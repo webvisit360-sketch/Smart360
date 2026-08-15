@@ -9,6 +9,16 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
+/**
+ * Permanent 301 redirects for renamed tenant slugs. Every slug a tenant has
+ * ever had stays here forever, so old QR codes keep working.
+ */
+export const tenantAliasesTable = pgTable("tenant_aliases", {
+  slug: text("slug").primaryKey(),
+  tenantId: uuid("tenant_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const tenantsTable = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),

@@ -1,17 +1,17 @@
 import { useGetTenant, useUpdateTenant, getGetTenantQueryKey, getListTenantsQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Home, ShoppingBag, Compass, ShoppingCart, MessageCircle, Upload, ImageIcon } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Upload, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
 import { ContentEditor } from "@/components/admin/content-editor";
+import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
+import { SlugField } from "@/components/admin/slug-field";
+import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
-
-const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -37,33 +37,6 @@ function contrastRatio(hexA: string, lumB: number): number | null {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-const THEME_DEFAULTS = {
-  mediterran: {
-    coverTitleSize: 24,
-    coverTitleOpacity: 100,
-    coverTextColor: "#14201F",
-    coverSubSize: 11,
-    coverSubOpacity: 100,
-    coverMetaSize: 13.5,
-    coverMetaOpacity: 100,
-    coverVeil: 0,
-    coverAlign: "left",
-    coverShowRating: true,
-  },
-  swipe: {
-    coverTitleSize: 56,
-    coverTitleOpacity: 66,
-    coverTextColor: "#FFFFFF",
-    coverSubSize: 22,
-    coverSubOpacity: 50,
-    coverMetaSize: 19.5,
-    coverMetaOpacity: 60,
-    coverVeil: 26,
-    coverAlign: "left",
-    coverShowRating: true,
-  }
-} as const;
-
 type ThemeKey = keyof typeof THEME_DEFAULTS;
 
 export default function AdminTenantEdit() {
@@ -71,6 +44,7 @@ export default function AdminTenantEdit() {
   const [, setLocation] = useLocation();
   const id = params?.id || "";
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: tenant, isLoading } = useGetTenant(id, { query: { enabled: !!id, queryKey: getGetTenantQueryKey(id) } });
   const updateMutation = useUpdateTenant({
@@ -78,7 +52,15 @@ export default function AdminTenantEdit() {
       onSuccess: (data) => {
         queryClient.setQueryData(getGetTenantQueryKey(id), (old: any) => old ? { ...old, ...data } : old);
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
-      }
+        toast({ title: "Shranjeno", description: "Spremembe so bile shranjene." });
+      },
+      onError: (err: any) => {
+        if (err?.status === 409) {
+          toast({ title: "Naslov je zaseden", description: "Ta naslov je že zaseden. Izberite drugega.", variant: "destructive" });
+        } else {
+          toast({ title: "Napaka", description: "Shranjevanje ni uspelo.", variant: "destructive" });
+        }
+      },
     }
   });
 
@@ -111,12 +93,13 @@ export default function AdminTenantEdit() {
     coverAlign: null as string | null,
     coverShowRating: null as boolean | null,
 
-    navColorCover: NAV_DEFAULTS.navColorCover as string,
-    navColor: NAV_DEFAULTS.navColor as string,
-    navColorOn: NAV_DEFAULTS.navColorOn as string,
+    navColorCover: null as string | null,
+    navColor: null as string | null,
+    navColorOn: null as string | null,
   });
 
   const initRef = useRef<string | null>(null);
+  const [originalSlug, setOriginalSlug] = useState("");
   const heroFileRef = useRef<HTMLInputElement>(null);
   const logoFileRef = useRef<HTMLInputElement>(null);
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
@@ -154,6 +137,7 @@ export default function AdminTenantEdit() {
   useEffect(() => {
     if (tenant && initRef.current !== tenant.id) {
       initRef.current = tenant.id;
+      setOriginalSlug(tenant.slug || "");
       setFormData({
         name: tenant.name || "",
         slug: tenant.slug || "",
@@ -183,9 +167,11 @@ export default function AdminTenantEdit() {
         coverAlign: tenant.coverAlign ?? null,
         coverShowRating: tenant.coverShowRating ?? null,
 
-        navColorCover: tenant.navColorCover || NAV_DEFAULTS.navColorCover,
-        navColor: tenant.navColor || NAV_DEFAULTS.navColor,
-        navColorOn: tenant.navColorOn || NAV_DEFAULTS.navColorOn,
+        // NULL = "use theme default" — never turn an inherited default into
+        // a stored value just by opening and saving this page.
+        navColorCover: tenant.navColorCover ?? null,
+        navColor: tenant.navColor ?? null,
+        navColorOn: tenant.navColorOn ?? null,
       });
     }
   }, [tenant]);
@@ -251,19 +237,6 @@ export default function AdminTenantEdit() {
     }));
   };
 
-  const themeDefaults = THEME_DEFAULTS[formData.theme] || THEME_DEFAULTS.mediterran;
-
-  const effTitleSize = formData.coverTitleSize ?? themeDefaults.coverTitleSize;
-  const effTitleOpacity = formData.coverTitleOpacity ?? themeDefaults.coverTitleOpacity;
-  const effTextColor = formData.coverTextColor ?? themeDefaults.coverTextColor;
-  const effSubSize = formData.coverSubSize ?? themeDefaults.coverSubSize;
-  const effSubOpacity = formData.coverSubOpacity ?? themeDefaults.coverSubOpacity;
-  const effMetaSize = formData.coverMetaSize ?? themeDefaults.coverMetaSize;
-  const effMetaOpacity = formData.coverMetaOpacity ?? themeDefaults.coverMetaOpacity;
-  const effVeil = formData.coverVeil ?? themeDefaults.coverVeil;
-  const effAlign = formData.coverAlign ?? themeDefaults.coverAlign;
-  const effShowRating = formData.coverShowRating ?? themeDefaults.coverShowRating;
-
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
       <div className="flex items-center gap-4 sticky top-0 bg-background/95 backdrop-blur z-10 py-4 -my-4 mb-4 border-b">
@@ -306,9 +279,14 @@ export default function AdminTenantEdit() {
                   <Label>Ime namestitve</Label>
                   <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Slug (URL naslov)</Label>
-                  <Input value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
+                <div className="col-span-2">
+                  <SlugField
+                    tenantId={id}
+                    name={formData.name}
+                    slug={formData.slug}
+                    originalSlug={originalSlug}
+                    onChange={(slug) => setFormData({ ...formData, slug })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Lastna domena (neobvezno)</Label>
@@ -470,332 +448,90 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Urejevalnik naslovnice</CardTitle>
-              <Button variant="outline" size="sm" onClick={handleResetCover} className="h-8">
-                <RefreshCcw className="w-3.5 h-3.5 mr-2" />
-                Ponastavi
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                {/* Controls */}
-                <div className="lg:col-span-7 space-y-8">
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-sm border-b pb-2">Besedila (preglasijo splošna)</h4>
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="space-y-2">
-                        <Label>Naslov (Title)</Label>
-                        <Input 
-                          placeholder={formData.name || "Ime namestitve"} 
-                          value={formData.coverTitle || ""} 
-                          onChange={e => setFormData({ ...formData, coverTitle: e.target.value || null })} 
-                        />
+          <CoverEditor
+            form={{
+              name: formData.name,
+              subtitle: formData.subtitle,
+              heroUrl: formData.heroUrl,
+              theme: formData.theme,
+              coverTitle: formData.coverTitle,
+              coverSubtitle: formData.coverSubtitle,
+              coverTitleSize: formData.coverTitleSize,
+              coverTitleOpacity: formData.coverTitleOpacity,
+              coverTextColor: formData.coverTextColor,
+              coverSubSize: formData.coverSubSize,
+              coverSubOpacity: formData.coverSubOpacity,
+              coverMetaSize: formData.coverMetaSize,
+              coverMetaOpacity: formData.coverMetaOpacity,
+              coverVeil: formData.coverVeil,
+              coverAlign: formData.coverAlign,
+              coverShowRating: formData.coverShowRating,
+            }}
+            onChange={(patch) => setFormData(prev => ({ ...prev, ...patch }))}
+            onReset={handleResetCover}
+          />
+
+          {formData.theme === 'swipe' && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Ikone spodaj</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setFormData(prev => ({ ...prev, navColorCover: null, navColor: null, navColorOn: null }))}
+                >
+                  <RefreshCcw className="w-3.5 h-3.5 mr-2" />
+                  Ponastavi
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {([
+                  { key: 'navColorCover', label: 'Barva na naslovnici', lum: coverLum },
+                  { key: 'navColor', label: 'Barva na podstraneh', lum: relLuminance('#FFFFFF') },
+                  { key: 'navColorOn', label: 'Barva izbrane ikone', lum: relLuminance('#FFFFFF') },
+                ] as const).map(({ key, label, lum }) => {
+                  // NULL = inherited theme default; show the default in the picker.
+                  const value = formData[key] ?? NAV_DEFAULTS[key];
+                  const ratio = lum !== null ? contrastRatio(value, lum) : null;
+                  return (
+                    <div key={key}>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-xs text-muted-foreground">{label}</Label>
+                        <span className="text-xs font-mono font-medium">{value.toUpperCase()}</span>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Podnaslov (Subtitle)</Label>
-                        <Input 
-                          placeholder={formData.subtitle || "Podnaslov nastanitve"} 
-                          value={formData.coverSubtitle || ""} 
-                          onChange={e => setFormData({ ...formData, coverSubtitle: e.target.value || null })} 
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-sm border-b pb-2">Pisava in barva</h4>
-                    <div className="pt-2">
-                      <Label className="mb-2 block text-xs text-muted-foreground">Barva besedila</Label>
                       <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Input 
-                            type="color" 
-                            value={effTextColor}
-                            onChange={e => setFormData({ ...formData, coverTextColor: e.target.value })}
-                            className="w-10 h-10 p-1 cursor-pointer"
-                          />
-                        </div>
+                        <Input
+                          type="color"
+                          value={value}
+                          onChange={e => setFormData({ ...formData, [key]: e.target.value })}
+                          className="w-10 h-10 p-1 cursor-pointer"
+                        />
                         <div className="flex items-center gap-2">
                           {PRESET_COLORS.map(color => (
                             <button
                               key={color}
-                              className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${effTextColor.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
+                              type="button"
+                              className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${value.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
                               style={{ backgroundColor: color }}
-                              onClick={() => setFormData({ ...formData, coverTextColor: color })}
+                              onClick={() => setFormData({ ...formData, [key]: color })}
                               title={color}
                             />
                           ))}
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2">
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Velikost naslova</Label>
-                          <span className="text-xs font-medium">{effTitleSize}px {formData.coverTitleSize === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={24} max={84} step={1} value={[effTitleSize]} onValueChange={v => setFormData({ ...formData, coverTitleSize: v[0] })} />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Prosojnost naslova</Label>
-                          <span className="text-xs font-medium">{effTitleOpacity} % {formData.coverTitleOpacity === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={20} max={100} step={1} value={[effTitleOpacity]} onValueChange={v => setFormData({ ...formData, coverTitleOpacity: v[0] })} />
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Velikost podnaslova</Label>
-                          <span className="text-xs font-medium">{effSubSize}px {formData.coverSubSize === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={12} max={40} step={1} value={[effSubSize]} onValueChange={v => setFormData({ ...formData, coverSubSize: v[0] })} />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Prosojnost podnaslova</Label>
-                          <span className="text-xs font-medium">{effSubOpacity} % {formData.coverSubOpacity === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={20} max={100} step={1} value={[effSubOpacity]} onValueChange={v => setFormData({ ...formData, coverSubOpacity: v[0] })} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-sm border-b pb-2">Metapodatki in Ozadje</h4>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2">
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Velikost metapodatkov</Label>
-                          <span className="text-xs font-medium">{effMetaSize}px {formData.coverMetaSize === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={12} max={32} step={0.5} value={[effMetaSize]} onValueChange={v => setFormData({ ...formData, coverMetaSize: v[0] })} />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Prosojnost metapodatkov</Label>
-                          <span className="text-xs font-medium">{effMetaOpacity} % {formData.coverMetaOpacity === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={20} max={100} step={1} value={[effMetaOpacity]} onValueChange={v => setFormData({ ...formData, coverMetaOpacity: v[0] })} />
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-muted-foreground">Zatemnitev slike (Veil)</Label>
-                          <span className="text-xs font-medium">{effVeil} % {formData.coverVeil === null && "(privzeto)"}</span>
-                        </div>
-                        <Slider min={0} max={60} step={1} value={[effVeil]} onValueChange={v => setFormData({ ...formData, coverVeil: v[0] })} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-sm border-b pb-2">Postavitev</h4>
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Poravnava {formData.coverAlign === null && "(privzeto)"}</Label>
-                        <div className="flex bg-muted rounded-md p-1 w-max border">
-                          <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${effAlign === 'left' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                            onClick={() => setFormData({ ...formData, coverAlign: 'left' })}
-                          >
-                            Levo
-                          </button>
-                          <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${effAlign === 'center' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                            onClick={() => setFormData({ ...formData, coverAlign: 'center' })}
-                          >
-                            Sredina
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Ocena {formData.coverShowRating === null && "(privzeto)"}</Label>
-                        <div className="flex bg-muted rounded-md p-1 w-max border">
-                          <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${effShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                            onClick={() => setFormData({ ...formData, coverShowRating: true })}
-                          >
-                            Prikaži
-                          </button>
-                          <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${!effShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                            onClick={() => setFormData({ ...formData, coverShowRating: false })}
-                          >
-                            Skrij
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {formData.theme === 'swipe' && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between border-b pb-2">
-                        <h4 className="font-semibold text-sm">Ikone spodaj</h4>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7"
-                          onClick={() => setFormData(prev => ({ ...prev, ...NAV_DEFAULTS }))}
-                        >
-                          <RefreshCcw className="w-3 h-3 mr-1.5" />
-                          Ponastavi
-                        </Button>
-                      </div>
-                      {([
-                        { key: 'navColorCover', label: 'Barva na naslovnici', lum: coverLum },
-                        { key: 'navColor', label: 'Barva na podstraneh', lum: relLuminance('#FFFFFF') },
-                        { key: 'navColorOn', label: 'Barva izbrane ikone', lum: relLuminance('#FFFFFF') },
-                      ] as const).map(({ key, label, lum }) => {
-                        const value = formData[key];
-                        const ratio = lum !== null ? contrastRatio(value, lum) : null;
-                        return (
-                          <div key={key} className="pt-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <Label className="text-xs text-muted-foreground">{label}</Label>
-                              <span className="text-xs font-mono font-medium">{value.toUpperCase()}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-2">
-                                {PRESET_COLORS.map(color => (
-                                  <button
-                                    key={color}
-                                    className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${value.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() => setFormData({ ...formData, [key]: color })}
-                                    title={color}
-                                  />
-                                ))}
-                              </div>
-                              <Input
-                                type="color"
-                                value={value}
-                                onChange={e => setFormData({ ...formData, [key]: e.target.value })}
-                                className="w-10 h-10 p-1 cursor-pointer"
-                              />
-                            </div>
-                            {ratio !== null && ratio < 3 && (
-                              <p className="text-xs text-amber-600 mt-1.5">Ta barva je slabo vidna.</p>
-                            )}
-                            {key === 'navColorCover' && ratio === null && (
-                              <p className="text-xs text-muted-foreground mt-1.5">Kontrasta z naslovnico ni mogoče preveriti (ni fotografije ali pa je naslovnica 360° ogled).</p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                </div>
-                
-                {/* Live Preview */}
-                <div className="lg:col-span-5">
-                  <div className="sticky top-24">
-                    <Label className="mb-3 block text-sm font-semibold">Predogled v živo</Label>
-                    <div 
-                      className="relative rounded-[2rem] overflow-hidden shadow-2xl border-4 border-muted bg-muted mx-auto max-w-sm"
-                      style={{
-                        aspectRatio: '9/16',
-                        backgroundImage: formData.heroUrl ? `url(${formData.heroUrl})` : 'none',
-                        backgroundColor: formData.heroUrl ? 'transparent' : '#1e293b',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div 
-                        className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-200" 
-                        style={{ opacity: effVeil / 100 }}
-                      />
-
-                      <div 
-                        className="absolute inset-x-0 bottom-0 flex flex-col pointer-events-none transition-all duration-200"
-                        style={{ 
-                          padding: formData.theme === 'mediterran' ? '1.5rem 1.5rem 2.5rem' : '2rem',
-                          backgroundColor: formData.theme === 'mediterran' ? '#FFFFFF' : 'transparent',
-                          borderTopLeftRadius: formData.theme === 'mediterran' ? '1.5rem' : '0',
-                          borderTopRightRadius: formData.theme === 'mediterran' ? '1.5rem' : '0',
-                          alignItems: effAlign === 'center' ? 'center' : 'flex-start',
-                          textAlign: effAlign === 'center' ? 'center' : 'left',
-                        }}
-                      >
-                        {effShowRating && (
-                          <div 
-                            className="flex items-center gap-1.5 mb-4 font-semibold transition-all duration-200"
-                            style={{
-                              fontSize: `${effMetaSize}px`,
-                              opacity: effMetaOpacity / 100,
-                              color: effTextColor,
-                            }}
-                          >
-                            <span style={{ color: effTextColor === '#FFFFFF' ? '#FBBF24' : 'currentColor', opacity: 0.9 }}>★</span> 4.9 (120)
-                          </div>
-                        )}
-                        
-                        <h1 
-                          className="font-bold leading-[1.1] mb-2 tracking-tight transition-all duration-200"
-                          style={{
-                            fontSize: `${effTitleSize}px`,
-                            opacity: effTitleOpacity / 100,
-                            color: effTextColor,
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                          }}
-                        >
-                          {formData.coverTitle || formData.name || 'Ime namestitve'}
-                        </h1>
-                        
-                        <p 
-                          className="font-medium transition-all duration-200"
-                          style={{
-                            fontSize: `${effSubSize}px`,
-                            opacity: effSubOpacity / 100,
-                            color: effTextColor,
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                          }}
-                        >
-                          {formData.coverSubtitle || formData.subtitle || 'Podnaslov namestitve'}
-                        </p>
-                      </div>
-
-                      {formData.theme === 'swipe' && (
-                        <div
-                          className="absolute inset-x-2 bottom-3 flex items-center justify-around pointer-events-none"
-                          style={{ height: 40, color: formData.navColorCover, filter: 'drop-shadow(0 1px 6px rgba(0,0,0,.55))' }}
-                        >
-                          <Home size={22} strokeWidth={1.9} />
-                          <ShoppingBag size={22} strokeWidth={1.9} />
-                          <Compass size={22} strokeWidth={1.9} />
-                          <ShoppingCart size={22} strokeWidth={1.9} />
-                          <MessageCircle size={22} strokeWidth={1.9} />
-                        </div>
+                      {ratio !== null && ratio < 3 && (
+                        <p className="text-xs text-amber-600 mt-1.5">Ta barva je slabo vidna.</p>
+                      )}
+                      {key === 'navColorCover' && ratio === null && (
+                        <p className="text-xs text-muted-foreground mt-1.5">Kontrasta z naslovnico ni mogoče preveriti (ni fotografije ali pa je naslovnica 360° ogled).</p>
                       )}
                     </div>
-
-                    {formData.theme === 'swipe' && (
-                      <div className="mt-3 rounded-xl border bg-white px-2 py-2 flex items-center justify-around max-w-sm mx-auto">
-                        <Home size={22} strokeWidth={2.5} style={{ color: formData.navColorOn }} />
-                        <ShoppingBag size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
-                        <Compass size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
-                        <ShoppingCart size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
-                        <MessageCircle size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="contacts" className="space-y-4">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   createSection,
@@ -11,11 +11,18 @@ import {
   updateItem,
   deleteItem,
   getGetTenantQueryKey,
+  useGetTrash,
+  restoreCategory,
+  restoreItem,
+  purgeCategory,
+  purgeItem,
+  getGetTrashQueryKey,
 } from "@workspace/api-client-react";
-import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -97,6 +104,118 @@ function slugify(str: string): string {
     .replace(/^_|_$/g, "");
 }
 
+// ---------- Character budgets (warn only, never block) ----------
+
+const BUDGET = {
+  categoryLabel: 28,
+  categorySublabel: 42,
+  itemTitle: 48,
+};
+
+const TRUNCATE_HINT = "Daljše besedilo se lahko na telefonu odreže.";
+
+function CharCounter({ value, max }: { value: string; max: number }) {
+  const len = value.length;
+  const over = len > max;
+  return (
+    <p className={`text-xs ${over ? "text-destructive font-medium" : len > max * 0.85 ? "text-amber-600" : "text-muted-foreground"}`}>
+      {len}/{max}
+      {over && <span className="ml-1">— {TRUNCATE_HINT}</span>}
+    </p>
+  );
+}
+
+// ---------- Autosave drafts ----------
+
+function draftKey(entityType: string, id: string): string {
+  return `s360:draft:${entityType}:${id}`;
+}
+
+/**
+ * Persists form state to localStorage (debounced) while a dialog is open.
+ * Returns a restored draft (if any & differs from stored values) and helpers.
+ */
+function useDraft<T extends Record<string, unknown>>(
+  entityType: string,
+  id: string,
+  current: T,
+  baseline: T,
+) {
+  const key = draftKey(entityType, id);
+  const [restored, setRestored] = useState<T | null>(null);
+  const [checked, setChecked] = useState(false);
+
+  // On mount, check for an existing draft that differs from the baseline.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw) as T;
+        if (JSON.stringify(parsed) !== JSON.stringify(baseline)) {
+          setRestored(parsed);
+        }
+      }
+    } catch {
+      // ignore malformed drafts
+    }
+    setChecked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  // Debounced save of current form state.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!checked) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      try {
+        if (JSON.stringify(current) === JSON.stringify(baseline)) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, JSON.stringify(current));
+        }
+      } catch {
+        // ignore quota errors
+      }
+    }, 500);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [current, baseline, key, checked]);
+
+  const clear = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+    setRestored(null);
+  }, [key]);
+
+  const discardRestored = useCallback(() => {
+    setRestored(null);
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+  }, [key]);
+
+  return { restored, clear, discardRestored };
+}
+
+function DraftNotice({ onDiscard }: { onDiscard: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <span>Obnovljen neshranjen osnutek</span>
+      <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-amber-800 hover:text-amber-900" onClick={onDiscard}>
+        Zavrzi
+      </Button>
+    </div>
+  );
+}
+
 // ==========================================
 // Section Dialog
 // ==========================================
@@ -114,6 +233,32 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   const [subtitle, setSubtitle] = useState(section?.subtitle ?? "");
   const [key, setKey] = useState(section?.key ?? "");
   const [isVisible, setIsVisible] = useState(section?.isVisible ?? true);
+
+  const baseline = {
+    title: section?.title ?? "",
+    icon: section?.icon ?? "",
+    subtitle: section?.subtitle ?? "",
+    key: section?.key ?? "",
+    isVisible: section?.isVisible ?? true,
+  };
+  const current = { title, icon, subtitle, key, isVisible };
+  const { restored, clear, discardRestored } = useDraft(
+    "section",
+    mode === "edit" ? section.id : "new",
+    current,
+    baseline,
+  );
+
+  useEffect(() => {
+    if (restored) {
+      setTitle(restored.title);
+      setIcon(restored.icon);
+      setSubtitle(restored.subtitle);
+      setKey(restored.key);
+      setIsVisible(restored.isVisible);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
 
@@ -142,6 +287,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
           isVisible,
         });
       }
+      clear();
       await refresh();
       onDone();
     } catch {
@@ -151,12 +297,18 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
     }
   };
 
+  const handleCancel = () => {
+    clear();
+    onDone();
+  };
+
   const handleDelete = async () => {
     if (!section) return;
     if (!confirm(`Izbrišem sekcijo "${section.title}"? Vse kategorije in vnosi v njej bodo trajno izbrisani.`)) return;
     setBusy(true);
     try {
       await deleteSection(section.id);
+      clear();
       await refresh();
       onDone();
     } catch {
@@ -168,6 +320,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
 
   return (
     <div className="space-y-4">
+      {restored && <DraftNotice onDiscard={discardRestored} />}
       <div className="grid grid-cols-[1fr_80px] gap-3">
         <div className="space-y-1">
           <Label>Naslov *</Label>
@@ -209,6 +362,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
           placeholder="Neobvezni podnaslov"
           disabled={busy}
         />
+        <CharCounter value={subtitle} max={BUDGET.categorySublabel} />
       </div>
       {mode === "edit" && (
         <div className="flex items-center gap-2">
@@ -228,6 +382,9 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
             Izbriši sekcijo
           </Button>
         )}
+        <Button variant="outline" onClick={handleCancel} disabled={busy}>
+          Prekliči
+        </Button>
         <Button onClick={handleSave} disabled={busy}>
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {mode === "create" ? "Ustvari" : "Shrani"}
@@ -254,6 +411,30 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
   const [layout, setLayout] = useState(category?.layout ?? "text");
   const [isVisible, setIsVisible] = useState(category?.isVisible ?? true);
 
+  const baseline = {
+    label: category?.label ?? "",
+    icon: category?.icon ?? "",
+    layout: category?.layout ?? "text",
+    isVisible: category?.isVisible ?? true,
+  };
+  const current = { label, icon, layout, isVisible };
+  const { restored, clear, discardRestored } = useDraft(
+    "category",
+    mode === "edit" ? category.id : `new-${sectionId}`,
+    current,
+    baseline,
+  );
+
+  useEffect(() => {
+    if (restored) {
+      setLabel(restored.label);
+      setIcon(restored.icon);
+      setLayout(restored.layout);
+      setIsVisible(restored.isVisible);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored]);
+
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
 
   const handleSave = async () => {
@@ -268,6 +449,7 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
       } else {
         await updateCategory(category.id, { label: label.trim(), icon: icon.trim(), layout, isVisible });
       }
+      clear();
       await refresh();
       onDone();
     } catch {
@@ -277,12 +459,18 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
     }
   };
 
+  const handleCancel = () => {
+    clear();
+    onDone();
+  };
+
   const handleDelete = async () => {
     if (!category) return;
-    if (!confirm(`Izbrišem kategorijo "${category.label}"? Vsi vnosi v njej bodo trajno izbrisani.`)) return;
+    if (!confirm(`Izbrišem kategorijo "${category.label}"? Premaknjena bo v "Nedavno izbrisano" in jo lahko obnovite še 30 dni (skupaj z vnosi v njej).`)) return;
     setBusy(true);
     try {
       await deleteCategory(category.id);
+      clear();
       await refresh();
       onDone();
     } catch {
@@ -294,6 +482,7 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
 
   return (
     <div className="space-y-4">
+      {restored && <DraftNotice onDiscard={discardRestored} />}
       <div className="grid grid-cols-[1fr_80px] gap-3">
         <div className="space-y-1">
           <Label>Ime kategorije *</Label>
@@ -303,6 +492,7 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
             placeholder="npr. Restavracije"
             disabled={busy}
           />
+          <CharCounter value={label} max={BUDGET.categoryLabel} />
         </div>
         <div className="space-y-1">
           <Label>Ikona *</Label>
@@ -345,6 +535,9 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
             Izbriši kategorijo
           </Button>
         )}
+        <Button variant="outline" onClick={handleCancel} disabled={busy}>
+          Prekliči
+        </Button>
         <Button onClick={handleSave} disabled={busy}>
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {mode === "create" ? "Ustvari" : "Shrani"}
@@ -373,6 +566,34 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const [phone, setPhone] = useState(item?.phone ?? "");
   const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
 
+  const baseline = {
+    title: item?.title ?? "",
+    body: item?.body ?? "",
+    price: item?.price ?? "",
+    priceUnit: item?.priceUnit ?? "",
+    phone: item?.phone ?? "",
+    isVisible: item?.isVisible ?? true,
+  };
+  const current = { title, body, price, priceUnit, phone, isVisible };
+  const { restored, clear, discardRestored } = useDraft(
+    "item",
+    mode === "edit" ? item.id : `new-${categoryId}`,
+    current,
+    baseline,
+  );
+
+  useEffect(() => {
+    if (restored) {
+      setTitle(restored.title);
+      setBody(restored.body);
+      setPrice(restored.price);
+      setPriceUnit(restored.priceUnit);
+      setPhone(restored.phone);
+      setIsVisible(restored.isVisible);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored]);
+
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
 
   const handleSave = async () => {
@@ -396,6 +617,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           isVisible,
         });
       }
+      clear();
       await refresh();
       onDone();
     } catch {
@@ -405,12 +627,18 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     }
   };
 
+  const handleCancel = () => {
+    clear();
+    onDone();
+  };
+
   const handleDelete = async () => {
     if (!item) return;
-    if (!confirm(`Izbrišem vnos "${item.title || "(Brez naslova)"}"?`)) return;
+    if (!confirm(`Izbrišem vnos "${item.title || "(Brez naslova)"}"? Premaknjen bo v "Nedavno izbrisano" in ga lahko obnovite še 30 dni.`)) return;
     setBusy(true);
     try {
       await deleteItem(item.id);
+      clear();
       await refresh();
       onDone();
     } catch {
@@ -422,6 +650,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
 
   return (
     <div className="space-y-4">
+      {restored && <DraftNotice onDiscard={discardRestored} />}
       <div className="space-y-1">
         <Label>Naslov</Label>
         <Input
@@ -430,6 +659,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           placeholder="npr. Pizzeria Napoli"
           disabled={busy}
         />
+        <CharCounter value={title} max={BUDGET.itemTitle} />
       </div>
       <div className="space-y-1">
         <Label>Opis / besedilo</Label>
@@ -488,6 +718,9 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             Izbriši
           </Button>
         )}
+        <Button variant="outline" onClick={handleCancel} disabled={busy}>
+          Prekliči
+        </Button>
         <Button onClick={handleSave} disabled={busy}>
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {mode === "create" ? "Dodaj vnos" : "Shrani"}
@@ -516,7 +749,12 @@ function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string;
           >
             {expanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
             <span className="font-medium">{item.title || "(Brez naslova)"}</span>
-            {!item.isVisible && <EyeOff className="w-3 h-3 ml-1 text-muted-foreground shrink-0" aria-label="Skrito" />}
+            {!item.isVisible && (
+              <Badge variant="secondary" className="ml-1 gap-1 px-1.5 py-0 text-[10px] shrink-0">
+                <EyeOff className="w-2.5 h-2.5" />
+                Skrito
+              </Badge>
+            )}
             {item.price && (
               <span className="text-muted-foreground text-xs ml-auto">
                 {item.price}{item.priceUnit ? ` ${item.priceUnit}` : ""}
@@ -580,7 +818,12 @@ function CategoryBlock({ category, tenantId }: { category: Category; tenantId: s
           <h4 className="font-semibold flex items-center gap-2 text-sm">
             {category.icon}
             <span>{category.label}</span>
-            {!category.isVisible && <EyeOff className="w-3 h-3 text-muted-foreground" aria-label="Skrito" />}
+            {!category.isVisible && (
+              <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-[10px]">
+                <EyeOff className="w-2.5 h-2.5" />
+                Skrito
+              </Badge>
+            )}
             <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-background rounded-full border">
               {category.layout}
             </span>
@@ -659,9 +902,10 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
             </span>
             {section.title}
             {!section.isVisible && (
-              <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
-                <EyeOff className="w-3 h-3" /> skrita
-              </span>
+              <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-[10px]">
+                <EyeOff className="w-2.5 h-2.5" />
+                Skrito
+              </Badge>
             )}
           </h3>
           <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
@@ -720,6 +964,166 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
 }
 
 // ==========================================
+// Trash panel ("Nedavno izbrisano")
+// ==========================================
+
+function TrashPanel({ tenantId }: { tenantId: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const { data, isLoading } = useGetTrash(tenantId);
+
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) }),
+      queryClient.invalidateQueries({ queryKey: getGetTrashQueryKey(tenantId) }),
+    ]);
+  };
+
+  const categories = data?.categories ?? [];
+  const items = data?.items ?? [];
+  const total = categories.length + items.length;
+  const retentionDays = data?.retentionDays ?? 30;
+
+  const run = async (id: string, fn: () => Promise<unknown>, failMsg: string) => {
+    setBusyId(id);
+    try {
+      await fn();
+      await refresh();
+    } catch {
+      alert(failMsg);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onRestoreCategory = (id: string) =>
+    run(id, () => restoreCategory(id), "Obnovitev ni uspela.");
+  const onPurgeCategory = (id: string, label: string) => {
+    if (!confirm(`Kategorijo "${label}" trajno izbrišem? Tega ni mogoče razveljaviti.`)) return;
+    run(id, () => purgeCategory(id), "Brisanje ni uspelo.");
+  };
+  const onRestoreItem = (id: string) =>
+    run(id, () => restoreItem(id), "Obnovitev ni uspela.");
+  const onPurgeItem = (id: string, title: string) => {
+    if (!confirm(`Vnos "${title}" trajno izbrišem? Tega ni mogoče razveljaviti.`)) return;
+    run(id, () => purgeItem(id), "Brisanje ni uspelo.");
+  };
+
+  return (
+    <div className="mt-8 border rounded-xl">
+      <button
+        type="button"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="flex items-center gap-2 font-semibold text-sm">
+          {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          <Trash2 className="w-4 h-4 text-muted-foreground" />
+          Nedavno izbrisano
+          {total > 0 && (
+            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">{total}</Badge>
+          )}
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Vnosi se trajno izbrišejo po {retentionDays} dneh.
+          </p>
+
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Nalaganje…
+            </div>
+          ) : total === 0 ? (
+            <p className="text-sm text-muted-foreground">Koš je prazen.</p>
+          ) : (
+            <>
+              {categories.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Kategorije</p>
+                  {categories.map((cat) => (
+                    <div key={cat.id} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
+                      <div className="min-w-0">
+                        <span className="font-medium truncate">{cat.label}</span>
+                        <span className="text-xs text-muted-foreground ml-1">v „{cat.sectionTitle}“</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          disabled={busyId === cat.id}
+                          onClick={() => onRestoreCategory(cat.id)}
+                        >
+                          {busyId === cat.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                          Obnovi
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                          disabled={busyId === cat.id}
+                          onClick={() => onPurgeCategory(cat.id, cat.label)}
+                        >
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Izbriši za vedno
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {items.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Vnosi</p>
+                  {items.map((it) => {
+                    const title = it.title || "(Brez naslova)";
+                    return (
+                      <div key={it.id} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
+                        <div className="min-w-0">
+                          <span className="font-medium truncate">{title}</span>
+                          <span className="text-xs text-muted-foreground ml-1">v „{it.categoryLabel}“</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            disabled={busyId === it.id}
+                            onClick={() => onRestoreItem(it.id)}
+                          >
+                            {busyId === it.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                            Obnovi
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                            disabled={busyId === it.id}
+                            onClick={() => onPurgeItem(it.id, title)}
+                          >
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Izbriši za vedno
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
 // Main export
 // ==========================================
 
@@ -754,6 +1158,8 @@ export function ContentEditor({
         <Plus className="w-4 h-4 mr-2" />
         Nova sekcija
       </Button>
+
+      <TrashPanel tenantId={tenantId} />
 
       <Dialog open={addSectionOpen} onOpenChange={setAddSectionOpen}>
         <DialogContent>

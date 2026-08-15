@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, tenantsTable } from "@workspace/db";
+import { db, tenantsTable, tenantAliasesTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
   SearchPublicTenantResponse,
@@ -44,7 +44,20 @@ async function resolveTenantBySlugOrDomain(
     .select()
     .from(tenantsTable)
     .where(eq(tenantsTable.slug, slug));
-  return bySlug;
+  if (bySlug) return bySlug;
+
+  // Renamed tenant? Old slugs live forever in tenant_aliases so that old
+  // QR codes keep working — resolve them to the current tenant.
+  const [alias] = await db
+    .select()
+    .from(tenantAliasesTable)
+    .where(eq(tenantAliasesTable.slug, slug));
+  if (!alias) return undefined;
+  const [byAlias] = await db
+    .select()
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, alias.tenantId));
+  return byAlias;
 }
 
 // GET /public/tenant-by-domain

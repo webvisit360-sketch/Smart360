@@ -26,6 +26,7 @@ import type {
   Category,
   CategoryInput,
   CategoryUpdate,
+  CheckSlugParams,
   EnrollOptionsBody,
   EnrollResult,
   EnrollVerifyBody,
@@ -48,6 +49,7 @@ import type {
   Section,
   SectionInput,
   SectionUpdate,
+  SlugCheckResponse,
   Tenant,
   TenantContent,
   TenantDuplicateInput,
@@ -55,6 +57,7 @@ import type {
   TenantUpdate,
   Translation,
   TranslationInput,
+  TrashResponse,
   WebAuthnOptions,
   WebAuthnVerifyBody
 } from './api.schemas';
@@ -2893,4 +2896,502 @@ export const useUpsertTranslation = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpsertTranslationMutationOptions(options));
     }
+
+export const getGetTrashUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/trash`
+}
+
+/**
+ * @summary Recently deleted categories and items (30-day trash)
+ */
+export const getTrash = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TrashResponse> => {
+
+  return customFetch<TrashResponse>(getGetTrashUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTrashQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/trash`
+    ] as const;
+    }
+
+
+export const getGetTrashQueryOptions = <TData = Awaited<ReturnType<typeof getTrash>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrash>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTrashQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrash>>> = ({ signal }) => getTrash(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTrash>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTrashQueryResult = NonNullable<Awaited<ReturnType<typeof getTrash>>>
+export type GetTrashQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Recently deleted categories and items (30-day trash)
+ */
+
+export function useGetTrash<TData = Awaited<ReturnType<typeof getTrash>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrash>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTrashQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRestoreCategoryUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/categories/${id}/restore`
+}
+
+export const restoreCategory = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<OkStatus> => {
+
+  return customFetch<OkStatus>(getRestoreCategoryUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRestoreCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreCategory>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreCategory>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['restoreCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreCategory>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreCategory(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof restoreCategory>>>
+
+    export type RestoreCategoryMutationError = ErrorType<unknown>
+
+    export const useRestoreCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreCategory>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreCategory>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRestoreCategoryMutationOptions(options));
+    }
+
+export const getRestoreItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/restore`
+}
+
+export const restoreItem = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<OkStatus> => {
+
+  return customFetch<OkStatus>(getRestoreItemUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRestoreItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreItem>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['restoreItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreItem>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreItem(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreItemMutationResult = NonNullable<Awaited<ReturnType<typeof restoreItem>>>
+
+    export type RestoreItemMutationError = ErrorType<unknown>
+
+    export const useRestoreItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreItem>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRestoreItemMutationOptions(options));
+    }
+
+export const getPurgeCategoryUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/categories/${id}/purge`
+}
+
+export const purgeCategory = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getPurgeCategoryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getPurgeCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeCategory>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purgeCategory>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['purgeCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purgeCategory>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  purgeCategory(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurgeCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof purgeCategory>>>
+
+    export type PurgeCategoryMutationError = ErrorType<unknown>
+
+    export const usePurgeCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeCategory>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purgeCategory>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPurgeCategoryMutationOptions(options));
+    }
+
+export const getPurgeItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/purge`
+}
+
+export const purgeItem = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getPurgeItemUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getPurgeItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purgeItem>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['purgeItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purgeItem>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  purgeItem(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurgeItemMutationResult = NonNullable<Awaited<ReturnType<typeof purgeItem>>>
+
+    export type PurgeItemMutationError = ErrorType<unknown>
+
+    export const usePurgeItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purgeItem>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPurgeItemMutationOptions(options));
+    }
+
+export const getCheckSlugUrl = (params: CheckSlugParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/slug-check?${stringifiedParams}` : `/api/admin/slug-check`
+}
+
+/**
+ * @summary Live slug availability check for the settings screen
+ */
+export const checkSlug = async (params: CheckSlugParams, options?: Parameters<typeof customFetch>[1]): Promise<SlugCheckResponse> => {
+
+  return customFetch<SlugCheckResponse>(getCheckSlugUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckSlugQueryKey = (params?: CheckSlugParams,) => {
+    return [
+    `/api/admin/slug-check`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCheckSlugQueryOptions = <TData = Awaited<ReturnType<typeof checkSlug>>, TError = ErrorType<unknown>>(params: CheckSlugParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkSlug>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckSlugQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkSlug>>> = ({ signal }) => checkSlug(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkSlug>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckSlugQueryResult = NonNullable<Awaited<ReturnType<typeof checkSlug>>>
+export type CheckSlugQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Live slug availability check for the settings screen
+ */
+
+export function useCheckSlug<TData = Awaited<ReturnType<typeof checkSlug>>, TError = ErrorType<unknown>>(
+ params: CheckSlugParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkSlug>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckSlugQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetTenantQrUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/qr.png`
+}
+
+/**
+ * @summary QR code PNG pointing to the tenant's guest address
+ */
+export const getTenantQr = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetTenantQrUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTenantQrQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/qr.png`
+    ] as const;
+    }
+
+
+export const getGetTenantQrQueryOptions = <TData = Awaited<ReturnType<typeof getTenantQr>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantQr>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantQrQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantQr>>> = ({ signal }) => getTenantQr(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantQr>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantQrQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantQr>>>
+export type GetTenantQrQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary QR code PNG pointing to the tenant's guest address
+ */
+
+export function useGetTenantQr<TData = Awaited<ReturnType<typeof getTenantQr>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantQr>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantQrQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

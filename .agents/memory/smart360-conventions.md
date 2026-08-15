@@ -29,3 +29,9 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 ## Naslovnica: NULL = privzetek teme (odločitev)
 - Vsa polja naslovnice in nav barv na Tenant so nullable; NULL pomeni "uporabi privzetek teme" (bloka html[data-theme=...] v CSS oz. var(--nv,#...) rezerve). Privzetkov NIKOLI ne zapisuj v bazo.
 - Ob izrisu se CSS spremenljivka nastavi SAMO za neprazna polja (cover-vars.ts, navVars v GuestSwipe). "Ročno spremenjeno" == "ni NULL"; gumb Ponastavi polja izprazni; preklop teme ne rabi ponastavljanja.
+
+## Vsebina in slug — implementirano stanje (avgust 2026)
+- Brisanje kategorij/postavk je mehko (deletedAt); koš "Nedavno izbrisano" z obnovitvijo, trajni izbris po 30 dneh (leni purge ob GET trash). Sekcije se še vedno brišejo trdo.
+- VSA besedila strežniško očisti cleanContentFields (adminContent.ts): body → majhen allowlist (p, b/strong, br, a[href]); ostala polja → golo besedilo; website/mapUrl → samo http(s), sicer null; tudi prevodi ob upsertu. Nikoli ne zaupaj odjemalcu.
+- Pravila slugov v api-server/src/lib/slug.ts (rezervirane besede, regex 3–40, checkSlugAvailability upošteva tudi tenant_aliases). Ob preimenovanju se stari slug za vedno zapiše v tenant_aliases; javni resolve najprej slug, nato alias → stari QR delujejo. Podvajanje/ustvarjanje najemnika gre skozi isti validator.
+- QR PNG: GET /api/admin/tenants/:id/qr.png (paket qrcode); naslov gostov zaenkrat REPLIT_DEV_DOMAIN/g/<slug>, ob selitvi na smart360.info popravi guestUrl() v adminTenants.ts.

@@ -13,6 +13,36 @@ export interface OkStatus {
   ok: boolean;
 }
 
+export interface TrashCategory {
+  id: string;
+  label: string;
+  sectionTitle: string;
+  /** @nullable */
+  deletedAt: string | null;
+}
+
+export interface TrashItem {
+  id: string;
+  /** @nullable */
+  title: string | null;
+  categoryLabel: string;
+  /** @nullable */
+  deletedAt: string | null;
+}
+
+export interface TrashResponse {
+  categories: TrashCategory[];
+  items: TrashItem[];
+  retentionDays: number;
+}
+
+export interface SlugCheckResponse {
+  slug: string;
+  available: boolean;
+  /** @nullable */
+  reason: string | null;
+}
+
 export type WebAuthnOptionsOptions = { [key: string]: unknown };
 
 export interface WebAuthnOptions {
@@ -480,5 +510,10 @@ lang?: string;
 export type ListTranslationsParams = {
 model: string;
 recordId: string;
+};
+
+export type CheckSlugParams = {
+slug: string;
+tenantId?: string;
 };
 

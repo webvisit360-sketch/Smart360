@@ -35,6 +35,32 @@ import {
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
+import { sanitizeBody, sanitizePlain, sanitizeUrl } from "../lib/sanitizeBody";
+
+/**
+ * Server-side sanitization of every guest-facing string, regardless of what
+ * the client sent (Word paste, scripts, styles). `body` keeps the small
+ * rich-text allowlist; every other string field is stripped to plain text.
+ */
+function cleanContentFields<T extends Record<string, unknown>>(data: T): T {
+  const out: Record<string, unknown> = { ...data };
+  for (const key of [
+    "title", "label", "sublabel", "subtitle",
+    "noteText", "noteType", "price", "priceUnit", "phone", "hours", "distance",
+  ]) {
+    if (typeof out[key] === "string") out[key] = sanitizePlain(out[key] as string);
+  }
+  if (Array.isArray(out["bullets"])) {
+    out["bullets"] = (out["bullets"] as unknown[]).map((b) =>
+      typeof b === "string" ? sanitizePlain(b) : b,
+    );
+  }
+  for (const key of ["website", "mapUrl"]) {
+    if (typeof out[key] === "string") out[key] = sanitizeUrl(out[key] as string) || null;
+  }
+  if (typeof out["body"] === "string") out["body"] = sanitizeBody(out["body"] as string);
+  return out as T;
+}
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -80,7 +106,7 @@ router.post("/admin/tenants/:id/sections", async (req, res): Promise<void> => {
     (existing.length ? Math.max(...existing.map((s) => s.position)) + 1 : 0);
   const [section] = await db
     .insert(sectionsTable)
-    .values({ ...parsed.data, position, tenantId })
+    .values({ ...cleanContentFields(parsed.data), position, tenantId })
     .returning();
   await logChange({
     tenantId,
@@ -101,7 +127,7 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
   }
   const [section] = await db
     .update(sectionsTable)
-    .set(parsed.data)
+    .set(cleanContentFields(parsed.data))
     .where(eq(sectionsTable.id, id))
     .returning();
   if (!section) {
@@ -205,7 +231,7 @@ router.post(
       (existing.length ? Math.max(...existing.map((c) => c.position)) + 1 : 0);
     const [category] = await db
       .insert(categoriesTable)
-      .values({ ...parsed.data, position, sectionId })
+      .values({ ...cleanContentFields(parsed.data), position, sectionId })
       .returning();
     const ctx = await tenantNameForSection(sectionId);
     await logChange({
@@ -227,7 +253,7 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
   }
   const [category] = await db
     .update(categoriesTable)
-    .set(parsed.data)
+    .set(cleanContentFields(parsed.data))
     .where(eq(categoriesTable.id, id))
     .returning();
   if (!category) {
@@ -244,11 +270,14 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
   res.json(UpdateCategoryResponse.parse(category));
 });
 
+// Soft delete: the category moves to the trash ("Nedavno izbrisano") and can
+// be restored for 30 days. Permanent removal happens via purge.
 router.delete("/admin/categories/:id", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
   const [category] = await db
-    .delete(categoriesTable)
-    .where(eq(categoriesTable.id, id))
+    .update(categoriesTable)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(categoriesTable.id, id), isNull(categoriesTable.deletedAt)))
     .returning();
   if (!category) {
     res.status(404).json({ error: "Not found" });
@@ -341,7 +370,7 @@ router.post("/admin/categories/:id/items", async (req, res): Promise<void> => {
     (existing.length ? Math.max(...existing.map((i) => i.position)) + 1 : 0);
   const [item] = await db
     .insert(itemsTable)
-    .values({ ...parsed.data, position, categoryId })
+    .values({ ...cleanContentFields(parsed.data), position, categoryId })
     .returning();
   const ctx = await tenantNameForSection(category.sectionId);
   await logChange({
@@ -362,7 +391,7 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
   }
   const [item] = await db
     .update(itemsTable)
-    .set(parsed.data)
+    .set(cleanContentFields(parsed.data))
     .where(eq(itemsTable.id, id))
     .returning();
   if (!item) {
@@ -383,11 +412,13 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
   res.json(UpdateItemResponse.parse(await itemWithMedia(item)));
 });
 
+// Soft delete: the item moves to the trash and can be restored for 30 days.
 router.delete("/admin/items/:id", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
   const [item] = await db
-    .delete(itemsTable)
-    .where(eq(itemsTable.id, id))
+    .update(itemsTable)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(itemsTable.id, id), isNull(itemsTable.deletedAt)))
     .returning();
   if (!item) {
     res.status(404).json({ error: "Not found" });
@@ -613,11 +644,180 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
         .where(eq(translationsTable.id, match.id));
     }
   } else if (value !== "") {
-    await db
-      .insert(translationsTable)
-      .values({ model, recordId, field, lang, value });
+    await db.insert(translationsTable).values({
+      model,
+      recordId,
+      field,
+      lang,
+      value: field === "body" ? sanitizeBody(value) : sanitizePlain(value),
+    });
   }
   res.json(UpsertTranslationResponse.parse({ ok: true }));
+});
+
+// ---------- Trash ("Nedavno izbrisano") ----------
+
+const TRASH_DAYS = 30;
+
+/** Permanently remove entries deleted more than 30 days ago (lazy purge). */
+async function purgeExpired(tenantId: string): Promise<void> {
+  const cutoff = new Date(Date.now() - TRASH_DAYS * 24 * 60 * 60 * 1000);
+  const sectionIds = (
+    await db
+      .select({ id: sectionsTable.id })
+      .from(sectionsTable)
+      .where(eq(sectionsTable.tenantId, tenantId))
+  ).map((s) => s.id);
+  if (sectionIds.length === 0) return;
+  const catIds = (
+    await db
+      .select({ id: categoriesTable.id })
+      .from(categoriesTable)
+      .where(inArray(categoriesTable.sectionId, sectionIds))
+  ).map((c) => c.id);
+  await db.transaction(async (tx) => {
+    if (catIds.length > 0) {
+      await tx
+        .delete(itemsTable)
+        .where(
+          and(
+            inArray(itemsTable.categoryId, catIds),
+            sql`${itemsTable.deletedAt} < ${cutoff}`,
+          ),
+        );
+    }
+    await tx
+      .delete(categoriesTable)
+      .where(
+        and(
+          inArray(categoriesTable.sectionId, sectionIds),
+          sql`${categoriesTable.deletedAt} < ${cutoff}`,
+        ),
+      );
+  });
+}
+
+router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
+  const tenantId = firstParam(req.params["id"]);
+  const [tenant] = await db
+    .select({ id: tenantsTable.id })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, tenantId));
+  if (!tenant) {
+    res.status(404).json({ error: "Tenant not found" });
+    return;
+  }
+  await purgeExpired(tenantId);
+  const categories = await db
+    .select({
+      id: categoriesTable.id,
+      label: categoriesTable.label,
+      sectionTitle: sectionsTable.title,
+      deletedAt: categoriesTable.deletedAt,
+    })
+    .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(
+      and(
+        eq(sectionsTable.tenantId, tenantId),
+        sql`${categoriesTable.deletedAt} IS NOT NULL`,
+      ),
+    );
+  // Items deleted directly (their category is still alive); items that went to
+  // the trash together with their category are represented by the category row.
+  const items = await db
+    .select({
+      id: itemsTable.id,
+      title: itemsTable.title,
+      categoryLabel: categoriesTable.label,
+      deletedAt: itemsTable.deletedAt,
+    })
+    .from(itemsTable)
+    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(
+      and(
+        eq(sectionsTable.tenantId, tenantId),
+        sql`${itemsTable.deletedAt} IS NOT NULL`,
+        isNull(categoriesTable.deletedAt),
+      ),
+    );
+  res.json({
+    categories: categories.map((c) => ({
+      ...c,
+      deletedAt: c.deletedAt?.toISOString() ?? null,
+    })),
+    items: items.map((i) => ({
+      ...i,
+      deletedAt: i.deletedAt?.toISOString() ?? null,
+    })),
+    retentionDays: TRASH_DAYS,
+  });
+});
+
+router.post("/admin/categories/:id/restore", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [category] = await db
+    .update(categoriesTable)
+    .set({ deletedAt: null })
+    .where(and(eq(categoriesTable.id, id), sql`${categoriesTable.deletedAt} IS NOT NULL`))
+    .returning();
+  if (!category) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const ctx = await tenantNameForSection(category.sectionId);
+  await logChange({ ...ctx, action: "restore", entity: "category", detail: category.label });
+  res.json({ ok: true });
+});
+
+router.post("/admin/items/:id/restore", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [item] = await db
+    .update(itemsTable)
+    .set({ deletedAt: null })
+    .where(and(eq(itemsTable.id, id), sql`${itemsTable.deletedAt} IS NOT NULL`))
+    .returning();
+  if (!item) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // If the parent category is itself in the trash, bring it back too —
+  // otherwise the restored item would be invisible everywhere.
+  await db
+    .update(categoriesTable)
+    .set({ deletedAt: null })
+    .where(and(eq(categoriesTable.id, item.categoryId), sql`${categoriesTable.deletedAt} IS NOT NULL`));
+  await logChange({ action: "restore", entity: "item", detail: item.title ?? undefined });
+  res.json({ ok: true });
+});
+
+router.delete("/admin/categories/:id/purge", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [category] = await db
+    .delete(categoriesTable)
+    .where(and(eq(categoriesTable.id, id), sql`${categoriesTable.deletedAt} IS NOT NULL`))
+    .returning();
+  if (!category) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  await logChange({ action: "purge", entity: "category", detail: category.label });
+  res.sendStatus(204);
+});
+
+router.delete("/admin/items/:id/purge", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [item] = await db
+    .delete(itemsTable)
+    .where(and(eq(itemsTable.id, id), sql`${itemsTable.deletedAt} IS NOT NULL`))
+    .returning();
+  if (!item) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  await logChange({ action: "purge", entity: "item", detail: item.title ?? undefined });
+  res.sendStatus(204);
 });
 
 export default router;

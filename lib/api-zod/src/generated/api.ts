@@ -978,3 +978,84 @@ export const UpsertTranslationResponse = zod.object({
 })
 
 
+/**
+ * @summary Recently deleted categories and items (30-day trash)
+ */
+export const GetTrashParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetTrashResponse = zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string(),
+  "sectionTitle": zod.string(),
+  "deletedAt": zod.string().nullable()
+})),
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string().nullable(),
+  "categoryLabel": zod.string(),
+  "deletedAt": zod.string().nullable()
+})),
+  "retentionDays": zod.number()
+})
+
+
+export const RestoreCategoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RestoreCategoryResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const RestoreItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RestoreItemResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const PurgeCategoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PurgeCategoryResponse = zod.void()
+
+
+export const PurgeItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PurgeItemResponse = zod.void()
+
+
+/**
+ * @summary Live slug availability check for the settings screen
+ */
+export const CheckSlugQueryParams = zod.object({
+  "slug": zod.coerce.string(),
+  "tenantId": zod.coerce.string().optional()
+})
+
+export const CheckSlugResponse = zod.object({
+  "slug": zod.string(),
+  "available": zod.boolean(),
+  "reason": zod.string().nullable()
+})
+
+
+/**
+ * @summary QR code PNG pointing to the tenant's guest address
+ */
+export const GetTenantQrParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetTenantQrResponse = zod.unknown()
+
+

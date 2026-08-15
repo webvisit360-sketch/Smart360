@@ -739,6 +739,118 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OkStatus"
+  /admin/tenants/{id}/trash:
+    get:
+      operationId: getTrash
+      tags: [content]
+      summary: Recently deleted categories and items (30-day trash)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Trash contents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrashResponse"
+  /admin/categories/{id}/restore:
+    post:
+      operationId: restoreCategory
+      tags: [content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/items/{id}/restore:
+    post:
+      operationId: restoreItem
+      tags: [content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/categories/{id}/purge:
+    delete:
+      operationId: purgeCategory
+      tags: [content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Permanently deleted
+  /admin/items/{id}/purge:
+    delete:
+      operationId: purgeItem
+      tags: [content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Permanently deleted
+  /admin/slug-check:
+    get:
+      operationId: checkSlug
+      tags: [tenants]
+      summary: Live slug availability check for the settings screen
+      parameters:
+        - name: slug
+          in: query
+          required: true
+          schema: { type: string }
+        - name: tenantId
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Availability verdict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlugCheckResponse"
+  /admin/tenants/{id}/qr.png:
+    get:
+      operationId: getTenantQr
+      tags: [tenants]
+      summary: QR code PNG pointing to the tenant's guest address
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
 components:
   schemas:
     HealthStatus:
@@ -751,6 +863,42 @@ components:
       properties:
         ok: { type: boolean }
       required: [ok]
+    TrashCategory:
+      type: object
+      properties:
+        id: { type: string }
+        label: { type: string }
+        sectionTitle: { type: string }
+        deletedAt: { type: ["string", "null"] }
+      required: [id, label, sectionTitle, deletedAt]
+    TrashItem:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: ["string", "null"] }
+        categoryLabel: { type: string }
+        deletedAt: { type: ["string", "null"] }
+      required: [id, title, categoryLabel, deletedAt]
+    TrashResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrashCategory"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrashItem"
+        retentionDays: { type: number }
+      required: [categories, items, retentionDays]
+    SlugCheckResponse:
+      type: object
+      properties:
+        slug: { type: string }
+        available: { type: boolean }
+        reason: { type: ["string", "null"] }
+      required: [slug, available, reason]
     WebAuthnOptions:
       type: object
       properties:

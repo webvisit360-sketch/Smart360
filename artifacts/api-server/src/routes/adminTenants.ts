@@ -23,6 +23,16 @@ import {
 import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { buildTenantContent } from "../lib/contentTree";
+import { checkSlugAvailability } from "../lib/slug";
+import { tenantAliasesTable } from "@workspace/db";
+import QRCode from "qrcode";
+
+/** Public guest address for a slug (dev domain now, smart360.info later). */
+function guestUrl(slug: string): string {
+  const domain = process.env["REPLIT_DEV_DOMAIN"];
+  const base = domain ? `https://${domain}` : "https://smart360.info";
+  return `${base}/g/${slug}`;
+}
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -75,12 +85,9 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     return;
   }
   const { slug, name, subtitle, fromTemplate } = parsed.data;
-  const [existing] = await db
-    .select({ id: tenantsTable.id })
-    .from(tenantsTable)
-    .where(eq(tenantsTable.slug, slug));
-  if (existing) {
-    res.status(409).json({ error: "Slug already exists" });
+  const verdict = await checkSlugAvailability(slug);
+  if (!verdict.available) {
+    res.status(409).json({ error: `slug ${verdict.reason}` });
     return;
   }
 
@@ -125,6 +132,37 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     entity: "tenant",
   });
   res.status(201).json(CreateTenantResponse.parse(serialize(tenant)));
+});
+
+router.get("/admin/slug-check", async (req, res): Promise<void> => {
+  const slug = String(req.query["slug"] ?? "").trim().toLowerCase();
+  const tenantId = req.query["tenantId"] ? String(req.query["tenantId"]) : undefined;
+  const verdict = await checkSlugAvailability(slug, tenantId);
+  res.json({ slug, available: verdict.available, reason: verdict.reason });
+});
+
+router.get("/admin/tenants/:id/qr.png", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [tenant] = await db
+    .select({ slug: tenantsTable.slug })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, id));
+  if (!tenant) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const png = await QRCode.toBuffer(guestUrl(tenant.slug), {
+    type: "png",
+    width: 1024,
+    margin: 2,
+    errorCorrectionLevel: "M",
+  });
+  res.setHeader("Content-Type", "image/png");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="smart360-${tenant.slug}-qr.png"`,
+  );
+  res.send(png);
 });
 
 router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
@@ -177,6 +215,22 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: invalid });
     return;
   }
+  const [before] = await db
+    .select({ slug: tenantsTable.slug })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, id));
+  if (!before) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const newSlug = (parsed.data as Record<string, unknown>)["slug"];
+  if (typeof newSlug === "string" && newSlug !== before.slug) {
+    const verdict = await checkSlugAvailability(newSlug, id);
+    if (!verdict.available) {
+      res.status(409).json({ error: `slug ${verdict.reason}` });
+      return;
+    }
+  }
   const [tenant] = await db
     .update(tenantsTable)
     .set(parsed.data)
@@ -185,6 +239,17 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   if (!tenant) {
     res.status(404).json({ error: "Not found" });
     return;
+  }
+  if (typeof newSlug === "string" && newSlug !== before.slug) {
+    // Keep the old address working forever: permanent alias -> 301.
+    await db
+      .insert(tenantAliasesTable)
+      .values({ slug: before.slug, tenantId: id })
+      .onConflictDoNothing();
+    // If the tenant reclaimed one of its own old slugs, drop that alias.
+    await db
+      .delete(tenantAliasesTable)
+      .where(eq(tenantAliasesTable.slug, newSlug));
   }
   await logChange({
     tenantId: tenant.id,
@@ -221,12 +286,9 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
     return;
   }
   const { slug, name, copyContent } = parsed.data;
-  const [existing] = await db
-    .select({ id: tenantsTable.id })
-    .from(tenantsTable)
-    .where(eq(tenantsTable.slug, slug));
-  if (existing) {
-    res.status(409).json({ error: "Slug already exists" });
+  const dupVerdict = await checkSlugAvailability(slug);
+  if (!dupVerdict.available) {
+    res.status(409).json({ error: `slug ${dupVerdict.reason}` });
     return;
   }
   const [source] = await db
