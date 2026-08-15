@@ -32,14 +32,22 @@ function sha256(value: string): string {
 // ---------- Relying party configuration ----------
 
 export function rpID(): string {
-  const configured = process.env["RP_ID"];
-  if (configured) return configured;
+  // Development container: ALWAYS the dev domain. The RP_ID/RP_ORIGIN secrets
+  // hold the production values (smart360.info), and secrets are shared across
+  // environments — honouring them in dev would break dev passkeys and vice
+  // versa. RP_ID must be a registrable suffix of the origin the browser is on.
   const dev = process.env["REPLIT_DEV_DOMAIN"];
   if (dev) return dev;
+  const configured = process.env["RP_ID"];
+  if (configured) return configured;
   throw new Error("RP_ID must be set");
 }
 
 export function rpOrigin(): string {
+  // Mirror rpID(): dev container always uses the dev domain; the RP_ORIGIN
+  // secret holds the production origin.
+  const dev = process.env["REPLIT_DEV_DOMAIN"];
+  if (dev) return `https://${dev}`;
   const configured = process.env["RP_ORIGIN"];
   if (configured) return configured;
   return `https://${rpID()}`;
