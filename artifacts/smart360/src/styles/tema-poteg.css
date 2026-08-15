@@ -630,3 +630,15 @@ body{background:#000}
 .tabdock.on-dark{background:none;border-top-color:transparent}
 .tabdock.on-dark .nv{color:var(--nv-cover,#FFFFFF)}
 .tabdock.on-dark .nv .ic{filter:drop-shadow(0 1px 6px rgba(0,0,0,.55))}
+
+/* vodoravni pas sličic za premikanje med postavkami na podstrani */
+.hrow--nav{margin-top:14px;padding:4px 16px 6px;scroll-padding-left:16px}
+.hrow--nav .hcard{width:116px}
+.hrow--nav .hcard .im{height:78px;border-radius:16px;position:relative}
+.hrow--nav .hcard b{font-size:12.5px;font-weight:700;margin-top:8px;line-height:1.2}
+.hrow--nav .hcard.is-on .im{box-shadow:0 0 0 3px var(--sea)}
+.hrow--nav .hcard.is-on b{color:var(--sea);font-weight:800}
+@media (hover:hover) and (pointer:fine){
+  .hrow--nav .hcard:hover .im{box-shadow:0 0 0 3px var(--sea-soft)}
+  .hrow--nav .hcard.is-on:hover .im{box-shadow:0 0 0 3px var(--sea)}
+}
