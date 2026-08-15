@@ -13,7 +13,7 @@ import {
   type AdminUser,
   type AdminCredential,
 } from "@workspace/db";
-import { eq, lt, and, isNull, gt, desc } from "drizzle-orm";
+import { eq, lt, and, isNull, gt, desc, sql } from "drizzle-orm";
 
 const SESSION_COOKIE = "__Host-s360_admin";
 export { SESSION_COOKIE };
@@ -99,17 +99,23 @@ export function generateRecoveryCode(): string {
   return `${group()}-${group()}-${group()}`;
 }
 
+// Advisory-lock keys serialize security-critical writes across instances.
+const LOCK_RECOVERY_ROTATE = 729401;
+const LOCK_RECOVERY_ATTEMPT = 729402;
+
 export async function issueRecoveryCodes(count = 10): Promise<string[]> {
-  await db.delete(adminRecoveryCodesTable); // replace any previous set
-  const codes: string[] = [];
-  for (let i = 0; i < count; i++) codes.push(generateRecoveryCode());
-  await db.insert(adminRecoveryCodesTable).values(
-    await Promise.all(
-      codes.map(async (code) => ({
-        codeHash: await argonHash(normalizeRecoveryCode(code), ARGON2ID),
-      })),
-    ),
+  const codes = Array.from({ length: count }, generateRecoveryCode);
+  const hashes = await Promise.all(
+    codes.map((code) => argonHash(normalizeRecoveryCode(code), ARGON2ID)),
   );
+  // Atomic replace: delete + insert under one transaction and an advisory
+  // lock, so concurrent rotations serialize and exactly one set is active.
+  // Codes are returned only after the commit.
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_RECOVERY_ROTATE})`);
+    await tx.delete(adminRecoveryCodesTable);
+    await tx.insert(adminRecoveryCodesTable).values(hashes.map((codeHash) => ({ codeHash })));
+  });
   return codes;
 }
 
@@ -332,7 +338,72 @@ export function loginRateLimited(ip: string, record = true): boolean {
   return limited(`login:${ip}`, 10, 15 * 60 * 1000, record);
 }
 
-/** Recovery codes: 5 attempts / 15 minutes per IP. */
-export function recoveryRateLimited(ip: string): boolean {
-  return limited(`recovery:${ip}`, 5, 15 * 60 * 1000, true);
+/**
+ * Recovery codes: max 5 real attempts per hour, per IP AND per account
+ * (single-admin app, so the global count is the per-account count).
+ *
+ * Atomic + fail-closed: the whole check-and-reserve runs in one transaction
+ * under an advisory lock, and the attempt row is inserted pessimistically as
+ * "failure" BEFORE code verification — a concurrent burst cannot slip past
+ * the limit, and an audit-write failure denies the attempt (the route 500s).
+ * Blocked requests are audited too, but throttled (max one "rate_limited"
+ * event per 10 minutes) so an attacker cannot flood the audit table.
+ */
+export async function recordRecoveryAttempt(
+  ip: string,
+  userAgent: string | null,
+): Promise<{ allowed: boolean; attemptId: string | null }> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_RECOVERY_ATTEMPT})`);
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const rows = await tx
+      .select({
+        ip: adminAuthEventsTable.ip,
+        detail: adminAuthEventsTable.detail,
+        createdAt: adminAuthEventsTable.createdAt,
+      })
+      .from(adminAuthEventsTable)
+      .where(
+        and(
+          eq(adminAuthEventsTable.type, "recovery_attempt"),
+          gt(adminAuthEventsTable.createdAt, since),
+        ),
+      );
+    const real = rows.filter((r) => r.detail === "success" || r.detail === "failure");
+    const limited = real.length >= 5 || real.filter((r) => r.ip === ip).length >= 5;
+    if (limited) {
+      const throttle = new Date(Date.now() - 10 * 60 * 1000);
+      const recentlyLogged = rows.some(
+        (r) => r.detail === "rate_limited" && r.createdAt > throttle,
+      );
+      if (!recentlyLogged) {
+        await tx
+          .insert(adminAuthEventsTable)
+          .values({ type: "recovery_attempt", detail: "rate_limited", ip, userAgent });
+      }
+      return { allowed: false, attemptId: null };
+    }
+    const [row] = await tx
+      .insert(adminAuthEventsTable)
+      .values({ type: "recovery_attempt", detail: "failure", ip, userAgent })
+      .returning();
+    return { allowed: true, attemptId: row!.id };
+  });
+}
+
+/** Flips a reserved attempt to success after the code actually matched. */
+export async function markRecoveryAttemptSuccess(attemptId: string): Promise<void> {
+  await db
+    .update(adminAuthEventsTable)
+    .set({ detail: "success" })
+    .where(eq(adminAuthEventsTable.id, attemptId));
+}
+
+/** Counts for the admin UI — never the values. */
+export async function recoveryCodeCounts(): Promise<{ active: number; consumed: number }> {
+  const rows = await db
+    .select({ usedAt: adminRecoveryCodesTable.usedAt })
+    .from(adminRecoveryCodesTable);
+  const consumed = rows.filter((r) => r.usedAt !== null).length;
+  return { active: rows.length - consumed, consumed };
 }

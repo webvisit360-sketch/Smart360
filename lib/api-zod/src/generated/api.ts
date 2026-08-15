@@ -255,6 +255,28 @@ export const RevokeAllSessionsResponse = zod.object({
 })
 
 
+export const GetRecoveryCodeStatusResponse = zod.object({
+  "active": zod.number(),
+  "consumed": zod.number()
+})
+
+
+export const RotateRecoveryCodesResponse = zod.object({
+  "recoveryCodes": zod.array(zod.string())
+})
+
+
+export const ListAuthEventsResponse = zod.object({
+  "events": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.string(),
+  "detail": zod.string().nullable(),
+  "ip": zod.string().nullable(),
+  "createdAt": zod.string()
+}))
+})
+
+
 export const AdminLogoutResponse = zod.object({
   "authenticated": zod.boolean()
 })

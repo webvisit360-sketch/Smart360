@@ -23,6 +23,7 @@ import type {
   AddPasskeyVerifyBody,
   AdminOverview,
   AdminSession,
+  AuthEventList,
   Category,
   CategoryInput,
   CategoryUpdate,
@@ -41,6 +42,8 @@ import type {
   OkStatus,
   PasskeyList,
   RecoveryBody,
+  RecoveryCodeStatus,
+  RecoveryCodesRotated,
   RecoveryResult,
   RenamePasskeyRequest,
   ReorderInput,
@@ -1065,6 +1068,213 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getRevokeAllSessionsMutationOptions(options));
     }
+
+export const getGetRecoveryCodeStatusUrl = () => {
+
+
+
+
+  return `/api/admin/recovery-codes`
+}
+
+export const getRecoveryCodeStatus = async ( options?: Parameters<typeof customFetch>[1]): Promise<RecoveryCodeStatus> => {
+
+  return customFetch<RecoveryCodeStatus>(getGetRecoveryCodeStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecoveryCodeStatusQueryKey = () => {
+    return [
+    `/api/admin/recovery-codes`
+    ] as const;
+    }
+
+
+export const getGetRecoveryCodeStatusQueryOptions = <TData = Awaited<ReturnType<typeof getRecoveryCodeStatus>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecoveryCodeStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecoveryCodeStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecoveryCodeStatus>>> = ({ signal }) => getRecoveryCodeStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecoveryCodeStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRecoveryCodeStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getRecoveryCodeStatus>>>
+export type GetRecoveryCodeStatusQueryError = ErrorType<void>
+
+
+
+export function useGetRecoveryCodeStatus<TData = Awaited<ReturnType<typeof getRecoveryCodeStatus>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecoveryCodeStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRecoveryCodeStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRotateRecoveryCodesUrl = () => {
+
+
+
+
+  return `/api/admin/recovery-codes/rotate`
+}
+
+export const rotateRecoveryCodes = async ( options?: Parameters<typeof customFetch>[1]): Promise<RecoveryCodesRotated> => {
+
+  return customFetch<RecoveryCodesRotated>(getRotateRecoveryCodesUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRotateRecoveryCodesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rotateRecoveryCodes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rotateRecoveryCodes>>, TError,void, TContext> => {
+
+const mutationKey = ['rotateRecoveryCodes'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rotateRecoveryCodes>>, void> = () => {
+
+
+          return  rotateRecoveryCodes(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RotateRecoveryCodesMutationResult = NonNullable<Awaited<ReturnType<typeof rotateRecoveryCodes>>>
+
+    export type RotateRecoveryCodesMutationError = ErrorType<void>
+
+    export const useRotateRecoveryCodes = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rotateRecoveryCodes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rotateRecoveryCodes>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRotateRecoveryCodesMutationOptions(options));
+    }
+
+export const getListAuthEventsUrl = () => {
+
+
+
+
+  return `/api/admin/auth-events`
+}
+
+export const listAuthEvents = async ( options?: Parameters<typeof customFetch>[1]): Promise<AuthEventList> => {
+
+  return customFetch<AuthEventList>(getListAuthEventsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAuthEventsQueryKey = () => {
+    return [
+    `/api/admin/auth-events`
+    ] as const;
+    }
+
+
+export const getListAuthEventsQueryOptions = <TData = Awaited<ReturnType<typeof listAuthEvents>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuthEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAuthEventsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuthEvents>>> = ({ signal }) => listAuthEvents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuthEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAuthEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuthEvents>>>
+export type ListAuthEventsQueryError = ErrorType<void>
+
+
+
+export function useListAuthEvents<TData = Awaited<ReturnType<typeof listAuthEvents>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuthEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAuthEventsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getAdminLogoutUrl = () => {
 

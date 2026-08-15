@@ -6,8 +6,13 @@ import {
   verifyRegistrationResponse,
   type AuthenticatorTransportFuture,
 } from "@simplewebauthn/server";
-import { db, adminCredentialsTable, adminRecoveryCodesTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import {
+  db,
+  adminCredentialsTable,
+  adminRecoveryCodesTable,
+  adminAuthEventsTable,
+} from "@workspace/db";
+import { eq, sql, desc } from "drizzle-orm";
 import {
   rpID,
   rpOrigin,
@@ -29,7 +34,9 @@ import {
   revokeAllSessions,
   logAuthEvent,
   loginRateLimited,
-  recoveryRateLimited,
+  recordRecoveryAttempt,
+  markRecoveryAttemptSuccess,
+  recoveryCodeCounts,
   SESSION_COOKIE,
 } from "../lib/adminAuth";
 import crypto from "node:crypto";
@@ -239,19 +246,61 @@ router.post("/admin/enroll/verify", async (req, res): Promise<void> => {
 // ---------- Recovery ----------
 
 router.post("/admin/recovery", async (req, res): Promise<void> => {
-  const ip = req.ip ?? "unknown";
-  if (recoveryRateLimited(ip)) {
-    res.status(429).json({ error: "Preveč poskusov. Poskusite znova čez 15 minut." });
+  // Atomic check-and-reserve: the attempt is audited as "failure" BEFORE
+  // verification (flipped to "success" only on a match). Fail-closed: if the
+  // audit write fails, the error propagates and the attempt is denied.
+  const { allowed, attemptId } = await recordRecoveryAttempt(
+    req.ip ?? "unknown",
+    req.get("user-agent") ?? null,
+  );
+  if (!allowed) {
+    res.status(429).json({
+      error: "Preveč poskusov (največ 5 na uro). Dostop je začasno zaklenjen.",
+    });
     return;
   }
   const { code } = req.body ?? {};
-  if (typeof code !== "string" || !(await consumeRecoveryCode(code))) {
+  const ok = typeof code === "string" && (await consumeRecoveryCode(code));
+  if (!ok) {
     res.status(401).json({ error: "Koda ni veljavna." });
     return;
   }
+  if (attemptId) await markRecoveryAttemptSuccess(attemptId);
+  // No session is created here: the enroll token only allows registering a
+  // passkey; every other admin action still requires a passkey login.
   const token = await createEnrollToken("recovery");
-  await logAuthEvent(req, "recovery", "code accepted");
   res.json({ enrollToken: token });
+});
+
+// ---------- Recovery codes management (authenticated) ----------
+
+router.get("/admin/recovery-codes", requireAdmin, async (_req, res): Promise<void> => {
+  res.json(await recoveryCodeCounts());
+});
+
+router.post("/admin/recovery-codes/rotate", requireAdmin, async (req, res): Promise<void> => {
+  // Invalidate ALL existing codes and mint a fresh set of 10. Plaintext goes
+  // only into this response (admin's screen); DB stores argon2 hashes.
+  const recoveryCodes = await issueRecoveryCodes(10);
+  await logAuthEvent(req, "recovery_codes_rotated", "count:10");
+  res.json({ recoveryCodes });
+});
+
+router.get("/admin/auth-events", requireAdmin, async (_req, res): Promise<void> => {
+  const events = await db
+    .select()
+    .from(adminAuthEventsTable)
+    .orderBy(desc(adminAuthEventsTable.createdAt))
+    .limit(200);
+  res.json({
+    events: events.map((e) => ({
+      id: e.id,
+      type: e.type,
+      detail: e.detail,
+      ip: e.ip,
+      createdAt: e.createdAt.toISOString(),
+    })),
+  });
 });
 
 // ---------- Keys management (authenticated) ----------

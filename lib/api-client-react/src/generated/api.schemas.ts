@@ -112,6 +112,29 @@ export interface AdminSession {
   authenticated: boolean;
 }
 
+export interface RecoveryCodeStatus {
+  active: number;
+  consumed: number;
+}
+
+export interface RecoveryCodesRotated {
+  recoveryCodes: string[];
+}
+
+export interface AuthEvent {
+  id: string;
+  type: string;
+  /** @nullable */
+  detail: string | null;
+  /** @nullable */
+  ip: string | null;
+  createdAt: string;
+}
+
+export interface AuthEventList {
+  events: AuthEvent[];
+}
+
 export interface Tenant {
   id: string;
   slug: string;

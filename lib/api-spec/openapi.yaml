@@ -279,6 +279,45 @@ paths:
                 $ref: "#/components/schemas/OkStatus"
         "401":
           description: Not authenticated
+  /admin/recovery-codes:
+    get:
+      operationId: getRecoveryCodeStatus
+      tags: [auth]
+      responses:
+        "200":
+          description: Recovery code counts (never the values)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecoveryCodeStatus"
+        "401":
+          description: Not authenticated
+  /admin/recovery-codes/rotate:
+    post:
+      operationId: rotateRecoveryCodes
+      tags: [auth]
+      responses:
+        "200":
+          description: Fresh set of recovery codes, shown exactly once
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecoveryCodesRotated"
+        "401":
+          description: Not authenticated
+  /admin/auth-events:
+    get:
+      operationId: listAuthEvents
+      tags: [auth]
+      responses:
+        "200":
+          description: Recent authentication audit events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEventList"
+        "401":
+          description: Not authenticated
   /admin/logout:
     post:
       operationId: adminLogout
@@ -1002,6 +1041,36 @@ components:
       properties:
         authenticated: { type: boolean }
       required: [authenticated]
+    RecoveryCodeStatus:
+      type: object
+      properties:
+        active: { type: number }
+        consumed: { type: number }
+      required: [active, consumed]
+    RecoveryCodesRotated:
+      type: object
+      properties:
+        recoveryCodes:
+          type: array
+          items: { type: string }
+      required: [recoveryCodes]
+    AuthEvent:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        detail: { type: ["string", "null"] }
+        ip: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, type, detail, ip, createdAt]
+    AuthEventList:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthEvent"
+      required: [events]
     Tenant:
       type: object
       properties:
