@@ -513,11 +513,11 @@ body{background:#000}
 .screen::-webkit-scrollbar{display:none}
 
 /* ---------- naslovnica ---------- */
-:root{
+html[data-theme="swipe"]{
   --tt-txt:#FFFFFF; --tt-size:56px; --tt-op:.66;
   --st-size:22px;  --st-op:.5;
   --mt-size:19.5px; --mt-op:.6;
-  --veil:.26; --cover-align:left;
+  --veil:.26; --cover-align:left; --cover-just:flex-start;
 }
 .cover{position:relative;height:100dvh;overflow:hidden;background:#111}
 .cover>img,.cover>iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}

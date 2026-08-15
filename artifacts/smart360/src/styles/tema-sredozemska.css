@@ -502,7 +502,7 @@ body{background:#EFECE6}
    Privzete vrednosti so drugačne kot v temi poteg, ker naslov
    ne leži na fotografiji, ampak na beli kartici.
    ============================================================ */
-:root{
+html[data-theme="mediterran"]{
   --tt-txt:#14201F; --tt-size:24px;  --tt-op:1;
   --st-size:11px;   --st-op:1;
   --mt-size:13.5px; --mt-op:1;

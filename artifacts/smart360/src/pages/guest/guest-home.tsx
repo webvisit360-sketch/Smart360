@@ -10,6 +10,7 @@ import { GuestSwipe } from "./GuestSwipe";
 import { getCoverVars } from "./cover-vars";
 import { imgSrc } from "./img";
 import { hsub } from "./hsub";
+import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
 
 export default function GuestHome() {
@@ -28,6 +29,8 @@ export default function GuestHome() {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+
+  useThemeAttr(tenant?.theme);
 
   // The cover photo is the first thing a guest sees — preload it eagerly.
   const heroHref = tenant?.heroUrl ? imgSrc(tenant.heroUrl, 1400) : null;

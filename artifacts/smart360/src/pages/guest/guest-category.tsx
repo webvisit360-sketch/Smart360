@@ -9,6 +9,7 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { buildGuestPath } from "./guest-url";
 import { GuestSwipe } from "./GuestSwipe";
 import { imgSrc } from "./img";
+import { useThemeAttr } from "./use-theme-attr";
 
 export default function GuestCategory() {
   const [, params] = useRoute("/g/:slug/c/:categoryId");
@@ -29,6 +30,8 @@ export default function GuestCategory() {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+
+  useThemeAttr(tenant?.theme);
 
   if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">Nalaganje...</div></div></div>;
   if (!tenant) return <div className="app"><div className="pagepad"><div className="empty">Kategorija ni najdena.</div></div></div>;
