@@ -41,7 +41,8 @@ if (!process.env["RP_ID"]) {
  * As soon as one credential exists, this never runs again.
  */
 async function logBootstrapEnrollLink(): Promise<void> {
-  if (!process.env["REPLIT_DEPLOYMENT"]) return; // only in deployed production
+  // No environment gate: runs only when the connected database has ZERO
+  // passkeys (bootstrap state), which in practice is production-only.
   const creds = await listCredentials();
   if (creds.length > 0) return;
   const token = await createEnrollToken("shell");

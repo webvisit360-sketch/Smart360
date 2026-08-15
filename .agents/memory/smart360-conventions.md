@@ -44,3 +44,9 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 
 ## Kanonični naslov (publicUrl/QR)
 - `guestUrl()` bere APP_DOMAIN → REPLIT_DOMAINS → REPLIT_DEV_DOMAIN; brez trdo kodirane domene (vrže napako, če ni nobene). Nalepke ne smejo v tisk, dokler produkcijska domena res ne deluje — menjava domene NI pokrita s TenantAlias (ta pokriva samo preimenovanje sluga znotraj iste domene). Ob preklopu na smart360.info nastavi APP_DOMAIN v produkciji.
+
+## Passkey/WebAuthn produkcija (avg 2026)
+- Deployment ima LOČEN komplet skrivnosti od delovnega prostora — posodobitev workspace secrets NE vpliva na objavo; produkcijske vrednosti nastavi kot production env vars (setEnvVars environment:"production") ali v Publishing UI.
+- V artifact-mode autoscale objavi REPLIT_DEPLOYMENT NI nastavljen — ne uporabljaj ga kot zaznavo produkcije. Zaznava "brez ključev v bazi" je zanesljivejši sprožilec za bootstrap.
+- rpID()/rpOrigin(): dev kontejner vedno REPLIT_DEV_DOMAIN, objava vedno RP_ID/RP_ORIGIN. Efektivni rpId preveri v živo: POST /api/admin/webauthn/login/options (javen, vrne options.rpId).
+- Bootstrap vpis: ob zagonu z 0 ključi strežnik izpiše enkratno enroll povezavo (15 min) v dnevnik objave.
