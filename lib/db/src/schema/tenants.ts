@@ -43,9 +43,12 @@ export const tenantsTable = pgTable("tenants", {
   coverAlign: text("cover_align"),
   coverShowRating: boolean("cover_show_rating"),
   // Swipe theme bottom icon row colours (see ui/tema-poteg.css .tabdock)
-  navColorCover: text("nav_color_cover").notNull().default("#FFFFFF"),
-  navColor: text("nav_color").notNull().default("#14201F"),
-  navColorOn: text("nav_color_on").notNull().default("#3B78DC"),
+  // Cover/nav fields: NULL means "use the theme default" (html[data-theme=...]
+  // block in CSS). Never write defaults into the DB — empty is the signal that
+  // the owner has not overridden the value, so theme switches inherit cleanly.
+  navColorCover: text("nav_color_cover"),
+  navColor: text("nav_color"),
+  navColorOn: text("nav_color_on"),
   languages: text("languages")
     .array()
     .notNull()

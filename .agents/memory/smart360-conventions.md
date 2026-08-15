@@ -25,3 +25,7 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - Poti namesto poddomen: smart360.info/<slug>. Stare naloge o poddomenah/lastnih domenah preklicane, TODA lastne domene strank (melipu.si) ostajajo odprta opcija — razreševanje najemnika MORA ostati v eni funkciji (resolveTenant), razširljivi s preslikavo domena→slug.
 - Vse povezave skozi en url() pomočnik z basePath; brez <base href>; statika ostane na korenu; localStorage ključi po slugu.
 - Polje slug (predlog iz imena, živo preverjanje, rezervirane besede, TenantAlias 301, klikljiv naslov + QR) se zgradi ŽE v nalogi administracije vsebine, na zaslonu nastavitev nastanitve. Usmerjanje, manifest na najemnika in vstopna stran pridejo v ločeni nalogi za tem.
+
+## Naslovnica: NULL = privzetek teme (odločitev)
+- Vsa polja naslovnice in nav barv na Tenant so nullable; NULL pomeni "uporabi privzetek teme" (bloka html[data-theme=...] v CSS oz. var(--nv,#...) rezerve). Privzetkov NIKOLI ne zapisuj v bazo.
+- Ob izrisu se CSS spremenljivka nastavi SAMO za neprazna polja (cover-vars.ts, navVars v GuestSwipe). "Ročno spremenjeno" == "ni NULL"; gumb Ponastavi polja izprazni; preklop teme ne rabi ponastavljanja.

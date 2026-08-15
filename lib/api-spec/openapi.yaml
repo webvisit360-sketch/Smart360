@@ -870,9 +870,9 @@ components:
         coverVeil: { type: ["number", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
-        navColorCover: { type: string }
-        navColor: { type: string }
-        navColorOn: { type: string }
+        navColorCover: { type: ["string", "null"] }
+        navColor: { type: ["string", "null"] }
+        navColorOn: { type: ["string", "null"] }
         languages:
           type: array
           items: { type: string }
@@ -930,9 +930,9 @@ components:
         coverVeil: { type: ["number", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
-        navColorCover: { type: string }
-        navColor: { type: string }
-        navColorOn: { type: string }
+        navColorCover: { type: ["string", "null"] }
+        navColor: { type: ["string", "null"] }
+        navColorOn: { type: ["string", "null"] }
         languages:
           type: array
           items: { type: string }

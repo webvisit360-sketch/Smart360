@@ -87,11 +87,12 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   
   const coverVars = getCoverVars(tenant);
-  const navVars = {
-    "--nv": tenant.navColor || "#14201F",
-    "--nv-on": tenant.navColorOn || "#3B78DC",
-    "--nv-cover": tenant.navColorCover || "#FFFFFF",
-  } as React.CSSProperties;
+  // Only set what the owner overrode; empty fields fall back to the
+  // theme defaults baked into the CSS (var(--nv, #...) fallbacks).
+  const navVars: Record<string, string> = {};
+  if (tenant.navColor) navVars["--nv"] = tenant.navColor;
+  if (tenant.navColorOn) navVars["--nv-on"] = tenant.navColorOn;
+  if (tenant.navColorCover) navVars["--nv-cover"] = tenant.navColorCover;
 
   const showRating = tenant.coverShowRating !== false;
 
