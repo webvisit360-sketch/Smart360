@@ -15,7 +15,8 @@ import {
 } from "@workspace/db";
 import { eq, lt, and, isNull, gt, desc } from "drizzle-orm";
 
-const SESSION_COOKIE = "smart360_admin";
+const SESSION_COOKIE = "__Host-s360_admin";
+export { SESSION_COOKIE };
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const ENROLL_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -233,10 +234,11 @@ export async function createSession(req: Request, res: Response): Promise<void> 
     userAgent: req.get("user-agent") ?? null,
     expiresAt: new Date(Date.now() + SESSION_TTL_MS),
   });
+  // __Host- prefix requires Secure + Path=/ + no Domain; the preview/prod are always HTTPS.
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    secure: true,
     maxAge: SESSION_TTL_MS,
     path: "/",
   });

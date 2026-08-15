@@ -30,6 +30,7 @@ import {
   logAuthEvent,
   loginRateLimited,
   recoveryRateLimited,
+  SESSION_COOKIE,
 } from "../lib/adminAuth";
 import crypto from "node:crypto";
 
@@ -387,7 +388,7 @@ router.post("/admin/credentials/verify", requireAdmin, async (req, res): Promise
 
 router.post("/admin/sessions/revoke-all", requireAdmin, async (req, res): Promise<void> => {
   await revokeAllSessions();
-  res.clearCookie("smart360_admin", { path: "/" });
+  res.clearCookie(SESSION_COOKIE, { path: "/" });
   await logAuthEvent(req, "revoke_all");
   res.json({ ok: true });
 });
