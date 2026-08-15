@@ -31,7 +31,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
           {isPreview && (
             <>
               <style>{`
-                .preview-back{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:12px;z-index:9999;height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;background:#14201F;color:#fff;font:700 13px/1 Jost,system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 0 #0A1211;}
+                .preview-back{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));left:12px;z-index:9999;height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;background:#14201F;color:#fff;font:700 13px/1 Jost,system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 0 #0A1211;}
                 .preview-back:active{transform:translateY(4px);box-shadow:0 0 0 #0A1211;}
               `}</style>
               <a href="/admin" className="preview-back">← Administracija</a>
