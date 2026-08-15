@@ -28,6 +28,7 @@ export default function AdminTenantEdit() {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
+    customDomain: "",
     subtitle: "",
     theme: "mediterran",
     isPublished: false,
@@ -48,6 +49,7 @@ export default function AdminTenantEdit() {
       setFormData({
         name: tenant.name || "",
         slug: tenant.slug || "",
+        customDomain: tenant.customDomain || "",
         subtitle: tenant.subtitle || "",
         theme: tenant.theme || "mediterran",
         isPublished: tenant.isPublished || false,
@@ -75,7 +77,10 @@ export default function AdminTenantEdit() {
   }
 
   const handleSave = () => {
-    updateMutation.mutate({ id, data: formData });
+    updateMutation.mutate({
+      id,
+      data: { ...formData, customDomain: formData.customDomain.trim() || null },
+    });
   };
 
   return (
@@ -120,6 +125,10 @@ export default function AdminTenantEdit() {
                 <div className="space-y-2">
                   <Label>Slug (URL naslov)</Label>
                   <Input value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Lastna domena (neobvezno)</Label>
+                  <Input placeholder="npr. gostje.mojapartma.si" value={formData.customDomain} onChange={e => setFormData({ ...formData, customDomain: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>Podnaslov</Label>

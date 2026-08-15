@@ -8,6 +8,7 @@ import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Trash2, Home, FileTex
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
+import { QrDialog } from "@/components/admin/qr-dialog";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
@@ -151,6 +152,7 @@ export default function AdminDashboard() {
                           >
                             <ExternalLink className="h-4 w-4 mr-2" /> Poglej kot gost
                           </Button>
+                          <QrDialog slug={tenant.slug} name={tenant.name} customDomain={tenant.customDomain} />
                           <Button 
                             variant="ghost" 
                             size="sm"

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db, tenantsTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
@@ -24,10 +24,14 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Missing slug" });
     return;
   }
+  // The :slug segment matches either the tenant slug or its custom domain
+  // (guest apps served on a tenant's own domain resolve via hostname).
   const [tenant] = await db
     .select()
     .from(tenantsTable)
-    .where(eq(tenantsTable.slug, slug));
+    .where(
+      or(eq(tenantsTable.slug, slug), eq(tenantsTable.customDomain, slug)),
+    );
   // Preview of unpublished tenants is only for the authenticated operator.
   const preview =
     (req.query["preview"] === "true" || req.query["preview"] === "1") &&
@@ -53,7 +57,9 @@ router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
   const [tenant] = await db
     .select()
     .from(tenantsTable)
-    .where(eq(tenantsTable.slug, slug));
+    .where(
+      or(eq(tenantsTable.slug, slug), eq(tenantsTable.customDomain, slug)),
+    );
   if (!tenant || (!tenant.isPublished && !isAuthenticated(req))) {
     res.status(404).json({ error: "Not found" });
     return;
