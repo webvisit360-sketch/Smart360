@@ -137,42 +137,31 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           </div>
         </section>
 
-        {sections.map((sec: any, idx: number) => {
-          const isGrid = sec.categories?.some((c: any) => c.layout === 'poi' || c.layout === 'routes'); // approximate logic for grid vs list
-          return (
-            <section className="screen" key={sec.id}>
-              <div className="sc">
-                <div className="sc__k">{idx + 1} / {sections.length}</div>
-                <h2 className="sc__t">{sec.title}</h2>
-                {sec.subtitle && <p className="sc__s">{sec.subtitle}</p>}
-                
-                <div className={isGrid ? "grid2" : "rowlist"}>
-                  {sec.categories?.filter((c: any) => c.isVisible).map((cat: any) => {
-                    const firstImg = cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url || "/img/foto.jpg";
-                    if (isGrid) {
-                      return (
-                        <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/g/${slug}/c/${cat.id}`))}>
-                          <img loading="lazy" src={firstImg} alt="" />
-                          <span className="ov"></span>
-                          <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg></span>
-                          <span className="lb">{cat.label}</span>
-                        </button>
-                      );
-                    } else {
-                      return (
-                        <button className="row" key={cat.id} onClick={() => setLocation(buildGuestPath(`/g/${slug}/c/${cat.id}`))}>
-                          <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
-                          <span className="row__t">{cat.label}</span>
-                          <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
-                        </button>
-                      );
-                    }
-                  })}
-                </div>
+        {sections.map((sec: any, idx: number) => (
+          <section className="screen" key={sec.id}>
+            <div className="sc">
+              <div className="sc__k">{idx + 1} / {sections.length}</div>
+              <h2 className="sc__t">{sec.title}</h2>
+              {sec.subtitle && <p className="sc__s">{sec.subtitle}</p>}
+
+              {/* one layout for every section screen: identical photo tiles */}
+              <div className="grid2">
+                {sec.categories?.filter((c: any) => c.isVisible).map((cat: any) => {
+                  const firstImg = cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url
+                    || tenant.heroUrl || "/img/foto.jpg";
+                  return (
+                    <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/g/${slug}/c/${cat.id}`))}>
+                      <img loading="lazy" src={firstImg} alt="" />
+                      <span className="ov"></span>
+                      <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg></span>
+                      <span className="cap">{cat.label}</span>
+                    </button>
+                  );
+                })}
               </div>
-            </section>
-          );
-        })}
+            </div>
+          </section>
+        ))}
 
         <section className="screen">
           <div className="contact">
