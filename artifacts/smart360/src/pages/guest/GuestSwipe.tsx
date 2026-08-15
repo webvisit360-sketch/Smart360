@@ -4,6 +4,7 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
+import { getCoverVars } from "./cover-vars";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
@@ -33,18 +34,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const cTitle = tenant.coverTitle || tenant.name;
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   
-  const coverVars = {
-    '--tt-txt': tenant.coverTextColor || '#FFFFFF',
-    '--tt-size': `${tenant.coverTitleSize ?? 56}px`,
-    '--tt-op': (tenant.coverTitleOpacity ?? 66) / 100,
-    '--st-size': `${tenant.coverSubSize ?? 22}px`,
-    '--st-op': (tenant.coverSubOpacity ?? 50) / 100,
-    '--mt-size': `${tenant.coverMetaSize ?? 19.5}px`,
-    '--mt-op': (tenant.coverMetaOpacity ?? 60) / 100,
-    '--veil': (tenant.coverVeil ?? 26) / 100,
-    '--cover-align': tenant.coverAlign || 'left',
-    '--cover-just': tenant.coverAlign === 'center' ? 'center' : 'flex-start',
-  } as React.CSSProperties;
+  const coverVars = getCoverVars(tenant);
 
   const showRating = tenant.coverShowRating !== false;
 

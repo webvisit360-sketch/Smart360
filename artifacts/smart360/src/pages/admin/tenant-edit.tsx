@@ -12,6 +12,35 @@ import { useEffect, useRef, useState } from "react";
 
 const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
 
+const THEME_DEFAULTS = {
+  mediterran: {
+    coverTitleSize: 24,
+    coverTitleOpacity: 100,
+    coverTextColor: "#14201F",
+    coverSubSize: 11,
+    coverSubOpacity: 100,
+    coverMetaSize: 13.5,
+    coverMetaOpacity: 100,
+    coverVeil: 0,
+    coverAlign: "left",
+    coverShowRating: true,
+  },
+  swipe: {
+    coverTitleSize: 56,
+    coverTitleOpacity: 66,
+    coverTextColor: "#FFFFFF",
+    coverSubSize: 22,
+    coverSubOpacity: 50,
+    coverMetaSize: 19.5,
+    coverMetaOpacity: 60,
+    coverVeil: 26,
+    coverAlign: "left",
+    coverShowRating: true,
+  }
+} as const;
+
+type ThemeKey = keyof typeof THEME_DEFAULTS;
+
 export default function AdminTenantEdit() {
   const [, params] = useRoute("/admin/tenants/:id");
   const [, setLocation] = useLocation();
@@ -33,7 +62,7 @@ export default function AdminTenantEdit() {
     slug: "",
     customDomain: "",
     subtitle: "",
-    theme: "mediterran",
+    theme: "mediterran" as ThemeKey,
     isPublished: false,
     phone: "",
     whatsapp: "",
@@ -43,18 +72,18 @@ export default function AdminTenantEdit() {
     tourUrl: "",
     heroUrl: "",
 
-    coverTitle: "",
-    coverSubtitle: "",
-    coverTitleSize: 56,
-    coverTitleOpacity: 66,
-    coverTextColor: "#FFFFFF",
-    coverSubSize: 22,
-    coverSubOpacity: 50,
-    coverMetaSize: 19.5,
-    coverMetaOpacity: 60,
-    coverVeil: 26,
-    coverAlign: "left",
-    coverShowRating: true,
+    coverTitle: null as string | null,
+    coverSubtitle: null as string | null,
+    coverTitleSize: null as number | null,
+    coverTitleOpacity: null as number | null,
+    coverTextColor: null as string | null,
+    coverSubSize: null as number | null,
+    coverSubOpacity: null as number | null,
+    coverMetaSize: null as number | null,
+    coverMetaOpacity: null as number | null,
+    coverVeil: null as number | null,
+    coverAlign: null as string | null,
+    coverShowRating: null as boolean | null,
   });
 
   const initRef = useRef<string | null>(null);
@@ -67,7 +96,7 @@ export default function AdminTenantEdit() {
         slug: tenant.slug || "",
         customDomain: tenant.customDomain || "",
         subtitle: tenant.subtitle || "",
-        theme: tenant.theme || "mediterran",
+        theme: (tenant.theme as ThemeKey) || "mediterran",
         isPublished: tenant.isPublished || false,
         phone: tenant.phone || "",
         whatsapp: tenant.whatsapp || "",
@@ -77,18 +106,18 @@ export default function AdminTenantEdit() {
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
 
-        coverTitle: tenant.coverTitle || "",
-        coverSubtitle: tenant.coverSubtitle || "",
-        coverTitleSize: tenant.coverTitleSize ?? 56,
-        coverTitleOpacity: tenant.coverTitleOpacity ?? 66,
-        coverTextColor: tenant.coverTextColor || "#FFFFFF",
-        coverSubSize: tenant.coverSubSize ?? 22,
-        coverSubOpacity: tenant.coverSubOpacity ?? 50,
-        coverMetaSize: tenant.coverMetaSize ?? 19.5,
-        coverMetaOpacity: tenant.coverMetaOpacity ?? 60,
-        coverVeil: tenant.coverVeil ?? 26,
-        coverAlign: tenant.coverAlign || "left",
-        coverShowRating: tenant.coverShowRating ?? true,
+        coverTitle: tenant.coverTitle ?? null,
+        coverSubtitle: tenant.coverSubtitle ?? null,
+        coverTitleSize: tenant.coverTitleSize ?? null,
+        coverTitleOpacity: tenant.coverTitleOpacity ?? null,
+        coverTextColor: tenant.coverTextColor ?? null,
+        coverSubSize: tenant.coverSubSize ?? null,
+        coverSubOpacity: tenant.coverSubOpacity ?? null,
+        coverMetaSize: tenant.coverMetaSize ?? null,
+        coverMetaOpacity: tenant.coverMetaOpacity ?? null,
+        coverVeil: tenant.coverVeil ?? null,
+        coverAlign: tenant.coverAlign ?? null,
+        coverShowRating: tenant.coverShowRating ?? null,
       });
     }
   }, [tenant]);
@@ -108,25 +137,43 @@ export default function AdminTenantEdit() {
   const handleSave = () => {
     updateMutation.mutate({
       id,
-      data: { ...formData, customDomain: formData.customDomain.trim() || null },
+      data: { 
+        ...formData, 
+        customDomain: formData.customDomain.trim() || null 
+      },
     });
   };
 
   const handleResetCover = () => {
     setFormData(prev => ({
       ...prev,
-      coverTitleSize: 56,
-      coverTitleOpacity: 66,
-      coverTextColor: "#FFFFFF",
-      coverSubSize: 22,
-      coverSubOpacity: 50,
-      coverMetaSize: 19.5,
-      coverMetaOpacity: 60,
-      coverVeil: 26,
-      coverAlign: "left",
-      coverShowRating: true,
+      coverTitle: null,
+      coverSubtitle: null,
+      coverTitleSize: null,
+      coverTitleOpacity: null,
+      coverTextColor: null,
+      coverSubSize: null,
+      coverSubOpacity: null,
+      coverMetaSize: null,
+      coverMetaOpacity: null,
+      coverVeil: null,
+      coverAlign: null,
+      coverShowRating: null,
     }));
   };
+
+  const themeDefaults = THEME_DEFAULTS[formData.theme] || THEME_DEFAULTS.mediterran;
+
+  const effTitleSize = formData.coverTitleSize ?? themeDefaults.coverTitleSize;
+  const effTitleOpacity = formData.coverTitleOpacity ?? themeDefaults.coverTitleOpacity;
+  const effTextColor = formData.coverTextColor ?? themeDefaults.coverTextColor;
+  const effSubSize = formData.coverSubSize ?? themeDefaults.coverSubSize;
+  const effSubOpacity = formData.coverSubOpacity ?? themeDefaults.coverSubOpacity;
+  const effMetaSize = formData.coverMetaSize ?? themeDefaults.coverMetaSize;
+  const effMetaOpacity = formData.coverMetaOpacity ?? themeDefaults.coverMetaOpacity;
+  const effVeil = formData.coverVeil ?? themeDefaults.coverVeil;
+  const effAlign = formData.coverAlign ?? themeDefaults.coverAlign;
+  const effShowRating = formData.coverShowRating ?? themeDefaults.coverShowRating;
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
@@ -259,16 +306,16 @@ export default function AdminTenantEdit() {
                         <Label>Naslov (Title)</Label>
                         <Input 
                           placeholder={formData.name || "Ime namestitve"} 
-                          value={formData.coverTitle} 
-                          onChange={e => setFormData({ ...formData, coverTitle: e.target.value })} 
+                          value={formData.coverTitle || ""} 
+                          onChange={e => setFormData({ ...formData, coverTitle: e.target.value || null })} 
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Podnaslov (Subtitle)</Label>
                         <Input 
                           placeholder={formData.subtitle || "Podnaslov nastanitve"} 
-                          value={formData.coverSubtitle} 
-                          onChange={e => setFormData({ ...formData, coverSubtitle: e.target.value })} 
+                          value={formData.coverSubtitle || ""} 
+                          onChange={e => setFormData({ ...formData, coverSubtitle: e.target.value || null })} 
                         />
                       </div>
                     </div>
@@ -282,7 +329,7 @@ export default function AdminTenantEdit() {
                         <div className="relative">
                           <Input 
                             type="color" 
-                            value={formData.coverTextColor}
+                            value={effTextColor}
                             onChange={e => setFormData({ ...formData, coverTextColor: e.target.value })}
                             className="w-10 h-10 p-1 cursor-pointer"
                           />
@@ -291,7 +338,7 @@ export default function AdminTenantEdit() {
                           {PRESET_COLORS.map(color => (
                             <button
                               key={color}
-                              className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${formData.coverTextColor.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
+                              className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${effTextColor.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
                               style={{ backgroundColor: color }}
                               onClick={() => setFormData({ ...formData, coverTextColor: color })}
                               title={color}
@@ -305,31 +352,31 @@ export default function AdminTenantEdit() {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Velikost naslova</Label>
-                          <span className="text-xs font-medium">{formData.coverTitleSize}px</span>
+                          <span className="text-xs font-medium">{effTitleSize}px {formData.coverTitleSize === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={24} max={84} step={1} value={[formData.coverTitleSize]} onValueChange={v => setFormData({ ...formData, coverTitleSize: v[0] })} />
+                        <Slider min={24} max={84} step={1} value={[effTitleSize]} onValueChange={v => setFormData({ ...formData, coverTitleSize: v[0] })} />
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Prosojnost naslova</Label>
-                          <span className="text-xs font-medium">{formData.coverTitleOpacity} %</span>
+                          <span className="text-xs font-medium">{effTitleOpacity} % {formData.coverTitleOpacity === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={20} max={100} step={1} value={[formData.coverTitleOpacity]} onValueChange={v => setFormData({ ...formData, coverTitleOpacity: v[0] })} />
+                        <Slider min={20} max={100} step={1} value={[effTitleOpacity]} onValueChange={v => setFormData({ ...formData, coverTitleOpacity: v[0] })} />
                       </div>
 
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Velikost podnaslova</Label>
-                          <span className="text-xs font-medium">{formData.coverSubSize}px</span>
+                          <span className="text-xs font-medium">{effSubSize}px {formData.coverSubSize === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={12} max={40} step={1} value={[formData.coverSubSize]} onValueChange={v => setFormData({ ...formData, coverSubSize: v[0] })} />
+                        <Slider min={12} max={40} step={1} value={[effSubSize]} onValueChange={v => setFormData({ ...formData, coverSubSize: v[0] })} />
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Prosojnost podnaslova</Label>
-                          <span className="text-xs font-medium">{formData.coverSubOpacity} %</span>
+                          <span className="text-xs font-medium">{effSubOpacity} % {formData.coverSubOpacity === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={20} max={100} step={1} value={[formData.coverSubOpacity]} onValueChange={v => setFormData({ ...formData, coverSubOpacity: v[0] })} />
+                        <Slider min={20} max={100} step={1} value={[effSubOpacity]} onValueChange={v => setFormData({ ...formData, coverSubOpacity: v[0] })} />
                       </div>
                     </div>
                   </div>
@@ -340,24 +387,24 @@ export default function AdminTenantEdit() {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Velikost metapodatkov</Label>
-                          <span className="text-xs font-medium">{formData.coverMetaSize}px</span>
+                          <span className="text-xs font-medium">{effMetaSize}px {formData.coverMetaSize === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={12} max={32} step={0.5} value={[formData.coverMetaSize]} onValueChange={v => setFormData({ ...formData, coverMetaSize: v[0] })} />
+                        <Slider min={12} max={32} step={0.5} value={[effMetaSize]} onValueChange={v => setFormData({ ...formData, coverMetaSize: v[0] })} />
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Prosojnost metapodatkov</Label>
-                          <span className="text-xs font-medium">{formData.coverMetaOpacity} %</span>
+                          <span className="text-xs font-medium">{effMetaOpacity} % {formData.coverMetaOpacity === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={20} max={100} step={1} value={[formData.coverMetaOpacity]} onValueChange={v => setFormData({ ...formData, coverMetaOpacity: v[0] })} />
+                        <Slider min={20} max={100} step={1} value={[effMetaOpacity]} onValueChange={v => setFormData({ ...formData, coverMetaOpacity: v[0] })} />
                       </div>
 
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <Label className="text-xs text-muted-foreground">Zatemnitev slike (Veil)</Label>
-                          <span className="text-xs font-medium">{formData.coverVeil} %</span>
+                          <span className="text-xs font-medium">{effVeil} % {formData.coverVeil === null && "(privzeto)"}</span>
                         </div>
-                        <Slider min={0} max={60} step={1} value={[formData.coverVeil]} onValueChange={v => setFormData({ ...formData, coverVeil: v[0] })} />
+                        <Slider min={0} max={60} step={1} value={[effVeil]} onValueChange={v => setFormData({ ...formData, coverVeil: v[0] })} />
                       </div>
                     </div>
                   </div>
@@ -366,16 +413,16 @@ export default function AdminTenantEdit() {
                     <h4 className="font-semibold text-sm border-b pb-2">Postavitev</h4>
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Poravnava</Label>
+                        <Label className="text-xs text-muted-foreground">Poravnava {formData.coverAlign === null && "(privzeto)"}</Label>
                         <div className="flex bg-muted rounded-md p-1 w-max border">
                           <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${formData.coverAlign === 'left' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${effAlign === 'left' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                             onClick={() => setFormData({ ...formData, coverAlign: 'left' })}
                           >
                             Levo
                           </button>
                           <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${formData.coverAlign === 'center' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${effAlign === 'center' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                             onClick={() => setFormData({ ...formData, coverAlign: 'center' })}
                           >
                             Sredina
@@ -383,16 +430,16 @@ export default function AdminTenantEdit() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Ocena</Label>
+                        <Label className="text-xs text-muted-foreground">Ocena {formData.coverShowRating === null && "(privzeto)"}</Label>
                         <div className="flex bg-muted rounded-md p-1 w-max border">
                           <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${formData.coverShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${effShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                             onClick={() => setFormData({ ...formData, coverShowRating: true })}
                           >
                             Prikaži
                           </button>
                           <button 
-                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${!formData.coverShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${!effShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                             onClick={() => setFormData({ ...formData, coverShowRating: false })}
                           >
                             Skrij
@@ -420,35 +467,39 @@ export default function AdminTenantEdit() {
                     >
                       <div 
                         className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-200" 
-                        style={{ opacity: formData.coverVeil / 100 }}
+                        style={{ opacity: effVeil / 100 }}
                       />
 
                       <div 
-                        className="absolute inset-x-0 bottom-0 p-8 flex flex-col pointer-events-none transition-all duration-200"
+                        className="absolute inset-x-0 bottom-0 flex flex-col pointer-events-none transition-all duration-200"
                         style={{ 
-                          alignItems: formData.coverAlign === 'center' ? 'center' : 'flex-start',
-                          textAlign: formData.coverAlign === 'center' ? 'center' : 'left',
+                          padding: formData.theme === 'mediterran' ? '1.5rem 1.5rem 2.5rem' : '2rem',
+                          backgroundColor: formData.theme === 'mediterran' ? '#FFFFFF' : 'transparent',
+                          borderTopLeftRadius: formData.theme === 'mediterran' ? '1.5rem' : '0',
+                          borderTopRightRadius: formData.theme === 'mediterran' ? '1.5rem' : '0',
+                          alignItems: effAlign === 'center' ? 'center' : 'flex-start',
+                          textAlign: effAlign === 'center' ? 'center' : 'left',
                         }}
                       >
-                        {formData.coverShowRating && (
+                        {effShowRating && (
                           <div 
                             className="flex items-center gap-1.5 mb-4 font-semibold transition-all duration-200"
                             style={{
-                              fontSize: `${formData.coverMetaSize}px`,
-                              opacity: formData.coverMetaOpacity / 100,
-                              color: formData.coverTextColor,
+                              fontSize: `${effMetaSize}px`,
+                              opacity: effMetaOpacity / 100,
+                              color: effTextColor,
                             }}
                           >
-                            <span style={{ color: formData.coverTextColor === '#FFFFFF' ? '#FBBF24' : 'currentColor', opacity: 0.9 }}>★</span> 4.9 (120)
+                            <span style={{ color: effTextColor === '#FFFFFF' ? '#FBBF24' : 'currentColor', opacity: 0.9 }}>★</span> 4.9 (120)
                           </div>
                         )}
                         
                         <h1 
                           className="font-bold leading-[1.1] mb-2 tracking-tight transition-all duration-200"
                           style={{
-                            fontSize: `${formData.coverTitleSize}px`,
-                            opacity: formData.coverTitleOpacity / 100,
-                            color: formData.coverTextColor,
+                            fontSize: `${effTitleSize}px`,
+                            opacity: effTitleOpacity / 100,
+                            color: effTextColor,
                             display: '-webkit-box',
                             WebkitLineClamp: 3,
                             WebkitBoxOrient: 'vertical',
@@ -461,9 +512,9 @@ export default function AdminTenantEdit() {
                         <p 
                           className="font-medium transition-all duration-200"
                           style={{
-                            fontSize: `${formData.coverSubSize}px`,
-                            opacity: formData.coverSubOpacity / 100,
-                            color: formData.coverTextColor,
+                            fontSize: `${effSubSize}px`,
+                            opacity: effSubOpacity / 100,
+                            color: effTextColor,
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',

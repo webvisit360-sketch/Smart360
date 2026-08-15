@@ -50,6 +50,21 @@ Pri strežniškem izrisu (SSR) enako, samo kot `style` atribut na `.cover`, da n
 - Vrednosti se hranijo **pri posamezni nastanitvi**, ne globalno
 - Če je `coverTitle` prazen, se na javni strani izpiše `name`; enako `coverSubtitle` → `subtitle`
 
+## Privzete vrednosti se razlikujejo po temi
+
+Iste spremenljivke, drugačna izhodišča — ker v sredozemski temi naslov leži na beli kartici, v temi poteg pa na fotografiji. Obe temi ju **bereta**, zato urejevalnik deluje enako v obeh.
+
+| Spremenljivka | Sredozemska | Poteg |
+|---|---|---|
+| `--tt-size` | 24px | 56px |
+| `--tt-op` | 1 | .66 |
+| `--tt-txt` | `#14201F` | `#FFFFFF` |
+| `--st-size` / `--st-op` | 11px / 1 (vrstica pod imenom v glavi) | 22px / .5 (podnaslov na fotografiji) |
+| `--mt-size` / `--mt-op` | 13.5px / 1 | 19.5px / .6 |
+| `--veil` | 0 (zatemnitev hero fotografije) | .26 (zatemnitev cele naslovnice) |
+
+Ob preklopu teme naj se privzete vrednosti nastavijo na stolpec ustrezne teme, razen tam, kjer je upravitelj vrednost že ročno spremenil.
+
 ## Pomembno
 
 Zatemnitev fotografije (`--veil`) je **enakomerna čez celo fotografijo**, brez preliva. Prejšnja različica je pokrivala samo spodnji del in se je čez sliko vlekla vidna vodoravna črta — tega ne ponavljaj.

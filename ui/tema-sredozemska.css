@@ -499,3 +499,23 @@ body{background:#EFECE6}
 .card > .card__body > .rule:last-child{border-bottom:0;padding-bottom:0}
 .card > .card__body > .banner:first-child{margin-top:0}
 .card > .card__body > .kv:first-of-type{margin-top:12px}
+
+/* ============================================================
+   UREJEVALNIK NASLOVNICE — spremenljivke veljajo tudi tu
+   Privzete vrednosti so drugačne kot v temi poteg, ker naslov
+   ne leži na fotografiji, ampak na beli kartici.
+   ============================================================ */
+:root{
+  --tt-txt:#14201F; --tt-size:24px;  --tt-op:1;
+  --st-size:11px;   --st-op:1;
+  --mt-size:13.5px; --mt-op:1;
+  --veil:0; --cover-align:left; --cover-just:flex-start;
+}
+.tcard .title{font-size:var(--tt-size);color:var(--tt-txt);opacity:var(--tt-op);text-align:var(--cover-align)}
+.tcard .meta{font-size:var(--mt-size);opacity:var(--mt-op);justify-content:var(--cover-just)}
+.tcard .meta .ic{width:calc(var(--mt-size) * 1.04);height:calc(var(--mt-size) * 1.04)}
+.brand small{font-size:var(--st-size);opacity:var(--st-op)}
+.hero{isolation:isolate}
+.hero::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;z-index:1;
+             background:rgba(10,16,20,var(--veil));pointer-events:none}
+.hero__pill,.hero__heart,.hero__hint{z-index:2}

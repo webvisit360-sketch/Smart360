@@ -31,16 +31,17 @@ export const tenantsTable = pgTable("tenants", {
   theme: text("theme").notNull().default("mediterran"),
   coverTitle: text("cover_title"),
   coverSubtitle: text("cover_subtitle"),
-  coverTitleSize: doublePrecision("cover_title_size").notNull().default(56),
-  coverTitleOpacity: doublePrecision("cover_title_opacity").notNull().default(66),
-  coverTextColor: text("cover_text_color").notNull().default("#FFFFFF"),
-  coverSubSize: doublePrecision("cover_sub_size").notNull().default(22),
-  coverSubOpacity: doublePrecision("cover_sub_opacity").notNull().default(50),
-  coverMetaSize: doublePrecision("cover_meta_size").notNull().default(19.5),
-  coverMetaOpacity: doublePrecision("cover_meta_opacity").notNull().default(60),
-  coverVeil: doublePrecision("cover_veil").notNull().default(26),
-  coverAlign: text("cover_align").notNull().default("left"),
-  coverShowRating: boolean("cover_show_rating").notNull().default(true),
+  // Cover editor overrides: NULL = inherit the active theme's default (see ui/urejevalnik-naslovnice.md)
+  coverTitleSize: doublePrecision("cover_title_size"),
+  coverTitleOpacity: doublePrecision("cover_title_opacity"),
+  coverTextColor: text("cover_text_color"),
+  coverSubSize: doublePrecision("cover_sub_size"),
+  coverSubOpacity: doublePrecision("cover_sub_opacity"),
+  coverMetaSize: doublePrecision("cover_meta_size"),
+  coverMetaOpacity: doublePrecision("cover_meta_opacity"),
+  coverVeil: doublePrecision("cover_veil"),
+  coverAlign: text("cover_align"),
+  coverShowRating: boolean("cover_show_rating"),
   languages: text("languages")
     .array()
     .notNull()

@@ -44,16 +44,26 @@ export interface TenantUpdate {
   coverTitle?: string | null;
   /** @nullable */
   coverSubtitle?: string | null;
-  coverTitleSize?: number;
-  coverTitleOpacity?: number;
-  coverTextColor?: string;
-  coverSubSize?: number;
-  coverSubOpacity?: number;
-  coverMetaSize?: number;
-  coverMetaOpacity?: number;
-  coverVeil?: number;
-  coverAlign?: string;
-  coverShowRating?: boolean;
+  /** @nullable */
+  coverTitleSize?: number | null;
+  /** @nullable */
+  coverTitleOpacity?: number | null;
+  /** @nullable */
+  coverTextColor?: string | null;
+  /** @nullable */
+  coverSubSize?: number | null;
+  /** @nullable */
+  coverSubOpacity?: number | null;
+  /** @nullable */
+  coverMetaSize?: number | null;
+  /** @nullable */
+  coverMetaOpacity?: number | null;
+  /** @nullable */
+  coverVeil?: number | null;
+  /** @nullable */
+  coverAlign?: string | null;
+  /** @nullable */
+  coverShowRating?: boolean | null;
   languages?: string[];
   isTemplate?: boolean;
   isPublished?: boolean;

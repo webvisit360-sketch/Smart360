@@ -7,6 +7,7 @@ import { SearchOverlay } from "./SearchOverlay";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
+import { getCoverVars } from "./cover-vars";
 
 export default function GuestHome() {
   const [, params] = useRoute("/g/:slug");
@@ -34,20 +35,10 @@ export default function GuestHome() {
 
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
 
-  const coverVars = {
-    '--tt-txt': tenant.coverTextColor || '#FFFFFF',
-    '--tt-size': `${tenant.coverTitleSize ?? 56}px`,
-    '--tt-op': (tenant.coverTitleOpacity ?? 66) / 100,
-    '--st-size': `${tenant.coverSubSize ?? 22}px`,
-    '--st-op': (tenant.coverSubOpacity ?? 50) / 100,
-    '--mt-size': `${tenant.coverMetaSize ?? 19.5}px`,
-    '--mt-op': (tenant.coverMetaOpacity ?? 60) / 100,
-    '--veil': (tenant.coverVeil ?? 26) / 100,
-    '--cover-align': tenant.coverAlign || 'left',
-    '--cover-just': tenant.coverAlign === 'center' ? 'center' : 'flex-start',
-  } as React.CSSProperties;
+  const coverVars = getCoverVars(tenant);
 
   const cTitle = tenant.coverTitle || tenant.name;
+  const cSub = tenant.coverSubtitle || tenant.subtitle;
   const showRating = tenant.coverShowRating !== false;
   
   // Big cards: top 4 sections
@@ -92,10 +83,10 @@ export default function GuestHome() {
   });
 
   return (
-    <div className="app">
+    <div className="app" style={coverVars}>
       <header className="appbar" id="appbar">
         {tenant.logoUrl && <img className="brandmark" src={tenant.logoUrl} alt="" />}
-        <span className="brand">{tenant.name}{tenant.subtitle && <small>{tenant.subtitle}</small>}</span>
+        <span className="brand">{tenant.name}{cSub && <small>{cSub}</small>}</span>
         
         <div style={{position: 'relative', marginLeft: 'auto'}}>
           <button className="iconbtn">
@@ -130,7 +121,7 @@ export default function GuestHome() {
         </div>
       </div>
 
-      <div className="tcard" style={coverVars}>
+      <div className="tcard">
         <h1 className="title">{cTitle}</h1>
         {showRating && (
           <div className="meta">

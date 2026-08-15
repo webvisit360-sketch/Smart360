@@ -144,12 +144,12 @@ router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
 /** Enforces documented ranges/enums from ui/urejevalnik-naslovnice.md; returns error message or null. */
 function validateThemeCoverFields(data: Record<string, unknown>): string | null {
   const inRange = (v: unknown, min: number, max: number) =>
-    v === undefined || (typeof v === "number" && Number.isFinite(v) && v >= min && v <= max);
+    v === undefined || v === null || (typeof v === "number" && Number.isFinite(v) && v >= min && v <= max);
   if (data["theme"] !== undefined && !["mediterran", "swipe"].includes(String(data["theme"])))
     return "theme must be 'mediterran' or 'swipe'";
-  if (data["coverAlign"] !== undefined && !["left", "center"].includes(String(data["coverAlign"])))
+  if (data["coverAlign"] !== undefined && data["coverAlign"] !== null && !["left", "center"].includes(String(data["coverAlign"])))
     return "coverAlign must be 'left' or 'center'";
-  if (data["coverTextColor"] !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(data["coverTextColor"])))
+  if (data["coverTextColor"] !== undefined && data["coverTextColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["coverTextColor"])))
     return "coverTextColor must be a hex color like #FFFFFF";
   if (!inRange(data["coverTitleSize"], 24, 84)) return "coverTitleSize must be 24-84";
   if (!inRange(data["coverTitleOpacity"], 20, 100)) return "coverTitleOpacity must be 20-100";
