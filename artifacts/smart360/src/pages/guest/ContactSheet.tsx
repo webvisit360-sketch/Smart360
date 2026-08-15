@@ -37,6 +37,12 @@ export function ContactSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen:
             <div className="t"><b>Naslov</b><span>{tenant.address}</span></div>
           </div>
         )}
+        {tenant?.mapQuery && (
+          <a className="srow" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery)}`} target="_blank" rel="noopener noreferrer">
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>
+            <div className="t"><b>Navigacija do nas</b><span>Odpri pot v Google Maps</span></div>
+          </a>
+        )}
       </div>
     </>
   );

@@ -393,7 +393,9 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
           {(item.phone || item.mapQuery) && (
             <div className="actions">
               {item.phone && <a className="act act--w" href={`tel:${item.phone}`} aria-label="Pokliči"><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg></a>}
-              {item.mapQuery && <a className="act act--fill" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>Navigacija</a>}
+              {item.mapQuery && (item.mapQuery === tenant.mapQuery
+                ? <a className="act act--fill" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>Navigacija do nas</a>
+                : <a className="act act--fill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
             </div>
           )}
         </div>
@@ -460,8 +462,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
           </div>
           {(item.mapQuery) && (
             <div className="actions">
-              <a className="act" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-map" /></svg>Izhodišče</a>
-              <a className="act act--fill" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>Navigacija</a>
+              <a className="act act--fill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
             </div>
           )}
         </div>
