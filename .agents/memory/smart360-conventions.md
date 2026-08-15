@@ -50,3 +50,4 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - V artifact-mode autoscale objavi REPLIT_DEPLOYMENT NI nastavljen — ne uporabljaj ga kot zaznavo produkcije. Zaznava "brez ključev v bazi" je zanesljivejši sprožilec za bootstrap.
 - rpID()/rpOrigin(): dev kontejner vedno REPLIT_DEV_DOMAIN, objava vedno RP_ID/RP_ORIGIN. Efektivni rpId preveri v živo: POST /api/admin/webauthn/login/options (javen, vrne options.rpId).
 - Bootstrap vpis: ob zagonu z 0 ključi strežnik izpiše enkratno enroll povezavo (15 min) v dnevnik objave.
+- Dnevnik objave med zagonom (~prvih 30 s) IZGUBLJA pino stdout vrstice ("Server listening", bootstrap sporočila); stderr z zamikom (setTimeout 30 s + console.error) zanesljivo pride skozi. Zagonski bootstrap zato izpiše kratko obnovitveno kodo na stderr z 30 s ponovitvijo.
