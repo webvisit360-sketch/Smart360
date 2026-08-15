@@ -20,3 +20,8 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - `deletedAt` (categories+items) = 30-day soft-delete trash. THREE scopes in `contentTree.ts`, the only visibility rules: `guestScope` (published+not deleted), `adminScope` (not deleted — hidden entries MUST stay in admin lists, greyed with "Skrito" badge), `trashScope` (deleted only). Never filter visibility elsewhere.
 - Reorder endpoints take the FULL ordered id list in one transaction and require exactly the non-deleted siblings.
 - Remaining admin-content work (trash UI/endpoints, autosave, paste sanitization, length counters, cover/logo upload UI) is deferred until task-agent work #16–#18 merges.
+
+## Naslovi strank — odločitev (avgust 2026)
+- Poti namesto poddomen: smart360.info/<slug>. Stare naloge o poddomenah/lastnih domenah preklicane, TODA lastne domene strank (melipu.si) ostajajo odprta opcija — razreševanje najemnika MORA ostati v eni funkciji (resolveTenant), razširljivi s preslikavo domena→slug.
+- Vse povezave skozi en url() pomočnik z basePath; brez <base href>; statika ostane na korenu; localStorage ključi po slugu.
+- Polje slug (predlog iz imena, živo preverjanje, rezervirane besede, TenantAlias 301, klikljiv naslov + QR) se zgradi ŽE v nalogi administracije vsebine, na zaslonu nastavitev nastanitve. Usmerjanje, manifest na najemnika in vstopna stran pridejo v ločeni nalogi za tem.
