@@ -1,0 +1,217 @@
+Administracija vsebine — besedila, struktura, naslovnica
+Združuje predlagani nalogi #16 (urejanje besedil) in #17 (zamenjava naslovnice in logotipa) ter dodaja tisto, kar v predlogu manjka: dodajanje, brisanje, skrivanje in prerazporejanje kategorij, ne le postavk.
+
+To je osrednji del izdelka. Dokler ga ni, aplikacije ni mogoče voditi brez razvijalca.
+
+
+Navodilo za Replit (prilepi v celoti)
+Build the content administration. This is the core of the product: the owner must be able to
+
+run the whole app without a developer. Nothing here is optional.
+
+=====================================================================
+
+1. STRUCTURE — SECTIONS, CATEGORIES, ITEMS
+
+=====================================================================
+
+The hierarchy is: Tenant → Section → Category → Item.
+
+Sections are the five fixed ones (stay, offer, explore, services, contact).
+
+Categories are what the guest sees as tiles ("Dobrodošli", "Apartmaji", "SUP deska", …).
+
+Items are the entries inside a category (a restaurant, a route, a product, a rule).
+
+The owner must be able to do ALL of the following, at BOTH levels (category and item):
+
+  - add a new one, anywhere in the list, not only at the end
+
+  - edit it
+
+  - reorder it by dragging (persist an integer `position`, reindex the whole list on save)
+
+  - HIDE it without deleting — a boolean `published`, default true
+
+  - delete it, with a confirmation dialog that names what is being deleted and how many
+
+    photos and items go with it
+
+HIDE IS NOT DELETE. A hidden category keeps its photos, texts and translations and simply
+
+does not render for guests. The owner switches the scooter off out of season and back on in
+
+May without retyping anything. Show hidden entries in the admin list greyed out with a
+
+"Skrito" badge, never filtered out of the admin view.
+
+Deleting a category soft-deletes it (deletedAt) and its items; a "Nedavno izbrisano" list
+
+allows restore for 30 days. Only after that does a job hard-delete the rows and the files.
+
+Guest-facing queries must filter `published = true AND deletedAt IS NULL` at every level —
+
+section, category and item. Write one shared scope so this cannot be forgotten in one place.
+
+Reordering must be safe under concurrency: send the whole ordered array of ids and rewrite
+
+positions in a single transaction. Do not send "moved item X to index 3" — two admins (or two
+
+tabs) would interleave and corrupt the order.
+
+=====================================================================
+
+2. TEXT EDITING
+
+=====================================================================
+
+Every text the guest can read is editable. The fields differ by item type, so drive the form
+
+from the type, not from one generic textarea:
+
+  text        title, body (multiple paragraphs), optional call-to-action (label + map query)
+
+  apartments  per apartment: name, meta line, description
+
+  rules       title, optional opening-hours line, list of rules (each: icon + text)
+
+  wifi        network name, password
+
+  tabs        per tab: title, optional big line, paragraphs, optional bullet list
+
+  products    per product: name, price, unit, description, what's included, note, CTA label
+
+  poi         per place: name, address/map query, phone, website, opening hours, host tip
+
+  routes      per route: name, difficulty, duration, distance, start point
+
+  events      per event: name, description, map query
+
+The body editor is a SIMPLE rich text field. Allowed: paragraphs, bold, line break, link.
+
+Nothing else — no headings, no colours, no font sizes, no tables, no embedded HTML. Sanitise
+
+on save (server-side allowlist) and store as clean markup, not as a blob of pasted Word HTML.
+
+When the owner pastes from Word or a website, strip all styling and keep only the text.
+
+Every field has a visible character budget where length breaks the design:
+
+  category title    max 28  (longer wraps to three lines on a tile)
+
+  subtitle line     max 42
+
+  item name         max 48
+
+Show a counter, warn at the limit, but let them save — they decide.
+
+The editor autosaves a draft every few seconds. "Shrani" publishes. "Prekliči" restores the
+
+last published version. Never lose typing on a navigation or a dropped connection.
+
+=====================================================================
+
+3. COVER PHOTO AND LOGO
+
+=====================================================================
+
+Two things the owner must be able to change without touching anything else:
+
+  Cover photo (tenant.hero)  — replaced by upload; server resizes to 1400px and 620px, sets
+
+                               it as the preloaded cover of both themes. Show a live preview
+
+                               at 390px width with the current cover title settings applied,
+
+                               so the owner sees whether the title is still readable on the
+
+                               new picture before saving.
+
+  Host avatar (tenant.logo)  — small round picture at the bottom of the public page and in
+
+                               the "Nasvet gostitelja" blocks. Square crop, 320px.
+
+The Smart360 wordmark in the app bar is NOT editable and is NOT tenant.logo. It is a fixed
+
+brand asset. Do not add a field for it.
+
+Next to the cover photo, keep the existing cover-title editor (size, colour, opacity, text)
+
+and the three bottom-icon colours. Same panel, same live preview.
+
+=====================================================================
+
+4. IMAGES INSIDE ITEMS — RULE ALREADY IN FORCE
+
+=====================================================================
+
+Image field sits ABOVE the text field on every item type, without exception. The first image
+
+is the tile image. This is already built — do not rework it, only make sure the new
+
+category-level editing keeps it.
+
+A category with no image at all falls back to: first image of its first item → section
+
+default → tenant.hero. Never an empty grey card.
+
+=====================================================================
+
+5. TRANSLATIONS — PREPARE, DO NOT BUILD YET
+
+=====================================================================
+
+Do not build the translation UI in this task, but do not make it impossible either:
+
+every editable string lives in a Translation row keyed by (entity, field, locale), with
+
+Slovene as the source locale. The stable category keys you already introduced stay the join
+
+key. Adding English later must not require touching the photo or ordering code.
+
+=====================================================================
+
+6. WHAT THE ADMIN MUST NOT DO
+
+=====================================================================
+
+  - no guest login, no guest accounts, no comments, no ratings submitted by guests
+
+  - no public sign-up page of any kind
+
+  - the admin stays on its own subdomain behind the passkey login
+
+  - keep X-Robots-Tag: noindex, nofollow, noarchive on every response, admin and public alike
+
+=====================================================================
+
+7. VERIFY
+
+=====================================================================
+
+  a) Add a category in the MIDDLE of a section, reload, confirm it stayed in place.
+
+  b) Drag three categories into a new order, reload in another browser, confirm the order.
+
+  c) Hide a category — it disappears for guests, stays visible and greyed in the admin,
+
+     and its photos are still there when you unhide it.
+
+  d) Delete a category, restore it from "Nedavno izbrisano", confirm photos and texts survived.
+
+  e) Paste a paragraph from Word into a body field — the result must be plain paragraphs.
+
+  f) Replace the cover photo and confirm the live preview and the public page both update.
+
+  g) Open the public page while a category is hidden and confirm it is absent from the tiles,
+
+     from the bottom row count and from search results.
+
+
+Zakaj tako
+Skrij namesto izbriši je edina stvar v tem navodilu, ki je nisi izrecno zahteval, a jo boš potreboval vsako sezono. Skuter, čoln in SUP so poleti na voljo, pozimi ne. Brez tega stikala bi jih vsako jesen brisal in vsako pomlad znova vnašal skupaj s fotografijami in besedili.
+
+Prerazporejanje s celotnim seznamom namesto »premakni to na tretje mesto« zveni kot podrobnost, a je ravno tisto, kar prepreči, da bi se ti vrstni red podrl, če imaš odprta dva zavihka ali če prvi klik ne uspe in ga ponoviš.
+
+Omejitev dolžine besedil ni kaprica: naslov kategorije čez 28 znakov se na ploščici prelomi v tri vrstice in mreža izgubi enakomernost, ki sva jo pravkar postavila.
+
