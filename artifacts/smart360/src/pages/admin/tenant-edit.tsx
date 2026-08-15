@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
-import { ItemMediaEditor } from "@/components/admin/item-media-editor";
+import { ContentEditor } from "@/components/admin/content-editor";
 import { useEffect, useRef, useState } from "react";
 
 const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
@@ -717,57 +717,7 @@ export default function AdminTenantEdit() {
               <CardTitle>Struktura vsebine</CardTitle>
             </CardHeader>
             <CardContent>
-              {tenant.sections?.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek.
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {tenant.sections?.map(section => (
-                    <div key={section.id} className="border-2 border-border rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-4 pb-2 border-b">
-                        <h3 className="font-bold text-lg flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">{section.icon}</span>
-                          {section.title}
-                        </h3>
-                        <Button variant="ghost" size="sm">Uredi sekcijo</Button>
-                      </div>
-                      
-                      <div className="pl-4 border-l-2 border-border/50 ml-4 space-y-4">
-                        {section.categories?.map(category => (
-                          <div key={category.id} className="bg-muted/50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold flex items-center gap-2">
-                                {category.icon} {category.label}
-                                <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-background rounded-full border">{category.layout}</span>
-                              </h4>
-                              <Button variant="ghost" size="sm" className="h-8">Uredi</Button>
-                            </div>
-                            
-                            <div className="space-y-2 pl-2">
-                              {category.items?.map((item: any) => (
-                                <div key={item.id} className="bg-background border rounded p-2 text-sm">
-                                  <span>{item.title || '(Brez naslova)'}</span>
-                                  <ItemMediaEditor itemId={item.id} tenantId={tenant.id} media={item.media || []} />
-                                </div>
-                              ))}
-                              <Button variant="ghost" size="sm" className="w-full border border-dashed mt-2 h-8 text-xs text-muted-foreground">
-                                + Dodaj element
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                        <Button variant="outline" size="sm" className="w-full border-dashed">
-                          + Dodaj kategorijo
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <Button className="w-full mt-6" variant="secondary">
-                + Nova sekcija
-              </Button>
+              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} />
             </CardContent>
           </Card>
         </TabsContent>
