@@ -63,7 +63,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
             )}
             <div className="cover__veil"></div>
             <div className="cover__top">
-              {tenant.logoUrl && <img className="cover__logo" src={tenant.logoUrl} alt="" />}
+              <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
               <span className="cover__sp"></span>
               <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
               <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>

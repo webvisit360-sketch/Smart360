@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className="w-64 bg-card border-r border-border hidden md:flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-border">
-          <span className="font-bold text-xl text-primary">Smart360</span>
+          <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
         </div>
         <div className="flex-1 py-6 px-4 space-y-2">
           <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-semibold">
@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 md:hidden">
-          <span className="font-bold text-xl text-primary">Smart360</span>
+          <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
           <Button variant="ghost" size="icon" onClick={() => logoutMutation.mutate()}>
             <LogOut className="h-5 w-5 text-muted-foreground" />
           </Button>

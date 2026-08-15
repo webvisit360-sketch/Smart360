@@ -38,7 +38,6 @@ export default function GuestHome() {
   const coverVars = getCoverVars(tenant);
 
   const cTitle = tenant.coverTitle || tenant.name;
-  const cSub = tenant.coverSubtitle || tenant.subtitle;
   const showRating = tenant.coverShowRating !== false;
   
   // Big cards: top 4 sections
@@ -85,8 +84,7 @@ export default function GuestHome() {
   return (
     <div className="app" style={coverVars}>
       <header className="appbar" id="appbar">
-        {tenant.logoUrl && <img className="brandmark" src={tenant.logoUrl} alt="" />}
-        <span className="brand">{tenant.name}{cSub && <small>{cSub}</small>}</span>
+        <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
         
         <div style={{position: 'relative', marginLeft: 'auto'}}>
           <button className="iconbtn">
