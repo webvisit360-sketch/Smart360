@@ -34,3 +34,6 @@ If `SwipeDetail` returns `null` when closed and mounts fresh with `className="de
 
 ## var() rezerve na naslovnici (paket 10)
 Vsak var() spremenljivke naslovnice MORA imeti rezervno vrednost enako privzetku svoje teme (npr. var(--tt-size,56px) v potegu, var(--tt-size,24px) v sredozemski). Neveljaven var() v calc() da width:auto in SVG ikona se razlije čez zaslon. Blok html[data-theme=...] je le prvi sloj; data-theme nastavlja useThemeAttr (useLayoutEffect) v guest-home, guest-category IN GuestSwipe. Dokaz pravilnosti: izprazni vse cover stolpce in stran mora izgledati enako.
+
+## Asinhroni <link> teme in programski scroll (deep-link)
+Tematska CSS-a se nalagata prek <link> šele po nalaganju najemnika — layout effecti se izvedejo PREJ, ko .pager/.dpager še nista flex (scrollWidth = ena stran, scrollLeft se poreže na 0). Vsako programsko pozicioniranje pagerja mora počakati, da se slog uveljavi (rAF zanka na getComputedStyle(el).display==='flex'), šele nato scroll-snap off → scrollLeft → forsiran reflow → snap on → razkrij (visibility). data-theme se nastavlja že med renderjem (use-theme-attr), ker child layout effecti tečejo pred starševskimi.

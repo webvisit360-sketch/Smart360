@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { sanitizeHtml } from "../../lib/sanitize";
 import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
@@ -18,6 +18,46 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   useThemeAttr(tenant?.theme);
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact
+
+  // Deep link (shared URL, QR): the section screen the pager must show on the
+  // very first painted frame. Cover is screen 0, sections follow.
+  const initialIdx = (() => {
+    if (!categoryId) return 0;
+    const si = sections.findIndex((sec: any) =>
+      sec.categories?.some((c: any) => c.id === categoryId));
+    return si >= 0 ? 1 + si : 0;
+  })();
+
+  // Position BEFORE first paint, with snap disabled (scroll-snap intercepts
+  // programmatic jumps — same recipe as pageTo). The pager renders hidden and
+  // is revealed here, in the same layout pass: one frame, no flash.
+  useLayoutEffect(() => {
+    const pg = pagerRef.current;
+    if (!pg) return;
+    // The theme CSS arrives via an async <link> injected after the tenant
+    // loads. Until it applies, .pager is not a flex row and every width is
+    // wrong — so wait for it (frame by frame), position, THEN reveal.
+    let raf = 0;
+    let tries = 0;
+    const place = () => {
+      if (getComputedStyle(pg).display !== "flex" && tries++ < 180) {
+        raf = requestAnimationFrame(place);
+        return;
+      }
+      if (initialIdx > 0) {
+        const w = pg.clientWidth || window.innerWidth;
+        pg.style.scrollSnapType = "none";
+        pg.scrollLeft = initialIdx * w;
+        void pg.offsetWidth; // force the layout to take effect
+        pg.style.scrollSnapType = "";
+        setActiveSectionIdx(initialIdx);
+      }
+      pg.style.visibility = "";
+    };
+    place();
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const el = pagerRef.current;
@@ -124,7 +164,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
 
   return (
     <div className="app" style={navVars}>
-      <div className="pager" id="pager" ref={pagerRef}>
+      <div className="pager" id="pager" ref={pagerRef} style={{ visibility: "hidden" }}>
         <section className="screen">
           <div className="cover" style={coverVars}>
             {tenant.tourUrl ? (
@@ -270,12 +310,42 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
   
   const [, setLocation] = useLocation();
   const dpagerRef = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
 
-  // Scroll dpager to active category when category changes (instant, not animated)
-  useEffect(() => {
-    if (dpagerRef.current && activeIdx >= 0) {
-      dpagerRef.current.scrollTo({ left: activeIdx * dpagerRef.current.clientWidth, behavior: 'instant' });
-    }
+  // Deep link straight into a detail: it must already BE there on the first
+  // frame, not drive in from the right (the guest did not trigger that).
+  useLayoutEffect(() => {
+    const el = detailRef.current;
+    if (!el || !isOpen) return;
+    el.style.transition = "none";
+    el.classList.add("on");
+    requestAnimationFrame(() => { el.style.transition = ""; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Scroll dpager to active category when category changes. Before paint and
+  // with snap disabled — scroll-snap intercepts programmatic jumps, and on a
+  // deep link the first painted frame must already be the right pane.
+  useLayoutEffect(() => {
+    const el = dpagerRef.current;
+    if (!el || activeIdx < 0) return;
+    let raf = 0;
+    let tries = 0;
+    const place = () => {
+      // Wait until the async theme stylesheet is applied (see pager above).
+      if (getComputedStyle(el).display !== "flex" && tries++ < 180) {
+        raf = requestAnimationFrame(place);
+        return;
+      }
+      const w = el.clientWidth || window.innerWidth;
+      el.style.scrollSnapType = "none";
+      el.scrollLeft = activeIdx * w;
+      void el.offsetWidth; // force the layout to take effect
+      el.style.scrollSnapType = "";
+    };
+    place();
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category?.id]);
 
   // Scroll active chip into view when active category changes
@@ -316,7 +386,7 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
   }, [activeIdx, categories, slug, setLocation, isOpen]);
 
   return (
-    <div className={`detail${isOpen ? ' on' : ''}`} id="detail">
+    <div className={`detail${isOpen ? ' on' : ''}`} id="detail" ref={detailRef}>
       {isOpen && (
         <>
           <div className="detail__bar">
