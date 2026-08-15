@@ -1,0 +1,347 @@
+Tema POTEG — spodnja vrstica (samo ikone) + barve v administraciji
+Nadomesti pikice in namig »Povlecite levo«. Samo ikone, brez napisov. Na podstraneh je pod njimi fiksen bel pas, na naslovnici pasu ni. Referenčni datoteki v paketu UI: tema-poteg.css in zasloni-poteg.html.
+
+
+Navodilo za Replit (prilepi v celoti)
+Replace the page indicator in the "swipe" theme with a bottom row of icons.
+
+Use the CSS and markup below verbatim — do not restyle, do not substitute a component
+
+library, do not change sizes.
+
+REMOVE COMPLETELY
+
+  - the dot page indicator (.dots and every rule for it)
+
+  - the "Povlecite levo" swipe hint (.swipehint and its @keyframes)
+
+THE BOTTOM ROW
+
+  5 icons = the 5 main categories, in this exact order, pointing at screens 1-5:
+
+  | # | screen   | icon (sprite id) | aria-label          |
+
+  |---|----------|------------------|---------------------|
+
+  | 1 | stay     | #i-home          | Vaša nastanitev     |
+
+  | 2 | offer    | #i-bag           | Naša ponudba        |
+
+  | 3 | explore  | #i-compass       | Odkrij okolico      |
+
+  | 4 | services | #i-cart          | Storitve v bližini  |
+
+  | 5 | contact  | #i-chat          | Tu smo za vas       |
+
+  Screen 0 is the cover — it has no icon. The guest returns to it by swiping right.
+
+  The row is visible on EVERY screen. On the section screens it sits on a fixed white band
+
+  pinned to the bottom edge; on the cover the band disappears and the icons float on the photo.
+
+  Icons come from the same sprite as the category icons — no icon library, no emoji.
+
+  There is NO text label anywhere in this row. The guest knows where they are from the
+
+  large heading at the top of each screen.
+
+MARKUP (rendered once, outside .pager, as the last child of .app)
+
+  <nav class="tabdock" id="tabdock">
+
+    <button class="nv" data-i="1" onclick="pageTo(1)" aria-label="Vaša nastanitev" title="Vaša nastanitev">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-home"></use></svg></button>
+
+    <button class="nv" data-i="2" onclick="pageTo(2)" aria-label="Naša ponudba" title="Naša ponudba">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-bag"></use></svg></button>
+
+    <button class="nv" data-i="3" onclick="pageTo(3)" aria-label="Odkrij okolico" title="Odkrij okolico">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-compass"></use></svg></button>
+
+    <button class="nv" data-i="4" onclick="pageTo(4)" aria-label="Storitve v bližini" title="Storitve v bližini">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-cart"></use></svg></button>
+
+    <button class="nv" data-i="5" onclick="pageTo(5)" aria-label="Tu smo za vas" title="Tu smo za vas">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-chat"></use></svg></button>
+
+  </nav>
+
+CSS (copy exactly)
+
+  /* SUBPAGES: a fixed white band pinned to the bottom edge, minimum height.
+
+     Content scrolls UNDERNEATH it — photos must never cover the icons. */
+
+  .tabdock{position:fixed;left:0;right:0;bottom:0;z-index:90;
+
+           height:calc(58px + env(safe-area-inset-bottom,0px));
+
+           padding-bottom:env(safe-area-inset-bottom,0px);
+
+           background:#fff;border-top:1px solid var(--line);
+
+           display:flex;align-items:center;justify-content:space-around}
+
+  .nv{flex:1 1 0;height:100%;display:flex;align-items:center;justify-content:center;
+
+      background:none;color:var(--nv,#14201F);transition:color .16s ease}
+
+  .nv .ic{width:27px;height:27px;stroke-width:1.9;flex:none;transition:stroke-width .16s ease}
+
+  .nv.is-on{color:var(--nv-on,#3B78DC)}
+
+  .nv.is-on .ic{stroke-width:2.5}
+
+  .nv:active .ic{transform:scale(.9)}
+
+  @media (hover:hover) and (pointer:fine){ .nv:hover{color:var(--nv-on,#3B78DC)} }
+
+  /* COVER (screen 0): only the background changes. Position, width, height and offsets stay
+
+     EXACTLY the same as on the section screens, so the icons do not jump when the guest
+
+     swipes from the cover to the first screen. Do not add left/right/bottom/height overrides
+
+     here — changing the geometry is the bug this rule exists to prevent. */
+
+  .tabdock.on-dark{background:none;border-top-color:transparent}
+
+  .tabdock.on-dark .nv{color:var(--nv-cover,#FFFFFF)}
+
+  .tabdock.on-dark .nv .ic{filter:drop-shadow(0 1px 6px rgba(0,0,0,.55))}
+
+  The band is FLAT WHITE — no gradient, no blur, no backdrop-filter, no transparency,
+
+  no rounded corners, no floating pill. A single 1px hairline on top, nothing else.
+
+BEHAVIOUR
+
+  1. Tapping an icon moves the pager to that screen. DO NOT simply call
+
+     pg.scrollTo({left:i*pg.clientWidth, behavior:"smooth"}) — with scroll-snap-type:x mandatory
+
+     and scroll-snap-stop:always, iOS Safari either stops the programmatic scroll at the first
+
+     snap point it passes or resets scrollLeft to 0, so the guest lands on the wrong screen
+
+     (usually the cover). Turn snapping off for the duration of the move:
+
+       let SNAPT=null, MOVING=false;
+
+       function pageTo(i){
+
+         const pg=document.getElementById("pager"); if(!pg) return;
+
+         const d=document.getElementById("detail");
+
+         const inDetail = d && d.classList.contains("on");
+
+         const w = pg.clientWidth || window.innerWidth;     // never trust a 0 width
+
+         i = Math.max(0, Math.min(SEC.length+1, i));
+
+         P.i = i;
+
+         if(inDetail){
+
+           // move the pager while it is still hidden behind the overlay, then reveal it —
+
+           // the guest never sees the screens in between and lands exactly on the tapped one
+
+           pg.style.scrollSnapType = "none";
+
+           pg.scrollLeft = i*w;
+
+           requestAnimationFrame(()=>{
+
+             pg.scrollLeft = i*w;                 // again after reflow
+
+             pg.style.scrollSnapType = "";
+
+             d.classList.remove("on");
+
+             syncNav();
+
+           });
+
+           return;
+
+         }
+
+         pg.style.scrollSnapType = "none";
+
+         MOVING = true;
+
+         pg.scrollTo({left:i*w, behavior:"smooth"});
+
+         syncNav();
+
+         clearTimeout(SNAPT);
+
+         SNAPT = setTimeout(()=>{
+
+           pg.scrollLeft = i*(pg.clientWidth||w);  // the TARGET, not the current value
+
+           pg.style.scrollSnapType = "";
+
+           MOVING = false;
+
+           P.i = i; syncNav();
+
+         }, 420);
+
+       }
+
+     While MOVING is true the pager's scroll listener must NOT update P.i, otherwise an
+
+     intermediate frame of the smooth scroll overwrites the target:
+
+       pg.addEventListener("scroll",()=>{
+
+         if(MOVING) return;
+
+         const i=Math.round(pg.scrollLeft/(pg.clientWidth||1));
+
+         if(i!==P.i){ P.i=i; syncNav(); }
+
+       },{passive:true});
+
+     Test it: from a detail page inside every category, tap every one of the five icons —
+
+     all 20 combinations must land on the tapped category, never on the cover.
+
+  2. Swiping updates the active icon — the pager's scroll listener calls syncNav():
+
+       function syncNav(){
+
+         document.querySelectorAll("#tabdock .nv").forEach(b=>
+
+           b.classList.toggle("is-on", +b.dataset.i === P.i));
+
+         document.getElementById("tabdock").classList.toggle("on-dark", P.i===0);
+
+       }
+
+     Swiping and tapping must always agree. On the cover (screen 0) no icon is active and the
+
+     row gets the on-dark class.
+
+  3. Screen content needs bottom clearance so nothing ends up hidden behind the band:
+
+       .sc{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+
+       .contact{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+
+       .cover__txt{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+
+     The band is opaque, so scrolling content passes cleanly underneath it. Do NOT make the
+
+     band translucent or add a fade — the cut must be sharp.
+
+  4. THE ROW IS ALWAYS FIXED AND ALWAYS PRESENT — on the cover, on the section screens AND
+
+     inside the detail overlay (the sub-sub-pages). It never disappears and never scrolls away.
+
+       .tabdock{z-index:105}   .detail{z-index:100}
+
+       .dscreen{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+
+     Inside the detail overlay the row keeps its white band, and the icon of the category the
+
+     guest came from stays highlighted:
+
+       const inDetail = detailEl.classList.contains("on");
+
+       const act = inDetail ? SEC.indexOf(P.sec)+1 : P.i;
+
+     Tapping any icon while the detail overlay is open must land on THAT category — see the
+
+     inDetail branch of pageTo() above.
+
+  5. Keyboard arrows keep working (ArrowLeft / ArrowRight), Escape closes the detail overlay.
+
+DO NOT
+
+  - no pill, floating card, blur, shadow or rounded corners on the band
+
+  - do not move, resize or inset the row on the cover — the icons must stay pixel-identical
+
+    between the cover and the section screens
+
+  - no white band on the cover — there the icons are bare on the photo
+
+  - no left/right arrow buttons, no dots, no progress line, no page counter
+
+  - no text labels in the bottom row
+
+  - do not shrink the icons below 27px (guests without glasses must read them)
+
+  - no badge, counter or notification dot
+
+  - do not hide the row behind the detail overlay, and do not re-render it per screen
+
+
+Barve ikon so nastavljive v administraciji
+The colour of the bottom icons must be editable per accommodation, in the same admin panel
+
+section as the cover title settings. Three separate colours, each with a free colour picker.
+
+DATABASE — add to the Tenant model
+
+  navColorCover  String  @default("#FFFFFF")   // icons on the cover photo
+
+  navColor       String  @default("#14201F")   // icons on the section screens
+
+  navColorOn     String  @default("#3B78DC")   // the active icon
+
+ADMIN UI — add a group titled "Ikone spodaj" under the cover-title settings, three rows:
+
+  | Field           | Label in admin           | Default |
+
+  |-----------------|--------------------------|---------|
+
+  | navColorCover   | Barva na naslovnici      | #FFFFFF |
+
+  | navColor        | Barva na podstraneh      | #14201F |
+
+  | navColorOn      | Barva izbrane ikone      | #3B78DC |
+
+  Each row: the six brand presets as round swatches
+
+  (#FFFFFF, #F6F1E9, #FFE9B8, #3B78DC, #14201F, #C4552E)
+
+  followed by an <input type="color"> so ANY colour can be chosen. The current hex value is
+
+  printed at the right end of the label. Live preview — the icons change as the colour changes,
+
+  before saving. A "Ponastavi" button restores the three defaults above.
+
+APPLYING THE VALUES — set CSS variables, do not write new classes or inline styles on the icons:
+
+  const r = document.documentElement.style;
+
+  r.setProperty("--nv",       t.navColor);
+
+  r.setProperty("--nv-on",    t.navColorOn);
+
+  r.setProperty("--nv-cover", t.navColorCover);
+
+  On server-side render, emit the same three variables as a style attribute on the root element
+
+  so there is no flash of the default colour on load.
+
+  Values are stored PER ACCOMMODATION, not globally.
+
+WARN THE MANAGER, DO NOT BLOCK
+
+  If a chosen colour has contrast below 3:1 against its background (white for the section
+
+  screens, the average of the cover photo for the cover), show a small inline note:
+
+  "Ta barva je slabo vidna." Save it anyway — the manager decides.
+

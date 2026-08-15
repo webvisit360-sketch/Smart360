@@ -10,6 +10,8 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const [, setLocation] = useLocation();
   const [activeSectionIdx, setActiveSectionIdx] = useState(0);
   const pagerRef = useRef<HTMLDivElement>(null);
+  const movingRef = useRef(false);
+  const snapTimerRef = useRef<any>(null);
 
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact
@@ -18,7 +20,8 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     const el = pagerRef.current;
     if (!el) return;
     const handleScroll = () => {
-      const idx = Math.round(el.scrollLeft / el.clientWidth);
+      if (movingRef.current) return; // an intermediate frame must not overwrite the target
+      const idx = Math.round(el.scrollLeft / (el.clientWidth || 1));
       setActiveSectionIdx(idx);
     };
     el.addEventListener('scroll', handleScroll, { passive: true });
@@ -39,15 +42,43 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     return () => window.removeEventListener("keydown", onKey);
   }, [activeSectionIdx, totalScreens, categoryId, slug, setLocation]);
 
+  // Programmatic paging: iOS Safari + scroll-snap stops smooth scrolls at the first
+  // snap point (or resets to 0), so snapping is turned off for the duration of the move.
   const scrollToScreen = (idx: number) => {
-    if (pagerRef.current) {
-      pagerRef.current.scrollTo({ left: idx * pagerRef.current.clientWidth, behavior: 'smooth' });
-    }
+    const pg = pagerRef.current;
+    if (!pg) return;
+    const w = pg.clientWidth || window.innerWidth; // never trust a 0 width
+    const i = Math.max(0, Math.min(totalScreens - 1, idx));
+    pg.style.scrollSnapType = "none";
+    movingRef.current = true;
+    pg.scrollTo({ left: i * w, behavior: 'smooth' });
+    setActiveSectionIdx(i);
+    clearTimeout(snapTimerRef.current);
+    snapTimerRef.current = setTimeout(() => {
+      pg.scrollLeft = i * (pg.clientWidth || w); // the TARGET, not the current value
+      pg.style.scrollSnapType = "";
+      movingRef.current = false;
+      setActiveSectionIdx(i);
+    }, 420);
   };
 
-  // Tap on a bottom icon: closes the detail overlay first (if open), then pages.
+  // Tap on a bottom icon while the detail overlay is open: move the pager while it is
+  // still hidden behind the overlay, then reveal it — the guest lands exactly there.
   const goToScreen = (idx: number) => {
-    if (categoryId) setLocation(buildGuestPath(`/g/${slug}`));
+    const pg = pagerRef.current;
+    if (categoryId && pg) {
+      const w = pg.clientWidth || window.innerWidth;
+      const i = Math.max(0, Math.min(totalScreens - 1, idx));
+      pg.style.scrollSnapType = "none";
+      pg.scrollLeft = i * w;
+      requestAnimationFrame(() => {
+        pg.scrollLeft = i * w; // again after reflow
+        pg.style.scrollSnapType = "";
+        setActiveSectionIdx(i);
+        setLocation(buildGuestPath(`/g/${slug}`));
+      });
+      return;
+    }
     scrollToScreen(idx);
   };
 
