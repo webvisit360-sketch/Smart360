@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { ensureAdminAccount, rpID, rpOrigin, createEnrollToken, listCredentials } from "./lib/adminAuth";
+import { ensureAdminAccount, rpID, rpOrigin, issueRecoveryCodes, listCredentials } from "./lib/adminAuth";
 
 const rawPort = process.env["PORT"];
 
@@ -45,12 +45,17 @@ async function logBootstrapEnrollLink(): Promise<void> {
   // passkeys (bootstrap state), which in practice is production-only.
   const creds = await listCredentials();
   if (creds.length > 0) return;
-  const token = await createEnrollToken("shell");
-  // Plain single-line INFO with the URL inside the message text: WARN-level
-  // and structured-field lines have been observed getting dropped from the
-  // deployment log stream, INFO message lines reliably get through.
+  // The deployment log pipeline scrubs lines containing long random tokens
+  // (both WARN and INFO variants of the enrolment URL never reached the
+  // logs, while the token WAS minted in the DB each boot). A short
+  // XXXX-XXXX-XXXX recovery code passes through, so bootstrap goes through
+  // the existing "Obnovitev dostopa" form on the login page instead: the
+  // code is exchanged there for an enrolment token, then a passkey is
+  // registered. issueRecoveryCodes replaces any previous set, which is safe
+  // here because this only runs when zero passkeys exist.
+  const [code] = await issueRecoveryCodes(1);
   logger.info(
-    `ENROLL: no admin passkeys exist — one-time enrolment link (valid 15 min): ${rpOrigin()}/admin/enroll?token=${token}`,
+    `BOOTSTRAP: no admin passkeys exist. Recovery code ${code} — enter it under "Obnovitev dostopa" at ${rpOrigin()}/admin to register the first passkey (a fresh code replaces this one on every restart).`,
   );
 }
 
