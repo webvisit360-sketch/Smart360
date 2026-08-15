@@ -1,0 +1,113 @@
+Podrobnosti brez zgornje pasice, naslov na vrhu vsebine
+Referenca: paket UI 16, predogled-poteg.html, zasloni-poteg.html.
+
+
+Navodilo za Replit (prilepi v celoti)
+On the detail overlay in the "swipe" theme, remove the top bar entirely and move the title
+
+into the content.
+
+=====================================================================
+
+1. REMOVE THE TOP BAR
+
+=====================================================================
+
+Delete .detail__bar completely — the back arrow, the magnifier and the title in it, plus
+
+every CSS rule for .detail__bar and .detail__bar h2.
+
+The guest is not stranded. Going back is the icon of the current section in the bottom row,
+
+which already closes the overlay and lands on that section screen. Moving between items of
+
+the same category stays on the chips row. Search stays on the cover.
+
+The chips row is now the first element in the overlay, so it takes over the safe area:
+
+  .detail .chips{margin-top:0;background:#fff;border-bottom:1px solid var(--line);
+
+                 padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}
+
+=====================================================================
+
+2. THE TITLE MOVES INTO THE CONTENT, ON EVERY SCREEN
+
+=====================================================================
+
+Every detail screen begins with the item title as a heading:
+
+  <h2 class="dh">Apartmaji</h2>
+
+  .dh{font-size:27px;font-weight:800;letter-spacing:-.03em;line-height:1.15;
+
+      margin:20px 0 2px;color:var(--ink)}
+
+  .dscreen .dh + .card{margin-top:14px}
+
+27px is the previous bar title (17px) plus 60 %.
+
+Render it in the function that fills a detail screen, before the body, so it appears for
+
+EVERY item type — including the ones that never printed the category title before
+
+(apartments, products, poi, routes, events, tabs, wifi). Those printed only the names of
+
+individual places, products or apartments; the category itself had no heading once the bar
+
+was gone.
+
+  el.innerHTML = `<h2 class="dh">${item.label}</h2>` + detailBody(item);
+
+=====================================================================
+
+3. REMOVE THE NOW-DUPLICATED TITLE
+
+=====================================================================
+
+Two item types printed the same title again inside their first card. Remove it there, or the
+
+guest sees it twice:
+
+  type "text"   — drop <h3 class="card__n">{label}</h3>, keep the prose and the CTA
+
+  type "rules"  — drop <h3 class="card__n">{label}</h3>, keep the hours line and the rules
+
+Do NOT remove headings that differ from the category title: "Dostop do omrežja" in wifi,
+
+apartment names, product names, place names, tab titles. Those are not duplicates.
+
+=====================================================================
+
+4. SYNC CODE
+
+=====================================================================
+
+The scroll handler updated the bar title through an element id ("dtitle"). That element no
+
+longer exists — remove that line, or the handler throws on every swipe between items and the
+
+chips stop following. It must only update the chips now.
+
+=====================================================================
+
+5. VERIFY
+
+=====================================================================
+
+  a) Open any category: no top bar, chips at the very top under the notch, the title as a
+
+     large heading above the first card.
+
+  b) Swipe between items inside a category — the heading changes with each screen and the
+
+     chips follow. No console errors.
+
+  c) "Dobrodošli" and "Hišni red" show the title once, not twice.
+
+  d) "Apartmaji", "Kulinarika", "SUP deska" and "WiFi" now show the category title, which
+
+     they did not before.
+
+  e) Tapping the section icon in the bottom row returns to that section screen.
+

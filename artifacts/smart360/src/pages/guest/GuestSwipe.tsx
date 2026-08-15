@@ -300,7 +300,6 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         tenant={tenant} 
         category={currentCategory} 
         section={currentSection} 
-        onClose={() => setLocation(buildGuestPath(`/g/${slug}`))} 
         slug={slug} 
       />
       <ShareSheet tenant={tenant} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
@@ -308,7 +307,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   );
 }
 
-function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any, category: any, section: any, onClose: () => void, slug: string }) {
+function SwipeDetail({ tenant, category, section, slug }: { tenant: any, category: any, section: any, slug: string }) {
   const isOpen = !!(category && section);
   const categories = section?.categories?.filter((c: any) => c.isVisible) || [];
   const activeIdx = category ? categories.findIndex((c: any) => c.id === category.id) : -1;
@@ -394,12 +393,7 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
     <div className={`detail${isOpen ? ' on' : ''}`} id="detail" ref={detailRef}>
       {isOpen && (
         <>
-          <div className="detail__bar">
-            <button className="iconbtn" onClick={onClose}><svg className="ic" viewBox="0 0 24 24"><use href="#i-back" /></svg></button>
-            {/* Title tracks active category label, matching reference behaviour */}
-            <h2 id="dtitle">{category.label}</h2>
-            <button className="iconbtn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
-          </div>
+          {/* Paket 16: brez zgornje pasice — nazaj prek spodnjih ikon, naslov v vsebini (.dh) */}
           <div className="chips" id="dchips">
             {categories.map((c: any, i: number) => (
               <button 
@@ -418,7 +412,10 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
               return (
                 <div className="dscreen" key={c.id}>
                   {isNear ? (
-                    <CategoryContent category={c} tenant={tenant} items={c.items?.filter((it: any) => it.isVisible) || []} />
+                    <>
+                      <h2 className="dh">{c.label}</h2>
+                      <CategoryContent category={c} tenant={tenant} items={c.items?.filter((it: any) => it.isVisible) || []} />
+                    </>
                   ) : null}
                 </div>
               );
@@ -566,7 +563,8 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
   return items.map((item: any) => (
     <div key={item.id} className="fade">
       <div className="prose">
-        {item.title && <h2 className="h2">{item.title}</h2>}
+        {/* Paket 16: kategorija ima naslov v .dh — ne podvajaj ga v vsebini */}
+        {item.title && item.title !== category.label && <h2 className="h2">{item.title}</h2>}
         {parseTextBody(item.body)}
       </div>
       {item.media && item.media.length > 0 && (
