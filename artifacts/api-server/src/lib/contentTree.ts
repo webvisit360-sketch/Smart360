@@ -1,0 +1,132 @@
+import { asc, eq, inArray } from "drizzle-orm";
+import {
+  db,
+  tenantsTable,
+  sectionsTable,
+  categoriesTable,
+  itemsTable,
+  mediaTable,
+  translationsTable,
+  type Tenant,
+  type Section,
+  type Category,
+  type Item,
+  type MediaRow,
+} from "@workspace/db";
+
+export type ItemWithMedia = Item & { media: MediaRow[] };
+export type CategoryContent = Category & { items: ItemWithMedia[] };
+export type SectionContent = Section & { categories: CategoryContent[] };
+export type TenantContentTree = Tenant & { sections: SectionContent[] };
+
+export async function buildTenantContent(
+  tenant: Tenant,
+  opts: { visibleOnly: boolean; lang?: string | undefined },
+): Promise<TenantContentTree> {
+  const sections = await db
+    .select()
+    .from(sectionsTable)
+    .where(eq(sectionsTable.tenantId, tenant.id))
+    .orderBy(asc(sectionsTable.position));
+
+  const sectionIds = sections.map((s) => s.id);
+  const categories = sectionIds.length
+    ? await db
+        .select()
+        .from(categoriesTable)
+        .where(inArray(categoriesTable.sectionId, sectionIds))
+        .orderBy(asc(categoriesTable.position))
+    : [];
+
+  const categoryIds = categories.map((c) => c.id);
+  const items = categoryIds.length
+    ? await db
+        .select()
+        .from(itemsTable)
+        .where(inArray(itemsTable.categoryId, categoryIds))
+        .orderBy(asc(itemsTable.position))
+    : [];
+
+  const itemIds = items.map((i) => i.id);
+  const media = itemIds.length
+    ? await db
+        .select()
+        .from(mediaTable)
+        .where(inArray(mediaTable.itemId, itemIds))
+        .orderBy(asc(mediaTable.position))
+    : [];
+
+  let tenantOut: Tenant = tenant;
+  let sectionsOut = sections;
+  let categoriesOut = categories;
+  let itemsOut = items;
+
+  const lang = opts.lang?.toLowerCase();
+  if (lang && lang !== "sl") {
+    const recordIds = [
+      tenant.id,
+      ...sectionIds,
+      ...categoryIds,
+      ...itemIds,
+    ];
+    const translations = recordIds.length
+      ? await db
+          .select()
+          .from(translationsTable)
+          .where(inArray(translationsTable.recordId, recordIds))
+      : [];
+    const byRecord = new Map<string, Record<string, string>>();
+    for (const t of translations) {
+      if (t.lang.toLowerCase() !== lang) continue;
+      const rec = byRecord.get(t.recordId) ?? {};
+      rec[t.field] = t.value;
+      byRecord.set(t.recordId, rec);
+    }
+    const apply = <T extends { id: string }>(row: T): T => {
+      const rec = byRecord.get(row.id);
+      if (!rec) return row;
+      const merged: Record<string, unknown> = { ...row };
+      for (const [field, value] of Object.entries(rec)) {
+        if (field in merged && value !== "") merged[field] = value;
+      }
+      return merged as T;
+    };
+    tenantOut = apply(tenant);
+    sectionsOut = sections.map(apply);
+    categoriesOut = categories.map(apply);
+    itemsOut = items.map(apply);
+  }
+
+  if (opts.visibleOnly) {
+    sectionsOut = sectionsOut.filter((s) => s.isVisible);
+    categoriesOut = categoriesOut.filter((c) => c.isVisible);
+    itemsOut = itemsOut.filter((i) => i.isVisible);
+  }
+
+  const mediaByItem = new Map<string, MediaRow[]>();
+  for (const m of media) {
+    if (!m.itemId) continue;
+    const arr = mediaByItem.get(m.itemId) ?? [];
+    arr.push(m);
+    mediaByItem.set(m.itemId, arr);
+  }
+  const itemsByCategory = new Map<string, ItemWithMedia[]>();
+  for (const i of itemsOut) {
+    const arr = itemsByCategory.get(i.categoryId) ?? [];
+    arr.push({ ...i, media: mediaByItem.get(i.id) ?? [] });
+    itemsByCategory.set(i.categoryId, arr);
+  }
+  const categoriesBySection = new Map<string, CategoryContent[]>();
+  for (const c of categoriesOut) {
+    const arr = categoriesBySection.get(c.sectionId) ?? [];
+    arr.push({ ...c, items: itemsByCategory.get(c.id) ?? [] });
+    categoriesBySection.set(c.sectionId, arr);
+  }
+  return {
+    ...tenantOut,
+    sections: sectionsOut.map((s) => ({
+      ...s,
+      categories: categoriesBySection.get(s.id) ?? [],
+    })),
+  };
+}

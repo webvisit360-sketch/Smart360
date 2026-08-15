@@ -1,45 +1,26 @@
-# [Project name]
+# Smart360
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastanitev. Gost skenira QR kodo in vidi vse o nastanitvi in okolici — brez prijave. En sam operater (lastnik) ureja vse najemnike v admin vmesniku.
 
-## Run & Operate
+## Struktura
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `artifacts/smart360` — React/Vite frontend (previewPath `/`): gostujoči pogled `/g/:slug`, admin `/admin`, `/admin/login`, `/admin/tenants/:id`.
+- `artifacts/api-server` — Express 5 API (`/api/...`): javni endpointi (tenant vsebina, iskanje), admin CRUD (tenants → sections → categories → items → media, translations, reorder, duplicate), overview + changelog.
+- `lib/db` — Drizzle shema: tenants, sections, categories, items, media, translations, changelog (uuid id-ji, `position` za vrstni red, `isVisible` za skrivanje brez brisanja).
+- `lib/api-spec/openapi.yaml` — pogodba; codegen: `pnpm --filter @workspace/api-spec run codegen`.
+- Seed demo najemnika: `node artifacts/api-server/scripts/seed-melipu.mjs` (bere prototip HTML iz `attached_assets/`, slike izvozi v `artifacts/smart360/public/images/`).
 
-## Stack
+## Ključne odločitve
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-
-## Where things live
-
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
-
-## Architecture decisions
-
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Admin avtentikacija: env poverilnice `ADMIN_USER` / `ADMIN_PASSWORD` (dev fallback admin/smart360, v produkciji obvezen `ADMIN_PASSWORD`), HMAC podpisan HTTP-only piškotek (30 dni, `SESSION_SECRET`), rate limit prijave 5/15 min. Brez registracije, brez gostujočih računov.
+- Iskalniki povsod blokirani: `X-Robots-Tag` header + `/robots.txt` Disallow.
+- Neobjavljeni najemniki na javnem endpointu vrnejo 404; `?preview=1` jih pokaže (za operaterja).
+- `hoursJson`: JSON niz 7 vnosov Pon–Ned, vsak `[odprtoMin, zaprtoMin]` ali `null`; zapiranje lahko čez polnoč. `open24` za 24/7.
+- Prevodi: tabela translations (model/recordId/field/lang); SL je osnovni jezik v vrsticah, EN/IT/DE prek prevodov; javni endpoint z `?lang=` združi prevode s SL fallbackom.
+- Tema "mediterran" je zavezujoča: tokens (accent #3B78DC), radij kartic 26px/fotk 24px, 3D gumbi, brez gradientov.
+- Demo najemnik: slug `meli-pu` (Apartmaji Meli Pu, Izola).
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Komunikacija v slovenščini.
+- Baza mora biti v EU — ob objavi (publish) je treba v Advanced settings izbrati regijo Europe (nepovratno). Opomni uporabnika ob vsakem predlogu objave.

@@ -3,20 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Smart360 API - multi-tenant guest information PWA
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: public
+  - name: auth
+  - name: tenants
+  - name: sections
+  - name: categories
+  - name: items
+  - name: media
+  - name: translations
+  - name: overview
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +31,871 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /public/tenants/{slug}:
+    get:
+      operationId: getPublicTenant
+      tags: [public]
+      summary: Full published content tree for a tenant (guest view)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string }
+        - name: preview
+          in: query
+          required: false
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Tenant content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantContent"
+        "404":
+          description: Not found or unpublished
+  /public/tenants/{slug}/search:
+    get:
+      operationId: searchPublicTenant
+      tags: [public]
+      summary: Full-text search across a tenant's visible content
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchResult"
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCredentials"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Invalid credentials
+        "429":
+          description: Too many attempts
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [auth]
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+  /admin/session:
+    get:
+      operationId: getAdminSession
+      tags: [auth]
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+  /admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [overview]
+      summary: Dashboard counts and recent changes
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+  /admin/tenants:
+    get:
+      operationId: listTenants
+      tags: [tenants]
+      responses:
+        "200":
+          description: Tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+    post:
+      operationId: createTenant
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+  /admin/tenants/{id}:
+    get:
+      operationId: getTenant
+      tags: [tenants]
+      summary: Tenant with full content tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tenant content tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantContent"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTenant
+      tags: [tenants]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+    delete:
+      operationId: deleteTenant
+      tags: [tenants]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /admin/tenants/{id}/duplicate:
+    post:
+      operationId: duplicateTenant
+      tags: [tenants]
+      summary: Duplicate a tenant with its full section/category tree
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantDuplicateInput"
+      responses:
+        "201":
+          description: Duplicated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+  /admin/tenants/{id}/sections:
+    post:
+      operationId: createSection
+      tags: [sections]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SectionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Section"
+  /admin/sections/{id}:
+    patch:
+      operationId: updateSection
+      tags: [sections]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SectionUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Section"
+    delete:
+      operationId: deleteSection
+      tags: [sections]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /admin/sections/reorder:
+    post:
+      operationId: reorderSections
+      tags: [sections]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/sections/{id}/categories:
+    post:
+      operationId: createCategory
+      tags: [categories]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+  /admin/categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /admin/categories/reorder:
+    post:
+      operationId: reorderCategories
+      tags: [categories]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/categories/{id}/items:
+    post:
+      operationId: createItem
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+  /admin/items/{id}:
+    patch:
+      operationId: updateItem
+      tags: [items]
+      summary: Update an item; pass categoryId to move it to another category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+    delete:
+      operationId: deleteItem
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /admin/items/{id}/duplicate:
+    post:
+      operationId: duplicateItem
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: Duplicated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+  /admin/items/reorder:
+    post:
+      operationId: reorderItems
+      tags: [items]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/items/{id}/media:
+    post:
+      operationId: addItemMedia
+      tags: [media]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaInput"
+      responses:
+        "201":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaEntry"
+  /admin/media/{id}:
+    delete:
+      operationId: deleteMedia
+      tags: [media]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /admin/media/reorder:
+    post:
+      operationId: reorderMedia
+      tags: [media]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/translations:
+    get:
+      operationId: listTranslations
+      tags: [translations]
+      parameters:
+        - name: model
+          in: query
+          required: true
+          schema: { type: string }
+        - name: recordId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Translations for a record
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Translation"
+    put:
+      operationId: upsertTranslation
+      tags: [translations]
+      summary: Create/update a translation; empty value deletes it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TranslationInput"
+      responses:
+        "200":
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+      required: [status]
+    OkStatus:
+      type: object
+      properties:
+        ok: { type: boolean }
+      required: [ok]
+    AdminCredentials:
+      type: object
+      properties:
+        username: { type: string }
+        password: { type: string }
+      required: [username, password]
+    AdminSession:
+      type: object
+      properties:
+        authenticated: { type: boolean }
+      required: [authenticated]
+    Tenant:
+      type: object
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        customDomain: { type: ["string", "null"] }
+        name: { type: string }
+        subtitle: { type: ["string", "null"] }
+        rating: { type: ["string", "null"] }
+        reviewsCount: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        heroUrl: { type: ["string", "null"] }
+        tourUrl: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        whatsapp: { type: ["string", "null"] }
+        viber: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        mapQuery: { type: ["string", "null"] }
+        wifiSsid: { type: ["string", "null"] }
+        wifiPass: { type: ["string", "null"] }
+        theme: { type: string }
+        languages:
+          type: array
+          items: { type: string }
+        isTemplate: { type: boolean }
+        isPublished: { type: boolean }
+        updatedAt: { type: string }
+      required: [id, slug, name, theme, languages, isTemplate, isPublished, updatedAt]
+    TenantInput:
+      type: object
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        subtitle: { type: string }
+        fromTemplate: { type: boolean }
+      required: [slug, name]
+    TenantDuplicateInput:
+      type: object
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        copyContent:
+          type: boolean
+          description: Copy item contents too; false copies only the section/category structure
+      required: [slug, name]
+    TenantUpdate:
+      type: object
+      properties:
+        slug: { type: string }
+        customDomain: { type: ["string", "null"] }
+        name: { type: string }
+        subtitle: { type: ["string", "null"] }
+        rating: { type: ["string", "null"] }
+        reviewsCount: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        heroUrl: { type: ["string", "null"] }
+        tourUrl: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        whatsapp: { type: ["string", "null"] }
+        viber: { type: ["string", "null"] }
+        instagram: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        mapQuery: { type: ["string", "null"] }
+        wifiSsid: { type: ["string", "null"] }
+        wifiPass: { type: ["string", "null"] }
+        theme: { type: string }
+        languages:
+          type: array
+          items: { type: string }
+        isTemplate: { type: boolean }
+        isPublished: { type: boolean }
+    Section:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        key: { type: string }
+        title: { type: string }
+        subtitle: { type: ["string", "null"] }
+        icon: { type: string }
+        position: { type: number }
+        isVisible: { type: boolean }
+      required: [id, tenantId, key, title, icon, position, isVisible]
+    SectionInput:
+      type: object
+      properties:
+        key: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        icon: { type: string }
+        position: { type: number }
+      required: [key, title, icon]
+    SectionUpdate:
+      type: object
+      properties:
+        key: { type: string }
+        title: { type: string }
+        subtitle: { type: ["string", "null"] }
+        icon: { type: string }
+        position: { type: number }
+        isVisible: { type: boolean }
+    Category:
+      type: object
+      properties:
+        id: { type: string }
+        sectionId: { type: string }
+        label: { type: string }
+        icon: { type: string }
+        layout: { type: string }
+        position: { type: number }
+        isVisible: { type: boolean }
+      required: [id, sectionId, label, icon, layout, position, isVisible]
+    CategoryInput:
+      type: object
+      properties:
+        label: { type: string }
+        icon: { type: string }
+        layout: { type: string }
+        position: { type: number }
+      required: [label, icon, layout]
+    CategoryUpdate:
+      type: object
+      properties:
+        label: { type: string }
+        icon: { type: string }
+        layout: { type: string }
+        position: { type: number }
+        isVisible: { type: boolean }
+    Item:
+      type: object
+      properties:
+        id: { type: string }
+        categoryId: { type: string }
+        title: { type: ["string", "null"] }
+        body: { type: ["string", "null"] }
+        price: { type: ["string", "null"] }
+        priceUnit: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
+        mapQuery: { type: ["string", "null"] }
+        difficulty: { type: ["string", "null"] }
+        duration: { type: ["string", "null"] }
+        distance: { type: ["string", "null"] }
+        open24: { type: boolean }
+        hoursJson:
+          type: ["string", "null"]
+          description: JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight
+        noteType: { type: ["string", "null"] }
+        noteText: { type: ["string", "null"] }
+        bullets:
+          type: array
+          items: { type: string }
+        position: { type: number }
+        isVisible: { type: boolean }
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaEntry"
+      required: [id, categoryId, open24, bullets, position, isVisible, media]
+    ItemInput:
+      type: object
+      properties:
+        title: { type: string }
+        body: { type: string }
+        price: { type: string }
+        priceUnit: { type: string }
+        phone: { type: string }
+        website: { type: string }
+        mapQuery: { type: string }
+        difficulty: { type: string }
+        duration: { type: string }
+        distance: { type: string }
+        open24: { type: boolean }
+        hoursJson: { type: ["string", "null"] }
+        noteType: { type: string }
+        noteText: { type: string }
+        bullets:
+          type: array
+          items: { type: string }
+        position: { type: number }
+    ItemUpdate:
+      type: object
+      properties:
+        categoryId: { type: string }
+        title: { type: ["string", "null"] }
+        body: { type: ["string", "null"] }
+        price: { type: ["string", "null"] }
+        priceUnit: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
+        mapQuery: { type: ["string", "null"] }
+        difficulty: { type: ["string", "null"] }
+        duration: { type: ["string", "null"] }
+        distance: { type: ["string", "null"] }
+        open24: { type: boolean }
+        hoursJson: { type: ["string", "null"] }
+        noteType: { type: ["string", "null"] }
+        noteText: { type: ["string", "null"] }
+        bullets:
+          type: array
+          items: { type: string }
+        position: { type: number }
+        isVisible: { type: boolean }
+    MediaEntry:
+      type: object
+      properties:
+        id: { type: string }
+        itemId: { type: ["string", "null"] }
+        tenantId: { type: ["string", "null"] }
+        url: { type: string }
+        alt: { type: ["string", "null"] }
+        position: { type: number }
+      required: [id, url, position]
+    MediaInput:
+      type: object
+      properties:
+        url: { type: string }
+        alt: { type: string }
+        position: { type: number }
+      required: [url]
+    Translation:
+      type: object
+      properties:
+        id: { type: string }
+        model: { type: string }
+        recordId: { type: string }
+        field: { type: string }
+        lang: { type: string }
+        value: { type: string }
+      required: [id, model, recordId, field, lang, value]
+    TranslationInput:
+      type: object
+      properties:
+        model: { type: string }
+        recordId: { type: string }
+        field: { type: string }
+        lang: { type: string }
+        value: { type: string }
+      required: [model, recordId, field, lang, value]
+    ReorderInput:
+      type: object
+      properties:
+        ids:
+          type: array
+          items: { type: string }
+      required: [ids]
+    CategoryContent:
+      allOf:
+        - $ref: "#/components/schemas/Category"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Item"
+          required: [items]
+    SectionContent:
+      allOf:
+        - $ref: "#/components/schemas/Section"
+        - type: object
+          properties:
+            categories:
+              type: array
+              items:
+                $ref: "#/components/schemas/CategoryContent"
+          required: [categories]
+    TenantContent:
+      allOf:
+        - $ref: "#/components/schemas/Tenant"
+        - type: object
+          properties:
+            sections:
+              type: array
+              items:
+                $ref: "#/components/schemas/SectionContent"
+          required: [sections]
+    SearchResult:
+      type: object
+      properties:
+        itemId: { type: string }
+        categoryId: { type: string }
+        sectionId: { type: string }
+        title: { type: string }
+        snippet: { type: string }
+        categoryLabel: { type: string }
+        sectionTitle: { type: string }
+      required: [itemId, categoryId, sectionId, title, snippet, categoryLabel, sectionTitle]
+    AdminOverview:
+      type: object
+      properties:
+        tenantsCount: { type: number }
+        publishedCount: { type: number }
+        itemsCount: { type: number }
+        recentChanges:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChangelogEntry"
+      required: [tenantsCount, publishedCount, itemsCount, recentChanges]
+    ChangelogEntry:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: ["string", "null"] }
+        tenantName: { type: ["string", "null"] }
+        action: { type: string }
+        entity: { type: string }
+        detail: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, action, entity, createdAt]

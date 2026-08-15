@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Smart360"
+description = "Multi-tenant guest information PWA for tourist accommodations. Guests scan a QR code and see everything about their stay (welcome, WiFi, house rules, equipment guides, check-in/out) and the surroundings (restaurants, beaches, trails, services). Includes a single-operator admin for managing tenants, sections, categories, items and translations."
+version = "1.0.0"
+id = "artifacts/smart360"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26044
+
+[services.development]
+run = "pnpm --filter @workspace/smart360 run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smart360", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/smart360/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26044"
+BASE_PATH = "/"
