@@ -1,0 +1,134 @@
+Popravek: predogled naj se odpre v novem zavihku (iPhone)
+Težava
+Na iPhonu gumb Predogled v administraciji zamenja trenutno stran. Ker administracija nima vidnega gumba za nazaj in je na iPhonu brskalnik brez orodne vrstice (če je aplikacija dodana na začetni zaslon), se iz predogleda ni več mogoče vrniti nazaj.
+Rešitev — tri stvari hkrati
+Predogled se odpre v novem zavihku.
+Odpiranje mora biti pravi <a> element, ne window.open() v asinhroni funkciji — Safari na iOS blokira okna, ki niso posledica neposrednega dotika.
+Za primer, ko iOS kljub temu odpre v istem oknu (aplikacija na začetnem zaslonu, način standalone), ima stran predogleda plavajoč gumb za vrnitev v administracijo.
+
+
+Navodilo za Replit (prilepi v celoti)
+The Preview button in the admin panel currently replaces the admin page, and on iOS there is
+
+no way to get back. Fix it as follows.
+
+1. PREVIEW OPENS IN A NEW TAB
+
+Render the preview control as a real anchor element — never window.location.href, and never
+
+window.open() called after an await. iOS Safari blocks popups that are not the direct result
+
+of a user gesture, so an async handler will silently fail.
+
+Correct:
+
+  <a
+
+    href={`/s/${tenant.slug}?preview=1`}
+
+    target="_blank"
+
+    rel="noopener noreferrer"
+
+    className="btn"
+
+  >
+
+    Predogled
+
+  </a>
+
+If a click handler is unavoidable, call window.open synchronously as the FIRST statement,
+
+before any await:
+
+  function onPreview(e) {
+
+    const w = window.open("", "_blank");        // must be first, synchronous
+
+    if (!w) return;                              // popup blocked — do nothing further
+
+    w.location = `/s/${tenant.slug}?preview=1`;
+
+  }
+
+Do NOT use: window.location.href = ..., router.push(...), <Link> without target="_blank",
+
+or window.open() inside .then()/async.
+
+2. BACK BUTTON ON THE PREVIEW PAGE
+
+When the app is installed to the iOS home screen it runs in standalone mode, where
+
+target="_blank" still opens in the same webview and there is no browser toolbar. So the
+
+preview page needs its own way back.
+
+When the public page is loaded with ?preview=1, render a fixed button in the top-left corner:
+
+  {isPreview && (
+
+    <a href="/admin" className="preview-back">← Administracija</a>
+
+  )}
+
+  .preview-back{
+
+    position: fixed;
+
+    top: calc(12px + env(safe-area-inset-top, 0px));
+
+    left: 12px;
+
+    z-index: 9999;
+
+    height: 40px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0 16px;
+
+    border-radius: 999px;
+
+    background: #14201F;
+
+    color: #fff;
+
+    font: 700 13px/1 Jost, system-ui, sans-serif;
+
+    text-decoration: none;
+
+    box-shadow: 0 4px 0 #0A1211;
+
+  }
+
+  .preview-back:active{ transform: translateY(4px); box-shadow: 0 0 0 #0A1211; }
+
+The button must appear ONLY when ?preview=1 is present, so real guests never see it.
+
+No gradient, no transparency, no icon library — flat colour only.
+
+3. PREVIEW MUST NOT BE INDEXED
+
+The preview route stays behind the same robots blocking as the rest of the app:
+
+Response header X-Robots-Tag: noindex, nofollow on any request carrying ?preview=1.
+
+4. TEST
+
+- Open the admin panel on an iPhone, tap Predogled: a new tab must open and the admin tab
+
+  must still be there when switching back.
+
+- Add the admin to the iOS home screen, open it, tap Predogled: if it opens in the same
+
+  view, the "← Administracija" button must be visible in the top-left corner and must
+
+  return to the admin panel.
+
+- Confirm the button does not appear on the normal public URL without ?preview=1.
+

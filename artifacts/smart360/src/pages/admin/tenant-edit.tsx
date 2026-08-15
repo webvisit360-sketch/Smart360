@@ -186,8 +186,10 @@ export default function AdminTenantEdit() {
           <p className="text-sm text-muted-foreground">Urejanje namestitve</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" onClick={() => window.open(`/g/${tenant.slug}?preview=1`, '_blank')}>
-            <ExternalLink className="w-4 h-4 mr-2" /> Poglej
+          <Button variant="outline" asChild>
+            <a href={`/g/${tenant.slug}?preview=1`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4 mr-2" /> Poglej
+            </a>
           </Button>
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
             {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}

@@ -145,12 +145,14 @@ export default function AdminDashboard() {
                           <Button variant="secondary" size="sm" onClick={() => setLocation(`/admin/tenants/${tenant.id}`)}>
                             <Edit2 className="h-4 w-4 mr-2" /> Uredi
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => window.open(`/g/${tenant.slug}?preview=1`, '_blank')}
-                          >
-                            <ExternalLink className="h-4 w-4 mr-2" /> Poglej kot gost
+                          <Button variant="outline" size="sm" asChild>
+                            <a
+                              href={`/g/${tenant.slug}?preview=1`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" /> Poglej kot gost
+                            </a>
                           </Button>
                           <QrDialog slug={tenant.slug} name={tenant.name} customDomain={tenant.customDomain} />
                           <Button 
