@@ -1,0 +1,65 @@
+Navodilo za Replit — vstavi logotip Smart360
+Datoteke so v smart360-logo.zip. Naloži jih v public/brand/.
+
+The Smart360 wordmark is now final. Add it to the app exactly as described. Files are in the
+
+attached zip — upload them to public/brand/.
+
+FILES
+
+  public/brand/logo-smart360-moder.svg     #3B78DC  — the only version used in the UI
+
+  public/brand/logo-smart360-bel.svg       #FFFFFF  — print / dark backgrounds only
+
+  public/brand/logo-smart360-temen.svg     #14201F  — print only
+
+  public/brand/ikona-smart360-512.png      manifest / Android
+
+  public/brand/ikona-smart360-180.png      apple-touch-icon
+
+  public/brand/ikona-smart360-64.png       favicon
+
+RULE: the logo is ALWAYS blue #3B78DC in the app. Never recolour it, never invert it,
+
+never apply a filter, shadow, outline, gradient or rotation. Aspect ratio is 5.49:1 —
+
+set only the height, let the width follow. Minimum on-screen width 90px.
+
+1. PUBLIC PAGE — theme "mediterran"
+
+   In the app bar, top-left, replace whatever brand mark is there now:
+
+     <img src="/brand/logo-smart360-moder.svg" alt="Smart360" style="height:21px;width:auto">
+
+   The accommodation name does NOT go in the app bar. It stays in the white card below the
+
+   hero photo, together with the subtitle, rating and search field.
+
+2. PUBLIC PAGE — theme "swipe"
+
+   Top-left of the cover, directly on the photo, identical to the mediterran theme —
+
+   same blue, same size, no pill, no plate, no white background behind it:
+
+     <img src="/brand/logo-smart360-moder.svg" alt="Smart360" style="height:21px;width:auto">
+
+   The logo must look exactly the same in both themes. Do not add a background, border,
+
+   shadow or white version on the cover.
+
+3. ADMIN PANEL
+
+   Blue logo, height 26px, top-left of the header.
+
+4. ICONS
+
+   <link rel="icon" href="/brand/ikona-smart360-64.png" sizes="64x64">
+
+   <link rel="apple-touch-icon" href="/brand/ikona-smart360-180.png">
+
+   manifest.json → icons: ikona-smart360-512.png (512x512, purpose "any maskable")
+
+5. Tenant.logo stays in the database, but it is now used ONLY for the host avatar at the
+
+   bottom of the public page. It must not appear in the app bar or on the cover.
+
