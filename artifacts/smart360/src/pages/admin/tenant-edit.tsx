@@ -1,6 +1,6 @@
 import { useGetTenant, useUpdateTenant, getGetTenantQueryKey, getListTenantsQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Home, ShoppingBag, Compass, ShoppingCart, MessageCircle } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Home, ShoppingBag, Compass, ShoppingCart, MessageCircle, Upload, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -96,6 +96,7 @@ export default function AdminTenantEdit() {
     mapQuery: "",
     tourUrl: "",
     heroUrl: "",
+    logoUrl: "",
 
     coverTitle: null as string | null,
     coverSubtitle: null as string | null,
@@ -116,6 +117,9 @@ export default function AdminTenantEdit() {
   });
 
   const initRef = useRef<string | null>(null);
+  const heroFileRef = useRef<HTMLInputElement>(null);
+  const logoFileRef = useRef<HTMLInputElement>(null);
+  const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
   // Average luminance of the cover photo — for the contrast warning on the cover icons.
   const [coverLum, setCoverLum] = useState<number | null>(null);
@@ -164,6 +168,7 @@ export default function AdminTenantEdit() {
         mapQuery: tenant.mapQuery || "",
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
+        logoUrl: tenant.logoUrl || "",
 
         coverTitle: tenant.coverTitle ?? null,
         coverSubtitle: tenant.coverSubtitle ?? null,
@@ -184,6 +189,27 @@ export default function AdminTenantEdit() {
       });
     }
   }, [tenant]);
+
+  const handleImageUpload = async (file: File, kind: "hero" | "logo") => {
+    setUploadBusy(kind);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/admin/tenants/${id}/${kind}/upload`, {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json() as { heroUrl?: string | null; logoUrl?: string | null };
+      if (kind === "hero" && data.heroUrl) setFormData(prev => ({ ...prev, heroUrl: data.heroUrl! }));
+      if (kind === "logo" && data.logoUrl) setFormData(prev => ({ ...prev, logoUrl: data.logoUrl! }));
+    } catch {
+      alert(kind === "hero" ? "Nalaganje naslovnice ni uspelo." : "Nalaganje logotipa ni uspelo.");
+    } finally {
+      setUploadBusy(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -316,6 +342,99 @@ export default function AdminTenantEdit() {
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
+          {/* Hidden file inputs for hero/logo upload */}
+          <input
+            ref={heroFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "hero"); e.target.value = ""; }}
+          />
+          <input
+            ref={logoFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "logo"); e.target.value = ""; }}
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Fotografije gostitelja</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Hero image */}
+                <div className="space-y-3">
+                  <Label className="font-semibold">Naslovnica (Hero)</Label>
+                  <div
+                    className="relative rounded-xl overflow-hidden border-2 border-dashed border-muted-foreground/25 bg-muted flex items-center justify-center"
+                    style={{ aspectRatio: "16/9" }}
+                  >
+                    {formData.heroUrl ? (
+                      <img
+                        src={`${formData.heroUrl}?w=620`}
+                        alt="Naslovnica"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground py-8">
+                        <ImageIcon className="w-10 h-10 opacity-40" />
+                        <span className="text-sm">Ni naslovnice</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={uploadBusy !== null}
+                    onClick={() => heroFileRef.current?.click()}
+                  >
+                    {uploadBusy === "hero" ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Nalaganje…</>
+                    ) : (
+                      <><Upload className="w-4 h-4 mr-2" /> Zamenjaj naslovnico</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Logo image */}
+                <div className="space-y-3">
+                  <Label className="font-semibold">Logotip gostitelja</Label>
+                  <div
+                    className="relative rounded-xl overflow-hidden border-2 border-dashed border-muted-foreground/25 bg-muted flex items-center justify-center"
+                    style={{ aspectRatio: "16/9" }}
+                  >
+                    {formData.logoUrl ? (
+                      <img
+                        src={`${formData.logoUrl}?w=620`}
+                        alt="Logotip"
+                        className="w-full h-full object-contain p-4"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground py-8">
+                        <ImageIcon className="w-10 h-10 opacity-40" />
+                        <span className="text-sm">Ni logotipa</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={uploadBusy !== null}
+                    onClick={() => logoFileRef.current?.click()}
+                  >
+                    {uploadBusy === "logo" ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Nalaganje…</>
+                    ) : (
+                      <><Upload className="w-4 h-4 mr-2" /> Zamenjaj logotip</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Tema vmesnika</CardTitle>

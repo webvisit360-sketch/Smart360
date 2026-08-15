@@ -168,4 +168,70 @@ router.post(
   },
 );
 
+// ---------------------------------------------------------------------------
+// POST /admin/tenants/:id/hero/upload  — replace the tenant hero image.
+// POST /admin/tenants/:id/logo/upload  — replace the tenant logo image.
+// Both resize to 620/1400 via storePhotoVariants and update the DB column.
+// ---------------------------------------------------------------------------
+async function handleTenantImageUpload(
+  req: import("express").Request,
+  res: import("express").Response,
+  column: "heroUrl" | "logoUrl",
+): Promise<void> {
+  const tenantId = String(req.params["id"] ?? "");
+  if (!req.file) {
+    res.status(400).json({ error: "file is required" });
+    return;
+  }
+  const [tenant] = await db
+    .select({ id: tenantsTable.id, slug: tenantsTable.slug })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, tenantId));
+  if (!tenant) {
+    res.status(404).json({ error: "Tenant not found" });
+    return;
+  }
+  // Validate image before touching storage.
+  try {
+    const meta = await sharp(req.file.buffer).metadata();
+    if (!meta.width || !meta.height || meta.width * meta.height > 60_000_000) {
+      res.status(400).json({ error: "Neveljavna ali prevelika slika." });
+      return;
+    }
+  } catch {
+    res.status(400).json({ error: "Datoteka ni veljavna slika." });
+    return;
+  }
+  const name = `${randomUUID()}.jpg`;
+  try {
+    await storePhotoVariants(tenant.slug, name, req.file.buffer);
+  } catch (err) {
+    req.log.error({ err }, "tenant image upload failed");
+    res.status(500).json({ error: "Upload failed" });
+    return;
+  }
+  const url = `/api/storage/img/${tenant.slug}/${name}`;
+  const patch = column === "heroUrl" ? { heroUrl: url } : { logoUrl: url };
+  const [updated] = await db
+    .update(tenantsTable)
+    .set(patch)
+    .where(eq(tenantsTable.id, tenantId))
+    .returning({ heroUrl: tenantsTable.heroUrl, logoUrl: tenantsTable.logoUrl });
+  res.status(200).json({ heroUrl: updated?.heroUrl, logoUrl: updated?.logoUrl });
+}
+
+router.post(
+  "/admin/tenants/:id/hero/upload",
+  requireAdmin,
+  upload.single("file"),
+  (req, res): Promise<void> => handleTenantImageUpload(req, res, "heroUrl"),
+);
+
+router.post(
+  "/admin/tenants/:id/logo/upload",
+  requireAdmin,
+  upload.single("file"),
+  (req, res): Promise<void> => handleTenantImageUpload(req, res, "logoUrl"),
+);
+
 export default router;
