@@ -97,6 +97,10 @@ async function buildAll() {
       "wrangler",
       "zeromq",
       "zeromq-prebuilt",
+      // pdfkit loads its bundled .afm font data from disk at runtime — must stay external
+      "pdfkit",
+      "svg-to-pdfkit",
+      "fontkit",
       "playwright",
       "puppeteer",
       "puppeteer-core",

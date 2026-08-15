@@ -26,14 +26,12 @@ import { buildTenantContent } from "../lib/contentTree";
 import { checkSlugAvailability } from "../lib/slug";
 import { tenantAliasesTable } from "@workspace/db";
 import QRCode from "qrcode";
+import PDFDocument from "pdfkit";
+import SVGtoPDF from "svg-to-pdfkit";
+import { guestUrl, guestQrSvg } from "../lib/guestUrl";
+import { WORDMARK_SVG } from "../lib/wordmark";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
-function guestUrl(slug: string): string {
-  const domain = process.env["REPLIT_DEV_DOMAIN"];
-  const base = domain ? `https://${domain}` : "https://smart360.info";
-  return `${base}/g/${slug}`;
-}
-
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
 }
@@ -165,6 +163,71 @@ router.get("/admin/tenants/:id/qr.png", async (req, res): Promise<void> => {
   res.send(png);
 });
 
+// A6 label PDF — same card as the guest "Natisni nalepko" output (paket 14):
+// wordmark 38 mm, QR 62 mm, name, bilingual caption, address in blue.
+router.get("/admin/tenants/:id/label.pdf", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [tenant] = await db
+    .select({ slug: tenantsTable.slug, name: tenantsTable.name })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, id));
+  if (!tenant) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const MM = 72 / 25.4;
+  const pageW = 105 * MM;
+  const url = guestUrl(tenant.slug);
+  const qrSvg = await guestQrSvg(url);
+
+  const doc = new PDFDocument({ size: [pageW, 148 * MM], margin: 8 * MM });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="smart360-${tenant.slug}-nalepka-a6.pdf"`,
+  );
+  doc.pipe(res);
+
+  // Wordmark: 38 mm wide, aspect 4712:858.
+  const wmW = 38 * MM;
+  const wmH = (wmW * 858) / 4712;
+  let y = 14 * MM;
+  SVGtoPDF(doc, WORDMARK_SVG.replace("<svg ", '<svg fill="#3B78DC" '), (pageW - wmW) / 2, y, {
+    width: wmW,
+    height: wmH,
+    preserveAspectRatio: "xMidYMid meet",
+  });
+  y += wmH + 6 * MM;
+
+  const qrW = 62 * MM;
+  SVGtoPDF(doc, qrSvg, (pageW - qrW) / 2, y, {
+    width: qrW,
+    height: qrW,
+    preserveAspectRatio: "xMidYMid meet",
+  });
+  y += qrW + 5 * MM;
+
+  doc.font("Helvetica-Bold").fontSize(16).fillColor("#14201F");
+  doc.text(tenant.name, 8 * MM, y, { width: pageW - 16 * MM, align: "center" });
+  y = doc.y + 2 * MM;
+  doc.font("Helvetica-Bold").fontSize(9.5).fillColor("#14201F");
+  doc.text("Skenirajte za vse o nastanitvi in okolici", 8 * MM, y, {
+    width: pageW - 16 * MM,
+    align: "center",
+  });
+  doc.font("Helvetica-Oblique").fontSize(9.5).fillColor("#6B7876");
+  doc.text("Scan for everything about your stay", 8 * MM, doc.y + 1, {
+    width: pageW - 16 * MM,
+    align: "center",
+  });
+  doc.font("Helvetica-Bold").fontSize(9).fillColor("#3B78DC");
+  doc.text(url.replace(/^https?:\/\//, ""), 8 * MM, doc.y + 4 * MM, {
+    width: pageW - 16 * MM,
+    align: "center",
+  });
+  doc.end();
+});
+
 router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
   const [tenant] = await db
@@ -176,7 +239,9 @@ router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
     return;
   }
   const tree = await buildTenantContent(tenant, { visibleOnly: false });
-  res.json(GetTenantResponse.parse(serialize(tree)));
+  const publicUrl = guestUrl(tenant.slug);
+  const qrSvg = await guestQrSvg(publicUrl);
+  res.json(GetTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg })));
 });
 
 /** Enforces documented ranges/enums from ui/urejevalnik-naslovnice.md; returns error message or null. */

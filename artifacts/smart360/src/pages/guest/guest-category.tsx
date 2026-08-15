@@ -3,6 +3,7 @@ import { useRoute, useSearch, Link, useLocation } from "wouter";
 import { useState } from "react";
 import { Tabbar } from "./Tabbar";
 import { ContactSheet } from "./ContactSheet";
+import { ShareSheet } from "./ShareSheet";
 import { SearchOverlay } from "./SearchOverlay";
 import { formatTodayHours } from "../../lib/hours";
 import { sanitizeHtml } from "../../lib/sanitize";
@@ -30,6 +31,7 @@ export default function GuestCategory() {
   );
 
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
   useThemeAttr(tenant?.theme);
@@ -63,7 +65,10 @@ export default function GuestCategory() {
         <button className="iconbtn" onClick={() => setLocation(buildGuestPath(`/g/${slug}`))}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-back" /></svg>
         </button>
-        <button className="iconbtn right" onClick={() => setSearchOpen(true)}>
+        <button className="iconbtn right" onClick={() => setShareOpen(true)} aria-label="Deli">
+          <svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg>
+        </button>
+        <button className="iconbtn" onClick={() => setSearchOpen(true)}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg>
         </button>
       </header>
@@ -90,6 +95,7 @@ export default function GuestCategory() {
 
       <Tabbar slug={slug} tenant={tenant} currentTab={currentCategory.id} onContactClick={() => setContactOpen(true)} />
       <ContactSheet tenant={tenant} isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      <ShareSheet tenant={tenant} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
       <SearchOverlay slug={slug} lang={lang} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );

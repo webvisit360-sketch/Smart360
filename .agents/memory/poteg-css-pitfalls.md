@@ -39,3 +39,6 @@ Vsak var() spremenljivke naslovnice MORA imeti rezervno vrednost enako privzetku
 Obe temi se uvozita statično in ju vite vtičnik (vite-plugin-scope-themes.ts) ob prevodu predpne s html[data-theme="swipe"/"mediterran"] (:root/html → prefiks, body → prefiks + body; @keyframes nedotaknjeni). Preklop teme je izključno atribut data-theme, ki se nastavi ŽE MED RENDERJEM (use-theme-attr) — otroški layout effecti tečejo pred starševskimi.
 **Zakaj:** asinhroni <link> je pomenil, da so bile ob prvem izrisu vse meritve (clientWidth/scrollWidth) napačne in je scroll-snap porezal programske skoke na 0 (prazne globoke povezave).
 **Kako uporabiti:** pri programskem pozicioniranju pagerjev ostaja varovalka: rAF zanka (max 20 okvirjev) čaka display:flex, nato snap off → scrollLeft → reflow → snap on → razkrij; po izteku se pager VEDNO razkrije. Novi tematski CSS iz paketov mora ostati neskopiran — vtičnik skopira sam; pazi na ujemanje id-ja z query stringom (?t=...).
+
+## Scope-vtičnik in at-pravila
+- Vtičnik prefiksa samo selektorje (postcss walkRules); `@page`, `@font-face`, `@media`, `@supports`, `@keyframes` ostanejo nedotaknjeni, selektorji ZNOTRAJ @media pa se prefiksajo (`html,body` → `html[data-theme=..],html[data-theme=..] body`). Preverjeno v postreženem CSS ob paketu 14 (tisk nalepke A6 je odvisen od nepredponjenega `@page{size:A6;margin:8mm}`).

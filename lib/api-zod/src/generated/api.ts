@@ -122,7 +122,9 @@ export const GetPublicTenantResponse = zod.object({
 }))
 }))
 })))
-})))
+}))),
+  "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
+  "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl')
 }))
 
 
@@ -483,7 +485,9 @@ export const GetTenantResponse = zod.object({
 }))
 }))
 })))
-})))
+}))),
+  "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
+  "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl')
 }))
 
 
@@ -1085,5 +1089,15 @@ export const GetTenantQrParams = zod.object({
 })
 
 export const GetTenantQrResponse = zod.unknown()
+
+
+/**
+ * @summary Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+ */
+export const GetTenantLabelPdfParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetTenantLabelPdfResponse = zod.unknown()
 
 

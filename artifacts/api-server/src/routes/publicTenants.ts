@@ -6,6 +6,7 @@ import {
   SearchPublicTenantResponse,
 } from "@workspace/api-zod";
 import { buildTenantContent } from "../lib/contentTree";
+import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { isAuthenticated } from "../lib/adminAuth";
 
 function serialize<T>(value: T): unknown {
@@ -87,7 +88,11 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   const lang =
     typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
-  res.json(GetPublicTenantResponse.parse(serialize(tree)));
+  const publicUrl = guestUrl(tenant.slug);
+  const qrSvg = await guestQrSvg(publicUrl);
+  res.json(
+    GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
+  );
 });
 
 router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
@@ -111,7 +116,11 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const lang =
     typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
-  res.json(GetPublicTenantResponse.parse(serialize(tree)));
+  const publicUrl = guestUrl(tenant.slug);
+  const qrSvg = await guestQrSvg(publicUrl);
+  res.json(
+    GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
+  );
 });
 
 router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {

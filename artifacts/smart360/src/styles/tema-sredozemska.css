@@ -559,7 +559,35 @@ body{background:#EFECE6}
   font-family:var(--txt-font, inherit);
 }
 
-/* Privzete vrednosti naslovnice — preneseno iz prejšnje različice (NULL = privzeto teme) */
+
+/* ---------- deljenje: QR v listu ---------- */
+.qrbox{display:flex;flex-direction:column;align-items:center;gap:10px;margin:4px 0 18px;
+       padding:18px;border:1px solid var(--line);border-radius:20px;background:#fff}
+.qrbox__code{width:190px;height:190px}
+.qrbox__code svg{width:100%;height:100%;display:block;fill:none;stroke:none}
+.qrbox__code svg path{stroke:#14201F;stroke-width:1;shape-rendering:crispEdges}
+.qrbox__u{font-size:calc(12.5px * var(--txt-scale,1.4));font-weight:700;color:var(--ink-2);
+          letter-spacing:.01em;word-break:break-all;text-align:center}
+
+/* ---------- nalepka za tisk (A6) ---------- */
+#printcard{display:none}
+@media print{
+  @page{size:A6;margin:8mm}
+  html,body{height:auto !important;overflow:visible !important;background:#fff !important}
+  body>*{display:none !important}
+  #printcard{display:block !important;position:static}
+  .pc{text-align:center;font-family:"Figtree",sans-serif;color:#14201F}
+  .pc__logo{width:38mm;height:auto;display:block;margin:0 auto 6mm;fill:#3B78DC;stroke:none}
+  .pc__qr{width:62mm;height:62mm;margin:0 auto}
+  .pc__qr svg{width:100%;height:100%;display:block;fill:none;stroke:none}
+  .pc__qr svg path{stroke:#14201F;stroke-width:1;shape-rendering:crispEdges}
+  .pc__n{font-size:16pt;font-weight:800;letter-spacing:-.02em;margin-top:5mm}
+  .pc__s{font-size:9.5pt;font-weight:600;margin-top:2mm;line-height:1.45}
+  .pc__s i{color:#6B7876;font-style:italic}
+  .pc__u{font-size:9pt;font-weight:700;color:#3B78DC;margin-top:4mm}
+}
+
+/* ---- Smart360: privzete vrednosti naslovnice (appended, unscoped) ---- */
 html[data-theme="mediterran"]{
   --tt-txt:#14201F; --tt-size:24px;  --tt-op:1;
   --st-size:11px;   --st-op:1;

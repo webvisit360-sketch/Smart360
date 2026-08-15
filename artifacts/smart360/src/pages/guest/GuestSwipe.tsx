@@ -5,12 +5,14 @@ import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { getCoverVars, getTextVars } from "./cover-vars";
+import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc } from "./img";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
   const [activeSectionIdx, setActiveSectionIdx] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
   const pagerRef = useRef<HTMLDivElement>(null);
   const movingRef = useRef(false);
   const snapTimerRef = useRef<any>(null);
@@ -178,6 +180,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
               <span className="cover__sp"></span>
               <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
+              <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label="Deli"><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
               <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
             </div>
             <div className="cover__txt">
@@ -300,6 +303,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         onClose={() => setLocation(buildGuestPath(`/g/${slug}`))} 
         slug={slug} 
       />
+      <ShareSheet tenant={tenant} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
   );
 }

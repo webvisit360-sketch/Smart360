@@ -851,6 +851,24 @@ paths:
               schema:
                 type: string
                 format: binary
+  /admin/tenants/{id}/label.pdf:
+    get:
+      operationId: getTenantLabelPdf
+      tags: [tenants]
+      summary: Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: PDF document
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404":
+          description: Not found
 components:
   schemas:
     HealthStatus:
@@ -1299,7 +1317,13 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/SectionContent"
-          required: [sections]
+            publicUrl:
+              type: string
+              description: Canonical absolute https guest URL for the current slug
+            qrSvg:
+              type: string
+              description: Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl
+          required: [sections, publicUrl, qrSvg]
     SearchResult:
       type: object
       properties:

@@ -8,6 +8,7 @@ import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
 import { getCoverVars, getTextVars } from "./cover-vars";
+import { ShareSheet } from "./ShareSheet";
 import { imgSrc } from "./img";
 import { hsub } from "./hsub";
 import { useThemeAttr } from "./use-theme-attr";
@@ -28,6 +29,7 @@ export default function GuestHome() {
   );
 
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
   useThemeAttr(tenant?.theme);
@@ -106,7 +108,10 @@ export default function GuestHome() {
       <header className="appbar" id="appbar">
         <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
         
-        <div style={{position: 'relative', marginLeft: 'auto'}}>
+        <button className="iconbtn" style={{marginLeft: 'auto'}} onClick={() => setShareOpen(true)} aria-label="Deli">
+          <svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg>
+        </button>
+        <div style={{position: 'relative'}}>
           <button className="iconbtn">
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg>
           </button>
@@ -219,6 +224,7 @@ export default function GuestHome() {
 
       <Tabbar slug={slug} tenant={tenant} currentTab="home" onContactClick={() => setContactOpen(true)} />
       <ContactSheet tenant={tenant} isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      <ShareSheet tenant={tenant} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
       <SearchOverlay slug={slug} lang={lang} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );

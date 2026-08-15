@@ -35,3 +35,9 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - VSA besedila strežniško očisti cleanContentFields (adminContent.ts): body → majhen allowlist (p, b/strong, br, a[href]); ostala polja → golo besedilo; website/mapUrl → samo http(s), sicer null; tudi prevodi ob upsertu. Nikoli ne zaupaj odjemalcu.
 - Pravila slugov v api-server/src/lib/slug.ts (rezervirane besede, regex 3–40, checkSlugAvailability upošteva tudi tenant_aliases). Ob preimenovanju se stari slug za vedno zapiše v tenant_aliases; javni resolve najprej slug, nato alias → stari QR delujejo. Podvajanje/ustvarjanje najemnika gre skozi isti validator.
 - QR PNG: GET /api/admin/tenants/:id/qr.png (paket qrcode); naslov gostov zaenkrat REPLIT_DEV_DOMAIN/g/<slug>, ob selitvi na smart360.info popravi guestUrl() v adminTenants.ts.
+
+## Deljenje in QR (paket 14)
+- QR SVG in publicUrl generira strežnik in ju pošlje v TenantContent; brez odjemalske QR knjižnice.
+- **TenantContent shemo delita javni IN admin endpoint** — vsako novo `required` polje je treba dodati v OBA route-a, sicer zod parse na drugem poči šele ob zagonu.
+- pdfkit/svg-to-pdfkit/fontkit morajo v esbuild ostati `external` (pdfkit bere .afm pisave z diska; bundlanje poči na @swc/helpers).
+- Nalepka A6: en vir (wordmark+QR+ime+dvojezični napis), dva izhoda — #printcard v gosta (window.print) in /admin/.../label.pdf.

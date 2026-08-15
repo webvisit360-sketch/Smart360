@@ -3395,3 +3395,80 @@ export function useGetTenantQr<TData = Awaited<ReturnType<typeof getTenantQr>>, 
 
 
 
+export const getGetTenantLabelPdfUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/label.pdf`
+}
+
+/**
+ * @summary Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+ */
+export const getTenantLabelPdf = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetTenantLabelPdfUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTenantLabelPdfQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/label.pdf`
+    ] as const;
+    }
+
+
+export const getGetTenantLabelPdfQueryOptions = <TData = Awaited<ReturnType<typeof getTenantLabelPdf>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantLabelPdfQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantLabelPdf>>> = ({ signal }) => getTenantLabelPdf(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantLabelPdfQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantLabelPdf>>>
+export type GetTenantLabelPdfQueryError = ErrorType<void>
+
+
+/**
+ * @summary Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+ */
+
+export function useGetTenantLabelPdf<TData = Awaited<ReturnType<typeof getTenantLabelPdf>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantLabelPdfQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+

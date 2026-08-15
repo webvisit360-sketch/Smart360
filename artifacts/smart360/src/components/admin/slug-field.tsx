@@ -122,6 +122,11 @@ export function SlugField({
             <QrCode className="w-3.5 h-3.5 mr-1.5" /> Prenesi QR
           </a>
         </Button>
+        <Button type="button" variant="ghost" size="sm" className="h-7 px-2" asChild>
+          <a href={`/api/admin/tenants/${tenantId}/label.pdf`} download>
+            <QrCode className="w-3.5 h-3.5 mr-1.5" /> Nalepka (PDF, A6)
+          </a>
+        </Button>
       </div>
 
       {changed && (

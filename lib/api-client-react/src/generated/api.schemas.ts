@@ -481,6 +481,10 @@ export type SectionContent = Section & {
 
 export type TenantContent = Tenant & {
   sections: SectionContent[];
+  /** Canonical absolute https guest URL for the current slug */
+  publicUrl: string;
+  /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */
+  qrSvg: string;
 };
 
 export interface SearchResult {
