@@ -50,6 +50,7 @@ export const tenantsTable = pgTable("tenants", {
   coverMetaSize: doublePrecision("cover_meta_size"),
   coverMetaOpacity: doublePrecision("cover_meta_opacity"),
   coverVeil: doublePrecision("cover_veil"),
+  tileVeil: doublePrecision("tile_veil"),
   coverAlign: text("cover_align"),
   coverShowRating: boolean("cover_show_rating"),
   // Swipe theme bottom icon row colours (see ui/tema-poteg.css .tabdock)

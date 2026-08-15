@@ -200,6 +200,7 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
   if (!inRange(data["coverMetaSize"], 12, 32)) return "coverMetaSize must be 12-32";
   if (!inRange(data["coverMetaOpacity"], 20, 100)) return "coverMetaOpacity must be 20-100";
   if (!inRange(data["coverVeil"], 0, 60)) return "coverVeil must be 0-60";
+  if (!inRange(data["tileVeil"], 0, 60)) return "tileVeil must be 0-60";
   return null;
 }
 

@@ -168,6 +168,8 @@ export interface Tenant {
   /** @nullable */
   coverVeil?: number | null;
   /** @nullable */
+  tileVeil?: number | null;
+  /** @nullable */
   coverAlign?: string | null;
   /** @nullable */
   coverShowRating?: boolean | null;
@@ -251,6 +253,8 @@ export interface TenantUpdate {
   coverMetaOpacity?: number | null;
   /** @nullable */
   coverVeil?: number | null;
+  /** @nullable */
+  tileVeil?: number | null;
   /** @nullable */
   coverAlign?: string | null;
   /** @nullable */

@@ -61,6 +61,8 @@ export interface TenantUpdate {
   /** @nullable */
   coverVeil?: number | null;
   /** @nullable */
+  tileVeil?: number | null;
+  /** @nullable */
   coverAlign?: string | null;
   /** @nullable */
   coverShowRating?: boolean | null;

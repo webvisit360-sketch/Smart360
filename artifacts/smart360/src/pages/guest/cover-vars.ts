@@ -14,6 +14,7 @@ export function getCoverVars(tenant: any): CSSProperties {
   if (tenant.coverMetaOpacity != null) vars['--mt-op'] = tenant.coverMetaOpacity / 100;
   
   if (tenant.coverVeil != null) vars['--veil'] = tenant.coverVeil / 100;
+  if (tenant.tileVeil != null) vars['--tile-veil'] = tenant.tileVeil / 100;
   
   if (tenant.coverAlign != null) {
     vars['--cover-align'] = tenant.coverAlign;

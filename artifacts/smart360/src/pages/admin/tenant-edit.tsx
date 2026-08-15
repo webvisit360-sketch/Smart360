@@ -90,6 +90,7 @@ export default function AdminTenantEdit() {
     coverMetaSize: null as number | null,
     coverMetaOpacity: null as number | null,
     coverVeil: null as number | null,
+    tileVeil: null as number | null,
     coverAlign: null as string | null,
     coverShowRating: null as boolean | null,
 
@@ -164,6 +165,7 @@ export default function AdminTenantEdit() {
         coverMetaSize: tenant.coverMetaSize ?? null,
         coverMetaOpacity: tenant.coverMetaOpacity ?? null,
         coverVeil: tenant.coverVeil ?? null,
+        tileVeil: tenant.tileVeil ?? null,
         coverAlign: tenant.coverAlign ?? null,
         coverShowRating: tenant.coverShowRating ?? null,
 
@@ -232,6 +234,7 @@ export default function AdminTenantEdit() {
       coverMetaSize: null,
       coverMetaOpacity: null,
       coverVeil: null,
+      tileVeil: null,
       coverAlign: null,
       coverShowRating: null,
     }));
@@ -464,6 +467,7 @@ export default function AdminTenantEdit() {
               coverMetaSize: formData.coverMetaSize,
               coverMetaOpacity: formData.coverMetaOpacity,
               coverVeil: formData.coverVeil,
+              tileVeil: formData.tileVeil,
               coverAlign: formData.coverAlign,
               coverShowRating: formData.coverShowRating,
             }}

@@ -19,6 +19,7 @@ export const THEME_DEFAULTS = {
     coverMetaSize: 13.5,
     coverMetaOpacity: 100,
     coverVeil: 0,
+    tileVeil: 0,
     coverAlign: "left" as const,
     coverShowRating: true,
   },
@@ -31,6 +32,7 @@ export const THEME_DEFAULTS = {
     coverMetaSize: 19.5,
     coverMetaOpacity: 60,
     coverVeil: 26,
+    tileVeil: 0,
     coverAlign: "left" as const,
     coverShowRating: true,
   },
@@ -54,6 +56,7 @@ export interface CoverFields {
   coverMetaSize: number | null;
   coverMetaOpacity: number | null;
   coverVeil: number | null;
+  tileVeil: number | null;
   coverAlign: string | null;
   coverShowRating: boolean | null;
 }
@@ -145,6 +148,7 @@ export function CoverEditor({
   const effMetaSize = form.coverMetaSize ?? themeDefaults.coverMetaSize;
   const effMetaOpacity = form.coverMetaOpacity ?? themeDefaults.coverMetaOpacity;
   const effVeil = form.coverVeil ?? themeDefaults.coverVeil;
+  const effTileVeil = form.tileVeil ?? themeDefaults.tileVeil;
   const effAlign = form.coverAlign ?? themeDefaults.coverAlign;
   const effShowRating = form.coverShowRating ?? themeDefaults.coverShowRating;
 
@@ -278,7 +282,7 @@ export function CoverEditor({
                   onChange={(v) => onChange({ coverMetaOpacity: v })}
                 />
                 <SliderRow
-                  label="Zatemnitev slike"
+                  label="Zatemnitev naslovnice"
                   min={0}
                   max={60}
                   step={1}
@@ -286,6 +290,16 @@ export function CoverEditor({
                   value={effVeil}
                   isDefault={form.coverVeil === null}
                   onChange={(v) => onChange({ coverVeil: v })}
+                />
+                <SliderRow
+                  label="Zatemnitev ploščic"
+                  min={0}
+                  max={60}
+                  step={1}
+                  unit="%"
+                  value={effTileVeil}
+                  isDefault={form.tileVeil === null}
+                  onChange={(v) => onChange({ tileVeil: v })}
                 />
               </div>
             </div>

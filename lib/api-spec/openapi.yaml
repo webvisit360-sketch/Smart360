@@ -1016,6 +1016,7 @@ components:
         coverMetaSize: { type: ["number", "null"] }
         coverMetaOpacity: { type: ["number", "null"] }
         coverVeil: { type: ["number", "null"] }
+        tileVeil: { type: ["number", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
         navColorCover: { type: ["string", "null"] }
@@ -1076,6 +1077,7 @@ components:
         coverMetaSize: { type: ["number", "null"] }
         coverMetaOpacity: { type: ["number", "null"] }
         coverVeil: { type: ["number", "null"] }
+        tileVeil: { type: ["number", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
         navColorCover: { type: ["string", "null"] }
