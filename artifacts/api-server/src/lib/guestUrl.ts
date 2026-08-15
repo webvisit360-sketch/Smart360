@@ -5,9 +5,21 @@ import QRCode from "qrcode";
  * survive slug changes through the TenantAlias 301 redirect.
  */
 export function guestUrl(slug: string): string {
-  const domain = process.env["REPLIT_DEV_DOMAIN"];
-  const base = domain ? `https://${domain}` : "https://smart360.info";
-  return `${base}/g/${slug}`;
+  // Priority: explicit APP_DOMAIN (set this to smart360.info once the custom
+  // domain actually resolves) → published domain (production) → dev domain.
+  // Never a hard-coded future domain: a printed QR must point at a URL that
+  // works TODAY. A domain switch is NOT covered by TenantAlias redirects —
+  // those only handle slug renames within the same domain.
+  const domain =
+    process.env["APP_DOMAIN"] ||
+    process.env["REPLIT_DOMAINS"]?.split(",")[0] ||
+    process.env["REPLIT_DEV_DOMAIN"];
+  if (!domain) {
+    throw new Error(
+      "guestUrl: no APP_DOMAIN / REPLIT_DOMAINS / REPLIT_DEV_DOMAIN set",
+    );
+  }
+  return `https://${domain}/g/${slug}`;
 }
 
 /**

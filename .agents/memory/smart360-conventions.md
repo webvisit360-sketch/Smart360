@@ -41,3 +41,6 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - **TenantContent shemo delita javni IN admin endpoint** — vsako novo `required` polje je treba dodati v OBA route-a, sicer zod parse na drugem poči šele ob zagonu.
 - pdfkit/svg-to-pdfkit/fontkit morajo v esbuild ostati `external` (pdfkit bere .afm pisave z diska; bundlanje poči na @swc/helpers).
 - Nalepka A6: en vir (wordmark+QR+ime+dvojezični napis), dva izhoda — #printcard v gosta (window.print) in /admin/.../label.pdf.
+
+## Kanonični naslov (publicUrl/QR)
+- `guestUrl()` bere APP_DOMAIN → REPLIT_DOMAINS → REPLIT_DEV_DOMAIN; brez trdo kodirane domene (vrže napako, če ni nobene). Nalepke ne smejo v tisk, dokler produkcijska domena res ne deluje — menjava domene NI pokrita s TenantAlias (ta pokriva samo preimenovanje sluga znotraj iste domene). Ob preklopu na smart360.info nastavi APP_DOMAIN v produkciji.
