@@ -8,16 +8,60 @@ import {
   Route,
   Switch,
   useLocation,
+  useRoute,
+  useSearch,
   Router as WouterRouter,
 } from 'wouter';
+import { useGetPublicTenant } from '@workspace/api-client-react';
 
 import Landing from '@/pages/landing';
 import { AdminRouter } from '@/components/admin/admin-router';
 import GuestHome from '@/pages/guest/guest-home';
 import GuestCategory from '@/pages/guest/guest-category';
 import GuestLayout from '@/pages/guest/guest-layout';
+import { GuestSwipe } from '@/pages/guest/GuestSwipe';
 
 const queryClient = new QueryClient();
+
+/**
+ * GuestHost — single component rendered for ALL guest paths (/g/:slug and /g/:slug/c/:categoryId).
+ *
+ * For the swipe theme this component stays mounted as the user navigates between those two paths
+ * (because they share the same parent Route "/g/:slug*"), so the .detail overlay can animate in/out
+ * via CSS transitions rather than mounting already-open.
+ *
+ * For the Mediterranean theme we fall back to the original GuestHome / GuestCategory components
+ * which handle their own data fetching and loading states.
+ */
+function GuestHost() {
+  const [, paramsHome] = useRoute('/g/:slug');
+  const [matchCat, paramsCat] = useRoute('/g/:slug/c/:categoryId');
+
+  const slug = matchCat ? (paramsCat?.slug ?? '') : (paramsHome?.slug ?? '');
+  const categoryId = matchCat ? (paramsCat?.categoryId ?? null) : null;
+
+  const searchStr = useSearch();
+  const sp = new URLSearchParams(searchStr);
+  const lang = sp.get('lang') || 'sl';
+  const isPreview = sp.get('preview') === '1';
+
+  // React Query caches this — GuestLayout already fetched it so this is a synchronous cache hit.
+  const { data: tenant } = useGetPublicTenant(
+    slug,
+    { lang, preview: isPreview },
+    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, lang, isPreview] } },
+  );
+
+  // Swipe theme: one mounted GuestSwipe instance handles both the pager and the detail overlay.
+  // categoryId prop changes drive the detail open/close animation via CSS class toggling.
+  if (tenant?.theme === 'swipe') {
+    return <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={categoryId} />;
+  }
+
+  // Mediterranean theme: original route-aware components (they fetch via cache too).
+  if (matchCat) return <GuestCategory />;
+  return <GuestHome />;
+}
 
 function Router() {
   return (
@@ -26,22 +70,18 @@ function Router() {
         <Route path="/" component={Landing} />
         <Route path="/admin" component={AdminRouter} />
         <Route path="/admin/*" component={AdminRouter} />
-        
-        <Route path="/g/:slug">
+
+        {/* Single wildcard route for all guest paths so GuestHost (and GuestSwipe for the swipe
+            theme) stays mounted when navigating between /g/:slug and /g/:slug/c/:categoryId.
+            /g/:slug/*? uses wouter's optional wildcard — matches "/g/slug" and "/g/slug/c/catId". */}
+        <Route path="/g/:slug/*?">
           {() => (
             <GuestLayout>
-              <GuestHome />
+              <GuestHost />
             </GuestLayout>
           )}
         </Route>
-        <Route path="/g/:slug/c/:categoryId">
-          {() => (
-            <GuestLayout>
-              <GuestCategory />
-            </GuestLayout>
-          )}
-        </Route>
-        
+
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

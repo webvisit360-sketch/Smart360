@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
-/* ============================================================
+/* ----
    SMART360 · smer A — "Airbnb 2025, dosledno zvesto"
    Bela podlaga · hairline #EBEBEB · ena akcentna barva #FF385C
-   ============================================================ */
+   ---- */
 :root{
   --ink:#222222; --ink-2:#717171; --ink-3:#9A9A9A;
   --line:#EBEBEB; --line-2:#DDDDDD; --wash:#F7F7F7;
@@ -275,10 +275,10 @@ a{color:inherit;text-decoration:none}
 .fade{animation:f .24s ease}
 @keyframes f{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-/* ============================================================
+/* ----
    SMART360 · SKIN C — "Sredozemsko"
    Akcent: Google modra, potemnjena za 10 %  #4285F4 → #3B78DC
-   ============================================================ */
+   ---- */
 :root{
   --ink:#14201F; --ink-2:#6B7876; --ink-3:#9BA6A4;
   --line:#E8E4DD; --line-2:#DCD6CC; --wash:#F6F1E9;
@@ -439,10 +439,10 @@ body{background:#EFECE6}
 .srow .ic{color:var(--sea);stroke-width:1.8}
 .srow .t b{font-weight:700}
 
-/* ============================================================
+/* ----
    PREHOD MIŠKE (hover) — beli gumbi se obarvajo modro
    Velja samo za naprave z miško; na dotik se stanje ne "zatakne".
-   ============================================================ */
+   ---- */
 .chip,.act,.svc,.row,.srow,.qk button,.iconbtn,.btn,.mapbtn,.tab,.search,.hcard,.bc{
   transition:background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease,opacity .16s ease;
 }
@@ -497,9 +497,9 @@ body{background:#EFECE6}
 .card > .card__body > .banner:first-child{margin-top:0}
 .card > .card__body > .kv:first-of-type{margin-top:12px}
 
-/* ============================================================
+/* ----
    SMART360 · POTEG (swipe) — zasloni levo/desno
-   ============================================================ */
+   ---- */
 html,body{height:100%;overflow:hidden}
 body{background:#000}
 .app{max-width:none;width:100%;height:100dvh;background:#000;box-shadow:none;overflow:hidden}

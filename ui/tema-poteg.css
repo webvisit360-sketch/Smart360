@@ -571,7 +571,8 @@ body{background:#000}
 .gc img{width:100%;height:100%;object-fit:cover}
 .gc .ov{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(14,32,31,.42)}
 .gc .lb{position:absolute;left:13px;right:13px;bottom:11px;color:#fff;font-size:14.5px;
-        font-weight:800;letter-spacing:-.015em;line-height:1.2}
+        font-weight:800;letter-spacing:-.015em;line-height:1.2;display:block;background:transparent;
+        z-index:auto;inset:auto;align-items:unset;justify-content:unset}
 .gc .ico{position:absolute;top:11px;left:11px;width:32px;height:32px;border-radius:11px;
          background:rgba(255,255,255,.93);display:grid;place-items:center;color:var(--sea)}
 .gc .ico .ic{width:16px;height:16px;stroke-width:1.9}

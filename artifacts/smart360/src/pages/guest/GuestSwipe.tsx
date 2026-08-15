@@ -29,6 +29,17 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     return () => el.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Re-snap on resize (prevents half-snapped state after orientation change)
+  useEffect(() => {
+    const handleResize = () => {
+      const pg = pagerRef.current;
+      if (pg) pg.scrollLeft = activeSectionIdx * (pg.clientWidth || window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeSectionIdx]);
+
+  // Keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && categoryId) {
@@ -238,6 +249,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         </button>
       </nav>
 
+      {/* Always keep detail in DOM so CSS slide-in transition fires when category is selected */}
       <SwipeDetail 
         tenant={tenant} 
         category={currentCategory} 
@@ -250,23 +262,34 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
 }
 
 function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any, category: any, section: any, onClose: () => void, slug: string }) {
-  if (!category || !section) return null;
-
-  const categories = section.categories?.filter((c: any) => c.isVisible) || [];
-  const activeIdx = categories.findIndex((c: any) => c.id === category.id);
+  const isOpen = !!(category && section);
+  const categories = section?.categories?.filter((c: any) => c.isVisible) || [];
+  const activeIdx = category ? categories.findIndex((c: any) => c.id === category.id) : -1;
   
   const [, setLocation] = useLocation();
   const dpagerRef = useRef<HTMLDivElement>(null);
 
+  // Scroll dpager to active category when category changes (instant, not animated)
   useEffect(() => {
     if (dpagerRef.current && activeIdx >= 0) {
       dpagerRef.current.scrollTo({ left: activeIdx * dpagerRef.current.clientWidth, behavior: 'instant' });
     }
-  }, [category.id]); // only re-run when category changes route, not on normal scroll
+  }, [category?.id]);
 
+  // Scroll active chip into view when active category changes
+  useEffect(() => {
+    if (activeIdx < 0) return;
+    const t = setTimeout(() => {
+      const chip = document.querySelector('#dchips .chip.is-on') as HTMLElement | null;
+      if (chip) chip.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [category?.id]);
+
+  // Dpager scroll → update route (which updates active chip via category.id)
   useEffect(() => {
     const el = dpagerRef.current;
-    if (!el) return;
+    if (!el || !isOpen) return;
     
     let isScrolling = false;
     let scrollTimeout: any;
@@ -284,44 +307,48 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
     };
 
     el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [activeIdx, categories, slug, setLocation]);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, [activeIdx, categories, slug, setLocation, isOpen]);
 
   return (
-    <div className="detail on" id="detail">
-      <div className="detail__bar">
-        <button className="iconbtn" onClick={onClose}><svg className="ic" viewBox="0 0 24 24"><use href="#i-back" /></svg></button>
-        <h2 id="dtitle">{section.title}</h2>
-        <button className="iconbtn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
-      </div>
-      <div className="chips" id="dchips">
-        {categories.map((c: any, i: number) => (
-          <button 
-            key={c.id} 
-            className={`chip ${i === activeIdx ? 'is-on' : ''}`}
-            onClick={() => {
-              setLocation(buildGuestPath(`/g/${slug}/c/${c.id}`));
-            }}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
-      <div className="dpager" id="dpager" ref={dpagerRef}>
-        {categories.map((c: any, i: number) => {
-          // Lazy render: only render current, prev, next
-          const isNear = Math.abs(i - activeIdx) <= 1;
-          return (
-            <div className="dscreen" key={c.id}>
-              {isNear ? (
-                <div style={{ padding: '0 24px' }}>
-                  <CategoryContent category={c} tenant={tenant} items={c.items?.filter((it: any) => it.isVisible) || []} />
+    <div className={`detail${isOpen ? ' on' : ''}`} id="detail">
+      {isOpen && (
+        <>
+          <div className="detail__bar">
+            <button className="iconbtn" onClick={onClose}><svg className="ic" viewBox="0 0 24 24"><use href="#i-back" /></svg></button>
+            {/* Title tracks active category label, matching reference behaviour */}
+            <h2 id="dtitle">{category.label}</h2>
+            <button className="iconbtn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
+          </div>
+          <div className="chips" id="dchips">
+            {categories.map((c: any, i: number) => (
+              <button 
+                key={c.id} 
+                className={`chip ${i === activeIdx ? 'is-on' : ''}`}
+                onClick={() => setLocation(buildGuestPath(`/g/${slug}/c/${c.id}`))}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="dpager" id="dpager" ref={dpagerRef}>
+            {categories.map((c: any, i: number) => {
+              // Lazy render: only render current, prev, next
+              const isNear = Math.abs(i - activeIdx) <= 1;
+              return (
+                <div className="dscreen" key={c.id}>
+                  {isNear ? (
+                    <CategoryContent category={c} tenant={tenant} items={c.items?.filter((it: any) => it.isVisible) || []} />
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
