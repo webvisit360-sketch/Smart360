@@ -34,13 +34,14 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   useLayoutEffect(() => {
     const pg = pagerRef.current;
     if (!pg) return;
-    // The theme CSS arrives via an async <link> injected after the tenant
-    // loads. Until it applies, .pager is not a flex row and every width is
-    // wrong — so wait for it (frame by frame), position, THEN reveal.
+    // Themes ship in the main bundle now, so styles are normally applied at
+    // first paint. The short frame-by-frame guard stays as a safety net (max
+    // 20 frames) — after that the pager is revealed regardless: a hidden
+    // pager is worse than a misplaced one.
     let raf = 0;
     let tries = 0;
     const place = () => {
-      if (getComputedStyle(pg).display !== "flex" && tries++ < 180) {
+      if (getComputedStyle(pg).display !== "flex" && tries++ < 20) {
         raf = requestAnimationFrame(place);
         return;
       }
@@ -333,7 +334,7 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
     let tries = 0;
     const place = () => {
       // Wait until the async theme stylesheet is applied (see pager above).
-      if (getComputedStyle(el).display !== "flex" && tries++ < 180) {
+      if (getComputedStyle(el).display !== "flex" && tries++ < 20) {
         raf = requestAnimationFrame(place);
         return;
       }

@@ -5,6 +5,8 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
+import { scopeThemes } from './vite-plugin-scope-themes';
+
 const rawPort = process.env.PORT;
 
 if (!rawPort) {
@@ -30,6 +32,7 @@ if (!basePath) {
 export default defineConfig({
   base: basePath,
   plugins: [
+    scopeThemes(),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),

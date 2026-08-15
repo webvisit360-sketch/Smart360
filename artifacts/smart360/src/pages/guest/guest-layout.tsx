@@ -3,8 +3,11 @@ import { IconSprite } from "./IconSprite";
 import { useRoute, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 
-import cssMediterranUrl from "../../styles/tema-sredozemska.css?url";
-import cssSwipeUrl from "../../styles/tema-poteg.css?url";
+// Both themes ship in the main bundle, scoped to html[data-theme="..."] by
+// the scope-themes vite plugin. Switching is done purely via the attribute,
+// so layout rules are already applied at the very first paint.
+import "../../styles/tema-sredozemska.css";
+import "../../styles/tema-poteg.css";
 
 export default function GuestLayout({ children }: { children: ReactNode }) {
   const [match1, params1] = useRoute("/g/:slug");
@@ -27,7 +30,6 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       <IconSprite />
       {tenant ? (
         <>
-          <link rel="stylesheet" href={tenant.theme === 'swipe' ? cssSwipeUrl : cssMediterranUrl} />
           {isPreview && (
             <>
               <style>{`
