@@ -521,7 +521,7 @@ html[data-theme="swipe"]{
 }
 .cover{position:relative;height:100dvh;overflow:hidden;background:#111}
 .cover>img,.cover>iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
-.cover__veil{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(10,16,20,var(--veil))}
+.cover__veil{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(10,16,20,var(--veil,.26))}
 .cover__top{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:18px;right:18px;
             display:flex;align-items:center;gap:10px}
 
@@ -531,15 +531,15 @@ html[data-theme="swipe"]{
             display:grid;place-items:center;color:var(--ink)}
 .cover__btn .ic{width:19px;height:19px;stroke-width:1.9}
 
-.cover__txt{position:absolute;left:24px;right:24px;bottom:calc(104px + env(safe-area-inset-bottom,0px));text-align:var(--cover-align)}
-.cover__txt h1{font-size:var(--tt-size);line-height:1.02;font-weight:800;letter-spacing:-.045em;
-               color:var(--tt-txt);opacity:var(--tt-op);text-shadow:0 2px 30px rgba(0,0,0,.62);margin:0}
-.cover__txt p{margin:16px 0 0;font-size:var(--st-size);font-weight:600;letter-spacing:-.015em;
-              color:var(--tt-txt);opacity:var(--st-op);text-shadow:0 1px 20px rgba(0,0,0,.62)}
+.cover__txt{position:absolute;left:24px;right:24px;bottom:calc(104px + env(safe-area-inset-bottom,0px));text-align:var(--cover-align,left)}
+.cover__txt h1{font-size:var(--tt-size,56px);line-height:1.02;font-weight:800;letter-spacing:-.045em;
+               color:var(--tt-txt,#FFFFFF);opacity:var(--tt-op,.66);text-shadow:0 2px 30px rgba(0,0,0,.62);margin:0}
+.cover__txt p{margin:16px 0 0;font-size:var(--st-size,22px);font-weight:600;letter-spacing:-.015em;
+              color:var(--tt-txt,#FFFFFF);opacity:var(--st-op,.5);text-shadow:0 1px 20px rgba(0,0,0,.62)}
 .cover__meta{display:flex;align-items:center;justify-content:var(--cover-just,flex-start);gap:9px;margin-top:19px;
-             color:var(--tt-txt);opacity:var(--mt-op);font-size:var(--mt-size);font-weight:700;
+             color:var(--tt-txt,#FFFFFF);opacity:var(--mt-op,.6);font-size:var(--mt-size,19.5px);font-weight:700;
              text-shadow:0 1px 18px rgba(0,0,0,.62)}
-.cover__meta .ic{width:calc(var(--mt-size) * 1.08);height:calc(var(--mt-size) * 1.08);fill:currentColor;stroke:none}
+.cover__meta .ic{width:calc(var(--mt-size,19.5px) * 1.08);height:calc(var(--mt-size,19.5px) * 1.08);max-width:34px;max-height:34px;fill:currentColor;stroke:none}
 
 
 /* ---------- pikice ---------- */

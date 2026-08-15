@@ -5,6 +5,7 @@ import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { getCoverVars } from "./cover-vars";
+import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc } from "./img";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
@@ -14,6 +15,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const movingRef = useRef(false);
   const snapTimerRef = useRef<any>(null);
 
+  useThemeAttr(tenant?.theme);
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact
 
