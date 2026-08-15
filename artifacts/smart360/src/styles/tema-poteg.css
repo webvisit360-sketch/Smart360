@@ -545,7 +545,7 @@ body{background:#000}
 /* ---------- pikice ---------- */
 
 /* ---------- sekcijski zaslon ---------- */
-.sc{padding:calc(26px + env(safe-area-inset-top,0px)) 18px 104px}
+.sc{padding:calc(26px + env(safe-area-inset-top,0px)) 18px calc(78px + env(safe-area-inset-bottom,0px))}
 .sc__k{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sea)}
 .sc__t{font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.1;margin-top:6px}
 .sc__s{font-size:14.5px;color:var(--ink-2);font-weight:600;margin-top:8px}
@@ -565,7 +565,7 @@ body{background:#000}
 .rowlist .row{border-bottom:1px solid var(--line)}
 
 /* ---------- kontaktni zaslon ---------- */
-.contact{padding:calc(30px + env(safe-area-inset-top,0px)) 18px 112px}
+.contact{padding:calc(30px + env(safe-area-inset-top,0px)) 18px calc(86px + env(safe-area-inset-bottom,0px))}
 .contact .big-btn{margin-top:14px}
 
 /* ---------- podrobnosti (overlay pager) ---------- */
@@ -612,18 +612,24 @@ body{background:#000}
             font-weight:800;font-size:13.5px;color:var(--ink)}
 .seg button.on{background:var(--sea);border-color:var(--sea);color:#fff}
 
-/* ---------- spodnja vrstica — samo ikone, brez podlage ---------- */
-.tabdock{position:fixed;left:8px;right:8px;z-index:90;
-         bottom:calc(14px + env(safe-area-inset-bottom,0px));
-         height:52px;background:none;box-shadow:none;
+/* ---------- spodnja vrstica ----------
+   Podstrani: fiksen bel pas z minimalno višino, vsebina se drsi POD njim.
+   Naslovnica: brez pasu — same bele ikone na fotografiji.            */
+.tabdock{position:fixed;left:0;right:0;bottom:0;z-index:90;
+         height:calc(58px + env(safe-area-inset-bottom,0px));
+         padding-bottom:env(safe-area-inset-bottom,0px);
+         background:#fff;border-top:1px solid var(--line);
          display:flex;align-items:center;justify-content:space-around}
-.nv{flex:1 1 0;height:52px;display:flex;align-items:center;justify-content:center;
+.nv{flex:1 1 0;height:100%;display:flex;align-items:center;justify-content:center;
     background:none;color:var(--nv,#14201F);transition:color .16s ease}
 .nv .ic{width:27px;height:27px;stroke-width:1.9;flex:none;transition:stroke-width .16s ease}
 .nv.is-on{color:var(--nv-on,#3B78DC)}
 .nv.is-on .ic{stroke-width:2.5}
 .nv:active .ic{transform:scale(.9)}
 @media (hover:hover) and (pointer:fine){ .nv:hover{color:var(--nv-on,#3B78DC)} }
-/* on the cover the icons sit on a photo */
+/* naslovnica: pas izgine, ikone lebdijo na fotografiji */
+.tabdock.on-dark{background:none;border-top:0;
+                 left:8px;right:8px;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+                 height:52px;padding-bottom:0}
 .tabdock.on-dark .nv{color:var(--nv-cover,#FFFFFF)}
 .tabdock.on-dark .nv .ic{filter:drop-shadow(0 1px 6px rgba(0,0,0,.55))}
