@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, tenantsTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
@@ -18,20 +18,75 @@ function firstParam(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
 }
 
+/**
+ * Resolves a tenant by slug.  If the request carries a Host header that
+ * matches a customDomain stored in the database, that domain takes
+ * precedence and we look up the tenant by domain instead of slug.
+ */
+async function resolveTenantBySlugOrDomain(
+  slug: string,
+  host: string | undefined
+) {
+  // Strip port from host so "example.com:3000" matches "example.com".
+  const hostname = host ? host.replace(/:\d+$/, "") : undefined;
+
+  if (hostname) {
+    // Look for a tenant whose customDomain matches the incoming hostname.
+    const [byDomain] = await db
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.customDomain, hostname));
+    if (byDomain) return byDomain;
+  }
+
+  // Fall back to slug lookup.
+  const [bySlug] = await db
+    .select()
+    .from(tenantsTable)
+    .where(eq(tenantsTable.slug, slug));
+  return bySlug;
+}
+
+// GET /public/tenant-by-domain
+// Resolves the tenant from the Host header alone (used when the guest app
+// is served on a custom domain and the slug is unknown to the frontend).
+router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
+  const hostname = req.hostname; // express strips port automatically
+  if (!hostname) {
+    res.status(400).json({ error: "Cannot determine host" });
+    return;
+  }
+
+  const [tenant] = await db
+    .select()
+    .from(tenantsTable)
+    .where(eq(tenantsTable.customDomain, hostname));
+
+  const preview =
+    (req.query["preview"] === "true" || req.query["preview"] === "1") &&
+    (await isAuthenticated(req));
+
+  if (!tenant || (!tenant.isPublished && !preview)) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  const lang =
+    typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
+  const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
+  res.json(GetPublicTenantResponse.parse(serialize(tree)));
+});
+
 router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const slug = firstParam(req.params["slug"]);
   if (!slug) {
     res.status(400).json({ error: "Missing slug" });
     return;
   }
-  // The :slug segment matches either the tenant slug or its custom domain
-  // (guest apps served on a tenant's own domain resolve via hostname).
-  const [tenant] = await db
-    .select()
-    .from(tenantsTable)
-    .where(
-      or(eq(tenantsTable.slug, slug), eq(tenantsTable.customDomain, slug)),
-    );
+  const tenant = await resolveTenantBySlugOrDomain(
+    slug,
+    req.headers["host"] as string | undefined
+  );
   // Preview of unpublished tenants is only for the authenticated operator.
   const preview =
     (req.query["preview"] === "true" || req.query["preview"] === "1") &&
@@ -54,12 +109,10 @@ router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
     res.json(SearchPublicTenantResponse.parse(serialize([])));
     return;
   }
-  const [tenant] = await db
-    .select()
-    .from(tenantsTable)
-    .where(
-      or(eq(tenantsTable.slug, slug), eq(tenantsTable.customDomain, slug)),
-    );
+  const tenant = await resolveTenantBySlugOrDomain(
+    slug,
+    req.headers["host"] as string | undefined
+  );
   if (!tenant || (!tenant.isPublished && !(await isAuthenticated(req)))) {
     res.status(404).json({ error: "Not found" });
     return;
