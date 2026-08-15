@@ -870,6 +870,9 @@ components:
         coverVeil: { type: ["number", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
+        navColorCover: { type: string }
+        navColor: { type: string }
+        navColorOn: { type: string }
         languages:
           type: array
           items: { type: string }
@@ -927,6 +930,9 @@ components:
         coverVeil: { type: ["number", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
+        navColorCover: { type: string }
+        navColor: { type: string }
+        navColorOn: { type: string }
         languages:
           type: array
           items: { type: string }

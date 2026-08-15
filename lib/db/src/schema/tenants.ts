@@ -42,6 +42,10 @@ export const tenantsTable = pgTable("tenants", {
   coverVeil: doublePrecision("cover_veil"),
   coverAlign: text("cover_align"),
   coverShowRating: boolean("cover_show_rating"),
+  // Swipe theme bottom icon row colours (see ui/tema-poteg.css .tabdock)
+  navColorCover: text("nav_color_cover").notNull().default("#FFFFFF"),
+  navColor: text("nav_color").notNull().default("#14201F"),
+  navColorOn: text("nav_color_on").notNull().default("#3B78DC"),
   languages: text("languages")
     .array()
     .notNull()

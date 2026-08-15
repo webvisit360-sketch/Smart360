@@ -531,7 +531,7 @@ body{background:#000}
             display:grid;place-items:center;color:var(--ink)}
 .cover__btn .ic{width:19px;height:19px;stroke-width:1.9}
 
-.cover__txt{position:absolute;left:24px;right:24px;bottom:calc(112px + env(safe-area-inset-bottom,0px));text-align:var(--cover-align)}
+.cover__txt{position:absolute;left:24px;right:24px;bottom:calc(104px + env(safe-area-inset-bottom,0px));text-align:var(--cover-align)}
 .cover__txt h1{font-size:var(--tt-size);line-height:1.02;font-weight:800;letter-spacing:-.045em;
                color:var(--tt-txt);opacity:var(--tt-op);text-shadow:0 2px 30px rgba(0,0,0,.62);margin:0}
 .cover__txt p{margin:16px 0 0;font-size:var(--st-size);font-weight:600;letter-spacing:-.015em;
@@ -541,24 +541,11 @@ body{background:#000}
              text-shadow:0 1px 18px rgba(0,0,0,.62)}
 .cover__meta .ic{width:calc(var(--mt-size) * 1.08);height:calc(var(--mt-size) * 1.08);fill:currentColor;stroke:none}
 
-.swipehint{position:absolute;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));
-           display:flex;justify-content:center;pointer-events:none}
-.swipehint span{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.85);
-                font-size:12.5px;font-weight:700;letter-spacing:.02em}
-.swipehint .ic{width:16px;height:16px;stroke:rgba(255,255,255,.85);stroke-width:2;
-               animation:sw 1.9s ease-in-out infinite}
-@keyframes sw{0%,100%{transform:translateX(0);opacity:.5}50%{transform:translateX(8px);opacity:1}}
 
 /* ---------- pikice ---------- */
-.dots{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom,0px));
-      display:flex;justify-content:center;gap:7px;z-index:80;pointer-events:auto}
-.dots i{width:7px;height:7px;border-radius:50%;background:rgba(20,32,31,.22);transition:all .22s ease;cursor:pointer}
-.dots i.on{width:24px;border-radius:999px;background:var(--sea)}
-.dots.on-dark i{background:rgba(255,255,255,.42)}
-.dots.on-dark i.on{background:#fff}
 
 /* ---------- sekcijski zaslon ---------- */
-.sc{padding:calc(26px + env(safe-area-inset-top,0px)) 18px 120px}
+.sc{padding:calc(26px + env(safe-area-inset-top,0px)) 18px 104px}
 .sc__k{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sea)}
 .sc__t{font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.1;margin-top:6px}
 .sc__s{font-size:14.5px;color:var(--ink-2);font-weight:600;margin-top:8px}
@@ -578,11 +565,11 @@ body{background:#000}
 .rowlist .row{border-bottom:1px solid var(--line)}
 
 /* ---------- kontaktni zaslon ---------- */
-.contact{padding:calc(30px + env(safe-area-inset-top,0px)) 18px 130px}
+.contact{padding:calc(30px + env(safe-area-inset-top,0px)) 18px 112px}
 .contact .big-btn{margin-top:14px}
 
 /* ---------- podrobnosti (overlay pager) ---------- */
-.detail{position:fixed;inset:0;z-index:90;background:#fff;transform:translateX(100%);
+.detail{position:fixed;inset:0;z-index:100;background:#fff;transform:translateX(100%);
         transition:transform .32s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column}
 .detail.on{transform:translateX(0)}
 .detail__bar{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
@@ -624,3 +611,19 @@ body{background:#000}
 .seg button{flex:1;height:42px;border-radius:14px;border:1px solid var(--line);background:#fff;
             font-weight:800;font-size:13.5px;color:var(--ink)}
 .seg button.on{background:var(--sea);border-color:var(--sea);color:#fff}
+
+/* ---------- spodnja vrstica — samo ikone, brez podlage ---------- */
+.tabdock{position:fixed;left:8px;right:8px;z-index:90;
+         bottom:calc(14px + env(safe-area-inset-bottom,0px));
+         height:52px;background:none;box-shadow:none;
+         display:flex;align-items:center;justify-content:space-around}
+.nv{flex:1 1 0;height:52px;display:flex;align-items:center;justify-content:center;
+    background:none;color:var(--nv,#14201F);transition:color .16s ease}
+.nv .ic{width:27px;height:27px;stroke-width:1.9;flex:none;transition:stroke-width .16s ease}
+.nv.is-on{color:var(--nv-on,#3B78DC)}
+.nv.is-on .ic{stroke-width:2.5}
+.nv:active .ic{transform:scale(.9)}
+@media (hover:hover) and (pointer:fine){ .nv:hover{color:var(--nv-on,#3B78DC)} }
+/* on the cover the icons sit on a photo */
+.tabdock.on-dark .nv{color:var(--nv-cover,#FFFFFF)}
+.tabdock.on-dark .nv .ic{filter:drop-shadow(0 1px 6px rgba(0,0,0,.55))}

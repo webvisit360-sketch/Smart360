@@ -1,0 +1,217 @@
+Tema POTEG — spodnja vrstica (samo ikone) + barve v administraciji
+Nadomesti pikice in namig »Povlecite levo«. Brez bele pasice — samo ikone. Referenčni datoteki v paketu UI: tema-poteg.css in zasloni-poteg.html.
+
+
+Navodilo za Replit (prilepi v celoti)
+Replace the page indicator in the "swipe" theme with a bottom row of icons.
+
+Use the CSS and markup below verbatim — do not restyle, do not substitute a component
+
+library, do not change sizes.
+
+REMOVE COMPLETELY
+
+  - the dot page indicator (.dots and every rule for it)
+
+  - the "Povlecite levo" swipe hint (.swipehint and its @keyframes)
+
+  - any white bar, pill, card, plate or panel behind the bottom icons
+
+THE BOTTOM ROW
+
+  5 icons = the 5 main categories, in this exact order, pointing at screens 1-5:
+
+  | # | screen   | icon (sprite id) | aria-label          |
+
+  |---|----------|------------------|---------------------|
+
+  | 1 | stay     | #i-home          | Vaša nastanitev     |
+
+  | 2 | offer    | #i-bag           | Naša ponudba        |
+
+  | 3 | explore  | #i-compass       | Odkrij okolico      |
+
+  | 4 | services | #i-cart          | Storitve v bližini  |
+
+  | 5 | contact  | #i-chat          | Tu smo za vas       |
+
+  Screen 0 is the cover — it has no icon. The guest returns to it by swiping right.
+
+  The row is visible on EVERY screen, including the cover, and floats directly over the
+
+  content with NO background of any kind.
+
+  Icons come from the same sprite as the category icons — no icon library, no emoji.
+
+  There is NO text label anywhere in this row. The guest knows where they are from the
+
+  large heading at the top of each screen.
+
+MARKUP (rendered once, outside .pager, as the last child of .app)
+
+  <nav class="tabdock" id="tabdock">
+
+    <button class="nv" data-i="1" onclick="pageTo(1)" aria-label="Vaša nastanitev" title="Vaša nastanitev">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-home"></use></svg></button>
+
+    <button class="nv" data-i="2" onclick="pageTo(2)" aria-label="Naša ponudba" title="Naša ponudba">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-bag"></use></svg></button>
+
+    <button class="nv" data-i="3" onclick="pageTo(3)" aria-label="Odkrij okolico" title="Odkrij okolico">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-compass"></use></svg></button>
+
+    <button class="nv" data-i="4" onclick="pageTo(4)" aria-label="Storitve v bližini" title="Storitve v bližini">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-cart"></use></svg></button>
+
+    <button class="nv" data-i="5" onclick="pageTo(5)" aria-label="Tu smo za vas" title="Tu smo za vas">
+
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-chat"></use></svg></button>
+
+  </nav>
+
+CSS (copy exactly)
+
+  .tabdock{position:fixed;left:8px;right:8px;z-index:90;
+
+           bottom:calc(14px + env(safe-area-inset-bottom,0px));
+
+           height:52px;background:none;box-shadow:none;
+
+           display:flex;align-items:center;justify-content:space-around}
+
+  .nv{flex:1 1 0;height:52px;display:flex;align-items:center;justify-content:center;
+
+      background:none;color:var(--nv,#14201F);transition:color .16s ease}
+
+  .nv .ic{width:27px;height:27px;stroke-width:1.9;flex:none;transition:stroke-width .16s ease}
+
+  .nv.is-on{color:var(--nv-on,#3B78DC)}
+
+  .nv.is-on .ic{stroke-width:2.5}
+
+  .nv:active .ic{transform:scale(.9)}
+
+  @media (hover:hover) and (pointer:fine){ .nv:hover{color:var(--nv-on,#3B78DC)} }
+
+  /* on the cover the icons sit on a photo */
+
+  .tabdock.on-dark .nv{color:var(--nv-cover,#FFFFFF)}
+
+  .tabdock.on-dark .nv .ic{filter:drop-shadow(0 1px 6px rgba(0,0,0,.55))}
+
+BEHAVIOUR
+
+  1. Tapping an icon scrolls the pager to that screen:
+
+       function pageTo(i){
+
+         const pg=document.getElementById("pager");
+
+         pg.scrollTo({left:i*pg.clientWidth,behavior:"smooth"});
+
+         P.i=i; syncNav();
+
+       }
+
+  2. Swiping updates the active icon — the pager's scroll listener calls syncNav():
+
+       function syncNav(){
+
+         document.querySelectorAll("#tabdock .nv").forEach(b=>
+
+           b.classList.toggle("is-on", +b.dataset.i === P.i));
+
+         document.getElementById("tabdock").classList.toggle("on-dark", P.i===0);
+
+       }
+
+     Swiping and tapping must always agree. On the cover (screen 0) no icon is active and the
+
+     row gets the on-dark class.
+
+  3. Screen content needs bottom clearance:
+
+       .sc{padding-bottom:104px}  .contact{padding-bottom:112px}
+
+       .cover__txt{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+
+  4. The detail overlay covers the row: .detail{z-index:100}.
+
+  5. Keyboard arrows keep working (ArrowLeft / ArrowRight), Escape closes the detail overlay.
+
+DO NOT
+
+  - no white bar, pill, plate, blur or shadow behind the icons
+
+  - no left/right arrow buttons, no dots, no progress line, no page counter
+
+  - no text labels in the bottom row
+
+  - do not shrink the icons below 27px (guests without glasses must read them)
+
+  - no badge, counter or notification dot
+
+
+Barve ikon so nastavljive v administraciji
+The colour of the bottom icons must be editable per accommodation, in the same admin panel
+
+section as the cover title settings. Three separate colours, each with a free colour picker.
+
+DATABASE — add to the Tenant model
+
+  navColorCover  String  @default("#FFFFFF")   // icons on the cover photo
+
+  navColor       String  @default("#14201F")   // icons on the section screens
+
+  navColorOn     String  @default("#3B78DC")   // the active icon
+
+ADMIN UI — add a group titled "Ikone spodaj" under the cover-title settings, three rows:
+
+  | Field           | Label in admin           | Default |
+
+  |-----------------|--------------------------|---------|
+
+  | navColorCover   | Barva na naslovnici      | #FFFFFF |
+
+  | navColor        | Barva na podstraneh      | #14201F |
+
+  | navColorOn      | Barva izbrane ikone      | #3B78DC |
+
+  Each row: the six brand presets as round swatches
+
+  (#FFFFFF, #F6F1E9, #FFE9B8, #3B78DC, #14201F, #C4552E)
+
+  followed by an <input type="color"> so ANY colour can be chosen. The current hex value is
+
+  printed at the right end of the label. Live preview — the icons change as the colour changes,
+
+  before saving. A "Ponastavi" button restores the three defaults above.
+
+APPLYING THE VALUES — set CSS variables, do not write new classes or inline styles on the icons:
+
+  const r = document.documentElement.style;
+
+  r.setProperty("--nv",       t.navColor);
+
+  r.setProperty("--nv-on",    t.navColorOn);
+
+  r.setProperty("--nv-cover", t.navColorCover);
+
+  On server-side render, emit the same three variables as a style attribute on the root element
+
+  so there is no flash of the default colour on load.
+
+  Values are stored PER ACCOMMODATION, not globally.
+
+WARN THE MANAGER, DO NOT BLOCK
+
+  If a chosen colour has contrast below 3:1 against its background (white for the section
+
+  screens, the average of the cover photo for the cover), show a small inline note:
+
+  "Ta barva je slabo vidna." Save it anyway — the manager decides.
+

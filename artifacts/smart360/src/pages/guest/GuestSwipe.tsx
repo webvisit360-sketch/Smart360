@@ -25,6 +25,20 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     return () => el.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && categoryId) {
+        setLocation(buildGuestPath(`/g/${slug}`));
+        return;
+      }
+      if (categoryId) return;
+      if (e.key === "ArrowRight") scrollToScreen(Math.min(activeSectionIdx + 1, totalScreens - 1));
+      if (e.key === "ArrowLeft") scrollToScreen(Math.max(activeSectionIdx - 1, 0));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeSectionIdx, totalScreens, categoryId, slug, setLocation]);
+
   const scrollToScreen = (idx: number) => {
     if (pagerRef.current) {
       pagerRef.current.scrollTo({ left: idx * pagerRef.current.clientWidth, behavior: 'smooth' });
@@ -35,6 +49,11 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   
   const coverVars = getCoverVars(tenant);
+  const navVars = {
+    "--nv": tenant.navColor || "#14201F",
+    "--nv-on": tenant.navColorOn || "#3B78DC",
+    "--nv-cover": tenant.navColorCover || "#FFFFFF",
+  } as React.CSSProperties;
 
   const showRating = tenant.coverShowRating !== false;
 
@@ -52,7 +71,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   }
 
   return (
-    <div className="app">
+    <div className="app" style={navVars}>
       <div className="pager" id="pager" ref={pagerRef}>
         <section className="screen">
           <div className="cover" style={coverVars}>
@@ -77,9 +96,6 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                   {tenant.rating || "5.0"} · {tenant.reviewsCount || "0"} ocen
                 </div>
               )}
-            </div>
-            <div className="swipehint">
-              <span onClick={() => scrollToScreen(1)}>Povlecite levo<svg className="ic" viewBox="0 0 24 24"><use href="#i-chev" /></svg></span>
             </div>
           </div>
         </section>
@@ -163,11 +179,33 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         </section>
       </div>
 
-      <div className={`dots ${activeSectionIdx === 0 ? 'on-dark' : ''}`} id="dots">
-        {Array.from({ length: totalScreens }).map((_, i) => (
-          <i key={i} className={i === activeSectionIdx ? 'on' : ''} onClick={() => scrollToScreen(i)}></i>
-        ))}
-      </div>
+      <nav className={`tabdock ${activeSectionIdx === 0 ? 'on-dark' : ''}`} id="tabdock">
+        {sections.map((sec: any, idx: number) => {
+          const fallback = ["i-home", "i-bag", "i-compass", "i-cart"];
+          const iconId = sec.icon ? spriteId(sec.icon) : (fallback[idx] || "i-doc");
+          return (
+            <button
+              key={sec.id}
+              className={`nv ${activeSectionIdx === idx + 1 ? 'is-on' : ''}`}
+              data-i={idx + 1}
+              onClick={() => scrollToScreen(idx + 1)}
+              aria-label={sec.title}
+              title={sec.title}
+            >
+              <svg className="ic" viewBox="0 0 24 24"><use href={`#${iconId}`} /></svg>
+            </button>
+          );
+        })}
+        <button
+          className={`nv ${activeSectionIdx === totalScreens - 1 ? 'is-on' : ''}`}
+          data-i={totalScreens - 1}
+          onClick={() => scrollToScreen(totalScreens - 1)}
+          aria-label="Tu smo za vas"
+          title="Tu smo za vas"
+        >
+          <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
+        </button>
+      </nav>
 
       <SwipeDetail 
         tenant={tenant} 

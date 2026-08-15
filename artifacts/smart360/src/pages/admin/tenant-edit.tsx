@@ -1,6 +1,6 @@
 import { useGetTenant, useUpdateTenant, getGetTenantQueryKey, getListTenantsQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Home, ShoppingBag, Compass, ShoppingCart, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,30 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
 const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
+
+const NAV_DEFAULTS = {
+  navColorCover: "#FFFFFF",
+  navColor: "#14201F",
+  navColorOn: "#3B78DC",
+} as const;
+
+function relLuminance(hex: string): number | null {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  const chan = (v: number) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * chan((n >> 16) & 255) + 0.7152 * chan((n >> 8) & 255) + 0.0722 * chan(n & 255);
+}
+
+function contrastRatio(hexA: string, lumB: number): number | null {
+  const a = relLuminance(hexA);
+  if (a === null) return null;
+  const [hi, lo] = a > lumB ? [a, lumB] : [lumB, a];
+  return (hi + 0.05) / (lo + 0.05);
+}
 
 const THEME_DEFAULTS = {
   mediterran: {
@@ -84,9 +108,43 @@ export default function AdminTenantEdit() {
     coverVeil: null as number | null,
     coverAlign: null as string | null,
     coverShowRating: null as boolean | null,
+
+    navColorCover: NAV_DEFAULTS.navColorCover as string,
+    navColor: NAV_DEFAULTS.navColor as string,
+    navColorOn: NAV_DEFAULTS.navColorOn as string,
   });
 
   const initRef = useRef<string | null>(null);
+
+  // Average luminance of the cover photo — for the contrast warning on the cover icons.
+  const [coverLum, setCoverLum] = useState<number | null>(null);
+  useEffect(() => {
+    if (!formData.heroUrl) { setCoverLum(null); return; }
+    let cancelled = false;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = 16; c.height = 16;
+        const ctx = c.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 16, 16);
+        const d = ctx.getImageData(0, 0, 16, 16).data;
+        let sum = 0;
+        const chan = (v: number) => {
+          const x = v / 255;
+          return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+        };
+        for (let i = 0; i < d.length; i += 4) {
+          sum += 0.2126 * chan(d[i]) + 0.7152 * chan(d[i + 1]) + 0.0722 * chan(d[i + 2]);
+        }
+        if (!cancelled) setCoverLum(sum / (d.length / 4));
+      } catch { /* tainted canvas or similar — skip the warning */ }
+    };
+    img.src = formData.heroUrl;
+    return () => { cancelled = true; };
+  }, [formData.heroUrl]);
 
   useEffect(() => {
     if (tenant && initRef.current !== tenant.id) {
@@ -118,6 +176,10 @@ export default function AdminTenantEdit() {
         coverVeil: tenant.coverVeil ?? null,
         coverAlign: tenant.coverAlign ?? null,
         coverShowRating: tenant.coverShowRating ?? null,
+
+        navColorCover: tenant.navColorCover || NAV_DEFAULTS.navColorCover,
+        navColor: tenant.navColor || NAV_DEFAULTS.navColor,
+        navColorOn: tenant.navColorOn || NAV_DEFAULTS.navColorOn,
       });
     }
   }, [tenant]);
@@ -450,7 +512,65 @@ export default function AdminTenantEdit() {
                       </div>
                     </div>
                   </div>
-                  
+
+                  {formData.theme === 'swipe' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="font-semibold text-sm">Ikone spodaj</h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7"
+                          onClick={() => setFormData(prev => ({ ...prev, ...NAV_DEFAULTS }))}
+                        >
+                          <RefreshCcw className="w-3 h-3 mr-1.5" />
+                          Ponastavi
+                        </Button>
+                      </div>
+                      {([
+                        { key: 'navColorCover', label: 'Barva na naslovnici', lum: coverLum },
+                        { key: 'navColor', label: 'Barva na podstraneh', lum: relLuminance('#FFFFFF') },
+                        { key: 'navColorOn', label: 'Barva izbrane ikone', lum: relLuminance('#FFFFFF') },
+                      ] as const).map(({ key, label, lum }) => {
+                        const value = formData[key];
+                        const ratio = lum !== null ? contrastRatio(value, lum) : null;
+                        return (
+                          <div key={key} className="pt-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-xs text-muted-foreground">{label}</Label>
+                              <span className="text-xs font-mono font-medium">{value.toUpperCase()}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
+                                {PRESET_COLORS.map(color => (
+                                  <button
+                                    key={color}
+                                    className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${value.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
+                                    style={{ backgroundColor: color }}
+                                    onClick={() => setFormData({ ...formData, [key]: color })}
+                                    title={color}
+                                  />
+                                ))}
+                              </div>
+                              <Input
+                                type="color"
+                                value={value}
+                                onChange={e => setFormData({ ...formData, [key]: e.target.value })}
+                                className="w-10 h-10 p-1 cursor-pointer"
+                              />
+                            </div>
+                            {ratio !== null && ratio < 3 && (
+                              <p className="text-xs text-amber-600 mt-1.5">Ta barva je slabo vidna.</p>
+                            )}
+                            {key === 'navColorCover' && ratio === null && (
+                              <p className="text-xs text-muted-foreground mt-1.5">Kontrasta z naslovnico ni mogoče preveriti (ni fotografije ali pa je naslovnica 360° ogled).</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                 </div>
                 
                 {/* Live Preview */}
@@ -526,7 +646,30 @@ export default function AdminTenantEdit() {
                           {formData.coverSubtitle || formData.subtitle || 'Podnaslov namestitve'}
                         </p>
                       </div>
+
+                      {formData.theme === 'swipe' && (
+                        <div
+                          className="absolute inset-x-2 bottom-3 flex items-center justify-around pointer-events-none"
+                          style={{ height: 40, color: formData.navColorCover, filter: 'drop-shadow(0 1px 6px rgba(0,0,0,.55))' }}
+                        >
+                          <Home size={22} strokeWidth={1.9} />
+                          <ShoppingBag size={22} strokeWidth={1.9} />
+                          <Compass size={22} strokeWidth={1.9} />
+                          <ShoppingCart size={22} strokeWidth={1.9} />
+                          <MessageCircle size={22} strokeWidth={1.9} />
+                        </div>
+                      )}
                     </div>
+
+                    {formData.theme === 'swipe' && (
+                      <div className="mt-3 rounded-xl border bg-white px-2 py-2 flex items-center justify-around max-w-sm mx-auto">
+                        <Home size={22} strokeWidth={2.5} style={{ color: formData.navColorOn }} />
+                        <ShoppingBag size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
+                        <Compass size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
+                        <ShoppingCart size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
+                        <MessageCircle size={22} strokeWidth={1.9} style={{ color: formData.navColor }} />
+                      </div>
+                    )}
                   </div>
                 </div>
 

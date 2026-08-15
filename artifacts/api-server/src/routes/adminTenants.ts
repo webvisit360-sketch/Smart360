@@ -151,6 +151,10 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
     return "coverAlign must be 'left' or 'center'";
   if (data["coverTextColor"] !== undefined && data["coverTextColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["coverTextColor"])))
     return "coverTextColor must be a hex color like #FFFFFF";
+  for (const key of ["navColorCover", "navColor", "navColorOn"]) {
+    if (data[key] !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(data[key])))
+      return `${key} must be a hex color like #FFFFFF`;
+  }
   if (!inRange(data["coverTitleSize"], 24, 84)) return "coverTitleSize must be 24-84";
   if (!inRange(data["coverTitleOpacity"], 20, 100)) return "coverTitleOpacity must be 20-100";
   if (!inRange(data["coverSubSize"], 12, 40)) return "coverSubSize must be 12-40";

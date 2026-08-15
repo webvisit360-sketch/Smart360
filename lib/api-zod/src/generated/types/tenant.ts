@@ -65,6 +65,9 @@ export interface Tenant {
   coverAlign?: string | null;
   /** @nullable */
   coverShowRating?: boolean | null;
+  navColorCover?: string;
+  navColor?: string;
+  navColorOn?: string;
   languages: string[];
   isTemplate: boolean;
   isPublished: boolean;
