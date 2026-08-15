@@ -38,7 +38,9 @@ app.use(
     },
   }),
 );
-app.use(cors());
+// CORS only on the public tenant API; /admin/* stays same-origin-only (no CORS headers at all).
+app.use("/api/public", cors());
+app.use("/api/healthz", cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
