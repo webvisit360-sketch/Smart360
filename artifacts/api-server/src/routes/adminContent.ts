@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   sectionsTable,
@@ -284,10 +284,11 @@ router.post("/admin/categories/reorder", async (req, res): Promise<void> => {
     res.status(400).json({ error: "ids must all belong to the same section" });
     return;
   }
+  // Soft-deleted siblings live in the trash and are not part of the visible order.
   const siblings = await db
     .select({ id: categoriesTable.id })
     .from(categoriesTable)
-    .where(eq(categoriesTable.sectionId, [...parents][0]!));
+    .where(and(eq(categoriesTable.sectionId, [...parents][0]!), isNull(categoriesTable.deletedAt)));
   if (siblings.length !== ids.length) {
     res.status(400).json({ error: "ids must include every category of the section" });
     return;
@@ -467,10 +468,11 @@ router.post("/admin/items/reorder", async (req, res): Promise<void> => {
     res.status(400).json({ error: "ids must all belong to the same category" });
     return;
   }
+  // Soft-deleted siblings live in the trash and are not part of the visible order.
   const siblings = await db
     .select({ id: itemsTable.id })
     .from(itemsTable)
-    .where(eq(itemsTable.categoryId, [...parents][0]!));
+    .where(and(eq(itemsTable.categoryId, [...parents][0]!), isNull(itemsTable.deletedAt)));
   if (siblings.length !== ids.length) {
     res.status(400).json({ error: "ids must include every item of the category" });
     return;

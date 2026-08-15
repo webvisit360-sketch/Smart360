@@ -14,3 +14,9 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - The guest UI is a BINDING design package in `ui/` (README.md + zasloni.html + smart360-sredozemski.css + ikone-sprite.svg): no new CSS, no component libs/Tailwind visuals on guest screens, icons only via inline sprite `<use href="#i-...">` (DB icon keys map through `sprite-icon.ts`), categories are their own pages (no accordions), verify at 390px against zasloni.html. Admin keeps shadcn.
 - Item `body` can be a JSON array of paragraphs (seed quirk) — always flatten before render; all API HTML goes through DOMPurify. `priceUnit` already starts with "/". Guest links must preserve `lang`/`preview` via `buildGuestPath`.
 - Reorder endpoints require the full, unique sibling set of one parent and update positions in a transaction.
+
+## Content visibility & trash (pre-built for admin content editing)
+- `isVisible` on sections/categories/items IS the spec's `published` flag (hide-without-delete); do not add a second column.
+- `deletedAt` (categories+items) = 30-day soft-delete trash; the ONLY visibility rule lives in `contentTree.ts` (`isGuestVisible` + notDeleted filter). Guest queries must never filter visibility elsewhere.
+- Reorder endpoints take the FULL ordered id list in one transaction and require exactly the non-deleted siblings.
+- Remaining admin-content work (trash UI/endpoints, autosave, paste sanitization, length counters, cover/logo upload UI) is deferred until task-agent work #16–#18 merges.

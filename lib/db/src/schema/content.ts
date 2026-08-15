@@ -34,7 +34,10 @@ export const categoriesTable = pgTable("categories", {
   icon: text("icon").notNull().default("doc"),
   layout: text("layout").notNull().default("text"),
   position: integer("position").notNull().default(0),
+  // "published" in the product spec: hide without deleting (seasonal offers).
   isVisible: boolean("is_visible").notNull().default(true),
+  // Soft delete: rows stay (with photos and translations) for the 30-day trash.
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const itemsTable = pgTable("items", {
@@ -58,7 +61,10 @@ export const itemsTable = pgTable("items", {
   noteText: text("note_text"),
   bullets: text("bullets").array().notNull().default([]),
   position: integer("position").notNull().default(0),
+  // "published" in the product spec: hide without deleting (seasonal offers).
   isVisible: boolean("is_visible").notNull().default(true),
+  // Soft delete: rows stay (with photos and translations) for the 30-day trash.
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const mediaTable = pgTable("media", {

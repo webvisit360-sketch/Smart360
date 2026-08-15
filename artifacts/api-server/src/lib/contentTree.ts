@@ -14,6 +14,23 @@ import {
   type MediaRow,
 } from "@workspace/db";
 
+/**
+ * The single shared guest-visibility scope. Guest-facing queries must never
+ * see unpublished (isVisible=false) or soft-deleted rows, at every level.
+ * Keep this the only place that rule lives.
+ */
+export function isGuestVisible(row: {
+  isVisible: boolean;
+  deletedAt?: Date | null;
+}): boolean {
+  return row.isVisible && !("deletedAt" in row && row.deletedAt);
+}
+
+/** Soft-deleted rows never render anywhere except the trash list. */
+function notDeleted(row: { deletedAt?: Date | null }): boolean {
+  return !row.deletedAt;
+}
+
 export type ItemWithMedia = Item & { media: MediaRow[] };
 export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
@@ -97,10 +114,14 @@ export async function buildTenantContent(
     itemsOut = items.map(apply);
   }
 
+  // Soft-deleted rows are only reachable via the trash endpoints.
+  categoriesOut = categoriesOut.filter(notDeleted);
+  itemsOut = itemsOut.filter(notDeleted);
+
   if (opts.visibleOnly) {
-    sectionsOut = sectionsOut.filter((s) => s.isVisible);
-    categoriesOut = categoriesOut.filter((c) => c.isVisible);
-    itemsOut = itemsOut.filter((i) => i.isVisible);
+    sectionsOut = sectionsOut.filter((s) => isGuestVisible(s));
+    categoriesOut = categoriesOut.filter((c) => isGuestVisible(c));
+    itemsOut = itemsOut.filter((i) => isGuestVisible(i));
   }
 
   const mediaByItem = new Map<string, MediaRow[]>();
