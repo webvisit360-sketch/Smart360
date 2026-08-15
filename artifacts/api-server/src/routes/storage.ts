@@ -154,16 +154,23 @@ router.post(
       res.status(500).json({ error: "Upload failed" });
       return;
     }
-    // Atomic position allocation: compute max(position)+1 inside the INSERT
-    // so parallel uploads cannot claim the same slot.
-    const [media] = await db
-      .insert(mediaTable)
-      .values({
-        itemId,
-        url: `/api/storage/img/${row.slug}/${name}`,
-        position: sql<number>`(select coalesce(max(${mediaTable.position}), -1) + 1 from ${mediaTable} where ${mediaTable.itemId} = ${itemId})`,
-      })
-      .returning();
+    // Atomic position allocation: wrap in a transaction and lock the item row
+    // with SELECT … FOR UPDATE so that concurrent uploads for the same item
+    // serialise here. Without the lock every concurrent INSERT reads the same
+    // max(position) snapshot and they all land on the same slot.
+    const [media] = await db.transaction(async (tx) => {
+      await tx.execute(
+        sql`SELECT 1 FROM ${itemsTable} WHERE ${itemsTable.id} = ${itemId} FOR UPDATE`,
+      );
+      return tx
+        .insert(mediaTable)
+        .values({
+          itemId,
+          url: `/api/storage/img/${row.slug}/${name}`,
+          position: sql<number>`(select coalesce(max(${mediaTable.position}), -1) + 1 from ${mediaTable} where ${mediaTable.itemId} = ${itemId})`,
+        })
+        .returning();
+    });
     res.status(201).json(media);
   },
 );
