@@ -128,6 +128,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminSession"
+  /admin/account/password:
+    post:
+      operationId: changeAdminPassword
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordBody"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+        "400":
+          description: Validation error
+        "401":
+          description: Wrong current password or not authenticated
+  /admin/forgot-password:
+    post:
+      operationId: forgotAdminPassword
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordBody"
+      responses:
+        "200":
+          description: Neutral acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+        "429":
+          description: Too many requests
+  /admin/reset-password:
+    post:
+      operationId: resetAdminPassword
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordBody"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+        "400":
+          description: Invalid or expired token
   /admin/overview:
     get:
       operationId: getAdminOverview
@@ -584,6 +643,23 @@ components:
         username: { type: string }
         password: { type: string }
       required: [username, password]
+    ChangePasswordBody:
+      type: object
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string }
+      required: [currentPassword, newPassword]
+    ForgotPasswordBody:
+      type: object
+      properties:
+        email: { type: string }
+      required: [email]
+    ResetPasswordBody:
+      type: object
+      properties:
+        token: { type: string }
+        newPassword: { type: string }
+      required: [token, newPassword]
     AdminSession:
       type: object
       properties:

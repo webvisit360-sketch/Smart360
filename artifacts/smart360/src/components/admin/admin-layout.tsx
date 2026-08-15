@@ -45,7 +45,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <LayoutDashboard className="h-5 w-5" />
             Nadzorna plošča
           </Link>
-          {/* Add more links if needed */}
+          <Link href="/admin/account" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted font-medium transition-colors">
+            <User className="h-5 w-5" />
+            Moj račun
+          </Link>
         </div>
         <div className="p-4 border-t border-border">
           <Button 

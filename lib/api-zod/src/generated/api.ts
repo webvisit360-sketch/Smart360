@@ -162,6 +162,35 @@ export const GetAdminSessionResponse = zod.object({
 })
 
 
+export const ChangeAdminPasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const ChangeAdminPasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const ForgotAdminPasswordBody = zod.object({
+  "email": zod.string()
+})
+
+export const ForgotAdminPasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const ResetAdminPasswordBody = zod.object({
+  "token": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const ResetAdminPasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
 /**
  * @summary Dashboard counts and recent changes
  */

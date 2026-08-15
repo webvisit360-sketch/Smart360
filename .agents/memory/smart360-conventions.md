@@ -5,7 +5,7 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 
 - Communication with the user (Frenk, Smart360.info) is in Slovenian.
 - EU data requirement: the user must pick the **Europe** region in Advanced settings at publish time (irreversible). Remind on every deploy suggestion.
-- Admin auth is env-credential based (`ADMIN_USER`/`ADMIN_PASSWORD`, dev fallback admin/smart360 outside production) with an HMAC-signed cookie (`SESSION_SECRET`), NOT Clerk/Replit Auth — the brief explicitly demands this. No guest accounts ever.
+- Admin auth is DB-backed (single `admin_users` row, email pi4.doo@gmail.com, argon2id via @node-rs/argon2 — must stay external in esbuild config): server-side revocable sessions (hashed tokens in `admin_sessions`), hashed single-use 30-min reset tokens, seed password from `ADMIN_PASSWORD` env on first boot only (dev fallback smart360). NOT Clerk/Replit Auth — the brief explicitly demands this. No guest accounts ever. Mails (change notice, reset link) go over SMTP env vars via nodemailer. TOTP/2FA from the brief is NOT implemented yet; ADMIN_2FA gate on reset links pending.
 - `?preview=1` on public endpoints only works for an authenticated admin session (was a data-exposure bug otherwise); unpublished tenants are 404 publicly, including search.
 - Robots are blocked at three levels: API `X-Robots-Tag` middleware + robots.txt, web artifact `public/robots.txt` Disallow all, and `<meta name="robots">` in index.html. Keep all three when touching either server.
 - `hoursJson` = JSON array of 7 [openMin, closeMin] Mon–Sun entries or null; closing may pass midnight; prototype stored fractional hours (7.5 = 07:30) — convert ×60.

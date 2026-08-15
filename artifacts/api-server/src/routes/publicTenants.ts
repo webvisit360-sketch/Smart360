@@ -35,7 +35,7 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   // Preview of unpublished tenants is only for the authenticated operator.
   const preview =
     (req.query["preview"] === "true" || req.query["preview"] === "1") &&
-    isAuthenticated(req);
+    (await isAuthenticated(req));
   if (!tenant || (!tenant.isPublished && !preview)) {
     res.status(404).json({ error: "Not found" });
     return;
@@ -60,7 +60,7 @@ router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
     .where(
       or(eq(tenantsTable.slug, slug), eq(tenantsTable.customDomain, slug)),
     );
-  if (!tenant || (!tenant.isPublished && !isAuthenticated(req))) {
+  if (!tenant || (!tenant.isPublished && !(await isAuthenticated(req)))) {
     res.status(404).json({ error: "Not found" });
     return;
   }

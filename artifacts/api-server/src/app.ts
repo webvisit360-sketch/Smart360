@@ -7,6 +7,9 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// Behind the Replit proxy: derive client IP from X-Forwarded-For (first hop).
+app.set("trust proxy", 1);
+
 // Search engines must never index anything.
 app.use((_req, res, next) => {
   res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
