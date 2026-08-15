@@ -65,7 +65,14 @@ async function logBootstrapEnrollLink(): Promise<void> {
 }
 
 ensureAdminAccount()
-  .then(() => logBootstrapEnrollLink())
+  .then(() =>
+    // Bootstrap is best-effort: a transient DB error here must not take the
+    // whole deployment down (a fresh code is minted on the next restart).
+    logBootstrapEnrollLink().catch((err) => {
+      logger.error({ err }, "Bootstrap enrolment code could not be issued");
+      console.error("BOOTSTRAP failed:", err instanceof Error ? err.message : String(err));
+    }),
+  )
   .then(() => {
     app.listen(port, (err) => {
       if (err) {
