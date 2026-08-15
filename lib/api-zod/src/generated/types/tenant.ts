@@ -41,6 +41,20 @@ export interface Tenant {
   /** @nullable */
   wifiPass?: string | null;
   theme: string;
+  /** @nullable */
+  coverTitle?: string | null;
+  /** @nullable */
+  coverSubtitle?: string | null;
+  coverTitleSize: number;
+  coverTitleOpacity: number;
+  coverTextColor: string;
+  coverSubSize: number;
+  coverSubOpacity: number;
+  coverMetaSize: number;
+  coverMetaOpacity: number;
+  coverVeil: number;
+  coverAlign: string;
+  coverShowRating: boolean;
   languages: string[];
   isTemplate: boolean;
   isPublished: boolean;

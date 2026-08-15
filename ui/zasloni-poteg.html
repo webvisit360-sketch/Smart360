@@ -1,0 +1,404 @@
+<!DOCTYPE html><html lang="sl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="tema-poteg.css">
+<title>Smart360 · tema POTEG — referenčni zasloni</title></head>
+<body>
+<!-- ============================================================
+     TEMA "POTEG" — vodoravni zasloni, brez spodnje navigacije.
+     .app > .pager > .screen*(N)  · naslovnica je prvi .screen
+     Premikanje: scroll-snap + poteg s prstom. Nobenih puščic.
+     Podrobnosti so #detail (overlay z lastnim .dpager).
+     ============================================================ -->
+
+<!-- ====== GLAVNI PAGER (naslovnica + sekcije + kontakt) ====== -->
+<div class="app">
+<div class="pager" id="pager">
+       <section class="screen"><div class="cover">
+    <img src="/img/foto.jpg" alt="">
+    <div class="cover__veil"></div>
+    <div class="cover__top">
+      <img class="cover__logo" src="/img/foto.jpg" alt=""><span class="cover__sp"></span>
+      <button class="cover__btn"><svg class="ic" viewBox="0 0 24 24"><use href="#i-search"></use></svg></button>
+      <button class="cover__btn"><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg></button>
+    <button class="cover__btn" title="Uredi naslov"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sliders"></use></svg></button></div>
+    <div class="cover__txt">
+      <h1>Apartmaji Meli Pu</h1>
+      <p>Malija 143b, Izola</p>
+      <div class="cover__meta"><svg class="ic" viewBox="0 0 24 24"><use href="#i-star"></use></svg>4,95 · 128 ocen</div>
+    </div>
+    <div class="swipehint"><span>Povlecite levo<svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></span></div>
+  </div></section>
+       <section class="screen"><div class="sc">
+    <div class="sc__k">1 / 4</div>
+    <h2 class="sc__t">Vaša nastanitev</h2>
+    <p class="sc__s">Vse o vašem bivanju na enem mestu</p>
+    <div class="rowlist"><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sparkle"></use></svg>
+          <span class="row__t">Dobrodošli</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bed"></use></svg>
+          <span class="row__t">Apartmaji</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-pin"></use></svg>
+          <span class="row__t">Lokacija</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-car"></use></svg>
+          <span class="row__t">Parkirišče</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-key"></use></svg>
+          <span class="row__t">Vhodna vrata</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sliders"></use></svg>
+          <span class="row__t">Navodila za opremo</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>
+          <span class="row__t">Prijava / Odjava</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-wifi"></use></svg>
+          <span class="row__t">WiFi</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-rules"></use></svg>
+          <span class="row__t">Hišni red</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-waves"></use></svg>
+          <span class="row__t">Bazen</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button></div>
+  </div></section><section class="screen"><div class="sc">
+    <div class="sc__k">2 / 4</div>
+    <h2 class="sc__t">Naša ponudba</h2>
+    <p class="sc__s">Na voljo gostom apartmajev Meli Pu</p>
+    <div class="grid2"><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="9" ry="4"></ellipse><path d="M16 3l-4 9"></path><path d="M14.4 2l3.2 1.6"></path></svg></span><span class="lb">SUP deska</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3"></circle><circle cx="18.5" cy="17.5" r="3"></circle><path d="M8.5 17.5h7"></path><path d="M15.5 17.5l-1.6-8H11"></path><path d="M13.9 9.5H18l1 4"></path></svg></span><span class="lb">Skuter</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><use href="#i-dumbbell"></use></svg></span><span class="lb">Zunanji fitnes</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><use href="#i-flame"></use></svg></span><span class="lb">Žar</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M3 17h18l-2.4 4H5.4z"></path><path d="M12 3v11"></path><path d="M12 5l7 6H12"></path></svg></span><span class="lb">Čoln s skiperjem</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M3 18h18l-2 4H5z"></path><rect x="7" y="8" width="10" height="6" rx="1"></rect><path d="M11 8V5h2v3"></path></svg></span><span class="lb">Ladijski prevoz</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.3" fill="#fff" stroke="none"></circle><circle cx="15.5" cy="15.5" r="1.3" fill="#fff" stroke="none"></circle><circle cx="12" cy="12" r="1.3" fill="#fff" stroke="none"></circle></svg></span><span class="lb">Družabne igre</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3s6 6.4 6 10.4A6 6 0 0 1 6 13.4C6 9.4 12 3 12 3z"></path></svg></span><span class="lb">Oljčno olje</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M8 10h8l-4 11z"></path><path d="M8 10a4 4 0 0 1 8 0"></path><path d="M9.5 6.5a3 3 0 0 1 5 0"></path></svg></span><span class="lb">Sladoled 24/7</span></button></div>
+  </div></section><section class="screen"><div class="sc">
+    <div class="sc__k">3 / 4</div>
+    <h2 class="sc__t">Odkrij okolico</h2>
+    <p class="sc__s">Izbrana priporočila na slovenski obali</p>
+    <div class="grid2"><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9h13v5a5 5 0 0 1-10 0z"></path><path d="M17 10h2.2a2.3 2.3 0 0 1 0 4.6H17"></path><path d="M8 4v2M12 3v3"></path></svg></span><span class="lb">Zajtrk</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3v7a2 2 0 0 0 4 0V3"></path><path d="M9 10v11"></path><path d="M17 3c-1.6 1.4-2.4 3.2-2.4 5.4 0 1.6.8 2.6 2.4 2.6V3z"></path><path d="M17 11v10"></path></svg></span><span class="lb">Kulinarika</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16l-8 8z"></path><path d="M12 13v6"></path><path d="M8.5 19h7"></path></svg></span><span class="lb">Nočno življenje</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5-9 13z"></path><circle cx="10" cy="9.5" r="1.1" fill="#fff" stroke="none"></circle><circle cx="14" cy="12" r="1.1" fill="#fff" stroke="none"></circle></svg></span><span class="lb">Picerije</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><use href="#i-star"></use></svg></span><span class="lb">Aktivnosti</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><circle cx="14" cy="4.5" r="1.8"></circle><path d="M12.6 8.2L9 11l2.5 2.5.6 7.5"></path><path d="M11.5 13.5L8 21"></path><path d="M12.6 8.2L17 10l1.5 4"></path><path d="M5 4v17"></path></svg></span><span class="lb">Pohodništvo</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><circle cx="5.5" cy="17" r="3.4"></circle><circle cx="18.5" cy="17" r="3.4"></circle><path d="M5.5 17l4-9h5"></path><path d="M9.5 8l5.5 9M14.5 8h3"></path></svg></span><span class="lb">Kolesarjenje</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><use href="#i-parasol"></use></svg></span><span class="lb">Plaže</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M3 21h18"></path><path d="M4 21V10M9 21V10M15 21V10M20 21V10"></path><path d="M12 3l9 6H3z"></path></svg></span><span class="lb">Kulturna dediščina</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21v-6"></path><path d="M12 15c-4.5 0-7-2.6-7-6a7 7 0 0 1 14 0c0 3.4-2.5 6-7 6z"></path><path d="M12 15V7"></path></svg></span><span class="lb">Naravna dediščina</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><use href="#i-map"></use></svg></span><span class="lb">Izleti</span></button><button class="gc">
+          <img loading="lazy" src="/img/foto.jpg" alt=""><span class="ov"></span>
+          <span class="ico"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21l5.5-13 6.5 6.5z"></path><path d="M15 3l.8 1.8L17.6 5l-1.4 1.4.4 2-1.6-1-1.6 1 .4-2L12.4 5l1.8-.2z"></path><path d="M19 11.5h2M18 15.5l1.6 1.2"></path></svg></span><span class="lb">Dogodki</span></button></div>
+  </div></section><section class="screen"><div class="sc">
+    <div class="sc__k">4 / 4</div>
+    <h2 class="sc__t">Storitve</h2>
+    <p class="sc__s">Praktične informacije v bližini</p>
+    <div class="rowlist"><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-cart"></use></svg>
+          <span class="row__t">Trgovine</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bread"></use></svg>
+          <span class="row__t">Pekarne</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-fuel"></use></svg>
+          <span class="row__t">Bencinske črpalke</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-card"></use></svg>
+          <span class="row__t">Bankomati</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-cross"></use></svg>
+          <span class="row__t">Lekarne</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button><button class="row"><svg class="ic" viewBox="0 0 24 24"><use href="#i-hospital"></use></svg>
+          <span class="row__t">Bolnišnica</span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></button></div>
+  </div></section>
+       <section class="screen"><div class="contact">
+    <div class="sc__k">Stik</div>
+    <h2 class="sc__t">Tu smo za vas</h2>
+    <p class="sc__s">Vprašanje, rezervacija ali priporočilo — odgovorimo v nekaj minutah.</p>
+    <div style="margin-top:22px">
+      <a class="srow" href="tel:+38641998660" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><span class="t"><b>Pokliči</b><span>+386 41 998 660</span></span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></a>
+      <a class="srow" href="https://wa.me/38641998660" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chat"></use></svg><span class="t"><b>WhatsApp</b><span>Napišite sporočilo</span></span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></a>
+      <a class="srow" href="viber://chat?number=38641998660" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chat"></use></svg><span class="t"><b>Viber</b><span>Napišite sporočilo</span></span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></a>
+      <a class="srow" href="https://instagram.com/" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-heart"></use></svg><span class="t"><b>Instagram</b><span>Označite nas v zgodbi</span></span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></a>
+      <a class="srow" href="https://www.google.com/maps/search/?api=1&amp;query=Malija%20143b%2C%20Izola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-pin"></use></svg><span class="t"><b>Naslov</b><span>Malija 143b, 6310 Izola, Slovenija</span></span><svg class="ic chev" viewBox="0 0 24 24"><use href="#i-chev"></use></svg></a>
+    </div>
+    <a class="btn" style="margin-top:24px" href="https://www.google.com/maps/dir/?api=1&amp;destination=Malija%20143b%2C%20Izola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija do nas</a>
+  </div></section>
+     </div>
+     <div class="dots on-dark" id="dots"><i data-i="0" class="on"></i><i data-i="1"></i><i data-i="2"></i><i data-i="3"></i><i data-i="4"></i><i data-i="5"></i></div>
+</div>
+
+<!-- ====== PODROBNOSTI: overlay z vodoravnim pagerjem ====== -->
+<div class="detail on" id="detail">
+    <div class="detail__bar">
+      <button class="iconbtn"><svg class="ic" viewBox="0 0 24 24"><use href="#i-back"></use></svg></button>
+      <h2 id="dtitle">Kulinarika</h2>
+      <button class="iconbtn"><svg class="ic" viewBox="0 0 24 24"><use href="#i-search"></use></svg></button>
+    </div>
+    <div class="chips" id="dchips"><button class="chip " data-i="0">Zajtrk</button><button class="chip is-on" data-i="1">Kulinarika</button><button class="chip " data-i="2">Nočno življenje</button><button class="chip " data-i="3">Picerije</button><button class="chip " data-i="4">Aktivnosti</button><button class="chip " data-i="5">Pohodništvo</button><button class="chip " data-i="6">Kolesarjenje</button><button class="chip " data-i="7">Plaže</button><button class="chip " data-i="8">Kulturna dediščina</button><button class="chip " data-i="9">Naravna dediščina</button><button class="chip " data-i="10">Izleti</button><button class="chip " data-i="11">Dogodki</button></div>
+    <div class="dpager" id="dpager"><div class="dscreen" data-i="0" data-done="1"><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Restavracija Kamin</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 12:00–22:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656605666">+386 5 660 56 66</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="tip"><img src="/img/foto.jpg" alt="">
+    <div><div class="tip__l">Dobro je vedeti</div><div class="tip__t">Za pot iz apartmaja uporabite priporočeno pot.</div></div></div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656605666" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Restavracija%20Kamin%20Izola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Cafinho Piran</h3></div>
+      <div><span class="pill o">Odprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 07:00–03:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38640554410">+386 40 554 410</a></div>
+      </div>
+      <div class="tip"><img src="/img/foto.jpg" alt="">
+    <div><div class="tip__l">Dobro je vedeti</div><div class="tip__t">Za pot iz apartmaja uporabite priporočeno pot.</div></div></div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38640554410" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Cafinho%20Piran" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article></div><div class="dscreen" data-i="1" data-done="1"><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Takamaka Cocktails &amp; Food</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 12:00–21:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38640331601">+386 40 331 601</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38640331601" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Takamaka%20Izola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Restavracija Marina Portorož</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 12:00–22:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656761317">+386 5 676 13 17</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656761317" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Restavracija%20Marina%20Portoro%C5%BE" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Restavracija Pavel</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 11:00–23:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656747101">+386 5 674 71 01</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="tip"><img src="/img/foto.jpg" alt="">
+    <div><div class="tip__l">Dobro je vedeti</div><div class="tip__t"><b>Ribja restavracija.</b> Za pot iz apartmaja uporabite priporočeno pot.</div></div></div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656747101" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Restavracija%20Pavel%20Piran" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Restavracija Pavel 2</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 11:00–23:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656747102">+386 5 674 71 02</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656747102" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Restavracija%20Pavel%202%20Piran" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Hiša Dual</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 11:00–22:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656403500">+386 5 640 35 00</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="tip"><img src="/img/foto.jpg" alt="">
+    <div><div class="tip__l">Dobro je vedeti</div><div class="tip__t"><b>Rezervacija:</b> Dunja, +386 70 577 069</div></div></div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656403500" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Hi%C5%A1a%20Dual%20Koper" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Gostilna Karjola</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 11:30–22:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656550168">+386 5 655 01 68</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656550168" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Gostilna%20Karjola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Primavera</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 11:00–21:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38656418444">+386 5 641 84 44</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38656418444" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Restavracija%20Primavera%20Koper" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article></div><div class="dscreen" data-i="2" data-done="1"><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Club Alaya</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 22:00–04:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38641612169">+386 41 612 169</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38641612169" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Club%20Alaya" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Coco cafe Portorož</h3></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38640349020">+386 40 349 020</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38640349020" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Coco%20cafe%20Portoro%C5%BE" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Barba bar &amp; more</h3></div>
+      <div><span class="pill o">Odprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 07:00–00:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38640871027">+386 40 871 027</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38640871027" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Barba%20bar%20Izola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Snack Bar 1964</h3></div>
+      <div><span class="pill o">Odprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 07:00–00:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38631343111">+386 31 343 111</a></div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"></use></svg><a href="#" target="_blank" rel="noopener">Spletna stran</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38631343111" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Snack%20Bar%201964" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article><article class="card fade">
+    <div class="card__ph"><img loading="lazy" src="/img/foto.jpg" alt=""><button class="card__heart">
+  <svg viewBox="0 0 24 24"><use href="#i-heart"></use></svg></button></div>
+    <div class="card__body">
+      <div class="card__h"><h3 class="card__n">Wakanda Beach Bar</h3></div>
+      <div><span class="pill c">Zaprto</span></div>
+      <div class="info">
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"></use></svg>Danes 12:00–00:00</div>
+        <div><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg><a href="tel:+38640331601">+386 40 331 601</a></div>
+      </div>
+      <div class="actions">
+        <a class="act act--w" href="tel:+38640331601" aria-label="Pokliči"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"></use></svg></a>
+        <a class="act act--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Wakanda%20Izola" target="_blank" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-nav"></use></svg>Navigacija</a>
+      </div>
+    </div>
+  </article></div><div class="dscreen" data-i="3"></div><div class="dscreen" data-i="4"></div><div class="dscreen" data-i="5"></div><div class="dscreen" data-i="6"></div><div class="dscreen" data-i="7"></div><div class="dscreen" data-i="8"></div><div class="dscreen" data-i="9"></div><div class="dscreen" data-i="10"></div><div class="dscreen" data-i="11"></div></div></div>
+
+<!-- ====== UREJEVALNIK NASLOVNICE (v administraciji) ====== -->
+<div class="editor on" id="editor"><div class="grab"></div>
+       <h3>Naslovnica</h3>
+       <p class="sub">Demo urejevalnika, ki bo v administraciji. Nastavitve se shranijo v brskalnik.</p>
+       <div id="edbody">
+    <div class="fld"><label>Naslov</label>
+      <input type="text" value="Apartmaji Meli Pu"></div>
+    <div class="fld"><label>Podnaslov</label>
+      <input type="text" value="Malija 143b, Izola"></div>
+    <div class="fld"><label>Velikost naslova<b>56px</b></label>
+      <input type="range" min="24" max="84" step="1" value="56"></div>
+    <div class="fld"><label>Prosojnost naslova<b>66 %</b></label>
+      <input type="range" min="20" max="100" step="1" value="66"></div>
+    <div class="fld"><label>Barva besedila</label>
+      <div class="swatches"><button style="background:#FFFFFF" class="on"></button><button style="background:#F6F1E9" class=""></button><button style="background:#FFE9B8" class=""></button><button style="background:#3B78DC" class=""></button><button style="background:#14201F" class=""></button><button style="background:#C4552E" class=""></button>
+      </div></div>
+    <div class="fld"><label>Velikost podnaslova<b>22px</b></label>
+      <input type="range" min="12" max="40" step="1" value="22"></div>
+    <div class="fld"><label>Prosojnost podnaslova<b>50 %</b></label>
+      <input type="range" min="20" max="100" step="1" value="50"></div>
+    <div class="fld"><label>Velikost vrstice z oceno<b>19.5px</b></label>
+      <input type="range" min="12" max="32" step="0.5" value="19.5"></div>
+    <div class="fld"><label>Zatemnitev fotografije<b>26 %</b></label>
+      <input type="range" min="0" max="60" step="1" value="26"></div>
+    <div class="fld"><label>Poravnava</label>
+      <div class="seg">
+        <button class="on">Levo</button>
+        <button class="">Sredina</button>
+      </div></div>
+    <div class="fld"><label>Vrstica z oceno</label>
+      <div class="seg">
+        <button class="on">Prikaži</button>
+        <button class="">Skrij</button>
+      </div></div>
+    <div class="seg" style="margin-top:20px">
+      <button>Ponastavi</button>
+      <button class="on">Kopiraj nastavitve</button>
+    </div></div></div>
+
+</body></html>

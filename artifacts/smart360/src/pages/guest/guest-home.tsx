@@ -6,6 +6,7 @@ import { ContactSheet } from "./ContactSheet";
 import { SearchOverlay } from "./SearchOverlay";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
+import { GuestSwipe } from "./GuestSwipe";
 
 export default function GuestHome() {
   const [, params] = useRoute("/g/:slug");
@@ -27,7 +28,27 @@ export default function GuestHome() {
   if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">Nalaganje...</div></div></div>;
   if (isError || !tenant) return <div className="app"><div className="pagepad"><div className="empty">Namestitev ni najdena.</div></div></div>;
 
+  if (tenant.theme === 'swipe') {
+    return <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={null} />;
+  }
+
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
+
+  const coverVars = {
+    '--tt-txt': tenant.coverTextColor || '#FFFFFF',
+    '--tt-size': `${tenant.coverTitleSize ?? 56}px`,
+    '--tt-op': (tenant.coverTitleOpacity ?? 66) / 100,
+    '--st-size': `${tenant.coverSubSize ?? 22}px`,
+    '--st-op': (tenant.coverSubOpacity ?? 50) / 100,
+    '--mt-size': `${tenant.coverMetaSize ?? 19.5}px`,
+    '--mt-op': (tenant.coverMetaOpacity ?? 60) / 100,
+    '--veil': (tenant.coverVeil ?? 26) / 100,
+    '--cover-align': tenant.coverAlign || 'left',
+    '--cover-just': tenant.coverAlign === 'center' ? 'center' : 'flex-start',
+  } as React.CSSProperties;
+
+  const cTitle = tenant.coverTitle || tenant.name;
+  const showRating = tenant.coverShowRating !== false;
   
   // Big cards: top 4 sections
   const bigCards = sections.slice(0, 4).map((sec: any) => {
@@ -109,14 +130,16 @@ export default function GuestHome() {
         </div>
       </div>
 
-      <div className="tcard">
-        <h1 className="title">{tenant.name}</h1>
-        <div className="meta">
-          <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
-          <b>{tenant.rating || "5.0"}</b><span className="sep">·</span>
-          <span>{tenant.reviewsCount || "0"} ocen</span>
-          {tenant.address && <><span className="sep">·</span><span>{tenant.address}</span></>}
-        </div>
+      <div className="tcard" style={coverVars}>
+        <h1 className="title">{cTitle}</h1>
+        {showRating && (
+          <div className="meta">
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
+            <b>{tenant.rating || "5.0"}</b><span className="sep">·</span>
+            <span>{tenant.reviewsCount || "0"} ocen</span>
+            {tenant.address && <><span className="sep">·</span><span>{tenant.address}</span></>}
+          </div>
+        )}
         <button className="search" onClick={() => setSearchOpen(true)}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg>
           <span style={{minWidth: 0}}>

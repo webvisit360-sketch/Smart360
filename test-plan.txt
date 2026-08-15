@@ -1,0 +1,5 @@
+1. Edit tenant-edit.tsx to include Slider, Switch, RadioGroup or custom buttons.
+2. Add new fields to formData.
+3. In useEffect, sync these fields (with defaults if undefined in tenant).
+4. Build the Cover Editor UI.
+5. Provide a Live Preview box inside Cover Editor.

@@ -1,55 +1,64 @@
-# Smart360 · sredozemski UI paket — OBVEZNO ZA UPORABO
+# Smart360 · UI paket — OBVEZNO ZA UPORABO
 
 Ta mapa je **končan dizajn**, ne predlog. Aplikacija mora izgledati točno tako.
-Uporablja se **samo sredozemska tema**. Druge teme ni.
+Vsebuje **dve temi**, med katerima se izbira **v administraciji za vsako nastanitev posebej**.
 
 ## Datoteke
 
-| Datoteka | Kaj je | Kako se uporabi |
-|---|---|---|
-| `smart360-sredozemski.css` | celoten slog aplikacije | vključi ga **v celoti in nespremenjenega** |
-| `zasloni.html` | točna oznaka (markup) za vsak tip zaslona | prepiši strukturo v komponente |
-| `ikone-sprite.svg` | vse ikone | vstavi na začetek `<body>`, uporabljaj `<use href="#i-…">` |
+| Datoteka | Kaj je |
+|---|---|
+| `tema-sredozemska.css` | celoten slog teme **sredozemska** (navpično drsenje, spodnja navigacija) |
+| `tema-poteg.css` | celoten slog teme **poteg** (vodoravni zasloni, brez spodnje navigacije) |
+| `zasloni-sredozemska.html` | točna oznaka za vsak tip zaslona v sredozemski temi |
+| `zasloni-poteg.html` | točna oznaka za naslovnico, sekcijske zaslone, podrobnosti in urejevalnik |
+| `urejevalnik-naslovnice.md` | polja, meje, privzete vrednosti in prenos na CSS spremenljivke |
+| `ikone-sprite.svg` | vse ikone — vstavi na začetek `<body>`, uporabljaj `<use href="#i-…">` |
+| `predogled-sredozemska.html` | delujoč predogled teme |
+| `predogled-poteg.html` | delujoč predogled teme (vključno z urejevalnikom naslovnice) |
 
-Odpri `zasloni.html` v brskalniku pri širini 390 px — to je videz, ki ga je treba doseči.
+Odpri predogleda v brskalniku pri širini 390 px — to je videz, ki ga je treba doseči.
 
-## Pravila, ki jih ni dovoljeno kršiti
+## Izbira teme
 
-1. **Ne piši novega CSS.** Uporabi razrede iz priložene datoteke. Če komponenta manjka, jo sestavi iz obstoječih razredov.
+Polje `Tenant.theme` z vrednostma `mediterran` in `swipe`. Naloži se **samo ena** datoteka CSS, glede na temo. V administraciji je to izbirnik z dvema možnostma in kratkim opisom.
+
+## Pravila, ki jih ni dovoljeno kršiti (za obe temi)
+
+1. **Ne piši novega CSS.** Uporabi razrede iz priloženih datotek. Če komponenta manjka, jo sestavi iz obstoječih razredov.
 2. **Ne uporabljaj knjižnice komponent** (shadcn, MUI, Chakra, Bootstrap, DaisyUI). Nobene.
-3. **Ne uporabljaj Tailwind pomožnih razredov za videz.** Če je Tailwind v projektu, samo za postavitev — nikoli za barve, sence, robove in tipografijo.
-4. **Barve so točno določene:**
-   - akcent `#3B78DC` (Google modra, potemnjena za 10 %), spodnji rob gumbov `#2E60B0`
-   - besedilo `#14201F`, sekundarno `#6B7876`, črte `#E8E4DD`
-   - topla podlaga blokov `#F6F1E9`, opečnata samo za zvezdico ocene in oznako priporočila `#C4552E`
-   - **nič pastelnih krogov, nič vijolične, roza, zelene ali oranžne**
+3. **Ne uporabljaj Tailwind pomožnih razredov za videz.** Če je Tailwind v projektu, samo za postavitev.
+4. **Barve so točno določene:** akcent `#3B78DC`, spodnji rob gumbov `#2E60B0`, besedilo `#14201F`, sekundarno `#6B7876`, črte `#E8E4DD`, topla podlaga `#F6F1E9`, opečnata `#C4552E`. Nič pastelnih krogov, nič vijolične, roza, zelene ali oranžne.
 5. **Brez prelivov** (`linear-gradient`). Čisti rezi, polne barve.
-6. **Ikone so samo obris**, debelina 1.8, brez barvne podlage. Uporabi sprite — ne emojijev, ne ikonske knjižnice, ne barvnih krogov okoli ikon.
-7. **Pisava:** Figtree (CSS jo naloži sam), naslovi 800, `letter-spacing` negativen kot v CSS.
-8. **Nobenih zloženk (accordion).** Kategorija je **svoja stran**, ne razpiralnik na domači strani.
-9. **Nobenih besedil o stanju izdelave** v vmesniku (npr. »Postavitev še ni optimizirana«). Če česa ni, se ne prikaže nič.
-10. **Prehod miške (hover):** vsak bel ali obrobljen gumb se ob prehodu miške obarva **polno modro** (`#3B78DC`) z belim besedilom in ikono, ob izhodu miške pa se takoj vrne v belo. Vrstice seznama in iskalno polje dobijo mehko modro podlago `#EAF1FC` z modrim obrisom. Modri gumbi ob prehodu potemnijo v `#2E60B0`. Vse to je že v CSS pod `@media (hover:hover) and (pointer:fine)` — **ne odstranjuj tega pogoja**, ker sicer stanje ostane "zataknjeno" na zaslonih na dotik.
-11. **Gumbi imajo 3D podstavo** — `box-shadow: 0 4px 0 <temnejša>` in ob dotiku `translateY(4px)`. To ni okras, to je del dizajna.
+6. **Ikone samo obris**, debelina 1.8, iz priloženega sprite-a. Ne emojiji, ne ikonska knjižnica, ne barvni krogi okoli ikon.
+7. **Pisava:** Figtree, naslovi 800, negativen `letter-spacing` kot v CSS.
+8. **Nobenih zloženk (accordion).** Kategorija je svoja stran.
+9. **Nobenih besedil o stanju izdelave** v vmesniku.
+10. **Prehod miške (hover):** beli in obrobljeni gumbi se obarvajo polno modro z belim besedilom, ob izhodu miške nazaj v belo; vrstice in iskalnik dobijo mehko modro `#EAF1FC`; modri gumbi potemnijo. Vse je v CSS pod `@media (hover:hover) and (pointer:fine)` — **ne odstranjuj tega pogoja**.
+11. **Vsa vsebina na podstraneh je v okvirju `.card`** — tudi navadno besedilo, pravila, WiFi in zavihki. Vzorec: `.card` → neobvezna fotografija (`.card__ph` ali `.gal`) → `.card__body`.
+12. **Fotografija je vedno nad besedilom**, nikoli pod ali ob njem.
+13. **Gumbi imajo 3D podstavo** — `box-shadow: 0 4px 0 <temnejša>`, ob dotiku `translateY(4px)`.
 
-## Struktura domače strani (po vrsti od zgoraj)
+## Tema SREDOZEMSKA — struktura
 
-1. `appbar` — logotip 40×40 z radijem 14, ime nastanitve z manjšim naslovom pod njim, desno okrogel gumb za jezik na peščeni podlagi
-2. `hero` — fotografija, radij 28, višina 290; zgoraj levo bela pilula »360° sprehod«, zgoraj desno bel krog s srčkom, spodaj namig »Povlecite za razgled«
-3. `tcard` — **bela kartica, ki se s –26 px prekriva čez fotografijo**; v njej naslov 24 px, vrstica z oceno in peščeno iskalno polje
-4. »Kaj vas zanima?« — **štiri velike kartice s fotografijami** (`.big` + `.bc`), vsaka s temnim prekrivom, belo ikono v kotu in naslovom spodaj
-5. Vrstica hitrih bližnjic (`.qk`) — WiFi, Prijava, Pot do nas, Bazen, Nujna pomoč
-6. »Priljubljeno pri gostih« in »Za danes« — **vodoravni vrstici kartic** (`.hrow` + `.hcard`), slika 158×112, pod njo naslov in cena
-7. »Vaša nastanitev« — seznam vrstic z ločilnimi črtami (`.list` + `.row`), ikone modre
-8. »Storitve v bližini« — dva stolpca ploščic (`.svcs` + `.svc`)
-9. Kartica gostitelja na peščeni podlagi z modrim 3D gumbom
-10. `tabbar` — pet postavk, aktivna modra
+`appbar` → `hero` (radij 28, višina 290, bela pilula »360°«, srček, namig) → `tcard` (bela kartica, ki se s –26 px prekriva čez fotografijo; naslov 24 px, vrstica z oceno, peščeno iskalno polje) → »Kaj vas zanima?« s štirimi velikimi foto-karticami (`.big`/`.bc`) → vrstica hitrih bližnjic (`.qk`) → dve vodoravni vrstici kartic (`.hrow`/`.hcard`) → seznam »Vaša nastanitev« (`.list`/`.row`) → ploščice »Storitve« (`.svcs`/`.svc`) → kartica gostitelja → `tabbar`.
 
-## Podstran
+Podstran: `navbar` → `lead` → `chips` → kartice.
 
-`navbar` (nazaj + iskanje, oba okrogla na peščeni podlagi) → `lead` (naslov 24 px + število vnosov) → `chips` (sosednje kategorije, aktivna polna modra) → kartice.
+## Tema POTEG — struktura
 
-**Kartica lokala** (`.card`): uokvirjena, radij 26, fotografija 16:10 brez zaobljenih vogalov znotraj okvirja, srček v belem krogu, pod fotografijo `card__body` z naslovom 17 px, pilulo stanja, vrsticami `info` (ura, telefon, splet), po potrebi blokom `tip` z avatarjem gostitelja, na dnu ozek gumb za klic in poln moder gumb »Navigacija«.
+- `.app` → `.pager` (vodoravni `scroll-snap`, `scroll-snap-stop: always`) → zaporedje `.screen`, vsak `100%` širine in `100dvh` višine
+- **Prvi `.screen` je naslovnica:** `.cover` s fotografijo ali `<iframe>` 3DVista čez cel zaslon, enakomeren temen film `.cover__veil`, zgoraj logotip in okrogli gumbi, spodaj `.cover__txt` z naslovom, podnaslovom in vrstico z oceno, pod njim namig »Povlecite levo«
+- Sledijo sekcijski zasloni (`.sc`): števec, velik naslov, podnaslov, nato mreža foto-kartic (`.grid2`/`.gc`) ali seznam (`.rowlist`/`.row`)
+- Zadnji zaslon je kontakt
+- **Pikice** (`.dots`) na dnu kažejo položaj in so klikljive; na naslovnici so bele (`.on-dark`)
+- **Nobenih puščic levo/desno** — premikanje samo s potegom, pikicami in tipkovnico
+- **Podrobnosti** so `#detail` overlay, ki se prismuka z desne in ima **svoj vodoravni pager** (`.dpager`/`.dscreen`): s potegom se premikaš med kategorijami iste sekcije, zgoraj so čipi za neposreden skok. Vsebina se polni sproti (trenutni zaslon in soseda), ne vsa naenkrat.
+- Spodnje navigacije v tej temi **ni** (`.tabbar{display:none}`)
+
+## Urejevalnik naslovnice
+
+Glej `urejevalnik-naslovnice.md`. Deluje v obeh temah — v sredozemski nastavlja naslov v `tcard`, v temi poteg naslov na naslovnici.
 
 ## Kako preveriš, da je prav
 
-Postavi `zasloni.html` in svojo stran eno ob drugo pri 390 px. Če se karkoli razlikuje — razmik, velikost pisave, barva, oblika gumba, radij — je narobe tvoja stran, ne referenca.
+Postavi ustrezen predogled in svojo stran eno ob drugo pri 390 px. Če se karkoli razlikuje — razmik, velikost pisave, barva, oblika gumba, radij — je narobe tvoja stran, ne referenca.

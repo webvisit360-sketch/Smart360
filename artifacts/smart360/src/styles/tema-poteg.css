@@ -489,3 +489,141 @@ body{background:#EFECE6}
   .tab:hover{color:var(--sea)}
   .hcard:hover,.bc:hover{opacity:.9}
 }
+
+/* galerija znotraj okvirja kartice */
+.card > .gal{margin:0}
+.card > .gal .galtrack{border-radius:0}
+.card > .gal img{aspect-ratio:16/10}
+.card > .card__body > .card__n{font-size:18px;margin-bottom:2px}
+.card > .card__body > .prose{margin-top:10px}
+.card > .card__body > .rule:last-child{border-bottom:0;padding-bottom:0}
+.card > .card__body > .banner:first-child{margin-top:0}
+.card > .card__body > .kv:first-of-type{margin-top:12px}
+
+/* ============================================================
+   SMART360 · POTEG (swipe) — zasloni levo/desno
+   ============================================================ */
+html,body{height:100%;overflow:hidden}
+body{background:#000}
+.app{max-width:none;width:100%;height:100dvh;background:#000;box-shadow:none;overflow:hidden}
+.tabbar{display:none}
+
+.pager{display:flex;width:100%;height:100dvh;overflow-x:auto;overflow-y:hidden;
+       scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pager::-webkit-scrollbar{display:none}
+.screen{flex:0 0 100%;width:100%;height:100dvh;scroll-snap-align:center;scroll-snap-stop:always;
+        overflow-y:auto;overflow-x:hidden;background:#fff;position:relative;-webkit-overflow-scrolling:touch}
+.screen::-webkit-scrollbar{display:none}
+
+/* ---------- naslovnica ---------- */
+:root{
+  --tt-txt:#FFFFFF; --tt-size:56px; --tt-op:.66;
+  --st-size:22px;  --st-op:.5;
+  --mt-size:19.5px; --mt-op:.6;
+  --veil:.26; --cover-align:left;
+}
+.cover{position:relative;height:100dvh;overflow:hidden;background:#111}
+.cover>img,.cover>iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
+.cover__veil{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(10,16,20,var(--veil))}
+.cover__top{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:18px;right:18px;
+            display:flex;align-items:center;gap:10px}
+.cover__logo{width:44px;height:44px;border-radius:15px;object-fit:cover;
+             box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.cover__sp{flex:1}
+.cover__btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);
+            display:grid;place-items:center;color:var(--ink)}
+.cover__btn .ic{width:19px;height:19px;stroke-width:1.9}
+
+.cover__txt{position:absolute;left:24px;right:24px;bottom:calc(112px + env(safe-area-inset-bottom,0px));text-align:var(--cover-align)}
+.cover__txt h1{font-size:var(--tt-size);line-height:1.02;font-weight:800;letter-spacing:-.045em;
+               color:var(--tt-txt);opacity:var(--tt-op);text-shadow:0 2px 30px rgba(0,0,0,.62);margin:0}
+.cover__txt p{margin:16px 0 0;font-size:var(--st-size);font-weight:600;letter-spacing:-.015em;
+              color:var(--tt-txt);opacity:var(--st-op);text-shadow:0 1px 20px rgba(0,0,0,.62)}
+.cover__meta{display:flex;align-items:center;justify-content:var(--cover-just,flex-start);gap:9px;margin-top:19px;
+             color:var(--tt-txt);opacity:var(--mt-op);font-size:var(--mt-size);font-weight:700;
+             text-shadow:0 1px 18px rgba(0,0,0,.62)}
+.cover__meta .ic{width:calc(var(--mt-size) * 1.08);height:calc(var(--mt-size) * 1.08);fill:currentColor;stroke:none}
+
+.swipehint{position:absolute;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));
+           display:flex;justify-content:center;pointer-events:none}
+.swipehint span{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.85);
+                font-size:12.5px;font-weight:700;letter-spacing:.02em}
+.swipehint .ic{width:16px;height:16px;stroke:rgba(255,255,255,.85);stroke-width:2;
+               animation:sw 1.9s ease-in-out infinite}
+@keyframes sw{0%,100%{transform:translateX(0);opacity:.5}50%{transform:translateX(8px);opacity:1}}
+
+/* ---------- pikice ---------- */
+.dots{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom,0px));
+      display:flex;justify-content:center;gap:7px;z-index:80;pointer-events:auto}
+.dots i{width:7px;height:7px;border-radius:50%;background:rgba(20,32,31,.22);transition:all .22s ease;cursor:pointer}
+.dots i.on{width:24px;border-radius:999px;background:var(--sea)}
+.dots.on-dark i{background:rgba(255,255,255,.42)}
+.dots.on-dark i.on{background:#fff}
+
+/* ---------- sekcijski zaslon ---------- */
+.sc{padding:calc(26px + env(safe-area-inset-top,0px)) 18px 120px}
+.sc__k{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sea)}
+.sc__t{font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.1;margin-top:6px}
+.sc__s{font-size:14.5px;color:var(--ink-2);font-weight:600;margin-top:8px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.gc{position:relative;border-radius:22px;overflow:hidden;height:150px;width:100%;display:block;background:var(--wash)}
+.gc img{width:100%;height:100%;object-fit:cover}
+.gc .ov{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(14,32,31,.42)}
+.gc .lb{position:absolute;left:13px;right:13px;bottom:11px;color:#fff;font-size:14.5px;
+        font-weight:800;letter-spacing:-.015em;line-height:1.2}
+.gc .ico{position:absolute;top:11px;left:11px;width:32px;height:32px;border-radius:11px;
+         background:rgba(255,255,255,.93);display:grid;place-items:center;color:var(--sea)}
+.gc .ico .ic{width:16px;height:16px;stroke-width:1.9}
+.gc:active{opacity:.85}
+
+.rowlist{margin-top:20px}
+.rowlist .row{border-bottom:1px solid var(--line)}
+
+/* ---------- kontaktni zaslon ---------- */
+.contact{padding:calc(30px + env(safe-area-inset-top,0px)) 18px 130px}
+.contact .big-btn{margin-top:14px}
+
+/* ---------- podrobnosti (overlay pager) ---------- */
+.detail{position:fixed;inset:0;z-index:90;background:#fff;transform:translateX(100%);
+        transition:transform .32s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column}
+.detail.on{transform:translateX(0)}
+.detail__bar{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
+             background:#fff;border-bottom:1px solid var(--line)}
+.detail__bar h2{flex:1;font-size:17px;font-weight:800;letter-spacing:-.025em;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail .chips{margin-top:0;padding:10px 16px;border-bottom:1px solid var(--line);background:#fff}
+.dpager{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+        scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.dpager::-webkit-scrollbar{display:none}
+.dscreen{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;scroll-snap-align:center;
+         scroll-snap-stop:always;padding:0 16px 40px}
+.dscreen::-webkit-scrollbar{display:none}
+.dscreen .card:first-child{margin-top:16px}
+
+
+/* ---------- urejevalnik naslovnice (demo) ---------- */
+.edbtn{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));right:18px;z-index:5}
+.editor{position:fixed;left:0;right:0;bottom:0;z-index:110;background:#fff;border-radius:26px 26px 0 0;
+        padding:10px 20px calc(26px + env(safe-area-inset-bottom,0px));max-height:86vh;overflow:auto;
+        transform:translateY(110%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+        box-shadow:0 -10px 40px rgba(0,0,0,.18)}
+.editor.on{transform:translateY(0)}
+.editor .grab{width:36px;height:4px;border-radius:2px;background:var(--line-2);margin:6px auto 16px}
+.editor h3{font-size:19px;font-weight:800;letter-spacing:-.03em}
+.editor .sub{font-size:13.5px;color:var(--ink-2);margin:4px 0 18px;font-weight:600}
+.fld{margin-bottom:16px}
+.fld label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;
+           font-weight:800;color:var(--ink-2);letter-spacing:.02em;margin-bottom:7px}
+.fld label b{color:var(--sea);font-weight:800}
+.fld input[type=text]{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+                      font:inherit;font-size:15px;font-weight:700;color:var(--ink);background:#fff;outline:none}
+.fld input[type=text]:focus{border-color:var(--sea)}
+.fld input[type=range]{width:100%;accent-color:var(--sea)}
+.swatches{display:flex;gap:9px;flex-wrap:wrap}
+.swatches button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);}
+.swatches button.on{border-color:var(--sea);box-shadow:0 0 0 3px var(--sea-soft)}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;height:42px;border-radius:14px;border:1px solid var(--line);background:#fff;
+            font-weight:800;font-size:13.5px;color:var(--ink)}
+.seg button.on{background:var(--sea);border-color:var(--sea);color:#fff}

@@ -1,13 +1,16 @@
 import { useGetTenant, useUpdateTenant, getGetTenantQueryKey, getListTenantsQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { Loader2, ArrowLeft, ExternalLink, Save, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+
+const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
 
 export default function AdminTenantEdit() {
   const [, params] = useRoute("/admin/tenants/:id");
@@ -39,6 +42,19 @@ export default function AdminTenantEdit() {
     mapQuery: "",
     tourUrl: "",
     heroUrl: "",
+
+    coverTitle: "",
+    coverSubtitle: "",
+    coverTitleSize: 56,
+    coverTitleOpacity: 66,
+    coverTextColor: "#FFFFFF",
+    coverSubSize: 22,
+    coverSubOpacity: 50,
+    coverMetaSize: 19.5,
+    coverMetaOpacity: 60,
+    coverVeil: 26,
+    coverAlign: "left",
+    coverShowRating: true,
   });
 
   const initRef = useRef<string | null>(null);
@@ -60,6 +76,19 @@ export default function AdminTenantEdit() {
         mapQuery: tenant.mapQuery || "",
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
+
+        coverTitle: tenant.coverTitle || "",
+        coverSubtitle: tenant.coverSubtitle || "",
+        coverTitleSize: tenant.coverTitleSize ?? 56,
+        coverTitleOpacity: tenant.coverTitleOpacity ?? 66,
+        coverTextColor: tenant.coverTextColor || "#FFFFFF",
+        coverSubSize: tenant.coverSubSize ?? 22,
+        coverSubOpacity: tenant.coverSubOpacity ?? 50,
+        coverMetaSize: tenant.coverMetaSize ?? 19.5,
+        coverMetaOpacity: tenant.coverMetaOpacity ?? 60,
+        coverVeil: tenant.coverVeil ?? 26,
+        coverAlign: tenant.coverAlign || "left",
+        coverShowRating: tenant.coverShowRating ?? true,
       });
     }
   }, [tenant]);
@@ -83,9 +112,25 @@ export default function AdminTenantEdit() {
     });
   };
 
+  const handleResetCover = () => {
+    setFormData(prev => ({
+      ...prev,
+      coverTitleSize: 56,
+      coverTitleOpacity: 66,
+      coverTextColor: "#FFFFFF",
+      coverSubSize: 22,
+      coverSubOpacity: 50,
+      coverMetaSize: 19.5,
+      coverMetaOpacity: 60,
+      coverVeil: 26,
+      coverAlign: "left",
+      coverShowRating: true,
+    }));
+  };
+
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
+      <div className="flex items-center gap-4 sticky top-0 bg-background/95 backdrop-blur z-10 py-4 -my-4 mb-4 border-b">
         <Button variant="ghost" size="icon" onClick={() => setLocation("/admin")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -107,6 +152,7 @@ export default function AdminTenantEdit() {
       <Tabs defaultValue="general">
         <TabsList className="mb-4">
           <TabsTrigger value="general">Splošno</TabsTrigger>
+          <TabsTrigger value="appearance">Videz</TabsTrigger>
           <TabsTrigger value="contacts">Stiki & Lokacija</TabsTrigger>
           <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
         </TabsList>
@@ -152,6 +198,285 @@ export default function AdminTenantEdit() {
                   <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${formData.isPublished ? 'left-7' : 'left-1'}`} />
                 </button>
                 <Label>Objavljeno (vidno gostom)</Label>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="appearance" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tema vmesnika</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div 
+                  className={`border rounded-xl p-4 cursor-pointer transition-all ${formData.theme === 'mediterran' ? 'border-primary ring-1 ring-primary bg-primary/5' : 'hover:bg-muted'}`}
+                  onClick={() => setFormData({...formData, theme: 'mediterran'})}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold">Sredozemska</h4>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.theme === 'mediterran' ? 'border-primary' : 'border-muted-foreground/30'}`}>
+                      {formData.theme === 'mediterran' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Navpično drsenje, spodnja navigacija</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-xl p-4 cursor-pointer transition-all ${formData.theme === 'swipe' ? 'border-primary ring-1 ring-primary bg-primary/5' : 'hover:bg-muted'}`}
+                  onClick={() => setFormData({...formData, theme: 'swipe'})}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold">Poteg</h4>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.theme === 'swipe' ? 'border-primary' : 'border-muted-foreground/30'}`}>
+                      {formData.theme === 'swipe' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Vodoravni zasloni, brez spodnje navigacije</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Urejevalnik naslovnice</CardTitle>
+              <Button variant="outline" size="sm" onClick={handleResetCover} className="h-8">
+                <RefreshCcw className="w-3.5 h-3.5 mr-2" />
+                Ponastavi
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* Controls */}
+                <div className="lg:col-span-7 space-y-8">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm border-b pb-2">Besedila (preglasijo splošna)</h4>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <Label>Naslov (Title)</Label>
+                        <Input 
+                          placeholder={formData.name || "Ime namestitve"} 
+                          value={formData.coverTitle} 
+                          onChange={e => setFormData({ ...formData, coverTitle: e.target.value })} 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Podnaslov (Subtitle)</Label>
+                        <Input 
+                          placeholder={formData.subtitle || "Podnaslov nastanitve"} 
+                          value={formData.coverSubtitle} 
+                          onChange={e => setFormData({ ...formData, coverSubtitle: e.target.value })} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm border-b pb-2">Pisava in barva</h4>
+                    <div className="pt-2">
+                      <Label className="mb-2 block text-xs text-muted-foreground">Barva besedila</Label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Input 
+                            type="color" 
+                            value={formData.coverTextColor}
+                            onChange={e => setFormData({ ...formData, coverTextColor: e.target.value })}
+                            className="w-10 h-10 p-1 cursor-pointer"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {PRESET_COLORS.map(color => (
+                            <button
+                              key={color}
+                              className={`w-8 h-8 rounded-full border shadow-sm transition-transform ${formData.coverTextColor.toUpperCase() === color ? 'scale-110 ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => setFormData({ ...formData, coverTextColor: color })}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Velikost naslova</Label>
+                          <span className="text-xs font-medium">{formData.coverTitleSize}px</span>
+                        </div>
+                        <Slider min={24} max={84} step={1} value={[formData.coverTitleSize]} onValueChange={v => setFormData({ ...formData, coverTitleSize: v[0] })} />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Prosojnost naslova</Label>
+                          <span className="text-xs font-medium">{formData.coverTitleOpacity} %</span>
+                        </div>
+                        <Slider min={20} max={100} step={1} value={[formData.coverTitleOpacity]} onValueChange={v => setFormData({ ...formData, coverTitleOpacity: v[0] })} />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Velikost podnaslova</Label>
+                          <span className="text-xs font-medium">{formData.coverSubSize}px</span>
+                        </div>
+                        <Slider min={12} max={40} step={1} value={[formData.coverSubSize]} onValueChange={v => setFormData({ ...formData, coverSubSize: v[0] })} />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Prosojnost podnaslova</Label>
+                          <span className="text-xs font-medium">{formData.coverSubOpacity} %</span>
+                        </div>
+                        <Slider min={20} max={100} step={1} value={[formData.coverSubOpacity]} onValueChange={v => setFormData({ ...formData, coverSubOpacity: v[0] })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm border-b pb-2">Metapodatki in Ozadje</h4>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Velikost metapodatkov</Label>
+                          <span className="text-xs font-medium">{formData.coverMetaSize}px</span>
+                        </div>
+                        <Slider min={12} max={32} step={0.5} value={[formData.coverMetaSize]} onValueChange={v => setFormData({ ...formData, coverMetaSize: v[0] })} />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Prosojnost metapodatkov</Label>
+                          <span className="text-xs font-medium">{formData.coverMetaOpacity} %</span>
+                        </div>
+                        <Slider min={20} max={100} step={1} value={[formData.coverMetaOpacity]} onValueChange={v => setFormData({ ...formData, coverMetaOpacity: v[0] })} />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-muted-foreground">Zatemnitev slike (Veil)</Label>
+                          <span className="text-xs font-medium">{formData.coverVeil} %</span>
+                        </div>
+                        <Slider min={0} max={60} step={1} value={[formData.coverVeil]} onValueChange={v => setFormData({ ...formData, coverVeil: v[0] })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm border-b pb-2">Postavitev</h4>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Poravnava</Label>
+                        <div className="flex bg-muted rounded-md p-1 w-max border">
+                          <button 
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${formData.coverAlign === 'left' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            onClick={() => setFormData({ ...formData, coverAlign: 'left' })}
+                          >
+                            Levo
+                          </button>
+                          <button 
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${formData.coverAlign === 'center' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            onClick={() => setFormData({ ...formData, coverAlign: 'center' })}
+                          >
+                            Sredina
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Ocena</Label>
+                        <div className="flex bg-muted rounded-md p-1 w-max border">
+                          <button 
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${formData.coverShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            onClick={() => setFormData({ ...formData, coverShowRating: true })}
+                          >
+                            Prikaži
+                          </button>
+                          <button 
+                            className={`px-4 py-1.5 text-sm rounded-sm font-medium transition-colors ${!formData.coverShowRating ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                            onClick={() => setFormData({ ...formData, coverShowRating: false })}
+                          >
+                            Skrij
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                </div>
+                
+                {/* Live Preview */}
+                <div className="lg:col-span-5">
+                  <div className="sticky top-24">
+                    <Label className="mb-3 block text-sm font-semibold">Predogled v živo</Label>
+                    <div 
+                      className="relative rounded-[2rem] overflow-hidden shadow-2xl border-4 border-muted bg-muted mx-auto max-w-sm"
+                      style={{
+                        aspectRatio: '9/16',
+                        backgroundImage: formData.heroUrl ? `url(${formData.heroUrl})` : 'none',
+                        backgroundColor: formData.heroUrl ? 'transparent' : '#1e293b',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    >
+                      <div 
+                        className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-200" 
+                        style={{ opacity: formData.coverVeil / 100 }}
+                      />
+
+                      <div 
+                        className="absolute inset-x-0 bottom-0 p-8 flex flex-col pointer-events-none transition-all duration-200"
+                        style={{ 
+                          alignItems: formData.coverAlign === 'center' ? 'center' : 'flex-start',
+                          textAlign: formData.coverAlign === 'center' ? 'center' : 'left',
+                        }}
+                      >
+                        {formData.coverShowRating && (
+                          <div 
+                            className="flex items-center gap-1.5 mb-4 font-semibold transition-all duration-200"
+                            style={{
+                              fontSize: `${formData.coverMetaSize}px`,
+                              opacity: formData.coverMetaOpacity / 100,
+                              color: formData.coverTextColor,
+                            }}
+                          >
+                            <span style={{ color: formData.coverTextColor === '#FFFFFF' ? '#FBBF24' : 'currentColor', opacity: 0.9 }}>★</span> 4.9 (120)
+                          </div>
+                        )}
+                        
+                        <h1 
+                          className="font-bold leading-[1.1] mb-2 tracking-tight transition-all duration-200"
+                          style={{
+                            fontSize: `${formData.coverTitleSize}px`,
+                            opacity: formData.coverTitleOpacity / 100,
+                            color: formData.coverTextColor,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {formData.coverTitle || formData.name || 'Ime namestitve'}
+                        </h1>
+                        
+                        <p 
+                          className="font-medium transition-all duration-200"
+                          style={{
+                            fontSize: `${formData.coverSubSize}px`,
+                            opacity: formData.coverSubOpacity / 100,
+                            color: formData.coverTextColor,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {formData.coverSubtitle || formData.subtitle || 'Podnaslov namestitve'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </CardContent>
           </Card>

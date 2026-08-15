@@ -611,13 +611,25 @@ components:
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
         theme: { type: string }
+        coverTitle: { type: ["string", "null"] }
+        coverSubtitle: { type: ["string", "null"] }
+        coverTitleSize: { type: number }
+        coverTitleOpacity: { type: number }
+        coverTextColor: { type: string }
+        coverSubSize: { type: number }
+        coverSubOpacity: { type: number }
+        coverMetaSize: { type: number }
+        coverMetaOpacity: { type: number }
+        coverVeil: { type: number }
+        coverAlign: { type: string }
+        coverShowRating: { type: boolean }
         languages:
           type: array
           items: { type: string }
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, languages, isTemplate, isPublished, updatedAt]
+      required: [id, slug, name, theme, coverTitleSize, coverTitleOpacity, coverTextColor, coverSubSize, coverSubOpacity, coverMetaSize, coverMetaOpacity, coverVeil, coverAlign, coverShowRating, languages, isTemplate, isPublished, updatedAt]
     TenantInput:
       type: object
       properties:
@@ -656,6 +668,18 @@ components:
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
         theme: { type: string }
+        coverTitle: { type: ["string", "null"] }
+        coverSubtitle: { type: ["string", "null"] }
+        coverTitleSize: { type: number }
+        coverTitleOpacity: { type: number }
+        coverTextColor: { type: string }
+        coverSubSize: { type: number }
+        coverSubOpacity: { type: number }
+        coverMetaSize: { type: number }
+        coverMetaOpacity: { type: number }
+        coverVeil: { type: number }
+        coverAlign: { type: string }
+        coverShowRating: { type: boolean }
         languages:
           type: array
           items: { type: string }

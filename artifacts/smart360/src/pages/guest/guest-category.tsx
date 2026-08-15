@@ -7,6 +7,7 @@ import { SearchOverlay } from "./SearchOverlay";
 import { formatTodayHours } from "../../lib/hours";
 import { sanitizeHtml } from "../../lib/sanitize";
 import { buildGuestPath } from "./guest-url";
+import { GuestSwipe } from "./GuestSwipe";
 
 export default function GuestCategory() {
   const [, params] = useRoute("/g/:slug/c/:categoryId");
@@ -30,6 +31,10 @@ export default function GuestCategory() {
 
   if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">Nalaganje...</div></div></div>;
   if (!tenant) return <div className="app"><div className="pagepad"><div className="empty">Kategorija ni najdena.</div></div></div>;
+
+  if (tenant.theme === 'swipe') {
+    return <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={categoryId} />;
+  }
 
   let currentCategory: any = null;
   let currentSection: any = null;

@@ -505,6 +505,16 @@ body{background:#EFECE6}
   .hcard:hover,.bc:hover{opacity:.9}
 }
 
+/* galerija znotraj okvirja kartice */
+.card > .gal{margin:0}
+.card > .gal .galtrack{border-radius:0}
+.card > .gal img{aspect-ratio:16/10}
+.card > .card__body > .card__n{font-size:18px;margin-bottom:2px}
+.card > .card__body > .prose{margin-top:10px}
+.card > .card__body > .rule:last-child{border-bottom:0;padding-bottom:0}
+.card > .card__body > .banner:first-child{margin-top:0}
+.card > .card__body > .kv:first-of-type{margin-top:12px}
+
 </style>
 </head>
 <body>
@@ -1622,6 +1632,100 @@ function eventCard(o){
       <div class="actions"><a class="act act--fill" href="${mapUrl(o.q)}" target="_blank" rel="noopener">${svg("map")}Poglej program</a></div>
     </div>
   </article>`;
+}
+render();
+
+/* ---------- podstrani: vse vsebine v okvirjih ---------- */
+function cardWrap(inner, imgs){
+  const head = (imgs && imgs.length)
+    ? (imgs.length===1
+        ? `<div class="card__ph"><img loading="lazy" src="${img(imgs[0])}" onclick="lightbox('${imgs[0]}')" alt="">${heartC}</div>`
+        : gallery(imgs,"c"+Math.floor(imgs.length*7)))
+    : "";
+  return `<article class="card fade">${head}<div class="card__body">${inner}</div></article>`;
+}
+function itemView(){
+  const sec=DATA[state.sec], it=findItem(state.sec,state.item);
+  const n=countOf(it);
+  const subs={poi:"priporočenih mest v bližini",routes:"izbranih poti",products:"možnosti",
+              events:"krajev z dogodki",rules:"pravil",apartments:"apartmaja",tabs:"sklopi",
+              text:"informacija",wifi:"dostop do omrežja"};
+  const sub = subs[it.type] ? (["text","wifi"].includes(it.type)? subs[it.type] : `${n} ${subs[it.type]}`) : SECMETA[state.sec].t;
+
+  const chips=`<div class="chips">${sec.items.map(x=>
+    `<button class="chip ${x.id===it.id?'is-on':''}" onclick="go('item','${state.sec}','${x.id}',false)">${x.label}</button>`).join("")}</div>`;
+
+  let body="";
+  const warn = it.warn?cardWrap(`<div class="banner">${svg("shield")}<div>${it.warn}</div></div>`):"";
+
+  switch(it.type){
+    case "text":
+      body = cardWrap(
+        `<h3 class="card__n">${it.label}</h3>
+         <div class="prose">${it.body.map(p=>`<p>${p}</p>`).join("")}</div>
+         ${it.cta?`<div class="actions"><a class="act act--fill" href="${dirUrl(it.cta.q)}" target="_blank" rel="noopener">${svg("nav")}${it.cta.label}</a></div>`:""}`,
+        it.gallery);
+      break;
+
+    case "apartments":
+      body = it.items.map((a,i)=>cardWrap(
+        `<h3 class="card__n">${a.name}</h3>
+         <div class="card__sub" style="margin-top:4px">${a.meta}</div>
+         <div class="prose" style="margin-top:10px"><p>${a.desc}</p></div>`, a.gallery)).join("");
+      break;
+
+    case "tabs":{
+      const t=it.tabs[state.tab]||it.tabs[0];
+      body = `<div class="chips" style="padding-left:0;padding-right:0;margin-top:14px">
+          ${it.tabs.map((x,i)=>`<button class="chip ${i===state.tab?'is-on':''}" onclick="state.tab=${i};render()">${x.t}</button>`).join("")}</div>`
+        + cardWrap(
+          `<h3 class="card__n">${t.t}</h3>
+           ${t.big?`<div class="kv" style="margin-top:12px"><div class="t"><div class="k">Obratovalni čas</div><div class="v">${t.big}</div></div>${svg(t.icon)}</div>`:""}
+           ${t.body?`<div class="prose">${t.body.map(p=>`<p>${p}</p>`).join("")}</div>`:""}
+           ${t.list?`<div style="margin-top:6px">${t.list.map(x=>`<div class="rule">${svg("shield")}<div>${x}</div></div>`).join("")}</div>`:""}`,
+          t.img?[t.img]:null);
+      break;}
+
+    case "wifi":
+      body = cardWrap(
+        `<h3 class="card__n">Dostop do omrežja</h3>
+         <div class="kv" style="margin-top:12px"><div class="t"><div class="k">Ime omrežja</div><div class="v">${CONFIG.wifi.ssid}</div></div>
+           <button class="iconbtn" onclick="copy('${CONFIG.wifi.ssid}',this)">${svg("copy")}</button></div>
+         <div class="kv"><div class="t"><div class="k">Geslo</div><div class="v">${CONFIG.wifi.pass}</div></div>
+           <button class="iconbtn" onclick="copy('${CONFIG.wifi.pass}',this)">${svg("copy")}</button></div>
+         <div class="banner">${svg("wifi")}<div>Signal pokriva oba apartmaja, teraso in okolico bazena. Če povezava peša, napravo odklopite in znova povežite.</div></div>`);
+      break;
+
+    case "rules":
+      body = cardWrap(
+        `<h3 class="card__n">${it.label}</h3>
+         ${it.big?`<div class="kv" style="margin-top:12px"><div class="t"><div class="k">Obratovalni čas</div><div class="v">${it.big}</div></div>${svg(it.icon)}</div>`:""}
+         <div style="margin-top:6px">${it.rules.map(r=>`<div class="rule">${svg(r.i)}<div>${r.t}</div></div>`).join("")}</div>`,
+        it.gallery);
+      break;
+
+    case "products":
+      body = (it.intro?cardWrap(`<div class="banner">${svg("star")}<div>${it.intro}</div></div>`):"")
+           + it.products.map(productCard).join("");
+      break;
+
+    case "poi":
+      body = (it.sos?cardWrap(`<div class="actions" style="margin-top:0"><a class="act act--fill" href="tel:112">${svg("phone")}Nujni klic 112</a></div>`):"")
+           + it.poi.map(poiCard).join("")
+           + `<div class="center"><a class="mapbtn" href="${mapUrl(it.poi[0].q)}" target="_blank" rel="noopener">${svg("map")}Zemljevid</a></div>`;
+      break;
+
+    case "routes": body = it.routes.map(routeCard).join(""); break;
+    case "events": body = it.events.map(eventCard).join(""); break;
+  }
+
+  return `<header class="navbar">
+      <button class="iconbtn" onclick="back()">${svg("back")}</button>
+      <button class="iconbtn right" onclick="go('search',null,null)">${svg("search")}</button>
+    </header>
+    <div class="pagepad"><div class="lead"><h1 class="lead__t">${it.label}</h1><p class="lead__s">${sub} · ${CONFIG.name}</p></div></div>
+    ${chips}
+    <div class="pagepad">${warn}${body}<div class="tail"></div></div>`;
 }
 render();
 
