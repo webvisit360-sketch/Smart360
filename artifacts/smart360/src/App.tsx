@@ -14,6 +14,8 @@ import {
 import Landing from '@/pages/landing';
 import { AdminRouter } from '@/components/admin/admin-router';
 import GuestHome from '@/pages/guest/guest-home';
+import GuestCategory from '@/pages/guest/guest-category';
+import GuestLayout from '@/pages/guest/guest-layout';
 
 const queryClient = new QueryClient();
 
@@ -24,7 +26,22 @@ function Router() {
         <Route path="/" component={Landing} />
         <Route path="/admin" component={AdminRouter} />
         <Route path="/admin/*" component={AdminRouter} />
-        <Route path="/g/:slug" component={GuestHome} />
+        
+        <Route path="/g/:slug">
+          {() => (
+            <GuestLayout>
+              <GuestHome />
+            </GuestLayout>
+          )}
+        </Route>
+        <Route path="/g/:slug/c/:categoryId">
+          {() => (
+            <GuestLayout>
+              <GuestCategory />
+            </GuestLayout>
+          )}
+        </Route>
+        
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

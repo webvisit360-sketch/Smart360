@@ -1,0 +1,20 @@
+Moja napaka: v briefu sem dizajn opisal z besedami in barvnimi kodami, ne pa priložil kot kodo. Agent je opis prebral kot smernico in narisal svojo različico — od tod pastelni krogi, zloženke namesto podstrani in celo besedilo »Postavitev tabs še ni v celoti optimizirana« v vmesniku.
+
+Poslal sem ti smart360-ui-sredozemski.zip (tudi na Namizju). V njem so štiri datoteke:
+
+smart360-sredozemski.css — celoten slog, pripravljen za neposredno vključitev
+zasloni.html — točna oznaka za vsak tip zaslona: domača stran, seznam lokalov, pravila, ponudba, poti, besedilo z galerijo in spodnji list. Odpre se v brskalniku in izgleda končno.
+ikone-sprite.svg — vse ikone
+README.md — deset pravil, ki jih ne sme kršiti, in opis strukture vsakega zaslona
+
+Postopek v Replitu: razširi zip in naloži mapo ui/ v projekt, nato prilepi:
+
+I uploaded a folder ui/ containing the finished design: smart360-sredozemski.css, zasloni.html, ikone-sprite.svg and README.md. Read ui/README.md first and follow it literally.
+
+Replace all existing styling with this. Import smart360-sredozemski.css globally and do not write any new CSS. Rebuild every screen so the DOM matches the markup in ui/zasloni.html class for class — appbar, hero, tcard, big/bc, qk, hrow/hcard, list/row, svcs/svc, host, tabbar, navbar, lead, chips, card/card__ph/card__body, info, tip, act, pill, kv, banner, prose, rule, sheet/srow.
+
+Inline ui/ikone-sprite.svg at the start of <body> and use <svg class="ic" viewBox="0 0 24 24"><use href="#i-…"/></svg> for every icon. Remove all component libraries, all pastel circular icon buttons, all accordions, all gradients, all invented colours, and any placeholder text such as "Postavitev tabs še ni v celoti optimizirana".
+
+Each category must be its own page reached from the home screen, not an expandable panel. When you are done, render your home screen and ui/zasloni.html side by side at 390 px and fix every visual difference.
+
+V paketu je tudi predogled-cela-aplikacija.html — delujoča sredozemska različica, da lahko med preverjanjem klikaš po njej in primerjaš.
