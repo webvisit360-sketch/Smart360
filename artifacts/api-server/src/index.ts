@@ -46,9 +46,11 @@ async function logBootstrapEnrollLink(): Promise<void> {
   const creds = await listCredentials();
   if (creds.length > 0) return;
   const token = await createEnrollToken("shell");
-  logger.warn(
-    { enrollUrl: `${rpOrigin()}/admin/enroll?token=${token}` },
-    "No admin passkeys exist — one-time enrolment link minted (valid 15 minutes). Open it in the browser to register the first passkey. Restart the deployment to mint a fresh link if it expires.",
+  // Plain single-line INFO with the URL inside the message text: WARN-level
+  // and structured-field lines have been observed getting dropped from the
+  // deployment log stream, INFO message lines reliably get through.
+  logger.info(
+    `ENROLL: no admin passkeys exist — one-time enrolment link (valid 15 min): ${rpOrigin()}/admin/enroll?token=${token}`,
   );
 }
 
