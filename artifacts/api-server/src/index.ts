@@ -54,9 +54,14 @@ async function logBootstrapEnrollLink(): Promise<void> {
   // registered. issueRecoveryCodes replaces any previous set, which is safe
   // here because this only runs when zero passkeys exist.
   const [code] = await issueRecoveryCodes(1);
-  logger.info(
-    `BOOTSTRAP: no admin passkeys exist. Recovery code ${code} — enter it under "Obnovitev dostopa" at ${rpOrigin()}/admin to register the first passkey (a fresh code replaces this one on every restart).`,
-  );
+  const msg = `BOOTSTRAP: no admin passkeys exist. Recovery code ${code} — enter it under "Obnovitev dostopa" at ${rpOrigin()}/admin to register the first passkey (a fresh code replaces this one on every restart).`;
+  // Write to stderr, NOT through pino: several pino stdout lines emitted
+  // around startup ("Server listening", earlier bootstrap messages) never
+  // reach the deployment log stream, while stderr lines (e.g. node's SSL
+  // warning) always do. Repeat once after 30s in case the first write races
+  // the log collector's attach.
+  console.error(msg);
+  setTimeout(() => console.error(msg), 30_000);
 }
 
 ensureAdminAccount()
