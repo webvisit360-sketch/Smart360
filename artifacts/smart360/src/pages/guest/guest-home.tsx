@@ -9,6 +9,7 @@ import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
 import { getCoverVars } from "./cover-vars";
 import { imgSrc } from "./img";
+import { hsub } from "./hsub";
 import { useEffect } from "react";
 
 export default function GuestHome() {
@@ -75,25 +76,27 @@ export default function GuestHome() {
     };
   });
 
-  // Organize content by type to match the UI screens
-  const priljubljenoItems: any[] = [];
-  const zaDanesCats: any[] = [];
-  const nastanitevCats: any[] = [];
-  const storitveCats: any[] = [];
-
-  sections.forEach((sec: any) => {
-    sec.categories?.filter((c: any) => c.isVisible).forEach((cat: any) => {
-      if (cat.layout === 'products') {
-        cat.items?.filter((i: any) => i.isVisible).forEach((item: any) => priljubljenoItems.push({...item, catId: cat.id}));
-      } else if (cat.layout === 'poi' || cat.layout === 'routes') {
-        zaDanesCats.push(cat);
-      } else if (cat.layout === 'svcs' || ['cart', 'bread', 'fuel', 'card', 'cross', 'hospital'].includes(cat.icon)) {
-        storitveCats.push(cat);
-      } else {
-        nastanitevCats.push(cat);
-      }
-    });
-  });
+  // Home rows: one identical .hrow per section, listing ALL of its categories.
+  // Thumbnail: first visible item's first photo → section default → tenant hero.
+  const homeRows = sections.map((sec: any) => {
+    const cats = (sec.categories || []).filter((c: any) => c.isVisible);
+    return {
+      id: sec.id,
+      title: sec.title,
+      subtitle: sec.subtitle,
+      cats: cats.map((cat: any) => {
+        const firstPhoto = cat.items
+          ?.filter((i: any) => i.isVisible)
+          .find((i: any) => i.media?.[0])?.media[0].url;
+        return {
+          id: cat.id,
+          label: cat.label,
+          photo: firstPhoto || sec.imageUrl || tenant.heroUrl || "",
+          sub: hsub(cat),
+        };
+      }),
+    };
+  }).filter((row: any) => row.cats.length > 0);
 
   return (
     <div className="app" style={coverVars}>
@@ -179,71 +182,21 @@ export default function GuestHome() {
           </section>
         )}
 
-        {priljubljenoItems.length > 0 && (
-          <section className="section fade">
-            <h2 className="sec__title">Priljubljeno pri gostih</h2>
-            <p className="sec__sub">Na voljo gostom {tenant.name}</p>
+        {homeRows.map((row: any) => (
+          <section key={row.id} className="section fade">
+            <h2 className="sec__title">{row.title}</h2>
+            {row.subtitle && <p className="sec__sub">{row.subtitle}</p>}
             <div className="hrow">
-              {priljubljenoItems.map((item, idx) => (
-                <Link key={`${item.id}-${idx}`} href={buildGuestPath(`/g/${slug}/c/${item.catId}`)} className="hcard">
-                  <span className="im"><img loading="lazy" decoding="async" src={imgSrc(item.media?.[0]?.url, 620)} alt="" /></span>
-                  <b>{item.title}</b>
-                  <span>{item.price ? `${item.price}${item.priceUnit ? ' ' + item.priceUnit.replace(/^\/?\s*/, '/ ') : ''}` : 'Več info'}</span>
+              {row.cats.map((cat: any) => (
+                <Link key={cat.id} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className="hcard">
+                  <span className="im"><img loading="lazy" decoding="async" src={imgSrc(cat.photo, 620)} alt="" /></span>
+                  <b>{cat.label}</b>
+                  <span>{cat.sub}</span>
                 </Link>
               ))}
             </div>
           </section>
-        )}
-
-        {zaDanesCats.length > 0 && (
-          <section className="section fade">
-            <h2 className="sec__title">Za danes</h2>
-            <p className="sec__sub">Izbrana priporočila na dosegu</p>
-            <div className="hrow">
-              {zaDanesCats.map((cat, idx) => {
-                const photo = imgSrc(cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url, 620);
-                const count = cat.items?.filter((i: any) => i.isVisible).length || 0;
-                return (
-                  <Link key={`${cat.id}-${idx}`} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className="hcard">
-                    <span className="im"><img loading="lazy" src={photo} alt="" /></span>
-                    <b>{cat.label}</b>
-                    <span>{count} priporočil</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {nastanitevCats.length > 0 && (
-          <section className="section fade">
-            <h2 className="sec__title">Vaša nastanitev</h2>
-            <p className="sec__sub">Vse o vašem bivanju na enem mestu</p>
-            <div className="list">
-              {nastanitevCats.map((cat, idx) => (
-                <Link key={`${cat.id}-${idx}`} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className="row">
-                  <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
-                  <span className="row__t">{cat.label}</span>
-                  <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {storitveCats.length > 0 && (
-          <section className="section fade">
-            <h2 className="sec__title">Storitve v bližini</h2>
-            <div className="svcs">
-              {storitveCats.map((cat, idx) => (
-                <Link key={`${cat.id}-${idx}`} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className="svc">
-                  <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
-                  <span>{cat.label}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        ))}
 
         <section className="host">
           <div className="host__top">
