@@ -45,6 +45,12 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     }
   };
 
+  // Tap on a bottom icon: closes the detail overlay first (if open), then pages.
+  const goToScreen = (idx: number) => {
+    if (categoryId) setLocation(buildGuestPath(`/g/${slug}`));
+    scrollToScreen(idx);
+  };
+
   const cTitle = tenant.coverTitle || tenant.name;
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   
@@ -179,16 +185,19 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         </section>
       </div>
 
-      <nav className={`tabdock ${activeSectionIdx === 0 ? 'on-dark' : ''}`} id="tabdock">
+      <nav className={`tabdock ${!currentCategory && activeSectionIdx === 0 ? 'on-dark' : ''}`} id="tabdock">
         {sections.map((sec: any, idx: number) => {
           const fallback = ["i-home", "i-bag", "i-compass", "i-cart"];
           const iconId = sec.icon ? spriteId(sec.icon) : (fallback[idx] || "i-doc");
+          const activeIdxNow = currentCategory && currentSection
+            ? sections.indexOf(currentSection) + 1
+            : activeSectionIdx;
           return (
             <button
               key={sec.id}
-              className={`nv ${activeSectionIdx === idx + 1 ? 'is-on' : ''}`}
+              className={`nv ${activeIdxNow === idx + 1 ? 'is-on' : ''}`}
               data-i={idx + 1}
-              onClick={() => scrollToScreen(idx + 1)}
+              onClick={() => goToScreen(idx + 1)}
               aria-label={sec.title}
               title={sec.title}
             >
@@ -197,9 +206,9 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           );
         })}
         <button
-          className={`nv ${activeSectionIdx === totalScreens - 1 ? 'is-on' : ''}`}
+          className={`nv ${!currentCategory && activeSectionIdx === totalScreens - 1 ? 'is-on' : ''}`}
           data-i={totalScreens - 1}
-          onClick={() => scrollToScreen(totalScreens - 1)}
+          onClick={() => goToScreen(totalScreens - 1)}
           aria-label="Tu smo za vas"
           title="Tu smo za vas"
         >
@@ -283,7 +292,7 @@ function SwipeDetail({ tenant, category, section, onClose, slug }: { tenant: any
           return (
             <div className="dscreen" key={c.id}>
               {isNear ? (
-                <div style={{ padding: '0 24px', paddingBottom: 100 }}>
+                <div style={{ padding: '0 24px' }}>
                   <CategoryContent category={c} tenant={tenant} items={c.items?.filter((it: any) => it.isVisible) || []} />
                 </div>
               ) : null}

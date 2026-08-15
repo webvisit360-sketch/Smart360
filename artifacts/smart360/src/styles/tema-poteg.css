@@ -581,7 +581,7 @@ body{background:#000}
         scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .dpager::-webkit-scrollbar{display:none}
 .dscreen{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;scroll-snap-align:center;
-         scroll-snap-stop:always;padding:0 16px 40px}
+         scroll-snap-stop:always;padding:0 16px calc(80px + env(safe-area-inset-bottom,0px))}
 .dscreen::-webkit-scrollbar{display:none}
 .dscreen .card:first-child{margin-top:16px}
 
@@ -615,7 +615,7 @@ body{background:#000}
 /* ---------- spodnja vrstica ----------
    Podstrani: fiksen bel pas z minimalno višino, vsebina se drsi POD njim.
    Naslovnica: brez pasu — same bele ikone na fotografiji.            */
-.tabdock{position:fixed;left:0;right:0;bottom:0;z-index:90;
+.tabdock{position:fixed;left:0;right:0;bottom:0;z-index:105;
          height:calc(58px + env(safe-area-inset-bottom,0px));
          padding-bottom:env(safe-area-inset-bottom,0px);
          background:#fff;border-top:1px solid var(--line);
@@ -627,9 +627,8 @@ body{background:#000}
 .nv.is-on .ic{stroke-width:2.5}
 .nv:active .ic{transform:scale(.9)}
 @media (hover:hover) and (pointer:fine){ .nv:hover{color:var(--nv-on,#3B78DC)} }
-/* naslovnica: pas izgine, ikone lebdijo na fotografiji */
-.tabdock.on-dark{background:none;border-top:0;
-                 left:8px;right:8px;bottom:calc(14px + env(safe-area-inset-bottom,0px));
-                 height:52px;padding-bottom:0}
+/* naslovnica: pas izgine, ikone ostanejo na POPOLNOMA ISTEM mestu —
+   spremeni se samo podlaga, da ikone ob prehodu ne poskočijo */
+.tabdock.on-dark{background:none;border-top-color:transparent}
 .tabdock.on-dark .nv{color:var(--nv-cover,#FFFFFF)}
 .tabdock.on-dark .nv .ic{filter:drop-shadow(0 1px 6px rgba(0,0,0,.55))}
