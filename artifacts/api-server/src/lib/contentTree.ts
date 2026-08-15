@@ -15,20 +15,25 @@ import {
 } from "@workspace/db";
 
 /**
- * The single shared guest-visibility scope. Guest-facing queries must never
- * see unpublished (isVisible=false) or soft-deleted rows, at every level.
- * Keep this the only place that rule lives.
+ * The three content scopes. These are the ONLY visibility rules:
+ * - guestScope: what guests see — published AND not soft-deleted.
+ * - adminScope: what the admin lists show — everything not soft-deleted,
+ *   INCLUDING hidden entries (rendered greyed out with a "Skrito" badge),
+ *   otherwise a hidden category could never be switched back on.
+ * - trashScope: only soft-deleted rows — the "Nedavno izbrisano" list.
  */
-export function isGuestVisible(row: {
-  isVisible: boolean;
-  deletedAt?: Date | null;
-}): boolean {
-  return row.isVisible && !("deletedAt" in row && row.deletedAt);
+type Scoped = { isVisible: boolean; deletedAt?: Date | null };
+
+export function guestScope(row: Scoped): boolean {
+  return row.isVisible && !row.deletedAt;
 }
 
-/** Soft-deleted rows never render anywhere except the trash list. */
-function notDeleted(row: { deletedAt?: Date | null }): boolean {
+export function adminScope(row: { deletedAt?: Date | null }): boolean {
   return !row.deletedAt;
+}
+
+export function trashScope(row: { deletedAt?: Date | null }): boolean {
+  return !!row.deletedAt;
 }
 
 export type ItemWithMedia = Item & { media: MediaRow[] };
@@ -114,14 +119,16 @@ export async function buildTenantContent(
     itemsOut = items.map(apply);
   }
 
-  // Soft-deleted rows are only reachable via the trash endpoints.
-  categoriesOut = categoriesOut.filter(notDeleted);
-  itemsOut = itemsOut.filter(notDeleted);
-
   if (opts.visibleOnly) {
-    sectionsOut = sectionsOut.filter((s) => isGuestVisible(s));
-    categoriesOut = categoriesOut.filter((c) => isGuestVisible(c));
-    itemsOut = itemsOut.filter((i) => isGuestVisible(i));
+    // Guest queries: published AND not deleted, at every level.
+    sectionsOut = sectionsOut.filter((s) => guestScope(s));
+    categoriesOut = categoriesOut.filter((c) => guestScope(c));
+    itemsOut = itemsOut.filter((i) => guestScope(i));
+  } else {
+    // Admin tree: hidden entries stay visible (greyed, "Skrito"); only
+    // soft-deleted rows are excluded — they live in the trash list.
+    categoriesOut = categoriesOut.filter(adminScope);
+    itemsOut = itemsOut.filter(adminScope);
   }
 
   const mediaByItem = new Map<string, MediaRow[]>();

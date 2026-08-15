@@ -17,6 +17,6 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 
 ## Content visibility & trash (pre-built for admin content editing)
 - `isVisible` on sections/categories/items IS the spec's `published` flag (hide-without-delete); do not add a second column.
-- `deletedAt` (categories+items) = 30-day soft-delete trash; the ONLY visibility rule lives in `contentTree.ts` (`isGuestVisible` + notDeleted filter). Guest queries must never filter visibility elsewhere.
+- `deletedAt` (categories+items) = 30-day soft-delete trash. THREE scopes in `contentTree.ts`, the only visibility rules: `guestScope` (published+not deleted), `adminScope` (not deleted — hidden entries MUST stay in admin lists, greyed with "Skrito" badge), `trashScope` (deleted only). Never filter visibility elsewhere.
 - Reorder endpoints take the FULL ordered id list in one transaction and require exactly the non-deleted siblings.
 - Remaining admin-content work (trash UI/endpoints, autosave, paste sanitization, length counters, cover/logo upload UI) is deferred until task-agent work #16–#18 merges.
