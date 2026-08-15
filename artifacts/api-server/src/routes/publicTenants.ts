@@ -24,12 +24,35 @@ function firstParam(v: string | string[] | undefined): string | undefined {
  * matches a customDomain stored in the database, that domain takes
  * precedence and we look up the tenant by domain instead of slug.
  */
+// 60-second in-memory cache for slug/domain → tenant lookups (naslovi-strank.md §1).
+// Invalidated on every tenant save via invalidateTenantCache().
+type TenantRow = typeof tenantsTable.$inferSelect;
+const tenantCache = new Map<string, { tenant: TenantRow | undefined; expiresAt: number }>();
+const TENANT_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateTenantCache(): void {
+  tenantCache.clear();
+}
+
 async function resolveTenantBySlugOrDomain(
   slug: string,
   host: string | undefined
 ) {
   // Strip port from host so "example.com:3000" matches "example.com".
   const hostname = host ? host.replace(/:\d+$/, "") : undefined;
+
+  const cacheKey = `${hostname ?? ""}|${slug}`;
+  const cached = tenantCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.tenant;
+  const tenant = await resolveTenantUncached(slug, hostname);
+  tenantCache.set(cacheKey, { tenant, expiresAt: Date.now() + TENANT_CACHE_TTL_MS });
+  return tenant;
+}
+
+async function resolveTenantUncached(
+  slug: string,
+  hostname: string | undefined
+) {
 
   if (hostname) {
     // Look for a tenant whose customDomain matches the incoming hostname.
@@ -94,6 +117,56 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
     GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
   );
 });
+
+// GET /public/tenants/:slug/manifest.webmanifest
+// Per-tenant PWA manifest: "add to home screen" must open THIS accommodation,
+// so scope and start_url are the tenant path. Icons are the Smart360 app
+// icon, never the accommodation photo.
+router.get(
+  "/public/tenants/:slug/manifest.webmanifest",
+  async (req, res): Promise<void> => {
+    const slug = firstParam(req.params["slug"]);
+    if (!slug) {
+      res.status(400).json({ error: "Missing slug" });
+      return;
+    }
+    const tenant = await resolveTenantBySlugOrDomain(
+      slug,
+      req.headers["host"] as string | undefined
+    );
+    if (!tenant || !tenant.isPublished) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res
+      // Short client cache: a rename/publish change must reach installers
+      // quickly; the process-local tenant cache is already only 60 s.
+      .set("Cache-Control", "public, max-age=60")
+      .type("application/manifest+json")
+      .json({
+        name: tenant.name,
+        short_name: tenant.name.length > 12 ? tenant.name.slice(0, 12) : tenant.name,
+        start_url: `/${tenant.slug}/`,
+        scope: `/${tenant.slug}/`,
+        display: "standalone",
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
+        icons: [
+          {
+            src: "/brand/ikona-smart360-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+          {
+            src: "/brand/ikona-smart360-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+        ],
+      });
+  }
+);
 
 router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const slug = firstParam(req.params["slug"]);

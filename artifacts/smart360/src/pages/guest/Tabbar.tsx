@@ -16,12 +16,12 @@ export function Tabbar({ slug, tenant, currentTab, onContactClick }: { slug: str
 
   return (
     <nav className="tabbar" id="tabbar">
-      <Link href={buildGuestPath(`/g/${slug}`)} className={`tab ${currentTab === 'home' ? 'is-on' : ''}`}>
+      <Link href={buildGuestPath(`/${slug}`)} className={`tab ${currentTab === 'home' ? 'is-on' : ''}`}>
         <svg className="ic" viewBox="0 0 24 24"><use href="#i-home" /></svg><span>Domov</span>
       </Link>
       
       {odkrijId ? (
-        <Link href={buildGuestPath(`/g/${slug}/c/${odkrijId}`)} className={`tab ${currentTab === odkrijId ? 'is-on' : ''}`}>
+        <Link href={buildGuestPath(`/${slug}/c/${odkrijId}`)} className={`tab ${currentTab === odkrijId ? 'is-on' : ''}`}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-compass" /></svg><span>Odkrij</span>
         </Link>
       ) : (
@@ -29,7 +29,7 @@ export function Tabbar({ slug, tenant, currentTab, onContactClick }: { slug: str
       )}
       
       {ponudbaId ? (
-        <Link href={buildGuestPath(`/g/${slug}/c/${ponudbaId}`)} className={`tab ${currentTab === ponudbaId ? 'is-on' : ''}`}>
+        <Link href={buildGuestPath(`/${slug}/c/${ponudbaId}`)} className={`tab ${currentTab === ponudbaId ? 'is-on' : ''}`}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-bag" /></svg><span>Ponudba</span>
         </Link>
       ) : (
@@ -37,7 +37,7 @@ export function Tabbar({ slug, tenant, currentTab, onContactClick }: { slug: str
       )}
       
       {storitveId ? (
-        <Link href={buildGuestPath(`/g/${slug}/c/${storitveId}`)} className={`tab ${currentTab === storitveId ? 'is-on' : ''}`}>
+        <Link href={buildGuestPath(`/${slug}/c/${storitveId}`)} className={`tab ${currentTab === storitveId ? 'is-on' : ''}`}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-cart" /></svg><span>Storitve</span>
         </Link>
       ) : (

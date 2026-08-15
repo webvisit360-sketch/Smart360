@@ -88,7 +88,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && categoryId) {
-        setLocation(buildGuestPath(`/g/${slug}`));
+        setLocation(buildGuestPath(`/${slug}`));
         return;
       }
       if (categoryId) return;
@@ -132,7 +132,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         pg.scrollLeft = i * w; // again after reflow
         pg.style.scrollSnapType = "";
         setActiveSectionIdx(i);
-        setLocation(buildGuestPath(`/g/${slug}`));
+        setLocation(buildGuestPath(`/${slug}`));
       });
       return;
     }
@@ -209,7 +209,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                   const firstImg = imgSrc(cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url
                     || tenant.heroUrl, 620);
                   return (
-                    <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/g/${slug}/c/${cat.id}`))}>
+                    <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/${slug}/c/${cat.id}`))}>
                       <img loading="lazy" decoding="async" src={firstImg} alt="" />
                       <span className="ov"></span>
                       <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg></span>
@@ -377,7 +377,7 @@ function SwipeDetail({ tenant, category, section, slug }: { tenant: any, categor
         isScrolling = false;
         const newIdx = Math.round(el.scrollLeft / el.clientWidth);
         if (newIdx !== activeIdx && categories[newIdx]) {
-          setLocation(buildGuestPath(`/g/${slug}/c/${categories[newIdx].id}`));
+          setLocation(buildGuestPath(`/${slug}/c/${categories[newIdx].id}`));
         }
       }, 100);
     };
@@ -399,7 +399,7 @@ function SwipeDetail({ tenant, category, section, slug }: { tenant: any, categor
               <button 
                 key={c.id} 
                 className={`chip ${i === activeIdx ? 'is-on' : ''}`}
-                onClick={() => setLocation(buildGuestPath(`/g/${slug}/c/${c.id}`))}
+                onClick={() => setLocation(buildGuestPath(`/${slug}/c/${c.id}`))}
               >
                 {c.label}
               </button>

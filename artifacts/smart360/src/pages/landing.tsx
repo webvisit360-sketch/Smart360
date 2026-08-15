@@ -1,9 +1,13 @@
 import { useEffect } from "react";
-import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 const PLATFORM_HOSTS = /(^localhost$|^127\.|\.replit\.dev$|\.replit\.app$|\.repl\.co$)/;
 
+/**
+ * Minimal placeholder at smart360.info (naslovi-strank.md §5):
+ * wordmark, one sentence, one contact e-mail. No client list, no sign-up,
+ * no login link, no link to the admin.
+ */
 export default function Landing() {
   const [, setLocation] = useLocation();
 
@@ -13,31 +17,19 @@ export default function Landing() {
     if (PLATFORM_HOSTS.test(host)) return;
     fetch(`${import.meta.env.BASE_URL}api/public/tenants/${encodeURIComponent(host)}`)
       .then((r) => {
-        if (r.ok) setLocation(`/g/${host}`, { replace: true });
+        if (r.ok) setLocation(`/${host}`, { replace: true });
       })
       .catch(() => {});
   }, [setLocation]);
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background text-foreground p-6 text-center">
-      <div className="max-w-md w-full space-y-8">
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold tracking-tight text-primary">Smart360</h1>
-          <p className="text-xl text-muted-foreground">Digitalni vratar za vaše goste.</p>
-        </div>
-        
-        <div className="space-y-4 pt-8">
-          <Link href="/g/meli-pu" className="block">
-            <Button className="w-full text-lg h-14" size="lg">
-              Poglej demo (Gost)
-            </Button>
-          </Link>
-          <Link href="/admin" className="block">
-            <Button variant="outline" className="w-full text-lg h-14" size="lg">
-              Upraviteljska plošča
-            </Button>
-          </Link>
-        </div>
+      <div className="max-w-md w-full space-y-4">
+        <h1 className="text-5xl font-bold tracking-tight text-primary">Smart360</h1>
+        <p className="text-xl text-muted-foreground">Digitalni vodnik za goste vaše nastanitve.</p>
+        <p className="text-sm text-muted-foreground">
+          <a href="mailto:pi4.doo@gmail.com" className="underline">pi4.doo@gmail.com</a>
+        </p>
       </div>
     </div>
   );

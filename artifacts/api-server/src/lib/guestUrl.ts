@@ -19,7 +19,9 @@ export function guestUrl(slug: string): string {
       "guestUrl: no APP_DOMAIN / REPLIT_DOMAINS / REPLIT_DEV_DOMAIN set",
     );
   }
-  return `https://${domain}/g/${slug}`;
+  // Canonical short address (naslovi-strank.md): apex domain + /<slug>.
+  // The legacy /g/<slug> address redirects permanently in the app.
+  return `https://${domain}/${slug}`;
 }
 
 /**

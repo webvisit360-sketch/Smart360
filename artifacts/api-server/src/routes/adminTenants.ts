@@ -24,6 +24,7 @@ import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { buildTenantContent } from "../lib/contentTree";
 import { checkSlugAvailability } from "../lib/slug";
+import { invalidateTenantCache } from "./publicTenants";
 import { tenantAliasesTable } from "@workspace/db";
 import QRCode from "qrcode";
 import PDFDocument from "pdfkit";
@@ -100,6 +101,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         name,
         copyContent: false,
       });
+      invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
       if (subtitle !== undefined) {
         await db
           .update(tenantsTable)
@@ -123,6 +125,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     .insert(tenantsTable)
     .values({ slug, name, subtitle: subtitle ?? null })
     .returning();
+  invalidateTenantCache();
   await logChange({
     tenantId: tenant!.id,
     tenantName: name,
@@ -323,6 +326,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       .delete(tenantAliasesTable)
       .where(eq(tenantAliasesTable.slug, newSlug));
   }
+  invalidateTenantCache();
   await logChange({
     tenantId: tenant.id,
     tenantName: tenant.name,
@@ -342,6 +346,7 @@ router.delete("/admin/tenants/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  invalidateTenantCache();
   await logChange({
     tenantName: tenant.name,
     action: "delete",
@@ -376,6 +381,7 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
     name,
     copyContent: copyContent ?? true,
   });
+  invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
   await logChange({
     tenantId: created.id,
     tenantName: name,

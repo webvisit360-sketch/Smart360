@@ -14,7 +14,7 @@ import { getTextVars } from "./cover-vars";
 import { useThemeAttr } from "./use-theme-attr";
 
 export default function GuestCategory() {
-  const [, params] = useRoute("/g/:slug/c/:categoryId");
+  const [, params] = useRoute("/:slug/c/:categoryId");
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
   const lang = searchParams.get("lang") || "sl";
@@ -62,7 +62,7 @@ export default function GuestCategory() {
   return (
     <div className="app" style={getTextVars(tenant)}>
       <header className="navbar">
-        <button className="iconbtn" onClick={() => setLocation(buildGuestPath(`/g/${slug}`))}>
+        <button className="iconbtn" onClick={() => setLocation(buildGuestPath(`/${slug}`))}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-back" /></svg>
         </button>
         <button className="iconbtn right" onClick={() => setShareOpen(true)} aria-label="Deli">
@@ -82,7 +82,7 @@ export default function GuestCategory() {
 
       <div className="chips">
         {adjacentCategories.map((cat: any) => (
-          <Link key={cat.id} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className={`chip ${cat.id === categoryId ? 'is-on' : ''}`}>
+          <Link key={cat.id} href={buildGuestPath(`/${slug}/c/${cat.id}`)} className={`chip ${cat.id === categoryId ? 'is-on' : ''}`}>
             {cat.label}
           </Link>
         ))}

@@ -261,7 +261,7 @@ export default function AdminTenantEdit() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" asChild>
-            <a href={`/g/${tenant.slug}?preview=1`} target="_blank" rel="noopener noreferrer">
+            <a href={`/${tenant.slug}?preview=1`} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="w-4 h-4 mr-2" /> Poglej
             </a>
           </Button>

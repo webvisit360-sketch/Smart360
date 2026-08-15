@@ -1,0 +1,269 @@
+Naslovi strank — smart360.info/imestranke
+Odločitev: naslov v obliki poti, ne poddomene.
+
+Cilj: ko v administraciji ustvarim novo nastanitev in ji vpišem ime bistrotrimurve, je smart360.info/bistrotrimurve takoj dosegljiva — brez dodajanja domene v Replitu in brez kakršnega koli zapisa DNS pri registrarju.
+
+Administracija ostane, kjer je: admin.smart360.info, za prijavo s ključem.
+
+
+Zakaj ta pot
+Poddomena za vsako stranko bi zahtevala nadomestno potrdilo TLS, ki ga Replit ne izda — vsako stranko bi bilo treba vpisati posebej v Replit in v DNS. Pot v naslovu ne potrebuje ničesar: smart360.info je registriran enkrat, vse ostalo je stvar aplikacije.
+
+Kasnejši prehod na poddomene ostaja odprt, če bo prepoznavanje stranke zapisano na enem mestu (spodaj, točka 1). Takrat se zamenja samo ta funkcija.
+
+
+Navodilo za Replit (prilepi v celoti)
+Serve every accommodation under a path on the apex domain: smart360.info/<slug>.
+
+Creating an accommodation in the admin with slug "bistrotrimurve" must make
+
+smart360.info/bistrotrimurve reachable immediately, with no DNS work and no domain
+
+registration per client. The admin stays on admin.smart360.info as it is now.
+
+=====================================================================
+
+0. THE LEGACY /g/ PREFIX — MIGRATE IT, DO NOT KEEP IT
+
+=====================================================================
+
+Production currently serves the guest app at smart360.info/g/<slug>. The app's own share
+
+sheet and QR code already point at smart360.info/<slug> (CONFIG.url), so today the printed
+
+code and the served address do not match. Fix the server, not the QR code — the short
+
+address is the one that goes on a printed label in a guest room and can never be changed
+
+afterwards.
+
+  - /<slug>/...  becomes the canonical address, rendered with 200
+
+  - /g/<slug>/... answers with 301 (permanent) to /<slug>/... , preserving the rest of the
+
+    path and the query string. Keep this redirect forever: links have been shared already.
+
+  - Never render the app at both addresses with 200. Two live addresses for one page is how
+
+    bookmarks, QR codes and analytics drift apart.
+
+  - "g" goes on the reserved-words list in section 3, so no client can ever take it.
+
+=====================================================================
+
+1. TENANT RESOLUTION — ONE FUNCTION, ONE PLACE
+
+=====================================================================
+
+All public routes are nested under a single dynamic segment. Put tenant resolution in ONE
+
+function used by every public request, so that switching to subdomains later is a one-file
+
+change:
+
+  // resolveTenant(req) -> { tenant, basePath }
+
+  // today:  from the first path segment
+
+  // later:  from the host label, without touching anything else
+
+  const seg = decodeURIComponent(req.path.split("/")[1] || "").toLowerCase();
+
+Rules:
+
+  - empty segment  → the landing page (see 5), NOT a tenant
+
+  - reserved word  → its own route, never a tenant (see 3)
+
+  - otherwise      → look up Tenant by slug, or by TenantAlias for renamed ones
+
+  - unknown slug   → the app's own 404 page, with a link back to smart360.info.
+
+    NEVER fall back to a default tenant: a typo must not show another client's house.
+
+Cache the slug→tenant lookup in memory for 60 seconds; invalidate on tenant save.
+
+=====================================================================
+
+2. EVERY LINK MUST CARRY THE BASE PATH
+
+=====================================================================
+
+This is where a path-based setup usually breaks. Expose `basePath = "/" + tenant.slug` from
+
+the resolver and route EVERYTHING through one helper:
+
+  const url = (p = "") => `${basePath}${p.startsWith("/") ? p : "/" + p}`;
+
+Apply it to: router links, redirects after save, API calls from the client, form actions,
+
+the 3DVista iframe src, share links, and the QR-code target.
+
+  - Do NOT use <base href>. It also rewrites in-page anchors and breaks the swipe pager.
+
+  - Static assets (JS, CSS, sprite, fonts) stay at the ROOT — /assets/... — shared by all
+
+    tenants. Only uploaded media is per tenant.
+
+  - Normalise the trailing slash with a 301: /melipu → /melipu/ . Do this once, in
+
+    middleware, before routing.
+
+  - Client-side state kept in localStorage must be keyed by slug
+
+    (e.g. "s360:melipu:favourites"), otherwise two accommodations opened on the same phone
+
+    would share hearts and settings.
+
+Write one test that crawls the rendered page for href/src starting with "/" and asserts that
+
+every one either starts with /assets/ or with the base path. A single forgotten link sends
+
+the guest to the landing page.
+
+=====================================================================
+
+3. THE SLUG FIELD IN THE ADMIN
+
+=====================================================================
+
+Add `slug` to Tenant: unique, lowercase, [a-z0-9-], 3–40 chars, no leading or trailing hyphen.
+
+  - When creating an accommodation, propose a slug from the name
+
+    ("Bistro Tri Murve" → "bistro-tri-murve"), let the owner edit it.
+
+  - Live availability check while typing, showing the full address underneath:
+
+    "smart360.info/bistro-tri-murve — na voljo" / "— že zasedeno".
+
+  - RESERVED words, rejected as slugs because they are or will be real routes:
+
+    admin, api, app, assets, static, media, files, uploads, img, css, js, fonts,
+
+    g, robots.txt, sitemap.xml, favicon.ico, manifest.json, sw.js, health, status,
+
+    login, auth, logout, account, my, help, support, docs, blog, about, contact,
+
+    privacy, terms, www, mail, cdn, preview, test, demo, dev, staging.
+
+  - Renaming a slug keeps the old one forever as a 301 redirect (table TenantAlias:
+
+    slug, tenantId, createdAt). Guests carry printed QR codes and bookmarks.
+
+  - In the tenant list show the live address as a clickable link, plus a button that copies
+
+    it and a button that downloads a QR code PNG pointing at it.
+
+=====================================================================
+
+4. ADD TO HOME SCREEN, PER ACCOMMODATION
+
+=====================================================================
+
+Guests put this on their phone home screen, so the manifest must be per tenant:
+
+  GET /<slug>/manifest.webmanifest
+
+    name        = tenant name
+
+    short_name  = short form
+
+    start_url   = "/<slug>/"
+
+    scope       = "/<slug>/"
+
+    display     = "standalone"
+
+    theme_color = "#ffffff"
+
+    icons       = Smart360 app icon (512 maskable, 192), NOT the accommodation photo
+
+  <link rel="manifest" href="/<slug>/manifest.webmanifest">
+
+  <link rel="apple-touch-icon" href="/assets/brand/ikona-smart360-180.png">
+
+Scope MUST be the tenant path, otherwise the installed app opens the landing page.
+
+=====================================================================
+
+5. THE LANDING PAGE AT smart360.info
+
+=====================================================================
+
+A minimal placeholder: the Smart360 wordmark, one sentence, one contact e-mail.
+
+No client list, no sign-up, no login link, no link to the admin.
+
+=====================================================================
+
+6. ROBOTS
+
+=====================================================================
+
+Unchanged and mandatory everywhere — landing page, every tenant path, admin:
+
+  response header  X-Robots-Tag: noindex, nofollow, noarchive
+
+  meta             <meta name="robots" content="noindex, nofollow">
+
+  /robots.txt      User-agent: *
+
+                   Disallow: /
+
+Do not generate sitemaps. Serve one robots.txt at the root; a per-tenant one is not needed
+
+and must not contradict it.
+
+=====================================================================
+
+7. VERIFY
+
+=====================================================================
+
+  a) Create a tenant with slug "test-hotel" — open smart360.info/test-hotel within a minute,
+
+     with no other action anywhere.
+
+  b) Walk the whole app (cover, all five screens, a detail page, search, contact) and confirm
+
+     the address always stays under /test-hotel/.
+
+  c) Open smart360.info/ne-obstaja → the app's own 404, never another tenant.
+
+  d) Open smart360.info/admin → not treated as a tenant.
+
+  e) Rename the slug and confirm the old address 301-redirects.
+
+  f) Open two accommodations on the same phone and confirm favourites do not leak between
+
+     them.
+
+  g) Add one to the home screen and confirm it opens that accommodation, not the landing page.
+
+  h) Open smart360.info/g/meli-pu → 301 to smart360.info/meli-pu, page loads, and a deep
+
+     link such as /g/meli-pu/?s=2 keeps its path and query after the redirect.
+
+  i) Scan the QR code in the app's share sheet with a phone: it must open the served page
+
+     directly, with no redirect hop and no 404.
+
+
+Kaj moraš narediti ti
+V Replitu registriraj dve domeni, enkrat za vedno:
+
+Domena
+Za kaj
+smart360.info
+vse stranke, vsaka pod svojo potjo
+admin.smart360.info
+administracija (že urejeno)
+
+
+Dodaj še www.smart360.info s preusmeritvijo na smart360.info, če ga Neoserv ponuja. Po tem pri Neoservu ni več nobenega dela — nikoli, za nobeno stranko.
+Kaj se s tem odpoveš
+Stranka nima svojega imena v domeni, kar je pri predstavitvi šibkejše — smart360.info/bistrotrimurve namesto bistrotrimurve.smart360.info.
+
+Prehod na poddomene ostaja mogoč kadar koli: če je prepoznavanje stranke res na enem mestu (točka 1) in vse povezave res tečejo skozi url() (točka 2), je sprememba ena funkcija plus preusmeritev starih poti na nove. Če pa se to dvoje razleze po kodi, bo pozneje drago — zato sta obe točki v navodilu prvi.
+

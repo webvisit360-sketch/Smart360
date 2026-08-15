@@ -138,7 +138,7 @@ export default function AdminDashboard() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-4">
-                          /g/{tenant.slug} • Tema: {tenant.theme}
+                          /{tenant.slug} • Tema: {tenant.theme}
                         </p>
                         
                         <div className="flex flex-wrap items-center gap-2 mt-auto">
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
                           </Button>
                           <Button variant="outline" size="sm" asChild>
                             <a
-                              href={`/g/${tenant.slug}?preview=1`}
+                              href={`/${tenant.slug}?preview=1`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

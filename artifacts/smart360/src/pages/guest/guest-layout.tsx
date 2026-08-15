@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { IconSprite } from "./IconSprite";
-import { useRoute, useSearch } from "wouter";
+import { useLocation, useRoute, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 
 // Both themes ship in the main bundle, scoped to html[data-theme="..."] by
@@ -10,8 +10,8 @@ import "../../styles/tema-sredozemska.css";
 import "../../styles/tema-poteg.css";
 
 export default function GuestLayout({ children }: { children: ReactNode }) {
-  const [match1, params1] = useRoute("/g/:slug");
-  const [match2, params2] = useRoute("/g/:slug/c/:categoryId");
+  const [match1, params1] = useRoute("/:slug");
+  const [match2, params2] = useRoute("/:slug/c/:categoryId");
   const slug = match1 ? params1?.slug : (match2 ? params2?.slug : "");
 
   const searchStr = useSearch();
@@ -19,11 +19,55 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   const lang = searchParams.get("lang") || "sl";
   const isPreview = searchParams.get("preview") === "1";
 
-  const { data: tenant } = useGetPublicTenant(
+  const { data: tenant, isError } = useGetPublicTenant(
     slug || "", 
     { lang, preview: isPreview },
-    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, lang, isPreview] } }
+    // retry: false — an unknown slug must show the 404 immediately, not after
+    // three retries of a request that will always 404.
+    { query: { enabled: !!slug, retry: false, queryKey: ['getPublicTenant', slug, lang, isPreview] } }
   );
+
+  // Alias canonicalization: an old (renamed) slug resolves to the tenant, but
+  // the address bar must always show the current slug — replace, keep the
+  // rest of the path and the query string.
+  const [location, setLocation] = useLocation();
+  useEffect(() => {
+    if (!tenant || !slug || tenant.slug === slug) return;
+    const rest = location.startsWith(`/${slug}`) ? location.slice(slug.length + 1) : "";
+    setLocation(`/${tenant.slug}${rest}${window.location.search}`, { replace: true });
+  }, [tenant, slug, location, setLocation]);
+
+  // Per-tenant PWA manifest: "add to home screen" must open THIS accommodation,
+  // so scope/start_url are /<slug>/ (served by the API, injected per tenant).
+  useEffect(() => {
+    if (!tenant || !slug) return;
+    const base = (import.meta.env.BASE_URL || "/");
+    let link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "manifest";
+      document.head.appendChild(link);
+    }
+    link.href = `${base}api/public/tenants/${encodeURIComponent(slug)}/manifest.webmanifest`;
+    let touch = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+    if (!touch) {
+      touch = document.createElement("link");
+      touch.rel = "apple-touch-icon";
+      document.head.appendChild(touch);
+    }
+    touch.href = `${base}brand/ikona-smart360-180.png`;
+  }, [tenant, slug]);
+
+  // Unknown slug → the app's own 404 with a way back. NEVER a default tenant.
+  if (isError) {
+    return (
+      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", fontFamily: "Jost, system-ui, sans-serif", textAlign: "center", padding: "24px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: 700, margin: 0 }}>Namestitev ni najdena</h1>
+        <p style={{ margin: 0, color: "#555" }}>Naslov ne obstaja ali pa nastanitev ni objavljena.</p>
+        <a href="https://smart360.info" style={{ color: "#14201F", fontWeight: 700 }}>smart360.info</a>
+      </div>
+    );
+  }
 
   return (
     <>

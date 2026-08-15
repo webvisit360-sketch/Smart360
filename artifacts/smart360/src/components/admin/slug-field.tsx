@@ -53,7 +53,7 @@ export function SlugField({
     { query: { enabled, queryKey: ["slug-check", debounced, tenantId] } },
   );
 
-  const guestUrl = useMemo(() => `${window.location.origin}/g/${slug}`, [slug]);
+  const guestUrl = useMemo(() => `${window.location.origin}/${slug}`, [slug]);
   const displayUrl = useMemo(() => `smart360.info/${slug}`, [slug]);
 
   const changed = slug !== originalSlug;

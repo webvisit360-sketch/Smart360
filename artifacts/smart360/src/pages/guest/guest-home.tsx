@@ -15,7 +15,7 @@ import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
 
 export default function GuestHome() {
-  const [, params] = useRoute("/g/:slug");
+  const [, params] = useRoute("/:slug");
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
   const lang = searchParams.get("lang") || "sl";
@@ -77,7 +77,7 @@ export default function GuestHome() {
       icon: sec.icon || "home", 
       count: itemCount, 
       photo: sec.imageUrl || photo || "/img/foto.jpg", 
-      link: firstCat ? `/g/${slug}/c/${firstCat}` : null 
+      link: firstCat ? `/${slug}/c/${firstCat}` : null 
     };
   });
 
@@ -196,7 +196,7 @@ export default function GuestHome() {
             {row.subtitle && <p className="sec__sub">{row.subtitle}</p>}
             <div className="hrow">
               {row.cats.map((cat: any) => (
-                <Link key={cat.id} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className="hcard">
+                <Link key={cat.id} href={buildGuestPath(`/${slug}/c/${cat.id}`)} className="hcard">
                   <span className="im"><img loading="lazy" decoding="async" src={imgSrc(cat.photo, 620)} alt="" /></span>
                   <b>{cat.label}</b>
                   <span>{cat.sub}</span>

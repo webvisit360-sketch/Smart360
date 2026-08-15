@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 function guestUrl(slug: string, customDomain?: string | null): string {
   if (customDomain) return `https://${customDomain}`;
   const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
-  return `${window.location.origin}${base}/g/${slug}`;
+  return `${window.location.origin}${base}/${slug}`;
 }
 
 export function QrDialog({

@@ -29,7 +29,7 @@ export function SearchOverlay({ slug, lang, isOpen, onClose }: { slug: string, l
           results && results.length > 0 ? (
             <div className="list">
               {results.map(res => (
-                <Link href={buildGuestPath(`/g/${slug}/c/${res.categoryId}`)} onClick={onClose} className="row" key={res.itemId} style={{flexDirection: 'column', alignItems: 'flex-start', padding: '12px 0'}}>
+                <Link href={buildGuestPath(`/${slug}/c/${res.categoryId}`)} onClick={onClose} className="row" key={res.itemId} style={{flexDirection: 'column', alignItems: 'flex-start', padding: '12px 0'}}>
                   <div className="tip__l">{res.sectionTitle} • {res.categoryLabel}</div>
                   <div className="row__t" style={{marginTop: 6}}>{res.title || 'Rezultat'}</div>
                   <div className="card__sub" style={{marginTop: 4}} dangerouslySetInnerHTML={{__html: sanitizeHtml(res.snippet)}}></div>
