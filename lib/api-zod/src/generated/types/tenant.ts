@@ -21,6 +21,8 @@ export interface Tenant {
   /** @nullable */
   logoUrl?: string | null;
   /** @nullable */
+  logoSquareUrl?: string | null;
+  /** @nullable */
   heroUrl?: string | null;
   /** @nullable */
   tourUrl?: string | null;

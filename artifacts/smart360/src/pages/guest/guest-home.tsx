@@ -208,7 +208,7 @@ export default function GuestHome() {
 
         <section className="host">
           <div className="host__top">
-            <img className="host__av" src={imgSrc(tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
+            <img className="host__av" src={imgSrc(tenant.logoSquareUrl || tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
             <div>
               <div className="host__n">Tu smo za vas</div>
               <div className="host__s">Običajno odgovorimo v nekaj minutah</div>

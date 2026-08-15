@@ -195,9 +195,17 @@ export default function AdminTenantEdit() {
         credentials: "include",
       });
       if (!res.ok) throw new Error(await res.text());
-      const data = await res.json() as { heroUrl?: string | null; logoUrl?: string | null };
+      const data = await res.json() as {
+        heroUrl?: string | null;
+        logoUrl?: string | null;
+        logoSquareUrl?: string | null;
+        warning?: string;
+      };
       if (kind === "hero" && data.heroUrl) setFormData(prev => ({ ...prev, heroUrl: data.heroUrl! }));
       if (kind === "logo" && data.logoUrl) setFormData(prev => ({ ...prev, logoUrl: data.logoUrl! }));
+      // Opaque upload: warn once — a white box around the artwork on a photo
+      // reads as a rendering fault (logotip-stranke-naslovnica.md §4).
+      if (data.warning) alert(data.warning);
     } catch {
       alert(kind === "hero" ? "Nalaganje naslovnice ni uspelo." : "Nalaganje logotipa ni uspelo.");
     } finally {

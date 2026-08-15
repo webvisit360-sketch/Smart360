@@ -138,6 +138,24 @@ router.get(
       res.status(404).json({ error: "Not found" });
       return;
     }
+    // Home-screen icons: the TENANT's artwork, derived on upload alongside
+    // the square avatar (same uuid prefix). Smart360 icon only as fallback
+    // for a tenant with no logo uploaded.
+    const iconBase =
+      tenant.logoSquareUrl && tenant.logoSquareUrl.endsWith("-kvadrat.png")
+        ? tenant.logoSquareUrl.replace(/-kvadrat\.png$/, "")
+        : null;
+    const icons = iconBase
+      ? [
+          { src: `${iconBase}-ikona-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: `${iconBase}-ikona-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+          // Wider safe margin (60 % artwork) — Android crops up to 20 % per side.
+          { src: `${iconBase}-ikona-maskable-512.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ]
+      : [
+          { src: "/brand/ikona-smart360-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "/brand/ikona-smart360-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        ];
     res
       // Short client cache: a rename/publish change must reach installers
       // quickly; the process-local tenant cache is already only 60 s.
@@ -151,19 +169,7 @@ router.get(
         display: "standalone",
         theme_color: "#ffffff",
         background_color: "#ffffff",
-        icons: [
-          {
-            src: "/brand/ikona-smart360-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-          {
-            src: "/brand/ikona-smart360-192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-        ],
+        icons,
       });
   }
 );

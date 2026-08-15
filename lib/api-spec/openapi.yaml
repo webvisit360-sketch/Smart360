@@ -1082,6 +1082,7 @@ components:
         rating: { type: ["string", "null"] }
         reviewsCount: { type: ["string", "null"] }
         logoUrl: { type: ["string", "null"] }
+        logoSquareUrl: { type: ["string", "null"] }
         heroUrl: { type: ["string", "null"] }
         tourUrl: { type: ["string", "null"] }
         phone: { type: ["string", "null"] }
@@ -1146,6 +1147,7 @@ components:
         rating: { type: ["string", "null"] }
         reviewsCount: { type: ["string", "null"] }
         logoUrl: { type: ["string", "null"] }
+        logoSquareUrl: { type: ["string", "null"] }
         heroUrl: { type: ["string", "null"] }
         tourUrl: { type: ["string", "null"] }
         phone: { type: ["string", "null"] }

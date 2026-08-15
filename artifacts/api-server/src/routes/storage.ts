@@ -176,9 +176,107 @@ router.post(
 );
 
 // ---------------------------------------------------------------------------
+// Tenant logo pipeline (logotip-melipu.md / logotip-stranke-naslovnica.md).
+// ONE upload, TWO derivatives, both kept:
+//   logoUrl       trimmed to the artwork, longest side 480, PNG WITH alpha
+//                 -> first-screen logo (.brandlogo) sitting on a photo
+//   logoSquareUrl 384x384 PNG on WHITE, artwork at 72 % of the canvas
+//                 -> round host avatar (.host__av) and tip thumbnail (.tip img)
+// Never the square white file on a photo: a white box there reads as a bug.
+// ---------------------------------------------------------------------------
+export async function storeLogoVariants(
+  slug: string,
+  original: Buffer,
+): Promise<{ logoUrl: string; logoSquareUrl: string; warning?: string }> {
+  const searchPath = storage.getPublicObjectSearchPaths()[0];
+  if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
+
+  const meta = await sharp(original).metadata();
+  const hasAlpha = Boolean(meta.hasAlpha);
+
+  // a) trim: to the alpha bounding box, or to the uniform border colour
+  //    (corner-pixel, tolerance 12) when the file is opaque.
+  const trimmed = await sharp(original)
+    .rotate()
+    .ensureAlpha()
+    .trim({ threshold: 12 })
+    .png()
+    .toBuffer();
+
+  // b) transparent source: longest side 480, keep alpha.
+  const transparent = await sharp(trimmed)
+    .resize({ width: 480, height: 480, fit: "inside", withoutEnlargement: true })
+    .png()
+    .toBuffer();
+
+  // Square-on-white composer: artwork centred at `pct` of the canvas.
+  // 72 % for avatars/icons; 60 % for the maskable icon, because Android
+  // may crop up to 20 % per side.
+  const onWhite = async (canvas: number, pct: number): Promise<Buffer> => {
+    const inner = Math.round(canvas * pct);
+    const art = await sharp(trimmed)
+      .resize({ width: inner, height: inner, fit: "inside" })
+      .toBuffer();
+    const artMeta = await sharp(art).metadata();
+    const left = Math.round((canvas - (artMeta.width ?? inner)) / 2);
+    const top = Math.round((canvas - (artMeta.height ?? inner)) / 2);
+    return sharp({
+      create: { width: canvas, height: canvas, channels: 3, background: "#ffffff" },
+    })
+      .composite([{ input: art, left, top }])
+      .flatten({ background: "#ffffff" })
+      .png()
+      .toBuffer();
+  };
+
+  // c) square avatar (.host__av / .tip img).
+  const square = await onWhite(384, 0.72);
+
+  // d) home-screen icons: a guest installs the APARTMENT and must recognise
+  //    it on a crowded home screen — tenant artwork, not the Smart360 mark.
+  const icon512 = await onWhite(512, 0.72);
+  const icon192 = await onWhite(192, 0.72);
+  const iconMask512 = await onWhite(512, 0.6);
+  const icon180 = await onWhite(180, 0.72);
+
+  const id = randomUUID();
+  const files: Array<[string, Buffer]> = [
+    [`${id}-prosojni.png`, transparent],
+    [`${id}-kvadrat.png`, square],
+    [`${id}-ikona-512.png`, icon512],
+    [`${id}-ikona-192.png`, icon192],
+    [`${id}-ikona-maskable-512.png`, iconMask512],
+    [`${id}-ikona-180.png`, icon180],
+  ];
+  for (const [name, buf] of files) {
+    // Stored once under the 620 folder; the serve route's width fallback
+    // finds it for ?w=1400 requests too.
+    const { bucketName, objectName } = parseObjectPath(
+      `${searchPath}/media/${slug}/620/${name}`,
+    );
+    await objectStorageClient
+      .bucket(bucketName)
+      .file(objectName)
+      .save(buf, { contentType: "image/png" });
+  }
+  const result = {
+    logoUrl: `/api/storage/img/${slug}/${id}-prosojni.png`,
+    logoSquareUrl: `/api/storage/img/${slug}/${id}-kvadrat.png`,
+  };
+  return hasAlpha
+    ? result
+    : {
+        ...result,
+        warning:
+          "Logotip nima prosojnega ozadja — na fotografiji bo viden bel okvir.",
+      };
+}
+
+// ---------------------------------------------------------------------------
 // POST /admin/tenants/:id/hero/upload  — replace the tenant hero image.
 // POST /admin/tenants/:id/logo/upload  — replace the tenant logo image.
-// Both resize to 620/1400 via storePhotoVariants and update the DB column.
+// Hero resizes to 620/1400 via storePhotoVariants; the logo derives the
+// transparent + square pair via storeLogoVariants. Both update the DB.
 // ---------------------------------------------------------------------------
 async function handleTenantImageUpload(
   req: import("express").Request,
@@ -209,22 +307,38 @@ async function handleTenantImageUpload(
     res.status(400).json({ error: "Datoteka ni veljavna slika." });
     return;
   }
-  const name = `${randomUUID()}.jpg`;
+  let patch: Partial<typeof tenantsTable.$inferInsert>;
+  let warning: string | undefined;
   try {
-    await storePhotoVariants(tenant.slug, name, req.file.buffer);
+    if (column === "logoUrl") {
+      const out = await storeLogoVariants(tenant.slug, req.file.buffer);
+      patch = { logoUrl: out.logoUrl, logoSquareUrl: out.logoSquareUrl };
+      warning = out.warning;
+    } else {
+      const name = `${randomUUID()}.jpg`;
+      await storePhotoVariants(tenant.slug, name, req.file.buffer);
+      patch = { heroUrl: `/api/storage/img/${tenant.slug}/${name}` };
+    }
   } catch (err) {
     req.log.error({ err }, "tenant image upload failed");
     res.status(500).json({ error: "Upload failed" });
     return;
   }
-  const url = `/api/storage/img/${tenant.slug}/${name}`;
-  const patch = column === "heroUrl" ? { heroUrl: url } : { logoUrl: url };
   const [updated] = await db
     .update(tenantsTable)
     .set(patch)
     .where(eq(tenantsTable.id, tenantId))
-    .returning({ heroUrl: tenantsTable.heroUrl, logoUrl: tenantsTable.logoUrl });
-  res.status(200).json({ heroUrl: updated?.heroUrl, logoUrl: updated?.logoUrl });
+    .returning({
+      heroUrl: tenantsTable.heroUrl,
+      logoUrl: tenantsTable.logoUrl,
+      logoSquareUrl: tenantsTable.logoSquareUrl,
+    });
+  res.status(200).json({
+    heroUrl: updated?.heroUrl,
+    logoUrl: updated?.logoUrl,
+    logoSquareUrl: updated?.logoSquareUrl,
+    ...(warning ? { warning } : {}),
+  });
 }
 
 router.post(

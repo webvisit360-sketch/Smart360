@@ -27,7 +27,12 @@ export const tenantsTable = pgTable("tenants", {
   subtitle: text("subtitle"),
   rating: text("rating"),
   reviewsCount: text("reviews_count"),
+  // Two derivatives of ONE logo upload. logoUrl is the source of truth:
+  // transparent PNG trimmed to the artwork (first-screen logo on a photo).
+  // logoSquareUrl is derived on save: 384x384 on white, artwork at 72 %
+  // (round host avatar and tip thumbnail — circles crop nothing).
   logoUrl: text("logo_url"),
+  logoSquareUrl: text("logo_square_url"),
   heroUrl: text("hero_url"),
   tourUrl: text("tour_url"),
   phone: text("phone"),

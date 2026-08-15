@@ -135,7 +135,7 @@ a{color:inherit;text-decoration:none}
 /* ---------- gostitelj ---------- */
 .host{margin-top:32px;border:1px solid var(--line);border-radius:var(--r-photo);padding:18px}
 .host__top{display:flex;align-items:center;gap:13px}
-.host__av{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:50% 8%}
+.host__av{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:50% 50%;background:#fff}
 .host__n{font-size:calc(15px * var(--txt-scale,1.4));font-weight:600;letter-spacing:-.02em}
 .host__s{font-size:calc(13px * var(--txt-scale,1.4));color:var(--txt-color,var(--ink-2));margin-top:2px;letter-spacing:-.012em}
 .btn{margin-top:16px;min-height:48px;height:auto;border-radius:10px;background:var(--coral);color:var(--txt-color,#fff);width:100%;
@@ -198,7 +198,7 @@ a{color:inherit;text-decoration:none}
 .info b{font-weight:500;color:var(--ink)}
 
 .tip{margin-top:14px;background:var(--wash);border-radius:14px;padding:14px 15px;display:flex;gap:11px}
-.tip img{width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:50% 8%;flex:none}
+.tip img{width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:50% 50%;background:#fff;flex:none}
 .tip__l{font-size:calc(12px * var(--txt-scale,1.4));font-weight:600;letter-spacing:-.005em}
 .tip__t{font-size:calc(13.5px * var(--txt-scale,1.4));line-height:1.45;margin-top:3px;letter-spacing:-.012em}
 

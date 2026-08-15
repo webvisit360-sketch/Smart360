@@ -454,7 +454,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
 
           {item.noteText && (
             <div className="tip">
-              <img src={imgSrc(tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
+              <img src={imgSrc(tenant.logoSquareUrl || tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
               <div>
                 <div className="tip__l">{item.noteType || "Dobro je vedeti"}</div>
                 <div className="tip__t" dangerouslySetInnerHTML={{__html: sanitizeHtml(item.noteText)}}></div>

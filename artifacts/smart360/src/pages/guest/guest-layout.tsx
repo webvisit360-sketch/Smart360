@@ -55,7 +55,14 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       touch.rel = "apple-touch-icon";
       document.head.appendChild(touch);
     }
-    touch.href = `${base}brand/ikona-smart360-180.png`;
+    // Tenant's own 180 px icon (derived on upload); Smart360 only as fallback.
+    const iconBase =
+      tenant.logoSquareUrl && tenant.logoSquareUrl.endsWith("-kvadrat.png")
+        ? tenant.logoSquareUrl.replace(/-kvadrat\.png$/, "")
+        : null;
+    touch.href = iconBase
+      ? `${iconBase}-ikona-180.png`
+      : `${base}brand/ikona-smart360-180.png`;
   }, [tenant, slug]);
 
   // Unknown slug → the app's own 404 with a way back. NEVER a default tenant.

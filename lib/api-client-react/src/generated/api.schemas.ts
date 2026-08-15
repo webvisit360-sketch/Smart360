@@ -150,6 +150,8 @@ export interface Tenant {
   /** @nullable */
   logoUrl?: string | null;
   /** @nullable */
+  logoSquareUrl?: string | null;
+  /** @nullable */
   heroUrl?: string | null;
   /** @nullable */
   tourUrl?: string | null;
@@ -241,6 +243,8 @@ export interface TenantUpdate {
   reviewsCount?: string | null;
   /** @nullable */
   logoUrl?: string | null;
+  /** @nullable */
+  logoSquareUrl?: string | null;
   /** @nullable */
   heroUrl?: string | null;
   /** @nullable */
