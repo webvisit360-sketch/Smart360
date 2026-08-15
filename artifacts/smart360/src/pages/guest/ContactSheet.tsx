@@ -1,9 +1,10 @@
+import { SheetTop } from "./SheetTop";
 export function ContactSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: boolean, onClose: () => void }) {
   return (
     <>
       <div className={`mask ${isOpen ? 'on' : ''}`} onClick={onClose}></div>
       <div className={`sheet ${isOpen ? 'on' : ''}`}>
-        <div className="grab" onClick={onClose}></div>
+        <SheetTop isOpen={isOpen} onClose={onClose} />
         <h3>Kontakt</h3>
         <div className="sub">Kako vam lahko pomagamo?</div>
         

@@ -1,0 +1,127 @@
+Spodnji listi — križec za zapiranje in pravilne plasti
+Referenca: paket UI 17.
+
+Plošča za deljenje se ni dala zapreti. Vzrok ni bil samo manjkajoč križec: spodnji listi so bili pod spodnjo vrstico ikon, zato so ikone risale čez vsebino, zastor pa je bil še nižje.
+
+
+Navodilo za Replit (prilepi v celoti)
+The share sheet could not be closed. Two separate faults — fix both.
+
+=====================================================================
+
+1. LAYERS — THIS IS THE REAL BUG
+
+=====================================================================
+
+The bottom icon row sits at z-index 105. The sheet was at 95 and the backdrop at 90, so the
+
+icons were drawn ON TOP of the sheet and the backdrop was below everything. Correct order:
+
+  .detail   z-index:100    detail overlay
+
+  .tabdock  z-index:105    bottom icon row
+
+  .mask     z-index:115    backdrop
+
+  .sheet    z-index:120    bottom sheet
+
+  .editor   z-index:120    cover editor
+
+Whenever a new fixed layer is added later, place it against this list. A sheet that is under
+
+the navigation is not a cosmetic problem — parts of it become unreachable.
+
+=====================================================================
+
+2. A CLOSE BUTTON IN EVERY SHEET
+
+=====================================================================
+
+Every bottom sheet — share, contact, language, search, booking — and the cover editor get the
+
+same header. Render it once, in the function that opens a sheet, never per sheet:
+
+  <div class="sheet__top">
+
+    <span class="grab"></span>
+
+    <button class="sheet__x" onclick="closeSheet()" aria-label="Zapri">
+
+      <svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+
+  </div>
+
+  .sheet__top{position:sticky;top:0;z-index:3;background:#fff;margin:0 -24px 10px;
+
+              padding:10px 24px 8px;display:flex;align-items:center;justify-content:flex-end;
+
+              min-height:50px}
+
+  .sheet__top .grab{position:absolute;left:50%;top:10px;transform:translateX(-50%);
+
+                    width:38px;height:4px;border-radius:2px;background:var(--line-2);margin:0}
+
+  .sheet__x{width:40px;height:40px;border-radius:50%;background:var(--wash);color:var(--ink);
+
+            display:grid;place-items:center;border:1px solid var(--line);
+
+            transition:background .15s,color .15s}
+
+  .sheet__x .ic{width:20px;height:20px;stroke-width:2.2}
+
+  .sheet__x:active{background:var(--sea);border-color:var(--sea);color:#fff}
+
+  @media (hover:hover) and (pointer:fine){
+
+    .sheet__x:hover{background:var(--sea);border-color:var(--sea);color:#fff}
+
+  }
+
+  The header is STICKY, not absolute. The sheet scrolls (max-height:88vh;overflow:auto), and
+
+  an absolutely positioned button scrolls out of sight on a long sheet — exactly when the
+
+  guest needs it most.
+
+  Three ways out, all of them working: the cross, a tap on the backdrop, and the Escape key.
+
+=====================================================================
+
+3. THE SHARE SHEET, BETTER LAID OUT
+
+=====================================================================
+
+  .qrbox{display:flex;flex-direction:column;align-items:center;gap:14px;margin:2px 0 20px;
+
+         padding:22px 18px 18px;border:1px solid var(--line);border-radius:24px;
+
+         background:var(--wash)}
+
+  .qrbox__code{width:210px;height:210px;background:#fff;padding:12px;border-radius:16px}
+
+  .qrbox__u{font-weight:800;color:var(--sea);text-align:center;word-break:break-all;
+
+            background:#fff;border-radius:999px;padding:8px 16px;border:1px solid var(--line)}
+
+  The QR sits on its own white plate inside the warm box — a scanner needs white margin
+
+  around the code, and the plate guarantees it whatever the box colour. The address below is
+
+  a blue pill, so the guest can read it aloud or type it without hunting for it.
+
+=====================================================================
+
+4. VERIFY
+
+=====================================================================
+
+  a) Open the share sheet: the cross is visible top right, the bottom icon row is BEHIND the
+
+     sheet, not over it.
+
+  b) Close it three ways: cross, backdrop, Escape.
+
+  c) Open the contact sheet and scroll it — the cross stays put at the top.
+
+  d) Same header appears in every sheet and in the cover editor.
+

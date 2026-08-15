@@ -1,3 +1,4 @@
+import { SheetTop } from "./SheetTop";
 import { useRef, useState } from "react";
 
 /** Deli to stran — QR, native share, copy link, printable A6 label (paket 14). */
@@ -60,7 +61,7 @@ export function ShareSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: b
     <>
       <div className={`mask ${isOpen ? 'on' : ''}`} onClick={onClose}></div>
       <div className={`sheet ${isOpen ? 'on' : ''}`}>
-        <div className="grab" onClick={onClose}></div>
+        <SheetTop isOpen={isOpen} onClose={onClose} />
         <h3>Deli to stran</h3>
         <div className="sub">Skenirajte kodo ali pošljite povezavo naprej.</div>
 
