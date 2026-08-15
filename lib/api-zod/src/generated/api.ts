@@ -75,6 +75,7 @@ export const GetPublicTenantResponse = zod.object({
   "title": zod.string(),
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
+  "imageUrl": zod.string().nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 }).and(zod.object({
@@ -423,6 +424,7 @@ export const GetTenantResponse = zod.object({
   "title": zod.string(),
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
+  "imageUrl": zod.string().nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 }).and(zod.object({
@@ -635,6 +637,7 @@ export const CreateSectionResponse = zod.object({
   "title": zod.string(),
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
+  "imageUrl": zod.string().nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 })
@@ -660,6 +663,7 @@ export const UpdateSectionResponse = zod.object({
   "title": zod.string(),
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
+  "imageUrl": zod.string().nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 })

@@ -4,10 +4,12 @@ import publicTenantsRouter from "./publicTenants";
 import adminAuthRouter from "./adminAuth";
 import adminTenantsRouter from "./adminTenants";
 import adminContentRouter from "./adminContent";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(storageRouter);
 router.use(publicTenantsRouter);
 router.use(adminAuthRouter);
 router.use(adminTenantsRouter);

@@ -14,6 +14,8 @@ export interface Section {
   /** @nullable */
   subtitle?: string | null;
   icon: string;
+  /** @nullable */
+  imageUrl?: string | null;
   position: number;
   isVisible: boolean;
 }

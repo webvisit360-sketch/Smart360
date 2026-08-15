@@ -947,6 +947,7 @@ components:
         title: { type: string }
         subtitle: { type: ["string", "null"] }
         icon: { type: string }
+        imageUrl: { type: ["string", "null"] }
         position: { type: number }
         isVisible: { type: boolean }
       required: [id, tenantId, key, title, icon, position, isVisible]

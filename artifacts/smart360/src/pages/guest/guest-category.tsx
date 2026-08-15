@@ -8,6 +8,7 @@ import { formatTodayHours } from "../../lib/hours";
 import { sanitizeHtml } from "../../lib/sanitize";
 import { buildGuestPath } from "./guest-url";
 import { GuestSwipe } from "./GuestSwipe";
+import { imgSrc } from "./img";
 
 export default function GuestCategory() {
   const [, params] = useRoute("/g/:slug/c/:categoryId");
@@ -100,7 +101,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       <article className="card fade" key={item.id}>
         {item.media?.[0] && (
           <div className="card__ph">
-            <img loading="lazy" src={item.media[0].url} alt={item.media[0].alt || ""} />
+            <img loading="lazy" decoding="async" src={imgSrc(item.media[0].url, 620)} alt={item.media[0].alt || ""} />
             <button className="card__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
           </div>
         )}
@@ -116,7 +117,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
 
           {item.noteText && (
             <div className="tip">
-              <img src={tenant.logoUrl || "/img/foto.jpg"} alt="" />
+              <img src={imgSrc(tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
               <div>
                 <div className="tip__l">{item.noteType || "Dobro je vedeti"}</div>
                 <div className="tip__t" dangerouslySetInnerHTML={{__html: sanitizeHtml(item.noteText)}}></div>
@@ -156,7 +157,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       <article className="card fade" key={item.id}>
         {item.media?.[0] && (
           <div className="card__ph">
-            <img loading="lazy" src={item.media[0].url} alt="" />
+            <img loading="lazy" decoding="async" src={imgSrc(item.media[0].url, 620)} alt="" />
             <button className="card__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
           </div>
         )}
@@ -181,7 +182,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       <article className="card fade" key={item.id}>
         {item.media?.[0] && (
           <div className="card__ph">
-            <img loading="lazy" src={item.media[0].url} alt="" />
+            <img loading="lazy" decoding="async" src={imgSrc(item.media[0].url, 620)} alt="" />
             <button className="card__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
           </div>
         )}
@@ -230,7 +231,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       {item.media && item.media.length > 0 && (
         <div className="gal" style={{marginTop: 16}}>
           <div className="galtrack">
-            {item.media.map((m: any) => <img key={m.id} src={m.url} alt={m.alt || ""} />)}
+            {item.media.map((m: any) => <img key={m.id} loading="lazy" decoding="async" src={imgSrc(m.url, 1400)} alt={m.alt || ""} />)}
           </div>
         </div>
       )}

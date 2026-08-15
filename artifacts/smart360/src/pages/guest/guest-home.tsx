@@ -8,6 +8,8 @@ import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
 import { getCoverVars } from "./cover-vars";
+import { imgSrc } from "./img";
+import { useEffect } from "react";
 
 export default function GuestHome() {
   const [, params] = useRoute("/g/:slug");
@@ -25,6 +27,18 @@ export default function GuestHome() {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+
+  // The cover photo is the first thing a guest sees — preload it eagerly.
+  const heroHref = tenant?.heroUrl ? imgSrc(tenant.heroUrl, 1400) : null;
+  useEffect(() => {
+    if (!heroHref) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = heroHref;
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, [heroHref]);
 
   if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">Nalaganje...</div></div></div>;
   if (isError || !tenant) return <div className="app"><div className="pagepad"><div className="empty">Namestitev ni najdena.</div></div></div>;
@@ -56,7 +70,7 @@ export default function GuestHome() {
       title: sec.title, 
       icon: sec.icon || "home", 
       count: itemCount, 
-      photo: photo || "/img/foto.jpg", 
+      photo: sec.imageUrl || photo || "/img/foto.jpg", 
       link: firstCat ? `/g/${slug}/c/${firstCat}` : null 
     };
   });
@@ -107,7 +121,7 @@ export default function GuestHome() {
       </header>
 
       <div className="hero">
-        {tenant.heroUrl ? <img src={tenant.heroUrl} alt="" /> : <div style={{width: '100%', height: '100%', background: 'var(--wash)'}}></div>}
+        {tenant.heroUrl ? <img src={imgSrc(tenant.heroUrl, 1400)} alt="" loading="eager" decoding="sync" /> : <div style={{width: '100%', height: '100%', background: 'var(--wash)'}}></div>}
         <button className="hero__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
         {tenant.tourUrl && (
           <a href={tenant.tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">
@@ -146,7 +160,7 @@ export default function GuestHome() {
             <div className="big">
               {bigCards.map(bc => (
                 <Link key={bc.id} href={bc.link ? buildGuestPath(bc.link) : '#'} className="bc">
-                  <img loading="lazy" src={bc.photo} alt="" />
+                  <img loading="lazy" decoding="async" src={imgSrc(bc.photo, 620)} alt="" />
                   <span className="ov"></span>
                   <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg></span>
                   <span className="tx">
@@ -172,7 +186,7 @@ export default function GuestHome() {
             <div className="hrow">
               {priljubljenoItems.map((item, idx) => (
                 <Link key={`${item.id}-${idx}`} href={buildGuestPath(`/g/${slug}/c/${item.catId}`)} className="hcard">
-                  <span className="im"><img loading="lazy" src={item.media?.[0]?.url || "/img/foto.jpg"} alt="" /></span>
+                  <span className="im"><img loading="lazy" decoding="async" src={imgSrc(item.media?.[0]?.url, 620)} alt="" /></span>
                   <b>{item.title}</b>
                   <span>{item.price ? `${item.price}${item.priceUnit ? ' ' + item.priceUnit.replace(/^\/?\s*/, '/ ') : ''}` : 'Več info'}</span>
                 </Link>
@@ -187,7 +201,7 @@ export default function GuestHome() {
             <p className="sec__sub">Izbrana priporočila na dosegu</p>
             <div className="hrow">
               {zaDanesCats.map((cat, idx) => {
-                const photo = cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url || "/img/foto.jpg";
+                const photo = imgSrc(cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url, 620);
                 const count = cat.items?.filter((i: any) => i.isVisible).length || 0;
                 return (
                   <Link key={`${cat.id}-${idx}`} href={buildGuestPath(`/g/${slug}/c/${cat.id}`)} className="hcard">
@@ -233,7 +247,7 @@ export default function GuestHome() {
 
         <section className="host">
           <div className="host__top">
-            <img className="host__av" src={tenant.logoUrl || "/img/foto.jpg"} alt="" />
+            <img className="host__av" src={imgSrc(tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
             <div>
               <div className="host__n">Tu smo za vas</div>
               <div className="host__s">Običajno odgovorimo v nekaj minutah</div>

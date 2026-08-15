@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
+import { ItemMediaEditor } from "@/components/admin/item-media-editor";
 import { useEffect, useRef, useState } from "react";
 
 const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
@@ -745,8 +746,9 @@ export default function AdminTenantEdit() {
                             
                             <div className="space-y-2 pl-2">
                               {category.items?.map((item: any) => (
-                                <div key={item.id} className="bg-background border rounded p-2 text-sm flex items-center justify-between">
+                                <div key={item.id} className="bg-background border rounded p-2 text-sm">
                                   <span>{item.title || '(Brez naslova)'}</span>
+                                  <ItemMediaEditor itemId={item.id} tenantId={tenant.id} media={item.media || []} />
                                 </div>
                               ))}
                               <Button variant="ghost" size="sm" className="w-full border border-dashed mt-2 h-8 text-xs text-muted-foreground">

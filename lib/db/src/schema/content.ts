@@ -19,6 +19,7 @@ export const sectionsTable = pgTable("sections", {
   title: text("title").notNull(),
   subtitle: text("subtitle"),
   icon: text("icon").notNull().default("sparkle"),
+  imageUrl: text("image_url"),
   position: integer("position").notNull().default(0),
   isVisible: boolean("is_visible").notNull().default(true),
 });
@@ -28,6 +29,7 @@ export const categoriesTable = pgTable("categories", {
   sectionId: uuid("section_id")
     .notNull()
     .references(() => sectionsTable.id, { onDelete: "cascade" }),
+  key: text("key"),
   label: text("label").notNull(),
   icon: text("icon").notNull().default("doc"),
   layout: text("layout").notNull().default("text"),
