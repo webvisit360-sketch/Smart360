@@ -32,22 +32,27 @@ function sha256(value: string): string {
 // ---------- Relying party configuration ----------
 
 export function rpID(): string {
-  // Development container: ALWAYS the dev domain. The RP_ID/RP_ORIGIN secrets
-  // hold the production values (smart360.info), and secrets are shared across
-  // environments — honouring them in dev would break dev passkeys and vice
-  // versa. RP_ID must be a registrable suffix of the origin the browser is on.
+  // Deployed production (REPLIT_DEPLOYMENT set): ALWAYS the configured RP_ID —
+  // deployments also expose a per-publish REPLIT_DEV_DOMAIN, which must be
+  // ignored there. Development container: ALWAYS the dev domain, because the
+  // configured RP_ID/RP_ORIGIN hold production values (smart360.info) and
+  // honouring them in dev would break dev passkeys. RP_ID must be a
+  // registrable suffix of the origin the browser is on.
+  const deployed = !!process.env["REPLIT_DEPLOYMENT"];
   const dev = process.env["REPLIT_DEV_DOMAIN"];
-  if (dev) return dev;
+  if (!deployed && dev) return dev;
   const configured = process.env["RP_ID"];
   if (configured) return configured;
+  if (dev) return dev;
   throw new Error("RP_ID must be set");
 }
 
 export function rpOrigin(): string {
-  // Mirror rpID(): dev container always uses the dev domain; the RP_ORIGIN
-  // secret holds the production origin.
+  // Mirror rpID(): configured value wins in deployments, dev domain wins in
+  // the development container.
+  const deployed = !!process.env["REPLIT_DEPLOYMENT"];
   const dev = process.env["REPLIT_DEV_DOMAIN"];
-  if (dev) return `https://${dev}`;
+  if (!deployed && dev) return `https://${dev}`;
   const configured = process.env["RP_ORIGIN"];
   if (configured) return configured;
   return `https://${rpID()}`;
