@@ -9,6 +9,7 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { buildGuestPath } from "./guest-url";
 import { GuestSwipe } from "./GuestSwipe";
 import { imgSrc } from "./img";
+import { getTextVars } from "./cover-vars";
 import { useThemeAttr } from "./use-theme-attr";
 
 export default function GuestCategory() {
@@ -57,7 +58,7 @@ export default function GuestCategory() {
   const items = currentCategory.items?.filter((i: any) => i.isVisible) || [];
 
   return (
-    <div className="app">
+    <div className="app" style={getTextVars(tenant)}>
       <header className="navbar">
         <button className="iconbtn" onClick={() => setLocation(buildGuestPath(`/g/${slug}`))}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-back" /></svg>

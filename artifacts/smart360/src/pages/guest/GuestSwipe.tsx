@@ -4,7 +4,7 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
-import { getCoverVars } from "./cover-vars";
+import { getCoverVars, getTextVars } from "./cover-vars";
 import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc } from "./img";
 
@@ -164,7 +164,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   }
 
   return (
-    <div className="app" style={navVars}>
+    <div className="app" style={{ ...navVars, ...getTextVars(tenant) }}>
       <div className="pager" id="pager" ref={pagerRef} style={{ visibility: "hidden" }}>
         <section className="screen">
           <div className="cover" style={coverVars}>

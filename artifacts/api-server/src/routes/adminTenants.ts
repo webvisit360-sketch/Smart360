@@ -201,6 +201,12 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
   if (!inRange(data["coverMetaOpacity"], 20, 100)) return "coverMetaOpacity must be 20-100";
   if (!inRange(data["coverVeil"], 0, 60)) return "coverVeil must be 0-60";
   if (!inRange(data["tileVeil"], 0, 60)) return "tileVeil must be 0-60";
+  if (!inRange(data["textScale"], 80, 200)) return "textScale must be 80-200";
+  if (data["textFont"] !== undefined && data["textFont"] !== null &&
+      !["figtree", "system", "georgia", "verdana", "menlo"].includes(String(data["textFont"])))
+    return "textFont must be one of figtree, system, georgia, verdana, menlo";
+  if (data["textColor"] !== undefined && data["textColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["textColor"])))
+    return "textColor must be a hex color like #14201F";
   return null;
 }
 

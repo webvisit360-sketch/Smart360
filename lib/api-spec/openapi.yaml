@@ -1017,6 +1017,9 @@ components:
         coverMetaOpacity: { type: ["number", "null"] }
         coverVeil: { type: ["number", "null"] }
         tileVeil: { type: ["number", "null"] }
+        textScale: { type: ["number", "null"] }
+        textFont: { type: ["string", "null"] }
+        textColor: { type: ["string", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
         navColorCover: { type: ["string", "null"] }
@@ -1078,6 +1081,9 @@ components:
         coverMetaOpacity: { type: ["number", "null"] }
         coverVeil: { type: ["number", "null"] }
         tileVeil: { type: ["number", "null"] }
+        textScale: { type: ["number", "null"] }
+        textFont: { type: ["string", "null"] }
+        textColor: { type: ["string", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
         navColorCover: { type: ["string", "null"] }

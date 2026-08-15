@@ -7,7 +7,7 @@ import { SearchOverlay } from "./SearchOverlay";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
-import { getCoverVars } from "./cover-vars";
+import { getCoverVars, getTextVars } from "./cover-vars";
 import { imgSrc } from "./img";
 import { hsub } from "./hsub";
 import { useThemeAttr } from "./use-theme-attr";
@@ -102,7 +102,7 @@ export default function GuestHome() {
   }).filter((row: any) => row.cats.length > 0);
 
   return (
-    <div className="app" style={coverVars}>
+    <div className="app" style={{ ...coverVars, ...getTextVars(tenant) }}>
       <header className="appbar" id="appbar">
         <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
         

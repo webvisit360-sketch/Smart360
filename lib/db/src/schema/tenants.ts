@@ -51,6 +51,11 @@ export const tenantsTable = pgTable("tenants", {
   coverMetaOpacity: doublePrecision("cover_meta_opacity"),
   coverVeil: doublePrecision("cover_veil"),
   tileVeil: doublePrecision("tile_veil"),
+  // Small-text controls (ui paket 13): multiplier %, curated font key, colour.
+  // NULL = theme default (scale 140 %, app typeface, original grey hierarchy).
+  textScale: doublePrecision("text_scale"),
+  textFont: text("text_font"),
+  textColor: text("text_color"),
   coverAlign: text("cover_align"),
   coverShowRating: boolean("cover_show_rating"),
   // Swipe theme bottom icon row colours (see ui/tema-poteg.css .tabdock)

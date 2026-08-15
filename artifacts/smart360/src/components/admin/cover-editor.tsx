@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { getCoverVars } from "@/pages/guest/cover-vars";
+import { FONT_LABELS, getCoverVars } from "@/pages/guest/cover-vars";
 import { imgSrc } from "@/pages/guest/img";
 
 export const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
@@ -20,6 +20,7 @@ export const THEME_DEFAULTS = {
     coverMetaOpacity: 100,
     coverVeil: 0,
     tileVeil: 0,
+    textScale: 140,
     coverAlign: "left" as const,
     coverShowRating: true,
   },
@@ -33,6 +34,7 @@ export const THEME_DEFAULTS = {
     coverMetaOpacity: 60,
     coverVeil: 26,
     tileVeil: 0,
+    textScale: 140,
     coverAlign: "left" as const,
     coverShowRating: true,
   },
@@ -57,6 +59,9 @@ export interface CoverFields {
   coverMetaOpacity: number | null;
   coverVeil: number | null;
   tileVeil: number | null;
+  textScale: number | null;
+  textFont: string | null;
+  textColor: string | null;
   coverAlign: string | null;
   coverShowRating: boolean | null;
 }
@@ -149,6 +154,7 @@ export function CoverEditor({
   const effMetaOpacity = form.coverMetaOpacity ?? themeDefaults.coverMetaOpacity;
   const effVeil = form.coverVeil ?? themeDefaults.coverVeil;
   const effTileVeil = form.tileVeil ?? themeDefaults.tileVeil;
+  const effTextScale = form.textScale ?? themeDefaults.textScale;
   const effAlign = form.coverAlign ?? themeDefaults.coverAlign;
   const effShowRating = form.coverShowRating ?? themeDefaults.coverShowRating;
 
@@ -301,6 +307,54 @@ export function CoverEditor({
                   isDefault={form.tileVeil === null}
                   onChange={(v) => onChange({ tileVeil: v })}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-sm border-b pb-2">Majhna besedila</h4>
+              <p className="text-xs text-muted-foreground">
+                Opisi, odpiralni časi, pravila, oznake in napisi na gumbih. Velikih naslovov
+                in naslovnice ne zadevajo; gumbi obdržijo obliko, poveča se le napis.
+              </p>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                <SliderRow
+                  label="Velikost besedila"
+                  min={80}
+                  max={200}
+                  step={1}
+                  unit="%"
+                  value={effTextScale}
+                  isDefault={form.textScale === null}
+                  onChange={(v) => onChange({ textScale: v })}
+                />
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Pisava {form.textFont === null && "(privzeta)"}
+                  </Label>
+                  <select
+                    className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+                    value={form.textFont ?? ""}
+                    onChange={(e) => onChange({ textFont: e.target.value || null })}
+                  >
+                    <option value="">(privzeta)</option>
+                    {Object.entries(FONT_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Barva besedila {form.textColor === null && "(privzete sivine)"}
+                  </Label>
+                  {form.textColor !== null && (
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => onChange({ textColor: null })}>
+                      Privzeta
+                    </Button>
+                  )}
+                </div>
+                <ColorRow value={form.textColor ?? "#14201F"} onChange={(hex) => onChange({ textColor: hex })} />
               </div>
             </div>
 

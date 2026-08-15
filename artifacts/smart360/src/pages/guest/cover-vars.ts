@@ -23,3 +23,31 @@ export function getCoverVars(tenant: any): CSSProperties {
 
   return vars as CSSProperties;
 }
+
+// Curated small-text typefaces (ui paket 13). Keys are stored in Tenant.textFont;
+// only the chosen stack is applied — fonts are never all loaded.
+export const FONT_STACKS: Record<string, string> = {
+  figtree: '"Figtree","Plus Jakarta Sans",sans-serif',
+  system: 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif',
+  georgia: 'Georgia,"Times New Roman",serif',
+  verdana: 'Verdana,Geneva,sans-serif',
+  menlo: 'Menlo,Consolas,monospace',
+};
+
+export const FONT_LABELS: Record<string, string> = {
+  figtree: "Figtree",
+  system: "Sistemska",
+  georgia: "Georgia",
+  verdana: "Verdana",
+  menlo: "Menlo",
+};
+
+/** Small-text vars (--txt-*). Set only when non-null — the CSS fallbacks carry
+ *  the defaults (scale 1.4, app typeface, original grey hierarchy). */
+export function getTextVars(tenant: any): CSSProperties {
+  const vars: Record<string, string | number> = {};
+  if (tenant.textScale != null) vars['--txt-scale'] = tenant.textScale / 100;
+  if (tenant.textFont != null && FONT_STACKS[tenant.textFont]) vars['--txt-font'] = FONT_STACKS[tenant.textFont];
+  if (tenant.textColor != null) vars['--txt-color'] = tenant.textColor;
+  return vars as CSSProperties;
+}

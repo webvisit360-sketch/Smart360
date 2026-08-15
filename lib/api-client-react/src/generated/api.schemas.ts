@@ -170,6 +170,12 @@ export interface Tenant {
   /** @nullable */
   tileVeil?: number | null;
   /** @nullable */
+  textScale?: number | null;
+  /** @nullable */
+  textFont?: string | null;
+  /** @nullable */
+  textColor?: string | null;
+  /** @nullable */
   coverAlign?: string | null;
   /** @nullable */
   coverShowRating?: boolean | null;
@@ -255,6 +261,12 @@ export interface TenantUpdate {
   coverVeil?: number | null;
   /** @nullable */
   tileVeil?: number | null;
+  /** @nullable */
+  textScale?: number | null;
+  /** @nullable */
+  textFont?: string | null;
+  /** @nullable */
+  textColor?: string | null;
   /** @nullable */
   coverAlign?: string | null;
   /** @nullable */
