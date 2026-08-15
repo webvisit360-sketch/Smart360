@@ -13,23 +13,69 @@ export interface OkStatus {
   ok: boolean;
 }
 
-export interface AdminCredentials {
-  username: string;
-  password: string;
+export type WebAuthnOptionsOptions = { [key: string]: unknown };
+
+export interface WebAuthnOptions {
+  challengeId: string;
+  options: WebAuthnOptionsOptions;
 }
 
-export interface ChangePasswordBody {
-  currentPassword: string;
-  newPassword: string;
+export type WebAuthnVerifyBodyResponse = { [key: string]: unknown };
+
+export interface WebAuthnVerifyBody {
+  challengeId: string;
+  response: WebAuthnVerifyBodyResponse;
 }
 
-export interface ForgotPasswordBody {
-  email: string;
-}
-
-export interface ResetPasswordBody {
+export interface EnrollOptionsBody {
   token: string;
-  newPassword: string;
+}
+
+export type EnrollVerifyBodyResponse = { [key: string]: unknown };
+
+export interface EnrollVerifyBody {
+  token: string;
+  challengeId: string;
+  deviceName?: string;
+  response: EnrollVerifyBodyResponse;
+}
+
+export interface EnrollResult {
+  ok: boolean;
+  recoveryCodes?: string[];
+}
+
+export interface RecoveryBody {
+  code: string;
+}
+
+export interface RecoveryResult {
+  enrollToken: string;
+}
+
+export interface Passkey {
+  id: string;
+  deviceName: string;
+  createdAt: string;
+  /** @nullable */
+  lastUsedAt: string | null;
+}
+
+export interface PasskeyList {
+  credentials: Passkey[];
+  unusedRecoveryCodes: number;
+}
+
+export interface RenamePasskeyRequest {
+  deviceName: string;
+}
+
+export type AddPasskeyVerifyBodyResponse = { [key: string]: unknown };
+
+export interface AddPasskeyVerifyBody {
+  challengeId: string;
+  deviceName?: string;
+  response: AddPasskeyVerifyBodyResponse;
 }
 
 export interface AdminSession {

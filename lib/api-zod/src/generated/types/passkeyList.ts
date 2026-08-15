@@ -5,7 +5,9 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { Passkey } from './passkey';
 
-export interface ForgotPasswordBody {
-  email: string;
+export interface PasskeyList {
+  credentials: Passkey[];
+  unusedRecoveryCodes: number;
 }

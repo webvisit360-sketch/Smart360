@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface AdminCredentials {
-  username: string;
-  password: string;
+export interface RenamePasskeyRequest {
+  deviceName: string;
 }

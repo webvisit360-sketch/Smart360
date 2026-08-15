@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </Link>
           <Link href="/admin/account" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted font-medium transition-colors">
             <User className="h-5 w-5" />
-            Moj račun
+            Ključi
           </Link>
         </div>
         <div className="p-4 border-t border-border">

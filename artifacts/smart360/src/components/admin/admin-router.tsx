@@ -1,6 +1,6 @@
 import { Route, Switch, useLocation } from "wouter";
 import AdminLogin from "@/pages/admin/login";
-import AdminResetPassword from "@/pages/admin/reset-password";
+import AdminEnroll from "@/pages/admin/enroll";
 import AdminAccount from "@/pages/admin/account";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminLayout from "@/components/admin/admin-layout";
@@ -13,8 +13,8 @@ export function AdminRouter() {
     return <AdminLogin />;
   }
 
-  if (location === "/admin/reset-password") {
-    return <AdminResetPassword />;
+  if (location === "/admin/enroll") {
+    return <AdminEnroll />;
   }
 
   return (

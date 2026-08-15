@@ -5,61 +5,51 @@ import {
   db,
   adminUsersTable,
   adminSessionsTable,
-  adminPasswordResetsTable,
+  adminCredentialsTable,
+  adminRecoveryCodesTable,
+  adminEnrollTokensTable,
+  adminChallengesTable,
+  adminAuthEventsTable,
   type AdminUser,
+  type AdminCredential,
 } from "@workspace/db";
-import { eq, lt, ne, and, isNull, gt } from "drizzle-orm";
+import { eq, lt, and, isNull, gt, desc } from "drizzle-orm";
 
 const SESSION_COOKIE = "smart360_admin";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const RESET_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const ENROLL_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-export const ADMIN_EMAIL_SEED = "pi4.doo@gmail.com";
-export const MIN_PASSWORD_LENGTH = 12;
+export const ADMIN_EMAIL = "pi4.doo@gmail.com";
 
-const ARGON2ID = { algorithm: 2 } as const; // 2 = argon2id
-
-export function hashPassword(password: string): Promise<string> {
-  return argonHash(password, ARGON2ID);
-}
-
-export async function verifyPassword(hashed: string, password: string): Promise<boolean> {
-  try {
-    return await argonVerify(hashed, password);
-  } catch {
-    return false;
-  }
-}
+const ARGON2ID = { algorithm: 2 } as const; // argon2id
 
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
-/**
- * Ensures the single admin account exists and uses the configured email.
- * Initial password comes from ADMIN_PASSWORD (dev fallback: "smart360").
- */
+// ---------- Relying party configuration ----------
+
+export function rpID(): string {
+  const configured = process.env["RP_ID"];
+  if (configured) return configured;
+  const dev = process.env["REPLIT_DEV_DOMAIN"];
+  if (dev) return dev;
+  throw new Error("RP_ID must be set");
+}
+
+export function rpOrigin(): string {
+  const configured = process.env["RP_ORIGIN"];
+  if (configured) return configured;
+  return `https://${rpID()}`;
+}
+
+// ---------- Admin account ----------
+
 export async function ensureAdminAccount(): Promise<void> {
-  const [existing] = await db.select().from(adminUsersTable).limit(1);
-  if (existing) {
-    if (existing.email !== ADMIN_EMAIL_SEED) {
-      await db
-        .update(adminUsersTable)
-        .set({ email: ADMIN_EMAIL_SEED })
-        .where(eq(adminUsersTable.id, existing.id));
-    }
-    return;
-  }
-  const initial = process.env["ADMIN_PASSWORD"];
-  if (!initial && process.env.NODE_ENV === "production") {
-    throw new Error("ADMIN_PASSWORD must be set to create the admin account");
-  }
   await db
     .insert(adminUsersTable)
-    .values({
-      email: ADMIN_EMAIL_SEED,
-      passwordHash: await hashPassword(initial ?? "smart360"),
-    })
+    .values({ email: ADMIN_EMAIL, displayName: "Upravitelj" })
     .onConflictDoNothing({ target: adminUsersTable.email });
 }
 
@@ -68,34 +58,181 @@ export async function getAdminUser(): Promise<AdminUser | undefined> {
   return user;
 }
 
-/** Accepts the account email; ADMIN_USER env value is tolerated for backward compatibility. */
-export async function checkCredentials(
-  username: string,
-  password: string,
-): Promise<AdminUser | null> {
-  const user = await getAdminUser();
-  if (!user) return null;
-  const legacyUser = process.env["ADMIN_USER"];
-  const nameOk =
-    username.toLowerCase() === user.email.toLowerCase() ||
-    (!!legacyUser && username === legacyUser);
-  const passOk = await verifyPassword(user.passwordHash, password);
-  return nameOk && passOk ? user : null;
+// ---------- Credentials ----------
+
+export async function listCredentials(): Promise<AdminCredential[]> {
+  return db
+    .select()
+    .from(adminCredentialsTable)
+    .orderBy(desc(adminCredentialsTable.createdAt));
+}
+
+export async function countUnusedRecoveryCodes(): Promise<number> {
+  const rows = await db
+    .select({ id: adminRecoveryCodesTable.id })
+    .from(adminRecoveryCodesTable)
+    .where(isNull(adminRecoveryCodesTable.usedAt));
+  return rows.length;
+}
+
+// ---------- Recovery codes ----------
+
+export function generateRecoveryCode(): string {
+  // Format: XXXX-XXXX-XXXX (base32-like, unambiguous alphabet)
+  const alphabet = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
+  const pick = () => alphabet[crypto.randomInt(alphabet.length)];
+  const group = () => Array.from({ length: 4 }, pick).join("");
+  return `${group()}-${group()}-${group()}`;
+}
+
+export async function issueRecoveryCodes(count = 10): Promise<string[]> {
+  await db.delete(adminRecoveryCodesTable); // replace any previous set
+  const codes: string[] = [];
+  for (let i = 0; i < count; i++) codes.push(generateRecoveryCode());
+  await db.insert(adminRecoveryCodesTable).values(
+    await Promise.all(
+      codes.map(async (code) => ({
+        codeHash: await argonHash(normalizeRecoveryCode(code), ARGON2ID),
+      })),
+    ),
+  );
+  return codes;
+}
+
+function normalizeRecoveryCode(code: string): string {
+  return code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+/** Verifies and burns a recovery code. Returns true when a code matched. */
+export async function consumeRecoveryCode(code: string): Promise<boolean> {
+  const normalized = normalizeRecoveryCode(code);
+  if (normalized.length < 8) return false;
+  const rows = await db
+    .select()
+    .from(adminRecoveryCodesTable)
+    .where(isNull(adminRecoveryCodesTable.usedAt));
+  for (const row of rows) {
+    let ok = false;
+    try {
+      ok = await argonVerify(row.codeHash, normalized);
+    } catch {
+      ok = false;
+    }
+    if (ok) {
+      const [burned] = await db
+        .update(adminRecoveryCodesTable)
+        .set({ usedAt: new Date() })
+        .where(
+          and(
+            eq(adminRecoveryCodesTable.id, row.id),
+            isNull(adminRecoveryCodesTable.usedAt),
+          ),
+        )
+        .returning();
+      return !!burned;
+    }
+  }
+  return false;
+}
+
+// ---------- Enrolment tokens (single-use, 15 minutes) ----------
+
+export async function createEnrollToken(source: "shell" | "recovery"): Promise<string> {
+  const token = crypto.randomBytes(32).toString("base64url");
+  await db.insert(adminEnrollTokensTable).values({
+    tokenHash: sha256(token),
+    source,
+    expiresAt: new Date(Date.now() + ENROLL_TTL_MS),
+  });
+  await db
+    .delete(adminEnrollTokensTable)
+    .where(lt(adminEnrollTokensTable.expiresAt, new Date()));
+  return token;
+}
+
+/** Checks the token is valid without burning it (burn happens on successful registration). */
+export async function isEnrollTokenValid(token: string): Promise<boolean> {
+  const [row] = await db
+    .select()
+    .from(adminEnrollTokensTable)
+    .where(
+      and(
+        eq(adminEnrollTokensTable.tokenHash, sha256(token)),
+        isNull(adminEnrollTokensTable.usedAt),
+        gt(adminEnrollTokensTable.expiresAt, new Date()),
+      ),
+    )
+    .limit(1);
+  return !!row;
+}
+
+/** Atomically burns a valid enroll token. Returns its source, or null. */
+export async function consumeEnrollToken(token: string): Promise<"shell" | "recovery" | null> {
+  const [row] = await db
+    .update(adminEnrollTokensTable)
+    .set({ usedAt: new Date() })
+    .where(
+      and(
+        eq(adminEnrollTokensTable.tokenHash, sha256(token)),
+        isNull(adminEnrollTokensTable.usedAt),
+        gt(adminEnrollTokensTable.expiresAt, new Date()),
+      ),
+    )
+    .returning();
+  return row ? (row.source as "shell" | "recovery") : null;
+}
+
+// ---------- WebAuthn challenges (DB-backed, single use) ----------
+
+export async function storeChallenge(
+  type: "registration" | "authentication",
+  challenge: string,
+  context?: string,
+): Promise<string> {
+  const [row] = await db
+    .insert(adminChallengesTable)
+    .values({
+      type,
+      challenge,
+      context: context ?? null,
+      expiresAt: new Date(Date.now() + CHALLENGE_TTL_MS),
+    })
+    .returning();
+  await db
+    .delete(adminChallengesTable)
+    .where(lt(adminChallengesTable.expiresAt, new Date()));
+  return row!.id;
+}
+
+/** Atomically consumes a challenge by id. Returns { challenge, context } or null. */
+export async function consumeChallenge(
+  id: string,
+  type: "registration" | "authentication",
+): Promise<{ challenge: string; context: string | null } | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const [row] = await db
+    .delete(adminChallengesTable)
+    .where(
+      and(
+        eq(adminChallengesTable.id, id),
+        eq(adminChallengesTable.type, type),
+        gt(adminChallengesTable.expiresAt, new Date()),
+      ),
+    )
+    .returning();
+  return row ? { challenge: row.challenge, context: row.context } : null;
 }
 
 // ---------- Sessions (server-side, revocable) ----------
 
-export async function createSession(req: Request, res: Response): Promise<string> {
+export async function createSession(req: Request, res: Response): Promise<void> {
   const token = crypto.randomBytes(32).toString("base64url");
-  const [session] = await db
-    .insert(adminSessionsTable)
-    .values({
-      tokenHash: sha256(token),
-      ip: req.ip ?? null,
-      userAgent: req.get("user-agent") ?? null,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
-    })
-    .returning();
+  await db.insert(adminSessionsTable).values({
+    tokenHash: sha256(token),
+    ip: req.ip ?? null,
+    userAgent: req.get("user-agent") ?? null,
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+  });
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -103,7 +240,6 @@ export async function createSession(req: Request, res: Response): Promise<string
     maxAge: SESSION_TTL_MS,
     path: "/",
   });
-  return session!.id;
 }
 
 async function findSessionId(req: Request): Promise<string | null> {
@@ -129,16 +265,6 @@ export async function destroyCurrentSession(req: Request, res: Response): Promis
   res.clearCookie(SESSION_COOKIE, { path: "/" });
 }
 
-/** Deletes every session except the current one (used after a password change). */
-export async function revokeOtherSessions(req: Request): Promise<void> {
-  const id = await findSessionId(req);
-  if (id) {
-    await db.delete(adminSessionsTable).where(ne(adminSessionsTable.id, id));
-  } else {
-    await db.delete(adminSessionsTable);
-  }
-}
-
 export async function revokeAllSessions(): Promise<void> {
   await db.delete(adminSessionsTable);
 }
@@ -155,35 +281,19 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     .catch(next);
 }
 
-// ---------- Password reset tokens ----------
+// ---------- Audit log ----------
 
-export async function createResetToken(): Promise<string> {
-  const token = crypto.randomBytes(32).toString("base64url");
-  await db.insert(adminPasswordResetsTable).values({
-    tokenHash: sha256(token),
-    expiresAt: new Date(Date.now() + RESET_TTL_MS),
+export async function logAuthEvent(
+  req: Request,
+  type: string,
+  detail?: string,
+): Promise<void> {
+  await db.insert(adminAuthEventsTable).values({
+    type,
+    detail: detail ?? null,
+    ip: req.ip ?? null,
+    userAgent: req.get("user-agent") ?? null,
   });
-  // Opportunistic cleanup of expired tokens.
-  await db
-    .delete(adminPasswordResetsTable)
-    .where(lt(adminPasswordResetsTable.expiresAt, new Date()));
-  return token;
-}
-
-/** Atomically consumes a valid, unused, unexpired token. Returns true on success. */
-export async function consumeResetToken(token: string): Promise<boolean> {
-  const [row] = await db
-    .update(adminPasswordResetsTable)
-    .set({ usedAt: new Date() })
-    .where(
-      and(
-        eq(adminPasswordResetsTable.tokenHash, sha256(token)),
-        isNull(adminPasswordResetsTable.usedAt),
-        gt(adminPasswordResetsTable.expiresAt, new Date()),
-      ),
-    )
-    .returning();
-  return !!row;
 }
 
 // ---------- Rate limiting (in-memory) ----------
@@ -202,20 +312,12 @@ function limited(key: string, max: number, windowMs: number, record: boolean): b
   return false;
 }
 
-// Login: 5 attempts / 15 minutes per IP.
-export function loginRateLimited(ip: string): boolean {
-  return limited(`login:${ip}`, 5, 15 * 60 * 1000, false);
-}
-export function recordLoginFailure(ip: string): void {
-  limited(`login:${ip}`, 5, 15 * 60 * 1000, true);
-}
-export function resetLoginFailures(ip: string): void {
-  attempts.delete(`login:${ip}`);
+/** Login: 10 attempts / 15 minutes per IP. Only verify attempts count. */
+export function loginRateLimited(ip: string, record = true): boolean {
+  return limited(`login:${ip}`, 10, 15 * 60 * 1000, record);
 }
 
-// Forgot password: 3 requests / hour per email and per IP (records on check).
-export function forgotRateLimited(email: string, ip: string): boolean {
-  const e = limited(`forgot:e:${email.toLowerCase()}`, 3, 60 * 60 * 1000, true);
-  const i = limited(`forgot:i:${ip}`, 3, 60 * 60 * 1000, true);
-  return e || i;
+/** Recovery codes: 5 attempts / 15 minutes per IP. */
+export function recoveryRateLimited(ip: string): boolean {
+  return limited(`recovery:${ip}`, 5, 15 * 60 * 1000, true);
 }

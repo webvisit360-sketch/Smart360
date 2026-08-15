@@ -6,7 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './adminCredentials';
+export * from './addPasskeyVerifyBody';
+export * from './addPasskeyVerifyBodyResponse';
 export * from './adminOverview';
 export * from './adminSession';
 export * from './category';
@@ -14,8 +15,10 @@ export * from './categoryContent';
 export * from './categoryInput';
 export * from './categoryUpdate';
 export * from './changelogEntry';
-export * from './changePasswordBody';
-export * from './forgotPasswordBody';
+export * from './enrollOptionsBody';
+export * from './enrollResult';
+export * from './enrollVerifyBody';
+export * from './enrollVerifyBodyResponse';
 export * from './getPublicTenantParams';
 export * from './healthStatus';
 export * from './item';
@@ -25,8 +28,12 @@ export * from './listTranslationsParams';
 export * from './mediaEntry';
 export * from './mediaInput';
 export * from './okStatus';
+export * from './passkey';
+export * from './passkeyList';
+export * from './recoveryBody';
+export * from './recoveryResult';
+export * from './renamePasskeyRequest';
 export * from './reorderInput';
-export * from './resetPasswordBody';
 export * from './searchPublicTenantParams';
 export * from './searchResult';
 export * from './section';
@@ -40,3 +47,7 @@ export * from './tenantInput';
 export * from './tenantUpdate';
 export * from './translation';
 export * from './translationInput';
+export * from './webAuthnOptions';
+export * from './webAuthnOptionsOptions';
+export * from './webAuthnVerifyBody';
+export * from './webAuthnVerifyBodyResponse';

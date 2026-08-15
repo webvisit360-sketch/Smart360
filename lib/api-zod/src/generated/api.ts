@@ -142,13 +142,106 @@ export const SearchPublicTenantResponseItem = zod.object({
 export const SearchPublicTenantResponse = zod.array(SearchPublicTenantResponseItem)
 
 
-export const AdminLoginBody = zod.object({
-  "username": zod.string(),
-  "password": zod.string()
+export const GetPasskeyLoginOptionsResponse = zod.object({
+  "challengeId": zod.string(),
+  "options": zod.record(zod.string(), zod.unknown())
 })
 
-export const AdminLoginResponse = zod.object({
+
+export const VerifyPasskeyLoginBody = zod.object({
+  "challengeId": zod.string(),
+  "response": zod.record(zod.string(), zod.unknown())
+})
+
+export const VerifyPasskeyLoginResponse = zod.object({
   "authenticated": zod.boolean()
+})
+
+
+export const GetEnrollOptionsBody = zod.object({
+  "token": zod.string()
+})
+
+export const GetEnrollOptionsResponse = zod.object({
+  "challengeId": zod.string(),
+  "options": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const VerifyEnrollBody = zod.object({
+  "token": zod.string(),
+  "challengeId": zod.string(),
+  "deviceName": zod.string().optional(),
+  "response": zod.record(zod.string(), zod.unknown())
+})
+
+export const VerifyEnrollResponse = zod.object({
+  "ok": zod.boolean(),
+  "recoveryCodes": zod.array(zod.string()).optional()
+})
+
+
+export const UseRecoveryCodeBody = zod.object({
+  "code": zod.string()
+})
+
+export const UseRecoveryCodeResponse = zod.object({
+  "enrollToken": zod.string()
+})
+
+
+export const ListPasskeysResponse = zod.object({
+  "credentials": zod.array(zod.object({
+  "id": zod.string(),
+  "deviceName": zod.string(),
+  "createdAt": zod.string(),
+  "lastUsedAt": zod.string().nullable()
+})),
+  "unusedRecoveryCodes": zod.number()
+})
+
+
+export const RenamePasskeyParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RenamePasskeyBody = zod.object({
+  "deviceName": zod.string()
+})
+
+export const RenamePasskeyResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const DeletePasskeyParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeletePasskeyResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const GetAddPasskeyOptionsResponse = zod.object({
+  "challengeId": zod.string(),
+  "options": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const VerifyAddPasskeyBody = zod.object({
+  "challengeId": zod.string(),
+  "deviceName": zod.string().optional(),
+  "response": zod.record(zod.string(), zod.unknown())
+})
+
+export const VerifyAddPasskeyResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const RevokeAllSessionsResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 
@@ -159,35 +252,6 @@ export const AdminLogoutResponse = zod.object({
 
 export const GetAdminSessionResponse = zod.object({
   "authenticated": zod.boolean()
-})
-
-
-export const ChangeAdminPasswordBody = zod.object({
-  "currentPassword": zod.string(),
-  "newPassword": zod.string()
-})
-
-export const ChangeAdminPasswordResponse = zod.object({
-  "ok": zod.boolean()
-})
-
-
-export const ForgotAdminPasswordBody = zod.object({
-  "email": zod.string()
-})
-
-export const ForgotAdminPasswordResponse = zod.object({
-  "ok": zod.boolean()
-})
-
-
-export const ResetAdminPasswordBody = zod.object({
-  "token": zod.string(),
-  "newPassword": zod.string()
-})
-
-export const ResetAdminPasswordResponse = zod.object({
-  "ok": zod.boolean()
 })
 
 

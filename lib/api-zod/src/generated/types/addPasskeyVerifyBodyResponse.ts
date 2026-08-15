@@ -6,7 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ResetPasswordBody {
-  token: string;
-  newPassword: string;
-}
+export type AddPasskeyVerifyBodyResponse = { [key: string]: unknown };

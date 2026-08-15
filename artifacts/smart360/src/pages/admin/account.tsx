@@ -1,144 +1,300 @@
 import { useState } from "react";
-import { useChangeAdminPassword } from "@workspace/api-client-react";
+import { useLocation } from "wouter";
+import { 
+  useListPasskeys, 
+  useRenamePasskey, 
+  useDeletePasskey, 
+  useGetAddPasskeyOptions, 
+  useVerifyAddPasskey, 
+  useRevokeAllSessions 
+} from "@workspace/api-client-react";
+import { startRegistration } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, LogOut, KeyRound, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { getListPasskeysQueryKey } from "@workspace/api-client-react";
 
 export default function AdminAccount() {
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const changeMutation = useChangeAdminPassword({
+  const { data: passkeyData, isLoading: isLoadingPasskeys } = useListPasskeys();
+  
+  const renameMutation = useRenamePasskey({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListPasskeysQueryKey() })
+    }
+  });
+  
+  const deleteMutation = useDeletePasskey({
     mutation: {
       onSuccess: () => {
-        toast({
-          title: "Geslo je spremenjeno",
-          description: "Uspešno ste spremenili geslo. Druge seje so odjavljene.",
-        });
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setError(null);
+        toast({ title: "Ključ izbrisan", description: "Passkey je bil uspešno izbrisan." });
+        queryClient.invalidateQueries({ queryKey: getListPasskeysQueryKey() });
       },
       onError: (err: any) => {
-        if (err?.response?.status === 401) {
-          setError("Trenutno geslo ni pravilno.");
-        } else {
-          toast({
-            title: "Napaka",
-            description: "Prišlo je do napake pri spremembi gesla.",
-            variant: "destructive",
-          });
-        }
-      },
-    },
+        const msg = err?.response?.data?.message || "Napaka pri brisanju ključa.";
+        toast({ title: "Napaka", description: msg, variant: "destructive" });
+      }
+    }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (newPassword.length < 12) {
-      setError("Novo geslo mora vsebovati vsaj 12 znakov.");
-      return;
+  const revokeMutation = useRevokeAllSessions({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Seje odjavljene", description: "Vse ostale seje so bile uspešno odjavljene." });
+        setLocation("/admin/login");
+      }
     }
-    
-    if (newPassword !== confirmPassword) {
-      setError("Novi gesli se ne ujemata.");
-      return;
-    }
+  });
 
-    changeMutation.mutate({ data: { currentPassword, newPassword } });
+  const getAddOptionsMutation = useGetAddPasskeyOptions();
+  const verifyAddMutation = useVerifyAddPasskey();
+
+  const [isAdding, setIsAdding] = useState(false);
+  const [newDeviceName, setNewDeviceName] = useState("");
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const handleAddPasskey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError(null);
+    setIsAdding(true);
+
+    try {
+      const optionsRes = await getAddOptionsMutation.mutateAsync();
+      const { challengeId, options } = optionsRes;
+
+      const response = await startRegistration({ optionsJSON: options as any });
+
+      await verifyAddMutation.mutateAsync({
+        data: {
+          challengeId,
+          deviceName: newDeviceName.trim() || "Nova naprava",
+          response: response as any,
+        }
+      });
+      
+      toast({ title: "Ključ dodan", description: "Nov passkey je bil uspešno dodan." });
+      setNewDeviceName("");
+      queryClient.invalidateQueries({ queryKey: getListPasskeysQueryKey() });
+    } catch (err: any) {
+      setAddError("Napaka pri dodajanju ključa. Preverite brskalnik in poskusite znova.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const startEdit = (id: string, currentName: string) => {
+    setEditingId(id);
+    setEditName(currentName);
+  };
+
+  const saveEdit = (id: string) => {
+    if (editName.trim()) {
+      renameMutation.mutate({ id, data: { deviceName: editName.trim() } });
+    }
+    setEditingId(null);
+  };
+
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleString("sl-SI", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Moj račun</h1>
-        <p className="text-sm text-muted-foreground">Upravljanje vašega uporabniškega računa</p>
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Varnost in ključi</h1>
+          <p className="text-sm text-muted-foreground">Upravljanje vaših dostopov s passkeyji in sej</p>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
+              <LogOut className="w-4 h-4 mr-2" />
+              Odjavi vse seje
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Odjava vseh sej</AlertDialogTitle>
+              <AlertDialogDescription>
+                Ali ste prepričani, da želite odjaviti vse seje? To vas bo odjavilo iz vseh naprav, tudi te.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Prekliči</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => revokeMutation.mutate()} 
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Da, odjavi vse
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Prijavni podatki</CardTitle>
-          <CardDescription>Email za prijavo in obvestila</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-primary" />
+            Registrirani ključi (Passkeys)
+          </CardTitle>
+          <CardDescription>
+            Tukaj so navedene vse naprave, s katerimi se lahko prijavite v administracijo.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            <Label>Email naslov</Label>
-            <div className="text-sm font-medium py-2 px-3 bg-muted rounded-md w-full sm:w-1/2">
-              pi4.doo@gmail.com
+        <CardContent className="space-y-6">
+          {isLoadingPasskeys ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
+          ) : (
+            <>
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ime naprave</TableHead>
+                      <TableHead>Ustvarjeno</TableHead>
+                      <TableHead>Zadnja uporaba</TableHead>
+                      <TableHead className="text-right">Dejanja</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {passkeyData?.credentials?.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                          Ni registriranih ključev.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      passkeyData?.credentials?.map(key => (
+                        <TableRow key={key.id}>
+                          <TableCell className="font-medium">
+                            {editingId === key.id ? (
+                              <div className="flex items-center gap-2">
+                                <Input 
+                                  value={editName} 
+                                  onChange={e => setEditName(e.target.value)} 
+                                  className="h-8 max-w-[200px]"
+                                  autoFocus
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') saveEdit(key.id);
+                                    if (e.key === 'Escape') setEditingId(null);
+                                  }}
+                                />
+                                <Button size="sm" onClick={() => saveEdit(key.id)}>Shrani</Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 cursor-pointer group" onClick={() => startEdit(key.id, key.deviceName)}>
+                                {key.deviceName}
+                                <span className="opacity-0 group-hover:opacity-100 text-xs text-muted-foreground underline">Uredi</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{formatDate(key.createdAt)}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{formatDate(key.lastUsedAt)}</TableCell>
+                          <TableCell className="text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                                  Odstrani
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Odstranitev ključa</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Ali res želite odstraniti ključ "{key.deviceName}"? 
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Prekliči</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => deleteMutation.mutate({ id: key.id })}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Odstrani
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="bg-muted p-4 rounded-lg flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-sm">Obnovitvene kode</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Število neuporabljenih kod: <strong className="text-foreground">{passkeyData?.unusedRecoveryCodes || 0}</strong>
+                  </p>
+                </div>
+                {passkeyData?.unusedRecoveryCodes === 0 && (
+                  <div className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Nimate več obnovitvenih kod!
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="pt-4 border-t border-border">
+            <h3 className="font-semibold mb-4">Dodaj novo napravo</h3>
+            <form onSubmit={handleAddPasskey} className="flex items-end gap-4 max-w-md">
+              <div className="space-y-2 flex-1">
+                <Label htmlFor="newDeviceName">Ime naprave</Label>
+                <Input
+                  id="newDeviceName"
+                  placeholder="npr. Službeni prenosnik"
+                  value={newDeviceName}
+                  onChange={(e) => setNewDeviceName(e.target.value)}
+                  disabled={isAdding}
+                />
+              </div>
+              <Button type="submit" disabled={isAdding}>
+                {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                Dodaj ključ
+              </Button>
+            </form>
+            {addError && <p className="text-sm text-destructive mt-2">{addError}</p>}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sprememba gesla</CardTitle>
-          <CardDescription>Izberite močno geslo, dolgo vsaj 12 znakov.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Trenutno geslo</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                disabled={changeMutation.isPending}
-              />
-            </div>
-            
-            <div className="pt-2 space-y-2">
-              <Label htmlFor="newPassword">Novo geslo</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                disabled={changeMutation.isPending}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Ponovite novo geslo</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={changeMutation.isPending}
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm font-medium text-destructive">{error}</p>
-            )}
-
-            <Button
-              type="submit"
-              className="mt-4"
-              disabled={changeMutation.isPending}
-            >
-              {changeMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Spremeni geslo
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
     </div>
   );
 }

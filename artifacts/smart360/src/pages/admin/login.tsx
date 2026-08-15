@@ -1,42 +1,31 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAdminLogin, useForgotAdminPassword } from "@workspace/api-client-react";
+import { useGetPasskeyLoginOptions, useVerifyPasskeyLogin, useUseRecoveryCode } from "@workspace/api-client-react";
+import { startAuthentication } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  const [isForgotMode, setIsForgotMode] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState("");
+  
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isProcessingLogin, setIsProcessingLogin] = useState(false);
 
-  const loginMutation = useAdminLogin({
+  const getLoginOptionsMutation = useGetPasskeyLoginOptions();
+  const verifyLoginMutation = useVerifyPasskeyLogin();
+  
+  const useRecoveryMutation = useUseRecoveryCode({
     mutation: {
-      onSuccess: () => {
-        setLocation("/admin");
-      },
-      onError: () => {
-        toast({
-          title: "Napaka pri prijavi",
-          description: "Preverite uporabniško ime in geslo.",
-          variant: "destructive",
-        });
-      },
-    },
-  });
-
-  const forgotMutation = useForgotAdminPassword({
-    mutation: {
-      onSuccess: () => {
-        setForgotSuccess(true);
+      onSuccess: (data) => {
+        setLocation(`/admin/enroll?token=${data.enrollToken}`);
       },
       onError: (err: any) => {
         if (err?.response?.status === 429) {
@@ -46,78 +35,90 @@ export default function AdminLogin() {
             variant: "destructive",
           });
         } else {
-          // Always show success message to prevent email enumeration,
-          // except for explicit rate limits
-          setForgotSuccess(true);
+          toast({
+            title: "Napaka",
+            description: "Obnovitvena koda ni veljavna.",
+            variant: "destructive",
+          });
         }
       }
     }
   });
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginMutation.mutate({ data: { username, password } });
+  const handlePasskeyLogin = async () => {
+    setLoginError(null);
+    setIsProcessingLogin(true);
+    try {
+      const optionsRes = await getLoginOptionsMutation.mutateAsync();
+      const { challengeId, options } = optionsRes;
+
+      const response = await startAuthentication({ optionsJSON: options as any });
+
+      await verifyLoginMutation.mutateAsync({
+        data: {
+          challengeId,
+          response: response as any,
+        }
+      });
+      
+      setLocation("/admin");
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        setLoginError("Preveč poskusov. Prosimo, poskusite znova kasneje.");
+      } else {
+        setLoginError("Prijava ni uspela. Preverite brskalnik ali uporabite drugo napravo.");
+      }
+    } finally {
+      setIsProcessingLogin(false);
+    }
   };
 
-  const handleForgotSubmit = (e: React.FormEvent) => {
+  const handleRecoverySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setForgotSuccess(false);
-    forgotMutation.mutate({ data: { email: forgotEmail } });
+    useRecoveryMutation.mutate({ data: { code: recoveryCode } });
   };
 
-  if (isForgotMode) {
+  if (isRecoveryMode) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-muted p-4">
         <Card className="w-full max-w-sm">
           <CardHeader className="space-y-2 text-center pb-8">
             <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+              <KeyRound className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Pozabljeno geslo</CardTitle>
-            <CardDescription>Vnesite svoj email za ponastavitev gesla</CardDescription>
+            <CardTitle className="text-2xl">Obnovitev dostopa</CardTitle>
+            <CardDescription>Vnesite obnovitveno kodo v obliki XXXX-XXXX-XXXX</CardDescription>
           </CardHeader>
           <CardContent>
-            {forgotSuccess ? (
-              <div className="space-y-4 text-center">
-                <div className="p-4 bg-muted rounded-md text-sm">
-                  Če račun obstaja, smo poslali navodila na vnesen e-naslov.
-                </div>
-                <Button variant="link" onClick={() => setIsForgotMode(false)} className="w-full">
+            <form onSubmit={handleRecoverySubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="recoveryCode">Obnovitvena koda</Label>
+                <Input
+                  id="recoveryCode"
+                  type="text"
+                  placeholder="XXXX-XXXX-XXXX"
+                  value={recoveryCode}
+                  onChange={(e) => setRecoveryCode(e.target.value)}
+                  required
+                  disabled={useRecoveryMutation.isPending}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full mt-4"
+                disabled={useRecoveryMutation.isPending || !recoveryCode.trim()}
+              >
+                {useRecoveryMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Obnovi dostop
+              </Button>
+              <div className="text-center pt-2">
+                <Button type="button" variant="link" onClick={() => setIsRecoveryMode(false)} className="text-muted-foreground text-sm">
                   Nazaj na prijavo
                 </Button>
               </div>
-            ) : (
-              <form onSubmit={handleForgotSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="forgotEmail">Email</Label>
-                  <Input
-                    id="forgotEmail"
-                    type="email"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    required
-                    disabled={forgotMutation.isPending}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full mt-4"
-                  disabled={forgotMutation.isPending}
-                >
-                  {forgotMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Pošlji navodila
-                </Button>
-                <div className="text-center pt-2">
-                  <Button type="button" variant="link" onClick={() => setIsForgotMode(false)} className="text-muted-foreground text-sm">
-                    Nazaj na prijavo
-                  </Button>
-                </div>
-              </form>
-            )}
+            </form>
           </CardContent>
         </Card>
       </div>
@@ -134,49 +135,30 @@ export default function AdminLogin() {
             </svg>
           </div>
           <CardTitle className="text-2xl">Smart360 Admin</CardTitle>
-          <CardDescription>Prijavite se za upravljanje namestitev</CardDescription>
+          <CardDescription>Prijavite se v nadzorno ploščo</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Uporabniško ime</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                disabled={loginMutation.isPending}
-              />
+        <CardContent className="space-y-6">
+          <Button
+            size="lg"
+            className="w-full text-base"
+            onClick={handlePasskeyLogin}
+            disabled={isProcessingLogin}
+          >
+            {isProcessingLogin && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+            Prijava s passkeyjem
+          </Button>
+
+          {loginError && (
+            <div className="text-sm font-medium text-destructive text-center">
+              {loginError}
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Geslo</Label>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loginMutation.isPending}
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full mt-4"
-              disabled={loginMutation.isPending}
-            >
-              {loginMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Prijava
+          )}
+
+          <div className="text-center pt-2">
+            <Button type="button" variant="link" onClick={() => setIsRecoveryMode(true)} className="text-muted-foreground text-sm">
+              Obnovitev dostopa
             </Button>
-            <div className="text-center pt-2">
-              <Button type="button" variant="link" onClick={() => setIsForgotMode(true)} className="text-muted-foreground text-sm">
-                Pozabljeno geslo?
-              </Button>
-            </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
