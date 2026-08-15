@@ -28,3 +28,5 @@ channel = "stable-25_05"
 
 [userenv.production]
 APP_DOMAIN = "smart360.info"
+RP_ID = "smart360.info"
+RP_ORIGIN = "https://smart360.info"
