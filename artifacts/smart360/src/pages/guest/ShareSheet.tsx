@@ -79,7 +79,7 @@ export function ShareSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: b
         )}
 
         <button className="srow" onClick={copyLink}>
-          <svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg>
+          <svg className="ic" viewBox="0 0 24 24"><use href="#i-copy" /></svg>
           <div className="t"><b>{copied ? "Kopirano \u2713" : "Kopiraj povezavo"}</b><span>{shortUrl}</span></div>
           <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
         </button>

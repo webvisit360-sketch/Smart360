@@ -138,6 +138,10 @@ export function IconSprite() {
         <symbol id="i-disc" viewBox="0 0 24 24">
           <circle cx="10.8" cy="10.8" r="6.8"/><path d="M15.9 15.9 20.8 20.8"/>
         </symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24">
+      <rect x="9" y="9" width="11" height="11" rx="2.5"/>
+      <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/>
+    </symbol>
         <symbol id="i-share" viewBox="0 0 24 24">
       <path d="M12 3v13"/><path d="M8 7l4-4 4 4"/>
       <path d="M5 13v5.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V13"/>
