@@ -28,7 +28,8 @@ Odpri `zasloni.html` v brskalniku pri širini 390 px — to je videz, ki ga je t
 7. **Pisava:** Figtree (CSS jo naloži sam), naslovi 800, `letter-spacing` negativen kot v CSS.
 8. **Nobenih zloženk (accordion).** Kategorija je **svoja stran**, ne razpiralnik na domači strani.
 9. **Nobenih besedil o stanju izdelave** v vmesniku (npr. »Postavitev še ni optimizirana«). Če česa ni, se ne prikaže nič.
-10. **Gumbi imajo 3D podstavo** — `box-shadow: 0 4px 0 <temnejša>` in ob dotiku `translateY(4px)`. To ni okras, to je del dizajna.
+10. **Prehod miške (hover):** vsak bel ali obrobljen gumb se ob prehodu miške obarva **polno modro** (`#3B78DC`) z belim besedilom in ikono, ob izhodu miške pa se takoj vrne v belo. Vrstice seznama in iskalno polje dobijo mehko modro podlago `#EAF1FC` z modrim obrisom. Modri gumbi ob prehodu potemnijo v `#2E60B0`. Vse to je že v CSS pod `@media (hover:hover) and (pointer:fine)` — **ne odstranjuj tega pogoja**, ker sicer stanje ostane "zataknjeno" na zaslonih na dotik.
+11. **Gumbi imajo 3D podstavo** — `box-shadow: 0 4px 0 <temnejša>` in ob dotiku `translateY(4px)`. To ni okras, to je del dizajna.
 
 ## Struktura domače strani (po vrsti od zgoraj)
 
