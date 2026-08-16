@@ -134,6 +134,34 @@ async function insertCategory(sectionId, label, icon, layout, position) {
   );
   return r.rows[0].id;
 }
+// Import residue guard: the prototype HTML sometimes yields undefined fields,
+// and JSON.stringify([undefined]) === "[null]" — which then renders as literal
+// text in the guest app. Junk string values ("null", "undefined", "NaN",
+// "[null]") must be stored as NULL, never as text. JSON-array bodies get their
+// null/junk paragraphs dropped; an empty array becomes NULL.
+const JUNK = new Set(["[null]", "null", "undefined", "NaN"]);
+function cleanText(v) {
+  if (v == null) return null;
+  const s = String(v).trim();
+  if (s === "" || JUNK.has(s)) return null;
+  return v;
+}
+function cleanBody(v) {
+  const s = cleanText(v);
+  if (s == null) return null;
+  if (typeof s === "string" && s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      if (Array.isArray(arr)) {
+        const kept = arr.filter((p) => cleanText(p) != null);
+        return kept.length ? JSON.stringify(kept) : null;
+      }
+    } catch {
+      /* not JSON — keep as-is */
+    }
+  }
+  return s;
+}
 async function insertItem(categoryId, fields, position) {
   const r = await q(
     `insert into items (category_id, title, body, price, price_unit, phone, website, map_query,
@@ -141,21 +169,21 @@ async function insertItem(categoryId, fields, position) {
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) returning id`,
     [
       categoryId,
-      fields.title ?? null,
-      fields.body ?? null,
-      fields.price ?? null,
-      fields.priceUnit ?? null,
-      fields.phone ?? null,
-      fields.website ?? null,
-      fields.mapQuery ?? null,
-      fields.difficulty ?? null,
-      fields.duration ?? null,
-      fields.distance ?? null,
+      cleanText(fields.title),
+      cleanBody(fields.body),
+      cleanText(fields.price),
+      cleanText(fields.priceUnit),
+      cleanText(fields.phone),
+      cleanText(fields.website),
+      cleanText(fields.mapQuery),
+      cleanText(fields.difficulty),
+      cleanText(fields.duration),
+      cleanText(fields.distance),
       fields.open24 ?? false,
       fields.hoursJson ?? null,
-      fields.noteType ?? null,
-      fields.noteText ?? null,
-      fields.bullets ?? [],
+      cleanText(fields.noteType),
+      cleanText(fields.noteText),
+      (fields.bullets ?? []).filter((b) => cleanText(b) != null),
       position,
     ],
   );

@@ -578,7 +578,11 @@ function parseTextBody(body: string) {
   try {
     const parsed = JSON.parse(body);
     if (Array.isArray(parsed)) {
-      return parsed.map((p, i) => <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeHtml(p) }} />);
+      // Drop null/junk paragraphs (import residue like [null]) so an
+      // effectively empty body renders nothing — no empty <p>, no gap.
+      const paras = parsed.filter((p) => p != null && String(p).trim() !== "" && !["null", "undefined", "NaN", "[null]"].includes(String(p).trim()));
+      if (paras.length === 0) return null;
+      return paras.map((p, i) => <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeHtml(p) }} />);
     }
   } catch (e) {}
   return <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />;
