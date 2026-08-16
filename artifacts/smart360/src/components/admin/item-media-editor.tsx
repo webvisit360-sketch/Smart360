@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetTenantQueryKey, useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
 import { fmtGb, usagePct } from "@/lib/format-bytes";
-import { Loader2, Plus, Trash2, Play, RotateCcw, X } from "lucide-react";
+import { Loader2, Plus, Play, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Media = {
@@ -44,6 +44,7 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const didDragRef = useRef(false);
   const [order, setOrder] = useState<string[] | null>(null);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [dropActive, setDropActive] = useState(false);
@@ -190,7 +191,7 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
           <div key={m.id} className="w-24">
             <div
               draggable={!busy}
-              onDragStart={() => { setDragId(m.id); setOrder(shown.map(x => x.id)); }}
+              onDragStart={() => { didDragRef.current = true; setDragId(m.id); setOrder(shown.map(x => x.id)); }}
               onDragOver={(e) => {
                 e.preventDefault();
                 if (!dragId || dragId === m.id || !order) return;
@@ -198,7 +199,11 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
                 next.splice(next.indexOf(m.id) < 0 ? next.length : next.indexOf(m.id), 0, dragId);
                 setOrder(next);
               }}
-              onDragEnd={() => { if (order) commitOrder(order); setDragId(null); }}
+              onDragEnd={() => { if (order) commitOrder(order); setDragId(null); setTimeout(() => { didDragRef.current = false; }, 0); }}
+              onClick={() => {
+                if (didDragRef.current || busy) return;
+                window.open(fullSize(m), "_blank", "noopener,noreferrer");
+              }}
               className={`relative group rounded-xl overflow-hidden border bg-muted ${i === 0 ? "ring-2 ring-primary" : ""} ${dragId === m.id ? "opacity-50" : ""}`}
               style={{ width: 96, height: 96, aspectRatio: "1 / 1", cursor: "grab" }}
               title={i === 0 ? "Ploščica (prva v galeriji)" : "Povlecite za vrstni red"}
@@ -225,11 +230,11 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
               )}
               <button
                 type="button"
-                onClick={() => remove(m.id)}
-                className="absolute top-1 right-1 hidden group-hover:grid place-items-center w-5 h-5 rounded bg-black/60 text-white"
+                onClick={(e) => { e.stopPropagation(); remove(m.id); }}
+                className="absolute top-1 right-1 grid place-items-center w-5 h-5 rounded bg-black/60 text-white hover:bg-black/80"
                 aria-label="Odstrani"
               >
-                <Trash2 className="w-3 h-3" />
+                <X className="w-3 h-3" />
               </button>
             </div>
             <a

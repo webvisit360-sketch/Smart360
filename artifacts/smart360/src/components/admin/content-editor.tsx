@@ -748,6 +748,16 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           disabled={busy}
         />
       </div>
+      <div className="space-y-1">
+        <Label>Fotografije in video</Label>
+        {mode === "edit" ? (
+          <ItemMediaEditor itemId={item.id} tenantId={tenantId} media={item.media || []} />
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Fotografije in video dodate takoj po shranjevanju — odprite vnos z gumbom »Uredi«.
+          </p>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Cena</Label>
@@ -858,7 +868,11 @@ function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string;
             {item.phone && (
               <p className="text-xs text-muted-foreground mb-2">📞 {item.phone}</p>
             )}
-            <ItemMediaEditor itemId={item.id} tenantId={tenantId} media={item.media || []} />
+            {(item.media?.length ?? 0) > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {item.media!.length} {item.media!.length === 1 ? "datoteka" : item.media!.length === 2 ? "datoteki" : "datotek(e)"} v galeriji — urejanje prek »Uredi«.
+              </p>
+            )}
           </div>
         )}
       </div>
