@@ -25,7 +25,13 @@ import {
   formatGb,
   type Admission,
 } from "../lib/mediaUsage";
-import { cleanupPreview, cleanupExecute } from "../lib/mediaCleanup";
+import {
+  cleanupPreview,
+  cleanupExecute,
+  listCleanupRuns,
+  restoreFromTrash,
+  CLEANUP_EXECUTE_ENABLED,
+} from "../lib/mediaCleanup";
 import {
   ObjectStorageService,
   objectStorageClient,
@@ -524,6 +530,13 @@ router.get("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<voi
 });
 
 router.post("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<void> => {
+  // HARD environment gate: dev and prod share ONE bucket but see different
+  // databases — a dev run computes "unused" from the wrong DB and deletes
+  // production files (it happened). Execution is production-only.
+  if (!CLEANUP_EXECUTE_ENABLED) {
+    res.status(403).json({ error: "Čiščenje je dovoljeno samo v produkciji (skupen bucket, ločeni bazi)." });
+    return;
+  }
   const body = (req.body ?? {}) as { scope?: unknown; tenantId?: unknown };
   const parsed = parseCleanupScope(body.scope, body.tenantId);
   if (!parsed) {
@@ -537,6 +550,27 @@ router.post("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<vo
   }
   const result = await cleanupExecute(slugs, parsed.scope === "orphans");
   req.log.info(result, "storage cleanup executed");
+  res.json(result);
+});
+
+// Audit list of past cleanup runs (Koš + dnevnik). Read-only, allowed everywhere.
+router.get("/admin/storage/cleanup/runs", requireAdmin, async (_req, res): Promise<void> => {
+  res.json({ runs: await listCleanupRuns() });
+});
+
+// Restore from trash — safe in any environment (only puts files back).
+router.post("/admin/storage/cleanup/restore", requireAdmin, async (req, res): Promise<void> => {
+  const body = (req.body ?? {}) as { runId?: unknown; key?: unknown };
+  if (typeof body.runId !== "string" || !body.runId) {
+    res.status(400).json({ error: "runId je obvezen" });
+    return;
+  }
+  const result = await restoreFromTrash(body.runId, typeof body.key === "string" ? body.key : null);
+  if ("error" in result) {
+    res.status(result.error === "purged" ? 410 : 404).json({ error: result.error });
+    return;
+  }
+  req.log.info({ runId: body.runId, ...result }, "cleanup trash restore");
   res.json(result);
 });
 

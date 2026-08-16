@@ -1112,7 +1112,7 @@ export const GetStorageCleanupPreviewResponse = zod.object({
 
 
 /**
- * Execute the cleanup for the same scope. References are re-computed at execution time; files that gained a reference since the preview are skipped. Never runs on a schedule — admin-confirmed only.
+ * Execute the cleanup for the same scope. References are re-computed at execution time; files that gained a reference since the preview are skipped. Never runs on a schedule — admin-confirmed only. Files are MOVED to a 30-day trash (never hard-deleted) and every run writes an audit record. Allowed only in production — the bucket is shared with development while databases are separate, so a dev run would compute "unused" from the wrong database (403 outside production).
  */
 export const RunStorageCleanupBody = zod.object({
   "scope": zod.enum(['tenant', 'orphans']),
@@ -1121,7 +1121,43 @@ export const RunStorageCleanupBody = zod.object({
 
 export const RunStorageCleanupResponse = zod.object({
   "freedBytes": zod.number(),
-  "deletedFiles": zod.number()
+  "deletedFiles": zod.number(),
+  "runId": zod.string().nullable()
+})
+
+
+/**
+ * Audit list of past cleanup runs (who, when, scope, files with sizes) including trash state — restorable files stay in trash 30 days.
+ */
+export const ListCleanupRunsResponse = zod.object({
+  "runs": zod.array(zod.object({
+  "id": zod.string(),
+  "createdAt": zod.string(),
+  "actor": zod.string(),
+  "scope": zod.string(),
+  "tenantSlug": zod.string().nullable(),
+  "fileCount": zod.number(),
+  "totalBytes": zod.number(),
+  "purged": zod.boolean(),
+  "files": zod.array(zod.object({
+  "key": zod.string(),
+  "bytes": zod.number(),
+  "restored": zod.boolean()
+}))
+}))
+})
+
+
+/**
+ * Restore files of a cleanup run from trash back to their original locations. Omitting key restores the whole run.
+ */
+export const RestoreCleanupFilesBody = zod.object({
+  "runId": zod.string(),
+  "key": zod.string().nullish()
+})
+
+export const RestoreCleanupFilesResponse = zod.object({
+  "restoredFiles": zod.number()
 })
 
 

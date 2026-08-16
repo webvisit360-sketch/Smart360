@@ -6,7 +6,10 @@ import {
   sectionsTable,
   itemsTable,
   translationsTable,
+  cleanupRunsTable,
+  type CleanupRunFile,
 } from "@workspace/db";
+import { desc, eq, isNull, lt, and } from "drizzle-orm";
 import { ObjectStorageService, objectStorageClient } from "./objectStorage.js";
 import { invalidateMediaUsage } from "./mediaUsage.js";
 
@@ -122,7 +125,7 @@ type BucketObject = {
   updated: string | null;
 };
 
-/** All objects under media/, parsed into slug + file name. */
+/** All objects under media/, parsed into slug + file name (trash/ excluded by prefix). */
 async function listBucketObjects(): Promise<{ bucketName: string; prefix: string; objects: BucketObject[] }> {
   const storage = new ObjectStorageService();
   const searchPath = storage.getPublicObjectSearchPaths()[0];
@@ -174,6 +177,7 @@ export async function getLiveSlugSet(): Promise<Set<string>> {
 async function findRemovable(
   slugs: string[] | null,
   orphansOnly: boolean,
+  minAgeMs: number = MIN_AGE_MS, // overridable only from server-side tests, never via HTTP
 ): Promise<{ groups: Map<string, { files: CleanupFile[]; paths: string[] }>; bucketName: string }> {
   const [referenced, listing, liveSlugs] = await Promise.all([
     getReferencedKeys(),
@@ -187,7 +191,7 @@ async function findRemovable(
     if (orphansOnly ? liveSlugs.has(o.slug) : wanted ? !wanted.has(o.slug) : false) continue;
     const key = `${o.slug}/${o.name}`;
     if (referenced.has(key)) continue;
-    if (o.updated && Date.now() - new Date(o.updated).getTime() < MIN_AGE_MS) continue;
+    if (o.updated && Date.now() - new Date(o.updated).getTime() < minAgeMs) continue;
     const g = byKey.get(key) ?? { bytes: 0, updated: null, paths: [], slug: o.slug, name: o.name };
     g.bytes += o.bytes;
     g.paths.push(o.fullPath);
@@ -221,22 +225,185 @@ export async function cleanupPreview(slugs: string[] | null, orphansOnly: boolea
   return { totalBytes: files.reduce((s, f) => s + f.bytes, 0), files };
 }
 
+/**
+ * Cleanup EXECUTION is allowed only in production. The bucket is shared
+ * between development and the published deployment while each environment
+ * has its own database — computing "unused" from the dev DB while deleting
+ * from the shared bucket is exactly the incident that deleted live files.
+ * Preview stays available everywhere (read-only); moving files is prod-only.
+ */
+export const CLEANUP_EXECUTE_ENABLED = process.env.NODE_ENV === "production";
+
+const TRASH_PREFIX = "trash/";
+const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+async function getBucket() {
+  const storage = new ObjectStorageService();
+  const searchPath = storage.getPublicObjectSearchPaths()[0];
+  if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
+  const { bucketName } = parseObjectPath(searchPath);
+  return objectStorageClient.bucket(bucketName);
+}
+
 export async function cleanupExecute(
   slugs: string[] | null,
   orphansOnly: boolean,
-): Promise<{ freedBytes: number; deletedFiles: number }> {
+  opts?: { minAgeMs?: number; actor?: string },
+): Promise<{ freedBytes: number; deletedFiles: number; runId: string | null }> {
   // Re-computed NOW — never trust a preview the admin looked at minutes ago.
-  const { groups, bucketName } = await findRemovable(slugs, orphansOnly);
+  const { groups, bucketName } = await findRemovable(slugs, orphansOnly, opts?.minAgeMs);
+  const bucket = objectStorageClient.bucket(bucketName);
+
+  // NEVER hard-delete: every object moves to trash/<runId>/<original path>
+  // and stays restorable for 30 days via the Koš list.
+  const [run] = await db
+    .insert(cleanupRunsTable)
+    .values({
+      actor: opts?.actor ?? "admin",
+      scope: orphansOnly ? "orphans" : "tenant",
+      tenantSlug: slugs?.[0] ?? null,
+    })
+    .returning();
+  const runId = run!.id;
+
   let freedBytes = 0;
   let deletedFiles = 0;
-  const bucket = objectStorageClient.bucket(bucketName);
-  for (const g of groups.values()) {
-    for (const path of g.paths) {
-      await bucket.file(path).delete({ ignoreNotFound: true });
-    }
-    freedBytes += g.files.reduce((s, f) => s + f.bytes, 0);
+  const auditFiles: CleanupRunFile[] = [];
+  for (const [key, g] of groups) {
+    // CRASH SAFETY: record the INTENT (key + paths) in the audit row BEFORE
+    // moving anything. If the process dies mid-move, the run still lists the
+    // file, restore handles half-moved state (trash OR original, whichever
+    // exists), and purge sweeps the whole trash/<runId>/ prefix.
+    const bytes = g.files.reduce((s, f) => s + f.bytes, 0);
+    auditFiles.push({ key, bytes, paths: [...g.paths], restoredAt: null });
+    freedBytes += bytes;
     deletedFiles += 1;
+    await db
+      .update(cleanupRunsTable)
+      .set({ fileCount: deletedFiles, totalBytes: freedBytes, files: auditFiles })
+      .where(eq(cleanupRunsTable.id, runId));
+    for (const path of g.paths) {
+      try {
+        await bucket.file(path).move(`${TRASH_PREFIX}${runId}/${path}`);
+      } catch (err) {
+        if ((err as { code?: number }).code !== 404) throw err;
+      }
+    }
   }
   if (deletedFiles > 0) invalidateMediaUsage();
-  return { freedBytes, deletedFiles };
+  // Lazy retention: purge trash older than 30 days on each (prod-only) run.
+  await purgeExpiredTrash().catch(() => {});
+  return { freedBytes, deletedFiles, runId };
+}
+
+/** Delete trash objects of runs older than 30 days; mark them purged. */
+export async function purgeExpiredTrash(): Promise<number> {
+  const cutoff = new Date(Date.now() - TRASH_RETENTION_MS);
+  const expired = await db
+    .select()
+    .from(cleanupRunsTable)
+    .where(and(isNull(cleanupRunsTable.purgedAt), lt(cleanupRunsTable.createdAt, cutoff)));
+  if (expired.length === 0) return 0;
+  const bucket = await getBucket();
+  let purged = 0;
+  for (const run of expired) {
+    // CLAIM the run first (conditional update) so a concurrent restore that
+    // starts afterwards sees purgedAt and refuses with 410 — never a silent
+    // "restored" of an object that purge is deleting underneath it.
+    const claimed = await db
+      .update(cleanupRunsTable)
+      .set({ purgedAt: new Date() })
+      .where(and(eq(cleanupRunsTable.id, run.id), isNull(cleanupRunsTable.purgedAt)))
+      .returning({ id: cleanupRunsTable.id });
+    if (claimed.length === 0) continue;
+    const [files] = await bucket.getFiles({ prefix: `${TRASH_PREFIX}${run.id}/` });
+    for (const f of files) await f.delete({ ignoreNotFound: true });
+    purged += 1;
+  }
+  return purged;
+}
+
+export type CleanupRunSummary = {
+  id: string;
+  createdAt: string;
+  actor: string;
+  scope: string;
+  tenantSlug: string | null;
+  fileCount: number;
+  totalBytes: number;
+  purged: boolean;
+  files: { key: string; bytes: number; restored: boolean }[];
+};
+
+/** Audit list: most recent cleanup runs, newest first. */
+export async function listCleanupRuns(limit = 50): Promise<CleanupRunSummary[]> {
+  const runs = await db
+    .select()
+    .from(cleanupRunsTable)
+    .orderBy(desc(cleanupRunsTable.createdAt))
+    .limit(limit);
+  return runs.map((r) => ({
+    id: r.id,
+    createdAt: r.createdAt.toISOString(),
+    actor: r.actor,
+    scope: r.scope,
+    tenantSlug: r.tenantSlug,
+    fileCount: r.fileCount,
+    totalBytes: r.totalBytes,
+    purged: r.purgedAt !== null,
+    files: r.files.map((f) => ({ key: f.key, bytes: f.bytes, restored: f.restoredAt !== null })),
+  }));
+}
+
+/**
+ * Restore files of a run from trash back to their original bucket paths.
+ * `key` limits the restore to one logical file; omitted = whole run.
+ */
+export async function restoreFromTrash(
+  runId: string,
+  key: string | null,
+): Promise<{ restoredFiles: number } | { error: "not_found" | "purged" }> {
+  const [run] = await db.select().from(cleanupRunsTable).where(eq(cleanupRunsTable.id, runId));
+  if (!run) return { error: "not_found" };
+  if (run.purgedAt) return { error: "purged" };
+  const bucket = await getBucket();
+  let restoredFiles = 0;
+  const files = run.files.map((f) => ({ ...f }));
+  for (const f of files) {
+    if (key && f.key !== key) continue;
+    if (f.restoredAt) continue;
+    // A path counts as back-in-place when either the trash copy moved back
+    // or the original already exists (half-moved run, or a NEW file was
+    // uploaded at the same path — which we must NEVER overwrite with the
+    // stale trashed copy).
+    let inPlace = 0;
+    for (const path of f.paths) {
+      const [destExists] = await bucket.file(path).exists();
+      if (destExists) {
+        inPlace += 1;
+        continue;
+      }
+      try {
+        await bucket.file(`${TRASH_PREFIX}${runId}/${path}`).move(path);
+        inPlace += 1;
+      } catch (err) {
+        if ((err as { code?: number }).code !== 404) throw err;
+        // trash copy gone (e.g. purged concurrently) — NOT restored
+      }
+    }
+    if (inPlace === 0) continue; // nothing came back — don't claim success
+    f.restoredAt = new Date().toISOString();
+    restoredFiles += 1;
+  }
+  if (restoredFiles > 0) {
+    // Conditional on purgedAt still null: if purge claimed the run while we
+    // worked, the audit keeps the purged truth; files we DID move back are
+    // safe either way (purge only deletes under the trash prefix).
+    await db
+      .update(cleanupRunsTable)
+      .set({ files })
+      .where(and(eq(cleanupRunsTable.id, runId), isNull(cleanupRunsTable.purgedAt)));
+    invalidateMediaUsage();
+  }
+  return { restoredFiles };
 }

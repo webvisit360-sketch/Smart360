@@ -13,3 +13,9 @@ description: Explicit media cleanup design, shared dev/prod bucket danger, prod 
 # Prod SQL pitfall
 
 - `executeSql environment:"production"` FAILS SILENTLY (output = only `START TRANSACTION / ROLLBACK`, no error) when the query references a column that doesn't exist in prod (e.g. additive dev columns like media.poster_url before publish). Always test column existence or query tables separately; empty output ≠ no rows.
+
+## Trash + audit rework (post-incident)
+- Execution is PROD-ONLY: `CLEANUP_EXECUTE_ENABLED = NODE_ENV==='production'` (403 in dev), UI buttons hidden via `import.meta.env.PROD`. Root cause of incident: shared bucket, separate DBs — never compute orphans in dev.
+- Never hard-deletes: objects move to `trash/<runId>/<originalPath>`; `cleanup_runs` table (jsonb files ledger) = audit + Koš; 30-day lazy purge on execute; restore is per-file, skips existing destinations (never overwrites newer uploads), purge claims run via conditional update before deleting.
+- Crash safety: audit intent written BEFORE moving; restore treats "original exists" as in-place.
+- Test-only `minAgeMs` override param on cleanupExecute — never exposed via HTTP.

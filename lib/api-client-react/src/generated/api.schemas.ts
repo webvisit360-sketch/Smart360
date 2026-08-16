@@ -407,6 +407,38 @@ export interface StorageCleanupRequest {
 export interface StorageCleanupResult {
   freedBytes: number;
   deletedFiles: number;
+  runId: string | null;
+}
+
+export interface CleanupRunFileEntry {
+  key: string;
+  bytes: number;
+  restored: boolean;
+}
+
+export interface CleanupRun {
+  id: string;
+  createdAt: string;
+  actor: string;
+  scope: string;
+  tenantSlug: string | null;
+  fileCount: number;
+  totalBytes: number;
+  purged: boolean;
+  files: CleanupRunFileEntry[];
+}
+
+export interface CleanupRunsResult {
+  runs: CleanupRun[];
+}
+
+export interface CleanupRestoreRequest {
+  runId: string;
+  key?: string | null;
+}
+
+export interface CleanupRestoreResult {
+  restoredFiles: number;
 }
 
 export interface Section {

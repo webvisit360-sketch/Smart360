@@ -6,8 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface StorageCleanupResult {
-  freedBytes: number;
-  deletedFiles: number;
-  runId: string | null;
+export interface CleanupRestoreResult {
+  restoredFiles: number;
 }

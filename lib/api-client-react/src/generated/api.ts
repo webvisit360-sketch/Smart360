@@ -28,6 +28,9 @@ import type {
   CategoryInput,
   CategoryUpdate,
   CheckSlugParams,
+  CleanupRestoreRequest,
+  CleanupRestoreResult,
+  CleanupRunsResult,
   DuplicateTenantResult,
   EnrollOptionsBody,
   EnrollResult,
@@ -3073,7 +3076,7 @@ export const getRunStorageCleanupUrl = () => {
 }
 
 /**
- * Execute the cleanup for the same scope. References are re-computed at execution time; files that gained a reference since the preview are skipped. Never runs on a schedule — admin-confirmed only.
+ * Execute the cleanup for the same scope. References are re-computed at execution time; files that gained a reference since the preview are skipped. Never runs on a schedule — admin-confirmed only. Files are MOVED to a 30-day trash (never hard-deleted) and every run writes an audit record. Allowed only in production — the bucket is shared with development while databases are separate, so a dev run would compute "unused" from the wrong database (403 outside production).
  */
 export const runStorageCleanup = async (storageCleanupRequest: StorageCleanupRequest, options?: Parameters<typeof customFetch>[1]): Promise<StorageCleanupResult> => {
 
@@ -3090,7 +3093,7 @@ export const runStorageCleanup = async (storageCleanupRequest: StorageCleanupReq
 
 
 
-export const getRunStorageCleanupMutationOptions = <TError = ErrorType<unknown>,
+export const getRunStorageCleanupMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runStorageCleanup>>, TError,{data: BodyType<StorageCleanupRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof runStorageCleanup>>, TError,{data: BodyType<StorageCleanupRequest>}, TContext> => {
 
@@ -3119,9 +3122,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RunStorageCleanupMutationResult = NonNullable<Awaited<ReturnType<typeof runStorageCleanup>>>
     export type RunStorageCleanupMutationBody = BodyType<StorageCleanupRequest>
-    export type RunStorageCleanupMutationError = ErrorType<unknown>
+    export type RunStorageCleanupMutationError = ErrorType<void>
 
-    export const useRunStorageCleanup = <TError = ErrorType<unknown>,
+    export const useRunStorageCleanup = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runStorageCleanup>>, TError,{data: BodyType<StorageCleanupRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof runStorageCleanup>>,
@@ -3130,6 +3133,148 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getRunStorageCleanupMutationOptions(options));
+    }
+
+export const getListCleanupRunsUrl = () => {
+
+
+
+
+  return `/api/admin/storage/cleanup/runs`
+}
+
+/**
+ * Audit list of past cleanup runs (who, when, scope, files with sizes) including trash state — restorable files stay in trash 30 days.
+ */
+export const listCleanupRuns = async ( options?: Parameters<typeof customFetch>[1]): Promise<CleanupRunsResult> => {
+
+  return customFetch<CleanupRunsResult>(getListCleanupRunsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCleanupRunsQueryKey = () => {
+    return [
+    `/api/admin/storage/cleanup/runs`
+    ] as const;
+    }
+
+
+export const getListCleanupRunsQueryOptions = <TData = Awaited<ReturnType<typeof listCleanupRuns>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCleanupRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCleanupRunsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCleanupRuns>>> = ({ signal }) => listCleanupRuns({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCleanupRuns>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCleanupRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listCleanupRuns>>>
+export type ListCleanupRunsQueryError = ErrorType<unknown>
+
+
+
+export function useListCleanupRuns<TData = Awaited<ReturnType<typeof listCleanupRuns>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCleanupRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCleanupRunsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRestoreCleanupFilesUrl = () => {
+
+
+
+
+  return `/api/admin/storage/cleanup/restore`
+}
+
+/**
+ * Restore files of a cleanup run from trash back to their original locations. Omitting key restores the whole run.
+ */
+export const restoreCleanupFiles = async (cleanupRestoreRequest: CleanupRestoreRequest, options?: Parameters<typeof customFetch>[1]): Promise<CleanupRestoreResult> => {
+
+  return customFetch<CleanupRestoreResult>(getRestoreCleanupFilesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(cleanupRestoreRequest)
+  }
+);}
+
+
+
+
+
+export const getRestoreCleanupFilesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreCleanupFiles>>, TError,{data: BodyType<CleanupRestoreRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreCleanupFiles>>, TError,{data: BodyType<CleanupRestoreRequest>}, TContext> => {
+
+const mutationKey = ['restoreCleanupFiles'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreCleanupFiles>>, {data: BodyType<CleanupRestoreRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  restoreCleanupFiles(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreCleanupFilesMutationResult = NonNullable<Awaited<ReturnType<typeof restoreCleanupFiles>>>
+    export type RestoreCleanupFilesMutationBody = BodyType<CleanupRestoreRequest>
+    export type RestoreCleanupFilesMutationError = ErrorType<void>
+
+    export const useRestoreCleanupFiles = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreCleanupFiles>>, TError,{data: BodyType<CleanupRestoreRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreCleanupFiles>>,
+        TError,
+        {data: BodyType<CleanupRestoreRequest>},
+        TContext
+      > => {
+      return useMutation(getRestoreCleanupFilesMutationOptions(options));
     }
 
 export const getDeleteMediaUrl = (id: string,) => {

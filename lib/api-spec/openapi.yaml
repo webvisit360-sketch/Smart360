@@ -778,7 +778,11 @@ paths:
       description: >
         Execute the cleanup for the same scope. References are re-computed at
         execution time; files that gained a reference since the preview are
-        skipped. Never runs on a schedule — admin-confirmed only.
+        skipped. Never runs on a schedule — admin-confirmed only. Files are
+        MOVED to a 30-day trash (never hard-deleted) and every run writes an
+        audit record. Allowed only in production — the bucket is shared with
+        development while databases are separate, so a dev run would compute
+        "unused" from the wrong database (403 outside production).
       requestBody:
         required: true
         content:
@@ -792,6 +796,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageCleanupResult"
+        "403":
+          description: Cleanup execution is disabled outside production
+  /admin/storage/cleanup/runs:
+    get:
+      operationId: listCleanupRuns
+      tags: [media]
+      description: >
+        Audit list of past cleanup runs (who, when, scope, files with sizes)
+        including trash state — restorable files stay in trash 30 days.
+      responses:
+        "200":
+          description: Runs, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CleanupRunsResult"
+  /admin/storage/cleanup/restore:
+    post:
+      operationId: restoreCleanupFiles
+      tags: [media]
+      description: >
+        Restore files of a cleanup run from trash back to their original
+        locations. Omitting key restores the whole run.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CleanupRestoreRequest"
+      responses:
+        "200":
+          description: Restore result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CleanupRestoreResult"
+        "404":
+          description: Run not found
+        "410":
+          description: Trash already purged (older than 30 days)
   # NOTE: POST /admin/items/{id}/media/upload (multipart photo/video upload)
   # intentionally lives OUTSIDE this contract: orval's zod output emits
   # File/Blob types for format:binary, which do not exist in the node lib
@@ -1354,7 +1398,50 @@ components:
       properties:
         freedBytes: { type: number }
         deletedFiles: { type: number }
-      required: [freedBytes, deletedFiles]
+        runId: { type: string, nullable: true }
+      required: [freedBytes, deletedFiles, runId]
+    CleanupRunFileEntry:
+      type: object
+      properties:
+        key: { type: string }
+        bytes: { type: number }
+        restored: { type: boolean }
+      required: [key, bytes, restored]
+    CleanupRun:
+      type: object
+      properties:
+        id: { type: string }
+        createdAt: { type: string }
+        actor: { type: string }
+        scope: { type: string }
+        tenantSlug: { type: string, nullable: true }
+        fileCount: { type: number }
+        totalBytes: { type: number }
+        purged: { type: boolean }
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/CleanupRunFileEntry"
+      required: [id, createdAt, actor, scope, tenantSlug, fileCount, totalBytes, purged, files]
+    CleanupRunsResult:
+      type: object
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: "#/components/schemas/CleanupRun"
+      required: [runs]
+    CleanupRestoreRequest:
+      type: object
+      properties:
+        runId: { type: string }
+        key: { type: string, nullable: true }
+      required: [runId]
+    CleanupRestoreResult:
+      type: object
+      properties:
+        restoredFiles: { type: number }
+      required: [restoredFiles]
     Section:
       type: object
       properties:

@@ -4,6 +4,8 @@ import {
   timestamp,
   uuid,
   integer,
+  bigint,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 /** Single-operator admin account. Email is a label only (no mail is ever sent). */
@@ -73,6 +75,34 @@ export const adminAuthEventsTable = pgTable("admin_auth_events", {
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** One file moved to trash by a cleanup run. Paths are bucket object names. */
+export type CleanupRunFile = {
+  key: string; // "<slug>/<file>" — logical file
+  bytes: number;
+  paths: string[]; // original bucket object names (all width derivatives)
+  restoredAt: string | null;
+};
+
+/**
+ * Audit record of every storage-cleanup execution. Files are moved to
+ * trash/<runId>/… in the bucket (never hard-deleted) and kept 30 days;
+ * this row is the ledger that makes the trash restorable and the run
+ * accountable (who, when, what, how much).
+ */
+export const cleanupRunsTable = pgTable("cleanup_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  actor: text("actor").notNull().default("admin"),
+  scope: text("scope").notNull(), // tenant | orphans
+  tenantSlug: text("tenant_slug"),
+  fileCount: integer("file_count").notNull().default(0),
+  totalBytes: bigint("total_bytes", { mode: "number" }).notNull().default(0),
+  files: jsonb("files").$type<CleanupRunFile[]>().notNull().default([]),
+  purgedAt: timestamp("purged_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type CleanupRun = typeof cleanupRunsTable.$inferSelect;
 
 export type AdminUser = typeof adminUsersTable.$inferSelect;
 export type AdminCredential = typeof adminCredentialsTable.$inferSelect;

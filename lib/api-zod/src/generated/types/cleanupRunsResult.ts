@@ -5,9 +5,8 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { CleanupRun } from './cleanupRun';
 
-export interface StorageCleanupResult {
-  freedBytes: number;
-  deletedFiles: number;
-  runId: string | null;
+export interface CleanupRunsResult {
+  runs: CleanupRun[];
 }
