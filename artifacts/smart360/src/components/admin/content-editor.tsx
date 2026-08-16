@@ -20,6 +20,7 @@ import {
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -634,6 +635,14 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
+  // Deferred media (new item): the grid queues files locally; Shrani creates
+  // the item, then uploads them to it. If the dialog stays open after a
+  // failed upload, the item already exists — remember its id so a second
+  // Shrani updates it instead of creating a duplicate.
+  const mediaRef = useRef<ItemMediaEditorHandle>(null);
+  const createdIdRef = useRef<string | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+
   const [title, setTitle] = useState(item?.title ?? "");
   const [body, setBody] = useState(item?.body ?? "");
   const [price, setPrice] = useState(item?.price ?? "");
@@ -675,13 +684,41 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     setBusy(true);
     try {
       if (mode === "create") {
-        await createItem(categoryId, {
-          title: title.trim() || undefined,
-          body: body.trim() || undefined,
-          price: price.trim() || undefined,
-          priceUnit: priceUnit.trim() || undefined,
-          phone: phone.trim() || undefined,
-        });
+        let id = createdIdRef.current;
+        if (!id) {
+          const created = await createItem(categoryId, {
+            title: title.trim() || undefined,
+            body: body.trim() || undefined,
+            price: price.trim() || undefined,
+            priceUnit: priceUnit.trim() || undefined,
+            phone: phone.trim() || undefined,
+          });
+          id = created.id;
+          createdIdRef.current = id;
+        } else {
+          // Item was created on a previous Shrani whose uploads failed —
+          // update it instead of creating a duplicate.
+          await updateItem(id, {
+            title: title.trim() || null,
+            body: body.trim() || null,
+            price: price.trim() || null,
+            priceUnit: priceUnit.trim() || null,
+            phone: phone.trim() || null,
+            isVisible,
+          });
+        }
+        // Upload the queued media to the fresh item, one by one, with the
+        // progress shown in the grid. On a failure the dialog stays open:
+        // the item exists, the failed file is red, Shrani retries it.
+        if (mediaRef.current) {
+          const allOk = await mediaRef.current.uploadAllTo(id);
+          if (!allOk) {
+            await refresh();
+            alert("Vnos je shranjen, a nekatere datoteke se niso naložile. Neuspele so označene rdeče — »Shrani« jih poskusi znova.");
+            setBusy(false);
+            return;
+          }
+        }
       } else {
         await updateItem(item.id, {
           title: title.trim() || null,
@@ -703,11 +740,12 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   };
 
   const handleCancel = () => {
+    mediaRef.current?.discardPending();
     clear();
     onDone();
   };
 
-  useReportDirty(JSON.stringify(current) !== JSON.stringify(baseline));
+  useReportDirty(JSON.stringify(current) !== JSON.stringify(baseline) || pendingCount > 0);
 
   const handleDelete = async () => {
     if (!item) return;
@@ -750,13 +788,13 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
       </div>
       <div className="space-y-1">
         <Label>Fotografije in video</Label>
-        {mode === "edit" ? (
-          <ItemMediaEditor itemId={item.id} tenantId={tenantId} media={item.media || []} />
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Fotografije in video dodate takoj po shranjevanju — odprite vnos z gumbom »Uredi«.
-          </p>
-        )}
+        <ItemMediaEditor
+          ref={mediaRef}
+          itemId={mode === "edit" ? item.id : null}
+          tenantId={tenantId}
+          media={mode === "edit" ? item.media || [] : []}
+          onPendingChange={setPendingCount}
+        />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">

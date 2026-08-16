@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetTenantQueryKey, useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
 import { fmtGb, usagePct } from "@/lib/format-bytes";
@@ -22,8 +22,25 @@ type QueueEntry = {
   key: string;
   file: File;
   pct: number;
-  status: "uploading" | "error";
+  status: "pending" | "uploading" | "error";
   error?: string;
+  /** Client-side validation failure (too big / wrong type) — never retried. */
+  permanent?: boolean;
+  /** Object URL for the local thumbnail of a not-yet-uploaded file. */
+  previewUrl?: string;
+};
+
+/** Imperative API for the deferred (new item) mode. */
+export type ItemMediaEditorHandle = {
+  /** Files chosen but not uploaded yet (pending or failed). */
+  hasPending: () => boolean;
+  /**
+   * Upload every pending/failed file to the given item, one at a time,
+   * in selection order. Resolves true when ALL succeeded.
+   */
+  uploadAllTo: (itemId: string) => Promise<boolean>;
+  /** Drop all queued files (cancel path) and release their object URLs. */
+  discardPending: () => void;
 };
 
 function fmtDuration(sec: number | null | undefined): string {
@@ -39,7 +56,14 @@ function fmtDuration(sec: number | null | undefined): string {
  * drag to reorder, multi-upload with per-file progress and retry, drag-and-drop
  * onto the grid.
  */
-export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; tenantId: string; media: Media[] }) {
+export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
+  /** null = deferred mode (new item): files queue locally until uploadAllTo(). */
+  itemId: string | null;
+  tenantId: string;
+  media: Media[];
+  /** Reports how many local files wait for upload (dirty tracking). */
+  onPendingChange?: (count: number) => void;
+}>(function ItemMediaEditor({ itemId, tenantId, media, onPendingChange }, handleRef) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -48,6 +72,28 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   const [order, setOrder] = useState<string[] | null>(null);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [dropActive, setDropActive] = useState(false);
+
+  // Upload target: the itemId prop, or — in deferred mode — the id passed
+  // to uploadAllTo() once the item has been created.
+  const targetIdRef = useRef<string | null>(itemId);
+  if (itemId) targetIdRef.current = itemId;
+
+  // Live mirror of the queue so async flows can read the current state.
+  const queueRef = useRef<QueueEntry[]>(queue);
+  queueRef.current = queue;
+
+  // The dialog can close past handleCancel (X, Escape, backdrop) — revoke
+  // any remaining local previews on unmount so blob URLs never leak.
+  useEffect(() => () => {
+    for (const e of queueRef.current) {
+      if (e.previewUrl) URL.revokeObjectURL(e.previewUrl);
+    }
+  }, []);
+
+  const reportPending = (q: QueueEntry[]) =>
+    onPendingChange?.(q.filter(e => e.status === "pending" || e.status === "error").length);
+  const setQueueReported = (updater: (q: QueueEntry[]) => QueueEntry[]) =>
+    setQueue(q => { const next = updater(q); reportPending(next); return next; });
 
   const sorted = [...media].sort((a, b) => a.position - b.position);
   const shown = order ? order.map(id => sorted.find(m => m.id === id)!).filter(Boolean) : sorted;
@@ -66,7 +112,7 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   const quotaFull = quotaPct >= 100;
 
   const patchQueue = (key: string, patch: Partial<QueueEntry>) =>
-    setQueue(q => q.map(e => (e.key === key ? { ...e, ...patch } : e)));
+    setQueueReported(q => q.map(e => (e.key === key ? { ...e, ...patch } : e)));
 
   // Uploads run ONE at a time, in selection order — the server assigns
   // gallery positions at completion time, so parallel uploads would let a
@@ -74,58 +120,96 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   const chainRef = useRef<Promise<void>>(Promise.resolve());
 
   const uploadOneNow = (entry: QueueEntry) =>
-    new Promise<void>((resolve) => {
+    new Promise<boolean>((resolve) => {
+      const target = targetIdRef.current;
+      if (!target) {
+        // Deferred mode without a created item yet — keep the file queued.
+        resolve(false);
+        return;
+      }
       const fd = new FormData();
       fd.append("file", entry.file);
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `/api/admin/items/${itemId}/media/upload`);
+      xhr.open("POST", `/api/admin/items/${target}/media/upload`);
       xhr.withCredentials = true;
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) patchQueue(entry.key, { pct: Math.round((e.loaded / e.total) * 100) });
       };
       xhr.onload = async () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          setQueue(q => q.filter(e => e.key !== entry.key));
+          if (entry.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+          setQueueReported(q => q.filter(e => e.key !== entry.key));
           await refresh();
+          resolve(true);
         } else {
           let msg = "Nalaganje ni uspelo.";
           try { msg = JSON.parse(xhr.responseText).error || msg; } catch { /* keep default */ }
           patchQueue(entry.key, { status: "error", error: msg });
+          resolve(false);
         }
-        resolve();
       };
-      xhr.onerror = () => { patchQueue(entry.key, { status: "error", error: "Povezava je bila prekinjena." }); resolve(); };
+      xhr.onerror = () => { patchQueue(entry.key, { status: "error", error: "Povezava je bila prekinjena." }); resolve(false); };
       xhr.send(fd);
     });
 
   const uploadOne = (entry: QueueEntry) => {
-    chainRef.current = chainRef.current.then(() => uploadOneNow(entry));
+    if (!targetIdRef.current) return; // deferred: wait for uploadAllTo()
+    chainRef.current = chainRef.current.then(() => uploadOneNow(entry).then(() => undefined));
   };
+
+  useImperativeHandle(handleRef, () => ({
+    hasPending: () =>
+      queueRef.current.some(e => e.status === "pending" || e.status === "error"),
+    uploadAllTo: async (id: string) => {
+      targetIdRef.current = id;
+      const entries = queueRef.current.filter(e => e.status === "pending" || (e.status === "error" && !e.permanent));
+      let allOk = true;
+      for (const entry of entries) {
+        patchQueue(entry.key, { status: "uploading", pct: 0, error: undefined });
+        const ok = await uploadOneNow(entry);
+        if (!ok) allOk = false;
+      }
+      return allOk;
+    },
+    discardPending: () => {
+      for (const e of queueRef.current) {
+        if (e.previewUrl) URL.revokeObjectURL(e.previewUrl);
+      }
+      setQueueReported(() => []);
+    },
+  }));
 
   const enqueue = (files: FileList | File[]) => {
     if (quotaFull && tenantUsage) {
       alert(`Prostor za medije je poln (${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto v nastavitvah namestitve.`);
       return;
     }
+    const deferred = !targetIdRef.current;
     for (const file of Array.from(files)) {
       const key = `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       // Refuse over the limit BEFORE the upload runs, with a clear message.
       if (file.size > MAX_BYTES) {
-        setQueue(q => [...q, { key, file, pct: 0, status: "error", error: `Datoteka je prevelika (${Math.round(file.size / 1024 / 1024)} MB). Omejitev je 100 MB.` }]);
+        setQueueReported(q => [...q, { key, file, pct: 0, status: "error", permanent: true, error: `Datoteka je prevelika (${Math.round(file.size / 1024 / 1024)} MB). Omejitev je 100 MB.` }]);
         continue;
       }
       const isMedia = file.type.startsWith("image/") || file.type.startsWith("video/") || VIDEO_EXT.test(file.name);
       if (!isMedia) {
-        setQueue(q => [...q, { key, file, pct: 0, status: "error", error: "Podprte so fotografije in video (mp4, webm, mov)." }]);
+        setQueueReported(q => [...q, { key, file, pct: 0, status: "error", permanent: true, error: "Podprte so fotografije in video (mp4, webm, mov)." }]);
         continue;
       }
-      const entry: QueueEntry = { key, file, pct: 0, status: "uploading" };
-      setQueue(q => [...q, entry]);
-      uploadOne(entry);
+      const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+      const entry: QueueEntry = { key, file, pct: 0, status: deferred ? "pending" : "uploading", previewUrl };
+      setQueueReported(q => [...q, entry]);
+      if (!deferred) uploadOne(entry);
     }
   };
 
   const retry = (entry: QueueEntry) => {
+    if (!targetIdRef.current) {
+      // Deferred mode: the size/type errors cannot succeed on retry; a failed
+      // upload retries through Shrani (uploadAllTo). Nothing to do here.
+      return;
+    }
     patchQueue(entry.key, { status: "uploading", pct: 0, error: undefined });
     uploadOne(entry);
   };
@@ -249,13 +333,39 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
           </div>
         ))}
 
-        {queue.map((q) => (
+        {queue.map((q, qi) => (
           <div key={q.key} className="w-24">
             <div
               className={`relative rounded-xl overflow-hidden border grid place-items-center ${q.status === "error" ? "border-destructive bg-destructive/10" : "bg-muted"}`}
               style={{ width: 96, height: 96 }}
             >
-              {q.status === "uploading" ? (
+              {q.status === "pending" ? (
+                <>
+                  {q.previewUrl ? (
+                    <img src={q.previewUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <span className="grid place-items-center w-8 h-8 rounded-full bg-black/55">
+                      <Play className="w-4 h-4 text-white fill-white" />
+                    </span>
+                  )}
+                  {shown.length === 0 && qi === 0 && (
+                    <span className="absolute top-0 left-0 rounded-br-lg bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5 pointer-events-none">
+                      1 · ploščica
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (q.previewUrl) URL.revokeObjectURL(q.previewUrl);
+                      setQueueReported(qq => qq.filter(e => e.key !== q.key));
+                    }}
+                    className="absolute top-1 right-1 grid place-items-center w-5 h-5 rounded bg-black/60 text-white hover:bg-black/80"
+                    aria-label="Odstrani"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </>
+              ) : q.status === "uploading" ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
@@ -276,7 +386,10 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
                   </button>
                   <button
                     type="button"
-                    onClick={() => setQueue(qq => qq.filter(e => e.key !== q.key))}
+                    onClick={() => {
+                      if (q.previewUrl) URL.revokeObjectURL(q.previewUrl);
+                      setQueueReported(qq => qq.filter(e => e.key !== q.key));
+                    }}
                     className="absolute top-1 right-1 grid place-items-center w-5 h-5 rounded bg-black/50 text-white"
                     aria-label="Odstrani iz seznama"
                   >
@@ -324,4 +437,4 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
       )}
     </div>
   );
-}
+});
