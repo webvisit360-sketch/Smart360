@@ -599,7 +599,7 @@ body{background:#EFECE6}
   body>*{display:none !important}
   #printcard{display:block !important;position:static}
   .pc{text-align:center;font-family:"Figtree",sans-serif;color:#14201F}
-  .pc__logo{width:38mm;height:auto;display:block;margin:0 auto 6mm;fill:#3B78DC;stroke:none}
+  .pc__logo{width:auto;max-width:46mm;max-height:34mm;height:auto;display:block;margin:0 auto 5mm}
   .pc__qr{width:62mm;height:62mm;margin:0 auto}
   .pc__qr svg{width:100%;height:100%;display:block;fill:none;stroke:none}
   .pc__qr svg path{stroke:#14201F;stroke-width:1;shape-rendering:crispEdges}

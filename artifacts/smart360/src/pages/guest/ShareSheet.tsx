@@ -44,8 +44,14 @@ export function ShareSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: b
       el.id = "printcard";
       document.body.appendChild(el);
     }
+    // The label hangs in a guest room — it carries the ACCOMMODATION's logo
+    // (transparent file: prints clean on white paper), never the Smart360
+    // wordmark. No logo → the card is simply headed by the name.
+    const logoImg = tenant.logoUrl
+      ? `<img class="pc__logo" src="${String(tenant.logoUrl).replace(/"/g, "&quot;")}" alt="">`
+      : "";
     el.innerHTML = `<div class="pc">
-      <svg class="pc__logo" viewBox="0 0 4712 858" role="img" aria-label="Smart360"><use href="#i-wordmark"/></svg>
+      ${logoImg}
       <div class="pc__qr">${tenant.qrSvg ?? ""}</div>
       <div class="pc__n"></div>
       <div class="pc__s">Skenirajte za vse o nastanitvi in okolici<br><i>Scan for everything about your stay</i></div>
