@@ -123,7 +123,10 @@ export const GetPublicTenantResponse = zod.object({
   "tenantId": zod.string().nullish(),
   "url": zod.string(),
   "alt": zod.string().nullish(),
-  "position": zod.number()
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish()
 }))
 }))
 })))
@@ -523,7 +526,10 @@ export const GetTenantResponse = zod.object({
   "tenantId": zod.string().nullish(),
   "url": zod.string(),
   "alt": zod.string().nullish(),
-  "position": zod.number()
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish()
 }))
 }))
 })))
@@ -884,7 +890,10 @@ export const CreateItemResponse = zod.object({
   "tenantId": zod.string().nullish(),
   "url": zod.string(),
   "alt": zod.string().nullish(),
-  "position": zod.number()
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish()
 }))
 })
 
@@ -943,7 +952,10 @@ export const UpdateItemResponse = zod.object({
   "tenantId": zod.string().nullish(),
   "url": zod.string(),
   "alt": zod.string().nullish(),
-  "position": zod.number()
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish()
 }))
 })
 
@@ -985,7 +997,10 @@ export const DuplicateItemResponse = zod.object({
   "tenantId": zod.string().nullish(),
   "url": zod.string(),
   "alt": zod.string().nullish(),
-  "position": zod.number()
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish()
 }))
 })
 
@@ -1015,7 +1030,10 @@ export const AddItemMediaResponse = zod.object({
   "tenantId": zod.string().nullish(),
   "url": zod.string(),
   "alt": zod.string().nullish(),
-  "position": zod.number()
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish()
 })
 
 

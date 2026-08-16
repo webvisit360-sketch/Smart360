@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ItemMediaEditor } from "@/components/admin/item-media-editor";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 // ---------- Types ----------
 
@@ -663,11 +664,10 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
       </div>
       <div className="space-y-1">
         <Label>Opis / besedilo</Label>
-        <Textarea
+        <RichTextEditor
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={setBody}
           placeholder="Kratko besedilo ali opis…"
-          rows={3}
           disabled={busy}
         />
       </div>

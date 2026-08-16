@@ -1,15 +1,42 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetTenantQueryKey } from "@workspace/api-client-react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Play, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Media = { id: string; url: string; alt?: string | null; position: number };
+type Media = {
+  id: string;
+  url: string;
+  alt?: string | null;
+  position: number;
+  kind?: string;
+  posterUrl?: string | null;
+  durationSec?: number | null;
+};
+
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v)$/i;
+const MAX_BYTES = 100 * 1024 * 1024;
+
+type QueueEntry = {
+  key: string;
+  file: File;
+  pct: number;
+  status: "uploading" | "error";
+  error?: string;
+};
+
+function fmtDuration(sec: number | null | undefined): string {
+  if (!sec || !isFinite(sec)) return "";
+  const s = Math.round(sec);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 /**
- * Photo strip for one content item in the admin content tree.
- * Position 0 is the tile image (the rule: image above text, first image wins).
- * Supports: add (upload — the server resizes to 620/1400), reorder by dragging, delete.
+ * Media strip for one content item: ONE ordered list of photos and videos
+ * (spec admin-slicice-in-video.md). Position 0 is the tile in the guest app —
+ * for a video, its poster frame. 96 px thumbnails from the 200 px derivative,
+ * drag to reorder, multi-upload with per-file progress and retry, drag-and-drop
+ * onto the grid.
  */
 export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; tenantId: string; media: Media[] }) {
   const queryClient = useQueryClient();
@@ -17,29 +44,77 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   const [busy, setBusy] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const [order, setOrder] = useState<string[] | null>(null);
+  const [queue, setQueue] = useState<QueueEntry[]>([]);
+  const [dropActive, setDropActive] = useState(false);
 
   const sorted = [...media].sort((a, b) => a.position - b.position);
   const shown = order ? order.map(id => sorted.find(m => m.id === id)!).filter(Boolean) : sorted;
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
 
-  const upload = async (file: File) => {
-    setBusy(true);
-    try {
+  const patchQueue = (key: string, patch: Partial<QueueEntry>) =>
+    setQueue(q => q.map(e => (e.key === key ? { ...e, ...patch } : e)));
+
+  // Uploads run ONE at a time, in selection order — the server assigns
+  // gallery positions at completion time, so parallel uploads would let a
+  // small photo overtake a large video and scramble the order.
+  const chainRef = useRef<Promise<void>>(Promise.resolve());
+
+  const uploadOneNow = (entry: QueueEntry) =>
+    new Promise<void>((resolve) => {
       const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch(`/api/admin/items/${itemId}/media/upload`, { method: "POST", body: fd, credentials: "include" });
-      if (!res.ok) throw new Error(await res.text());
-      await refresh();
-    } catch {
-      alert("Nalaganje fotografije ni uspelo.");
-    } finally {
-      setBusy(false);
+      fd.append("file", entry.file);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `/api/admin/items/${itemId}/media/upload`);
+      xhr.withCredentials = true;
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) patchQueue(entry.key, { pct: Math.round((e.loaded / e.total) * 100) });
+      };
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setQueue(q => q.filter(e => e.key !== entry.key));
+          await refresh();
+        } else {
+          let msg = "Nalaganje ni uspelo.";
+          try { msg = JSON.parse(xhr.responseText).error || msg; } catch { /* keep default */ }
+          patchQueue(entry.key, { status: "error", error: msg });
+        }
+        resolve();
+      };
+      xhr.onerror = () => { patchQueue(entry.key, { status: "error", error: "Povezava je bila prekinjena." }); resolve(); };
+      xhr.send(fd);
+    });
+
+  const uploadOne = (entry: QueueEntry) => {
+    chainRef.current = chainRef.current.then(() => uploadOneNow(entry));
+  };
+
+  const enqueue = (files: FileList | File[]) => {
+    for (const file of Array.from(files)) {
+      const key = `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      // Refuse over the limit BEFORE the upload runs, with a clear message.
+      if (file.size > MAX_BYTES) {
+        setQueue(q => [...q, { key, file, pct: 0, status: "error", error: `Datoteka je prevelika (${Math.round(file.size / 1024 / 1024)} MB). Omejitev je 100 MB.` }]);
+        continue;
+      }
+      const isMedia = file.type.startsWith("image/") || file.type.startsWith("video/") || VIDEO_EXT.test(file.name);
+      if (!isMedia) {
+        setQueue(q => [...q, { key, file, pct: 0, status: "error", error: "Podprte so fotografije in video (mp4, webm, mov)." }]);
+        continue;
+      }
+      const entry: QueueEntry = { key, file, pct: 0, status: "uploading" };
+      setQueue(q => [...q, entry]);
+      uploadOne(entry);
     }
   };
 
+  const retry = (entry: QueueEntry) => {
+    patchQueue(entry.key, { status: "uploading", pct: 0, error: undefined });
+    uploadOne(entry);
+  };
+
   const remove = async (id: string) => {
-    if (!confirm("Odstranim fotografijo?")) return;
+    if (!confirm("Odstranim datoteko iz galerije?")) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE", credentials: "include" });
@@ -71,62 +146,153 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
     }
   };
 
-  const thumb = (url: string) => (url.startsWith("/api/storage/img/") ? `${url}?w=620` : url);
+  // Thumbnails come from the 200 px derivative — never the full photo.
+  const thumb = (m: Media) => {
+    const src = m.kind === "video" ? m.posterUrl : m.url;
+    if (!src) return "";
+    return src.startsWith("/api/storage/img/") ? `${src}?w=200` : src;
+  };
+  const fullSize = (m: Media) =>
+    m.kind === "video" ? m.url : (m.url.startsWith("/api/storage/img/") ? `${m.url}?w=1400` : m.url);
 
   return (
-    <div className="mt-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <div
+      className={`mt-2 rounded-lg ${dropActive ? "ring-2 ring-primary ring-offset-2" : ""}`}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDropActive(true); }
+      }}
+      onDragLeave={() => setDropActive(false)}
+      onDrop={(e) => {
+        if (!e.dataTransfer.files.length) return;
+        e.preventDefault();
+        setDropActive(false);
+        enqueue(e.dataTransfer.files);
+      }}
+    >
+      <div className="flex flex-wrap items-start gap-2">
         {shown.map((m, i) => (
-          <div
-            key={m.id}
-            draggable={!busy}
-            onDragStart={() => { setDragId(m.id); setOrder(shown.map(x => x.id)); }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              if (!dragId || dragId === m.id || !order) return;
-              const next = order.filter(id => id !== dragId);
-              next.splice(next.indexOf(m.id) < 0 ? next.length : next.indexOf(m.id), 0, dragId);
-              setOrder(next);
-            }}
-            onDragEnd={() => { if (order) commitOrder(order); setDragId(null); }}
-            className={`relative group rounded-lg overflow-hidden border ${i === 0 ? "ring-2 ring-primary" : ""} ${dragId === m.id ? "opacity-50" : ""}`}
-            style={{ width: 72, height: 54, cursor: "grab" }}
-            title={i === 0 ? "Ploščica (prva slika)" : "Povleci za razvrstitev"}
-          >
-            <img src={thumb(m.url)} alt={m.alt || ""} className="w-full h-full object-cover" loading="lazy" />
-            {i === 0 && <span className="absolute bottom-0 left-0 right-0 bg-primary/90 text-primary-foreground text-[9px] text-center leading-3 py-0.5">ploščica</span>}
-            <button
-              type="button"
-              onClick={() => remove(m.id)}
-              className="absolute top-0.5 right-0.5 hidden group-hover:grid place-items-center w-5 h-5 rounded bg-black/60 text-white"
-              aria-label="Odstrani fotografijo"
+          <div key={m.id} className="w-24">
+            <div
+              draggable={!busy}
+              onDragStart={() => { setDragId(m.id); setOrder(shown.map(x => x.id)); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (!dragId || dragId === m.id || !order) return;
+                const next = order.filter(id => id !== dragId);
+                next.splice(next.indexOf(m.id) < 0 ? next.length : next.indexOf(m.id), 0, dragId);
+                setOrder(next);
+              }}
+              onDragEnd={() => { if (order) commitOrder(order); setDragId(null); }}
+              className={`relative group rounded-xl overflow-hidden border bg-muted ${i === 0 ? "ring-2 ring-primary" : ""} ${dragId === m.id ? "opacity-50" : ""}`}
+              style={{ width: 96, height: 96, aspectRatio: "1 / 1", cursor: "grab" }}
+              title={i === 0 ? "Ploščica (prva v galeriji)" : "Povlecite za vrstni red"}
             >
-              <Trash2 className="w-3 h-3" />
-            </button>
+              <img src={thumb(m)} alt={m.alt || ""} className="w-full h-full object-cover" loading="lazy" />
+              {m.kind === "video" && (
+                <>
+                  <span className="absolute inset-0 grid place-items-center pointer-events-none">
+                    <span className="grid place-items-center w-8 h-8 rounded-full bg-black/55">
+                      <Play className="w-4 h-4 text-white fill-white" />
+                    </span>
+                  </span>
+                  {m.durationSec ? (
+                    <span className="absolute bottom-1 right-1 rounded bg-black/70 text-white text-[10px] px-1 leading-4 pointer-events-none">
+                      {fmtDuration(m.durationSec)}
+                    </span>
+                  ) : null}
+                </>
+              )}
+              {i === 0 && (
+                <span className="absolute top-0 left-0 rounded-br-lg bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5 pointer-events-none">
+                  1 · ploščica
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => remove(m.id)}
+                className="absolute top-1 right-1 hidden group-hover:grid place-items-center w-5 h-5 rounded bg-black/60 text-white"
+                aria-label="Odstrani"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+            <a
+              href={fullSize(m)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-[10px] text-muted-foreground truncate mt-0.5 hover:underline"
+              title="Odpri v polni velikosti"
+            >
+              {decodeURIComponent(m.url.split("/").pop() || "")}
+            </a>
           </div>
         ))}
+
+        {queue.map((q) => (
+          <div key={q.key} className="w-24">
+            <div
+              className={`relative rounded-xl overflow-hidden border grid place-items-center ${q.status === "error" ? "border-destructive bg-destructive/10" : "bg-muted"}`}
+              style={{ width: 96, height: 96 }}
+            >
+              {q.status === "uploading" ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${q.pct}%` }} />
+                  </div>
+                  <span className="absolute bottom-2 left-0 right-0 text-center text-[10px] text-muted-foreground">{q.pct}%</span>
+                </>
+              ) : (
+                <div className="p-1 text-center">
+                  <button
+                    type="button"
+                    onClick={() => retry(q)}
+                    className="inline-grid place-items-center w-7 h-7 rounded-full bg-destructive text-white mb-1"
+                    aria-label="Poskusi znova"
+                    title="Poskusi znova"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQueue(qq => qq.filter(e => e.key !== q.key))}
+                    className="absolute top-1 right-1 grid place-items-center w-5 h-5 rounded bg-black/50 text-white"
+                    aria-label="Odstrani iz seznama"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <p className="text-[9px] leading-tight text-destructive line-clamp-3">{q.error}</p>
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground truncate mt-0.5">{q.file.name}</p>
+          </div>
+        ))}
+
         <Button
           type="button"
           variant="outline"
-          size="sm"
-          className="h-[54px] w-[72px] border-dashed p-0"
+          className="h-24 w-24 border-dashed p-0 flex-col gap-1"
           disabled={busy}
           onClick={() => fileRef.current?.click()}
-          aria-label="Dodaj fotografijo"
+          aria-label="Dodaj fotografije ali video"
         >
-          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          <Plus className="w-5 h-5" />
+          <span className="text-[10px] leading-tight">Dodaj</span>
         </Button>
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          multiple
+          accept="image/*,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v"
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }}
+          onChange={(e) => { if (e.target.files?.length) enqueue(e.target.files); e.target.value = ""; }}
         />
       </div>
-      {shown.length > 0 && (
-        <p className="text-[11px] text-muted-foreground mt-1">Prva slika je ploščica razdelka in prva slika galerije. Povlecite za vrstni red.</p>
-      )}
+      <p className="text-[11px] text-muted-foreground mt-1">
+        Prva datoteka je ploščica in prva v galeriji — povlecite za vrstni red. Fotografije ali video
+        (mp4, webm, mov) — video do 100 MB in 3 minute. Datoteke lahko tudi povlečete sem.
+      </p>
     </div>
   );
 }

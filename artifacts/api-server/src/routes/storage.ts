@@ -2,6 +2,11 @@ import { Router, type IRouter } from "express";
 import multer from "multer";
 import sharp from "sharp";
 import { randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { writeFile, readFile, rm, mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { eq, sql } from "drizzle-orm";
 import {
   db,
@@ -20,10 +25,10 @@ import {
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
 
-// The two widths every photo is stored in. Tiles/thumbnails use 620,
-// gallery/lightbox uses 1400. Never store phone originals.
-export const IMG_WIDTHS = [620, 1400] as const;
-const JPEG_QUALITY: Record<number, number> = { 620: 65, 1400: 75 };
+// The widths every photo is stored in. Admin thumbnails use 200,
+// tiles use 620, gallery/lightbox uses 1400. Never store phone originals.
+export const IMG_WIDTHS = [200, 620, 1400] as const;
+const JPEG_QUALITY: Record<number, number> = { 200: 60, 620: 65, 1400: 75 };
 
 function parseObjectPath(path: string): { bucketName: string; objectName: string } {
   if (!path.startsWith("/")) path = `/${path}`;
@@ -72,14 +77,18 @@ router.get("/storage/img/:slug/:file", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Bad path" });
     return;
   }
-  const w = req.query["w"] === "620" ? 620 : 1400;
+  const wParam = String(req.query["w"] ?? "");
+  const w = wParam === "200" ? 200 : wParam === "620" ? 620 : 1400;
   try {
-    const object =
-      (await storage.searchPublicObject(`media/${slug}/${w}/${file}`)) ??
-      // fall back to the other width rather than a broken image
-      (await storage.searchPublicObject(
-        `media/${slug}/${w === 620 ? 1400 : 620}/${file}`,
-      ));
+    // Fall back across widths rather than serving a broken image — older
+    // photos have no 200 px derivative, logos are stored only under 620.
+    let object = await storage.searchPublicObject(`media/${slug}/${w}/${file}`);
+    if (!object) {
+      for (const alt of IMG_WIDTHS.filter((x) => x !== w)) {
+        object = await storage.searchPublicObject(`media/${slug}/${alt}/${file}`);
+        if (object) break;
+      }
+    }
     if (!object) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -105,13 +114,187 @@ router.get("/storage/img/:slug/:file", async (req, res): Promise<void> => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /admin/items/:id/media/upload — manager uploads a photo for an item.
-// The server resizes to the two widths (never stores the phone original)
-// and appends a media row; position 0 is the tile image.
+// Video pipeline (admin-slicice-in-video.md): the item gallery is ONE ordered
+// list of photos AND videos. Videos are transcoded to H.264/AAC mp4 with the
+// moov atom at the front (faststart — iOS refuses to start playing without
+// it), capped at 1080p and 3 minutes; a poster frame at 1 s becomes a JPEG
+// with the same width variants as photos (so a video can be the tile).
+// ---------------------------------------------------------------------------
+const execFileP = promisify(execFile);
+export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
+export const VIDEO_MAX_SECONDS = 180;
+
+// Transcodes run ONE at a time: ffmpeg on a 100 MB clip can eat a core and
+// hundreds of MB of RAM, and nothing stops an admin from dropping ten files
+// at once. The admin UI also serialises uploads, this is the backstop.
+let videoLock: Promise<void> = Promise.resolve();
+function withVideoLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = videoLock.then(fn);
+  videoLock = run.then(() => undefined, () => undefined);
+  return run;
+}
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v)$/i;
+
+function isVideoUpload(file: Express.Multer.File): boolean {
+  return file.mimetype.startsWith("video/") || VIDEO_EXT.test(file.originalname);
+}
+
+/** Readable object names: meli-pu_apart_04 instead of IMG_6207. */
+export function mediaBaseName(slug: string, itemTitle: string | null, seq: number): string {
+  const item = (itemTitle ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24) || "vnos";
+  // Short suffix keeps names unique when photos are deleted and re-added.
+  const uniq = randomUUID().slice(0, 4);
+  return `${slug}_${item}_${String(seq).padStart(2, "0")}-${uniq}`;
+}
+
+async function ffprobeMeta(path: string): Promise<{
+  durationSec: number; width: number; height: number; vcodec: string;
+}> {
+  const { stdout } = await execFileP("ffprobe", [
+    "-v", "error", "-print_format", "json",
+    "-show_format", "-show_streams", path,
+  ]);
+  const meta = JSON.parse(stdout);
+  const v = (meta.streams ?? []).find((s: { codec_type?: string }) => s.codec_type === "video");
+  if (!v) throw new Error("no video stream");
+  return {
+    durationSec: Number(meta.format?.duration ?? v.duration ?? 0),
+    width: Number(v.width ?? 0),
+    height: Number(v.height ?? 0),
+    vcodec: String(v.codec_name ?? ""),
+  };
+}
+
+/**
+ * Transcode + poster + upload. Returns URLs and duration for the media row.
+ */
+export async function storeVideo(
+  slug: string,
+  base: string,
+  original: Buffer,
+  originalName: string,
+): Promise<{ url: string; posterUrl: string; durationSec: number }> {
+  const searchPath = storage.getPublicObjectSearchPaths()[0];
+  if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
+  const dir = await mkdtemp(join(tmpdir(), "s360video-"));
+  const ext = (originalName.match(VIDEO_EXT)?.[1] ?? "mp4").toLowerCase();
+  const inPath = join(dir, `in.${ext}`);
+  const outPath = join(dir, "out.mp4");
+  const posterPath = join(dir, "poster.jpg");
+  try {
+    await writeFile(inPath, original);
+    const probe = await ffprobeMeta(inPath);
+    if (!probe.durationSec || probe.durationSec > VIDEO_MAX_SECONDS) {
+      throw Object.assign(
+        new Error(`Video je predolg (${Math.round(probe.durationSec)} s). Omejitev je 3 minute.`),
+        { status: 400 },
+      );
+    }
+    if (probe.width * probe.height > 4096 * 4096) {
+      throw Object.assign(
+        new Error("Video ima preveliko ločljivost. Omejitev je 4K."),
+        { status: 400 },
+      );
+    }
+    // Transcode: H.264/AAC, max 1080p, even dimensions, faststart.
+    await execFileP("ffmpeg", [
+      "-y", "-i", inPath,
+      "-vf", "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+      "-pix_fmt", "yuv420p",
+      "-c:a", "aac", "-b:a", "128k",
+      "-movflags", "+faststart",
+      outPath,
+    ], { timeout: 10 * 60 * 1000, maxBuffer: 16 * 1024 * 1024 });
+    // Poster frame at 1 s (or 0 s when the clip is shorter).
+    const posterAt = probe.durationSec > 1.2 ? "1" : "0";
+    await execFileP("ffmpeg", [
+      "-y", "-ss", posterAt, "-i", outPath,
+      "-frames:v", "1", "-q:v", "3", posterPath,
+    ], { timeout: 60 * 1000, maxBuffer: 16 * 1024 * 1024 });
+
+    const finalMeta = await ffprobeMeta(outPath);
+    const videoName = `${base}.mp4`;
+    const posterName = `${base}-poster.jpg`;
+    const videoBuf = await readFile(outPath);
+    const { bucketName, objectName } = parseObjectPath(
+      `${searchPath}/media/${slug}/video/${videoName}`,
+    );
+    await objectStorageClient
+      .bucket(bucketName)
+      .file(objectName)
+      .save(videoBuf, { contentType: "video/mp4" });
+    await storePhotoVariants(slug, posterName, await readFile(posterPath));
+    return {
+      url: `/api/storage/video/${slug}/${videoName}`,
+      posterUrl: `/api/storage/img/${slug}/${posterName}`,
+      durationSec: finalMeta.durationSec,
+    };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /storage/video/:slug/:file — serve a stored video WITH Range support.
+// iOS Safari sends Range requests and will not play (or seek) without 206s.
+// ---------------------------------------------------------------------------
+router.get("/storage/video/:slug/:file", async (req, res): Promise<void> => {
+  const slug = String(req.params["slug"] ?? "");
+  const file = String(req.params["file"] ?? "");
+  if (!/^[a-z0-9-]+$/i.test(slug) || !/^[\w.-]+$/.test(file)) {
+    res.status(400).json({ error: "Bad path" });
+    return;
+  }
+  try {
+    const object = await storage.searchPublicObject(`media/${slug}/video/${file}`);
+    if (!object) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const [meta] = await object.getMetadata();
+    const size = Number(meta.size ?? 0);
+    const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ""));
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cache-Control", "public, max-age=604800, immutable");
+    let start = 0;
+    let end = size - 1;
+    if (range && size > 0 && (range[1] || range[2])) {
+      start = range[1] ? parseInt(range[1], 10) : Math.max(0, size - parseInt(range[2]!, 10));
+      end = range[1] && range[2] ? Math.min(parseInt(range[2], 10), size - 1) : end;
+      if (start > end || start >= size) {
+        res.status(416).setHeader("Content-Range", `bytes */${size}`).end();
+        return;
+      }
+      res.status(206);
+      res.setHeader("Content-Range", `bytes ${start}-${end}/${size}`);
+    }
+    res.setHeader("Content-Length", String(end - start + 1));
+    const stream = object.createReadStream({ start, end });
+    stream.on("error", () => { if (!res.headersSent) res.status(500); res.end(); });
+    stream.pipe(res);
+  } catch (err) {
+    req.log.error({ err }, "storage video serve failed");
+    if (!res.headersSent) res.status(500).json({ error: "Storage error" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/items/:id/media/upload — manager uploads a photo OR video for
+// an item. Photos are resized to the serving widths (never stores the phone
+// original, EXIF stripped after auto-rotate); videos are transcoded (above).
+// A media row is appended; position 0 is the tile image (poster for videos).
 // ---------------------------------------------------------------------------
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: VIDEO_MAX_BYTES },
 });
 
 router.post(
@@ -135,24 +318,60 @@ router.post(
       res.status(404).json({ error: "Item not found" });
       return;
     }
-    // Reject non-images / corrupt files with a 400 before touching storage.
-    try {
-      const meta = await sharp(req.file.buffer).metadata();
-      if (!meta.width || !meta.height || meta.width * meta.height > 60_000_000) {
-        res.status(400).json({ error: "Neveljavna ali prevelika slika." });
+    const [{ title: itemTitle }] = await db
+      .select({ title: itemsTable.title })
+      .from(itemsTable)
+      .where(eq(itemsTable.id, itemId));
+    const [{ n: seq }] = (await db
+      .select({ n: sql<number>`coalesce(max(${mediaTable.position}), -1) + 2` })
+      .from(mediaTable)
+      .where(eq(mediaTable.itemId, itemId))) as [{ n: number }];
+    const base = mediaBaseName(row.slug, itemTitle ?? null, Number(seq));
+
+    const video = isVideoUpload(req.file);
+    let url: string;
+    let posterUrl: string | null = null;
+    let durationSec: number | null = null;
+    if (video) {
+      try {
+        const file = req.file;
+        const out = await withVideoLock(() =>
+          storeVideo(row.slug, base, file.buffer, file.originalname),
+        );
+        url = out.url;
+        posterUrl = out.posterUrl;
+        durationSec = out.durationSec;
+      } catch (err) {
+        const status = (err as { status?: number }).status ?? 500;
+        req.log.error({ err }, "video upload failed");
+        res.status(status).json({
+          error: status === 400
+            ? (err as Error).message
+            : "Obdelava videa ni uspela. Podprti so mp4, webm in mov do 100 MB in 3 minute.",
+        });
         return;
       }
-    } catch {
-      res.status(400).json({ error: "Datoteka ni veljavna slika." });
-      return;
-    }
-    const name = `${randomUUID()}.jpg`;
-    try {
-      await storePhotoVariants(row.slug, name, req.file.buffer);
-    } catch (err) {
-      req.log.error({ err }, "photo upload failed");
-      res.status(500).json({ error: "Upload failed" });
-      return;
+    } else {
+      // Reject non-images / corrupt files with a 400 before touching storage.
+      try {
+        const meta = await sharp(req.file.buffer).metadata();
+        if (!meta.width || !meta.height || meta.width * meta.height > 60_000_000) {
+          res.status(400).json({ error: "Neveljavna ali prevelika slika." });
+          return;
+        }
+      } catch {
+        res.status(400).json({ error: "Datoteka ni veljavna slika." });
+        return;
+      }
+      const name = `${base}.jpg`;
+      try {
+        await storePhotoVariants(row.slug, name, req.file.buffer);
+      } catch (err) {
+        req.log.error({ err }, "photo upload failed");
+        res.status(500).json({ error: "Upload failed" });
+        return;
+      }
+      url = `/api/storage/img/${row.slug}/${name}`;
     }
     // Atomic position allocation: wrap in a transaction and lock the item row
     // with SELECT … FOR UPDATE so that concurrent uploads for the same item
@@ -166,7 +385,10 @@ router.post(
         .insert(mediaTable)
         .values({
           itemId,
-          url: `/api/storage/img/${row.slug}/${name}`,
+          url,
+          kind: video ? "video" : "image",
+          posterUrl,
+          durationSec,
           position: sql<number>`(select coalesce(max(${mediaTable.position}), -1) + 1 from ${mediaTable} where ${mediaTable.itemId} = ${itemId})`,
         })
         .returning();

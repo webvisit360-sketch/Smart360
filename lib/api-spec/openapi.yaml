@@ -710,6 +710,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MediaEntry"
+  # NOTE: POST /admin/items/{id}/media/upload (multipart photo/video upload)
+  # intentionally lives OUTSIDE this contract: orval's zod output emits
+  # File/Blob types for format:binary, which do not exist in the node lib
+  # config. The admin UI calls it with raw XHR (progress events).
   /admin/media/{id}:
     delete:
       operationId: deleteMedia
@@ -1333,7 +1337,10 @@ components:
         url: { type: string }
         alt: { type: ["string", "null"] }
         position: { type: number }
-      required: [id, url, position]
+        kind: { type: string }
+        posterUrl: { type: ["string", "null"] }
+        durationSec: { type: ["number", "null"] }
+      required: [id, url, position, kind]
     MediaInput:
       type: object
       properties:

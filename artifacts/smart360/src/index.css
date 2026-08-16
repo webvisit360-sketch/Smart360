@@ -147,3 +147,27 @@
     box-shadow: 0 4px 0 var(--color-destructive-border);
   }
 }
+
+/* Rich-text editor (admin) — inherits app typography, only structural styles */
+.rte-content {
+  min-height: 7rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.rte-content p { margin: 0 0 0.5em; }
+.rte-content p:last-child { margin-bottom: 0; }
+.rte-content h4 { font-weight: 700; font-size: 1rem; margin: 0.75em 0 0.35em; }
+.rte-content ul, .rte-content ol { padding-left: 1.4em; margin: 0 0 0.5em; }
+.rte-content ul { list-style: disc; }
+.rte-content ol { list-style: decimal; }
+.rte-content li { margin: 0.15em 0; }
+.rte-content a { text-decoration: underline; color: var(--color-primary, #2563eb); }
+.rte-content:empty::before,
+.rte-content > p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-muted-foreground, #9ca3af);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

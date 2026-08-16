@@ -46,10 +46,13 @@ function cleanContentFields<T extends Record<string, unknown>>(data: T): T {
   const out: Record<string, unknown> = { ...data };
   for (const key of [
     "title", "label", "sublabel", "subtitle",
-    "noteText", "noteType", "price", "priceUnit", "phone", "hours", "distance",
+    "noteType", "price", "priceUnit", "phone", "hours", "distance",
   ]) {
     if (typeof out[key] === "string") out[key] = sanitizePlain(out[key] as string);
   }
+  // noteText ("Nasvet gostitelja") is rendered as HTML in the guest app,
+  // so it keeps the same rich-text allowlist as body.
+  if (typeof out["noteText"] === "string") out["noteText"] = sanitizeBody(out["noteText"] as string);
   if (Array.isArray(out["bullets"])) {
     out["bullets"] = (out["bullets"] as unknown[]).map((b) =>
       typeof b === "string" ? sanitizePlain(b) : b,
@@ -640,7 +643,7 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
     } else {
       await db
         .update(translationsTable)
-        .set({ value })
+        .set({ value: field === "body" ? sanitizeBody(value) : sanitizePlain(value) })
         .where(eq(translationsTable.id, match.id));
     }
   } else if (value !== "") {

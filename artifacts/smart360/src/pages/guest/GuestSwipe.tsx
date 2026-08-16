@@ -7,7 +7,8 @@ import { spriteId } from "./sprite-icon";
 import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
 import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
-import { imgSrc } from "./img";
+import { imgSrc, mediaImgSrc } from "./img";
+import { GalleryStrip, MediaThumb } from "./media-viewer";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
@@ -210,8 +211,8 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               {/* one layout for every section screen: identical photo tiles */}
               <div className="grid2">
                 {sec.categories?.filter((c: any) => c.isVisible).map((cat: any) => {
-                  const firstImg = imgSrc(cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0].url
-                    || tenant.heroUrl, 620);
+                  const firstMedia = cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0];
+                  const firstImg = firstMedia ? mediaImgSrc(firstMedia, 620) : imgSrc(tenant.heroUrl, 620);
                   return (
                     <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/${slug}/c/${cat.id}`))}>
                       <img loading="lazy" decoding="async" src={firstImg} alt="" />
@@ -442,7 +443,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       <article className="card fade" key={item.id}>
         {item.media?.[0] && (
           <div className="card__ph">
-            <img loading="lazy" decoding="async" src={imgSrc(item.media[0].url, 620)} alt={item.media[0].alt || ""} />
+            <MediaThumb media={item.media} />
             <button className="card__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
           </div>
         )}
@@ -500,7 +501,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       <article className="card fade" key={item.id}>
         {item.media?.[0] && (
           <div className="card__ph">
-            <img loading="lazy" decoding="async" src={imgSrc(item.media[0].url, 620)} alt="" />
+            <MediaThumb media={item.media} alt="" />
             <button className="card__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
           </div>
         )}
@@ -525,7 +526,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
       <article className="card fade" key={item.id}>
         {item.media?.[0] && (
           <div className="card__ph">
-            <img loading="lazy" decoding="async" src={imgSrc(item.media[0].url, 620)} alt="" />
+            <MediaThumb media={item.media} alt="" />
             <button className="card__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
           </div>
         )}
@@ -572,11 +573,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
         {parseTextBody(item.body)}
       </div>
       {item.media && item.media.length > 0 && (
-        <div className="gal" style={{marginTop: 16}}>
-          <div className="galtrack">
-            {item.media.map((m: any) => <img key={m.id} loading="lazy" decoding="async" src={imgSrc(m.url, 1400)} alt={m.alt || ""} />)}
-          </div>
-        </div>
+        <GalleryStrip media={item.media} style={{marginTop: 16}} />
       )}
     </div>
   ));

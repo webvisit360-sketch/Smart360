@@ -9,7 +9,7 @@ import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
 import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
 import { ShareSheet } from "./ShareSheet";
-import { imgSrc } from "./img";
+import { imgSrc, mediaImgSrc } from "./img";
 import { hsub } from "./hsub";
 import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
@@ -67,7 +67,7 @@ export default function GuestHome() {
     sec.categories?.filter((c: any) => c.isVisible).forEach((cat: any) => {
       cat.items?.filter((i: any) => i.isVisible).forEach((item: any) => {
         itemCount++;
-        if (!photo && item.media?.[0]) photo = item.media[0].url;
+        if (!photo && item.media?.[0]) photo = mediaImgSrc(item.media[0], 620);
       });
     });
     const firstCat = sec.categories?.filter((c: any) => c.isVisible)[0]?.id;
@@ -90,9 +90,10 @@ export default function GuestHome() {
       title: sec.title,
       subtitle: sec.subtitle,
       cats: cats.map((cat: any) => {
-        const firstPhoto = cat.items
+        const firstMedia = cat.items
           ?.filter((i: any) => i.isVisible)
-          .find((i: any) => i.media?.[0])?.media[0].url;
+          .find((i: any) => i.media?.[0])?.media[0];
+        const firstPhoto = firstMedia ? mediaImgSrc(firstMedia, 620) : undefined;
         return {
           id: cat.id,
           label: cat.label,

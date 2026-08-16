@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   uuid,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -78,6 +79,11 @@ export const mediaTable = pgTable("media", {
   url: text("url").notNull(),
   alt: text("alt"),
   position: integer("position").notNull().default(0),
+  // "image" | "video" — the gallery is ONE ordered list holding both.
+  kind: text("kind").notNull().default("image"),
+  // Video only: poster frame (JPEG, same variants as photos) and duration.
+  posterUrl: text("poster_url"),
+  durationSec: doublePrecision("duration_sec"),
 });
 
 export const translationsTable = pgTable("translations", {

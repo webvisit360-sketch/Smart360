@@ -774,3 +774,52 @@ html[data-theme="swipe"]{
   width:var(--lg-w,22%);height:auto;object-fit:contain;object-position:50% 50%}
 .brandlogo.is-drag{pointer-events:auto;cursor:grab;
   outline:2px dashed rgba(59,120,220,.9);outline-offset:6px;border-radius:6px}
+
+/* ---------- galerija čez cel zaslon (slike in video) ----------
+   Nad vsemi plastmi: .detail 100 < .tabdock 105 < .mask 115 < .sheet 120 < .mv 130 */
+.mv{position:fixed;inset:0;background:#000;z-index:130;display:none;flex-direction:column;
+    overscroll-behavior:contain}
+.mv.on{display:flex}
+.mv__top{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
+  background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,0))}
+.mv__c{color:#fff;font-size:14px;font-weight:700;letter-spacing:.01em;
+  background:rgba(255,255,255,.16);border-radius:999px;padding:5px 12px}
+.mv__sp{flex:1}
+.mv__b{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);
+  display:grid;place-items:center;color:#fff;flex:none}
+.mv__b .ic{width:19px;height:19px;stroke-width:2}
+.mv__b:active{background:rgba(255,255,255,.32)}
+
+.mv__track{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mv__track::-webkit-scrollbar{display:none}
+.mv.is-zoom .mv__track{overflow:hidden;scroll-snap-type:none}
+.mv__it{flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;scroll-snap-stop:always;
+  display:grid;place-items:center;overflow:hidden;position:relative}
+.mv__z{touch-action:none;will-change:transform;display:grid;place-items:center;
+  transform:translate(var(--mvx,0px),var(--mvy,0px)) scale(var(--mvs,1)) rotate(var(--mvr,0deg));
+  transition:transform .18s ease}
+.mv__z.is-live{transition:none}
+/* Slika se razpne po celi širini telefona; ob zasuku se preračuna sama,
+   ker sta mera 100dvw in 100dvh vezani na trenutno postavitev zaslona. */
+.mv__z img{max-width:100dvw;max-height:100dvh;width:auto;height:auto;object-fit:contain;
+  display:block;background:#000}
+.mv__z video{width:100dvw;max-height:100dvh;height:auto;object-fit:contain;display:block;background:#000}
+.mv__z.is-turned img{max-width:100dvh;max-height:100dvw}
+.mv__z.is-turned video{width:100dvh;max-height:100dvw}
+.mv__cap{position:absolute;left:0;right:0;bottom:0;z-index:3;color:#fff;font-size:13.5px;font-weight:600;
+  padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.6));pointer-events:none}
+.mv__hint{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%);z-index:3;color:rgba(255,255,255,.72);font-size:12.5px;font-weight:600;
+  pointer-events:none;transition:opacity .3s}
+.mv__hint.off{opacity:0}
+/* video v traku galerije: sličica z gumbom za predvajanje */
+.gvid{position:relative;width:100%;flex:none;scroll-snap-align:center;display:block}
+.gvid video{width:100%;aspect-ratio:5/3;object-fit:cover;display:block;background:#000}
+.card > .gal .gvid video{aspect-ratio:16/10}
+.gvid__p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;
+  border-radius:50%;background:rgba(255,255,255,.93);display:grid;place-items:center;color:#14201F;
+  pointer-events:none;box-shadow:0 2px 14px rgba(0,0,0,.3)}
+.gvid__p svg{width:26px;height:26px;display:block;fill:currentColor}

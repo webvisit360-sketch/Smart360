@@ -392,6 +392,11 @@ export interface MediaEntry {
   /** @nullable */
   alt?: string | null;
   position: number;
+  kind: string;
+  /** @nullable */
+  posterUrl?: string | null;
+  /** @nullable */
+  durationSec?: number | null;
 }
 
 export interface Item {
