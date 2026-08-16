@@ -341,6 +341,32 @@ export interface StorageUsage {
   tenants: TenantStorageUsage[];
 }
 
+export type MediaIssueReason = typeof MediaIssueReason[keyof typeof MediaIssueReason];
+
+
+export const MediaIssueReason = {
+  missing: 'missing',
+  wrong_type: 'wrong_type',
+  no_alpha: 'no_alpha',
+} as const;
+
+export interface MediaIssue {
+  field: string;
+  label: string;
+  url: string;
+  reason: MediaIssueReason;
+  adminPath: string;
+}
+
+export interface MediaCheckResult {
+  issues: MediaIssue[];
+}
+
+export interface DuplicateTenantResult {
+  tenant: Tenant;
+  dropped: MediaIssue[];
+}
+
 export type StorageCleanupFileKind = typeof StorageCleanupFileKind[keyof typeof StorageCleanupFileKind];
 
 

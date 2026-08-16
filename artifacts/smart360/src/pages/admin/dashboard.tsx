@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Trash2, Home, FileText, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Trash2, Home, FileText, CheckCircle2, FileCheck2 } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
 import { QrDialog } from "@/components/admin/qr-dialog";
 import { StorageCleanupDialog } from "@/components/admin/storage-cleanup-dialog";
+import { MediaCheckDialog } from "@/components/admin/media-check-dialog";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
@@ -24,9 +25,17 @@ export default function AdminDashboard() {
 
   const duplicateMutation = useDuplicateTenant({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (result) => {
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
+        // Duplication hygiene report: stale references were dropped on the
+        // server — tell the admin exactly what to re-upload in the copy.
+        if (result.dropped.length > 0) {
+          const lines = result.dropped.map(d =>
+            `• ${d.label} (${d.reason === "missing" ? "datoteka ne obstaja" : d.reason === "no_alpha" ? "logotip ni prosojen" : "napačna vrsta datoteke"})`
+          );
+          alert(`Kopija je ustvarjena kot osnutek.\n\nIzpuščene neveljavne reference (naložite znova):\n${lines.join("\n")}`);
+        }
       }
     }
   });
@@ -169,6 +178,15 @@ export default function AdminDashboard() {
                             </a>
                           </Button>
                           <QrDialog slug={tenant.slug} name={tenant.name} customDomain={tenant.customDomain} />
+                          <MediaCheckDialog
+                            tenantId={tenant.id}
+                            tenantName={tenant.name}
+                            trigger={
+                              <Button variant="ghost" size="sm">
+                                <FileCheck2 className="h-4 w-4 mr-2" /> Preveri datoteke
+                              </Button>
+                            }
+                          />
                           <Button 
                             variant="ghost" 
                             size="sm"

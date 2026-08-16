@@ -454,7 +454,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Tenant"
+                $ref: "#/components/schemas/DuplicateTenantResult"
+  /admin/tenants/{id}/media-check:
+    get:
+      operationId: checkTenantMedia
+      tags: [tenants]
+      description: >
+        Consistency check ("Preveri datoteke"): every media reference of this
+        tenant whose file is missing from storage, has the wrong content type
+        for the field, or lacks transparency where the transparent logo is
+        required. Read-only.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Issues found (empty list = clean)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaCheckResult"
   /admin/tenants/{id}/sections:
     post:
       operationId: createSection
@@ -1276,6 +1297,33 @@ components:
         usedBytes: { type: number }
         quotaBytes: { type: number }
       required: [tenantId, slug, name, usedBytes, quotaBytes]
+    MediaIssue:
+      type: object
+      properties:
+        field: { type: string }
+        label: { type: string }
+        url: { type: string }
+        reason: { type: string, enum: [missing, wrong_type, no_alpha] }
+        adminPath: { type: string }
+      required: [field, label, url, reason, adminPath]
+    MediaCheckResult:
+      type: object
+      properties:
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaIssue"
+      required: [issues]
+    DuplicateTenantResult:
+      type: object
+      properties:
+        tenant:
+          $ref: "#/components/schemas/Tenant"
+        dropped:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaIssue"
+      required: [tenant, dropped]
     StorageCleanupPreview:
       type: object
       properties:

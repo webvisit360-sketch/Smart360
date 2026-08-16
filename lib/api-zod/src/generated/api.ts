@@ -673,6 +673,7 @@ export const DuplicateTenantBody = zod.object({
 })
 
 export const DuplicateTenantResponse = zod.object({
+  "tenant": zod.object({
   "id": zod.string(),
   "slug": zod.string(),
   "customDomain": zod.string().nullish(),
@@ -721,6 +722,32 @@ export const DuplicateTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
+}),
+  "dropped": zod.array(zod.object({
+  "field": zod.string(),
+  "label": zod.string(),
+  "url": zod.string(),
+  "reason": zod.enum(['missing', 'wrong_type', 'no_alpha']),
+  "adminPath": zod.string()
+}))
+})
+
+
+/**
+ * Consistency check ("Preveri datoteke"): every media reference of this tenant whose file is missing from storage, has the wrong content type for the field, or lacks transparency where the transparent logo is required. Read-only.
+ */
+export const CheckTenantMediaParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CheckTenantMediaResponse = zod.object({
+  "issues": zod.array(zod.object({
+  "field": zod.string(),
+  "label": zod.string(),
+  "url": zod.string(),
+  "reason": zod.enum(['missing', 'wrong_type', 'no_alpha']),
+  "adminPath": zod.string()
+}))
 })
 
 

@@ -28,6 +28,7 @@ import type {
   CategoryInput,
   CategoryUpdate,
   CheckSlugParams,
+  DuplicateTenantResult,
   EnrollOptionsBody,
   EnrollResult,
   EnrollVerifyBody,
@@ -38,6 +39,7 @@ import type {
   ItemInput,
   ItemUpdate,
   ListTranslationsParams,
+  MediaCheckResult,
   MediaEntry,
   MediaInput,
   OkStatus,
@@ -1850,9 +1852,9 @@ export const getDuplicateTenantUrl = (id: string,) => {
  * @summary Duplicate a tenant with its full section/category tree
  */
 export const duplicateTenant = async (id: string,
-    tenantDuplicateInput: TenantDuplicateInput, options?: Parameters<typeof customFetch>[1]): Promise<Tenant> => {
+    tenantDuplicateInput: TenantDuplicateInput, options?: Parameters<typeof customFetch>[1]): Promise<DuplicateTenantResult> => {
 
-  return customFetch<Tenant>(getDuplicateTenantUrl(id),
+  return customFetch<DuplicateTenantResult>(getDuplicateTenantUrl(id),
   {
     ...options,
     method: 'POST',
@@ -1909,6 +1911,80 @@ export const useDuplicateTenant = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDuplicateTenantMutationOptions(options));
     }
+
+export const getCheckTenantMediaUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/media-check`
+}
+
+/**
+ * Consistency check ("Preveri datoteke"): every media reference of this tenant whose file is missing from storage, has the wrong content type for the field, or lacks transparency where the transparent logo is required. Read-only.
+ */
+export const checkTenantMedia = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<MediaCheckResult> => {
+
+  return customFetch<MediaCheckResult>(getCheckTenantMediaUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckTenantMediaQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/media-check`
+    ] as const;
+    }
+
+
+export const getCheckTenantMediaQueryOptions = <TData = Awaited<ReturnType<typeof checkTenantMedia>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkTenantMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckTenantMediaQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkTenantMedia>>> = ({ signal }) => checkTenantMedia(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkTenantMedia>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckTenantMediaQueryResult = NonNullable<Awaited<ReturnType<typeof checkTenantMedia>>>
+export type CheckTenantMediaQueryError = ErrorType<unknown>
+
+
+
+export function useCheckTenantMedia<TData = Awaited<ReturnType<typeof checkTenantMedia>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkTenantMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckTenantMediaQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getCreateSectionUrl = (id: string,) => {
 

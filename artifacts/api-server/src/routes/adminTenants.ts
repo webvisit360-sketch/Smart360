@@ -24,6 +24,7 @@ import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { buildTenantContent } from "../lib/contentTree";
 import { checkSlugAvailability } from "../lib/slug";
+import { checkTenantMedia, dropBrokenReferences } from "../lib/mediaCheck";
 import { invalidateTenantCache } from "./publicTenants";
 import { tenantAliasesTable } from "@workspace/db";
 import QRCode from "qrcode";
@@ -387,14 +388,37 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
     copyContent: copyContent ?? true,
   });
   invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
+  // Duplication hygiene: the copy must not inherit references to files that
+  // no longer exist or don't fit the field (e.g. opaque JPEG as transparent
+  // logo). Re-check everything against the CURRENT bucket and drop misses.
+  const dropped = await dropBrokenReferences(created.id);
+  const [fresh] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, created.id));
   await logChange({
     tenantId: created.id,
     tenantName: name,
     action: "duplicate",
     entity: "tenant",
-    detail: `kopija`,
+    detail: dropped.length ? `kopija (izpuščenih ${dropped.length} neveljavnih referenc)` : `kopija`,
   });
-  res.status(201).json(DuplicateTenantResponse.parse(serialize(created)));
+  res.status(201).json(
+    DuplicateTenantResponse.parse({
+      tenant: serialize(fresh ?? created),
+      dropped: dropped.map(({ field, label, url, reason, adminPath }) => ({ field, label, url, reason, adminPath })),
+    }),
+  );
+});
+
+router.get("/admin/tenants/:id/media-check", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [exists] = await db.select({ id: tenantsTable.id }).from(tenantsTable).where(eq(tenantsTable.id, id));
+  if (!exists) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const issues = await checkTenantMedia(id);
+  res.json({
+    issues: issues.map(({ field, label, url, reason, adminPath }) => ({ field, label, url, reason, adminPath })),
+  });
 });
 
 async function copyTenant(
