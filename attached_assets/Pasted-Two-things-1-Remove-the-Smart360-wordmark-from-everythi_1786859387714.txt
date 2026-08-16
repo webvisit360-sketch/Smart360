@@ -1,0 +1,66 @@
+Two things. (1) Remove the Smart360 wordmark from everything the guest sees around the QR
+code. (2) Verify the /g/ redirect on the PUBLISHED site.
+
+=====================================================================
+1. THE A6 LABEL — TENANT LOGO, NO SMART360
+=====================================================================
+
+The label hangs in a guest room. What means something there is the accommodation, not the
+system the page runs on.
+
+  <img class="pc__logo" src="{tenant.logoTransparent}" alt="">   <!-- was the wordmark -->
+  <div class="pc__qr">…QR…</div>
+  <div class="pc__n">{tenant.name}</div>
+  <div class="pc__s">Skenirajte za vse o nastanitvi in okolici<br>
+                     <i>Scan for everything about your stay</i></div>
+  <div class="pc__u">{url without the scheme}</div>
+
+  .pc__logo{width:auto;max-width:46mm;max-height:34mm;height:auto;display:block;
+            margin:0 auto 5mm}
+
+  max-width AND max-height, because tenant logos arrive in every proportion: a wide
+  wordmark and a tall crest must both fit the same block without pushing the QR code down
+  the page. Never set a fixed height.
+
+  Use the TRANSPARENT file, not the square white avatar — the label prints on white and
+  the square would show as a grey-edged box on some printers.
+
+  Keep the address line. It is not branding; it is what a guest types when the camera will
+  not focus.
+
+  Tenant with no logo: print the card headed by the name. Do NOT fall back to the Smart360
+  wordmark here.
+
+Same rule in the share sheet: no Smart360 wordmark anywhere in it. The QR plate, the
+address pill and the rows stay as they are.
+
+Smart360 branding now lives in exactly two places: the admin UI and the landing page at
+smart360.info. Nowhere in the guest app, the label, or the share sheet.
+
+VERIFY
+  a) Print to PDF: tenant logo on top, no wordmark, QR still fully on the page.
+  b) Try a deliberately wide logo (1200x200) and a tall one (400x1200): both fit the same
+     block and nothing below moves.
+  c) Scan the printed PDF from paper — it resolves to smart360.info/<slug>.
+  d) A tenant with no logo still prints a usable card.
+
+=====================================================================
+2. THE /g/ REDIRECT — TEST IT PUBLISHED, NOT IN DEV
+=====================================================================
+
+The redirect is done in the app, not as a real 301, so it depends on two things that only
+show up on the published static host.
+
+  a) SPA FALLBACK
+     The host must serve index.html for /g/<slug>/... . If it returns its own 404, our
+     JavaScript never loads and the redirect never runs. Fetch
+     https://smart360.info/g/meli-pu and confirm the body is the app shell, not a host 404.
+
+  b) NO HISTORY LOOP
+     The redirect must replace the history entry, not push one:
+       history.replaceState(null, "", target)      // not location.href = target
+     Test by hand: open /g/meli-pu, land on /meli-pu, press Back — you must leave the site,
+     not bounce back to /g/meli-pu. Apply the same to the alias canonicalisation.
+
+Report back: the HTTP status and first bytes of the /g/meli-pu response, and whether Back
+leaves the site.
