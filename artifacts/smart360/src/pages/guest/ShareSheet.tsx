@@ -44,7 +44,9 @@ export function ShareSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant: a
     if (!el) {
       el = document.createElement("div");
       el.id = "printcard";
-      document.body.appendChild(el);
+      // Namizni zaslon: vse plasti gostujoče aplikacije živijo v #frame —
+      // element, dodan na body, bi ušel iz stolpca (namizni-zaslon.md).
+      (document.getElementById("frame") ?? document.body).appendChild(el);
     }
     // The label hangs in a guest room — it carries the ACCOMMODATION's logo
     // (transparent file: prints clean on white paper), never the Smart360

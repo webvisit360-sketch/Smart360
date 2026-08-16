@@ -82,7 +82,12 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     <>
       <IconSprite />
       {tenant ? (
-        <>
+        /* Namizni zaslon: en sam ovoj okoli VSEH plasti gostujoče aplikacije.
+           Na telefonu .frame ne nosi nobenih slogov; na širokem zaslonu ga
+           temi postavita v 430 px stolpec (transform ustvari containing block
+           za vse fixed prekrivke, da ostanejo znotraj stolpca). Vse, kar bi se
+           sicer dodajalo na document.body, mora v #frame. */
+        <div className="frame" id="frame">
           {isPreview && (
             <>
               <style>{`
@@ -93,7 +98,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
             </>
           )}
           {children}
-        </>
+        </div>
       ) : null}
     </>
   );
