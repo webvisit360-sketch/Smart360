@@ -158,11 +158,16 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
     return (
       <div style={{marginTop: 8}}>
         {items.map((item: any) => (
-          <div className="rule fade" key={item.id}>
-            <svg className="ic" viewBox="0 0 24 24"><use href="#i-rules" /></svg>
-            <div>
-              {item.title && <b>{item.title} </b>}
-              <span dangerouslySetInnerHTML={{__html: sanitizeHtml(item.body || "")}}></span>
+          <div className="fade" key={item.id}>
+            {item.media && item.media.length > 0 && (
+              <GalleryStrip media={item.media} style={{marginBottom: 12}} />
+            )}
+            <div className="rule">
+              <svg className="ic" viewBox="0 0 24 24"><use href="#i-rules" /></svg>
+              <div>
+                {item.title && <b>{item.title} </b>}
+                <span dangerouslySetInnerHTML={{__html: sanitizeHtml(item.body || "")}}></span>
+              </div>
             </div>
           </div>
         ))}
@@ -241,13 +246,13 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   // fallback to text layout
   return items.map((item: any) => (
     <div key={item.id} className="fade">
+      {item.media && item.media.length > 0 && (
+        <GalleryStrip media={item.media} style={{marginBottom: 16}} />
+      )}
       <div className="prose">
         {item.title && <h2 className="h2">{item.title}</h2>}
         {parseTextBody(item.body)}
       </div>
-      {item.media && item.media.length > 0 && (
-        <GalleryStrip media={item.media} style={{marginTop: 16}} />
-      )}
     </div>
   ));
 }

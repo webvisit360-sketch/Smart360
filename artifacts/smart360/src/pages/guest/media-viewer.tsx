@@ -230,6 +230,18 @@ const ZOOM_HINTS: Record<string, string> = {
   de: "Zum Vergrößern doppelt tippen",
   it: "Tocca due volte per ingrandire",
 };
+/** Dostopna oznaka za odpiranje galerije (video brez alt) — sledi <html lang>. */
+const OPEN_LABELS: Record<string, string> = {
+  sl: "Odpri galerijo",
+  en: "Open gallery",
+  de: "Galerie öffnen",
+  it: "Apri la galleria",
+};
+function zoomOpenLabel(): string {
+  const l = (document.documentElement.lang || "sl").slice(0, 2);
+  return OPEN_LABELS[l] ?? OPEN_LABELS.sl!;
+}
+
 function zoomHint(): string {
   const l = (document.documentElement.lang || "sl").slice(0, 2);
   return ZOOM_HINTS[l] ?? ZOOM_HINTS.sl!;
@@ -249,7 +261,15 @@ export function GalleryStrip({
       <div className="galtrack">
         {media.map((m, i) =>
           m.kind === "video" ? (
-            <span key={m.id} className="gvid" onClick={() => setIdx(i)}>
+            <span
+              key={m.id}
+              className="gvid"
+              role="button"
+              tabIndex={0}
+              aria-label={m.alt || zoomOpenLabel()}
+              onClick={() => setIdx(i)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIdx(i); } }}
+            >
               <video src={m.url} poster={imgSrc(m.posterUrl, 1400)} muted playsInline preload="metadata" />
               <i className="gvid__p" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5l12 7-12 7z" /></svg></i>
             </span>
@@ -260,7 +280,10 @@ export function GalleryStrip({
               decoding="async"
               src={imgSrc(m.url, 1400)}
               alt={m.alt || ""}
+              role="button"
+              tabIndex={0}
               onClick={() => setIdx(i)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIdx(i); } }}
             />
           ),
         )}
