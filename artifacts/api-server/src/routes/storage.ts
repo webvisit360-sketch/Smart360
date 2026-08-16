@@ -88,6 +88,16 @@ router.get("/storage/img/:slug/:file", async (req, res): Promise<void> => {
   }
   const wParam = String(req.query["w"] ?? "");
   const w = wParam === "200" ? 200 : wParam === "620" ? 620 : 1400;
+  // Derivatives are immutable once written and object names are unique
+  // (rand4 suffix), so the URL itself is a stable identity — answer 304
+  // BEFORE the object-storage round-trip.
+  const etag = `"img-${slug}-${w}-${file}"`;
+  if (req.headers["if-none-match"] === etag) {
+    res.setHeader("ETag", etag);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.status(304).end();
+    return;
+  }
   try {
     // Fall back across widths rather than serving a broken image — older
     // photos have no 200 px derivative, logos are stored only under 620.
@@ -106,7 +116,8 @@ router.get("/storage/img/:slug/:file", async (req, res): Promise<void> => {
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
     // Guest photos are public by design; share-cache them regardless of ACL metadata.
-    res.setHeader("Cache-Control", "public, max-age=604800, immutable");
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("ETag", etag);
     if (response.body) {
       const reader = response.body.getReader();
       for (;;) {
@@ -272,7 +283,8 @@ router.get("/storage/video/:slug/:file", async (req, res): Promise<void> => {
     const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ""));
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Accept-Ranges", "bytes");
-    res.setHeader("Cache-Control", "public, max-age=604800, immutable");
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("ETag", `"vid-${slug}-${file}"`);
     let start = 0;
     let end = size - 1;
     if (range && size > 0 && (range[1] || range[2])) {

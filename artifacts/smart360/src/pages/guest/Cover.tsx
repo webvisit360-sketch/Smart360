@@ -78,7 +78,7 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
         {tenant.tourUrl && !edit ? (
           <iframe src={tenant.tourUrl} className="cover__bg" frameBorder="0" allowFullScreen></iframe>
         ) : tenant.heroUrl ? (
-          <img src={imgSrc(tenant.heroUrl, 1400)} alt="" className="cover__bg" loading="eager" decoding="sync" />
+          <img src={imgSrc(tenant.heroUrl, 1400)} alt="" className="cover__bg" loading="eager" decoding="sync" fetchPriority="high" />
         ) : (
           <div className="cover__bg" style={{ background: "#1e293b" }}></div>
         )}
@@ -103,7 +103,7 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
     <>
       <div className="hero" style={getLogoVars(tenant)}>
         {tenant.heroUrl ? (
-          <img src={imgSrc(tenant.heroUrl, 1400)} alt="" loading="eager" decoding="sync" />
+          <img src={imgSrc(tenant.heroUrl, 1400)} alt="" loading="eager" decoding="sync" fetchPriority="high" />
         ) : (
           <div style={{ width: "100%", height: "100%", background: "var(--wash)" }}></div>
         )}
