@@ -644,8 +644,10 @@ body{background:#000}
 .cover{position:relative;height:100dvh;overflow:hidden;background:#111}
 .cover>img,.cover>iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
 .cover__veil{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(10,16,20,var(--veil,.26))}
+/* z-index:8 — above .brandlogo (6): while the search bar or a panel is open
+   it is DRAWN OVER the tenant logo; the logo itself is never hidden. */
 .cover__top{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:18px;right:18px;
-            display:flex;align-items:center;gap:10px}
+            display:flex;align-items:center;gap:10px;z-index:8}
 .cover__logo{height:21px;width:115.3px;color:#3B78DC;background:none;padding:0;
              border-radius:0;box-shadow:none;filter:none}
 .cover__sp{flex:1}
@@ -655,16 +657,16 @@ body{background:#000}
   align-items:center;gap:10px;padding:0 6px 0 14px;border:1px solid var(--line);min-width:0}
 .cover__top.is-find .findbar{display:flex}
 .cover__top.is-find .cover__btn,.cover__top.is-find .cover__sp{display:none}
-/* med iskanjem logotip stranke izgine, da ne pade pod vrstico */
-.cover.is-find .brandlogo{opacity:0;pointer-events:none;transition:opacity .12s ease}
 .findbar__ic{display:grid;place-items:center;color:var(--ink-2);flex:none}
 .findbar__ic .ic{width:19px;height:19px;stroke-width:2}
 .findbar input{flex:1;min-width:0;border:0;outline:none;background:none;font:inherit;
   font-size:15.5px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
 .findbar input::placeholder{color:var(--ink-3);font-weight:500}
-.findbar__x{width:32px;height:32px;border-radius:50%;background:var(--wash);color:var(--ink);
-  display:grid;place-items:center;flex:none}
-.findbar__x .ic{width:16px;height:16px;stroke-width:2.2}
+.findbar__x{width:34px;height:34px;border-radius:50%;background:var(--wash);color:var(--ink);
+  display:grid;place-items:center;flex:none;border:1px solid var(--line)}
+/* fill:none je nujen — sicer se poteza zalije v packo */
+.findbar__x .ic{width:18px;height:18px;stroke-width:2.4;fill:none;stroke:currentColor}
+.findbar__x:active{background:var(--sea);border-color:var(--sea);color:#fff}
 
 .findres{display:none;position:absolute;left:0;right:0;
   top:calc(100% + 10px);background:#fff;border-radius:20px;border:1px solid var(--line);

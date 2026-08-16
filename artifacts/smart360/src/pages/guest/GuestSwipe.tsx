@@ -193,40 +193,11 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   }
 
   const openFind = () => { setLangOpen(false); setFindQ(""); setFindOpen(true); setTimeout(() => findInputRef.current?.focus(), 60); };
-  const closeFind = () => { setFindOpen(false); setFindQ(""); setLogoHit(false); };
+  const closeFind = () => { setFindOpen(false); setFindQ(""); };
 
-  // Logotip se skrije SAMO, če bi ga iskalna vrstica dejansko prekrila.
-  // Meritev v requestAnimationFrame — pred prikazom je pravokotnik vrstice prazen
-  // in bi test vedno rekel "ni prekrivanja".
-  const [logoHit, setLogoHit] = useState(false);
-  useEffect(() => {
-    if (!findOpen) return;
-    let raf = 0;
-    const measure = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const bar = document.getElementById("findbar");
-        const logo = document.getElementById("brandlogo");
-        if (!bar || !logo) { setLogoHit(false); return; }
-        const a = bar.getBoundingClientRect(), b = logo.getBoundingClientRect();
-        setLogoHit(a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom);
-      });
-    };
-    measure();
-    // Ponovna meritev, ko se logotip šele naloži (prazen rect ob hladnem nalaganju)
-    // ali ko se spremeni geometrija (obrat zaslona, sprememba velikosti).
-    const logo = document.getElementById("brandlogo");
-    logo?.addEventListener("load", measure);
-    window.addEventListener("resize", measure);
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-    if (ro && logo) ro.observe(logo);
-    return () => {
-      cancelAnimationFrame(raf);
-      logo?.removeEventListener("load", measure);
-      window.removeEventListener("resize", measure);
-      ro?.disconnect();
-    };
-  }, [findOpen]);
+  // Logotip stranke se NIKOLI ne skriva, ne bledi in ne premika (spec
+  // iskanje-in-jezik.md). Če se iskalna vrstica z njim prekriva, je vrstica
+  // narisana NAD njim (.cover__top z-index:8 > .brandlogo z-index:6).
 
   // Dotik izven izbirnika jezika ga zapre.
   useEffect(() => {
@@ -258,7 +229,6 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           <Cover
             tenant={tenant}
             lang={lang}
-            coverClass={findOpen && logoHit ? "is-find" : undefined}
             coverTopClass={findOpen ? "is-find" : undefined}
             coverTop={
               <>
@@ -291,8 +261,11 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                     placeholder={t("UI.search.title")}
                     autoComplete="off"
                   />
+                  {/* Križec kot ČRTNI SVG — sprite #i-cross je zavrten pravokotnik
+                      in se zalije v packo; tu je poteza eksplicitna. */}
                   <button type="button" className="findbar__x" onClick={closeFind} aria-label="Zapri">
-                    <svg className="ic" viewBox="0 0 24 24"><use href="#i-cross" /></svg>
+                    <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2.4" strokeLinecap="round"><path d="M7 7l10 10M17 7L7 17" /></svg>
                   </button>
                 </form>
                 <div className={findOpen && q.length >= 2 ? "findres on" : "findres"} id="findres">
