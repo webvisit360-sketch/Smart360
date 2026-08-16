@@ -67,6 +67,13 @@ export const tenantsTable = pgTable("tenants", {
   // Cover/nav fields: NULL means "use the theme default" (html[data-theme=...]
   // block in CSS). Never write defaults into the DB — empty is the signal that
   // the owner has not overridden the value, so theme switches inherit cleanly.
+  // First-screen tenant logo placement (logotip-stranke-naslovnica.md).
+  // Percentages of the cover/hero image box, so one saved position holds on
+  // every phone width. NULL = theme default (CSS var() fallback).
+  logoX: doublePrecision("logo_x"),
+  logoY: doublePrecision("logo_y"),
+  logoW: doublePrecision("logo_w"),
+  logoOpacity: doublePrecision("logo_opacity"),
   navColorCover: text("nav_color_cover"),
   navColor: text("nav_color"),
   navColorOn: text("nav_color_on"),

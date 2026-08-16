@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,11 @@ export const THEME_DEFAULTS = {
     textScale: 140,
     coverAlign: "left" as const,
     coverShowRating: true,
+    // First-screen tenant logo (logotip-stranke-naslovnica.md §2)
+    logoX: 50,
+    logoY: 6,
+    logoW: 26,
+    logoOpacity: 100,
   },
   swipe: {
     coverTitleSize: 56,
@@ -37,6 +43,12 @@ export const THEME_DEFAULTS = {
     textScale: 140,
     coverAlign: "left" as const,
     coverShowRating: true,
+    // Exactly where the Smart360 wordmark used to sit — top left, clear of
+    // the round buttons on the right.
+    logoX: 15.5,
+    logoY: 2.5,
+    logoW: 22,
+    logoOpacity: 100,
   },
 } as const;
 
@@ -64,6 +76,11 @@ export interface CoverFields {
   textColor: string | null;
   coverAlign: string | null;
   coverShowRating: boolean | null;
+  logoUrl: string;
+  logoX: number | null;
+  logoY: number | null;
+  logoW: number | null;
+  logoOpacity: number | null;
 }
 
 type Patch = Partial<CoverFields>;
@@ -157,6 +174,51 @@ export function CoverEditor({
   const effTextScale = form.textScale ?? themeDefaults.textScale;
   const effAlign = form.coverAlign ?? themeDefaults.coverAlign;
   const effShowRating = form.coverShowRating ?? themeDefaults.coverShowRating;
+  const effLogoX = form.logoX ?? themeDefaults.logoX;
+  const effLogoY = form.logoY ?? themeDefaults.logoY;
+  const effLogoW = form.logoW ?? themeDefaults.logoW;
+  const effLogoOp = form.logoOpacity ?? themeDefaults.logoOpacity;
+
+  // Drag state for the preview logo: style is written directly during the
+  // move (smooth), the form fields (and sliders) update on pointerup.
+  const logoRef = useRef<HTMLImageElement>(null);
+  const dragRef = useRef<{ box: DOMRect; offX: number; offY: number; x: number; y: number } | null>(null);
+  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+  const onLogoPointerDown = (e: React.PointerEvent<HTMLImageElement>) => {
+    const el = logoRef.current;
+    if (!el || !el.parentElement) return;
+    const box = el.parentElement.getBoundingClientRect();
+    // Remember where inside the logo the user grabbed it (offset from the
+    // reference point: X = centre, Y = top), so the logo does not teleport
+    // its centre under the pointer on the first move.
+    dragRef.current = {
+      box,
+      offX: e.clientX - (box.left + (effLogoX / 100) * box.width),
+      offY: e.clientY - (box.top + (effLogoY / 100) * box.height),
+      x: effLogoX,
+      y: effLogoY,
+    };
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  };
+  const onLogoPointerMove = (e: React.PointerEvent<HTMLImageElement>) => {
+    const el = logoRef.current;
+    const d = dragRef.current;
+    if (!el || !d || !el.hasPointerCapture(e.pointerId)) return;
+    d.x = clamp(((e.clientX - d.offX - d.box.left) / d.box.width) * 100, 0, 100);
+    d.y = clamp(((e.clientY - d.offY - d.box.top) / d.box.height) * 100, 0, 100);
+    el.style.left = `${d.x}%`;
+    el.style.top = `${d.y}%`;
+  };
+  const onLogoPointerUp = (e: React.PointerEvent<HTMLImageElement>) => {
+    const el = logoRef.current;
+    const d = dragRef.current;
+    dragRef.current = null;
+    if (!el || !d) return;
+    if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    onChange({ logoX: Math.round(d.x * 10) / 10, logoY: Math.round(d.y * 10) / 10 });
+  };
 
   // Build the CSS variables exactly the way the guest page does, from the
   // *effective* values (so the preview matches theme defaults when NULL).
@@ -359,6 +421,76 @@ export function CoverEditor({
             </div>
 
             <div className="space-y-4">
+              <h4 className="font-semibold text-sm border-b pb-2">Logotip stranke</h4>
+              {form.logoUrl ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Logotip lahko v predogledu tudi primete in povlečete na svoje mesto.
+                  </p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                    <SliderRow
+                      label="Velikost"
+                      min={8}
+                      max={60}
+                      step={0.5}
+                      unit="%"
+                      value={effLogoW}
+                      isDefault={form.logoW === null}
+                      onChange={(v) => onChange({ logoW: v })}
+                    />
+                    <SliderRow
+                      label="Prosojnost"
+                      min={20}
+                      max={100}
+                      step={1}
+                      unit="%"
+                      value={effLogoOp}
+                      isDefault={form.logoOpacity === null}
+                      onChange={(v) => onChange({ logoOpacity: v })}
+                    />
+                    <SliderRow
+                      label="Vodoravno"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      unit="%"
+                      value={effLogoX}
+                      isDefault={form.logoX === null}
+                      onChange={(v) => onChange({ logoX: v })}
+                    />
+                    <SliderRow
+                      label="Navpično"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      unit="%"
+                      value={effLogoY}
+                      isDefault={form.logoY === null}
+                      onChange={(v) => onChange({ logoY: v })}
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button variant="outline" size="sm" className="h-8" onClick={() => onChange({ logoX: 50 })}>
+                      Na sredino
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => onChange({ logoX: null, logoY: null, logoW: null, logoOpacity: null })}
+                    >
+                      Ponastavi logotip
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Najprej naložite logotip v razdelku »Slike« — nato ga tu postavite na naslovnico.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-4">
               <h4 className="font-semibold text-sm border-b pb-2">Postavitev</h4>
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
@@ -433,6 +565,40 @@ export function CoverEditor({
                 >
                   {/* Uniform veil across the whole photo — no gradient. */}
                   <div className="absolute inset-0 bg-black pointer-events-none" style={{ opacity: effVeil / 100 }} />
+
+                  {/* Tenant logo — draggable (dashed outline signals it). The
+                      admin does not load the guest theme CSS, so the .brandlogo
+                      rules are mirrored inline here. */}
+                  {form.logoUrl && (
+                    <img
+                      ref={logoRef}
+                      src={imgSrc(form.logoUrl, 620)}
+                      alt=""
+                      draggable={false}
+                      onPointerDown={onLogoPointerDown}
+                      onPointerMove={onLogoPointerMove}
+                      onPointerUp={onLogoPointerUp}
+                      onPointerCancel={onLogoPointerUp}
+                      style={{
+                        position: "absolute",
+                        left: `${effLogoX}%`,
+                        top: `${effLogoY}%`,
+                        width: `${effLogoW}%`,
+                        maxWidth: "70%",
+                        height: "auto",
+                        transform: "translate(-50%,0)",
+                        opacity: effLogoOp / 100,
+                        zIndex: 6,
+                        display: "block",
+                        filter: "drop-shadow(0 2px 10px rgba(0,0,0,.34))",
+                        cursor: "grab",
+                        touchAction: "none",
+                        outline: "2px dashed rgba(59,120,220,.9)",
+                        outlineOffset: 6,
+                        borderRadius: 6,
+                      }}
+                    />
+                  )}
 
                   <div
                     className="absolute inset-x-0 bottom-0 flex flex-col pointer-events-none"

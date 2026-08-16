@@ -270,6 +270,11 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
   if (!inRange(data["coverVeil"], 0, 60)) return "coverVeil must be 0-60";
   if (!inRange(data["tileVeil"], 0, 60)) return "tileVeil must be 0-60";
   if (!inRange(data["textScale"], 80, 200)) return "textScale must be 80-200";
+  // First-screen logo placement (logotip-stranke-naslovnica.md §3).
+  if (!inRange(data["logoW"], 8, 60)) return "logoW must be 8-60";
+  if (!inRange(data["logoX"], 0, 100)) return "logoX must be 0-100";
+  if (!inRange(data["logoY"], 0, 100)) return "logoY must be 0-100";
+  if (!inRange(data["logoOpacity"], 20, 100)) return "logoOpacity must be 20-100";
   if (data["textFont"] !== undefined && data["textFont"] !== null &&
       !["figtree", "system", "georgia", "verdana", "menlo"].includes(String(data["textFont"])))
     return "textFont must be one of figtree, system, georgia, verdana, menlo";

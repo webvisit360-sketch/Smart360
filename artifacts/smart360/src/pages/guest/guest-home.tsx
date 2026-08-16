@@ -7,7 +7,7 @@ import { SearchOverlay } from "./SearchOverlay";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
-import { getCoverVars, getTextVars } from "./cover-vars";
+import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
 import { ShareSheet } from "./ShareSheet";
 import { imgSrc } from "./img";
 import { hsub } from "./hsub";
@@ -106,7 +106,6 @@ export default function GuestHome() {
   return (
     <div className="app" style={{ ...coverVars, ...getTextVars(tenant) }}>
       <header className="appbar" id="appbar">
-        <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
         
         <button className="iconbtn" style={{marginLeft: 'auto'}} onClick={() => setShareOpen(true)} aria-label="Deli">
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg>
@@ -131,8 +130,13 @@ export default function GuestHome() {
         </div>
       </header>
 
-      <div className="hero">
+      <div className="hero" style={getLogoVars(tenant)}>
         {tenant.heroUrl ? <img src={imgSrc(tenant.heroUrl, 1400)} alt="" loading="eager" decoding="sync" /> : <div style={{width: '100%', height: '100%', background: 'var(--wash)'}}></div>}
+        {/* Tenant logo over the hero photo — Smart360 branding lives only in
+            the admin and on smart360.info. No logo → nothing rendered. */}
+        {tenant.logoUrl && (
+          <img className="brandlogo" id="brandlogo" src={imgSrc(tenant.logoUrl, 620)} alt={tenant.name} />
+        )}
         <button className="hero__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
         {tenant.tourUrl && (
           <a href={tenant.tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">

@@ -97,6 +97,11 @@ export default function AdminTenantEdit() {
     coverAlign: null as string | null,
     coverShowRating: null as boolean | null,
 
+    logoX: null as number | null,
+    logoY: null as number | null,
+    logoW: null as number | null,
+    logoOpacity: null as number | null,
+
     navColorCover: null as string | null,
     navColor: null as string | null,
     navColorOn: null as string | null,
@@ -174,6 +179,11 @@ export default function AdminTenantEdit() {
         textColor: tenant.textColor ?? null,
         coverAlign: tenant.coverAlign ?? null,
         coverShowRating: tenant.coverShowRating ?? null,
+
+        logoX: tenant.logoX ?? null,
+        logoY: tenant.logoY ?? null,
+        logoW: tenant.logoW ?? null,
+        logoOpacity: tenant.logoOpacity ?? null,
 
         // NULL = "use theme default" — never turn an inherited default into
         // a stored value just by opening and saving this page.
@@ -254,6 +264,10 @@ export default function AdminTenantEdit() {
       textColor: null,
       coverAlign: null,
       coverShowRating: null,
+      logoX: null,
+      logoY: null,
+      logoW: null,
+      logoOpacity: null,
     }));
   };
 
@@ -490,6 +504,11 @@ export default function AdminTenantEdit() {
               textColor: formData.textColor,
               coverAlign: formData.coverAlign,
               coverShowRating: formData.coverShowRating,
+              logoUrl: formData.logoUrl,
+              logoX: formData.logoX,
+              logoY: formData.logoY,
+              logoW: formData.logoW,
+              logoOpacity: formData.logoOpacity,
             }}
             onChange={(patch) => setFormData(prev => ({ ...prev, ...patch }))}
             onReset={handleResetCover}

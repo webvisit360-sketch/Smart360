@@ -616,3 +616,15 @@ html[data-theme="mediterran"]{
   --mt-size:13.5px; --mt-op:1;
   --veil:0; --cover-align:left; --cover-just:flex-start;
 }
+
+/* ===== Logotip stranke na naslovnici (logotip-stranke-naslovnica.md) ===== */
+.brandlogo{position:absolute;left:var(--lg-x,50%);top:var(--lg-y,6%);
+  width:var(--lg-w,26%);max-width:70%;height:auto;
+  transform:translate(-50%,0);opacity:var(--lg-op,1);
+  z-index:6;display:block;pointer-events:none;
+  filter:drop-shadow(0 2px 10px rgba(0,0,0,.34))}
+/* .hero img forces width/height 100% — the logo must outrank it */
+.hero>img.brandlogo,.hero img.brandlogo{
+  width:var(--lg-w,26%);height:auto;object-fit:contain;object-position:50% 50%}
+.brandlogo.is-drag{pointer-events:auto;cursor:grab;
+  outline:2px dashed rgba(59,120,220,.9);outline-offset:6px;border-radius:6px}

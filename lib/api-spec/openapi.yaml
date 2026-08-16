@@ -1110,6 +1110,10 @@ components:
         textColor: { type: ["string", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
+        logoX: { type: ["number", "null"] }
+        logoY: { type: ["number", "null"] }
+        logoW: { type: ["number", "null"] }
+        logoOpacity: { type: ["number", "null"] }
         navColorCover: { type: ["string", "null"] }
         navColor: { type: ["string", "null"] }
         navColorOn: { type: ["string", "null"] }
@@ -1175,6 +1179,10 @@ components:
         textColor: { type: ["string", "null"] }
         coverAlign: { type: ["string", "null"] }
         coverShowRating: { type: ["boolean", "null"] }
+        logoX: { type: ["number", "null"] }
+        logoY: { type: ["number", "null"] }
+        logoW: { type: ["number", "null"] }
+        logoOpacity: { type: ["number", "null"] }
         navColorCover: { type: ["string", "null"] }
         navColor: { type: ["string", "null"] }
         navColorOn: { type: ["string", "null"] }

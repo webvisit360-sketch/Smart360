@@ -759,3 +759,18 @@ html[data-theme="swipe"]{
   --mt-size:19.5px; --mt-op:.6;
   --veil:.26; --cover-align:left; --cover-just:flex-start;
 }
+
+/* ===== Logotip stranke na naslovnici (logotip-stranke-naslovnica.md) =====
+   Percentages of the cover box so one saved position holds on every phone.
+   translate(-50%,0): X is the logo's CENTRE — what dragging expects.
+   pointer-events:none: the logo never swallows a guest's swipe. */
+.brandlogo{position:absolute;left:var(--lg-x,15.5%);top:var(--lg-y,2.5%);
+  width:var(--lg-w,22%);max-width:70%;height:auto;
+  transform:translate(-50%,0);opacity:var(--lg-op,1);
+  z-index:6;display:block;pointer-events:none;
+  filter:drop-shadow(0 2px 10px rgba(0,0,0,.34))}
+/* .cover>img forces width/height 100% — the logo must outrank it */
+.cover>img.brandlogo,.cover img.brandlogo{
+  width:var(--lg-w,22%);height:auto;object-fit:contain;object-position:50% 50%}
+.brandlogo.is-drag{pointer-events:auto;cursor:grab;
+  outline:2px dashed rgba(59,120,220,.9);outline-offset:6px;border-radius:6px}

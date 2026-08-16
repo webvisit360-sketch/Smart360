@@ -24,6 +24,18 @@ export function getCoverVars(tenant: any): CSSProperties {
   return vars as CSSProperties;
 }
 
+/** First-screen tenant logo vars (--lg-*). Set only when the owner overrode
+ *  them — the theme CSS carries per-theme defaults in the var() fallbacks
+ *  (swipe: 15.5/2.5/22, mediterranean: 50/6/26). */
+export function getLogoVars(tenant: any): CSSProperties {
+  const vars: Record<string, string | number> = {};
+  if (tenant.logoX != null) vars['--lg-x'] = `${tenant.logoX}%`;
+  if (tenant.logoY != null) vars['--lg-y'] = `${tenant.logoY}%`;
+  if (tenant.logoW != null) vars['--lg-w'] = `${tenant.logoW}%`;
+  if (tenant.logoOpacity != null) vars['--lg-op'] = tenant.logoOpacity / 100;
+  return vars as CSSProperties;
+}
+
 // Curated small-text typefaces (ui paket 13). Keys are stored in Tenant.textFont;
 // only the chosen stack is applied — fonts are never all loaded.
 export const FONT_STACKS: Record<string, string> = {

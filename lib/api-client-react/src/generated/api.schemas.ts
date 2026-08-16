@@ -205,6 +205,14 @@ export interface Tenant {
   /** @nullable */
   coverShowRating?: boolean | null;
   /** @nullable */
+  logoX?: number | null;
+  /** @nullable */
+  logoY?: number | null;
+  /** @nullable */
+  logoW?: number | null;
+  /** @nullable */
+  logoOpacity?: number | null;
+  /** @nullable */
   navColorCover?: string | null;
   /** @nullable */
   navColor?: string | null;
@@ -298,6 +306,14 @@ export interface TenantUpdate {
   coverAlign?: string | null;
   /** @nullable */
   coverShowRating?: boolean | null;
+  /** @nullable */
+  logoX?: number | null;
+  /** @nullable */
+  logoY?: number | null;
+  /** @nullable */
+  logoW?: number | null;
+  /** @nullable */
+  logoOpacity?: number | null;
   /** @nullable */
   navColorCover?: string | null;
   /** @nullable */

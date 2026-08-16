@@ -4,7 +4,7 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
-import { getCoverVars, getTextVars } from "./cover-vars";
+import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
 import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc } from "./img";
@@ -169,15 +169,19 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     <div className="app" style={{ ...navVars, ...getTextVars(tenant) }}>
       <div className="pager" id="pager" ref={pagerRef} style={{ visibility: "hidden" }}>
         <section className="screen">
-          <div className="cover" style={coverVars}>
+          <div className="cover" style={{ ...coverVars, ...getLogoVars(tenant) }}>
             {tenant.tourUrl ? (
               <iframe src={tenant.tourUrl} className="cover__bg" frameBorder="0" allowFullScreen></iframe>
             ) : (
               <img src={imgSrc(tenant.heroUrl, 1400)} alt="" className="cover__bg" loading="eager" decoding="sync" />
             )}
             <div className="cover__veil"></div>
+            {/* Tenant logo on the cover — Smart360 branding lives only in the
+                admin and on smart360.info. No logo → nothing rendered. */}
+            {tenant.logoUrl && (
+              <img className="brandlogo" id="brandlogo" src={imgSrc(tenant.logoUrl, 620)} alt={tenant.name} />
+            )}
             <div className="cover__top">
-              <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 21, width: "auto" }} />
               <span className="cover__sp"></span>
               <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
               <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label="Deli"><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
