@@ -53,6 +53,7 @@ import type {
   SectionInput,
   SectionUpdate,
   SlugCheckResponse,
+  StorageUsage,
   Tenant,
   TenantContent,
   TenantDuplicateInput,
@@ -2827,6 +2828,80 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getAddItemMediaMutationOptions(options));
     }
+
+export const getGetStorageUsageUrl = () => {
+
+
+
+
+  return `/api/admin/storage/usage`
+}
+
+/**
+ * Object-storage usage per tenant (sum of stored media object sizes), largest first, plus the total across all tenants. Values refresh at most every few minutes (server-side cache).
+ */
+export const getStorageUsage = async ( options?: Parameters<typeof customFetch>[1]): Promise<StorageUsage> => {
+
+  return customFetch<StorageUsage>(getGetStorageUsageUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStorageUsageQueryKey = () => {
+    return [
+    `/api/admin/storage/usage`
+    ] as const;
+    }
+
+
+export const getGetStorageUsageQueryOptions = <TData = Awaited<ReturnType<typeof getStorageUsage>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStorageUsageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorageUsage>>> = ({ signal }) => getStorageUsage({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStorageUsageQueryResult = NonNullable<Awaited<ReturnType<typeof getStorageUsage>>>
+export type GetStorageUsageQueryError = ErrorType<unknown>
+
+
+
+export function useGetStorageUsage<TData = Awaited<ReturnType<typeof getStorageUsage>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStorageUsageQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getDeleteMediaUrl = (id: string,) => {
 

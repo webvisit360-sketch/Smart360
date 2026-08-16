@@ -107,6 +107,10 @@ export default function AdminTenantEdit() {
     navColorOn: null as string | null,
   });
 
+  // Media quota edited in GB, stored in bytes (kept out of formData so the
+  // GB↔bytes conversion happens exactly once, on save).
+  const [mediaQuotaGb, setMediaQuotaGb] = useState("2");
+
   const initRef = useRef<string | null>(null);
   const [originalSlug, setOriginalSlug] = useState("");
   const heroFileRef = useRef<HTMLInputElement>(null);
@@ -147,6 +151,7 @@ export default function AdminTenantEdit() {
     if (tenant && initRef.current !== tenant.id) {
       initRef.current = tenant.id;
       setOriginalSlug(tenant.slug || "");
+      setMediaQuotaGb(((tenant.mediaQuotaBytes ?? 2 * 1024 ** 3) / 1024 ** 3).toFixed(1).replace(/\.0$/, ""));
       setFormData({
         name: tenant.name || "",
         slug: tenant.slug || "",
@@ -240,7 +245,9 @@ export default function AdminTenantEdit() {
       id,
       data: { 
         ...formData, 
-        customDomain: formData.customDomain.trim() || null 
+        customDomain: formData.customDomain.trim() || null,
+        // min 0.1 GB — a zero/invalid quota would block every upload
+        mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1024 ** 3),
       },
     });
   };
@@ -337,6 +344,11 @@ export default function AdminTenantEdit() {
                 <div className="space-y-2">
                   <Label>URL 360° ogleda</Label>
                   <Input value={formData.tourUrl} onChange={e => setFormData({ ...formData, tourUrl: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kvota za medije (GB)</Label>
+                  <Input type="number" min={0.1} step={0.5} value={mediaQuotaGb} onChange={e => setMediaQuotaGb(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Pri 100 % so nova nalaganja zavrnjena; obstoječa vsebina se nikoli ne briše.</p>
                 </div>
               </div>
               

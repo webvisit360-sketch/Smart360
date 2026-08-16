@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetTenantQueryKey } from "@workspace/api-client-react";
+import { getGetTenantQueryKey, useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
+import { fmtGb, usagePct } from "@/lib/format-bytes";
 import { Loader2, Plus, Trash2, Play, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -50,7 +51,18 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   const sorted = [...media].sort((a, b) => a.position - b.position);
   const shown = order ? order.map(id => sorted.find(m => m.id === id)!).filter(Boolean) : sorted;
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+  const refresh = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) }),
+    queryClient.invalidateQueries({ queryKey: getGetStorageUsageQueryKey() }),
+  ]);
+
+  // Soft quota (see /admin/storage/usage): warn from 80 %, block the add
+  // controls at 100 % — the server refuses the upload anyway, this just
+  // saves the host a pointless 100 MB transfer.
+  const { data: storageUsage } = useGetStorageUsage();
+  const tenantUsage = storageUsage?.tenants.find(t => t.tenantId === tenantId);
+  const quotaPct = tenantUsage ? usagePct(tenantUsage.usedBytes, tenantUsage.quotaBytes) : 0;
+  const quotaFull = quotaPct >= 100;
 
   const patchQueue = (key: string, patch: Partial<QueueEntry>) =>
     setQueue(q => q.map(e => (e.key === key ? { ...e, ...patch } : e)));
@@ -90,6 +102,10 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
   };
 
   const enqueue = (files: FileList | File[]) => {
+    if (quotaFull && tenantUsage) {
+      alert(`Prostor za medije je poln (${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto v nastavitvah namestitve.`);
+      return;
+    }
     for (const file of Array.from(files)) {
       const key = `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       // Refuse over the limit BEFORE the upload runs, with a clear message.
@@ -273,7 +289,8 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
           type="button"
           variant="outline"
           className="h-24 w-24 border-dashed p-0 flex-col gap-1"
-          disabled={busy}
+          disabled={busy || quotaFull}
+          title={quotaFull ? "Prostor za medije je poln" : undefined}
           onClick={() => fileRef.current?.click()}
           aria-label="Dodaj fotografije ali video"
         >
@@ -293,6 +310,13 @@ export function ItemMediaEditor({ itemId, tenantId, media }: { itemId: string; t
         Prva datoteka je ploščica in prva v galeriji — povlecite za vrstni red. Fotografije ali video
         (mp4, webm, mov) — video do 100 MB in 3 minute. Datoteke lahko tudi povlečete sem.
       </p>
+      {tenantUsage && quotaPct >= 80 && (
+        <p className={`text-[11px] mt-1 font-medium ${quotaFull ? "text-destructive" : "text-amber-600"}`}>
+          {quotaFull
+            ? `Prostor za medije je poln: ${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}. Nova nalaganja so zavrnjena — povečajte kvoto v nastavitvah namestitve. Nič se ne briše samodejno.`
+            : `Porabljenega ${quotaPct} % prostora za medije (${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}).`}
+        </p>
+      )}
     </div>
   );
 }

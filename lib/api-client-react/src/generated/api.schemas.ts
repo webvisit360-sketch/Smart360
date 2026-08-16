@@ -221,6 +221,7 @@ export interface Tenant {
   languages: string[];
   isTemplate: boolean;
   isPublished: boolean;
+  mediaQuotaBytes: number;
   updatedAt: string;
 }
 
@@ -323,6 +324,21 @@ export interface TenantUpdate {
   languages?: string[];
   isTemplate?: boolean;
   isPublished?: boolean;
+  /** @minimum 104857600 */
+  mediaQuotaBytes?: number;
+}
+
+export interface TenantStorageUsage {
+  tenantId: string;
+  slug: string;
+  name: string;
+  usedBytes: number;
+  quotaBytes: number;
+}
+
+export interface StorageUsage {
+  totalBytes: number;
+  tenants: TenantStorageUsage[];
 }
 
 export interface Section {

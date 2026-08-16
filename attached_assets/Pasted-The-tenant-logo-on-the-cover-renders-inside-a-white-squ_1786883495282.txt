@@ -1,0 +1,36 @@
+The tenant logo on the cover renders inside a white square. The uploaded file is a
+transparent PNG, so something in our pipeline is serving the wrong derivative or
+destroying the alpha channel. Check both, in this order.
+
+1. WHICH FILE DOES THE COVER USE
+   .brandlogo on the cover/hero must be bound to the TRANSPARENT derivative
+   (logo_url / logoTransparent), never to logo_square_url. The square white file is only
+   for the round host avatar (.host__av) and the tip thumbnail. The white box in the
+   screenshot is exactly the shape of the 384 px square avatar (artwork at 72 % on white),
+   so this is the first suspect.
+
+2. IS THE "TRANSPARENT" DERIVATIVE ACTUALLY TRANSPARENT
+   The photo pipeline resizes to JPEG q82. JPEG HAS NO ALPHA CHANNEL — if the logo was
+   processed by that path, its transparency was replaced with white the moment it was
+   saved, and no front-end change can bring it back.
+   Logos must bypass the photo pipeline entirely:
+     - keep the format: PNG in -> PNG out, WebP in -> WebP out, SVG in -> stored as is
+     - never convert a logo to JPEG, never flatten onto a background colour
+     - resize with an alpha-aware resampler, longest side 480 px for the cover derivative
+     - only the SQUARE avatar derivative is allowed to composite onto white
+
+   Verify at the URL, not in the UI:
+     curl -sI <logo_url>            -> content-type: image/png
+     then check the file actually has an alpha channel (e.g. ImageMagick:
+     identify -format '%[channels]' file.png  -> must contain "a")
+   If the stored file is opaque, re-derive it from the original upload. If the original was
+   also flattened on the way in, I will re-upload the source.
+
+3. ALSO CHECK THE LABEL
+   The A6 print label uses the same transparent file. Print it to PDF and confirm there is
+   no white box around the artwork there either.
+
+4. VERIFY
+   a) Cover: the seahorse sits directly on the photo, no white square, no grey edge.
+   b) Round host avatar: unchanged, still the square white version.
+   c) Re-upload the same PNG and confirm the served file is still PNG with alpha.

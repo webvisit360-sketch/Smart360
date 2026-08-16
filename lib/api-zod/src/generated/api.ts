@@ -75,6 +75,7 @@ export const GetPublicTenantResponse = zod.object({
   "languages": zod.array(zod.string()),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
 }).and(zod.object({
   "sections": zod.array(zod.object({
@@ -361,6 +362,7 @@ export const ListTenantsResponseItem = zod.object({
   "languages": zod.array(zod.string()),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
 })
 export const ListTenantsResponse = zod.array(ListTenantsResponseItem)
@@ -420,6 +422,7 @@ export const CreateTenantResponse = zod.object({
   "languages": zod.array(zod.string()),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
 })
 
@@ -478,6 +481,7 @@ export const GetTenantResponse = zod.object({
   "languages": zod.array(zod.string()),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
 }).and(zod.object({
   "sections": zod.array(zod.object({
@@ -543,6 +547,10 @@ export const UpdateTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const updateTenantBodyMediaQuotaBytesMin = 104857600;
+
+
+
 export const UpdateTenantBody = zod.object({
   "slug": zod.string().optional(),
   "customDomain": zod.string().nullish(),
@@ -588,7 +596,8 @@ export const UpdateTenantBody = zod.object({
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()).optional(),
   "isTemplate": zod.boolean().optional(),
-  "isPublished": zod.boolean().optional()
+  "isPublished": zod.boolean().optional(),
+  "mediaQuotaBytes": zod.number().min(updateTenantBodyMediaQuotaBytesMin).optional()
 })
 
 export const UpdateTenantResponse = zod.object({
@@ -638,6 +647,7 @@ export const UpdateTenantResponse = zod.object({
   "languages": zod.array(zod.string()),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
 })
 
@@ -709,6 +719,7 @@ export const DuplicateTenantResponse = zod.object({
   "languages": zod.array(zod.string()),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
   "updatedAt": zod.string()
 })
 
@@ -1034,6 +1045,21 @@ export const AddItemMediaResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish()
+})
+
+
+/**
+ * Object-storage usage per tenant (sum of stored media object sizes), largest first, plus the total across all tenants. Values refresh at most every few minutes (server-side cache).
+ */
+export const GetStorageUsageResponse = zod.object({
+  "totalBytes": zod.number(),
+  "tenants": zod.array(zod.object({
+  "tenantId": zod.string(),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "usedBytes": zod.number(),
+  "quotaBytes": zod.number()
+}))
 })
 
 

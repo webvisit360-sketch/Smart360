@@ -92,5 +92,6 @@ export interface Tenant {
   languages: string[];
   isTemplate: boolean;
   isPublished: boolean;
+  mediaQuotaBytes: number;
   updatedAt: string;
 }

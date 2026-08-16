@@ -91,4 +91,6 @@ export interface TenantUpdate {
   languages?: string[];
   isTemplate?: boolean;
   isPublished?: boolean;
+  /** @minimum 104857600 */
+  mediaQuotaBytes?: number;
 }

@@ -710,6 +710,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MediaEntry"
+  /admin/storage/usage:
+    get:
+      operationId: getStorageUsage
+      tags: [media]
+      description: >
+        Object-storage usage per tenant (sum of stored media object sizes),
+        largest first, plus the total across all tenants. Values refresh at
+        most every few minutes (server-side cache).
+      responses:
+        "200":
+          description: Usage
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageUsage"
   # NOTE: POST /admin/items/{id}/media/upload (multipart photo/video upload)
   # intentionally lives OUTSIDE this contract: orval's zod output emits
   # File/Blob types for format:binary, which do not exist in the node lib
@@ -1126,8 +1141,9 @@ components:
           items: { type: string }
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
+        mediaQuotaBytes: { type: number }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, languages, isTemplate, isPublished, updatedAt]
+      required: [id, slug, name, theme, languages, isTemplate, isPublished, mediaQuotaBytes, updatedAt]
     TenantInput:
       type: object
       properties:
@@ -1195,6 +1211,25 @@ components:
           items: { type: string }
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
+        mediaQuotaBytes: { type: number, minimum: 104857600 }
+    StorageUsage:
+      type: object
+      properties:
+        totalBytes: { type: number }
+        tenants:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantStorageUsage"
+      required: [totalBytes, tenants]
+    TenantStorageUsage:
+      type: object
+      properties:
+        tenantId: { type: string }
+        slug: { type: string }
+        name: { type: string }
+        usedBytes: { type: number }
+        quotaBytes: { type: number }
+      required: [tenantId, slug, name, usedBytes, quotaBytes]
     Section:
       type: object
       properties:

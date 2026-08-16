@@ -1,4 +1,5 @@
-import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useDeleteTenant } from "@workspace/api-client-react";
+import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useDeleteTenant, useGetStorageUsage } from "@workspace/api-client-react";
+import { fmtGb, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const { data: overview, isLoading: loadingOverview } = useGetAdminOverview();
   const { data: tenants, isLoading: loadingTenants } = useListTenants();
+  const { data: storageUsage } = useGetStorageUsage();
+  const usageByTenant = new Map(storageUsage?.tenants.map(t => [t.tenantId, t]) ?? []);
   
   const [search, setSearch] = useState("");
 
@@ -139,6 +142,16 @@ export default function AdminDashboard() {
                         </div>
                         <p className="text-sm text-muted-foreground mb-4">
                           /{tenant.slug} • Tema: {tenant.theme}
+                          {(() => {
+                            const u = usageByTenant.get(tenant.id);
+                            if (!u) return null;
+                            const pct = usagePct(u.usedBytes, u.quotaBytes);
+                            return (
+                              <span className={pct >= 100 ? "text-destructive font-medium" : pct >= 80 ? "text-amber-600 font-medium" : ""}>
+                                {" • "}{fmtGb(u.usedBytes)} / {fmtGb(u.quotaBytes)}
+                              </span>
+                            );
+                          })()}
                         </p>
                         
                         <div className="flex flex-wrap items-center gap-2 mt-auto">
@@ -191,8 +204,45 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Recent Changes */}
-        <div>
+        {/* Storage + Recent Changes */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Prostor za medije</CardTitle>
+              <CardDescription>
+                Skupaj: {storageUsage ? fmtGb(storageUsage.totalBytes) : "…"} — največje namestitve najprej
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!storageUsage ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {storageUsage.tenants.map(t => {
+                    const pct = usagePct(t.usedBytes, t.quotaBytes);
+                    return (
+                      <div key={t.tenantId}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-medium truncate mr-2">{t.name}</span>
+                          <span className={`shrink-0 ${pct >= 100 ? "text-destructive font-medium" : pct >= 80 ? "text-amber-600 font-medium" : "text-muted-foreground"}`}>
+                            {fmtGb(t.usedBytes)} / {fmtGb(t.quotaBytes)}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-amber-500" : "bg-primary"}`}
+                            style={{ width: `${Math.min(100, pct)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Nedavne spremembe</CardTitle>

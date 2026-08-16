@@ -2,6 +2,7 @@ import {
   pgTable,
   text,
   boolean,
+  bigint,
   doublePrecision,
   timestamp,
   uuid,
@@ -81,6 +82,11 @@ export const tenantsTable = pgTable("tenants", {
     .array()
     .notNull()
     .default(["sl", "en", "it", "de"]),
+  // Soft per-tenant media quota (bytes). Uploads are refused at 100 %;
+  // nothing is ever deleted automatically. Default 2 GB.
+  mediaQuotaBytes: bigint("media_quota_bytes", { mode: "number" })
+    .notNull()
+    .default(2_147_483_648),
   isTemplate: boolean("is_template").notNull().default(false),
   isPublished: boolean("is_published").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true })

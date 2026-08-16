@@ -14,9 +14,17 @@ import {
   categoriesTable,
   sectionsTable,
   tenantsTable,
+  tenantAliasesTable,
   mediaTable,
 } from "@workspace/db";
 import { requireAdmin } from "../lib/adminAuth";
+import {
+  getMediaUsageBySlug,
+  invalidateMediaUsage,
+  admitUpload,
+  formatGb,
+  type Admission,
+} from "../lib/mediaUsage";
 import {
   ObjectStorageService,
   objectStorageClient,
@@ -297,6 +305,30 @@ const upload = multer({
   limits: { fileSize: VIDEO_MAX_BYTES },
 });
 
+/** All slugs a tenant has ever had — media objects stay under old prefixes. */
+async function tenantSlugs(tenantId: string): Promise<string[]> {
+  const [current, aliases] = await Promise.all([
+    db
+      .select({ slug: tenantsTable.slug })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId)),
+    db
+      .select({ slug: tenantAliasesTable.slug })
+      .from(tenantAliasesTable)
+      .where(eq(tenantAliasesTable.tenantId, tenantId)),
+  ]);
+  return [...current, ...aliases].map((r) => r.slug);
+}
+
+/** Quota admission for one upload; see mediaUsage.admitUpload. */
+async function admitTenantUpload(
+  tenantId: string,
+  quotaBytes: number,
+  incomingBytes: number,
+): Promise<Admission> {
+  return admitUpload(tenantId, await tenantSlugs(tenantId), quotaBytes, incomingBytes);
+}
+
 router.post(
   "/admin/items/:id/media/upload",
   requireAdmin,
@@ -308,7 +340,12 @@ router.post(
       return;
     }
     const [row] = await db
-      .select({ itemId: itemsTable.id, slug: tenantsTable.slug })
+      .select({
+        itemId: itemsTable.id,
+        slug: tenantsTable.slug,
+        tenantId: tenantsTable.id,
+        quotaBytes: tenantsTable.mediaQuotaBytes,
+      })
       .from(itemsTable)
       .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
       .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
@@ -318,6 +355,17 @@ router.post(
       res.status(404).json({ error: "Item not found" });
       return;
     }
+    // Soft quota: refuse NEW uploads at 100 %, never touch existing content.
+    // Counts every slug the tenant has ever had (renames keep old prefixes)
+    // and reserves the incoming bytes so parallel uploads can't slip under.
+    const admission = await admitTenantUpload(row.tenantId, row.quotaBytes, req.file.size);
+    if (!admission.ok) {
+      res.status(400).json({
+        error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} / ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto ali se obrnite na skrbnika.`,
+      });
+      return;
+    }
+    res.once("finish", admission.release);
     const [{ title: itemTitle }] = await db
       .select({ title: itemsTable.title })
       .from(itemsTable)
@@ -393,9 +441,56 @@ router.post(
         })
         .returning();
     });
+    invalidateMediaUsage();
     res.status(201).json(media);
   },
 );
+
+// ---------------------------------------------------------------------------
+// GET /admin/storage/usage — object-storage consumption per tenant, largest
+// first, plus the grand total. Numbers come from a bucket listing (cached
+// 5 min), so they reflect what is actually stored — including objects still
+// referenced by duplicated tenants.
+// ---------------------------------------------------------------------------
+router.get("/admin/storage/usage", requireAdmin, async (_req, res): Promise<void> => {
+  const [bySlug, tenants, aliases] = await Promise.all([
+    getMediaUsageBySlug(),
+    db
+      .select({
+        tenantId: tenantsTable.id,
+        slug: tenantsTable.slug,
+        name: tenantsTable.name,
+        quotaBytes: tenantsTable.mediaQuotaBytes,
+      })
+      .from(tenantsTable),
+    db
+      .select({ slug: tenantAliasesTable.slug, tenantId: tenantAliasesTable.tenantId })
+      .from(tenantAliasesTable),
+  ]);
+  // A tenant's usage covers every slug it has ever had (media objects stay
+  // under the prefix they were uploaded to; renames don't move them).
+  const slugsByTenant = new Map<string, Set<string>>();
+  for (const t of tenants) slugsByTenant.set(t.tenantId, new Set([t.slug]));
+  for (const a of aliases) slugsByTenant.get(a.tenantId)?.add(a.slug);
+  const rows = tenants
+    .map((t) => {
+      let usedBytes = 0;
+      for (const s of slugsByTenant.get(t.tenantId) ?? []) usedBytes += bySlug.get(s) ?? 0;
+      return {
+        tenantId: t.tenantId,
+        slug: t.slug,
+        name: t.name,
+        usedBytes,
+        quotaBytes: t.quotaBytes,
+      };
+    })
+    .sort((a, b) => b.usedBytes - a.usedBytes);
+  // Total counts EVERYTHING under media/ — also orphaned prefixes whose
+  // tenant was deleted — so it matches the storage bill, not just the list.
+  let totalBytes = 0;
+  for (const v of bySlug.values()) totalBytes += v;
+  res.json({ totalBytes, tenants: rows });
+});
 
 // ---------------------------------------------------------------------------
 // Tenant logo pipeline (logotip-melipu.md / logotip-stranke-naslovnica.md).
@@ -511,13 +606,26 @@ async function handleTenantImageUpload(
     return;
   }
   const [tenant] = await db
-    .select({ id: tenantsTable.id, slug: tenantsTable.slug })
+    .select({
+      id: tenantsTable.id,
+      slug: tenantsTable.slug,
+      quotaBytes: tenantsTable.mediaQuotaBytes,
+    })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, tenantId));
   if (!tenant) {
     res.status(404).json({ error: "Tenant not found" });
     return;
   }
+  // Hero/logo replacements write new objects too — same quota as the gallery.
+  const admission = await admitTenantUpload(tenant.id, tenant.quotaBytes, req.file.size);
+  if (!admission.ok) {
+    res.status(400).json({
+      error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} / ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto.`,
+    });
+    return;
+  }
+  res.once("finish", admission.release);
   // Validate image before touching storage.
   try {
     const meta = await sharp(req.file.buffer).metadata();
@@ -546,6 +654,7 @@ async function handleTenantImageUpload(
     res.status(500).json({ error: "Upload failed" });
     return;
   }
+  invalidateMediaUsage();
   const [updated] = await db
     .update(tenantsTable)
     .set(patch)
