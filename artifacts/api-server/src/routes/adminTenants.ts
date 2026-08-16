@@ -421,7 +421,7 @@ router.get("/admin/tenants/:id/media-check", async (req, res): Promise<void> => 
   });
 });
 
-async function copyTenant(
+export async function copyTenant(
   sourceId: string,
   opts: { slug: string; name: string; copyContent: boolean },
 ): Promise<typeof tenantsTable.$inferSelect> {
