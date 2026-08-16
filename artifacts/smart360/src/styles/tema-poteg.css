@@ -645,6 +645,48 @@ body{background:#000}
 .cover__logo{height:21px;width:115.3px;color:#3B78DC;background:none;padding:0;
              border-radius:0;box-shadow:none;filter:none}
 .cover__sp{flex:1}
+
+/* ---------- iskanje v vrstici na naslovnici (swipe) ---------- */
+.findbar{display:none;flex:1;height:44px;border-radius:999px;background:#fff;
+  align-items:center;gap:10px;padding:0 6px 0 14px;border:1px solid var(--line);min-width:0}
+.cover__top.is-find .findbar{display:flex}
+.cover__top.is-find .cover__btn,.cover__top.is-find .cover__sp{display:none}
+/* med iskanjem logotip stranke izgine, da ne pade pod vrstico */
+.cover.is-find .brandlogo{opacity:0;pointer-events:none;transition:opacity .12s ease}
+.findbar__ic{display:grid;place-items:center;color:var(--ink-2);flex:none}
+.findbar__ic .ic{width:19px;height:19px;stroke-width:2}
+.findbar input{flex:1;min-width:0;border:0;outline:none;background:none;font:inherit;
+  font-size:15.5px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.findbar input::placeholder{color:var(--ink-3);font-weight:500}
+.findbar__x{width:32px;height:32px;border-radius:50%;background:var(--wash);color:var(--ink);
+  display:grid;place-items:center;flex:none}
+.findbar__x .ic{width:16px;height:16px;stroke-width:2.2}
+
+.findres{display:none;position:absolute;left:0;right:0;
+  top:calc(100% + 10px);background:#fff;border-radius:20px;border:1px solid var(--line);
+  max-height:46vh;overflow-y:auto;z-index:6;-webkit-overflow-scrolling:touch}
+.findres.on{display:block}
+.cover__top:not(.is-find) .findres{display:none}
+.findres__r{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:#fff;
+  border-bottom:1px solid var(--line);text-align:left;color:var(--ink)}
+.findres__r:last-child{border-bottom:0}
+.findres__r .ic{width:20px;height:20px;color:var(--sea);flex:none}
+.findres__r .t{flex:1;min-width:0}
+.findres__r .t b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.015em}
+.findres__r .t span{display:block;font-size:12.5px;color:var(--ink-2);font-weight:600}
+.findres__r .chev{width:14px;height:14px;color:#B0B0B0}
+.findres__r:active{background:var(--wash)}
+.findres__e{padding:18px 16px;text-align:center;color:var(--ink-2);font-size:14px;font-weight:600}
+
+/* ---------- jezik: ozek bel spustni seznam s kraticami ---------- */
+.langpop{display:none;position:absolute;right:0;top:calc(100% + 10px);z-index:7;
+  width:84px;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.langpop.on{display:block}
+.langpop__i{display:block;width:100%;height:44px;background:#fff;color:var(--ink);text-align:center;
+  font-size:14.5px;font-weight:800;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+.langpop__i:last-child{border-bottom:0}
+.langpop__i.is-on{color:var(--sea);background:var(--sea-soft)}
+.langpop__i:active{background:var(--wash)}
 .cover__btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);
             display:grid;place-items:center;color:var(--ink)}
 .cover__btn .ic{width:19px;height:19px;stroke-width:1.9}

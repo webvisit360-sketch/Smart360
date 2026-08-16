@@ -16,6 +16,13 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const [, setLocation] = useLocation();
   const [activeSectionIdx, setActiveSectionIdx] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
+  // Iskanje v vrstici na naslovnici + ozek izbirnik jezika. Nikoli hkrati odprta.
+  const [findOpen, setFindOpen] = useState(false);
+  const [findQ, setFindQ] = useState("");
+  const [langOpen, setLangOpen] = useState(false);
+  const findInputRef = useRef<HTMLInputElement>(null);
+  const findBtnRef = useRef<HTMLButtonElement>(null);
+  const langBtnRef = useRef<HTMLButtonElement>(null);
   const pagerRef = useRef<HTMLDivElement>(null);
   const movingRef = useRef(false);
   const snapTimerRef = useRef<any>(null);
@@ -91,9 +98,13 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   // Keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && categoryId) {
-        setLocation(buildGuestPath(`/${slug}`));
-        return;
+      if (e.key === "Escape") {
+        // Najprej zapri prekrivke na naslovnici in vrni fokus na sprožilni gumb.
+        // Fokus šele po Reactovem izrisu — dokler je vrstica odprta, je gumb
+        // z lupo display:none in focus() ne prime.
+        if (findOpen) { closeFind(); setTimeout(() => findBtnRef.current?.focus(), 0); return; }
+        if (langOpen) { setLangOpen(false); langBtnRef.current?.focus(); return; }
+        if (categoryId) { setLocation(buildGuestPath(`/${slug}`)); return; }
       }
       if (categoryId) return;
       if (e.key === "ArrowRight") scrollToScreen(Math.min(activeSectionIdx + 1, totalScreens - 1));
@@ -101,7 +112,17 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [activeSectionIdx, totalScreens, categoryId, slug, setLocation]);
+  }, [activeSectionIdx, totalScreens, categoryId, slug, setLocation, findOpen, langOpen]);
+
+  // Odmik z naslovnice zapre iskanje in izbirnik jezika — vrnitev na
+  // zaslon 0 mora pokazati čisto naslovnico, ne obležalega stanja.
+  useEffect(() => {
+    if (activeSectionIdx !== 0) {
+      setFindOpen(false);
+      setFindQ("");
+      setLangOpen(false);
+    }
+  }, [activeSectionIdx]);
 
   // Programmatic paging: iOS Safari + scroll-snap stops smooth scrolls at the first
   // snap point (or resets to 0), so snapping is turned off for the duration of the move.
@@ -150,6 +171,40 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   if (tenant.navColorOn) navVars["--nv-on"] = tenant.navColorOn;
   if (tenant.navColorCover) navVars["--nv-cover"] = tenant.navColorCover;
 
+  // Zadetki: nazivi kategorij (pod: naslov razdelka) + naslovi postavk (pod:
+  // naziv kategorije) — POI, poti, izdelki, dogodki so postavke svojih kategorij.
+  // Neobčutljivo na velikost črk IN šumnike ("plaza" najde "Plaža").
+  const fold = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const q = fold(findQ.trim());
+  const findResults: { title: string, sub: string, icon: string, catId: string }[] = [];
+  if (q.length >= 2) {
+    for (const sec of sections) {
+      for (const cat of sec.categories?.filter((c: any) => c.isVisible) || []) {
+        if (fold(cat.label).includes(q)) {
+          findResults.push({ title: cat.label, sub: sec.title, icon: cat.icon, catId: cat.id });
+        }
+        for (const it of cat.items?.filter((i: any) => i.isVisible) || []) {
+          if (fold(it.title).includes(q)) {
+            findResults.push({ title: it.title, sub: cat.label, icon: cat.icon, catId: cat.id });
+          }
+        }
+      }
+    }
+  }
+
+  const openFind = () => { setLangOpen(false); setFindQ(""); setFindOpen(true); setTimeout(() => findInputRef.current?.focus(), 60); };
+  const closeFind = () => { setFindOpen(false); setFindQ(""); };
+
+  // Dotik izven izbirnika jezika ga zapre.
+  useEffect(() => {
+    if (!langOpen) return;
+    const away = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest?.(".langpop,.cover__btn")) setLangOpen(false);
+    };
+    document.addEventListener("click", away);
+    return () => document.removeEventListener("click", away);
+  }, [langOpen]);
+
   let currentCategory: any = null;
   let currentSection: any = null;
   if (categoryId) {
@@ -170,24 +225,60 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           <Cover
             tenant={tenant}
             lang={lang}
+            coverClass={findOpen ? "is-find" : undefined}
+            coverTopClass={findOpen ? "is-find" : undefined}
             coverTop={
               <>
                 <span className="cover__sp"></span>
-                <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
+                <button className="cover__btn" ref={findBtnRef} onClick={openFind} aria-label={t("UI.search.title")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
                 <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label={t("UI.share.native")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
-                <span style={{ position: "relative", display: "inline-flex" }}>
-                  <button className="cover__btn" aria-hidden="true" tabIndex={-1}><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
-                  <select
-                    value={lang}
-                    onChange={(e) => switchLang(slug, e.target.value)}
-                    aria-label={t("UI.lang.title")}
-                    style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", cursor: "pointer" }}
-                  >
+                <button className="cover__btn" ref={langBtnRef} onClick={() => { closeFind(); setLangOpen(v => !v); }} aria-label={t("UI.lang.title")} aria-haspopup="listbox" aria-expanded={langOpen} aria-controls="langpop"><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
+                {langOpen && (
+                  <div className="langpop on" id="langpop" role="listbox" aria-label={t("UI.lang.title")}>
                     {tenant.languages?.map((l: string) => (
-                      <option key={l} value={l}>{LANG_NAMES[l] ?? l.toUpperCase()}</option>
+                      <button
+                        key={l}
+                        className={l === lang ? "langpop__i is-on" : "langpop__i"}
+                        role="option"
+                        aria-selected={l === lang}
+                        aria-label={LANG_NAMES[l] ?? l.toUpperCase()}
+                        title={LANG_NAMES[l] ?? l.toUpperCase()}
+                        onClick={() => { setLangOpen(false); switchLang(slug, l); }}
+                      >{l.toUpperCase()}</button>
                     ))}
-                  </select>
-                </span>
+                  </div>
+                )}
+                <form className="findbar" id="findbar" onSubmit={(e) => e.preventDefault()}>
+                  <span className="findbar__ic"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></span>
+                  <input
+                    id="findq"
+                    ref={findInputRef}
+                    value={findQ}
+                    onChange={(e) => setFindQ(e.target.value)}
+                    placeholder={t("UI.search.title")}
+                    autoComplete="off"
+                  />
+                  <button type="button" className="findbar__x" onClick={closeFind} aria-label="Zapri">
+                    <svg className="ic" viewBox="0 0 24 24"><use href="#i-cross" /></svg>
+                  </button>
+                </form>
+                <div className={findOpen && q.length >= 2 ? "findres on" : "findres"} id="findres">
+                  {findOpen && q.length >= 2 && (
+                    findResults.length
+                      ? findResults.slice(0, 20).map((r, i) => (
+                        <button
+                          key={`${r.catId}-${i}`}
+                          className="findres__r"
+                          onClick={() => { closeFind(); setLocation(buildGuestPath(`/${slug}/c/${r.catId}`)); }}
+                        >
+                          <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(r.icon)}`} /></svg>
+                          <span className="t"><b>{r.title}</b><span>{r.sub}</span></span>
+                          <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
+                        </button>
+                      ))
+                      : <div className="findres__e">{t("UI.search.empty")}</div>
+                  )}
+                </div>
               </>
             }
           />

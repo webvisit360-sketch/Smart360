@@ -1,0 +1,100 @@
+# Iskanje v vrstici in ozek izbirnik jezika
+
+Dvoje na naslovnici:
+
+1. **Lupa se ne odziva.** Klik ne naredi nič — iskanja v aplikaciji sploh ni mogoče uporabiti.
+2. **Izbirnik jezika** je preširok, temen in izpisuje polna imena jezikov. Namesto tega
+   ozek bel spustni seznam s kraticami **SL · EN · DE · IT**.
+
+Referenca: `smart360-poteg.html` — tapni lupo in globus.
+
+---
+
+## Navodilo za Replit (prilepi v celoti)
+
+```
+Two things on the cover. Copy the finished markup and CSS from the reference build
+(search for "findbar", "findres" and "langpop").
+
+=====================================================================
+1. THE MAGNIFIER DOES NOTHING — FIX IT, THEN CHANGE WHAT IT DOES
+=====================================================================
+
+First find out why the click does not fire at all: check that the button is not covered by
+another element (the tenant logo is absolutely positioned in the same corner), that it is
+not behind an overlay with a higher z-index, and that the handler is actually bound.
+Report the cause in one line — I want to know whether it was the logo, the z-index or a
+missing handler, because the same mistake will repeat elsewhere.
+
+Then change the behaviour: tapping the magnifier must NOT open a bottom sheet. It expands
+in place into a white rounded search bar with the magnifier at its left, which is what
+people expect from a search icon.
+
+  <form class="findbar" id="findbar" onsubmit="return false">
+    <span class="findbar__ic">…search icon…</span>
+    <input id="findq" placeholder="Plaža, pica, WiFi, bazen…" autocomplete="off">
+    <button type="button" class="findbar__x">…×…</button>
+  </form>
+  <div class="findres" id="findres"></div>
+
+  .findbar{display:none;flex:1;height:44px;border-radius:999px;background:#fff;
+    align-items:center;gap:10px;padding:0 6px 0 14px;border:1px solid var(--line);min-width:0}
+  .cover__top.is-find .findbar{display:flex}
+  .cover__top.is-find .cover__btn,.cover__top.is-find .cover__sp{display:none}
+  .cover.is-find .brandlogo{opacity:0;pointer-events:none;transition:opacity .12s ease}
+
+  .findres{display:none;position:absolute;left:0;right:0;top:calc(100% + 10px);
+    background:#fff;border-radius:20px;border:1px solid var(--line);
+    max-height:46vh;overflow-y:auto;z-index:6}
+  .findres.on{display:block}
+
+  Rows: icon + title + the category it belongs to + chevron, 1 px separator, white.
+  Tap a row -> close the search and open that item's detail page.
+  Fewer than 2 characters: no panel. No results: "Ni zadetkov" inside the panel.
+
+  While the search bar is open, the other round buttons AND the tenant logo hide. The logo
+  sits in the same corner and would otherwise be drawn over the input — that is exactly the
+  kind of overlap that made the magnifier unclickable in the first place.
+
+  Search across: category labels, POI names, route names, product names, event names —
+  the same index the reference uses.
+
+=====================================================================
+2. LANGUAGE PICKER — NARROW, WHITE, CODES ONLY
+=====================================================================
+
+  <div class="langpop" id="langpop">
+    <button class="langpop__i is-on">SL</button>
+    <button class="langpop__i">EN</button>
+    <button class="langpop__i">DE</button>
+    <button class="langpop__i">IT</button>
+  </div>
+
+  .langpop{display:none;position:absolute;right:0;top:calc(100% + 10px);z-index:7;
+    width:84px;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .langpop.on{display:block}
+  .langpop__i{display:block;width:100%;height:44px;background:#fff;color:var(--ink);
+    text-align:center;font-size:14.5px;font-weight:800;letter-spacing:.04em;
+    border-bottom:1px solid var(--line)}
+  .langpop__i:last-child{border-bottom:0}
+  .langpop__i.is-on{color:var(--sea);background:var(--sea-soft)}
+
+  White, not the dark system menu. Codes only, no full language names — the codes are
+  understood in every language and the panel stays narrow enough not to cover the cover
+  photo. Only the languages the tenant has enabled are listed.
+
+  A tap outside closes it. Opening the search closes the language list and vice versa —
+  the two must never be open at once.
+
+=====================================================================
+3. VERIFY
+=====================================================================
+
+  a) Tap the magnifier: the white bar appears, the keyboard opens, the logo and the other
+     buttons disappear.
+  b) Type "pla": results appear under the bar, tapping one opens the right page.
+  c) The × closes the bar and restores the buttons and the logo.
+  d) Tap the globe: a narrow white list of four codes, the current one marked in blue.
+  e) Open the language list, then the search: the language list closes by itself.
+  f) 390 px and 430 px wide: the bar never pushes anything off screen.
+```

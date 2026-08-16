@@ -35,6 +35,9 @@ type CoverProps = {
   heroExtras?: ReactNode;
   /** Mediterranean theme: content after the title block (search field). */
   tcardExtra?: ReactNode;
+  /** Swipe theme: extra classes on .cover / .cover__top (e.g. "is-find"). */
+  coverClass?: string;
+  coverTopClass?: string;
 };
 
 function BrandLogo({ tenant, edit }: { tenant: any; edit?: CoverEdit }) {
@@ -56,7 +59,7 @@ function BrandLogo({ tenant, edit }: { tenant: any; edit?: CoverEdit }) {
   );
 }
 
-export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardExtra }: CoverProps) {
+export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardExtra, coverClass, coverTopClass }: CoverProps) {
   const cTitle = tenant.coverTitle || tenant.name;
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   const showRating = tenant.coverShowRating !== false;
@@ -71,7 +74,7 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
     const style: CSSProperties = { ...getCoverVars(tenant), ...getLogoVars(tenant) };
     if (edit?.frameHeight) style.height = edit.frameHeight;
     return (
-      <div className="cover" style={style}>
+      <div className={coverClass ? `cover ${coverClass}` : "cover"} style={style}>
         {tenant.tourUrl && !edit ? (
           <iframe src={tenant.tourUrl} className="cover__bg" frameBorder="0" allowFullScreen></iframe>
         ) : tenant.heroUrl ? (
@@ -83,7 +86,7 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
         {/* Tenant logo on the cover — Smart360 branding lives only in the
             admin and on smart360.info. No logo → nothing rendered. */}
         <BrandLogo tenant={tenant} edit={edit} />
-        {coverTop && <div className="cover__top">{coverTop}</div>}
+        {coverTop && <div className={coverTopClass ? `cover__top ${coverTopClass}` : "cover__top"}>{coverTop}</div>}
         <div className="cover__txt">
           <h1>{cTitle}</h1>
           {cSub && <p>{cSub}</p>}
