@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { FONT_LABELS, getCoverVars } from "@/pages/guest/cover-vars";
-import { imgSrc } from "@/pages/guest/img";
+import { Cover } from "@/pages/guest/Cover";
 
 export const PRESET_COLORS = ["#FFFFFF", "#F6F1E9", "#FFE9B8", "#3B78DC", "#14201F", "#C4552E"];
 
@@ -238,11 +238,15 @@ export function CoverEditor({
     coverAlign: effAlign,
   });
 
-  const previewTitle = form.coverTitle || form.name || "Ime namestitve";
-  // Guest parity: the guest cover renders NO subtitle element when both
-  // sources are empty — the preview must not invent one.
-  const previewSubtitle = form.coverSubtitle || form.subtitle || "";
-  const heroBg = form.heroUrl ? imgSrc(form.heroUrl, 620) : null;
+  // The form already has the tenant's cover fields — hand it to the guest
+  // <Cover> as-is (with a name placeholder while the field is empty). NULL
+  // fields stay unset so the CSS theme defaults apply, exactly like on the
+  // guest page.
+  const previewTenant = {
+    ...form,
+    name: form.name || "Ime namestitve",
+    theme: form.theme === "mediterran" ? "mediterran" : "swipe",
+  };
 
   return (
     <Card>
@@ -553,124 +557,31 @@ export function CoverEditor({
             </div>
           </div>
 
-          {/* Live preview — phone frame at 390px inner width */}
+          {/* Live preview — phone frame at 390px inner width. It renders THE
+              guest <Cover> component (same DOM, same theme CSS — the theme
+              stylesheets ship in the one app bundle), so the preview can never
+              drift from what a guest sees. `edit` only adds the draggable
+              logo (dashed .is-drag outline) and a fixed frame height. The
+              data-theme attribute on the frame scopes the per-theme CSS
+              defaults exactly like <html data-theme> does on the guest page. */}
           <div className="lg:col-span-5">
             <div className="sticky top-24">
               <Label className="mb-3 block text-sm font-semibold">Predogled v živo</Label>
-              <div className="mx-auto rounded-[2rem] border-4 border-muted bg-muted shadow-2xl overflow-hidden" style={{ width: 390 }}>
-                <div
-                  className="relative"
-                  style={{
-                    ...coverVars,
-                    height: 640,
-                    backgroundImage: heroBg ? `url(${heroBg})` : "none",
-                    backgroundColor: heroBg ? "transparent" : "#1e293b",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+              <div
+                className="mx-auto rounded-[2rem] border-4 border-muted bg-white shadow-2xl overflow-hidden"
+                style={{ width: 390, ...coverVars }}
+                data-theme={previewTenant.theme}
+              >
+                <Cover
+                  tenant={previewTenant}
+                  edit={{
+                    frameHeight: 640,
+                    logoRef,
+                    onLogoPointerDown,
+                    onLogoPointerMove,
+                    onLogoPointerUp,
                   }}
-                >
-                  {/* Uniform veil across the whole photo — no gradient. */}
-                  <div className="absolute inset-0 bg-black pointer-events-none" style={{ opacity: effVeil / 100 }} />
-
-                  {/* Tenant logo — draggable (dashed outline signals it). The
-                      admin does not load the guest theme CSS, so the .brandlogo
-                      rules are mirrored inline here. */}
-                  {form.logoUrl && (
-                    <img
-                      ref={logoRef}
-                      src={imgSrc(form.logoUrl, 620)}
-                      alt=""
-                      draggable={false}
-                      onPointerDown={onLogoPointerDown}
-                      onPointerMove={onLogoPointerMove}
-                      onPointerUp={onLogoPointerUp}
-                      onPointerCancel={onLogoPointerUp}
-                      style={{
-                        position: "absolute",
-                        left: `${effLogoX}%`,
-                        top: `${effLogoY}%`,
-                        width: `${effLogoW}%`,
-                        maxWidth: "70%",
-                        height: "auto",
-                        transform: "translate(-50%,0)",
-                        opacity: effLogoOp / 100,
-                        zIndex: 6,
-                        display: "block",
-                        filter: "drop-shadow(0 2px 10px rgba(0,0,0,.34))",
-                        cursor: "grab",
-                        touchAction: "none",
-                        outline: "2px dashed rgba(59,120,220,.9)",
-                        outlineOffset: 6,
-                        borderRadius: 6,
-                      }}
-                    />
-                  )}
-
-                  <div
-                    className="absolute inset-x-0 bottom-0 flex flex-col pointer-events-none"
-                    style={{
-                      padding: form.theme === "mediterran" ? "1.5rem 1.5rem 2.5rem" : "2rem",
-                      backgroundColor: form.theme === "mediterran" ? "#FFFFFF" : "transparent",
-                      borderTopLeftRadius: form.theme === "mediterran" ? "1.5rem" : "0",
-                      borderTopRightRadius: form.theme === "mediterran" ? "1.5rem" : "0",
-                      alignItems: effAlign === "center" ? "center" : "flex-start",
-                      textAlign: effAlign === "center" ? "center" : "left",
-                    }}
-                  >
-                    {/* Same DOM order and gaps as the guest cover (.cover__txt):
-                        title, subtitle 16px below, rating 19px below — one
-                        block, one shared left edge. Rating shows the SAVED
-                        tenant values, never a hardcoded sample. */}
-                    <h1
-                      className="font-bold leading-[1.1] tracking-tight"
-                      style={{
-                        margin: 0,
-                        fontSize: `var(--tt-size, ${effTitleSize}px)`,
-                        opacity: effTitleOpacity / 100,
-                        color: `var(--tt-txt, ${effTextColor})`,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {previewTitle}
-                    </h1>
-
-                    {previewSubtitle && (
-                      <p
-                        className="font-medium"
-                        style={{
-                          margin: "16px 0 0",
-                          fontSize: `var(--st-size, ${effSubSize}px)`,
-                          opacity: effSubOpacity / 100,
-                          color: `var(--tt-txt, ${effTextColor})`,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {previewSubtitle}
-                      </p>
-                    )}
-
-                    {effShowRating && (
-                      <div
-                        className="flex items-center gap-1.5 font-semibold"
-                        style={{
-                          marginTop: 19,
-                          fontSize: `var(--mt-size, ${effMetaSize}px)`,
-                          opacity: effMetaOpacity / 100,
-                          color: `var(--tt-txt, ${effTextColor})`,
-                        }}
-                      >
-                        <span style={{ color: effTextColor.toUpperCase() === "#FFFFFF" ? "#FBBF24" : "currentColor" }}>★</span>{" "}
-                        {form.rating || "5,0"} · {form.reviewsCount || "0"} ocen
-                      </div>
-                    )}
-                  </div>
-                </div>
+                />
               </div>
             </div>
           </div>

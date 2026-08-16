@@ -42,3 +42,8 @@ Obe temi se uvozita statično in ju vite vtičnik (vite-plugin-scope-themes.ts) 
 
 ## Scope-vtičnik in at-pravila
 - Vtičnik prefiksa samo selektorje (postcss walkRules); `@page`, `@font-face`, `@media`, `@supports`, `@keyframes` ostanejo nedotaknjeni, selektorji ZNOTRAJ @media pa se prefiksajo (`html,body` → `html[data-theme=..],html[data-theme=..] body`). Preverjeno v postreženem CSS ob paketu 14 (tisk nalepke A6 je odvisen od nepredponjenega `@page{size:A6;margin:8mm}`).
+
+## Theme CSS scoping & the shared cover
+The guest theme stylesheets are NOT what ships: `vite-plugin-scope-themes.ts` prefixes every selector with `:is(html[data-theme="X"], [data-theme="X"])` at build time. Judge scoping by compiled CSS (`curl .../src/styles/tema-*.css?direct`), never by the source files. The `[data-theme]` alternative in the anchor exists so the admin cover preview (a `<div data-theme>` frame around the shared guest `Cover` component in `pages/guest/Cover.tsx`) gets the real theme CSS.
+**Why:** the admin preview once carried its own copy of the cover markup (own DOM order, hardcoded rating) and drifted from the guest page.
+**How to apply:** any cover change goes into `Cover.tsx`; editing affordances (draggable logo via `.is-drag`, fixed preview height) are passed via its `edit` prop, never forked markup.

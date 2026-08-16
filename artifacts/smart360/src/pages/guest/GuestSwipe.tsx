@@ -4,7 +4,8 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
-import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
+import { getTextVars } from "./cover-vars";
+import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc, mediaImgSrc } from "./img";
@@ -142,18 +143,12 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     scrollToScreen(idx);
   };
 
-  const cTitle = tenant.coverTitle || tenant.name;
-  const cSub = tenant.coverSubtitle || tenant.subtitle;
-  
-  const coverVars = getCoverVars(tenant);
   // Only set what the owner overrode; empty fields fall back to the
   // theme defaults baked into the CSS (var(--nv, #...) fallbacks).
   const navVars: Record<string, string> = {};
   if (tenant.navColor) navVars["--nv"] = tenant.navColor;
   if (tenant.navColorOn) navVars["--nv-on"] = tenant.navColorOn;
   if (tenant.navColorCover) navVars["--nv-cover"] = tenant.navColorCover;
-
-  const showRating = tenant.coverShowRating !== false;
 
   let currentCategory: any = null;
   let currentSection: any = null;
@@ -172,47 +167,30 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
     <div className="app" style={{ ...navVars, ...getTextVars(tenant) }}>
       <div className="pager" id="pager" ref={pagerRef} style={{ visibility: "hidden" }}>
         <section className="screen">
-          <div className="cover" style={{ ...coverVars, ...getLogoVars(tenant) }}>
-            {tenant.tourUrl ? (
-              <iframe src={tenant.tourUrl} className="cover__bg" frameBorder="0" allowFullScreen></iframe>
-            ) : (
-              <img src={imgSrc(tenant.heroUrl, 1400)} alt="" className="cover__bg" loading="eager" decoding="sync" />
-            )}
-            <div className="cover__veil"></div>
-            {/* Tenant logo on the cover — Smart360 branding lives only in the
-                admin and on smart360.info. No logo → nothing rendered. */}
-            {tenant.logoUrl && (
-              <img className="brandlogo" id="brandlogo" src={imgSrc(tenant.logoUrl, 620)} alt={tenant.name} />
-            )}
-            <div className="cover__top">
-              <span className="cover__sp"></span>
-              <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
-              <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label={t("UI.share.native")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
-              <span style={{ position: "relative", display: "inline-flex" }}>
-                <button className="cover__btn" aria-hidden="true" tabIndex={-1}><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
-                <select
-                  value={lang}
-                  onChange={(e) => switchLang(slug, e.target.value)}
-                  aria-label={t("UI.lang.title")}
-                  style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", cursor: "pointer" }}
-                >
-                  {tenant.languages?.map((l: string) => (
-                    <option key={l} value={l}>{LANG_NAMES[l] ?? l.toUpperCase()}</option>
-                  ))}
-                </select>
-              </span>
-            </div>
-            <div className="cover__txt">
-              <h1>{cTitle}</h1>
-              {cSub && <p>{cSub}</p>}
-              {showRating && (
-                <div className="cover__meta">
-                  <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
-                  {tenant.rating || "5.0"} · {plural(tenant, lang, "reviews", Number(tenant.reviewsCount) || 0)}
-                </div>
-              )}
-            </div>
-          </div>
+          <Cover
+            tenant={tenant}
+            lang={lang}
+            coverTop={
+              <>
+                <span className="cover__sp"></span>
+                <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
+                <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label={t("UI.share.native")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
+                <span style={{ position: "relative", display: "inline-flex" }}>
+                  <button className="cover__btn" aria-hidden="true" tabIndex={-1}><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
+                  <select
+                    value={lang}
+                    onChange={(e) => switchLang(slug, e.target.value)}
+                    aria-label={t("UI.lang.title")}
+                    style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", cursor: "pointer" }}
+                  >
+                    {tenant.languages?.map((l: string) => (
+                      <option key={l} value={l}>{LANG_NAMES[l] ?? l.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </span>
+              </>
+            }
+          />
         </section>
 
         {sections.map((sec: any, idx: number) => (

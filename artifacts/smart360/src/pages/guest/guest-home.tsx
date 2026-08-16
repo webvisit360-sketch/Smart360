@@ -7,7 +7,8 @@ import { SearchOverlay } from "./SearchOverlay";
 import { buildGuestPath } from "./guest-url";
 import { spriteId } from "./sprite-icon";
 import { GuestSwipe } from "./GuestSwipe";
-import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
+import { getCoverVars, getTextVars } from "./cover-vars";
+import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
 import { imgSrc, mediaImgSrc } from "./img";
 import { hsub } from "./hsub";
@@ -62,9 +63,6 @@ export default function GuestHome() {
 
   const coverVars = getCoverVars(tenant);
 
-  const cTitle = tenant.coverTitle || tenant.name;
-  const showRating = tenant.coverShowRating !== false;
-  
   // Big cards: top 4 sections
   const bigCards = sections.slice(0, 4).map((sec: any) => {
     let photo = "";
@@ -133,42 +131,32 @@ export default function GuestHome() {
         </div>
       </header>
 
-      <div className="hero" style={getLogoVars(tenant)}>
-        {tenant.heroUrl ? <img src={imgSrc(tenant.heroUrl, 1400)} alt="" loading="eager" decoding="sync" /> : <div style={{width: '100%', height: '100%', background: 'var(--wash)'}}></div>}
-        {/* Tenant logo over the hero photo — Smart360 branding lives only in
-            the admin and on smart360.info. No logo → nothing rendered. */}
-        {tenant.logoUrl && (
-          <img className="brandlogo" id="brandlogo" src={imgSrc(tenant.logoUrl, 620)} alt={tenant.name} />
-        )}
-        <button className="hero__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
-        {tenant.tourUrl && (
-          <a href={tenant.tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">
-            <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.pill")}
-          </a>
-        )}
-        <div className="hero__hint">
-          <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.hint")}
-        </div>
-      </div>
-
-      <div className="tcard">
-        <h1 className="title">{cTitle}</h1>
-        {showRating && (
-          <div className="meta">
-            <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
-            <b>{tenant.rating || "5.0"}</b><span className="sep">·</span>
-            <span>{plural(tenant, lang, "reviews", Number(tenant.reviewsCount) || 0)}</span>
-            {tenant.address && <><span className="sep">·</span><span>{tenant.address}</span></>}
-          </div>
-        )}
-        <button className="search" onClick={() => setSearchOpen(true)}>
-          <svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg>
-          <span style={{minWidth: 0}}>
-            <span className="search__t" style={{display: 'block'}}>{t("UI.search.title")}</span>
-            <span className="search__s" style={{display: 'block'}}>{t("UI.search.sub")}</span>
-          </span>
-        </button>
-      </div>
+      <Cover
+        tenant={tenant}
+        lang={lang}
+        heroExtras={
+          <>
+            <button className="hero__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
+            {tenant.tourUrl && (
+              <a href={tenant.tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">
+                <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.pill")}
+              </a>
+            )}
+            <div className="hero__hint">
+              <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.hint")}
+            </div>
+          </>
+        }
+        tcardExtra={
+          <button className="search" onClick={() => setSearchOpen(true)}>
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg>
+            <span style={{minWidth: 0}}>
+              <span className="search__t" style={{display: 'block'}}>{t("UI.search.title")}</span>
+              <span className="search__s" style={{display: 'block'}}>{t("UI.search.sub")}</span>
+            </span>
+          </button>
+        }
+      />
 
       <div className="pagepad">
         
