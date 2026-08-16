@@ -10,15 +10,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
 import { QrDialog } from "@/components/admin/qr-dialog";
-import { StorageCleanupDialog } from "@/components/admin/storage-cleanup-dialog";
 import { MediaCheckDialog } from "@/components/admin/media-check-dialog";
 import { CleanupTrashDialog } from "@/components/admin/cleanup-trash-dialog";
-
-// Cleanup EXECUTION is production-only: dev and prod share one storage
-// bucket but have separate databases, so a dev run would compute "unused"
-// from the wrong database. The server enforces this with 403; here we
-// simply don't render the buttons outside the published build.
-const CLEANUP_AVAILABLE = import.meta.env.PROD;
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
@@ -262,38 +255,10 @@ export default function AdminDashboard() {
                             style={{ width: `${Math.min(100, pct)}%` }}
                           />
                         </div>
-                        {CLEANUP_AVAILABLE && (
-                          <div className="flex justify-end mt-1">
-                            <StorageCleanupDialog
-                              scope="tenant"
-                              tenantId={t.tenantId}
-                              tenantName={t.name}
-                              trigger={
-                                <button type="button" className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
-                                  Sprosti neuporabljene datoteke
-                                </button>
-                              }
-                            />
-                          </div>
-                        )}
                       </div>
                     );
                   })}
                   <div className="pt-2 border-t flex items-center gap-4">
-                    {CLEANUP_AVAILABLE ? (
-                      <StorageCleanupDialog
-                        scope="orphans"
-                        trigger={
-                          <button type="button" className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
-                            Datoteke izbrisanih namestitev …
-                          </button>
-                        }
-                      />
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground">
-                        Čiščenje je na voljo samo v produkciji.
-                      </span>
-                    )}
                     <CleanupTrashDialog
                       trigger={
                         <button type="button" className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">

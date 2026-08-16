@@ -25,13 +25,7 @@ import {
   formatGb,
   type Admission,
 } from "../lib/mediaUsage";
-import {
-  cleanupPreview,
-  cleanupExecute,
-  listCleanupRuns,
-  restoreFromTrash,
-  CLEANUP_EXECUTE_ENABLED,
-} from "../lib/mediaCleanup";
+import { listCleanupRuns, restoreFromTrash } from "../lib/mediaCleanup";
 import {
   ObjectStorageService,
   objectStorageClient,
@@ -499,58 +493,17 @@ router.get("/admin/storage/usage", requireAdmin, async (_req, res): Promise<void
   res.json({ totalBytes, tenants: rows });
 });
 
-// ---------------------------------------------------------------------------
-// Explicit storage cleanup (never automatic). GET = dry run, POST = execute.
-// References are computed from the DB across ALL tenants at call time —
-// duplicated tenants keep each other's files alive; a file is removable only
-// when no media row and no tenant column anywhere points at it.
-// ---------------------------------------------------------------------------
-function parseCleanupScope(
-  scope: unknown,
-  tenantIdRaw: unknown,
-): { scope: "tenant" | "orphans"; tenantId: string | null } | null {
-  if (scope === "orphans") return { scope: "orphans", tenantId: null };
-  if (scope === "tenant" && typeof tenantIdRaw === "string" && tenantIdRaw)
-    return { scope: "tenant", tenantId: tenantIdRaw };
-  return null;
-}
-
-router.get("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<void> => {
-  const parsed = parseCleanupScope(req.query["scope"], req.query["tenantId"]);
-  if (!parsed) {
-    res.status(400).json({ error: "scope=tenant zahteva tenantId, ali scope=orphans" });
-    return;
-  }
-  const slugs = parsed.tenantId ? await tenantSlugs(parsed.tenantId) : null;
-  if (parsed.scope === "tenant" && (!slugs || slugs.length === 0)) {
-    res.status(404).json({ error: "Tenant not found" });
-    return;
-  }
-  res.json(await cleanupPreview(slugs, parsed.scope === "orphans"));
+// DISABLED: dev and production share one bucket while having separate
+// databases, so an orphan calculation from either side can delete files the
+// other side is using. Re-enable only with ALL THREE: environment-prefixed
+// keys (dev/…, prod/…), soft delete to trash/<date>/… kept 30 days with a
+// restore list, and an audit record of every run.
+router.get("/admin/storage/cleanup", requireAdmin, async (_req, res): Promise<void> => {
+  res.status(403).json({ error: "Čiščenje shrambe je izklopljeno." });
 });
 
-router.post("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<void> => {
-  // HARD environment gate: dev and prod share ONE bucket but see different
-  // databases — a dev run computes "unused" from the wrong DB and deletes
-  // production files (it happened). Execution is production-only.
-  if (!CLEANUP_EXECUTE_ENABLED) {
-    res.status(403).json({ error: "Čiščenje je dovoljeno samo v produkciji (skupen bucket, ločeni bazi)." });
-    return;
-  }
-  const body = (req.body ?? {}) as { scope?: unknown; tenantId?: unknown };
-  const parsed = parseCleanupScope(body.scope, body.tenantId);
-  if (!parsed) {
-    res.status(400).json({ error: "scope=tenant zahteva tenantId, ali scope=orphans" });
-    return;
-  }
-  const slugs = parsed.tenantId ? await tenantSlugs(parsed.tenantId) : null;
-  if (parsed.scope === "tenant" && (!slugs || slugs.length === 0)) {
-    res.status(404).json({ error: "Tenant not found" });
-    return;
-  }
-  const result = await cleanupExecute(slugs, parsed.scope === "orphans");
-  req.log.info(result, "storage cleanup executed");
-  res.json(result);
+router.post("/admin/storage/cleanup", requireAdmin, async (_req, res): Promise<void> => {
+  res.status(403).json({ error: "Čiščenje shrambe je izklopljeno." });
 });
 
 // Audit list of past cleanup runs (Koš + dnevnik). Read-only, allowed everywhere.
