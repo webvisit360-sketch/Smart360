@@ -6,12 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Translation {
-  id: string;
-  model: string;
-  recordId: string;
-  field: string;
-  lang: string;
-  value: string;
-  stale: boolean;
+export interface TranslationImportReport {
+  set: number;
+  skippedUnknown: number;
+  unchanged: number;
+  kept: number;
+  unknownKeys: string[];
 }

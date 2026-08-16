@@ -621,6 +621,66 @@ export interface Translation {
   field: string;
   lang: string;
   value: string;
+  stale: boolean;
+}
+
+/**
+ * One translatable field — path key, Slovene source, current translation
+ */
+export interface TranslationEntry {
+  key: string;
+  model: string;
+  recordId: string;
+  field: string;
+  source: string;
+  rich: boolean;
+  value?: string | null;
+  stale: boolean;
+}
+
+export interface TranslationOverview {
+  lang: string;
+  translated: number;
+  total: number;
+  stale: number;
+}
+
+export type TranslationImportBodyContent = {[key: string]: string};
+
+export type TranslationImportBodyUi = {[key: string]: string};
+
+export type TranslationImportBodyPlurals = {[key: string]: {[key: string]: string}};
+
+export type TranslationImportBodySource = {[key: string]: string};
+
+export interface TranslationImportBody {
+  lang: string;
+  content?: TranslationImportBodyContent;
+  ui?: TranslationImportBodyUi;
+  plurals?: TranslationImportBodyPlurals;
+  source?: TranslationImportBodySource;
+  overwrite?: boolean;
+}
+
+export interface TranslationImportReport {
+  set: number;
+  skippedUnknown: number;
+  unchanged: number;
+  kept: number;
+  unknownKeys: string[];
+}
+
+export type TranslationExportContent = {[key: string]: string};
+
+export type TranslationExportUi = {[key: string]: string};
+
+export type TranslationExportPlurals = {[key: string]: {[key: string]: string}};
+
+export interface TranslationExport {
+  lang: string;
+  content: TranslationExportContent;
+  ui: TranslationExportUi;
+  plurals: TranslationExportPlurals;
 }
 
 export interface TranslationInput {
@@ -643,12 +703,26 @@ export type SectionContent = Section & {
   categories: CategoryContent[];
 };
 
+/**
+ * Interface strings for the active language (empty for sl)
+ */
+export type TenantContentUi = {[key: string]: string};
+
+/**
+ * Plural forms for the active language, key -> CLDR form -> template
+ */
+export type TenantContentPlurals = {[key: string]: {[key: string]: string}};
+
 export type TenantContent = Tenant & {
   sections: SectionContent[];
   /** Canonical absolute https guest URL for the current slug */
   publicUrl: string;
   /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */
   qrSvg: string;
+  /** Interface strings for the active language (empty for sl) */
+  ui?: TenantContentUi;
+  /** Plural forms for the active language, key -> CLDR form -> template */
+  plurals?: TenantContentPlurals;
 };
 
 export interface SearchResult {
@@ -707,6 +781,14 @@ export const GetStorageCleanupPreviewScope = {
 export type ListTranslationsParams = {
 model: string;
 recordId: string;
+};
+
+export type ListTenantTranslationsParams = {
+lang: string;
+};
+
+export type ExportTranslationsParams = {
+lang: string;
 };
 
 export type CheckSlugParams = {

@@ -20,6 +20,7 @@ import GuestHome from '@/pages/guest/guest-home';
 import GuestCategory from '@/pages/guest/guest-category';
 import GuestLayout from '@/pages/guest/guest-layout';
 import { GuestSwipe } from '@/pages/guest/GuestSwipe';
+import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages/guest/i18n';
 
 const queryClient = new QueryClient();
 
@@ -42,15 +43,28 @@ function GuestHost() {
 
   const searchStr = useSearch();
   const sp = new URLSearchParams(searchStr);
-  const lang = sp.get('lang') || 'sl';
+  // ?lang → remembered choice → browser language → Slovene. Filtering by
+  // tenant.languages happens once the tenant arrives (effect below).
+  const rawLang = resolveLang(slug, sp.get('lang'), null);
   const isPreview = sp.get('preview') === '1';
 
   // React Query caches this — GuestLayout already fetched it so this is a synchronous cache hit.
   const { data: tenant } = useGetPublicTenant(
     slug,
-    { lang, preview: isPreview },
-    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, lang, isPreview] } },
+    { lang: rawLang, preview: isPreview },
+    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, rawLang, isPreview] } },
   );
+  // Once the tenant is known, an un-enabled language silently becomes Slovene
+  // (the server already refuses to serve content for it).
+  const lang = tenant ? clampLang(rawLang, tenant.languages) : rawLang;
+
+  // <html lang> + hreflang alternates follow the active language.
+  useEffect(() => {
+    if (!tenant) return;
+    applyDocumentLang(lang, slug, tenant.languages);
+    if (sp.get('lang')) rememberLang(slug, lang);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant, lang, slug]);
 
   // Swipe theme: one mounted GuestSwipe instance handles both the pager and the detail overlay.
   // categoryId prop changes drive the detail open/close animation via CSS class toggling.

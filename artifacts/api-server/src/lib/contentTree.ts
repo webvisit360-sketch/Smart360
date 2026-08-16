@@ -108,9 +108,37 @@ export async function buildTenantContent(
       const rec = byRecord.get(row.id);
       if (!rec) return row;
       const merged: Record<string, unknown> = { ...row };
+      // Sub-indexed fields ("body[3]", "bullets[2]") patch one element of the
+      // array — a missing translation leaves that paragraph in Slovene, so a
+      // half-translated item never shows an empty block.
+      let bodyArr: string[] | null = null;
+      let bulletsArr: string[] | null = null;
       for (const [field, value] of Object.entries(rec)) {
-        if (field in merged && value !== "") merged[field] = value;
+        if (value === "") continue;
+        const sub = field.match(/^(body|bullets)\[(\d+)\]$/);
+        if (sub) {
+          const idx = Number(sub[2]);
+          if (sub[1] === "body") {
+            if (!bodyArr) {
+              try {
+                const parsed = JSON.parse(String(merged["body"] ?? "null"));
+                bodyArr = Array.isArray(parsed) ? [...parsed] : null;
+              } catch {
+                bodyArr = null;
+              }
+            }
+            if (bodyArr && idx < bodyArr.length) bodyArr[idx] = value;
+          } else {
+            const src = merged["bullets"];
+            if (!bulletsArr && Array.isArray(src)) bulletsArr = [...src];
+            if (bulletsArr && idx < bulletsArr.length) bulletsArr[idx] = value;
+          }
+          continue;
+        }
+        if (field in merged) merged[field] = value;
       }
+      if (bodyArr) merged["body"] = JSON.stringify(bodyArr);
+      if (bulletsArr) merged["bullets"] = bulletsArr;
       return merged as T;
     };
     tenantOut = apply(tenant);

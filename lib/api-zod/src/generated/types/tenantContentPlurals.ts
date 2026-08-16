@@ -6,12 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Translation {
-  id: string;
-  model: string;
-  recordId: string;
-  field: string;
-  lang: string;
-  value: string;
-  stale: boolean;
-}
+/**
+ * Plural forms for the active language, key -> CLDR form -> template
+ */
+export type TenantContentPlurals = {[key: string]: {[key: string]: string}};

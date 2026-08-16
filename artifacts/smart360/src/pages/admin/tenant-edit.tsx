@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import { ContentEditor } from "@/components/admin/content-editor";
+import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
 import { useToast } from "@/hooks/use-toast";
@@ -307,6 +308,7 @@ export default function AdminTenantEdit() {
           <TabsTrigger value="appearance">Videz</TabsTrigger>
           <TabsTrigger value="contacts">Stiki & Lokacija</TabsTrigger>
           <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
+          <TabsTrigger value="translations">Prevodi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -630,6 +632,17 @@ export default function AdminTenantEdit() {
             </CardHeader>
             <CardContent>
               <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="translations">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prevodi vsebine</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TranslationsEditor tenantId={tenant.id} />
             </CardContent>
           </Card>
         </TabsContent>

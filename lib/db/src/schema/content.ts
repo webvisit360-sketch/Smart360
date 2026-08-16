@@ -6,6 +6,8 @@ import {
   timestamp,
   uuid,
   doublePrecision,
+  uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -86,14 +88,46 @@ export const mediaTable = pgTable("media", {
   durationSec: doublePrecision("duration_sec"),
 });
 
-export const translationsTable = pgTable("translations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  model: text("model").notNull(),
-  recordId: uuid("record_id").notNull(),
-  field: text("field").notNull(),
-  lang: text("lang").notNull(),
-  value: text("value").notNull(),
-});
+export const translationsTable = pgTable(
+  "translations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // "tenant" | "section" | "category" | "item" | "ui" (interface strings,
+    // recordId = tenant id, field = the UI key e.g. "UI.search.title").
+    model: text("model").notNull(),
+    recordId: uuid("record_id").notNull(),
+    // Field name on the record; array fields use sub-indexes ("body[3]",
+    // "bullets[2]") so a translation sticks to its own paragraph/bullet.
+    field: text("field").notNull(),
+    lang: text("lang").notNull(),
+    value: text("value").notNull(),
+    // The Slovene source changed after this translation was written. Stale
+    // translations stay visible ("izvirnik se je spremenil") — never deleted.
+    stale: boolean("stale").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("translations_ref_idx").on(t.model, t.recordId, t.field, t.lang)]
+);
+
+// Plural forms per language ("1 ocena / 2 oceni / 3 ocene / 5 ocen").
+// Selected with Intl.PluralRules(lang) — forms are the CLDR categories.
+export const pluralFormsTable = pgTable(
+  "plural_forms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Nullable: system strings shared by every tenant have no tenant.
+    tenantId: uuid("tenant_id").references(() => tenantsTable.id, {
+      onDelete: "cascade",
+    }),
+    lang: text("lang").notNull(),
+    key: text("key").notNull(), // e.g. "reviews"
+    form: text("form").notNull(), // "one" | "two" | "few" | "other"
+    value: text("value").notNull(), // e.g. "{n} reviews"
+  },
+  (t) => [index("plural_forms_lookup_idx").on(t.tenantId, t.lang, t.key)]
+);
 
 export const changelogTable = pgTable("changelog", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -122,6 +156,7 @@ export type Category = typeof categoriesTable.$inferSelect;
 export type Item = typeof itemsTable.$inferSelect;
 export type MediaRow = typeof mediaTable.$inferSelect;
 export type TranslationRow = typeof translationsTable.$inferSelect;
+export type PluralFormRow = typeof pluralFormsTable.$inferSelect;
 export type ChangelogRow = typeof changelogTable.$inferSelect;
 export type InsertSection = z.infer<typeof insertSectionSchema>;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;

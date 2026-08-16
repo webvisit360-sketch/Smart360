@@ -4,6 +4,7 @@ import publicTenantsRouter from "./publicTenants";
 import adminAuthRouter from "./adminAuth";
 import adminTenantsRouter from "./adminTenants";
 import adminContentRouter from "./adminContent";
+import adminTranslationsRouter from "./adminTranslations";
 import storageRouter from "./storage";
 
 const router: IRouter = Router();
@@ -14,5 +15,6 @@ router.use(publicTenantsRouter);
 router.use(adminAuthRouter);
 router.use(adminTenantsRouter);
 router.use(adminContentRouter);
+router.use(adminTranslationsRouter);
 
 export default router;

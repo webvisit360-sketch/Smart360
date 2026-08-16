@@ -7,6 +7,8 @@
  */
 import type { SectionContent } from './sectionContent';
 import type { Tenant } from './tenant';
+import type { TenantContentPlurals } from './tenantContentPlurals';
+import type { TenantContentUi } from './tenantContentUi';
 
 export type TenantContent = Tenant & {
   sections: SectionContent[];
@@ -14,4 +16,8 @@ export type TenantContent = Tenant & {
   publicUrl: string;
   /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */
   qrSvg: string;
+  /** Interface strings for the active language (empty for sl) */
+  ui?: TenantContentUi;
+  /** Plural forms for the active language, key -> CLDR form -> template */
+  plurals?: TenantContentPlurals;
 };

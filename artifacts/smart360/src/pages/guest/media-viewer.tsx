@@ -218,9 +218,21 @@ export function MediaViewer({
           </div>
         ))}
       </div>
-      <div className={`mv__hint${hintOff ? " off" : ""}`}>Dvakrat tapnite za povečavo</div>
+      <div className={`mv__hint${hintOff ? " off" : ""}`}>{zoomHint()}</div>
     </div>
   );
+}
+
+/** Namig za povečavo sledi <html lang>, ki ga nastavi applyDocumentLang. */
+const ZOOM_HINTS: Record<string, string> = {
+  sl: "Dvakrat tapnite za povečavo",
+  en: "Double-tap to zoom",
+  de: "Zum Vergrößern doppelt tippen",
+  it: "Tocca due volte per ingrandire",
+};
+function zoomHint(): string {
+  const l = (document.documentElement.lang || "sl").slice(0, 2);
+  return ZOOM_HINTS[l] ?? ZOOM_HINTS.sl!;
 }
 
 /** Galerijski trak v vsebini: dotik odpre galerijo čez cel zaslon. */

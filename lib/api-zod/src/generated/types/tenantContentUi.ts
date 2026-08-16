@@ -6,12 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Translation {
-  id: string;
-  model: string;
-  recordId: string;
-  field: string;
-  lang: string;
-  value: string;
-  stale: boolean;
-}
+/**
+ * Interface strings for the active language (empty for sl)
+ */
+export type TenantContentUi = {[key: string]: string};

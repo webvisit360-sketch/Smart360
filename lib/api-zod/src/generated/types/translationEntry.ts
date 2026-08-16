@@ -6,12 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Translation {
-  id: string;
+/**
+ * One translatable field — path key, Slovene source, current translation
+ */
+export interface TranslationEntry {
+  key: string;
   model: string;
   recordId: string;
   field: string;
-  lang: string;
-  value: string;
+  source: string;
+  rich: boolean;
+  value?: string | null;
   stale: boolean;
 }

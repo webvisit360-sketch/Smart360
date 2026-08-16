@@ -35,12 +35,14 @@ import type {
   EnrollOptionsBody,
   EnrollResult,
   EnrollVerifyBody,
+  ExportTranslationsParams,
   GetPublicTenantParams,
   GetStorageCleanupPreviewParams,
   HealthStatus,
   Item,
   ItemInput,
   ItemUpdate,
+  ListTenantTranslationsParams,
   ListTranslationsParams,
   MediaCheckResult,
   MediaEntry,
@@ -69,7 +71,12 @@ import type {
   TenantInput,
   TenantUpdate,
   Translation,
+  TranslationEntry,
+  TranslationExport,
+  TranslationImportBody,
+  TranslationImportReport,
   TranslationInput,
+  TranslationOverview,
   TrashResponse,
   WebAuthnOptions,
   WebAuthnVerifyBody
@@ -3555,6 +3562,333 @@ export const useUpsertTranslation = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpsertTranslationMutationOptions(options));
     }
+
+export const getListTenantTranslationsUrl = (id: string,
+    params: ListTenantTranslationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/tenants/${id}/translations?${stringifiedParams}` : `/api/admin/tenants/${id}/translations`
+}
+
+/**
+ * @summary Every translatable field with its path key, source and translation
+ */
+export const listTenantTranslations = async (id: string,
+    params: ListTenantTranslationsParams, options?: Parameters<typeof customFetch>[1]): Promise<TranslationEntry[]> => {
+
+  return customFetch<TranslationEntry[]>(getListTenantTranslationsUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTenantTranslationsQueryKey = (id: string,
+    params?: ListTenantTranslationsParams,) => {
+    return [
+    `/api/admin/tenants/${id}/translations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTenantTranslationsQueryOptions = <TData = Awaited<ReturnType<typeof listTenantTranslations>>, TError = ErrorType<unknown>>(id: string,
+    params: ListTenantTranslationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantTranslations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTenantTranslationsQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTenantTranslations>>> = ({ signal }) => listTenantTranslations(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTenantTranslations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTenantTranslationsQueryResult = NonNullable<Awaited<ReturnType<typeof listTenantTranslations>>>
+export type ListTenantTranslationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Every translatable field with its path key, source and translation
+ */
+
+export function useListTenantTranslations<TData = Awaited<ReturnType<typeof listTenantTranslations>>, TError = ErrorType<unknown>>(
+ id: string,
+    params: ListTenantTranslationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantTranslations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTenantTranslationsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetTranslationOverviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/translations/overview`
+}
+
+/**
+ * @summary Coverage per language (translated / total, stale count)
+ */
+export const getTranslationOverview = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TranslationOverview[]> => {
+
+  return customFetch<TranslationOverview[]>(getGetTranslationOverviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTranslationOverviewQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/translations/overview`
+    ] as const;
+    }
+
+
+export const getGetTranslationOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getTranslationOverview>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTranslationOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTranslationOverviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTranslationOverview>>> = ({ signal }) => getTranslationOverview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTranslationOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTranslationOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getTranslationOverview>>>
+export type GetTranslationOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Coverage per language (translated / total, stale count)
+ */
+
+export function useGetTranslationOverview<TData = Awaited<ReturnType<typeof getTranslationOverview>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTranslationOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTranslationOverviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getImportTranslationsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/translations/import`
+}
+
+/**
+ * @summary Import a language file; reports set/skipped/unchanged/kept
+ */
+export const importTranslations = async (id: string,
+    translationImportBody: TranslationImportBody, options?: Parameters<typeof customFetch>[1]): Promise<TranslationImportReport> => {
+
+  return customFetch<TranslationImportReport>(getImportTranslationsUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(translationImportBody)
+  }
+);}
+
+
+
+
+
+export const getImportTranslationsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importTranslations>>, TError,{id: string;data: BodyType<TranslationImportBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importTranslations>>, TError,{id: string;data: BodyType<TranslationImportBody>}, TContext> => {
+
+const mutationKey = ['importTranslations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importTranslations>>, {id: string;data: BodyType<TranslationImportBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  importTranslations(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportTranslationsMutationResult = NonNullable<Awaited<ReturnType<typeof importTranslations>>>
+    export type ImportTranslationsMutationBody = BodyType<TranslationImportBody>
+    export type ImportTranslationsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Import a language file; reports set/skipped/unchanged/kept
+ */
+export const useImportTranslations = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importTranslations>>, TError,{id: string;data: BodyType<TranslationImportBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importTranslations>>,
+        TError,
+        {id: string;data: BodyType<TranslationImportBody>},
+        TContext
+      > => {
+      return useMutation(getImportTranslationsMutationOptions(options));
+    }
+
+export const getExportTranslationsUrl = (id: string,
+    params: ExportTranslationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/tenants/${id}/translations/export?${stringifiedParams}` : `/api/admin/tenants/${id}/translations/export`
+}
+
+/**
+ * @summary Export one language in exactly the import format
+ */
+export const exportTranslations = async (id: string,
+    params: ExportTranslationsParams, options?: Parameters<typeof customFetch>[1]): Promise<TranslationExport> => {
+
+  return customFetch<TranslationExport>(getExportTranslationsUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getExportTranslationsQueryKey = (id: string,
+    params?: ExportTranslationsParams,) => {
+    return [
+    `/api/admin/tenants/${id}/translations/export`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getExportTranslationsQueryOptions = <TData = Awaited<ReturnType<typeof exportTranslations>>, TError = ErrorType<unknown>>(id: string,
+    params: ExportTranslationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportTranslations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportTranslationsQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTranslations>>> = ({ signal }) => exportTranslations(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportTranslations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ExportTranslationsQueryResult = NonNullable<Awaited<ReturnType<typeof exportTranslations>>>
+export type ExportTranslationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Export one language in exactly the import format
+ */
+
+export function useExportTranslations<TData = Awaited<ReturnType<typeof exportTranslations>>, TError = ErrorType<unknown>>(
+ id: string,
+    params: ExportTranslationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportTranslations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getExportTranslationsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetTrashUrl = (id: string,) => {
 

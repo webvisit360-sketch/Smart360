@@ -6,6 +6,7 @@ import {
   SearchPublicTenantResponse,
 } from "@workspace/api-zod";
 import { buildTenantContent } from "../lib/contentTree";
+import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { isAuthenticated } from "../lib/adminAuth";
 
@@ -87,6 +88,18 @@ async function resolveTenantUncached(
 // GET /public/tenant-by-domain
 // Resolves the tenant from the Host header alone (used when the guest app
 // is served on a custom domain and the slug is unknown to the frontend).
+
+// A guest may only request a language the tenant has enabled — anything else
+// silently falls back to Slovene (undefined = source language).
+function enabledLang(
+  tenant: { languages?: string[] | null },
+  req: { query: Record<string, unknown> }
+): string | undefined {
+  const raw = typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
+  if (!raw || raw === "sl") return undefined;
+  return (tenant.languages ?? []).includes(raw) ? raw : undefined;
+}
+
 router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   const hostname = req.hostname; // express strips port automatically
   if (!hostname) {
@@ -108,16 +121,18 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
     return;
   }
 
-  const lang =
-    typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
+  const lang = enabledLang(tenant, req);
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
+  const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   res.json(
-    GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
+    GetPublicTenantResponse.parse(
+      serialize({ ...tree, publicUrl, qrSvg, ui, plurals })
+    )
   );
 });
 
@@ -133,6 +148,7 @@ router.get(
       res.status(400).json({ error: "Missing slug" });
       return;
     }
+    const rawLang = firstParam(req.query["lang"] as string | string[] | undefined);
     const tenant = await resolveTenantBySlugOrDomain(
       slug,
       req.headers["host"] as string | undefined
@@ -167,7 +183,12 @@ router.get(
       .json({
         name: tenant.name,
         short_name: tenant.name.length > 12 ? tenant.name.slice(0, 12) : tenant.name,
-        start_url: `/${tenant.slug}/`,
+        // Installed in a language → it opens in that language (only enabled ones).
+        start_url: `/${tenant.slug}/${
+          rawLang && rawLang !== "sl" && (tenant.languages ?? []).includes(rawLang)
+            ? `?lang=${encodeURIComponent(rawLang)}`
+            : ""
+        }`,
         scope: `/${tenant.slug}/`,
         display: "standalone",
         theme_color: "#ffffff",
@@ -195,16 +216,18 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  const lang =
-    typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
+  const lang = enabledLang(tenant, req);
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
+  const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   res.json(
-    GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
+    GetPublicTenantResponse.parse(
+      serialize({ ...tree, publicUrl, qrSvg, ui, plurals })
+    )
   );
 });
 
@@ -224,8 +247,7 @@ router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  const lang =
-    typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
+  const lang = enabledLang(tenant, req);
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
   const results: Array<{
     itemId: string;

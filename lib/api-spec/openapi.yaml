@@ -908,6 +908,92 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OkStatus"
+  /admin/tenants/{id}/translations:
+    get:
+      operationId: listTenantTranslations
+      tags: [translations]
+      summary: Every translatable field with its path key, source and translation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: lang
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Translation entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TranslationEntry"
+  /admin/tenants/{id}/translations/overview:
+    get:
+      operationId: getTranslationOverview
+      tags: [translations]
+      summary: Coverage per language (translated / total, stale count)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Coverage per language
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TranslationOverview"
+  /admin/tenants/{id}/translations/import:
+    post:
+      operationId: importTranslations
+      tags: [translations]
+      summary: Import a language file; reports set/skipped/unchanged/kept
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TranslationImportBody"
+      responses:
+        "200":
+          description: Import report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranslationImportReport"
+  /admin/tenants/{id}/translations/export:
+    get:
+      operationId: exportTranslations
+      tags: [translations]
+      summary: Export one language in exactly the import format
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: lang
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Export file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranslationExport"
   /admin/tenants/{id}/trash:
     get:
       operationId: getTrash
@@ -1604,7 +1690,76 @@ components:
         field: { type: string }
         lang: { type: string }
         value: { type: string }
-      required: [id, model, recordId, field, lang, value]
+        stale: { type: boolean }
+      required: [id, model, recordId, field, lang, value, stale]
+    TranslationEntry:
+      type: object
+      description: One translatable field — path key, Slovene source, current translation
+      properties:
+        key: { type: string }
+        model: { type: string }
+        recordId: { type: string }
+        field: { type: string }
+        source: { type: string }
+        rich: { type: boolean }
+        value: { type: string, nullable: true }
+        stale: { type: boolean }
+      required: [key, model, recordId, field, source, rich, stale]
+    TranslationOverview:
+      type: object
+      properties:
+        lang: { type: string }
+        translated: { type: number }
+        total: { type: number }
+        stale: { type: number }
+      required: [lang, translated, total, stale]
+    TranslationImportBody:
+      type: object
+      properties:
+        lang: { type: string }
+        content:
+          type: object
+          additionalProperties: { type: string }
+        ui:
+          type: object
+          additionalProperties: { type: string }
+        plurals:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: { type: string }
+        source:
+          type: object
+          additionalProperties: { type: string }
+        overwrite: { type: boolean }
+      required: [lang]
+    TranslationImportReport:
+      type: object
+      properties:
+        set: { type: number }
+        skippedUnknown: { type: number }
+        unchanged: { type: number }
+        kept: { type: number }
+        unknownKeys:
+          type: array
+          items: { type: string }
+      required: [set, skippedUnknown, unchanged, kept, unknownKeys]
+    TranslationExport:
+      type: object
+      properties:
+        lang: { type: string }
+        content:
+          type: object
+          additionalProperties: { type: string }
+        ui:
+          type: object
+          additionalProperties: { type: string }
+        plurals:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: { type: string }
+      required: [lang, content, ui, plurals]
     TranslationInput:
       type: object
       properties:
@@ -1656,6 +1811,16 @@ components:
             qrSvg:
               type: string
               description: Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl
+            ui:
+              type: object
+              description: Interface strings for the active language (empty for sl)
+              additionalProperties: { type: string }
+            plurals:
+              type: object
+              description: Plural forms for the active language, key -> CLDR form -> template
+              additionalProperties:
+                type: object
+                additionalProperties: { type: string }
           required: [sections, publicUrl, qrSvg]
     SearchResult:
       type: object

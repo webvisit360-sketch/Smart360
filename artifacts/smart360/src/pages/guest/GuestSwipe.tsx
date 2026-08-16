@@ -9,6 +9,7 @@ import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
+import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
@@ -19,6 +20,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const snapTimerRef = useRef<any>(null);
 
   useThemeAttr(tenant?.theme);
+  const t = makeT(tenant, lang);
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact
 
@@ -185,8 +187,20 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
             <div className="cover__top">
               <span className="cover__sp"></span>
               <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg></button>
-              <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label="Deli"><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
-              <button className="cover__btn"><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
+              <button className="cover__btn" onClick={() => setShareOpen(true)} aria-label={t("UI.share.native")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg></button>
+              <span style={{ position: "relative", display: "inline-flex" }}>
+                <button className="cover__btn" aria-hidden="true" tabIndex={-1}><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg></button>
+                <select
+                  value={lang}
+                  onChange={(e) => switchLang(slug, e.target.value)}
+                  aria-label={t("UI.lang.title")}
+                  style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", cursor: "pointer" }}
+                >
+                  {tenant.languages?.map((l: string) => (
+                    <option key={l} value={l}>{LANG_NAMES[l] ?? l.toUpperCase()}</option>
+                  ))}
+                </select>
+              </span>
             </div>
             <div className="cover__txt">
               <h1>{cTitle}</h1>
@@ -194,7 +208,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               {showRating && (
                 <div className="cover__meta">
                   <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
-                  {tenant.rating || "5.0"} · {tenant.reviewsCount || "0"} ocen
+                  {tenant.rating || "5.0"} · {plural(tenant, lang, "reviews", Number(tenant.reviewsCount) || 0)}
                 </div>
               )}
             </div>
@@ -229,25 +243,25 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
 
         <section className="screen">
           <div className="contact">
-            <div className="sc__k">Stik</div>
-            <h2 className="sc__t">Tu smo za vas</h2>
-            <p className="sc__s">Vprašanje, rezervacija ali priporočilo — odgovorimo v nekaj minutah.</p>
+            <div className="sc__k">{t("UI.contact.k")}</div>
+            <h2 className="sc__t">{t("UI.host.title")}</h2>
+            <p className="sc__s">{t("UI.contact.intro")}</p>
             <div style={{ marginTop: 22 }}>
               {tenant.phone && (
                 <>
                   <a className="srow" href={`tel:${tenant.phone}`} target="_blank" rel="noopener noreferrer">
                     <svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg>
-                    <span className="t"><b>Pokliči</b><span>{tenant.phone}</span></span>
+                    <span className="t"><b>{t("UI.contact.call")}</b><span>{tenant.phone}</span></span>
                     <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                   </a>
                   <a className="srow" href={`https://wa.me/${tenant.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
                     <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
-                    <span className="t"><b>WhatsApp</b><span>Napišite sporočilo</span></span>
+                    <span className="t"><b>WhatsApp</b><span>{t("UI.contact.message")}</span></span>
                     <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                   </a>
                   <a className="srow" href={`viber://chat?number=${tenant.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
                     <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
-                    <span className="t"><b>Viber</b><span>Napišite sporočilo</span></span>
+                    <span className="t"><b>Viber</b><span>{t("UI.contact.message")}</span></span>
                     <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                   </a>
                 </>
@@ -255,14 +269,14 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               {tenant.address && (
                 <a className="srow" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.address)}`} target="_blank" rel="noopener noreferrer">
                   <svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>
-                  <span className="t"><b>Naslov</b><span>{tenant.address}</span></span>
+                  <span className="t"><b>{t("UI.contact.address")}</b><span>{tenant.address}</span></span>
                   <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                 </a>
               )}
             </div>
             {tenant.mapQuery && (
               <a className="btn" style={{ marginTop: 24 }} href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery)}`} target="_blank" rel="noopener noreferrer">
-                <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>Navigacija do nas
+                <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}
               </a>
             )}
           </div>
@@ -293,8 +307,8 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           className={`nv ${!currentCategory && activeSectionIdx === totalScreens - 1 ? 'is-on' : ''}`}
           data-i={totalScreens - 1}
           onClick={() => goToScreen(totalScreens - 1)}
-          aria-label="Tu smo za vas"
-          title="Tu smo za vas"
+          aria-label={t("UI.host.title")}
+          title={t("UI.host.title")}
         >
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
         </button>
@@ -306,13 +320,15 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
         category={currentCategory} 
         section={currentSection} 
         slug={slug} 
+        lang={lang}
       />
-      <ShareSheet tenant={tenant} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
+      <ShareSheet tenant={tenant} lang={lang} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
   );
 }
 
-function SwipeDetail({ tenant, category, section, slug }: { tenant: any, category: any, section: any, slug: string }) {
+function SwipeDetail({ tenant, category, section, slug, lang }: { tenant: any, category: any, section: any, slug: string, lang: string }) {
+  const t = makeT(tenant, lang);
   const isOpen = !!(category && section);
   const categories = section?.categories?.filter((c: any) => c.isVisible) || [];
   const activeIdx = category ? categories.findIndex((c: any) => c.id === category.id) : -1;
@@ -419,7 +435,7 @@ function SwipeDetail({ tenant, category, section, slug }: { tenant: any, categor
                   {isNear ? (
                     <>
                       <h2 className="dh">{c.label}</h2>
-                      <CategoryContent category={c} tenant={tenant} items={c.items?.filter((it: any) => it.isVisible) || []} />
+                      <CategoryContent category={c} tenant={tenant} t={t} lang={lang} items={c.items?.filter((it: any) => it.isVisible) || []} />
                     </>
                   ) : null}
                 </div>
@@ -433,9 +449,9 @@ function SwipeDetail({ tenant, category, section, slug }: { tenant: any, categor
 }
 
 // Reuse the exact same CategoryContent from guest-category.tsx
-function CategoryContent({ category, tenant, items }: { category: any, tenant: any, items: any[] }) {
+function CategoryContent({ category, tenant, t, lang, items }: { category: any, tenant: any, t: (key: string) => string, lang: string, items: any[] }) {
   if (items.length === 0) {
-    return <div className="empty">V tej kategoriji še ni vsebine.</div>;
+    return <div className="empty">{t("UI.search.empty")}</div>;
   }
 
   if (category.layout === 'poi') {
@@ -449,19 +465,19 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
         )}
         <div className="card__body">
           <div className="card__h"><h3 className="card__n">{item.title}</h3></div>
-          {item.open24 && <div><span className="pill o">Odprto 24/7</span></div>}
+          {item.open24 && <div><span className="pill o">{t("UI.open247")}</span></div>}
           
           <div className="info">
-            {item.hoursJson && <div><svg className="ic" viewBox="0 0 24 24"><use href="#i-clock" /></svg>{formatTodayHours(item.hoursJson) || "Obratovalni čas ni na voljo"}</div>}
+            {item.hoursJson && <div><svg className="ic" viewBox="0 0 24 24"><use href="#i-clock" /></svg>{formatTodayHours(item.hoursJson, lang) || t("UI.closed")}</div>}
             {item.phone && <div><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg><a href={`tel:${item.phone}`}>{item.phone}</a></div>}
-            {item.website && <div><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg><a href={item.website} target="_blank" rel="noopener noreferrer">Spletna stran</a></div>}
+            {item.website && <div><svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg><a href={item.website} target="_blank" rel="noopener noreferrer">{t("UI.website")}</a></div>}
           </div>
 
           {item.noteText && (
             <div className="tip">
               <img src={imgSrc(tenant.logoSquareUrl || tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
               <div>
-                <div className="tip__l">{item.noteType || "Dobro je vedeti"}</div>
+                <div className="tip__l">{item.noteType || t("UI.tip")}</div>
                 <div className="tip__t" dangerouslySetInnerHTML={{__html: sanitizeHtml(item.noteText)}}></div>
               </div>
             </div>
@@ -469,9 +485,9 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
 
           {(item.phone || item.mapQuery) && (
             <div className="actions">
-              {item.phone && <a className="act act--w" href={`tel:${item.phone}`} aria-label="Pokliči"><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg></a>}
+              {item.phone && <a className="act act--w" href={`tel:${item.phone}`} aria-label={t("UI.contact.call")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg></a>}
               {item.mapQuery && (item.mapQuery === tenant.mapQuery
-                ? <a className="act act--fill" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>Navigacija do nas</a>
+                ? <a className="act act--fill" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
                 : <a className="act act--fill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
             </div>
           )}
@@ -511,9 +527,9 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
           {item.price && <div className="card__price">{item.price} <span>{item.priceUnit ? `/ ${item.priceUnit}` : ''}</span></div>}
           <div className="actions">
             {item.phone ? (
-              <a className="act act--fill" href={`tel:${item.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>Rezerviraj</a>
+              <a className="act act--fill" href={`tel:${item.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>{t("UI.book")}</a>
             ) : tenant.phone ? (
-              <a className="act act--fill" href={`tel:${tenant.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>Povprašaj</a>
+              <a className="act act--fill" href={`tel:${tenant.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>{t("UI.book")}</a>
             ) : null}
           </div>
         </div>
@@ -533,7 +549,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
         <div className="card__body">
           <div className="card__h"><h3 className="card__n">{item.title}</h3></div>
           <div style={{display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap', marginTop: 2}}>
-            {item.difficulty && <span className={`pill ${item.difficulty === 'Zahtevna' ? 'hard' : 'mod'}`}>{item.difficulty}</span>}
+            {item.difficulty && <span className={`pill ${item.difficulty === 'Zahtevna' ? 'hard' : 'mod'}`}>{DIFFICULTY_KEYS[item.difficulty] ? t(DIFFICULTY_KEYS[item.difficulty]!) : item.difficulty}</span>}
             {item.duration && <span className="info" style={{margin: 0}}><div><svg className="ic" viewBox="0 0 24 24"><use href="#i-clock" /></svg>{item.duration}</div></span>}
             {item.distance && <span className="info" style={{margin: 0}}><div><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>{item.distance}</div></span>}
           </div>
@@ -557,7 +573,7 @@ function CategoryContent({ category, tenant, items }: { category: any, tenant: a
         <button className="iconbtn" onClick={() => {
           if (item.body) {
             navigator.clipboard.writeText(item.body);
-            alert("Kopirano!");
+            alert(t("UI.share.copied"));
           }
         }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-book" /></svg></button>
       </div>

@@ -36,6 +36,7 @@ import {
 import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { sanitizeBody, sanitizePlain, sanitizeUrl } from "../lib/sanitizeBody";
+import { invalidateTenantCache } from "./publicTenants";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -128,6 +129,10 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const [prevSection] = await db
+    .select()
+    .from(sectionsTable)
+    .where(eq(sectionsTable.id, id));
   const [section] = await db
     .update(sectionsTable)
     .set(cleanContentFields(parsed.data))
@@ -136,6 +141,9 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
   if (!section) {
     res.status(404).json({ error: "Not found" });
     return;
+  }
+  if (prevSection) {
+    await markStaleForChange("section", prevSection, section, section.id);
   }
   const ctx = await tenantNameForSection(section.id);
   await logChange({
@@ -254,6 +262,10 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const [prevCategory] = await db
+    .select()
+    .from(categoriesTable)
+    .where(eq(categoriesTable.id, id));
   const [category] = await db
     .update(categoriesTable)
     .set(cleanContentFields(parsed.data))
@@ -262,6 +274,9 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
   if (!category) {
     res.status(404).json({ error: "Not found" });
     return;
+  }
+  if (prevCategory) {
+    await markStaleForChange("category", prevCategory, category, category.id);
   }
   const ctx = await tenantNameForSection(category.sectionId);
   await logChange({
@@ -392,6 +407,10 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const [prevItem] = await db
+    .select()
+    .from(itemsTable)
+    .where(eq(itemsTable.id, id));
   const [item] = await db
     .update(itemsTable)
     .set(cleanContentFields(parsed.data))
@@ -400,6 +419,9 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
   if (!item) {
     res.status(404).json({ error: "Not found" });
     return;
+  }
+  if (prevItem) {
+    await markStaleForChange("item", prevItem, item, item.id);
   }
   const [category] = await db
     .select()
@@ -599,6 +621,46 @@ router.post("/admin/media/reorder", async (req, res): Promise<void> => {
 
 // ---------- Translations ----------
 
+/**
+ * Mark existing translations of changed source fields as STALE — never
+ * delete them. The admin shows "izvirnik se je spremenil" and keeps the old
+ * translation visible; losing an afternoon of translation work because the
+ * source moved a comma is the worse failure.
+ */
+async function markStaleForChange(
+  model: "tenant" | "section" | "category" | "item",
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+  recordId: string
+): Promise<void> {
+  const changed: string[] = [];
+  for (const key of Object.keys(after)) {
+    if (key in before && before[key] !== after[key]) changed.push(key);
+  }
+  if (!changed.length) return;
+  const rows = await db
+    .select()
+    .from(translationsTable)
+    .where(
+      and(
+        eq(translationsTable.recordId, recordId),
+        eq(translationsTable.stale, false)
+      )
+    );
+  const staleIds = rows
+    .filter((r) => r.model === model)
+    .filter((r) =>
+      changed.some((f) => r.field === f || r.field.startsWith(`${f}[`))
+    )
+    .map((r) => r.id);
+  if (staleIds.length) {
+    await db
+      .update(translationsTable)
+      .set({ stale: true })
+      .where(inArray(translationsTable.id, staleIds));
+  }
+}
+
 router.get("/admin/translations", async (req, res): Promise<void> => {
   const model =
     typeof req.query["model"] === "string" ? req.query["model"] : undefined;
@@ -635,6 +697,9 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
   const match = existing.find(
     (t) => t.model === model && t.field === field && t.lang === lang,
   );
+  // body and its paragraphs ("body[3]") are rich text like the source field.
+  const rich = field === "body" || field.startsWith("body[");
+  const clean = rich ? sanitizeBody(value) : sanitizePlain(value);
   if (match) {
     if (value === "") {
       await db
@@ -643,7 +708,7 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
     } else {
       await db
         .update(translationsTable)
-        .set({ value: field === "body" ? sanitizeBody(value) : sanitizePlain(value) })
+        .set({ value: clean, stale: false, updatedAt: new Date() })
         .where(eq(translationsTable.id, match.id));
     }
   } else if (value !== "") {
@@ -652,9 +717,10 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
       recordId,
       field,
       lang,
-      value: field === "body" ? sanitizeBody(value) : sanitizePlain(value),
+      value: clean,
     });
   }
+  invalidateTenantCache();
   res.json(UpsertTranslationResponse.parse({ ok: true }));
 });
 

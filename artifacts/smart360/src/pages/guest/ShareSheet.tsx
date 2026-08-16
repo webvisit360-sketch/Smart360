@@ -1,8 +1,10 @@
 import { SheetTop } from "./SheetTop";
 import { useRef, useState } from "react";
+import { makeT } from "./i18n";
 
 /** Deli to stran — QR, native share, copy link, printable A6 label (paket 14). */
-export function ShareSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: boolean, onClose: () => void }) {
+export function ShareSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant: any, lang?: string, isOpen: boolean, onClose: () => void }) {
+  const t = makeT(tenant, lang);
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const url: string = tenant?.publicUrl ?? "";
@@ -68,8 +70,8 @@ export function ShareSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: b
       <div className={`mask ${isOpen ? 'on' : ''}`} onClick={onClose}></div>
       <div className={`sheet ${isOpen ? 'on' : ''}`}>
         <SheetTop isOpen={isOpen} onClose={onClose} />
-        <h3>Deli to stran</h3>
-        <div className="sub">Skenirajte kodo ali pošljite povezavo naprej.</div>
+        <h3>{t("UI.share.title")}</h3>
+        <div className="sub">{t("UI.share.sub")}</div>
 
         <div className="qrbox">
           <div className="qrbox__code" dangerouslySetInnerHTML={{ __html: tenant?.qrSvg ?? "" }} />
@@ -79,20 +81,20 @@ export function ShareSheet({ tenant, isOpen, onClose }: { tenant: any, isOpen: b
         {canShare && (
           <button className="srow" onClick={shareNative}>
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-share" /></svg>
-            <div className="t"><b>Deli</b><span>Pošlji povezavo prek telefona</span></div>
+            <div className="t"><b>{t("UI.share.native")}</b><span>{t("UI.share.native.sub")}</span></div>
             <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
           </button>
         )}
 
         <button className="srow" onClick={copyLink}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-copy" /></svg>
-          <div className="t"><b>{copied ? "Kopirano \u2713" : "Kopiraj povezavo"}</b><span>{shortUrl}</span></div>
+          <div className="t"><b>{copied ? t("UI.share.copied") : t("UI.share.copy")}</b><span>{shortUrl}</span></div>
           <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
         </button>
 
         <button className="srow" onClick={printLabel}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-print" /></svg>
-          <div className="t"><b>Natisni nalepko</b><span>Za v apartma, A6</span></div>
+          <div className="t"><b>{t("UI.share.print")}</b><span>{t("UI.share.print.sub")}</span></div>
           <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
         </button>
       </div>

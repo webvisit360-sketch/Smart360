@@ -133,7 +133,9 @@ export const GetPublicTenantResponse = zod.object({
 })))
 }))),
   "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
-  "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl')
+  "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
+  "ui": zod.record(zod.string(), zod.string()).optional().describe('Interface strings for the active language (empty for sl)'),
+  "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template')
 }))
 
 
@@ -539,7 +541,9 @@ export const GetTenantResponse = zod.object({
 })))
 }))),
   "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
-  "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl')
+  "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
+  "ui": zod.record(zod.string(), zod.string()).optional().describe('Interface strings for the active language (empty for sl)'),
+  "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template')
 }))
 
 
@@ -1188,7 +1192,8 @@ export const ListTranslationsResponseItem = zod.object({
   "recordId": zod.string(),
   "field": zod.string(),
   "lang": zod.string(),
-  "value": zod.string()
+  "value": zod.string(),
+  "stale": zod.boolean()
 })
 export const ListTranslationsResponse = zod.array(ListTranslationsResponseItem)
 
@@ -1206,6 +1211,90 @@ export const UpsertTranslationBody = zod.object({
 
 export const UpsertTranslationResponse = zod.object({
   "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Every translatable field with its path key, source and translation
+ */
+export const ListTenantTranslationsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListTenantTranslationsQueryParams = zod.object({
+  "lang": zod.coerce.string()
+})
+
+export const ListTenantTranslationsResponseItem = zod.object({
+  "key": zod.string(),
+  "model": zod.string(),
+  "recordId": zod.string(),
+  "field": zod.string(),
+  "source": zod.string(),
+  "rich": zod.boolean(),
+  "value": zod.string().nullish(),
+  "stale": zod.boolean()
+}).describe('One translatable field — path key, Slovene source, current translation')
+export const ListTenantTranslationsResponse = zod.array(ListTenantTranslationsResponseItem)
+
+
+/**
+ * @summary Coverage per language (translated / total, stale count)
+ */
+export const GetTranslationOverviewParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetTranslationOverviewResponseItem = zod.object({
+  "lang": zod.string(),
+  "translated": zod.number(),
+  "total": zod.number(),
+  "stale": zod.number()
+})
+export const GetTranslationOverviewResponse = zod.array(GetTranslationOverviewResponseItem)
+
+
+/**
+ * @summary Import a language file; reports set/skipped/unchanged/kept
+ */
+export const ImportTranslationsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ImportTranslationsBody = zod.object({
+  "lang": zod.string(),
+  "content": zod.record(zod.string(), zod.string()).optional(),
+  "ui": zod.record(zod.string(), zod.string()).optional(),
+  "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional(),
+  "source": zod.record(zod.string(), zod.string()).optional(),
+  "overwrite": zod.boolean().optional()
+})
+
+export const ImportTranslationsResponse = zod.object({
+  "set": zod.number(),
+  "skippedUnknown": zod.number(),
+  "unchanged": zod.number(),
+  "kept": zod.number(),
+  "unknownKeys": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Export one language in exactly the import format
+ */
+export const ExportTranslationsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ExportTranslationsQueryParams = zod.object({
+  "lang": zod.coerce.string()
+})
+
+export const ExportTranslationsResponse = zod.object({
+  "lang": zod.string(),
+  "content": zod.record(zod.string(), zod.string()),
+  "ui": zod.record(zod.string(), zod.string()),
+  "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string()))
 })
 
 

@@ -11,6 +11,7 @@ import { getCoverVars, getLogoVars, getTextVars } from "./cover-vars";
 import { ShareSheet } from "./ShareSheet";
 import { imgSrc, mediaImgSrc } from "./img";
 import { hsub } from "./hsub";
+import { makeT, plural, resolveLang, clampLang, switchLang, LANG_NAMES, SL_UI } from "./i18n";
 import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
 
@@ -18,14 +19,14 @@ export default function GuestHome() {
   const [, params] = useRoute("/:slug");
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
-  const lang = searchParams.get("lang") || "sl";
+  const rawLang = resolveLang(params?.slug || "", searchParams.get("lang"), null);
   const isPreview = searchParams.get("preview") === "1";
   const slug = params?.slug || "";
 
   const { data: tenant, isLoading, isError } = useGetPublicTenant(
     slug, 
-    { lang, preview: isPreview },
-    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, lang, isPreview] } }
+    { lang: rawLang, preview: isPreview },
+    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, rawLang, isPreview] } }
   );
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -46,8 +47,12 @@ export default function GuestHome() {
     return () => { document.head.removeChild(link); };
   }, [heroHref]);
 
-  if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">Nalaganje...</div></div></div>;
-  if (isError || !tenant) return <div className="app"><div className="pagepad"><div className="empty">Namestitev ni najdena.</div></div></div>;
+  if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">…</div></div></div>;
+  if (isError || !tenant) return <div className="app"><div className="pagepad"><div className="empty">{SL_UI["UI.notFound"]}</div></div></div>;
+
+  // Un-enabled language silently becomes Slovene once the tenant is known.
+  const lang = clampLang(rawLang, tenant.languages);
+  const t = makeT(tenant, lang);
 
   if (tenant.theme === 'swipe') {
     return <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={null} />;
@@ -98,7 +103,7 @@ export default function GuestHome() {
           id: cat.id,
           label: cat.label,
           photo: firstPhoto || sec.imageUrl || tenant.heroUrl || "",
-          sub: hsub(cat),
+          sub: hsub(cat, tenant, lang),
         };
       }),
     };
@@ -115,17 +120,14 @@ export default function GuestHome() {
           <button className="iconbtn">
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-globe" /></svg>
           </button>
-          <select 
+          <select
             value={lang}
-            onChange={(e) => {
-              const sp = new URLSearchParams(window.location.search);
-              sp.set("lang", e.target.value);
-              window.location.search = sp.toString();
-            }}
+            onChange={(e) => switchLang(slug, e.target.value)}
+            aria-label={t("UI.lang.title")}
             style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }}
           >
             {tenant.languages?.map(l => (
-              <option key={l} value={l}>{l.toUpperCase()}</option>
+              <option key={l} value={l}>{LANG_NAMES[l] ?? l.toUpperCase()}</option>
             ))}
           </select>
         </div>
@@ -141,11 +143,11 @@ export default function GuestHome() {
         <button className="hero__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
         {tenant.tourUrl && (
           <a href={tenant.tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">
-            <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>360° sprehod
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.pill")}
           </a>
         )}
         <div className="hero__hint">
-          <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>Povlecite za razgled
+          <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.hint")}
         </div>
       </div>
 
@@ -155,15 +157,15 @@ export default function GuestHome() {
           <div className="meta">
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
             <b>{tenant.rating || "5.0"}</b><span className="sep">·</span>
-            <span>{tenant.reviewsCount || "0"} ocen</span>
+            <span>{plural(tenant, lang, "reviews", Number(tenant.reviewsCount) || 0)}</span>
             {tenant.address && <><span className="sep">·</span><span>{tenant.address}</span></>}
           </div>
         )}
         <button className="search" onClick={() => setSearchOpen(true)}>
           <svg className="ic" viewBox="0 0 24 24"><use href="#i-search" /></svg>
           <span style={{minWidth: 0}}>
-            <span className="search__t" style={{display: 'block'}}>Kaj iščete?</span>
-            <span className="search__s" style={{display: 'block'}}>Nastanitev · Ponudba · Okolica</span>
+            <span className="search__t" style={{display: 'block'}}>{t("UI.search.title")}</span>
+            <span className="search__s" style={{display: 'block'}}>{t("UI.search.sub")}</span>
           </span>
         </button>
       </div>
@@ -172,7 +174,7 @@ export default function GuestHome() {
         
         {bigCards.length > 0 && (
           <section className="section fade">
-            <h2 className="sec__title">Kaj vas zanima?</h2>
+            <h2 className="sec__title">{t("UI.interest")}</h2>
             <div className="big">
               {bigCards.map(bc => (
                 <Link key={bc.id} href={bc.link ? buildGuestPath(bc.link) : '#'} className="bc">
@@ -181,16 +183,16 @@ export default function GuestHome() {
                   <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg></span>
                   <span className="tx">
                     <b>{bc.title}</b>
-                    <span>{bc.count} vnosov</span>
+                    <span>{plural(tenant, lang, "entries", bc.count)}</span>
                   </span>
                 </Link>
               ))}
             </div>
             
             <div className="qk">
-              {tenant.wifiSsid && <button onClick={() => { navigator.clipboard.writeText(tenant.wifiPass || ""); alert("Geslo kopirano!"); }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-wifi" /></svg>WiFi</button>}
-              {tenant.phone && <button onClick={() => window.location.href = `tel:${tenant.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg>Klic</button>}
-              {tenant.mapQuery && <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery || "")}`, '_blank')}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>Navigacija do nas</button>}
+              {tenant.wifiSsid && <button onClick={() => { navigator.clipboard.writeText(tenant.wifiPass || ""); alert(t("UI.share.copied")); }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-wifi" /></svg>WiFi</button>}
+              {tenant.phone && <button onClick={() => window.location.href = `tel:${tenant.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg>{t("UI.contact.call")}</button>}
+              {tenant.mapQuery && <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery || "")}`, '_blank')}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</button>}
             </div>
           </section>
         )}
@@ -215,22 +217,22 @@ export default function GuestHome() {
           <div className="host__top">
             <img className="host__av" src={imgSrc(tenant.logoSquareUrl || tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
             <div>
-              <div className="host__n">Tu smo za vas</div>
-              <div className="host__s">Običajno odgovorimo v nekaj minutah</div>
+              <div className="host__n">{t("UI.host.title")}</div>
+              <div className="host__s">{t("UI.host.sub")}</div>
             </div>
           </div>
           <button className="btn" onClick={() => setContactOpen(true)}>
-            <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>Kontaktirajte gostitelja
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>{t("UI.host.cta")}
           </button>
         </section>
 
         <div className="tail"></div>
       </div>
 
-      <Tabbar slug={slug} tenant={tenant} currentTab="home" onContactClick={() => setContactOpen(true)} />
-      <ContactSheet tenant={tenant} isOpen={contactOpen} onClose={() => setContactOpen(false)} />
-      <ShareSheet tenant={tenant} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
-      <SearchOverlay slug={slug} lang={lang} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <Tabbar slug={slug} tenant={tenant} lang={lang} currentTab="home" onContactClick={() => setContactOpen(true)} />
+      <ContactSheet tenant={tenant} lang={lang} isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      <ShareSheet tenant={tenant} lang={lang} isOpen={shareOpen} onClose={() => setShareOpen(false)} />
+      <SearchOverlay slug={slug} lang={lang} tenant={tenant} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

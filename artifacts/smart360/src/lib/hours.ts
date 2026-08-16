@@ -1,4 +1,8 @@
-export function formatTodayHours(hoursJson?: string | null): string | null {
+// "Danes 12:00–22:00" pod postavko — beseda sledi jeziku gosta.
+const TODAY: Record<string, string> = { sl: "Danes", en: "Today", de: "Heute", it: "Oggi" };
+const CLOSED: Record<string, string> = { sl: "Danes zaprto", en: "Closed today", de: "Heute geschlossen", it: "Oggi chiuso" };
+
+export function formatTodayHours(hoursJson?: string | null, lang = "sl"): string | null {
   if (!hoursJson) return null;
   try {
     const hours = JSON.parse(hoursJson);
@@ -10,7 +14,7 @@ export function formatTodayHours(hoursJson?: string | null): string | null {
     const targetIdx = jsDay === 0 ? 6 : jsDay - 1;
     
     const today = hours[targetIdx];
-    if (!today) return "Danes Zaprto";
+    if (!today) return CLOSED[lang] ?? CLOSED.sl!;
     
     const [openMin, closeMin] = today;
     const formatMin = (m: number) => {
@@ -19,7 +23,7 @@ export function formatTodayHours(hoursJson?: string | null): string | null {
       return `${h}:${min.toString().padStart(2, '0')}`;
     };
     
-    return `Danes ${formatMin(openMin)}–${formatMin(closeMin)}`;
+    return `${TODAY[lang] ?? TODAY.sl} ${formatMin(openMin)}–${formatMin(closeMin)}`;
   } catch (e) {
     return null;
   }

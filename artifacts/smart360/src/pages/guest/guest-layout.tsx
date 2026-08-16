@@ -48,7 +48,9 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       link.rel = "manifest";
       document.head.appendChild(link);
     }
-    link.href = `${base}api/public/tenants/${encodeURIComponent(slug)}/manifest.webmanifest`;
+    // Language rides along: the installed app must open in the guest's language.
+    const langQ = lang && lang !== "sl" ? `?lang=${encodeURIComponent(lang)}` : "";
+    link.href = `${base}api/public/tenants/${encodeURIComponent(slug)}/manifest.webmanifest${langQ}`;
     let touch = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
     if (!touch) {
       touch = document.createElement("link");
@@ -63,7 +65,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     touch.href = iconBase
       ? `${iconBase}-ikona-180.png`
       : `${base}brand/ikona-smart360-180.png`;
-  }, [tenant, slug]);
+  }, [tenant, slug, lang]);
 
   // Unknown slug → the app's own 404 with a way back. NEVER a default tenant.
   if (isError) {
