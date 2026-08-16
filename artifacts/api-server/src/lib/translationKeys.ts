@@ -6,6 +6,8 @@ import {
 } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { buildTenantContent, adminScope } from "./contentTree";
+import { sanitizeBody, sanitizePlain } from "./sanitizeBody";
+import { isRichField } from "./normalizeContent";
 
 /**
  * Translation keys are PATHS into the tenant's content tree
@@ -249,8 +251,16 @@ export async function importTranslations(
     model: string,
     recordId: string,
     field: string,
-    value: string
+    rawValue: string
   ) => {
+    // Uvožena vrednost gre skozi ISTI sanitizer kot izvorno polje — vrednost
+    // z <b> se shrani kot <strong>, da se prevod in slovenski izvirnik nikoli
+    // ne razlikujeta samo po zapisu oznak. UI ključi in ostala polja so plain.
+    const value = isRichField(field) ? sanitizeBody(rawValue) : sanitizePlain(rawValue);
+    if (value === "") {
+      report.unchanged++;
+      return;
+    }
     const prev = existingMap.get(exKey(model, recordId, field));
     if (prev) {
       if (prev.value === value) {
@@ -327,8 +337,10 @@ export async function importTranslations(
   // Plural forms: replace this tenant+lang set for the imported keys.
   const plurals = file.plurals ?? {};
   for (const [key, forms] of Object.entries(plurals)) {
-    for (const [form, value] of Object.entries(forms)) {
-      if (typeof value !== "string" || value.trim() === "") continue;
+    for (const [form, rawValue] of Object.entries(forms)) {
+      if (typeof rawValue !== "string" || rawValue.trim() === "") continue;
+      const value = sanitizePlain(rawValue);
+      if (value === "") continue;
       const prev = await db
         .select()
         .from(pluralFormsTable)

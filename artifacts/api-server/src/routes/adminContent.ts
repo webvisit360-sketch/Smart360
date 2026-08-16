@@ -36,6 +36,7 @@ import {
 import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { sanitizeBody, sanitizePlain, sanitizeUrl } from "../lib/sanitizeBody";
+import { isRichField, normalizeAllContent } from "../lib/normalizeContent";
 import { invalidateTenantCache } from "./publicTenants";
 
 /**
@@ -697,8 +698,9 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
   const match = existing.find(
     (t) => t.model === model && t.field === field && t.lang === lang,
   );
-  // body and its paragraphs ("body[3]") are rich text like the source field.
-  const rich = field === "body" || field.startsWith("body[");
+  // body/noteText and their paragraphs are rich text like the source field
+  // (noteText is rendered as HTML in the guest app — plain bi mu slekel oznake).
+  const rich = isRichField(field);
   const clean = rich ? sanitizeBody(value) : sanitizePlain(value);
   if (match) {
     if (value === "") {
@@ -722,6 +724,32 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
   }
   invalidateTenantCache();
   res.json(UpsertTranslationResponse.parse({ ok: true }));
+});
+
+// ---------- Vzdrževanje ----------
+
+/**
+ * Enkratna normalizacija vse vsebine skozi sanitizer (b→strong, i→em, …).
+ * Idempotentno — drugi zagon vrne 0. Vrne seznam spremenjenih polj in število.
+ */
+router.post("/admin/maintenance/normalize-content", async (_req, res): Promise<void> => {
+  const { count, changes } = await normalizeAllContent();
+  // Samo metapodatki — vrednosti lahko vsebujejo WiFi gesla in kontakte,
+  // zato ne sodijo v centralne dnevnike.
+  for (const c of changes) {
+    console.log(`[normalize-content] ${c.table} ${c.id} ${c.field}`);
+  }
+  await logChange({
+    action: "maintenance",
+    entity: "normalize-content",
+    detail: `Normalizacija vsebine: ${count} spremenjenih polj`,
+  });
+  invalidateTenantCache();
+  res.json({
+    ok: true,
+    count,
+    changes: changes.map((c) => ({ table: c.table, id: c.id, field: c.field })),
+  });
 });
 
 // ---------- Trash ("Nedavno izbrisano") ----------

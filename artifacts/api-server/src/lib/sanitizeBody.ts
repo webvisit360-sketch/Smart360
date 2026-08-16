@@ -48,9 +48,42 @@ export function sanitizeUrl(url: string): string {
   return "";
 }
 
-/** Plain-text fields: strip every tag, collapse nbsp. */
+/**
+ * Plain-text fields: strip every tag, collapse nbsp, and DECODE entities.
+ * Ta polja se izrisujejo kot navadno besedilo (React jih sam ubeži) — če bi
+ * v bazi ostal "&amp;", bi gost videl dobesedno "&amp;" namesto "&".
+ */
 export function sanitizePlain(text: string): string {
-  return sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} })
-    .replace(/\u00a0/g, " ")
-    .trim();
+  // Do fiksne točke: dekodiranje lahko razkrije nove oznake/entitete
+  // ("&amp;lt;b&amp;gt;" → "&lt;b&gt;" → "<b>" → ""), zato ponavljamo, dokler
+  // se izhod ne ustali — šele to zagotavlja sanitizePlain(sanitizePlain(x))
+  // === sanitizePlain(x) za vsak vhod.
+  let cur = text;
+  for (let i = 0; i < 5; i++) {
+    const next = decodeEntities(
+      sanitizeHtml(cur, { allowedTags: [], allowedAttributes: {} }),
+    )
+      .replace(/\u00a0/g, " ")
+      .trim();
+    if (next === cur) break;
+    cur = next;
+  }
+  return cur;
+}
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0",
+};
+
+function decodeEntities(s: string): string {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, ent: string) => {
+    if (ent[0] === "#") {
+      const code =
+        ent[1] === "x" || ent[1] === "X"
+          ? parseInt(ent.slice(2), 16)
+          : parseInt(ent.slice(1), 10);
+      return Number.isFinite(code) && code > 0 ? String.fromCodePoint(code) : m;
+    }
+    return NAMED_ENTITIES[ent] ?? m;
+  });
 }

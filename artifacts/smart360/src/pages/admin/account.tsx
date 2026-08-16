@@ -79,6 +79,7 @@ export default function AdminAccount() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [isNormalizing, setIsNormalizing] = useState(false);
 
   // Recovery codes: counts always available, plaintext only right after rotation.
   const { data: codeStatus } = useGetRecoveryCodeStatus();
@@ -443,6 +444,45 @@ export default function AdminAccount() {
               </Table>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Vzdrževanje</CardTitle>
+          <CardDescription>
+            Enkratna normalizacija oblikovanja besedil: vsa obstoječa vsebina in prevodi gredo
+            skozi isti čistilec kot pri shranjevanju (npr. &lt;b&gt; → &lt;strong&gt;). Varno
+            ponoviti — drugi zagon ne spremeni ničesar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            disabled={isNormalizing}
+            onClick={async () => {
+              setIsNormalizing(true);
+              try {
+                const res = await fetch("/api/admin/maintenance/normalize-content", {
+                  method: "POST",
+                  credentials: "include",
+                });
+                if (!res.ok) throw new Error(String(res.status));
+                const data = await res.json();
+                toast({
+                  title: "Normalizacija končana",
+                  description: `Spremenjenih polj: ${data.count}. Podrobnosti so v dnevniku sprememb.`,
+                });
+              } catch {
+                toast({ title: "Napaka", description: "Normalizacija ni uspela.", variant: "destructive" });
+              } finally {
+                setIsNormalizing(false);
+              }
+            }}
+          >
+            {isNormalizing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Normaliziraj oblikovanje besedil
+          </Button>
         </CardContent>
       </Card>
 
