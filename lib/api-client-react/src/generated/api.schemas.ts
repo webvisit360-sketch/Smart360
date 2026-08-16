@@ -171,6 +171,16 @@ export interface Tenant {
   wifiSsid?: string | null;
   /** @nullable */
   wifiPass?: string | null;
+  /**
+     * WPA | WEP | nopass; null = WPA
+     * @nullable
+     */
+  wifiEnc?: string | null;
+  /**
+     * Page background for the whole guest app; null = white
+     * @nullable
+     */
+  bgColor?: string | null;
   theme: string;
   /** @nullable */
   coverTitle?: string | null;
@@ -222,6 +232,9 @@ export interface Tenant {
   isTemplate: boolean;
   isPublished: boolean;
   mediaQuotaBytes: number;
+  createdAt: string;
+  /** @nullable */
+  renewsAt?: string | null;
   updatedAt: string;
 }
 
@@ -274,6 +287,12 @@ export interface TenantUpdate {
   wifiSsid?: string | null;
   /** @nullable */
   wifiPass?: string | null;
+  /** @nullable */
+  wifiEnc?: string | null;
+  /** @nullable */
+  bgColor?: string | null;
+  /** @nullable */
+  renewsAt?: string | null;
   theme?: string;
   /** @nullable */
   coverTitle?: string | null;
@@ -713,17 +732,22 @@ export type TenantContentUi = {[key: string]: string};
  */
 export type TenantContentPlurals = {[key: string]: {[key: string]: string}};
 
-export type TenantContent = Tenant & {
+export type TenantContent = Tenant & ({
   sections: SectionContent[];
   /** Canonical absolute https guest URL for the current slug */
   publicUrl: string;
   /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */
   qrSvg: string;
+  /**
+     * Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID/password on every request; null when no SSID is set
+     * @nullable
+     */
+  wifiQrSvg?: string | null;
   /** Interface strings for the active language (empty for sl) */
   ui?: TenantContentUi;
   /** Plural forms for the active language, key -> CLDR form -> template */
   plurals?: TenantContentPlurals;
-};
+});
 
 export interface SearchResult {
   itemId: string;
@@ -748,11 +772,30 @@ export interface ChangelogEntry {
   createdAt: string;
 }
 
+export interface RenewalDue {
+  tenantId: string;
+  name: string;
+  slug: string;
+  renewsAt: string;
+}
+
 export interface AdminOverview {
   tenantsCount: number;
   publishedCount: number;
   itemsCount: number;
   recentChanges: ChangelogEntry[];
+  /** "Obnove v naslednjih 60 dneh" — tenants whose renewsAt falls in the next 60 days OR has already passed (overdue first), soonest first. */
+  renewalsDue: RenewalDue[];
+}
+
+export interface RenewalEntry {
+  id: string;
+  /** @nullable */
+  prevDate?: string | null;
+  newDate: string;
+  /** @nullable */
+  actor?: string | null;
+  createdAt: string;
 }
 
 export type GetPublicTenantParams = {

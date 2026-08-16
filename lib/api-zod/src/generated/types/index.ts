@@ -51,6 +51,8 @@ export * from './recoveryCodesRotated';
 export * from './recoveryCodeStatus';
 export * from './recoveryResult';
 export * from './renamePasskeyRequest';
+export * from './renewalDue';
+export * from './renewalEntry';
 export * from './reorderInput';
 export * from './searchPublicTenantParams';
 export * from './searchResult';

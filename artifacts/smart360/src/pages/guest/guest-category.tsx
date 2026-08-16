@@ -12,7 +12,7 @@ import { GuestSwipe } from "./GuestSwipe";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
 import { getTextVars } from "./cover-vars";
-import { useThemeAttr } from "./use-theme-attr";
+import { useThemeAttr, usePageBg } from "./use-theme-attr";
 import { makeT, plural, resolveLang, clampLang, SL_UI, DIFFICULTY_KEYS } from "./i18n";
 
 export default function GuestCategory() {
@@ -37,6 +37,7 @@ export default function GuestCategory() {
   const [contactOpen, setContactOpen] = useState(false);
 
   useThemeAttr(tenant?.theme);
+  usePageBg(tenant?.bgColor);
 
   if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">…</div></div></div>;
   if (!tenant) return <div className="app"><div className="pagepad"><div className="empty">{SL_UI["UI.notFound"]}</div></div></div>;
@@ -250,20 +251,32 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   }
 
   if (category.layout === 'wifi') {
-    return items.map((item: any) => (
-      <div className="kv" key={item.id}>
-        <div className="t">
-          <div className="k">{item.title}</div>
-          <div className="v">{item.body}</div>
-        </div>
-        <button className="iconbtn" onClick={() => {
-          if (item.body) {
-            navigator.clipboard.writeText(item.body);
-            alert(t("UI.share.copied"));
-          }
-        }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-book" /></svg></button>
-      </div>
-    ));
+    return (
+      <>
+        {items.map((item: any) => (
+          <div className="kv" key={item.id}>
+            <div className="t">
+              <div className="k">{item.title}</div>
+              <div className="v">{item.body}</div>
+            </div>
+            <button className="iconbtn" onClick={() => {
+              if (item.body) {
+                navigator.clipboard.writeText(item.body);
+                alert(t("UI.share.copied"));
+              }
+            }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-book" /></svg></button>
+          </div>
+        ))}
+        {/* Join-by-scan QR: Android joins from the code; the copy rows above
+            stay for older iPhones and laptops that still need to type. */}
+        {tenant.wifiQrSvg && (
+          <div className="qrbox">
+            <div className="qrbox__code" dangerouslySetInnerHTML={{ __html: tenant.wifiQrSvg }} />
+            <div className="qrbox__cap">{t("UI.wifi.scan")}</div>
+          </div>
+        )}
+      </>
+    );
   }
 
   // fallback to text layout

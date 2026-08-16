@@ -10,14 +10,19 @@ import type { Tenant } from './tenant';
 import type { TenantContentPlurals } from './tenantContentPlurals';
 import type { TenantContentUi } from './tenantContentUi';
 
-export type TenantContent = Tenant & {
+export type TenantContent = Tenant & ({
   sections: SectionContent[];
   /** Canonical absolute https guest URL for the current slug */
   publicUrl: string;
   /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */
   qrSvg: string;
+  /**
+     * Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID/password on every request; null when no SSID is set
+     * @nullable
+     */
+  wifiQrSvg?: string | null;
   /** Interface strings for the active language (empty for sl) */
   ui?: TenantContentUi;
   /** Plural forms for the active language, key -> CLDR form -> template */
   plurals?: TenantContentPlurals;
-};
+});

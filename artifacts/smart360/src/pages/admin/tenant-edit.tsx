@@ -1,4 +1,4 @@
-import { useGetTenant, useUpdateTenant, getGetTenantQueryKey, getListTenantsQueryKey } from "@workspace/api-client-react";
+import { useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
 import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Upload, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -106,11 +106,31 @@ export default function AdminTenantEdit() {
     navColorCover: null as string | null,
     navColor: null as string | null,
     navColorOn: null as string | null,
+
+    wifiSsid: "",
+    wifiPass: "",
+    wifiEnc: null as string | null, // null = WPA (privzeto)
+    bgColor: null as string | null, // null = belo (privzeto)
   });
 
   // Media quota edited in GB, stored in bytes (kept out of formData so the
   // GB↔bytes conversion happens exactly once, on save).
   const [mediaQuotaGb, setMediaQuotaGb] = useState("2");
+
+  // Renewal ("Obnova"): a real editable date, edited directly (not via
+  // formData — saving it immediately keeps the history trail on the server).
+  const { data: renewals } = useListTenantRenewals(id);
+  const renewMutation = useRenewTenant({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
+        queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListTenantRenewalsQueryKey(id) });
+        queryClient.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
+        toast({ title: "Obnovljeno", description: "Datum obnove je zamaknjen za eno leto." });
+      },
+    },
+  });
 
   const initRef = useRef<string | null>(null);
   const [originalSlug, setOriginalSlug] = useState("");
@@ -196,6 +216,11 @@ export default function AdminTenantEdit() {
         navColorCover: tenant.navColorCover ?? null,
         navColor: tenant.navColor ?? null,
         navColorOn: tenant.navColorOn ?? null,
+
+        wifiSsid: tenant.wifiSsid ?? "",
+        wifiPass: tenant.wifiPass ?? "",
+        wifiEnc: tenant.wifiEnc ?? null,
+        bgColor: tenant.bgColor ?? null,
       });
     }
   }, [tenant]);
@@ -247,6 +272,8 @@ export default function AdminTenantEdit() {
       data: { 
         ...formData, 
         customDomain: formData.customDomain.trim() || null,
+        wifiSsid: formData.wifiSsid.trim() || null,
+        wifiPass: formData.wifiPass || null,
         // min 0.1 GB — a zero/invalid quota would block every upload
         mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1024 ** 3),
       },
@@ -354,6 +381,30 @@ export default function AdminTenantEdit() {
                 </div>
               </div>
               
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t mt-4">
+                <div className="space-y-2">
+                  <Label>WiFi omrežje (SSID)</Label>
+                  <Input value={formData.wifiSsid} onChange={e => setFormData({ ...formData, wifiSsid: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>WiFi geslo</Label>
+                  <Input value={formData.wifiPass} onChange={e => setFormData({ ...formData, wifiPass: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Šifriranje</Label>
+                  <select
+                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    value={formData.wifiEnc ?? "WPA"}
+                    onChange={e => setFormData({ ...formData, wifiEnc: e.target.value === "WPA" ? null : e.target.value })}
+                  >
+                    <option value="WPA">WPA / WPA2 / WPA3 (običajno)</option>
+                    <option value="WEP">WEP (star usmerjevalnik)</option>
+                    <option value="nopass">Brez gesla</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">Gostje na WiFi strani dobijo QR za samodejno povezavo.</p>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2 pt-4">
                 <button 
                   className={`w-12 h-6 rounded-full transition-colors relative ${formData.isPublished ? 'bg-primary' : 'bg-muted-foreground/30'}`}
@@ -363,6 +414,61 @@ export default function AdminTenantEdit() {
                 </button>
                 <Label>Objavljeno (vidno gostom)</Label>
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Naročnina</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Vzpostavljeno</Label>
+                  <p className="text-sm py-2">{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString("sl-SI") : "—"}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Obnova</Label>
+                  <Input
+                    type="date"
+                    value={tenant.renewsAt ? new Date(tenant.renewsAt).toISOString().slice(0, 10) : ""}
+                    onChange={e => {
+                      const v = e.target.value;
+                      updateMutation.mutate({ id, data: { renewsAt: v ? new Date(v + "T12:00:00Z").toISOString() : null } });
+                    }}
+                  />
+                  {tenant.renewsAt && (() => {
+                    const days = Math.ceil((new Date(tenant.renewsAt).getTime() - Date.now()) / 86400000);
+                    const cls = days < 0 ? "text-destructive" : days <= 30 ? "text-amber-600" : "text-muted-foreground";
+                    return <p className={`text-xs ${cls}`}>{days < 0 ? `Zapadlo pred ${-days} dnevi` : `Čez ${days} dni`}</p>;
+                  })()}
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                disabled={renewMutation.isPending}
+                onClick={() => renewMutation.mutate({ id })}
+              >
+                {renewMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
+                Obnovljeno za eno leto
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Datum se zamakne točno eno leto od trenutnega datuma obnove (ne od danes). Potekla namestitev za goste deluje naprej.
+              </p>
+              {(renewals?.length ?? 0) > 0 && (
+                <div className="border rounded-md divide-y">
+                  {renewals!.map(r => (
+                    <div key={r.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">{new Date(r.createdAt).toLocaleDateString("sl-SI")}</span>
+                      <span>
+                        {r.prevDate ? new Date(r.prevDate).toLocaleDateString("sl-SI") : "—"}
+                        {" → "}
+                        {new Date(r.newDate).toLocaleDateString("sl-SI")}
+                      </span>
+                      <span className="text-muted-foreground">{r.actor ?? ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -383,6 +489,39 @@ export default function AdminTenantEdit() {
             className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "logo"); e.target.value = ""; }}
           />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ozadje strani</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Ena barva za celotno aplikacijo za goste. Pri temnem ozadju se barve besedila prilagodijo samodejno.
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {["#FFFFFF", "#F7F5F1", "#EEF2F6", "#14201F", "#101820", "#0B1B2B"].map(c => {
+                  const active = (formData.bgColor ?? "#FFFFFF").toUpperCase() === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      title={c}
+                      onClick={() => setFormData({ ...formData, bgColor: c === "#FFFFFF" ? null : c })}
+                      className={`w-9 h-9 rounded-full border ${active ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      style={{ background: c }}
+                    />
+                  );
+                })}
+                <input
+                  type="color"
+                  aria-label="Poljubna barva"
+                  value={formData.bgColor ?? "#FFFFFF"}
+                  onChange={e => setFormData({ ...formData, bgColor: e.target.value.toUpperCase() === "#FFFFFF" ? null : e.target.value.toUpperCase() })}
+                  className="w-9 h-9 rounded-full border cursor-pointer bg-transparent"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

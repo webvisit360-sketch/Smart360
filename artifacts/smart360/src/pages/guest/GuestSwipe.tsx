@@ -7,7 +7,7 @@ import { spriteId } from "./sprite-icon";
 import { getTextVars } from "./cover-vars";
 import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
-import { useThemeAttr } from "./use-theme-attr";
+import { useThemeAttr, usePageBg } from "./use-theme-attr";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
 import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
@@ -28,6 +28,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const snapTimerRef = useRef<any>(null);
 
   useThemeAttr(tenant?.theme);
+  usePageBg(tenant?.bgColor);
   const t = makeT(tenant, lang);
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact
@@ -170,6 +171,13 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   if (tenant.navColor) navVars["--nv"] = tenant.navColor;
   if (tenant.navColorOn) navVars["--nv-on"] = tenant.navColorOn;
   if (tenant.navColorCover) navVars["--nv-cover"] = tenant.navColorCover;
+  // Dark page background: force light bottom icons ONLY when the owner has
+  // not overridden the nav colours (their explicit choice always wins).
+  if (typeof document !== "undefined" &&
+      document.documentElement.getAttribute("data-dark") === "1") {
+    if (!tenant.navColor) navVars["--nv"] = "#C7CFD6";
+    if (!tenant.navColorOn) navVars["--nv-on"] = "#F3F6F8";
+  }
 
   // Zadetki: nazivi kategorij (pod: naslov razdelka) + naslovi postavk (pod:
   // naziv kategorije) — POI, poti, izdelki, dogodki so postavke svojih kategorij.
@@ -667,20 +675,32 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   }
 
   if (category.layout === 'wifi') {
-    return items.map((item: any) => (
-      <div className="kv" key={item.id}>
-        <div className="t">
-          <div className="k">{item.title}</div>
-          <div className="v">{item.body}</div>
-        </div>
-        <button className="iconbtn" onClick={() => {
-          if (item.body) {
-            navigator.clipboard.writeText(item.body);
-            alert(t("UI.share.copied"));
-          }
-        }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-book" /></svg></button>
-      </div>
-    ));
+    return (
+      <>
+        {items.map((item: any) => (
+          <div className="kv" key={item.id}>
+            <div className="t">
+              <div className="k">{item.title}</div>
+              <div className="v">{item.body}</div>
+            </div>
+            <button className="iconbtn" onClick={() => {
+              if (item.body) {
+                navigator.clipboard.writeText(item.body);
+                alert(t("UI.share.copied"));
+              }
+            }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-book" /></svg></button>
+          </div>
+        ))}
+        {/* Join-by-scan QR: Android joins from the code; the copy rows above
+            stay for older iPhones and laptops that still need to type. */}
+        {tenant.wifiQrSvg && (
+          <div className="qrbox">
+            <div className="qrbox__code" dangerouslySetInnerHTML={{ __html: tenant.wifiQrSvg }} />
+            <div className="qrbox__cap">{t("UI.wifi.scan")}</div>
+          </div>
+        )}
+      </>
+    );
   }
 
   // fallback to text layout

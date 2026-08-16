@@ -44,6 +44,13 @@ export const tenantsTable = pgTable("tenants", {
   mapQuery: text("map_query"),
   wifiSsid: text("wifi_ssid"),
   wifiPass: text("wifi_pass"),
+  // WiFi encryption for the join-by-scan QR: "WPA" | "WEP" | "nopass".
+  // NULL = WPA (the sensible default; almost every router is WPA2/WPA3).
+  wifiEnc: text("wifi_enc"),
+  // One page background colour for the WHOLE guest app (wifi-in-barva-ozadja.md).
+  // NULL = theme default white. Dark text/line tokens are DERIVED from its
+  // luminance client-side — never stored separately.
+  bgColor: text("bg_color"),
   theme: text("theme").notNull().default("mediterran"),
   coverTitle: text("cover_title"),
   coverSubtitle: text("cover_subtitle"),
@@ -89,10 +96,34 @@ export const tenantsTable = pgTable("tenants", {
     .default(2_147_483_648),
   isTemplate: boolean("is_template").notNull().default(false),
   isPublished: boolean("is_published").notNull().default(false),
+  // Yearly maintenance (datum-in-obnova-narocnine.md). createdAt is shown as
+  // "Vzpostavljeno" on the tenant card; existing rows get the migration date.
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  // "Obnova" — a REAL editable date, not computed. Set to createdAt + 1 year
+  // on create; the operator may move it (late payer, free months).
+  renewsAt: timestamp("renews_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
+});
+
+/**
+ * Renewal history — proof of WHEN a renewal was recorded. Three columns and
+ * nothing more: no invoicing module (spec section 4, "WHAT THIS IS NOT").
+ */
+export const tenantRenewalsTable = pgTable("tenant_renewals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull(),
+  prevDate: timestamp("prev_date", { withTimezone: true }),
+  newDate: timestamp("new_date", { withTimezone: true }).notNull(),
+  // Operator username (single-operator system); kept for the audit line.
+  actor: text("actor"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export const insertTenantSchema = createInsertSchema(tenantsTable).omit({

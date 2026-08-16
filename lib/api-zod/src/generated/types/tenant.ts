@@ -42,6 +42,16 @@ export interface Tenant {
   wifiSsid?: string | null;
   /** @nullable */
   wifiPass?: string | null;
+  /**
+     * WPA | WEP | nopass; null = WPA
+     * @nullable
+     */
+  wifiEnc?: string | null;
+  /**
+     * Page background for the whole guest app; null = white
+     * @nullable
+     */
+  bgColor?: string | null;
   theme: string;
   /** @nullable */
   coverTitle?: string | null;
@@ -93,5 +103,8 @@ export interface Tenant {
   isTemplate: boolean;
   isPublished: boolean;
   mediaQuotaBytes: number;
+  createdAt: string;
+  /** @nullable */
+  renewsAt?: string | null;
   updatedAt: string;
 }

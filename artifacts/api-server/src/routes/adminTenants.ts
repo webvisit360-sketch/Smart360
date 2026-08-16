@@ -3,6 +3,7 @@ import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   db,
   tenantsTable,
+  tenantRenewalsTable,
   sectionsTable,
   categoriesTable,
   itemsTable,
@@ -19,8 +20,10 @@ import {
   UpdateTenantResponse,
   DuplicateTenantBody,
   DuplicateTenantResponse,
+  RenewTenantResponse,
+  ListTenantRenewalsResponse,
 } from "@workspace/api-zod";
-import { requireAdmin } from "../lib/adminAuth";
+import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { buildTenantContent } from "../lib/contentTree";
 import { checkSlugAvailability } from "../lib/slug";
@@ -45,6 +48,13 @@ function firstParam(v: string | string[] | undefined): string {
   return (Array.isArray(v) ? v[0] : v) ?? "";
 }
 
+/** renewsAt default on create: exactly one year after createdAt. */
+function plusOneYear(d: Date): Date {
+  const out = new Date(d);
+  out.setFullYear(out.getFullYear() + 1);
+  return out;
+}
+
 router.get("/admin/overview", async (_req, res): Promise<void> => {
   const [tenantCounts] = await db
     .select({
@@ -60,12 +70,27 @@ router.get("/admin/overview", async (_req, res): Promise<void> => {
     .from(changelogTable)
     .orderBy(desc(changelogTable.createdAt))
     .limit(20);
+  // "Obnove v naslednjih 60 dneh" — includes ALREADY OVERDUE tenants (they
+  // sort first because their date is smallest). Never hides or disables
+  // anyone: payment is between the operator and the client.
+  const horizon = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+  const renewalsDue = await db
+    .select({
+      tenantId: tenantsTable.id,
+      name: tenantsTable.name,
+      slug: tenantsTable.slug,
+      renewsAt: tenantsTable.renewsAt,
+    })
+    .from(tenantsTable)
+    .where(sql`${tenantsTable.renewsAt} is not null and ${tenantsTable.renewsAt} <= ${horizon}`)
+    .orderBy(asc(tenantsTable.renewsAt));
   res.json(
     GetAdminOverviewResponse.parse(serialize({
       tenantsCount: tenantCounts?.total ?? 0,
       publishedCount: tenantCounts?.published ?? 0,
       itemsCount: itemCounts?.total ?? 0,
       recentChanges,
+      renewalsDue,
     })),
   );
 });
@@ -103,13 +128,14 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         copyContent: false,
       });
       invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
-      if (subtitle !== undefined) {
-        await db
-          .update(tenantsTable)
-          .set({ subtitle })
-          .where(eq(tenantsTable.id, created.id));
-        created.subtitle = subtitle;
-      }
+      // Every new tenant starts with a renewal date one year out.
+      const renewsAt = plusOneYear(new Date());
+      await db
+        .update(tenantsTable)
+        .set({ renewsAt, ...(subtitle !== undefined ? { subtitle } : {}) })
+        .where(eq(tenantsTable.id, created.id));
+      created.renewsAt = renewsAt;
+      if (subtitle !== undefined) created.subtitle = subtitle;
       await logChange({
         tenantId: created.id,
         tenantName: name,
@@ -124,7 +150,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
 
   const [tenant] = await db
     .insert(tenantsTable)
-    .values({ slug, name, subtitle: subtitle ?? null })
+    .values({ slug, name, subtitle: subtitle ?? null, renewsAt: plusOneYear(new Date()) })
     .returning();
   invalidateTenantCache();
   await logChange({
@@ -281,6 +307,10 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
     return "textFont must be one of figtree, system, georgia, verdana, menlo";
   if (data["textColor"] !== undefined && data["textColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["textColor"])))
     return "textColor must be a hex color like #14201F";
+  if (data["bgColor"] !== undefined && data["bgColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["bgColor"])))
+    return "bgColor must be a hex color like #FFFFFF";
+  if (data["wifiEnc"] !== undefined && data["wifiEnc"] !== null && !["WPA", "WEP", "nopass"].includes(String(data["wifiEnc"])))
+    return "wifiEnc must be WPA, WEP or nopass";
   return null;
 }
 
@@ -297,7 +327,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     return;
   }
   const [before] = await db
-    .select({ slug: tenantsTable.slug })
+    .select({ slug: tenantsTable.slug, renewsAt: tenantsTable.renewsAt })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, id));
   if (!before) {
@@ -312,9 +342,23 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       return;
     }
   }
+  // renewsAt arrives as an ISO string; drizzle timestamp wants a Date.
+  const { renewsAt: renewsAtRaw, ...restData } = parsed.data;
+  const updateData: Record<string, unknown> = { ...restData };
+  let renewsAtChanged = false;
+  if (renewsAtRaw !== undefined) {
+    const next = renewsAtRaw === null ? null : new Date(renewsAtRaw);
+    if (next !== null && Number.isNaN(next.getTime())) {
+      res.status(400).json({ error: "renewsAt must be an ISO date" });
+      return;
+    }
+    updateData["renewsAt"] = next;
+    renewsAtChanged =
+      (next?.getTime() ?? null) !== (before.renewsAt?.getTime() ?? null);
+  }
   const [tenant] = await db
     .update(tenantsTable)
-    .set(parsed.data)
+    .set(updateData)
     .where(eq(tenantsTable.id, id))
     .returning();
   if (!tenant) {
@@ -333,6 +377,17 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       .where(eq(tenantAliasesTable.slug, newSlug));
   }
   invalidateTenantCache();
+  if (renewsAtChanged) {
+    // A manually moved renewal date is part of the same proof trail as the
+    // renew button — record it (late payer, free months, corrections).
+    const admin = await getAdminUser();
+    await db.insert(tenantRenewalsTable).values({
+      tenantId: tenant.id,
+      prevDate: before.renewsAt,
+      newDate: tenant.renewsAt ?? new Date(0),
+      actor: admin?.email ?? null,
+    });
+  }
   await logChange({
     tenantId: tenant.id,
     tenantName: tenant.name,
@@ -340,6 +395,52 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     entity: "tenant",
   });
   res.json(UpdateTenantResponse.parse(serialize(tenant)));
+});
+
+router.post("/admin/tenants/:id/renew", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [before] = await db
+    .select({ name: tenantsTable.name, renewsAt: tenantsTable.renewsAt, createdAt: tenantsTable.createdAt })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, id));
+  if (!before) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // Exactly one year from the CURRENT value, never from today — a client who
+  // pays two weeks late must not silently gain two weeks every year.
+  const base = before.renewsAt ?? plusOneYear(before.createdAt);
+  const next = plusOneYear(base);
+  const [tenant] = await db
+    .update(tenantsTable)
+    .set({ renewsAt: next })
+    .where(eq(tenantsTable.id, id))
+    .returning();
+  const admin = await getAdminUser();
+  await db.insert(tenantRenewalsTable).values({
+    tenantId: id,
+    prevDate: before.renewsAt,
+    newDate: next,
+    actor: admin?.email ?? null,
+  });
+  await logChange({
+    tenantId: id,
+    tenantName: before.name,
+    action: "renew",
+    entity: "tenant",
+    detail: `obnova do ${next.toISOString().slice(0, 10)}`,
+  });
+  res.json(RenewTenantResponse.parse(serialize(tenant)));
+});
+
+router.get("/admin/tenants/:id/renewals", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const rows = await db
+    .select()
+    .from(tenantRenewalsTable)
+    .where(eq(tenantRenewalsTable.tenantId, id))
+    .orderBy(desc(tenantRenewalsTable.createdAt));
+  res.json(ListTenantRenewalsResponse.parse(serialize(rows)));
 });
 
 router.delete("/admin/tenants/:id", async (req, res): Promise<void> => {
@@ -431,7 +532,9 @@ export async function copyTenant(
     .where(eq(tenantsTable.id, sourceId));
   if (!source) throw new Error("Source tenant not found");
 
-  const { id: _id, updatedAt: _u, ...rest } = source;
+  // Subscription dates are per-tenant, never inherited: the copy is a NEW
+  // establishment, so createdAt = now (DB default) and renewal = now + 1 year.
+  const { id: _id, updatedAt: _u, createdAt: _c, renewsAt: _r, ...rest } = source;
   const [created] = await db
     .insert(tenantsTable)
     .values({
@@ -440,6 +543,7 @@ export async function copyTenant(
       name: opts.name,
       isTemplate: false,
       isPublished: false,
+      renewsAt: plusOneYear(new Date()),
     })
     .returning();
 

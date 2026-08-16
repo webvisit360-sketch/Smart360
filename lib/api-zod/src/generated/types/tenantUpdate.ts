@@ -41,6 +41,12 @@ export interface TenantUpdate {
   wifiSsid?: string | null;
   /** @nullable */
   wifiPass?: string | null;
+  /** @nullable */
+  wifiEnc?: string | null;
+  /** @nullable */
+  bgColor?: string | null;
+  /** @nullable */
+  renewsAt?: string | null;
   theme?: string;
   /** @nullable */
   coverTitle?: string | null;

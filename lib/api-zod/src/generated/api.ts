@@ -48,6 +48,8 @@ export const GetPublicTenantResponse = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -76,6 +78,8 @@ export const GetPublicTenantResponse = zod.object({
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
   "sections": zod.array(zod.object({
@@ -134,6 +138,7 @@ export const GetPublicTenantResponse = zod.object({
 }))),
   "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
   "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
+  "wifiQrSvg": zod.string().nullish().describe('Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID\/password on every request; null when no SSID is set\n'),
   "ui": zod.record(zod.string(), zod.string()).optional().describe('Interface strings for the active language (empty for sl)'),
   "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template')
 }))
@@ -313,7 +318,13 @@ export const GetAdminOverviewResponse = zod.object({
   "entity": zod.string(),
   "detail": zod.string().nullish(),
   "createdAt": zod.string()
-}))
+})),
+  "renewalsDue": zod.array(zod.object({
+  "tenantId": zod.string(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "renewsAt": zod.string()
+})).describe('\"Obnove v naslednjih 60 dneh\" — tenants whose renewsAt falls in the next 60 days OR has already passed (overdue first), soonest first.\n')
 })
 
 
@@ -337,6 +348,8 @@ export const ListTenantsResponseItem = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -365,6 +378,8 @@ export const ListTenantsResponseItem = zod.object({
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 })
 export const ListTenantsResponse = zod.array(ListTenantsResponseItem)
@@ -397,6 +412,8 @@ export const CreateTenantResponse = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -425,6 +442,8 @@ export const CreateTenantResponse = zod.object({
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 })
 
@@ -456,6 +475,8 @@ export const GetTenantResponse = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -484,6 +505,8 @@ export const GetTenantResponse = zod.object({
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
   "sections": zod.array(zod.object({
@@ -542,6 +565,7 @@ export const GetTenantResponse = zod.object({
 }))),
   "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
   "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
+  "wifiQrSvg": zod.string().nullish().describe('Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID\/password on every request; null when no SSID is set\n'),
   "ui": zod.record(zod.string(), zod.string()).optional().describe('Interface strings for the active language (empty for sl)'),
   "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template')
 }))
@@ -574,6 +598,9 @@ export const UpdateTenantBody = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish(),
+  "bgColor": zod.string().nullish(),
+  "renewsAt": zod.string().nullish(),
   "theme": zod.string().optional(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -624,6 +651,8 @@ export const UpdateTenantResponse = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -652,6 +681,8 @@ export const UpdateTenantResponse = zod.object({
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 })
 
@@ -697,6 +728,8 @@ export const DuplicateTenantResponse = zod.object({
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
@@ -725,6 +758,8 @@ export const DuplicateTenantResponse = zod.object({
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }),
   "dropped": zod.array(zod.object({
@@ -735,6 +770,87 @@ export const DuplicateTenantResponse = zod.object({
   "adminPath": zod.string()
 }))
 })
+
+
+/**
+ * @summary "Obnovljeno za eno leto" — moves renewsAt forward exactly one year from its CURRENT value (never from today: a late payer must not gain weeks).
+
+ */
+export const RenewTenantParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RenewTenantResponse = zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "customDomain": zod.string().nullish(),
+  "name": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "rating": zod.string().nullish(),
+  "reviewsCount": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish(),
+  "heroUrl": zod.string().nullish(),
+  "tourUrl": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "whatsapp": zod.string().nullish(),
+  "viber": zod.string().nullish(),
+  "instagram": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "mapQuery": zod.string().nullish(),
+  "wifiSsid": zod.string().nullish(),
+  "wifiPass": zod.string().nullish(),
+  "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
+  "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "theme": zod.string(),
+  "coverTitle": zod.string().nullish(),
+  "coverSubtitle": zod.string().nullish(),
+  "coverTitleSize": zod.number().nullish(),
+  "coverTitleOpacity": zod.number().nullish(),
+  "coverTextColor": zod.string().nullish(),
+  "coverSubSize": zod.number().nullish(),
+  "coverSubOpacity": zod.number().nullish(),
+  "coverMetaSize": zod.number().nullish(),
+  "coverMetaOpacity": zod.number().nullish(),
+  "coverVeil": zod.number().nullish(),
+  "tileVeil": zod.number().nullish(),
+  "textScale": zod.number().nullish(),
+  "textFont": zod.string().nullish(),
+  "textColor": zod.string().nullish(),
+  "coverAlign": zod.string().nullish(),
+  "coverShowRating": zod.boolean().nullish(),
+  "logoX": zod.number().nullish(),
+  "logoY": zod.number().nullish(),
+  "logoW": zod.number().nullish(),
+  "logoOpacity": zod.number().nullish(),
+  "navColorCover": zod.string().nullish(),
+  "navColor": zod.string().nullish(),
+  "navColorOn": zod.string().nullish(),
+  "languages": zod.array(zod.string()),
+  "isTemplate": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "mediaQuotaBytes": zod.number(),
+  "createdAt": zod.string(),
+  "renewsAt": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Renewal history — proof of when a renewal was recorded
+ */
+export const ListTenantRenewalsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListTenantRenewalsResponseItem = zod.object({
+  "id": zod.string(),
+  "prevDate": zod.string().nullish(),
+  "newDate": zod.string(),
+  "actor": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListTenantRenewalsResponse = zod.array(ListTenantRenewalsResponseItem)
 
 
 /**

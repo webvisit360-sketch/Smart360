@@ -455,6 +455,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DuplicateTenantResult"
+  /admin/tenants/{id}/renew:
+    post:
+      operationId: renewTenant
+      tags: [tenants]
+      summary: >
+        "Obnovljeno za eno leto" — moves renewsAt forward exactly one year from
+        its CURRENT value (never from today: a late payer must not gain weeks).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Renewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "404":
+          description: Not found
+  /admin/tenants/{id}/renewals:
+    get:
+      operationId: listTenantRenewals
+      tags: [tenants]
+      summary: Renewal history — proof of when a renewal was recorded
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: History, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RenewalEntry"
   /admin/tenants/{id}/media-check:
     get:
       operationId: checkTenantMedia
@@ -1309,6 +1349,8 @@ components:
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
+        wifiEnc: { type: ["string", "null"], description: "WPA | WEP | nopass; null = WPA" }
+        bgColor: { type: ["string", "null"], description: "Page background for the whole guest app; null = white" }
         theme: { type: string }
         coverTitle: { type: ["string", "null"] }
         coverSubtitle: { type: ["string", "null"] }
@@ -1339,8 +1381,10 @@ components:
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
         mediaQuotaBytes: { type: number }
+        createdAt: { type: string }
+        renewsAt: { type: ["string", "null"] }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, languages, isTemplate, isPublished, mediaQuotaBytes, updatedAt]
+      required: [id, slug, name, theme, languages, isTemplate, isPublished, mediaQuotaBytes, createdAt, updatedAt]
     TenantInput:
       type: object
       properties:
@@ -1379,6 +1423,9 @@ components:
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
+        wifiEnc: { type: ["string", "null"] }
+        bgColor: { type: ["string", "null"] }
+        renewsAt: { type: ["string", "null"] }
         theme: { type: string }
         coverTitle: { type: ["string", "null"] }
         coverSubtitle: { type: ["string", "null"] }
@@ -1811,6 +1858,11 @@ components:
             qrSvg:
               type: string
               description: Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl
+            wifiQrSvg:
+              type: ["string", "null"]
+              description: >
+                Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the
+                current SSID/password on every request; null when no SSID is set
             ui:
               type: object
               description: Interface strings for the active language (empty for sl)
@@ -1843,7 +1895,31 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ChangelogEntry"
-      required: [tenantsCount, publishedCount, itemsCount, recentChanges]
+        renewalsDue:
+          type: array
+          description: >
+            "Obnove v naslednjih 60 dneh" — tenants whose renewsAt falls in the
+            next 60 days OR has already passed (overdue first), soonest first.
+          items:
+            $ref: "#/components/schemas/RenewalDue"
+      required: [tenantsCount, publishedCount, itemsCount, recentChanges, renewalsDue]
+    RenewalDue:
+      type: object
+      properties:
+        tenantId: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        renewsAt: { type: string }
+      required: [tenantId, name, slug, renewsAt]
+    RenewalEntry:
+      type: object
+      properties:
+        id: { type: string }
+        prevDate: { type: ["string", "null"] }
+        newDate: { type: string }
+        actor: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, newDate, createdAt]
     ChangelogEntry:
       type: object
       properties:

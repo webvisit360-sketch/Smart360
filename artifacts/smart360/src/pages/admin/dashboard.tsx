@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Trash2, Home, FileText, CheckCircle2, FileCheck2 } from "lucide-react";
+import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Trash2, Home, FileText, CheckCircle2, FileCheck2, CalendarClock } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
@@ -22,6 +22,8 @@ export default function AdminDashboard() {
   const usageByTenant = new Map(storageUsage?.tenants.map(t => [t.tenantId, t]) ?? []);
   
   const [search, setSearch] = useState("");
+  // Card grid, so sorting is a toggle rather than a column header.
+  const [sortBy, setSortBy] = useState<"name" | "renewal">("name");
 
   const duplicateMutation = useDuplicateTenant({
     mutation: {
@@ -57,10 +59,25 @@ export default function AdminDashboard() {
     }
   });
 
-  const filteredTenants = tenants?.filter(t => 
-    t.name.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredTenants = (tenants?.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.slug.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  ) || []).slice().sort((a, b) => {
+    if (sortBy === "renewal") {
+      // Soonest (or most overdue) first; tenants without a date go last.
+      const av = a.renewsAt ? new Date(a.renewsAt).getTime() : Infinity;
+      const bv = b.renewsAt ? new Date(b.renewsAt).getTime() : Infinity;
+      return av - bv;
+    }
+    return a.name.localeCompare(b.name, "sl");
+  });
+
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("sl-SI");
+  /** Whole days from today to the date (negative = overdue). */
+  const daysTo = (d: string) =>
+    Math.ceil((new Date(d).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  const renewalTone = (days: number) =>
+    days < 0 ? "text-destructive font-medium" : days <= 30 ? "text-amber-600 font-medium" : "text-muted-foreground";
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -118,6 +135,14 @@ export default function AdminDashboard() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortBy(s => (s === "name" ? "renewal" : "name"))}
+            >
+              <CalendarClock className="h-4 w-4 mr-2" />
+              {sortBy === "name" ? "Razvrsti: Ime" : "Razvrsti: Obnova"}
+            </Button>
           </div>
 
           {loadingTenants ? (
@@ -159,6 +184,18 @@ export default function AdminDashboard() {
                             return (
                               <span className={pct >= 100 ? "text-destructive font-medium" : pct >= 80 ? "text-amber-600 font-medium" : ""}>
                                 {" • "}{fmtGb(u.usedBytes)} / {fmtGb(u.quotaBytes)}
+                              </span>
+                            );
+                          })()}
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4 -mt-3">
+                          Vzpostavljeno: {fmtDate(tenant.createdAt)}
+                          {tenant.renewsAt && (() => {
+                            const days = daysTo(tenant.renewsAt!);
+                            return (
+                              <span className={renewalTone(days)}>
+                                {" • "}Obnova: {fmtDate(tenant.renewsAt!)}
+                                {days < 0 ? ` · zapadlo pred ${-days} dnevi` : ` · čez ${days} dni`}
                               </span>
                             );
                           })()}
@@ -225,6 +262,35 @@ export default function AdminDashboard() {
 
         {/* Storage + Recent Changes */}
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Obnove v naslednjih 60 dneh</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(overview?.renewalsDue?.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground">Nobene obnove v naslednjih 60 dneh</p>
+              ) : (
+                <div className="space-y-2">
+                  {overview!.renewalsDue.map(r => {
+                    const days = daysTo(r.renewsAt);
+                    return (
+                      <button
+                        key={r.tenantId}
+                        className="w-full text-left flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+                        onClick={() => setLocation(`/admin/tenants/${r.tenantId}`)}
+                      >
+                        <span className="text-sm font-medium truncate">{r.name}</span>
+                        <span className={`text-sm whitespace-nowrap ${renewalTone(days)}`}>
+                          {fmtDate(r.renewsAt)}{days < 0 ? " · zapadlo" : ` · čez ${days} dni`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Prostor za medije</CardTitle>

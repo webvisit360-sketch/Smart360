@@ -6,10 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ChangelogEntry } from './changelogEntry';
+import type { RenewalDue } from './renewalDue';
 
 export interface AdminOverview {
   tenantsCount: number;
   publishedCount: number;
   itemsCount: number;
   recentChanges: ChangelogEntry[];
+  /** "Obnove v naslednjih 60 dneh" — tenants whose renewsAt falls in the next 60 days OR has already passed (overdue first), soonest first. */
+  renewalsDue: RenewalDue[];
 }

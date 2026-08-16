@@ -13,7 +13,7 @@ import { ShareSheet } from "./ShareSheet";
 import { imgSrc, mediaImgSrc } from "./img";
 import { hsub } from "./hsub";
 import { makeT, plural, resolveLang, clampLang, switchLang, LANG_NAMES, SL_UI } from "./i18n";
-import { useThemeAttr } from "./use-theme-attr";
+import { useThemeAttr, usePageBg } from "./use-theme-attr";
 import { useEffect } from "react";
 
 export default function GuestHome() {
@@ -35,6 +35,7 @@ export default function GuestHome() {
   const [contactOpen, setContactOpen] = useState(false);
 
   useThemeAttr(tenant?.theme);
+  usePageBg(tenant?.bgColor);
 
   // The cover photo is the first thing a guest sees — preload it eagerly.
   const heroHref = tenant?.heroUrl ? imgSrc(tenant.heroUrl, 1400) : null;

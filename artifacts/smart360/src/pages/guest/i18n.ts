@@ -59,6 +59,7 @@ export const SL_UI: Record<string, string> = {
   "UI.wifi.network": "Omrežje",
   "UI.wifi.password": "Geslo",
   "UI.wifi.copy": "Kopiraj",
+  "UI.wifi.scan": "Skenirajte za samodejno povezavo",
   "UI.notFound": "Namestitev ni najdena",
   "UI.zoomHint": "Dvakrat tapnite za povečavo",
   "UI.difficulty.easy": "Lahka",

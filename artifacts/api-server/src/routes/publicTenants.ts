@@ -8,6 +8,7 @@ import {
 import { buildTenantContent } from "../lib/contentTree";
 import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
+import { wifiQrSvg } from "../lib/wifiQr";
 import { isAuthenticated } from "../lib/adminAuth";
 
 function serialize<T>(value: T): unknown {
@@ -126,12 +127,16 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
+  // Join-network QR — always rendered fresh from the CURRENT ssid/password.
+  const joinQr = tenant.wifiSsid
+    ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
+    : null;
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   res.json(
     GetPublicTenantResponse.parse(
-      serialize({ ...tree, publicUrl, qrSvg, ui, plurals })
+      serialize({ ...tree, publicUrl, qrSvg, wifiQrSvg: joinQr, ui, plurals })
     )
   );
 });
@@ -221,12 +226,17 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
+  // Join-network QR — rendered fresh from the CURRENT ssid/password on every
+  // request (never cached by tenant id: a password change must change the code).
+  const joinQr = tenant.wifiSsid
+    ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
+    : null;
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   res.json(
     GetPublicTenantResponse.parse(
-      serialize({ ...tree, publicUrl, qrSvg, ui, plurals })
+      serialize({ ...tree, publicUrl, qrSvg, wifiQrSvg: joinQr, ui, plurals })
     )
   );
 });
