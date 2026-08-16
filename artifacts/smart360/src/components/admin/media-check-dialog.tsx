@@ -38,6 +38,11 @@ export function MediaCheckDialog({ tenantId, tenantName, trigger }: {
           <DialogDescription>
             Preverjanje, ali vse fotografije, videi in logotipi te namestitve
             kažejo na obstoječe in pravilne datoteke. Nič se ne spreminja.
+            {/* The check reads THIS environment's database only — a green
+                result in dev says nothing about production. Say so. */}
+            <span className="block mt-1 font-medium">
+              Preverjam: {import.meta.env.PROD ? "produkcija" : "razvoj"} (podatki tega okolja).
+            </span>
           </DialogDescription>
         </DialogHeader>
 

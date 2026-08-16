@@ -624,6 +624,48 @@ export async function storeLogoVariants(
       };
 }
 
+// Upload-time gate for the transparent-logo field.
+//  - REJECT when the file carries no usable transparency: no alpha channel at
+//    all (JPEG), or an alpha channel that is opaque everywhere (JPEG re-saved
+//    as PNG). Such a file can never sit cleanly on the cover photo.
+//  - WARN (but accept) when the image looks photographic rather than graphic:
+//    high entropy and no dominant flat-colour areas. Logos are flat artwork;
+//    photographs sneak in when someone picks the wrong file.
+export async function validateLogoUpload(
+  original: Buffer,
+): Promise<{ ok: true; warning?: string } | { ok: false; error: string }> {
+  const img = sharp(original).rotate();
+  const meta = await img.metadata();
+  if (!meta.hasAlpha) {
+    return {
+      ok: false,
+      error:
+        "Datoteka nima prosojnega ozadja (alfa kanala). Logotip na naslovnici leži neposredno na fotografiji, zato mora biti PNG s prosojnim ozadjem — izvozite ga iz grafičnega programa brez podlage.",
+    };
+  }
+  const stats = await img.stats();
+  const alpha = stats.channels[stats.channels.length - 1];
+  if (alpha && alpha.min >= 250) {
+    // Alpha channel exists but every pixel is opaque — same problem as a JPEG.
+    return {
+      ok: false,
+      error:
+        "Slika ima alfa kanal, a je povsod neprosojna — ozadje ni prosojno. Logotip mora imeti prosojno ozadje (PNG brez podlage).",
+    };
+  }
+  // Photograph heuristic: photographs have high overall entropy (measured
+  // ~7.3 on a real photo); flat graphic artwork has large uniform areas and
+  // sits far lower (~2–3 on real logos).
+  if (stats.entropy > 5.5) {
+    return {
+      ok: true,
+      warning:
+        "To je videti kot fotografija, ne logotip. Logotip mora imeti prosojno ozadje.",
+    };
+  }
+  return { ok: true };
+}
+
 // ---------------------------------------------------------------------------
 // POST /admin/tenants/:id/hero/upload  — replace the tenant hero image.
 // POST /admin/tenants/:id/logo/upload  — replace the tenant logo image.
@@ -674,11 +716,31 @@ async function handleTenantImageUpload(
   }
   let patch: Partial<typeof tenantsTable.$inferInsert>;
   let warning: string | undefined;
+  // The cover logo sits directly on a photograph — a file without real
+  // transparency WILL render as a box (or a photo) on the cover. Refuse at
+  // upload time; a refusal here is worth more than any later check.
+  if (column === "logoUrl") {
+    try {
+      const gate = await validateLogoUpload(req.file.buffer);
+      if (!gate.ok) {
+        res.status(400).json({ error: gate.error });
+        return;
+      }
+      warning = gate.warning;
+    } catch (err) {
+      // stats() decodes every pixel and can fail on files whose header alone
+      // parsed fine (truncated/corrupt data) — that is an invalid image, not
+      // a server error.
+      req.log.warn({ err }, "logo validation failed to decode image");
+      res.status(400).json({ error: "Datoteka ni veljavna slika." });
+      return;
+    }
+  }
   try {
     if (column === "logoUrl") {
       const out = await storeLogoVariants(tenant.slug, req.file.buffer);
       patch = { logoUrl: out.logoUrl, logoSquareUrl: out.logoSquareUrl };
-      warning = out.warning;
+      warning = warning ?? out.warning;
     } else {
       const name = `${randomUUID()}.jpg`;
       await storePhotoVariants(tenant.slug, name, req.file.buffer);
