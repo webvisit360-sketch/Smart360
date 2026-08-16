@@ -154,6 +154,29 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
     ));
   }
 
+  if (category.layout === 'apartments') {
+    /* Apartmaji: naslov stoji NAD fotografijo, opis pod njo.
+       Naslov pove, kaj slika prikazuje, preden jo gost pogleda. */
+    return items.map((item: any) => (
+      <article className="card fade" key={item.id}>
+        <div className="card__body card__body--head"><h3 className="card__n">{item.title}</h3></div>
+        {item.media && item.media.length > 1 ? (
+          <GalleryStrip media={item.media} />
+        ) : item.media?.[0] ? (
+          <div className="card__ph card__ph--mid">
+            <MediaThumb media={item.media} />
+          </div>
+        ) : null}
+        <div className="card__body">
+          {Array.isArray(item.bullets) && item.bullets.length > 0 && (
+            <div className="card__sub">{item.bullets.join(" · ")}</div>
+          )}
+          <div className="prose" style={{marginTop: 8}}>{parseTextBody(item.body)}</div>
+        </div>
+      </article>
+    ));
+  }
+
   if (category.layout === 'rules') {
     return (
       <div style={{marginTop: 8}}>

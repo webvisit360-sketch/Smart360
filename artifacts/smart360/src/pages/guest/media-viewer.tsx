@@ -10,6 +10,11 @@ import { imgSrc, mediaImgSrc } from "./img";
    - video se predvaja v istem okviru, z istim povečanjem
    ========================================================= */
 
+/* ZAMRZNJENO, NE ODSTRANJENO: ščipanje/dvojni dotik/vrtenje se ne obnašajo
+   dovolj dobro za izdajo. Ena zastavica — ko bo geste urejena, jo obrnemo
+   nazaj na true, brez ponovne implementacije. */
+const ZOOM_ON = false;
+
 export type ViewerMedia = {
   id: string;
   url: string;
@@ -65,6 +70,7 @@ export function MediaViewer({
      Preslikano 1:1 iz reference (mvBind) — is-zoom na .mv izklopi
      horizontalni pomik traku, da povečana slika ne "uide" na sosednjo. */
   useEffect(() => {
+    if (!ZOOM_ON) return; /* povečava zamrznjena — gest ne vežemo */
     const tr = trackRef.current;
     const mv = mvRef.current;
     if (!tr || !mv) return;
@@ -191,10 +197,12 @@ export function MediaViewer({
       <div className="mv__top">
         <span className="mv__c">{count + 1} / {media.length}</span>
         <span className="mv__sp"></span>
-        <button className="mv__b" onClick={turn} aria-label="Zavrti">
-          <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 1 3 6.7" /><path d="M3 20v-5h5" /></svg>
-        </button>
+        {ZOOM_ON && (
+          <button className="mv__b" onClick={turn} aria-label="Zavrti">
+            <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 1 3 6.7" /><path d="M3 20v-5h5" /></svg>
+          </button>
+        )}
         <button className="mv__b" onClick={onClose} aria-label="Zapri">
           <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
@@ -218,7 +226,7 @@ export function MediaViewer({
           </div>
         ))}
       </div>
-      <div className={`mv__hint${hintOff ? " off" : ""}`}>{zoomHint()}</div>
+      {ZOOM_ON && <div className={`mv__hint${hintOff ? " off" : ""}`}>{zoomHint()}</div>}
     </div>
   );
 }
