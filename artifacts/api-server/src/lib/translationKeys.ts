@@ -308,7 +308,7 @@ export async function importTranslations(
     }
   }
   for (const [key, value] of Object.entries(file.ui ?? {})) {
-    if (typeof value !== "string") continue;
+    if (typeof value !== "string" || value.trim() === "") continue;
     await upsert("ui", tenant.id, key, value);
     const sm = key.match(/^SECMETA\.([^.]+)\.(t|s)$/);
     if (sm && sm[1]) {
@@ -328,7 +328,7 @@ export async function importTranslations(
   const plurals = file.plurals ?? {};
   for (const [key, forms] of Object.entries(plurals)) {
     for (const [form, value] of Object.entries(forms)) {
-      if (typeof value !== "string") continue;
+      if (typeof value !== "string" || value.trim() === "") continue;
       const prev = await db
         .select()
         .from(pluralFormsTable)

@@ -1,0 +1,9 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "4WWdQB8YMaXomiThJQlOe"
+uri = "file://.agents/outputs/meli-pu-en-template.json"
+type = "unspecified"
+title = "meli-pu — angleška predloga (moj ključni prostor)"
+description = "Vsak prevedljiv ključ iz PRODUKCIJE: content (282) + ui (76) + plurals (11). Slovenski izvirniki so v polju \"source\"; izpolnite prazne vrednosti \"en\" v content/ui/plurals."
