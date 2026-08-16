@@ -516,6 +516,8 @@ export default function AdminTenantEdit() {
               textColor: formData.textColor,
               coverAlign: formData.coverAlign,
               coverShowRating: formData.coverShowRating,
+              rating: tenant?.rating ?? null,
+              reviewsCount: tenant?.reviewsCount ?? null,
               logoUrl: formData.logoUrl,
               logoX: formData.logoX,
               logoY: formData.logoY,

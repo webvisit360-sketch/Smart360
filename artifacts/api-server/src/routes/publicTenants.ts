@@ -113,6 +113,9 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
+  // An admin save must reach a reloading guest within a second — never let
+  // the browser reuse a cached copy of this JSON.
+  res.set("Cache-Control", "no-store");
   res.json(
     GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
   );
@@ -197,6 +200,9 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
+  // An admin save must reach a reloading guest within a second — never let
+  // the browser reuse a cached copy of this JSON.
+  res.set("Cache-Control", "no-store");
   res.json(
     GetPublicTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg }))
   );

@@ -76,6 +76,10 @@ export interface CoverFields {
   textColor: string | null;
   coverAlign: string | null;
   coverShowRating: boolean | null;
+  /** Read-only in this editor — shown in the preview so it matches the guest
+   *  page instead of a hardcoded sample. */
+  rating: string | null;
+  reviewsCount: string | null;
   logoUrl: string;
   logoX: number | null;
   logoY: number | null;
@@ -235,7 +239,9 @@ export function CoverEditor({
   });
 
   const previewTitle = form.coverTitle || form.name || "Ime namestitve";
-  const previewSubtitle = form.coverSubtitle || form.subtitle || "Podnaslov nastanitve";
+  // Guest parity: the guest cover renders NO subtitle element when both
+  // sources are empty — the preview must not invent one.
+  const previewSubtitle = form.coverSubtitle || form.subtitle || "";
   const heroBg = form.heroUrl ? imgSrc(form.heroUrl, 620) : null;
 
   return (
@@ -611,23 +617,14 @@ export function CoverEditor({
                       textAlign: effAlign === "center" ? "center" : "left",
                     }}
                   >
-                    {effShowRating && (
-                      <div
-                        className="flex items-center gap-1.5 mb-4 font-semibold"
-                        style={{
-                          fontSize: `var(--mt-size, ${effMetaSize}px)`,
-                          opacity: effMetaOpacity / 100,
-                          color: `var(--tt-txt, ${effTextColor})`,
-                        }}
-                      >
-                        <span style={{ color: effTextColor.toUpperCase() === "#FFFFFF" ? "#FBBF24" : "currentColor" }}>★</span>{" "}
-                        4,95 · 128 ocen
-                      </div>
-                    )}
-
+                    {/* Same DOM order and gaps as the guest cover (.cover__txt):
+                        title, subtitle 16px below, rating 19px below — one
+                        block, one shared left edge. Rating shows the SAVED
+                        tenant values, never a hardcoded sample. */}
                     <h1
-                      className="font-bold leading-[1.1] mb-2 tracking-tight"
+                      className="font-bold leading-[1.1] tracking-tight"
                       style={{
+                        margin: 0,
                         fontSize: `var(--tt-size, ${effTitleSize}px)`,
                         opacity: effTitleOpacity / 100,
                         color: `var(--tt-txt, ${effTextColor})`,
@@ -640,20 +637,38 @@ export function CoverEditor({
                       {previewTitle}
                     </h1>
 
-                    <p
-                      className="font-medium"
-                      style={{
-                        fontSize: `var(--st-size, ${effSubSize}px)`,
-                        opacity: effSubOpacity / 100,
-                        color: `var(--tt-txt, ${effTextColor})`,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {previewSubtitle}
-                    </p>
+                    {previewSubtitle && (
+                      <p
+                        className="font-medium"
+                        style={{
+                          margin: "16px 0 0",
+                          fontSize: `var(--st-size, ${effSubSize}px)`,
+                          opacity: effSubOpacity / 100,
+                          color: `var(--tt-txt, ${effTextColor})`,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {previewSubtitle}
+                      </p>
+                    )}
+
+                    {effShowRating && (
+                      <div
+                        className="flex items-center gap-1.5 font-semibold"
+                        style={{
+                          marginTop: 19,
+                          fontSize: `var(--mt-size, ${effMetaSize}px)`,
+                          opacity: effMetaOpacity / 100,
+                          color: `var(--tt-txt, ${effTextColor})`,
+                        }}
+                      >
+                        <span style={{ color: effTextColor.toUpperCase() === "#FFFFFF" ? "#FBBF24" : "currentColor" }}>★</span>{" "}
+                        {form.rating || "5,0"} · {form.reviewsCount || "0"} ocen
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
