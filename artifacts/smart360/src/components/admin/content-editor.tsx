@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   createSection,
@@ -303,6 +303,8 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
     onDone();
   };
 
+  useReportDirty(JSON.stringify(current) !== JSON.stringify(baseline));
+
   const handleDelete = async () => {
     if (!section) return;
     if (!confirm(`Izbrišem sekcijo "${section.title}"? Vse kategorije in vnosi v njej bodo trajno izbrisani.`)) return;
@@ -320,7 +322,8 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
       <div className="grid grid-cols-[1fr_80px] gap-3">
         <div className="space-y-1">
@@ -376,7 +379,8 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
           <Label htmlFor="section-visible">Vidna gostom</Label>
         </div>
       )}
-      <DialogFooter className="gap-2 flex-wrap">
+      </DialogScrollBody>
+      <DialogFooter className="gap-2 flex-wrap shrink-0 border-t pt-3">
         {mode === "edit" && (
           <Button variant="destructive" size="sm" onClick={handleDelete} disabled={busy} className="mr-auto">
             {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
@@ -392,6 +396,72 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
         </Button>
       </DialogFooter>
     </div>
+  );
+}
+
+// ==========================================
+// EditDialog — shared shell for all content edit dialogs.
+// Centred in the viewport (never anchored to the row), capped at
+// min(86vh, 900px) with the BODY scrolling internally; on narrow windows it
+// becomes a full-height sheet. Header (title + X) and footer stay fixed —
+// the form dialogs render their fields inside <DialogScrollBody> and their
+// buttons in a shrink-0 DialogFooter, so Save is always reachable.
+// Escape / backdrop close it; with unsaved changes we ask first (the form
+// reports dirtiness through DirtyCtx).
+// ==========================================
+
+const DirtyCtx = createContext<(dirty: boolean) => void>(() => {});
+
+/** Form dialogs call this every render with their current dirty state. */
+function useReportDirty(dirty: boolean) {
+  const report = useContext(DirtyCtx);
+  useEffect(() => {
+    report(dirty);
+    return () => report(false);
+  }, [dirty, report]);
+}
+
+/** Scrollable middle part of an EditDialog. */
+function DialogScrollBody({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto space-y-4 -mx-2 px-2 pb-1">
+      {children}
+    </div>
+  );
+}
+
+function EditDialog({
+  open,
+  onOpenChange,
+  title,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const dirtyRef = useRef(false);
+  const setDirty = useCallback((d: boolean) => {
+    dirtyRef.current = d;
+  }, []);
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v && dirtyRef.current && !confirm("Imate neshranjene spremembe. Zaprem brez shranjevanja?")) {
+          return; // keep it open
+        }
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent className="overflow-hidden max-sm:h-dvh max-sm:max-h-dvh max-sm:rounded-none">
+        <DialogHeader className="shrink-0">
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <DirtyCtx.Provider value={setDirty}>{children}</DirtyCtx.Provider>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -465,6 +535,8 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
     onDone();
   };
 
+  useReportDirty(JSON.stringify(current) !== JSON.stringify(baseline));
+
   const handleDelete = async () => {
     if (!category) return;
     if (!confirm(`Izbrišem kategorijo "${category.label}"? Premaknjena bo v "Nedavno izbrisano" in jo lahko obnovite še 30 dni (skupaj z vnosi v njej).`)) return;
@@ -482,7 +554,8 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
       <div className="grid grid-cols-[1fr_80px] gap-3">
         <div className="space-y-1">
@@ -529,7 +602,8 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
           <Label htmlFor="cat-visible">Vidna gostom</Label>
         </div>
       )}
-      <DialogFooter className="gap-2 flex-wrap">
+      </DialogScrollBody>
+      <DialogFooter className="gap-2 flex-wrap shrink-0 border-t pt-3">
         {mode === "edit" && (
           <Button variant="destructive" size="sm" onClick={handleDelete} disabled={busy} className="mr-auto">
             {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
@@ -633,6 +707,8 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     onDone();
   };
 
+  useReportDirty(JSON.stringify(current) !== JSON.stringify(baseline));
+
   const handleDelete = async () => {
     if (!item) return;
     if (!confirm(`Izbrišem vnos "${item.title || "(Brez naslova)"}"? Premaknjen bo v "Nedavno izbrisano" in ga lahko obnovite še 30 dni.`)) return;
@@ -650,7 +726,8 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
       <div className="space-y-1">
         <Label>Naslov</Label>
@@ -711,7 +788,8 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           <Label htmlFor="item-visible">Viden gostom</Label>
         </div>
       )}
-      <DialogFooter className="gap-2 flex-wrap">
+      </DialogScrollBody>
+      <DialogFooter className="gap-2 flex-wrap shrink-0 border-t pt-3">
         {mode === "edit" && (
           <Button variant="destructive" size="sm" onClick={handleDelete} disabled={busy} className="mr-auto">
             {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
@@ -785,11 +863,7 @@ function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string;
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Uredi vnos</DialogTitle>
-          </DialogHeader>
+      <EditDialog open={open} onOpenChange={setOpen} title="Uredi vnos">
           <ItemDialog
             mode="edit"
             tenantId={tenantId}
@@ -797,8 +871,7 @@ function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string;
             item={item}
             onDone={() => setOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+      </EditDialog>
     </>
   );
 }
@@ -851,11 +924,7 @@ function CategoryBlock({ category, tenantId }: { category: Category; tenantId: s
       </div>
 
       {/* Edit category dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Uredi kategorijo</DialogTitle>
-          </DialogHeader>
+      <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
           <CategoryDialog
             mode="edit"
             tenantId={tenantId}
@@ -863,23 +932,17 @@ function CategoryBlock({ category, tenantId }: { category: Category; tenantId: s
             category={category}
             onDone={() => setEditOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+      </EditDialog>
 
       {/* Add item dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nov element</DialogTitle>
-          </DialogHeader>
+      <EditDialog open={addOpen} onOpenChange={setAddOpen} title="Nov element">
           <ItemDialog
             mode="create"
             tenantId={tenantId}
             categoryId={category.id}
             onDone={() => setAddOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+      </EditDialog>
     </>
   );
 }
@@ -931,34 +994,24 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
       </div>
 
       {/* Edit section dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Uredi sekcijo</DialogTitle>
-          </DialogHeader>
+      <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi sekcijo">
           <SectionDialog
             mode="edit"
             tenantId={tenantId}
             section={section}
             onDone={() => setEditOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+      </EditDialog>
 
       {/* Add category dialog */}
-      <Dialog open={addCatOpen} onOpenChange={setAddCatOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova kategorija</DialogTitle>
-          </DialogHeader>
+      <EditDialog open={addCatOpen} onOpenChange={setAddCatOpen} title="Nova kategorija">
           <CategoryDialog
             mode="create"
             tenantId={tenantId}
             sectionId={section.id}
             onDone={() => setAddCatOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+      </EditDialog>
     </>
   );
 }
@@ -1161,18 +1214,13 @@ export function ContentEditor({
 
       <TrashPanel tenantId={tenantId} />
 
-      <Dialog open={addSectionOpen} onOpenChange={setAddSectionOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova sekcija</DialogTitle>
-          </DialogHeader>
+      <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
           <SectionDialog
             mode="create"
             tenantId={tenantId}
             onDone={() => setAddSectionOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
+      </EditDialog>
     </>
   );
 }
