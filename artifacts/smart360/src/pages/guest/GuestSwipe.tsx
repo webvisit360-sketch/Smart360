@@ -193,7 +193,40 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   }
 
   const openFind = () => { setLangOpen(false); setFindQ(""); setFindOpen(true); setTimeout(() => findInputRef.current?.focus(), 60); };
-  const closeFind = () => { setFindOpen(false); setFindQ(""); };
+  const closeFind = () => { setFindOpen(false); setFindQ(""); setLogoHit(false); };
+
+  // Logotip se skrije SAMO, če bi ga iskalna vrstica dejansko prekrila.
+  // Meritev v requestAnimationFrame — pred prikazom je pravokotnik vrstice prazen
+  // in bi test vedno rekel "ni prekrivanja".
+  const [logoHit, setLogoHit] = useState(false);
+  useEffect(() => {
+    if (!findOpen) return;
+    let raf = 0;
+    const measure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const bar = document.getElementById("findbar");
+        const logo = document.getElementById("brandlogo");
+        if (!bar || !logo) { setLogoHit(false); return; }
+        const a = bar.getBoundingClientRect(), b = logo.getBoundingClientRect();
+        setLogoHit(a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom);
+      });
+    };
+    measure();
+    // Ponovna meritev, ko se logotip šele naloži (prazen rect ob hladnem nalaganju)
+    // ali ko se spremeni geometrija (obrat zaslona, sprememba velikosti).
+    const logo = document.getElementById("brandlogo");
+    logo?.addEventListener("load", measure);
+    window.addEventListener("resize", measure);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    if (ro && logo) ro.observe(logo);
+    return () => {
+      cancelAnimationFrame(raf);
+      logo?.removeEventListener("load", measure);
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
+  }, [findOpen]);
 
   // Dotik izven izbirnika jezika ga zapre.
   useEffect(() => {
@@ -225,7 +258,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           <Cover
             tenant={tenant}
             lang={lang}
-            coverClass={findOpen ? "is-find" : undefined}
+            coverClass={findOpen && logoHit ? "is-find" : undefined}
             coverTopClass={findOpen ? "is-find" : undefined}
             coverTop={
               <>
