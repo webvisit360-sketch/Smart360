@@ -32,6 +32,7 @@ import type {
   EnrollResult,
   EnrollVerifyBody,
   GetPublicTenantParams,
+  GetStorageCleanupPreviewParams,
   HealthStatus,
   Item,
   ItemInput,
@@ -53,6 +54,9 @@ import type {
   SectionInput,
   SectionUpdate,
   SlugCheckResponse,
+  StorageCleanupPreview,
+  StorageCleanupRequest,
+  StorageCleanupResult,
   StorageUsage,
   Tenant,
   TenantContent,
@@ -2902,6 +2906,155 @@ export function useGetStorageUsage<TData = Awaited<ReturnType<typeof getStorageU
 
 
 
+
+export const getGetStorageCleanupPreviewUrl = (params: GetStorageCleanupPreviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/storage/cleanup?${stringifiedParams}` : `/api/admin/storage/cleanup`
+}
+
+/**
+ * DRY RUN of the explicit storage cleanup — lists files no DB row references any more (across ALL tenants, so duplicated tenants keep each other's files alive) without touching anything. scope=tenant needs tenantId and scans that tenant's slug prefixes; scope=orphans scans prefixes belonging to no live tenant.
+ */
+export const getStorageCleanupPreview = async (params: GetStorageCleanupPreviewParams, options?: Parameters<typeof customFetch>[1]): Promise<StorageCleanupPreview> => {
+
+  return customFetch<StorageCleanupPreview>(getGetStorageCleanupPreviewUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStorageCleanupPreviewQueryKey = (params?: GetStorageCleanupPreviewParams,) => {
+    return [
+    `/api/admin/storage/cleanup`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetStorageCleanupPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getStorageCleanupPreview>>, TError = ErrorType<unknown>>(params: GetStorageCleanupPreviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorageCleanupPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStorageCleanupPreviewQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorageCleanupPreview>>> = ({ signal }) => getStorageCleanupPreview(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStorageCleanupPreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStorageCleanupPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getStorageCleanupPreview>>>
+export type GetStorageCleanupPreviewQueryError = ErrorType<unknown>
+
+
+
+export function useGetStorageCleanupPreview<TData = Awaited<ReturnType<typeof getStorageCleanupPreview>>, TError = ErrorType<unknown>>(
+ params: GetStorageCleanupPreviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorageCleanupPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStorageCleanupPreviewQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRunStorageCleanupUrl = () => {
+
+
+
+
+  return `/api/admin/storage/cleanup`
+}
+
+/**
+ * Execute the cleanup for the same scope. References are re-computed at execution time; files that gained a reference since the preview are skipped. Never runs on a schedule — admin-confirmed only.
+ */
+export const runStorageCleanup = async (storageCleanupRequest: StorageCleanupRequest, options?: Parameters<typeof customFetch>[1]): Promise<StorageCleanupResult> => {
+
+  return customFetch<StorageCleanupResult>(getRunStorageCleanupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(storageCleanupRequest)
+  }
+);}
+
+
+
+
+
+export const getRunStorageCleanupMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runStorageCleanup>>, TError,{data: BodyType<StorageCleanupRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runStorageCleanup>>, TError,{data: BodyType<StorageCleanupRequest>}, TContext> => {
+
+const mutationKey = ['runStorageCleanup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runStorageCleanup>>, {data: BodyType<StorageCleanupRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  runStorageCleanup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunStorageCleanupMutationResult = NonNullable<Awaited<ReturnType<typeof runStorageCleanup>>>
+    export type RunStorageCleanupMutationBody = BodyType<StorageCleanupRequest>
+    export type RunStorageCleanupMutationError = ErrorType<unknown>
+
+    export const useRunStorageCleanup = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runStorageCleanup>>, TError,{data: BodyType<StorageCleanupRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runStorageCleanup>>,
+        TError,
+        {data: BodyType<StorageCleanupRequest>},
+        TContext
+      > => {
+      return useMutation(getRunStorageCleanupMutationOptions(options));
+    }
 
 export const getDeleteMediaUrl = (id: string,) => {
 

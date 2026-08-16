@@ -725,6 +725,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StorageUsage"
+  /admin/storage/cleanup:
+    get:
+      operationId: getStorageCleanupPreview
+      tags: [media]
+      description: >
+        DRY RUN of the explicit storage cleanup — lists files no DB row
+        references any more (across ALL tenants, so duplicated tenants keep
+        each other's files alive) without touching anything. scope=tenant
+        needs tenantId and scans that tenant's slug prefixes; scope=orphans
+        scans prefixes belonging to no live tenant.
+      parameters:
+        - name: scope
+          in: query
+          required: true
+          schema: { type: string, enum: [tenant, orphans] }
+        - name: tenantId
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: What would be removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageCleanupPreview"
+    post:
+      operationId: runStorageCleanup
+      tags: [media]
+      description: >
+        Execute the cleanup for the same scope. References are re-computed at
+        execution time; files that gained a reference since the preview are
+        skipped. Never runs on a schedule — admin-confirmed only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageCleanupRequest"
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageCleanupResult"
   # NOTE: POST /admin/items/{id}/media/upload (multipart photo/video upload)
   # intentionally lives OUTSIDE this contract: orval's zod output emits
   # File/Blob types for format:binary, which do not exist in the node lib
@@ -1230,6 +1276,37 @@ components:
         usedBytes: { type: number }
         quotaBytes: { type: number }
       required: [tenantId, slug, name, usedBytes, quotaBytes]
+    StorageCleanupPreview:
+      type: object
+      properties:
+        totalBytes: { type: number }
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/StorageCleanupFile"
+      required: [totalBytes, files]
+    StorageCleanupFile:
+      type: object
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        bytes: { type: number }
+        kind: { type: string, enum: [image, video] }
+        thumbUrl: { type: ["string", "null"] }
+        lastModified: { type: ["string", "null"] }
+      required: [slug, name, bytes, kind]
+    StorageCleanupRequest:
+      type: object
+      properties:
+        scope: { type: string, enum: [tenant, orphans] }
+        tenantId: { type: string }
+      required: [scope]
+    StorageCleanupResult:
+      type: object
+      properties:
+        freedBytes: { type: number }
+        deletedFiles: { type: number }
+      required: [freedBytes, deletedFiles]
     Section:
       type: object
       properties:

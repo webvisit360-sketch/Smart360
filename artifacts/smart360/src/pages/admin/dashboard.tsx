@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
 import { QrDialog } from "@/components/admin/qr-dialog";
+import { StorageCleanupDialog } from "@/components/admin/storage-cleanup-dialog";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
@@ -236,9 +237,31 @@ export default function AdminDashboard() {
                             style={{ width: `${Math.min(100, pct)}%` }}
                           />
                         </div>
+                        <div className="flex justify-end mt-1">
+                          <StorageCleanupDialog
+                            scope="tenant"
+                            tenantId={t.tenantId}
+                            tenantName={t.name}
+                            trigger={
+                              <button type="button" className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                                Sprosti neuporabljene datoteke
+                              </button>
+                            }
+                          />
+                        </div>
                       </div>
                     );
                   })}
+                  <div className="pt-2 border-t">
+                    <StorageCleanupDialog
+                      scope="orphans"
+                      trigger={
+                        <button type="button" className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                          Datoteke izbrisanih namestitev …
+                        </button>
+                      }
+                    />
+                  </div>
                 </div>
               )}
             </CardContent>

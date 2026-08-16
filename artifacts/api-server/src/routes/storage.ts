@@ -25,6 +25,7 @@ import {
   formatGb,
   type Admission,
 } from "../lib/mediaUsage";
+import { cleanupPreview, cleanupExecute } from "../lib/mediaCleanup";
 import {
   ObjectStorageService,
   objectStorageClient,
@@ -490,6 +491,53 @@ router.get("/admin/storage/usage", requireAdmin, async (_req, res): Promise<void
   let totalBytes = 0;
   for (const v of bySlug.values()) totalBytes += v;
   res.json({ totalBytes, tenants: rows });
+});
+
+// ---------------------------------------------------------------------------
+// Explicit storage cleanup (never automatic). GET = dry run, POST = execute.
+// References are computed from the DB across ALL tenants at call time —
+// duplicated tenants keep each other's files alive; a file is removable only
+// when no media row and no tenant column anywhere points at it.
+// ---------------------------------------------------------------------------
+function parseCleanupScope(
+  scope: unknown,
+  tenantIdRaw: unknown,
+): { scope: "tenant" | "orphans"; tenantId: string | null } | null {
+  if (scope === "orphans") return { scope: "orphans", tenantId: null };
+  if (scope === "tenant" && typeof tenantIdRaw === "string" && tenantIdRaw)
+    return { scope: "tenant", tenantId: tenantIdRaw };
+  return null;
+}
+
+router.get("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<void> => {
+  const parsed = parseCleanupScope(req.query["scope"], req.query["tenantId"]);
+  if (!parsed) {
+    res.status(400).json({ error: "scope=tenant zahteva tenantId, ali scope=orphans" });
+    return;
+  }
+  const slugs = parsed.tenantId ? await tenantSlugs(parsed.tenantId) : null;
+  if (parsed.scope === "tenant" && (!slugs || slugs.length === 0)) {
+    res.status(404).json({ error: "Tenant not found" });
+    return;
+  }
+  res.json(await cleanupPreview(slugs, parsed.scope === "orphans"));
+});
+
+router.post("/admin/storage/cleanup", requireAdmin, async (req, res): Promise<void> => {
+  const body = (req.body ?? {}) as { scope?: unknown; tenantId?: unknown };
+  const parsed = parseCleanupScope(body.scope, body.tenantId);
+  if (!parsed) {
+    res.status(400).json({ error: "scope=tenant zahteva tenantId, ali scope=orphans" });
+    return;
+  }
+  const slugs = parsed.tenantId ? await tenantSlugs(parsed.tenantId) : null;
+  if (parsed.scope === "tenant" && (!slugs || slugs.length === 0)) {
+    res.status(404).json({ error: "Tenant not found" });
+    return;
+  }
+  const result = await cleanupExecute(slugs, parsed.scope === "orphans");
+  req.log.info(result, "storage cleanup executed");
+  res.json(result);
 });
 
 // ---------------------------------------------------------------------------

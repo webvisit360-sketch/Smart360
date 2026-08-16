@@ -1063,6 +1063,41 @@ export const GetStorageUsageResponse = zod.object({
 })
 
 
+/**
+ * DRY RUN of the explicit storage cleanup — lists files no DB row references any more (across ALL tenants, so duplicated tenants keep each other's files alive) without touching anything. scope=tenant needs tenantId and scans that tenant's slug prefixes; scope=orphans scans prefixes belonging to no live tenant.
+ */
+export const GetStorageCleanupPreviewQueryParams = zod.object({
+  "scope": zod.enum(['tenant', 'orphans']),
+  "tenantId": zod.coerce.string().optional()
+})
+
+export const GetStorageCleanupPreviewResponse = zod.object({
+  "totalBytes": zod.number(),
+  "files": zod.array(zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "bytes": zod.number(),
+  "kind": zod.enum(['image', 'video']),
+  "thumbUrl": zod.string().nullish(),
+  "lastModified": zod.string().nullish()
+}))
+})
+
+
+/**
+ * Execute the cleanup for the same scope. References are re-computed at execution time; files that gained a reference since the preview are skipped. Never runs on a schedule — admin-confirmed only.
+ */
+export const RunStorageCleanupBody = zod.object({
+  "scope": zod.enum(['tenant', 'orphans']),
+  "tenantId": zod.string().optional()
+})
+
+export const RunStorageCleanupResponse = zod.object({
+  "freedBytes": zod.number(),
+  "deletedFiles": zod.number()
+})
+
+
 export const DeleteMediaParams = zod.object({
   "id": zod.coerce.string()
 })

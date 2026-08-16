@@ -341,6 +341,48 @@ export interface StorageUsage {
   tenants: TenantStorageUsage[];
 }
 
+export type StorageCleanupFileKind = typeof StorageCleanupFileKind[keyof typeof StorageCleanupFileKind];
+
+
+export const StorageCleanupFileKind = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export interface StorageCleanupFile {
+  slug: string;
+  name: string;
+  bytes: number;
+  kind: StorageCleanupFileKind;
+  /** @nullable */
+  thumbUrl?: string | null;
+  /** @nullable */
+  lastModified?: string | null;
+}
+
+export interface StorageCleanupPreview {
+  totalBytes: number;
+  files: StorageCleanupFile[];
+}
+
+export type StorageCleanupRequestScope = typeof StorageCleanupRequestScope[keyof typeof StorageCleanupRequestScope];
+
+
+export const StorageCleanupRequestScope = {
+  tenant: 'tenant',
+  orphans: 'orphans',
+} as const;
+
+export interface StorageCleanupRequest {
+  scope: StorageCleanupRequestScope;
+  tenantId?: string;
+}
+
+export interface StorageCleanupResult {
+  freedBytes: number;
+  deletedFiles: number;
+}
+
 export interface Section {
   id: string;
   tenantId: string;
@@ -590,6 +632,19 @@ export type SearchPublicTenantParams = {
 q: string;
 lang?: string;
 };
+
+export type GetStorageCleanupPreviewParams = {
+scope: GetStorageCleanupPreviewScope;
+tenantId?: string;
+};
+
+export type GetStorageCleanupPreviewScope = typeof GetStorageCleanupPreviewScope[keyof typeof GetStorageCleanupPreviewScope];
+
+
+export const GetStorageCleanupPreviewScope = {
+  tenant: 'tenant',
+  orphans: 'orphans',
+} as const;
 
 export type ListTranslationsParams = {
 model: string;
