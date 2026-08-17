@@ -3,6 +3,7 @@ import { IconSprite } from "./IconSprite";
 import { useLocation, useRoute, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 import { resolveLang } from "./i18n";
+import { installClickSound } from "./click-sound";
 
 // Both themes ship in the main bundle, scoped to html[data-theme="..."] by
 // the scope-themes vite plugin. Switching is done purely via the attribute,
@@ -11,6 +12,9 @@ import "../../styles/tema-sredozemska.css";
 import "../../styles/tema-poteg.css";
 
 export default function GuestLayout({ children }: { children: ReactNode }) {
+  // Mehanski klik ob dotiku — en delegiran poslušalec za OBE temi (zvok-gumbov.md).
+  useEffect(() => installClickSound(), []);
+
   const [match1, params1] = useRoute("/:slug");
   const [match2, params2] = useRoute("/:slug/c/:categoryId");
   const slug = match1 ? params1?.slug : (match2 ? params2?.slug : "");

@@ -8,6 +8,7 @@ import { getTextVars } from "./cover-vars";
 import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
+import { isSoundOn, toggleSound } from "./click-sound";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
 import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
@@ -20,6 +21,8 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const [findOpen, setFindOpen] = useState(false);
   const [findQ, setFindQ] = useState("");
   const [langOpen, setLangOpen] = useState(false);
+  // Zvok gumbov: ikona v spustnem seznamu mora slediti stanju (zvok-gumbov.md).
+  const [sndOn, setSndOn] = useState(isSoundOn);
   const findInputRef = useRef<HTMLInputElement>(null);
   const findBtnRef = useRef<HTMLButtonElement>(null);
   const langBtnRef = useRef<HTMLButtonElement>(null);
@@ -257,6 +260,26 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                         onClick={() => { setLangOpen(false); switchLang(slug, l); }}
                       >{l.toUpperCase()}</button>
                     ))}
+                    {/* Zadnja vrstica: zvok gumbov — ločena s črto, samo ikona,
+                        da seznam ostane 84 px širok (zvok-gumbov.md). */}
+                    <button
+                      className="langpop__i langpop__snd"
+                      aria-label="Zvok gumbov"
+                      title="Zvok gumbov"
+                      aria-pressed={sndOn}
+                      data-nosound="1"
+                      onClick={() => setSndOn(toggleSound())}
+                    >
+                      {sndOn ? (
+                        <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 5L6 9H3v6h3l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" />
+                        </svg>
+                      ) : (
+                        <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 5L6 9H3v6h3l5 4z" /><path d="M16 9l5 6M21 9l-5 6" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 )}
                 <form className="findbar" id="findbar" onSubmit={(e) => e.preventDefault()}>

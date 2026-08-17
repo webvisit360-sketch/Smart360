@@ -706,6 +706,9 @@ body{background:#000}
 .langpop__i:last-child{border-bottom:0}
 .langpop__i.is-on{color:var(--sea);background:var(--sea-soft)}
 .langpop__i:active{background:var(--wash)}
+/* zadnja vrstica: zvok gumbov — ločena s črto, samo ikona */
+.langpop__snd{border-top:2px solid var(--line);display:grid;place-items:center;color:var(--ink-2)}
+.langpop__snd .ic{width:19px;height:19px}
 .cover__btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);
             display:grid;place-items:center;color:var(--ink)}
 .cover__btn .ic{width:19px;height:19px;stroke-width:1.9}
