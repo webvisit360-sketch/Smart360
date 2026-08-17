@@ -34,6 +34,8 @@ export interface TenantUpdate {
   /** @nullable */
   instagram?: string | null;
   /** @nullable */
+  email?: string | null;
+  /** @nullable */
   address?: string | null;
   /** @nullable */
   mapQuery?: string | null;

@@ -123,6 +123,10 @@ export function IconSprite() {
         <symbol id="i-chat" viewBox="0 0 24 24">
           <path d="M4.4 7A2.4 2.4 0 0 1 6.8 4.6h10.4A2.4 2.4 0 0 1 19.6 7v6.6a2.4 2.4 0 0 1-2.4 2.4H10l-4.2 3.4V16h-1.4z" strokeLinejoin="round"/>
         </symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24">
+          <rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/>
+          <path d="m4.2 6.8 7.8 6 7.8-6"/>
+        </symbol>
         <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9.5 4.8 16.7 12l-7.2 7.2"/></symbol>
         <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 4.8 7.3 12l7.2 7.2"/></symbol>
         <symbol id="i-map" viewBox="0 0 24 24">

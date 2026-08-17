@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { ItemInputFrame } from './itemInputFrame';
 
 export interface ItemInput {
   title?: string;
@@ -25,5 +26,6 @@ export interface ItemInput {
   bullets?: string[];
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   tint?: string;
+  frame?: ItemInputFrame;
   position?: number;
 }

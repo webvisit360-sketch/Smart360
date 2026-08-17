@@ -177,8 +177,8 @@ a{color:inherit;text-decoration:none}
 
 /* ---------- kartica ---------- */
 .card{margin-top:26px}
-.card__ph{position:relative;width:100%;aspect-ratio:5/3;border-radius:var(--r-photo);overflow:hidden;background:var(--wash)}
-.card__ph img{width:100%;height:100%;object-fit:cover}
+.card__ph{position:relative;width:100%;aspect-ratio:var(--ph-ratio,5/3);border-radius:var(--r-photo);overflow:hidden;background:var(--wash)}
+.card__ph img{width:100%;height:100%;object-fit:cover;object-position:var(--ph-focus,50% 50%)}
 /* Apartmaji: naslov nad fotografijo — glava brez spodnjega odmika,
    fotografija/galerija pod njo dobi 12px razmika. */
 .card__body--head{padding-bottom:0}
@@ -256,7 +256,7 @@ a{color:inherit;text-decoration:none}
 .galtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0;
           border-radius:var(--r-photo)}
 .galtrack::-webkit-scrollbar{display:none}
-.galtrack img{width:100%;flex:none;scroll-snap-align:center;aspect-ratio:5/3;object-fit:cover}
+.galtrack img{width:100%;flex:none;scroll-snap-align:center;aspect-ratio:var(--ph-ratio,5/3);object-fit:cover;object-position:var(--ph-focus,50% 50%)}
 /* pike pod fotografijo — edini znak, da je fotografij več.
    Vedno bele s senco: ležijo NA fotografiji, zato ne smejo slediti barvi ozadja strani. */
 .galdots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;
@@ -435,7 +435,7 @@ body{background:var(--page,#EFECE6)}
 
 /* kartice */
 .card{margin-top:20px;border:1px solid var(--line);border-radius:26px;overflow:hidden;background:var(--paper,#fff)}
-.card__ph{border-radius:0;aspect-ratio:16/10}
+.card__ph{border-radius:0;aspect-ratio:var(--ph-ratio,16/10)}
 .card__body{padding:16px 18px 18px}
 .card__badge{display:none}
 .card__heart{top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.94);
@@ -555,7 +555,7 @@ body{background:var(--page,#EFECE6)}
 /* galerija znotraj okvirja kartice */
 .card > .gal{margin:0}
 .card > .gal .galtrack{border-radius:0}
-.card > .gal img{aspect-ratio:16/10}
+.card > .gal img{aspect-ratio:var(--ph-ratio,16/10)}
 .card > .card__body > .card__n{font-size:18px;margin-bottom:2px}
 .card > .card__body > .prose{margin-top:10px}
 .card > .card__body > .rule:last-child{border-bottom:0;padding-bottom:0}
@@ -699,8 +699,8 @@ html[data-theme="mediterran"]{
 .mv__hint.off{opacity:0}
 /* video v traku galerije: sličica z gumbom za predvajanje */
 .gvid{position:relative;width:100%;flex:none;scroll-snap-align:center;display:block}
-.gvid video{width:100%;aspect-ratio:5/3;object-fit:cover;display:block;background:#000}
-.card > .gal .gvid video{aspect-ratio:16/10}
+.gvid video{width:100%;aspect-ratio:var(--ph-ratio,5/3);object-fit:cover;display:block;background:#000}
+.card > .gal .gvid video{aspect-ratio:var(--ph-ratio,16/10)}
 .gvid__p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;
   border-radius:50%;background:rgba(255,255,255,.93);display:grid;place-items:center;color:#14201F;
   pointer-events:none;box-shadow:0 2px 14px rgba(0,0,0,.3)}

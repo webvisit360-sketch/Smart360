@@ -21,4 +21,6 @@ export interface MediaEntry {
   posterUrl?: string | null;
   /** @nullable */
   durationSec?: number | null;
+  focusX?: number;
+  focusY?: number;
 }

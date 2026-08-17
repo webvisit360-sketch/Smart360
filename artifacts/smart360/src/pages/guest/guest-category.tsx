@@ -10,7 +10,7 @@ import { sanitizeHtml } from "../../lib/sanitize";
 import { buildGuestPath } from "./guest-url";
 import { GuestSwipe } from "./GuestSwipe";
 import { imgSrc, mediaImgSrc } from "./img";
-import { GalleryStrip, MediaThumb } from "./media-viewer";
+import { GalleryStrip, MediaThumb, frameStyle } from "./media-viewer";
 import { getTextVars } from "./cover-vars";
 import { useThemeAttr } from "./use-theme-attr";
 import { makeT, plural, resolveLang, clampLang, SL_UI, DIFFICULTY_KEYS } from "./i18n";
@@ -115,7 +115,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
 
   if (category.layout === 'poi') {
     return items.map((item: any) => (
-      <article className="card fade" key={item.id}>
+      <article className="card fade" key={item.id} style={frameStyle(item.frame)}>
         {item.media?.[0] && (
           <div className="card__ph">
             <MediaThumb media={item.media} />
@@ -159,7 +159,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
     /* Apartmaji: naslov stoji NAD fotografijo, opis pod njo.
        Naslov pove, kaj slika prikazuje, preden jo gost pogleda. */
     return items.map((item: any) => (
-      <article className="card fade" key={item.id}>
+      <article className="card fade" key={item.id} style={frameStyle(item.frame)}>
         <div className="card__body card__body--head"><h3 className="card__n">{item.title}</h3></div>
         {item.media && item.media.length > 1 ? (
           <GalleryStrip media={item.media} />
@@ -184,7 +184,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
         {items.map((item: any) => (
           <div className="fade" key={item.id}>
             {item.media && item.media.length > 0 && (
-              <GalleryStrip media={item.media} style={{marginBottom: 12}} />
+              <GalleryStrip media={item.media} style={{ marginBottom: 12, ...frameStyle(item.frame) }} />
             )}
             <div className="rule">
               <svg className="ic" viewBox="0 0 24 24"><use href="#i-rules" /></svg>
@@ -201,7 +201,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
 
   if (category.layout === 'products') {
     return items.map((item: any) => (
-      <article className="card fade" key={item.id}>
+      <article className="card fade" key={item.id} style={frameStyle(item.frame)}>
         {item.media?.[0] && (
           <div className="card__ph">
             <MediaThumb media={item.media} alt="" />
@@ -226,7 +226,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
 
   if (category.layout === 'routes') {
     return items.map((item: any) => (
-      <article className="card fade" key={item.id}>
+      <article className="card fade" key={item.id} style={frameStyle(item.frame)}>
         {item.media?.[0] && (
           <div className="card__ph">
             <MediaThumb media={item.media} alt="" />
@@ -251,19 +251,25 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   }
 
   if (category.layout === 'wifi') {
+    /* Kartica WiFi se gradi iz strukturiranih polj namestitve (SSID, geslo),
+       ne iz besedilnega bloba — dve vrstici s kopiranjem in QR koda
+       (izrez-wifi-eposta.md §2). Prosto besedilo vnosov ostane kot opomba
+       SPODAJ (npr. "signal seže do bazena"), izrisano kot povsod drugje. */
+    const wifiRows = [
+      tenant.wifiSsid ? { k: t("UI.wifi.network"), v: tenant.wifiSsid as string } : null,
+      tenant.wifiPass ? { k: t("UI.wifi.password"), v: tenant.wifiPass as string } : null,
+    ].filter(Boolean) as { k: string; v: string }[];
     return (
       <>
-        {items.map((item: any) => (
-          <div className="kv" key={item.id}>
+        {wifiRows.map((row) => (
+          <div className="kv" key={row.k}>
             <div className="t">
-              <div className="k">{item.title}</div>
-              <div className="v">{item.body}</div>
+              <div className="k">{row.k}</div>
+              <div className="v">{row.v}</div>
             </div>
-            <button className="iconbtn" onClick={() => {
-              if (item.body) {
-                navigator.clipboard.writeText(item.body);
-                alert(t("UI.share.copied"));
-              }
+            <button className="iconbtn" aria-label={t("UI.wifi.copy")} onClick={() => {
+              navigator.clipboard.writeText(row.v);
+              alert(t("UI.share.copied"));
             }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-book" /></svg></button>
           </div>
         ))}
@@ -275,6 +281,10 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
             <div className="qrbox__cap">{t("UI.wifi.scan")}</div>
           </div>
         )}
+        {items.map((item: any) => {
+          const note = parseTextBody(item.body);
+          return note ? <div className="prose" key={item.id} style={{ marginTop: 12 }}>{note}</div> : null;
+        })}
       </>
     );
   }
@@ -283,7 +293,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   return items.map((item: any) => (
     <div key={item.id} className="fade">
       {item.media && item.media.length > 0 && (
-        <GalleryStrip media={item.media} style={{marginBottom: 16}} />
+        <GalleryStrip media={item.media} style={{ marginBottom: 16, ...frameStyle(item.frame) }} />
       )}
       <div className="prose">
         {item.title && <h2 className="h2">{item.title}</h2>}

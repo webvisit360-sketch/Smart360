@@ -47,6 +47,7 @@ import type {
   MediaCheckResult,
   MediaEntry,
   MediaInput,
+  MediaUpdate,
   OkStatus,
   PasskeyList,
   RecoveryBody,
@@ -3433,6 +3434,72 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getRestoreCleanupFilesMutationOptions(options));
+    }
+
+export const getUpdateMediaUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/media/${id}`
+}
+
+export const updateMedia = async (id: string,
+    mediaUpdate: MediaUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MediaEntry> => {
+
+  return customFetch<MediaEntry>(getUpdateMediaUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediaUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateMediaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMedia>>, TError,{id: string;data: BodyType<MediaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMedia>>, TError,{id: string;data: BodyType<MediaUpdate>}, TContext> => {
+
+const mutationKey = ['updateMedia'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMedia>>, {id: string;data: BodyType<MediaUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateMedia(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMediaMutationResult = NonNullable<Awaited<ReturnType<typeof updateMedia>>>
+    export type UpdateMediaMutationBody = BodyType<MediaUpdate>
+    export type UpdateMediaMutationError = ErrorType<unknown>
+
+    export const useUpdateMedia = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMedia>>, TError,{id: string;data: BodyType<MediaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMedia>>,
+        TError,
+        {id: string;data: BodyType<MediaUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateMediaMutationOptions(options));
     }
 
 export const getDeleteMediaUrl = (id: string,) => {

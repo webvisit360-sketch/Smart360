@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { ItemFrame } from './itemFrame';
 import type { MediaEntry } from './mediaEntry';
 
 export interface Item {
@@ -46,6 +47,11 @@ export interface Item {
      * @nullable
      */
   tint?: string | null;
+  /**
+     * Photo frame shape for the whole item gallery; null/wide = landscape default, tall = 4:5, square = 1:1
+     * @nullable
+     */
+  frame?: ItemFrame;
   position: number;
   isVisible: boolean;
   media: MediaEntry[];

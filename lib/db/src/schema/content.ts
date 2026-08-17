@@ -66,6 +66,10 @@ export const itemsTable = pgTable("items", {
   // Barvna ploščica: hex barva namesto fotografije na PLOŠČICI (fotografije v
   // detajlu ostanejo). Prazno = fotografija, kot doslej. (barvne-ploscice.md)
   tint: text("tint"),
+  // Oblika okvirja fotografij vnosa (izrez-wifi-eposta.md §1b): null/"wide" =
+  // ležeče (privzeto), "tall" = pokončno 4:5, "square" = kvadrat 1:1. Cela
+  // galerija enega vnosa deli obliko (mešane višine v traku poskakujejo).
+  frame: text("frame"),
   position: integer("position").notNull().default(0),
   // "published" in the product spec: hide without deleting (seasonal offers).
   isVisible: boolean("is_visible").notNull().default(true),
@@ -89,6 +93,10 @@ export const mediaTable = pgTable("media", {
   // Video only: poster frame (JPEG, same variants as photos) and duration.
   posterUrl: text("poster_url"),
   durationSec: doublePrecision("duration_sec"),
+  // Žariščna točka izreza v odstotkih (izrez-wifi-eposta.md §1a): točka, ki
+  // mora ostati vidna, izrisana kot object-position. Privzeto središče.
+  focusX: integer("focus_x").notNull().default(50),
+  focusY: integer("focus_y").notNull().default(50),
 });
 
 export const translationsTable = pgTable(

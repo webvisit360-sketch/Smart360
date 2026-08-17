@@ -29,6 +29,8 @@ import {
   AddItemMediaBody,
   AddItemMediaResponse,
   ReorderMediaBody,
+  UpdateMediaBody,
+  UpdateMediaResponse,
   ListTranslationsResponse,
   UpsertTranslationBody,
   UpsertTranslationResponse,
@@ -574,6 +576,27 @@ router.post("/admin/items/:id/media", async (req, res): Promise<void> => {
     .values({ ...parsed.data, position, itemId })
     .returning();
   res.status(201).json(AddItemMediaResponse.parse(media));
+});
+
+// Žariščna točka izreza (izrez-wifi-eposta.md §1a): odstotka, ki povesta,
+// katera točka fotografije mora ostati vidna v vsakem okvirju.
+router.patch("/admin/media/:id", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const parsed = UpdateMediaBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [media] = await db
+    .update(mediaTable)
+    .set(parsed.data)
+    .where(eq(mediaTable.id, id))
+    .returning();
+  if (!media) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.json(UpdateMediaResponse.parse(media));
 });
 
 router.delete("/admin/media/:id", async (req, res): Promise<void> => {

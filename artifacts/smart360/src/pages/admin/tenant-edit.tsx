@@ -76,6 +76,7 @@ export default function AdminTenantEdit() {
     whatsapp: "",
     viber: "",
     instagram: "",
+    email: "",
     mapQuery: "",
     tourUrl: "",
     heroUrl: "",
@@ -184,6 +185,7 @@ export default function AdminTenantEdit() {
         whatsapp: tenant.whatsapp || "",
         viber: tenant.viber || "",
         instagram: tenant.instagram || "",
+        email: tenant.email || "",
         mapQuery: tenant.mapQuery || "",
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
@@ -272,6 +274,7 @@ export default function AdminTenantEdit() {
       data: { 
         ...formData, 
         customDomain: formData.customDomain.trim() || null,
+        email: formData.email.trim() || null,
         wifiSsid: formData.wifiSsid.trim() || null,
         wifiPass: formData.wifiPass || null,
         // min 0.1 GB — a zero/invalid quota would block every upload
@@ -754,6 +757,10 @@ export default function AdminTenantEdit() {
                 <div className="space-y-2">
                   <Label>Instagram uporabniško ime</Label>
                   <Input value={formData.instagram} onChange={e => setFormData({ ...formData, instagram: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>E-pošta</Label>
+                  <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="info@primer.si" />
                 </div>
                 <div className="space-y-2 col-span-2">
                   <Label>Poizvedba za zemljevid (Map Query)</Label>

@@ -881,6 +881,27 @@ paths:
   # File/Blob types for format:binary, which do not exist in the node lib
   # config. The admin UI calls it with raw XHR (progress events).
   /admin/media/{id}:
+    patch:
+      operationId: updateMedia
+      tags: [media]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaUpdate"
+      responses:
+        "200":
+          description: Updated media entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaEntry"
     delete:
       operationId: deleteMedia
       tags: [media]
@@ -1345,6 +1366,7 @@ components:
         whatsapp: { type: ["string", "null"] }
         viber: { type: ["string", "null"] }
         instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
@@ -1419,6 +1441,7 @@ components:
         whatsapp: { type: ["string", "null"] }
         viber: { type: ["string", "null"] }
         instagram: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
@@ -1660,6 +1683,10 @@ components:
         tint:
           type: ["string", "null"]
           description: Hex colour for a flat colour tile instead of a photo tile; null/empty = photo tile
+        frame:
+          type: ["string", "null"]
+          enum: ["wide", "tall", "square", null]
+          description: Photo frame shape for the whole item gallery; null/wide = landscape default, tall = 4:5, square = 1:1
         position: { type: number }
         isVisible: { type: boolean }
         media:
@@ -1688,6 +1715,7 @@ components:
           type: array
           items: { type: string }
         tint: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        frame: { type: string, enum: ["wide", "tall", "square"] }
         position: { type: number }
     ItemUpdate:
       type: object
@@ -1711,6 +1739,7 @@ components:
           type: array
           items: { type: string }
         tint: { type: ["string", "null"], pattern: "^#[0-9A-Fa-f]{6}$" }
+        frame: { type: ["string", "null"], enum: ["wide", "tall", "square", null] }
         position: { type: number }
         isVisible: { type: boolean }
     MediaEntry:
@@ -1725,7 +1754,15 @@ components:
         kind: { type: string }
         posterUrl: { type: ["string", "null"] }
         durationSec: { type: ["number", "null"] }
+        focusX: { type: number }
+        focusY: { type: number }
       required: [id, url, position, kind]
+    MediaUpdate:
+      type: object
+      description: Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)
+      properties:
+        focusX: { type: number, minimum: 0, maximum: 100 }
+        focusY: { type: number, minimum: 0, maximum: 100 }
     MediaInput:
       type: object
       properties:

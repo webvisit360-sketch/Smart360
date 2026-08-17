@@ -55,6 +55,7 @@ type Item = {
   priceUnit?: string | null;
   phone?: string | null;
   tint?: string | null;
+  frame?: string | null;
   isVisible: boolean;
   position: number;
   media: MediaEntry[];
@@ -661,6 +662,8 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
   // Barvna ploščica: prazno = fotografija, kot doslej (barvne-ploscice.md).
   const [tint, setTint] = useState(item?.tint ?? "");
+  // Oblika okvirja fotografij: prazno = ležeče 5:3 (izrez-wifi-eposta.md §1b).
+  const [frame, setFrame] = useState(item?.frame ?? "");
 
   const baseline = {
     title: item?.title ?? "",
@@ -670,8 +673,9 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     phone: item?.phone ?? "",
     isVisible: item?.isVisible ?? true,
     tint: item?.tint ?? "",
+    frame: item?.frame ?? "",
   };
-  const current = { title, body, price, priceUnit, phone, isVisible, tint };
+  const current = { title, body, price, priceUnit, phone, isVisible, tint, frame };
   const { restored, clear, discardRestored } = useDraft(
     "item",
     mode === "edit" ? item.id : `new-${categoryId}`,
@@ -688,6 +692,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
       setPhone(restored.phone);
       setIsVisible(restored.isVisible);
       setTint(restored.tint ?? "");
+      setFrame(restored.frame ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
@@ -707,6 +712,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             priceUnit: priceUnit.trim() || undefined,
             phone: phone.trim() || undefined,
             tint: tint || undefined,
+            frame: (frame || undefined) as any,
           });
           id = created.id;
           createdIdRef.current = id;
@@ -721,6 +727,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             phone: phone.trim() || null,
             isVisible,
             tint: tint || null,
+          frame: (frame || null) as any,
           });
         }
         // Upload the queued media to the fresh item, one by one, with the
@@ -744,6 +751,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           phone: phone.trim() || null,
           isVisible,
           tint: tint || null,
+          frame: (frame || null) as any,
         });
       }
       clear();
@@ -811,6 +819,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           tenantId={tenantId}
           media={mode === "edit" ? item.media || [] : []}
           onPendingChange={setPendingCount}
+          frameRatio={frame === "tall" ? "4 / 5" : frame === "square" ? "1 / 1" : "5 / 3"}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -841,6 +850,26 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           placeholder="+386 …"
           disabled={busy}
         />
+      </div>
+      <div className="space-y-1">
+        <Label>Oblika fotografij</Label>
+        <p className="text-xs text-muted-foreground">
+          Vse fotografije tega vnosa delijo isto obliko okvirja; kaj je v okvirju vidno, določite s klikom na sličico zgoraj.
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          {[{ v: "", n: "Ležeče (5:3)" }, { v: "tall", n: "Pokončno (4:5)" }, { v: "square", n: "Kvadrat (1:1)" }].map((o) => (
+            <Button
+              key={o.v}
+              type="button"
+              size="sm"
+              variant={(frame || "") === o.v ? "default" : "outline"}
+              disabled={busy}
+              onClick={() => setFrame(o.v)}
+            >
+              {o.n}
+            </Button>
+          ))}
+        </div>
       </div>
       <div className="space-y-1">
         <Label>Barvna ploščica</Label>

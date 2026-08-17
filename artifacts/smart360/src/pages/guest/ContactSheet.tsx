@@ -34,6 +34,16 @@ export function ContactSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant:
           </a>
         )}
         
+        {/* E-pošta med Instagramom in naslovom (izrez-wifi-eposta.md §3):
+            pisno vprašanje s pisnim odgovorom je tudi dokaz dogovora. */}
+        {tenant?.email && (
+          <a href={`mailto:${tenant.email}`} className="srow">
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-mail" /></svg>
+            <div className="t"><b>{t("UI.contact.email")}</b><span>{tenant.email}</span></div>
+            <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
+          </a>
+        )}
+
         {tenant?.address && (
           <div className="srow" style={{pointerEvents: 'none'}}>
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>

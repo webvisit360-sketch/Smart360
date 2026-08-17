@@ -40,6 +40,9 @@ export const tenantsTable = pgTable("tenants", {
   whatsapp: text("whatsapp"),
   viber: text("viber"),
   instagram: text("instagram"),
+  // E-pošta med kontakti (izrez-wifi-eposta.md §3): pisno vprašanje s pisnim
+  // odgovorom je tudi dokaz dogovora. Prazno = brez vrstice.
+  email: text("email"),
   address: text("address"),
   mapQuery: text("map_query"),
   wifiSsid: text("wifi_ssid"),

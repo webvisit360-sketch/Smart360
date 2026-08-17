@@ -13,6 +13,9 @@ type Media = {
   kind?: string;
   posterUrl?: string | null;
   durationSec?: number | null;
+  /** Žariščna točka izreza v odstotkih (izrez-wifi-eposta.md §1a). */
+  focusX?: number | null;
+  focusY?: number | null;
 };
 
 const VIDEO_EXT = /\.(mp4|webm|mov|m4v)$/i;
@@ -63,7 +66,9 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   media: Media[];
   /** Reports how many local files wait for upload (dirty tracking). */
   onPendingChange?: (count: number) => void;
-}>(function ItemMediaEditor({ itemId, tenantId, media, onPendingChange }, handleRef) {
+  /** CSS aspect-ratio okvirja vnosa — predogled izreza v pravem razmerju. */
+  frameRatio?: string;
+}>(function ItemMediaEditor({ itemId, tenantId, media, onPendingChange, frameRatio }, handleRef) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -72,6 +77,9 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   const [order, setOrder] = useState<string[] | null>(null);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [dropActive, setDropActive] = useState(false);
+  /* Žariščna točka: klik na fotografijo odpre urejevalnik izreza namesto
+     odpiranja polne velikosti (polna velikost ostane na povezavi pod sličico). */
+  const [focusEdit, setFocusEdit] = useState<Media | null>(null);
 
   // Upload target: the itemId prop, or — in deferred mode — the id passed
   // to uploadAllTo() once the item has been created.
@@ -286,13 +294,23 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
               onDragEnd={() => { if (order) commitOrder(order); setDragId(null); setTimeout(() => { didDragRef.current = false; }, 0); }}
               onClick={() => {
                 if (didDragRef.current || busy) return;
-                window.open(fullSize(m), "_blank", "noopener,noreferrer");
+                if (m.kind === "video") {
+                  window.open(fullSize(m), "_blank", "noopener,noreferrer");
+                } else {
+                  setFocusEdit(m);
+                }
               }}
               className={`relative group rounded-xl overflow-hidden border bg-muted ${i === 0 ? "ring-2 ring-primary" : ""} ${dragId === m.id ? "opacity-50" : ""}`}
               style={{ width: 96, height: 96, aspectRatio: "1 / 1", cursor: "grab" }}
               title={i === 0 ? "Ploščica (prva v galeriji)" : "Povlecite za vrstni red"}
             >
-              <img src={thumb(m)} alt={m.alt || ""} className="w-full h-full object-cover" loading="lazy" />
+              <img
+                src={thumb(m)}
+                alt={m.alt || ""}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                style={{ objectPosition: `${m.focusX ?? 50}% ${m.focusY ?? 50}%` }}
+              />
               {m.kind === "video" && (
                 <>
                   <span className="absolute inset-0 grid place-items-center pointer-events-none">
@@ -438,6 +456,107 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
             : `Porabljenega ${quotaPct} % prostora za medije (${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}).`}
         </p>
       )}
+      {focusEdit && (
+        <FocusEditor
+          media={focusEdit}
+          frameRatio={frameRatio || "5 / 3"}
+          onClose={() => setFocusEdit(null)}
+          onSaved={async () => { setFocusEdit(null); await refresh(); }}
+        />
+      )}
     </div>
   );
 });
+
+
+/* =========================================================
+   UREJEVALNIK ŽARIŠČNE TOČKE (izrez-wifi-eposta.md §1a)
+   Klik na fotografijo pove, katera točka mora ostati vidna,
+   ne glede na obliko okvirja. Desno predogled v razmerju
+   okvirja vnosa — točno to vidi gost.
+   ========================================================= */
+function FocusEditor({ media, frameRatio, onClose, onSaved }: {
+  media: Media;
+  frameRatio: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [fx, setFx] = useState(media.focusX ?? 50);
+  const [fy, setFy] = useState(media.focusY ?? 50);
+  const [saving, setSaving] = useState(false);
+  const src = media.url.startsWith("/api/storage/img/") ? `${media.url}?w=620` : media.url;
+
+  const pick = (e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setFx(Math.round(Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100))));
+    setFy(Math.round(Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100))));
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/media/${media.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ focusX: fx, focusY: fy }),
+      });
+      if (!res.ok) throw new Error();
+      onSaved();
+    } catch {
+      alert("Shranjevanje ni uspelo.");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-label="Žariščna točka fotografije"
+    >
+      <div
+        className="w-full max-w-md rounded-xl bg-background p-4 shadow-lg space-y-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div>
+          <div className="font-medium">Žariščna točka</div>
+          <p className="text-xs text-muted-foreground">
+            Kliknite na fotografijo tam, kjer je glavni motiv — ta točka ostane vidna v vseh okvirjih.
+          </p>
+        </div>
+        <div className="relative cursor-crosshair select-none" onClick={pick}>
+          <img src={src} alt={media.alt || ""} className="block w-full rounded-md" draggable={false} />
+          <span
+            className="pointer-events-none absolute h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_2px_rgba(0,0,0,0.6)]"
+            style={{ left: `${fx}%`, top: `${fy}%` }}
+          >
+            <span className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+          </span>
+        </div>
+        <div>
+          <div className="text-xs text-muted-foreground mb-1">Predogled v okvirju vnosa</div>
+          <div className="overflow-hidden rounded-md border" style={{ aspectRatio: frameRatio, maxWidth: 220 }}>
+            <img
+              src={src}
+              alt=""
+              className="h-full w-full object-cover"
+              style={{ objectPosition: `${fx}% ${fy}%` }}
+              draggable={false}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={saving}>
+            Prekliči
+          </Button>
+          <Button type="button" size="sm" onClick={save} disabled={saving}>
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+            Shrani
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

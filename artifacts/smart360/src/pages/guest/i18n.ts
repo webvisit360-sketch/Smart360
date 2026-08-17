@@ -26,6 +26,7 @@ export const SL_UI: Record<string, string> = {
   "UI.contact.instagram": "Instagram",
   "UI.contact.instagram.sub": "Označite nas v zgodbi",
   "UI.contact.address": "Naslov",
+  "UI.contact.email": "E-pošta",
   "UI.contact.directions": "Navigacija do nas",
   "UI.maps": "Google Maps",
   "UI.book": "Rezerviraj",

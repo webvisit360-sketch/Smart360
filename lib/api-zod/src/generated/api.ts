@@ -44,6 +44,7 @@ export const GetPublicTenantResponse = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -121,6 +122,7 @@ export const GetPublicTenantResponse = zod.object({
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
   "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -132,7 +134,9 @@ export const GetPublicTenantResponse = zod.object({
   "position": zod.number(),
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
-  "durationSec": zod.number().nullish()
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 }))
 }))
 })))
@@ -345,6 +349,7 @@ export const ListTenantsResponseItem = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -409,6 +414,7 @@ export const CreateTenantResponse = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -472,6 +478,7 @@ export const GetTenantResponse = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -549,6 +556,7 @@ export const GetTenantResponse = zod.object({
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
   "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -560,7 +568,9 @@ export const GetTenantResponse = zod.object({
   "position": zod.number(),
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
-  "durationSec": zod.number().nullish()
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 }))
 }))
 })))
@@ -596,6 +606,7 @@ export const UpdateTenantBody = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -649,6 +660,7 @@ export const UpdateTenantResponse = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -726,6 +738,7 @@ export const DuplicateTenantResponse = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -798,6 +811,7 @@ export const RenewTenantResponse = zod.object({
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -1025,6 +1039,7 @@ export const CreateItemBody = zod.object({
   "noteText": zod.string().optional(),
   "bullets": zod.array(zod.string()).optional(),
   "tint": zod.string().regex(createItemBodyTintRegExp).optional(),
+  "frame": zod.enum(['wide', 'tall', 'square']).optional(),
   "position": zod.number().optional()
 })
 
@@ -1047,6 +1062,7 @@ export const CreateItemResponse = zod.object({
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
   "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -1058,7 +1074,9 @@ export const CreateItemResponse = zod.object({
   "position": zod.number(),
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
-  "durationSec": zod.number().nullish()
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 }))
 })
 
@@ -1091,6 +1109,7 @@ export const UpdateItemBody = zod.object({
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()).optional(),
   "tint": zod.string().regex(updateItemBodyTintRegExp).nullish(),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish(),
   "position": zod.number().optional(),
   "isVisible": zod.boolean().optional()
 })
@@ -1114,6 +1133,7 @@ export const UpdateItemResponse = zod.object({
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
   "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -1125,7 +1145,9 @@ export const UpdateItemResponse = zod.object({
   "position": zod.number(),
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
-  "durationSec": zod.number().nullish()
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 }))
 })
 
@@ -1160,6 +1182,7 @@ export const DuplicateItemResponse = zod.object({
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
   "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -1171,7 +1194,9 @@ export const DuplicateItemResponse = zod.object({
   "position": zod.number(),
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
-  "durationSec": zod.number().nullish()
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 }))
 })
 
@@ -1204,7 +1229,9 @@ export const AddItemMediaResponse = zod.object({
   "position": zod.number(),
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
-  "durationSec": zod.number().nullish()
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 })
 
 
@@ -1291,6 +1318,38 @@ export const RestoreCleanupFilesBody = zod.object({
 
 export const RestoreCleanupFilesResponse = zod.object({
   "restoredFiles": zod.number()
+})
+
+
+export const UpdateMediaParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updateMediaBodyFocusXMin = 0;
+export const updateMediaBodyFocusXMax = 100;
+
+export const updateMediaBodyFocusYMin = 0;
+export const updateMediaBodyFocusYMax = 100;
+
+
+
+export const UpdateMediaBody = zod.object({
+  "focusX": zod.number().min(updateMediaBodyFocusXMin).max(updateMediaBodyFocusXMax).optional(),
+  "focusY": zod.number().min(updateMediaBodyFocusYMin).max(updateMediaBodyFocusYMax).optional()
+}).describe('Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)')
+
+export const UpdateMediaResponse = zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullish(),
+  "tenantId": zod.string().nullish(),
+  "url": zod.string(),
+  "alt": zod.string().nullish(),
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish(),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional()
 })
 
 

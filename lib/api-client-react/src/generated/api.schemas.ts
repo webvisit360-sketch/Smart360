@@ -164,6 +164,8 @@ export interface Tenant {
   /** @nullable */
   instagram?: string | null;
   /** @nullable */
+  email?: string | null;
+  /** @nullable */
   address?: string | null;
   /** @nullable */
   mapQuery?: string | null;
@@ -279,6 +281,8 @@ export interface TenantUpdate {
   viber?: string | null;
   /** @nullable */
   instagram?: string | null;
+  /** @nullable */
+  email?: string | null;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -517,6 +521,19 @@ export interface CategoryUpdate {
   isVisible?: boolean;
 }
 
+/**
+ * Photo frame shape for the whole item gallery; null/wide = landscape default, tall = 4:5, square = 1:1
+ * @nullable
+ */
+export type ItemFrame = typeof ItemFrame[keyof typeof ItemFrame] | null;
+
+
+export const ItemFrame = {
+  wide: 'wide',
+  tall: 'tall',
+  square: 'square',
+} as const;
+
 export interface MediaEntry {
   id: string;
   /** @nullable */
@@ -532,6 +549,8 @@ export interface MediaEntry {
   posterUrl?: string | null;
   /** @nullable */
   durationSec?: number | null;
+  focusX?: number;
+  focusY?: number;
 }
 
 export interface Item {
@@ -573,10 +592,24 @@ export interface Item {
      * @nullable
      */
   tint?: string | null;
+  /**
+     * Photo frame shape for the whole item gallery; null/wide = landscape default, tall = 4:5, square = 1:1
+     * @nullable
+     */
+  frame?: ItemFrame;
   position: number;
   isVisible: boolean;
   media: MediaEntry[];
 }
+
+export type ItemInputFrame = typeof ItemInputFrame[keyof typeof ItemInputFrame];
+
+
+export const ItemInputFrame = {
+  wide: 'wide',
+  tall: 'tall',
+  square: 'square',
+} as const;
 
 export interface ItemInput {
   title?: string;
@@ -597,8 +630,21 @@ export interface ItemInput {
   bullets?: string[];
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   tint?: string;
+  frame?: ItemInputFrame;
   position?: number;
 }
+
+/**
+ * @nullable
+ */
+export type ItemUpdateFrame = typeof ItemUpdateFrame[keyof typeof ItemUpdateFrame] | null;
+
+
+export const ItemUpdateFrame = {
+  wide: 'wide',
+  tall: 'tall',
+  square: 'square',
+} as const;
 
 export interface ItemUpdate {
   categoryId?: string;
@@ -635,8 +681,26 @@ export interface ItemUpdate {
      * @pattern ^#[0-9A-Fa-f]{6}$
      */
   tint?: string | null;
+  /** @nullable */
+  frame?: ItemUpdateFrame;
   position?: number;
   isVisible?: boolean;
+}
+
+/**
+ * Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)
+ */
+export interface MediaUpdate {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  focusX?: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  focusY?: number;
 }
 
 export interface MediaInput {

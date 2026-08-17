@@ -26,7 +26,27 @@ export type ViewerMedia = {
   alt?: string | null;
   kind?: string;
   posterUrl?: string | null;
+  /** Žariščna točka izreza v odstotkih (izrez-wifi-eposta.md §1a). */
+  focusX?: number | null;
+  focusY?: number | null;
 };
+
+/* Oblika okvirja fotografij vnosa (izrez-wifi-eposta.md §1b): CSS
+   spremenljivka --ph-ratio, ki jo temi bereta na .card__ph/.galtrack.
+   Cela galerija enega vnosa deli obliko — mešane višine poskakujejo. */
+const FRAME_RATIOS: Record<string, string> = { tall: "4 / 5", square: "1 / 1" };
+export function frameStyle(frame?: string | null): React.CSSProperties | undefined {
+  const r = frame ? FRAME_RATIOS[frame] : undefined;
+  return r ? ({ "--ph-ratio": r } as React.CSSProperties) : undefined;
+}
+
+/** object-position prek --ph-focus; privzeto središče = današnji izris. */
+export function focusStyle(m: ViewerMedia): React.CSSProperties | undefined {
+  const x = m.focusX ?? 50;
+  const y = m.focusY ?? 50;
+  if (x === 50 && y === 50) return undefined;
+  return { "--ph-focus": `${x}% ${y}%` } as React.CSSProperties;
+}
 
 export function MediaViewer({
   media,
@@ -314,6 +334,7 @@ export function GalleryStrip({
               src={imgSrc(m.url, 1400)}
               alt={m.alt || ""}
               {...clickable(i)}
+              style={{ ...(LIGHTBOX_ON ? undefined : { cursor: "default" }), ...focusStyle(m) }}
             />
           ),
         )}
@@ -349,7 +370,7 @@ export function MediaThumb({
         decoding="async"
         src={mediaImgSrc(m, 620)}
         alt={alt ?? m.alt ?? ""}
-        style={LIGHTBOX_ON ? undefined : { cursor: "default" }}
+        style={{ ...(LIGHTBOX_ON ? undefined : { cursor: "default" }), ...focusStyle(m) }}
         onClick={(e) => {
           e.stopPropagation();
           if (LIGHTBOX_ON) setIdx(0); /* pregledovalnik zamrznjen */
