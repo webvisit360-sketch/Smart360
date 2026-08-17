@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { IconSprite } from "./IconSprite";
 import { useLocation, useRoute, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
+import { resolveLang } from "./i18n";
 
 // Both themes ship in the main bundle, scoped to html[data-theme="..."] by
 // the scope-themes vite plugin. Switching is done purely via the attribute,
@@ -16,7 +17,11 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
 
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
-  const lang = searchParams.get("lang") || "sl";
+  // Isti izračun jezika kot GuestHost (resolveLang: ?lang → zapomnjena izbira
+  // → jezik brskalnika), da OBA zadeneta ISTI predpomnjeni vnos. Prej je ta
+  // komponenta uporabljala surov ?lang in je lahko obstajala druga, sveža
+  // kopija najemnika, medtem ko je GuestHost bral zastarelo.
+  const lang = resolveLang(slug || "", searchParams.get("lang"), null);
   const isPreview = searchParams.get("preview") === "1";
 
   const { data: tenant, isError } = useGetPublicTenant(

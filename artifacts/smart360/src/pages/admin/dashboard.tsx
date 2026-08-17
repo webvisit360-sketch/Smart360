@@ -1,11 +1,11 @@
-import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useDeleteTenant, useGetStorageUsage } from "@workspace/api-client-react";
+import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useGetStorageUsage } from "@workspace/api-client-react";
 import { fmtGb, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Trash2, Home, FileText, CheckCircle2, FileCheck2, CalendarClock } from "lucide-react";
+import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Home, FileText, CheckCircle2, FileCheck2, CalendarClock } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
@@ -46,15 +46,6 @@ export default function AdminDashboard() {
     mutation: {
       onSuccess: (data) => {
         setLocation(`/admin/tenants/${data.id}`);
-      }
-    }
-  });
-
-  const deleteMutation = useDeleteTenant({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
       }
     }
   });
@@ -238,18 +229,9 @@ export default function AdminDashboard() {
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
-                            onClick={() => {
-                              if(confirm(`Ste prepričani, da želite izbrisati ${tenant.name}?`)) {
-                                deleteMutation.mutate({ id: tenant.id });
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {/* Brisanje namestitve namenoma NI v vsakodnevnem dosegu (pike-brisanje-ozadje.md):
+                              en zgrešen klik uniči vsebino plačljive stranke. Ostane stikalo
+                              osnutek/objavljeno; API konec obstaja, a ni dosegljiv iz vmesnika. */}
                         </div>
                       </div>
                     </div>

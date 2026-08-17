@@ -7,7 +7,7 @@ import { spriteId } from "./sprite-icon";
 import { getTextVars } from "./cover-vars";
 import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
-import { useThemeAttr, usePageBg } from "./use-theme-attr";
+import { useThemeAttr } from "./use-theme-attr";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
 import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
@@ -28,7 +28,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   const snapTimerRef = useRef<any>(null);
 
   useThemeAttr(tenant?.theme);
-  usePageBg(tenant?.bgColor);
+  // Barvo ozadja nanaša IZKLJUČNO GuestHost (App.tsx) — en vir resnice.
   const t = makeT(tenant, lang);
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact

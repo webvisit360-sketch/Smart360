@@ -15,6 +15,11 @@ import { imgSrc, mediaImgSrc } from "./img";
    nazaj na true, brez ponovne implementacije. */
 const ZOOM_ON = false;
 
+/* ZAMRZNJENO: celozaslonski pregledovalnik. Dotik na fotografijo ne odpre
+   ničesar — galerija se lista na mestu, s pikami pod sliko. Koda ostane;
+   vklop: ena vrednost (pike-brisanje-ozadje.md). */
+const LIGHTBOX_ON = false;
+
 export type ViewerMedia = {
   id: string;
   url: string;
@@ -264,19 +269,39 @@ export function GalleryStrip({
   style?: React.CSSProperties;
 }) {
   const [idx, setIdx] = useState<number | null>(null);
+  const [dot, setDot] = useState(0);
+  const open = (i: number) => {
+    if (!LIGHTBOX_ON) return; /* pregledovalnik zamrznjen — dotik ne odpre ničesar */
+    setIdx(i);
+  };
+  /* Aktivna pika iz scrollLeft/clientWidth (kot galScroll v referenci). */
+  const onTrackScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const tr = e.currentTarget;
+    const w = tr.clientWidth || 1;
+    const i = Math.round(tr.scrollLeft / w);
+    if (i !== dot) setDot(i);
+  };
+  /* Fotografije so fokusabilne/klikabilne samo, ko je pregledovalnik vklopljen. */
+  const clickable = LIGHTBOX_ON
+    ? (i: number) => ({
+        role: "button" as const,
+        tabIndex: 0,
+        onClick: () => open(i),
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(i); }
+        },
+      })
+    : () => ({ style: { cursor: "default" } as React.CSSProperties });
   return (
     <div className="gal" style={style}>
-      <div className="galtrack">
+      <div className="galtrack" onScroll={media.length > 1 ? onTrackScroll : undefined}>
         {media.map((m, i) =>
           m.kind === "video" ? (
             <span
               key={m.id}
               className="gvid"
-              role="button"
-              tabIndex={0}
               aria-label={m.alt || zoomOpenLabel()}
-              onClick={() => setIdx(i)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIdx(i); } }}
+              {...clickable(i)}
             >
               <video src={m.url} poster={imgSrc(m.posterUrl, 1400)} muted playsInline preload="metadata" />
               <i className="gvid__p" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5l12 7-12 7z" /></svg></i>
@@ -288,14 +313,19 @@ export function GalleryStrip({
               decoding="async"
               src={imgSrc(m.url, 1400)}
               alt={m.alt || ""}
-              role="button"
-              tabIndex={0}
-              onClick={() => setIdx(i)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIdx(i); } }}
+              {...clickable(i)}
             />
           ),
         )}
       </div>
+      {/* Pike: edini znak, da je fotografij več. Ena fotografija: brez pik. */}
+      {media.length > 1 && (
+        <div className="galdots" aria-hidden="true">
+          {media.map((m, i) => (
+            <i key={m.id} className={i === dot ? "on" : undefined} />
+          ))}
+        </div>
+      )}
       {idx !== null && <MediaViewer media={media} index={idx} onClose={() => setIdx(null)} />}
     </div>
   );
@@ -319,7 +349,11 @@ export function MediaThumb({
         decoding="async"
         src={mediaImgSrc(m, 620)}
         alt={alt ?? m.alt ?? ""}
-        onClick={(e) => { e.stopPropagation(); setIdx(0); }}
+        style={LIGHTBOX_ON ? undefined : { cursor: "default" }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (LIGHTBOX_ON) setIdx(0); /* pregledovalnik zamrznjen */
+        }}
       />
       {m.kind === "video" && (
         <i className="gvid__p" aria-hidden="true" style={{ width: 44, height: 44 }}>

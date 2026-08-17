@@ -215,7 +215,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Odstranim datoteko iz galerije?")) return;
+    if (!confirm("Odstranim to fotografijo/video iz galerije? Datoteka bo trajno izbrisana in je ne bo mogoče povrniti.")) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE", credentials: "include" });

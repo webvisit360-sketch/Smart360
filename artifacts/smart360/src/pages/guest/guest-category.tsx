@@ -12,7 +12,7 @@ import { GuestSwipe } from "./GuestSwipe";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
 import { getTextVars } from "./cover-vars";
-import { useThemeAttr, usePageBg } from "./use-theme-attr";
+import { useThemeAttr } from "./use-theme-attr";
 import { makeT, plural, resolveLang, clampLang, SL_UI, DIFFICULTY_KEYS } from "./i18n";
 
 export default function GuestCategory() {
@@ -37,7 +37,7 @@ export default function GuestCategory() {
   const [contactOpen, setContactOpen] = useState(false);
 
   useThemeAttr(tenant?.theme);
-  usePageBg(tenant?.bgColor);
+  // Barvo ozadja nanaša IZKLJUČNO GuestHost (App.tsx) — en vir resnice.
 
   if (isLoading) return <div className="app"><div className="pagepad"><div className="empty">…</div></div></div>;
   if (!tenant) return <div className="app"><div className="pagepad"><div className="empty">{SL_UI["UI.notFound"]}</div></div></div>;

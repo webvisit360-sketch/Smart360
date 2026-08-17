@@ -21,6 +21,7 @@ import GuestCategory from '@/pages/guest/guest-category';
 import GuestLayout from '@/pages/guest/guest-layout';
 import { GuestSwipe } from '@/pages/guest/GuestSwipe';
 import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages/guest/i18n';
+import { usePageBg } from '@/pages/guest/use-theme-attr';
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,14 @@ function GuestHost() {
   // Once the tenant is known, an un-enabled language silently becomes Slovene
   // (the server already refuses to serve content for it).
   const lang = tenant ? clampLang(rawLang, tenant.languages) : rawLang;
+
+  // EDINI vir resnice za barvo ozadja (pike-brisanje-ozadje.md, točka 4):
+  // shranjena barva namestitve, uporabljena TU in nikjer drugje. data-dark se
+  // izpelje iz nje v istem trenutku (usePageBg). Nobena podkomponenta ne sme
+  // ne uporabljati ne predpomniti te vrednosti — prej so jo GuestSwipe,
+  // GuestHome in GuestCategory nanašali vsak zase, vsak iz svoje (lahko
+  // zastarele) predpomnjene kopije najemnika.
+  usePageBg(tenant?.bgColor);
 
   // <html lang> + hreflang alternates follow the active language.
   useEffect(() => {

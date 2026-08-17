@@ -53,3 +53,9 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - rpID()/rpOrigin(): dev kontejner vedno REPLIT_DEV_DOMAIN, objava vedno RP_ID/RP_ORIGIN. Efektivni rpId preveri v živo: POST /api/admin/webauthn/login/options (javen, vrne options.rpId).
 - Bootstrap vpis: ob zagonu z 0 ključi strežnik izpiše enkratno enroll povezavo (15 min) v dnevnik objave.
 - Dnevnik objave med zagonom (~prvih 30 s) IZGUBLJA pino stdout vrstice ("Server listening", bootstrap sporočila); stderr z zamikom (setTimeout 30 s + console.error) zanesljivo pride skozi. Zagonski bootstrap zato izpiše kratko obnovitveno kodo na stderr z 30 s ponovitvijo.
+
+## Zamrznjene funkcije in en vir resnice za ozadje (avg 2026)
+- Frozen-switch pattern: `ZOOM_ON` and `LIGHTBOX_ON` consts in guest media-viewer — code stays, one flag re-enables. Tapping photos must do nothing while frozen (no focusability, default cursor).
+- Gallery dots (`.galdots`) are ALWAYS white with shadow + `pointer-events:none` — they lie on the photo and must never follow the page background color.
+- Page background (`usePageBg`) is applied ONLY by GuestHost in App.tsx; no other guest component may call it or cache bgColor. GuestLayout and GuestHost must key the public-tenant query with the same `resolveLang` result, or two cache entries diverge and a stale dark bg leaks.
+- Tenant delete is intentionally NOT reachable from the admin UI (API endpoint kept); destructive confirms must name what is lost.
