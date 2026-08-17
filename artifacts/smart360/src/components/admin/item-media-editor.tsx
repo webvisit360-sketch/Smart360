@@ -428,6 +428,9 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
         Prva datoteka je ploščica in prva v galeriji — povlecite za vrstni red. Fotografije ali video
         (mp4, webm, mov) — video do 100 MB in 3 minute. Datoteke lahko tudi povlečete sem.
       </p>
+      <p className="text-[11px] text-muted-foreground mt-1">
+        Prvi vidni vnos določa fotografijo in barvo ploščice kategorije.
+      </p>
       {tenantUsage && quotaPct >= 80 && (
         <p className={`text-[11px] mt-1 font-medium ${quotaFull ? "text-destructive" : "text-amber-600"}`}>
           {quotaFull
