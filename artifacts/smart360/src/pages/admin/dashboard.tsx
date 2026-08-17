@@ -1,4 +1,4 @@
-import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useGetStorageUsage } from "@workspace/api-client-react";
+import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
 import { fmtGb, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,6 +41,26 @@ export default function AdminDashboard() {
       }
     }
   });
+
+  // Značka Objavljeno/Osnutek na kartici je hkrati stikalo — edino
+  // življenjsko dejanje namestitve na seznamu (brisanja iz vmesnika ni).
+  const publishMutation = useUpdateTenant({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
+      }
+    }
+  });
+
+  const togglePublished = (tenant: { id: string; isPublished: boolean }) => {
+    const msg = tenant.isPublished
+      ? "Preklop na osnutek: gostje strani ne bodo več videli. Vsebina ostane nedotaknjena."
+      : "Objava: gostje bodo stran spet videli. Vsebina ostane nedotaknjena.";
+    if (confirm(msg)) {
+      publishMutation.mutate({ id: tenant.id, data: { isPublished: !tenant.isPublished } });
+    }
+  };
 
   const createMutation = useCreateTenant({
     mutation: {
@@ -157,11 +177,20 @@ export default function AdminDashboard() {
                       <div className="p-6 flex-1 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold">{tenant.name}</h3>
-                          {tenant.isPublished ? (
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none">Objavljeno</Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-100 border-none">Osnutek</Badge>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => togglePublished(tenant)}
+                            disabled={publishMutation.isPending}
+                            title={tenant.isPublished ? "Kliknite za preklop na osnutek" : "Kliknite za objavo"}
+                            aria-label={tenant.isPublished ? "Objavljeno — kliknite za preklop na osnutek" : "Osnutek — kliknite za objavo"}
+                            className="disabled:opacity-50"
+                          >
+                            {tenant.isPublished ? (
+                              <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-none cursor-pointer">Objavljeno</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-none cursor-pointer">Osnutek</Badge>
+                            )}
+                          </button>
                           {tenant.isTemplate && (
                             <Badge variant="outline" className="border-purple-200 text-purple-700 bg-purple-50">Predloga</Badge>
                           )}
