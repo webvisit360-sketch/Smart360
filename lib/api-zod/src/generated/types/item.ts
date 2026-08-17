@@ -41,6 +41,11 @@ export interface Item {
   /** @nullable */
   noteText?: string | null;
   bullets: string[];
+  /**
+     * Hex colour for a flat colour tile instead of a photo tile; null/empty = photo tile
+     * @nullable
+     */
+  tint?: string | null;
   position: number;
   isVisible: boolean;
   media: MediaEntry[];

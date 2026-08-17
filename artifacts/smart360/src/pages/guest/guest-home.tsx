@@ -12,6 +12,7 @@ import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
 import { imgSrc, mediaImgSrc } from "./img";
 import { hsub } from "./hsub";
+import { isLightHex } from "./use-theme-attr";
 import { makeT, plural, resolveLang, clampLang, switchLang, LANG_NAMES, SL_UI } from "./i18n";
 import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
@@ -101,6 +102,9 @@ export default function GuestHome() {
         return {
           id: cat.id,
           label: cat.label,
+          icon: cat.icon,
+          // Barvna ploščica: prvi vidni vnos z barvo (barvne-ploscice.md).
+          tint: cat.items?.find((i: any) => i.isVisible)?.tint || null,
           photo: firstPhoto || sec.imageUrl || tenant.heroUrl || "",
           sub: hsub(cat, tenant, lang),
         };
@@ -193,7 +197,18 @@ export default function GuestHome() {
             <div className="hrow">
               {row.cats.map((cat: any) => (
                 <Link key={cat.id} href={buildGuestPath(`/${slug}/c/${cat.id}`)} className="hcard">
-                  <span className="im"><img loading="lazy" decoding="async" src={imgSrc(cat.photo, 620)} alt="" /></span>
+                  {cat.tint ? (
+                    /* Barvna ploščica: polna barva z ikono namesto fotografije
+                       — ista velikost, isti radij (barvne-ploscice.md). */
+                    <span
+                      className={isLightHex(cat.tint) ? "im im--tint im--tint-light" : "im im--tint"}
+                      style={{ "--tint": cat.tint } as React.CSSProperties}
+                    >
+                      <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
+                    </span>
+                  ) : (
+                    <span className="im"><img loading="lazy" decoding="async" src={imgSrc(cat.photo, 620)} alt="" /></span>
+                  )}
                   <b>{cat.label}</b>
                   <span>{cat.sub}</span>
                 </Link>

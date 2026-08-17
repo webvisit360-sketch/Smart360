@@ -36,6 +36,11 @@ export interface ItemUpdate {
   /** @nullable */
   noteText?: string | null;
   bullets?: string[];
+  /**
+     * @nullable
+     * @pattern ^#[0-9A-Fa-f]{6}$
+     */
+  tint?: string | null;
   position?: number;
   isVisible?: boolean;
 }

@@ -23,5 +23,7 @@ export interface ItemInput {
   noteType?: string;
   noteText?: string;
   bullets?: string[];
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  tint?: string;
   position?: number;
 }

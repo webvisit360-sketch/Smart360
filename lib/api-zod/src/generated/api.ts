@@ -120,6 +120,7 @@ export const GetPublicTenantResponse = zod.object({
   "noteType": zod.string().nullish(),
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
+  "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -547,6 +548,7 @@ export const GetTenantResponse = zod.object({
   "noteType": zod.string().nullish(),
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
+  "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -1003,6 +1005,9 @@ export const CreateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const createItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const CreateItemBody = zod.object({
   "title": zod.string().optional(),
   "body": zod.string().optional(),
@@ -1019,6 +1024,7 @@ export const CreateItemBody = zod.object({
   "noteType": zod.string().optional(),
   "noteText": zod.string().optional(),
   "bullets": zod.array(zod.string()).optional(),
+  "tint": zod.string().regex(createItemBodyTintRegExp).optional(),
   "position": zod.number().optional()
 })
 
@@ -1040,6 +1046,7 @@ export const CreateItemResponse = zod.object({
   "noteType": zod.string().nullish(),
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
+  "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -1063,6 +1070,9 @@ export const UpdateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const updateItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const UpdateItemBody = zod.object({
   "categoryId": zod.string().optional(),
   "title": zod.string().nullish(),
@@ -1080,6 +1090,7 @@ export const UpdateItemBody = zod.object({
   "noteType": zod.string().nullish(),
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()).optional(),
+  "tint": zod.string().regex(updateItemBodyTintRegExp).nullish(),
   "position": zod.number().optional(),
   "isVisible": zod.boolean().optional()
 })
@@ -1102,6 +1113,7 @@ export const UpdateItemResponse = zod.object({
   "noteType": zod.string().nullish(),
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
+  "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({
@@ -1147,6 +1159,7 @@ export const DuplicateItemResponse = zod.object({
   "noteType": zod.string().nullish(),
   "noteText": zod.string().nullish(),
   "bullets": zod.array(zod.string()),
+  "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
   "media": zod.array(zod.object({

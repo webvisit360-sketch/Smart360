@@ -18,6 +18,15 @@ function relLuminance(hex: string): number {
 }
 
 /**
+ * Ali je barva svetla — takrat morata ikona in napis na barvni ploščici na
+ * temen tuš, enako kot ozadje strani preklopi data-dark (barvne-ploscice.md).
+ * Prag je isti kot pri ozadju, gledan z druge strani: svetlo = luminanca >= .42.
+ */
+export function isLightHex(hex: string): boolean {
+  return relLuminance(hex) >= 0.42;
+}
+
+/**
  * One admin setting, "Ozadje strani": applies tenant.bgColor as --paper on
  * <html> and DERIVES dark mode (luminance < 0.42 -> data-dark="1") — text and
  * line tokens flip in CSS, they are never stored (wifi-in-barva-ozadja.md).

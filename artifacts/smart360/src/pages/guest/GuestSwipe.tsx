@@ -9,6 +9,7 @@ import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
 import { useThemeAttr } from "./use-theme-attr";
 import { isSoundOn, toggleSound } from "./click-sound";
+import { isLightHex } from "./use-theme-attr";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb } from "./media-viewer";
 import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
@@ -331,6 +332,22 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               {/* one layout for every section screen: identical photo tiles */}
               <div className="grid2">
                 {sec.categories?.filter((c: any) => c.isVisible).map((cat: any) => {
+                  // Barvna ploščica: prvi vidni vnos z barvo določi površino
+                  // ploščice (fotografije v detajlu ostanejo) — barvne-ploscice.md.
+                  const tint = cat.items?.find((i: any) => i.isVisible)?.tint;
+                  if (tint) {
+                    return (
+                      <button
+                        className={isLightHex(tint) ? "gc gc--tint gc--tint-light" : "gc gc--tint"}
+                        key={cat.id}
+                        style={{ "--tint": tint } as React.CSSProperties}
+                        onClick={() => setLocation(buildGuestPath(`/${slug}/c/${cat.id}`))}
+                      >
+                        <span className="gc__ic"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg></span>
+                        <span className="cap">{cat.label}</span>
+                      </button>
+                    );
+                  }
                   const firstMedia = cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0];
                   const firstImg = firstMedia ? mediaImgSrc(firstMedia, 620) : imgSrc(tenant.heroUrl, 620);
                   return (

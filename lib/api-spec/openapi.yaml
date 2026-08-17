@@ -1657,6 +1657,9 @@ components:
         bullets:
           type: array
           items: { type: string }
+        tint:
+          type: ["string", "null"]
+          description: Hex colour for a flat colour tile instead of a photo tile; null/empty = photo tile
         position: { type: number }
         isVisible: { type: boolean }
         media:
@@ -1684,6 +1687,7 @@ components:
         bullets:
           type: array
           items: { type: string }
+        tint: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         position: { type: number }
     ItemUpdate:
       type: object
@@ -1706,6 +1710,7 @@ components:
         bullets:
           type: array
           items: { type: string }
+        tint: { type: ["string", "null"], pattern: "^#[0-9A-Fa-f]{6}$" }
         position: { type: number }
         isVisible: { type: boolean }
     MediaEntry:

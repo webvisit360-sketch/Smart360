@@ -59,3 +59,9 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 - Gallery dots (`.galdots`) are ALWAYS white with shadow + `pointer-events:none` — they lie on the photo and must never follow the page background color.
 - Page background (`usePageBg`) is applied ONLY by GuestHost in App.tsx; no other guest component may call it or cache bgColor. GuestLayout and GuestHost must key the public-tenant query with the same `resolveLang` result, or two cache entries diverge and a stale dark bg leaks.
 - Tenant delete is intentionally NOT reachable from the admin UI (API endpoint kept); destructive confirms must name what is lost.
+
+## Barvne ploščice (tint)
+- `items.tint` (hex ali null): ploščica kategorije dobi polno barvo z ikono namesto fotografije; površino ploščice določa PRVI VIDNI vnos kategorije (ista konvencija kot fotografija ploščice).
+- Svetla barva → fiksen temen tuš `#14201f`, NIKOLI `var(--ink)` — na temnem ozadju strani se --ink prevrne v svetlo, ploščica pa je lastna površina.
+- Prag svetlosti: isti WCAG 0.42 kot ozadje strani (`isLightHex` v use-theme-attr.ts).
+- Javni API za najemnike ima 60-sekundni in-memory predpomnilnik slug→tenant: sprememba `is_published`/theme v DB se v dev pokaže šele po minuti ali restartu API-ja.

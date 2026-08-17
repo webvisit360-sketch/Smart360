@@ -386,6 +386,13 @@ body{background:var(--page,#EFECE6)}
 .hcard b{display:block;font-size:calc(14px * var(--txt-scale,1.4));font-weight:800;margin-top:10px;letter-spacing:-.01em}
 .hcard>span:not(.im){display:block;font-size:calc(12.5px * var(--txt-scale,1.4));color:var(--txt-color,var(--ink-2));font-weight:600;margin-top:1px}
 .hcard:active{opacity:.7}
+/* Barvna ploščica: polna barva z ikono namesto fotografije, kjer bi bila
+   fotografija samo okras — ista velikost, isti radij (barvne-ploscice.md). */
+.hcard .im--tint{background:var(--tint,#3B78DC);display:grid;place-items:center}
+.hcard .im--tint .ic{width:34px;height:34px;color:#fff;stroke-width:1.6}
+/* fiksen temen tuš — --ink se na temnem ozadju strani prevrne v svetlo,
+   ploščica pa je lastna površina (barvne-ploscice.md, točka f) */
+.hcard .im--tint-light .ic{color:#14201f}
 
 /* vodoravni pas sličic za premikanje med postavkami na podstrani */
 .hrow--nav{margin-top:14px;padding:4px 16px 6px;scroll-padding-left:16px}

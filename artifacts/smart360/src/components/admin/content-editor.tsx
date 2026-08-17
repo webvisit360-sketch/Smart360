@@ -54,6 +54,7 @@ type Item = {
   price?: string | null;
   priceUnit?: string | null;
   phone?: string | null;
+  tint?: string | null;
   isVisible: boolean;
   position: number;
   media: MediaEntry[];
@@ -627,6 +628,15 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
 // Item Dialog
 // ==========================================
 
+// Štiri preizkušene barve — iste za vse stranke, da izdelek ostane ena
+// družina; poljubna barva je dovoljena (barvne-ploscice.md).
+const TINT_SUGGESTIONS = [
+  { hex: "#3B78DC", name: "Modra — povezljivost, informacije" },
+  { hex: "#2F6F62", name: "Zelenomodra — navodila, kako stvari delujejo" },
+  { hex: "#14201F", name: "Skoraj črna — ure, prihod in odhod" },
+  { hex: "#C4552E", name: "Terakota — pravila in opozorila" },
+];
+
 type ItemDialogProps =
   | { mode: "create"; tenantId: string; categoryId: string; item?: undefined; onDone: () => void }
   | { mode: "edit"; tenantId: string; categoryId: string; item: Item; onDone: () => void };
@@ -649,6 +659,8 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const [priceUnit, setPriceUnit] = useState(item?.priceUnit ?? "");
   const [phone, setPhone] = useState(item?.phone ?? "");
   const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
+  // Barvna ploščica: prazno = fotografija, kot doslej (barvne-ploscice.md).
+  const [tint, setTint] = useState(item?.tint ?? "");
 
   const baseline = {
     title: item?.title ?? "",
@@ -657,8 +669,9 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     priceUnit: item?.priceUnit ?? "",
     phone: item?.phone ?? "",
     isVisible: item?.isVisible ?? true,
+    tint: item?.tint ?? "",
   };
-  const current = { title, body, price, priceUnit, phone, isVisible };
+  const current = { title, body, price, priceUnit, phone, isVisible, tint };
   const { restored, clear, discardRestored } = useDraft(
     "item",
     mode === "edit" ? item.id : `new-${categoryId}`,
@@ -674,6 +687,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
       setPriceUnit(restored.priceUnit);
       setPhone(restored.phone);
       setIsVisible(restored.isVisible);
+      setTint(restored.tint ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
@@ -692,6 +706,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             price: price.trim() || undefined,
             priceUnit: priceUnit.trim() || undefined,
             phone: phone.trim() || undefined,
+            tint: tint || undefined,
           });
           id = created.id;
           createdIdRef.current = id;
@@ -705,6 +720,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             priceUnit: priceUnit.trim() || null,
             phone: phone.trim() || null,
             isVisible,
+            tint: tint || null,
           });
         }
         // Upload the queued media to the fresh item, one by one, with the
@@ -727,6 +743,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           priceUnit: priceUnit.trim() || null,
           phone: phone.trim() || null,
           isVisible,
+          tint: tint || null,
         });
       }
       clear();
@@ -824,6 +841,41 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           placeholder="+386 …"
           disabled={busy}
         />
+      </div>
+      <div className="space-y-1">
+        <Label>Barvna ploščica</Label>
+        <p className="text-xs text-muted-foreground">
+          Fotografija, kadar slika pokaže resnično stvar; barva, kadar je vnos navodilo ali podatek
+          (WiFi, hišni red, prijava). Prazno = fotografija. Fotografije v detajlu ostanejo.
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          {TINT_SUGGESTIONS.map((c) => (
+            <button
+              key={c.hex}
+              type="button"
+              title={c.name}
+              aria-label={c.name}
+              disabled={busy}
+              onClick={() => setTint(tint === c.hex ? "" : c.hex)}
+              className={`h-8 w-8 rounded-md border-2 ${tint === c.hex ? "border-ring ring-2 ring-ring" : "border-transparent"}`}
+              style={{ backgroundColor: c.hex }}
+            />
+          ))}
+          <input
+            type="color"
+            value={/^#[0-9a-fA-F]{6}$/.test(tint) ? tint : "#3B78DC"}
+            onChange={(e) => setTint(e.target.value)}
+            disabled={busy}
+            title="Poljubna barva"
+            aria-label="Poljubna barva"
+            className="h-8 w-8 cursor-pointer rounded-md border p-0.5"
+          />
+          {tint && (
+            <Button type="button" variant="outline" size="sm" onClick={() => setTint("")} disabled={busy}>
+              Brez barve (fotografija)
+            </Button>
+          )}
+        </div>
       </div>
       {mode === "edit" && (
         <div className="flex items-center gap-2">

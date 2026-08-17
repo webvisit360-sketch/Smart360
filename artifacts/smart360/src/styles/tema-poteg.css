@@ -763,6 +763,19 @@ body{background:#000}
          background:rgba(255,255,255,.93);display:grid;place-items:center;color:var(--sea)}
 .gc .ico .ic{width:16px;height:16px;stroke-width:1.9}
 .gc:active{opacity:.85}
+/* Barvna ploščica: polna barva z ikono, kjer bi bila fotografija samo okras
+   (WiFi, hišni red, prijava, navodila) — barvne-ploscice.md. Ista velikost,
+   isti radij, isto mesto v mreži; brez tančice in brez sence pod napisom. */
+.gc--tint{background:var(--tint,#3B78DC);display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;padding:13px}
+.gc--tint .gc__ic{position:absolute;top:13px;left:13px;display:grid;place-items:center}
+.gc--tint .gc__ic .ic{width:34px;height:34px;color:#fff;stroke-width:1.6}
+.gc--tint .cap{position:static;left:auto;right:auto;bottom:auto;color:#fff;text-shadow:none}
+/* svetla barva iz prostega izbirnika: ikona in napis na temen tuš.
+   Fiksna barva, NE --ink: na temnem ozadju strani se --ink prevrne v
+   skoraj belo, ploščica pa je lastna površina in ne tematska. */
+.gc--tint-light .gc__ic .ic{color:#14201f}
+.gc--tint-light .cap{color:#14201f}
 
 .rowlist{margin-top:20px}
 .rowlist .row{border-bottom:1px solid var(--line)}

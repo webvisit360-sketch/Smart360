@@ -568,6 +568,11 @@ export interface Item {
   /** @nullable */
   noteText?: string | null;
   bullets: string[];
+  /**
+     * Hex colour for a flat colour tile instead of a photo tile; null/empty = photo tile
+     * @nullable
+     */
+  tint?: string | null;
   position: number;
   isVisible: boolean;
   media: MediaEntry[];
@@ -590,6 +595,8 @@ export interface ItemInput {
   noteType?: string;
   noteText?: string;
   bullets?: string[];
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  tint?: string;
   position?: number;
 }
 
@@ -623,6 +630,11 @@ export interface ItemUpdate {
   /** @nullable */
   noteText?: string | null;
   bullets?: string[];
+  /**
+     * @nullable
+     * @pattern ^#[0-9A-Fa-f]{6}$
+     */
+  tint?: string | null;
   position?: number;
   isVisible?: boolean;
 }

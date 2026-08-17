@@ -63,6 +63,9 @@ export const itemsTable = pgTable("items", {
   noteType: text("note_type"),
   noteText: text("note_text"),
   bullets: text("bullets").array().notNull().default([]),
+  // Barvna ploščica: hex barva namesto fotografije na PLOŠČICI (fotografije v
+  // detajlu ostanejo). Prazno = fotografija, kot doslej. (barvne-ploscice.md)
+  tint: text("tint"),
   position: integer("position").notNull().default(0),
   // "published" in the product spec: hide without deleting (seasonal offers).
   isVisible: boolean("is_visible").notNull().default(true),
