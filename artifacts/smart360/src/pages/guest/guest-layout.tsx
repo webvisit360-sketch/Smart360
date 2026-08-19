@@ -1,9 +1,10 @@
 import { ReactNode, useEffect } from "react";
 import { IconSprite } from "./IconSprite";
-import { useLocation, useRoute, useSearch } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 import { resolveLang } from "./i18n";
 import { installClickSound } from "./click-sound";
+import { installLivingGuideClick } from "../living-guide/living-click";
 
 // Both themes ship in the main bundle, scoped to html[data-theme="..."] by
 // the scope-themes vite plugin. Switching is done purely via the attribute,
@@ -12,15 +13,19 @@ import "../../styles/tema-sredozemska.css";
 import "../../styles/tema-poteg.css";
 
 export default function GuestLayout({ children }: { children: ReactNode }) {
-  // Mehanski klik ob dotiku — en delegiran poslušalec za OBE temi (zvok-gumbov.md).
-  useEffect(() => installClickSound(), []);
-
-  const [match1, params1] = useRoute("/:slug");
-  const [match2, params2] = useRoute("/:slug/c/:categoryId");
-  const slug = match1 ? params1?.slug : (match2 ? params2?.slug : "");
-
+  const [location, setLocation] = useLocation();
+  const slug = location.split("/").filter(Boolean)[0] ?? "";
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
+  const livingGuidePreview =
+    import.meta.env.DEV && searchParams.get("ui") === "living-guide";
+
+  // One delegated listener per active guest UI. The Living Guide keeps the
+  // prototype's audio/haptic feedback without double-firing the legacy sound.
+  useEffect(
+    () => livingGuidePreview ? installLivingGuideClick() : installClickSound(),
+    [livingGuidePreview],
+  );
   // Isti izračun jezika kot GuestHost (resolveLang: ?lang → zapomnjena izbira
   // → jezik brskalnika), da OBA zadeneta ISTI predpomnjeni vnos. Prej je ta
   // komponenta uporabljala surov ?lang in je lahko obstajala druga, sveža
@@ -39,7 +44,6 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   // Alias canonicalization: an old (renamed) slug resolves to the tenant, but
   // the address bar must always show the current slug — replace, keep the
   // rest of the path and the query string.
-  const [location, setLocation] = useLocation();
   useEffect(() => {
     if (!tenant || !slug || tenant.slug === slug) return;
     const rest = location.startsWith(`/${slug}`) ? location.slice(slug.length + 1) : "";
@@ -89,7 +93,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <IconSprite />
+      {!livingGuidePreview && <IconSprite />}
       {tenant ? (
         /* Namizni zaslon: en sam ovoj okoli VSEH plasti gostujoče aplikacije.
            Na telefonu .frame ne nosi nobenih slogov; na širokem zaslonu ga

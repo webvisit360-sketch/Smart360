@@ -15,8 +15,13 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script>
       (() => {
-        const isLivingGuideDemo = window.location.pathname.endsWith('/__living-guide/tokens');
-        if (isLivingGuideDemo) return;
+        const isLivingGuide =
+          window.location.pathname.endsWith('/__living-guide/tokens') ||
+          (
+            '%MODE%' === 'development' &&
+            new URLSearchParams(window.location.search).get('ui') === 'living-guide'
+          );
+        if (isLivingGuide) return;
 
         const apiPreconnect = document.createElement('link');
         apiPreconnect.rel = 'preconnect';

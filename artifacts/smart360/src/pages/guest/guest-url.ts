@@ -6,10 +6,14 @@ export function buildGuestPath(path: string): string {
   
   const lang = sp.get('lang');
   const preview = sp.get('preview');
+  const ui = sp.get('ui');
+  const theme = sp.get('theme');
   
   const out = new URLSearchParams();
   if (lang) out.set('lang', lang);
   if (preview) out.set('preview', preview);
+  if (ui) out.set('ui', ui);
+  if (theme) out.set('theme', theme);
   
   const q = out.toString();
   return q ? `${path}?${q}` : path;

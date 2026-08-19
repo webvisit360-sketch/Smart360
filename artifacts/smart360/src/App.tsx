@@ -8,7 +8,6 @@ import {
   Route,
   Switch,
   useLocation,
-  useRoute,
   useSearch,
   Router as WouterRouter,
 } from 'wouter';
@@ -27,6 +26,9 @@ const queryClient = new QueryClient();
 const LivingGuideTokensPage = lazy(
   () => import('@/pages/living-guide/LivingGuideTokensPage'),
 );
+const LivingGuideGuestShell = lazy(
+  () => import('@/pages/living-guide/LivingGuideGuestShell'),
+);
 
 /**
  * GuestHost — single component rendered for ALL guest paths (/:slug and /:slug/c/:categoryId).
@@ -39,18 +41,19 @@ const LivingGuideTokensPage = lazy(
  * which handle their own data fetching and loading states.
  */
 function GuestHost() {
-  const [, paramsHome] = useRoute('/:slug');
-  const [matchCat, paramsCat] = useRoute('/:slug/c/:categoryId');
-
-  const slug = matchCat ? (paramsCat?.slug ?? '') : (paramsHome?.slug ?? '');
-  const categoryId = matchCat ? (paramsCat?.categoryId ?? null) : null;
-
+  const [location] = useLocation();
+  const segments = location.split('/').filter(Boolean);
+  const slug = segments[0] ? decodeURIComponent(segments[0]) : '';
+  const isCategoryPath = segments[1] === 'c' && !!segments[2];
+  const categoryId = isCategoryPath ? decodeURIComponent(segments[2]!) : null;
   const searchStr = useSearch();
   const sp = new URLSearchParams(searchStr);
   // ?lang → remembered choice → browser language → Slovene. Filtering by
   // tenant.languages happens once the tenant arrives (effect below).
   const rawLang = resolveLang(slug, sp.get('lang'), null);
   const isPreview = sp.get('preview') === '1';
+  const livingGuidePreview =
+    import.meta.env.DEV && sp.get('ui') === 'living-guide';
 
   // React Query caches this — GuestLayout already fetched it so this is a synchronous cache hit.
   const { data: tenant } = useGetPublicTenant(
@@ -78,6 +81,19 @@ function GuestHost() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant, lang, slug]);
 
+  if (livingGuidePreview && tenant) {
+    return (
+      <Suspense fallback={null}>
+        <LivingGuideGuestShell
+          tenant={tenant}
+          slug={slug}
+          lang={lang}
+          categoryId={categoryId}
+        />
+      </Suspense>
+    );
+  }
+
   // Swipe theme: one mounted GuestSwipe instance handles both the pager and the detail overlay.
   // categoryId prop changes drive the detail open/close animation via CSS class toggling.
   if (tenant?.theme === 'swipe') {
@@ -85,7 +101,7 @@ function GuestHost() {
   }
 
   // Mediterranean theme: original route-aware components (they fetch via cache too).
-  if (matchCat) return <GuestCategory />;
+  if (isCategoryPath) return <GuestCategory />;
   return <GuestHome />;
 }
 
