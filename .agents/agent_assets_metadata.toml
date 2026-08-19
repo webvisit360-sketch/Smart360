@@ -7,3 +7,74 @@ uri = "file://.agents/outputs/meli-pu-en-template.json"
 type = "unspecified"
 title = "meli-pu — angleška predloga (moj ključni prostor)"
 description = "Vsak prevedljiv ključ iz PRODUKCIJE: content (282) + ui (76) + plurals (11). Slovenski izvirniki so v polju \"source\"; izpolnite prazne vrednosti \"en\" v content/ui/plurals."
+logical_id = "717efb9b-1b2e-4d5f-85e1-e96ab94dd9f5"
+
+[[outputs]]
+id = "0dyOMKpRH19xiWo19pLP8"
+uri = "file://screenshots/part1-tokens-overview-final.jpg"
+type = "image"
+title = "Part 1 — pregled design sistema"
+description = "Končni staging pregled tokenov, komponent in vseh štirih palet."
+logical_id = "82ca4867-e8ab-45e4-a809-57a389a169fa"
+content_hash = "sha256:a75401862025b81df1a9090cda3d3a3090be8497e9fd786a3939c3905bfc72b6"
+size = 115928
+mtime_ms = 1787176276468
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/82ca4867-e8ab-45e4-a809-57a389a169fa/b381bfc1-f6bc-4046-80cc-cf8bf29d5d4b"
+storage_version_token = "1787176291241731"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "q-Bf4EZR1UumQG-jl29Wd"
+uri = "file://screenshots/part1-jutro-final.jpg"
+type = "image"
+title = "Part 1 — Jutro, 390 px"
+description = "Mobilni posnetek jutranje teme."
+logical_id = "30101a30-71d8-4af1-aea6-88dc914f72fe"
+content_hash = "sha256:eb991068adb21d688355c4ce116630759f49e96735394802ff11902dda00ef63"
+size = 39757
+mtime_ms = 1787176267404
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/30101a30-71d8-4af1-aea6-88dc914f72fe/f457584f-9c18-42e8-b8dc-1a9da90b3ec2"
+storage_version_token = "1787176291945733"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "J-j4uV9P4roT3nj26PGt8"
+uri = "file://screenshots/part1-dan-final.jpg"
+type = "image"
+title = "Part 1 — Dan, 390 px"
+description = "Mobilni posnetek dnevne teme."
+logical_id = "ac0c25ca-ad5a-4fb8-8a6a-dc0964531805"
+content_hash = "sha256:9a1c745bdecbdce4960a737af42a205bedd3a679531767cd1ffad2caa90c90de"
+size = 39731
+mtime_ms = 1787176269732
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ac0c25ca-ad5a-4fb8-8a6a-dc0964531805/5a874b83-2263-44c4-b67c-43dc319af051"
+storage_version_token = "1787176292836955"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "dZH0hUE4nOBvZIK87609I"
+uri = "file://screenshots/part1-vecer-final.jpg"
+type = "image"
+title = "Part 1 — Zlata ura, 390 px"
+description = "Mobilni posnetek večerne teme."
+logical_id = "829d4675-f99c-4a9b-95a3-124c6a544660"
+content_hash = "sha256:24d98fb409d45018c25e5bacc49e9c40acdb348f221b415155d742b43ad5fedd"
+size = 39059
+mtime_ms = 1787176271652
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/829d4675-f99c-4a9b-95a3-124c6a544660/7c74e2a3-32cb-4817-aa4a-39d690be06c0"
+storage_version_token = "1787176293668380"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "wbC88TIpVMIinns_ci2JF"
+uri = "file://screenshots/part1-noc-final.jpg"
+type = "image"
+title = "Part 1 — Noč, 390 px"
+description = "Mobilni posnetek nočne teme z zvezdnim ozadjem."
+logical_id = "525d5a44-6d41-4dd0-b465-77085a411d5d"
+content_hash = "sha256:348a1f55de17577306310dafa2e846a618cfd07c5b3c477cf65f3bba8c5223f1"
+size = 40995
+mtime_ms = 1787176273696
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/525d5a44-6d41-4dd0-b465-77085a411d5d/d197cc58-13b3-4998-9e7c-19238f41fa52"
+storage_version_token = "1787176294353139"
+content_type = "image/jpeg"

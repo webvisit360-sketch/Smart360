@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect } from 'react';
+import { lazy, Suspense, type ReactNode, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -24,6 +24,9 @@ import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages
 import { usePageBg } from '@/pages/guest/use-theme-attr';
 
 const queryClient = new QueryClient();
+const LivingGuideTokensPage = lazy(
+  () => import('@/pages/living-guide/LivingGuideTokensPage'),
+);
 
 /**
  * GuestHost — single component rendered for ALL guest paths (/:slug and /:slug/c/:categoryId).
@@ -132,6 +135,14 @@ function Router() {
         <Route path="/" component={Landing} />
         <Route path="/admin" component={AdminRouter} />
         <Route path="/admin/*" component={AdminRouter} />
+
+        {/* Isolated Part 1 design-system proof. It intentionally bypasses GuestLayout,
+            legacy theme CSS and tenant data. */}
+        <Route path="/__living-guide/tokens">
+          <Suspense fallback={null}>
+            <LivingGuideTokensPage />
+          </Suspense>
+        </Route>
 
         {/* Legacy /g/ prefix: permanent client redirect to the canonical short path. */}
         <Route path="/g/*?" component={LegacyGRedirect} />

@@ -7,3 +7,4 @@
 - [Smart360 storage cleanup](storage-cleanup.md) — live DB reference set (incl. rich text!), shared dev/prod bucket + 7-day guard, prod SQL fails silently on missing columns.
 - [Smart360 translation layer](translation-layer.md) — ui/plurals overlay maps, two-sided lang enforcement (enabledLang + clampLang), export/import takes tenant row not id.
 - [Poteg CSS pitfalls](poteg-css-pitfalls.md) — `.lb` class collision (lightbox vs grid card label); must override display/background/inset on `.gc .lb`.
+- [Living Guide decisions](living-guide-decisions.md) — approved theme boundaries, guest persistence, price/order rules, event tabs, cutover and staged-review gates.

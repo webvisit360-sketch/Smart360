@@ -13,9 +13,28 @@
     <meta name="twitter:title" content="Smart360" />
     <meta name="twitter:description" content="Smart360 — built on Replit. Update this description to reflect the app." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (() => {
+        const isLivingGuideDemo = window.location.pathname.endsWith('/__living-guide/tokens');
+        if (isLivingGuideDemo) return;
+
+        const apiPreconnect = document.createElement('link');
+        apiPreconnect.rel = 'preconnect';
+        apiPreconnect.href = 'https://fonts.googleapis.com';
+        document.head.appendChild(apiPreconnect);
+
+        const assetPreconnect = document.createElement('link');
+        assetPreconnect.rel = 'preconnect';
+        assetPreconnect.href = 'https://fonts.gstatic.com';
+        assetPreconnect.crossOrigin = 'anonymous';
+        document.head.appendChild(assetPreconnect);
+
+        const legacyFonts = document.createElement('link');
+        legacyFonts.rel = 'stylesheet';
+        legacyFonts.href = 'https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap';
+        document.head.appendChild(legacyFonts);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

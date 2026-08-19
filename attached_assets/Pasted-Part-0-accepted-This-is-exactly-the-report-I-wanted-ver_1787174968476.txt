@@ -1,0 +1,59 @@
+Part 0 accepted. This is exactly the report I wanted — verified, honest about gaps,
+and you caught three real conflicts. Resolutions and answers to every OPEN item below.
+Then start Part 1.
+
+CONFLICTS — resolved:
+C1  Hours 00:00–04:59 = NOC. The prototype's `h<10` is a bug in the prototype, not a
+    spec. Boundaries: jutro 05–09, dan 10–16, vecer 17–20, noc 21–04. This is the ONE
+    place the written spec beats the prototype.
+C2  Guest sign-in persists in localStorage, keyed by tenant slug. The prototype kept
+    it in memory only because of its demo environment. localStorage wins.
+C3  NO computed totals anywhere. Price stays text. The order sheet shows the quantity
+    stepper and a plain "Pošlji naročilo" button (no "· 16 €"). The order e-mail and
+    admin row show qty + the item's price text; the host does any arithmetic. Do not
+    add numeric price fields.
+
+MAPPING — OPEN rows:
+#5  Ograja: render as template A for now (prose + photos + existing note as a danger
+    rule if noteType warrants). Do NOT split the text into steps yourself; the owner
+    will restructure the content in the admin later, and B2 applies when structured
+    steps exist.
+#10 Bazen: your proposal approved — template A with fact strip (from hoursJson when
+    present) and the rules as rule-rows inside the sheet.
+#11/12/15/18/19 Order flags: implement `orderEnabled` (default false) per item; the
+    owner will set values in the admin himself. For the staging demo seed TRUE only
+    for SUP deska and Oljčno olje. Ladijski prevoz and Sladoled stay informational.
+#16 Confirmed: presentation only, no ordering.
+#25/26 Routes: approved — template G renders ONLY what exists today (difficulty,
+    duration, distance, photos, prose); map, elevation profile and waypoints sections
+    are hidden until GPX data exists. Add the GPX/waypoint fields + admin input as
+    specified, content optional. Never render a fake map.
+#31 Events: correct call. Template I activates only for items with eventStartsAt.
+    Additionally: the five bottom-bar slots are per-tenant configuration (this was
+    always the architecture). Meli Pu LAUNCHES WITH FOUR TABS — no Program tab —
+    until dated events exist; the three generic event links stay under Okolica as
+    template-A/F pages. Build the tab-config mechanism now.
+
+DATA GAPS — all proposed additive fields approved as written (distanceMeters,
+producerName/producerNote, orderEnabled, soldOut, orderPickupOptions,
+eventStartsAt/EndsAt/Scope/Venue/registrationEnabled, notices model, orders model +
+statuses + deleteAfter, coverStatOrder max 3 itemIds, stayFeaturedCategoryId, GPX
+fields, hashed device token). Two corrections:
+- notices: drop the stored `isNew` flag — "novo" is computed (publishedAt < 72h).
+- hoursJson: good find that it already exists. The week editor + validation you
+  proposed is approved; "odprto do" hides when hours are absent — never invented.
+
+THEME ENGINE — `body[data-t]` isolation approved exactly as you planned it, including
+the reasons. Keep `html[data-theme]` legacy-only until deletion. Your reduced-motion
+extensions and phstars-only (no demo stage) are approved. Recheck on visibilitychange
+approved.
+
+CUTOVER — approved as written, including guestUiMode default legacy, dev-only
+?ui=living-guide, admin cover-preview replacement before deleting Cover.tsx, and the
+rollback rules. One addition: the Part 5 report must include a device matrix (real
+iPhone Safari + one Android Chrome) with screenshots per theme.
+
+ESTIMATE — acknowledged (28–42 days). We go part by part; quality gates over speed.
+
+START PART 1 now. Report with the tokens/demo page URL, build id, and screenshots of
+all four themes (including night stars) when done.
