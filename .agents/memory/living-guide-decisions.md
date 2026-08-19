@@ -32,3 +32,9 @@ Use the `guestUiMode` cutover flag with legacy as the default and a development-
 **Why:** The new guest shell must be introduced without breaking admin tools or live tenants.
 
 **How to apply:** Keep new and legacy guest systems isolated until the final validated cutover.
+
+Demo-only examples are allowed on the Living Guide tokens page. Parts 2–5 must never invent values in the real guest UI; if source data is missing, hide the dependent block.
+
+**Why:** The guest guide must remain trustworthy and reflect only actual tenant content.
+
+**How to apply:** Treat every real temperature, phone number, opening time, route fact, price, and similar value as optional source data; omit its UI when absent.

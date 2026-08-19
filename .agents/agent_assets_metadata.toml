@@ -78,3 +78,45 @@ mtime_ms = 1787176273696
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/525d5a44-6d41-4dd0-b465-77085a411d5d/d197cc58-13b3-4998-9e7c-19238f41fa52"
 storage_version_token = "1787176294353139"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "5Ca6lxx0ecCnzLE7JFcQy"
+uri = "file://screenshots/part1-warning-dan-final.jpg"
+type = "image"
+title = "Part 1 popravek — opozorilo · Dan"
+description = "Solid #D93A2B ikona z belim glifom; vrstica ohrani svetlo rdeč tint."
+logical_id = "2756dc24-6885-4af1-aa95-fdddc667e673"
+content_hash = "sha256:bfeb0d88dd223dfd03b370930a296e7cabb164821346df2b7aa3a105c1275299"
+size = 53488
+mtime_ms = 1787176818895
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2756dc24-6885-4af1-aa95-fdddc667e673/a9e473f1-5bb0-4a04-aa22-572b2d603be9"
+storage_version_token = "1787176835474220"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "Nmuyf2fyQGHg7qrrCGq0P"
+uri = "file://screenshots/part1-warning-noc-final.jpg"
+type = "image"
+title = "Part 1 popravek — opozorilo · Noč"
+description = "Solid #D93A2B ikona z belim glifom v nočni temi; vrstica ohrani tint."
+logical_id = "0960c26f-8b31-4d6b-acd6-63ef0db9cb2e"
+content_hash = "sha256:2216d2e3d51435b699d85edc1746022ffe8d22b9417e8cc2b5a32bfe1beb26a2"
+size = 54127
+mtime_ms = 1787176821107
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0960c26f-8b31-4d6b-acd6-63ef0db9cb2e/aca88a16-7a4e-4652-b130-2054f2a40a4a"
+storage_version_token = "1787176836138826"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "3t_ceUCSNN-GMQOGMciEI"
+uri = "file://screenshots/part1-live-token-table-final.jpg"
+type = "image"
+title = "Part 1 — živa tabela 18 tokenov"
+description = "Runtime getComputedStyle vrednosti aktivne teme pod štirimi paletami."
+logical_id = "74d387f1-67aa-4f04-a15b-f5dba69a4d2c"
+content_hash = "sha256:b9564889475dbc9f6d14ceb22898a587d6eeafff6e6696d75f840beeae19c559"
+size = 140457
+mtime_ms = 1787176824315
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/74d387f1-67aa-4f04-a15b-f5dba69a4d2c/16f56dd7-2d6c-4b92-b068-206ce007a337"
+storage_version_token = "1787176836781202"
+content_type = "image/jpeg"

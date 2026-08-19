@@ -1,4 +1,10 @@
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { installLivingGuideClick } from "./living-click";
 import { livingGuideInterWoff2 } from "./inter-font-source";
 import { LivingGuideSprite } from "./LivingGuideSprite";
@@ -16,6 +22,29 @@ const THEME_LABELS: Record<LivingTheme, string> = {
   vecer: "Zlata ura",
   noc: "Noč",
 };
+
+const LIVE_TOKEN_NAMES = [
+  "--amb1",
+  "--amb2",
+  "--amb3",
+  "--ambbg",
+  "--bg",
+  "--card",
+  "--card2",
+  "--tx",
+  "--tx2",
+  "--line",
+  "--acc",
+  "--accg",
+  "--onacc",
+  "--warm",
+  "--glass",
+  "--scrim",
+  "--navtx",
+  "--phbr",
+] as const;
+
+type LiveTokenName = (typeof LIVE_TOKEN_NAMES)[number];
 
 function Icon({ name }: { name: string }) {
   return (
@@ -87,6 +116,39 @@ function ThemeSamples() {
   );
 }
 
+function LiveTokenTable({
+  theme,
+  values,
+}: {
+  theme: LivingTheme;
+  values: Record<LiveTokenName, string>;
+}) {
+  return (
+    <section className="lg-token-table-wrap" aria-labelledby="lg-live-token-title">
+      <div className="lg-token-table-heading">
+        <div>
+          <span className="lg-kicker">getComputedStyle · runtime</span>
+          <h2 id="lg-live-token-title">Žive vrednosti · {THEME_LABELS[theme]}</h2>
+        </div>
+        <span>{LIVE_TOKEN_NAMES.length} custom properties</span>
+      </div>
+      <table className="lg-token-table">
+        <caption className="lg-sr-only">
+          Žive izračunane CSS vrednosti aktivne teme
+        </caption>
+        <tbody>
+          {LIVE_TOKEN_NAMES.map((name) => (
+            <tr key={name}>
+              <th scope="row"><code>{name}</code></th>
+              <td><code data-live-token={name}>{values[name] || "—"}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
 function DemoQr() {
   return (
     <div className="lg-qr" aria-label="Primer WiFi QR">
@@ -106,6 +168,14 @@ export default function LivingGuideTokensPage() {
     isLivingTheme(initialOverride) ? initialOverride : undefined,
   );
   const [copied, setCopied] = useState(false);
+  const livingGuideRef = useRef<HTMLElement>(null);
+  const [liveTokenValues, setLiveTokenValues] = useState<
+    Record<LiveTokenName, string>
+  >(() =>
+    Object.fromEntries(
+      LIVE_TOKEN_NAMES.map((name) => [name, ""]),
+    ) as Record<LiveTokenName, string>,
+  );
   const theme = useLivingTheme(themeOverride);
 
   useEffect(() => {
@@ -118,6 +188,22 @@ export default function LivingGuideTokensPage() {
   }, [theme]);
 
   useEffect(() => installLivingGuideClick(), []);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      if (!livingGuideRef.current) return;
+      const computed = window.getComputedStyle(livingGuideRef.current);
+      setLiveTokenValues(
+        Object.fromEntries(
+          LIVE_TOKEN_NAMES.map((name) => [
+            name,
+            computed.getPropertyValue(name).trim(),
+          ]),
+        ) as Record<LiveTokenName, string>,
+      );
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [theme]);
 
   const selectTheme = (nextTheme: LivingTheme) => {
     setThemeOverride(nextTheme);
@@ -137,7 +223,7 @@ export default function LivingGuideTokensPage() {
   return (
     <>
       <style>{`@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(${livingGuideInterWoff2}) format('woff2')}`}</style>
-      <main data-living-guide>
+      <main data-living-guide ref={livingGuideRef}>
         <LivingGuideSprite />
         <Stars />
         <div className="lg-page">
@@ -249,6 +335,7 @@ export default function LivingGuideTokensPage() {
           </div>
 
           <ThemeSamples />
+          <LiveTokenTable theme={theme} values={liveTokenValues} />
         </div>
       </main>
     </>
