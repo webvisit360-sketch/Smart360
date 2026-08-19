@@ -38,3 +38,9 @@ Demo-only examples are allowed on the Living Guide tokens page. Parts 2–5 must
 **Why:** The guest guide must remain trustworthy and reflect only actual tenant content.
 
 **How to apply:** Treat every real temperature, phone number, opening time, route fact, price, and similar value as optional source data; omit its UI when absent.
+
+Every checkpoint report must include an exact development URL that was re-verified immediately before sending; derive its path from the registered artifact configuration, never from the artifact directory name.
+
+**Why:** A guessed artifact-directory prefix produced a tenant-not-found URL even though the tenant and server were healthy.
+
+**How to apply:** Run the complete 390 px checkpoint walk on the reported public URL, confirm the expected tenant API returns 200, and perform a final live reachability check just before reporting.
