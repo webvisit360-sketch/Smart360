@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { installLivingGuideClick } from "./living-click";
+import { installTapFeedback } from "../guest/tap-feedback";
 import { livingGuideInterWoff2 } from "./inter-font-source";
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import {
@@ -187,7 +187,7 @@ export default function LivingGuideTokensPage() {
     };
   }, [theme]);
 
-  useEffect(() => installLivingGuideClick(), []);
+  useEffect(() => installTapFeedback(), []);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {

@@ -50,3 +50,9 @@ Every checkpoint report must include a “DELIBERATELY ABSENT IN THIS CHECKPOINT
 **Why:** Without an explicit absence list, the owner could not tell planned scope boundaries from broken or missing UI.
 
 **How to apply:** Name each intentionally absent surface and its scheduled checkpoint; for generic placeholders, state which specialized treatment or destination is still pending.
+
+Living Guide touch feedback is haptic and visual only: `navigator.vibrate(6)` plus press scale `.97`; never initialize or request WebAudio, and never expose a sound toggle.
+
+**Why:** On a real iPhone the synthesized mechanical click sounded like a beep, so the owner removed audio from the binding specification.
+
+**How to apply:** Guest and tokens surfaces share haptic-only tap feedback. Verification must prove the first tap requests a 6 ms vibration and makes zero audio API requests.

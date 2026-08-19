@@ -934,7 +934,7 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-primary-button:active,
 .lg2-greeting:active,
 .lg2-bottom-nav button:active {
-  transform: scale(.96);
+  transform: scale(.97);
 }
 
 .lg2-fab:focus-visible,

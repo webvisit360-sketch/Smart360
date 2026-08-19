@@ -3,8 +3,7 @@ import { IconSprite } from "./IconSprite";
 import { useLocation, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 import { resolveLang } from "./i18n";
-import { installClickSound } from "./click-sound";
-import { installLivingGuideClick } from "../living-guide/living-click";
+import { installTapFeedback } from "./tap-feedback";
 
 // Both themes ship in the main bundle, scoped to html[data-theme="..."] by
 // the scope-themes vite plugin. Switching is done purely via the attribute,
@@ -20,12 +19,8 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   const livingGuidePreview =
     import.meta.env.DEV && searchParams.get("ui") === "living-guide";
 
-  // One delegated listener per active guest UI. The Living Guide keeps the
-  // prototype's audio/haptic feedback without double-firing the legacy sound.
-  useEffect(
-    () => livingGuidePreview ? installLivingGuideClick() : installClickSound(),
-    [livingGuidePreview],
-  );
+  // One delegated haptic-only listener for every active guest UI.
+  useEffect(() => installTapFeedback(), []);
   // Isti izračun jezika kot GuestHost (resolveLang: ?lang → zapomnjena izbira
   // → jezik brskalnika), da OBA zadeneta ISTI predpomnjeni vnos. Prej je ta
   // komponenta uporabljala surov ?lang in je lahko obstajala druga, sveža
