@@ -13,7 +13,11 @@ import { formatTodayHours } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { mediaImgSrc } from "../guest/img";
 import { buildGuestPath } from "../guest/guest-url";
-import { switchLang } from "../guest/i18n";
+import {
+  makeT,
+  switchLang,
+  type UiTranslator,
+} from "../guest/i18n";
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import { livingGuideInterWoff2 } from "./inter-font-source";
 import {
@@ -30,140 +34,6 @@ type GuestRecord = {
 };
 
 type ScreenName = "cover" | "grid" | "detail";
-type SupportedLanguage = "sl" | "en" | "de" | "it";
-
-type Copy = {
-  guide: string;
-  openGuide: string;
-  home: string;
-  stay: string;
-  offer: string;
-  area: string;
-  welcomeKicker: string;
-  welcomeTitle: string;
-  welcomeDescription: string;
-  unit: string;
-  unitPlaceholder: string;
-  name: string;
-  namePlaceholder: string;
-  save: string;
-  later: string;
-  greeting: (name: string) => string;
-  ordersTo: string;
-  change: string;
-  call: string;
-  directions: string;
-  website: string;
-  open24: string;
-  back: string;
-};
-
-const COPY: Record<SupportedLanguage, Copy> = {
-  sl: {
-    guide: "Vaš živi vodnik",
-    openGuide: "Odpri vodnik",
-    home: "Domov",
-    stay: "Nastanitev",
-    offer: "Ponudba",
-    area: "Okolica",
-    welcomeKicker: "Dobrodošli",
-    welcomeTitle: "Prijava v nastanitev",
-    welcomeDescription:
-      "Vnesite številko apartmaja ali sobe. Ime lahko dodate po želji.",
-    unit: "Apartma ali soba",
-    unitPlaceholder: "Na primer B-14",
-    name: "Ime",
-    namePlaceholder: "Neobvezno",
-    save: "Shrani prijavo",
-    later: "Pozneje — najprej si samo ogledam",
-    greeting: (name) => (name ? `${name}, dobrodošli` : "Dobrodošli"),
-    ordersTo: "naročila gredo na",
-    change: "spremeni",
-    call: "Pokliči",
-    directions: "Odpri pot",
-    website: "Spletna stran",
-    open24: "Odprto 24/7",
-    back: "Nazaj",
-  },
-  en: {
-    guide: "Your living guide",
-    openGuide: "Open guide",
-    home: "Home",
-    stay: "Stay",
-    offer: "Offer",
-    area: "Around",
-    welcomeKicker: "Welcome",
-    welcomeTitle: "Check in to your stay",
-    welcomeDescription:
-      "Enter your apartment or room number. Adding your name is optional.",
-    unit: "Apartment or room",
-    unitPlaceholder: "For example B-14",
-    name: "Name",
-    namePlaceholder: "Optional",
-    save: "Save check-in",
-    later: "Later — I just want to look around",
-    greeting: (name) => (name ? `Welcome, ${name}` : "Welcome"),
-    ordersTo: "orders go to",
-    change: "change",
-    call: "Call",
-    directions: "Directions",
-    website: "Website",
-    open24: "Open 24/7",
-    back: "Back",
-  },
-  de: {
-    guide: "Ihr lebendiger Reiseführer",
-    openGuide: "Reiseführer öffnen",
-    home: "Start",
-    stay: "Unterkunft",
-    offer: "Angebot",
-    area: "Umgebung",
-    welcomeKicker: "Willkommen",
-    welcomeTitle: "In der Unterkunft anmelden",
-    welcomeDescription:
-      "Geben Sie Ihre Apartment- oder Zimmernummer ein. Der Name ist optional.",
-    unit: "Apartment oder Zimmer",
-    unitPlaceholder: "Zum Beispiel B-14",
-    name: "Name",
-    namePlaceholder: "Optional",
-    save: "Anmeldung speichern",
-    later: "Später — zuerst nur ansehen",
-    greeting: (name) => (name ? `Willkommen, ${name}` : "Willkommen"),
-    ordersTo: "Bestellungen gehen an",
-    change: "ändern",
-    call: "Anrufen",
-    directions: "Route öffnen",
-    website: "Webseite",
-    open24: "Rund um die Uhr geöffnet",
-    back: "Zurück",
-  },
-  it: {
-    guide: "La vostra guida vivente",
-    openGuide: "Apri la guida",
-    home: "Home",
-    stay: "Alloggio",
-    offer: "Offerta",
-    area: "Dintorni",
-    welcomeKicker: "Benvenuti",
-    welcomeTitle: "Registrazione nell'alloggio",
-    welcomeDescription:
-      "Inserite il numero dell'appartamento o della camera. Il nome è facoltativo.",
-    unit: "Appartamento o camera",
-    unitPlaceholder: "Per esempio B-14",
-    name: "Nome",
-    namePlaceholder: "Facoltativo",
-    save: "Salva registrazione",
-    later: "Più tardi — prima voglio dare un'occhiata",
-    greeting: (name) => (name ? `Benvenuto, ${name}` : "Benvenuti"),
-    ordersTo: "gli ordini vanno a",
-    change: "modifica",
-    call: "Chiama",
-    directions: "Indicazioni",
-    website: "Sito web",
-    open24: "Aperto 24 ore su 24",
-    back: "Indietro",
-  },
-};
 
 const GUEST_STORAGE_PREFIX = "smart360:living-guide:guest:";
 
@@ -241,15 +111,15 @@ function categoryIcon(category: any): string {
   return "doc";
 }
 
-function supportedLanguage(value: string): SupportedLanguage {
-  return value === "en" || value === "de" || value === "it" ? value : "sl";
-}
-
 function enabledLanguageCodes(tenant: any): string[] {
-  const codes = (tenant?.languages ?? [])
+  const enabled = new Set(
+    (tenant?.languages ?? [])
     .map((entry: any) => (typeof entry === "string" ? entry : entry?.code))
-    .filter((entry: unknown): entry is string => typeof entry === "string");
-  return codes.length ? codes : ["sl", "en", "de", "it"];
+      .filter((entry: unknown): entry is string => typeof entry === "string"),
+  );
+  return ["sl", "en", "de", "it"].filter(
+    (code) => code === "sl" || enabled.has(code),
+  );
 }
 
 function externalUrl(value: string): string {
@@ -274,7 +144,7 @@ export default function LivingGuideGuestShell({
       ? requestedTheme
       : undefined;
   const theme = useLivingTheme(themeOverride);
-  const copy = COPY[supportedLanguage(lang)];
+  const t = makeT(tenant, lang);
   const rootRef = useRef<HTMLDivElement>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const welcomeOverride = import.meta.env.DEV
@@ -409,7 +279,7 @@ export default function LivingGuideGuestShell({
             tenant={tenant}
             slug={slug}
             lang={lang}
-            copy={copy}
+            t={t}
             onOpen={() => navigate(gridPath(staySection))}
           />
         )}
@@ -419,7 +289,7 @@ export default function LivingGuideGuestShell({
             tenant={tenant}
             section={currentSection}
             lang={lang}
-            copy={copy}
+            t={t}
             guest={currentSection.key === "stay" ? guest : null}
             onEditGuest={() => setShowSignIn(true)}
             onOpenCategory={openCategory}
@@ -430,7 +300,7 @@ export default function LivingGuideGuestShell({
           <DetailView
             category={categoryContext.category}
             lang={lang}
-            copy={copy}
+            t={t}
             galleryIndex={galleryIndex}
             onGalleryIndex={setGalleryIndex}
             onBack={goBack}
@@ -442,7 +312,7 @@ export default function LivingGuideGuestShell({
         <BottomNav
           sections={sections}
           slug={slug}
-          copy={copy}
+          t={t}
           activeSectionKey={currentSection?.key ?? null}
           onNavigate={navigate}
         />
@@ -450,7 +320,8 @@ export default function LivingGuideGuestShell({
 
       {showSignIn && (
         <SignInSheet
-          copy={copy}
+          tenantName={tenant.name}
+          t={t}
           initialGuest={guest}
           onClose={() => setShowSignIn(false)}
           onSave={saveGuest}
@@ -492,13 +363,13 @@ function CoverView({
   tenant,
   slug,
   lang,
-  copy,
+  t,
   onOpen,
 }: {
   tenant: any;
   slug: string;
   lang: string;
-  copy: Copy;
+  t: UiTranslator;
   onOpen: () => void;
 }) {
   const languages = enabledLanguageCodes(tenant);
@@ -519,13 +390,13 @@ function CoverView({
           className="lg2-fab lg2-language"
           type="button"
           onClick={() => switchLang(slug, nextLanguage)}
-          aria-label={`Language: ${lang.toUpperCase()}`}
+          aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })}
         >
           {lang.toUpperCase()}
         </button>
       </div>
       <div className="lg2-cover-mast">
-        <p className="lg2-cover-kicker">{copy.guide}</p>
+        <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
         {tenant.coverSubtitle && (
           <p className="lg2-cover-subtitle">{tenant.coverSubtitle}</p>
@@ -536,19 +407,21 @@ function CoverView({
         <svg aria-hidden="true">
           <use href="#lg-i-down" />
         </svg>
-        {copy.openGuide}
+        {t("UI.lg.openGuide")}
       </button>
     </section>
   );
 }
 
 function SignInSheet({
-  copy,
+  tenantName,
+  t,
   initialGuest,
   onClose,
   onSave,
 }: {
-  copy: Copy;
+  tenantName: string;
+  t: UiTranslator;
   initialGuest: GuestRecord | null;
   onClose: () => void;
   onSave: (record: GuestRecord) => void;
@@ -584,35 +457,35 @@ function SignInSheet({
       >
         <div className="lg2-grabber" aria-hidden="true" />
         <div className="lg2-welcome-heading">
-          <p>{copy.welcomeKicker}</p>
-          <h2 id="lg2-welcome-title">{copy.welcomeTitle}</h2>
-          <span>{copy.welcomeDescription}</span>
+          <p>{tenantName}</p>
+          <h2 id="lg2-welcome-title">{t("UI.lg.welcome.title")}</h2>
+          <span>{t("UI.lg.welcome.description")}</span>
         </div>
         <label className="lg2-field lg2-field--required">
-          <span>{copy.unit}</span>
+          <span>{t("UI.lg.welcome.unit")}</span>
           <input
             ref={unitInput}
             required
             autoComplete="off"
             value={unit}
-            placeholder={copy.unitPlaceholder}
+            placeholder={t("UI.lg.welcome.unitPlaceholder")}
             onChange={(event) => setUnit(event.target.value)}
           />
         </label>
         <label className="lg2-field">
-          <span>{copy.name}</span>
+          <span>{t("UI.lg.welcome.name")}</span>
           <input
             autoComplete="name"
             value={name}
-            placeholder={copy.namePlaceholder}
+            placeholder={t("UI.lg.welcome.namePlaceholder")}
             onChange={(event) => setName(event.target.value)}
           />
         </label>
         <button className="lg2-primary-button" type="submit" disabled={!unit.trim()}>
-          {copy.save}
+          {t("UI.lg.welcome.save")}
         </button>
         <button className="lg2-later" type="button" onClick={onClose}>
-          {copy.later}
+          {t("UI.lg.welcome.later")}
         </button>
       </form>
     </div>
@@ -623,7 +496,7 @@ function GridView({
   tenant,
   section,
   lang,
-  copy,
+  t,
   guest,
   onEditGuest,
   onOpenCategory,
@@ -631,7 +504,7 @@ function GridView({
   tenant: any;
   section: any;
   lang: string;
-  copy: Copy;
+  t: UiTranslator;
   guest: GuestRecord | null;
   onEditGuest: () => void;
   onOpenCategory: (id: string) => void;
@@ -671,12 +544,16 @@ function GridView({
               </svg>
             </span>
             <span>
-              <b>{copy.greeting(guest.name)}</b>
+              <b>
+                {guest.name
+                  ? t("UI.lg.greeting.named", { name: guest.name })
+                  : t("UI.lg.greeting.generic")}
+              </b>
               <small>
-                {copy.ordersTo}: {guest.unit}
+                {t("UI.lg.greeting.ordersTo")} {guest.unit}
               </small>
             </span>
-            <em>{copy.change}</em>
+            <em>{t("UI.lg.greeting.change")}</em>
           </button>
         )}
 
@@ -746,14 +623,14 @@ function GridView({
 function DetailView({
   category,
   lang,
-  copy,
+  t,
   galleryIndex,
   onGalleryIndex,
   onBack,
 }: {
   category: any;
   lang: string;
-  copy: Copy;
+  t: UiTranslator;
   galleryIndex: number;
   onGalleryIndex: (index: number) => void;
   onBack: () => void;
@@ -773,7 +650,7 @@ function DetailView({
     firstItem?.phone
       ? {
           href: `tel:${firstItem.phone}`,
-          label: copy.call,
+          label: t("UI.lg.action.call"),
           icon: "phone",
           external: false,
         }
@@ -781,7 +658,7 @@ function DetailView({
     firstItem?.mapQuery
       ? {
           href: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(firstItem.mapQuery)}`,
-          label: copy.directions,
+          label: t("UI.lg.action.directions"),
           icon: "nav2",
           external: true,
         }
@@ -789,7 +666,7 @@ function DetailView({
     firstItem?.website
       ? {
           href: externalUrl(firstItem.website),
-          label: copy.website,
+          label: t("UI.lg.action.website"),
           icon: "comp",
           external: true,
         }
@@ -802,6 +679,8 @@ function DetailView({
     icon: string;
     external: boolean;
   }>;
+
+  const todayTime = today?.match(/\d{1,2}:\d{2}–\d{1,2}:\d{2}/)?.[0] ?? null;
 
   return (
     <section className="lg2-view lg2-detail-view">
@@ -851,7 +730,7 @@ function DetailView({
                 className="lg2-detail-back"
                 type="button"
                 onClick={onBack}
-                aria-label={copy.back}
+                aria-label={t("UI.lg.action.back")}
               >
                 <svg aria-hidden="true">
                   <use href="#lg-i-bk" />
@@ -864,16 +743,18 @@ function DetailView({
             <div className="lg2-grabber" aria-hidden="true" />
             <h1>{category.label}</h1>
 
-            {(today || firstItem?.open24) && (
+            {(todayTime || firstItem?.open24) && (
               <div className="lg2-facts">
                 <div>
                   <b>
                     {firstItem?.open24
-                      ? "24/7"
-                      : today?.split(" ").slice(1).join(" ")}
+                      ? t("UI.lg.hours.alwaysValue")
+                      : todayTime}
                   </b>
                   <small>
-                    {firstItem?.open24 ? copy.open24 : today?.split(" ")[0]}
+                    {firstItem?.open24
+                      ? t("UI.lg.hours.alwaysLabel")
+                      : t("UI.lg.hours.openUntil")}
                   </small>
                 </div>
               </div>
@@ -954,35 +835,40 @@ function DetailView({
 function BottomNav({
   sections,
   slug,
-  copy,
+  t,
   activeSectionKey,
   onNavigate,
 }: {
   sections: any[];
   slug: string;
-  copy: Copy;
+  t: UiTranslator;
   activeSectionKey: string | null;
   onNavigate: (path: string) => void;
 }) {
   const sectionFor = (key: string) =>
     sections.find((section: any) => section.key === key);
   const tabs = [
-    { key: "home", label: copy.home, icon: "home", path: `/${slug}` },
+    {
+      key: "home",
+      label: t("UI.lg.nav.home"),
+      icon: "home",
+      path: `/${slug}`,
+    },
     {
       key: "stay",
-      label: copy.stay,
+      label: t("UI.lg.nav.stay"),
       icon: "tent",
       section: sectionFor("stay"),
     },
     {
       key: "offer",
-      label: copy.offer,
+      label: t("UI.lg.nav.offer"),
       icon: "bag",
       section: sectionFor("offer"),
     },
     {
       key: "explore",
-      label: copy.area,
+      label: t("UI.lg.nav.area"),
       icon: "comp",
       section: sectionFor("explore"),
     },
@@ -992,7 +878,7 @@ function BottomNav({
     activeSectionKey === "services" ? "explore" : activeSectionKey;
 
   return (
-    <nav className="lg2-bottom-nav" aria-label="Primary">
+    <nav className="lg2-bottom-nav" aria-label={t("UI.lg.nav.primary")}>
       {tabs.map((tab) => {
         const isActive = tab.key !== "home" && normalizedActive === tab.key;
         const path =

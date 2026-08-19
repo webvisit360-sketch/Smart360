@@ -6,6 +6,208 @@
  * Missing translation → silent Slovene fallback, never a raw key.
  */
 
+export type UiLanguage = "sl" | "en" | "de" | "it";
+export type UiVariables = Record<string, string | number>;
+export type UiTranslator = (key: string, variables?: UiVariables) => string;
+
+/**
+ * Living Guide UI chrome. Slovene values are copied from the binding
+ * prototip-2030.html; the other three languages are built-in fallbacks until
+ * a tenant-specific translation with the same key is available.
+ */
+export const LIVING_GUIDE_UI = {
+  "UI.lg.guide": {
+    sl: "Vaš vodnik",
+    en: "Your guide",
+    de: "Ihr Reiseführer",
+    it: "La vostra guida",
+  },
+  "UI.lg.openGuide": {
+    sl: "Odpri vodnik",
+    en: "Open guide",
+    de: "Reiseführer öffnen",
+    it: "Apri la guida",
+  },
+  "UI.lg.nav.home": {
+    sl: "Domov",
+    en: "Home",
+    de: "Start",
+    it: "Home",
+  },
+  "UI.lg.nav.stay": {
+    sl: "Nastanitev",
+    en: "Accommodation",
+    de: "Unterkunft",
+    it: "Alloggio",
+  },
+  "UI.lg.nav.offer": {
+    sl: "Ponudba",
+    en: "Offer",
+    de: "Angebot",
+    it: "Offerta",
+  },
+  "UI.lg.nav.area": {
+    sl: "Okolica",
+    en: "Surroundings",
+    de: "Umgebung",
+    it: "Dintorni",
+  },
+  "UI.lg.nav.primary": {
+    sl: "Glavna navigacija",
+    en: "Main navigation",
+    de: "Hauptnavigation",
+    it: "Navigazione principale",
+  },
+  "UI.lg.language": {
+    sl: "Jezik: {lang}",
+    en: "Language: {lang}",
+    de: "Sprache: {lang}",
+    it: "Lingua: {lang}",
+  },
+  "UI.lg.welcome.title": {
+    sl: "Dobrodošli",
+    en: "Welcome",
+    de: "Willkommen",
+    it: "Benvenuti",
+  },
+  "UI.lg.welcome.description": {
+    sl: "Vpišite številko parcele, sobe ali apartmaja — vsako naročilo in najem bo samodejno označen z njo. Ime je neobvezno.",
+    en: "Enter your pitch, room or apartment number — every order and rental will automatically be tagged with it. Your name is optional.",
+    de: "Geben Sie die Nummer Ihres Stellplatzes, Zimmers oder Apartments ein — jede Bestellung und Ausleihe wird automatisch damit gekennzeichnet. Der Name ist optional.",
+    it: "Inserite il numero della piazzola, della camera o dell’appartamento — ogni ordine e noleggio verrà contrassegnato automaticamente con questo dato. Il nome è facoltativo.",
+  },
+  "UI.lg.welcome.unit": {
+    sl: "Parcela / soba / apartma · obvezno",
+    en: "Pitch / room / apartment · required",
+    de: "Stellplatz / Zimmer / Apartment · erforderlich",
+    it: "Piazzola / camera / appartamento · obbligatorio",
+  },
+  "UI.lg.welcome.unitPlaceholder": {
+    sl: "npr. B-14",
+    en: "e.g. B-14",
+    de: "z. B. B-14",
+    it: "ad es. B-14",
+  },
+  "UI.lg.welcome.name": {
+    sl: "Ime in priimek · neobvezno",
+    en: "Full name · optional",
+    de: "Vor- und Nachname · optional",
+    it: "Nome e cognome · facoltativo",
+  },
+  "UI.lg.welcome.namePlaceholder": {
+    sl: "npr. Ana Novak",
+    en: "e.g. Ana Novak",
+    de: "z. B. Ana Novak",
+    it: "ad es. Ana Novak",
+  },
+  "UI.lg.welcome.save": {
+    sl: "Shrani",
+    en: "Save",
+    de: "Speichern",
+    it: "Salva",
+  },
+  "UI.lg.welcome.later": {
+    sl: "Pozneje — najprej si samo ogledam",
+    en: "Later — I just want to look around first",
+    de: "Später — ich möchte mich zuerst nur umsehen",
+    it: "Più tardi — per ora voglio solo dare un’occhiata",
+  },
+  "UI.lg.greeting.generic": {
+    sl: "Dobrodošli",
+    en: "Welcome",
+    de: "Willkommen",
+    it: "Benvenuti",
+  },
+  "UI.lg.greeting.named": {
+    sl: "{name}, dobrodošli",
+    en: "Welcome, {name}",
+    de: "Willkommen, {name}",
+    it: "Benvenuto/a, {name}",
+  },
+  "UI.lg.greeting.ordersTo": {
+    sl: "naročila gredo na:",
+    en: "orders go to:",
+    de: "Bestellungen gehen an:",
+    it: "gli ordini vanno a:",
+  },
+  "UI.lg.greeting.change": {
+    sl: "spremeni",
+    en: "change",
+    de: "ändern",
+    it: "modifica",
+  },
+  "UI.lg.action.call": {
+    sl: "Pokliči",
+    en: "Call",
+    de: "Anrufen",
+    it: "Chiama",
+  },
+  "UI.lg.action.directions": {
+    sl: "Kje je",
+    en: "Where is it?",
+    de: "Wo ist es?",
+    it: "Dov’è?",
+  },
+  "UI.lg.action.website": {
+    sl: "Spletna stran",
+    en: "Website",
+    de: "Webseite",
+    it: "Sito web",
+  },
+  "UI.lg.action.back": {
+    sl: "Nazaj",
+    en: "Back",
+    de: "Zurück",
+    it: "Indietro",
+  },
+  "UI.lg.hours.alwaysValue": {
+    sl: "24/7",
+    en: "24/7",
+    de: "24/7",
+    it: "24/7",
+  },
+  "UI.lg.hours.alwaysLabel": {
+    sl: "odprto",
+    en: "open",
+    de: "geöffnet",
+    it: "aperto",
+  },
+  "UI.lg.hours.openUntil": {
+    sl: "odprto do",
+    en: "open until",
+    de: "geöffnet bis",
+    it: "aperto fino alle",
+  },
+  "UI.lg.fromSignIn": {
+    sl: "iz prijave",
+    en: "from check-in",
+    de: "aus der Anmeldung",
+    it: "dalla registrazione",
+  },
+  "UI.lg.helpEmergency": {
+    sl: "Pomoč in nujni primeri",
+    en: "Help and emergencies",
+    de: "Hilfe und Notfälle",
+    it: "Aiuto ed emergenze",
+  },
+} as const satisfies Record<string, Record<UiLanguage, string>>;
+
+function livingGuideUiFor(language: UiLanguage): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(LIVING_GUIDE_UI).map(([key, values]) => [key, values[language]]),
+  );
+}
+
+const LIVING_GUIDE_UI_BY_LANGUAGE: Record<
+  UiLanguage,
+  Record<string, string>
+> = {
+  sl: livingGuideUiFor("sl"),
+  en: livingGuideUiFor("en"),
+  de: livingGuideUiFor("de"),
+  it: livingGuideUiFor("it"),
+};
+
 /** Built-in Slovene UI strings (the source of truth for the interface). */
 export const SL_UI: Record<string, string> = {
   "UI.all": "Vse",
@@ -87,6 +289,7 @@ export const SL_UI: Record<string, string> = {
   "UI.tab.contact": "Kontakt",
   "UI.contact.how": "Kako vam lahko pomagamo?",
   "UI.maps.open": "Odpri pot v Google Maps",
+  ...LIVING_GUIDE_UI_BY_LANGUAGE.sl,
 };
 
 /** Slovene difficulty values as stored in content → UI keys. */
@@ -123,10 +326,27 @@ type TenantLike = {
   plurals?: Record<string, Record<string, string>> | null;
 };
 
-/** UI string lookup: tenant translation → Slovene built-in → the key's tail. */
-export function makeT(tenant: TenantLike | null | undefined, lang: string) {
+/** UI string lookup: tenant translation → language built-in → Slovene → key. */
+export function makeT(
+  tenant: TenantLike | null | undefined,
+  lang: string,
+): UiTranslator {
+  const language: UiLanguage =
+    lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
   const overlay = lang !== "sl" ? (tenant?.ui ?? {}) : {};
-  return (key: string): string => overlay[key] ?? SL_UI[key] ?? key;
+  return (key: string, variables?: UiVariables): string => {
+    let value =
+      overlay[key] ??
+      LIVING_GUIDE_UI_BY_LANGUAGE[language][key] ??
+      SL_UI[key] ??
+      key;
+    if (variables) {
+      for (const [name, replacement] of Object.entries(variables)) {
+        value = value.replaceAll(`{${name}}`, String(replacement));
+      }
+    }
+    return value;
+  };
 }
 
 /**

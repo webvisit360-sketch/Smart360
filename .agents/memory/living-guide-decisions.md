@@ -44,3 +44,9 @@ Every checkpoint report must include an exact development URL that was re-verifi
 **Why:** A guessed artifact-directory prefix produced a tenant-not-found URL even though the tenant and server were healthy.
 
 **How to apply:** Run the complete 390 px checkpoint walk on the reported public URL, confirm the expected tenant API returns 200, and perform a final live reachability check just before reporting.
+
+Every checkpoint report must include a “DELIBERATELY ABSENT IN THIS CHECKPOINT” section that distinguishes later-stage screens, buttons, and templates from defects.
+
+**Why:** Without an explicit absence list, the owner could not tell planned scope boundaries from broken or missing UI.
+
+**How to apply:** Name each intentionally absent surface and its scheduled checkpoint; for generic placeholders, state which specialized treatment or destination is still pending.
