@@ -1,0 +1,35 @@
+Plan first. Do NOT write or change any code yet.
+
+Deliver a REBUILD PLAN as "Part 0 report" with exactly these sections:
+
+1. INVENTORY — every guest-facing route/component of the current app that Part 1–5
+   will replace, and everything that stays untouched (admin, auth, data, i18n, media).
+
+2. MAPPING TABLE — every existing category and item type of Meli Pu (production data)
+   mapped to a prototype template (A/B/B2/C/D/E/F/G/H/I) and to a bottom-bar tab.
+   One row per category. Where the mapping is ambiguous, propose and mark it OPEN.
+
+3. DATA GAPS — fields the prototype needs that the current model does NOT have.
+   Check at least: per-item opening hours (needed for the live "odprto do" rows and
+   the cover numbers), distance-from-property for surroundings items, weekly-hours
+   table for places (template F), producer name/note for offer items, price-text /
+   order-enabled / sold-out flags, event date-times and in-house vs area flag,
+   notices (title, thumb, date, "novo"), guest sign-in has no server side (confirm),
+   orders table (Part 4). For each gap: proposed field, where it lives, admin input.
+   Do NOT invent data or hardcode content to fake a gap away.
+
+4. THEME ENGINE PLAN — where data-theme is applied, how the hour is read (guest's
+   local clock), how prefers-reduced-motion is handled, how the four token sets from
+   the prototype are extracted verbatim (name the file you'll copy them into).
+
+5. CUTOVER PLAN — feature flag per tenant, staging URL, what "old UI deleted" means
+   concretely, rollback path.
+
+6. ESTIMATE + RISKS — per part (1–5), with the three things most likely to break.
+
+Rules for the plan itself: no schema changes yet, no dependencies added (and none
+will be — no component/icon libraries, ever), every claim about the current app
+verified in the actual code, not from memory. Where the prototype and the md text
+disagree, the prototype wins — note any such conflicts you find.
+
+I will review the plan and answer the OPEN items before you start Part 1.
