@@ -506,6 +506,7 @@ body[data-t="noc"] .lg2-grid-view {
 
 .lg2-photo-card {
   background: var(--card);
+  display: block;
 }
 
 .lg2-photo-card--wide {
@@ -515,8 +516,14 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-photo-card img {
   display: block;
   width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   aspect-ratio: 5 / 3;
   object-fit: cover;
+  vertical-align: top;
   background: var(--card2);
 }
 
@@ -620,6 +627,27 @@ body[data-t="noc"] .lg2-grid-view {
   flex: 1 1 auto;
   min-height: 175px;
   background: var(--card2);
+}
+
+.lg2-detail-hero--ambient {
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--amb1) 78%, transparent) 0, transparent 55%),
+    radial-gradient(circle at 88% 82%, color-mix(in srgb, var(--amb3) 78%, transparent) 0, transparent 58%),
+    radial-gradient(circle at 62% 36%, color-mix(in srgb, var(--amb2) 68%, transparent) 0, transparent 52%),
+    var(--ambbg);
+}
+
+body[data-t="noc"] .lg2-detail-view,
+body[data-t="noc"] .lg2-detail-layout {
+  background: transparent;
+}
+
+body[data-t="noc"] .lg2-detail-hero--ambient {
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--amb1) 70%, transparent) 0, transparent 56%),
+    radial-gradient(circle at 88% 82%, color-mix(in srgb, var(--amb3) 70%, transparent) 0, transparent 60%),
+    radial-gradient(circle at 62% 36%, color-mix(in srgb, var(--amb2) 62%, transparent) 0, transparent 54%),
+    color-mix(in srgb, var(--ambbg) 78%, transparent);
 }
 
 .lg2-gallery-track {
@@ -847,6 +875,16 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-rule-row > div {
   min-width: 0;
   flex: 1;
+}
+
+.lg2-bullet-rules {
+  width: 100%;
+}
+
+.lg2-bullet-rules .lg2-rule-row > p {
+  min-width: 0;
+  flex: 1;
+  padding-top: 5px;
 }
 
 .lg2-rule-row b {
@@ -1218,6 +1256,12 @@ body[data-t="noc"] .lg2-grid-view {
   padding: 11px 0;
   color: var(--tx);
   border-bottom: 1px solid var(--line);
+}
+.lg2-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
 }
 .lg2-step-number {
   width: 32px;

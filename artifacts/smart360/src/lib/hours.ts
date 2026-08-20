@@ -18,9 +18,10 @@ export function formatTodayHours(hoursJson?: string | null, lang = "sl"): string
     
     const [openMin, closeMin] = today;
     const formatMin = (m: number) => {
-      const h = Math.floor(m / 60);
-      const min = m % 60;
-      return `${h}:${min.toString().padStart(2, '0')}`;
+      const clockMinutes = ((Math.trunc(m) % 1440) + 1440) % 1440;
+      const h = Math.floor(clockMinutes / 60);
+      const min = clockMinutes % 60;
+      return `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
     };
     
     return `${TODAY[lang] ?? TODAY.sl} ${formatMin(openMin)}–${formatMin(closeMin)}`;

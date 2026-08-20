@@ -11,7 +11,11 @@ import {
 import { useLocation } from "wouter";
 import { formatTodayHours } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { mediaImgSrc } from "../guest/img";
+import {
+  CARD_IMAGE_WIDTH,
+  HERO_IMAGE_WIDTH,
+  mediaImgSrc,
+} from "../guest/img";
 import { buildGuestPath } from "../guest/guest-url";
 import {
   makeT,
@@ -68,6 +72,105 @@ function bodyHtml(body: string | null | undefined): string {
     }
   } catch {}
   return sanitizeHtml(body);
+}
+
+function normalizeDisplayText(value: unknown): string {
+  return typeof value === "string"
+    ? value.trim().replace(/\s+/g, " ").toLocaleLowerCase()
+    : "";
+}
+
+function distinctSubtitle(
+  title: unknown,
+  subtitle: unknown,
+): string | null {
+  if (typeof subtitle !== "string" || !subtitle.trim()) return null;
+  const cleanSubtitle = subtitle.trim();
+  return normalizeDisplayText(cleanSubtitle) === normalizeDisplayText(title)
+    ? null
+    : cleanSubtitle;
+}
+
+function standaloneBodyBullets(body: unknown): string[] {
+  if (typeof body !== "string" || !body.trim()) return [];
+  const cleanBody = body.trim();
+  const lines = cleanBody
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (
+    lines.length > 0 &&
+    lines.every((line) => /^(?:[-*•]|\d+[.)])\s+/.test(line))
+  ) {
+    return lines.map((line) =>
+      line.replace(/^(?:[-*•]|\d+[.)])\s+/, "").trim(),
+    );
+  }
+
+  const sanitized = sanitizeHtml(cleanBody);
+  if (!/^<ul(?:\s[^>]*)?>[\s\S]*<\/ul>$/i.test(sanitized)) return [];
+  const items = Array.from(sanitized.matchAll(/<li(?:\s[^>]*)?>([\s\S]*?)<\/li>/gi))
+    .map((match) =>
+      match[1]
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter(Boolean);
+  return items;
+}
+
+function itemBullets(item: any): string[] {
+  const explicit = Array.isArray(item?.bullets)
+    ? item.bullets.filter(
+        (bullet: unknown): bullet is string =>
+          typeof bullet === "string" && !!bullet.trim(),
+      )
+    : [];
+  return explicit.length > 0
+    ? explicit.map((bullet: string) => bullet.trim())
+    : standaloneBodyBullets(item?.body);
+}
+
+function itemBodyHtml(item: any): string {
+  return standaloneBodyBullets(item?.body).length > 0
+    ? ""
+    : bodyHtml(item?.body);
+}
+
+function StructuredBulletRows({
+  bullets,
+  numbered = false,
+}: {
+  bullets: string[];
+  numbered?: boolean;
+}) {
+  if (bullets.length === 0) return null;
+  if (numbered) {
+    return (
+      <div className="lg2-steps">
+        {bullets.map((bullet, index) => (
+          <div className="lg2-step" key={`${index}-${bullet}`}>
+            <span className="lg2-step-number">{index + 1}</span>
+            <p>{bullet}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="lg2-rule-list lg2-bullet-rules">
+      {bullets.map((bullet, index) => (
+        <div className="lg2-rule-row" key={`${index}-${bullet}`}>
+          <span className="lg2-rule-icon" aria-hidden="true">
+            <svg><use href="#lg-i-doc" /></svg>
+          </span>
+          <p>{bullet}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function firstMedia(category: any): any | null {
@@ -623,15 +726,18 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
             const isPhotoCard = !!media;
             const isWide = category.id === featuredCategory?.id;
             const today = formatTodayHours(item?.hoursJson, lang);
-            const supporting = today || (item?.title && item.title !== category.label ? item.title : null);
+            const supporting = distinctSubtitle(
+              category.label,
+              today || item?.title,
+            );
             const frame = category.frame || item?.frame;
             const frameClass = frame === "tall" ? " lg2-photo-card--tall" : frame === "square" ? " lg2-photo-card--square" : "";
             const staggerStyle = { "--lg2-delay": `${0.05 + Math.min(index, 6) * 0.06}s` } as CSSProperties;
 
             if (isPhotoCard) {
               return (
-                <button key={category.id} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}${frameClass}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
-                  <img src={mediaImgSrc(media, isWide ? 1400 : 620)} alt="" loading={index < 2 ? "eager" : "lazy"} decoding="async" style={imageStyle(media)} />
+                <button key={category.id} data-lg-card={category.label} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}${frameClass}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
+                  <img data-lg-card-image src={mediaImgSrc(media, CARD_IMAGE_WIDTH)} alt="" loading={index < 2 ? "eager" : "lazy"} decoding="async" style={imageStyle(media)} />
                   <span><b>{category.label}</b>{supporting && <small>{supporting}</small>}</span>
                 </button>
               );
@@ -639,7 +745,7 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
             return (
               <button key={category.id} className={`lg2-utility-card${isWide ? " lg2-utility-card--wide" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
                 <span className="lg2-utility-icon" aria-hidden="true"><svg><use href={`#lg-i-${categoryIcon(category)}`} /></svg></span>
-                <span><b>{category.label}</b>{supporting && <small>{supporting}</small>}</span>
+                <span><b>{category.label}</b></span>
               </button>
             );
           })}
@@ -673,13 +779,18 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
         </div>
         <div className="lg2-ngrp">{t("UI.lg.nearby")}</div>
         <div className="lg2-subs lg2-nearby-list">
-          {allItems.map((item: any) => (
-             <button type="button" className="lg2-sub2 lg2-nrow" key={item.id} onClick={() => onOpenItem(item.categoryId, item.id)}>
-               {item.media?.[0] ? <img className="lg2-notice-thumb" src={mediaImgSrc(item.media[0], 620)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
-               <div><b>{item.title}</b><small>{item.subtitle || formatTodayHours(item.hoursJson, lang) || ""}</small></div>
-               <span className="lg2-chevron">›</span>
-             </button>
-          ))}
+          {allItems.map((item: any) => {
+            const supporting =
+              distinctSubtitle(item.title, item.subtitle) ||
+              formatTodayHours(item.hoursJson, lang);
+            return (
+              <button type="button" className="lg2-sub2 lg2-nrow" key={item.id} onClick={() => onOpenItem(item.categoryId, item.id)}>
+                {item.media?.[0] ? <img className="lg2-notice-thumb" src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
+                <div><b>{item.title}</b>{supporting && <small>{supporting}</small>}</div>
+                <span className="lg2-chevron">›</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -688,7 +799,7 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
 
 function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
   if (!media?.length) return (
-    <div className="lg2-detail-hero" style={{ minHeight: 70 }}>
+    <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero>
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk"/></svg></button>
     </div>
   );
@@ -698,7 +809,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       <div className="lg2-detail-hero">
         <div className="lg2-gallery-track">
           <div className="lg2-gallery-slide">
-            <img src={mediaImgSrc(entry, 1400)} alt="" loading="eager" decoding="async" style={imageStyle(entry)} />
+            <img data-lg-hero-image src={mediaImgSrc(entry, HERO_IMAGE_WIDTH)} alt="" loading="eager" decoding="async" style={imageStyle(entry)} />
           </div>
         </div>
         <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
@@ -714,7 +825,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       }}>
         {media.map((entry: any, index: number) => (
           <div className="lg2-gallery-slide" key={entry.id || index}>
-            <img src={mediaImgSrc(entry, 1400)} alt="" loading={index===0?"eager":"lazy"} decoding="async" style={imageStyle(entry)} />
+            <img data-lg-hero-image src={mediaImgSrc(entry, HERO_IMAGE_WIDTH)} alt="" loading={index===0?"eager":"lazy"} decoding="async" style={imageStyle(entry)} />
           </div>
         ))}
       </div>
@@ -775,17 +886,19 @@ function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onB
   const firstItem = items[0] ?? null;
   const media = mediaOverride ?? categoryMedia(category);
   const todayTime = formatTodayHours(firstItem?.hoursJson, lang)?.match(/\d{1,2}:\d{2}–\d{1,2}:\d{2}/)?.[0];
-  const introTitle = firstItem?.title && firstItem.title !== category.label ? firstItem.title : null;
-  const introBody = bodyHtml(firstItem?.body);
+  const heading = titleOverride || category.label;
+  const introTitle = distinctSubtitle(heading, firstItem?.title);
+  const introBody = itemBodyHtml(firstItem);
+  const firstItemBullets = itemBullets(firstItem);
   const detailRows = items.slice(1).filter((i: any) => i.title || i.body || i.bullets?.length);
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
-          <h1>{titleOverride || category.label}</h1>
+          <h1>{heading}</h1>
           {(todayTime || firstItem?.open24) && (
             <div className="lg2-facts">
               <div>
@@ -796,9 +909,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onB
           )}
           {introTitle && <p className="lg2-detail-lead">{introTitle}</p>}
           {introBody && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: introBody }} />}
-          {firstItem?.bullets?.length > 0 && (
-            <ul className="lg2-bullets">{firstItem.bullets.map((b: string) => <li key={b}>{b}</li>)}</ul>
-          )}
+          <StructuredBulletRows bullets={firstItemBullets} />
           {detailRows.length > 0 && (
             <div className="lg2-rule-list">
               {detailRows.map((item: any) => (
@@ -806,8 +917,8 @@ function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onB
                   <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${item.tint ? "sos" : "doc"}`} /></svg></span>
                   <div>
                     {item.title && <b>{item.title}</b>}
-                    {item.body && <span dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
-                    {item.bullets?.length > 0 && <ul>{item.bullets.map((b: string) => <li key={b}>{b}</li>)}</ul>}
+                    {itemBodyHtml(item) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+                    <StructuredBulletRows bullets={itemBullets(item)} />
                   </div>
                 </div>
               ))}
@@ -833,19 +944,22 @@ function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
            <h1>{category.label}</h1>
            <div className="lg2-subs">
-             {items.map((item: any) => (
-               <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
-                 <span className="lg2-sub-icon" aria-hidden="true">
-                   {item.media?.[0] ? <img src={mediaImgSrc(item.media[0], 620)} alt="" style={imageStyle(item.media[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
-                 </span>
-                 <div><b>{item.title}</b><small>{item.subtitle || ""}</small></div>
-                 <span className="lg2-chevron" aria-hidden="true">›</span>
-               </button>
-             ))}
+              {items.map((item: any) => {
+                const subtitle = distinctSubtitle(item.title, item.subtitle);
+                return (
+                  <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
+                    <span className="lg2-sub-icon" aria-hidden="true">
+                      {item.media?.[0] ? <img src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
+                    </span>
+                    <div><b>{item.title}</b>{subtitle && <small>{subtitle}</small>}</div>
+                    <span className="lg2-chevron" aria-hidden="true">›</span>
+                  </button>
+                );
+              })}
            </div>
         </article>
       </div>
@@ -856,27 +970,21 @@ function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
 // Template B2: Steps page
 function TemplateB2({ item, category, t, onBack, galleryIndex, onGalleryIndex }: any) {
   const media = visible(item?.media);
+  const heading = item?.title || category?.label;
+  const subtitle = distinctSubtitle(heading, item?.subtitle);
+  const bullets = itemBullets(item);
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
-           <h1>{item?.title || category?.label}</h1>
-           {item?.subtitle && <div className="lg2-chips"><span className="lg2-chip">{item.subtitle}</span></div>}
+           <h1>{heading}</h1>
+           {subtitle && <div className="lg2-chips"><span className="lg2-chip">{subtitle}</span></div>}
 
-           {item?.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+           {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
 
-           {item?.bullets?.length > 0 && (
-             <div className="lg2-rules" style={{marginTop: 16}}>
-               {item.bullets.map((bullet: string, i: number) => (
-                 <div className="lg2-step" key={i}>
-                   <span className="lg2-step-number">{i + 1}</span>
-                   <p>{bullet}</p>
-                 </div>
-               ))}
-             </div>
-           )}
+           <StructuredBulletRows bullets={bullets} numbered />
 
            {item?.phone && (
              <div className="lg2-actions" style={{marginTop:16}}>
@@ -896,7 +1004,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
           <div className="lg2-rule-list">
@@ -907,8 +1015,8 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                    <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${isWarning ? "sos" : "doc"}`}/></svg></span>
                    <div>
                      {item.title && <b>{item.title}</b>}
-                     {item.body && <div dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
-                     {item.bullets?.length > 0 && <ul>{item.bullets.map((b: string) => <li key={b}>{b}</li>)}</ul>}
+                     {itemBodyHtml(item) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+                     <StructuredBulletRows bullets={itemBullets(item)} />
                    </div>
                  </div>
                );
@@ -931,7 +1039,7 @@ function TemplateD({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
           <div className="lg2-seg" role="tablist">
@@ -952,12 +1060,8 @@ function TemplateD({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
              ))}
           </div>
           <div id="lg2-segment-panel" role="tabpanel" aria-labelledby={`lg2-tab-${activeItem.id}`}>
-            {activeItem.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(activeItem.body) }} />}
-            {activeItem.bullets?.length > 0 && (
-               <ul className="lg2-bullets">
-                 {activeItem.bullets.map((b: string) => <li key={b}>{b}</li>)}
-               </ul>
-            )}
+             {itemBodyHtml(activeItem) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(activeItem) }} />}
+             <StructuredBulletRows bullets={itemBullets(activeItem)} />
           </div>
         </article>
       </div>
@@ -974,12 +1078,13 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
     : null;
   const wifiItem = items[0] || {};
   const media = categoryMedia(category);
+  const wifiBullets = itemBullets(wifiItem);
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
            <h1>{category.label}</h1>
 
@@ -1005,7 +1110,8 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
              </div>
            )}
 
-           {wifiItem.body && <div className="lg2-detail-prose lg2-wifi-note" dangerouslySetInnerHTML={{ __html: bodyHtml(wifiItem.body) }} />}
+           {itemBodyHtml(wifiItem) && <div className="lg2-detail-prose lg2-wifi-note" dangerouslySetInnerHTML={{ __html: itemBodyHtml(wifiItem) }} />}
+           <StructuredBulletRows bullets={wifiBullets} />
         </article>
       </div>
     </div>
@@ -1015,6 +1121,9 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
 // Template F: Place
 function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryIndex }: any) {
   const media = visible(item?.media);
+  const heading = item?.title || category?.label;
+  const subtitle = distinctSubtitle(heading, item?.subtitle);
+  const bullets = itemBullets(item);
   const weeklyHours = useMemo(
     () => parseWeeklyHours(item?.hoursJson),
     [item?.hoursJson],
@@ -1026,18 +1135,19 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
-           <h1>{item?.title || category?.label}</h1>
-           {(item?.open24 || todayRange || item?.subtitle || item?.price) && (
+           <h1>{heading}</h1>
+           {(item?.open24 || todayRange || subtitle || item?.price) && (
              <div className="lg2-chips">
                 {item?.open24 && <span className="lg2-chip lg2-chip--open">{t("UI.lg.hours.alwaysValue")}</span>}
                 {!item?.open24 && todayRange && <span className="lg2-chip lg2-chip--open">{t("UI.lg.hours.openUntil")} {formatMinutes(todayRange[1])}</span>}
-                {item?.subtitle && <span className="lg2-chip">{item.subtitle}</span>}
+                 {subtitle && <span className="lg2-chip">{subtitle}</span>}
                 {item?.price && <span className="lg2-chip">{item.price}</span>}
              </div>
            )}
-           {item?.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+           {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+           <StructuredBulletRows bullets={bullets} />
 
            {weeklyHours && (
              <div className="lg2-weekly-hours">
@@ -1072,21 +1182,25 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
 // Template G: Trail
 function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex }: any) {
   const media = visible(item?.media);
+  const heading = item?.title || category?.label;
+  const subtitle = distinctSubtitle(heading, item?.subtitle);
+  const bullets = itemBullets(item);
   const routeFacts = [item?.difficulty, item?.duration, item?.distance].filter(Boolean);
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+        <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
-           <h1>{item?.title || category?.label}</h1>
-           {(item?.subtitle || routeFacts.length > 0) && (
+           <h1>{heading}</h1>
+           {(subtitle || routeFacts.length > 0) && (
              <div className="lg2-chips">
-               {item?.subtitle && <span className="lg2-chip">{item.subtitle}</span>}
+                {subtitle && <span className="lg2-chip">{subtitle}</span>}
                {routeFacts.map((fact: string) => <span className="lg2-chip" key={fact}>{fact}</span>)}
              </div>
            )}
-           {item?.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+           {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+           <StructuredBulletRows bullets={bullets} />
         </article>
       </div>
     </div>
