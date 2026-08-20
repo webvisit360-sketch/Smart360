@@ -1,0 +1,147 @@
+# FIX BATCH 1 — Screenshot parity audit (binding reference: prototip-2030.html)
+
+Context: The owner walked through the live dev app on a real iPhone (jutro theme,
+`/meli-pu?ui=living-guide&lang=sl`) and compared it against the binding prototype.
+The defects below are ordered by severity. Fix ALL of them in one pass, then send
+ONE report using the established format: re-verify the public dev URL immediately
+before sending, include build id, and per-fix verification (computed styles or
+screenshots where stated). The prototype wins over any written text except the
+night-hours rule (C1). Production DB remains strictly READ-ONLY.
+
+Do NOT invent or alter content data while fixing these. Where a defect is caused
+by data (photos, ordering, focal points), it is listed at the bottom as owner
+work — leave those alone.
+
+---
+
+## FIX 1 — Duplicated title on detail pages (highest priority)
+
+Observed on: Skuter — najem za 3 do 4 ure, SUP "Najem za 3-4 ure", Apartma 1,
+Zlatoperka, Čoln (3 ure and 5 ur), Izlet s čolnom — i.e. systematically on every
+detail page: the sheet renders the `h2` title and directly below it a bold
+subtitle line with the IDENTICAL string.
+
+The prototype never repeats the title. Rule to implement in the detail templates
+(A/B2/C and any template with a subtitle slot):
+
+- Render the subtitle line ONLY when `normalize(subtitle) !== normalize(title)`,
+  where `normalize` = trim, collapse whitespace, case-insensitive compare.
+- This applies to every language variant independently.
+- Same rule on grid/list cards: a card never shows a subtitle that duplicates
+  its own title.
+
+Verify: screenshot of Skuter detail and SUP detail — title appears exactly once.
+A subtitle that genuinely differs (e.g. "SUP deska" / "SUP — dnevni najem")
+must still render.
+
+## FIX 2 — Empty flat hero on photo-less detail pages
+
+Observed on: Prijava / Odjava, Televizija, Klima — the top ~55% of the screen is
+a flat empty beige rectangle with only the back button.
+
+In the prototype every `.dhero` paints an image. When an item has NO photo, the
+shell must never paint a flat background block. Implement the no-media fallback:
+
+- The layout law stays unchanged (`.sc` flex column, hero `flex:1`, sheet
+  content-height).
+- When the item has zero photos, fill the hero with the ambient gradient of the
+  ACTIVE theme: `ambbg` base with soft radial blobs of `amb1`/`amb2`/`amb3`
+  (same visual language as the cover ambience). Subtle, static, no animation
+  required. In noc theme the hero joins the starfield like other night views.
+- Never show a broken-image icon, never show flat `bg`.
+
+Verify: screenshots of Televizija and Klima in jutro theme — hero shows the
+golden ambient gradient, not flat beige. Report the computed background of the
+hero element.
+
+## FIX 3 — Grid card media letterboxed / not flush to card top
+
+Observed on: Ponudba grid (SUP deska card has a white strip above the photo;
+Zunanji fitnes photo floats letterboxed inside white padding) and Nastanitev grid
+(Navodila za ograjo photo has white bands above/below).
+
+Prototype rule: on every photo card the media box is flush to the card's top
+edge (sharing the card's top rounded corners) and the image fills it with
+`object-fit: cover`, honoring `focusX`/`focusY` via `object-position`. Never
+`contain`, never intrinsic-ratio letterboxing, no padding between card edge and
+image.
+
+Verify: screenshots of the Ponudba grid and the Nastanitev grid — every card's
+image bleeds edge-to-edge to the top corners. Report the computed `object-fit`
+and `object-position` of the SUP, Zunanji fitnes and Navodila za ograjo card
+images.
+
+## FIX 4 — Hero image served at thumbnail resolution (blurry/pixelated)
+
+Observed on: Skuter detail and Skuter list hero — the photo is visibly upscaled
+(soft, pixelated) across the full-width hero, while the small row thumbnail of
+the same photo is sharp. The hero is being fed a small image variant.
+
+Rule: heroes and gallery slides must request an image variant of at least 900 px
+width (or the original if smaller variants only exist). Never upscale a thumbnail
+variant into a hero. Card thumbnails may keep the small variant.
+
+Verify: report the actual image URL/variant width requested by the Skuter hero
+before and after, plus a screenshot.
+
+## FIX 5 — Cross-midnight time rendered as "27:00"
+
+Observed on: Okolica → Najbližje row showing "Danes 7:00–27:00", while the same
+venue's detail chip correctly says "odprto do 03:00" (Cafinho Piran).
+
+Rule: hours that cross midnight are ALWAYS displayed as real clock times
+(07:00–03:00), in every surface: Najbližje rows, hours tables, "odprto do"
+chips. No 24+ hour arithmetic ever reaches the UI. The open/closed computation
+must still treat the interval as crossing midnight (a venue open until 03:00 is
+"odprto" at 01:00).
+
+Verify: screenshot of the Najbližje list showing the corrected string, and state
+which formatter function was fixed.
+
+## FIX 6 — Bullet lists rendered as bare text lines
+
+Observed on: Čoln (3 ure / 5 ur) and Zlatoperka details — list content renders
+as plain unstyled lines, no markers, no spacing rhythm.
+
+Prototype rule: list-like content renders in the prototype's rule/step visual
+language — each line as a row with a leading icon chip (`.rule` with `.ric`) or
+the numbered `.step` style, matching what template the page uses. Plain
+paragraphs stay paragraphs; only genuine list items (markdown bullets or list
+fields in data) get rows.
+
+Verify: screenshot of one Čoln detail — list items show as icon rows identical
+in style to the prototype's Hišni red rows (minus the danger tint unless the
+item is flagged danger).
+
+## FIX 7 — Icon tile shows a redundant child subtitle
+
+Observed on: Nastanitev grid, the "Prijava / Odjava" icon tile shows a small
+subtitle "Prijava" (the name of its first tab/child).
+
+Prototype rule: icon tiles (`.ut` — Prijava/Odjava, WiFi) contain ONLY icon +
+label. No child-derived subtitle. Photo cards may keep meaningful subtitles
+(e.g. "Bojler" under "Navodila za opremo" is fine) subject to the FIX 1
+duplicate rule.
+
+Verify: screenshot of the Nastanitev grid tiles.
+
+---
+
+## DELIBERATELY ABSENT — do not "fix"
+
+- Order buttons / "Naroči" CTAs (incl. "Naroči pozni odhod" on Odjava) — Part 4.
+- Program tab — hidden until dated events exist.
+- Any content invention (photos, texts, hours) — owner/data work, listed below,
+  off-limits to you.
+
+## Owner/data tasks (NOT for the agent)
+
+1. Add a photo to: Prijava/Odjava, Televizija, Klima (until then the ambient
+   hero from FIX 2 shows).
+2. Parkirišče: set the focal point (photo currently shows mostly sky/clouds on
+   card and detail) or crop/replace the photo.
+3. Apartma 1: reorder photos — first photo is currently the bathroom; the cover
+   should be the living room/most representative shot.
+4. Skuter: upload a higher-resolution photo (current original may itself be
+   small — FIX 4 only helps if a larger file exists).
+5. Cafinho Piran: confirm hours really are 07:00–03:00 every day of the week.
