@@ -757,12 +757,36 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   scroll-snap-stop: always;
 }
 
-.lg2-gallery-slide img {
+.lg2-hero-image-frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.lg2-hero-image-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lg2-hero-image-main {
   object-fit: cover;
+}
+
+.lg2-hero-image-frame.is-blur-fill .lg2-hero-image-blur {
+  z-index: 0;
+  object-fit: cover;
+  filter: blur(24px) brightness(.92) saturate(1.05);
+  transform: scale(1.08);
+}
+
+.lg2-hero-image-frame.is-blur-fill .lg2-hero-image-main {
+  z-index: 1;
+  object-fit: contain;
+  object-position: center;
 }
 
 .lg2-gallery-dots {

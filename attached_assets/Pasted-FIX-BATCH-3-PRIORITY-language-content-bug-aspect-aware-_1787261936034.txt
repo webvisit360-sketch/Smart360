@@ -1,0 +1,135 @@
+FIX BATCH 3 — PRIORITY: language content bug + aspect-aware heroes
+
+These defects were found by the owner on a real iPhone and take priority over
+(and partly belong to) PART 3. Fix them now, one report, established format
+(re-verified public URL immediately before the report, build id, per-fix
+verification). Production DB strictly READ-ONLY. Never invent content.
+
+Evidence note: two of the owner's screenshots had Safari/Google page
+translation ACTIVE (translate icon visible in the URL bar), which machine-
+translated parts of the page and produced garbled mixed sentences. Ignore
+those artifacts — but the underlying defect below is real and reproduces
+without browser translation.
+
+
+
+
+
+LANG-1 — Content bodies ignore the selected language (critical)
+
+Observed with lang=en: page/item TITLES render translated (Welcome, Location,
+Parking, Entrance gate, House rules — and the House rules bullet texts are
+fully English), but the BODY/description text of most detail pages renders in
+Slovene (Welcome body, Location "Kako do nas...", Parking body, Entrance gate
+body). The dev DB is the hash-verified copy with 1080 translations, so EN/DE/IT
+bodies exist for most items.
+
+Required:
+
+
+
+
+
+When a translation exists for the selected language, the UI must use it for
+EVERY translatable field: title, subtitle, body/description, list/bullet
+items, chips, labels.
+
+
+
+Fallback to the source language happens ONLY per-field when that field's
+translation is genuinely missing — never a raw key (existing rule).
+
+
+
+Diagnose and state the root cause in the report: are body translations
+missing from the dev copy (compare against the hash-verified data), or are
+they present but not queried/joined/applied per language? Do not "fix" this
+by copying or generating any content.
+
+Verify: for Welcome, Location, Parking and Entrance gate, report a table:
+field × language (SL/EN/DE/IT) → translation present in DB? shown in UI?
+Screenshots of Welcome body in EN, DE and IT.
+
+LANG-2 — Full four-language chrome re-check on the live URL
+
+The owner reports that with IT selected most of the app still reads
+Slovene/English. His IT screenshots are contaminated by Safari translation, so
+re-verify cleanly: on the live dev URL switch SL → EN → DE → IT; for each,
+screenshot the tab bar + one grid + one detail. Confirm the choice persists
+across navigation and that <html lang> matches. Also confirm the EN tab
+label is "Offers" (plural) in the current build — one screenshot showed
+"Offer".
+
+IMG-1 — Aspect-aware hero rendering (new BINDING rule, extension C4)
+
+Problem: Skuter, Čoln and Parkirišče photos are LANDSCAPE images inside a tall
+portrait hero. object-fit: cover therefore crops them to a narrow vertical
+slice — the owner sees only a detail of the scooter/boat, and only sky on
+Parking. No focal point can ever fit a whole landscape subject into a tall
+cover crop, so this is a shell rule, not a data task.
+
+New rule (extends the prototype; the prototype's placeholder photos do not
+exercise this case — this text is binding, precedent C1):
+
+
+
+
+
+Compute mismatch = imageAspect / containerAspect (aspect = width/height).
+
+
+
+If mismatch <= 1.6 and >= 1/1.6: keep today's behavior — cover +
+focal-point object-position.
+
+
+
+Otherwise render the "blur-fill" hero:
+
+
+
+
+
+background layer: the SAME image, object-fit: cover, scaled ~1.08,
+filter: blur(24px) brightness(.92) saturate(1.05), clipped to the hero;
+
+
+
+foreground layer: the image with object-fit: contain, centered, so the
+WHOLE photograph is visible;
+
+
+
+back button, gallery dots and sheet overlap unchanged.
+
+
+
+Applies to detail heroes and gallery slides. Grid/list thumbnails keep
+cover (small crops are fine there).
+
+
+
+Recompute on resize/orientation change.
+
+Verify: screenshots of Skuter, Čoln (3 ure) and Parkirišče details — whole
+scooter/boat/car-park visible with blurred fill behind; plus one control page
+whose photo aspect roughly matches the hero (e.g. the Welcome pool photo)
+still rendering as plain cover.
+
+DELIBERATELY ABSENT / owner tasks — unchanged
+
+
+
+
+
+Orders/Naroči, Program: later parts.
+
+
+
+Bazen photo, Apartma 1 photo order, optional better Skuter/Čoln originals,
+Cafinho hours confirmation: owner/admin work — off-limits to you.
+
+
+
+PART 3 (full 37-category declaration + four-language audit) continues AFTER
+this batch is approved; LANG-1/LANG-2 evidence feeds directly into it.

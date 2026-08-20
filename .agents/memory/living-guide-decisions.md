@@ -74,3 +74,9 @@ The development Meli Pu tenant is a read-mostly production-content copy; refresh
 **Why:** Template work must use the full realistic tenant tree, while production must never be mutated and development-only category keys must survive refreshes.
 
 **How to apply:** Snapshot dev first; compare per-category counts and content hashes; sync guest tenant fields, sections, categories, items, media metadata, translations, and plurals. Preserve category keys and operational tenant fields, then require exact post-sync hashes.
+
+Detail heroes and gallery slides use aspect-aware rendering based on `imageAspect / containerAspect`: keep cover plus focal point within `1/1.6…1.6`; otherwise use a same-image blurred cover background with a centered contain foreground.
+
+**Why:** Landscape and portrait source photos can lose the whole subject in a tall mobile cover crop; the owner made the measured mismatch formula binding after real-iPhone review.
+
+**How to apply:** Measure natural image and live container dimensions, recompute after load/resize/orientation, and apply this only to detail/gallery media. Grid and list thumbnails remain cover.

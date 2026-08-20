@@ -841,7 +841,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       <div className="lg2-detail-hero">
         <div className="lg2-gallery-track">
           <div className="lg2-gallery-slide">
-            <img data-lg-hero-image src={mediaImgSrc(entry, HERO_IMAGE_WIDTH)} alt="" loading="eager" decoding="async" style={imageStyle(entry)} />
+            <AspectAwareHeroImage entry={entry} loading="eager" />
           </div>
         </div>
         <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
@@ -857,7 +857,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       }}>
         {media.map((entry: any, index: number) => (
           <div className="lg2-gallery-slide" key={entry.id || index}>
-            <img data-lg-hero-image src={mediaImgSrc(entry, HERO_IMAGE_WIDTH)} alt="" loading={index===0?"eager":"lazy"} decoding="async" style={imageStyle(entry)} />
+            <AspectAwareHeroImage entry={entry} loading={index === 0 ? "eager" : "lazy"} />
           </div>
         ))}
       </div>
@@ -867,6 +867,85 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         </div>
       )}
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
+    </div>
+  );
+}
+
+function AspectAwareHeroImage({
+  entry,
+  loading,
+}: {
+  entry: any;
+  loading: "eager" | "lazy";
+}) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [useBlurFill, setUseBlurFill] = useState(false);
+  const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
+
+  const recompute = useCallback(() => {
+    const frame = frameRef.current;
+    const image = imageRef.current;
+    if (
+      !frame ||
+      !image ||
+      image.naturalWidth <= 0 ||
+      image.naturalHeight <= 0 ||
+      frame.clientWidth <= 0 ||
+      frame.clientHeight <= 0
+    ) {
+      return;
+    }
+    const imageAspect = image.naturalWidth / image.naturalHeight;
+    const containerAspect = frame.clientWidth / frame.clientHeight;
+    const mismatch = imageAspect / containerAspect;
+    setUseBlurFill(mismatch > 1.6 || mismatch < 1 / 1.6);
+  }, []);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(recompute);
+    observer?.observe(frame);
+    window.addEventListener("resize", recompute);
+    window.addEventListener("orientationchange", recompute);
+    recompute();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", recompute);
+      window.removeEventListener("orientationchange", recompute);
+    };
+  }, [recompute, source]);
+
+  return (
+    <div
+      ref={frameRef}
+      className={`lg2-hero-image-frame${useBlurFill ? " is-blur-fill" : ""}`}
+      data-lg-hero-fit={useBlurFill ? "blur-fill" : "cover"}
+    >
+      {useBlurFill && (
+        <img
+          className="lg2-hero-image-blur"
+          src={source}
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+        />
+      )}
+      <img
+        ref={imageRef}
+        className="lg2-hero-image-main"
+        data-lg-hero-image
+        src={source}
+        alt=""
+        loading={loading}
+        decoding="async"
+        style={useBlurFill ? undefined : imageStyle(entry)}
+        onLoad={recompute}
+      />
     </div>
   );
 }

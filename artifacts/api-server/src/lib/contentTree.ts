@@ -41,6 +41,65 @@ export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
 export type TenantContentTree = Tenant & { sections: SectionContent[] };
 
+function indexedBodyParts(body: unknown): string[] | null {
+  if (typeof body !== "string" || body.trim() === "") return null;
+
+  try {
+    const parsed = JSON.parse(body);
+    if (Array.isArray(parsed) && parsed.every((part) => typeof part === "string")) {
+      return [...parsed];
+    }
+  } catch {
+    /* Normalized rich text is stored as consecutive HTML paragraphs. */
+  }
+
+  const parts: string[] = [];
+  const paragraph = /<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/gi;
+  let cursor = 0;
+  for (const match of body.matchAll(paragraph)) {
+    const index = match.index ?? 0;
+    if (body.slice(cursor, index).trim() !== "") return null;
+    parts.push(match[1]);
+    cursor = index + match[0].length;
+  }
+
+  return parts.length > 0 && body.slice(cursor).trim() === "" ? parts : null;
+}
+
+export function applyTranslationFields<T extends { id: string }>(
+  row: T,
+  translations: Record<string, string>,
+): T {
+  const merged: Record<string, unknown> = { ...row };
+  // Sub-indexed fields ("body[3]", "bullets[2]") patch one element of the
+  // source array. Rich-text bodies may now be normalized HTML paragraphs
+  // rather than their original JSON array, so recover those paragraph slots
+  // before applying translations. A missing translation keeps the source
+  // paragraph and never creates an empty block.
+  let bodyArr: string[] | null = null;
+  let bulletsArr: string[] | null = null;
+  for (const [field, value] of Object.entries(translations)) {
+    if (value === "") continue;
+    const sub = field.match(/^(body|bullets)\[(\d+)\]$/);
+    if (sub) {
+      const idx = Number(sub[2]);
+      if (sub[1] === "body") {
+        if (!bodyArr) bodyArr = indexedBodyParts(merged["body"]);
+        if (bodyArr && idx < bodyArr.length) bodyArr[idx] = value;
+      } else {
+        const src = merged["bullets"];
+        if (!bulletsArr && Array.isArray(src)) bulletsArr = [...src];
+        if (bulletsArr && idx < bulletsArr.length) bulletsArr[idx] = value;
+      }
+      continue;
+    }
+    if (field in merged) merged[field] = value;
+  }
+  if (bodyArr) merged["body"] = JSON.stringify(bodyArr);
+  if (bulletsArr) merged["bullets"] = bulletsArr;
+  return merged as T;
+}
+
 export async function buildTenantContent(
   tenant: Tenant,
   opts: { visibleOnly: boolean; lang?: string | undefined },
@@ -107,39 +166,7 @@ export async function buildTenantContent(
     const apply = <T extends { id: string }>(row: T): T => {
       const rec = byRecord.get(row.id);
       if (!rec) return row;
-      const merged: Record<string, unknown> = { ...row };
-      // Sub-indexed fields ("body[3]", "bullets[2]") patch one element of the
-      // array — a missing translation leaves that paragraph in Slovene, so a
-      // half-translated item never shows an empty block.
-      let bodyArr: string[] | null = null;
-      let bulletsArr: string[] | null = null;
-      for (const [field, value] of Object.entries(rec)) {
-        if (value === "") continue;
-        const sub = field.match(/^(body|bullets)\[(\d+)\]$/);
-        if (sub) {
-          const idx = Number(sub[2]);
-          if (sub[1] === "body") {
-            if (!bodyArr) {
-              try {
-                const parsed = JSON.parse(String(merged["body"] ?? "null"));
-                bodyArr = Array.isArray(parsed) ? [...parsed] : null;
-              } catch {
-                bodyArr = null;
-              }
-            }
-            if (bodyArr && idx < bodyArr.length) bodyArr[idx] = value;
-          } else {
-            const src = merged["bullets"];
-            if (!bulletsArr && Array.isArray(src)) bulletsArr = [...src];
-            if (bulletsArr && idx < bulletsArr.length) bulletsArr[idx] = value;
-          }
-          continue;
-        }
-        if (field in merged) merged[field] = value;
-      }
-      if (bodyArr) merged["body"] = JSON.stringify(bodyArr);
-      if (bulletsArr) merged["bullets"] = bulletsArr;
-      return merged as T;
+      return applyTranslationFields(row, rec);
     };
     tenantOut = apply(tenant);
     sectionsOut = sections.map(apply);
