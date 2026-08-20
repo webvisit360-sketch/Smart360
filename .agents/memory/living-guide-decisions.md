@@ -56,3 +56,9 @@ Living Guide touch feedback is haptic and visual only: `navigator.vibrate(6)` pl
 **Why:** On a real iPhone the synthesized mechanical click sounded like a beep, so the owner removed audio from the binding specification.
 
 **How to apply:** Guest and tokens surfaces share haptic-only tap feedback. Verification must prove the first tap requests a 6 ms vibration and makes zero audio API requests.
+
+The development Meli Pu tenant is a read-mostly production-content copy; refresh production only through read-only export and write solely to development in one guarded transaction.
+
+**Why:** Template work must use the full realistic tenant tree, while production must never be mutated and development-only category keys must survive refreshes.
+
+**How to apply:** Snapshot dev first; compare per-category counts and content hashes; sync guest tenant fields, sections, categories, items, media metadata, translations, and plurals. Preserve category keys and operational tenant fields, then require exact post-sync hashes.
