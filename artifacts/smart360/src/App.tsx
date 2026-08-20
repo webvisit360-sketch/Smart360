@@ -88,7 +88,6 @@ function GuestHost() {
           tenant={tenant}
           slug={slug}
           lang={lang}
-          categoryId={categoryId}
         />
       </Suspense>
     );

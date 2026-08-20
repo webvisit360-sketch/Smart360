@@ -33,7 +33,7 @@ type GuestRecord = {
   name: string;
 };
 
-type ScreenName = "cover" | "grid" | "detail";
+type ScreenName = "cover" | "grid" | "detail" | "explore";
 
 const GUEST_STORAGE_PREFIX = "smart360:living-guide:guest:";
 
@@ -66,9 +66,7 @@ function bodyHtml(body: string | null | undefined): string {
         .map((part) => `<p>${sanitizeHtml(part)}</p>`)
         .join("");
     }
-  } catch {
-    // Existing content also contains normal HTML strings.
-  }
+  } catch {}
   return sanitizeHtml(body);
 }
 
@@ -95,26 +93,31 @@ function categoryMedia(category: any): any[] {
 }
 
 function categoryIcon(category: any): string {
-  const haystack = `${category?.label ?? ""} ${category?.layout ?? ""}`
-    .toLocaleLowerCase("sl")
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
-  if (haystack.includes("wifi")) return "wifi";
-  if (haystack.includes("prijav") || haystack.includes("odjav")) return "clk";
-  if (haystack.includes("vhod") || haystack.includes("ramp")) return "gate";
-  if (haystack.includes("apartma") || haystack.includes("sob")) return "bed";
-  if (haystack.includes("lokacij")) return "pin";
-  if (haystack.includes("park")) return "car";
-  if (haystack.includes("oprem")) return "tool";
-  if (haystack.includes("dobrodos")) return "home";
-  if (haystack.includes("kontakt")) return "phone";
+  const firstItem = visible(category?.items)[0];
+  if (category?.layout === "wifi") return "wifi";
+  if (category?.layout === "apartments") return "bed";
+  if (category?.layout === "products") return "bag";
+  if (category?.layout === "poi" || category?.layout === "routes") return "pin";
+  if (category?.layout === "events") return "cal";
+  if (category?.layout === "tabs") return "tool";
+  if (firstItem?.phone) return "phone";
+  if (firstItem?.hoursJson || firstItem?.open24) return "clk";
+  if (firstItem?.mapQuery) return "pin";
   return "doc";
+}
+
+function isOperationalRulesCategory(category: any): boolean {
+  if (category?.layout !== "rules") return false;
+  const items = visible(category.items);
+  if (items.some((item: any) => item.hoursJson || item.open24)) return true;
+  const firstItem = items[0];
+  return !!firstItem?.title && !firstItem?.tint;
 }
 
 function enabledLanguageCodes(tenant: any): string[] {
   const enabled = new Set(
     (tenant?.languages ?? [])
-    .map((entry: any) => (typeof entry === "string" ? entry : entry?.code))
+      .map((entry: any) => (typeof entry === "string" ? entry : entry?.code))
       .filter((entry: unknown): entry is string => typeof entry === "string"),
   );
   return ["sl", "en", "de", "it"].filter(
@@ -126,16 +129,85 @@ function externalUrl(value: string): string {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
 }
 
+function imageStyle(media: any, tenantOverride?: any): CSSProperties | undefined {
+  if (tenantOverride) {
+    const focusX = tenantOverride.heroFocusX ?? media?.focusX ?? 50;
+    const focusY = tenantOverride.heroFocusY ?? media?.focusY ?? 50;
+    return { objectPosition: `${focusX}% ${focusY}%` };
+  }
+  if (!media) return undefined;
+  return {
+    objectPosition: `${media.focusX ?? 50}% ${media.focusY ?? 50}%`,
+  };
+}
+
+type HoursRange = [number, number] | null;
+
+function parseWeeklyHours(value: unknown): HoursRange[] | null {
+  if (!value) return null;
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    if (!Array.isArray(parsed) || parsed.length !== 7) return null;
+    return parsed.map((entry) => {
+      if (
+        !Array.isArray(entry) ||
+        entry.length !== 2 ||
+        !entry.every((part) => typeof part === "number")
+      ) {
+        return null;
+      }
+      return [entry[0], entry[1]];
+    });
+  } catch {
+    return null;
+  }
+}
+
+function formatMinutes(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60) % 24;
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function noticeTimestamp(notice: any): number | null {
+  const value = notice?.publishedAt ?? notice?.createdAt;
+  if (!value) return null;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function noticeDayGroup(notice: any): "today" | "yesterday" | "older" {
+  const timestamp = noticeTimestamp(notice);
+  if (timestamp === null) return "older";
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const noticeDate = new Date(timestamp);
+  const noticeDay = new Date(
+    noticeDate.getFullYear(),
+    noticeDate.getMonth(),
+    noticeDate.getDate(),
+  ).getTime();
+  const difference = Math.round((today - noticeDay) / 86_400_000);
+  if (difference === 0) return "today";
+  if (difference === 1) return "yesterday";
+  return "older";
+}
+
+function isNewNotice(notice: any): boolean {
+  const timestamp = noticeTimestamp(notice);
+  if (timestamp === null) return false;
+  const age = Date.now() - timestamp;
+  return age >= 0 && age < 72 * 60 * 60 * 1000;
+}
+
 export default function LivingGuideGuestShell({
   tenant,
   slug,
   lang,
-  categoryId,
 }: {
   tenant: any;
   slug: string;
   lang: string;
-  categoryId: string | null;
 }) {
   const [location, setLocation] = useLocation();
   const requestedTheme = new URLSearchParams(window.location.search).get("theme");
@@ -162,22 +234,21 @@ export default function LivingGuideGuestShell({
       ),
     [sections],
   );
-  const categoryContext =
-    allCategories.find((entry: any) => entry.category.id === categoryId) ?? null;
   const staySection =
     sections.find((section: any) => section.key === "stay") ?? sections[0] ?? null;
 
   const pathParts = location.split("/").filter(Boolean);
-  const routeSectionKey =
-    pathParts[1] === "s" ? decodeURIComponent(pathParts[2] ?? "") : null;
-  const routeSection =
-    sections.find((section: any) => section.key === routeSectionKey) ?? null;
-  const currentSection = categoryContext?.section ?? routeSection ?? staySection;
-  const screen: ScreenName = categoryContext
-    ? "detail"
-    : routeSectionKey
-      ? "grid"
-      : "cover";
+  const routeSectionKey = pathParts[1] === "s" ? decodeURIComponent(pathParts[2] ?? "") : null;
+  const routeCategoryId = pathParts[1] === "c" ? decodeURIComponent(pathParts[2] ?? "") : null;
+  const routeItemId = pathParts[3] === "i" ? decodeURIComponent(pathParts[4] ?? "") : null;
+
+  const categoryContext = routeCategoryId ? allCategories.find((entry: any) => entry.category.id === routeCategoryId) ?? null : null;
+  const currentSection = categoryContext?.section ?? (routeSectionKey ? sections.find((section: any) => section.key === routeSectionKey) ?? null : staySection);
+
+  let screen: ScreenName = "cover";
+  if (categoryContext) screen = "detail";
+  else if (routeSectionKey === "explore") screen = "explore";
+  else if (routeSectionKey) screen = "grid";
 
   const [guest, setGuest] = useState<GuestRecord | null>(() => readGuest(slug));
   const [showSignIn, setShowSignIn] = useState(
@@ -186,6 +257,7 @@ export default function LivingGuideGuestShell({
       (welcomeOverride === "show" ||
         (welcomeOverride !== "skip" && !readGuest(slug))),
   );
+  const [showNotices, setShowNotices] = useState(false);
 
   useEffect(() => {
     const previousTheme = document.documentElement.getAttribute("data-theme");
@@ -231,21 +303,29 @@ export default function LivingGuideGuestShell({
 
   const goBack = useCallback(() => {
     if (screen !== "detail") return;
-    if (window.history.state?.livingGuide) {
+    if (window.history.length > 1 && window.history.state?.livingGuide) {
       window.history.back();
       return;
     }
-    navigate(gridPath(categoryContext?.section ?? staySection), true);
-  }, [categoryContext?.section, navigate, screen, slug, staySection]);
+    if (routeItemId) {
+      navigate(`/${slug}/c/${routeCategoryId}`, true);
+    } else {
+      navigate(gridPath(categoryContext?.section ?? staySection), true);
+    }
+  }, [categoryContext?.section, navigate, screen, slug, staySection, routeItemId, routeCategoryId]);
 
   useEffect(() => {
-    if (screen !== "detail") return;
+    if (screen !== "detail" && !showNotices && !showSignIn) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") goBack();
+      if (event.key === "Escape") {
+        if (showSignIn) setShowSignIn(false);
+        else if (showNotices) setShowNotices(false);
+        else goBack();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goBack, screen]);
+  }, [goBack, screen, showNotices, showSignIn]);
 
   const saveGuest = (record: GuestRecord) => {
     const clean = { unit: record.unit.trim(), name: record.name.trim() };
@@ -253,13 +333,25 @@ export default function LivingGuideGuestShell({
     setGuest(clean);
     try {
       localStorage.setItem(GUEST_STORAGE_PREFIX + slug, JSON.stringify(clean));
-    } catch {
-      // Private browsing can make localStorage unavailable; current state still works.
-    }
+    } catch {}
     setShowSignIn(false);
   };
 
   const openCategory = (id: string) => navigate(`/${slug}/c/${id}`);
+  const openItem = (categoryId: string, itemId: string) => navigate(`/${slug}/c/${categoryId}/i/${itemId}`);
+
+  const helpCategory = allCategories.find((c: any) => c.category.layout === "help")?.category;
+
+  const exploreCategories = useMemo(() => {
+    const exploreSec = sections.find((s: any) => s.key === "explore");
+    const servicesSec = sections.find((s: any) => s.key === "services");
+    return [
+      ...(exploreSec ? visible(exploreSec.categories) : []),
+      ...(servicesSec ? visible(servicesSec.categories) : [])
+    ];
+  }, [sections]);
+
+  const notices = visible(tenant?.notices);
 
   return (
     <div
@@ -275,13 +367,7 @@ export default function LivingGuideGuestShell({
 
       <main className="lg2-stage">
         {screen === "cover" && (
-          <CoverView
-            tenant={tenant}
-            slug={slug}
-            lang={lang}
-            t={t}
-            onOpen={() => navigate(gridPath(staySection))}
-          />
+          <CoverView tenant={tenant} slug={slug} lang={lang} t={t} onOpen={() => navigate(gridPath(staySection))} />
         )}
 
         {screen === "grid" && currentSection && (
@@ -293,17 +379,36 @@ export default function LivingGuideGuestShell({
             guest={currentSection.key === "stay" ? guest : null}
             onEditGuest={() => setShowSignIn(true)}
             onOpenCategory={openCategory}
+            onOpenNotices={() => setShowNotices(true)}
+            helpCategoryId={currentSection.key === "stay" ? helpCategory?.id : null}
+            notices={currentSection.key === "stay" ? notices : []}
+          />
+        )}
+
+        {screen === "explore" && (
+          <ExploreView
+            tenant={tenant}
+            categories={exploreCategories}
+            lang={lang}
+            t={t}
+            onOpenCategory={openCategory}
+            onOpenItem={openItem}
           />
         )}
 
         {screen === "detail" && categoryContext && (
           <DetailView
             category={categoryContext.category}
+            itemId={routeItemId}
             lang={lang}
             t={t}
             galleryIndex={galleryIndex}
             onGalleryIndex={setGalleryIndex}
             onBack={goBack}
+            slug={slug}
+            setLocation={setLocation}
+            tenant={tenant}
+            onOpenItem={(id: string) => openItem(categoryContext.category.id, id)}
           />
         )}
       </main>
@@ -319,13 +424,11 @@ export default function LivingGuideGuestShell({
       )}
 
       {showSignIn && (
-        <SignInSheet
-          tenantName={tenant.name}
-          t={t}
-          initialGuest={guest}
-          onClose={() => setShowSignIn(false)}
-          onSave={saveGuest}
-        />
+        <SignInSheet tenantName={tenant.name} t={t} initialGuest={guest} onClose={() => setShowSignIn(false)} onSave={saveGuest} />
+      )}
+
+      {showNotices && notices.length > 0 && (
+        <NoticesSheet notices={notices} onClose={() => setShowNotices(false)} t={t} />
       )}
     </div>
   );
@@ -359,73 +462,37 @@ function Starfield({ theme }: { theme: LivingTheme }) {
   );
 }
 
-function CoverView({
-  tenant,
-  slug,
-  lang,
-  t,
-  onOpen,
-}: {
-  tenant: any;
-  slug: string;
-  lang: string;
-  t: UiTranslator;
-  onOpen: () => void;
-}) {
+function CoverView({ tenant, slug, lang, t, onOpen }: { tenant: any; slug: string; lang: string; t: UiTranslator; onOpen: () => void; }) {
   const languages = enabledLanguageCodes(tenant);
-  const nextLanguage =
-    languages[(Math.max(0, languages.indexOf(lang)) + 1) % languages.length] ?? lang;
+  const nextLanguage = languages[(Math.max(0, languages.indexOf(lang)) + 1) % languages.length] ?? lang;
   const title = tenant.coverTitle || tenant.name;
 
   return (
     <section className="lg2-view lg2-cover" aria-label={title}>
       <div className="lg2-cover-photo" aria-hidden="true">
-        {tenant.heroUrl && (
-          <img src={tenant.heroUrl} alt="" fetchPriority="high" decoding="async" />
-        )}
+        {tenant.heroUrl && <img src={tenant.heroUrl} alt="" fetchPriority="high" decoding="async" style={imageStyle(tenant.heroMedia, tenant)} />}
       </div>
       <div className="lg2-cover-veil" aria-hidden="true" />
       <div className="lg2-cover-top">
-        <button
-          className="lg2-fab lg2-language"
-          type="button"
-          onClick={() => switchLang(slug, nextLanguage)}
-          aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })}
-        >
+        <button className="lg2-fab lg2-language" type="button" onClick={() => switchLang(slug, nextLanguage)} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })}>
           {lang.toUpperCase()}
         </button>
       </div>
       <div className="lg2-cover-mast">
         <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
-        {tenant.coverSubtitle && (
-          <p className="lg2-cover-subtitle">{tenant.coverSubtitle}</p>
-        )}
+        {tenant.coverSubtitle && <p className="lg2-cover-subtitle">{tenant.coverSubtitle}</p>}
         {tenant.address && <p className="lg2-cover-address">{tenant.address}</p>}
       </div>
       <button className="lg2-open-guide" type="button" onClick={onOpen}>
-        <svg aria-hidden="true">
-          <use href="#lg-i-down" />
-        </svg>
+        <svg aria-hidden="true"><use href="#lg-i-down" /></svg>
         {t("UI.lg.openGuide")}
       </button>
     </section>
   );
 }
 
-function SignInSheet({
-  tenantName,
-  t,
-  initialGuest,
-  onClose,
-  onSave,
-}: {
-  tenantName: string;
-  t: UiTranslator;
-  initialGuest: GuestRecord | null;
-  onClose: () => void;
-  onSave: (record: GuestRecord) => void;
-}) {
+function SignInSheet({ tenantName, t, initialGuest, onClose, onSave }: any) {
   const [unit, setUnit] = useState(initialGuest?.unit ?? "");
   const [name, setName] = useState(initialGuest?.name ?? "");
   const unitInput = useRef<HTMLInputElement>(null);
@@ -441,20 +508,8 @@ function SignInSheet({
   };
 
   return (
-    <div
-      className="lg2-sheet-overlay"
-      role="presentation"
-      onPointerDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <form
-        className="lg2-welcome-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="lg2-welcome-title"
-        onSubmit={submit}
-      >
+    <div className="lg2-sheet-overlay" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <form className="lg2-welcome-sheet" role="dialog" aria-modal="true" aria-labelledby="lg2-welcome-title" onSubmit={submit}>
         <div className="lg2-grabber" aria-hidden="true" />
         <div className="lg2-welcome-heading">
           <p>{tenantName}</p>
@@ -463,23 +518,11 @@ function SignInSheet({
         </div>
         <label className="lg2-field lg2-field--required">
           <span>{t("UI.lg.welcome.unit")}</span>
-          <input
-            ref={unitInput}
-            required
-            autoComplete="off"
-            value={unit}
-            placeholder={t("UI.lg.welcome.unitPlaceholder")}
-            onChange={(event) => setUnit(event.target.value)}
-          />
+          <input ref={unitInput} required autoComplete="off" value={unit} placeholder={t("UI.lg.welcome.unitPlaceholder")} onChange={(event) => setUnit(event.target.value)} />
         </label>
         <label className="lg2-field">
           <span>{t("UI.lg.welcome.name")}</span>
-          <input
-            autoComplete="name"
-            value={name}
-            placeholder={t("UI.lg.welcome.namePlaceholder")}
-            onChange={(event) => setName(event.target.value)}
-          />
+          <input autoComplete="name" value={name} placeholder={t("UI.lg.welcome.namePlaceholder")} onChange={(event) => setName(event.target.value)} />
         </label>
         <button className="lg2-primary-button" type="submit" disabled={!unit.trim()}>
           {t("UI.lg.welcome.save")}
@@ -492,40 +535,62 @@ function SignInSheet({
   );
 }
 
-function GridView({
-  tenant,
-  section,
-  lang,
-  t,
-  guest,
-  onEditGuest,
-  onOpenCategory,
-}: {
-  tenant: any;
-  section: any;
-  lang: string;
-  t: UiTranslator;
-  guest: GuestRecord | null;
-  onEditGuest: () => void;
-  onOpenCategory: (id: string) => void;
-}) {
+function NoticesSheet({ notices, onClose, t }: any) {
+  const grouped = useMemo(() => {
+    const today: any[] = [];
+    const yesterday: any[] = [];
+    const older: any[] = [];
+    for (const notice of notices) {
+      const row = { ...notice, isNew: isNewNotice(notice) };
+      const group = noticeDayGroup(notice);
+      if (group === "today") today.push(row);
+      else if (group === "yesterday") yesterday.push(row);
+      else older.push(row);
+    }
+    return { today, yesterday, older };
+  }, [notices]);
+
+  return (
+    <div className="lg2-sheet-overlay" role="presentation" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="lg2-welcome-sheet" role="dialog" aria-modal="true" aria-labelledby="notices-title">
+        <div className="lg2-grabber" aria-hidden="true" />
+        <h2 className="lg2-notices-title" id="notices-title">{t("UI.lg.notices.title")}</h2>
+        <div className="lg2-subs">
+          {grouped.today.length > 0 && <div className="lg2-notice-group">{t("UI.lg.notices.today")}</div>}
+          {grouped.today.map(n => <NoticeRow key={n.id} n={n} t={t} />)}
+
+          {grouped.yesterday.length > 0 && <div className="lg2-notice-group">{t("UI.lg.notices.yesterday")}</div>}
+          {grouped.yesterday.map(n => <NoticeRow key={n.id} n={n} t={t} />)}
+
+          {grouped.older.map(n => <NoticeRow key={n.id} n={n} t={t} />)}
+
+          {notices.length === 0 && <p className="lg2-notices-empty">{t("UI.lg.notices.empty")}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NoticeRow({ n, t }: { n: any, t: UiTranslator }) {
+  return (
+    <div className="lg2-notice-row">
+      {n.media?.[0] && <img src={mediaImgSrc(n.media[0], 620)} alt="" className="lg2-notice-thumb" style={imageStyle(n.media[0])} />}
+      <div>
+        <b>{n.title}</b>
+        <small>{n.body ? sanitizeHtml(n.body).replace(/<[^>]+>/g, '') : ""}</small>
+      </div>
+      {n.isNew && <span className="lg2-new">{t("UI.lg.notices.new")}</span>}
+    </div>
+  );
+}
+
+function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices }: any) {
   const categories = visible(section.categories);
-  const featuredCategory =
-    categories.find(
-      (category: any) =>
-        category.layout === "rules" &&
-        (visible(category.items)[0]?.media?.length ?? 0) > 1,
-    ) ??
-    categories.find((category: any) => {
-    const firstItem = visible(category.items)[0];
-    return !firstItem?.tint && !!firstMedia(category);
-  });
-  const orderedCategories = featuredCategory
-    ? [
-        featuredCategory,
-        ...categories.filter((category: any) => category.id !== featuredCategory.id),
-      ]
-    : categories;
+  const featuredCategory = categories.find(isOperationalRulesCategory) ??
+    categories.find((c: any) => { const firstItem = visible(c.items)[0]; return !firstItem?.tint && !!firstMedia(c); });
+  const orderedCategories = featuredCategory ? [featuredCategory, ...categories.filter((c: any) => c.id !== featuredCategory.id)] : categories;
+
+  const hasNew = notices.some(isNewNotice);
 
   return (
     <section className="lg2-view lg2-grid-view">
@@ -534,366 +599,520 @@ function GridView({
           <p>{tenant.name}</p>
           <h1>{section.title}</h1>
         </div>
+        {notices.length > 0 && (
+          <button className={`lg2-bell${hasNew ? " lg2-bell--dot" : ""}`} type="button" onClick={onOpenNotices} aria-label={t("UI.lg.notices.title")}>
+            <svg aria-hidden="true"><use href="#lg-i-bell"/></svg>
+          </button>
+        )}
       </header>
       <div className="lg2-screen-scroll" data-lg-scroll>
         {guest && (
           <button className="lg2-greeting" type="button" onClick={onEditGuest}>
-            <span className="lg2-greeting-icon" aria-hidden="true">
-              <svg>
-                <use href="#lg-i-usr" />
-              </svg>
-            </span>
+            <span className="lg2-greeting-icon" aria-hidden="true"><svg><use href="#lg-i-usr" /></svg></span>
             <span>
-              <b>
-                {guest.name
-                  ? t("UI.lg.greeting.named", { name: guest.name })
-                  : t("UI.lg.greeting.generic")}
-              </b>
-              <small>
-                {t("UI.lg.greeting.ordersTo")} {guest.unit}
-              </small>
+              <b>{guest.name ? t("UI.lg.greeting.named", { name: guest.name }) : t("UI.lg.greeting.generic")}</b>
+              <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
             </span>
             <em>{t("UI.lg.greeting.change")}</em>
           </button>
         )}
-
         <div className="lg2-grid lg2-stagger">
           {orderedCategories.map((category: any, index: number) => {
             const item = visible(category.items)[0];
             const media = firstMedia(category);
-            const isPhotoCard = !!media && !item?.tint;
+            const isPhotoCard = !!media;
             const isWide = category.id === featuredCategory?.id;
             const today = formatTodayHours(item?.hoursJson, lang);
-            const supporting =
-              today ||
-              (item?.title && item.title !== category.label ? item.title : null);
-            const staggerStyle = {
-              "--lg2-delay": `${0.05 + Math.min(index, 6) * 0.06}s`,
-            } as CSSProperties;
+            const supporting = today || (item?.title && item.title !== category.label ? item.title : null);
+            const frame = category.frame || item?.frame;
+            const frameClass = frame === "tall" ? " lg2-photo-card--tall" : frame === "square" ? " lg2-photo-card--square" : "";
+            const staggerStyle = { "--lg2-delay": `${0.05 + Math.min(index, 6) * 0.06}s` } as CSSProperties;
 
             if (isPhotoCard) {
               return (
-                <button
-                  key={category.id}
-                  className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}`}
-                  style={staggerStyle}
-                  type="button"
-                  onClick={() => onOpenCategory(category.id)}
-                >
-                  <img
-                    src={mediaImgSrc(media, isWide ? 1400 : 620)}
-                    alt=""
-                    loading={index < 2 ? "eager" : "lazy"}
-                    decoding="async"
-                  />
-                  <span>
-                    <b>{category.label}</b>
-                    {supporting && <small>{supporting}</small>}
-                  </span>
+                <button key={category.id} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}${frameClass}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
+                  <img src={mediaImgSrc(media, isWide ? 1400 : 620)} alt="" loading={index < 2 ? "eager" : "lazy"} decoding="async" style={imageStyle(media)} />
+                  <span><b>{category.label}</b>{supporting && <small>{supporting}</small>}</span>
                 </button>
               );
             }
-
             return (
-              <button
-                key={category.id}
-                className="lg2-utility-card"
-                style={staggerStyle}
-                type="button"
-                onClick={() => onOpenCategory(category.id)}
-              >
-                <span className="lg2-utility-icon" aria-hidden="true">
-                  <svg>
-                    <use href={`#lg-i-${categoryIcon(category)}`} />
-                  </svg>
-                </span>
-                <span>
-                  <b>{category.label}</b>
-                  {supporting && <small>{supporting}</small>}
-                </span>
+              <button key={category.id} className={`lg2-utility-card${isWide ? " lg2-utility-card--wide" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
+                <span className="lg2-utility-icon" aria-hidden="true"><svg><use href={`#lg-i-${categoryIcon(category)}`} /></svg></span>
+                <span><b>{category.label}</b>{supporting && <small>{supporting}</small>}</span>
               </button>
             );
           })}
         </div>
+        {helpCategoryId && (
+          <div className="lg2-help-entry">
+            <button type="button" onClick={() => onOpenCategory(helpCategoryId)}>{t("UI.lg.helpEmergency")}</button>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function DetailView({
-  category,
-  lang,
-  t,
-  galleryIndex,
-  onGalleryIndex,
-  onBack,
-}: {
-  category: any;
-  lang: string;
-  t: UiTranslator;
-  galleryIndex: number;
-  onGalleryIndex: (index: number) => void;
-  onBack: () => void;
-}) {
-  const items = visible(category.items);
-  const firstItem = items[0] ?? null;
-  const media = categoryMedia(category);
-  const today = formatTodayHours(firstItem?.hoursJson, lang);
-  const introTitle =
-    firstItem?.title && firstItem.title !== category.label ? firstItem.title : null;
-  const introBody = bodyHtml(firstItem?.body);
-  const detailRows = items
-    .slice(1)
-    .filter((item: any) => item.title || item.body || item.bullets?.length);
-
-  const actions = [
-    firstItem?.phone
-      ? {
-          href: `tel:${firstItem.phone}`,
-          label: t("UI.lg.action.call"),
-          icon: "phone",
-          external: false,
-        }
-      : null,
-    firstItem?.mapQuery
-      ? {
-          href: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(firstItem.mapQuery)}`,
-          label: t("UI.lg.action.directions"),
-          icon: "nav2",
-          external: true,
-        }
-      : null,
-    firstItem?.website
-      ? {
-          href: externalUrl(firstItem.website),
-          label: t("UI.lg.action.website"),
-          icon: "comp",
-          external: true,
-        }
-      : null,
-  ]
-    .filter(Boolean)
-    .slice(0, 2) as Array<{
-    href: string;
-    label: string;
-    icon: string;
-    external: boolean;
-  }>;
-
-  const todayTime = today?.match(/\d{1,2}:\d{2}–\d{1,2}:\d{2}/)?.[0] ?? null;
+function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }: any) {
+  const allItems = categories.flatMap((c: any) => visible(c.items).map((i: any) => ({ ...i, categoryId: c.id })));
 
   return (
-    <section className="lg2-view lg2-detail-view">
-      <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-        <div className="lg2-detail-layout">
-          {media.length > 0 && (
-            <div className="lg2-detail-hero">
-              <div
-                className="lg2-gallery-track"
-                data-lg-gallery
-                onScroll={(event) => {
-                  const element = event.currentTarget;
-                  if (!element.clientWidth) return;
-                  onGalleryIndex(
-                    Math.max(
-                      0,
-                      Math.min(
-                        media.length - 1,
-                        Math.round(element.scrollLeft / element.clientWidth),
-                      ),
-                    ),
-                  );
-                }}
-              >
-                {media.map((entry: any, index: number) => (
-                  <div className="lg2-gallery-slide" key={entry.id ?? `${entry.url}-${index}`}>
-                    <img
-                      src={mediaImgSrc(entry, 1400)}
-                      alt=""
-                      loading={index === 0 ? "eager" : "lazy"}
-                      decoding="async"
-                    />
-                  </div>
-                ))}
-              </div>
-              {media.length > 1 && (
-                <div className="lg2-gallery-dots" aria-hidden="true">
-                  {media.map((entry: any, index: number) => (
-                    <i
-                      key={entry.id ?? index}
-                      className={index === galleryIndex ? "is-active" : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-              <button
-                className="lg2-detail-back"
-                type="button"
-                onClick={onBack}
-                aria-label={t("UI.lg.action.back")}
-              >
-                <svg aria-hidden="true">
-                  <use href="#lg-i-bk" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
-            <div className="lg2-grabber" aria-hidden="true" />
-            <h1>{category.label}</h1>
-
-            {(todayTime || firstItem?.open24) && (
-              <div className="lg2-facts">
-                <div>
-                  <b>
-                    {firstItem?.open24
-                      ? t("UI.lg.hours.alwaysValue")
-                      : todayTime}
-                  </b>
-                  <small>
-                    {firstItem?.open24
-                      ? t("UI.lg.hours.alwaysLabel")
-                      : t("UI.lg.hours.openUntil")}
-                  </small>
-                </div>
-              </div>
-            )}
-
-            {introTitle && <p className="lg2-detail-lead">{introTitle}</p>}
-            {introBody && (
-              <div
-                className="lg2-detail-prose"
-                dangerouslySetInnerHTML={{ __html: introBody }}
-              />
-            )}
-            {firstItem?.bullets?.length > 0 && (
-              <ul className="lg2-bullets">
-                {firstItem.bullets.map((bullet: string) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-            )}
-
-            {detailRows.length > 0 && (
-              <div className="lg2-rule-list">
-                {detailRows.map((item: any, index: number) => (
-                  <div
-                    className={`lg2-rule-row${index === 0 ? " lg2-rule-row--warning" : ""}`}
-                    key={item.id}
-                  >
-                    <span className="lg2-rule-icon" aria-hidden="true">
-                      <svg>
-                        <use href={`#lg-i-${index === 0 ? "sos" : "doc"}`} />
-                      </svg>
-                    </span>
-                    <div>
-                      {item.title && <b>{item.title}</b>}
-                      {item.body && (
-                        <span
-                          dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }}
-                        />
-                      )}
-                      {item.bullets?.length > 0 && (
-                        <ul>
-                          {item.bullets.map((bullet: string) => (
-                            <li key={bullet}>{bullet}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {actions.length > 0 && (
-              <div className="lg2-actions">
-                {actions.map((action) => (
-                  <a
-                    key={action.href}
-                    className="lg2-primary-button"
-                    href={action.href}
-                    target={action.external ? "_blank" : undefined}
-                    rel={action.external ? "noopener noreferrer" : undefined}
-                  >
-                    <svg aria-hidden="true">
-                      <use href={`#lg-i-${action.icon}`} />
-                    </svg>
-                    {action.label}
-                  </a>
-                ))}
-              </div>
-            )}
-          </article>
+    <section className="lg2-view lg2-explore-view">
+      <header className="lg2-grid-header">
+        <div>
+          <p>{tenant.name}</p>
+          <h1>{t("UI.lg.exploreTitle")}</h1>
+        </div>
+      </header>
+      <div className="lg2-screen-scroll" data-lg-scroll>
+        <div className="lg2-chips lg2-explore-chips">
+          {categories.map((c: any) => (
+             <button type="button" key={c.id} className="lg2-chip" onClick={() => onOpenCategory(c.id)}>{c.label}</button>
+          ))}
+        </div>
+        <div className="lg2-ngrp">{t("UI.lg.nearby")}</div>
+        <div className="lg2-subs lg2-nearby-list">
+          {allItems.map((item: any) => (
+             <button type="button" className="lg2-sub2 lg2-nrow" key={item.id} onClick={() => onOpenItem(item.categoryId, item.id)}>
+               {item.media?.[0] ? <img className="lg2-notice-thumb" src={mediaImgSrc(item.media[0], 620)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
+               <div><b>{item.title}</b><small>{item.subtitle || formatTodayHours(item.hoursJson, lang) || ""}</small></div>
+               <span className="lg2-chevron">›</span>
+             </button>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function BottomNav({
-  sections,
-  slug,
-  t,
-  activeSectionKey,
-  onNavigate,
-}: {
-  sections: any[];
-  slug: string;
-  t: UiTranslator;
-  activeSectionKey: string | null;
-  onNavigate: (path: string) => void;
-}) {
-  const sectionFor = (key: string) =>
-    sections.find((section: any) => section.key === key);
+function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
+  if (!media?.length) return (
+    <div className="lg2-detail-hero" style={{ minHeight: 70 }}>
+      <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk"/></svg></button>
+    </div>
+  );
+  if (singleOnly) {
+    const entry = media[0];
+    return (
+      <div className="lg2-detail-hero">
+        <div className="lg2-gallery-track">
+          <div className="lg2-gallery-slide">
+            <img src={mediaImgSrc(entry, 1400)} alt="" loading="eager" decoding="async" style={imageStyle(entry)} />
+          </div>
+        </div>
+        <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
+      </div>
+    );
+  }
+  return (
+    <div className="lg2-detail-hero">
+      <div className="lg2-gallery-track" data-lg-gallery onScroll={(e) => {
+        const el = e.currentTarget;
+        if (!el.clientWidth) return;
+        onGalleryIndex(Math.max(0, Math.min(media.length - 1, Math.round(el.scrollLeft / el.clientWidth))));
+      }}>
+        {media.map((entry: any, index: number) => (
+          <div className="lg2-gallery-slide" key={entry.id || index}>
+            <img src={mediaImgSrc(entry, 1400)} alt="" loading={index===0?"eager":"lazy"} decoding="async" style={imageStyle(entry)} />
+          </div>
+        ))}
+      </div>
+      {media.length > 1 && (
+        <div className="lg2-gallery-dots" aria-hidden="true">
+          {media.map((_: any, index: number) => <i key={index} className={index === galleryIndex ? "is-active" : undefined} />)}
+        </div>
+      )}
+      <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
+    </div>
+  );
+}
+
+function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem }: any) {
+  const items = visible(category.items);
+  const activeItem = itemId ? items.find((i: any) => i.id === itemId) : null;
+
+  const layout = category.layout || "";
+
+  let content = null;
+  if (activeItem) {
+    if (layout === "poi") {
+      content = <TemplateF item={activeItem} category={category} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+    } else if (layout === "routes") {
+      content = <TemplateG item={activeItem} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+    } else if (layout === "tabs") {
+      content = <TemplateB2 item={activeItem} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+    } else {
+      content = <TemplateA category={category} items={[activeItem]} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+    }
+  } else {
+    if (layout === "wifi") {
+      content = <TemplateE category={category} items={items} tenant={tenant} t={t} onBack={onBack} />;
+    } else if (layout === "tabs" && items.length === 2) {
+      content = <TemplateD category={category} items={items} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+    } else if (layout === "tabs" || layout === "apartments" || layout === "products" || layout === "poi" || layout === "routes" || layout === "events") {
+      content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} />;
+    } else if (layout === "rules") {
+      if (isOperationalRulesCategory(category)) {
+        content = <TemplateA category={category} items={items} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      } else {
+        content = <TemplateC category={category} items={items} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      }
+    } else {
+      content = <TemplateA category={category} items={items} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+    }
+  }
+
+  return (
+    <section className="lg2-view lg2-detail-view">
+      {content}
+    </section>
+  );
+}
+
+// Template A: Content page (Bazen)
+function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onBack, galleryIndex, onGalleryIndex }: any) {
+  const firstItem = items[0] ?? null;
+  const media = mediaOverride ?? categoryMedia(category);
+  const todayTime = formatTodayHours(firstItem?.hoursJson, lang)?.match(/\d{1,2}:\d{2}–\d{1,2}:\d{2}/)?.[0];
+  const introTitle = firstItem?.title && firstItem.title !== category.label ? firstItem.title : null;
+  const introBody = bodyHtml(firstItem?.body);
+  const detailRows = items.slice(1).filter((i: any) => i.title || i.body || i.bullets?.length);
+
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+          <div className="lg2-grabber" aria-hidden="true" />
+          <h1>{titleOverride || category.label}</h1>
+          {(todayTime || firstItem?.open24) && (
+            <div className="lg2-facts">
+              <div>
+                <b>{firstItem?.open24 ? t("UI.lg.hours.alwaysValue") : todayTime}</b>
+                <small>{firstItem?.open24 ? t("UI.lg.hours.alwaysLabel") : t("UI.lg.hours.openUntil")}</small>
+              </div>
+            </div>
+          )}
+          {introTitle && <p className="lg2-detail-lead">{introTitle}</p>}
+          {introBody && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: introBody }} />}
+          {firstItem?.bullets?.length > 0 && (
+            <ul className="lg2-bullets">{firstItem.bullets.map((b: string) => <li key={b}>{b}</li>)}</ul>
+          )}
+          {detailRows.length > 0 && (
+            <div className="lg2-rule-list">
+              {detailRows.map((item: any) => (
+                <div className={`lg2-rule-row${item.tint ? " lg2-rule-row--warning" : ""}`} key={item.id}>
+                  <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${item.tint ? "sos" : "doc"}`} /></svg></span>
+                  <div>
+                    {item.title && <b>{item.title}</b>}
+                    {item.body && <span dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+                    {item.bullets?.length > 0 && <ul>{item.bullets.map((b: string) => <li key={b}>{b}</li>)}</ul>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {(firstItem?.mapQuery || firstItem?.phone || firstItem?.website) && (
+            <div className="lg2-actions">
+              {firstItem?.mapQuery && <a className="lg2-primary-button" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(firstItem.mapQuery)}`} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
+              {firstItem?.phone && <a className="lg2-primary-button lg2-secondary-button" href={`tel:${firstItem.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
+              {firstItem?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(firstItem.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
+            </div>
+          )}
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template B: List page
+function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
+  const media = firstMedia(category) ? [firstMedia(category)] : [];
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+           <div className="lg2-grabber" aria-hidden="true" />
+           <h1>{category.label}</h1>
+           <div className="lg2-subs">
+             {items.map((item: any) => (
+               <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
+                 <span className="lg2-sub-icon" aria-hidden="true">
+                   {item.media?.[0] ? <img src={mediaImgSrc(item.media[0], 620)} alt="" style={imageStyle(item.media[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
+                 </span>
+                 <div><b>{item.title}</b><small>{item.subtitle || ""}</small></div>
+                 <span className="lg2-chevron" aria-hidden="true">›</span>
+               </button>
+             ))}
+           </div>
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template B2: Steps page
+function TemplateB2({ item, category, t, onBack, galleryIndex, onGalleryIndex }: any) {
+  const media = visible(item?.media);
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+           <div className="lg2-grabber" aria-hidden="true" />
+           <h1>{item?.title || category?.label}</h1>
+           {item?.subtitle && <div className="lg2-chips"><span className="lg2-chip">{item.subtitle}</span></div>}
+
+           {item?.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+
+           {item?.bullets?.length > 0 && (
+             <div className="lg2-rules" style={{marginTop: 16}}>
+               {item.bullets.map((bullet: string, i: number) => (
+                 <div className="lg2-step" key={i}>
+                   <span className="lg2-step-number">{i + 1}</span>
+                   <p>{bullet}</p>
+                 </div>
+               ))}
+             </div>
+           )}
+
+           {item?.phone && (
+             <div className="lg2-actions" style={{marginTop:16}}>
+               {item?.phone && <a className="lg2-primary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
+             </div>
+           )}
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template C: Rules
+function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }: any) {
+  const media = categoryMedia(category);
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+          <div className="lg2-grabber" aria-hidden="true" />
+          <h1>{category.label}</h1>
+          <div className="lg2-rule-list">
+             {items.map((item: any) => {
+               const isWarning = !!item.tint;
+               return (
+                 <div className={`lg2-rule-row${isWarning ? " lg2-rule-row--warning" : ""}`} key={item.id}>
+                   <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${isWarning ? "sos" : "doc"}`}/></svg></span>
+                   <div>
+                     {item.title && <b>{item.title}</b>}
+                     {item.body && <div dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+                     {item.bullets?.length > 0 && <ul>{item.bullets.map((b: string) => <li key={b}>{b}</li>)}</ul>}
+                   </div>
+                 </div>
+               );
+             })}
+          </div>
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template D: Segmented
+function TemplateD({ category, items, t, onBack, galleryIndex, onGalleryIndex }: any) {
+  const [segment, setSegment] = useState(0);
+  const activeItem = items[segment] || items[0];
+  if (!activeItem) return null;
+  const media = visible(activeItem.media);
+
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+          <div className="lg2-grabber" aria-hidden="true" />
+          <h1>{category.label}</h1>
+          <div className="lg2-seg" role="tablist">
+             {items.map((item: any, i: number) => (
+                <button
+                  id={`lg2-tab-${item.id}`}
+                  type="button"
+                  role="tab"
+                  aria-controls="lg2-segment-panel"
+                  aria-selected={i === segment}
+                  tabIndex={i === segment ? 0 : -1}
+                  key={item.id}
+                  className={i === segment ? "is-active" : ""}
+                  onClick={() => { setSegment(i); onGalleryIndex(0); }}
+                >
+                  {item.title || item.label}
+                </button>
+             ))}
+          </div>
+          <div id="lg2-segment-panel" role="tabpanel" aria-labelledby={`lg2-tab-${activeItem.id}`}>
+            {activeItem.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(activeItem.body) }} />}
+            {activeItem.bullets?.length > 0 && (
+               <ul className="lg2-bullets">
+                 {activeItem.bullets.map((b: string) => <li key={b}>{b}</li>)}
+               </ul>
+            )}
+          </div>
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template E: WiFi
+function TemplateE({ category, items, tenant, t, onBack }: any) {
+  const ssid = tenant?.wifiSsid;
+  const pass = tenant?.wifiPass;
+  const qrSvg = tenant?.wifiQrSvg
+    ? sanitizeHtml(tenant.wifiQrSvg)
+    : null;
+  const wifiItem = items[0] || {};
+  const media = categoryMedia(category);
+
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+           <div className="lg2-grabber" aria-hidden="true" />
+           <h1>{category.label}</h1>
+
+           {qrSvg && (
+             <div
+               className="lg2-qr"
+               aria-label={t("UI.lg.wifi.scan")}
+               dangerouslySetInnerHTML={{ __html: qrSvg }}
+             />
+           )}
+
+           {ssid && (
+               <div className="lg2-wifi-row">
+                 <div><b>{ssid}</b><small>{t("UI.lg.wifi.network")}</small></div>
+                 <button type="button" className="lg2-wifi-copy" onClick={() => navigator.clipboard.writeText(ssid)}>{t("UI.lg.action.copy")}</button>
+               </div>
+           )}
+
+           {pass && (
+             <div className="lg2-wifi-row">
+               <div><b>{pass}</b><small>{t("UI.lg.wifi.password")}</small></div>
+               <button type="button" className="lg2-wifi-copy" onClick={() => navigator.clipboard.writeText(pass)}>{t("UI.lg.action.copy")}</button>
+             </div>
+           )}
+
+           {wifiItem.body && <div className="lg2-detail-prose lg2-wifi-note" dangerouslySetInnerHTML={{ __html: bodyHtml(wifiItem.body) }} />}
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template F: Place
+function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryIndex }: any) {
+  const media = visible(item?.media);
+  const weeklyHours = useMemo(
+    () => parseWeeklyHours(item?.hoursJson),
+    [item?.hoursJson],
+  );
+  const todayIndex = (new Date().getDay() + 6) % 7;
+  const todayRange = weeklyHours?.[todayIndex] ?? null;
+
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+           <div className="lg2-grabber" aria-hidden="true" />
+           <h1>{item?.title || category?.label}</h1>
+           {(item?.open24 || todayRange || item?.subtitle || item?.price) && (
+             <div className="lg2-chips">
+                {item?.open24 && <span className="lg2-chip lg2-chip--open">{t("UI.lg.hours.alwaysValue")}</span>}
+                {!item?.open24 && todayRange && <span className="lg2-chip lg2-chip--open">{t("UI.lg.hours.openUntil")} {formatMinutes(todayRange[1])}</span>}
+                {item?.subtitle && <span className="lg2-chip">{item.subtitle}</span>}
+                {item?.price && <span className="lg2-chip">{item.price}</span>}
+             </div>
+           )}
+           {item?.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+
+           {weeklyHours && (
+             <div className="lg2-weekly-hours">
+               <h3>{t("UI.lg.hours.title")}</h3>
+               {weeklyHours.map((range, dayIndex) => {
+                  const isToday = dayIndex === todayIndex;
+                  // 2024-01-01 was a Monday
+                  const dayName = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(new Date(2024, 0, dayIndex + 1));
+                  return (
+                    <div key={dayIndex} className={`lg2-hours-row${isToday ? " lg2-hours-row--today" : ""}`}>
+                      <span>{dayName}</span>
+                      <span>{range ? `${formatMinutes(range[0])}–${formatMinutes(range[1])}` : t("UI.lg.hours.closed")}</span>
+                    </div>
+                  );
+               })}
+             </div>
+           )}
+
+           {(item?.mapQuery || item?.phone || item?.website) && (
+             <div className="lg2-actions lg2-actions--spaced">
+               {item?.mapQuery && <a className="lg2-primary-button" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery)}`} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
+               {item?.phone && <a className="lg2-primary-button lg2-secondary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
+                {item?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(item.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
+             </div>
+           )}
+        </article>
+      </div>
+    </div>
+  );
+}
+
+// Template G: Trail
+function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex }: any) {
+  const media = visible(item?.media);
+  const routeFacts = [item?.difficulty, item?.duration, item?.distance].filter(Boolean);
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-layout">
+        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
+        <article className={`lg2-detail-sheet${media.length ? "" : " lg2-detail-sheet--solo"}`}>
+           <div className="lg2-grabber" aria-hidden="true" />
+           <h1>{item?.title || category?.label}</h1>
+           {(item?.subtitle || routeFacts.length > 0) && (
+             <div className="lg2-chips">
+               {item?.subtitle && <span className="lg2-chip">{item.subtitle}</span>}
+               {routeFacts.map((fact: string) => <span className="lg2-chip" key={fact}>{fact}</span>)}
+             </div>
+           )}
+           {item?.body && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: bodyHtml(item.body) }} />}
+        </article>
+      </div>
+    </div>
+  );
+}
+
+function BottomNav({ sections, slug, t, activeSectionKey, onNavigate }: any) {
+  const sectionFor = (key: string) => sections.find((section: any) => section.key === key);
   const tabs = [
-    {
-      key: "home",
-      label: t("UI.lg.nav.home"),
-      icon: "home",
-      path: `/${slug}`,
-    },
-    {
-      key: "stay",
-      label: t("UI.lg.nav.stay"),
-      icon: "tent",
-      section: sectionFor("stay"),
-    },
-    {
-      key: "offer",
-      label: t("UI.lg.nav.offer"),
-      icon: "bag",
-      section: sectionFor("offer"),
-    },
-    {
-      key: "explore",
-      label: t("UI.lg.nav.area"),
-      icon: "comp",
-      section: sectionFor("explore"),
-    },
+    { key: "home", label: t("UI.lg.nav.home"), icon: "home", path: `/${slug}` },
+    { key: "stay", label: t("UI.lg.nav.stay"), icon: "tent", section: sectionFor("stay") },
+    { key: "offer", label: t("UI.lg.nav.offer"), icon: "bag", section: sectionFor("offer") },
+    { key: "explore", label: t("UI.lg.nav.area"), icon: "comp", section: sectionFor("explore") },
+    { key: "program", label: t("UI.lg.nav.program"), icon: "cal", section: sectionFor("program") },
   ].filter((tab) => tab.key === "home" || tab.section);
 
-  const normalizedActive =
-    activeSectionKey === "services" ? "explore" : activeSectionKey;
+  const normalizedActive = activeSectionKey === "services" ? "explore" : activeSectionKey;
 
   return (
     <nav className="lg2-bottom-nav" aria-label={t("UI.lg.nav.primary")}>
       {tabs.map((tab) => {
         const isActive = tab.key !== "home" && normalizedActive === tab.key;
-        const path =
-          tab.path ??
-          `/${slug}/s/${encodeURIComponent((tab.section as any).key)}`;
+        const path = tab.path ?? `/${slug}/s/${encodeURIComponent((tab.section as any).key)}`;
         return (
-          <button
-            key={tab.key}
-            className={isActive ? "is-active" : undefined}
-            type="button"
-            onClick={() => onNavigate(path)}
-          >
-            <svg aria-hidden="true">
-              <use href={`#lg-i-${tab.icon}`} />
-            </svg>
+          <button key={tab.key} className={isActive ? "is-active" : undefined} type="button" onClick={() => onNavigate(path)}>
+            <svg aria-hidden="true"><use href={`#lg-i-${tab.icon}`} /></svg>
             <b>{tab.label}</b>
           </button>
         );
