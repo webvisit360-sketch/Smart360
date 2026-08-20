@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useLocation } from "wouter";
-import { formatTodayHours } from "@/lib/hours";
+import { getOpenStatus } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
   CARD_IMAGE_WIDTH,
@@ -19,7 +19,6 @@ import {
 import { buildGuestPath } from "../guest/guest-url";
 import {
   makeT,
-  switchLang,
   type UiTranslator,
 } from "../guest/i18n";
 import { LivingGuideSprite } from "./LivingGuideSprite";
@@ -29,6 +28,8 @@ import {
   type LivingTheme,
   useLivingTheme,
 } from "./theme-clock";
+import { LivingGuideSearchSheet } from "./LivingGuideSearchSheet";
+import { LivingGuideLanguageSheet } from "./LivingGuideLanguageSheet";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 
@@ -181,6 +182,24 @@ function firstMedia(category: any): any | null {
   return null;
 }
 
+function itemOpenStatus(
+  item: any,
+  t: UiTranslator,
+): { text: string; isOpen: boolean } | null {
+  if (item?.open24) {
+    return { text: t("UI.lg.hours.alwaysValue"), isOpen: true };
+  }
+  const status = getOpenStatus(item?.hoursJson);
+  if (!status) return null;
+  return {
+    text:
+      status.isOpen && status.closesAt
+        ? `${t("UI.lg.hours.openUntil")} ${status.closesAt}`
+        : t("UI.lg.hours.closed"),
+    isOpen: status.isOpen,
+  };
+}
+
 function categoryMedia(category: any): any[] {
   const seen = new Set<string>();
   const result: any[] = [];
@@ -244,34 +263,6 @@ function imageStyle(media: any, tenantOverride?: any): CSSProperties | undefined
   };
 }
 
-type HoursRange = [number, number] | null;
-
-function parseWeeklyHours(value: unknown): HoursRange[] | null {
-  if (!value) return null;
-  try {
-    const parsed = typeof value === "string" ? JSON.parse(value) : value;
-    if (!Array.isArray(parsed) || parsed.length !== 7) return null;
-    return parsed.map((entry) => {
-      if (
-        !Array.isArray(entry) ||
-        entry.length !== 2 ||
-        !entry.every((part) => typeof part === "number")
-      ) {
-        return null;
-      }
-      return [entry[0], entry[1]];
-    });
-  } catch {
-    return null;
-  }
-}
-
-function formatMinutes(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60) % 24;
-  const minutes = totalMinutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
-
 function noticeTimestamp(notice: any): number | null {
   const value = notice?.publishedAt ?? notice?.createdAt;
   if (!value) return null;
@@ -307,10 +298,12 @@ export default function LivingGuideGuestShell({
   tenant,
   slug,
   lang,
+  onLanguageChange,
 }: {
   tenant: any;
   slug: string;
   lang: string;
+  onLanguageChange: (lang: string) => void;
 }) {
   const [location, setLocation] = useLocation();
   const requestedTheme = new URLSearchParams(window.location.search).get("theme");
@@ -361,6 +354,8 @@ export default function LivingGuideGuestShell({
         (welcomeOverride !== "skip" && !readGuest(slug))),
   );
   const [showNotices, setShowNotices] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showLanguages, setShowLanguages] = useState(false);
 
   useEffect(() => {
     const previousTheme = document.documentElement.getAttribute("data-theme");
@@ -418,17 +413,19 @@ export default function LivingGuideGuestShell({
   }, [categoryContext?.section, navigate, screen, slug, staySection, routeItemId, routeCategoryId]);
 
   useEffect(() => {
-    if (screen !== "detail" && !showNotices && !showSignIn) return;
+    if (screen !== "detail" && !showLanguages && !showNotices && !showSearch && !showSignIn) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (showSignIn) setShowSignIn(false);
         else if (showNotices) setShowNotices(false);
+        else if (showSearch) setShowSearch(false);
+        else if (showLanguages) setShowLanguages(false);
         else goBack();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goBack, screen, showNotices, showSignIn]);
+  }, [goBack, screen, showLanguages, showNotices, showSearch, showSignIn]);
 
   const saveGuest = (record: GuestRecord) => {
     const clean = { unit: record.unit.trim(), name: record.name.trim() };
@@ -470,7 +467,7 @@ export default function LivingGuideGuestShell({
 
       <main className="lg2-stage">
         {screen === "cover" && (
-          <CoverView tenant={tenant} slug={slug} lang={lang} t={t} onOpen={() => navigate(gridPath(staySection))} />
+          <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => navigate(gridPath(staySection))} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
         )}
 
         {screen === "grid" && currentSection && (
@@ -512,9 +509,26 @@ export default function LivingGuideGuestShell({
             setLocation={setLocation}
             tenant={tenant}
             onOpenItem={(id: string) => openItem(categoryContext.category.id, id)}
+            showHostContacts={
+              categoryContext.section?.key === "stay" &&
+              categoryContext.category.id ===
+                visible(categoryContext.section?.categories)[0]?.id
+            }
           />
         )}
       </main>
+
+      {screen !== "cover" && (
+        <button
+          className="lg2-screen-language"
+          type="button"
+          onClick={() => setShowLanguages(true)}
+          aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })}
+          data-lg-language-trigger
+        >
+          {lang.toUpperCase()}
+        </button>
+      )}
 
       {screen !== "cover" && (
         <BottomNav
@@ -532,6 +546,35 @@ export default function LivingGuideGuestShell({
 
       {showNotices && notices.length > 0 && (
         <NoticesSheet notices={notices} onClose={() => setShowNotices(false)} t={t} />
+      )}
+
+      {showSearch && (
+        <LivingGuideSearchSheet
+          sections={sections}
+          t={t}
+          onClose={() => setShowSearch(false)}
+          onOpenCategory={(categoryId) => {
+            setShowSearch(false);
+            openCategory(categoryId);
+          }}
+          onOpenItem={(categoryId, itemId) => {
+            setShowSearch(false);
+            openItem(categoryId, itemId);
+          }}
+        />
+      )}
+
+      {showLanguages && (
+        <LivingGuideLanguageSheet
+          languages={enabledLanguageCodes(tenant)}
+          currentLanguage={lang}
+          t={t}
+          onClose={() => setShowLanguages(false)}
+          onSelect={(nextLang) => {
+            setShowLanguages(false);
+            onLanguageChange(nextLang);
+          }}
+        />
       )}
     </div>
   );
@@ -565,9 +608,7 @@ function Starfield({ theme }: { theme: LivingTheme }) {
   );
 }
 
-function CoverView({ tenant, slug, lang, t, onOpen }: { tenant: any; slug: string; lang: string; t: UiTranslator; onOpen: () => void; }) {
-  const languages = enabledLanguageCodes(tenant);
-  const nextLanguage = languages[(Math.max(0, languages.indexOf(lang)) + 1) % languages.length] ?? lang;
+function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: any; lang: string; t: UiTranslator; onOpen: () => void; onSearch: () => void; onLanguage: () => void; }) {
   const title = tenant.coverTitle || tenant.name;
 
   return (
@@ -577,7 +618,10 @@ function CoverView({ tenant, slug, lang, t, onOpen }: { tenant: any; slug: strin
       </div>
       <div className="lg2-cover-veil" aria-hidden="true" />
       <div className="lg2-cover-top">
-        <button className="lg2-fab lg2-language" type="button" onClick={() => switchLang(slug, nextLanguage)} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })}>
+        <button className="lg2-fab lg2-cover-search" type="button" onClick={onSearch} aria-label={t("UI.lg.search.title")}>
+          <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
+        </button>
+        <button className="lg2-fab lg2-language" type="button" onClick={onLanguage} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })} data-lg-language-trigger>
           {lang.toUpperCase()}
         </button>
       </div>
@@ -723,21 +767,19 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
           {orderedCategories.map((category: any, index: number) => {
             const item = visible(category.items)[0];
             const media = firstMedia(category);
-            const isPhotoCard = !!media;
+            const isPhotoCard = !!media || (!!item?.title && !item?.tint);
             const isWide = category.id === featuredCategory?.id;
-            const today = formatTodayHours(item?.hoursJson, lang);
-            const supporting = distinctSubtitle(
-              category.label,
-              today || item?.title,
-            );
-            const frame = category.frame || item?.frame;
-            const frameClass = frame === "tall" ? " lg2-photo-card--tall" : frame === "square" ? " lg2-photo-card--square" : "";
+            const supporting = distinctSubtitle(category.label, category.subtitle);
             const staggerStyle = { "--lg2-delay": `${0.05 + Math.min(index, 6) * 0.06}s` } as CSSProperties;
 
             if (isPhotoCard) {
               return (
-                <button key={category.id} data-lg-card={category.label} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}${frameClass}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
-                  <img data-lg-card-image src={mediaImgSrc(media, CARD_IMAGE_WIDTH)} alt="" loading={index < 2 ? "eager" : "lazy"} decoding="async" style={imageStyle(media)} />
+                <button key={category.id} data-lg-card={category.label} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
+                  {media ? (
+                    <img data-lg-card-image src={mediaImgSrc(media, CARD_IMAGE_WIDTH)} alt="" loading={index < 2 ? "eager" : "lazy"} decoding="async" style={imageStyle(media)} />
+                  ) : (
+                    <div className="lg2-photo-card-media lg2-card-ambient" data-lg-card-ambient aria-hidden="true" />
+                  )}
                   <span><b>{category.label}</b>{supporting && <small>{supporting}</small>}</span>
                 </button>
               );
@@ -780,12 +822,14 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
         <div className="lg2-ngrp">{t("UI.lg.nearby")}</div>
         <div className="lg2-subs lg2-nearby-list">
           {allItems.map((item: any) => {
-            const supporting =
-              distinctSubtitle(item.title, item.subtitle) ||
-              formatTodayHours(item.hoursJson, lang);
+            const status = itemOpenStatus(item, t);
+            const supporting = [
+              distinctSubtitle(item.title, item.subtitle),
+              status?.text,
+            ].filter(Boolean).join(" · ");
             return (
               <button type="button" className="lg2-sub2 lg2-nrow" key={item.id} onClick={() => onOpenItem(item.categoryId, item.id)}>
-                {item.media?.[0] ? <img className="lg2-notice-thumb" src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
+                {item.media?.[0] ? <img className="lg2-list-thumb" src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
                 <div><b>{item.title}</b>{supporting && <small>{supporting}</small>}</div>
                 <span className="lg2-chevron">›</span>
               </button>
@@ -839,7 +883,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   );
 }
 
-function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem }: any) {
+function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts }: any) {
   const items = visible(category.items);
   const activeItem = itemId ? items.find((i: any) => i.id === itemId) : null;
 
@@ -854,7 +898,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
     } else if (layout === "tabs") {
       content = <TemplateB2 item={activeItem} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else {
-      content = <TemplateA category={category} items={[activeItem]} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+        content = <TemplateA category={category} items={[activeItem]} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
   } else {
     if (layout === "wifi") {
@@ -865,12 +909,12 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
       content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} />;
     } else if (layout === "rules") {
       if (isOperationalRulesCategory(category)) {
-        content = <TemplateA category={category} items={items} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+        content = <TemplateA category={category} items={items} tenant={tenant} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
       } else {
         content = <TemplateC category={category} items={items} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
       }
     } else {
-      content = <TemplateA category={category} items={items} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateA category={category} items={items} tenant={tenant} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
   }
 
@@ -882,12 +926,51 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
 }
 
 // Template A: Content page (Bazen)
-function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onBack, galleryIndex, onGalleryIndex }: any) {
+function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
+  const contacts = [
+    tenant?.phone
+      ? { key: "phone", icon: "phone", label: t("UI.contact.call"), value: tenant.phone, href: `tel:${tenant.phone}` }
+      : null,
+    tenant?.whatsapp
+      ? { key: "whatsapp", icon: "chat", label: "WhatsApp", value: tenant.whatsapp, href: `https://wa.me/${String(tenant.whatsapp).replace(/\D/g, "")}`, external: true }
+      : null,
+    tenant?.email
+      ? { key: "email", icon: "mail", label: t("UI.contact.email"), value: tenant.email, href: `mailto:${tenant.email}` }
+      : null,
+    tenant?.address
+      ? { key: "address", icon: "pin", label: t("UI.contact.address"), value: tenant.address, href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.mapQuery || tenant.address)}`, external: true }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; icon: string; label: string; value: string; href: string; external?: boolean }>;
+
+  if (contacts.length === 0) return null;
+  return (
+    <div className="lg2-contact-list" data-lg-host-contacts>
+      {contacts.map((contact) => (
+        <a
+          className="lg2-sub2"
+          href={contact.href}
+          key={contact.key}
+          target={contact.external ? "_blank" : undefined}
+          rel={contact.external ? "noopener noreferrer" : undefined}
+        >
+          <span className="lg2-sub-icon" aria-hidden="true"><svg><use href={`#lg-i-${contact.icon}`} /></svg></span>
+          <span><b>{contact.label}</b><small>{contact.value}</small></span>
+          <span className="lg2-chevron" aria-hidden="true">›</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function TemplateA({ category, items, mediaOverride, titleOverride, tenant, showHostContacts, t, onBack, galleryIndex, onGalleryIndex }: any) {
   const firstItem = items[0] ?? null;
   const media = mediaOverride ?? categoryMedia(category);
-  const todayTime = formatTodayHours(firstItem?.hoursJson, lang)?.match(/\d{1,2}:\d{2}–\d{1,2}:\d{2}/)?.[0];
   const heading = titleOverride || category.label;
-  const introTitle = distinctSubtitle(heading, firstItem?.title);
+  const introTitle = distinctSubtitle(
+    heading,
+    titleOverride ? firstItem?.subtitle : category?.subtitle,
+  );
+  const openStatus = itemOpenStatus(firstItem, t);
   const introBody = itemBodyHtml(firstItem);
   const firstItemBullets = itemBullets(firstItem);
   const detailRows = items.slice(1).filter((i: any) => i.title || i.body || i.bullets?.length);
@@ -899,16 +982,13 @@ function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onB
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{heading}</h1>
-          {(todayTime || firstItem?.open24) && (
-            <div className="lg2-facts">
-              <div>
-                <b>{firstItem?.open24 ? t("UI.lg.hours.alwaysValue") : todayTime}</b>
-                <small>{firstItem?.open24 ? t("UI.lg.hours.alwaysLabel") : t("UI.lg.hours.openUntil")}</small>
-              </div>
+          {openStatus && (
+            <div className="lg2-chips">
+              <span className={`lg2-chip${openStatus.isOpen ? " lg2-chip--open" : ""}`}>{openStatus.text}</span>
             </div>
           )}
           {introTitle && <p className="lg2-detail-lead">{introTitle}</p>}
-          {introBody && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: introBody }} />}
+          {introBody && <div className={`lg2-detail-prose${category?.layout === "products" && titleOverride ? " lg2-product-prose" : ""}`} dangerouslySetInnerHTML={{ __html: introBody }} />}
           <StructuredBulletRows bullets={firstItemBullets} />
           {detailRows.length > 0 && (
             <div className="lg2-rule-list">
@@ -931,6 +1011,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, lang, t, onB
               {firstItem?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(firstItem.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
             </div>
           )}
+          {showHostContacts && <TenantContactRows tenant={tenant} t={t} />}
         </article>
       </div>
     </div>
@@ -950,12 +1031,14 @@ function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
            <div className="lg2-subs">
               {items.map((item: any) => {
                 const subtitle = distinctSubtitle(item.title, item.subtitle);
+                const status = itemOpenStatus(item, t);
+                const supporting = [subtitle, status?.text].filter(Boolean).join(" · ");
                 return (
                   <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
                     <span className="lg2-sub-icon" aria-hidden="true">
                       {item.media?.[0] ? <img src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
                     </span>
-                    <div><b>{item.title}</b>{subtitle && <small>{subtitle}</small>}</div>
+                    <div><b>{item.title}</b>{supporting && <small>{supporting}</small>}</div>
                     <span className="lg2-chevron" aria-hidden="true">›</span>
                   </button>
                 );
@@ -1124,12 +1207,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
   const bullets = itemBullets(item);
-  const weeklyHours = useMemo(
-    () => parseWeeklyHours(item?.hoursJson),
-    [item?.hoursJson],
-  );
-  const todayIndex = (new Date().getDay() + 6) % 7;
-  const todayRange = weeklyHours?.[todayIndex] ?? null;
+  const openStatus = itemOpenStatus(item, t);
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -1138,33 +1216,15 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
            <h1>{heading}</h1>
-           {(item?.open24 || todayRange || subtitle || item?.price) && (
+           {(openStatus || subtitle || item?.price) && (
              <div className="lg2-chips">
-                {item?.open24 && <span className="lg2-chip lg2-chip--open">{t("UI.lg.hours.alwaysValue")}</span>}
-                {!item?.open24 && todayRange && <span className="lg2-chip lg2-chip--open">{t("UI.lg.hours.openUntil")} {formatMinutes(todayRange[1])}</span>}
+                {openStatus && <span className={`lg2-chip${openStatus.isOpen ? " lg2-chip--open" : ""}`}>{openStatus.text}</span>}
                  {subtitle && <span className="lg2-chip">{subtitle}</span>}
                 {item?.price && <span className="lg2-chip">{item.price}</span>}
              </div>
            )}
            {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
            <StructuredBulletRows bullets={bullets} />
-
-           {weeklyHours && (
-             <div className="lg2-weekly-hours">
-               <h3>{t("UI.lg.hours.title")}</h3>
-               {weeklyHours.map((range, dayIndex) => {
-                  const isToday = dayIndex === todayIndex;
-                  // 2024-01-01 was a Monday
-                  const dayName = new Intl.DateTimeFormat(lang, { weekday: "long" }).format(new Date(2024, 0, dayIndex + 1));
-                  return (
-                    <div key={dayIndex} className={`lg2-hours-row${isToday ? " lg2-hours-row--today" : ""}`}>
-                      <span>{dayName}</span>
-                      <span>{range ? `${formatMinutes(range[0])}–${formatMinutes(range[1])}` : t("UI.lg.hours.closed")}</span>
-                    </div>
-                  );
-               })}
-             </div>
-           )}
 
            {(item?.mapQuery || item?.phone || item?.website) && (
              <div className="lg2-actions lg2-actions--spaced">

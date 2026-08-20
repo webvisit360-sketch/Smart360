@@ -33,7 +33,15 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     { lang, preview: isPreview },
     // retry: false — an unknown slug must show the 404 immediately, not after
     // three retries of a request that will always 404.
-    { query: { enabled: !!slug, retry: false, queryKey: ['getPublicTenant', slug, lang, isPreview] } }
+    {
+      query: {
+        enabled: !!slug,
+        retry: false,
+        queryKey: ['getPublicTenant', slug, lang, isPreview],
+        placeholderData: (previousTenant) =>
+          previousTenant?.slug === slug ? previousTenant : undefined,
+      },
+    }
   );
 
   // Alias canonicalization: an old (renamed) slug resolves to the tenant, but

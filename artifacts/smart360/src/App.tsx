@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode, useEffect } from 'react';
+import { lazy, Suspense, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -54,16 +54,46 @@ function GuestHost() {
   const isPreview = sp.get('preview') === '1';
   const livingGuidePreview =
     import.meta.env.DEV && sp.get('ui') === 'living-guide';
+  const [livingGuideLang, setLivingGuideLang] = useState(rawLang);
+
+  useEffect(() => {
+    if (livingGuidePreview) setLivingGuideLang(rawLang);
+  }, [livingGuidePreview, rawLang, slug]);
+
+  const queryLang = livingGuidePreview ? livingGuideLang : rawLang;
 
   // React Query caches this — GuestLayout already fetched it so this is a synchronous cache hit.
   const { data: tenant } = useGetPublicTenant(
     slug,
-    { lang: rawLang, preview: isPreview },
-    { query: { enabled: !!slug, queryKey: ['getPublicTenant', slug, rawLang, isPreview] } },
+    { lang: queryLang, preview: isPreview },
+    {
+      query: {
+        enabled: !!slug,
+        queryKey: ['getPublicTenant', slug, queryLang, isPreview],
+        placeholderData: (previousTenant) =>
+          previousTenant?.slug === slug ? previousTenant : undefined,
+      },
+    },
   );
   // Once the tenant is known, an un-enabled language silently becomes Slovene
   // (the server already refuses to serve content for it).
-  const lang = tenant ? clampLang(rawLang, tenant.languages) : rawLang;
+  const lang = tenant ? clampLang(queryLang, tenant.languages) : queryLang;
+
+  const changeLivingGuideLanguage = useCallback((nextLang: string) => {
+    if (!['sl', 'en', 'de', 'it'].includes(nextLang)) return;
+
+    rememberLang(slug, nextLang);
+    setLivingGuideLang(nextLang);
+
+    const nextSearch = new URLSearchParams(window.location.search);
+    nextSearch.set('lang', nextLang);
+    const query = nextSearch.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    );
+  }, [slug]);
 
   // EDINI vir resnice za barvo ozadja (pike-brisanje-ozadje.md, točka 4):
   // shranjena barva namestitve, uporabljena TU in nikjer drugje. data-dark se
@@ -88,6 +118,7 @@ function GuestHost() {
           tenant={tenant}
           slug={slug}
           lang={lang}
+          onLanguageChange={changeLivingGuideLanguage}
         />
       </Suspense>
     );

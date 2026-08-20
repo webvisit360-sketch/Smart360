@@ -70,6 +70,24 @@ export const LIVING_GUIDE_UI = {
     de: "In der Nähe",
     it: "Più vicini",
   },
+  "UI.lg.search.title": {
+    sl: "Iskanje",
+    en: "Search",
+    de: "Suche",
+    it: "Cerca",
+  },
+  "UI.lg.search.placeholder": {
+    sl: "Poiščite vsebino",
+    en: "Search the guide",
+    de: "Im Reiseführer suchen",
+    it: "Cerca nella guida",
+  },
+  "UI.lg.search.empty": {
+    sl: "Ni zadetkov.",
+    en: "No results.",
+    de: "Keine Ergebnisse.",
+    it: "Nessun risultato.",
+  },
   "UI.lg.nav.primary": {
     sl: "Glavna navigacija",
     en: "Main navigation",
@@ -81,6 +99,12 @@ export const LIVING_GUIDE_UI = {
     en: "Language: {lang}",
     de: "Sprache: {lang}",
     it: "Lingua: {lang}",
+  },
+  "UI.lg.languagePicker.title": {
+    sl: "Izberite jezik",
+    en: "Choose a language",
+    de: "Sprache auswählen",
+    it: "Scegli la lingua",
   },
   "UI.lg.welcome.title": {
     sl: "Dobrodošli",
@@ -233,10 +257,10 @@ export const LIVING_GUIDE_UI = {
     it: "Orari di apertura",
   },
   "UI.lg.hours.closed": {
-    sl: "Zaprto",
-    en: "Closed",
-    de: "Geschlossen",
-    it: "Chiuso",
+    sl: "zaprto",
+    en: "closed",
+    de: "geschlossen",
+    it: "chiuso",
   },
   "UI.lg.fromSignIn": {
     sl: "iz prijave",

@@ -125,7 +125,7 @@ body[data-t="noc"] .lg2-grid-view {
   left: 18px;
   right: 18px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 .lg2-fab {
@@ -142,6 +142,38 @@ body[data-t="noc"] .lg2-grid-view {
   font-size: 13px;
   font-weight: 750;
   cursor: pointer;
+}
+
+.lg2-screen-language {
+  position: fixed;
+  z-index: 20;
+  top: max(20px, env(safe-area-inset-top));
+  right: max(16px, calc((100vw - var(--lg2-shell-width)) / 2 + 16px));
+  min-width: 41px;
+  height: 41px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, .34);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .82);
+  color: #18231c;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.lg2-cover-search {
+  width: 41px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.lg2-cover-search svg {
+  width: 20px;
+  height: 20px;
 }
 
 .lg2-cover-mast {
@@ -244,7 +276,7 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-welcome-sheet {
   width: 100%;
   height: auto;
-  max-height: 88%;
+  max-height: 100%;
   overflow-y: auto;
   padding: 22px 20px max(28px, calc(16px + env(safe-area-inset-bottom)));
   border: 1px solid var(--line);
@@ -360,6 +392,59 @@ body[data-t="noc"] .lg2-grid-view {
 
 .lg2-welcome-sheet .lg2-primary-button {
   margin-top: 14px;
+}
+
+.lg2-language-sheet h2 {
+  margin: 0 0 18px;
+  color: var(--tx);
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.lg2-language-options {
+  display: grid;
+  gap: 9px;
+}
+
+[data-living-guide] .lg2-language-options button {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 48px 1fr 24px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 15px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--tx);
+  text-align: left;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+[data-living-guide] .lg2-language-options button.is-current {
+  border-color: var(--acc);
+  background: var(--card2);
+  box-shadow: inset 0 0 0 1px var(--acc);
+}
+
+.lg2-language-code {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  border-radius: 12px;
+  background: var(--btn);
+  color: var(--btnt);
+  font-size: 13px;
+  letter-spacing: .08em;
+}
+
+.lg2-language-check {
+  color: var(--acc);
+  font-size: 20px;
+  text-align: center;
 }
 
 .lg2-primary-button:disabled {
@@ -527,22 +612,30 @@ body[data-t="noc"] .lg2-grid-view {
   background: var(--card2);
 }
 
+.lg2-photo-card-media {
+  width: 100%;
+  aspect-ratio: 5 / 3;
+}
+
 .lg2-photo-card--wide img {
   aspect-ratio: 2 / 1;
 }
 
-.lg2-photo-card--wide.lg2-photo-card--tall img,
-.lg2-photo-card--tall img {
-  aspect-ratio: 4 / 5;
+.lg2-photo-card--wide .lg2-photo-card-media {
+  aspect-ratio: 2 / 1;
 }
 
-.lg2-photo-card--wide.lg2-photo-card--square img,
-.lg2-photo-card--square img {
-  aspect-ratio: 1 / 1;
+.lg2-card-ambient {
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--amb1) 78%, transparent) 0, transparent 55%),
+    radial-gradient(circle at 88% 82%, color-mix(in srgb, var(--amb3) 78%, transparent) 0, transparent 58%),
+    radial-gradient(circle at 62% 36%, color-mix(in srgb, var(--amb2) 68%, transparent) 0, transparent 52%),
+    var(--ambbg);
 }
 
 .lg2-photo-card > span {
   display: block;
+  height: 92px;
   padding: 11px 14px 13px;
 }
 
@@ -555,25 +648,38 @@ body[data-t="noc"] .lg2-grid-view {
 
 .lg2-photo-card b,
 .lg2-utility-card b {
-  font-size: 15.5px;
+  font-size: 19px;
   line-height: 1.25;
   font-weight: 750;
 }
 
 .lg2-photo-card--wide b {
-  font-size: 19px;
+  font-size: 22px;
 }
 
 .lg2-photo-card small,
 .lg2-utility-card small {
   margin-top: 3px;
   color: var(--tx2);
-  font-size: 11.5px;
+  font-size: 15px;
   line-height: 1.35;
 }
 
+.lg2-photo-card b {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.lg2-photo-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .lg2-utility-card {
-  min-height: 114px;
+  height: 132px;
   padding: 15px;
   background: var(--card2);
   display: flex;
@@ -583,7 +689,6 @@ body[data-t="noc"] .lg2-grid-view {
 
 .lg2-utility-card--wide {
   grid-column: 1 / -1;
-  min-height: 132px;
 }
 
 .lg2-utility-icon {
@@ -625,11 +730,12 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-detail-hero {
   position: relative;
   flex: 1 1 auto;
-  min-height: 175px;
+  min-height: 33.4dvh;
   background: var(--card2);
 }
 
 .lg2-detail-hero--ambient {
+  min-height: 0;
   background:
     radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--amb1) 78%, transparent) 0, transparent 55%),
     radial-gradient(circle at 88% 82%, color-mix(in srgb, var(--amb3) 78%, transparent) 0, transparent 58%),
@@ -787,7 +893,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-facts small {
   margin-top: 4px;
   color: var(--tx2);
-  font-size: 9.5px;
+  font-size: 13px;
   line-height: 1.2;
   font-weight: 750;
   letter-spacing: .09em;
@@ -797,20 +903,25 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-detail-lead {
   margin: 0 0 12px;
   color: var(--tx);
-  font-size: 14.5px;
-  line-height: 1.6;
+  font-size: 21px;
+  line-height: 1.55;
   font-weight: 700;
 }
 
 .lg2-detail-prose {
   color: var(--tx);
-  font-size: 14.5px;
-  line-height: 1.6;
+  font-size: 21px;
+  line-height: 1.55;
   opacity: .85;
 }
 
 .lg2-detail-prose p {
   margin: 0 0 12px;
+}
+
+.lg2-product-prose {
+  font-size: 18px;
+  line-height: 1.5;
 }
 
 .lg2-detail-prose a,
@@ -834,15 +945,15 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 
 .lg2-rule-row {
   min-width: 0;
-  padding: 11px 12px;
+  padding: 13px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--card);
   display: flex;
   align-items: flex-start;
-  gap: 11px;
+  gap: 13px;
   color: var(--tx);
-  font-size: 13.5px;
+  font-size: 20px;
   line-height: 1.5;
 }
 
@@ -852,10 +963,10 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-rule-icon {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
-  border-radius: 11px;
+  border-radius: 13px;
   background: var(--card2);
   color: var(--acc);
   display: grid;
@@ -868,8 +979,8 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-rule-icon svg {
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
 }
 
 .lg2-rule-row > div {
@@ -884,7 +995,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-bullet-rules .lg2-rule-row > p {
   min-width: 0;
   flex: 1;
-  padding-top: 5px;
+  padding-top: 2px;
 }
 
 .lg2-rule-row b {
@@ -1000,6 +1111,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-fab:focus-visible,
+.lg2-screen-language:focus-visible,
 .lg2-open-guide:focus-visible,
 .lg2-photo-card:focus-visible,
 .lg2-utility-card:focus-visible,
@@ -1129,9 +1241,9 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   cursor: pointer;
 }
 .lg2-sub-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 13px;
+  width: 74px;
+  height: 74px;
+  border-radius: 16px;
   background: var(--card);
   display: grid;
   place-items: center;
@@ -1158,8 +1270,16 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   opacity: 0.6;
   font-weight: 300;
 }
-.lg2-sub2 b { display: block; font-size: 14px; color: var(--tx); margin-bottom: 2px; }
-.lg2-sub2 small { display: block; color: var(--tx2); font-size: 11.5px; }
+.lg2-sub2 b { display: block; margin-bottom: 2px; color: var(--tx); font-size: 19px; line-height: 1.3; }
+.lg2-sub2 small { display: block; color: var(--tx2); font-size: 15.5px; line-height: 1.35; }
+
+.lg2-list-thumb {
+  width: 74px;
+  height: 74px;
+  border-radius: 16px;
+  object-fit: cover;
+  flex: none;
+}
 
 .lg2-notice-row {
   display: flex;
@@ -1196,13 +1316,13 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   flex-wrap: wrap;
   margin: 0 0 13px;
 }
-.lg2-chip {
-  font-size: 12.5px;
+[data-living-guide] .lg2-chip {
+  font-size: 16px;
   font-weight: 700;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 8px 15px;
   color: var(--tx);
   cursor: pointer;
 }
@@ -1277,7 +1397,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   font-size: 13px;
 }
 .lg2-step p {
-  font-size: 14.5px;
+  font-size: 21px;
   line-height: 1.5;
   color: var(--tx);
   margin: 0;
@@ -1320,36 +1440,76 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   margin-top: 16px;
 }
 
-.lg2-weekly-hours {
+.lg2-contact-list {
   margin-top: 20px;
-  background: var(--card);
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  padding: 14px 16px;
 }
-.lg2-weekly-hours h3 {
-  margin: 0 0 12px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
+
+.lg2-contact-list .lg2-sub-icon,
+.lg2-search-results .lg2-sub-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+
+.lg2-contact-list .lg2-sub2 {
+  text-decoration: none;
+}
+
+.lg2-search-sheet h2 {
+  margin: 0 0 14px;
+  color: var(--tx);
+  font-size: 27px;
+  line-height: 1.08;
+}
+
+.lg2-search-field {
+  height: 54px;
+  padding: 0 15px;
+  border: 1.5px solid var(--line);
+  border-radius: 17px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lg2-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lg2-search-field svg {
+  width: 21px;
+  height: 21px;
+  flex: none;
   color: var(--tx2);
 }
-.lg2-hours-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 14px;
+
+.lg2-search-field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
   color: var(--tx);
-  border-bottom: 1px solid var(--line);
+  font: inherit;
+  font-size: 17px;
 }
-.lg2-hours-row > span:first-child {
-  text-transform: capitalize;
+
+.lg2-search-results {
+  min-height: 90px;
+  margin-top: 10px;
 }
-.lg2-hours-row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-.lg2-hours-row--today {
-  font-weight: 750;
-  color: var(--accg);
+
+.lg2-search-empty {
+  margin: 24px 0;
+  color: var(--tx2);
+  text-align: center;
+  font-size: 16px;
 }

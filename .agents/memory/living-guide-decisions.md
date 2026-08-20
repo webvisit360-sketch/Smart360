@@ -45,6 +45,12 @@ Every checkpoint report must include an exact development URL that was re-verifi
 
 **How to apply:** Run the complete 390 px checkpoint walk on the reported public URL, confirm the expected tenant API returns 200, and perform a final live reachability check just before reporting.
 
+Living Guide language changes are stateful UI changes: they update the visible language and shareable `?lang=` value without a document navigation, while preserving the current route and scroll position.
+
+**Why:** The legacy language helper performs a full `window.location.href` reload, which made the real mobile guide flash, remount, and lose the guest’s current screen.
+
+**How to apply:** Keep the reload-based helper isolated to legacy themes. For Living Guide, retain the shell, update language state and URL history in place, keep prior same-tenant data during the language fetch, and verify the complete SL → EN → DE → IT → SL cycle on one scrolled detail page.
+
 Every checkpoint report must include a “DELIBERATELY ABSENT IN THIS CHECKPOINT” section that distinguishes later-stage screens, buttons, and templates from defects.
 
 **Why:** Without an explicit absence list, the owner could not tell planned scope boundaries from broken or missing UI.
