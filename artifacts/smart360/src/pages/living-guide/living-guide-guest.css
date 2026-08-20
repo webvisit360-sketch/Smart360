@@ -144,26 +144,6 @@ body[data-t="noc"] .lg2-grid-view {
   cursor: pointer;
 }
 
-.lg2-screen-language {
-  position: fixed;
-  z-index: 20;
-  top: max(20px, env(safe-area-inset-top));
-  right: max(16px, calc((100vw - var(--lg2-shell-width)) / 2 + 16px));
-  min-width: 41px;
-  height: 41px;
-  padding: 0 13px;
-  border: 1px solid rgba(255, 255, 255, .34);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, .82);
-  color: #18231c;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  font-size: 13px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
 .lg2-cover-search {
   width: 41px;
   padding: 0;
@@ -1111,7 +1091,6 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-fab:focus-visible,
-.lg2-screen-language:focus-visible,
 .lg2-open-guide:focus-visible,
 .lg2-photo-card:focus-visible,
 .lg2-utility-card:focus-visible,

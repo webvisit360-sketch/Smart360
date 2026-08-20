@@ -519,18 +519,6 @@ export default function LivingGuideGuestShell({
       </main>
 
       {screen !== "cover" && (
-        <button
-          className="lg2-screen-language"
-          type="button"
-          onClick={() => setShowLanguages(true)}
-          aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })}
-          data-lg-language-trigger
-        >
-          {lang.toUpperCase()}
-        </button>
-      )}
-
-      {screen !== "cover" && (
         <BottomNav
           sections={sections}
           slug={slug}

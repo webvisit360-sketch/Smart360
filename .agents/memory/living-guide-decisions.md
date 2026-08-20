@@ -51,6 +51,12 @@ Living Guide language changes are stateful UI changes: they update the visible l
 
 **How to apply:** Keep the reload-based helper isolated to legacy themes. For Living Guide, retain the shell, update language state and URL history in place, keep prior same-tenant data during the language fetch, and verify the complete SL → EN → DE → IT → SL cycle on one scrolled detail page.
 
+The Living Guide language picker belongs on the cover only; grid, explore, and detail screens must not add their own language trigger.
+
+**Why:** The binding prototype and owner explicitly confirmed cover-only language placement.
+
+**How to apply:** Preserve the cover picker and its in-place language behavior, but do not surface a separate language control after entering the guide.
+
 Every checkpoint report must include a “DELIBERATELY ABSENT IN THIS CHECKPOINT” section that distinguishes later-stage screens, buttons, and templates from defects.
 
 **Why:** Without an explicit absence list, the owner could not tell planned scope boundaries from broken or missing UI.
