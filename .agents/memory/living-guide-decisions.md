@@ -87,6 +87,12 @@ PART 4 ordering scope is fixed: SUP, olive oil, scooter, boat with skipper, and 
 
 **How to apply:** Apply the allowlist to all rows in each approved category rather than choosing one representative variant; keep prices textual with no calculated totals, derive any delivery promise only from item text, and do not begin PART 4 before the Batch 4 owner review gate passes.
 
+The development Meli Pu order recipient may use a staging placeholder, but PART 5 cutover is blocked until the owner replaces it with Meli Pu's real address through the tenant admin. The tenant recipient must never be hardcoded.
+
+**Why:** A staging delivery address is suitable for controlled verification but must not receive real post-cutover tenant orders.
+
+**How to apply:** Keep the staging value in tenant data only, make recipient replacement an explicit pre-publish checklist item, and require owner confirmation before sending any test to the real tenant address.
+
 Browser machine translation is disabled for the guest app; Smart360’s own SL, EN, DE, and IT content is the only supported translation path.
 
 **Why:** The owner explicitly prohibited browser translation after it produced mixed languages, invented labels, and a runtime stack-overflow incident while mutating guest DOM.
