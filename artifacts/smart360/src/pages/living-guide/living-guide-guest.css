@@ -725,7 +725,8 @@ body[data-t="noc"] .lg2-grid-view {
   transition: height .2s ease;
 }
 
-.lg2-detail-hero--photo.is-awaiting-dimensions {
+.lg2-detail-hero--photo.is-awaiting-dimensions,
+.lg2-detail-hero--photo.is-measured-fallback {
   transition: none;
 }
 

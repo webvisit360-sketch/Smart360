@@ -72,17 +72,17 @@ test("keeps a supplied distance first in POI supporting text", () => {
   );
 });
 
-test("hero rule v5 uses natural full width through the 85 percent threshold", () => {
+test("hero rule uses natural full width through the 89 percent threshold", () => {
   const exactlyAtThreshold = calculateLivingGuideHeroLayout({
     containerWidth: 400,
-    imageAspect: 400 / 680,
+    imageAspect: 400 / 712,
     viewportHeight: 800,
   });
   assert.deepEqual(exactlyAtThreshold, {
     branch: "full-bleed",
-    naturalHeight: 680,
-    thresholdHeight: 680,
-    heroHeight: 680,
+    naturalHeight: 712,
+    thresholdHeight: 712,
+    heroHeight: 712,
   });
 
   const wide = calculateLivingGuideHeroLayout({
@@ -94,7 +94,7 @@ test("hero rule v5 uses natural full width through the 85 percent threshold", ()
   assert.equal(wide?.heroHeight, 160);
 });
 
-test("hero rule v5 caps only images above 85 percent and uses 85 percent height", () => {
+test("hero rule caps only images above 89 percent and uses 89 percent height", () => {
   const capped = calculateLivingGuideHeroLayout({
     containerWidth: 400,
     imageAspect: 0.5,
@@ -102,8 +102,8 @@ test("hero rule v5 caps only images above 85 percent and uses 85 percent height"
   });
   assert.equal(capped?.branch, "side-blur");
   assert.equal(capped?.naturalHeight, 800);
-  assert.equal(capped?.thresholdHeight, 680);
-  assert.equal(capped?.heroHeight, 680);
+  assert.equal(capped?.thresholdHeight, 712);
+  assert.equal(capped?.heroHeight, 712);
 });
 
 test("media aspect uses payload dimensions and rejects missing metadata", () => {

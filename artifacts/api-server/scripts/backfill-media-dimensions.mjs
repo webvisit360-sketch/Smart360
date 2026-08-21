@@ -1,6 +1,9 @@
 // Development-only reconciliation for media created before width/height were
 // persisted. It reads the widest stored derivative through the public route
 // and updates only rows whose dimensions are missing.
+//
+// Usage:
+//   node scripts/backfill-media-dimensions.mjs --development-only
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -12,10 +15,25 @@ const pg = requireDb("pg");
 const requireApi = createRequire(path.join(__dirname, "..", "package.json"));
 const sharp = requireApi("sharp");
 
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
-await client.connect();
+if (!process.argv.includes("--development-only")) {
+  throw new Error(
+    "Refusing to write: pass --development-only after confirming this is the development database.",
+  );
+}
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.REPLIT_DEPLOYMENT === "1" ||
+  process.env.REPLIT_DEPLOYMENT_ID
+) {
+  throw new Error("Refusing to run media dimension backfill in a deployment.");
+}
 
-const { rows } = await client.query(`
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 8,
+});
+
+const { rows } = await pool.query(`
   select id, kind, url, poster_url
   from media
   where width is null or height is null
@@ -29,13 +47,15 @@ const failures = [];
 
 async function reconcile(row) {
   const source = row.kind === "video" ? row.poster_url : row.url;
-  if (!source || !source.startsWith("/api/storage/img/")) {
+  if (!source || !source.startsWith("/") || source.startsWith("//")) {
     skipped += 1;
     return;
   }
 
   const url = new URL(source, "http://localhost:80");
-  url.searchParams.set("w", "1400");
+  if (source.startsWith("/api/storage/img/")) {
+    url.searchParams.set("w", "1400");
+  }
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} for ${source}`);
@@ -44,7 +64,7 @@ async function reconcile(row) {
   if (!metadata.width || !metadata.height) {
     throw new Error(`No dimensions for ${source}`);
   }
-  await client.query(
+  await pool.query(
     "update media set width=$1, height=$2 where id=$3",
     [metadata.width, metadata.height, row.id],
   );
@@ -63,7 +83,7 @@ async function worker() {
 }
 
 await Promise.all(Array.from({ length: Math.min(8, rows.length) }, worker));
-await client.end();
+await pool.end();
 
 console.log(JSON.stringify({
   scanned: rows.length,

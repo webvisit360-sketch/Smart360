@@ -1,5 +1,5 @@
-export const HERO_FULL_WIDTH_THRESHOLD = 0.85;
-export const HERO_SIDE_BLUR_HEIGHT = 0.85;
+export const HERO_FULL_WIDTH_THRESHOLD = 0.89;
+export const HERO_SIDE_BLUR_HEIGHT = 0.89;
 
 export type LivingGuideHeroBranch = "full-bleed" | "side-blur";
 

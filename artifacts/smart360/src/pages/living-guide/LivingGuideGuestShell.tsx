@@ -1028,7 +1028,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     return (
       <div
         ref={heroRef}
-        className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}`}
+        className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}${activeAspectSource === "measured" ? " is-measured-fallback" : ""}`}
         data-lg-hero-height={Math.round(heroHeight)}
         data-lg-hero-natural-height={heroLayout?.naturalHeight}
         data-lg-hero-branch={heroLayout?.branch}
@@ -1056,7 +1056,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   return (
     <div
       ref={heroRef}
-      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}`}
+      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}${activeAspectSource === "measured" ? " is-measured-fallback" : ""}`}
       data-lg-active-slide={activeIndex}
       data-lg-hero-height={Math.round(heroHeight)}
       data-lg-hero-natural-height={heroLayout?.naturalHeight}
