@@ -120,3 +120,17 @@ mtime_ms = 1787176824315
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/74d387f1-67aa-4f04-a15b-f5dba69a4d2c/16f56dd7-2d6c-4b92-b068-206ce007a337"
 storage_version_token = "1787176836781202"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "VIgXyn-vFKEewv3UXoCCl"
+uri = "file://screenshots/living-guide-batch4-boat-final.jpg"
+type = "image"
+title = "Living Guide Batch 4 — portrait hero proof"
+description = "Final 390×844 proof: the complete portrait boat remains visible, uses only a same-image side blur, and shows the authored text price."
+logical_id = "0308159a-5fe0-4ca8-aff3-44b2e9e8536e"
+content_hash = "sha256:6fc5f162d3efa5a4d69e55eea862009d75e13b91336c49c16946bba25aa9669a"
+size = 47998
+mtime_ms = 1787291467687
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0308159a-5fe0-4ca8-aff3-44b2e9e8536e/3550eb65-cf26-473d-8948-e6659aae108b"
+storage_version_token = "1787291838345836"
+content_type = "image/jpeg"

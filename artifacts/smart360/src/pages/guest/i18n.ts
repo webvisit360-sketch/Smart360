@@ -262,6 +262,12 @@ export const LIVING_GUIDE_UI = {
     de: "geschlossen",
     it: "chiuso",
   },
+  "UI.lg.hours.opensAt": {
+    sl: "odpre se ob",
+    en: "opens at",
+    de: "öffnet um",
+    it: "apre alle",
+  },
   "UI.lg.fromSignIn": {
     sl: "iz prijave",
     en: "from sign-in",

@@ -29,6 +29,11 @@ export interface ItemUpdate {
   duration?: string | null;
   /** @nullable */
   distance?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  distanceMeters?: number | null;
   open24?: boolean;
   /** @nullable */
   hoursJson?: string | null;

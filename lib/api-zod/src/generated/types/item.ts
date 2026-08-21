@@ -31,6 +31,11 @@ export interface Item {
   duration?: string | null;
   /** @nullable */
   distance?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  distanceMeters?: number | null;
   open24: boolean;
   /**
      * JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight

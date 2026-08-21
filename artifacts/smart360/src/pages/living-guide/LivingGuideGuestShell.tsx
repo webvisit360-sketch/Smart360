@@ -30,6 +30,10 @@ import {
 } from "./theme-clock";
 import { LivingGuideSearchSheet } from "./LivingGuideSearchSheet";
 import { LivingGuideLanguageSheet } from "./LivingGuideLanguageSheet";
+import {
+  itemPriceText,
+  itemSupportingText,
+} from "./living-guide-formatters";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 
@@ -191,11 +195,14 @@ function itemOpenStatus(
   }
   const status = getOpenStatus(item?.hoursJson);
   if (!status) return null;
+  const closedText = status.opensAt
+    ? `${t("UI.lg.hours.closed")} · ${t("UI.lg.hours.opensAt")} ${status.opensAt}`
+    : t("UI.lg.hours.closed");
   return {
     text:
       status.isOpen && status.closesAt
         ? `${t("UI.lg.hours.openUntil")} ${status.closesAt}`
-        : t("UI.lg.hours.closed"),
+        : closedText,
     isOpen: status.isOpen,
   };
 }
@@ -811,10 +818,11 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
         <div className="lg2-subs lg2-nearby-list">
           {allItems.map((item: any) => {
             const status = itemOpenStatus(item, t);
-            const supporting = [
+            const supporting = itemSupportingText(
+              item,
               distinctSubtitle(item.title, item.subtitle),
               status?.text,
-            ].filter(Boolean).join(" · ");
+            );
             return (
               <button type="button" className="lg2-sub2 lg2-nrow" key={item.id} onClick={() => onOpenItem(item.categoryId, item.id)}>
                 {item.media?.[0] ? <img className="lg2-list-thumb" src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
@@ -830,6 +838,65 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
 }
 
 function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [frameWidth, setFrameWidth] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(() =>
+    typeof window === "undefined" ? 844 : window.innerHeight,
+  );
+  const [imageAspects, setImageAspects] = useState<Record<string, number>>({});
+  const activeIndex = singleOnly
+    ? 0
+    : Math.max(0, Math.min((media?.length ?? 1) - 1, galleryIndex ?? 0));
+  const activeEntry = media?.[activeIndex] ?? media?.[0];
+  const activeKey = activeEntry
+    ? String(activeEntry.id ?? activeEntry.url ?? activeIndex)
+    : "";
+  const activeAspect = imageAspects[activeKey];
+  const unclampedHeight =
+    frameWidth > 0 && activeAspect > 0 ? frameWidth / activeAspect : null;
+  const capHeight = Math.max(176, Math.floor(viewportHeight * 0.66) - 1);
+  const heroHeight =
+    unclampedHeight === null
+      ? null
+      : Math.min(capHeight, Math.max(176, unclampedHeight));
+  const portraitCapped =
+    unclampedHeight !== null &&
+    activeAspect < 1 &&
+    unclampedHeight > capHeight;
+
+  const mediaKey = (media ?? [])
+    .map((entry: any, index: number) => entry.id ?? entry.url ?? index)
+    .join("|");
+
+  useLayoutEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || !media?.length) return;
+    const measure = () => {
+      setFrameWidth(hero.clientWidth);
+      setViewportHeight(window.innerHeight);
+    };
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    observer?.observe(hero);
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    measure();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, [mediaKey, media?.length]);
+
+  const rememberAspect = useCallback((key: string, aspect: number) => {
+    if (!Number.isFinite(aspect) || aspect <= 0) return;
+    setImageAspects((current) =>
+      current[key] === aspect ? current : { ...current, [key]: aspect },
+    );
+  }, []);
+
   if (!media?.length) return (
     <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero>
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk"/></svg></button>
@@ -837,11 +904,23 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   );
   if (singleOnly) {
     const entry = media[0];
+    const entryKey = String(entry.id ?? entry.url ?? 0);
     return (
-      <div className="lg2-detail-hero">
+      <div
+        ref={heroRef}
+        className="lg2-detail-hero lg2-detail-hero--photo"
+        data-lg-hero-height={heroHeight === null ? undefined : Math.round(heroHeight)}
+        style={heroHeight === null ? undefined : { height: heroHeight }}
+      >
         <div className="lg2-gallery-track">
           <div className="lg2-gallery-slide">
-            <AspectAwareHeroImage entry={entry} loading="eager" />
+            <AspectAwareHeroImage
+              entry={entry}
+              entryKey={entryKey}
+              loading="eager"
+              portraitCapped={portraitCapped}
+              onAspect={rememberAspect}
+            />
           </div>
         </div>
         <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
@@ -849,17 +928,32 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     );
   }
   return (
-    <div className="lg2-detail-hero">
+    <div
+      ref={heroRef}
+      className="lg2-detail-hero lg2-detail-hero--photo"
+      data-lg-active-slide={activeIndex}
+      data-lg-hero-height={heroHeight === null ? undefined : Math.round(heroHeight)}
+      style={heroHeight === null ? undefined : { height: heroHeight }}
+    >
       <div className="lg2-gallery-track" data-lg-gallery onScroll={(e) => {
         const el = e.currentTarget;
         if (!el.clientWidth) return;
         onGalleryIndex(Math.max(0, Math.min(media.length - 1, Math.round(el.scrollLeft / el.clientWidth))));
       }}>
-        {media.map((entry: any, index: number) => (
-          <div className="lg2-gallery-slide" key={entry.id || index}>
-            <AspectAwareHeroImage entry={entry} loading={index === 0 ? "eager" : "lazy"} />
-          </div>
-        ))}
+        {media.map((entry: any, index: number) => {
+          const entryKey = String(entry.id ?? entry.url ?? index);
+          return (
+            <div className="lg2-gallery-slide" key={entryKey}>
+              <AspectAwareHeroImage
+                entry={entry}
+                entryKey={entryKey}
+                loading={index === 0 ? "eager" : "lazy"}
+                portraitCapped={index === activeIndex && portraitCapped}
+                onAspect={rememberAspect}
+              />
+            </div>
+          );
+        })}
       </div>
       {media.length > 1 && (
         <div className="lg2-gallery-dots" aria-hidden="true">
@@ -873,60 +967,25 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
 
 function AspectAwareHeroImage({
   entry,
+  entryKey,
   loading,
+  portraitCapped,
+  onAspect,
 }: {
   entry: any;
+  entryKey: string;
   loading: "eager" | "lazy";
+  portraitCapped: boolean;
+  onAspect: (key: string, aspect: number) => void;
 }) {
-  const frameRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const [useBlurFill, setUseBlurFill] = useState(false);
   const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
-
-  const recompute = useCallback(() => {
-    const frame = frameRef.current;
-    const image = imageRef.current;
-    if (
-      !frame ||
-      !image ||
-      image.naturalWidth <= 0 ||
-      image.naturalHeight <= 0 ||
-      frame.clientWidth <= 0 ||
-      frame.clientHeight <= 0
-    ) {
-      return;
-    }
-    const imageAspect = image.naturalWidth / image.naturalHeight;
-    const containerAspect = frame.clientWidth / frame.clientHeight;
-    const mismatch = imageAspect / containerAspect;
-    setUseBlurFill(mismatch > 1.6 || mismatch < 1 / 1.6);
-  }, []);
-
-  useEffect(() => {
-    const frame = frameRef.current;
-    if (!frame) return;
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(recompute);
-    observer?.observe(frame);
-    window.addEventListener("resize", recompute);
-    window.addEventListener("orientationchange", recompute);
-    recompute();
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", recompute);
-      window.removeEventListener("orientationchange", recompute);
-    };
-  }, [recompute, source]);
 
   return (
     <div
-      ref={frameRef}
-      className={`lg2-hero-image-frame${useBlurFill ? " is-blur-fill" : ""}`}
-      data-lg-hero-fit={useBlurFill ? "blur-fill" : "cover"}
+      className={`lg2-hero-image-frame${portraitCapped ? " is-portrait-capped" : ""}`}
+      data-lg-hero-fit={portraitCapped ? "portrait-cap" : "full"}
     >
-      {useBlurFill && (
+      {portraitCapped && (
         <img
           className="lg2-hero-image-blur"
           src={source}
@@ -936,15 +995,18 @@ function AspectAwareHeroImage({
         />
       )}
       <img
-        ref={imageRef}
         className="lg2-hero-image-main"
         data-lg-hero-image
         src={source}
         alt=""
         loading={loading}
         decoding="async"
-        style={useBlurFill ? undefined : imageStyle(entry)}
-        onLoad={recompute}
+        onLoad={(event) => {
+          const image = event.currentTarget;
+          if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+            onAspect(entryKey, image.naturalWidth / image.naturalHeight);
+          }
+        }}
       />
     </div>
   );
@@ -963,7 +1025,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
     } else if (layout === "routes") {
       content = <TemplateG item={activeItem} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "tabs") {
-      content = <TemplateB2 item={activeItem} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateB2 key={activeItem.id} items={items} initialItemId={activeItem.id} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else {
         content = <TemplateA category={category} items={[activeItem]} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
@@ -1040,6 +1102,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
   const openStatus = itemOpenStatus(firstItem, t);
   const introBody = itemBodyHtml(firstItem);
   const firstItemBullets = itemBullets(firstItem);
+  const price = itemPriceText(firstItem);
   const detailRows = items.slice(1).filter((i: any) => i.title || i.body || i.bullets?.length);
 
   return (
@@ -1048,7 +1111,14 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
-          <h1>{heading}</h1>
+          {price ? (
+            <div className="lg2-detail-title-row">
+              <h1>{heading}</h1>
+              <span className="lg2-price">{price}</span>
+            </div>
+          ) : (
+            <h1>{heading}</h1>
+          )}
           {openStatus && (
             <div className="lg2-chips">
               <span className={`lg2-chip${openStatus.isOpen ? " lg2-chip--open" : ""}`}>{openStatus.text}</span>
@@ -1099,13 +1169,24 @@ function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
               {items.map((item: any) => {
                 const subtitle = distinctSubtitle(item.title, item.subtitle);
                 const status = itemOpenStatus(item, t);
-                const supporting = [subtitle, status?.text].filter(Boolean).join(" · ");
+                 const price = itemPriceText(item);
+                 const supporting = itemSupportingText(
+                   item,
+                   subtitle,
+                   status?.text,
+                 );
                 return (
                   <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
                     <span className="lg2-sub-icon" aria-hidden="true">
                       {item.media?.[0] ? <img src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
                     </span>
-                    <div><b>{item.title}</b>{supporting && <small>{supporting}</small>}</div>
+                     <div className="lg2-sub-content">
+                       <span className="lg2-row-title">
+                         <b>{item.title}</b>
+                         {price && <span className="lg2-price">{price}</span>}
+                       </span>
+                       {supporting && <small>{supporting}</small>}
+                     </div>
                     <span className="lg2-chevron" aria-hidden="true">›</span>
                   </button>
                 );
@@ -1117,33 +1198,16 @@ function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
   );
 }
 
-// Template B2: Steps page
-function TemplateB2({ item, category, t, onBack, galleryIndex, onGalleryIndex }: any) {
-  const media = visible(item?.media);
-  const heading = item?.title || category?.label;
-  const subtitle = distinctSubtitle(heading, item?.subtitle);
-  const bullets = itemBullets(item);
+// Template B2: Direct route into a tabbed detail
+function TemplateB2({ items, initialItemId, category, ...props }: any) {
   return (
-    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
-        <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
-        <article className="lg2-detail-sheet">
-           <div className="lg2-grabber" aria-hidden="true" />
-           <h1>{heading}</h1>
-           {subtitle && <div className="lg2-chips"><span className="lg2-chip">{subtitle}</span></div>}
-
-           {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
-
-           <StructuredBulletRows bullets={bullets} numbered />
-
-           {item?.phone && (
-             <div className="lg2-actions" style={{marginTop:16}}>
-               {item?.phone && <a className="lg2-primary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
-             </div>
-           )}
-        </article>
-      </div>
-    </div>
+    <TabbedDetail
+      {...props}
+      category={category}
+      items={items}
+      initialItemId={initialItemId}
+      numbered
+    />
   );
 }
 
@@ -1178,12 +1242,81 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
   );
 }
 
-// Template D: Segmented
-function TemplateD({ category, items, t, onBack, galleryIndex, onGalleryIndex }: any) {
-  const [segment, setSegment] = useState(0);
+function useEqualPanelHeight(panelCount: number) {
+  const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [lockedHeight, setLockedHeight] = useState<number | null>(null);
+
+  const measure = useCallback(() => {
+    const measured = panelRefs.current
+      .slice(0, panelCount)
+      .map((panel) => panel?.scrollHeight ?? 0);
+    const tallest = Math.max(0, ...measured);
+    if (tallest > 0) {
+      const stableHeight = tallest + 1;
+      setLockedHeight((current) =>
+        current === stableHeight ? current : stableHeight,
+      );
+    }
+  }, [panelCount]);
+
+  useLayoutEffect(() => {
+    measure();
+  });
+
+  useEffect(() => {
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    panelRefs.current.slice(0, panelCount).forEach((panel) => {
+      if (panel) observer?.observe(panel);
+    });
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    let cancelled = false;
+    if (document.fonts?.ready) {
+      void document.fonts.ready.then(() => {
+        if (!cancelled) measure();
+      });
+    }
+    document.fonts?.addEventListener?.("loadingdone", measure);
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      document.fonts?.removeEventListener?.("loadingdone", measure);
+    };
+  }, [measure, panelCount]);
+
+  return { panelRefs, lockedHeight };
+}
+
+function TabbedDetail({
+  category,
+  items,
+  initialItemId,
+  numbered = false,
+  t,
+  onBack,
+  galleryIndex,
+  onGalleryIndex,
+}: any) {
+  const initialSegment = Math.max(
+    0,
+    items.findIndex((item: any) => item.id === initialItemId),
+  );
+  const [segment, setSegment] = useState(initialSegment);
+  const { panelRefs, lockedHeight } = useEqualPanelHeight(items.length);
   const activeItem = items[segment] || items[0];
+
+  useEffect(() => {
+    setSegment(initialSegment);
+  }, [initialSegment]);
+
   if (!activeItem) return null;
   const media = visible(activeItem.media);
+  const panelBaseId = `lg2-segment-${category.id}`;
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -1195,10 +1328,10 @@ function TemplateD({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
           <div className="lg2-seg" role="tablist">
              {items.map((item: any, i: number) => (
                 <button
-                  id={`lg2-tab-${item.id}`}
+                   id={`${panelBaseId}-tab-${item.id}`}
                   type="button"
                   role="tab"
-                  aria-controls="lg2-segment-panel"
+                   aria-controls={`${panelBaseId}-panel-${item.id}`}
                   aria-selected={i === segment}
                   tabIndex={i === segment ? 0 : -1}
                   key={item.id}
@@ -1209,14 +1342,40 @@ function TemplateD({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                 </button>
              ))}
           </div>
-          <div id="lg2-segment-panel" role="tabpanel" aria-labelledby={`lg2-tab-${activeItem.id}`}>
-             {itemBodyHtml(activeItem) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(activeItem) }} />}
-             <StructuredBulletRows bullets={itemBullets(activeItem)} />
+           <div
+             className="lg2-segment-panels"
+             data-lg-panel-locked-height={lockedHeight ?? undefined}
+             style={lockedHeight === null ? undefined : { height: lockedHeight }}
+           >
+             {items.map((item: any, index: number) => (
+               <div
+                 id={`${panelBaseId}-panel-${item.id}`}
+                 ref={(node) => { panelRefs.current[index] = node; }}
+                 role="tabpanel"
+                 aria-labelledby={`${panelBaseId}-tab-${item.id}`}
+                 aria-hidden={index !== segment}
+                 className={`lg2-segment-panel${index === segment ? " is-active" : ""}`}
+                 key={item.id}
+               >
+                 {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+                 <StructuredBulletRows bullets={itemBullets(item)} numbered={numbered} />
+                 {item?.phone && (
+                   <div className="lg2-actions lg2-actions--spaced">
+                     <a className="lg2-primary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>
+                   </div>
+                 )}
+               </div>
+             ))}
           </div>
         </article>
       </div>
     </div>
   );
+}
+
+// Template D: Segmented
+function TemplateD(props: any) {
+  return <TabbedDetail {...props} />;
 }
 
 // Template E: WiFi
@@ -1275,6 +1434,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
   const subtitle = distinctSubtitle(heading, item?.subtitle);
   const bullets = itemBullets(item);
   const openStatus = itemOpenStatus(item, t);
+  const price = itemPriceText(item);
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -1282,12 +1442,18 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
-           <h1>{heading}</h1>
-           {(openStatus || subtitle || item?.price) && (
+           {price ? (
+             <div className="lg2-detail-title-row">
+               <h1>{heading}</h1>
+               <span className="lg2-price">{price}</span>
+             </div>
+           ) : (
+             <h1>{heading}</h1>
+           )}
+           {(openStatus || subtitle) && (
              <div className="lg2-chips">
                 {openStatus && <span className={`lg2-chip${openStatus.isOpen ? " lg2-chip--open" : ""}`}>{openStatus.text}</span>}
-                 {subtitle && <span className="lg2-chip">{subtitle}</span>}
-                {item?.price && <span className="lg2-chip">{item.price}</span>}
+                {subtitle && <span className="lg2-chip">{subtitle}</span>}
              </div>
            )}
            {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}

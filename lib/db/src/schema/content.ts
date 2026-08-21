@@ -58,6 +58,7 @@ export const itemsTable = pgTable("items", {
   difficulty: text("difficulty"),
   duration: text("duration"),
   distance: text("distance"),
+  distanceMeters: doublePrecision("distance_meters"),
   open24: boolean("open24").notNull().default(false),
   hoursJson: text("hours_json"),
   noteType: text("note_type"),

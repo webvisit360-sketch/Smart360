@@ -75,8 +75,14 @@ The development Meli Pu tenant is a read-mostly production-content copy; refresh
 
 **How to apply:** Snapshot dev first; compare per-category counts and content hashes; sync guest tenant fields, sections, categories, items, media metadata, translations, and plurals. Preserve category keys and operational tenant fields, then require exact post-sync hashes.
 
-Detail heroes and gallery slides use aspect-aware rendering based on `imageAspect / containerAspect`: keep cover plus focal point within `1/1.6…1.6`; otherwise use a same-image blurred cover background with a centered contain foreground.
+Detail hero height follows the active image’s natural aspect at the live container width, clamped to 176 px…66 vh. Fitting images remain fully visible edge-to-edge with no crop, side bands, or blur; only a portrait image that exceeds the cap may use a same-image blurred side fill behind the fully visible image. Gallery height follows the active slide with an approximately 200 ms transition.
 
-**Why:** Landscape and portrait source photos can lose the whole subject in a tall mobile cover crop; the owner made the measured mismatch formula binding after real-iPhone review.
+**Why:** Hero v3 replaced the former general mismatch/blur rule after real-device review so ordinary landscape photos stay clean while capped portrait subjects remain complete.
 
-**How to apply:** Measure natural image and live container dimensions, recompute after load/resize/orientation, and apply this only to detail/gallery media. Grid and list thumbnails remain cover.
+**How to apply:** Recompute from natural image dimensions after image load, active-slide change, resize, and orientation. Apply this only to detail/gallery media; no-photo ambient heroes and grid/list thumbnail cover behavior remain unchanged.
+
+PART 4 ordering scope is fixed: SUP, olive oil, scooter, boat with skipper, and boat transport are orderable; late checkout is not. Pickup is at the host unless authored item text explicitly promises delivery. Skip the help/emergency ordering link.
+
+**Why:** These are explicit launch decisions recorded before ordering implementation, and delivery or late-checkout promises must never be invented.
+
+**How to apply:** Use this allowlist when PART 4 starts, keep prices textual with no calculated totals, derive any delivery promise only from item text, and do not begin PART 4 before the Batch 4 owner review gate passes.

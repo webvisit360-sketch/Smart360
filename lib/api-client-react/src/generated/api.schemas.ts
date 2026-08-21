@@ -576,6 +576,11 @@ export interface Item {
   duration?: string | null;
   /** @nullable */
   distance?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  distanceMeters?: number | null;
   open24: boolean;
   /**
      * JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight
@@ -622,6 +627,8 @@ export interface ItemInput {
   difficulty?: string;
   duration?: string;
   distance?: string;
+  /** @minimum 0 */
+  distanceMeters?: number;
   open24?: boolean;
   /** @nullable */
   hoursJson?: string | null;
@@ -668,6 +675,11 @@ export interface ItemUpdate {
   duration?: string | null;
   /** @nullable */
   distance?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  distanceMeters?: number | null;
   open24?: boolean;
   /** @nullable */
   hoursJson?: string | null;

@@ -1671,6 +1671,7 @@ components:
         difficulty: { type: ["string", "null"] }
         duration: { type: ["string", "null"] }
         distance: { type: ["string", "null"] }
+        distanceMeters: { type: ["number", "null"], minimum: 0 }
         open24: { type: boolean }
         hoursJson:
           type: ["string", "null"]
@@ -1707,6 +1708,7 @@ components:
         difficulty: { type: string }
         duration: { type: string }
         distance: { type: string }
+        distanceMeters: { type: number, minimum: 0 }
         open24: { type: boolean }
         hoursJson: { type: ["string", "null"] }
         noteType: { type: string }
@@ -1731,6 +1733,7 @@ components:
         difficulty: { type: ["string", "null"] }
         duration: { type: ["string", "null"] }
         distance: { type: ["string", "null"] }
+        distanceMeters: { type: ["number", "null"], minimum: 0 }
         open24: { type: boolean }
         hoursJson: { type: ["string", "null"] }
         noteType: { type: ["string", "null"] }

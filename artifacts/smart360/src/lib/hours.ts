@@ -7,6 +7,7 @@ type HoursRange = [number, number] | null;
 export type OpenStatus = {
   isOpen: boolean;
   closesAt: string | null;
+  opensAt: string | null;
 };
 
 function parseHours(hoursJson?: string | null): HoursRange[] | null {
@@ -55,7 +56,11 @@ export function getOpenStatus(
     currentMinutes >= today[0] &&
     currentMinutes < effectiveClose(today)
   ) {
-    return { isOpen: true, closesAt: formatMinutes(today[1]) };
+    return {
+      isOpen: true,
+      closesAt: formatMinutes(today[1]),
+      opensAt: null,
+    };
   }
 
   const previous = hours[(dayIndex + 6) % 7];
@@ -65,10 +70,33 @@ export function getOpenStatus(
     previousDayMinutes >= previous[0] &&
     previousDayMinutes < effectiveClose(previous)
   ) {
-    return { isOpen: true, closesAt: formatMinutes(previous[1]) };
+    return {
+      isOpen: true,
+      closesAt: formatMinutes(previous[1]),
+      opensAt: null,
+    };
   }
 
-  return { isOpen: false, closesAt: null };
+  if (today && currentMinutes < today[0]) {
+    return {
+      isOpen: false,
+      closesAt: null,
+      opensAt: formatMinutes(today[0]),
+    };
+  }
+
+  for (let offset = 1; offset <= 7; offset += 1) {
+    const nextRange = hours[(dayIndex + offset) % 7];
+    if (nextRange) {
+      return {
+        isOpen: false,
+        closesAt: null,
+        opensAt: formatMinutes(nextRange[0]),
+      };
+    }
+  }
+
+  return { isOpen: false, closesAt: null, opensAt: null };
 }
 
 export function formatTodayHours(hoursJson?: string | null, lang = "sl"): string | null {

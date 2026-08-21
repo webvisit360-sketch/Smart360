@@ -28,6 +28,10 @@ export const GetPublicTenantQueryParams = zod.object({
   "preview": zod.coerce.boolean().optional()
 })
 
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
+
+
+
 export const GetPublicTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -116,6 +120,7 @@ export const GetPublicTenantResponse = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin).nullish(),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -462,6 +467,10 @@ export const GetTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
+
+
+
 export const GetTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -550,6 +559,7 @@ export const GetTenantResponse = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin).nullish(),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -1019,6 +1029,8 @@ export const CreateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const createItemBodyDistanceMetersMin = 0;
+
 export const createItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
@@ -1033,6 +1045,7 @@ export const CreateItemBody = zod.object({
   "difficulty": zod.string().optional(),
   "duration": zod.string().optional(),
   "distance": zod.string().optional(),
+  "distanceMeters": zod.number().min(createItemBodyDistanceMetersMin).optional(),
   "open24": zod.boolean().optional(),
   "hoursJson": zod.string().nullish(),
   "noteType": zod.string().optional(),
@@ -1042,6 +1055,10 @@ export const CreateItemBody = zod.object({
   "frame": zod.enum(['wide', 'tall', 'square']).optional(),
   "position": zod.number().optional()
 })
+
+export const createItemResponseDistanceMetersMin = 0;
+
+
 
 export const CreateItemResponse = zod.object({
   "id": zod.string(),
@@ -1056,6 +1073,7 @@ export const CreateItemResponse = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(createItemResponseDistanceMetersMin).nullish(),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -1088,6 +1106,8 @@ export const UpdateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const updateItemBodyDistanceMetersMin = 0;
+
 export const updateItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
@@ -1103,6 +1123,7 @@ export const UpdateItemBody = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(updateItemBodyDistanceMetersMin).nullish(),
   "open24": zod.boolean().optional(),
   "hoursJson": zod.string().nullish(),
   "noteType": zod.string().nullish(),
@@ -1113,6 +1134,10 @@ export const UpdateItemBody = zod.object({
   "position": zod.number().optional(),
   "isVisible": zod.boolean().optional()
 })
+
+export const updateItemResponseDistanceMetersMin = 0;
+
+
 
 export const UpdateItemResponse = zod.object({
   "id": zod.string(),
@@ -1127,6 +1152,7 @@ export const UpdateItemResponse = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(updateItemResponseDistanceMetersMin).nullish(),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -1163,6 +1189,10 @@ export const DuplicateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const duplicateItemResponseDistanceMetersMin = 0;
+
+
+
 export const DuplicateItemResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
@@ -1176,6 +1206,7 @@ export const DuplicateItemResponse = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(duplicateItemResponseDistanceMetersMin).nullish(),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),

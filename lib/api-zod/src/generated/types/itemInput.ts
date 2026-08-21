@@ -18,6 +18,8 @@ export interface ItemInput {
   difficulty?: string;
   duration?: string;
   distance?: string;
+  /** @minimum 0 */
+  distanceMeters?: number;
   open24?: boolean;
   /** @nullable */
   hoursJson?: string | null;
