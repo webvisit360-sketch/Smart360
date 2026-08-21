@@ -9,6 +9,12 @@ const {
   itemPriceText,
   itemSupportingText,
 } = await import(formatterModulePath);
+const heroLayoutModulePath =
+  "../../../smart360/src/pages/living-guide/living-guide-hero-layout.ts";
+const {
+  calculateLivingGuideHeroLayout,
+  nearestGalleryIndex,
+} = await import(heroLayoutModulePath);
 
 test("keeps authored price text and adds the authored unit", () => {
   assert.equal(
@@ -63,4 +69,46 @@ test("keeps a supplied distance first in POI supporting text", () => {
     itemSupportingText({ distance: "850 m" }, null, "open · until 20:00"),
     "850 m · open · until 20:00",
   );
+});
+
+test("hero rule v4 uses natural full width through the 80 percent threshold", () => {
+  const exactlyAtThreshold = calculateLivingGuideHeroLayout({
+    containerWidth: 400,
+    imageAspect: 400 / 640,
+    viewportHeight: 800,
+  });
+  assert.deepEqual(exactlyAtThreshold, {
+    branch: "full-bleed",
+    naturalHeight: 640,
+    thresholdHeight: 640,
+    heroHeight: 640,
+  });
+
+  const wide = calculateLivingGuideHeroLayout({
+    containerWidth: 400,
+    imageAspect: 2.5,
+    viewportHeight: 800,
+  });
+  assert.equal(wide?.branch, "full-bleed");
+  assert.equal(wide?.heroHeight, 160);
+});
+
+test("hero rule v4 caps only images above 80 percent and uses 78 percent height", () => {
+  const capped = calculateLivingGuideHeroLayout({
+    containerWidth: 400,
+    imageAspect: 0.5,
+    viewportHeight: 800,
+  });
+  assert.equal(capped?.branch, "side-blur");
+  assert.equal(capped?.naturalHeight, 800);
+  assert.equal(capped?.thresholdHeight, 640);
+  assert.equal(capped?.heroHeight, 624);
+});
+
+test("gallery settling always chooses a whole slide boundary", () => {
+  assert.equal(nearestGalleryIndex(0, 390, 5), 0);
+  assert.equal(nearestGalleryIndex(194, 390, 5), 0);
+  assert.equal(nearestGalleryIndex(196, 390, 5), 1);
+  assert.equal(nearestGalleryIndex(780, 390, 5), 2);
+  assert.equal(nearestGalleryIndex(9999, 390, 5), 4);
 });

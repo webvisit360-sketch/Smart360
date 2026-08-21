@@ -35,6 +35,10 @@ import {
   itemPriceText,
   itemSupportingText,
 } from "./living-guide-formatters";
+import {
+  calculateLivingGuideHeroLayout,
+  nearestGalleryIndex,
+} from "./living-guide-hero-layout";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 import { OrderSheet, MyOrdersSheet } from "./living-guide-order-sheet";
@@ -873,6 +877,8 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
 
 function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
   const heroRef = useRef<HTMLDivElement>(null);
+  const galleryTrackRef = useRef<HTMLDivElement>(null);
+  const settleTimeoutRef = useRef<number | null>(null);
   const [frameWidth, setFrameWidth] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(() =>
     typeof window === "undefined" ? 844 : window.innerHeight,
@@ -886,17 +892,13 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     ? String(activeEntry.id ?? activeEntry.url ?? activeIndex)
     : "";
   const activeAspect = imageAspects[activeKey];
-  const unclampedHeight =
-    frameWidth > 0 && activeAspect > 0 ? frameWidth / activeAspect : null;
-  const capHeight = Math.max(176, Math.floor(viewportHeight * 0.66) - 1);
-  const heroHeight =
-    unclampedHeight === null
-      ? null
-      : Math.min(capHeight, Math.max(176, unclampedHeight));
-  const portraitCapped =
-    unclampedHeight !== null &&
-    activeAspect < 1 &&
-    unclampedHeight > capHeight;
+  const heroLayout = calculateLivingGuideHeroLayout({
+    containerWidth: frameWidth,
+    imageAspect: activeAspect,
+    viewportHeight,
+  });
+  const heroHeight = heroLayout?.heroHeight ?? null;
+  const sideBlur = heroLayout?.branch === "side-blur";
 
   const mediaKey = (media ?? [])
     .map((entry: any, index: number) => entry.id ?? entry.url ?? index)
@@ -946,6 +948,66 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     );
   }, []);
 
+  const settleGallery = useCallback(
+    (track: HTMLDivElement) => {
+      const nextIndex = nearestGalleryIndex(
+        track.scrollLeft,
+        track.clientWidth,
+        media?.length ?? 0,
+      );
+      const targetLeft = nextIndex * track.clientWidth;
+      if (Math.abs(track.scrollLeft - targetLeft) > 0.5) {
+        track.scrollTo({ left: targetLeft, behavior: "auto" });
+      }
+      onGalleryIndex(nextIndex);
+    },
+    [media?.length, onGalleryIndex],
+  );
+
+  const scheduleGallerySettle = useCallback(
+    (track: HTMLDivElement) => {
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current);
+      }
+      settleTimeoutRef.current = window.setTimeout(() => {
+        settleTimeoutRef.current = null;
+        settleGallery(track);
+      }, 120);
+    },
+    [settleGallery],
+  );
+
+  useEffect(() => {
+    const track = galleryTrackRef.current;
+    if (!track || singleOnly || !media?.length) return;
+
+    const handleScrollEnd = () => {
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current);
+        settleTimeoutRef.current = null;
+      }
+      settleGallery(track);
+    };
+
+    track.addEventListener("scrollend", handleScrollEnd);
+    return () => {
+      track.removeEventListener("scrollend", handleScrollEnd);
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current);
+        settleTimeoutRef.current = null;
+      }
+    };
+  }, [media?.length, mediaKey, settleGallery, singleOnly]);
+
+  useLayoutEffect(() => {
+    const track = galleryTrackRef.current;
+    if (!track || singleOnly || !track.clientWidth) return;
+    const targetLeft = activeIndex * track.clientWidth;
+    if (Math.abs(track.scrollLeft - targetLeft) > 0.5) {
+      track.scrollTo({ left: targetLeft, behavior: "auto" });
+    }
+  }, [activeIndex, frameWidth, mediaKey, singleOnly]);
+
   if (!media?.length) return (
     <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero>
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk"/></svg></button>
@@ -959,6 +1021,8 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         ref={heroRef}
         className="lg2-detail-hero lg2-detail-hero--photo"
         data-lg-hero-height={heroHeight === null ? undefined : Math.round(heroHeight)}
+        data-lg-hero-natural-height={heroLayout?.naturalHeight}
+        data-lg-hero-branch={heroLayout?.branch}
         style={heroHeight === null ? undefined : { height: heroHeight }}
       >
         <div className="lg2-gallery-track">
@@ -967,7 +1031,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
               entry={entry}
               entryKey={entryKey}
               loading="eager"
-              portraitCapped={portraitCapped}
+              sideBlur={sideBlur}
               onAspect={rememberAspect}
             />
           </div>
@@ -982,13 +1046,16 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       className="lg2-detail-hero lg2-detail-hero--photo"
       data-lg-active-slide={activeIndex}
       data-lg-hero-height={heroHeight === null ? undefined : Math.round(heroHeight)}
+      data-lg-hero-natural-height={heroLayout?.naturalHeight}
+      data-lg-hero-branch={heroLayout?.branch}
       style={heroHeight === null ? undefined : { height: heroHeight }}
     >
-      <div className="lg2-gallery-track" data-lg-gallery onScroll={(e) => {
-        const el = e.currentTarget;
-        if (!el.clientWidth) return;
-        onGalleryIndex(Math.max(0, Math.min(media.length - 1, Math.round(el.scrollLeft / el.clientWidth))));
-      }}>
+      <div
+        ref={galleryTrackRef}
+        className="lg2-gallery-track"
+        data-lg-gallery
+        onScroll={(event) => scheduleGallerySettle(event.currentTarget)}
+      >
         {media.map((entry: any, index: number) => {
           const entryKey = String(entry.id ?? entry.url ?? index);
           return (
@@ -997,7 +1064,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
                 entry={entry}
                 entryKey={entryKey}
                 loading={index === 0 ? "eager" : "lazy"}
-                portraitCapped={index === activeIndex && portraitCapped}
+                sideBlur={index === activeIndex && sideBlur}
                 onAspect={rememberAspect}
               />
             </div>
@@ -1006,7 +1073,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       </div>
       {media.length > 1 && (
         <div className="lg2-gallery-dots" aria-hidden="true">
-          {media.map((_: any, index: number) => <i key={index} className={index === galleryIndex ? "is-active" : undefined} />)}
+          {media.map((_: any, index: number) => <i key={index} className={index === activeIndex ? "is-active" : undefined} />)}
         </div>
       )}
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
@@ -1018,23 +1085,23 @@ function AspectAwareHeroImage({
   entry,
   entryKey,
   loading,
-  portraitCapped,
+  sideBlur,
   onAspect,
 }: {
   entry: any;
   entryKey: string;
   loading: "eager" | "lazy";
-  portraitCapped: boolean;
+  sideBlur: boolean;
   onAspect: (key: string, aspect: number) => void;
 }) {
   const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
 
   return (
     <div
-      className={`lg2-hero-image-frame${portraitCapped ? " is-portrait-capped" : ""}`}
-      data-lg-hero-fit={portraitCapped ? "portrait-cap" : "full"}
+      className={`lg2-hero-image-frame${sideBlur ? " is-side-blur" : " is-full-bleed"}`}
+      data-lg-hero-fit={sideBlur ? "side-blur" : "full-bleed"}
     >
-      {portraitCapped && (
+      {sideBlur && (
         <img
           className="lg2-hero-image-blur"
           src={source}

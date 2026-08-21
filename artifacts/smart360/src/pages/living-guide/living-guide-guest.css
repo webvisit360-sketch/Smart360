@@ -710,16 +710,18 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-detail-hero {
   position: relative;
   flex: 1 1 auto;
-  min-height: 33.4dvh;
+  min-height: 0;
   background: var(--card2);
+  overflow: hidden;
 }
 
 .lg2-detail-hero--photo {
   flex: 0 0 auto;
   width: 100%;
   height: 33.4dvh;
-  min-height: 176px;
-  max-height: calc(66dvh - 1px);
+  min-height: 0;
+  max-height: none;
+  contain: layout paint;
   transition: height .2s ease;
 }
 
@@ -753,15 +755,20 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
+  scroll-padding: 0;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
 .lg2-gallery-slide {
   position: relative;
   width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   height: 100%;
   flex: 0 0 100%;
+  box-sizing: border-box;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
@@ -779,6 +786,8 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
+  border: 0;
 }
 
 .lg2-hero-image-main {
@@ -787,14 +796,19 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   object-position: center;
 }
 
-.lg2-hero-image-frame.is-portrait-capped .lg2-hero-image-blur {
+.lg2-hero-image-frame.is-full-bleed .lg2-hero-image-main {
+  object-fit: cover;
+  object-position: center;
+}
+
+.lg2-hero-image-frame.is-side-blur .lg2-hero-image-blur {
   z-index: 0;
   object-fit: cover;
   filter: blur(24px) brightness(.92) saturate(1.05);
   transform: scale(1.08);
 }
 
-.lg2-hero-image-frame.is-portrait-capped .lg2-hero-image-main {
+.lg2-hero-image-frame.is-side-blur .lg2-hero-image-main {
   object-fit: contain;
   object-position: center;
 }
