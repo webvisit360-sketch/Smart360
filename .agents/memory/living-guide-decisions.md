@@ -86,3 +86,9 @@ PART 4 ordering scope is fixed: SUP, olive oil, scooter, boat with skipper, and 
 **Why:** These are explicit launch decisions recorded before ordering implementation, and delivery or late-checkout promises must never be invented.
 
 **How to apply:** Use this allowlist when PART 4 starts, keep prices textual with no calculated totals, derive any delivery promise only from item text, and do not begin PART 4 before the Batch 4 owner review gate passes.
+
+Browser machine translation is disabled for the guest app; Smart360’s own SL, EN, DE, and IT content is the only supported translation path.
+
+**Why:** The owner explicitly prohibited browser translation after it produced mixed languages, invented labels, and a runtime stack-overflow incident while mutating guest DOM.
+
+**How to apply:** Preserve document- and guest-root-level `notranslate` protection. Any observer-driven measurement must coalesce callbacks, avoid same-value state writes, and remain stable when extensions mutate text nodes.

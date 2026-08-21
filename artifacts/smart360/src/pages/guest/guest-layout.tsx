@@ -103,7 +103,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
            temi postavita v 430 px stolpec (transform ustvari containing block
            za vse fixed prekrivke, da ostanejo znotraj stolpca). Vse, kar bi se
            sicer dodajalo na document.body, mora v #frame. */
-        <div className="frame" id="frame">
+        <div className="frame notranslate" id="frame" translate="no">
           {isPreview && (
             <>
               <style>{`

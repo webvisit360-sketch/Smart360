@@ -463,10 +463,11 @@ export default function LivingGuideGuestShell({
   return (
     <div
       ref={rootRef}
-      className="lg2-app"
+      className="lg2-app notranslate"
       data-living-guide
       data-living-guide-app
       data-screen={screen}
+      translate="no"
     >
       <style>{`@font-face{font-family:"Inter";src:url("${livingGuideInterWoff2}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`}</style>
       <LivingGuideSprite />
@@ -871,9 +872,21 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   useLayoutEffect(() => {
     const hero = heroRef.current;
     if (!hero || !media?.length) return;
+    let measurementFrame: number | null = null;
     const measure = () => {
-      setFrameWidth(hero.clientWidth);
-      setViewportHeight(window.innerHeight);
+      if (measurementFrame !== null) return;
+      measurementFrame = window.requestAnimationFrame(() => {
+        measurementFrame = null;
+        if (!hero.isConnected) return;
+        const nextFrameWidth = hero.clientWidth;
+        const nextViewportHeight = window.innerHeight;
+        setFrameWidth((current) =>
+          current === nextFrameWidth ? current : nextFrameWidth,
+        );
+        setViewportHeight((current) =>
+          current === nextViewportHeight ? current : nextViewportHeight,
+        );
+      });
     };
     const observer =
       typeof ResizeObserver === "undefined"
@@ -885,6 +898,9 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     measure();
     return () => {
       observer?.disconnect();
+      if (measurementFrame !== null) {
+        window.cancelAnimationFrame(measurementFrame);
+      }
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
     };
@@ -1244,24 +1260,35 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
 
 function useEqualPanelHeight(panelCount: number) {
   const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const measurementFrameRef = useRef<number | null>(null);
   const [lockedHeight, setLockedHeight] = useState<number | null>(null);
 
   const measure = useCallback(() => {
-    const measured = panelRefs.current
-      .slice(0, panelCount)
-      .map((panel) => panel?.scrollHeight ?? 0);
-    const tallest = Math.max(0, ...measured);
-    if (tallest > 0) {
-      const stableHeight = tallest + 1;
-      setLockedHeight((current) =>
-        current === stableHeight ? current : stableHeight,
-      );
-    }
+    if (measurementFrameRef.current !== null) return;
+    measurementFrameRef.current = window.requestAnimationFrame(() => {
+      measurementFrameRef.current = null;
+      const measured = panelRefs.current
+        .slice(0, panelCount)
+        .map((panel) => (panel?.isConnected ? panel.scrollHeight : 0));
+      const tallest = Math.max(0, ...measured);
+      if (tallest > 0) {
+        const stableHeight = tallest + 1;
+        setLockedHeight((current) =>
+          current === stableHeight ? current : stableHeight,
+        );
+      }
+    });
   }, [panelCount]);
 
   useLayoutEffect(() => {
     measure();
-  });
+    return () => {
+      if (measurementFrameRef.current !== null) {
+        window.cancelAnimationFrame(measurementFrameRef.current);
+        measurementFrameRef.current = null;
+      }
+    };
+  }, [measure]);
 
   useEffect(() => {
     const observer =
@@ -1283,6 +1310,10 @@ function useEqualPanelHeight(panelCount: number) {
     return () => {
       cancelled = true;
       observer?.disconnect();
+      if (measurementFrameRef.current !== null) {
+        window.cancelAnimationFrame(measurementFrameRef.current);
+        measurementFrameRef.current = null;
+      }
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
       document.fonts?.removeEventListener?.("loadingdone", measure);

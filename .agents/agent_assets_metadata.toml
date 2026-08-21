@@ -134,3 +134,17 @@ mtime_ms = 1787291467687
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0308159a-5fe0-4ca8-aff3-44b2e9e8536e/3550eb65-cf26-473d-8948-e6659aae108b"
 storage_version_token = "1787291838345836"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "c7Hevl_8ejnqrcUs2M48l"
+uri = "file://screenshots/living-guide-batch4-fix6-7-final.jpg"
+type = "image"
+title = "Living Guide FIX 6–7 — recovered Nastanitev grid"
+description = "Final 390×844 proof after translator-style DOM mutation stress: the Nastanitev grid remains responsive and renders without a crash overlay."
+logical_id = "ae743509-09be-4221-9d01-999954728a37"
+content_hash = "sha256:92072fb864658f547fccc1447fe3657ded3cd904a9f76e91b7282005bd6495a8"
+size = 38875
+mtime_ms = 1787292428493
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ae743509-09be-4221-9d01-999954728a37/28f44fcf-3451-46ea-802a-b7831fc41ffe"
+storage_version_token = "1787292462281905"
+content_type = "image/jpeg"
