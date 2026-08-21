@@ -1515,6 +1515,9 @@ components:
         orderNotifyEmail:
           type: boolean
           description: Whether new orders send the tenant a notification email; defaults to true
+        orderPasswordConfigured:
+          type: boolean
+          description: Whether this tenant currently requires a password for new orders; the password itself is never returned
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
@@ -1591,6 +1594,11 @@ components:
         instagram: { type: ["string", "null"] }
         email: { type: ["string", "null"] }
         orderNotifyEmail: { type: boolean }
+        orderPassword:
+          type: ["string", "null"]
+          maxLength: 200
+          writeOnly: true
+          description: Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
@@ -1945,6 +1953,14 @@ components:
           type: string
           maxLength: 500
           description: Optional guest note
+        orderPassword:
+          type: string
+          maxLength: 200
+          description: Required only when the tenant has configured an order password; compared after trimming and remains case-sensitive
+        lang:
+          type: string
+          enum: [sl, en, de, it]
+          description: UI language used for localized order validation errors; defaults to sl
       required: [itemId, qty, guestName, guestPhone, guestUnit]
     OrderStatusUpdate:
       type: object

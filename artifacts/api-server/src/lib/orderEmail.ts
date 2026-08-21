@@ -51,6 +51,8 @@ export interface OrderEmailPayload {
   orderRef: string;
   itemTitle: string | null | undefined;
   qty: number;
+  /** Required full name shown first so the host can identify the guest. */
+  guestName: string;
   /** Phone shown in email — operator needs it to call back. */
   guestPhone: string;
   /** Guest's accommodation/unit from sign-in (for example B-14). */
@@ -85,6 +87,7 @@ export function buildEmailBody(
   <h1 style="font-size:20px;margin-bottom:4px">Novo naročilo</h1>
   <p style="color:#666;margin-top:0;font-size:14px">Odprite skrbniški portal za obdelavo naročila.</p>
   <table style="border-collapse:collapse;width:100%;margin-top:16px">
+    <tr><td style="padding:6px 0;color:#666;width:140px">Ime in priimek</td><td><strong>${escHtml(p.guestName)}</strong></td></tr>
     <tr><td style="padding:6px 0;color:#666;width:140px">Artikel</td><td><strong>${escHtml(p.itemTitle ?? "—")}</strong></td></tr>
     <tr><td style="padding:6px 0;color:#666">Količina</td><td>${p.qty}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Enota gosta</td><td>${escHtml(p.guestUnit)}</td></tr>

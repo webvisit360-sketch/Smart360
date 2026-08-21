@@ -573,8 +573,10 @@ export default function LivingGuideGuestShell({
           <OrderSheet
             item={item}
             slug={slug}
+            lang={lang as UiLanguage}
             t={t}
             guest={guest}
+            passwordRequired={Boolean(tenant.orderPasswordConfigured)}
             onClose={() => setOrderItemId(null)}
           />
         );

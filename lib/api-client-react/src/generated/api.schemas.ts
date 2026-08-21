@@ -167,6 +167,8 @@ export interface Tenant {
   email?: string | null;
   /** Whether new orders send the tenant a notification email; defaults to true */
   orderNotifyEmail: boolean;
+  /** Whether this tenant currently requires a password for new orders; the password itself is never returned */
+  orderPasswordConfigured?: boolean;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -286,6 +288,12 @@ export interface TenantUpdate {
   /** @nullable */
   email?: string | null;
   orderNotifyEmail?: boolean;
+  /**
+     * Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
+     * @maxLength 200
+     * @nullable
+     */
+  orderPassword?: string | null;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -727,6 +735,19 @@ export interface ItemUpdate {
 }
 
 /**
+ * UI language used for localized order validation errors; defaults to sl
+ */
+export type OrderInputLang = typeof OrderInputLang[keyof typeof OrderInputLang];
+
+
+export const OrderInputLang = {
+  sl: 'sl',
+  en: 'en',
+  de: 'de',
+  it: 'it',
+} as const;
+
+/**
  * Body for placing a new order
  */
 export interface OrderInput {
@@ -761,6 +782,13 @@ export interface OrderInput {
      * @maxLength 500
      */
   guestNote?: string;
+  /**
+     * Required only when the tenant has configured an order password; compared after trimming and remains case-sensitive
+     * @maxLength 200
+     */
+  orderPassword?: string;
+  /** UI language used for localized order validation errors; defaults to sl */
+  lang?: OrderInputLang;
 }
 
 /**

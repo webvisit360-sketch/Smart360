@@ -50,6 +50,7 @@ export const GetPublicTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -361,6 +362,7 @@ export const ListTenantsResponseItem = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -427,6 +429,7 @@ export const CreateTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -496,6 +499,7 @@ export const GetTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -609,6 +613,8 @@ export const UpdateTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const updateTenantBodyOrderPasswordMax = 200;
+
 export const updateTenantBodyMediaQuotaBytesMin = 104857600;
 
 
@@ -630,6 +636,7 @@ export const UpdateTenantBody = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().optional(),
+  "orderPassword": zod.string().max(updateTenantBodyOrderPasswordMax).nullish().describe('Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -685,6 +692,7 @@ export const UpdateTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -764,6 +772,7 @@ export const DuplicateTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -838,6 +847,7 @@ export const RenewTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -1675,6 +1685,8 @@ export const createOrderBodyGuestUnitMax = 100;
 
 export const createOrderBodyGuestNoteMax = 500;
 
+export const createOrderBodyOrderPasswordMax = 200;
+
 
 
 export const CreateOrderBody = zod.object({
@@ -1683,7 +1695,9 @@ export const CreateOrderBody = zod.object({
   "guestName": zod.string().min(1).max(createOrderBodyGuestNameMax).describe('Guest name (required)'),
   "guestPhone": zod.string().min(1).max(createOrderBodyGuestPhoneMax).describe('Guest phone number (required; must contain at least six digit characters; formatting is preserved)'),
   "guestUnit": zod.string().min(1).max(createOrderBodyGuestUnitMax).describe('Guest accommodation\/unit pre-filled from sign-in but editable (e.g. \"B-14\")'),
-  "guestNote": zod.string().max(createOrderBodyGuestNoteMax).optional().describe('Optional guest note')
+  "guestNote": zod.string().max(createOrderBodyGuestNoteMax).optional().describe('Optional guest note'),
+  "orderPassword": zod.string().max(createOrderBodyOrderPasswordMax).optional().describe('Required only when the tenant has configured an order password; compared after trimming and remains case-sensitive'),
+  "lang": zod.enum(['sl', 'en', 'de', 'it']).optional().describe('UI language used for localized order validation errors; defaults to sl')
 }).describe('Body for placing a new order')
 
 export const CreateOrderResponse = zod.object({

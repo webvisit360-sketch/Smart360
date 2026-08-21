@@ -267,6 +267,35 @@ setInterval(() => {
 // ─── Order retention ──────────────────────────────────────────────────────────
 
 export const ORDER_RETENTION_DAYS = 90;
+export const ORDER_PASSWORD_MAX = 200;
+
+export type OrderLanguage = "sl" | "en" | "de" | "it";
+
+const WRONG_ORDER_PASSWORD_MESSAGES: Record<OrderLanguage, string> = {
+  sl: "Napačno geslo",
+  en: "Wrong password",
+  de: "Falsches Passwort",
+  it: "Password errata",
+};
+
+/**
+ * Empty tenant passwords opt out. Configured passwords are trimmed on both
+ * sides and remain case-sensitive.
+ */
+export function matchesOrderPassword(
+  configuredPassword: string | null | undefined,
+  submittedPassword: string | null | undefined,
+): boolean {
+  const configured = configuredPassword?.trim() ?? "";
+  if (!configured) return true;
+  return (submittedPassword?.trim() ?? "") === configured;
+}
+
+export function wrongOrderPasswordMessage(lang: string | undefined): string {
+  return WRONG_ORDER_PASSWORD_MESSAGES[
+    lang === "en" || lang === "de" || lang === "it" ? lang : "sl"
+  ];
+}
 
 /** Returns the deleteAfter timestamp for a new order (90 days from now). */
 export function makeDeleteAfter(): Date {

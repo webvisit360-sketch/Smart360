@@ -98,14 +98,19 @@ export function AdminTenantOrders({ tenantId }: { tenantId: string }) {
                     data-testid={`admin-order-row-${order.orderRef}`}
                   >
                     <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-lg">{order.snapshotTitle}</span>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-lg font-bold">{order.guestName}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Soba/parcela: <b className="text-foreground">{order.guestUnit}</b>
+                          </div>
+                        </div>
                         <Badge variant={order.status === 'novo' ? 'default' : order.status === 'potrjeno' ? 'secondary' : order.status === 'zavrnjeno' ? 'destructive' : 'outline'}>
                           {order.status}
                         </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {order.guestName} · Soba/parcela: <b>{order.guestUnit}</b>
+                      <div className="pt-1 text-base font-semibold">
+                        {order.snapshotTitle}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Količina: <b>{order.qty}</b>

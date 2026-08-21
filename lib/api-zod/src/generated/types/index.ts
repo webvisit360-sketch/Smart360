@@ -52,6 +52,7 @@ export * from './orderAdmin';
 export * from './orderAdminNotificationStatus';
 export * from './orderAdminStatus';
 export * from './orderInput';
+export * from './orderInputLang';
 export * from './orderPublic';
 export * from './orderPublicStatus';
 export * from './orderStatusUpdate';

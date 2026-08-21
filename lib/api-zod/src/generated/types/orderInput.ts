@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderInputLang } from './orderInputLang';
 
 /**
  * Body for placing a new order
@@ -41,4 +42,11 @@ export interface OrderInput {
      * @maxLength 500
      */
   guestNote?: string;
+  /**
+     * Required only when the tenant has configured an order password; compared after trimming and remains case-sensitive
+     * @maxLength 200
+     */
+  orderPassword?: string;
+  /** UI language used for localized order validation errors; defaults to sl */
+  lang?: OrderInputLang;
 }

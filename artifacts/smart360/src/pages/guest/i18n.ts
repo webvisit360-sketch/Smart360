@@ -364,6 +364,12 @@ export const LIVING_GUIDE_UI = {
     de: "Telefon (erforderlich)",
     it: "Telefono (obbligatorio)",
   },
+  "UI.lg.order.password": {
+    sl: "Geslo",
+    en: "Password",
+    de: "Passwort",
+    it: "Password",
+  },
   "UI.lg.order.note": {
     sl: "Opomba (neobvezno)",
     en: "Note (optional)",
@@ -477,6 +483,12 @@ export const LIVING_GUIDE_UI = {
     en: "The phone number must contain at least 6 digits.",
     de: "Die Telefonnummer muss mindestens 6 Ziffern enthalten.",
     it: "Il numero di telefono deve contenere almeno 6 cifre."
+  },
+  "UI.lg.order.validation.password": {
+    sl: "Napačno geslo",
+    en: "Wrong password",
+    de: "Falsches Passwort",
+    it: "Password errata",
   },
   "UI.lg.order.placeholder.phone": {
     sl: "+386 41 000 000",

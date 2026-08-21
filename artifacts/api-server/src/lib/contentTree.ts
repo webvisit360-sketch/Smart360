@@ -39,7 +39,10 @@ export function trashScope(row: { deletedAt?: Date | null }): boolean {
 export type ItemWithMedia = Item & { media: MediaRow[] };
 export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
-export type TenantContentTree = Tenant & { sections: SectionContent[] };
+export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
+  orderPasswordConfigured: boolean;
+  sections: SectionContent[];
+};
 
 function indexedBodyParts(body: unknown): string[] | null {
   if (typeof body !== "string" || body.trim() === "") return null;
@@ -205,8 +208,12 @@ export async function buildTenantContent(
     arr.push({ ...c, items: itemsByCategory.get(c.id) ?? [] });
     categoriesBySection.set(c.sectionId, arr);
   }
+  const orderPasswordConfigured = Boolean(tenantOut.orderPassword?.trim());
+  const { orderPassword: _orderPassword, ...safeTenant } = tenantOut;
+
   return {
-    ...tenantOut,
+    ...safeTenant,
+    orderPasswordConfigured,
     sections: sectionsOut.map((s) => ({
       ...s,
       categories: categoriesBySection.get(s.id) ?? [],

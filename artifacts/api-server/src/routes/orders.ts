@@ -49,6 +49,8 @@
  *  - qty must be Number.isInteger, 1–999
  *  - All guest strings trimmed before storage
  *  - guestPhone must contain at least six digits; original formatting is preserved
+ *  - A configured tenant order password gates genuinely new orders only; it is
+ *    trimmed, case-sensitive, never persisted with the order, and never logged
  *  - When tenant orderNotifyEmail=true, missing ORDER_EMAIL_FROM/email → 422
  *  - When disabled, notificationStatus='skipped' and no email attempt occurs
  *  - Only notificationStatus IN ('sent','skipped') + unexpired rows are visible
@@ -96,6 +98,8 @@ import {
   GUEST_NOTE_MAX,
   STATUS_NOTE_MAX,
   hasMinimumPhoneDigits,
+  matchesOrderPassword,
+  wrongOrderPasswordMessage,
 } from "../lib/orderHelpers";
 import { sendOrderEmail, emailFrom } from "../lib/orderEmail";
 import { extractFulfillmentSentence } from "../lib/orderFulfillment";
@@ -242,6 +246,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
   const guestPhone = parsed.data.guestPhone.trim();
   const guestUnit = parsed.data.guestUnit.trim();
   const guestNote = parsed.data.guestNote?.trim() ?? null;
+  const submittedOrderPassword = parsed.data.orderPassword?.trim() ?? null;
 
   if (!guestName) { res.status(400).json({ error: "guestName must not be blank" }); return; }
   if (!guestPhone) { res.status(400).json({ error: "guestPhone must not be blank" }); return; }
@@ -290,6 +295,14 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
   let inserted: typeof ordersTable.$inferSelect | undefined;
 
   if (!preExisting) {
+    if (!matchesOrderPassword(tenant.orderPassword, submittedOrderPassword)) {
+      res.status(403).json({
+        code: "INVALID_ORDER_PASSWORD",
+        error: wrongOrderPasswordMessage(parsed.data.lang),
+      });
+      return;
+    }
+
     // Current notification settings apply only to genuinely NEW orders.
     if (tenant.orderNotifyEmail) {
       try {
@@ -516,6 +529,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     orderRef: canonical.orderRef,
     itemTitle: canonical.snapshotTitle,
     qty: canonical.qty,
+    guestName: canonical.guestName,
     guestPhone: canonical.guestPhone,
     guestUnit: canonical.guestUnit,
     guestNote: canonical.guestNote,

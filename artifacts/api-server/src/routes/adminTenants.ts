@@ -343,8 +343,15 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     }
   }
   // renewsAt arrives as an ISO string; drizzle timestamp wants a Date.
-  const { renewsAt: renewsAtRaw, ...restData } = parsed.data;
+  const {
+    renewsAt: renewsAtRaw,
+    orderPassword: orderPasswordRaw,
+    ...restData
+  } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
+  if (orderPasswordRaw !== undefined) {
+    updateData["orderPassword"] = orderPasswordRaw?.trim() || null;
+  }
   let renewsAtChanged = false;
   if (renewsAtRaw !== undefined) {
     const next = renewsAtRaw === null ? null : new Date(renewsAtRaw);
@@ -394,7 +401,14 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     action: "update",
     entity: "tenant",
   });
-  res.json(UpdateTenantResponse.parse(serialize(tenant)));
+  res.json(
+    UpdateTenantResponse.parse(
+      serialize({
+        ...tenant,
+        orderPasswordConfigured: Boolean(tenant.orderPassword?.trim()),
+      }),
+    ),
+  );
 });
 
 router.post("/admin/tenants/:id/renew", async (req, res): Promise<void> => {
@@ -534,7 +548,14 @@ export async function copyTenant(
 
   // Subscription dates are per-tenant, never inherited: the copy is a NEW
   // establishment, so createdAt = now (DB default) and renewal = now + 1 year.
-  const { id: _id, updatedAt: _u, createdAt: _c, renewsAt: _r, ...rest } = source;
+  const {
+    id: _id,
+    updatedAt: _u,
+    createdAt: _c,
+    renewsAt: _r,
+    orderPassword: _orderPassword,
+    ...rest
+  } = source;
   const [created] = await db
     .insert(tenantsTable)
     .values({
@@ -543,6 +564,9 @@ export async function copyTenant(
       name: opts.name,
       isTemplate: false,
       isPublished: false,
+      // Security settings belong to the new establishment and must never be
+      // inherited from a template or duplicated tenant.
+      orderPassword: null,
       renewsAt: plusOneYear(new Date()),
     })
     .returning();

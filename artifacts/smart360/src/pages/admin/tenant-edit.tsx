@@ -120,6 +120,8 @@ export default function AdminTenantEdit() {
   // Media quota edited in GB, stored in bytes (kept out of formData so the
   // GB↔bytes conversion happens exactly once, on save).
   const [mediaQuotaGb, setMediaQuotaGb] = useState("2");
+  const [orderPasswordDraft, setOrderPasswordDraft] = useState("");
+  const [orderPasswordConfigured, setOrderPasswordConfigured] = useState(false);
 
   // Renewal ("Obnova"): a real editable date, edited directly (not via
   // formData — saving it immediately keeps the history trail on the server).
@@ -176,6 +178,8 @@ export default function AdminTenantEdit() {
     if (tenant && initRef.current !== tenant.id) {
       initRef.current = tenant.id;
       setOriginalSlug(tenant.slug || "");
+      setOrderPasswordConfigured(Boolean(tenant.orderPasswordConfigured));
+      setOrderPasswordDraft("");
       setMediaQuotaGb(((tenant.mediaQuotaBytes ?? 2 * 1024 ** 3) / 1024 ** 3).toFixed(1).replace(/\.0$/, ""));
       setFormData({
         name: tenant.name || "",
@@ -816,7 +820,78 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="orders">
+        <TabsContent value="orders" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Geslo za naročila</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  {orderPasswordConfigured ? "Geslo je nastavljeno." : "Geslo ni nastavljeno."}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Če geslo ni nastavljeno, gostje oddajo naročilo brez gesla.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="order-password-admin">
+                  {orderPasswordConfigured ? "Novo geslo" : "Geslo"}
+                </Label>
+                <Input
+                  id="order-password-admin"
+                  type="password"
+                  maxLength={200}
+                  autoComplete="new-password"
+                  value={orderPasswordDraft}
+                  onChange={(event) => setOrderPasswordDraft(event.target.value)}
+                  placeholder={orderPasswordConfigured ? "Vnesite novo geslo za zamenjavo" : "Vnesite geslo za naročila"}
+                  data-testid="admin-order-password"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  disabled={!orderPasswordDraft.trim() || updateMutation.isPending}
+                  onClick={() =>
+                    updateMutation.mutate({
+                      id,
+                      data: { orderPassword: orderPasswordDraft.trim() },
+                    }, {
+                      onSuccess: (data) => {
+                        setOrderPasswordConfigured(Boolean(data.orderPasswordConfigured));
+                        setOrderPasswordDraft("");
+                      },
+                    })
+                  }
+                  data-testid="save-order-password"
+                >
+                  Shrani geslo
+                </Button>
+                {orderPasswordConfigured && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={updateMutation.isPending}
+                    onClick={() =>
+                      updateMutation.mutate({
+                        id,
+                        data: { orderPassword: null },
+                      }, {
+                        onSuccess: (data) => {
+                          setOrderPasswordConfigured(Boolean(data.orderPasswordConfigured));
+                          setOrderPasswordDraft("");
+                        },
+                      })
+                    }
+                    data-testid="clear-order-password"
+                  >
+                    Odstrani geslo
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
           <AdminTenantOrders tenantId={id} />
         </TabsContent>
       </Tabs>

@@ -98,3 +98,9 @@ Browser machine translation is disabled for the guest app; Smart360’s own SL, 
 **Why:** The owner explicitly prohibited browser translation after it produced mixed languages, invented labels, and a runtime stack-overflow incident while mutating guest DOM.
 
 **How to apply:** Preserve document- and guest-root-level `notranslate` protection. Any observer-driven measurement must coalesce callbacks, avoid same-value state writes, and remain stable when extensions mutate text nodes.
+
+Living Guide orders may use an optional host-managed tenant password, stored separately from Wi-Fi data. Raw values are write-only outside the server; guest/admin reads expose only whether one is configured. Matching trims both sides but remains case-sensitive. A successful password-protected order remembers the accepted value in slug-scoped browser storage; canonical idempotent retries keep their original outcome.
+
+**Why:** The owner chose a simple manually shared gate and explicitly rejected Wi-Fi copying, GPS checks, daily PINs, and per-unit codes. They also required silent same-device prefill despite the normal sensitivity of browser storage.
+
+**How to apply:** Never return, log, e-mail, clone, or store the password with an order. Apply rate limiting before rejecting a genuinely new intent, allow password-free ordering when unset, and reset the password to empty on tenant/template duplication.

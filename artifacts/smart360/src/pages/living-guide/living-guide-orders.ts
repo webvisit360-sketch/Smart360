@@ -1,4 +1,23 @@
 export const GUEST_STORAGE_PREFIX = "smart360:living-guide:guest:";
+const ORDER_PASSWORD_STORAGE_PREFIX = "smart360:living-guide:order-password:";
+
+export function getRememberedOrderPassword(slug: string): string {
+  try {
+    return localStorage.getItem(`${ORDER_PASSWORD_STORAGE_PREFIX}${slug}`) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function rememberOrderPassword(slug: string, password: string): void {
+  const trimmed = password.trim();
+  if (!trimmed) return;
+  try {
+    localStorage.setItem(`${ORDER_PASSWORD_STORAGE_PREFIX}${slug}`, trimmed);
+  } catch {
+    // Ignore quota errors / private mode. The order itself still succeeded.
+  }
+}
 
 export function getDeviceToken(slug: string): string {
   const key = `${GUEST_STORAGE_PREFIX}${slug}:token`;

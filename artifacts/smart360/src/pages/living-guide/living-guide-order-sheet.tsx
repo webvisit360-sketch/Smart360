@@ -1,6 +1,13 @@
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { useCreateOrder, useListDeviceOrders, getListDeviceOrdersQueryKey } from "@workspace/api-client-react";
-import { getDeviceToken, addOrderRef, getIdempotencyKey, extractFulfillmentText } from "./living-guide-orders";
+import {
+  getDeviceToken,
+  addOrderRef,
+  getIdempotencyKey,
+  extractFulfillmentText,
+  getRememberedOrderPassword,
+  rememberOrderPassword,
+} from "./living-guide-orders";
 import { UiLanguage, UiTranslator } from "../guest/i18n";
 
 const hasMinimumPhoneDigits = (value: string) =>
@@ -9,14 +16,18 @@ const hasMinimumPhoneDigits = (value: string) =>
 export function OrderSheet({
   item,
   slug,
+  lang,
   t,
   guest,
+  passwordRequired,
   onClose,
 }: {
   item: any;
   slug: string;
+  lang: UiLanguage;
   t: UiTranslator;
   guest: { unit: string; name: string } | null;
+  passwordRequired: boolean;
   onClose: () => void;
 }) {
   const [qty, setQty] = useState(1);
@@ -24,6 +35,9 @@ export function OrderSheet({
   const [note, setNote] = useState("");
   const [guestName, setGuestName] = useState(guest?.name ?? "");
   const [guestUnit, setGuestUnit] = useState(guest?.unit ?? "");
+  const [orderPassword, setOrderPassword] = useState(
+    passwordRequired ? getRememberedOrderPassword(slug) : "",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [successRef, setSuccessRef] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -41,7 +55,12 @@ export function OrderSheet({
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!guestUnit.trim() || !guestName.trim() || !phone.trim()) {
+    if (
+      !guestUnit.trim() ||
+      !guestName.trim() ||
+      !phone.trim() ||
+      (passwordRequired && !orderPassword.trim())
+    ) {
       setErrorMsg(t("UI.lg.order.validation.required"));
       return;
     }
@@ -61,12 +80,29 @@ export function OrderSheet({
           guestPhone: phone.trim(),
           guestUnit: guestUnit.trim(),
           guestNote: note.trim() || undefined,
+          orderPassword: passwordRequired ? orderPassword.trim() : undefined,
+          lang,
         },
       });
       addOrderRef(slug, res.orderRef);
+      if (passwordRequired) {
+        rememberOrderPassword(slug, orderPassword);
+      }
       setSuccessRef(res.orderRef);
-    } catch {
-      setErrorMsg(t("UI.lg.order.error"));
+    } catch (error: unknown) {
+      const data =
+        typeof error === "object" && error !== null && "data" in error
+          ? (error as { data?: unknown }).data
+          : null;
+      const code =
+        typeof data === "object" && data !== null && "code" in data
+          ? (data as { code?: unknown }).code
+          : null;
+      setErrorMsg(
+        code === "INVALID_ORDER_PASSWORD"
+          ? t("UI.lg.order.validation.password")
+          : t("UI.lg.order.error"),
+      );
       setSubmitting(false);
     }
   };
@@ -112,19 +148,35 @@ export function OrderSheet({
         </div>
 
         <label className="lg2-field lg2-field--required">
-          <span>{t("UI.lg.order.unit")}</span>
-          <input required type="text" maxLength={100} value={guestUnit} onChange={e => setGuestUnit(e.target.value)} disabled={submitting} data-testid="input-guest-unit" />
+          <span>{t("UI.lg.order.name")}</span>
+          <input required type="text" maxLength={200} value={guestName} onChange={e => setGuestName(e.target.value)} disabled={submitting} data-testid="input-guest-name" />
         </label>
 
         <label className="lg2-field lg2-field--required">
-          <span>{t("UI.lg.order.name")}</span>
-          <input required type="text" maxLength={200} value={guestName} onChange={e => setGuestName(e.target.value)} disabled={submitting} data-testid="input-guest-name" />
+          <span>{t("UI.lg.order.unit")}</span>
+          <input required type="text" maxLength={100} value={guestUnit} onChange={e => setGuestUnit(e.target.value)} disabled={submitting} data-testid="input-guest-unit" />
         </label>
 
         <label className="lg2-field lg2-field--required">
           <span>{t("UI.lg.order.phone")}</span>
           <input required type="tel" maxLength={50} value={phone} onChange={e => setPhone(e.target.value)} placeholder={t("UI.lg.order.placeholder.phone")} disabled={submitting} data-testid="input-guest-phone" />
         </label>
+
+        {passwordRequired && (
+          <label className="lg2-field lg2-field--required">
+            <span>{t("UI.lg.order.password")}</span>
+            <input
+              required
+              type="password"
+              maxLength={200}
+              value={orderPassword}
+              onChange={e => setOrderPassword(e.target.value)}
+              disabled={submitting}
+              autoComplete="current-password"
+              data-testid="input-order-password"
+            />
+          </label>
+        )}
 
         <label className="lg2-field">
           <span>{t("UI.lg.order.note")}</span>
@@ -138,7 +190,7 @@ export function OrderSheet({
           <button className="lg2-primary-button" style={{ background: "var(--card)", color: "var(--tx)", border: "1px solid var(--line)" }} type="button" onClick={onClose} disabled={submitting}>
             {t("UI.lg.action.back")}
           </button>
-          <button className="lg2-primary-button" type="submit" disabled={!guestUnit.trim() || !guestName.trim() || !phone.trim() || submitting} data-testid="submit-order">
+          <button className="lg2-primary-button" type="submit" disabled={!guestUnit.trim() || !guestName.trim() || !phone.trim() || (passwordRequired && !orderPassword.trim()) || submitting} data-testid="submit-order">
             {submitting ? "..." : t("UI.lg.order.submit")}
           </button>
         </div>

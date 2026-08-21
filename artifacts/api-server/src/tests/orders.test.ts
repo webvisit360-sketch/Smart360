@@ -50,6 +50,9 @@ import {
   GUEST_NOTE_MAX,
   STATUS_NOTE_MAX,
   hasMinimumPhoneDigits,
+  ORDER_PASSWORD_MAX,
+  matchesOrderPassword,
+  wrongOrderPasswordMessage,
   type ExistingOrderSummary,
 } from "../lib/orderHelpers";
 
@@ -81,6 +84,7 @@ describe("header length constants", () => {
   test("GUEST_UNIT_MAX = 100", () => assert.equal(GUEST_UNIT_MAX, 100));
   test("GUEST_NOTE_MAX = 500", () => assert.equal(GUEST_NOTE_MAX, 500));
   test("STATUS_NOTE_MAX = 300", () => assert.equal(STATUS_NOTE_MAX, 300));
+  test("ORDER_PASSWORD_MAX = 200", () => assert.equal(ORDER_PASSWORD_MAX, 200));
   test("STALE_PENDING_MS = 120000 (2 minutes)", () => assert.equal(STALE_PENDING_MS, 120_000));
 });
 
@@ -101,6 +105,30 @@ describe("hasMinimumPhoneDigits", () => {
 
   test("rejects five digits even with allowed formatting", () => {
     assert.equal(hasMinimumPhoneDigits("+12 / 34-5."), false);
+  });
+});
+
+describe("tenant order password", () => {
+  test("empty or unset tenant password opts out", () => {
+    assert.equal(matchesOrderPassword(null, undefined), true);
+    assert.equal(matchesOrderPassword("   ", "anything"), true);
+  });
+
+  test("trims both sides and remains case-sensitive", () => {
+    assert.equal(matchesOrderPassword("  Stay-2026  ", " Stay-2026 "), true);
+    assert.equal(matchesOrderPassword("Stay-2026", "stay-2026"), false);
+  });
+
+  test("missing or incorrect submitted password is rejected", () => {
+    assert.equal(matchesOrderPassword("Stay-2026", undefined), false);
+    assert.equal(matchesOrderPassword("Stay-2026", "wrong"), false);
+  });
+
+  test("returns the exact localized error messages", () => {
+    assert.equal(wrongOrderPasswordMessage("sl"), "Napačno geslo");
+    assert.equal(wrongOrderPasswordMessage("en"), "Wrong password");
+    assert.equal(wrongOrderPasswordMessage("de"), "Falsches Passwort");
+    assert.equal(wrongOrderPasswordMessage("it"), "Password errata");
   });
 });
 
@@ -574,6 +602,7 @@ describe("buildEmailBody", () => {
     orderRef: "aaaabbbb-cccc-dddd-eeee-ffff00001111",
     itemTitle: "Bio jabolka",
     qty: 3,
+    guestName: "Ana Novak",
     guestPhone: "+386 41 123 456",
     guestUnit: "B-14",
     guestNote: null,
@@ -583,6 +612,16 @@ describe("buildEmailBody", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
     assert.ok(html.includes("Bio jabolka"), "snapshot item title must appear in email");
+  });
+
+  test("shows required full name as the first data row", () => {
+    const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
+    const html = body["html"] as string;
+    const nameIndex = html.indexOf("Ime in priimek");
+    const itemIndex = html.indexOf("Artikel");
+    assert.ok(nameIndex >= 0, "full-name label must appear");
+    assert.ok(html.includes("Ana Novak"), "full-name value must appear");
+    assert.ok(nameIndex < itemIndex, "full name must be the first data row");
   });
 
   test("quantity and accommodation unit are shown separately", () => {
@@ -678,6 +717,7 @@ describe("stored-snapshot retry semantics", () => {
     snapshotFulfillment: string | null;
     snapshotProducerName: string | null;
     qty: number;
+    guestName: string;
     guestPhone: string;
     guestUnit: string;
     guestNote: string | null;
@@ -688,6 +728,7 @@ describe("stored-snapshot retry semantics", () => {
       orderRef: stored.orderRef,
       itemTitle: stored.snapshotTitle,
       qty: stored.qty,
+      guestName: stored.guestName,
       guestPhone: stored.guestPhone,
       guestUnit: stored.guestUnit,
       guestNote: stored.guestNote,
@@ -704,6 +745,7 @@ describe("stored-snapshot retry semantics", () => {
     snapshotFulfillment: "Prevzem vsak petek.",
     snapshotProducerName: "Čebelar Kovač",
     qty: 2,
+    guestName: "Janez Novak",
     guestPhone: "041 000 111",
     guestUnit: "0.5 kg",
     guestNote: null,
