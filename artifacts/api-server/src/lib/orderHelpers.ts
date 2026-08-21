@@ -27,9 +27,22 @@ export const IDEMPOTENCY_KEY_MAX = 128;
 
 export const GUEST_NAME_MAX = 200;
 export const GUEST_PHONE_MAX = 50;
+export const GUEST_PHONE_MIN_DIGITS = 6;
 export const GUEST_UNIT_MAX = 100;
 export const GUEST_NOTE_MAX = 500;
 export const STATUS_NOTE_MAX = 300;
+
+/**
+ * Phone validation intentionally stays format-agnostic: international and
+ * local separators are preserved, and only the number of digit characters is
+ * checked.
+ */
+export function hasMinimumPhoneDigits(
+  value: string,
+  minimum: number = GUEST_PHONE_MIN_DIGITS,
+): boolean {
+  return (value.match(/\d/g)?.length ?? 0) >= minimum;
+}
 
 // ─── Stale-claim reclaim threshold ───────────────────────────────────────────
 

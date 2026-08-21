@@ -1645,7 +1645,7 @@ export const GetTenantLabelPdfResponse = zod.unknown()
 
 
 /**
- * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant only when the tenant's orderNotifyEmail setting is enabled.
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone containing at least six digit characters, rate limits, and idempotency. Sends a notification email to the tenant only when the tenant's orderNotifyEmail setting is enabled.
 
  */
 export const CreateOrderParams = zod.object({
@@ -1681,7 +1681,7 @@ export const CreateOrderBody = zod.object({
   "itemId": zod.string().describe('UUID of the item to order'),
   "qty": zod.number().min(1).max(createOrderBodyQtyMax).describe('Quantity (positive integer 1-999); must be a whole number'),
   "guestName": zod.string().min(1).max(createOrderBodyGuestNameMax).describe('Guest name (required)'),
-  "guestPhone": zod.string().min(1).max(createOrderBodyGuestPhoneMax).describe('Guest phone number (required, non-blank)'),
+  "guestPhone": zod.string().min(1).max(createOrderBodyGuestPhoneMax).describe('Guest phone number (required; must contain at least six digit characters; formatting is preserved)'),
   "guestUnit": zod.string().min(1).max(createOrderBodyGuestUnitMax).describe('Guest accommodation\/unit pre-filled from sign-in but editable (e.g. \"B-14\")'),
   "guestNote": zod.string().max(createOrderBodyGuestNoteMax).optional().describe('Optional guest note')
 }).describe('Body for placing a new order')

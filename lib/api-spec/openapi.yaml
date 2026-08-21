@@ -1192,9 +1192,9 @@ paths:
       tags: [orders]
       summary: >
         Place an order for an item that has orderEnabled=true. Validates item
-        eligibility, tenant published state, phone non-blank, rate limits, and
-        idempotency. Sends a notification email to the tenant only when the
-        tenant's orderNotifyEmail setting is enabled.
+        eligibility, tenant published state, phone containing at least six digit
+        characters, rate limits, and idempotency. Sends a notification email to
+        the tenant only when the tenant's orderNotifyEmail setting is enabled.
       parameters:
         - name: slug
           in: path
@@ -1232,7 +1232,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OrderPublic"
         "400":
-          description: Validation error (item not orderable, sold out, phone blank, etc.)
+          description: Validation error (item not orderable, sold out, phone has fewer than six digits, etc.)
         "422":
           description: >
             Email notification rejected or sender not configured. A retryable hidden
@@ -1935,7 +1935,7 @@ components:
           type: string
           minLength: 1
           maxLength: 50
-          description: Guest phone number (required, non-blank)
+          description: Guest phone number (required; must contain at least six digit characters; formatting is preserved)
         guestUnit:
           type: string
           minLength: 1

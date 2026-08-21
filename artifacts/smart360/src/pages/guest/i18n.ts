@@ -472,6 +472,12 @@ export const LIVING_GUIDE_UI = {
     de: "Dieses Feld ist erforderlich.",
     it: "Questo campo è obbligatorio."
   },
+  "UI.lg.order.validation.phoneDigits": {
+    sl: "Telefonska številka mora vsebovati vsaj 6 števk.",
+    en: "The phone number must contain at least 6 digits.",
+    de: "Die Telefonnummer muss mindestens 6 Ziffern enthalten.",
+    it: "Il numero di telefono deve contenere almeno 6 cifre."
+  },
   "UI.lg.order.placeholder.phone": {
     sl: "+386 41 000 000",
     en: "+1 234 567 8900",

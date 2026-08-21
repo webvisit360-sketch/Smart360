@@ -48,6 +48,7 @@
  *  - x-idempotency-key: REQUIRED, 16–128 chars; missing = 400
  *  - qty must be Number.isInteger, 1–999
  *  - All guest strings trimmed before storage
+ *  - guestPhone must contain at least six digits; original formatting is preserved
  *  - When tenant orderNotifyEmail=true, missing ORDER_EMAIL_FROM/email → 422
  *  - When disabled, notificationStatus='skipped' and no email attempt occurs
  *  - Only notificationStatus IN ('sent','skipped') + unexpired rows are visible
@@ -90,9 +91,11 @@ import {
   IDEMPOTENCY_KEY_MAX,
   GUEST_NAME_MAX,
   GUEST_PHONE_MAX,
+  GUEST_PHONE_MIN_DIGITS,
   GUEST_UNIT_MAX,
   GUEST_NOTE_MAX,
   STATUS_NOTE_MAX,
+  hasMinimumPhoneDigits,
 } from "../lib/orderHelpers";
 import { sendOrderEmail, emailFrom } from "../lib/orderEmail";
 import { extractFulfillmentSentence } from "../lib/orderFulfillment";
@@ -242,6 +245,12 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
 
   if (!guestName) { res.status(400).json({ error: "guestName must not be blank" }); return; }
   if (!guestPhone) { res.status(400).json({ error: "guestPhone must not be blank" }); return; }
+  if (!hasMinimumPhoneDigits(guestPhone)) {
+    res.status(400).json({
+      error: `guestPhone must contain at least ${GUEST_PHONE_MIN_DIGITS} digits`,
+    });
+    return;
+  }
   if (!guestUnit) { res.status(400).json({ error: "guestUnit must not be blank" }); return; }
   if (guestName.length > GUEST_NAME_MAX) { res.status(400).json({ error: `guestName max ${GUEST_NAME_MAX}` }); return; }
   if (guestPhone.length > GUEST_PHONE_MAX) { res.status(400).json({ error: `guestPhone max ${GUEST_PHONE_MAX}` }); return; }

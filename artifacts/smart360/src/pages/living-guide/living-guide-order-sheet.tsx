@@ -3,6 +3,9 @@ import { useCreateOrder, useListDeviceOrders, getListDeviceOrdersQueryKey } from
 import { getDeviceToken, addOrderRef, getIdempotencyKey, extractFulfillmentText } from "./living-guide-orders";
 import { UiLanguage, UiTranslator } from "../guest/i18n";
 
+const hasMinimumPhoneDigits = (value: string) =>
+  (value.match(/\d/g)?.length ?? 0) >= 6;
+
 export function OrderSheet({
   item,
   slug,
@@ -40,6 +43,10 @@ export function OrderSheet({
     setErrorMsg("");
     if (!guestUnit.trim() || !guestName.trim() || !phone.trim()) {
       setErrorMsg(t("UI.lg.order.validation.required"));
+      return;
+    }
+    if (!hasMinimumPhoneDigits(phone)) {
+      setErrorMsg(t("UI.lg.order.validation.phoneDigits"));
       return;
     }
     if (submitting) return;

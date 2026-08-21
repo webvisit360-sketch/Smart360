@@ -25,7 +25,7 @@ export interface OrderInput {
      */
   guestName: string;
   /**
-     * Guest phone number (required, non-blank)
+     * Guest phone number (required; must contain at least six digit characters; formatting is preserved)
      * @minLength 1
      * @maxLength 50
      */

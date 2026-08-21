@@ -45,9 +45,11 @@ import {
   IDEMPOTENCY_KEY_MAX,
   GUEST_NAME_MAX,
   GUEST_PHONE_MAX,
+  GUEST_PHONE_MIN_DIGITS,
   GUEST_UNIT_MAX,
   GUEST_NOTE_MAX,
   STATUS_NOTE_MAX,
+  hasMinimumPhoneDigits,
   type ExistingOrderSummary,
 } from "../lib/orderHelpers";
 
@@ -75,10 +77,31 @@ describe("header length constants", () => {
   test("IDEMPOTENCY_KEY_MAX = 128", () => assert.equal(IDEMPOTENCY_KEY_MAX, 128));
   test("GUEST_NAME_MAX = 200", () => assert.equal(GUEST_NAME_MAX, 200));
   test("GUEST_PHONE_MAX = 50", () => assert.equal(GUEST_PHONE_MAX, 50));
+  test("GUEST_PHONE_MIN_DIGITS = 6", () => assert.equal(GUEST_PHONE_MIN_DIGITS, 6));
   test("GUEST_UNIT_MAX = 100", () => assert.equal(GUEST_UNIT_MAX, 100));
   test("GUEST_NOTE_MAX = 500", () => assert.equal(GUEST_NOTE_MAX, 500));
   test("STATUS_NOTE_MAX = 300", () => assert.equal(STATUS_NOTE_MAX, 300));
   test("STALE_PENDING_MS = 120000 (2 minutes)", () => assert.equal(STALE_PENDING_MS, 120_000));
+});
+
+describe("hasMinimumPhoneDigits", () => {
+  test("rejects non-digit text", () => {
+    assert.equal(hasMinimumPhoneDigits("abcdef"), false);
+  });
+
+  test("accepts an international number with spaces and plus", () => {
+    assert.equal(hasMinimumPhoneDigits("+386 41 998 660"), true);
+  });
+
+  test("accepts local separators without normalizing the input", () => {
+    const phone = "041/998-660";
+    assert.equal(hasMinimumPhoneDigits(phone), true);
+    assert.equal(phone, "041/998-660");
+  });
+
+  test("rejects five digits even with allowed formatting", () => {
+    assert.equal(hasMinimumPhoneDigits("+12 / 34-5."), false);
+  });
 });
 
 // ─── Token hashing ────────────────────────────────────────────────────────────
