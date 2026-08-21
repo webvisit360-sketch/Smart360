@@ -1,0 +1,133 @@
+FIX BATCH 4 — Hero rule v3 (no blur, whole image), equal tab heights, "opens at"
+
+Owner feedback from the live app. Execute BEFORE PART 4. One report, established
+format (re-verified public URL immediately before the report, build id, per-fix
+verification). Production DB strictly READ-ONLY. Never invent content.
+
+
+
+FIX 1 — Equal panel heights on tabbed details (Prijava/Odjava and all D/B2)
+
+Toggling Check-in ↔ Check-out changes the sheet height because the two panels
+have different content lengths. Rule: on any tabbed detail (template D and B2),
+measure both/all panels and lock the panel container to the TALLEST panel's
+height, so switching tabs never moves the sheet or the segment control.
+Recompute on language change, font load and resize.
+
+Verify: screenshots of Prijava and Odjava tabs — identical sheet top position;
+report the locked height value.
+
+FIX 2 — HERO RULE v3 (binding extension C5 — replaces the IMG-1 blur-fill rule)
+
+The owner rejects the blur backdrop except where it is unavoidable. New rule
+for every detail hero and gallery slide:
+
+
+
+
+
+Compute the image's natural aspect (w/h). Hero height =
+
+containerWidth / imageAspect, clamped to [176px, 66%] of the viewport
+ height.
+
+
+
+If the full-width height fits inside the clamp: render the WHOLE image
+
+edge-to-edge — no cropping, no blur, no side bands. The sheet starts
+ directly below the hero: landscape photo → short hero, sheet high;
+ portrait photo → tall hero, sheet low. The former "sheet ≤ 2/3" cap no
+ longer applies on photo pages; the sheet fills the remaining space
+ (content top-aligned, inner scroll as needed).
+
+
+
+ONLY when the image is so portrait that full-width rendering would exceed
+
+the 66% cap: hero = cap, image object-fit: contain by height, centered,
+ with the blurred same-image fill on the LEFT/RIGHT bands only. This is the
+ single case where blur is allowed (the owner explicitly approved it on the
+ BFT key-box photo; the Čoln portrait photo falls into the same case). The
+ whole photograph must always remain visible.
+
+
+
+Blur is removed everywhere else. A landscape image must never be cropped
+
+left/right nor blurred.
+
+
+
+Galleries: hero height adapts to the ACTIVE slide with a smooth ~200 ms
+
+height transition; each slide follows rules 1–3. Dots and the back button
+ stay in place.
+
+
+
+No-photo pages keep the ambient hero and content-height sheet unchanged.
+
+
+
+Grid/list thumbnails keep cover (unchanged).
+
+Verify with screenshots at 390×844: Skuter (whole scooter, NO blur, short
+hero, sheet high), Parkirišče (whole photo incl. asphalt, no blur), Čoln 3h
+(portrait → capped hero with side blur, whole boat visible), Dobrodošli
+control (matching aspect, unchanged), one gallery with mixed-aspect slides
+showing the animated height change. Report computed hero heights for each.
+
+FIX 3 — Closed status must include the next opening time
+
+Wherever a venue currently shows only "zaprto" (detail status chip, list and
+Najbližje rows), append the next opening time:
+
+
+
+
+
+SL: zaprto · odpre se ob HH:MM
+
+
+
+EN: closed · opens at HH:MM
+
+
+
+DE: geschlossen · öffnet um HH:MM
+
+
+
+IT: chiuso · apre alle HH:MM
+
+"Next opening" is computed from the weekly data in the DB (which stays
+unrendered otherwise): today's later opening if any, else the next day's first
+opening. If the venue has no hours data at all, show plain "zaprto"/"closed"
+etc. Cross-midnight logic unchanged. Add the new i18n keys in all four
+languages following the existing UI.lg.hours group.
+
+Verify: screenshot of a closed venue's detail chip and its Najbližje/list row
+in SL and one other language; state the computed next-opening logic for a
+venue that is closed today but opens tomorrow.
+
+
+
+
+
+DELIBERATELY ABSENT — do not "fix"
+
+
+
+
+
+PART 4 (orders) starts only after this batch is approved.
+
+
+
+Bazen photo, SUP rental translations, Apartma 1 reorder, Cafinho hours —
+owner/admin work.
+
+
+
+Logo-header task — separate, as already planned.
