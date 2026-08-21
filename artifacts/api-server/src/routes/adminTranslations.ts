@@ -19,7 +19,7 @@ import {
 import { invalidateTenantCache } from "./publicTenants";
 
 const router: IRouter = Router();
-router.use(requireAdmin);
+router.use("/admin", requireAdmin);
 
 function firstParam(v: string | string[] | undefined): string {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");

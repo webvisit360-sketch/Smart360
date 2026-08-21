@@ -120,7 +120,9 @@ export function buildEmailHeaders(orderRef: string): Record<string, string> {
   };
 }
 
-export type EmailResult = { ok: true } | { ok: false };
+export type EmailResult =
+  | { ok: true; messageId?: string }
+  | { ok: false };
 
 /**
  * Send an order notification email via the Resend connector.
@@ -155,8 +157,22 @@ export async function sendOrderEmail(p: OrderEmailPayload): Promise<EmailResult>
       return { ok: false };
     }
 
-    logger.info({ orderRef: p.orderRef }, "[orderEmail] notification accepted by Resend");
-    return { ok: true };
+    // Resend returns { id } for an accepted send. It is safe to log and retain
+    // for delivery evidence; unlike the response body it contains no guest PII.
+    const accepted = await resp.json().catch(() => null);
+    const messageId =
+      accepted &&
+      typeof accepted === "object" &&
+      "id" in accepted &&
+      typeof accepted.id === "string"
+        ? accepted.id
+        : undefined;
+
+    logger.info(
+      { orderRef: p.orderRef, resendMessageId: messageId ?? null },
+      "[orderEmail] notification accepted by Resend",
+    );
+    return { ok: true, messageId };
   } catch (err) {
     // Log only the error name/message — never the full err object which may
     // serialise the outgoing body containing guest PII.
