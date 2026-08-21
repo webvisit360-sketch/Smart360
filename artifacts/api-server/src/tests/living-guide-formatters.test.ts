@@ -13,6 +13,7 @@ const heroLayoutModulePath =
   "../../../smart360/src/pages/living-guide/living-guide-hero-layout.ts";
 const {
   calculateLivingGuideHeroLayout,
+  mediaAspectFromDimensions,
   nearestGalleryIndex,
 } = await import(heroLayoutModulePath);
 
@@ -71,17 +72,17 @@ test("keeps a supplied distance first in POI supporting text", () => {
   );
 });
 
-test("hero rule v4 uses natural full width through the 80 percent threshold", () => {
+test("hero rule v5 uses natural full width through the 85 percent threshold", () => {
   const exactlyAtThreshold = calculateLivingGuideHeroLayout({
     containerWidth: 400,
-    imageAspect: 400 / 640,
+    imageAspect: 400 / 680,
     viewportHeight: 800,
   });
   assert.deepEqual(exactlyAtThreshold, {
     branch: "full-bleed",
-    naturalHeight: 640,
-    thresholdHeight: 640,
-    heroHeight: 640,
+    naturalHeight: 680,
+    thresholdHeight: 680,
+    heroHeight: 680,
   });
 
   const wide = calculateLivingGuideHeroLayout({
@@ -93,7 +94,7 @@ test("hero rule v4 uses natural full width through the 80 percent threshold", ()
   assert.equal(wide?.heroHeight, 160);
 });
 
-test("hero rule v4 caps only images above 80 percent and uses 78 percent height", () => {
+test("hero rule v5 caps only images above 85 percent and uses 85 percent height", () => {
   const capped = calculateLivingGuideHeroLayout({
     containerWidth: 400,
     imageAspect: 0.5,
@@ -101,8 +102,15 @@ test("hero rule v4 caps only images above 80 percent and uses 78 percent height"
   });
   assert.equal(capped?.branch, "side-blur");
   assert.equal(capped?.naturalHeight, 800);
-  assert.equal(capped?.thresholdHeight, 640);
-  assert.equal(capped?.heroHeight, 624);
+  assert.equal(capped?.thresholdHeight, 680);
+  assert.equal(capped?.heroHeight, 680);
+});
+
+test("media aspect uses payload dimensions and rejects missing metadata", () => {
+  assert.equal(mediaAspectFromDimensions(1400, 1750), 0.8);
+  assert.equal(mediaAspectFromDimensions("900", "600"), 1.5);
+  assert.equal(mediaAspectFromDimensions(null, 600), null);
+  assert.equal(mediaAspectFromDimensions(900, 0), null);
 });
 
 test("gallery settling always chooses a whole slide boundary", () => {

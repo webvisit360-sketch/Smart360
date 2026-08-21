@@ -99,6 +99,10 @@ export const mediaTable = pgTable("media", {
   // Video only: poster frame (JPEG, same variants as photos) and duration.
   posterUrl: text("poster_url"),
   durationSec: doublePrecision("duration_sec"),
+  // Intrinsic display dimensions after EXIF orientation. These let the guest
+  // app reserve the final gallery height before the image bytes arrive.
+  width: integer("width"),
+  height: integer("height"),
   // Žariščna točka izreza v odstotkih (izrez-wifi-eposta.md §1a): točka, ki
   // mora ostati vidna, izrisana kot object-position. Privzeto središče.
   focusX: integer("focus_x").notNull().default(50),

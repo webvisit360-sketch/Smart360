@@ -32,6 +32,8 @@ export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItem
 
 
 
+
+
 export const GetPublicTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -146,6 +148,8 @@ export const GetPublicTenantResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 }))
@@ -481,6 +485,8 @@ export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistan
 
 
 
+
+
 export const GetTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -595,6 +601,8 @@ export const GetTenantResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 }))
@@ -1090,6 +1098,8 @@ export const createItemResponseDistanceMetersMin = 0;
 
 
 
+
+
 export const CreateItemResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
@@ -1127,6 +1137,8 @@ export const CreateItemResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 }))
@@ -1177,6 +1189,8 @@ export const updateItemResponseDistanceMetersMin = 0;
 
 
 
+
+
 export const UpdateItemResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
@@ -1214,6 +1228,8 @@ export const UpdateItemResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 }))
@@ -1232,6 +1248,8 @@ export const DuplicateItemParams = zod.object({
 })
 
 export const duplicateItemResponseDistanceMetersMin = 0;
+
+
 
 
 
@@ -1272,6 +1290,8 @@ export const DuplicateItemResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 }))
@@ -1297,6 +1317,10 @@ export const AddItemMediaBody = zod.object({
   "position": zod.number().optional()
 })
 
+
+
+
+
 export const AddItemMediaResponse = zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1307,6 +1331,8 @@ export const AddItemMediaResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 })
@@ -1415,6 +1441,10 @@ export const UpdateMediaBody = zod.object({
   "focusY": zod.number().min(updateMediaBodyFocusYMin).max(updateMediaBodyFocusYMax).optional()
 }).describe('Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)')
 
+
+
+
+
 export const UpdateMediaResponse = zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1425,6 +1455,8 @@ export const UpdateMediaResponse = zod.object({
   "kind": zod.string(),
   "posterUrl": zod.string().nullish(),
   "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
   "focusY": zod.number().optional()
 })

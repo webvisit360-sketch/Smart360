@@ -37,6 +37,7 @@ import {
 } from "./living-guide-formatters";
 import {
   calculateLivingGuideHeroLayout,
+  mediaAspectFromDimensions,
   nearestGalleryIndex,
 } from "./living-guide-hero-layout";
 import "./living-guide-tokens.css";
@@ -879,7 +880,9 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const heroRef = useRef<HTMLDivElement>(null);
   const galleryTrackRef = useRef<HTMLDivElement>(null);
   const settleTimeoutRef = useRef<number | null>(null);
-  const [frameWidth, setFrameWidth] = useState(0);
+  const [frameWidth, setFrameWidth] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth,
+  );
   const [viewportHeight, setViewportHeight] = useState(() =>
     typeof window === "undefined" ? 844 : window.innerHeight,
   );
@@ -891,14 +894,25 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const activeKey = activeEntry
     ? String(activeEntry.id ?? activeEntry.url ?? activeIndex)
     : "";
-  const activeAspect = imageAspects[activeKey];
+  const activeMetadataAspect = mediaAspectFromDimensions(
+    activeEntry?.width,
+    activeEntry?.height,
+  );
+  const activeMeasuredAspect = imageAspects[activeKey];
+  const activeAspect = activeMetadataAspect ?? activeMeasuredAspect;
+  const activeAspectSource = activeMetadataAspect
+    ? "payload"
+    : activeMeasuredAspect
+      ? "measured"
+      : "pending";
   const heroLayout = calculateLivingGuideHeroLayout({
     containerWidth: frameWidth,
     imageAspect: activeAspect,
     viewportHeight,
   });
-  const heroHeight = heroLayout?.heroHeight ?? null;
+  const heroHeight = heroLayout?.heroHeight ?? 0;
   const sideBlur = heroLayout?.branch === "side-blur";
+  const layoutReady = heroLayout !== null;
 
   const mediaKey = (media ?? [])
     .map((entry: any, index: number) => entry.id ?? entry.url ?? index)
@@ -907,21 +921,16 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   useLayoutEffect(() => {
     const hero = heroRef.current;
     if (!hero || !media?.length) return;
-    let measurementFrame: number | null = null;
     const measure = () => {
-      if (measurementFrame !== null) return;
-      measurementFrame = window.requestAnimationFrame(() => {
-        measurementFrame = null;
-        if (!hero.isConnected) return;
-        const nextFrameWidth = hero.clientWidth;
-        const nextViewportHeight = window.innerHeight;
-        setFrameWidth((current) =>
-          current === nextFrameWidth ? current : nextFrameWidth,
-        );
-        setViewportHeight((current) =>
-          current === nextViewportHeight ? current : nextViewportHeight,
-        );
-      });
+      if (!hero.isConnected) return;
+      const nextFrameWidth = hero.clientWidth;
+      const nextViewportHeight = window.innerHeight;
+      setFrameWidth((current) =>
+        current === nextFrameWidth ? current : nextFrameWidth,
+      );
+      setViewportHeight((current) =>
+        current === nextViewportHeight ? current : nextViewportHeight,
+      );
     };
     const observer =
       typeof ResizeObserver === "undefined"
@@ -933,9 +942,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     measure();
     return () => {
       observer?.disconnect();
-      if (measurementFrame !== null) {
-        window.cancelAnimationFrame(measurementFrame);
-      }
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
     };
@@ -1016,14 +1022,19 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   if (singleOnly) {
     const entry = media[0];
     const entryKey = String(entry.id ?? entry.url ?? 0);
+    const entryAspectReady =
+      mediaAspectFromDimensions(entry.width, entry.height) !== null ||
+      Boolean(imageAspects[entryKey]);
     return (
       <div
         ref={heroRef}
-        className="lg2-detail-hero lg2-detail-hero--photo"
-        data-lg-hero-height={heroHeight === null ? undefined : Math.round(heroHeight)}
+        className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}`}
+        data-lg-hero-height={Math.round(heroHeight)}
         data-lg-hero-natural-height={heroLayout?.naturalHeight}
         data-lg-hero-branch={heroLayout?.branch}
-        style={heroHeight === null ? undefined : { height: heroHeight }}
+        data-lg-hero-aspect-source={activeAspectSource}
+        data-lg-hero-layout-ready={layoutReady}
+        style={{ height: heroHeight }}
       >
         <div className="lg2-gallery-track">
           <div className="lg2-gallery-slide">
@@ -1032,6 +1043,8 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
               entryKey={entryKey}
               loading="eager"
               sideBlur={sideBlur}
+              aspectReady={entryAspectReady}
+              expectedAspect={mediaAspectFromDimensions(entry.width, entry.height)}
               onAspect={rememberAspect}
             />
           </div>
@@ -1043,12 +1056,14 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   return (
     <div
       ref={heroRef}
-      className="lg2-detail-hero lg2-detail-hero--photo"
+      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}`}
       data-lg-active-slide={activeIndex}
-      data-lg-hero-height={heroHeight === null ? undefined : Math.round(heroHeight)}
+      data-lg-hero-height={Math.round(heroHeight)}
       data-lg-hero-natural-height={heroLayout?.naturalHeight}
       data-lg-hero-branch={heroLayout?.branch}
-      style={heroHeight === null ? undefined : { height: heroHeight }}
+      data-lg-hero-aspect-source={activeAspectSource}
+      data-lg-hero-layout-ready={layoutReady}
+      style={{ height: heroHeight }}
     >
       <div
         ref={galleryTrackRef}
@@ -1058,6 +1073,12 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       >
         {media.map((entry: any, index: number) => {
           const entryKey = String(entry.id ?? entry.url ?? index);
+          const expectedAspect = mediaAspectFromDimensions(
+            entry.width,
+            entry.height,
+          );
+          const aspectReady =
+            expectedAspect !== null || Boolean(imageAspects[entryKey]);
           return (
             <div className="lg2-gallery-slide" key={entryKey}>
               <AspectAwareHeroImage
@@ -1065,6 +1086,8 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
                 entryKey={entryKey}
                 loading={index === 0 ? "eager" : "lazy"}
                 sideBlur={index === activeIndex && sideBlur}
+                aspectReady={aspectReady}
+                expectedAspect={expectedAspect}
                 onAspect={rememberAspect}
               />
             </div>
@@ -1086,12 +1109,16 @@ function AspectAwareHeroImage({
   entryKey,
   loading,
   sideBlur,
+  aspectReady,
+  expectedAspect,
   onAspect,
 }: {
   entry: any;
   entryKey: string;
   loading: "eager" | "lazy";
   sideBlur: boolean;
+  aspectReady: boolean;
+  expectedAspect: number | null;
   onAspect: (key: string, aspect: number) => void;
 }) {
   const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
@@ -1111,8 +1138,9 @@ function AspectAwareHeroImage({
         />
       )}
       <img
-        className="lg2-hero-image-main"
+        className={`lg2-hero-image-main${aspectReady ? " is-ready" : ""}`}
         data-lg-hero-image
+        data-lg-aspect-source={expectedAspect === null ? "measured" : "payload"}
         src={source}
         alt=""
         loading={loading}
@@ -1120,7 +1148,16 @@ function AspectAwareHeroImage({
         onLoad={(event) => {
           const image = event.currentTarget;
           if (image.naturalWidth > 0 && image.naturalHeight > 0) {
-            onAspect(entryKey, image.naturalWidth / image.naturalHeight);
+            const naturalAspect = image.naturalWidth / image.naturalHeight;
+            if (expectedAspect === null) {
+              image.dataset.lgDimensionsConfirmed = "measured";
+              onAspect(entryKey, naturalAspect);
+            } else {
+              const relativeError =
+                Math.abs(naturalAspect - expectedAspect) / expectedAspect;
+              image.dataset.lgDimensionsConfirmed =
+                relativeError <= 0.01 ? "true" : "mismatch";
+            }
           }
         }}
       />

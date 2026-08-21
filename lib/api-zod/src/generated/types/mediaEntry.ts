@@ -21,6 +21,18 @@ export interface MediaEntry {
   posterUrl?: string | null;
   /** @nullable */
   durationSec?: number | null;
+  /**
+     * Intrinsic display width after EXIF orientation
+     * @minimum 1
+     * @nullable
+     */
+  width: number | null;
+  /**
+     * Intrinsic display height after EXIF orientation
+     * @minimum 1
+     * @nullable
+     */
+  height: number | null;
   focusX?: number;
   focusY?: number;
 }

@@ -2040,9 +2040,17 @@ components:
         kind: { type: string }
         posterUrl: { type: ["string", "null"] }
         durationSec: { type: ["number", "null"] }
+        width:
+          type: ["number", "null"]
+          minimum: 1
+          description: Intrinsic display width after EXIF orientation
+        height:
+          type: ["number", "null"]
+          minimum: 1
+          description: Intrinsic display height after EXIF orientation
         focusX: { type: number }
         focusY: { type: number }
-      required: [id, url, position, kind]
+      required: [id, url, position, kind, width, height]
     MediaUpdate:
       type: object
       description: Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)

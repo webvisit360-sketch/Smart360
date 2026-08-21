@@ -57,18 +57,24 @@ const prefix = prefixParts.join("/");
 const bucket = storage.bucket(bucketName);
 
 const urlFor = (name) => `/api/storage/img/${SLUG}/${name}`;
+const dimensionsByName = new Map();
 
 async function uploadPhoto(name) {
   const original = fs.readFileSync(path.join(slikeDir, name));
+  let displayDimensions = null;
   for (const { w, q } of WIDTHS) {
-    const buf = await sharp(original)
+    const { data: buf, info } = await sharp(original)
       .rotate()
       .resize({ width: w, withoutEnlargement: true })
       .jpeg({ quality: q, mozjpeg: true })
-      .toBuffer();
+      .toBuffer({ resolveWithObject: true });
+    if (w === 1400) {
+      displayDimensions = { width: info.width, height: info.height };
+    }
     const objectName = `${prefix}/media/${SLUG}/${w}/${name}`;
     await bucket.file(objectName).save(buf, { contentType: "image/jpeg" });
   }
+  if (displayDimensions) dimensionsByName.set(name, displayDimensions);
 }
 
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
@@ -149,9 +155,16 @@ for (const [secKey, entries] of Object.entries(mapping)) {
     try {
       await client.query("delete from media where item_id=$1", [itemId]);
       for (let i = 0; i < photos.length; i++) {
+        const dimensions = dimensionsByName.get(photos[i]);
         await client.query(
-          "insert into media (item_id, url, position) values ($1,$2,$3)",
-          [itemId, urlFor(photos[i]), i],
+          "insert into media (item_id, url, position, width, height) values ($1,$2,$3,$4,$5)",
+          [
+            itemId,
+            urlFor(photos[i]),
+            i,
+            dimensions?.width ?? null,
+            dimensions?.height ?? null,
+          ],
         );
       }
       await client.query("commit");

@@ -30,6 +30,7 @@ import {
   ObjectStorageService,
   objectStorageClient,
 } from "../lib/objectStorage";
+import { orientedImageDimensions } from "../lib/mediaDimensions";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -199,7 +200,13 @@ export async function storeVideo(
   base: string,
   original: Buffer,
   originalName: string,
-): Promise<{ url: string; posterUrl: string; durationSec: number }> {
+): Promise<{
+  url: string;
+  posterUrl: string;
+  durationSec: number;
+  width: number;
+  height: number;
+}> {
   const searchPath = storage.getPublicObjectSearchPaths()[0];
   if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
   const dir = await mkdtemp(join(tmpdir(), "s360video-"));
@@ -255,6 +262,8 @@ export async function storeVideo(
       url: `/api/storage/video/${slug}/${videoName}`,
       posterUrl: `/api/storage/img/${slug}/${posterName}`,
       durationSec: finalMeta.durationSec,
+      width: finalMeta.width,
+      height: finalMeta.height,
     };
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -393,6 +402,8 @@ router.post(
     let url: string;
     let posterUrl: string | null = null;
     let durationSec: number | null = null;
+    let mediaWidth: number | null = null;
+    let mediaHeight: number | null = null;
     if (video) {
       try {
         const file = req.file;
@@ -402,6 +413,8 @@ router.post(
         url = out.url;
         posterUrl = out.posterUrl;
         durationSec = out.durationSec;
+        mediaWidth = out.width;
+        mediaHeight = out.height;
       } catch (err) {
         const status = (err as { status?: number }).status ?? 500;
         req.log.error({ err }, "video upload failed");
@@ -416,10 +429,16 @@ router.post(
       // Reject non-images / corrupt files with a 400 before touching storage.
       try {
         const meta = await sharp(req.file.buffer).metadata();
-        if (!meta.width || !meta.height || meta.width * meta.height > 60_000_000) {
+        const dimensions = orientedImageDimensions(meta);
+        if (
+          !dimensions ||
+          dimensions.width * dimensions.height > 60_000_000
+        ) {
           res.status(400).json({ error: "Neveljavna ali prevelika slika." });
           return;
         }
+        mediaWidth = dimensions.width;
+        mediaHeight = dimensions.height;
       } catch {
         res.status(400).json({ error: "Datoteka ni veljavna slika." });
         return;
@@ -450,6 +469,8 @@ router.post(
           kind: video ? "video" : "image",
           posterUrl,
           durationSec,
+          width: mediaWidth,
+          height: mediaHeight,
           position: sql<number>`(select coalesce(max(${mediaTable.position}), -1) + 1 from ${mediaTable} where ${mediaTable.itemId} = ${itemId})`,
         })
         .returning();

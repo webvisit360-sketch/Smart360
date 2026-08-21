@@ -1,5 +1,5 @@
-export const HERO_FULL_WIDTH_THRESHOLD = 0.8;
-export const HERO_SIDE_BLUR_HEIGHT = 0.78;
+export const HERO_FULL_WIDTH_THRESHOLD = 0.85;
+export const HERO_SIDE_BLUR_HEIGHT = 0.85;
 
 export type LivingGuideHeroBranch = "full-bleed" | "side-blur";
 
@@ -9,6 +9,23 @@ export type LivingGuideHeroLayout = {
   thresholdHeight: number;
   heroHeight: number;
 };
+
+export function mediaAspectFromDimensions(
+  width: unknown,
+  height: unknown,
+): number | null {
+  const numericWidth = Number(width);
+  const numericHeight = Number(height);
+  if (
+    !Number.isFinite(numericWidth) ||
+    !Number.isFinite(numericHeight) ||
+    numericWidth <= 0 ||
+    numericHeight <= 0
+  ) {
+    return null;
+  }
+  return numericWidth / numericHeight;
+}
 
 export function calculateLivingGuideHeroLayout({
   containerWidth,
