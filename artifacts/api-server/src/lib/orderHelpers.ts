@@ -29,6 +29,7 @@ export const GUEST_NAME_MAX = 200;
 export const GUEST_PHONE_MAX = 50;
 export const GUEST_UNIT_MAX = 100;
 export const GUEST_NOTE_MAX = 500;
+export const STATUS_NOTE_MAX = 300;
 
 // ─── Stale-claim reclaim threshold ───────────────────────────────────────────
 
@@ -104,7 +105,8 @@ export interface ExistingOrderSummary {
  * What the create-order handler should do when it finds an existing row for
  * the composite idempotency key.
  *
- *   'conflict_sent'         — Row already delivered → return existing order (409)
+ *   'conflict_sent'         — Row already delivered or notification skipped
+ *                             → return existing visible order
  *   'processing'            — Row is 'sending' with a FRESH (non-expired) claim →
  *                             another attempt owns it; return 425 without sending
  *   'claim_failed'          — Row is 'failed' → caller should atomically reclaim
@@ -139,7 +141,12 @@ export function decideNotificationAction(
   nowMs: number = Date.now(),
   staleClaimMs: number = STALE_CLAIM_MS,
 ): NotificationAction {
-  if (existing.notificationStatus === "sent") return "conflict_sent";
+  if (
+    existing.notificationStatus === "sent" ||
+    existing.notificationStatus === "skipped"
+  ) {
+    return "conflict_sent";
+  }
   if (existing.notificationStatus === "failed") return "claim_failed";
   if (existing.notificationStatus === "pending") return "claim_pending";
   // notificationStatus === 'sending' (active claim)

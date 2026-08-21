@@ -285,7 +285,7 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
   if (data["coverTextColor"] !== undefined && data["coverTextColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["coverTextColor"])))
     return "coverTextColor must be a hex color like #FFFFFF";
   for (const key of ["navColorCover", "navColor", "navColorOn"]) {
-    if (data[key] !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(data[key])))
+    if (data[key] !== undefined && data[key] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data[key])))
       return `${key} must be a hex color like #FFFFFF`;
   }
   if (!inRange(data["coverTitleSize"], 24, 84)) return "coverTitleSize must be 24-84";

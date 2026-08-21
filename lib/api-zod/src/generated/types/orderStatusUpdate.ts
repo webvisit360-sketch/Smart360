@@ -8,9 +8,15 @@
 import type { OrderStatusUpdateStatus } from './orderStatusUpdateStatus';
 
 /**
- * Body for patching order status
+ * Body for patching order status and replacing the current host note
  */
 export interface OrderStatusUpdate {
   /** Target status (only non-terminal targets are valid per the transition matrix) */
   status: OrderStatusUpdateStatus;
+  /**
+     * Optional plain-text note for the target status; omitted, null, or blank clears the previous status note
+     * @maxLength 300
+     * @nullable
+     */
+  statusNote?: string | null;
 }

@@ -49,6 +49,7 @@ export const GetPublicTenantResponse = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -359,6 +360,7 @@ export const ListTenantsResponseItem = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -424,6 +426,7 @@ export const CreateTenantResponse = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -492,6 +495,7 @@ export const GetTenantResponse = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -625,6 +629,7 @@ export const UpdateTenantBody = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().optional(),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -679,6 +684,7 @@ export const UpdateTenantResponse = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -757,6 +763,7 @@ export const DuplicateTenantResponse = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -830,6 +837,7 @@ export const RenewTenantResponse = zod.object({
   "viber": zod.string().nullish(),
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "wifiSsid": zod.string().nullish(),
@@ -1637,7 +1645,7 @@ export const GetTenantLabelPdfResponse = zod.unknown()
 
 
 /**
- * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant on success.
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant only when the tenant's orderNotifyEmail setting is enabled.
 
  */
 export const CreateOrderParams = zod.object({
@@ -1693,9 +1701,10 @@ export const CreateOrderResponse = zod.object({
   "guestUnit": zod.string(),
   "guestNote": zod.string().nullish(),
   "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
+  "statusNote": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
-}).describe('Order fields safe to return to the ordering guest (only notification_status=sent orders)')
+}).describe('Order fields safe to return to the ordering guest (notification sent or intentionally skipped)')
 
 
 /**
@@ -1725,9 +1734,10 @@ export const ListDeviceOrdersResponseItem = zod.object({
   "guestUnit": zod.string(),
   "guestNote": zod.string().nullish(),
   "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
+  "statusNote": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
-}).describe('Order fields safe to return to the ordering guest (only notification_status=sent orders)')
+}).describe('Order fields safe to return to the ordering guest (notification sent or intentionally skipped)')
 export const ListDeviceOrdersResponse = zod.array(ListDeviceOrdersResponseItem)
 
 
@@ -1755,12 +1765,13 @@ export const ListTenantOrdersResponseItem = zod.object({
   "guestUnit": zod.string(),
   "guestNote": zod.string().nullish(),
   "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
-  "notificationStatus": zod.enum(['pending', 'sent', 'failed']),
+  "statusNote": zod.string().nullable(),
+  "notificationStatus": zod.enum(['pending', 'sending', 'sent', 'failed', 'skipped']),
   "notificationSentAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "deleteAfter": zod.string()
-}).describe('Full order fields for admin view (only notification_status=sent orders)')
+}).describe('Full order fields for admin view (notification sent or intentionally skipped)')
 export const ListTenantOrdersResponse = zod.array(ListTenantOrdersResponseItem)
 
 
@@ -1772,9 +1783,14 @@ export const UpdateOrderStatusParams = zod.object({
   "orderRef": zod.coerce.string()
 })
 
+export const updateOrderStatusBodyStatusNoteMax = 300;
+
+
+
 export const UpdateOrderStatusBody = zod.object({
-  "status": zod.enum(['potrjeno', 'prevzeto', 'zavrnjeno']).describe('Target status (only non-terminal targets are valid per the transition matrix)')
-}).describe('Body for patching order status')
+  "status": zod.enum(['potrjeno', 'prevzeto', 'zavrnjeno']).describe('Target status (only non-terminal targets are valid per the transition matrix)'),
+  "statusNote": zod.string().max(updateOrderStatusBodyStatusNoteMax).nullish().describe('Optional plain-text note for the target status; omitted, null, or blank clears the previous status note')
+}).describe('Body for patching order status and replacing the current host note')
 
 export const UpdateOrderStatusResponse = zod.object({
   "orderRef": zod.string(),
@@ -1792,11 +1808,12 @@ export const UpdateOrderStatusResponse = zod.object({
   "guestUnit": zod.string(),
   "guestNote": zod.string().nullish(),
   "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
-  "notificationStatus": zod.enum(['pending', 'sent', 'failed']),
+  "statusNote": zod.string().nullable(),
+  "notificationStatus": zod.enum(['pending', 'sending', 'sent', 'failed', 'skipped']),
   "notificationSentAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "deleteAfter": zod.string()
-}).describe('Full order fields for admin view (only notification_status=sent orders)')
+}).describe('Full order fields for admin view (notification sent or intentionally skipped)')
 
 

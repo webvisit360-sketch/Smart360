@@ -1193,7 +1193,8 @@ paths:
       summary: >
         Place an order for an item that has orderEnabled=true. Validates item
         eligibility, tenant published state, phone non-blank, rate limits, and
-        idempotency. Sends a notification email to the tenant on success.
+        idempotency. Sends a notification email to the tenant only when the
+        tenant's orderNotifyEmail setting is enabled.
       parameters:
         - name: slug
           in: path
@@ -1511,6 +1512,9 @@ components:
         viber: { type: ["string", "null"] }
         instagram: { type: ["string", "null"] }
         email: { type: ["string", "null"] }
+        orderNotifyEmail:
+          type: boolean
+          description: Whether new orders send the tenant a notification email; defaults to true
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
@@ -1550,7 +1554,7 @@ components:
         createdAt: { type: string }
         renewsAt: { type: ["string", "null"] }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, languages, isTemplate, isPublished, mediaQuotaBytes, createdAt, updatedAt]
+      required: [id, slug, name, theme, languages, isTemplate, isPublished, orderNotifyEmail, mediaQuotaBytes, createdAt, updatedAt]
     TenantInput:
       type: object
       properties:
@@ -1586,6 +1590,7 @@ components:
         viber: { type: ["string", "null"] }
         instagram: { type: ["string", "null"] }
         email: { type: ["string", "null"] }
+        orderNotifyEmail: { type: boolean }
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
         wifiSsid: { type: ["string", "null"] }
@@ -1943,16 +1948,20 @@ components:
       required: [itemId, qty, guestName, guestPhone, guestUnit]
     OrderStatusUpdate:
       type: object
-      description: Body for patching order status
+      description: Body for patching order status and replacing the current host note
       properties:
         status:
           type: string
           enum: [potrjeno, prevzeto, zavrnjeno]
           description: Target status (only non-terminal targets are valid per the transition matrix)
+        statusNote:
+          type: ["string", "null"]
+          maxLength: 300
+          description: Optional plain-text note for the target status; omitted, null, or blank clears the previous status note
       required: [status]
     OrderPublic:
       type: object
-      description: Order fields safe to return to the ordering guest (only notification_status=sent orders)
+      description: Order fields safe to return to the ordering guest (notification sent or intentionally skipped)
       properties:
         orderRef: { type: string }
         tenantId: { type: string }
@@ -1970,12 +1979,13 @@ components:
         status:
           type: string
           enum: [novo, potrjeno, prevzeto, zavrnjeno]
+        statusNote: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }
-      required: [orderRef, tenantId, itemId, qty, guestName, guestPhone, guestUnit, status, createdAt, updatedAt]
+      required: [orderRef, tenantId, itemId, qty, guestName, guestPhone, guestUnit, status, statusNote, createdAt, updatedAt]
     OrderAdmin:
       type: object
-      description: Full order fields for admin view (only notification_status=sent orders)
+      description: Full order fields for admin view (notification sent or intentionally skipped)
       properties:
         orderRef: { type: string }
         tenantId: { type: string }
@@ -1994,14 +2004,15 @@ components:
         status:
           type: string
           enum: [novo, potrjeno, prevzeto, zavrnjeno]
+        statusNote: { type: ["string", "null"] }
         notificationStatus:
           type: string
-          enum: [pending, sent, failed]
+          enum: [pending, sending, sent, failed, skipped]
         notificationSentAt: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }
         deleteAfter: { type: string }
-      required: [orderRef, tenantId, itemId, qty, guestName, guestPhone, guestUnit, status, notificationStatus, createdAt, updatedAt, deleteAfter]
+      required: [orderRef, tenantId, itemId, qty, guestName, guestPhone, guestUnit, status, statusNote, notificationStatus, createdAt, updatedAt, deleteAfter]
     MediaEntry:
       type: object
       properties:

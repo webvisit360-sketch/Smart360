@@ -36,6 +36,8 @@ export interface Tenant {
   instagram?: string | null;
   /** @nullable */
   email?: string | null;
+  /** Whether new orders send the tenant a notification email; defaults to true */
+  orderNotifyEmail: boolean;
   /** @nullable */
   address?: string | null;
   /** @nullable */

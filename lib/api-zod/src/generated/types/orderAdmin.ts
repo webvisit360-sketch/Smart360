@@ -9,7 +9,7 @@ import type { OrderAdminNotificationStatus } from './orderAdminNotificationStatu
 import type { OrderAdminStatus } from './orderAdminStatus';
 
 /**
- * Full order fields for admin view (only notification_status=sent orders)
+ * Full order fields for admin view (notification sent or intentionally skipped)
  */
 export interface OrderAdmin {
   orderRef: string;
@@ -34,6 +34,8 @@ export interface OrderAdmin {
   /** @nullable */
   guestNote?: string | null;
   status: OrderAdminStatus;
+  /** @nullable */
+  statusNote: string | null;
   notificationStatus: OrderAdminNotificationStatus;
   /** @nullable */
   notificationSentAt?: string | null;

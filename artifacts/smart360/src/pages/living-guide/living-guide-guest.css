@@ -1733,6 +1733,25 @@ body[data-t="swipe"] .lg2-order-dock {
   color: #fff;
 }
 
+.lg2-my-orders-note {
+  display: grid;
+  gap: 3px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--acc) 24%, var(--line));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--acc) 7%, var(--card));
+  color: var(--tx);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.lg2-my-orders-note b {
+  font-size: 12px;
+  color: var(--tx2);
+}
+
 .lg2-my-orders-meta {
   font-size: 13px;
   color: var(--tx2);

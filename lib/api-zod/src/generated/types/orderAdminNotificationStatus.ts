@@ -11,6 +11,8 @@ export type OrderAdminNotificationStatus = typeof OrderAdminNotificationStatus[k
 
 export const OrderAdminNotificationStatus = {
   pending: 'pending',
+  sending: 'sending',
   sent: 'sent',
   failed: 'failed',
+  skipped: 'skipped',
 } as const;

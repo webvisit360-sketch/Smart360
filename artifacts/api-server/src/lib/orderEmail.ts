@@ -43,12 +43,7 @@ export interface OrderEmailPayload {
   /** Real order reference UUID (not a placeholder). */
   orderRef: string;
   itemTitle: string | null | undefined;
-  price: string | null | undefined;
-  priceUnit: string | null | undefined;
-  fulfillment: string | null | undefined;
-  producerName: string | null | undefined;
   qty: number;
-  guestName: string;
   /** Phone shown in email — operator needs it to call back. */
   guestPhone: string;
   /** Guest's accommodation/unit from sign-in (for example B-14). */
@@ -72,10 +67,6 @@ export function buildEmailBody(
   p: OrderEmailPayload,
   from: string,
 ): Record<string, unknown> {
-  const shortRef = p.orderRef.replace(/-/g, "").slice(0, 8).toUpperCase();
-  const priceStr = [p.price, p.priceUnit].filter(Boolean).join(" / ") || "—";
-  const fulfillmentStr = p.fulfillment ?? "—";
-  const producerStr = p.producerName ?? "—";
   const noteRow = p.guestNote
     ? `<tr><td style="padding:6px 0;color:#666;vertical-align:top">Opomba gosta</td><td>${escHtml(p.guestNote)}</td></tr>`
     : "";
@@ -84,15 +75,11 @@ export function buildEmailBody(
 <html lang="sl">
 <head><meta charset="utf-8"><title>Novo naročilo – ${escHtml(p.tenantName)}</title></head>
 <body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-  <h1 style="font-size:20px;margin-bottom:4px">Novo naročilo #${escHtml(shortRef)}</h1>
-  <p style="color:#666;margin-top:0;font-size:13px">Celotna referenca: ${escHtml(p.orderRef)}</p>
+  <h1 style="font-size:20px;margin-bottom:4px">Novo naročilo</h1>
+  <p style="color:#666;margin-top:0;font-size:14px">Odprite skrbniški portal za obdelavo naročila.</p>
   <table style="border-collapse:collapse;width:100%;margin-top:16px">
     <tr><td style="padding:6px 0;color:#666;width:140px">Artikel</td><td><strong>${escHtml(p.itemTitle ?? "—")}</strong></td></tr>
-    <tr><td style="padding:6px 0;color:#666">Cena</td><td>${escHtml(priceStr)}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Količina</td><td>${p.qty}</td></tr>
-    <tr><td style="padding:6px 0;color:#666">Prevzem / dostava</td><td>${escHtml(fulfillmentStr)}</td></tr>
-    <tr><td style="padding:6px 0;color:#666">Pridelovalec</td><td>${escHtml(producerStr)}</td></tr>
-    <tr><td style="padding:6px 0;color:#666">Ime gosta</td><td>${escHtml(p.guestName)}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Enota gosta</td><td>${escHtml(p.guestUnit)}</td></tr>
     <tr><td style="padding:6px 0;color:#666">Telefon gosta</td><td>${escHtml(p.guestPhone)}</td></tr>
     ${noteRow}
@@ -105,7 +92,7 @@ export function buildEmailBody(
   return {
     from,
     to: [p.to],
-    subject: `Novo naročilo: ${p.itemTitle ?? shortRef} – ${p.tenantName}`,
+    subject: `Novo naročilo – odprite portal`,
     html,
   };
 }

@@ -4696,7 +4696,7 @@ export const getCreateOrderUrl = (slug: string,) => {
 }
 
 /**
- * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant on success.
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant only when the tenant's orderNotifyEmail setting is enabled.
 
  */
 export const createOrder = async (slug: string,
@@ -4747,7 +4747,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateOrderMutationError = ErrorType<void>
 
     /**
- * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant on success.
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant only when the tenant's orderNotifyEmail setting is enabled.
 
  */
 export const useCreateOrder = <TError = ErrorType<void>,

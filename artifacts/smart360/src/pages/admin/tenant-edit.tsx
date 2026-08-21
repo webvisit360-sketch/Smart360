@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
@@ -78,6 +79,7 @@ export default function AdminTenantEdit() {
     viber: "",
     instagram: "",
     email: "",
+    orderNotifyEmail: true,
     mapQuery: "",
     tourUrl: "",
     heroUrl: "",
@@ -187,6 +189,7 @@ export default function AdminTenantEdit() {
         viber: tenant.viber || "",
         instagram: tenant.instagram || "",
         email: tenant.email || "",
+        orderNotifyEmail: tenant.orderNotifyEmail,
         mapQuery: tenant.mapQuery || "",
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
@@ -412,12 +415,31 @@ export default function AdminTenantEdit() {
 
               <div className="flex items-center gap-2 pt-4">
                 <button 
+                  type="button"
                   className={`w-12 h-6 rounded-full transition-colors relative ${formData.isPublished ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                   onClick={() => setFormData({ ...formData, isPublished: !formData.isPublished })}
                 >
                   <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${formData.isPublished ? 'left-7' : 'left-1'}`} />
                 </button>
                 <Label>Objavljeno (vidno gostom)</Label>
+              </div>
+
+              <div className="flex items-start justify-between gap-4 border-t pt-4">
+                <div className="space-y-1">
+                  <Label htmlFor="order-notify-email">E-poštno obvestilo ob novem naročilu</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Če je izklopljeno, naročilo še vedno takoj prispe v zavihek Naročila.
+                  </p>
+                </div>
+                <Switch
+                  id="order-notify-email"
+                  checked={formData.orderNotifyEmail}
+                  onCheckedChange={(checked) =>
+                    setFormData((current) => ({ ...current, orderNotifyEmail: checked }))
+                  }
+                  aria-label="E-poštno obvestilo ob novem naročilu"
+                  data-testid="switch-order-notify-email"
+                />
               </div>
             </CardContent>
           </Card>

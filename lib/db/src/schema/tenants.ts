@@ -43,6 +43,9 @@ export const tenantsTable = pgTable("tenants", {
   // E-pošta med kontakti (izrez-wifi-eposta.md §3): pisno vprašanje s pisnim
   // odgovorom je tudi dokaz dogovora. Prazno = brez vrstice.
   email: text("email"),
+  // New-order email is only a notification bell; the admin inbox remains the
+  // primary workflow. Hosts may disable email without disabling ordering.
+  orderNotifyEmail: boolean("order_notify_email").notNull().default(true),
   address: text("address"),
   mapQuery: text("map_query"),
   wifiSsid: text("wifi_ssid"),

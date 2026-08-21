@@ -8,7 +8,7 @@
 import type { OrderPublicStatus } from './orderPublicStatus';
 
 /**
- * Order fields safe to return to the ordering guest (only notification_status=sent orders)
+ * Order fields safe to return to the ordering guest (notification sent or intentionally skipped)
  */
 export interface OrderPublic {
   orderRef: string;
@@ -31,6 +31,8 @@ export interface OrderPublic {
   /** @nullable */
   guestNote?: string | null;
   status: OrderPublicStatus;
+  /** @nullable */
+  statusNote: string | null;
   createdAt: string;
   updatedAt: string;
 }

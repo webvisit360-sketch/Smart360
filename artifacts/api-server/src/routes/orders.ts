@@ -3,10 +3,10 @@
  *
  * Public:
  *   POST /public/tenants/:slug/orders   — create order (rate-limited, idempotent)
- *   GET  /public/tenants/:slug/orders   — device-scoped order list (sent only)
+ *   GET  /public/tenants/:slug/orders   — device-scoped visible order list
  *
  * Admin (requireAdmin middleware):
- *   GET   /admin/tenants/:id/orders         — list tenant orders (sent only)
+ *   GET   /admin/tenants/:id/orders         — list visible tenant orders
  *   PATCH /admin/orders/:orderRef/status    — status transition (race-safe)
  *
  * ── Atomic create flow with exact claim identity ─────────────────────────────
@@ -48,14 +48,14 @@
  *  - x-idempotency-key: REQUIRED, 16–128 chars; missing = 400
  *  - qty must be Number.isInteger, 1–999
  *  - All guest strings trimmed before storage
- *  - Missing ORDER_EMAIL_FROM → 422 before any DB work
- *  - Missing tenant.email → 422
- *  - Only notificationStatus='sent' + not expired rows appear in list responses
+ *  - When tenant orderNotifyEmail=true, missing ORDER_EMAIL_FROM/email → 422
+ *  - When disabled, notificationStatus='skipped' and no email attempt occurs
+ *  - Only notificationStatus IN ('sent','skipped') + unexpired rows are visible
  *  - Status PATCH uses WHERE orderRef AND current_status (race-safe optimistic lock)
  *  - PII never logged; errors never echo request bodies
  */
 import { Router, type IRouter } from "express";
-import { and, desc, eq, gt, lte } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lte } from "drizzle-orm";
 import {
   db,
   ordersTable,
@@ -92,6 +92,7 @@ import {
   GUEST_PHONE_MAX,
   GUEST_UNIT_MAX,
   GUEST_NOTE_MAX,
+  STATUS_NOTE_MAX,
 } from "../lib/orderHelpers";
 import { sendOrderEmail, emailFrom } from "../lib/orderEmail";
 import { extractFulfillmentSentence } from "../lib/orderFulfillment";
@@ -125,6 +126,7 @@ function formatOrderPublic(order: typeof ordersTable.$inferSelect) {
       guestUnit: order.guestUnit,
       guestNote: order.guestNote,
       status: order.status,
+      statusNote: order.statusNote,
       createdAt: order.createdAt.toISOString(),
       updatedAt: order.updatedAt.toISOString(),
     }),
@@ -149,6 +151,7 @@ function formatOrderAdmin(order: typeof ordersTable.$inferSelect) {
       guestUnit: order.guestUnit,
       guestNote: order.guestNote,
       status: order.status,
+      statusNote: order.statusNote,
       notificationStatus: order.notificationStatus,
       notificationSentAt: order.notificationSentAt?.toISOString() ?? null,
       createdAt: order.createdAt.toISOString(),
@@ -252,18 +255,6 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  // ── ORDER_EMAIL_FROM must be set — validate before any DB work ───────────
-  let senderFrom: string;
-  try {
-    senderFrom = emailFrom();
-    void senderFrom; // used implicitly via sendOrderEmail
-  } catch {
-    res.status(422).json({
-      error: "Order email sender is not configured (ORDER_EMAIL_FROM missing)",
-    });
-    return;
-  }
-
   // ── Resolve tenant ───────────────────────────────────────────────────────
   const tenant = await resolvePublishedTenant(slug);
   if (!tenant) {
@@ -271,32 +262,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  // Tenant email is required — missing is a blocking 422
-  if (!tenant.email) {
-    res.status(422).json({
-      error: "Order notification cannot be delivered: tenant has no email configured",
-    });
-    return;
-  }
-
-  // ── Resolve item ─────────────────────────────────────────────────────────
-  const item = await resolveEligibleItem(tenant.id, itemId);
-  if (!item) { res.status(400).json({ error: "Item not found" }); return; }
-  if (!item.isVisible) { res.status(400).json({ error: "Item is not visible" }); return; }
-  if (!item.orderEnabled) { res.status(400).json({ error: "Ordering is not enabled for this item" }); return; }
-  if (item.soldOut) { res.status(400).json({ error: "Item is sold out" }); return; }
-
-  // ── Build snapshots ──────────────────────────────────────────────────────
   const idempotencyKey = makeIdempotencyKey(tenant.id, deviceTokenHash, rawIdempotencyKey);
-
-  const snapshotTitle = item.title ?? null;
-  const snapshotPrice = item.price ?? null;
-  const snapshotPriceUnit = item.priceUnit ?? null;
-  const snapshotFulfillment = extractFulfillmentSentence(item.body, item.noteText, item.bullets);
-  const snapshotProducerName = item.producerName ?? null;
-  const snapshotTenantName = tenant.name;
-  const snapshotTenantEmail = tenant.email;
-  const deleteAfter = makeDeleteAfter();
 
   // Every send attempt (new insert OR reclaim) owns a fresh random claim token.
   // The row enters 'sending' with this token; only the attempt whose token
@@ -304,54 +270,109 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
   const claimToken = makeClaimToken();
   const claimedAt = new Date();
 
-  // ── Step 3: Atomic INSERT … ON CONFLICT DO NOTHING ───────────────────────
-  // The unique index on idempotencyKey makes this race-free. On insert the row
-  // is born directly in 'sending' owned by THIS attempt's token — no separate
-  // claim step, so no window where an unclaimed 'pending' row exists.
-  // If the INSERT returns nothing, a row already exists — read and contend for it.
-  const [inserted] = await db
-    .insert(ordersTable)
-    .values({
-      tenantId: tenant.id,
-      deviceTokenHash,
-      idempotencyKey,
-      itemId,
-      snapshotTitle,
-      snapshotPrice,
-      snapshotPriceUnit,
-      snapshotFulfillment,
-      snapshotProducerName,
-      snapshotTenantName,
-      snapshotTenantEmail,
-      qty,
-      guestName,
-      guestPhone,
-      guestUnit,
-      guestNote,
-      status: "novo",
-      notificationStatus: "sending",
-      notificationClaimToken: claimToken,
-      notificationClaimedAt: claimedAt,
-      deleteAfter,
-    })
-    .onConflictDoNothing({ target: ordersTable.idempotencyKey })
-    .returning();
+  // Resolve idempotency BEFORE applying current item/email configuration.
+  // A retry belongs to the stored order policy and snapshots, even if the host
+  // has since changed the toggle, email address, item visibility, or stock.
+  const [preExisting] = await db
+    .select()
+    .from(ordersTable)
+    .where(eq(ordersTable.idempotencyKey, idempotencyKey));
+
+  let inserted: typeof ordersTable.$inferSelect | undefined;
+
+  if (!preExisting) {
+    // Current notification settings apply only to genuinely NEW orders.
+    if (tenant.orderNotifyEmail) {
+      try {
+        emailFrom();
+      } catch {
+        res.status(422).json({
+          error: "Order email sender is not configured (ORDER_EMAIL_FROM missing)",
+        });
+        return;
+      }
+      if (!tenant.email) {
+        res.status(422).json({
+          error: "Order notification cannot be delivered: tenant has no email configured",
+        });
+        return;
+      }
+    }
+
+    // ── Resolve item for a new order ────────────────────────────────────────
+    const item = await resolveEligibleItem(tenant.id, itemId);
+    if (!item) { res.status(400).json({ error: "Item not found" }); return; }
+    if (!item.isVisible) { res.status(400).json({ error: "Item is not visible" }); return; }
+    if (!item.orderEnabled) { res.status(400).json({ error: "Ordering is not enabled for this item" }); return; }
+    if (item.soldOut) { res.status(400).json({ error: "Item is sold out" }); return; }
+
+    // ── Build immutable snapshots ───────────────────────────────────────────
+    const snapshotTitle = item.title ?? null;
+    const snapshotPrice = item.price ?? null;
+    const snapshotPriceUnit = item.priceUnit ?? null;
+    const snapshotFulfillment = extractFulfillmentSentence(item.body, item.noteText, item.bullets);
+    const snapshotProducerName = item.producerName ?? null;
+    const snapshotTenantName = tenant.name;
+    const snapshotTenantEmail = tenant.orderNotifyEmail ? tenant.email : null;
+    const deleteAfter = makeDeleteAfter();
+
+    // Atomic INSERT … ON CONFLICT DO NOTHING keeps concurrent creates safe.
+    // The conflict path below always reuses the winner's stored policy.
+    const [created] = await db
+      .insert(ordersTable)
+      .values({
+        tenantId: tenant.id,
+        deviceTokenHash,
+        idempotencyKey,
+        itemId,
+        snapshotTitle,
+        snapshotPrice,
+        snapshotPriceUnit,
+        snapshotFulfillment,
+        snapshotProducerName,
+        snapshotTenantName,
+        snapshotTenantEmail,
+        qty,
+        guestName,
+        guestPhone,
+        guestUnit,
+        guestNote,
+        status: "novo",
+        notificationStatus: tenant.orderNotifyEmail ? "sending" : "skipped",
+        notificationClaimToken: tenant.orderNotifyEmail ? claimToken : null,
+        notificationClaimedAt: tenant.orderNotifyEmail ? claimedAt : null,
+        deleteAfter,
+      })
+      .onConflictDoNothing({ target: ordersTable.idempotencyKey })
+      .returning();
+    inserted = created;
+  }
 
   let canonical: typeof ordersTable.$inferSelect;
 
   if (inserted) {
     // We inserted — we own the active claim (token = claimToken)
     canonical = inserted;
+    if (!tenant.orderNotifyEmail) {
+      logger.info(
+        { orderRef: canonical.orderRef, tenantId: tenant.id },
+        "[orders] new order accepted; tenant email notification skipped",
+      );
+      res.status(201).json(formatOrderPublic(canonical));
+      return;
+    }
     logger.info(
       { orderRef: canonical.orderRef, tenantId: tenant.id },
       "[orders] new order row created and claimed for sending",
     );
   } else {
-    // Conflict: read the existing canonical row
-    const [existing] = await db
-      .select()
-      .from(ordersTable)
-      .where(eq(ordersTable.idempotencyKey, idempotencyKey));
+    // Existing before validation, or concurrent winner after INSERT conflict.
+    const existing = preExisting ?? (
+      await db
+        .select()
+        .from(ordersTable)
+        .where(eq(ordersTable.idempotencyKey, idempotencyKey))
+    )[0];
     if (!existing) {
       // Should be impossible (conflict means it exists) but handle defensively
       logger.error({ tenantId: tenant.id }, "[orders] conflict row vanished");
@@ -374,6 +395,24 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
       res.status(425).json({
         error:
           "Order is being processed. Retry with the same idempotency key after a moment.",
+      });
+      return;
+    }
+
+    // A retry preserves the ORIGINAL per-order notification decision. Failed,
+    // pending, and stale-sending rows were created with email enabled; current
+    // tenant toggle/email changes must neither suppress nor relabel that attempt.
+    if (!existing.snapshotTenantEmail) {
+      res.status(422).json({
+        error: "Stored order notification recipient is missing",
+      });
+      return;
+    }
+    try {
+      emailFrom();
+    } catch {
+      res.status(422).json({
+        error: "Order email sender is not configured (ORDER_EMAIL_FROM missing)",
       });
       return;
     }
@@ -467,12 +506,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     tenantName: canonical.snapshotTenantName ?? "",
     orderRef: canonical.orderRef,
     itemTitle: canonical.snapshotTitle,
-    price: canonical.snapshotPrice,
-    priceUnit: canonical.snapshotPriceUnit,
-    fulfillment: canonical.snapshotFulfillment,
-    producerName: canonical.snapshotProducerName,
     qty: canonical.qty,
-    guestName: canonical.guestName,
     guestPhone: canonical.guestPhone,
     guestUnit: canonical.guestUnit,
     guestNote: canonical.guestNote,
@@ -602,7 +636,7 @@ router.get("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  // Only sent + not expired
+  // Only notification-complete (sent or intentionally skipped) + not expired
   const rows = await db
     .select()
     .from(ordersTable)
@@ -610,7 +644,7 @@ router.get("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
       and(
         eq(ordersTable.tenantId, tenant.id),
         eq(ordersTable.deviceTokenHash, deviceTokenHash),
-        eq(ordersTable.notificationStatus, "sent"),
+        inArray(ordersTable.notificationStatus, ["sent", "skipped"]),
         gt(ordersTable.deleteAfter, new Date()),
       ),
     )
@@ -631,6 +665,7 @@ router.get("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     guestUnit: order.guestUnit,
     guestNote: order.guestNote,
     status: order.status,
+    statusNote: order.statusNote,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   }));
@@ -658,7 +693,7 @@ router.get("/admin/tenants/:id/orders", requireAdmin, async (req, res): Promise<
 
   const conditions = [
     eq(ordersTable.tenantId, tenantId),
-    eq(ordersTable.notificationStatus, "sent"),
+    inArray(ordersTable.notificationStatus, ["sent", "skipped"]),
     gt(ordersTable.deleteAfter, new Date()),
   ];
   if (statusFilter && validStatuses.has(statusFilter)) {
@@ -687,6 +722,7 @@ router.get("/admin/tenants/:id/orders", requireAdmin, async (req, res): Promise<
     guestUnit: order.guestUnit,
     guestNote: order.guestNote,
     status: order.status,
+    statusNote: order.statusNote,
     notificationStatus: order.notificationStatus,
     notificationSentAt: order.notificationSentAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),
@@ -708,6 +744,11 @@ router.patch("/admin/orders/:orderRef/status", requireAdmin, async (req, res): P
     return;
   }
   const { status: toStatus } = parsed.data;
+  const statusNote = parsed.data.statusNote?.trim() || null;
+  if (statusNote && statusNote.length > STATUS_NOTE_MAX) {
+    res.status(400).json({ error: `statusNote max ${STATUS_NOTE_MAX}` });
+    return;
+  }
 
   // Must be a sent (visible) and non-expired order
   const [order] = await db
@@ -716,7 +757,7 @@ router.patch("/admin/orders/:orderRef/status", requireAdmin, async (req, res): P
     .where(
       and(
         eq(ordersTable.orderRef, orderRef),
-        eq(ordersTable.notificationStatus, "sent"),
+        inArray(ordersTable.notificationStatus, ["sent", "skipped"]),
         gt(ordersTable.deleteAfter, new Date()),
       ),
     );
@@ -736,7 +777,7 @@ router.patch("/admin/orders/:orderRef/status", requireAdmin, async (req, res): P
   // Race-safe: WHERE orderRef AND current status = expectedFrom
   const [updated] = await db
     .update(ordersTable)
-    .set({ status: toStatus, updatedAt: new Date() })
+    .set({ status: toStatus, statusNote, updatedAt: new Date() })
     .where(
       and(
         eq(ordersTable.orderRef, orderRef),

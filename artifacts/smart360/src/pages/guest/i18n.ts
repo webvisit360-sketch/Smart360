@@ -418,6 +418,12 @@ export const LIVING_GUIDE_UI = {
     de: "Abgelehnt",
     it: "Rifiutato",
   },
+  "UI.lg.order.statusNote": {
+    sl: "Opomba gostitelja",
+    en: "Host note",
+    de: "Hinweis des Gastgebers",
+    it: "Nota dell'host",
+  },
   "UI.lg.order.empty": {
     sl: "Nimate še nobenih naročil.",
     en: "You have no orders yet.",

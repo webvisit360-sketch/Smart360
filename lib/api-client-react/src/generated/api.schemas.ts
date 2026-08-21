@@ -165,6 +165,8 @@ export interface Tenant {
   instagram?: string | null;
   /** @nullable */
   email?: string | null;
+  /** Whether new orders send the tenant a notification email; defaults to true */
+  orderNotifyEmail: boolean;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -283,6 +285,7 @@ export interface TenantUpdate {
   instagram?: string | null;
   /** @nullable */
   email?: string | null;
+  orderNotifyEmail?: boolean;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -773,11 +776,17 @@ export const OrderStatusUpdateStatus = {
 } as const;
 
 /**
- * Body for patching order status
+ * Body for patching order status and replacing the current host note
  */
 export interface OrderStatusUpdate {
   /** Target status (only non-terminal targets are valid per the transition matrix) */
   status: OrderStatusUpdateStatus;
+  /**
+     * Optional plain-text note for the target status; omitted, null, or blank clears the previous status note
+     * @maxLength 300
+     * @nullable
+     */
+  statusNote?: string | null;
 }
 
 export type OrderPublicStatus = typeof OrderPublicStatus[keyof typeof OrderPublicStatus];
@@ -791,7 +800,7 @@ export const OrderPublicStatus = {
 } as const;
 
 /**
- * Order fields safe to return to the ordering guest (only notification_status=sent orders)
+ * Order fields safe to return to the ordering guest (notification sent or intentionally skipped)
  */
 export interface OrderPublic {
   orderRef: string;
@@ -814,6 +823,8 @@ export interface OrderPublic {
   /** @nullable */
   guestNote?: string | null;
   status: OrderPublicStatus;
+  /** @nullable */
+  statusNote: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -833,12 +844,14 @@ export type OrderAdminNotificationStatus = typeof OrderAdminNotificationStatus[k
 
 export const OrderAdminNotificationStatus = {
   pending: 'pending',
+  sending: 'sending',
   sent: 'sent',
   failed: 'failed',
+  skipped: 'skipped',
 } as const;
 
 /**
- * Full order fields for admin view (only notification_status=sent orders)
+ * Full order fields for admin view (notification sent or intentionally skipped)
  */
 export interface OrderAdmin {
   orderRef: string;
@@ -863,6 +876,8 @@ export interface OrderAdmin {
   /** @nullable */
   guestNote?: string | null;
   status: OrderAdminStatus;
+  /** @nullable */
+  statusNote: string | null;
   notificationStatus: OrderAdminNotificationStatus;
   /** @nullable */
   notificationSentAt?: string | null;

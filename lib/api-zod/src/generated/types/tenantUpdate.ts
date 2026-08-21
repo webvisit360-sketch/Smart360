@@ -35,6 +35,7 @@ export interface TenantUpdate {
   instagram?: string | null;
   /** @nullable */
   email?: string | null;
+  orderNotifyEmail?: boolean;
   /** @nullable */
   address?: string | null;
   /** @nullable */

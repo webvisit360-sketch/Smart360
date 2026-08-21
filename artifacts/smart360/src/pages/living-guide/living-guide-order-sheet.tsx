@@ -195,6 +195,12 @@ export function MyOrdersSheet({
                     </span>
                   )}
                 </div>
+                 {o.statusNote && (
+                   <div className="lg2-my-orders-note" data-testid={`order-status-note-${o.orderRef}`}>
+                     <b>{t("UI.lg.order.statusNote")}:</b>
+                     <span>{o.statusNote}</span>
+                   </div>
+                 )}
                 <div className="lg2-order-meta">
                   <span>{t("UI.lg.order.ref")} {o.orderRef}</span>
                   <span>{t("UI.lg.order.created")}: {new Intl.DateTimeFormat(lang, { dateStyle: "short", timeStyle: "short" }).format(new Date(o.createdAt))}</span>

@@ -47,6 +47,7 @@ import {
   GUEST_PHONE_MAX,
   GUEST_UNIT_MAX,
   GUEST_NOTE_MAX,
+  STATUS_NOTE_MAX,
   type ExistingOrderSummary,
 } from "../lib/orderHelpers";
 
@@ -74,6 +75,7 @@ describe("header length constants", () => {
   test("GUEST_PHONE_MAX = 50", () => assert.equal(GUEST_PHONE_MAX, 50));
   test("GUEST_UNIT_MAX = 100", () => assert.equal(GUEST_UNIT_MAX, 100));
   test("GUEST_NOTE_MAX = 500", () => assert.equal(GUEST_NOTE_MAX, 500));
+  test("STATUS_NOTE_MAX = 300", () => assert.equal(STATUS_NOTE_MAX, 300));
   test("STALE_PENDING_MS = 120000 (2 minutes)", () => assert.equal(STALE_PENDING_MS, 120_000));
 });
 
@@ -167,7 +169,7 @@ describe("decideNotificationAction", () => {
   const STALE = new Date(NOW - STALE_CLAIM_MS - 1000); // just past threshold
 
   function existing(
-    status: "pending" | "sending" | "sent" | "failed",
+    status: "pending" | "sending" | "sent" | "failed" | "skipped",
     claimedAt: Date | null = null,
   ): ExistingOrderSummary {
     return { notificationStatus: status, notificationClaimedAt: claimedAt };
@@ -179,6 +181,10 @@ describe("decideNotificationAction", () => {
 
   test("sent → conflict_sent", () => {
     assert.equal(decideNotificationAction(existing("sent"), NOW), "conflict_sent");
+  });
+
+  test("skipped → conflict_sent (visible idempotent success, no email retry)", () => {
+    assert.equal(decideNotificationAction(existing("skipped"), NOW), "conflict_sent");
   });
 
   test("failed → claim_failed", () => {
@@ -542,12 +548,7 @@ describe("buildEmailBody", () => {
     tenantName: "Kmetija Testna",
     orderRef: "aaaabbbb-cccc-dddd-eeee-ffff00001111",
     itemTitle: "Bio jabolka",
-    price: "5 €",
-    priceUnit: "kg",
-    fulfillment: "Prevzem vsak dan od 8 do 12h.",
-    producerName: "Kmetija Novak",
     qty: 3,
-    guestName: "Marija Novak",
     guestPhone: "+386 41 123 456",
     guestUnit: "B-14",
     guestNote: null,
@@ -559,12 +560,12 @@ describe("buildEmailBody", () => {
     assert.ok(html.includes("Bio jabolka"), "snapshot item title must appear in email");
   });
 
-  test("quantity and accommodation unit are shown separately (not as a computed total)", () => {
+  test("quantity and accommodation unit are shown separately", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
     assert.ok(html.includes("Količina</td><td>3</td>"), "quantity must appear");
     assert.ok(!html.includes("3 × B-14"), "guest accommodation unit must not be treated as a product unit");
-    assert.ok(!html.includes("15"), "no computed total (3 × 5 = 15) should appear");
+    assert.ok(!html.includes("Cena"), "notification email must not imply totals or checkout");
   });
 
   test("includes guestUnit in the email body", () => {
@@ -574,19 +575,15 @@ describe("buildEmailBody", () => {
     assert.ok(html.includes("B-14"), "guestUnit must appear");
   });
 
-  test("includes fulfillment snapshot text", () => {
+  test("is a notification bell with no action link or extended product details", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
-    assert.ok(html.includes("Prevzem vsak dan od 8 do 12h."), "fulfillment must appear");
-  });
-
-  test("includes real orderRef (short prefix) in email", () => {
-    const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
-    const html = body["html"] as string;
-    // shortRef = first 8 hex chars uppercased
-    assert.ok(html.includes("AAAABBBB"), "short orderRef prefix must appear");
-    // Full orderRef also present
-    assert.ok(html.includes(BASE_PAYLOAD.orderRef), "full orderRef must appear");
+    assert.ok(html.includes("Odprite skrbniški portal"), "email must direct the host to the primary in-app workflow");
+    assert.ok(!html.includes("<a "), "email must not contain action or login links");
+    assert.ok(!html.includes("Cena"), "price is not part of the notification summary");
+    assert.ok(!html.includes("Prevzem / dostava"), "fulfillment details stay in the portal");
+    assert.ok(!html.includes("Pridelovalec"), "producer details stay in the portal");
+    assert.ok(!html.includes(BASE_PAYLOAD.orderRef), "email stays short; order reference is available in the portal");
   });
 
   test("guestNote row is omitted when null", () => {
@@ -648,7 +645,6 @@ describe("stored-snapshot retry semantics", () => {
     snapshotFulfillment: string | null;
     snapshotProducerName: string | null;
     qty: number;
-    guestName: string;
     guestPhone: string;
     guestUnit: string;
     guestNote: string | null;
@@ -658,12 +654,7 @@ describe("stored-snapshot retry semantics", () => {
       tenantName: stored.snapshotTenantName ?? "",
       orderRef: stored.orderRef,
       itemTitle: stored.snapshotTitle,
-      price: stored.snapshotPrice,
-      priceUnit: stored.snapshotPriceUnit,
-      fulfillment: stored.snapshotFulfillment,
-      producerName: stored.snapshotProducerName,
       qty: stored.qty,
-      guestName: stored.guestName,
       guestPhone: stored.guestPhone,
       guestUnit: stored.guestUnit,
       guestNote: stored.guestNote,
@@ -680,7 +671,6 @@ describe("stored-snapshot retry semantics", () => {
     snapshotFulfillment: "Prevzem vsak petek.",
     snapshotProducerName: "Čebelar Kovač",
     qty: 2,
-    guestName: "Janez Novak",
     guestPhone: "041 000 111",
     guestUnit: "0.5 kg",
     guestNote: null,
@@ -708,7 +698,7 @@ describe("stored-snapshot retry semantics", () => {
     const payload = buildPayloadFromSnapshot(storedOrder);
     assert.equal(payload.guestUnit, "0.5 kg");
     assert.equal(payload.qty, 2);
-    assert.equal(payload.guestName, "Janez Novak");
+    assert.equal(payload.guestPhone, "041 000 111");
   });
 });
 

@@ -8,3 +8,4 @@
 - [Smart360 translation layer](translation-layer.md) — ui/plurals overlay maps, two-sided lang enforcement (enabledLang + clampLang), export/import takes tenant row not id.
 - [Poteg CSS pitfalls](poteg-css-pitfalls.md) — `.lb` class collision (lightbox vs grid card label); must override display/background/inset on `.gc .lb`.
 - [Living Guide decisions](living-guide-decisions.md) — approved theme boundaries, guest persistence, price/order rules, event tabs, cutover and staged-review gates.
+- [Drizzle check constraints](drizzle-check-constraints.md) — changing a same-named CHECK body may be skipped by db push; rename it and verify the live definition.

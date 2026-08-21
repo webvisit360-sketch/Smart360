@@ -4,6 +4,9 @@ import { Loader2, Phone, MessageCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 export function toWhatsAppDigits(phone: string): string | null {
   const compact = phone.trim().replace(/[\s().-]/g, "");
@@ -14,18 +17,35 @@ export function toWhatsAppDigits(phone: string): string | null {
 
 export function AdminTenantOrders({ tenantId }: { tenantId: string }) {
   const queryClient = useQueryClient();
+  const [pendingTransition, setPendingTransition] = useState<{
+    orderRef: string;
+    status: "potrjeno" | "prevzeto" | "zavrnjeno";
+    label: string;
+  } | null>(null);
+  const [statusNote, setStatusNote] = useState("");
 
   const updateStatus = useUpdateOrderStatus();
 
-  const handleStatusChange = (orderRef: string, status: 'potrjeno' | 'prevzeto' | 'zavrnjeno') => {
+  const handleStatusChange = (orderRef: string, status: "potrjeno" | "prevzeto" | "zavrnjeno") => {
     updateStatus.mutate({
       orderRef,
-      data: { status }
+      data: { status, statusNote: statusNote.trim() || null }
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTenantOrdersQueryKey(tenantId) });
+        setPendingTransition(null);
+        setStatusNote("");
       }
     });
+  };
+
+  const beginTransition = (
+    orderRef: string,
+    status: "potrjeno" | "prevzeto" | "zavrnjeno",
+    label: string,
+  ) => {
+    setPendingTransition({ orderRef, status, label });
+    setStatusNote("");
   };
 
   const { data: orders, isLoading, error, refetch } = useListTenantOrders(tenantId, { query: { refetchInterval: 15000, queryKey: getListTenantOrdersQueryKey(tenantId) } });
@@ -70,7 +90,13 @@ export function AdminTenantOrders({ tenantId }: { tenantId: string }) {
                   : null;
                 
                 return (
-                  <div key={order.orderRef} className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg" data-testid={`admin-order-row-${order.orderRef}`}>
+                  <div
+                    key={order.orderRef}
+                    className={`flex flex-col gap-4 rounded-lg border p-4 transition-colors sm:flex-row ${
+                      order.status === "novo" ? "border-primary/60 bg-primary/[0.04] shadow-sm" : ""
+                    }`}
+                    data-testid={`admin-order-row-${order.orderRef}`}
+                  >
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-lg">{order.snapshotTitle}</span>
@@ -95,6 +121,14 @@ export function AdminTenantOrders({ tenantId }: { tenantId: string }) {
                           Opomba: {order.guestNote}
                         </div>
                       )}
+                      {order.statusNote && (
+                        <div
+                          className="mt-2 rounded border border-primary/20 bg-primary/5 p-2 text-sm"
+                          data-testid={`current-status-note-${order.orderRef}`}
+                        >
+                          <span className="font-medium">Opomba gostu: </span>{order.statusNote}
+                        </div>
+                      )}
                       <div className="text-xs text-muted-foreground mt-2">
                         Prejeto: {new Date(order.createdAt).toLocaleString("sl-SI")}
                       </div>
@@ -116,26 +150,71 @@ export function AdminTenantOrders({ tenantId }: { tenantId: string }) {
                         )}
                       </div>
 
-                      {order.status === 'novo' && (
-                        <div className="flex gap-2 mt-2" data-testid="admin-order-actions">
-                          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => handleStatusChange(order.orderRef, 'potrjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
-                            Potrdi
-                          </Button>
-                          <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleStatusChange(order.orderRef, 'zavrnjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
-                            Zavrni
-                          </Button>
+                      {pendingTransition?.orderRef === order.orderRef ? (
+                        <div className="mt-2 space-y-3 rounded-lg border bg-background p-3" data-testid={`status-transition-${order.orderRef}`}>
+                          <div className="space-y-1.5">
+                            <Label htmlFor={`status-note-${order.orderRef}`}>
+                              {pendingTransition.label} · opomba gostu (neobvezno)
+                            </Label>
+                            <Textarea
+                              id={`status-note-${order.orderRef}`}
+                              value={statusNote}
+                              onChange={(event) => setStatusNote(event.target.value)}
+                              maxLength={300}
+                              rows={3}
+                              placeholder="Npr. Prevzem je možen danes po 17. uri."
+                              disabled={updateStatus.isPending}
+                              data-testid={`status-note-${order.orderRef}`}
+                            />
+                            <p className="text-right text-xs text-muted-foreground">{statusNote.length}/300</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleStatusChange(order.orderRef, pendingTransition.status)}
+                              disabled={updateStatus.isPending}
+                              data-testid={`confirm-status-${order.orderRef}`}
+                            >
+                              {updateStatus.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                              Shrani status
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setPendingTransition(null);
+                                setStatusNote("");
+                              }}
+                              disabled={updateStatus.isPending}
+                            >
+                              Prekliči
+                            </Button>
+                          </div>
                         </div>
-                      )}
+                      ) : (
+                        <>
+                          {order.status === "novo" && (
+                            <div className="flex gap-2 mt-2" data-testid="admin-order-actions">
+                              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => beginTransition(order.orderRef, "potrjeno", "Potrdi naročilo")} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
+                                Potrdi
+                              </Button>
+                              <Button size="sm" variant="destructive" className="flex-1" onClick={() => beginTransition(order.orderRef, "zavrnjeno", "Zavrni naročilo")} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
+                                Zavrni
+                              </Button>
+                            </div>
+                          )}
 
-                      {order.status === 'potrjeno' && (
-                        <div className="flex gap-2 mt-2" data-testid="admin-order-actions">
-                          <Button size="sm" className="flex-1" onClick={() => handleStatusChange(order.orderRef, 'prevzeto')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
-                            Označi kot prevzeto
-                          </Button>
-                          <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleStatusChange(order.orderRef, 'zavrnjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
-                            Zavrni
-                          </Button>
-                        </div>
+                          {order.status === "potrjeno" && (
+                            <div className="flex gap-2 mt-2" data-testid="admin-order-actions">
+                              <Button size="sm" className="flex-1" onClick={() => beginTransition(order.orderRef, "prevzeto", "Označi kot prevzeto")} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
+                                Označi kot prevzeto
+                              </Button>
+                              <Button size="sm" variant="destructive" className="flex-1" onClick={() => beginTransition(order.orderRef, "zavrnjeno", "Zavrni naročilo")} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === order.orderRef}>
+                                Zavrni
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

@@ -20,14 +20,15 @@ import { tenantsTable } from "./tenants";
  * - idempotencyKey (required, not null): SHA-256 of (tenantId + deviceTokenHash + clientKey)
  *   prevents duplicate rows on client retry via the unique constraint.
  * - Phone and name are stored for fulfilment only; never logged
- * - notificationStatus: pending → sent | failed.  Only 'sent' orders are visible
- *   in public/admin lists; pending/failed rows are eligible for retry and 90-day purge.
+ * - notificationStatus: pending → sent | failed, or skipped when tenant email
+ *   notifications are disabled. Sent/skipped orders are visible in public/admin
+ *   lists; pending/failed rows are eligible for retry and 90-day purge.
  * - Auto-expiry: deleteAfter is 90 days from creation; a daily sweep removes expired rows.
  *
  * DB-level check constraints (no DDL at runtime — applied by schema push only):
  *   orders_qty_range         qty BETWEEN 1 AND 999
  *   orders_status_enum       status IN ('novo','potrjeno','prevzeto','zavrnjeno')
- *   orders_notif_status_enum notificationStatus IN ('pending','sent','failed')
+ *   orders_notif_status_enum notificationStatus IN ('pending','sending','sent','failed','skipped')
  */
 export const ordersTable = pgTable(
   "orders",
@@ -82,10 +83,16 @@ export const ordersTable = pgTable(
      * Enforced by check constraint orders_status_enum.
      */
     status: text("status").notNull().default("novo"),
+    /**
+     * Optional plain-text note attached by the host to the CURRENT status.
+     * Every legal transition replaces/clears this value; there is no chat thread.
+     */
+    statusNote: text("status_note"),
 
     // ── Notification status ───────────────────────────────────────────────────
     /**
      * Lifecycle: pending → sending → sent | failed  (failed → sending on retry)
+     *            skipped (terminal, no email attempt because tenant disabled it)
      *
      *   pending  — row exists, no attempt has claimed it yet (transient; the
      *              inserting request immediately claims it into 'sending')
@@ -110,7 +117,7 @@ export const ordersTable = pgTable(
      *   older than STALE_PENDING_MS) or a 'failed' row may be atomically
      *   reclaimed by rotating the token and refreshing notificationClaimedAt.
      *
-     * Only rows with notificationStatus='sent' appear in list responses.
+     * Only rows with notificationStatus IN ('sent','skipped') appear in list responses.
      * Enforced by check constraint orders_notif_status_enum.
      */
     notificationStatus: text("notification_status").notNull().default("pending"),
@@ -153,8 +160,8 @@ export const ordersTable = pgTable(
       sql`${t.status} IN ('novo','potrjeno','prevzeto','zavrnjeno')`,
     ),
     check(
-      "orders_notif_status_enum",
-      sql`${t.notificationStatus} IN ('pending','sending','sent','failed')`,
+      "orders_notif_status_enum_v2",
+      sql`${t.notificationStatus} IN ('pending','sending','sent','failed','skipped')`,
     ),
   ],
 );
