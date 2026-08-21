@@ -51,4 +51,10 @@ export interface ItemUpdate {
   frame?: ItemUpdateFrame;
   position?: number;
   isVisible?: boolean;
+  orderEnabled?: boolean;
+  soldOut?: boolean;
+  /** @nullable */
+  producerName?: string | null;
+  /** @nullable */
+  producerNote?: string | null;
 }

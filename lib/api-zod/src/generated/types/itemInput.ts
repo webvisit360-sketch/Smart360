@@ -30,4 +30,8 @@ export interface ItemInput {
   tint?: string;
   frame?: ItemInputFrame;
   position?: number;
+  orderEnabled?: boolean;
+  soldOut?: boolean;
+  producerName?: string;
+  producerNote?: string;
 }

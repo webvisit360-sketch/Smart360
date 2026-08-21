@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureAdminAccount, rpID, rpOrigin, listCredentials } from "./lib/adminAuth";
+import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention";
 
 const rawPort = process.env["PORT"];
 
@@ -62,7 +63,14 @@ ensureAdminAccount()
       console.error("BOOTSTRAP failed:", err instanceof Error ? err.message : String(err));
     }),
   )
+  // Purge expired orders at startup (best-effort; a failure must not block boot)
+  .then(() =>
+    purgeExpiredOrders().catch((err) => {
+      logger.error({ err }, "[orderRetention] startup purge failed");
+    }),
+  )
   .then(() => {
+    scheduleOrderRetention();
     app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");

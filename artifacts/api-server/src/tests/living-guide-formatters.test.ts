@@ -29,6 +29,18 @@ test("formats structured metre distances at the kilometre boundary", () => {
   assert.equal(formatDistanceMeters("2450"), "2,5 km");
 });
 
+test("admin distance preview handles blank, comma decimals, and invalid input", () => {
+  // Blank / cleared field → no guest-facing preview.
+  assert.equal(formatDistanceMeters(""), null);
+  assert.equal(formatDistanceMeters("   "), null);
+  // Comma decimals (Slovene locale) parse the same as points.
+  assert.equal(formatDistanceMeters("1,2"), "1 m");
+  assert.equal(formatDistanceMeters("1500,5"), "1,5 km");
+  // Negative / non-numeric input yields no preview.
+  assert.equal(formatDistanceMeters("-5"), null);
+  assert.equal(formatDistanceMeters("abc"), null);
+});
+
 test("uses distanceMeters first and preserves authored legacy distance text", () => {
   assert.equal(
     itemDistanceText({ distanceMeters: 1200, distance: "8 km" }),

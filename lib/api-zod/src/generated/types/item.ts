@@ -59,5 +59,19 @@ export interface Item {
   frame?: ItemFrame;
   position: number;
   isVisible: boolean;
+  /** Whether ordering is enabled for this item */
+  orderEnabled: boolean;
+  /** Whether the item is currently sold out (ordering blocked) */
+  soldOut: boolean;
+  /**
+     * Optional producer / supplier name shown on the order form
+     * @nullable
+     */
+  producerName?: string | null;
+  /**
+     * Optional producer / fulfilment note shown on the order form
+     * @nullable
+     */
+  producerNote?: string | null;
   media: MediaEntry[];
 }

@@ -18,6 +18,7 @@ tags:
   - name: media
   - name: translations
   - name: overview
+  - name: orders
 paths:
   /healthz:
     get:
@@ -1185,6 +1186,149 @@ paths:
               schema: { type: string, format: binary }
         "404":
           description: Not found
+  /public/tenants/{slug}/orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: >
+        Place an order for an item that has orderEnabled=true. Validates item
+        eligibility, tenant published state, phone non-blank, rate limits, and
+        idempotency. Sends a notification email to the tenant on success.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: x-device-token
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 256 }
+          description: Raw device token (opaque, 16-256 chars); hashed server-side, never stored raw
+        - name: x-idempotency-key
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 128 }
+          description: Required (16-128 chars); unique per order intent; prevents duplicate submissions on retry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "200":
+          description: >
+            Idempotent retry of an already accepted order. Returns the existing
+            canonical order unchanged.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderPublic"
+        "201":
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderPublic"
+        "400":
+          description: Validation error (item not orderable, sold out, phone blank, etc.)
+        "422":
+          description: >
+            Email notification rejected or sender not configured. A retryable hidden
+            order record may persist internally but is not accepted or visible in any
+            list until the notification email sends successfully. Retry with the same
+            idempotency key to reattempt delivery.
+        "425":
+          description: >
+            Order is currently being processed by another in-flight request (fresh
+            pending notification). Retry with the same idempotency key after a
+            short delay (suggest 3-5 seconds).
+        "429":
+          description: Rate limit exceeded
+    get:
+      operationId: listDeviceOrders
+      tags: [orders]
+      summary: >
+        List orders for the calling device (identified by hashed device token).
+        Returns only orders for this tenant and this device — no cross-device data.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: x-device-token
+          in: header
+          required: true
+          schema: { type: string }
+          description: Raw device token; hashed server-side to look up orders
+      responses:
+        "200":
+          description: Orders for this device and tenant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderPublic"
+        "400":
+          description: Missing device token
+  /admin/tenants/{id}/orders:
+    get:
+      operationId: listTenantOrders
+      tags: [orders]
+      summary: >
+        List all orders for a tenant (admin, newest first).
+        Optional query param: ?status=novo|potrjeno|prevzeto|zavrnjeno
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Orders list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderAdmin"
+        "401":
+          description: Not authenticated
+        "404":
+          description: Tenant not found
+  /admin/orders/{orderRef}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: >
+        Transition an order status. Allowed transitions:
+        novo→potrjeno, novo→zavrnjeno, potrjeno→prevzeto, potrjeno→zavrnjeno.
+        Terminal statuses (prevzeto, zavrnjeno) cannot change.
+      parameters:
+        - name: orderRef
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderStatusUpdate"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderAdmin"
+        "400":
+          description: Invalid transition
+        "401":
+          description: Not authenticated
+        "404":
+          description: Order not found
 components:
   schemas:
     HealthStatus:
@@ -1690,11 +1834,23 @@ components:
           description: Photo frame shape for the whole item gallery; null/wide = landscape default, tall = 4:5, square = 1:1
         position: { type: number }
         isVisible: { type: boolean }
+        orderEnabled:
+          type: boolean
+          description: Whether ordering is enabled for this item
+        soldOut:
+          type: boolean
+          description: Whether the item is currently sold out (ordering blocked)
+        producerName:
+          type: ["string", "null"]
+          description: Optional producer / supplier name shown on the order form
+        producerNote:
+          type: ["string", "null"]
+          description: Optional producer / fulfilment note shown on the order form
         media:
           type: array
           items:
             $ref: "#/components/schemas/MediaEntry"
-      required: [id, categoryId, open24, bullets, position, isVisible, media]
+      required: [id, categoryId, open24, bullets, position, isVisible, orderEnabled, soldOut, media]
     ItemInput:
       type: object
       properties:
@@ -1719,6 +1875,10 @@ components:
         tint: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         frame: { type: string, enum: ["wide", "tall", "square"] }
         position: { type: number }
+        orderEnabled: { type: boolean }
+        soldOut: { type: boolean }
+        producerName: { type: string }
+        producerNote: { type: string }
     ItemUpdate:
       type: object
       properties:
@@ -1745,6 +1905,103 @@ components:
         frame: { type: ["string", "null"], enum: ["wide", "tall", "square", null] }
         position: { type: number }
         isVisible: { type: boolean }
+        orderEnabled: { type: boolean }
+        soldOut: { type: boolean }
+        producerName: { type: ["string", "null"] }
+        producerNote: { type: ["string", "null"] }
+    OrderInput:
+      type: object
+      description: Body for placing a new order
+      properties:
+        itemId:
+          type: string
+          description: UUID of the item to order
+        qty:
+          type: number
+          minimum: 1
+          maximum: 999
+          description: Quantity (positive integer 1-999); must be a whole number
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Guest name (required)
+        guestPhone:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Guest phone number (required, non-blank)
+        guestUnit:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Guest accommodation/unit pre-filled from sign-in but editable (e.g. "B-14")
+        guestNote:
+          type: string
+          maxLength: 500
+          description: Optional guest note
+      required: [itemId, qty, guestName, guestPhone, guestUnit]
+    OrderStatusUpdate:
+      type: object
+      description: Body for patching order status
+      properties:
+        status:
+          type: string
+          enum: [potrjeno, prevzeto, zavrnjeno]
+          description: Target status (only non-terminal targets are valid per the transition matrix)
+      required: [status]
+    OrderPublic:
+      type: object
+      description: Order fields safe to return to the ordering guest (only notification_status=sent orders)
+      properties:
+        orderRef: { type: string }
+        tenantId: { type: string }
+        itemId: { type: string }
+        snapshotTitle: { type: ["string", "null"] }
+        snapshotPrice: { type: ["string", "null"] }
+        snapshotPriceUnit: { type: ["string", "null"] }
+        snapshotFulfillment: { type: ["string", "null"] }
+        snapshotProducerName: { type: ["string", "null"] }
+        qty: { type: number }
+        guestName: { type: string }
+        guestPhone: { type: string }
+        guestUnit: { type: string }
+        guestNote: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [novo, potrjeno, prevzeto, zavrnjeno]
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [orderRef, tenantId, itemId, qty, guestName, guestPhone, guestUnit, status, createdAt, updatedAt]
+    OrderAdmin:
+      type: object
+      description: Full order fields for admin view (only notification_status=sent orders)
+      properties:
+        orderRef: { type: string }
+        tenantId: { type: string }
+        itemId: { type: string }
+        snapshotTitle: { type: ["string", "null"] }
+        snapshotPrice: { type: ["string", "null"] }
+        snapshotPriceUnit: { type: ["string", "null"] }
+        snapshotFulfillment: { type: ["string", "null"] }
+        snapshotProducerName: { type: ["string", "null"] }
+        snapshotTenantName: { type: ["string", "null"] }
+        qty: { type: number }
+        guestName: { type: string }
+        guestPhone: { type: string }
+        guestUnit: { type: string }
+        guestNote: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [novo, potrjeno, prevzeto, zavrnjeno]
+        notificationStatus:
+          type: string
+          enum: [pending, sent, failed]
+        notificationSentAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        deleteAfter: { type: string }
+      required: [orderRef, tenantId, itemId, qty, guestName, guestPhone, guestUnit, status, notificationStatus, createdAt, updatedAt, deleteAfter]
     MediaEntry:
       type: object
       properties:

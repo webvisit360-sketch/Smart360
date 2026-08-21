@@ -328,6 +328,186 @@ export const LIVING_GUIDE_UI = {
     de: "Hilfe und Notfälle",
     it: "Aiuto ed emergenze",
   },
+  "UI.lg.order.title": {
+    sl: "Naročilo",
+    en: "Order",
+    de: "Bestellung",
+    it: "Ordine",
+  },
+  "UI.lg.order.soldOut": {
+    sl: "Razprodano",
+    en: "Sold out",
+    de: "Ausverkauft",
+    it: "Esaurito",
+  },
+  "UI.lg.order.qty": {
+    sl: "Količina",
+    en: "Quantity",
+    de: "Menge",
+    it: "Quantità",
+  },
+  "UI.lg.order.unit": {
+    sl: "Soba / parcela (obvezno)",
+    en: "Room / pitch (required)",
+    de: "Zimmer / Stellplatz (erforderlich)",
+    it: "Camera / piazzola (obbligatorio)",
+  },
+  "UI.lg.order.name": {
+    sl: "Ime in priimek",
+    en: "Full name",
+    de: "Vor- und Nachname",
+    it: "Nome e cognome",
+  },
+  "UI.lg.order.phone": {
+    sl: "Telefon (obvezno)",
+    en: "Phone (required)",
+    de: "Telefon (erforderlich)",
+    it: "Telefono (obbligatorio)",
+  },
+  "UI.lg.order.note": {
+    sl: "Opomba (neobvezno)",
+    en: "Note (optional)",
+    de: "Notiz (optional)",
+    it: "Nota (opzionale)",
+  },
+  "UI.lg.order.submit": {
+    sl: "Pošlji naročilo",
+    en: "Send order",
+    de: "Bestellung senden",
+    it: "Invia ordine",
+  },
+  "UI.lg.order.success": {
+    sl: "Naročilo poslano",
+    en: "Order sent",
+    de: "Bestellung gesendet",
+    it: "Ordine inviato",
+  },
+  "UI.lg.order.successDesc": {
+    sl: "Gostitelj bo naročilo potrdil v najkrajšem možnem času. Sledite mu pod 'Moja naročila'.",
+    en: "The host will confirm the order as soon as possible. Track it under 'My orders'.",
+    de: "Der Gastgeber wird die Bestellung so schnell wie möglich bestätigen. Verfolgen Sie sie unter 'Meine Bestellungen'.",
+    it: "L'ospite confermerà l'ordine il prima possibile. Seguilo in 'I miei ordini'.",
+  },
+  "UI.lg.order.myOrders": {
+    sl: "Moja naročila",
+    en: "My orders",
+    de: "Meine Bestellungen",
+    it: "I miei ordini",
+  },
+  "UI.lg.order.status.novo": {
+    sl: "V obdelavi",
+    en: "Processing",
+    de: "In Bearbeitung",
+    it: "In elaborazione",
+  },
+  "UI.lg.order.status.potrjeno": {
+    sl: "Potrjeno",
+    en: "Confirmed",
+    de: "Bestätigt",
+    it: "Confermato",
+  },
+  "UI.lg.order.status.prevzeto": {
+    sl: "Prevzeto",
+    en: "Completed",
+    de: "Abgeschlossen",
+    it: "Completato",
+  },
+  "UI.lg.order.status.zavrnjeno": {
+    sl: "Zavrnjeno",
+    en: "Declined",
+    de: "Abgelehnt",
+    it: "Rifiutato",
+  },
+  "UI.lg.order.empty": {
+    sl: "Nimate še nobenih naročil.",
+    en: "You have no orders yet.",
+    de: "Sie haben noch keine Bestellungen.",
+    it: "Non hai ancora ordini.",
+  },
+  "UI.lg.order.pickupDefault": {
+    sl: "Prevzem pri gostitelju.",
+    en: "Pickup at the host.",
+    de: "Abholung beim Gastgeber.",
+    it: "Ritiro presso l'ospite.",
+  },
+  "UI.lg.order.pickupExplicit": {
+    sl: "Prevzem",
+    en: "Pickup",
+    de: "Abholung",
+    it: "Ritiro",
+  },
+  "UI.lg.order.error": {
+    sl: "Napaka pri naročilu.",
+    en: "Order error.",
+    de: "Bestellfehler.",
+    it: "Errore d'ordine."
+  },
+  "UI.lg.order.retry": {
+    sl: "Poskusi znova",
+    en: "Retry",
+    de: "Erneut versuchen",
+    it: "Riprova"
+  },
+  "UI.lg.order.qtyInc": {
+    sl: "Povečaj količino",
+    en: "Increase quantity",
+    de: "Menge erhöhen",
+    it: "Aumenta quantità"
+  },
+  "UI.lg.order.qtyDec": {
+    sl: "Zmanjšaj količino",
+    en: "Decrease quantity",
+    de: "Menge verringern",
+    it: "Riduci quantità"
+  },
+  "UI.lg.order.validation.required": {
+    sl: "To polje je obvezno.",
+    en: "This field is required.",
+    de: "Dieses Feld ist erforderlich.",
+    it: "Questo campo è obbligatorio."
+  },
+  "UI.lg.order.placeholder.phone": {
+    sl: "+386 41 000 000",
+    en: "+1 234 567 8900",
+    de: "+49 151 0000000",
+    it: "+39 300 000 0000"
+  },
+  "UI.lg.order.placeholder.note": {
+    sl: "Posebne želje...",
+    en: "Special requests...",
+    de: "Sonderwünsche...",
+    it: "Richieste speciali..."
+  },
+  "UI.lg.order.ref": {
+    sl: "Ref:",
+    en: "Ref:",
+    de: "Ref:",
+    it: "Rif:"
+  },
+  "UI.lg.order.loading": {
+    sl: "Nalagam...",
+    en: "Loading...",
+    de: "Wird geladen...",
+    it: "Caricamento in corso..."
+  },
+  "UI.lg.order.failedQuery": {
+    sl: "Napaka pri nalaganju naročil.",
+    en: "Failed to load orders.",
+    de: "Bestellungen konnten nicht geladen werden.",
+    it: "Impossibile caricare gli ordini."
+  },
+  "UI.lg.order.price": {
+    sl: "Cena",
+    en: "Price",
+    de: "Preis",
+    it: "Prezzo"
+  },
+  "UI.lg.order.created": {
+    sl: "Oddano",
+    en: "Placed",
+    de: "Aufgegeben",
+    it: "Inviato"
+  }
 } as const satisfies Record<string, Record<UiLanguage, string>>;
 
 function livingGuideUiFor(language: UiLanguage): Record<string, string> {

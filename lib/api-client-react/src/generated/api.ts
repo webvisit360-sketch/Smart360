@@ -49,6 +49,10 @@ import type {
   MediaInput,
   MediaUpdate,
   OkStatus,
+  OrderAdmin,
+  OrderInput,
+  OrderPublic,
+  OrderStatusUpdate,
   PasskeyList,
   RecoveryBody,
   RecoveryCodeStatus,
@@ -4682,4 +4686,310 @@ export function useGetTenantLabelPdf<TData = Awaited<ReturnType<typeof getTenant
 
 
 
+
+export const getCreateOrderUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/orders`
+}
+
+/**
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant on success.
+
+ */
+export const createOrder = async (slug: string,
+    orderInput: OrderInput, options?: Parameters<typeof customFetch>[1]): Promise<OrderPublic> => {
+
+  return customFetch<OrderPublic>(getCreateOrderUrl(slug),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(orderInput)
+  }
+);}
+
+
+
+
+
+export const getCreateOrderMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOrder>>, TError,{slug: string;data: BodyType<OrderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createOrder>>, TError,{slug: string;data: BodyType<OrderInput>}, TContext> => {
+
+const mutationKey = ['createOrder'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createOrder>>, {slug: string;data: BodyType<OrderInput>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  createOrder(slug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateOrderMutationResult = NonNullable<Awaited<ReturnType<typeof createOrder>>>
+    export type CreateOrderMutationBody = BodyType<OrderInput>
+    export type CreateOrderMutationError = ErrorType<void>
+
+    /**
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant on success.
+
+ */
+export const useCreateOrder = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOrder>>, TError,{slug: string;data: BodyType<OrderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createOrder>>,
+        TError,
+        {slug: string;data: BodyType<OrderInput>},
+        TContext
+      > => {
+      return useMutation(getCreateOrderMutationOptions(options));
+    }
+
+export const getListDeviceOrdersUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/orders`
+}
+
+/**
+ * @summary List orders for the calling device (identified by hashed device token). Returns only orders for this tenant and this device — no cross-device data.
+
+ */
+export const listDeviceOrders = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<OrderPublic[]> => {
+
+  return customFetch<OrderPublic[]>(getListDeviceOrdersUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDeviceOrdersQueryKey = (slug: string,) => {
+    return [
+    `/api/public/tenants/${slug}/orders`
+    ] as const;
+    }
+
+
+export const getListDeviceOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listDeviceOrders>>, TError = ErrorType<void>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeviceOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDeviceOrdersQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDeviceOrders>>> = ({ signal }) => listDeviceOrders(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDeviceOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDeviceOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listDeviceOrders>>>
+export type ListDeviceOrdersQueryError = ErrorType<void>
+
+
+/**
+ * @summary List orders for the calling device (identified by hashed device token). Returns only orders for this tenant and this device — no cross-device data.
+
+ */
+
+export function useListDeviceOrders<TData = Awaited<ReturnType<typeof listDeviceOrders>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeviceOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDeviceOrdersQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListTenantOrdersUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/orders`
+}
+
+/**
+ * @summary List all orders for a tenant (admin, newest first). Optional query param: ?status=novo|potrjeno|prevzeto|zavrnjeno
+
+ */
+export const listTenantOrders = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<OrderAdmin[]> => {
+
+  return customFetch<OrderAdmin[]>(getListTenantOrdersUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTenantOrdersQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/orders`
+    ] as const;
+    }
+
+
+export const getListTenantOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listTenantOrders>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTenantOrdersQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTenantOrders>>> = ({ signal }) => listTenantOrders(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTenantOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTenantOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listTenantOrders>>>
+export type ListTenantOrdersQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all orders for a tenant (admin, newest first). Optional query param: ?status=novo|potrjeno|prevzeto|zavrnjeno
+
+ */
+
+export function useListTenantOrders<TData = Awaited<ReturnType<typeof listTenantOrders>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTenantOrdersQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateOrderStatusUrl = (orderRef: string,) => {
+
+
+
+
+  return `/api/admin/orders/${orderRef}/status`
+}
+
+/**
+ * @summary Transition an order status. Allowed transitions: novo→potrjeno, novo→zavrnjeno, potrjeno→prevzeto, potrjeno→zavrnjeno. Terminal statuses (prevzeto, zavrnjeno) cannot change.
+
+ */
+export const updateOrderStatus = async (orderRef: string,
+    orderStatusUpdate: OrderStatusUpdate, options?: Parameters<typeof customFetch>[1]): Promise<OrderAdmin> => {
+
+  return customFetch<OrderAdmin>(getUpdateOrderStatusUrl(orderRef),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(orderStatusUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateOrderStatusMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrderStatus>>, TError,{orderRef: string;data: BodyType<OrderStatusUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrderStatus>>, TError,{orderRef: string;data: BodyType<OrderStatusUpdate>}, TContext> => {
+
+const mutationKey = ['updateOrderStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrderStatus>>, {orderRef: string;data: BodyType<OrderStatusUpdate>}> = (props) => {
+          const {orderRef,data} = props ?? {};
+
+          return  updateOrderStatus(orderRef,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrderStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrderStatus>>>
+    export type UpdateOrderStatusMutationBody = BodyType<OrderStatusUpdate>
+    export type UpdateOrderStatusMutationError = ErrorType<void>
+
+    /**
+ * @summary Transition an order status. Allowed transitions: novo→potrjeno, novo→zavrnjeno, potrjeno→prevzeto, potrjeno→zavrnjeno. Terminal statuses (prevzeto, zavrnjeno) cannot change.
+
+ */
+export const useUpdateOrderStatus = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrderStatus>>, TError,{orderRef: string;data: BodyType<OrderStatusUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrderStatus>>,
+        TError,
+        {orderRef: string;data: BodyType<OrderStatusUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateOrderStatusMutationOptions(options));
+    }
 

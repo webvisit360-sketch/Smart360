@@ -6,6 +6,7 @@ import adminTenantsRouter from "./adminTenants";
 import adminContentRouter from "./adminContent";
 import adminTranslationsRouter from "./adminTranslations";
 import storageRouter from "./storage";
+import ordersRouter from "./orders";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(adminAuthRouter);
 router.use(adminTenantsRouter);
 router.use(adminContentRouter);
 router.use(adminTranslationsRouter);
+router.use(ordersRouter);
 
 export default router;

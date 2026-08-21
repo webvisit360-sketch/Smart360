@@ -604,6 +604,20 @@ export interface Item {
   frame?: ItemFrame;
   position: number;
   isVisible: boolean;
+  /** Whether ordering is enabled for this item */
+  orderEnabled: boolean;
+  /** Whether the item is currently sold out (ordering blocked) */
+  soldOut: boolean;
+  /**
+     * Optional producer / supplier name shown on the order form
+     * @nullable
+     */
+  producerName?: string | null;
+  /**
+     * Optional producer / fulfilment note shown on the order form
+     * @nullable
+     */
+  producerNote?: string | null;
   media: MediaEntry[];
 }
 
@@ -639,6 +653,10 @@ export interface ItemInput {
   tint?: string;
   frame?: ItemInputFrame;
   position?: number;
+  orderEnabled?: boolean;
+  soldOut?: boolean;
+  producerName?: string;
+  producerNote?: string;
 }
 
 /**
@@ -697,6 +715,160 @@ export interface ItemUpdate {
   frame?: ItemUpdateFrame;
   position?: number;
   isVisible?: boolean;
+  orderEnabled?: boolean;
+  soldOut?: boolean;
+  /** @nullable */
+  producerName?: string | null;
+  /** @nullable */
+  producerNote?: string | null;
+}
+
+/**
+ * Body for placing a new order
+ */
+export interface OrderInput {
+  /** UUID of the item to order */
+  itemId: string;
+  /**
+     * Quantity (positive integer 1-999); must be a whole number
+     * @minimum 1
+     * @maximum 999
+     */
+  qty: number;
+  /**
+     * Guest name (required)
+     * @minLength 1
+     * @maxLength 200
+     */
+  guestName: string;
+  /**
+     * Guest phone number (required, non-blank)
+     * @minLength 1
+     * @maxLength 50
+     */
+  guestPhone: string;
+  /**
+     * Guest accommodation/unit pre-filled from sign-in but editable (e.g. "B-14")
+     * @minLength 1
+     * @maxLength 100
+     */
+  guestUnit: string;
+  /**
+     * Optional guest note
+     * @maxLength 500
+     */
+  guestNote?: string;
+}
+
+/**
+ * Target status (only non-terminal targets are valid per the transition matrix)
+ */
+export type OrderStatusUpdateStatus = typeof OrderStatusUpdateStatus[keyof typeof OrderStatusUpdateStatus];
+
+
+export const OrderStatusUpdateStatus = {
+  potrjeno: 'potrjeno',
+  prevzeto: 'prevzeto',
+  zavrnjeno: 'zavrnjeno',
+} as const;
+
+/**
+ * Body for patching order status
+ */
+export interface OrderStatusUpdate {
+  /** Target status (only non-terminal targets are valid per the transition matrix) */
+  status: OrderStatusUpdateStatus;
+}
+
+export type OrderPublicStatus = typeof OrderPublicStatus[keyof typeof OrderPublicStatus];
+
+
+export const OrderPublicStatus = {
+  novo: 'novo',
+  potrjeno: 'potrjeno',
+  prevzeto: 'prevzeto',
+  zavrnjeno: 'zavrnjeno',
+} as const;
+
+/**
+ * Order fields safe to return to the ordering guest (only notification_status=sent orders)
+ */
+export interface OrderPublic {
+  orderRef: string;
+  tenantId: string;
+  itemId: string;
+  /** @nullable */
+  snapshotTitle?: string | null;
+  /** @nullable */
+  snapshotPrice?: string | null;
+  /** @nullable */
+  snapshotPriceUnit?: string | null;
+  /** @nullable */
+  snapshotFulfillment?: string | null;
+  /** @nullable */
+  snapshotProducerName?: string | null;
+  qty: number;
+  guestName: string;
+  guestPhone: string;
+  guestUnit: string;
+  /** @nullable */
+  guestNote?: string | null;
+  status: OrderPublicStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type OrderAdminStatus = typeof OrderAdminStatus[keyof typeof OrderAdminStatus];
+
+
+export const OrderAdminStatus = {
+  novo: 'novo',
+  potrjeno: 'potrjeno',
+  prevzeto: 'prevzeto',
+  zavrnjeno: 'zavrnjeno',
+} as const;
+
+export type OrderAdminNotificationStatus = typeof OrderAdminNotificationStatus[keyof typeof OrderAdminNotificationStatus];
+
+
+export const OrderAdminNotificationStatus = {
+  pending: 'pending',
+  sent: 'sent',
+  failed: 'failed',
+} as const;
+
+/**
+ * Full order fields for admin view (only notification_status=sent orders)
+ */
+export interface OrderAdmin {
+  orderRef: string;
+  tenantId: string;
+  itemId: string;
+  /** @nullable */
+  snapshotTitle?: string | null;
+  /** @nullable */
+  snapshotPrice?: string | null;
+  /** @nullable */
+  snapshotPriceUnit?: string | null;
+  /** @nullable */
+  snapshotFulfillment?: string | null;
+  /** @nullable */
+  snapshotProducerName?: string | null;
+  /** @nullable */
+  snapshotTenantName?: string | null;
+  qty: number;
+  guestName: string;
+  guestPhone: string;
+  guestUnit: string;
+  /** @nullable */
+  guestNote?: string | null;
+  status: OrderAdminStatus;
+  notificationStatus: OrderAdminNotificationStatus;
+  /** @nullable */
+  notificationSentAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deleteAfter: string;
 }
 
 /**

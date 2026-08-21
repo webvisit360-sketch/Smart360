@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
+import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
@@ -339,6 +340,7 @@ export default function AdminTenantEdit() {
           <TabsTrigger value="contacts">Stiki & Lokacija</TabsTrigger>
           <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
           <TabsTrigger value="translations">Prevodi</TabsTrigger>
+          <TabsTrigger value="orders">Naročila</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -791,6 +793,9 @@ export default function AdminTenantEdit() {
               <TranslationsEditor tenantId={tenant.id} />
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="orders">
+          <AdminTenantOrders tenantId={id} />
         </TabsContent>
       </Tabs>
     </div>

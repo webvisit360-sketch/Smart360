@@ -42,6 +42,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ItemMediaEditor } from "@/components/admin/item-media-editor";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { formatDistanceMeters } from "@/pages/living-guide/living-guide-formatters";
 
 // ---------- Types ----------
 
@@ -54,11 +55,16 @@ type Item = {
   price?: string | null;
   priceUnit?: string | null;
   phone?: string | null;
+  distanceMeters?: number | null;
   tint?: string | null;
   frame?: string | null;
   isVisible: boolean;
   position: number;
   media: MediaEntry[];
+  orderEnabled?: boolean;
+  soldOut?: boolean;
+  producerName?: string | null;
+  producerNote?: string | null;
 };
 
 type Category = {
@@ -106,6 +112,18 @@ function slugify(str: string): string {
     .replace(/[đ]/g, "d")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+// Razčleni vneseno razdaljo v metrih. Vrne:
+//   number  — veljavna nenegativna razdalja za shranjevanje,
+//   null    — prazno polje (počisti razdaljo prek ItemUpdate),
+//   NaN     — neveljaven vnos (ne shrani).
+function parseDistanceMeters(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const meters = Number(trimmed.replace(",", "."));
+  if (!Number.isFinite(meters) || meters < 0) return Number.NaN;
+  return meters;
 }
 
 // ---------- Character budgets (warn only, never block) ----------
@@ -659,11 +677,20 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const [price, setPrice] = useState(item?.price ?? "");
   const [priceUnit, setPriceUnit] = useState(item?.priceUnit ?? "");
   const [phone, setPhone] = useState(item?.phone ?? "");
+  // Razdalja v metrih (neobvezno): prazno = brez razdalje. Hranimo kot niz,
+  // da lahko polje eksplicitno počistimo (pošljemo null prek ItemUpdate).
+  const [distanceMeters, setDistanceMeters] = useState(
+    item?.distanceMeters != null ? String(item.distanceMeters) : "",
+  );
   const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
   // Barvna ploščica: prazno = fotografija, kot doslej (barvne-ploscice.md).
   const [tint, setTint] = useState(item?.tint ?? "");
   // Oblika okvirja fotografij: prazno = ležeče 5:3 (izrez-wifi-eposta.md §1b).
   const [frame, setFrame] = useState(item?.frame ?? "");
+  const [orderEnabled, setOrderEnabled] = useState(item?.orderEnabled ?? false);
+  const [soldOut, setSoldOut] = useState(item?.soldOut ?? false);
+  const [producerName, setProducerName] = useState(item?.producerName ?? "");
+  const [producerNote, setProducerNote] = useState(item?.producerNote ?? "");
 
   const baseline = {
     title: item?.title ?? "",
@@ -671,11 +698,16 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     price: item?.price ?? "",
     priceUnit: item?.priceUnit ?? "",
     phone: item?.phone ?? "",
+    distanceMeters: item?.distanceMeters != null ? String(item.distanceMeters) : "",
     isVisible: item?.isVisible ?? true,
     tint: item?.tint ?? "",
     frame: item?.frame ?? "",
+    orderEnabled: item?.orderEnabled ?? false,
+    soldOut: item?.soldOut ?? false,
+    producerName: item?.producerName ?? "",
+    producerNote: item?.producerNote ?? "",
   };
-  const current = { title, body, price, priceUnit, phone, isVisible, tint, frame };
+  const current = { title, body, price, priceUnit, phone, distanceMeters, isVisible, tint, frame, orderEnabled, soldOut, producerName, producerNote };
   const { restored, clear, discardRestored } = useDraft(
     "item",
     mode === "edit" ? item.id : `new-${categoryId}`,
@@ -690,9 +722,14 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
       setPrice(restored.price);
       setPriceUnit(restored.priceUnit);
       setPhone(restored.phone);
+      setDistanceMeters(restored.distanceMeters ?? "");
       setIsVisible(restored.isVisible);
       setTint(restored.tint ?? "");
       setFrame(restored.frame ?? "");
+      setOrderEnabled(restored.orderEnabled ?? false);
+      setSoldOut(restored.soldOut ?? false);
+      setProducerName(restored.producerName ?? "");
+      setProducerNote(restored.producerNote ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
@@ -700,6 +737,11 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
 
   const handleSave = async () => {
+    const distanceValue = parseDistanceMeters(distanceMeters);
+    if (Number.isNaN(distanceValue)) {
+      alert("Razdalja mora biti nenegativno število metrov (ali prazno).");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "create") {
@@ -711,8 +753,13 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             price: price.trim() || undefined,
             priceUnit: priceUnit.trim() || undefined,
             phone: phone.trim() || undefined,
+            distanceMeters: distanceValue ?? undefined,
             tint: tint || undefined,
             frame: (frame || undefined) as any,
+            orderEnabled,
+            soldOut,
+            producerName: producerName.trim() || undefined,
+            producerNote: producerNote.trim() || undefined,
           });
           id = created.id;
           createdIdRef.current = id;
@@ -725,9 +772,14 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
             price: price.trim() || null,
             priceUnit: priceUnit.trim() || null,
             phone: phone.trim() || null,
+            distanceMeters: distanceValue,
             isVisible,
             tint: tint || null,
           frame: (frame || null) as any,
+          orderEnabled,
+          soldOut,
+          producerName: producerName.trim() || null,
+          producerNote: producerNote.trim() || null,
           });
         }
         // Upload the queued media to the fresh item, one by one, with the
@@ -749,9 +801,14 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           price: price.trim() || null,
           priceUnit: priceUnit.trim() || null,
           phone: phone.trim() || null,
+          distanceMeters: distanceValue,
           isVisible,
           tint: tint || null,
           frame: (frame || null) as any,
+          orderEnabled,
+          soldOut,
+          producerName: producerName.trim() || null,
+          producerNote: producerNote.trim() || null,
         });
       }
       clear();
@@ -852,6 +909,37 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
         />
       </div>
       <div className="space-y-1">
+        <Label>Razdalja (metri)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            type="text"
+            inputMode="decimal"
+            value={distanceMeters}
+            onChange={(e) => setDistanceMeters(e.target.value)}
+            placeholder="npr. 850"
+            disabled={busy}
+          />
+          {distanceMeters.trim() && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDistanceMeters("")}
+              disabled={busy}
+            >
+              Počisti
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Neobvezno. Prazno = brez razdalje.
+          {(() => {
+            const preview = formatDistanceMeters(distanceMeters);
+            return preview ? ` Gostom prikazano kot: ${preview}.` : "";
+          })()}
+        </p>
+      </div>
+      <div className="space-y-1">
         <Label>Oblika fotografij</Label>
         <p className="text-xs text-muted-foreground">
           Vse fotografije tega vnosa delijo isto obliko okvirja; kaj je v okvirju vidno, določite s klikom na sličico zgoraj.
@@ -917,6 +1005,55 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           <Label htmlFor="item-visible">Viden gostom</Label>
         </div>
       )}
+
+      <div className="border-t pt-4 mt-2">
+        <h4 className="font-semibold mb-3">Naročanje</h4>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="item-orderable"
+              checked={orderEnabled}
+              onCheckedChange={setOrderEnabled}
+              disabled={busy}
+            />
+            <Label htmlFor="item-orderable">Omogoči naročanje</Label>
+          </div>
+          {orderEnabled && (
+            <>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="item-soldout"
+                  checked={soldOut}
+                  onCheckedChange={setSoldOut}
+                  disabled={busy}
+                />
+                <Label htmlFor="item-soldout">Razprodano</Label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Ime proizvajalca / ponudnika</Label>
+                  <Input
+                    value={producerName}
+                    onChange={(e) => setProducerName(e.target.value)}
+                    placeholder="npr. Kmetija Novak"
+                    disabled={busy}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Opomba ponudnika</Label>
+                  <Input
+                    value={producerNote}
+                    onChange={(e) => setProducerNote(e.target.value)}
+                    placeholder="npr. 400 m od vas"
+                    disabled={busy}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       </DialogScrollBody>
       <DialogFooter className="gap-2 flex-wrap shrink-0 border-t pt-3">
         {mode === "edit" && (

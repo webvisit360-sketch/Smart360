@@ -1592,3 +1592,151 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   text-align: center;
   font-size: 16px;
 }
+
+/* Orders */
+.lg2-order-dock {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  width: min(100%, var(--lg2-shell-width));
+  padding: 12px 16px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.lg2-detail-view.has-order-dock .lg2-detail-scroll,
+.lg2-detail-view.has-order-dock .lg2-segment-panel,
+.lg2-detail-scroll--orderable {
+  padding-bottom: 180px;
+}
+
+.lg2-order-ref,
+.lg2-order-meta {
+  color: var(--tx2);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.lg2-order-ref {
+  margin: -10px auto 20px;
+}
+
+.lg2-order-facts,
+.lg2-order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+
+.lg2-orders-error {
+  padding: 28px 0;
+  color: #D93A2B;
+  text-align: center;
+}
+
+body[data-t="swipe"] .lg2-order-dock {
+  bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.lg2-order-dock-inner {
+  pointer-events: auto;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .2);
+}
+
+.lg2-order-producer {
+  margin-bottom: 12px;
+}
+
+.lg2-order-producer b {
+  display: block;
+  font-size: 14px;
+}
+
+.lg2-order-producer small {
+  color: var(--tx2);
+  font-size: 12px;
+}
+
+.lg2-primary-button--disabled {
+  background: var(--card2) !important;
+  color: var(--tx2) !important;
+  border: 1px solid var(--line) !important;
+  opacity: 1 !important;
+}
+
+.lg2-qty-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--tx);
+  display: grid;
+  place-items: center;
+}
+
+.lg2-error-text {
+  color: #D93A2B;
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.lg2-my-orders-list {
+  display: grid;
+  gap: 12px;
+}
+
+.lg2-my-orders-row {
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.lg2-my-orders-row b {
+  font-size: 16px;
+}
+
+.lg2-my-orders-status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-weight: 750;
+}
+
+.lg2-my-orders-status--novo {
+  background: var(--card);
+  color: var(--tx);
+}
+
+.lg2-my-orders-status--potrjeno {
+  background: var(--acc);
+  color: #fff;
+}
+
+.lg2-my-orders-status--prevzeto {
+  background: var(--accg);
+  color: #fff;
+}
+
+.lg2-my-orders-status--zavrnjeno {
+  background: #D93A2B;
+  color: #fff;
+}
+
+.lg2-my-orders-meta {
+  font-size: 13px;
+  color: var(--tx2);
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}

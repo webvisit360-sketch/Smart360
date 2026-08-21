@@ -76,6 +76,11 @@ export const itemsTable = pgTable("items", {
   isVisible: boolean("is_visible").notNull().default(true),
   // Soft delete: rows stay (with photos and translations) for the 30-day trash.
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  // Living Guide ordering fields (naročila.md)
+  orderEnabled: boolean("order_enabled").notNull().default(false),
+  soldOut: boolean("sold_out").notNull().default(false),
+  producerName: text("producer_name"),
+  producerNote: text("producer_note"),
 });
 
 export const mediaTable = pgTable("media", {

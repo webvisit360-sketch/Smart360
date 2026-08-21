@@ -130,6 +130,10 @@ export const GetPublicTenantResponse = zod.object({
   "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean().describe('Whether ordering is enabled for this item'),
+  "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
+  "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
+  "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -569,6 +573,10 @@ export const GetTenantResponse = zod.object({
   "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean().describe('Whether ordering is enabled for this item'),
+  "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
+  "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
+  "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1053,7 +1061,11 @@ export const CreateItemBody = zod.object({
   "bullets": zod.array(zod.string()).optional(),
   "tint": zod.string().regex(createItemBodyTintRegExp).optional(),
   "frame": zod.enum(['wide', 'tall', 'square']).optional(),
-  "position": zod.number().optional()
+  "position": zod.number().optional(),
+  "orderEnabled": zod.boolean().optional(),
+  "soldOut": zod.boolean().optional(),
+  "producerName": zod.string().optional(),
+  "producerNote": zod.string().optional()
 })
 
 export const createItemResponseDistanceMetersMin = 0;
@@ -1083,6 +1095,10 @@ export const CreateItemResponse = zod.object({
   "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean().describe('Whether ordering is enabled for this item'),
+  "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
+  "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
+  "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1132,7 +1148,11 @@ export const UpdateItemBody = zod.object({
   "tint": zod.string().regex(updateItemBodyTintRegExp).nullish(),
   "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish(),
   "position": zod.number().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "orderEnabled": zod.boolean().optional(),
+  "soldOut": zod.boolean().optional(),
+  "producerName": zod.string().nullish(),
+  "producerNote": zod.string().nullish()
 })
 
 export const updateItemResponseDistanceMetersMin = 0;
@@ -1162,6 +1182,10 @@ export const UpdateItemResponse = zod.object({
   "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean().describe('Whether ordering is enabled for this item'),
+  "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
+  "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
+  "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1216,6 +1240,10 @@ export const DuplicateItemResponse = zod.object({
   "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
   "position": zod.number(),
   "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean().describe('Whether ordering is enabled for this item'),
+  "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
+  "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
+  "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1606,5 +1634,169 @@ export const GetTenantLabelPdfParams = zod.object({
 })
 
 export const GetTenantLabelPdfResponse = zod.unknown()
+
+
+/**
+ * @summary Place an order for an item that has orderEnabled=true. Validates item eligibility, tenant published state, phone non-blank, rate limits, and idempotency. Sends a notification email to the tenant on success.
+
+ */
+export const CreateOrderParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const createOrderHeaderXDeviceTokenMin = 16;
+export const createOrderHeaderXDeviceTokenMax = 256;
+
+export const createOrderHeaderXIdempotencyKeyMin = 16;
+export const createOrderHeaderXIdempotencyKeyMax = 128;
+
+
+
+export const CreateOrderHeader = zod.object({
+  "x-device-token": zod.string().min(createOrderHeaderXDeviceTokenMin).max(createOrderHeaderXDeviceTokenMax).describe('Raw device token (opaque, 16-256 chars); hashed server-side, never stored raw'),
+  "x-idempotency-key": zod.string().min(createOrderHeaderXIdempotencyKeyMin).max(createOrderHeaderXIdempotencyKeyMax).describe('Required (16-128 chars); unique per order intent; prevents duplicate submissions on retry')
+})
+
+export const createOrderBodyQtyMax = 999;
+
+export const createOrderBodyGuestNameMax = 200;
+
+export const createOrderBodyGuestPhoneMax = 50;
+
+export const createOrderBodyGuestUnitMax = 100;
+
+export const createOrderBodyGuestNoteMax = 500;
+
+
+
+export const CreateOrderBody = zod.object({
+  "itemId": zod.string().describe('UUID of the item to order'),
+  "qty": zod.number().min(1).max(createOrderBodyQtyMax).describe('Quantity (positive integer 1-999); must be a whole number'),
+  "guestName": zod.string().min(1).max(createOrderBodyGuestNameMax).describe('Guest name (required)'),
+  "guestPhone": zod.string().min(1).max(createOrderBodyGuestPhoneMax).describe('Guest phone number (required, non-blank)'),
+  "guestUnit": zod.string().min(1).max(createOrderBodyGuestUnitMax).describe('Guest accommodation\/unit pre-filled from sign-in but editable (e.g. \"B-14\")'),
+  "guestNote": zod.string().max(createOrderBodyGuestNoteMax).optional().describe('Optional guest note')
+}).describe('Body for placing a new order')
+
+export const CreateOrderResponse = zod.object({
+  "orderRef": zod.string(),
+  "tenantId": zod.string(),
+  "itemId": zod.string(),
+  "snapshotTitle": zod.string().nullish(),
+  "snapshotPrice": zod.string().nullish(),
+  "snapshotPriceUnit": zod.string().nullish(),
+  "snapshotFulfillment": zod.string().nullish(),
+  "snapshotProducerName": zod.string().nullish(),
+  "qty": zod.number(),
+  "guestName": zod.string(),
+  "guestPhone": zod.string(),
+  "guestUnit": zod.string(),
+  "guestNote": zod.string().nullish(),
+  "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Order fields safe to return to the ordering guest (only notification_status=sent orders)')
+
+
+/**
+ * @summary List orders for the calling device (identified by hashed device token). Returns only orders for this tenant and this device — no cross-device data.
+
+ */
+export const ListDeviceOrdersParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const ListDeviceOrdersHeader = zod.object({
+  "x-device-token": zod.string().describe('Raw device token; hashed server-side to look up orders')
+})
+
+export const ListDeviceOrdersResponseItem = zod.object({
+  "orderRef": zod.string(),
+  "tenantId": zod.string(),
+  "itemId": zod.string(),
+  "snapshotTitle": zod.string().nullish(),
+  "snapshotPrice": zod.string().nullish(),
+  "snapshotPriceUnit": zod.string().nullish(),
+  "snapshotFulfillment": zod.string().nullish(),
+  "snapshotProducerName": zod.string().nullish(),
+  "qty": zod.number(),
+  "guestName": zod.string(),
+  "guestPhone": zod.string(),
+  "guestUnit": zod.string(),
+  "guestNote": zod.string().nullish(),
+  "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Order fields safe to return to the ordering guest (only notification_status=sent orders)')
+export const ListDeviceOrdersResponse = zod.array(ListDeviceOrdersResponseItem)
+
+
+/**
+ * @summary List all orders for a tenant (admin, newest first). Optional query param: ?status=novo|potrjeno|prevzeto|zavrnjeno
+
+ */
+export const ListTenantOrdersParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListTenantOrdersResponseItem = zod.object({
+  "orderRef": zod.string(),
+  "tenantId": zod.string(),
+  "itemId": zod.string(),
+  "snapshotTitle": zod.string().nullish(),
+  "snapshotPrice": zod.string().nullish(),
+  "snapshotPriceUnit": zod.string().nullish(),
+  "snapshotFulfillment": zod.string().nullish(),
+  "snapshotProducerName": zod.string().nullish(),
+  "snapshotTenantName": zod.string().nullish(),
+  "qty": zod.number(),
+  "guestName": zod.string(),
+  "guestPhone": zod.string(),
+  "guestUnit": zod.string(),
+  "guestNote": zod.string().nullish(),
+  "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
+  "notificationStatus": zod.enum(['pending', 'sent', 'failed']),
+  "notificationSentAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "deleteAfter": zod.string()
+}).describe('Full order fields for admin view (only notification_status=sent orders)')
+export const ListTenantOrdersResponse = zod.array(ListTenantOrdersResponseItem)
+
+
+/**
+ * @summary Transition an order status. Allowed transitions: novo→potrjeno, novo→zavrnjeno, potrjeno→prevzeto, potrjeno→zavrnjeno. Terminal statuses (prevzeto, zavrnjeno) cannot change.
+
+ */
+export const UpdateOrderStatusParams = zod.object({
+  "orderRef": zod.coerce.string()
+})
+
+export const UpdateOrderStatusBody = zod.object({
+  "status": zod.enum(['potrjeno', 'prevzeto', 'zavrnjeno']).describe('Target status (only non-terminal targets are valid per the transition matrix)')
+}).describe('Body for patching order status')
+
+export const UpdateOrderStatusResponse = zod.object({
+  "orderRef": zod.string(),
+  "tenantId": zod.string(),
+  "itemId": zod.string(),
+  "snapshotTitle": zod.string().nullish(),
+  "snapshotPrice": zod.string().nullish(),
+  "snapshotPriceUnit": zod.string().nullish(),
+  "snapshotFulfillment": zod.string().nullish(),
+  "snapshotProducerName": zod.string().nullish(),
+  "snapshotTenantName": zod.string().nullish(),
+  "qty": zod.number(),
+  "guestName": zod.string(),
+  "guestPhone": zod.string(),
+  "guestUnit": zod.string(),
+  "guestNote": zod.string().nullish(),
+  "status": zod.enum(['novo', 'potrjeno', 'prevzeto', 'zavrnjeno']),
+  "notificationStatus": zod.enum(['pending', 'sent', 'failed']),
+  "notificationSentAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "deleteAfter": zod.string()
+}).describe('Full order fields for admin view (only notification_status=sent orders)')
 
 

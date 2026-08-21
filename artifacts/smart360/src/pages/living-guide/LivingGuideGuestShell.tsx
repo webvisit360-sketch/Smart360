@@ -19,6 +19,7 @@ import {
 import { buildGuestPath } from "../guest/guest-url";
 import {
   makeT,
+  type UiLanguage,
   type UiTranslator,
 } from "../guest/i18n";
 import { LivingGuideSprite } from "./LivingGuideSprite";
@@ -36,6 +37,7 @@ import {
 } from "./living-guide-formatters";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
+import { OrderSheet, MyOrdersSheet } from "./living-guide-order-sheet";
 
 type GuestRecord = {
   unit: string;
@@ -362,7 +364,9 @@ export default function LivingGuideGuestShell({
   );
   const [showNotices, setShowNotices] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [showLanguages, setShowLanguages] = useState(false);
+    const [showLanguages, setShowLanguages] = useState(false);
+  const [orderItemId, setOrderItemId] = useState<string | null>(null);
+  const [showOrders, setShowOrders] = useState(false);
 
   useEffect(() => {
     const previousTheme = document.documentElement.getAttribute("data-theme");
@@ -426,7 +430,9 @@ export default function LivingGuideGuestShell({
         if (showSignIn) setShowSignIn(false);
         else if (showNotices) setShowNotices(false);
         else if (showSearch) setShowSearch(false);
-        else if (showLanguages) setShowLanguages(false);
+                else if (showLanguages) setShowLanguages(false);
+        else if (orderItemId) setOrderItemId(null);
+        else if (showOrders) setShowOrders(false);
         else goBack();
       }
     };
@@ -490,6 +496,7 @@ export default function LivingGuideGuestShell({
             onOpenNotices={() => setShowNotices(true)}
             helpCategoryId={currentSection.key === "stay" ? helpCategory?.id : null}
             notices={currentSection.key === "stay" ? notices : []}
+            onOpenOrders={() => setShowOrders(true)}
           />
         )}
 
@@ -522,6 +529,7 @@ export default function LivingGuideGuestShell({
               categoryContext.category.id ===
                 visible(categoryContext.section?.categories)[0]?.id
             }
+            onOrderClick={(id: string) => setOrderItemId(id)}
           />
         )}
       </main>
@@ -536,9 +544,7 @@ export default function LivingGuideGuestShell({
         />
       )}
 
-      {showSignIn && (
-        <SignInSheet tenantName={tenant.name} t={t} initialGuest={guest} onClose={() => setShowSignIn(false)} onSave={saveGuest} />
-      )}
+
 
       {showNotices && notices.length > 0 && (
         <NoticesSheet notices={notices} onClose={() => setShowNotices(false)} t={t} />
@@ -560,6 +566,26 @@ export default function LivingGuideGuestShell({
         />
       )}
 
+      {orderItemId && (() => {
+        const item = allCategories.flatMap((c: any) => visible(c.category.items)).find((i: any) => i.id === orderItemId);
+        if (!item) return null;
+        return (
+          <OrderSheet
+            item={item}
+            slug={slug}
+            t={t}
+            guest={guest}
+            onClose={() => setOrderItemId(null)}
+          />
+        );
+      })()}
+
+      {showOrders && (
+        <MyOrdersSheet slug={slug} lang={lang as UiLanguage} t={t} onClose={() => setShowOrders(false)} />
+      )}
+      {showSignIn && (
+        <SignInSheet tenantName={tenant.name} t={t} initialGuest={guest} onClose={() => setShowSignIn(false)} onSave={saveGuest} />
+      )}
       {showLanguages && (
         <LivingGuideLanguageSheet
           languages={enabledLanguageCodes(tenant)}
@@ -727,7 +753,7 @@ function NoticeRow({ n, t }: { n: any, t: UiTranslator }) {
   );
 }
 
-function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices }: any) {
+function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, onOpenOrders }: any) {
   const categories = visible(section.categories);
   const featuredCategory = categories.find(isOperationalRulesCategory) ??
     categories.find((c: any) => { const firstItem = visible(c.items)[0]; return !firstItem?.tint && !!firstMedia(c); });
@@ -750,14 +776,19 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
       </header>
       <div className="lg2-screen-scroll" data-lg-scroll>
         {guest && (
-          <button className="lg2-greeting" type="button" onClick={onEditGuest}>
-            <span className="lg2-greeting-icon" aria-hidden="true"><svg><use href="#lg-i-usr" /></svg></span>
-            <span>
-              <b>{guest.name ? t("UI.lg.greeting.named", { name: guest.name }) : t("UI.lg.greeting.generic")}</b>
-              <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
-            </span>
-            <em>{t("UI.lg.greeting.change")}</em>
-          </button>
+          <div style={{ margin: "0 16px 12px", display: "flex", gap: "8px" }}>
+            <button className="lg2-greeting" style={{ margin: 0, flex: 1 }} type="button" onClick={onEditGuest}>
+              <span className="lg2-greeting-icon" aria-hidden="true"><svg><use href="#lg-i-usr" /></svg></span>
+              <span>
+                <b>{guest.name ? t("UI.lg.greeting.named", { name: guest.name }) : t("UI.lg.greeting.generic")}</b>
+                <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
+              </span>
+              <em>{t("UI.lg.greeting.change")}</em>
+            </button>
+            <button type="button" onClick={onOpenOrders} style={{ width: "58px", height: "58px", borderRadius: "16px", background: "var(--card2)", color: "var(--tx)", border: "1px solid var(--line)", display: "grid", placeItems: "center", cursor: "pointer", flexShrink: 0 }} aria-label={t("UI.lg.order.myOrders")}>
+              <svg style={{ width: 22, height: 22 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </button>
+          </div>
         )}
         <div className="lg2-grid lg2-stagger">
           {orderedCategories.map((category: any, index: number) => {
@@ -1028,7 +1059,7 @@ function AspectAwareHeroImage({
   );
 }
 
-function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts }: any) {
+function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick }: any) {
   const items = visible(category.items);
   const activeItem = itemId ? items.find((i: any) => i.id === itemId) : null;
 
@@ -1037,36 +1068,63 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
   let content = null;
   if (activeItem) {
     if (layout === "poi") {
-      content = <TemplateF item={activeItem} category={category} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateF item={activeItem} category={category} lang={lang} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "routes") {
-      content = <TemplateG item={activeItem} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateG item={activeItem} category={category} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "tabs") {
-      content = <TemplateB2 key={activeItem.id} items={items} initialItemId={activeItem.id} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateB2 key={activeItem.id} items={items} initialItemId={activeItem.id} onOrderClick={onOrderClick} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else {
-        content = <TemplateA category={category} items={[activeItem]} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+        content = <TemplateA category={category} items={[activeItem]} onOrderClick={onOrderClick} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
   } else {
     if (layout === "wifi") {
       content = <TemplateE category={category} items={items} tenant={tenant} t={t} onBack={onBack} />;
     } else if (layout === "tabs" && items.length === 2) {
-      content = <TemplateD category={category} items={items} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateD category={category} items={items} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "tabs" || layout === "apartments" || layout === "products" || layout === "poi" || layout === "routes" || layout === "events") {
-      content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} />;
+      content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} onOrderClick={onOrderClick} />;
     } else if (layout === "rules") {
       if (isOperationalRulesCategory(category)) {
-        content = <TemplateA category={category} items={items} tenant={tenant} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+        content = <TemplateA category={category} items={items} tenant={tenant} onOrderClick={onOrderClick} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
       } else {
         content = <TemplateC category={category} items={items} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
       }
     } else {
-      content = <TemplateA category={category} items={items} tenant={tenant} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+      content = <TemplateA category={category} items={items} tenant={tenant} onOrderClick={onOrderClick} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
   }
 
   return (
-    <section className="lg2-view lg2-detail-view">
+    <section className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" ? " has-order-dock" : ""}`}>
       {content}
+      {activeItem?.orderEnabled && layout !== "tabs" && (
+        <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
+      )}
     </section>
+  );
+}
+
+function OrderDock({ item, t, onOrderClick }: { item: any; t: UiTranslator; onOrderClick: (itemId: string) => void }) {
+  return (
+    <div className="lg2-order-dock" data-testid="order-dock">
+      <div className="lg2-order-dock-inner">
+        {(item.producerName || item.producerNote) && (
+          <div className="lg2-order-producer">
+            {item.producerName && <b>{item.producerName}</b>}
+            {item.producerNote && <small>{item.producerNote}</small>}
+          </div>
+        )}
+        {item.soldOut ? (
+          <button className="lg2-primary-button lg2-primary-button--disabled" type="button" disabled>
+            {t("UI.lg.order.soldOut")}
+          </button>
+        ) : (
+          <button className="lg2-primary-button" type="button" onClick={() => onOrderClick(item.id)} data-testid={`order-cta-${item.id}`}>
+            {t("UI.lg.order.title")}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1107,7 +1165,7 @@ function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
   );
 }
 
-function TemplateA({ category, items, mediaOverride, titleOverride, tenant, showHostContacts, t, onBack, galleryIndex, onGalleryIndex }: any) {
+function TemplateA({ category, items, mediaOverride, titleOverride, tenant, showHostContacts, t, onBack, galleryIndex, onGalleryIndex, onOrderClick }: any) {
   const firstItem = items[0] ?? null;
   const media = mediaOverride ?? categoryMedia(category);
   const heading = titleOverride || category.label;
@@ -1172,7 +1230,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
 }
 
 // Template B: List page
-function TemplateB({ category, items, t, onBack, onOpenItem }: any) {
+function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick }: any) {
   const media = firstMedia(category) ? [firstMedia(category)] : [];
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -1332,6 +1390,7 @@ function TabbedDetail({
   onBack,
   galleryIndex,
   onGalleryIndex,
+  onOrderClick,
 }: any) {
   const initialSegment = Math.max(
     0,
@@ -1350,7 +1409,7 @@ function TabbedDetail({
   const panelBaseId = `lg2-segment-${category.id}`;
 
   return (
-    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+    <div className={`lg2-screen-scroll lg2-detail-scroll${activeItem.orderEnabled ? " lg2-detail-scroll--orderable" : ""}`} data-lg-scroll>
       <div className="lg2-detail-layout">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
@@ -1400,6 +1459,9 @@ function TabbedDetail({
           </div>
         </article>
       </div>
+      {activeItem.orderEnabled && (
+        <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
+      )}
     </div>
   );
 }
@@ -1459,7 +1521,7 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
 }
 
 // Template F: Place
-function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryIndex }: any) {
+function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryIndex, onOrderClick }: any) {
   const media = visible(item?.media);
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
@@ -1504,7 +1566,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
 }
 
 // Template G: Trail
-function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex }: any) {
+function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, onOrderClick }: any) {
   const media = visible(item?.media);
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
@@ -1538,7 +1600,6 @@ function BottomNav({ sections, slug, t, activeSectionKey, onNavigate }: any) {
     { key: "stay", label: t("UI.lg.nav.stay"), icon: "tent", section: sectionFor("stay") },
     { key: "offer", label: t("UI.lg.nav.offer"), icon: "bag", section: sectionFor("offer") },
     { key: "explore", label: t("UI.lg.nav.area"), icon: "comp", section: sectionFor("explore") },
-    { key: "program", label: t("UI.lg.nav.program"), icon: "cal", section: sectionFor("program") },
   ].filter((tab) => tab.key === "home" || tab.section);
 
   const normalizedActive = activeSectionKey === "services" ? "explore" : activeSectionKey;
