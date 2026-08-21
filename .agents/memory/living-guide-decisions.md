@@ -81,11 +81,11 @@ Detail hero height follows the active image’s natural aspect at the live conta
 
 **How to apply:** Recompute from natural image dimensions after image load, active-slide change, resize, and orientation. Apply this only to detail/gallery media; no-photo ambient heroes and grid/list thumbnail cover behavior remain unchanged.
 
-PART 4 ordering scope is fixed: SUP, olive oil, scooter, boat with skipper, and boat transport are orderable; late checkout is not. Pickup is at the host unless authored item text explicitly promises delivery. Skip the help/emergency ordering link.
+PART 4 ordering scope is fixed: SUP, olive oil, scooter, boat with skipper, and boat transport are orderable; late checkout is not. The allowlist counts category concepts, so every item variant in those five categories is orderable, including textual “Po dogovoru” offers. Pickup is at the host unless authored item text explicitly promises delivery. Skip the help/emergency ordering link.
 
 **Why:** These are explicit launch decisions recorded before ordering implementation, and delivery or late-checkout promises must never be invented.
 
-**How to apply:** Use this allowlist when PART 4 starts, keep prices textual with no calculated totals, derive any delivery promise only from item text, and do not begin PART 4 before the Batch 4 owner review gate passes.
+**How to apply:** Apply the allowlist to all rows in each approved category rather than choosing one representative variant; keep prices textual with no calculated totals, derive any delivery promise only from item text, and do not begin PART 4 before the Batch 4 owner review gate passes.
 
 Browser machine translation is disabled for the guest app; Smart360’s own SL, EN, DE, and IT content is the only supported translation path.
 

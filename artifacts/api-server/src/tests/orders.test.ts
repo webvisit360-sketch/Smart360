@@ -61,6 +61,8 @@ import {
 import {
   buildEmailHeaders,
   buildEmailBody,
+  ORDER_EMAIL_FROM_ADDRESS,
+  ORDER_EMAIL_FROM_NAME,
   type OrderEmailPayload,
 } from "../lib/orderEmail";
 
@@ -602,9 +604,17 @@ describe("buildEmailBody", () => {
     assert.ok(html.includes("Prosim brez pesticidov."), "note content must appear");
   });
 
-  test("from address is set from the passed argument, not from environment", () => {
-    const body = buildEmailBody(BASE_PAYLOAD, "custom-sender@domain.com");
-    assert.equal(body["from"], "custom-sender@domain.com");
+  test("uses the approved display name and verified sender address", () => {
+    const body = buildEmailBody(BASE_PAYLOAD, ORDER_EMAIL_FROM_ADDRESS);
+    assert.equal(
+      body["from"],
+      `${ORDER_EMAIL_FROM_NAME} <${ORDER_EMAIL_FROM_ADDRESS}>`,
+    );
+  });
+
+  test("reply-to is the approved sender address", () => {
+    const body = buildEmailBody(BASE_PAYLOAD, ORDER_EMAIL_FROM_ADDRESS);
+    assert.equal(body["reply_to"], ORDER_EMAIL_FROM_ADDRESS);
   });
 
   test("to is an array containing the payload.to address", () => {

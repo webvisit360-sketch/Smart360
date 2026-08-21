@@ -20,17 +20,24 @@ import { ReplitConnectors } from "@replit/connectors-sdk";
 import { logger } from "./logger";
 
 const connectors = new ReplitConnectors();
+export const ORDER_EMAIL_FROM_ADDRESS = "info@webvisit360.com";
+export const ORDER_EMAIL_FROM_NAME = "Smart360 naročila";
 
 /**
  * Sender address from environment.  Must be configured — no fallback.
  * Callers should check this at startup or fail clearly if missing.
  */
 export function emailFrom(): string {
-  const v = process.env["ORDER_EMAIL_FROM"];
+  const v = process.env["ORDER_EMAIL_FROM"]?.trim().toLowerCase();
   if (!v) {
     throw new Error(
       "ORDER_EMAIL_FROM environment variable is not set. " +
         "Configure a verified Resend sender address before enabling orders.",
+    );
+  }
+  if (v !== ORDER_EMAIL_FROM_ADDRESS) {
+    throw new Error(
+      `ORDER_EMAIL_FROM must be the verified sender ${ORDER_EMAIL_FROM_ADDRESS}.`,
     );
   }
   return v;
@@ -90,7 +97,8 @@ export function buildEmailBody(
 </html>`;
 
   return {
-    from,
+    from: `${ORDER_EMAIL_FROM_NAME} <${from}>`,
+    reply_to: from,
     to: [p.to],
     subject: `Novo naročilo – odprite portal`,
     html,

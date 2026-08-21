@@ -126,11 +126,11 @@ async function insertSection(key, title, subtitle, icon, position) {
   );
   return r.rows[0].id;
 }
-async function insertCategory(sectionId, label, icon, layout, position) {
+async function insertCategory(sectionId, key, label, icon, layout, position) {
   const r = await q(
-    `insert into categories (section_id, label, icon, layout, position)
-     values ($1,$2,$3,$4,$5) returning id`,
-    [sectionId, label, icon, layout, position],
+    `insert into categories (section_id, key, label, icon, layout, position)
+     values ($1,$2,$3,$4,$5,$6) returning id`,
+    [sectionId, key, label, icon, layout, position],
   );
   return r.rows[0].id;
 }
@@ -140,6 +140,7 @@ async function insertCategory(sectionId, label, icon, layout, position) {
 // "[null]") must be stored as NULL, never as text. JSON-array bodies get their
 // null/junk paragraphs dropped; an empty array becomes NULL.
 const JUNK = new Set(["[null]", "null", "undefined", "NaN"]);
+const ORDERABLE_CATEGORY_KEYS = new Set(["sup", "scooter", "boat", "ferry", "oil"]);
 function cleanText(v) {
   if (v == null) return null;
   const s = String(v).trim();
@@ -165,8 +166,9 @@ function cleanBody(v) {
 async function insertItem(categoryId, fields, position) {
   const r = await q(
     `insert into items (category_id, title, body, price, price_unit, phone, website, map_query,
-       difficulty, duration, distance, open24, hours_json, note_type, note_text, bullets, position)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) returning id`,
+       difficulty, duration, distance, open24, hours_json, note_type, note_text, bullets, position,
+       order_enabled)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) returning id`,
     [
       categoryId,
       cleanText(fields.title),
@@ -185,6 +187,7 @@ async function insertItem(categoryId, fields, position) {
       cleanText(fields.noteText),
       (fields.bullets ?? []).filter((b) => cleanText(b) != null),
       position,
+      fields.orderEnabled ?? false,
     ],
   );
   return r.rows[0].id;
@@ -225,6 +228,7 @@ for (const key of ["stay", "offer", "explore", "services"]) {
     const layout = cat.type ?? "text";
     const categoryId = await insertCategory(
       sectionId,
+      cat.id ?? null,
       cat.label,
       cat.icon ?? "doc",
       layout,
@@ -303,6 +307,7 @@ for (const key of ["stay", "offer", "explore", "services"]) {
             bullets: p.incl ?? [],
             noteType: cat.warn ? "info" : null,
             noteText: cat.warn ?? null,
+            orderEnabled: ORDERABLE_CATEGORY_KEYS.has(cat.id),
           },
           itemPos++,
         );

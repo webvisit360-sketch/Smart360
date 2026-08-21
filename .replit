@@ -25,6 +25,7 @@ channel = "stable-25_05"
 [userenv]
 
 [userenv.shared]
+ORDER_EMAIL_FROM = "info@webvisit360.com"
 
 [userenv.production]
 APP_DOMAIN = "smart360.info"
