@@ -278,6 +278,13 @@ const WRONG_ORDER_PASSWORD_MESSAGES: Record<OrderLanguage, string> = {
   it: "Password errata",
 };
 
+const REQUIRED_ORDER_FIELD_MESSAGES: Record<OrderLanguage, string> = {
+  sl: "To polje je obvezno.",
+  en: "This field is required.",
+  de: "Dieses Feld ist erforderlich.",
+  it: "Questo campo è obbligatorio.",
+};
+
 /**
  * Empty tenant passwords opt out. Configured passwords are trimmed on both
  * sides and remain case-sensitive.
@@ -293,6 +300,12 @@ export function matchesOrderPassword(
 
 export function wrongOrderPasswordMessage(lang: string | undefined): string {
   return WRONG_ORDER_PASSWORD_MESSAGES[
+    lang === "en" || lang === "de" || lang === "it" ? lang : "sl"
+  ];
+}
+
+export function requiredOrderFieldMessage(lang: string | undefined): string {
+  return REQUIRED_ORDER_FIELD_MESSAGES[
     lang === "en" || lang === "de" || lang === "it" ? lang : "sl"
   ];
 }

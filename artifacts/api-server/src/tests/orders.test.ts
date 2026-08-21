@@ -52,6 +52,7 @@ import {
   hasMinimumPhoneDigits,
   ORDER_PASSWORD_MAX,
   matchesOrderPassword,
+  requiredOrderFieldMessage,
   wrongOrderPasswordMessage,
   type ExistingOrderSummary,
 } from "../lib/orderHelpers";
@@ -129,6 +130,15 @@ describe("tenant order password", () => {
     assert.equal(wrongOrderPasswordMessage("en"), "Wrong password");
     assert.equal(wrongOrderPasswordMessage("de"), "Falsches Passwort");
     assert.equal(wrongOrderPasswordMessage("it"), "Password errata");
+  });
+});
+
+describe("required order fields", () => {
+  test("returns the same localized required-field error as the order form", () => {
+    assert.equal(requiredOrderFieldMessage("sl"), "To polje je obvezno.");
+    assert.equal(requiredOrderFieldMessage("en"), "This field is required.");
+    assert.equal(requiredOrderFieldMessage("de"), "Dieses Feld ist erforderlich.");
+    assert.equal(requiredOrderFieldMessage("it"), "Questo campo è obbligatorio.");
   });
 });
 

@@ -760,8 +760,7 @@ export interface OrderInput {
      */
   qty: number;
   /**
-     * Guest name (required)
-     * @minLength 1
+     * Guest name (required after whitespace trimming)
      * @maxLength 200
      */
   guestName: string;

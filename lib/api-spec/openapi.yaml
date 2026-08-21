@@ -1936,9 +1936,8 @@ components:
           description: Quantity (positive integer 1-999); must be a whole number
         guestName:
           type: string
-          minLength: 1
           maxLength: 200
-          description: Guest name (required)
+          description: Guest name (required after whitespace trimming)
         guestPhone:
           type: string
           minLength: 1

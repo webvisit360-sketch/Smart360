@@ -99,6 +99,7 @@ import {
   STATUS_NOTE_MAX,
   hasMinimumPhoneDigits,
   matchesOrderPassword,
+  requiredOrderFieldMessage,
   wrongOrderPasswordMessage,
 } from "../lib/orderHelpers";
 import { sendOrderEmail, emailFrom } from "../lib/orderEmail";
@@ -248,7 +249,10 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
   const guestNote = parsed.data.guestNote?.trim() ?? null;
   const submittedOrderPassword = parsed.data.orderPassword?.trim() ?? null;
 
-  if (!guestName) { res.status(400).json({ error: "guestName must not be blank" }); return; }
+  if (!guestName) {
+    res.status(400).json({ error: requiredOrderFieldMessage(parsed.data.lang) });
+    return;
+  }
   if (!guestPhone) { res.status(400).json({ error: "guestPhone must not be blank" }); return; }
   if (!hasMinimumPhoneDigits(guestPhone)) {
     res.status(400).json({

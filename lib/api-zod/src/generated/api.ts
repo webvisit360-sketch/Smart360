@@ -1692,7 +1692,7 @@ export const createOrderBodyOrderPasswordMax = 200;
 export const CreateOrderBody = zod.object({
   "itemId": zod.string().describe('UUID of the item to order'),
   "qty": zod.number().min(1).max(createOrderBodyQtyMax).describe('Quantity (positive integer 1-999); must be a whole number'),
-  "guestName": zod.string().min(1).max(createOrderBodyGuestNameMax).describe('Guest name (required)'),
+  "guestName": zod.string().max(createOrderBodyGuestNameMax).describe('Guest name (required after whitespace trimming)'),
   "guestPhone": zod.string().min(1).max(createOrderBodyGuestPhoneMax).describe('Guest phone number (required; must contain at least six digit characters; formatting is preserved)'),
   "guestUnit": zod.string().min(1).max(createOrderBodyGuestUnitMax).describe('Guest accommodation\/unit pre-filled from sign-in but editable (e.g. \"B-14\")'),
   "guestNote": zod.string().max(createOrderBodyGuestNoteMax).optional().describe('Optional guest note'),
