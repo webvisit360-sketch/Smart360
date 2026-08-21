@@ -1,0 +1,124 @@
+FIX BATCH 5 — Gallery snap bug, hero rule v4 (80% threshold), media strip check
+
+Owner feedback from the live app (screenshots reviewed). Cosmetic polish is the
+point of this batch — "pika na i". One report, established format (re-verified
+public URL immediately before the report, build id, per-fix verification with
+screenshots). Production DB strictly READ-ONLY. Never invent content.
+
+Note (not a fix): the order "Geslo" field correctly appears only once the
+tenant orderPassword is set; the owner will set it in the admin. After he does,
+confirm in your report that the field renders on the order form.
+
+
+
+
+
+FIX 1 — Gallery slides bleed into each other (bug, highest priority)
+
+On Apartma 1/2/3 galleries the view frequently rests showing TWO HALF images
+side by side (e.g. half shower + half bedroom). Slides must always snap to
+exactly one full-width slide at rest — never a partial pair. Diagnose (likely
+scroll-snap missing/broken on the new adaptive-height track, or slide width
+rounding at 100%*n) and fix. Momentum swipes and slow drags must both settle
+on a single slide. Dots must match the settled slide.
+
+Verify: screen recording or sequential screenshots of an Apartma gallery swipe
+at 390×844 and 402×874 — every rest state shows exactly one whole photo.
+
+FIX 2 — HERO RULE v4 (supersedes v3's clamp values; binding)
+
+The owner's rule, verbatim intent: blur ("senca") may exist ONLY when an image
+is so tall/narrow that rendered at full screen width it would cover MORE THAN
+80% of the viewport height and hide the sheet. Everywhere else: the whole
+image, full-bleed, no blur, no crop — the sheet simply sits lower or higher.
+
+
+
+
+
+heroH = containerWidth / imageAspect.
+
+
+
+heroH ≤ 0.80 × viewport height → render the image FULL-BLEED at natural
+
+ratio: whole image, no blur, no side bands, no cropping. Sheet starts
+ directly below. This now includes portrait photos like Wakanda Beach Bar
+ (≈62% of viewport → full width, blur removed), Žar, Zunanji fitnes.
+
+
+
+heroH > 0.80 × viewport height → hero capped at 78% of viewport, image
+
+contain by height, centered, side blur-fill on left/right ONLY. This is
+ the sole remaining blur case.
+
+
+
+REMOVE the 176px minimum-height crop: a very wide image renders at its
+
+natural (short) height, never cropped — the Skuter photo must show its
+ wheels. No minimum that crops content.
+
+
+
+Pixel-perfect edges: the image sits flush to the hero's top edge with
+
+integer pixel rounding — the Parking detail currently shows a ~1px bright
+ background sliver above the image. Zero hairline gaps anywhere.
+
+
+
+Galleries: per-slide height (existing) + FIX 1 snap. When the sheet content
+
+is only a title (apartments), the gallery area may use the remaining
+ height up to the 80% cap; each slide still renders whole per rules 2–3,
+ vertically centered on the plain theme background (never blur below the
+ threshold, never hairline gaps).
+
+Verify with screenshots: Skuter (whole scooter incl. wheels), Wakanda (full
+width, no blur), Žar, Zunanji fitnes, Parkirišče (no sliver), Čoln 3h (still
+the >80% side-blur case if its full-width height exceeds 80%), one Apartma
+gallery. Report computed heroH and the branch taken for each.
+
+FIX 3 — Numeric "3/5" badge inconsistent with dots
+
+Zunanji fitnes shows a "3/5" counter badge in the top-right of the hero while
+other galleries show dots. The prototype uses dots only. Remove the numeric
+badge everywhere; dots are the single pagination indicator.
+
+Verify: screenshot of the Zunanji fitnes gallery without the badge.
+
+FIX 4 — Skuter (and similar) served from a pre-cropped strip
+
+The Skuter image being served is a ~492×174 strip — the wheels are cut off in
+the FILE, not by CSS. Audit the media records for the orderable items and
+apartments: for each, report the stored original's real dimensions and whether
+a fuller original exists in the media library (the owner mentions a photo
+named like IMG-6605 / IMG_6605 as possibly the full scooter shot). Do NOT
+upload, replace or reassign any media yourself — report the findings as an
+owner list so he can reassign the correct originals in the admin.
+
+
+
+
+
+DELIBERATELY ABSENT
+
+
+
+
+
+Setting the tenant orderPassword — owner does it in the admin.
+
+
+
+Any media replacement/reassignment — owner work, per FIX 4's report.
+
+
+
+Task #34 formal closure report remains due as previously instructed.
+
+
+
+Part 5 does not start without the owner's explicit instruction.
