@@ -77,7 +77,7 @@ The development Meli Pu tenant is a read-mostly production-content copy; refresh
 
 Detail hero height follows the active image’s natural full-width aspect at the live container width. If that natural height is at most 80% of the viewport, use the natural height with a whole full-bleed image and no blur, bands, crop, or minimum height. Only a natural height above 80% uses a 78%-of-viewport cap, a contained centered image, and same-image side blur. Gallery height follows the active slide with an approximately 200 ms transition.
 
-**Why:** The owner’s v4 rule superseded v3 after live review: ordinary portrait images such as Wakanda must remain clean, wide media must never be forced into a crop, and blur exists only to stop an exceptionally tall image from hiding the sheet.
+**Why:** The owner formally approved v4 after direct mobile validation: ordinary portrait images such as Wakanda must remain clean, wide media must never be forced into a crop, and blur exists only to stop an exceptionally tall image from hiding the sheet.
 
 **How to apply:** Recompute from natural image dimensions after image load, settled active-slide change, resize, and orientation; treat exactly 80% as full-bleed and round rendered hero height to whole pixels. Apply this only to detail/gallery media; no-photo ambient heroes and grid/list thumbnail cover behavior remain unchanged.
 
