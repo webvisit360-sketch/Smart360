@@ -1,0 +1,100 @@
+FIX BATCH 6 — Stable image sizing (no flash-shrink) + threshold raised to 85%
+
+Owner feedback from the live app. One report, established format (re-verified
+public URL immediately before the report, build id, per-fix verification).
+Production DB strictly READ-ONLY. Never invent content.
+
+
+
+FIX 1 — Images first render large, then visibly shrink (bug, highest priority)
+
+On nearly every apartment photo (and likely elsewhere) the hero/gallery image
+first paints at one size and about a second later visibly shrinks to a smaller
+size. The owner is right that this is unacceptable: the image must appear ONCE,
+at its final size, with no post-load jump.
+
+Requirements:
+
+
+
+
+
+Compute the hero/slide height BEFORE the image loads, from the media
+
+record's stored width/height metadata (the FIX BATCH 5 audit read these
+ dimensions, so they are available server-side; expose them in the payload
+ if the client does not already receive them). The layout must be fully
+ reserved on first paint.
+
+
+
+The FINAL rendered state must equal the hero-rule branch exactly: natural
+
+full-width height (whole image, correct aspect, no distortion) or the
+ capped branch. No recompute may change the size after the image loads —
+ image onload must confirm, not restyle.
+
+
+
+If a media record lacks dimensions, fetch/measure FIRST and only then
+
+reveal the image (short fade-in) — never paint at a provisional size.
+
+
+
+Diagnose and state the root cause of the current shrink in the report.
+
+Verify: with network throttling (Slow 3G) open Apartma 1 and Apartma 4
+details — sequential screenshots or a recording proving the image area does
+not change size between first paint and loaded state. Report the payload
+field carrying the dimensions.
+
+FIX 2 — Threshold and cap raised from 80%/78% to 85%
+
+The owner reviewed the bathroom (portrait) photo: the side blur appears even
+though only a little height is missing. Adjust hero rule v4:
+
+
+
+
+
+Full-bleed branch: natural full-width height ≤ 85% of viewport height
+(was 80%).
+
+
+
+Blur branch: only above 85%; hero is capped at 85% of viewport (was
+78%), image contained by height, side blur-fill. The sheet keeps the
+remaining ≥15%.
+
+Expected effects to verify and screenshot:
+
+
+
+
+
+Apartma 4 shower photo (portrait): now FULL-BLEED, no blur.
+
+
+
+BFT remote photo (Navodila za ograjo slide 1): full-bleed, no blur, whole
+remote visible.
+
+
+
+Čoln 3h (natural ≈108% of viewport): still the blur branch, hero now at
+85% cap — whole boat visible, larger than before.
+Report computed heroH and branch for these three plus one landscape control
+(gate photo), at 390×844.
+
+
+
+
+
+DELIBERATELY ABSENT
+
+
+
+
+
+Owner media reassignments, order password setup, Part 5 — unchanged.
