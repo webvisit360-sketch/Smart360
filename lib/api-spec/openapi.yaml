@@ -1842,6 +1842,9 @@ components:
         tenantId: { type: string }
         guestName: { type: string }
         guestUnit: { type: string }
+        guestPhone:
+          type: ["string", "null"]
+          description: Guest phone for host tap-to-call; null only for legacy threads created before phone identity was required
         isOpen: { type: boolean }
         messages:
           type: array
@@ -1850,7 +1853,7 @@ components:
         createdAt: { type: string }
         updatedAt: { type: string }
         deleteAfter: { type: string }
-      required: [threadRef, tenantId, guestName, guestUnit, isOpen, messages, createdAt, updatedAt, deleteAfter]
+      required: [threadRef, tenantId, guestName, guestUnit, guestPhone, isOpen, messages, createdAt, updatedAt, deleteAfter]
     GuestMessageInput:
       type: object
       description: Guest-sent message body with required signed-in identity and optional tenant credential
@@ -1870,6 +1873,11 @@ components:
           minLength: 1
           maxLength: 100
           description: Required guest unit/room for host context; trimmed server-side and never emailed or logged
+        guestPhone:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Required guest phone; must contain at least six digit characters, formatting is preserved, and it is stored once on the thread but never emailed or logged
         password:
           type: string
           maxLength: 200
@@ -1879,7 +1887,7 @@ components:
           type: string
           enum: [sl, en, de, it]
           description: UI language used for localized credential errors; defaults to sl
-      required: [body, guestName, guestUnit]
+      required: [body, guestName, guestUnit, guestPhone]
     HostReplyInput:
       type: object
       description: Host reply message body

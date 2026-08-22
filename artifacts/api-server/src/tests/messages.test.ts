@@ -28,11 +28,16 @@ import { sha256hex, ProcessLocalRateLimiter } from "../lib/orderHelpers";
 import {
   MESSAGE_BODY_MAX,
   MESSAGE_GUEST_NAME_MAX,
+  MESSAGE_GUEST_PHONE_MAX,
+  MESSAGE_GUEST_PHONE_MIN_DIGITS,
   MESSAGE_GUEST_UNIT_MAX,
   MESSAGE_PASSWORD_MAX,
+  hasMinimumMessagePhoneDigits,
+  invalidMessagePhoneMessage,
   msgIpRateLimiter,
   msgDeviceRateLimiter,
   requiredMessageNameMessage,
+  requiredMessagePhoneMessage,
   requiredMessageUnitMessage,
   wrongMessagePasswordMessage,
 } from "../lib/messageHelpers";
@@ -56,12 +61,14 @@ describe("messaging constants", () => {
   test("MESSAGE_BODY_MAX = 2000", () => assert.equal(MESSAGE_BODY_MAX, 2000));
   test("MESSAGE_GUEST_NAME_MAX = 200", () => assert.equal(MESSAGE_GUEST_NAME_MAX, 200));
   test("MESSAGE_GUEST_UNIT_MAX = 100", () => assert.equal(MESSAGE_GUEST_UNIT_MAX, 100));
+  test("MESSAGE_GUEST_PHONE_MAX = 50", () => assert.equal(MESSAGE_GUEST_PHONE_MAX, 50));
+  test("MESSAGE_GUEST_PHONE_MIN_DIGITS = 6", () => assert.equal(MESSAGE_GUEST_PHONE_MIN_DIGITS, 6));
   test("MESSAGE_PASSWORD_MAX = 200", () => assert.equal(MESSAGE_PASSWORD_MAX, 200));
   test("MESSAGE_RETENTION_DAYS = 90", () => assert.equal(MESSAGE_RETENTION_DAYS, 90));
 });
 
 describe("message access contract", () => {
-  test("guest name and unit are required by the generated request schema", () => {
+  test("guest name, unit and phone are required by the generated request schema", () => {
     const parsed = SendGuestMessageBody.safeParse({ body: "Hello" });
     assert.equal(parsed.success, false);
   });
@@ -71,6 +78,7 @@ describe("message access contract", () => {
       body: "Hello",
       guestName: "Ana Novak",
       guestUnit: "B-14",
+      guestPhone: "+386 41 000 000",
       password: "Secret",
       lang: "de",
     });
@@ -82,6 +90,14 @@ describe("message access contract", () => {
     assert.equal(requiredMessageUnitMessage("en"), "This field is required.");
     assert.equal(requiredMessageNameMessage("de"), "Dieses Feld ist erforderlich.");
     assert.equal(requiredMessageUnitMessage("it"), "Questo campo è obbligatorio.");
+    assert.equal(requiredMessagePhoneMessage("sl"), "To polje je obvezno.");
+  });
+
+  test("phone digit errors are localized in all supported languages", () => {
+    assert.equal(invalidMessagePhoneMessage("sl"), "Telefonska številka mora vsebovati vsaj 6 števk.");
+    assert.equal(invalidMessagePhoneMessage("en"), "The phone number must contain at least 6 digits.");
+    assert.equal(invalidMessagePhoneMessage("de"), "Die Telefonnummer muss mindestens 6 Ziffern enthalten.");
+    assert.equal(invalidMessagePhoneMessage("it"), "Il numero di telefono deve contenere almeno 6 cifre.");
   });
 
   test("wrong-password errors are localized in all supported languages", () => {
@@ -208,6 +224,7 @@ describe("buildMessageEmailBody (PII safety)", () => {
     const html = body["html"] as string;
     assert.ok(!html.includes("guestName"), "guestName key must not appear");
     assert.ok(!html.includes("guestUnit"), "guestUnit key must not appear");
+    assert.ok(!html.includes("guestPhone"), "guestPhone key must not appear");
   });
 
   test("subject is a generic portal prompt", () => {
@@ -302,6 +319,20 @@ describe("input validation (boundary checks)", () => {
   test("guestUnit of 101 chars exceeds max", () => {
     assert.ok("a".repeat(101).length > MESSAGE_GUEST_UNIT_MAX);
   });
+
+  test("formatted phone with six digits is accepted without normalization", () => {
+    const phone = "+386 (0)1-23";
+    assert.equal(hasMinimumMessagePhoneDigits(phone), true);
+    assert.equal(phone, "+386 (0)1-23");
+  });
+
+  test("phone with fewer than six digits is rejected", () => {
+    assert.equal(hasMinimumMessagePhoneDigits("+386 1"), false);
+  });
+
+  test("guestPhone of 51 chars exceeds max", () => {
+    assert.ok("1".repeat(51).length > MESSAGE_GUEST_PHONE_MAX);
+  });
 });
 
 // ─── DB helpers ───────────────────────────────────────────────────────────────
@@ -381,6 +412,39 @@ describe("DB: one-thread invariant", async () => {
   });
 });
 
+describe("DB: single thread-level guest phone", async () => {
+  test("a legacy null phone is repaired in place and formatting is preserved", async () => {
+    const tenant = await createTestTenant(uniqueSlug("phone-repair"));
+    const hash = sha256hex("device-phone-repair");
+    const [legacyThread] = await db
+      .insert(messageThreadsTable)
+      .values({
+        tenantId: tenant.id,
+        deviceTokenHash: hash,
+        guestName: "Ana Novak",
+        guestUnit: "B-14",
+        guestPhone: null,
+        isOpen: true,
+        deleteAfter: makeMessageDeleteAfter(),
+      })
+      .returning();
+
+    await db
+      .update(messageThreadsTable)
+      .set({ guestPhone: "+386 41 000 000" })
+      .where(eq(messageThreadsTable.id, legacyThread!.id));
+
+    const [repaired] = await db
+      .select()
+      .from(messageThreadsTable)
+      .where(eq(messageThreadsTable.id, legacyThread!.id));
+    assert.equal(repaired!.id, legacyThread!.id);
+    assert.equal(repaired!.guestPhone, "+386 41 000 000");
+
+    await cleanupTenant(tenant.id);
+  });
+});
+
 // ─── DB: host reply ───────────────────────────────────────────────────────────
 
 describe("DB: host reply", async () => {
@@ -453,7 +517,13 @@ describe("DB: 90-day purge", async () => {
 
     const [expired] = await db
       .insert(messageThreadsTable)
-      .values({ tenantId: tenant.id, deviceTokenHash: expiredHash, isOpen: true, deleteAfter: new Date(Date.now() - 1) })
+      .values({
+        tenantId: tenant.id,
+        deviceTokenHash: expiredHash,
+        guestPhone: "+386 41 000 000",
+        isOpen: true,
+        deleteAfter: new Date(Date.now() - 1),
+      })
       .returning();
 
     const [live] = await db

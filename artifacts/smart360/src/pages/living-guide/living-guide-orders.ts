@@ -4,6 +4,7 @@ const ORDER_PASSWORD_STORAGE_PREFIX = "smart360:living-guide:order-password:";
 export type RememberedGuestIdentity = {
   unit: string;
   name: string;
+  phone: string;
 };
 
 export function getRememberedGuestIdentity(
@@ -15,7 +16,8 @@ export function getRememberedGuestIdentity(
     const parsed = JSON.parse(raw);
     const unit = typeof parsed?.unit === "string" ? parsed.unit.trim() : "";
     const name = typeof parsed?.name === "string" ? parsed.name.trim() : "";
-    return unit || name ? { unit, name } : null;
+    const phone = typeof parsed?.phone === "string" ? parsed.phone.trim() : "";
+    return unit || name || phone ? { unit, name, phone } : null;
   } catch {
     return null;
   }
@@ -28,8 +30,9 @@ export function rememberGuestIdentity(
   const clean = {
     unit: guest.unit.trim(),
     name: guest.name.trim(),
+    phone: guest.phone.trim(),
   };
-  if (!clean.unit || !clean.name) return;
+  if (!clean.unit && !clean.name && !clean.phone) return;
   try {
     localStorage.setItem(
       `${GUEST_STORAGE_PREFIX}${slug}`,

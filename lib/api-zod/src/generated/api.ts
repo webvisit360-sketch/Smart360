@@ -2024,6 +2024,8 @@ export const sendGuestMessageBodyGuestNameMax = 200;
 
 export const sendGuestMessageBodyGuestUnitMax = 100;
 
+export const sendGuestMessageBodyGuestPhoneMax = 50;
+
 export const sendGuestMessageBodyPasswordMax = 200;
 
 
@@ -2032,6 +2034,7 @@ export const SendGuestMessageBody = zod.object({
   "body": zod.string().min(1).max(sendGuestMessageBodyBodyMax).describe('Plain-text message body (max 2000 chars)'),
   "guestName": zod.string().min(1).max(sendGuestMessageBodyGuestNameMax).describe('Required signed-in guest name for host context; trimmed server-side and never emailed or logged'),
   "guestUnit": zod.string().min(1).max(sendGuestMessageBodyGuestUnitMax).describe('Required guest unit\/room for host context; trimmed server-side and never emailed or logged'),
+  "guestPhone": zod.string().min(1).max(sendGuestMessageBodyGuestPhoneMax).describe('Required guest phone; must contain at least six digit characters, formatting is preserved, and it is stored once on the thread but never emailed or logged'),
   "password": zod.string().max(sendGuestMessageBodyPasswordMax).optional().describe('Required only when the tenant has configured a guest\/order password; compared after trimming and remains case-sensitive'),
   "lang": zod.enum(['sl', 'en', 'de', 'it']).optional().describe('UI language used for localized credential errors; defaults to sl')
 }).describe('Guest-sent message body with required signed-in identity and optional tenant credential')
@@ -2062,6 +2065,7 @@ export const ListTenantThreadsResponseItem = zod.object({
   "tenantId": zod.string(),
   "guestName": zod.string(),
   "guestUnit": zod.string(),
+  "guestPhone": zod.string().nullable().describe('Guest phone for host tap-to-call; null only for legacy threads created before phone identity was required'),
   "isOpen": zod.boolean(),
   "messages": zod.array(zod.object({
   "id": zod.string(),
@@ -2097,6 +2101,7 @@ export const PostHostReplyResponse = zod.object({
   "tenantId": zod.string(),
   "guestName": zod.string(),
   "guestUnit": zod.string(),
+  "guestPhone": zod.string().nullable().describe('Guest phone for host tap-to-call; null only for legacy threads created before phone identity was required'),
   "isOpen": zod.boolean(),
   "messages": zod.array(zod.object({
   "id": zod.string(),

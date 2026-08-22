@@ -62,6 +62,7 @@ import { parseVirtualTourInput } from "@/lib/virtual-tour";
 type GuestRecord = {
   unit: string;
   name: string;
+  phone: string;
 };
 
 type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages";
@@ -421,6 +422,9 @@ export default function LivingGuideGuestShell({
   const [messageAccessError, setMessageAccessError] = useState<string | null>(
     null,
   );
+  const [credentialsRevision, setCredentialsRevision] = useState(0);
+  const [credentialsCancelRevision, setCredentialsCancelRevision] = useState(0);
+  const [pendingOrderItemId, setPendingOrderItemId] = useState<string | null>(null);
   const [showNotices, setShowNotices] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
     const [showLanguages, setShowLanguages] = useState(false);
@@ -428,8 +432,13 @@ export default function LivingGuideGuestShell({
   const [showOrders, setShowOrders] = useState(false);
   const messagePasswordRequired = Boolean(tenant.orderPasswordConfigured);
   const guestSignedIn = Boolean(guest?.unit.trim() && guest?.name.trim());
-  const messageAccessReady =
+  const guestIdentityComplete = Boolean(
     guestSignedIn &&
+    guest?.phone.trim() &&
+    (guest.phone.match(/\d/g)?.length ?? 0) >= 6,
+  );
+  const messageAccessReady =
+    guestIdentityComplete &&
     (!messagePasswordRequired || Boolean(messagePassword.trim()));
   const deviceToken = useMemo(() => getDeviceToken(slug), [slug]);
   const { data: deviceOrders } = useListDeviceOrders(slug, {
@@ -477,12 +486,6 @@ export default function LivingGuideGuestShell({
     resetNavigationState();
   }, [location, resetNavigationState]);
 
-  useEffect(() => {
-    if (screen === "messages" && !messageAccessReady) {
-      setShowSignIn(true);
-    }
-  }, [messageAccessReady, screen]);
-
   const navigate = useCallback(
     (path: string, replace = false) => {
       resetNavigationState();
@@ -510,14 +513,20 @@ export default function LivingGuideGuestShell({
     }
   }, [categoryContext?.section, navigate, screen, slug, staySection, routeItemId, routeCategoryId]);
 
+  const cancelSignIn = useCallback(() => {
+    setShowSignIn(false);
+    setPendingOrderItemId(null);
+    setCredentialsCancelRevision((value) => value + 1);
+  }, []);
+
   useEffect(() => {
     if (screen !== "detail" && !showLanguages && !showNotices && !showSearch && !showSignIn) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (showSignIn) setShowSignIn(false);
+        if (showSignIn) cancelSignIn();
         else if (showNotices) setShowNotices(false);
         else if (showSearch) setShowSearch(false);
-                else if (showLanguages) setShowLanguages(false);
+        else if (showLanguages) setShowLanguages(false);
         else if (orderItemId) setOrderItemId(null);
         else if (showOrders) setShowOrders(false);
         else goBack();
@@ -525,19 +534,66 @@ export default function LivingGuideGuestShell({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goBack, screen, showLanguages, showNotices, showSearch, showSignIn]);
+  }, [
+    cancelSignIn,
+    goBack,
+    orderItemId,
+    screen,
+    showLanguages,
+    showNotices,
+    showOrders,
+    showSearch,
+    showSignIn,
+  ]);
 
   const saveGuest = (record: GuestRecord & { password?: string }) => {
-    const clean = { unit: record.unit.trim(), name: record.name.trim() };
-    if (!clean.unit || !clean.name) return;
+    const clean = {
+      unit: record.unit.trim(),
+      name: record.name.trim(),
+      phone: record.phone.trim(),
+    };
+    if (
+      !clean.unit ||
+      !clean.name ||
+      !clean.phone ||
+      (clean.phone.match(/\d/g)?.length ?? 0) < 6
+    ) {
+      return;
+    }
+    const nextPassword = record.password?.trim() ?? "";
+    if (messagePasswordRequired && !nextPassword) return;
     setGuest(clean);
-    setMessagePassword(record.password?.trim() || messagePassword);
+    if (messagePasswordRequired) {
+      setMessagePassword(nextPassword);
+      rememberOrderPassword(slug, nextPassword);
+    } else {
+      setMessagePassword("");
+    }
     rememberGuestIdentity(slug, clean);
     setMessageAccessError(null);
     setShowSignIn(false);
+    setCredentialsRevision((value) => value + 1);
+    if (pendingOrderItemId) {
+      setOrderItemId(pendingOrderItemId);
+      setPendingOrderItemId(null);
+    }
     if (screen === "cover") {
       navigate(`/${slug}/home`);
     }
+  };
+
+  const requestCredentials = () => {
+    setMessageAccessError(null);
+    setShowSignIn(true);
+  };
+
+  const requestOrder = (itemId: string) => {
+    if (messageAccessReady) {
+      setOrderItemId(itemId);
+      return;
+    }
+    setPendingOrderItemId(itemId);
+    requestCredentials();
   };
 
   const openCategory = (id: string) => navigate(`/${slug}/c/${id}`);
@@ -572,7 +628,7 @@ export default function LivingGuideGuestShell({
       <main className="lg2-stage">
         {screen === "cover" && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
-            if (guestSignedIn) navigate(`/${slug}/home`);
+            if (guest) navigate(`/${slug}/home`);
             else setShowSignIn(true);
           }} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
         )}
@@ -584,7 +640,7 @@ export default function LivingGuideGuestShell({
             lang={lang}
             t={t}
             guest={guest}
-            onEditGuest={() => setShowSignIn(true)}
+            onEditGuest={requestCredentials}
             onOpenCategory={openCategory}
             onOpenItem={openItem}
             onOpenNotices={() => setShowNotices(true)}
@@ -602,7 +658,7 @@ export default function LivingGuideGuestShell({
             lang={lang}
             t={t}
             guest={currentSection.key === "stay" ? guest : null}
-            onEditGuest={() => setShowSignIn(true)}
+            onEditGuest={requestCredentials}
             onOpenCategory={openCategory}
             onOpenNotices={() => setShowNotices(true)}
             helpCategoryId={currentSection.key === "stay" ? helpCategory?.id : null}
@@ -637,15 +693,12 @@ export default function LivingGuideGuestShell({
             guest={guest}
             canSend={messageAccessReady}
             password={messagePasswordRequired ? messagePassword : undefined}
+            credentialsRevision={credentialsRevision}
+            credentialsCancelRevision={credentialsCancelRevision}
             lang={lang}
             t={t}
             onBack={() => navigate(`/${slug}/home`)}
-            onCredentialsRequired={() => setShowSignIn(true)}
-            onMessageAccepted={() => {
-              if (messagePasswordRequired) {
-                rememberOrderPassword(slug, messagePassword);
-              }
-            }}
+            onCredentialsRequired={requestCredentials}
             onCredentialsRejected={(message) => {
               setMessagePassword("");
               forgetRememberedOrderPassword(slug);
@@ -673,7 +726,7 @@ export default function LivingGuideGuestShell({
               categoryContext.category.id ===
                 visible(categoryContext.section?.categories)[0]?.id
             }
-            onOrderClick={(id: string) => setOrderItemId(id)}
+            onOrderClick={requestOrder}
           />
         )}
       </main>
@@ -722,15 +775,27 @@ export default function LivingGuideGuestShell({
             lang={lang as UiLanguage}
             t={t}
             guest={guest}
+            password={messagePasswordRequired ? messagePassword : undefined}
             passwordRequired={Boolean(tenant.orderPasswordConfigured)}
+            canSubmitWithCredentials={messageAccessReady}
+            credentialsRevision={credentialsRevision}
+            credentialsCancelRevision={credentialsCancelRevision}
             onClose={() => setOrderItemId(null)}
             onOpenOrders={() => {
               setOrderItemId(null);
               setShowOrders(true);
             }}
-            onCredentialsAccepted={(nextGuest, password) => {
+            onCredentialsAccepted={(nextGuest) => {
               setGuest(nextGuest);
-              if (password) setMessagePassword(password);
+              rememberGuestIdentity(slug, nextGuest);
+            }}
+            onCredentialsRejected={(nextGuest, message) => {
+              setGuest(nextGuest);
+              rememberGuestIdentity(slug, nextGuest);
+              setMessagePassword("");
+              forgetRememberedOrderPassword(slug);
+              setMessageAccessError(message);
+              setShowSignIn(true);
             }}
           />
         );
@@ -745,17 +810,13 @@ export default function LivingGuideGuestShell({
           t={t}
           initialGuest={guest}
           initialPassword={messagePassword}
-          passwordRequired={
-            screen === "messages" &&
-            messagePasswordRequired &&
-            !messagePassword.trim()
-          }
-          serverError={screen === "messages" ? messageAccessError : null}
-          allowLater={screen !== "messages"}
-          onClose={() => setShowSignIn(false)}
+          passwordRequired={messagePasswordRequired}
+          serverError={messageAccessError}
+          allowLater
+          onClose={cancelSignIn}
           onLater={() => {
-            setShowSignIn(false);
-            navigate(`/${slug}/home`);
+            cancelSignIn();
+            if (screen === "cover") navigate(`/${slug}/home`);
           }}
           onSave={saveGuest}
         />
@@ -862,23 +923,37 @@ function SignInSheet({
 }: any) {
   const [unit, setUnit] = useState(initialGuest?.unit ?? "");
   const [name, setName] = useState(initialGuest?.name ?? "");
+  const [phone, setPhone] = useState(initialGuest?.phone ?? "");
   const [password, setPassword] = useState(initialPassword ?? "");
+  const [phoneError, setPhoneError] = useState("");
   const unitInput = useRef<HTMLInputElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
+  const phoneInput = useRef<HTMLInputElement>(null);
   const passwordInput = useRef<HTMLInputElement>(null);
-  const focusPasswordInitially =
-    Boolean(passwordRequired) && Boolean(initialGuest?.unit?.trim());
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      if (focusPasswordInitially) passwordInput.current?.focus();
-      else unitInput.current?.focus();
+      if (!unit.trim()) unitInput.current?.focus();
+      else if (!name.trim()) nameInput.current?.focus();
+      else if ((phone.match(/\d/g)?.length ?? 0) < 6) phoneInput.current?.focus();
+      else if (passwordRequired && (!password.trim() || serverError)) {
+        passwordInput.current?.focus();
+      } else {
+        unitInput.current?.focus();
+      }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [focusPasswordInitially]);
+  }, []);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    onSave({ unit, name, password });
+    if ((phone.match(/\d/g)?.length ?? 0) < 6) {
+      setPhoneError(t("UI.lg.order.validation.phoneDigits"));
+      phoneInput.current?.focus();
+      return;
+    }
+    setPhoneError("");
+    onSave({ unit, name, phone, password });
   };
 
   return (
@@ -905,11 +980,29 @@ function SignInSheet({
         </label>
         <label className="lg2-field lg2-field--required">
           <span>{t("UI.lg.welcome.name")}</span>
-          <input required autoComplete="name" value={name} placeholder={t("UI.lg.welcome.namePlaceholder")} onChange={(event) => setName(event.target.value)} />
+          <input ref={nameInput} required autoComplete="name" value={name} placeholder={t("UI.lg.welcome.namePlaceholder")} onChange={(event) => setName(event.target.value)} />
         </label>
+        <label className="lg2-field lg2-field--required">
+          <span>{t("UI.lg.welcome.phone")}</span>
+          <input
+            ref={phoneInput}
+            required
+            type="tel"
+            maxLength={50}
+            autoComplete="tel"
+            value={phone}
+            placeholder={t("UI.lg.welcome.phonePlaceholder")}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              if (phoneError) setPhoneError("");
+            }}
+            data-testid="guest-phone"
+          />
+        </label>
+        {phoneError && <p className="lg2-msg-send-error" role="alert">{phoneError}</p>}
         {passwordRequired && (
           <label className="lg2-field lg2-field--required">
-            <span>{t("UI.lg.order.password")}</span>
+            <span>{t("UI.lg.welcome.password")}</span>
             <input
               ref={passwordInput}
               type="password"
@@ -917,6 +1010,7 @@ function SignInSheet({
               maxLength={200}
               autoComplete="current-password"
               value={password}
+              placeholder={t("UI.lg.welcome.passwordPlaceholder")}
               onChange={(event) => setPassword(event.target.value)}
               data-testid="messages-password"
             />
@@ -928,6 +1022,7 @@ function SignInSheet({
           disabled={
             !unit.trim() ||
             !name.trim() ||
+            (phone.match(/\d/g)?.length ?? 0) < 6 ||
             (passwordRequired && !password.trim())
           }
         >

@@ -30,6 +30,12 @@ export interface GuestMessageInput {
      */
   guestUnit: string;
   /**
+     * Required guest phone; must contain at least six digit characters, formatting is preserved, and it is stored once on the thread but never emailed or logged
+     * @minLength 1
+     * @maxLength 50
+     */
+  guestPhone: string;
+  /**
      * Required only when the tenant has configured a guest/order password; compared after trimming and remains case-sensitive
      * @maxLength 200
      */

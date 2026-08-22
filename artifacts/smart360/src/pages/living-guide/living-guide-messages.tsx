@@ -14,27 +14,30 @@ export function MessagesView({
   guest,
   canSend,
   password,
+  credentialsRevision,
+  credentialsCancelRevision,
   lang,
   t,
   onBack,
   onCredentialsRequired,
-  onMessageAccepted,
   onCredentialsRejected,
 }: {
   tenant: any;
   slug: string;
-  guest: { name: string; unit: string } | null;
+  guest: { name: string; unit: string; phone: string } | null;
   canSend: boolean;
   password?: string;
+  credentialsRevision: number;
+  credentialsCancelRevision: number;
   lang: string;
   t: UiTranslator;
   onBack: () => void;
   onCredentialsRequired: () => void;
-  onMessageAccepted: () => void;
   onCredentialsRejected: (message: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
+  const [pendingSend, setPendingSend] = useState(false);
   const deviceToken = useMemo(() => getDeviceToken(slug), [slug]);
 
   const { data: thread, isLoading, isError, refetch } = useGetGuestMessages(slug, {
@@ -49,7 +52,7 @@ export function MessagesView({
     mutation: {
       onSuccess: () => {
         setBody("");
-        onMessageAccepted();
+        setPendingSend(false);
         queryClient.invalidateQueries({ queryKey: getGetGuestMessagesQueryKey(slug) });
       },
       onError: (error) => {
@@ -58,6 +61,7 @@ export function MessagesView({
             ? Number((error as { status?: unknown }).status)
             : null;
         if (status === 403) {
+          setPendingSend(true);
           onCredentialsRejected(t("UI.lg.msg.invalidPassword"));
         }
       },
@@ -68,6 +72,8 @@ export function MessagesView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const previousMessageCount = useRef(0);
+  const previousCredentialsRevision = useRef(credentialsRevision);
+  const previousCancelRevision = useRef(credentialsCancelRevision);
 
   useEffect(() => {
     const currentCount = thread?.messages?.length ?? 0;
@@ -79,24 +85,46 @@ export function MessagesView({
     }
   }, [thread?.messages]);
 
-  const handleSend = () => {
-    if (!canSend || !guest) {
-      onCredentialsRequired();
-      return;
-    }
-    const text = body.trim();
-    if (!text || sendMutation.isPending) return;
+  const sendMessage = (text: string) => {
+    if (!guest || sendMutation.isPending) return;
+    setPendingSend(false);
     sendMutation.mutate({
       slug,
       data: {
         body: text,
         guestName: guest.name,
         guestUnit: guest.unit,
+        guestPhone: guest.phone,
         password,
         lang: lang === "en" || lang === "de" || lang === "it" ? lang : "sl",
       },
     });
   };
+
+  const handleSend = () => {
+    const text = body.trim();
+    if (!text || sendMutation.isPending) return;
+    if (!canSend || !guest) {
+      setPendingSend(true);
+      onCredentialsRequired();
+      return;
+    }
+    sendMessage(text);
+  };
+
+  useEffect(() => {
+    if (previousCredentialsRevision.current === credentialsRevision) return;
+    previousCredentialsRevision.current = credentialsRevision;
+    if (pendingSend && canSend && guest && body.trim()) {
+      sendMessage(body.trim());
+    }
+  }, [credentialsRevision, canSend, guest, pendingSend, body]);
+
+  useEffect(() => {
+    if (previousCancelRevision.current === credentialsCancelRevision) return;
+    previousCancelRevision.current = credentialsCancelRevision;
+    setPendingSend(false);
+  }, [credentialsCancelRevision]);
 
   const isClosed = thread?.isOpen === false;
   const sendErrorStatus =
@@ -188,9 +216,6 @@ export function MessagesView({
         <div className="lg2-msgbar" data-testid="messages-composer">
           <input
             value={body}
-            onFocus={() => {
-              if (!canSend) onCredentialsRequired();
-            }}
             onChange={(e) => {
               setBody(e.target.value);
               if (sendMutation.isError) sendMutation.reset();
@@ -214,7 +239,7 @@ export function MessagesView({
             disabled={
               isClosed ||
               sendMutation.isPending ||
-              (canSend && !body.trim())
+              !body.trim()
             }
             aria-label={t("UI.lg.msg.send")}
             data-testid="messages-send"

@@ -63,6 +63,12 @@ export const messageThreadsTable = pgTable(
      */
     guestUnit: text("guest_unit"),
     /**
+     * Optional guest-provided phone stored once on the thread for host context.
+     * Never sent in email; never logged. Nullable for pre-migration threads and
+     * updated by the next authenticated guest send.
+     */
+    guestPhone: text("guest_phone"),
+    /**
      * Whether the thread is still active. Admin may close it; closed threads
      * accept no new guest messages (returns 409).
      */

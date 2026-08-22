@@ -15,6 +15,11 @@ export interface AdminThreadView {
   tenantId: string;
   guestName: string;
   guestUnit: string;
+  /**
+     * Guest phone for host tap-to-call; null only for legacy threads created before phone identity was required
+     * @nullable
+     */
+  guestPhone: string | null;
   isOpen: boolean;
   messages: MessageEntry[];
   createdAt: string;

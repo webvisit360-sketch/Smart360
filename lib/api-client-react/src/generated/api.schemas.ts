@@ -425,6 +425,11 @@ export interface AdminThreadView {
   tenantId: string;
   guestName: string;
   guestUnit: string;
+  /**
+     * Guest phone for host tap-to-call; null only for legacy threads created before phone identity was required
+     * @nullable
+     */
+  guestPhone: string | null;
   isOpen: boolean;
   messages: MessageEntry[];
   createdAt: string;
@@ -467,6 +472,12 @@ export interface GuestMessageInput {
      * @maxLength 100
      */
   guestUnit: string;
+  /**
+     * Required guest phone; must contain at least six digit characters, formatting is preserved, and it is stored once on the thread but never emailed or logged
+     * @minLength 1
+     * @maxLength 50
+     */
+  guestPhone: string;
   /**
      * Required only when the tenant has configured a guest/order password; compared after trimming and remains case-sensitive
      * @maxLength 200

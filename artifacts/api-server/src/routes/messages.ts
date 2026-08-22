@@ -17,7 +17,8 @@
  * - Guest reads/writes only their own thread for the specified tenant.
  * - Admin endpoints are guarded by requireAdmin; tenant isolation enforced by
  *   checking the thread's tenantId against the path param.
- * - guestName / guestUnit stored on thread for host context; never in email or logs.
+ * - guestName / guestUnit / guestPhone stored on thread for host context; never
+ *   in email or logs.
  * - messageNotifyEmail controls the notification bell only, not feature availability.
  * - Rate limit: 5/min per IP and 5/min per device (separate from orders).
  * - Retention: deleteAfter = now + 90 days; extended on each new message. All
@@ -67,8 +68,12 @@ import {
   msgDeviceRateLimiter,
   MESSAGE_BODY_MAX,
   MESSAGE_GUEST_NAME_MAX,
+  MESSAGE_GUEST_PHONE_MAX,
   MESSAGE_GUEST_UNIT_MAX,
+  hasMinimumMessagePhoneDigits,
+  invalidMessagePhoneMessage,
   requiredMessageNameMessage,
+  requiredMessagePhoneMessage,
   requiredMessageUnitMessage,
   wrongMessagePasswordMessage,
 } from "../lib/messageHelpers";
@@ -120,6 +125,7 @@ function formatAdminThreadView(
     tenantId: thread.tenantId,
     guestName: thread.guestName,
     guestUnit: thread.guestUnit,
+    guestPhone: thread.guestPhone,
     isOpen: thread.isOpen,
     messages: formatMessages(messages),
     createdAt: thread.createdAt.toISOString(),
@@ -255,6 +261,12 @@ router.post(
       typeof req.body.guestUnit === "string"
         ? req.body.guestUnit.trim()
         : "";
+    const submittedGuestPhone =
+      req.body &&
+      typeof req.body === "object" &&
+      typeof req.body.guestPhone === "string"
+        ? req.body.guestPhone.trim()
+        : "";
     if (!submittedGuestName) {
       res.status(400).json({
         code: "MESSAGE_NAME_REQUIRED",
@@ -266,6 +278,13 @@ router.post(
       res.status(400).json({
         code: "MESSAGE_UNIT_REQUIRED",
         error: requiredMessageUnitMessage(submittedLang),
+      });
+      return;
+    }
+    if (!submittedGuestPhone) {
+      res.status(400).json({
+        code: "MESSAGE_PHONE_REQUIRED",
+        error: requiredMessagePhoneMessage(submittedLang),
       });
       return;
     }
@@ -291,12 +310,24 @@ router.post(
     // limiters so failed sign-in attempts count toward the same 5/min budget.
     const guestName = parsed.data.guestName.trim();
     const guestUnit = parsed.data.guestUnit.trim();
+    const guestPhone = parsed.data.guestPhone.trim();
     if (guestName.length > MESSAGE_GUEST_NAME_MAX) {
       res.status(400).json({ error: `guestName max ${MESSAGE_GUEST_NAME_MAX}` });
       return;
     }
     if (guestUnit.length > MESSAGE_GUEST_UNIT_MAX) {
       res.status(400).json({ error: `guestUnit max ${MESSAGE_GUEST_UNIT_MAX}` });
+      return;
+    }
+    if (!hasMinimumMessagePhoneDigits(guestPhone)) {
+      res.status(400).json({
+        code: "MESSAGE_PHONE_INVALID",
+        error: invalidMessagePhoneMessage(parsed.data.lang),
+      });
+      return;
+    }
+    if (guestPhone.length > MESSAGE_GUEST_PHONE_MAX) {
+      res.status(400).json({ error: `guestPhone max ${MESSAGE_GUEST_PHONE_MAX}` });
       return;
     }
 
@@ -380,6 +411,7 @@ router.post(
             deviceTokenHash,
             guestName,
             guestUnit,
+            guestPhone,
             isOpen: true,
             deleteAfter,
           })
@@ -411,8 +443,8 @@ router.post(
           throw new Error("thread_closed");
         }
 
-        // Step 6: extend deleteAfter and refresh the required signed-in name and
-        // unit. This also repairs a legacy device thread on its next
+        // Step 6: extend deleteAfter and refresh the required signed-in name,
+        // unit and phone. This also repairs a legacy device thread on its next
         // authenticated guest send.
         const updateFields: Record<string, unknown> = { deleteAfter };
         if (guestName !== currentThread.guestName) {
@@ -420,6 +452,9 @@ router.post(
         }
         if (guestUnit !== currentThread.guestUnit) {
           updateFields["guestUnit"] = guestUnit;
+        }
+        if (guestPhone !== currentThread.guestPhone) {
+          updateFields["guestPhone"] = guestPhone;
         }
         await tx
           .update(messageThreadsTable)

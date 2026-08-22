@@ -221,10 +221,10 @@ export const LIVING_GUIDE_UI = {
     it: "Benvenuti",
   },
   "UI.lg.welcome.description": {
-    sl: "Vpišite ime ter številko parcele, sobe ali apartmaja — vsako sporočilo, naročilo in najem bo samodejno označen s tema podatkoma.",
-    en: "Enter your name and pitch, room or apartment number — every message, order and rental will automatically be tagged with these details.",
-    de: "Geben Sie Ihren Namen und die Nummer Ihres Stellplatzes, Zimmers oder Apartments ein — jede Nachricht, Bestellung und Ausleihe wird automatisch damit gekennzeichnet.",
-    it: "Inserite il nome e il numero della piazzola, della camera o dell’appartamento — ogni messaggio, ordine e noleggio verrà contrassegnato automaticamente con questi dati.",
+    sl: "Za naročila in sporočila potrebujemo vaše podatke in geslo, ki vam ga je povedal gostitelj.",
+    en: "For orders and messages, we need your details and the password your host gave you.",
+    de: "Für Bestellungen und Nachrichten benötigen wir Ihre Daten und das Passwort, das Sie von Ihrem Gastgeber erhalten haben.",
+    it: "Per ordini e messaggi abbiamo bisogno dei tuoi dati e della password che ti ha fornito l’host.",
   },
   "UI.lg.welcome.unit": {
     sl: "Parcela / soba / apartma · obvezno",
@@ -249,6 +249,30 @@ export const LIVING_GUIDE_UI = {
     en: "e.g. Ana Novak",
     de: "z. B. Ana Novak",
     it: "ad es. Ana Novak",
+  },
+  "UI.lg.welcome.phone": {
+    sl: "Telefon · obvezno",
+    en: "Phone · required",
+    de: "Telefon · erforderlich",
+    it: "Telefono · obbligatorio",
+  },
+  "UI.lg.welcome.phonePlaceholder": {
+    sl: "npr. +386 41 998 660",
+    en: "+1 234 567 8900",
+    de: "+49 151 0000000",
+    it: "+39 300 000 0000",
+  },
+  "UI.lg.welcome.password": {
+    sl: "Geslo · obvezno",
+    en: "Password · required",
+    de: "Passwort · erforderlich",
+    it: "Password · obbligatorio",
+  },
+  "UI.lg.welcome.passwordPlaceholder": {
+    sl: "geslo, ki vam ga je povedal gostitelj",
+    en: "the password your host gave you",
+    de: "das Passwort, das Sie von Ihrem Gastgeber erhalten haben",
+    it: "la password che ti ha fornito l’host",
   },
   "UI.lg.welcome.save": {
     sl: "Shrani",
@@ -691,6 +715,21 @@ const LIVING_GUIDE_UI_BY_LANGUAGE: Record<
   it: livingGuideUiFor("it"),
 };
 
+const BINDING_GUEST_SIGN_IN_KEYS = new Set([
+  "UI.lg.welcome.title",
+  "UI.lg.welcome.description",
+  "UI.lg.welcome.unit",
+  "UI.lg.welcome.unitPlaceholder",
+  "UI.lg.welcome.name",
+  "UI.lg.welcome.namePlaceholder",
+  "UI.lg.welcome.phone",
+  "UI.lg.welcome.phonePlaceholder",
+  "UI.lg.welcome.password",
+  "UI.lg.welcome.passwordPlaceholder",
+  "UI.lg.welcome.save",
+  "UI.lg.welcome.later",
+]);
+
 /** Built-in Slovene UI strings (the source of truth for the interface). */
 export const SL_UI: Record<string, string> = {
   "UI.all": "Vse",
@@ -869,9 +908,11 @@ export function makeT(
     lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
   const overlay = lang !== "sl" ? (tenant?.ui ?? {}) : {};
   return (key: string, variables?: UiVariables): string => {
+    const languageBuiltIn = LIVING_GUIDE_UI_BY_LANGUAGE[language][key];
     let value =
-      overlay[key] ??
-      LIVING_GUIDE_UI_BY_LANGUAGE[language][key] ??
+      (BINDING_GUEST_SIGN_IN_KEYS.has(key)
+        ? languageBuiltIn
+        : overlay[key] ?? languageBuiltIn) ??
       SL_UI[key] ??
       key;
     if (variables) {

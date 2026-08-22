@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useCreateOrder, useListDeviceOrders, getListDeviceOrdersQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -6,8 +6,6 @@ import {
   addOrderRef,
   getIdempotencyKey,
   extractFulfillmentText,
-  getRememberedOrderPassword,
-  rememberOrderPassword,
   rememberGuestIdentity,
 } from "./living-guide-orders";
 import { UiLanguage, UiTranslator } from "../guest/i18n";
@@ -21,37 +19,47 @@ export function OrderSheet({
   lang,
   t,
   guest,
+  password,
   passwordRequired,
+  canSubmitWithCredentials,
+  credentialsRevision,
+  credentialsCancelRevision,
   onClose,
   onOpenOrders,
   onCredentialsAccepted,
+  onCredentialsRejected,
 }: {
   item: any;
   slug: string;
   lang: UiLanguage;
   t: UiTranslator;
-  guest: { unit: string; name: string } | null;
+  guest: { unit: string; name: string; phone: string } | null;
+  password?: string;
   passwordRequired: boolean;
+  canSubmitWithCredentials: boolean;
+  credentialsRevision: number;
+  credentialsCancelRevision: number;
   onClose: () => void;
   onOpenOrders: () => void;
-  onCredentialsAccepted: (
-    guest: { name: string; unit: string },
-    password?: string,
+  onCredentialsAccepted: (guest: { name: string; unit: string; phone: string }) => void;
+  onCredentialsRejected: (
+    guest: { name: string; unit: string; phone: string },
+    message: string,
   ) => void;
 }) {
   const queryClient = useQueryClient();
   const [qty, setQty] = useState(1);
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(guest?.phone ?? "");
   const [note, setNote] = useState("");
   const [guestName, setGuestName] = useState(guest?.name ?? "");
   const [guestUnit, setGuestUnit] = useState(guest?.unit ?? "");
-  const [orderPassword, setOrderPassword] = useState(
-    passwordRequired ? getRememberedOrderPassword(slug) : "",
-  );
   const [submitting, setSubmitting] = useState(false);
+  const [pendingCredentialRetry, setPendingCredentialRetry] = useState(false);
   const [successRef, setSuccessRef] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const idempotencyKey = useRef(getIdempotencyKey());
+  const previousCredentialsRevision = useRef(credentialsRevision);
+  const previousCancelRevision = useRef(credentialsCancelRevision);
 
   const createMutation = useCreateOrder({
     request: {
@@ -62,16 +70,26 @@ export function OrderSheet({
     }
   });
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const submitOrder = async () => {
     setErrorMsg("");
     if (
       !guestUnit.trim() ||
       !guestName.trim() ||
-      !phone.trim() ||
-      (passwordRequired && !orderPassword.trim())
+      !phone.trim()
     ) {
       setErrorMsg(t("UI.lg.order.validation.required"));
+      return;
+    }
+    if (!canSubmitWithCredentials) {
+      setPendingCredentialRetry(true);
+      onCredentialsRejected(
+        {
+          name: guestName.trim(),
+          unit: guestUnit.trim(),
+          phone: phone.trim(),
+        },
+        t("UI.lg.order.validation.password"),
+      );
       return;
     }
     if (!hasMinimumPhoneDigits(phone)) {
@@ -90,7 +108,7 @@ export function OrderSheet({
           guestPhone: phone.trim(),
           guestUnit: guestUnit.trim(),
           guestNote: note.trim() || undefined,
-          orderPassword: passwordRequired ? orderPassword.trim() : undefined,
+          orderPassword: passwordRequired ? password?.trim() : undefined,
           lang,
         },
       });
@@ -105,16 +123,14 @@ export function OrderSheet({
       rememberGuestIdentity(slug, {
         name: guestName,
         unit: guestUnit,
+        phone,
       });
-      if (passwordRequired) {
-        rememberOrderPassword(slug, orderPassword);
-      }
       onCredentialsAccepted(
         {
           name: guestName.trim(),
           unit: guestUnit.trim(),
+          phone: phone.trim(),
         },
-        passwordRequired ? orderPassword.trim() : undefined,
       );
       setSuccessRef(orderRef);
       void queryClient.invalidateQueries({
@@ -129,14 +145,42 @@ export function OrderSheet({
         typeof data === "object" && data !== null && "code" in data
           ? (data as { code?: unknown }).code
           : null;
-      setErrorMsg(
-        code === "INVALID_ORDER_PASSWORD"
-          ? t("UI.lg.order.validation.password")
-          : t("UI.lg.order.error"),
-      );
+      if (code === "INVALID_ORDER_PASSWORD") {
+        setPendingCredentialRetry(true);
+        onCredentialsRejected(
+          {
+            name: guestName.trim(),
+            unit: guestUnit.trim(),
+            phone: phone.trim(),
+          },
+          t("UI.lg.order.validation.password"),
+        );
+      } else {
+        setErrorMsg(t("UI.lg.order.error"));
+      }
       setSubmitting(false);
     }
   };
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void submitOrder();
+  };
+
+  useEffect(() => {
+    if (previousCredentialsRevision.current === credentialsRevision) return;
+    previousCredentialsRevision.current = credentialsRevision;
+    if (pendingCredentialRetry && canSubmitWithCredentials) {
+      setPendingCredentialRetry(false);
+      void submitOrder();
+    }
+  }, [credentialsRevision, canSubmitWithCredentials, pendingCredentialRetry]);
+
+  useEffect(() => {
+    if (previousCancelRevision.current === credentialsCancelRevision) return;
+    previousCancelRevision.current = credentialsCancelRevision;
+    setPendingCredentialRetry(false);
+  }, [credentialsCancelRevision]);
 
   const deliveryText = useMemo(() => extractFulfillmentText(item, t), [item, t]);
 
@@ -202,21 +246,6 @@ export function OrderSheet({
           <span>{t("UI.lg.order.phone")}</span>
           <input type="tel" maxLength={50} value={phone} onChange={e => setPhone(e.target.value)} placeholder={t("UI.lg.order.placeholder.phone")} disabled={submitting} data-testid="input-guest-phone" />
         </label>
-
-        {passwordRequired && (
-          <label className="lg2-field lg2-field--required">
-            <span>{t("UI.lg.order.password")}</span>
-            <input
-              type="password"
-              maxLength={200}
-              value={orderPassword}
-              onChange={e => setOrderPassword(e.target.value)}
-              disabled={submitting}
-              autoComplete="current-password"
-              data-testid="input-order-password"
-            />
-          </label>
-        )}
 
         <label className="lg2-field">
           <span>{t("UI.lg.order.note")}</span>

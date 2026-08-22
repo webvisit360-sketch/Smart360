@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, MessageCircle, AlertCircle } from "lucide-react";
+import { Loader2, MessageCircle, AlertCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,14 +111,27 @@ export function AdminTenantMessages({ tenantId }: { tenantId: string }) {
               <div className="col-span-1 md:col-span-2 border rounded-lg flex flex-col h-[600px]">
                 {activeThread ? (
                   <>
-                    <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
+                    <div className="p-4 border-b bg-muted/30 flex items-center justify-between gap-4">
                       <div>
                         <div className="font-semibold text-lg">{threadTitle(activeThread)}</div>
                         <div className="text-sm text-muted-foreground">
                           Soba/parcela: {activeThread.guestUnit}
                         </div>
                       </div>
-                      {!activeThread.isOpen && <Badge variant="outline">Zaprto</Badge>}
+                      <div className="flex items-center gap-2">
+                        {activeThread.guestPhone && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a
+                              href={`tel:${activeThread.guestPhone}`}
+                              data-testid="admin-message-guest-phone"
+                            >
+                              <Phone className="w-3 h-3 mr-2" />
+                              {activeThread.guestPhone}
+                            </a>
+                          </Button>
+                        )}
+                        {!activeThread.isOpen && <Badge variant="outline">Zaprto</Badge>}
+                      </div>
                     </div>
                     
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
