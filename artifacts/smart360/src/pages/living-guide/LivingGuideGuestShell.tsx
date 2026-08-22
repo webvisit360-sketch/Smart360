@@ -618,7 +618,17 @@ export default function LivingGuideGuestShell({
         <MyOrdersSheet slug={slug} lang={lang as UiLanguage} t={t} onClose={() => setShowOrders(false)} />
       )}
       {showSignIn && (
-        <SignInSheet tenantName={tenant.name} t={t} initialGuest={guest} onClose={() => setShowSignIn(false)} onSave={saveGuest} />
+        <SignInSheet
+          tenantName={tenant.name}
+          t={t}
+          initialGuest={guest}
+          onClose={() => setShowSignIn(false)}
+          onLater={() => {
+            setShowSignIn(false);
+            navigate(gridPath(staySection));
+          }}
+          onSave={saveGuest}
+        />
       )}
       {showLanguages && (
         <LivingGuideLanguageSheet
@@ -707,7 +717,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
   );
 }
 
-function SignInSheet({ tenantName, t, initialGuest, onClose, onSave }: any) {
+function SignInSheet({ tenantName, t, initialGuest, onClose, onLater, onSave }: any) {
   const [unit, setUnit] = useState(initialGuest?.unit ?? "");
   const [name, setName] = useState(initialGuest?.name ?? "");
   const unitInput = useRef<HTMLInputElement>(null);
@@ -742,7 +752,7 @@ function SignInSheet({ tenantName, t, initialGuest, onClose, onSave }: any) {
         <button className="lg2-primary-button" type="submit" disabled={!unit.trim()}>
           {t("UI.lg.welcome.save")}
         </button>
-        <button className="lg2-later" type="button" onClick={onClose}>
+        <button className="lg2-later" type="button" onClick={onLater}>
           {t("UI.lg.welcome.later")}
         </button>
       </form>
