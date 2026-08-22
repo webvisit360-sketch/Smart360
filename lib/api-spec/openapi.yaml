@@ -20,6 +20,7 @@ tags:
   - name: overview
   - name: orders
   - name: messages
+  - name: site-plan
 paths:
   /healthz:
     get:
@@ -553,6 +554,100 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MediaCheckResult"
+  /admin/tenants/{id}/site-plan-images:
+    get:
+      operationId: listSitePlanImages
+      tags: [site-plan]
+      summary: List all site-plan images for a tenant, ordered by position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ordered site-plan images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SitePlanImage"
+        "404":
+          description: Tenant not found
+  /admin/tenants/{id}/site-plan-images/reorder:
+    post:
+      operationId: reorderSitePlanImages
+      tags: [site-plan]
+      summary: Reorder site-plan images by providing the full ordered list of IDs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderInput"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+        "400":
+          description: Validation error (wrong ids, wrong ownership, item-scoped row)
+        "404":
+          description: Tenant not found
+  /admin/site-plan-images/{id}:
+    patch:
+      operationId: updateSitePlanImage
+      tags: [site-plan]
+      summary: Update the caption of a site-plan image
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SitePlanImageUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SitePlanImage"
+        "400":
+          description: Not a site-plan image
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSitePlanImage
+      tags: [site-plan]
+      summary: Delete a site-plan image and clean up storage objects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "400":
+          description: Not a site-plan image
+        "404":
+          description: Not found
+  # NOTE: POST /admin/tenants/{id}/site-plan-images/upload (multipart upload)
+  # intentionally lives OUTSIDE this contract, matching the item upload convention.
+  # It accepts FormData with a single "file" field, image-only.
   /admin/tenants/{id}/sections:
     post:
       operationId: createSection
@@ -1723,6 +1818,15 @@ components:
         languages:
           type: array
           items: { type: string }
+        livingGuideNav:
+          type: ["array", "null"]
+          items: { type: string, enum: [home, stay, offer, explore, program, messages] }
+          minItems: 5
+          maxItems: 5
+          description: >
+            Ordered five-key Living Guide navigation bar. NULL = not yet configured;
+            the frontend resolves the approved default. When set, must contain exactly
+            five unique keys from the allowed set with 'home' first.
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
         mediaQuotaBytes: { type: number }
@@ -1810,9 +1914,33 @@ components:
         languages:
           type: array
           items: { type: string }
+        livingGuideNav:
+          type: ["array", "null"]
+          items: { type: string, enum: [home, stay, offer, explore, program, messages] }
+          minItems: 5
+          maxItems: 5
+          description: >
+            Ordered five-key Living Guide navigation bar. Set to null to reset to
+            the frontend default. When set, must contain exactly five unique keys
+            from the allowed set with 'home' first.
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
         mediaQuotaBytes: { type: number, minimum: 104857600 }
+    SitePlanImage:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        url: { type: string }
+        caption: { type: ["string", "null"], description: "Human-readable caption (stored in alt column)" }
+        position: { type: number }
+        width: { type: ["number", "null"] }
+        height: { type: ["number", "null"] }
+      required: [id, tenantId, url, caption, position]
+    SitePlanImageUpdate:
+      type: object
+      properties:
+        caption: { type: ["string", "null"], description: "Caption text; null or empty clears it" }
     MessageEntry:
       type: object
       properties:
@@ -2182,6 +2310,9 @@ components:
         categoryId: { type: string }
         title: { type: ["string", "null"] }
         body: { type: ["string", "null"] }
+        eventStart:
+          type: ["string", "null"]
+          description: Optional event start; a dated item can make Program available in Living Guide navigation
         price: { type: ["string", "null"] }
         priceUnit: { type: ["string", "null"] }
         phone: { type: ["string", "null"] }
@@ -2231,6 +2362,7 @@ components:
       properties:
         title: { type: string }
         body: { type: string }
+        eventStart: { type: string }
         price: { type: string }
         priceUnit: { type: string }
         phone: { type: string }
@@ -2260,6 +2392,7 @@ components:
         categoryId: { type: string }
         title: { type: ["string", "null"] }
         body: { type: ["string", "null"] }
+        eventStart: { type: ["string", "null"] }
         price: { type: ["string", "null"] }
         priceUnit: { type: ["string", "null"] }
         phone: { type: ["string", "null"] }
@@ -2550,6 +2683,11 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/SectionContent"
+            sitePlanImages:
+              type: array
+              items:
+                $ref: "#/components/schemas/SitePlanImage"
+              description: Ordered site-plan images for this tenant; empty array when none uploaded
             publicUrl:
               type: string
               description: Canonical absolute https guest URL for the current slug
@@ -2571,7 +2709,7 @@ components:
               additionalProperties:
                 type: object
                 additionalProperties: { type: string }
-          required: [sections, publicUrl, qrSvg]
+          required: [sections, sitePlanImages, publicUrl, qrSvg]
     SearchResult:
       type: object
       properties:

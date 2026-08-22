@@ -52,6 +52,7 @@ type Item = {
   id: string;
   title?: string | null;
   body?: string | null;
+  eventStart?: string | null;
   price?: string | null;
   priceUnit?: string | null;
   phone?: string | null;
@@ -656,6 +657,20 @@ const TINT_SUGGESTIONS = [
   { hex: "#C4552E", name: "Terakota — pravila in opozorila" },
 ];
 
+function toDateTimeLocal(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function toEventStartIso(value: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
 type ItemDialogProps =
   | { mode: "create"; tenantId: string; categoryId: string; item?: undefined; onDone: () => void }
   | { mode: "edit"; tenantId: string; categoryId: string; item: Item; onDone: () => void };
@@ -674,6 +689,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
 
   const [title, setTitle] = useState(item?.title ?? "");
   const [body, setBody] = useState(item?.body ?? "");
+  const [eventStart, setEventStart] = useState(toDateTimeLocal(item?.eventStart));
   const [price, setPrice] = useState(item?.price ?? "");
   const [priceUnit, setPriceUnit] = useState(item?.priceUnit ?? "");
   const [phone, setPhone] = useState(item?.phone ?? "");
@@ -695,6 +711,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   const baseline = {
     title: item?.title ?? "",
     body: item?.body ?? "",
+    eventStart: toDateTimeLocal(item?.eventStart),
     price: item?.price ?? "",
     priceUnit: item?.priceUnit ?? "",
     phone: item?.phone ?? "",
@@ -707,7 +724,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     producerName: item?.producerName ?? "",
     producerNote: item?.producerNote ?? "",
   };
-  const current = { title, body, price, priceUnit, phone, distanceMeters, isVisible, tint, frame, orderEnabled, soldOut, producerName, producerNote };
+  const current = { title, body, eventStart, price, priceUnit, phone, distanceMeters, isVisible, tint, frame, orderEnabled, soldOut, producerName, producerNote };
   const { restored, clear, discardRestored } = useDraft(
     "item",
     mode === "edit" ? item.id : `new-${categoryId}`,
@@ -719,6 +736,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
     if (restored) {
       setTitle(restored.title);
       setBody(restored.body);
+      setEventStart(restored.eventStart ?? "");
       setPrice(restored.price);
       setPriceUnit(restored.priceUnit);
       setPhone(restored.phone);
@@ -750,6 +768,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           const created = await createItem(categoryId, {
             title: title.trim() || undefined,
             body: body.trim() || undefined,
+            eventStart: toEventStartIso(eventStart) ?? undefined,
             price: price.trim() || undefined,
             priceUnit: priceUnit.trim() || undefined,
             phone: phone.trim() || undefined,
@@ -769,6 +788,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           await updateItem(id, {
             title: title.trim() || null,
             body: body.trim() || null,
+            eventStart: toEventStartIso(eventStart),
             price: price.trim() || null,
             priceUnit: priceUnit.trim() || null,
             phone: phone.trim() || null,
@@ -798,6 +818,7 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
         await updateItem(item.id, {
           title: title.trim() || null,
           body: body.trim() || null,
+          eventStart: toEventStartIso(eventStart),
           price: price.trim() || null,
           priceUnit: priceUnit.trim() || null,
           phone: phone.trim() || null,
@@ -907,6 +928,18 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
           placeholder="+386 …"
           disabled={busy}
         />
+      </div>
+      <div className="space-y-1">
+        <Label>Začetek dogodka</Label>
+        <Input
+          type="datetime-local"
+          value={eventStart}
+          onChange={(e) => setEventStart(e.target.value)}
+          disabled={busy}
+        />
+        <p className="text-xs text-muted-foreground">
+          Neobvezno. Uporablja se za datirane vnose v kategorijah dogodkov in za zavihek Program.
+        </p>
       </div>
       <div className="space-y-1">
         <Label>Razdalja (metri)</Label>

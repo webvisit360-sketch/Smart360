@@ -73,6 +73,8 @@ import type {
   Section,
   SectionInput,
   SectionUpdate,
+  SitePlanImage,
+  SitePlanImageUpdate,
   SlugCheckResponse,
   StorageCleanupPreview,
   StorageCleanupRequest,
@@ -2306,6 +2308,298 @@ export function useCheckTenantMedia<TData = Awaited<ReturnType<typeof checkTenan
 
 
 
+
+export const getListSitePlanImagesUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/site-plan-images`
+}
+
+/**
+ * @summary List all site-plan images for a tenant, ordered by position
+ */
+export const listSitePlanImages = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SitePlanImage[]> => {
+
+  return customFetch<SitePlanImage[]>(getListSitePlanImagesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSitePlanImagesQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/site-plan-images`
+    ] as const;
+    }
+
+
+export const getListSitePlanImagesQueryOptions = <TData = Awaited<ReturnType<typeof listSitePlanImages>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSitePlanImages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSitePlanImagesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSitePlanImages>>> = ({ signal }) => listSitePlanImages(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSitePlanImages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSitePlanImagesQueryResult = NonNullable<Awaited<ReturnType<typeof listSitePlanImages>>>
+export type ListSitePlanImagesQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all site-plan images for a tenant, ordered by position
+ */
+
+export function useListSitePlanImages<TData = Awaited<ReturnType<typeof listSitePlanImages>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSitePlanImages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSitePlanImagesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReorderSitePlanImagesUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/site-plan-images/reorder`
+}
+
+/**
+ * @summary Reorder site-plan images by providing the full ordered list of IDs
+ */
+export const reorderSitePlanImages = async (id: string,
+    reorderInput: ReorderInput, options?: Parameters<typeof customFetch>[1]): Promise<OkStatus> => {
+
+  return customFetch<OkStatus>(getReorderSitePlanImagesUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reorderInput)
+  }
+);}
+
+
+
+
+
+export const getReorderSitePlanImagesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderSitePlanImages>>, TError,{id: string;data: BodyType<ReorderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reorderSitePlanImages>>, TError,{id: string;data: BodyType<ReorderInput>}, TContext> => {
+
+const mutationKey = ['reorderSitePlanImages'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderSitePlanImages>>, {id: string;data: BodyType<ReorderInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reorderSitePlanImages(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderSitePlanImagesMutationResult = NonNullable<Awaited<ReturnType<typeof reorderSitePlanImages>>>
+    export type ReorderSitePlanImagesMutationBody = BodyType<ReorderInput>
+    export type ReorderSitePlanImagesMutationError = ErrorType<void>
+
+    /**
+ * @summary Reorder site-plan images by providing the full ordered list of IDs
+ */
+export const useReorderSitePlanImages = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderSitePlanImages>>, TError,{id: string;data: BodyType<ReorderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reorderSitePlanImages>>,
+        TError,
+        {id: string;data: BodyType<ReorderInput>},
+        TContext
+      > => {
+      return useMutation(getReorderSitePlanImagesMutationOptions(options));
+    }
+
+export const getUpdateSitePlanImageUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/site-plan-images/${id}`
+}
+
+/**
+ * @summary Update the caption of a site-plan image
+ */
+export const updateSitePlanImage = async (id: string,
+    sitePlanImageUpdate: SitePlanImageUpdate, options?: Parameters<typeof customFetch>[1]): Promise<SitePlanImage> => {
+
+  return customFetch<SitePlanImage>(getUpdateSitePlanImageUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(sitePlanImageUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateSitePlanImageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSitePlanImage>>, TError,{id: string;data: BodyType<SitePlanImageUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSitePlanImage>>, TError,{id: string;data: BodyType<SitePlanImageUpdate>}, TContext> => {
+
+const mutationKey = ['updateSitePlanImage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSitePlanImage>>, {id: string;data: BodyType<SitePlanImageUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSitePlanImage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSitePlanImageMutationResult = NonNullable<Awaited<ReturnType<typeof updateSitePlanImage>>>
+    export type UpdateSitePlanImageMutationBody = BodyType<SitePlanImageUpdate>
+    export type UpdateSitePlanImageMutationError = ErrorType<void>
+
+    /**
+ * @summary Update the caption of a site-plan image
+ */
+export const useUpdateSitePlanImage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSitePlanImage>>, TError,{id: string;data: BodyType<SitePlanImageUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSitePlanImage>>,
+        TError,
+        {id: string;data: BodyType<SitePlanImageUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateSitePlanImageMutationOptions(options));
+    }
+
+export const getDeleteSitePlanImageUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/site-plan-images/${id}`
+}
+
+/**
+ * @summary Delete a site-plan image and clean up storage objects
+ */
+export const deleteSitePlanImage = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteSitePlanImageUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSitePlanImageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSitePlanImage>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSitePlanImage>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteSitePlanImage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSitePlanImage>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSitePlanImage(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSitePlanImageMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSitePlanImage>>>
+
+    export type DeleteSitePlanImageMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a site-plan image and clean up storage objects
+ */
+export const useDeleteSitePlanImage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSitePlanImage>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSitePlanImage>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteSitePlanImageMutationOptions(options));
+    }
 
 export const getCreateSectionUrl = (id: string,) => {
 

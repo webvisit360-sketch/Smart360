@@ -14,6 +14,8 @@ export interface ItemUpdate {
   /** @nullable */
   body?: string | null;
   /** @nullable */
+  eventStart?: string | null;
+  /** @nullable */
   price?: string | null;
   /** @nullable */
   priceUnit?: string | null;

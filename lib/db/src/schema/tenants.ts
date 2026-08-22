@@ -13,6 +13,48 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 /**
+ * The five Living Guide navigation keys in their canonical order.
+ * "home" must always come first; the other four can be any combination.
+ */
+export const LIVING_GUIDE_NAV_KEYS = [
+  "home",
+  "stay",
+  "offer",
+  "explore",
+  "program",
+  "messages",
+] as const;
+export type LivingGuideNavKey = (typeof LIVING_GUIDE_NAV_KEYS)[number];
+
+/**
+ * Validate a livingGuideNav array:
+ * - exactly five entries
+ * - first entry is "home"
+ * - all values are from the allowed set
+ * - all values are unique
+ */
+export function validateLivingGuideNav(
+  nav: unknown,
+): { ok: true } | { ok: false; error: string } {
+  if (!Array.isArray(nav)) return { ok: false, error: "livingGuideNav must be an array" };
+  if (nav.length !== 5) return { ok: false, error: "livingGuideNav must contain exactly 5 keys" };
+  if (nav[0] !== "home") return { ok: false, error: "livingGuideNav must start with 'home'" };
+  const allowed = new Set<string>(LIVING_GUIDE_NAV_KEYS);
+  for (const k of nav) {
+    if (typeof k !== "string" || !allowed.has(k)) {
+      return {
+        ok: false,
+        error: `livingGuideNav contains invalid key '${k}'. Allowed: ${LIVING_GUIDE_NAV_KEYS.join(", ")}`,
+      };
+    }
+  }
+  if (new Set(nav).size !== nav.length) {
+    return { ok: false, error: "livingGuideNav keys must be unique" };
+  }
+  return { ok: true };
+}
+
+/**
  * Permanent 301 redirects for renamed tenant slugs. Every slug a tenant has
  * ever had stays here forever, so old QR codes keep working.
  */
@@ -105,6 +147,10 @@ export const tenantsTable = pgTable("tenants", {
   navColorCover: text("nav_color_cover"),
   navColor: text("nav_color"),
   navColorOn: text("nav_color_on"),
+  // Living Guide navigation bar: exactly five unique keys from the allowed
+  // set, with "home" always first. NULL = not yet configured; the frontend
+  // resolves the approved default. DB stores as a TEXT ARRAY.
+  livingGuideNav: text("living_guide_nav").array(),
   languages: text("languages")
     .array()
     .notNull()

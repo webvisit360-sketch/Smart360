@@ -28,6 +28,9 @@ export const GetPublicTenantQueryParams = zod.object({
   "preview": zod.coerce.boolean().optional()
 })
 
+export const getPublicTenantResponseOneLivingGuideNavMin = 5;
+export const getPublicTenantResponseOneLivingGuideNavMax = 5;
+
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
 
@@ -86,6 +89,7 @@ export const GetPublicTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(getPublicTenantResponseOneLivingGuideNavMin).max(getPublicTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -118,6 +122,7 @@ export const GetPublicTenantResponse = zod.object({
   "categoryId": zod.string(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -158,6 +163,15 @@ export const GetPublicTenantResponse = zod.object({
 }))
 })))
 }))),
+  "sitePlanImages": zod.array(zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "url": zod.string(),
+  "caption": zod.string().nullable().describe('Human-readable caption (stored in alt column)'),
+  "position": zod.number(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish()
+})).describe('Ordered site-plan images for this tenant; empty array when none uploaded'),
   "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
   "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
   "wifiQrSvg": zod.string().nullish().describe('Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID\/password on every request; null when no SSID is set\n'),
@@ -441,6 +455,11 @@ export const ApplyPart5MeliPuCutoverResponse = zod.object({
 }))
 
 
+export const listTenantsResponseLivingGuideNavMin = 5;
+export const listTenantsResponseLivingGuideNavMax = 5;
+
+
+
 export const ListTenantsResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -493,6 +512,7 @@ export const ListTenantsResponseItem = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(listTenantsResponseLivingGuideNavMin).max(listTenantsResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -509,6 +529,11 @@ export const CreateTenantBody = zod.object({
   "subtitle": zod.string().optional(),
   "fromTemplate": zod.boolean().optional()
 })
+
+export const createTenantResponseLivingGuideNavMin = 5;
+export const createTenantResponseLivingGuideNavMax = 5;
+
+
 
 export const CreateTenantResponse = zod.object({
   "id": zod.string(),
@@ -562,6 +587,7 @@ export const CreateTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(createTenantResponseLivingGuideNavMin).max(createTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -577,6 +603,9 @@ export const CreateTenantResponse = zod.object({
 export const GetTenantParams = zod.object({
   "id": zod.coerce.string()
 })
+
+export const getTenantResponseOneLivingGuideNavMin = 5;
+export const getTenantResponseOneLivingGuideNavMax = 5;
 
 export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
@@ -636,6 +665,7 @@ export const GetTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(getTenantResponseOneLivingGuideNavMin).max(getTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -668,6 +698,7 @@ export const GetTenantResponse = zod.object({
   "categoryId": zod.string(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -708,6 +739,15 @@ export const GetTenantResponse = zod.object({
 }))
 })))
 }))),
+  "sitePlanImages": zod.array(zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "url": zod.string(),
+  "caption": zod.string().nullable().describe('Human-readable caption (stored in alt column)'),
+  "position": zod.number(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish()
+})).describe('Ordered site-plan images for this tenant; empty array when none uploaded'),
   "publicUrl": zod.string().describe('Canonical absolute https guest URL for the current slug'),
   "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
   "wifiQrSvg": zod.string().nullish().describe('Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID\/password on every request; null when no SSID is set\n'),
@@ -721,6 +761,9 @@ export const UpdateTenantParams = zod.object({
 })
 
 export const updateTenantBodyOrderPasswordMax = 200;
+
+export const updateTenantBodyLivingGuideNavMin = 5;
+export const updateTenantBodyLivingGuideNavMax = 5;
 
 export const updateTenantBodyMediaQuotaBytesMin = 104857600;
 
@@ -778,10 +821,16 @@ export const UpdateTenantBody = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()).optional(),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(updateTenantBodyLivingGuideNavMin).max(updateTenantBodyLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. Set to null to reset to the frontend default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean().optional(),
   "isPublished": zod.boolean().optional(),
   "mediaQuotaBytes": zod.number().min(updateTenantBodyMediaQuotaBytesMin).optional()
 })
+
+export const updateTenantResponseLivingGuideNavMin = 5;
+export const updateTenantResponseLivingGuideNavMax = 5;
+
+
 
 export const UpdateTenantResponse = zod.object({
   "id": zod.string(),
@@ -835,6 +884,7 @@ export const UpdateTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(updateTenantResponseLivingGuideNavMin).max(updateTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -863,6 +913,11 @@ export const DuplicateTenantBody = zod.object({
   "name": zod.string(),
   "copyContent": zod.boolean().optional().describe('Copy item contents too; false copies only the section\/category structure')
 })
+
+export const duplicateTenantResponseTenantLivingGuideNavMin = 5;
+export const duplicateTenantResponseTenantLivingGuideNavMax = 5;
+
+
 
 export const DuplicateTenantResponse = zod.object({
   "tenant": zod.object({
@@ -917,6 +972,7 @@ export const DuplicateTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(duplicateTenantResponseTenantLivingGuideNavMin).max(duplicateTenantResponseTenantLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -941,6 +997,11 @@ export const DuplicateTenantResponse = zod.object({
 export const RenewTenantParams = zod.object({
   "id": zod.coerce.string()
 })
+
+export const renewTenantResponseLivingGuideNavMin = 5;
+export const renewTenantResponseLivingGuideNavMax = 5;
+
+
 
 export const RenewTenantResponse = zod.object({
   "id": zod.string(),
@@ -994,6 +1055,7 @@ export const RenewTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(renewTenantResponseLivingGuideNavMin).max(renewTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "mediaQuotaBytes": zod.number(),
@@ -1036,6 +1098,73 @@ export const CheckTenantMediaResponse = zod.object({
   "adminPath": zod.string()
 }))
 })
+
+
+/**
+ * @summary List all site-plan images for a tenant, ordered by position
+ */
+export const ListSitePlanImagesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListSitePlanImagesResponseItem = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "url": zod.string(),
+  "caption": zod.string().nullable().describe('Human-readable caption (stored in alt column)'),
+  "position": zod.number(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish()
+})
+export const ListSitePlanImagesResponse = zod.array(ListSitePlanImagesResponseItem)
+
+
+/**
+ * @summary Reorder site-plan images by providing the full ordered list of IDs
+ */
+export const ReorderSitePlanImagesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ReorderSitePlanImagesBody = zod.object({
+  "ids": zod.array(zod.string())
+})
+
+export const ReorderSitePlanImagesResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Update the caption of a site-plan image
+ */
+export const UpdateSitePlanImageParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateSitePlanImageBody = zod.object({
+  "caption": zod.string().nullish().describe('Caption text; null or empty clears it')
+})
+
+export const UpdateSitePlanImageResponse = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "url": zod.string(),
+  "caption": zod.string().nullable().describe('Human-readable caption (stored in alt column)'),
+  "position": zod.number(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish()
+})
+
+
+/**
+ * @summary Delete a site-plan image and clean up storage objects
+ */
+export const DeleteSitePlanImageParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteSitePlanImageResponse = zod.void()
 
 
 export const CreateSectionParams = zod.object({
@@ -1178,6 +1307,7 @@ export const createItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const CreateItemBody = zod.object({
   "title": zod.string().optional(),
   "body": zod.string().optional(),
+  "eventStart": zod.string().optional(),
   "price": zod.string().optional(),
   "priceUnit": zod.string().optional(),
   "phone": zod.string().optional(),
@@ -1212,6 +1342,7 @@ export const CreateItemResponse = zod.object({
   "categoryId": zod.string(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -1268,6 +1399,7 @@ export const UpdateItemBody = zod.object({
   "categoryId": zod.string().optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -1303,6 +1435,7 @@ export const UpdateItemResponse = zod.object({
   "categoryId": zod.string(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -1365,6 +1498,7 @@ export const DuplicateItemResponse = zod.object({
   "categoryId": zod.string(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),

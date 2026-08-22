@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { TenantGuestUiMode } from './tenantGuestUiMode';
+import type { TenantLivingGuideNavItem } from './tenantLivingGuideNavItem';
 
 export interface Tenant {
   id: string;
@@ -111,6 +112,13 @@ export interface Tenant {
   /** @nullable */
   navColorOn?: string | null;
   languages: string[];
+  /**
+     * Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with 'home' first.
+     * @minItems 5
+     * @maxItems 5
+     * @nullable
+     */
+  livingGuideNav?: TenantLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
   mediaQuotaBytes: number;

@@ -176,3 +176,31 @@ mtime_ms = 1787424781603
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/661c34db-68f1-44cf-9cd0-fd419cb13f31/079a3904-4b4c-458f-b9a7-542b1edc7f6d"
 storage_version_token = "1787424804203631"
 content_type = "image/png"
+
+[[outputs]]
+id = "dW3d2iXaxvt9y2K1WRIAb"
+uri = "file://screenshots/checkpoint4-more-entry.jpg"
+type = "image"
+title = "CHECKPOINT 4 — More entry point"
+description = "390px Home screen showing Map / Site Plan, More, and the Camp five-slot bottom bar."
+logical_id = "96c306c0-fdbb-4dbd-a589-9225181d699b"
+content_hash = "sha256:414050360c58aa700f03e7f7b6ae1f34d3bf0ee0a3f25d373dcece71f5559a4d"
+size = 38602
+mtime_ms = 1787435038980
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/96c306c0-fdbb-4dbd-a589-9225181d699b/ce1cdeda-0e14-4fe7-9ea7-666ef62638ad"
+storage_version_token = "1787435051979446"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "LbsHorbuy9WKbXybFCIjX"
+uri = "file://screenshots/checkpoint4-map-exit.jpg"
+type = "image"
+title = "CHECKPOINT 4 — Map exit"
+description = "390px fullscreen map showing the persistent top-left back control, zoom controls, caption, and image dots."
+logical_id = "a3dc34fa-de85-4734-b25b-c8289529fc9b"
+content_hash = "sha256:74e1cfc88e76767cb84458c840bda20b4b7ab5a718e801a31fe58f2f84e9ece1"
+size = 12015
+mtime_ms = 1787435033806
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a3dc34fa-de85-4734-b25b-c8289529fc9b/ee9dbde4-99f5-4836-8e8e-fba2fd5bcf9b"
+storage_version_token = "1787435052722224"
+content_type = "image/jpeg"

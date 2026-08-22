@@ -694,6 +694,42 @@ export const LIVING_GUIDE_UI = {
     de: "Aufgegeben",
     it: "Inviato",
   },
+  "UI.lg.siteMap": {
+    sl: "Mapa / Tloris",
+    en: "Map / Site Plan",
+    de: "Karte / Lageplan",
+    it: "Mappa / Piantina",
+  },
+  "UI.lg.siteMapDot": {
+    sl: "Prikaži sliko {{index}}",
+    en: "Show image {{index}}",
+    de: "Bild {{index}} anzeigen",
+    it: "Mostra immagine {{index}}",
+  },
+  "UI.lg.siteMapZoomIn": {
+    sl: "Povečaj zemljevid",
+    en: "Zoom in on the map",
+    de: "Karte vergrößern",
+    it: "Ingrandisci la mappa",
+  },
+  "UI.lg.siteMapZoomOut": {
+    sl: "Pomanjšaj zemljevid",
+    en: "Zoom out of the map",
+    de: "Karte verkleinern",
+    it: "Riduci la mappa",
+  },
+  "UI.lg.siteMapReset": {
+    sl: "Ponastavi povečavo",
+    en: "Reset map zoom",
+    de: "Kartenzoom zurücksetzen",
+    it: "Reimposta lo zoom della mappa",
+  },
+  "UI.lg.more": {
+    sl: "Več",
+    en: "More",
+    de: "Mehr",
+    it: "Altro",
+  },
 } as const satisfies Record<string, Record<UiLanguage, string>>;
 
 function livingGuideUiFor(language: UiLanguage): Record<string, string> {

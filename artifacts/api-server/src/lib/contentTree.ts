@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import {
   db,
   tenantsTable,
@@ -36,12 +36,23 @@ export function trashScope(row: { deletedAt?: Date | null }): boolean {
   return !!row.deletedAt;
 }
 
+export type SitePlanImageEntry = {
+  id: string;
+  tenantId: string | null;
+  url: string;
+  caption: string | null;
+  position: number;
+  width: number | null;
+  height: number | null;
+};
+
 export type ItemWithMedia = Item & { media: MediaRow[] };
 export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
 export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
   orderPasswordConfigured: boolean;
   sections: SectionContent[];
+  sitePlanImages: SitePlanImageEntry[];
 };
 
 function indexedBodyParts(body: unknown): string[] | null {
@@ -189,6 +200,29 @@ export async function buildTenantContent(
     itemsOut = itemsOut.filter(adminScope);
   }
 
+  // Fetch site-plan images for this tenant (ordered, image-only, tenant-scoped).
+  const sitePlanRows = await db
+    .select()
+    .from(mediaTable)
+    .where(
+      and(
+        eq(mediaTable.tenantId, tenant.id),
+        eq(mediaTable.purpose, "site-plan"),
+        isNull(mediaTable.itemId),
+      ),
+    )
+    .orderBy(asc(mediaTable.position));
+
+  const sitePlanImages: SitePlanImageEntry[] = sitePlanRows.map((row) => ({
+    id: row.id,
+    tenantId: row.tenantId ?? null,
+    url: row.url,
+    caption: row.alt ?? null,
+    position: row.position,
+    width: row.width ?? null,
+    height: row.height ?? null,
+  }));
+
   const mediaByItem = new Map<string, MediaRow[]>();
   for (const m of media) {
     if (!m.itemId) continue;
@@ -214,6 +248,7 @@ export async function buildTenantContent(
   return {
     ...safeTenant,
     orderPasswordConfigured,
+    sitePlanImages,
     sections: sectionsOut.map((s) => ({
       ...s,
       categories: categoriesBySection.get(s.id) ?? [],

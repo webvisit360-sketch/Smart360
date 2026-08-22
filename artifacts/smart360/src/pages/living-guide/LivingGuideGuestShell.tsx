@@ -58,6 +58,15 @@ import {
   rememberOrderPassword,
 } from "./living-guide-orders";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
+import {
+  findDatedEventDestination as datedEventDestination,
+  getLivingGuideAvailableFeatures,
+  itemEventTimestamp,
+  resolveLivingGuideNav,
+  type NavState,
+} from "./living-guide-nav-resolver";
+import { SiteMapGuestView } from "./SiteMapGuestView";
+import { MoreGuestView } from "./MoreGuestView";
 
 type GuestRecord = {
   unit: string;
@@ -65,7 +74,7 @@ type GuestRecord = {
   phone: string;
 };
 
-type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages";
+type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages" | "site-map" | "more";
 
 function visible(rows: any[] | null | undefined): any[] {
   return (rows ?? []).filter((row) => row.isVisible !== false);
@@ -307,40 +316,6 @@ function isNewNotice(notice: any): boolean {
   return age >= 0 && age < 72 * 60 * 60 * 1000;
 }
 
-function itemEventTimestamp(item: any): number | null {
-  const value =
-    item?.eventStart ??
-    item?.startsAt ??
-    item?.startAt ??
-    item?.startDate ??
-    null;
-  if (!value) return null;
-  const timestamp = new Date(value).getTime();
-  return Number.isFinite(timestamp) ? timestamp : null;
-}
-
-function datedEventDestination(
-  sections: any[],
-): { section: any; category: any } | null {
-  for (const section of sections) {
-    for (const category of visible(section.categories)) {
-      const isEventSurface =
-        category.layout === "events" ||
-        section.key === "events" ||
-        section.key === "program";
-      if (
-        isEventSurface &&
-        visible(category.items).some(
-          (item: any) => itemEventTimestamp(item) !== null,
-        )
-      ) {
-        return { section, category };
-      }
-    }
-  }
-  return null;
-}
-
 function isToday(timestamp: number, now = new Date()): boolean {
   const date = new Date(timestamp);
   return (
@@ -408,9 +383,26 @@ export default function LivingGuideGuestShell({
   let screen: ScreenName = "cover";
   if (pathParts[1] === "home") screen = "home";
   else if (pathParts[1] === "messages") screen = "messages";
+  else if (pathParts[1] === "site-map") screen = "site-map";
+  else if (pathParts[1] === "more") screen = "more";
   else if (categoryContext) screen = "detail";
   else if (routeSectionKey === "explore") screen = "explore";
   else if (routeSectionKey) screen = "grid";
+
+  const validFeatures = useMemo(
+    () => getLivingGuideAvailableFeatures(sections),
+    [sections],
+  );
+
+  const sitePlanImages = visible(tenant?.sitePlanImages);
+  
+  const navState = useMemo(() => {
+    return resolveLivingGuideNav(tenant?.livingGuideNav, validFeatures, sitePlanImages.length > 0);
+  }, [tenant?.livingGuideNav, validFeatures, sitePlanImages]);
+  const unavailableGuestSubroute =
+    (screen === "site-map" && !navState.hasSiteMap) ||
+    (screen === "more" && navState.omitted.length === 0);
+  if (unavailableGuestSubroute) screen = "home";
 
   const [guest, setGuest] = useState<GuestRecord | null>(() =>
     getRememberedGuestIdentity(slug),
@@ -496,6 +488,12 @@ export default function LivingGuideGuestShell({
     },
     [location, resetNavigationState, setLocation],
   );
+
+  useEffect(() => {
+    if (unavailableGuestSubroute) {
+      navigate(`/${slug}/home`, true);
+    }
+  }, [navigate, slug, unavailableGuestSubroute]);
 
   const gridPath = (section = currentSection) =>
     `/${slug}/s/${encodeURIComponent(section?.key ?? "stay")}`;
@@ -648,6 +646,26 @@ export default function LivingGuideGuestShell({
             navigate={navigate}
             slug={slug}
             onSearch={() => setShowSearch(true)}
+            navState={navState}
+          />
+        )}
+
+        {screen === "site-map" && navState.hasSiteMap && (
+          <SiteMapGuestView
+            images={sitePlanImages}
+            t={t}
+            onBack={() => navigate(`/${slug}/home`)}
+          />
+        )}
+
+        {screen === "more" && navState.omitted.length > 0 && (
+          <MoreGuestView
+            omitted={navState.omitted}
+            t={t}
+            onBack={() => navigate(`/${slug}/home`)}
+            onNavigate={navigate}
+            sections={sections}
+            slug={slug}
           />
         )}
 
@@ -731,8 +749,9 @@ export default function LivingGuideGuestShell({
         )}
       </main>
 
-      {screen !== "cover" && (
+      {screen !== "cover" && screen !== "site-map" && screen !== "more" && (
         <BottomNav
+          resolvedNav={navState.resolved}
           sections={sections}
           slug={slug}
           t={t}
@@ -2106,6 +2125,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
 }
 
 function BottomNav({
+  resolvedNav,
   sections,
   slug,
   t,
@@ -2119,6 +2139,7 @@ function BottomNav({
   const eventDestination = datedEventDestination(sections);
   const normalizedActive =
     activeSectionKey === "services" ? "explore" : activeSectionKey;
+
   const home = {
     key: "home",
     label: t("UI.lg.nav.home"),
@@ -2129,19 +2150,19 @@ function BottomNav({
     key: "stay",
     label: t("UI.lg.nav.stay"),
     icon: "tent",
-    section: sectionFor("stay"),
+    path: `/${slug}/s/stay`,
   };
   const offer = {
     key: "offer",
     label: t("UI.lg.nav.offer"),
     icon: "bag",
-    section: sectionFor("offer"),
+    path: `/${slug}/s/offer`,
   };
   const explore = {
     key: "explore",
     label: t("UI.lg.nav.area"),
     icon: "comp",
-    section: sectionFor("explore"),
+    path: `/${slug}/s/explore`, // onClick overrides if only services exists
   };
   const program = eventDestination
     ? {
@@ -2151,7 +2172,12 @@ function BottomNav({
         path: `/${slug}/c/${eventDestination.category.id}`,
         categoryId: eventDestination.category.id,
       }
-    : null;
+    : {
+        key: "program",
+        label: t("UI.lg.nav.program"),
+        icon: "cal",
+        path: `/${slug}/home`, // fallback
+      };
   const messages = {
     key: "messages",
     label: t("UI.lg.nav.messages"),
@@ -2159,17 +2185,22 @@ function BottomNav({
     path: `/${slug}/messages`,
   };
 
-  const candidates = program
-    ? [home, stay, explore, program, messages]
-    : [home, stay, offer, explore, messages];
-  const tabs = candidates.filter(
-    (tab: any) =>
-      tab &&
-      (tab.key === "home" ||
-        tab.key === "messages" ||
-        tab.section ||
-        tab.path),
-  );
+  const getTab = (key: string) => {
+    switch (key) {
+      case "home": return home;
+      case "stay": return stay;
+      case "offer": return offer;
+      case "explore": return explore;
+      case "program": return program;
+      case "messages": return messages;
+      default: return null;
+    }
+  };
+
+  const tabs = (resolvedNav || [])
+    .map(getTab)
+    .filter(Boolean)
+    .slice(0, 5); // ensure max 5
 
   return (
     <nav
@@ -2189,11 +2220,7 @@ function BottomNav({
                 tab.key !== "home" &&
                 tab.key !== "program" &&
                 normalizedActive === tab.key);
-        const path =
-          tab.path ??
-          (tab.section
-            ? `/${slug}/s/${encodeURIComponent(tab.section.key)}`
-            : "");
+        
         return (
           <button
             key={tab.key}
@@ -2206,7 +2233,13 @@ function BottomNav({
                 ? `${tab.label} — ${t("UI.lg.nav.messagesUnavailable")}`
                 : tab.label
             }
-            onClick={tab.disabled ? undefined : () => onNavigate(path)}
+            onClick={tab.disabled ? undefined : () => {
+              if (tab.key === "explore" && !sectionFor("explore") && sectionFor("services")) {
+                onNavigate(`/${slug}/s/services`);
+              } else {
+                onNavigate(tab.path);
+              }
+            }}
             data-testid={`nav-${tab.key}`}
           >
             <svg aria-hidden="true"><use href={`#lg-i-${tab.icon}`} /></svg>
@@ -2232,6 +2265,7 @@ function HomeView({
   navigate,
   slug,
   onSearch,
+  navState,
 }: any) {
   const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
   const now = new Date();
@@ -2451,6 +2485,26 @@ function HomeView({
                   aria-hidden="true"
                 />
               )}
+            </button>
+          )}
+          {navState?.hasSiteMap && (
+            <button
+              className="lg2-q"
+              type="button"
+              onClick={() => navigate(`/${slug}/site-map`)}
+            >
+              <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
+              <b>{t("UI.lg.siteMap", "Mapa")}</b>
+            </button>
+          )}
+          {navState?.omitted?.length > 0 && (
+            <button
+              className="lg2-q"
+              type="button"
+              onClick={() => navigate(`/${slug}/more`)}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+              <b>{t("UI.lg.more", "Več")}</b>
             </button>
           )}
         </div>

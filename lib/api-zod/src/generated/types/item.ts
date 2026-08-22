@@ -15,6 +15,11 @@ export interface Item {
   title?: string | null;
   /** @nullable */
   body?: string | null;
+  /**
+     * Optional event start; a dated item can make Program available in Living Guide navigation
+     * @nullable
+     */
+  eventStart?: string | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */

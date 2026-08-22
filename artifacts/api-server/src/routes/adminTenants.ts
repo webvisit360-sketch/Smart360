@@ -9,6 +9,7 @@ import {
   itemsTable,
   mediaTable,
   changelogTable,
+  validateLivingGuideNav,
 } from "@workspace/db";
 import {
   GetAdminOverviewResponse,
@@ -317,6 +318,11 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
     return "wifiEnc must be WPA, WEP or nopass";
   if (data["guestUiMode"] !== undefined && !["legacy", "living-guide"].includes(String(data["guestUiMode"])))
     return "guestUiMode must be 'legacy' or 'living-guide'";
+  // livingGuideNav: null is allowed (reset to default); when set, must be valid.
+  if (data["livingGuideNav"] !== undefined && data["livingGuideNav"] !== null) {
+    const navResult = validateLivingGuideNav(data["livingGuideNav"]);
+    if (!navResult.ok) return navResult.error;
+  }
   return null;
 }
 
@@ -353,9 +359,14 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     renewsAt: renewsAtRaw,
     orderPassword: orderPasswordRaw,
     tourUrl: tourUrlRaw,
+    livingGuideNav: livingGuideNavRaw,
     ...restData
   } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
+  // livingGuideNav: null resets to null; array is already validated above.
+  if (livingGuideNavRaw !== undefined) {
+    updateData["livingGuideNav"] = livingGuideNavRaw ?? null;
+  }
   if (tourUrlRaw !== undefined) {
     try {
       updateData["tourUrl"] = extractVirtualTourUrl(tourUrlRaw);
@@ -588,6 +599,10 @@ export async function copyTenant(
       // Living Guide is an explicit per-establishment launch decision. New
       // copies always start on the safe legacy UI even when the source is live.
       guestUiMode: "legacy",
+      // livingGuideNav is a per-establishment navigation decision. Reset to null
+      // so the frontend applies the approved default rather than silently
+      // inheriting a nav layout that may not fit the new establishment's content.
+      livingGuideNav: null,
       renewsAt: plusOneYear(new Date()),
     })
     .returning();

@@ -13,6 +13,7 @@ import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
 import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
+import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-settings";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
 import { useToast } from "@/hooks/use-toast";
@@ -359,6 +360,7 @@ export default function AdminTenantEdit() {
           <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
           <TabsTrigger value="translations">Prevodi</TabsTrigger>
           <TabsTrigger value="orders">Naročila in Sporočila</TabsTrigger>
+          <TabsTrigger value="guide">Living Guide</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -1005,6 +1007,16 @@ export default function AdminTenantEdit() {
           </Card>
           <AdminTenantOrders tenantId={id} />
           <AdminTenantMessages tenantId={id} />
+        </TabsContent>
+        <TabsContent value="guide" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Living Guide</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AdminLivingGuideSettings tenant={tenant} id={tenant.id} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

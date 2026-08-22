@@ -6,12 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { SectionContent } from './sectionContent';
+import type { SitePlanImage } from './sitePlanImage';
 import type { Tenant } from './tenant';
 import type { TenantContentPlurals } from './tenantContentPlurals';
 import type { TenantContentUi } from './tenantContentUi';
 
 export type TenantContent = Tenant & ({
   sections: SectionContent[];
+  /** Ordered site-plan images for this tenant; empty array when none uploaded */
+  sitePlanImages: SitePlanImage[];
   /** Canonical absolute https guest URL for the current slug */
   publicUrl: string;
   /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */

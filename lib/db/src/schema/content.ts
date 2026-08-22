@@ -8,8 +8,10 @@ import {
   doublePrecision,
   uniqueIndex,
   index,
+  check,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import { tenantsTable } from "./tenants";
 
@@ -50,6 +52,9 @@ export const itemsTable = pgTable("items", {
     .references(() => categoriesTable.id, { onDelete: "cascade" }),
   title: text("title"),
   body: text("body"),
+  // Optional ISO-8601 start used by Living Guide Program/event destinations.
+  // Text keeps the public contract stable and avoids implicit timezone shifts.
+  eventStart: text("event_start"),
   price: text("price"),
   priceUnit: text("price_unit"),
   phone: text("phone"),
@@ -107,7 +112,17 @@ export const mediaTable = pgTable("media", {
   // mora ostati vidna, izrisana kot object-position. Privzeto središče.
   focusX: integer("focus_x").notNull().default(50),
   focusY: integer("focus_y").notNull().default(50),
-});
+  // Purpose discriminator: "item" (default, backward-compatible) or "site-plan".
+  // site-plan rows are tenant-scoped (tenantId NOT NULL, itemId NULL), image-only,
+  // ordered, and carry a caption (stored in the alt column).
+  // The DB CHECK below enforces tenant scope and image-only site plans.
+  purpose: text("purpose").notNull().default("item"),
+}, (t) => [
+  check(
+    "media_site_plan_scope_v2",
+    sql`${t.purpose} != 'site-plan' OR (${t.tenantId} IS NOT NULL AND ${t.itemId} IS NULL AND ${t.kind} = 'image')`,
+  ),
+]);
 
 export const translationsTable = pgTable(
   "translations",

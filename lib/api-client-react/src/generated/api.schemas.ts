@@ -146,6 +146,18 @@ export const TenantGuestUiMode = {
   'living-guide': 'living-guide',
 } as const;
 
+export type TenantLivingGuideNavItem = typeof TenantLivingGuideNavItem[keyof typeof TenantLivingGuideNavItem];
+
+
+export const TenantLivingGuideNavItem = {
+  home: 'home',
+  stay: 'stay',
+  offer: 'offer',
+  explore: 'explore',
+  program: 'program',
+  messages: 'messages',
+} as const;
+
 export interface Tenant {
   id: string;
   slug: string;
@@ -250,6 +262,13 @@ export interface Tenant {
   /** @nullable */
   navColorOn?: string | null;
   languages: string[];
+  /**
+     * Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with 'home' first.
+     * @minItems 5
+     * @maxItems 5
+     * @nullable
+     */
+  livingGuideNav?: TenantLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
   mediaQuotaBytes: number;
@@ -282,6 +301,18 @@ export type TenantUpdateGuestUiMode = typeof TenantUpdateGuestUiMode[keyof typeo
 export const TenantUpdateGuestUiMode = {
   legacy: 'legacy',
   'living-guide': 'living-guide',
+} as const;
+
+export type TenantUpdateLivingGuideNavItem = typeof TenantUpdateLivingGuideNavItem[keyof typeof TenantUpdateLivingGuideNavItem];
+
+
+export const TenantUpdateLivingGuideNavItem = {
+  home: 'home',
+  stay: 'stay',
+  offer: 'offer',
+  explore: 'explore',
+  program: 'program',
+  messages: 'messages',
 } as const;
 
 export interface TenantUpdate {
@@ -385,10 +416,41 @@ export interface TenantUpdate {
   /** @nullable */
   navColorOn?: string | null;
   languages?: string[];
+  /**
+     * Ordered five-key Living Guide navigation bar. Set to null to reset to the frontend default. When set, must contain exactly five unique keys from the allowed set with 'home' first.
+     * @minItems 5
+     * @maxItems 5
+     * @nullable
+     */
+  livingGuideNav?: TenantUpdateLivingGuideNavItem[] | null;
   isTemplate?: boolean;
   isPublished?: boolean;
   /** @minimum 104857600 */
   mediaQuotaBytes?: number;
+}
+
+export interface SitePlanImage {
+  id: string;
+  tenantId: string;
+  url: string;
+  /**
+     * Human-readable caption (stored in alt column)
+     * @nullable
+     */
+  caption: string | null;
+  position: number;
+  /** @nullable */
+  width?: number | null;
+  /** @nullable */
+  height?: number | null;
+}
+
+export interface SitePlanImageUpdate {
+  /**
+     * Caption text; null or empty clears it
+     * @nullable
+     */
+  caption?: string | null;
 }
 
 export type MessageEntrySender = typeof MessageEntrySender[keyof typeof MessageEntrySender];
@@ -828,6 +890,11 @@ export interface Item {
   title?: string | null;
   /** @nullable */
   body?: string | null;
+  /**
+     * Optional event start; a dated item can make Program available in Living Guide navigation
+     * @nullable
+     */
+  eventStart?: string | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */
@@ -901,6 +968,7 @@ export const ItemInputFrame = {
 export interface ItemInput {
   title?: string;
   body?: string;
+  eventStart?: string;
   price?: string;
   priceUnit?: string;
   phone?: string;
@@ -945,6 +1013,8 @@ export interface ItemUpdate {
   title?: string | null;
   /** @nullable */
   body?: string | null;
+  /** @nullable */
+  eventStart?: string | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */
@@ -1293,6 +1363,8 @@ export type TenantContentPlurals = {[key: string]: {[key: string]: string}};
 
 export type TenantContent = Tenant & ({
   sections: SectionContent[];
+  /** Ordered site-plan images for this tenant; empty array when none uploaded */
+  sitePlanImages: SitePlanImage[];
   /** Canonical absolute https guest URL for the current slug */
   publicUrl: string;
   /** Server-rendered QR SVG (viewBox only, no width/height) encoding publicUrl */

@@ -10,6 +10,7 @@ import type { ItemInputFrame } from './itemInputFrame';
 export interface ItemInput {
   title?: string;
   body?: string;
+  eventStart?: string;
   price?: string;
   priceUnit?: string;
   phone?: string;
