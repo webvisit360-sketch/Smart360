@@ -76,6 +76,48 @@ export const LIVING_GUIDE_UI = {
     de: "Nachrichten",
     it: "Messaggi",
   },
+  "UI.lg.msg.closed": {
+    sl: "Ta pogovor je zaprt.",
+    en: "This conversation is closed.",
+    de: "Diese Unterhaltung ist geschlossen.",
+    it: "Questa conversazione è chiusa.",
+  },
+  "UI.lg.msg.empty": {
+    sl: "Pošljite vprašanje gostitelju. Odgovor se bo prikazal tukaj.",
+    en: "Send your host a question. Their reply will appear here.",
+    de: "Senden Sie Ihrem Gastgeber eine Frage. Die Antwort erscheint hier.",
+    it: "Invia una domanda al tuo host. La risposta apparirà qui.",
+  },
+  "UI.lg.msg.placeholder": {
+    sl: "Napišite sporočilo…",
+    en: "Write a message…",
+    de: "Nachricht schreiben…",
+    it: "Scrivi un messaggio…",
+  },
+  "UI.lg.msg.send": {
+    sl: "Pošlji sporočilo",
+    en: "Send message",
+    de: "Nachricht senden",
+    it: "Invia messaggio",
+  },
+  "UI.lg.msg.you": {
+    sl: "Vi",
+    en: "You",
+    de: "Sie",
+    it: "Tu",
+  },
+  "UI.lg.msg.sendError": {
+    sl: "Sporočila ni bilo mogoče poslati. Poskusite znova.",
+    en: "The message could not be sent. Please try again.",
+    de: "Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    it: "Impossibile inviare il messaggio. Riprova.",
+  },
+  "UI.lg.msg.rateLimit": {
+    sl: "Poslali ste preveč sporočil naenkrat. Počakajte minuto in poskusite znova.",
+    en: "You sent too many messages at once. Wait a minute and try again.",
+    de: "Sie haben zu viele Nachrichten auf einmal gesendet. Warten Sie eine Minute und versuchen Sie es erneut.",
+    it: "Hai inviato troppi messaggi insieme. Attendi un minuto e riprova.",
+  },
   "UI.lg.nav.messagesUnavailable": {
     sl: "na voljo v naslednjem koraku",
     en: "available in the next step",
@@ -530,37 +572,37 @@ export const LIVING_GUIDE_UI = {
     sl: "Naročilo ni bilo poslano. Preverite podatke in poskusite znova.",
     en: "The order was not sent. Check your details and try again.",
     de: "Die Bestellung wurde nicht gesendet. Prüfen Sie Ihre Angaben und versuchen Sie es erneut.",
-    it: "L'ordine non è stato inviato. Controlla i dati e riprova."
+    it: "L'ordine non è stato inviato. Controlla i dati e riprova.",
   },
   "UI.lg.order.retry": {
     sl: "Poskusi znova",
     en: "Retry",
     de: "Erneut versuchen",
-    it: "Riprova"
+    it: "Riprova",
   },
   "UI.lg.order.qtyInc": {
     sl: "Povečaj količino",
     en: "Increase quantity",
     de: "Menge erhöhen",
-    it: "Aumenta quantità"
+    it: "Aumenta quantità",
   },
   "UI.lg.order.qtyDec": {
     sl: "Zmanjšaj količino",
     en: "Decrease quantity",
     de: "Menge verringern",
-    it: "Riduci quantità"
+    it: "Riduci quantità",
   },
   "UI.lg.order.validation.required": {
     sl: "To polje je obvezno.",
     en: "This field is required.",
     de: "Dieses Feld ist erforderlich.",
-    it: "Questo campo è obbligatorio."
+    it: "Questo campo è obbligatorio.",
   },
   "UI.lg.order.validation.phoneDigits": {
     sl: "Telefonska številka mora vsebovati vsaj 6 števk.",
     en: "The phone number must contain at least 6 digits.",
     de: "Die Telefonnummer muss mindestens 6 Ziffern enthalten.",
-    it: "Il numero di telefono deve contenere almeno 6 cifre."
+    it: "Il numero di telefono deve contenere almeno 6 cifre.",
   },
   "UI.lg.order.validation.password": {
     sl: "Napačno geslo",
@@ -572,49 +614,52 @@ export const LIVING_GUIDE_UI = {
     sl: "+386 41 000 000",
     en: "+1 234 567 8900",
     de: "+49 151 0000000",
-    it: "+39 300 000 0000"
+    it: "+39 300 000 0000",
   },
   "UI.lg.order.placeholder.note": {
     sl: "Posebne želje...",
     en: "Special requests...",
     de: "Sonderwünsche...",
-    it: "Richieste speciali..."
+    it: "Richieste speciali...",
   },
   "UI.lg.order.ref": {
     sl: "Ref:",
     en: "Ref:",
     de: "Ref:",
-    it: "Rif:"
+    it: "Rif:",
   },
   "UI.lg.order.loading": {
     sl: "Nalagam...",
     en: "Loading...",
     de: "Wird geladen...",
-    it: "Caricamento in corso..."
+    it: "Caricamento in corso...",
   },
   "UI.lg.order.failedQuery": {
     sl: "Napaka pri nalaganju naročil.",
     en: "Failed to load orders.",
     de: "Bestellungen konnten nicht geladen werden.",
-    it: "Impossibile caricare gli ordini."
+    it: "Impossibile caricare gli ordini.",
   },
   "UI.lg.order.price": {
     sl: "Cena",
     en: "Price",
     de: "Preis",
-    it: "Prezzo"
+    it: "Prezzo",
   },
   "UI.lg.order.created": {
     sl: "Oddano",
     en: "Placed",
     de: "Aufgegeben",
-    it: "Inviato"
-  }
+    it: "Inviato",
+  },
 } as const satisfies Record<string, Record<UiLanguage, string>>;
 
 function livingGuideUiFor(language: UiLanguage): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(LIVING_GUIDE_UI).map(([key, values]) => [key, values[language]]),
+    Object.entries(LIVING_GUIDE_UI).map(([key, values]) => [
+      key,
+      values[language],
+    ]),
   );
 }
 
@@ -688,7 +733,8 @@ export const SL_UI: Record<string, string> = {
   // Theme extras (translatable via ui rows like the rest).
   "UI.interest": "Kaj vas zanima?",
   "UI.contact.k": "Stik",
-  "UI.contact.intro": "Vprašanje, rezervacija ali priporočilo — odgovorimo v nekaj minutah.",
+  "UI.contact.intro":
+    "Vprašanje, rezervacija ali priporočilo — odgovorimo v nekaj minutah.",
   "UI.open247": "Odprto 24/7",
   "UI.website": "Spletna stran",
   "UI.nearby": "v bližini",
@@ -716,17 +762,72 @@ export const DIFFICULTY_KEYS: Record<string, string> = {
 
 /** Built-in Slovene plural forms (4 CLDR forms: one, two, few, other). */
 export const SL_PLURALS: Record<string, Record<string, string>> = {
-  reviews: { one: "{n} ocena", two: "{n} oceni", few: "{n} ocene", other: "{n} ocen" },
-  info: { one: "{n} informacija", two: "{n} informaciji", few: "{n} informacije", other: "{n} informacij" },
-  experiences: { one: "{n} doživetje", two: "{n} doživetji", few: "{n} doživetja", other: "{n} doživetij" },
-  places: { one: "{n} kraj", two: "{n} kraja", few: "{n} kraji", other: "{n} krajev" },
-  routes: { one: "{n} pot", two: "{n} poti", few: "{n} poti", other: "{n} poti" },
-  products: { one: "{n} izdelek", two: "{n} izdelka", few: "{n} izdelki", other: "{n} izdelkov" },
-  rules: { one: "{n} pravilo", two: "{n} pravili", few: "{n} pravila", other: "{n} pravil" },
-  events: { one: "{n} dogodek", two: "{n} dogodka", few: "{n} dogodki", other: "{n} dogodkov" },
-  entries: { one: "{n} vnos", two: "{n} vnosa", few: "{n} vnosi", other: "{n} vnosov" },
-  options: { one: "{n} možnost", two: "{n} možnosti", few: "{n} možnosti", other: "{n} možnosti" },
-  apartments: { one: "{n} apartma", two: "{n} apartmaja", few: "{n} apartmaji", other: "{n} apartmajev" },
+  reviews: {
+    one: "{n} ocena",
+    two: "{n} oceni",
+    few: "{n} ocene",
+    other: "{n} ocen",
+  },
+  info: {
+    one: "{n} informacija",
+    two: "{n} informaciji",
+    few: "{n} informacije",
+    other: "{n} informacij",
+  },
+  experiences: {
+    one: "{n} doživetje",
+    two: "{n} doživetji",
+    few: "{n} doživetja",
+    other: "{n} doživetij",
+  },
+  places: {
+    one: "{n} kraj",
+    two: "{n} kraja",
+    few: "{n} kraji",
+    other: "{n} krajev",
+  },
+  routes: {
+    one: "{n} pot",
+    two: "{n} poti",
+    few: "{n} poti",
+    other: "{n} poti",
+  },
+  products: {
+    one: "{n} izdelek",
+    two: "{n} izdelka",
+    few: "{n} izdelki",
+    other: "{n} izdelkov",
+  },
+  rules: {
+    one: "{n} pravilo",
+    two: "{n} pravili",
+    few: "{n} pravila",
+    other: "{n} pravil",
+  },
+  events: {
+    one: "{n} dogodek",
+    two: "{n} dogodka",
+    few: "{n} dogodki",
+    other: "{n} dogodkov",
+  },
+  entries: {
+    one: "{n} vnos",
+    two: "{n} vnosa",
+    few: "{n} vnosi",
+    other: "{n} vnosov",
+  },
+  options: {
+    one: "{n} možnost",
+    two: "{n} možnosti",
+    few: "{n} možnosti",
+    other: "{n} možnosti",
+  },
+  apartments: {
+    one: "{n} apartma",
+    two: "{n} apartmaja",
+    few: "{n} apartmaji",
+    other: "{n} apartmajev",
+  },
 };
 
 /** English built-ins for keys/plurals that predate a tenant's ui import. */
@@ -772,7 +873,7 @@ export function plural(
   tenant: TenantLike | null | undefined,
   lang: string,
   key: string,
-  n: number
+  n: number,
 ): string {
   const forms =
     (lang !== "sl"
@@ -798,7 +899,7 @@ const LS_PREFIX = "s360-lang:";
 export function resolveLang(
   slug: string,
   urlLang: string | null,
-  enabled: string[] | null | undefined
+  enabled: string[] | null | undefined,
 ): string {
   // Before the tenant arrives the enabled list is unknown — accept every
   // supported language; the globe menu itself only offers tenant.languages.
@@ -809,7 +910,9 @@ export function resolveLang(
   try {
     const stored = localStorage.getItem(LS_PREFIX + slug);
     if (ok(stored)) return stored;
-  } catch { /* private mode */ }
+  } catch {
+    /* private mode */
+  }
   const nav = (navigator.language || "").slice(0, 2).toLowerCase();
   if (ok(nav)) return nav;
   return langs.includes("sl") ? "sl" : (langs[0] ?? "sl");
@@ -818,7 +921,7 @@ export function resolveLang(
 /** Once the tenant is known, an un-enabled language silently becomes Slovene. */
 export function clampLang(
   lang: string,
-  enabled: string[] | null | undefined
+  enabled: string[] | null | undefined,
 ): string {
   if (!enabled?.length) return lang;
   return enabled.includes(lang) ? lang : "sl";
@@ -828,7 +931,9 @@ export function clampLang(
 export function rememberLang(slug: string, lang: string): void {
   try {
     localStorage.setItem(LS_PREFIX + slug, lang);
-  } catch { /* private mode */ }
+  } catch {
+    /* private mode */
+  }
 }
 
 /** Switch language: persist + reflect in the URL (survives navigation). */
@@ -849,11 +954,11 @@ export function switchLang(slug: string, lang: string): void {
 export function applyDocumentLang(
   lang: string,
   slug: string,
-  enabled: string[] | null | undefined
+  enabled: string[] | null | undefined,
 ): void {
   document.documentElement.lang = lang;
   document
-    .querySelectorAll('link[data-s360-hreflang]')
+    .querySelectorAll("link[data-s360-hreflang]")
     .forEach((el) => el.remove());
   const langs = enabled?.length ? enabled : ["sl"];
   const base = `${window.location.origin}/${slug}`;

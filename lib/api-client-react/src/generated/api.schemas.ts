@@ -178,6 +178,8 @@ export interface Tenant {
   email?: string | null;
   /** Whether new orders send the tenant a notification email; defaults to true */
   orderNotifyEmail: boolean;
+  /** Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability. */
+  messageNotifyEmail: boolean;
   /** Whether this tenant currently requires a password for new orders; the password itself is never returned */
   orderPasswordConfigured?: boolean;
   /** @nullable */
@@ -312,6 +314,7 @@ export interface TenantUpdate {
   /** @nullable */
   email?: string | null;
   orderNotifyEmail?: boolean;
+  messageNotifyEmail?: boolean;
   /**
      * Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
      * @maxLength 200
@@ -386,6 +389,83 @@ export interface TenantUpdate {
   isPublished?: boolean;
   /** @minimum 104857600 */
   mediaQuotaBytes?: number;
+}
+
+export type MessageEntrySender = typeof MessageEntrySender[keyof typeof MessageEntrySender];
+
+
+export const MessageEntrySender = {
+  guest: 'guest',
+  host: 'host',
+} as const;
+
+export interface MessageEntry {
+  id: string;
+  sender: MessageEntrySender;
+  body: string;
+  createdAt: string;
+}
+
+/**
+ * Thread and messages visible to the device that owns it
+ */
+export interface GuestThreadView {
+  threadRef: string;
+  isOpen: boolean;
+  messages: MessageEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Thread view for admin/host including host-context fields
+ */
+export interface AdminThreadView {
+  threadRef: string;
+  tenantId: string;
+  /** @nullable */
+  guestName?: string | null;
+  /** @nullable */
+  guestUnit?: string | null;
+  isOpen: boolean;
+  messages: MessageEntry[];
+  createdAt: string;
+  updatedAt: string;
+  deleteAfter: string;
+}
+
+/**
+ * Guest-sent message body and optional context fields
+ */
+export interface GuestMessageInput {
+  /**
+     * Plain-text message body (max 2000 chars)
+     * @minLength 1
+     * @maxLength 2000
+     */
+  body: string;
+  /**
+     * Optional guest display name for host context; never emailed or logged
+     * @maxLength 200
+     */
+  guestName?: string;
+  /**
+     * Optional guest unit/room for host context; never emailed or logged
+     * @maxLength 100
+     */
+  guestUnit?: string;
+}
+
+/**
+ * Host reply message body
+ */
+export interface HostReplyInput {
+  /**
+     * Plain-text reply body (max 2000 chars)
+     * @minLength 1
+     * @maxLength 2000
+     */
+  body: string;
 }
 
 export interface Part5ContentManifest {

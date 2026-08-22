@@ -140,3 +140,9 @@ The mandatory PART 5 production order test uses the explicit test name and note,
 **Why:** The real production e-mail chain must be proven before guest launch, but the current product has no safe supported deletion capability and a cutover must not add one ad hoc.
 
 **How to apply:** Do not claim the test order was deleted. Report the message delivery evidence and rejection status, and scope the deletion control to the existing future order-administration work.
+
+Guest-host message retention is a strict privacy boundary: a device thread at or after its 90-day deadline is non-revivable. A later guest message deletes its expired history and starts a fresh thread; a host write to an expired thread is rejected.
+
+**Why:** Extending an expired row would silently retain and expose a conversation beyond its promised deletion period.
+
+**How to apply:** Enforce expiry inside each message write transaction, not only in the scheduled sweep or read filters. Preserve the tenant/device uniqueness invariant for the fresh thread, and test both concurrent guest sends and expired host writes.

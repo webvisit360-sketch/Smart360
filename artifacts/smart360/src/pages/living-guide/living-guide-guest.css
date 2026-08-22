@@ -272,14 +272,15 @@ body[data-t="noc"] .lg2-grid-view {
   box-shadow: 0 10px 34px rgba(0, 0, 0, .22);
 }
 
-.lg2-cbar .lg2-language {
+.lg2-cbar button.lg2-language {
   min-width: 60px;
   width: auto;
+  height: 58px;
   padding: 0 15px;
-  border-radius: 14px;
+  border-radius: 20px;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 750;
 }
 
@@ -2348,4 +2349,165 @@ body[data-t="swipe"] .lg2-order-dock {
   font-size: 14px;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Messages */
+.lg2-msg-view {
+  padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  background: var(--bg);
+}
+
+.lg2-msg-hd {
+  flex: 0 0 auto;
+  min-height: 94px;
+  padding: max(22px, env(safe-area-inset-top)) 18px 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lg2-msg-tt p {
+  margin: 0 0 5px;
+  color: var(--acc);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.lg2-msg-tt h2 {
+  margin: 0;
+  color: var(--tx);
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+
+.lg2-msg-sc {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lg2-msgs {
+  margin-top: auto;
+  padding: 8px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lg2-msg {
+  max-width: 80%;
+  padding: 13px 16px;
+  border-radius: 20px;
+  font-size: 17px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.lg2-msg--h {
+  align-self: flex-start;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--tx);
+  border-bottom-left-radius: 7px;
+}
+
+.lg2-msg--g {
+  align-self: flex-end;
+  background: var(--acc);
+  color: var(--onacc);
+  border-bottom-right-radius: 7px;
+}
+
+.lg2-msg small {
+  display: block;
+  font-size: 12.5px;
+  opacity: .65;
+  margin-top: 5px;
+}
+
+.lg2-msgbar {
+  flex: none;
+  display: flex;
+  gap: 9px;
+  padding: 10px 16px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+  position: relative;
+  z-index: 10;
+}
+
+.lg2-msgbar input {
+  flex: 1;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  border-radius: 16px;
+  color: var(--tx);
+  font-size: 16px;
+  padding: 0 16px;
+  outline: none;
+  min-height: 52px;
+}
+
+.lg2-msgbar input:focus {
+  border-color: var(--acc);
+}
+
+.lg2-msgbar button {
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--acc);
+  color: var(--onacc);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.lg2-msgbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lg2-msgbar button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lg2-msg-empty {
+  margin: auto;
+  text-align: center;
+  color: var(--tx2);
+  font-size: 15px;
+  padding: 32px 16px;
+}
+
+.lg2-msg-empty p {
+  max-width: 300px;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+.lg2-msg-compose-area {
+  flex: none;
+  background: var(--bg);
+}
+
+.lg2-msg-send-error {
+  margin: 0;
+  padding: 9px 16px 0;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.4;
 }

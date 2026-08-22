@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
+import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
@@ -86,6 +87,7 @@ export default function AdminTenantEdit() {
     instagram: "",
     email: "",
     orderNotifyEmail: true,
+    messageNotifyEmail: true,
     mapQuery: "",
     tourUrl: "",
     heroUrl: "",
@@ -201,6 +203,7 @@ export default function AdminTenantEdit() {
         instagram: tenant.instagram || "",
         email: tenant.email || "",
         orderNotifyEmail: tenant.orderNotifyEmail,
+        messageNotifyEmail: tenant.messageNotifyEmail ?? true,
         mapQuery: tenant.mapQuery || "",
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
@@ -355,7 +358,7 @@ export default function AdminTenantEdit() {
           <TabsTrigger value="contacts">Stiki & Lokacija</TabsTrigger>
           <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
           <TabsTrigger value="translations">Prevodi</TabsTrigger>
-          <TabsTrigger value="orders">Naročila</TabsTrigger>
+          <TabsTrigger value="orders">Naročila in Sporočila</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -480,6 +483,23 @@ export default function AdminTenantEdit() {
                   }
                   aria-label="E-poštno obvestilo ob novem naročilu"
                   data-testid="switch-order-notify-email"
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4 border-t pt-4 mt-4">
+                <div className="space-y-1">
+                  <Label htmlFor="message-notify-email">E-poštno obvestilo ob sporočilu gosta</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Če je izklopljeno, sporočilo še vedno takoj prispe v zavihek Sporočila.
+                  </p>
+                </div>
+                <Switch
+                  id="message-notify-email"
+                  checked={formData.messageNotifyEmail}
+                  onCheckedChange={(checked) =>
+                    setFormData((current) => ({ ...current, messageNotifyEmail: checked }))
+                  }
+                  aria-label="E-poštno obvestilo ob sporočilu gosta"
+                  data-testid="switch-message-notify-email"
                 />
               </div>
             </CardContent>
@@ -984,6 +1004,7 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
           <AdminTenantOrders tenantId={id} />
+          <AdminTenantMessages tenantId={id} />
         </TabsContent>
       </Tabs>
     </div>

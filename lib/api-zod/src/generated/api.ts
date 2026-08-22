@@ -52,6 +52,7 @@ export const GetPublicTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -458,6 +459,7 @@ export const ListTenantsResponseItem = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -526,6 +528,7 @@ export const CreateTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -599,6 +602,7 @@ export const GetTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -739,6 +743,7 @@ export const UpdateTenantBody = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().optional(),
+  "messageNotifyEmail": zod.boolean().optional(),
   "orderPassword": zod.string().max(updateTenantBodyOrderPasswordMax).nullish().describe('Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -796,6 +801,7 @@ export const UpdateTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -877,6 +883,7 @@ export const DuplicateTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -953,6 +960,7 @@ export const RenewTenantResponse = zod.object({
   "instagram": zod.string().nullish(),
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
+  "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -1960,5 +1968,141 @@ export const UpdateOrderStatusResponse = zod.object({
   "updatedAt": zod.string(),
   "deleteAfter": zod.string()
 }).describe('Full order fields for admin view (notification sent or intentionally skipped)')
+
+
+/**
+ * @summary Fetch the active thread and messages for this device. Returns only the thread owned by this device token for this tenant. Returns 204 when no thread exists yet.
+
+ */
+export const GetGuestMessagesParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const getGuestMessagesHeaderXDeviceTokenMin = 16;
+export const getGuestMessagesHeaderXDeviceTokenMax = 256;
+
+
+
+export const GetGuestMessagesHeader = zod.object({
+  "x-device-token": zod.string().min(getGuestMessagesHeaderXDeviceTokenMin).max(getGuestMessagesHeaderXDeviceTokenMax).describe('Raw device token; hashed server-side, never stored raw')
+})
+
+export const GetGuestMessagesResponse = zod.object({
+  "threadRef": zod.string(),
+  "isOpen": zod.boolean(),
+  "messages": zod.array(zod.object({
+  "id": zod.string(),
+  "sender": zod.enum(['guest', 'host']),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Thread and messages visible to the device that owns it')
+
+
+/**
+ * @summary Send a message as a guest. Creates the thread on first message (one durable thread per tenant + device). Rate-limited 5/min per IP and 5/min per device.
+
+ */
+export const SendGuestMessageParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const sendGuestMessageHeaderXDeviceTokenMin = 16;
+export const sendGuestMessageHeaderXDeviceTokenMax = 256;
+
+
+
+export const SendGuestMessageHeader = zod.object({
+  "x-device-token": zod.string().min(sendGuestMessageHeaderXDeviceTokenMin).max(sendGuestMessageHeaderXDeviceTokenMax).describe('Raw device token; hashed server-side, never stored raw')
+})
+
+export const sendGuestMessageBodyBodyMax = 2000;
+
+export const sendGuestMessageBodyGuestNameMax = 200;
+
+export const sendGuestMessageBodyGuestUnitMax = 100;
+
+
+
+export const SendGuestMessageBody = zod.object({
+  "body": zod.string().min(1).max(sendGuestMessageBodyBodyMax).describe('Plain-text message body (max 2000 chars)'),
+  "guestName": zod.string().max(sendGuestMessageBodyGuestNameMax).optional().describe('Optional guest display name for host context; never emailed or logged'),
+  "guestUnit": zod.string().max(sendGuestMessageBodyGuestUnitMax).optional().describe('Optional guest unit\/room for host context; never emailed or logged')
+}).describe('Guest-sent message body and optional context fields')
+
+export const SendGuestMessageResponse = zod.object({
+  "threadRef": zod.string(),
+  "isOpen": zod.boolean(),
+  "messages": zod.array(zod.object({
+  "id": zod.string(),
+  "sender": zod.enum(['guest', 'host']),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Thread and messages visible to the device that owns it')
+
+
+/**
+ * @summary List all message threads for a tenant (admin, newest-activity first).
+ */
+export const ListTenantThreadsParams = zod.object({
+  "tenantId": zod.coerce.string()
+})
+
+export const ListTenantThreadsResponseItem = zod.object({
+  "threadRef": zod.string(),
+  "tenantId": zod.string(),
+  "guestName": zod.string().nullish(),
+  "guestUnit": zod.string().nullish(),
+  "isOpen": zod.boolean(),
+  "messages": zod.array(zod.object({
+  "id": zod.string(),
+  "sender": zod.enum(['guest', 'host']),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "deleteAfter": zod.string()
+}).describe('Thread view for admin\/host including host-context fields')
+export const ListTenantThreadsResponse = zod.array(ListTenantThreadsResponseItem)
+
+
+/**
+ * @summary Post a host reply into a thread.
+ */
+export const PostHostReplyParams = zod.object({
+  "tenantId": zod.coerce.string(),
+  "threadRef": zod.coerce.string()
+})
+
+export const postHostReplyBodyBodyMax = 2000;
+
+
+
+export const PostHostReplyBody = zod.object({
+  "body": zod.string().min(1).max(postHostReplyBodyBodyMax).describe('Plain-text reply body (max 2000 chars)')
+}).describe('Host reply message body')
+
+export const PostHostReplyResponse = zod.object({
+  "threadRef": zod.string(),
+  "tenantId": zod.string(),
+  "guestName": zod.string().nullish(),
+  "guestUnit": zod.string().nullish(),
+  "isOpen": zod.boolean(),
+  "messages": zod.array(zod.object({
+  "id": zod.string(),
+  "sender": zod.enum(['guest', 'host']),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "deleteAfter": zod.string()
+}).describe('Thread view for admin\/host including host-context fields')
 
 

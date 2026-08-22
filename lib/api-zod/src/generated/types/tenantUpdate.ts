@@ -37,6 +37,7 @@ export interface TenantUpdate {
   /** @nullable */
   email?: string | null;
   orderNotifyEmail?: boolean;
+  messageNotifyEmail?: boolean;
   /**
      * Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
      * @maxLength 200

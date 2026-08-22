@@ -19,6 +19,7 @@ tags:
   - name: translations
   - name: overview
   - name: orders
+  - name: messages
 paths:
   /healthz:
     get:
@@ -1365,6 +1366,131 @@ paths:
           description: Not authenticated
         "404":
           description: Order not found
+  /public/tenants/{slug}/messages:
+    get:
+      operationId: getGuestMessages
+      tags: [messages]
+      summary: >
+        Fetch the active thread and messages for this device.
+        Returns only the thread owned by this device token for this tenant.
+        Returns 204 when no thread exists yet.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: x-device-token
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 256 }
+          description: Raw device token; hashed server-side, never stored raw
+      responses:
+        "200":
+          description: Thread with messages for this device
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestThreadView"
+        "204":
+          description: No thread exists for this device yet
+        "400":
+          description: Missing or invalid device token
+        "404":
+          description: Tenant not found
+    post:
+      operationId: sendGuestMessage
+      tags: [messages]
+      summary: >
+        Send a message as a guest. Creates the thread on first message (one
+        durable thread per tenant + device). Rate-limited 5/min per IP and
+        5/min per device.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: x-device-token
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 256 }
+          description: Raw device token; hashed server-side, never stored raw
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestMessageInput"
+      responses:
+        "201":
+          description: Message sent; returns the updated thread view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestThreadView"
+        "400":
+          description: Validation error (body too long, blank, etc.)
+        "404":
+          description: Tenant not found or not published
+        "409":
+          description: Thread is closed — no new guest messages accepted
+        "429":
+          description: Rate limit exceeded (5/min per IP or per device)
+  /admin/tenants/{tenantId}/messages:
+    get:
+      operationId: listTenantThreads
+      tags: [messages]
+      summary: List all message threads for a tenant (admin, newest-activity first).
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Thread list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminThreadView"
+        "401":
+          description: Not authenticated
+        "404":
+          description: Tenant not found
+  /admin/tenants/{tenantId}/messages/{threadRef}:
+    post:
+      operationId: postHostReply
+      tags: [messages]
+      summary: Post a host reply into a thread.
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: threadRef
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HostReplyInput"
+      responses:
+        "201":
+          description: Reply posted; returns updated admin thread view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminThreadView"
+        "400":
+          description: Validation error
+        "401":
+          description: Not authenticated
+        "404":
+          description: Thread or tenant not found
 components:
   schemas:
     HealthStatus:
@@ -1550,6 +1676,9 @@ components:
         orderNotifyEmail:
           type: boolean
           description: Whether new orders send the tenant a notification email; defaults to true
+        messageNotifyEmail:
+          type: boolean
+          description: Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.
         orderPasswordConfigured:
           type: boolean
           description: Whether this tenant currently requires a password for new orders; the password itself is never returned
@@ -1596,7 +1725,7 @@ components:
         createdAt: { type: string }
         renewsAt: { type: ["string", "null"] }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, guestUiMode, languages, isTemplate, isPublished, orderNotifyEmail, mediaQuotaBytes, createdAt, updatedAt]
+      required: [id, slug, name, theme, guestUiMode, languages, isTemplate, isPublished, orderNotifyEmail, messageNotifyEmail, mediaQuotaBytes, createdAt, updatedAt]
     TenantInput:
       type: object
       properties:
@@ -1633,6 +1762,7 @@ components:
         instagram: { type: ["string", "null"] }
         email: { type: ["string", "null"] }
         orderNotifyEmail: { type: boolean }
+        messageNotifyEmail: { type: boolean }
         orderPassword:
           type: ["string", "null"]
           maxLength: 200
@@ -1679,6 +1809,72 @@ components:
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
         mediaQuotaBytes: { type: number, minimum: 104857600 }
+    MessageEntry:
+      type: object
+      properties:
+        id: { type: string }
+        sender: { type: string, enum: [guest, host] }
+        body: { type: string }
+        createdAt: { type: string }
+      required: [id, sender, body, createdAt]
+    GuestThreadView:
+      type: object
+      description: Thread and messages visible to the device that owns it
+      properties:
+        threadRef: { type: string }
+        isOpen: { type: boolean }
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageEntry"
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [threadRef, isOpen, messages, createdAt, updatedAt]
+    AdminThreadView:
+      type: object
+      description: Thread view for admin/host including host-context fields
+      properties:
+        threadRef: { type: string }
+        tenantId: { type: string }
+        guestName: { type: ["string", "null"] }
+        guestUnit: { type: ["string", "null"] }
+        isOpen: { type: boolean }
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageEntry"
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        deleteAfter: { type: string }
+      required: [threadRef, tenantId, isOpen, messages, createdAt, updatedAt, deleteAfter]
+    GuestMessageInput:
+      type: object
+      description: Guest-sent message body and optional context fields
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Plain-text message body (max 2000 chars)
+        guestName:
+          type: string
+          maxLength: 200
+          description: Optional guest display name for host context; never emailed or logged
+        guestUnit:
+          type: string
+          maxLength: 100
+          description: Optional guest unit/room for host context; never emailed or logged
+      required: [body]
+    HostReplyInput:
+      type: object
+      description: Host reply message body
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Plain-text reply body (max 2000 chars)
+      required: [body]
     Part5ContentManifest:
       type: object
       properties:

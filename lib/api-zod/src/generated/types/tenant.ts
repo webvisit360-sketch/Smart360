@@ -39,6 +39,8 @@ export interface Tenant {
   email?: string | null;
   /** Whether new orders send the tenant a notification email; defaults to true */
   orderNotifyEmail: boolean;
+  /** Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability. */
+  messageNotifyEmail: boolean;
   /** Whether this tenant currently requires a password for new orders; the password itself is never returned */
   orderPasswordConfigured?: boolean;
   /** @nullable */

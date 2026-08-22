@@ -48,6 +48,7 @@ import {
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 import { OrderSheet, MyOrdersSheet } from "./living-guide-order-sheet";
+import { MessagesView } from "./living-guide-messages";
 import { getDeviceToken } from "./living-guide-orders";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
 
@@ -56,7 +57,7 @@ type GuestRecord = {
   name: string;
 };
 
-type ScreenName = "cover" | "home" | "grid" | "detail" | "explore";
+type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages";
 
 const GUEST_STORAGE_PREFIX = "smart360:living-guide:guest:";
 
@@ -415,6 +416,7 @@ export default function LivingGuideGuestShell({
 
   let screen: ScreenName = "cover";
   if (pathParts[1] === "home") screen = "home";
+  else if (pathParts[1] === "messages") screen = "messages";
   else if (categoryContext) screen = "detail";
   else if (routeSectionKey === "explore") screen = "explore";
   else if (routeSectionKey) screen = "grid";
@@ -616,6 +618,16 @@ export default function LivingGuideGuestShell({
             t={t}
             onOpenCategory={openCategory}
             onOpenItem={openItem}
+          />
+        )}
+
+        {screen === "messages" && (
+          <MessagesView
+            tenant={tenant}
+            slug={slug}
+            guest={guest}
+            t={t}
+            onBack={() => navigate(`/${slug}/home`)}
           />
         )}
 
@@ -1961,7 +1973,7 @@ function BottomNav({
     key: "messages",
     label: t("UI.lg.nav.messages"),
     icon: "chat",
-    disabled: true,
+    path: `/${slug}/messages`,
   };
 
   const candidates = program
@@ -1984,14 +1996,16 @@ function BottomNav({
     >
       {tabs.map((tab: any) => {
         const isActive =
-          (tab.key === "home" && screen === "home") ||
-          (screen !== "home" &&
-            tab.categoryId &&
-            activeCategoryId === tab.categoryId) ||
-          (screen !== "home" &&
-            tab.key !== "home" &&
-            tab.key !== "program" &&
-            normalizedActive === tab.key);
+          screen === "messages"
+            ? tab.key === "messages"
+            : (tab.key === "home" && screen === "home") ||
+              (screen !== "home" &&
+                tab.categoryId &&
+                activeCategoryId === tab.categoryId) ||
+              (screen !== "home" &&
+                tab.key !== "home" &&
+                tab.key !== "program" &&
+                normalizedActive === tab.key);
         const path =
           tab.path ??
           (tab.section

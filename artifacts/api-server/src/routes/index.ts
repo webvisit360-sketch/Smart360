@@ -7,6 +7,7 @@ import adminContentRouter from "./adminContent";
 import adminTranslationsRouter from "./adminTranslations";
 import storageRouter from "./storage";
 import ordersRouter from "./orders";
+import messagesRouter from "./messages";
 import part5MeliPuCutoverRouter from "./part5MeliPuCutover";
 
 const router: IRouter = Router();
@@ -19,6 +20,7 @@ router.use(adminTenantsRouter);
 router.use(adminContentRouter);
 router.use(adminTranslationsRouter);
 router.use(ordersRouter);
+router.use(messagesRouter);
 router.use(part5MeliPuCutoverRouter);
 
 export default router;

@@ -48,6 +48,11 @@ export const tenantsTable = pgTable("tenants", {
   // New-order email is only a notification bell; the admin inbox remains the
   // primary workflow. Hosts may disable email without disabling ordering.
   orderNotifyEmail: boolean("order_notify_email").notNull().default(true),
+  // Guest-message email is only a notification bell; never controls feature
+  // availability. When enabled and tenant email exists, sends a PII-safe
+  // Resend notice that a message awaits. Never includes body, name, unit,
+  // raw token, or IP.
+  messageNotifyEmail: boolean("message_notify_email").notNull().default(true),
   // Optional host-managed order gate. It is intentionally independent from
   // wifiPass and is never copied from Wi-Fi settings.
   orderPassword: text("order_password"),

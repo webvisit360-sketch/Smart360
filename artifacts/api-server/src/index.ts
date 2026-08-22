@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureAdminAccount, rpID, rpOrigin, listCredentials } from "./lib/adminAuth";
 import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention";
+import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRetention";
 
 const rawPort = process.env["PORT"];
 
@@ -69,8 +70,15 @@ ensureAdminAccount()
       logger.error({ err }, "[orderRetention] startup purge failed");
     }),
   )
+  // Purge expired message threads at startup (best-effort)
+  .then(() =>
+    purgeExpiredThreads().catch((err) => {
+      logger.error({ err }, "[messageRetention] startup purge failed");
+    }),
+  )
   .then(() => {
     scheduleOrderRetention();
+    scheduleMessageRetention();
     app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");

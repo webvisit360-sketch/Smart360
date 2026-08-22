@@ -23,6 +23,7 @@ import type {
   AddPasskeyVerifyBody,
   AdminOverview,
   AdminSession,
+  AdminThreadView,
   AuthEventList,
   Category,
   CategoryInput,
@@ -38,7 +39,10 @@ import type {
   ExportTranslationsParams,
   GetPublicTenantParams,
   GetStorageCleanupPreviewParams,
+  GuestMessageInput,
+  GuestThreadView,
   HealthStatus,
+  HostReplyInput,
   Item,
   ItemInput,
   ItemUpdate,
@@ -5142,5 +5146,309 @@ export const useUpdateOrderStatus = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateOrderStatusMutationOptions(options));
+    }
+
+export const getGetGuestMessagesUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/messages`
+}
+
+/**
+ * @summary Fetch the active thread and messages for this device. Returns only the thread owned by this device token for this tenant. Returns 204 when no thread exists yet.
+
+ */
+export const getGuestMessages = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<GuestThreadView | void> => {
+
+  return customFetch<GuestThreadView | void>(getGetGuestMessagesUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGuestMessagesQueryKey = (slug: string,) => {
+    return [
+    `/api/public/tenants/${slug}/messages`
+    ] as const;
+    }
+
+
+export const getGetGuestMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getGuestMessages>>, TError = ErrorType<void>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGuestMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGuestMessagesQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGuestMessages>>> = ({ signal }) => getGuestMessages(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGuestMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGuestMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getGuestMessages>>>
+export type GetGuestMessagesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Fetch the active thread and messages for this device. Returns only the thread owned by this device token for this tenant. Returns 204 when no thread exists yet.
+
+ */
+
+export function useGetGuestMessages<TData = Awaited<ReturnType<typeof getGuestMessages>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGuestMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGuestMessagesQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendGuestMessageUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/messages`
+}
+
+/**
+ * @summary Send a message as a guest. Creates the thread on first message (one durable thread per tenant + device). Rate-limited 5/min per IP and 5/min per device.
+
+ */
+export const sendGuestMessage = async (slug: string,
+    guestMessageInput: GuestMessageInput, options?: Parameters<typeof customFetch>[1]): Promise<GuestThreadView> => {
+
+  return customFetch<GuestThreadView>(getSendGuestMessageUrl(slug),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(guestMessageInput)
+  }
+);}
+
+
+
+
+
+export const getSendGuestMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendGuestMessage>>, TError,{slug: string;data: BodyType<GuestMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendGuestMessage>>, TError,{slug: string;data: BodyType<GuestMessageInput>}, TContext> => {
+
+const mutationKey = ['sendGuestMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendGuestMessage>>, {slug: string;data: BodyType<GuestMessageInput>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  sendGuestMessage(slug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendGuestMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendGuestMessage>>>
+    export type SendGuestMessageMutationBody = BodyType<GuestMessageInput>
+    export type SendGuestMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Send a message as a guest. Creates the thread on first message (one durable thread per tenant + device). Rate-limited 5/min per IP and 5/min per device.
+
+ */
+export const useSendGuestMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendGuestMessage>>, TError,{slug: string;data: BodyType<GuestMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendGuestMessage>>,
+        TError,
+        {slug: string;data: BodyType<GuestMessageInput>},
+        TContext
+      > => {
+      return useMutation(getSendGuestMessageMutationOptions(options));
+    }
+
+export const getListTenantThreadsUrl = (tenantId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${tenantId}/messages`
+}
+
+/**
+ * @summary List all message threads for a tenant (admin, newest-activity first).
+ */
+export const listTenantThreads = async (tenantId: string, options?: Parameters<typeof customFetch>[1]): Promise<AdminThreadView[]> => {
+
+  return customFetch<AdminThreadView[]>(getListTenantThreadsUrl(tenantId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTenantThreadsQueryKey = (tenantId: string,) => {
+    return [
+    `/api/admin/tenants/${tenantId}/messages`
+    ] as const;
+    }
+
+
+export const getListTenantThreadsQueryOptions = <TData = Awaited<ReturnType<typeof listTenantThreads>>, TError = ErrorType<void>>(tenantId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantThreads>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTenantThreadsQueryKey(tenantId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTenantThreads>>> = ({ signal }) => listTenantThreads(tenantId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: tenantId !== null && tenantId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTenantThreads>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTenantThreadsQueryResult = NonNullable<Awaited<ReturnType<typeof listTenantThreads>>>
+export type ListTenantThreadsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all message threads for a tenant (admin, newest-activity first).
+ */
+
+export function useListTenantThreads<TData = Awaited<ReturnType<typeof listTenantThreads>>, TError = ErrorType<void>>(
+ tenantId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantThreads>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTenantThreadsQueryOptions(tenantId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostHostReplyUrl = (tenantId: string,
+    threadRef: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${tenantId}/messages/${threadRef}`
+}
+
+/**
+ * @summary Post a host reply into a thread.
+ */
+export const postHostReply = async (tenantId: string,
+    threadRef: string,
+    hostReplyInput: HostReplyInput, options?: Parameters<typeof customFetch>[1]): Promise<AdminThreadView> => {
+
+  return customFetch<AdminThreadView>(getPostHostReplyUrl(tenantId,threadRef),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostReplyInput)
+  }
+);}
+
+
+
+
+
+export const getPostHostReplyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postHostReply>>, TError,{tenantId: string;threadRef: string;data: BodyType<HostReplyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postHostReply>>, TError,{tenantId: string;threadRef: string;data: BodyType<HostReplyInput>}, TContext> => {
+
+const mutationKey = ['postHostReply'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postHostReply>>, {tenantId: string;threadRef: string;data: BodyType<HostReplyInput>}> = (props) => {
+          const {tenantId,threadRef,data} = props ?? {};
+
+          return  postHostReply(tenantId,threadRef,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostHostReplyMutationResult = NonNullable<Awaited<ReturnType<typeof postHostReply>>>
+    export type PostHostReplyMutationBody = BodyType<HostReplyInput>
+    export type PostHostReplyMutationError = ErrorType<void>
+
+    /**
+ * @summary Post a host reply into a thread.
+ */
+export const usePostHostReply = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postHostReply>>, TError,{tenantId: string;threadRef: string;data: BodyType<HostReplyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postHostReply>>,
+        TError,
+        {tenantId: string;threadRef: string;data: BodyType<HostReplyInput>},
+        TContext
+      > => {
+      return useMutation(getPostHostReplyMutationOptions(options));
     }
 

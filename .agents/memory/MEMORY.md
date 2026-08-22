@@ -9,3 +9,4 @@
 - [Poteg CSS pitfalls](poteg-css-pitfalls.md) — `.lb` class collision (lightbox vs grid card label); must override display/background/inset on `.gc .lb`.
 - [Living Guide decisions](living-guide-decisions.md) — approved theme boundaries, guest persistence, price/order rules, event tabs, cutover and staged-review gates.
 - [Drizzle check constraints](drizzle-check-constraints.md) — changing a same-named CHECK body may be skipped by db push; rename it and verify the live definition.
+- [CodeExecution runtime quirks](codeexecution-runtime-quirks.md) — deterministic test runtime may disable clock/random globals; use database IDs or fixed fixtures with cleanup.
