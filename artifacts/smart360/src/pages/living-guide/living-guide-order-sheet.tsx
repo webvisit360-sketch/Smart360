@@ -8,6 +8,7 @@ import {
   extractFulfillmentText,
   getRememberedOrderPassword,
   rememberOrderPassword,
+  rememberGuestIdentity,
 } from "./living-guide-orders";
 import { UiLanguage, UiTranslator } from "../guest/i18n";
 
@@ -23,6 +24,7 @@ export function OrderSheet({
   passwordRequired,
   onClose,
   onOpenOrders,
+  onCredentialsAccepted,
 }: {
   item: any;
   slug: string;
@@ -32,6 +34,10 @@ export function OrderSheet({
   passwordRequired: boolean;
   onClose: () => void;
   onOpenOrders: () => void;
+  onCredentialsAccepted: (
+    guest: { name: string; unit: string },
+    password?: string,
+  ) => void;
 }) {
   const queryClient = useQueryClient();
   const [qty, setQty] = useState(1);
@@ -96,9 +102,20 @@ export function OrderSheet({
         throw new Error("Order response did not include a reference");
       }
       addOrderRef(slug, orderRef);
+      rememberGuestIdentity(slug, {
+        name: guestName,
+        unit: guestUnit,
+      });
       if (passwordRequired) {
         rememberOrderPassword(slug, orderPassword);
       }
+      onCredentialsAccepted(
+        {
+          name: guestName.trim(),
+          unit: guestUnit.trim(),
+        },
+        passwordRequired ? orderPassword.trim() : undefined,
+      );
       setSuccessRef(orderRef);
       void queryClient.invalidateQueries({
         queryKey: getListDeviceOrdersQueryKey(slug),

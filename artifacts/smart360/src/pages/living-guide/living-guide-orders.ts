@@ -1,6 +1,45 @@
 export const GUEST_STORAGE_PREFIX = "smart360:living-guide:guest:";
 const ORDER_PASSWORD_STORAGE_PREFIX = "smart360:living-guide:order-password:";
 
+export type RememberedGuestIdentity = {
+  unit: string;
+  name: string;
+};
+
+export function getRememberedGuestIdentity(
+  slug: string,
+): RememberedGuestIdentity | null {
+  try {
+    const raw = localStorage.getItem(`${GUEST_STORAGE_PREFIX}${slug}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const unit = typeof parsed?.unit === "string" ? parsed.unit.trim() : "";
+    const name = typeof parsed?.name === "string" ? parsed.name.trim() : "";
+    return unit || name ? { unit, name } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberGuestIdentity(
+  slug: string,
+  guest: RememberedGuestIdentity,
+): void {
+  const clean = {
+    unit: guest.unit.trim(),
+    name: guest.name.trim(),
+  };
+  if (!clean.unit || !clean.name) return;
+  try {
+    localStorage.setItem(
+      `${GUEST_STORAGE_PREFIX}${slug}`,
+      JSON.stringify(clean),
+    );
+  } catch {
+    // Ignore quota errors / private mode. The request itself can still succeed.
+  }
+}
+
 export function getRememberedOrderPassword(slug: string): string {
   try {
     return localStorage.getItem(`${ORDER_PASSWORD_STORAGE_PREFIX}${slug}`) ?? "";
@@ -16,6 +55,14 @@ export function rememberOrderPassword(slug: string, password: string): void {
     localStorage.setItem(`${ORDER_PASSWORD_STORAGE_PREFIX}${slug}`, trimmed);
   } catch {
     // Ignore quota errors / private mode. The order itself still succeeded.
+  }
+}
+
+export function forgetRememberedOrderPassword(slug: string): void {
+  try {
+    localStorage.removeItem(`${ORDER_PASSWORD_STORAGE_PREFIX}${slug}`);
+  } catch {
+    // Ignore storage failures. In-memory state is cleared by the caller.
   }
 }
 

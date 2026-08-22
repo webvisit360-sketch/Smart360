@@ -60,6 +60,8 @@ export function AdminTenantMessages({ tenantId }: { tenantId: string }) {
   }
 
   const activeThread = threads?.find((t) => t.threadRef === selectedThread) || null;
+  const threadTitle = (thread: NonNullable<typeof activeThread>) =>
+    thread.guestName?.trim() || `Enota ${thread.guestUnit}`;
 
   return (
     <div className="space-y-6">
@@ -94,12 +96,10 @@ export function AdminTenantMessages({ tenantId }: { tenantId: string }) {
                     data-testid={`admin-message-thread-${t.threadRef}`}
                   >
                     <div className="flex w-full justify-between items-center mb-1">
-                      <span className="font-semibold">{t.guestName || "Gost"}</span>
+                      <span className="font-semibold">{threadTitle(t)}</span>
                       {!t.isOpen && <Badge variant="outline">Zaprto</Badge>}
                     </div>
-                    {t.guestUnit && (
-                      <span className="text-xs text-muted-foreground mb-2">Soba/parcela: {t.guestUnit}</span>
-                    )}
+                    <span className="text-xs text-muted-foreground mb-2">Soba/parcela: {t.guestUnit}</span>
                     <span className="text-sm truncate w-full text-muted-foreground">
                       {t.messages[t.messages.length - 1]?.body}
                     </span>
@@ -113,12 +113,10 @@ export function AdminTenantMessages({ tenantId }: { tenantId: string }) {
                   <>
                     <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
                       <div>
-                        <div className="font-semibold text-lg">{activeThread.guestName || "Gost"}</div>
-                        {activeThread.guestUnit && (
-                          <div className="text-sm text-muted-foreground">
-                            Soba/parcela: {activeThread.guestUnit}
-                          </div>
-                        )}
+                        <div className="font-semibold text-lg">{threadTitle(activeThread)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Soba/parcela: {activeThread.guestUnit}
+                        </div>
                       </div>
                       {!activeThread.isOpen && <Badge variant="outline">Zaprto</Badge>}
                     </div>

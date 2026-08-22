@@ -34,6 +34,7 @@ export * from './getPublicTenantParams';
 export * from './getStorageCleanupPreviewParams';
 export * from './getStorageCleanupPreviewScope';
 export * from './guestMessageInput';
+export * from './guestMessageInputLang';
 export * from './guestThreadView';
 export * from './healthStatus';
 export * from './hostReplyInput';

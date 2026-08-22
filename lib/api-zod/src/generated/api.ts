@@ -2002,7 +2002,7 @@ export const GetGuestMessagesResponse = zod.object({
 
 
 /**
- * @summary Send a message as a guest. Creates the thread on first message (one durable thread per tenant + device). Rate-limited 5/min per IP and 5/min per device.
+ * @summary Send a message as a signed-in guest. A nonblank name and unit are always required; the tenant password is also required when configured. Creates the thread on first message (one durable thread per tenant + device). All attempts, including failed credential checks, count toward the 5/min per-IP and 5/min per-device limits.
 
  */
 export const SendGuestMessageParams = zod.object({
@@ -2024,13 +2024,17 @@ export const sendGuestMessageBodyGuestNameMax = 200;
 
 export const sendGuestMessageBodyGuestUnitMax = 100;
 
+export const sendGuestMessageBodyPasswordMax = 200;
+
 
 
 export const SendGuestMessageBody = zod.object({
   "body": zod.string().min(1).max(sendGuestMessageBodyBodyMax).describe('Plain-text message body (max 2000 chars)'),
-  "guestName": zod.string().max(sendGuestMessageBodyGuestNameMax).optional().describe('Optional guest display name for host context; never emailed or logged'),
-  "guestUnit": zod.string().max(sendGuestMessageBodyGuestUnitMax).optional().describe('Optional guest unit\/room for host context; never emailed or logged')
-}).describe('Guest-sent message body and optional context fields')
+  "guestName": zod.string().min(1).max(sendGuestMessageBodyGuestNameMax).describe('Required signed-in guest name for host context; trimmed server-side and never emailed or logged'),
+  "guestUnit": zod.string().min(1).max(sendGuestMessageBodyGuestUnitMax).describe('Required guest unit\/room for host context; trimmed server-side and never emailed or logged'),
+  "password": zod.string().max(sendGuestMessageBodyPasswordMax).optional().describe('Required only when the tenant has configured a guest\/order password; compared after trimming and remains case-sensitive'),
+  "lang": zod.enum(['sl', 'en', 'de', 'it']).optional().describe('UI language used for localized credential errors; defaults to sl')
+}).describe('Guest-sent message body with required signed-in identity and optional tenant credential')
 
 export const SendGuestMessageResponse = zod.object({
   "threadRef": zod.string(),
@@ -2056,8 +2060,8 @@ export const ListTenantThreadsParams = zod.object({
 export const ListTenantThreadsResponseItem = zod.object({
   "threadRef": zod.string(),
   "tenantId": zod.string(),
-  "guestName": zod.string().nullish(),
-  "guestUnit": zod.string().nullish(),
+  "guestName": zod.string(),
+  "guestUnit": zod.string(),
   "isOpen": zod.boolean(),
   "messages": zod.array(zod.object({
   "id": zod.string(),
@@ -2091,8 +2095,8 @@ export const PostHostReplyBody = zod.object({
 export const PostHostReplyResponse = zod.object({
   "threadRef": zod.string(),
   "tenantId": zod.string(),
-  "guestName": zod.string().nullish(),
-  "guestUnit": zod.string().nullish(),
+  "guestName": zod.string(),
+  "guestUnit": zod.string(),
   "isOpen": zod.boolean(),
   "messages": zod.array(zod.object({
   "id": zod.string(),

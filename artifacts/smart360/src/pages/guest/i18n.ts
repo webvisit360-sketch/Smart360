@@ -118,6 +118,24 @@ export const LIVING_GUIDE_UI = {
     de: "Sie haben zu viele Nachrichten auf einmal gesendet. Warten Sie eine Minute und versuchen Sie es erneut.",
     it: "Hai inviato troppi messaggi insieme. Attendi un minuto e riprova.",
   },
+  "UI.lg.msg.accessRequired": {
+    sl: "Za pošiljanje sporočil vpišite ime ter parcelo, sobo ali apartma. Če je nastanitev zaščitena, vpišite tudi geslo.",
+    en: "To send messages, enter your name and pitch, room or apartment. If the property is protected, also enter the password.",
+    de: "Geben Sie zum Senden von Nachrichten Ihren Namen und Ihren Stellplatz, Ihr Zimmer oder Apartment ein. Wenn die Unterkunft geschützt ist, geben Sie auch das Passwort ein.",
+    it: "Per inviare messaggi, inserisci il nome e la piazzola, la camera o l'appartamento. Se la struttura è protetta, inserisci anche la password.",
+  },
+  "UI.lg.msg.invalidPassword": {
+    sl: "Napačno geslo. Prijavite se znova.",
+    en: "Wrong password. Sign in again.",
+    de: "Falsches Passwort. Melden Sie sich erneut an.",
+    it: "Password errata. Accedi di nuovo.",
+  },
+  "UI.lg.msg.signIn": {
+    sl: "Prijava za sporočila",
+    en: "Sign in for messages",
+    de: "Für Nachrichten anmelden",
+    it: "Accedi per i messaggi",
+  },
   "UI.lg.nav.messagesUnavailable": {
     sl: "na voljo v naslednjem koraku",
     en: "available in the next step",
@@ -203,10 +221,10 @@ export const LIVING_GUIDE_UI = {
     it: "Benvenuti",
   },
   "UI.lg.welcome.description": {
-    sl: "Vpišite številko parcele, sobe ali apartmaja — vsako naročilo in najem bo samodejno označen z njo. Ime je neobvezno.",
-    en: "Enter your pitch, room or apartment number — every order and rental will automatically be tagged with it. Your name is optional.",
-    de: "Geben Sie die Nummer Ihres Stellplatzes, Zimmers oder Apartments ein — jede Bestellung und Ausleihe wird automatisch damit gekennzeichnet. Der Name ist optional.",
-    it: "Inserite il numero della piazzola, della camera o dell’appartamento — ogni ordine e noleggio verrà contrassegnato automaticamente con questo dato. Il nome è facoltativo.",
+    sl: "Vpišite ime ter številko parcele, sobe ali apartmaja — vsako sporočilo, naročilo in najem bo samodejno označen s tema podatkoma.",
+    en: "Enter your name and pitch, room or apartment number — every message, order and rental will automatically be tagged with these details.",
+    de: "Geben Sie Ihren Namen und die Nummer Ihres Stellplatzes, Zimmers oder Apartments ein — jede Nachricht, Bestellung und Ausleihe wird automatisch damit gekennzeichnet.",
+    it: "Inserite il nome e il numero della piazzola, della camera o dell’appartamento — ogni messaggio, ordine e noleggio verrà contrassegnato automaticamente con questi dati.",
   },
   "UI.lg.welcome.unit": {
     sl: "Parcela / soba / apartma · obvezno",
@@ -221,10 +239,10 @@ export const LIVING_GUIDE_UI = {
     it: "ad es. B-14",
   },
   "UI.lg.welcome.name": {
-    sl: "Ime in priimek · neobvezno",
-    en: "Full name · optional",
-    de: "Vor- und Nachname · optional",
-    it: "Nome e cognome · facoltativo",
+    sl: "Ime in priimek · obvezno",
+    en: "Full name · required",
+    de: "Vor- und Nachname · erforderlich",
+    it: "Nome e cognome · obbligatorio",
   },
   "UI.lg.welcome.namePlaceholder": {
     sl: "npr. Ana Novak",

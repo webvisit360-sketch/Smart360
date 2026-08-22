@@ -29,9 +29,14 @@ import {
   MESSAGE_BODY_MAX,
   MESSAGE_GUEST_NAME_MAX,
   MESSAGE_GUEST_UNIT_MAX,
+  MESSAGE_PASSWORD_MAX,
   msgIpRateLimiter,
   msgDeviceRateLimiter,
+  requiredMessageNameMessage,
+  requiredMessageUnitMessage,
+  wrongMessagePasswordMessage,
 } from "../lib/messageHelpers";
+import { SendGuestMessageBody } from "@workspace/api-zod";
 import {
   makeMessageDeleteAfter,
   MESSAGE_RETENTION_DAYS,
@@ -51,7 +56,40 @@ describe("messaging constants", () => {
   test("MESSAGE_BODY_MAX = 2000", () => assert.equal(MESSAGE_BODY_MAX, 2000));
   test("MESSAGE_GUEST_NAME_MAX = 200", () => assert.equal(MESSAGE_GUEST_NAME_MAX, 200));
   test("MESSAGE_GUEST_UNIT_MAX = 100", () => assert.equal(MESSAGE_GUEST_UNIT_MAX, 100));
+  test("MESSAGE_PASSWORD_MAX = 200", () => assert.equal(MESSAGE_PASSWORD_MAX, 200));
   test("MESSAGE_RETENTION_DAYS = 90", () => assert.equal(MESSAGE_RETENTION_DAYS, 90));
+});
+
+describe("message access contract", () => {
+  test("guest name and unit are required by the generated request schema", () => {
+    const parsed = SendGuestMessageBody.safeParse({ body: "Hello" });
+    assert.equal(parsed.success, false);
+  });
+
+  test("accepts required signed-in identity plus optional password and language", () => {
+    const parsed = SendGuestMessageBody.safeParse({
+      body: "Hello",
+      guestName: "Ana Novak",
+      guestUnit: "B-14",
+      password: "Secret",
+      lang: "de",
+    });
+    assert.equal(parsed.success, true);
+  });
+
+  test("required identity errors exactly reuse order localization", () => {
+    assert.equal(requiredMessageNameMessage("sl"), "To polje je obvezno.");
+    assert.equal(requiredMessageUnitMessage("en"), "This field is required.");
+    assert.equal(requiredMessageNameMessage("de"), "Dieses Feld ist erforderlich.");
+    assert.equal(requiredMessageUnitMessage("it"), "Questo campo è obbligatorio.");
+  });
+
+  test("wrong-password errors are localized in all supported languages", () => {
+    assert.equal(wrongMessagePasswordMessage("sl"), "Napačno geslo");
+    assert.equal(wrongMessagePasswordMessage("en"), "Wrong password");
+    assert.equal(wrongMessagePasswordMessage("de"), "Falsches Passwort");
+    assert.equal(wrongMessagePasswordMessage("it"), "Password errata");
+  });
 });
 
 // ─── Device/tenant isolation ──────────────────────────────────────────────────

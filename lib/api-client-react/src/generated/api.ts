@@ -5236,7 +5236,7 @@ export const getSendGuestMessageUrl = (slug: string,) => {
 }
 
 /**
- * @summary Send a message as a guest. Creates the thread on first message (one durable thread per tenant + device). Rate-limited 5/min per IP and 5/min per device.
+ * @summary Send a message as a signed-in guest. A nonblank name and unit are always required; the tenant password is also required when configured. Creates the thread on first message (one durable thread per tenant + device). All attempts, including failed credential checks, count toward the 5/min per-IP and 5/min per-device limits.
 
  */
 export const sendGuestMessage = async (slug: string,
@@ -5287,7 +5287,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendGuestMessageMutationError = ErrorType<void>
 
     /**
- * @summary Send a message as a guest. Creates the thread on first message (one durable thread per tenant + device). Rate-limited 5/min per IP and 5/min per device.
+ * @summary Send a message as a signed-in guest. A nonblank name and unit are always required; the tenant password is also required when configured. Creates the thread on first message (one durable thread per tenant + device). All attempts, including failed credential checks, count toward the 5/min per-IP and 5/min per-device limits.
 
  */
 export const useSendGuestMessage = <TError = ErrorType<void>,

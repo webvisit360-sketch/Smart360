@@ -7,11 +7,28 @@
  *   independent from order rate limits.
  * - PII is never logged.
  */
-import { ProcessLocalRateLimiter } from "./orderHelpers";
+import {
+  ProcessLocalRateLimiter,
+  requiredOrderFieldMessage,
+  wrongOrderPasswordMessage,
+} from "./orderHelpers";
 
 export const MESSAGE_BODY_MAX = 2000;
 export const MESSAGE_GUEST_NAME_MAX = 200;
 export const MESSAGE_GUEST_UNIT_MAX = 100;
+export const MESSAGE_PASSWORD_MAX = 200;
+
+export function requiredMessageNameMessage(lang: string | undefined): string {
+  return requiredOrderFieldMessage(lang);
+}
+
+export function requiredMessageUnitMessage(lang: string | undefined): string {
+  return requiredOrderFieldMessage(lang);
+}
+
+export function wrongMessagePasswordMessage(lang: string | undefined): string {
+  return wrongOrderPasswordMessage(lang);
+}
 
 // ─── Per-feature rate limiters ────────────────────────────────────────────────
 

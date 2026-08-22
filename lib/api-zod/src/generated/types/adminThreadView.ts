@@ -13,10 +13,8 @@ import type { MessageEntry } from './messageEntry';
 export interface AdminThreadView {
   threadRef: string;
   tenantId: string;
-  /** @nullable */
-  guestName?: string | null;
-  /** @nullable */
-  guestUnit?: string | null;
+  guestName: string;
+  guestUnit: string;
   isOpen: boolean;
   messages: MessageEntry[];
   createdAt: string;

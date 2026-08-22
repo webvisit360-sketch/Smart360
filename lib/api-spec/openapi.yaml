@@ -1401,9 +1401,11 @@ paths:
       operationId: sendGuestMessage
       tags: [messages]
       summary: >
-        Send a message as a guest. Creates the thread on first message (one
-        durable thread per tenant + device). Rate-limited 5/min per IP and
-        5/min per device.
+        Send a message as a signed-in guest. A nonblank name and unit are always
+        required; the tenant password is also required when configured. Creates
+        the thread on first message (one durable thread per tenant + device). All
+        attempts, including failed credential checks, count toward the 5/min
+        per-IP and 5/min per-device limits.
       parameters:
         - name: slug
           in: path
@@ -1429,6 +1431,8 @@ paths:
                 $ref: "#/components/schemas/GuestThreadView"
         "400":
           description: Validation error (body too long, blank, etc.)
+        "403":
+          description: Invalid guest password
         "404":
           description: Tenant not found or not published
         "409":
@@ -1836,8 +1840,8 @@ components:
       properties:
         threadRef: { type: string }
         tenantId: { type: string }
-        guestName: { type: ["string", "null"] }
-        guestUnit: { type: ["string", "null"] }
+        guestName: { type: string }
+        guestUnit: { type: string }
         isOpen: { type: boolean }
         messages:
           type: array
@@ -1846,10 +1850,10 @@ components:
         createdAt: { type: string }
         updatedAt: { type: string }
         deleteAfter: { type: string }
-      required: [threadRef, tenantId, isOpen, messages, createdAt, updatedAt, deleteAfter]
+      required: [threadRef, tenantId, guestName, guestUnit, isOpen, messages, createdAt, updatedAt, deleteAfter]
     GuestMessageInput:
       type: object
-      description: Guest-sent message body and optional context fields
+      description: Guest-sent message body with required signed-in identity and optional tenant credential
       properties:
         body:
           type: string
@@ -1858,13 +1862,24 @@ components:
           description: Plain-text message body (max 2000 chars)
         guestName:
           type: string
+          minLength: 1
           maxLength: 200
-          description: Optional guest display name for host context; never emailed or logged
+          description: Required signed-in guest name for host context; trimmed server-side and never emailed or logged
         guestUnit:
           type: string
+          minLength: 1
           maxLength: 100
-          description: Optional guest unit/room for host context; never emailed or logged
-      required: [body]
+          description: Required guest unit/room for host context; trimmed server-side and never emailed or logged
+        password:
+          type: string
+          maxLength: 200
+          writeOnly: true
+          description: Required only when the tenant has configured a guest/order password; compared after trimming and remains case-sensitive
+        lang:
+          type: string
+          enum: [sl, en, de, it]
+          description: UI language used for localized credential errors; defaults to sl
+      required: [body, guestName, guestUnit]
     HostReplyInput:
       type: object
       description: Host reply message body

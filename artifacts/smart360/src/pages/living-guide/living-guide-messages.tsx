@@ -12,14 +12,26 @@ export function MessagesView({
   tenant,
   slug,
   guest,
+  canSend,
+  password,
+  lang,
   t,
   onBack,
+  onCredentialsRequired,
+  onMessageAccepted,
+  onCredentialsRejected,
 }: {
   tenant: any;
   slug: string;
   guest: { name: string; unit: string } | null;
+  canSend: boolean;
+  password?: string;
+  lang: string;
   t: UiTranslator;
   onBack: () => void;
+  onCredentialsRequired: () => void;
+  onMessageAccepted: () => void;
+  onCredentialsRejected: (message: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
@@ -37,7 +49,17 @@ export function MessagesView({
     mutation: {
       onSuccess: () => {
         setBody("");
+        onMessageAccepted();
         queryClient.invalidateQueries({ queryKey: getGetGuestMessagesQueryKey(slug) });
+      },
+      onError: (error) => {
+        const status =
+          typeof error === "object" && error !== null && "status" in error
+            ? Number((error as { status?: unknown }).status)
+            : null;
+        if (status === 403) {
+          onCredentialsRejected(t("UI.lg.msg.invalidPassword"));
+        }
       },
     },
     request: { headers: { "x-device-token": deviceToken } },
@@ -58,14 +80,20 @@ export function MessagesView({
   }, [thread?.messages]);
 
   const handleSend = () => {
+    if (!canSend || !guest) {
+      onCredentialsRequired();
+      return;
+    }
     const text = body.trim();
     if (!text || sendMutation.isPending) return;
     sendMutation.mutate({
       slug,
       data: {
         body: text,
-        guestName: guest?.name || undefined,
-        guestUnit: guest?.unit || undefined,
+        guestName: guest.name,
+        guestUnit: guest.unit,
+        password,
+        lang: lang === "en" || lang === "de" || lang === "it" ? lang : "sl",
       },
     });
   };
@@ -135,15 +163,34 @@ export function MessagesView({
 
       <div className="lg2-msg-compose-area">
         {sendMutation.isError && (
-          <p className="lg2-msg-send-error" role="alert" data-testid="messages-send-error">
-            {sendErrorStatus === 429
-              ? t("UI.lg.msg.rateLimit")
-              : t("UI.lg.msg.sendError")}
-          </p>
+          <div className="lg2-msg-send-error" role="alert" data-testid="messages-send-error">
+            <p>
+              {sendErrorStatus === 429
+                ? t("UI.lg.msg.rateLimit")
+                : sendErrorStatus === 403
+                  ? t("UI.lg.msg.invalidPassword")
+                  : t("UI.lg.msg.sendError")}
+            </p>
+            {sendErrorStatus === 403 && (
+              <button
+                type="button"
+                className="lg2-later"
+                onClick={() => {
+                  sendMutation.reset();
+                  onCredentialsRejected(t("UI.lg.msg.invalidPassword"));
+                }}
+              >
+                {t("UI.lg.msg.signIn")}
+              </button>
+            )}
+          </div>
         )}
         <div className="lg2-msgbar" data-testid="messages-composer">
           <input
             value={body}
+            onFocus={() => {
+              if (!canSend) onCredentialsRequired();
+            }}
             onChange={(e) => {
               setBody(e.target.value);
               if (sendMutation.isError) sendMutation.reset();
@@ -164,7 +211,11 @@ export function MessagesView({
           <button
             type="button"
             onClick={handleSend}
-            disabled={!body.trim() || isClosed || sendMutation.isPending}
+            disabled={
+              isClosed ||
+              sendMutation.isPending ||
+              (canSend && !body.trim())
+            }
             aria-label={t("UI.lg.msg.send")}
             data-testid="messages-send"
           >

@@ -60,6 +60,7 @@ import {
   sha256hex,
   DEVICE_TOKEN_MIN,
   DEVICE_TOKEN_MAX,
+  matchesOrderPassword,
 } from "../lib/orderHelpers";
 import {
   msgIpRateLimiter,
@@ -67,6 +68,9 @@ import {
   MESSAGE_BODY_MAX,
   MESSAGE_GUEST_NAME_MAX,
   MESSAGE_GUEST_UNIT_MAX,
+  requiredMessageNameMessage,
+  requiredMessageUnitMessage,
+  wrongMessagePasswordMessage,
 } from "../lib/messageHelpers";
 import { makeMessageDeleteAfter } from "../lib/messageRetention";
 import { sendMessageNotification, messageEmailFrom } from "../lib/messageEmail";
@@ -114,8 +118,8 @@ function formatAdminThreadView(
   return {
     threadRef: thread.threadRef,
     tenantId: thread.tenantId,
-    guestName: thread.guestName ?? null,
-    guestUnit: thread.guestUnit ?? null,
+    guestName: thread.guestName,
+    guestUnit: thread.guestUnit,
     isOpen: thread.isOpen,
     messages: formatMessages(messages),
     createdAt: thread.createdAt.toISOString(),
@@ -230,7 +234,43 @@ router.post(
       return;
     }
 
-    // Body validation
+    // Signed-in identity checks happen before the generated schema so missing
+    // and whitespace-only values receive the same localized required-field
+    // messages as orders. Both rate limiters intentionally run first.
+    const submittedLang =
+      req.body &&
+      typeof req.body === "object" &&
+      typeof req.body.lang === "string"
+        ? req.body.lang
+        : undefined;
+    const submittedGuestName =
+      req.body &&
+      typeof req.body === "object" &&
+      typeof req.body.guestName === "string"
+        ? req.body.guestName.trim()
+        : "";
+    const submittedGuestUnit =
+      req.body &&
+      typeof req.body === "object" &&
+      typeof req.body.guestUnit === "string"
+        ? req.body.guestUnit.trim()
+        : "";
+    if (!submittedGuestName) {
+      res.status(400).json({
+        code: "MESSAGE_NAME_REQUIRED",
+        error: requiredMessageNameMessage(submittedLang),
+      });
+      return;
+    }
+    if (!submittedGuestUnit) {
+      res.status(400).json({
+        code: "MESSAGE_UNIT_REQUIRED",
+        error: requiredMessageUnitMessage(submittedLang),
+      });
+      return;
+    }
+
+    // Remaining body validation
     const parsed = SendGuestMessageBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.message });
@@ -247,24 +287,30 @@ router.post(
       return;
     }
 
-    // guestName/guestUnit: optional context for host — trim, enforce max
-    const rawGuestName = parsed.data.guestName?.trim() ?? null;
-    const rawGuestUnit = parsed.data.guestUnit?.trim() ?? null;
-    if (rawGuestName && rawGuestName.length > MESSAGE_GUEST_NAME_MAX) {
+    // Identity and credential checks deliberately happen after both rate
+    // limiters so failed sign-in attempts count toward the same 5/min budget.
+    const guestName = parsed.data.guestName.trim();
+    const guestUnit = parsed.data.guestUnit.trim();
+    if (guestName.length > MESSAGE_GUEST_NAME_MAX) {
       res.status(400).json({ error: `guestName max ${MESSAGE_GUEST_NAME_MAX}` });
       return;
     }
-    if (rawGuestUnit && rawGuestUnit.length > MESSAGE_GUEST_UNIT_MAX) {
+    if (guestUnit.length > MESSAGE_GUEST_UNIT_MAX) {
       res.status(400).json({ error: `guestUnit max ${MESSAGE_GUEST_UNIT_MAX}` });
       return;
     }
-    const guestName = rawGuestName || null;
-    const guestUnit = rawGuestUnit || null;
 
     // Resolve published tenant — same guard as GET
     const tenant = await resolvePublishedTenant(slug);
     if (!tenant) {
       res.status(404).json({ error: "Tenant not found or not published" });
+      return;
+    }
+    if (!matchesOrderPassword(tenant.orderPassword, parsed.data.password)) {
+      res.status(403).json({
+        code: "INVALID_GUEST_PASSWORD",
+        error: wrongMessagePasswordMessage(parsed.data.lang),
+      });
       return;
     }
 
@@ -365,12 +411,14 @@ router.post(
           throw new Error("thread_closed");
         }
 
-        // Step 6: extend deleteAfter and update optional context fields.
+        // Step 6: extend deleteAfter and refresh the required signed-in name and
+        // unit. This also repairs a legacy device thread on its next
+        // authenticated guest send.
         const updateFields: Record<string, unknown> = { deleteAfter };
-        if (guestName !== null && guestName !== currentThread.guestName) {
+        if (guestName !== currentThread.guestName) {
           updateFields["guestName"] = guestName;
         }
-        if (guestUnit !== null && guestUnit !== currentThread.guestUnit) {
+        if (guestUnit !== currentThread.guestUnit) {
           updateFields["guestUnit"] = guestUnit;
         }
         await tx
@@ -484,9 +532,9 @@ router.get(
       return;
     }
 
-    // Filter by deleteAfter > now so expired threads do not surface between
-    // daily sweeps. The daily purge is the authoritative cleanup; this is a
-    // lazy guard that keeps the list clean at read time.
+    // Filter by deleteAfter and by the complete signed-in identity invariant.
+    // Legacy incomplete rows remain retained for their normal lifetime but can
+    // never surface as an identity-less thread in the portal.
     const threads = await db
       .select()
       .from(messageThreadsTable)
@@ -494,6 +542,8 @@ router.get(
         and(
           eq(messageThreadsTable.tenantId, tenantId),
           gt(messageThreadsTable.deleteAfter, new Date()),
+          sql`length(btrim(${messageThreadsTable.guestName})) > 0`,
+          sql`length(btrim(${messageThreadsTable.guestUnit})) > 0`,
         ),
       )
       .orderBy(desc(messageThreadsTable.updatedAt));
@@ -575,6 +625,8 @@ router.post(
             and(
               eq(messageThreadsTable.threadRef, threadRef),
               eq(messageThreadsTable.tenantId, tenantId),
+              sql`length(btrim(${messageThreadsTable.guestName})) > 0`,
+              sql`length(btrim(${messageThreadsTable.guestUnit})) > 0`,
             ),
           );
 

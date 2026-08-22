@@ -5,9 +5,10 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { GuestMessageInputLang } from './guestMessageInputLang';
 
 /**
- * Guest-sent message body and optional context fields
+ * Guest-sent message body with required signed-in identity and optional tenant credential
  */
 export interface GuestMessageInput {
   /**
@@ -17,13 +18,22 @@ export interface GuestMessageInput {
      */
   body: string;
   /**
-     * Optional guest display name for host context; never emailed or logged
+     * Required signed-in guest name for host context; trimmed server-side and never emailed or logged
+     * @minLength 1
      * @maxLength 200
      */
-  guestName?: string;
+  guestName: string;
   /**
-     * Optional guest unit/room for host context; never emailed or logged
+     * Required guest unit/room for host context; trimmed server-side and never emailed or logged
+     * @minLength 1
      * @maxLength 100
      */
-  guestUnit?: string;
+  guestUnit: string;
+  /**
+     * Required only when the tenant has configured a guest/order password; compared after trimming and remains case-sensitive
+     * @maxLength 200
+     */
+  password?: string;
+  /** UI language used for localized credential errors; defaults to sl */
+  lang?: GuestMessageInputLang;
 }
