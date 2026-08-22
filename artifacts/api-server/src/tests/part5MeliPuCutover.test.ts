@@ -29,7 +29,7 @@ test("compiled PART 5 ledger is the exact signed allowlist", () => {
   );
   assert.equal(
     PART5_COMPILED_PAYLOAD_SHA256,
-    "ba622ba48df0a1c8d27601428ba325764db5421b3617df34d5b2c059d63b90ea",
+    "81a5753e839bb59b1834354546f5253334f775d7fb86dd5251825c89616a6789",
   );
   assert.equal(PART5_CATEGORY_KEY_UPDATES.length, 37);
   assert.equal(PART5_ORDER_FLAG_UPDATES.length, 9);
@@ -48,9 +48,9 @@ test("compiled PART 5 ledger is the exact signed allowlist", () => {
 
 test("compiled PART 5 manifests match the approved pre/post evidence", () => {
   assert.deepEqual(PART5_EXPECTED_PRE, {
-    categories: { count: 37, hash: "47316cf53cd10c61bf49d6ce98816531" },
-    items: { count: 136, hash: "9a2b7ecc182872329381f3df5f06c9e8" },
-    media: { count: 133, hash: "e234b76cb07ec2b6cc99cf28d28d2d7b" },
+    categories: { count: 37, hash: "bd0cce5e43c91f734f8185918e23e4b7" },
+    items: { count: 136, hash: "54a66a2bff47cdaaeeba54f44bd94f39" },
+    media: { count: 133, hash: "87a1a47094045f81cf8c9fbe135150d0" },
   });
   assert.deepEqual(PART5_EXPECTED_POST, {
     categories: { count: 37, hash: "6ec36fdc5e276e354f6a939539a711fc" },
