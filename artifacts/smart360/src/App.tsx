@@ -57,10 +57,14 @@ function GuestHost() {
   const [livingGuideLang, setLivingGuideLang] = useState(rawLang);
 
   useEffect(() => {
-    if (livingGuidePreview) setLivingGuideLang(rawLang);
-  }, [livingGuidePreview, rawLang, slug]);
+    setLivingGuideLang(rawLang);
+  }, [rawLang, slug]);
 
-  const queryLang = livingGuidePreview ? livingGuideLang : rawLang;
+  // Keep one query language state for both the development preview and the
+  // published Living Guide. The in-shell selector updates history via
+  // replaceState, so its state — not only wouter's search snapshot — must drive
+  // the translated tenant-content request.
+  const queryLang = livingGuideLang;
 
   // React Query caches this — GuestLayout already fetched it so this is a synchronous cache hit.
   const { data: tenant } = useGetPublicTenant(
@@ -95,6 +99,11 @@ function GuestHost() {
     );
   }, [slug]);
 
+  // Living Guide is active when: (a) the dev ?ui=living-guide preview flag is
+  // set, or (b) the server reports guestUiMode='living-guide' for this tenant.
+  const isLivingGuideMode =
+    livingGuidePreview || (tenant != null && tenant.guestUiMode === 'living-guide');
+
   // EDINI vir resnice za barvo ozadja (pike-brisanje-ozadje.md, točka 4):
   // shranjena barva namestitve, uporabljena TU in nikjer drugje. data-dark se
   // izpelje iz nje v istem trenutku (usePageBg). Nobena podkomponenta ne sme
@@ -111,7 +120,10 @@ function GuestHost() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant, lang, slug]);
 
-  if (livingGuidePreview && tenant) {
+  // Living Guide: server-returned guestUiMode takes precedence for published
+  // tenants. In development the ?ui=living-guide preview override still works
+  // so the operator can preview the mode before publishing it.
+  if (isLivingGuideMode && tenant != null) {
     return (
       <Suspense fallback={null}>
         <LivingGuideGuestShell

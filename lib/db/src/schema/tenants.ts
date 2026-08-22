@@ -6,7 +6,9 @@ import {
   doublePrecision,
   timestamp,
   uuid,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -61,6 +63,10 @@ export const tenantsTable = pgTable("tenants", {
   // luminance client-side — never stored separately.
   bgColor: text("bg_color"),
   theme: text("theme").notNull().default("mediterran"),
+  // Guest-facing UI mode. "legacy" = the existing mediterran/swipe themes;
+  // "living-guide" = the new Living Guide shell. NOT NULL; default legacy so
+  // existing tenants are unaffected. DB CHECK guards the allowed values.
+  guestUiMode: text("guest_ui_mode").notNull().default("legacy"),
   coverTitle: text("cover_title"),
   coverSubtitle: text("cover_subtitle"),
   // Cover editor overrides: NULL = inherit the active theme's default (see ui/urejevalnik-naslovnice.md)
@@ -117,7 +123,10 @@ export const tenantsTable = pgTable("tenants", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-});
+}, (t) => [
+  // DB-level guard: only the two approved UI modes are stored.
+  check("tenants_guest_ui_mode_enum", sql`${t.guestUiMode} IN ('legacy','living-guide')`),
+]);
 
 /**
  * Renewal history — proof of WHEN a renewal was recorded. Three columns and

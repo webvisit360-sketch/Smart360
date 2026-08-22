@@ -311,6 +311,8 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
     return "bgColor must be a hex color like #FFFFFF";
   if (data["wifiEnc"] !== undefined && data["wifiEnc"] !== null && !["WPA", "WEP", "nopass"].includes(String(data["wifiEnc"])))
     return "wifiEnc must be WPA, WEP or nopass";
+  if (data["guestUiMode"] !== undefined && !["legacy", "living-guide"].includes(String(data["guestUiMode"])))
+    return "guestUiMode must be 'legacy' or 'living-guide'";
   return null;
 }
 
@@ -567,6 +569,9 @@ export async function copyTenant(
       // Security settings belong to the new establishment and must never be
       // inherited from a template or duplicated tenant.
       orderPassword: null,
+      // Living Guide is an explicit per-establishment launch decision. New
+      // copies always start on the safe legacy UI even when the source is live.
+      guestUiMode: "legacy",
       renewsAt: plusOneYear(new Date()),
     })
     .returning();

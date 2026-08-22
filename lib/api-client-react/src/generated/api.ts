@@ -53,6 +53,9 @@ import type {
   OrderInput,
   OrderPublic,
   OrderStatusUpdate,
+  Part5MeliPuCutoverApplyInput,
+  Part5MeliPuCutoverPreflight,
+  Part5MeliPuCutoverResult,
   PasskeyList,
   RecoveryBody,
   RecoveryCodeStatus,
@@ -1511,6 +1514,154 @@ export function useGetAdminOverview<TData = Awaited<ReturnType<typeof getAdminOv
 
 
 
+
+export const getGetPart5MeliPuCutoverPreflightUrl = () => {
+
+
+
+
+  return `/api/admin/cutovers/part-5-meli-pu`
+}
+
+/**
+ * @summary Read-only PART 5 preflight for the approved Meli Pu ledger
+ */
+export const getPart5MeliPuCutoverPreflight = async ( options?: Parameters<typeof customFetch>[1]): Promise<Part5MeliPuCutoverPreflight> => {
+
+  return customFetch<Part5MeliPuCutoverPreflight>(getGetPart5MeliPuCutoverPreflightUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPart5MeliPuCutoverPreflightQueryKey = () => {
+    return [
+    `/api/admin/cutovers/part-5-meli-pu`
+    ] as const;
+    }
+
+
+export const getGetPart5MeliPuCutoverPreflightQueryOptions = <TData = Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPart5MeliPuCutoverPreflightQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>> = ({ signal }) => getPart5MeliPuCutoverPreflight({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPart5MeliPuCutoverPreflightQueryResult = NonNullable<Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>>
+export type GetPart5MeliPuCutoverPreflightQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read-only PART 5 preflight for the approved Meli Pu ledger
+ */
+
+export function useGetPart5MeliPuCutoverPreflight<TData = Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPart5MeliPuCutoverPreflight>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPart5MeliPuCutoverPreflightQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApplyPart5MeliPuCutoverUrl = () => {
+
+
+
+
+  return `/api/admin/cutovers/part-5-meli-pu`
+}
+
+/**
+ * @summary Apply the approved PART 5 Meli Pu ledger exactly once
+ */
+export const applyPart5MeliPuCutover = async (part5MeliPuCutoverApplyInput: Part5MeliPuCutoverApplyInput, options?: Parameters<typeof customFetch>[1]): Promise<Part5MeliPuCutoverResult> => {
+
+  return customFetch<Part5MeliPuCutoverResult>(getApplyPart5MeliPuCutoverUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(part5MeliPuCutoverApplyInput)
+  }
+);}
+
+
+
+
+
+export const getApplyPart5MeliPuCutoverMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyPart5MeliPuCutover>>, TError,{data: BodyType<Part5MeliPuCutoverApplyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof applyPart5MeliPuCutover>>, TError,{data: BodyType<Part5MeliPuCutoverApplyInput>}, TContext> => {
+
+const mutationKey = ['applyPart5MeliPuCutover'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof applyPart5MeliPuCutover>>, {data: BodyType<Part5MeliPuCutoverApplyInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  applyPart5MeliPuCutover(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApplyPart5MeliPuCutoverMutationResult = NonNullable<Awaited<ReturnType<typeof applyPart5MeliPuCutover>>>
+    export type ApplyPart5MeliPuCutoverMutationBody = BodyType<Part5MeliPuCutoverApplyInput>
+    export type ApplyPart5MeliPuCutoverMutationError = ErrorType<void>
+
+    /**
+ * @summary Apply the approved PART 5 Meli Pu ledger exactly once
+ */
+export const useApplyPart5MeliPuCutover = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyPart5MeliPuCutover>>, TError,{data: BodyType<Part5MeliPuCutoverApplyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof applyPart5MeliPuCutover>>,
+        TError,
+        {data: BodyType<Part5MeliPuCutoverApplyInput>},
+        TContext
+      > => {
+      return useMutation(getApplyPart5MeliPuCutoverMutationOptions(options));
+    }
 
 export const getListTenantsUrl = () => {
 

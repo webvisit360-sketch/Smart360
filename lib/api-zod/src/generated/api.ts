@@ -60,6 +60,7 @@ export const GetPublicTenantResponse = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -348,6 +349,97 @@ export const GetAdminOverviewResponse = zod.object({
 })
 
 
+/**
+ * @summary Read-only PART 5 preflight for the approved Meli Pu ledger
+ */
+export const GetPart5MeliPuCutoverPreflightResponse = zod.object({
+  "tenantId": zod.string(),
+  "tenantName": zod.string(),
+  "slug": zod.enum(['meli-pu']),
+  "isPublished": zod.boolean(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']),
+  "recipientConfigured": zod.boolean(),
+  "orderPasswordConfigured": zod.boolean(),
+  "orderEmailEnabled": zod.boolean(),
+  "schema": zod.object({
+  "guestUiModeColumnReady": zod.boolean(),
+  "guestUiModeConstraintReady": zod.boolean(),
+  "cutoverMarkerReady": zod.boolean(),
+  "columnDefault": zod.string().nullable(),
+  "constraintDefinition": zod.string().nullable()
+}),
+  "ledgerSha256": zod.enum(['7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf']),
+  "manifests": zod.object({
+  "categories": zod.object({
+  "count": zod.number(),
+  "hash": zod.string().nullable()
+}),
+  "items": zod.object({
+  "count": zod.number(),
+  "hash": zod.string().nullable()
+}),
+  "media": zod.object({
+  "count": zod.number(),
+  "hash": zod.string().nullable()
+})
+}),
+  "phase": zod.enum(['pre', 'post', 'drift'])
+})
+
+
+/**
+ * @summary Apply the approved PART 5 Meli Pu ledger exactly once
+ */
+export const ApplyPart5MeliPuCutoverBody = zod.object({
+  "ledgerSha256": zod.enum(['7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf']),
+  "confirmTenantSlug": zod.enum(['meli-pu'])
+})
+
+export const ApplyPart5MeliPuCutoverResponse = zod.object({
+  "tenantId": zod.string(),
+  "tenantName": zod.string(),
+  "slug": zod.enum(['meli-pu']),
+  "isPublished": zod.boolean(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']),
+  "recipientConfigured": zod.boolean(),
+  "orderPasswordConfigured": zod.boolean(),
+  "orderEmailEnabled": zod.boolean(),
+  "schema": zod.object({
+  "guestUiModeColumnReady": zod.boolean(),
+  "guestUiModeConstraintReady": zod.boolean(),
+  "cutoverMarkerReady": zod.boolean(),
+  "columnDefault": zod.string().nullable(),
+  "constraintDefinition": zod.string().nullable()
+}),
+  "ledgerSha256": zod.enum(['7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf']),
+  "manifests": zod.object({
+  "categories": zod.object({
+  "count": zod.number(),
+  "hash": zod.string().nullable()
+}),
+  "items": zod.object({
+  "count": zod.number(),
+  "hash": zod.string().nullable()
+}),
+  "media": zod.object({
+  "count": zod.number(),
+  "hash": zod.string().nullable()
+})
+}),
+  "phase": zod.enum(['pre', 'post', 'drift'])
+}).and(zod.object({
+  "applied": zod.literal(true),
+  "mutations": zod.object({
+  "categoryKeys": zod.number(),
+  "orderFlags": zod.number(),
+  "mediaDimensionRows": zod.number(),
+  "mediaInserts": zod.number(),
+  "mediaRemovals": zod.number(),
+  "changelogEntries": zod.literal(1)
+})
+}))
+
+
 export const ListTenantsResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -374,6 +466,7 @@ export const ListTenantsResponseItem = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -441,6 +534,7 @@ export const CreateTenantResponse = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -513,6 +607,7 @@ export const GetTenantResponse = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -653,6 +748,7 @@ export const UpdateTenantBody = zod.object({
   "bgColor": zod.string().nullish(),
   "renewsAt": zod.string().nullish(),
   "theme": zod.string().optional(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).optional().describe('Guest-facing UI mode: \'legacy\' = existing themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -708,6 +804,7 @@ export const UpdateTenantResponse = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -788,6 +885,7 @@ export const DuplicateTenantResponse = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),
@@ -863,6 +961,7 @@ export const RenewTenantResponse = zod.object({
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
   "theme": zod.string(),
+  "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),

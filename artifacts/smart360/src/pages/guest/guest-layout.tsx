@@ -43,6 +43,8 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       },
     }
   );
+  const isLivingGuideMode =
+    livingGuidePreview || tenant?.guestUiMode === "living-guide";
 
   // Alias canonicalization: an old (renamed) slug resolves to the tenant, but
   // the address bar must always show the current slug — replace, keep the
@@ -96,7 +98,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {!livingGuidePreview && <IconSprite />}
+      {!isLivingGuideMode && <IconSprite />}
       {tenant ? (
         /* Namizni zaslon: en sam ovoj okoli VSEH plasti gostujoče aplikacije.
            Na telefonu .frame ne nosi nobenih slogov; na širokem zaslonu ga

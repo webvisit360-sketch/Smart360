@@ -154,6 +154,10 @@ export const changelogTable = pgTable("changelog", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id"),
   tenantName: text("tenant_name"),
+  // Optional durable idempotency marker for one-time operational cutovers.
+  // PostgreSQL unique constraints allow multiple NULLs, so ordinary changelog
+  // rows remain unaffected while a named operation can be recorded only once.
+  operationKey: text("operation_key").unique(),
   action: text("action").notNull(),
   entity: text("entity").notNull(),
   detail: text("detail"),

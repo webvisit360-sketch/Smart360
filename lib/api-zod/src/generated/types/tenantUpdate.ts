@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { TenantUpdateGuestUiMode } from './tenantUpdateGuestUiMode';
 
 export interface TenantUpdate {
   slug?: string;
@@ -57,6 +58,8 @@ export interface TenantUpdate {
   /** @nullable */
   renewsAt?: string | null;
   theme?: string;
+  /** Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell */
+  guestUiMode?: TenantUpdateGuestUiMode;
   /** @nullable */
   coverTitle?: string | null;
   /** @nullable */

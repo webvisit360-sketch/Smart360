@@ -135,6 +135,17 @@ export interface AuthEventList {
   events: AuthEvent[];
 }
 
+/**
+ * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
+ */
+export type TenantGuestUiMode = typeof TenantGuestUiMode[keyof typeof TenantGuestUiMode];
+
+
+export const TenantGuestUiMode = {
+  legacy: 'legacy',
+  'living-guide': 'living-guide',
+} as const;
+
 export interface Tenant {
   id: string;
   slug: string;
@@ -188,6 +199,8 @@ export interface Tenant {
      */
   bgColor?: string | null;
   theme: string;
+  /** Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell */
+  guestUiMode: TenantGuestUiMode;
   /** @nullable */
   coverTitle?: string | null;
   /** @nullable */
@@ -258,6 +271,17 @@ export interface TenantDuplicateInput {
   copyContent?: boolean;
 }
 
+/**
+ * Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell
+ */
+export type TenantUpdateGuestUiMode = typeof TenantUpdateGuestUiMode[keyof typeof TenantUpdateGuestUiMode];
+
+
+export const TenantUpdateGuestUiMode = {
+  legacy: 'legacy',
+  'living-guide': 'living-guide',
+} as const;
+
 export interface TenantUpdate {
   slug?: string;
   /** @nullable */
@@ -309,6 +333,8 @@ export interface TenantUpdate {
   /** @nullable */
   renewsAt?: string | null;
   theme?: string;
+  /** Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell */
+  guestUiMode?: TenantUpdateGuestUiMode;
   /** @nullable */
   coverTitle?: string | null;
   /** @nullable */
@@ -361,6 +387,114 @@ export interface TenantUpdate {
   /** @minimum 104857600 */
   mediaQuotaBytes?: number;
 }
+
+export interface Part5ContentManifest {
+  count: number;
+  /** @nullable */
+  hash: string | null;
+}
+
+export interface Part5ContentManifests {
+  categories: Part5ContentManifest;
+  items: Part5ContentManifest;
+  media: Part5ContentManifest;
+}
+
+export interface Part5GuestUiSchemaState {
+  guestUiModeColumnReady: boolean;
+  guestUiModeConstraintReady: boolean;
+  cutoverMarkerReady: boolean;
+  /** @nullable */
+  columnDefault: string | null;
+  /** @nullable */
+  constraintDefinition: string | null;
+}
+
+export type Part5MeliPuCutoverPreflightSlug = typeof Part5MeliPuCutoverPreflightSlug[keyof typeof Part5MeliPuCutoverPreflightSlug];
+
+
+export const Part5MeliPuCutoverPreflightSlug = {
+  'meli-pu': 'meli-pu',
+} as const;
+
+export type Part5MeliPuCutoverPreflightGuestUiMode = typeof Part5MeliPuCutoverPreflightGuestUiMode[keyof typeof Part5MeliPuCutoverPreflightGuestUiMode];
+
+
+export const Part5MeliPuCutoverPreflightGuestUiMode = {
+  legacy: 'legacy',
+  'living-guide': 'living-guide',
+} as const;
+
+export type Part5MeliPuCutoverPreflightLedgerSha256 = typeof Part5MeliPuCutoverPreflightLedgerSha256[keyof typeof Part5MeliPuCutoverPreflightLedgerSha256];
+
+
+export const Part5MeliPuCutoverPreflightLedgerSha256 = {
+  '7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf': '7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf',
+} as const;
+
+export type Part5MeliPuCutoverPreflightPhase = typeof Part5MeliPuCutoverPreflightPhase[keyof typeof Part5MeliPuCutoverPreflightPhase];
+
+
+export const Part5MeliPuCutoverPreflightPhase = {
+  pre: 'pre',
+  post: 'post',
+  drift: 'drift',
+} as const;
+
+export interface Part5MeliPuCutoverPreflight {
+  tenantId: string;
+  tenantName: string;
+  slug: Part5MeliPuCutoverPreflightSlug;
+  isPublished: boolean;
+  guestUiMode: Part5MeliPuCutoverPreflightGuestUiMode;
+  recipientConfigured: boolean;
+  orderPasswordConfigured: boolean;
+  orderEmailEnabled: boolean;
+  schema: Part5GuestUiSchemaState;
+  ledgerSha256: Part5MeliPuCutoverPreflightLedgerSha256;
+  manifests: Part5ContentManifests;
+  phase: Part5MeliPuCutoverPreflightPhase;
+}
+
+export type Part5MeliPuCutoverApplyInputLedgerSha256 = typeof Part5MeliPuCutoverApplyInputLedgerSha256[keyof typeof Part5MeliPuCutoverApplyInputLedgerSha256];
+
+
+export const Part5MeliPuCutoverApplyInputLedgerSha256 = {
+  '7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf': '7121b80080a3ae2a391d169f6c48ef73edda146f87081b95969831a30df86caf',
+} as const;
+
+export type Part5MeliPuCutoverApplyInputConfirmTenantSlug = typeof Part5MeliPuCutoverApplyInputConfirmTenantSlug[keyof typeof Part5MeliPuCutoverApplyInputConfirmTenantSlug];
+
+
+export const Part5MeliPuCutoverApplyInputConfirmTenantSlug = {
+  'meli-pu': 'meli-pu',
+} as const;
+
+export interface Part5MeliPuCutoverApplyInput {
+  ledgerSha256: Part5MeliPuCutoverApplyInputLedgerSha256;
+  confirmTenantSlug: Part5MeliPuCutoverApplyInputConfirmTenantSlug;
+}
+
+export type Part5MutationTotalsChangelogEntries = typeof Part5MutationTotalsChangelogEntries[keyof typeof Part5MutationTotalsChangelogEntries];
+
+
+export const Part5MutationTotalsChangelogEntries = {
+  NUMBER_1: 1,
+} as const;
+
+export interface Part5MutationTotals {
+  categoryKeys: number;
+  orderFlags: number;
+  mediaDimensionRows: number;
+  mediaInserts: number;
+  mediaRemovals: number;
+  changelogEntries: Part5MutationTotalsChangelogEntries;
+}
+
+export type Part5MeliPuCutoverResult = Part5MeliPuCutoverPreflight & {
+  applied: true;
+  mutations: Part5MutationTotals;
+};
 
 export interface TenantStorageUsage {
   tenantId: string;

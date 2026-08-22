@@ -12,7 +12,7 @@ app.set("trust proxy", 1);
 
 // Search engines must never index anything.
 app.use((_req, res, next) => {
-  res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
   next();
 });
 app.get("/robots.txt", (_req, res) => {

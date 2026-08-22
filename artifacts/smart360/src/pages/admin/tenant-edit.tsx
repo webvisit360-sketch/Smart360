@@ -115,6 +115,7 @@ export default function AdminTenantEdit() {
     wifiPass: "",
     wifiEnc: null as string | null, // null = WPA (privzeto)
     bgColor: null as string | null, // null = belo (privzeto)
+    guestUiMode: "legacy" as "legacy" | "living-guide",
   });
 
   // Media quota edited in GB, stored in bytes (kept out of formData so the
@@ -231,6 +232,7 @@ export default function AdminTenantEdit() {
         wifiPass: tenant.wifiPass ?? "",
         wifiEnc: tenant.wifiEnc ?? null,
         bgColor: tenant.bgColor ?? null,
+        guestUiMode: (tenant.guestUiMode === "living-guide" ? "living-guide" : "legacy") as "legacy" | "living-guide",
       });
     }
   }, [tenant]);
@@ -661,6 +663,43 @@ export default function AdminTenantEdit() {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">Vodoravni zasloni, brez spodnje navigacije</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vmesnik za goste</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Neodvisno od vizualne teme — določa, kateri vmesnik vidijo gostje.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  className={`border rounded-xl p-4 cursor-pointer transition-all ${formData.guestUiMode === 'legacy' ? 'border-primary ring-1 ring-primary bg-primary/5' : 'hover:bg-muted'}`}
+                  onClick={() => setFormData({ ...formData, guestUiMode: 'legacy' })}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold">Klasični vmesnik</h4>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.guestUiMode === 'legacy' ? 'border-primary' : 'border-muted-foreground/30'}`}>
+                      {formData.guestUiMode === 'legacy' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Sredozemska ali Poteg tema — privzeto za vse namestitve</p>
+                </div>
+                <div
+                  className={`border rounded-xl p-4 cursor-pointer transition-all ${formData.guestUiMode === 'living-guide' ? 'border-primary ring-1 ring-primary bg-primary/5' : 'hover:bg-muted'}`}
+                  onClick={() => setFormData({ ...formData, guestUiMode: 'living-guide' })}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold">Living Guide</h4>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.guestUiMode === 'living-guide' ? 'border-primary' : 'border-muted-foreground/30'}`}>
+                      {formData.guestUiMode === 'living-guide' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Novi vmesnik Living Guide</p>
                 </div>
               </div>
             </CardContent>
