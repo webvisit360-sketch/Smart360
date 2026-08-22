@@ -37,6 +37,7 @@ import {
 } from "./living-guide-formatters";
 import {
   calculateLivingGuideHeroLayout,
+  calculateLivingGuideUniformGalleryLayout,
   mediaAspectFromDimensions,
   nearestGalleryIndex,
 } from "./living-guide-hero-layout";
@@ -890,6 +891,8 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const activeIndex = singleOnly
     ? 0
     : Math.max(0, Math.min((media?.length ?? 1) - 1, galleryIndex ?? 0));
+  const isUniformGallery = !singleOnly && (media?.length ?? 0) > 1;
+  const isSingleHero = !isUniformGallery;
   const activeEntry = media?.[activeIndex] ?? media?.[0];
   const activeKey = activeEntry
     ? String(activeEntry.id ?? activeEntry.url ?? activeIndex)
@@ -900,19 +903,51 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   );
   const activeMeasuredAspect = imageAspects[activeKey];
   const activeAspect = activeMetadataAspect ?? activeMeasuredAspect;
-  const activeAspectSource = activeMetadataAspect
-    ? "payload"
-    : activeMeasuredAspect
-      ? "measured"
-      : "pending";
-  const heroLayout = calculateLivingGuideHeroLayout({
-    containerWidth: frameWidth,
-    imageAspect: activeAspect,
-    viewportHeight,
+  const galleryAspects = (media ?? []).map((entry: any, index: number) => {
+    const entryKey = String(entry.id ?? entry.url ?? index);
+    return (
+      mediaAspectFromDimensions(entry.width, entry.height) ??
+      imageAspects[entryKey] ??
+      null
+    );
   });
-  const heroHeight = heroLayout?.heroHeight ?? 0;
-  const sideBlur = heroLayout?.branch === "side-blur";
-  const layoutReady = heroLayout !== null;
+  const galleryHasOnlyPayloadAspects = (media ?? []).every(
+    (entry: any) => mediaAspectFromDimensions(entry.width, entry.height) !== null,
+  );
+  const uniformGalleryLayout = isUniformGallery
+    ? calculateLivingGuideUniformGalleryLayout({
+        containerWidth: frameWidth,
+        imageAspects: galleryAspects,
+        viewportHeight,
+      })
+    : null;
+  const singleHeroLayout = isSingleHero
+    ? calculateLivingGuideHeroLayout({
+        containerWidth: frameWidth,
+        imageAspect: activeAspect,
+        viewportHeight,
+      })
+    : null;
+  const activeAspectSource = isUniformGallery
+    ? uniformGalleryLayout
+      ? galleryHasOnlyPayloadAspects
+        ? "payload"
+        : "measured"
+      : "pending"
+    : activeMetadataAspect
+      ? "payload"
+      : activeMeasuredAspect
+        ? "measured"
+        : "pending";
+  const heroLayout = singleHeroLayout;
+  const heroHeight =
+    uniformGalleryLayout?.heroHeight ?? singleHeroLayout?.heroHeight ?? 0;
+  const sideBlur = singleHeroLayout?.branch === "side-blur";
+  const layoutReady =
+    uniformGalleryLayout !== null || singleHeroLayout !== null;
+  const activeNaturalHeight = isUniformGallery
+    ? uniformGalleryLayout?.naturalHeights[activeIndex]
+    : singleHeroLayout?.naturalHeight;
 
   const mediaKey = (media ?? [])
     .map((entry: any, index: number) => entry.id ?? entry.url ?? index)
@@ -985,7 +1020,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
 
   useEffect(() => {
     const track = galleryTrackRef.current;
-    if (!track || singleOnly || !media?.length) return;
+    if (!track || !isUniformGallery || !media?.length) return;
 
     const handleScrollEnd = () => {
       if (settleTimeoutRef.current !== null) {
@@ -1003,23 +1038,23 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         settleTimeoutRef.current = null;
       }
     };
-  }, [media?.length, mediaKey, settleGallery, singleOnly]);
+  }, [isUniformGallery, media?.length, mediaKey, settleGallery]);
 
   useLayoutEffect(() => {
     const track = galleryTrackRef.current;
-    if (!track || singleOnly || !track.clientWidth) return;
+    if (!track || !isUniformGallery || !track.clientWidth) return;
     const targetLeft = activeIndex * track.clientWidth;
     if (Math.abs(track.scrollLeft - targetLeft) > 0.5) {
       track.scrollTo({ left: targetLeft, behavior: "auto" });
     }
-  }, [activeIndex, frameWidth, mediaKey, singleOnly]);
+  }, [activeIndex, frameWidth, isUniformGallery, mediaKey]);
 
   if (!media?.length) return (
     <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero>
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk"/></svg></button>
     </div>
   );
-  if (singleOnly) {
+  if (isSingleHero) {
     const entry = media[0];
     const entryKey = String(entry.id ?? entry.url ?? 0);
     const entryAspectReady =
@@ -1056,13 +1091,19 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   return (
     <div
       ref={heroRef}
-      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}${activeAspectSource === "measured" ? " is-measured-fallback" : ""}`}
+      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}${activeAspectSource === "measured" ? " is-measured-fallback" : ""} is-uniform-gallery`}
       data-lg-active-slide={activeIndex}
       data-lg-hero-height={Math.round(heroHeight)}
-      data-lg-hero-natural-height={heroLayout?.naturalHeight}
-      data-lg-hero-branch={heroLayout?.branch}
+      data-lg-hero-natural-height={activeNaturalHeight}
+      data-lg-hero-branch="gallery-cover"
       data-lg-hero-aspect-source={activeAspectSource}
       data-lg-hero-layout-ready={layoutReady}
+      data-lg-hero-mode="uniform-gallery"
+      data-lg-gallery-uniform-height={Math.round(heroHeight)}
+      data-lg-gallery-median-height={uniformGalleryLayout?.medianHeight}
+      data-lg-gallery-natural-heights={uniformGalleryLayout ? JSON.stringify(uniformGalleryLayout.naturalHeights) : undefined}
+      data-lg-gallery-min-height={uniformGalleryLayout?.minHeight}
+      data-lg-gallery-max-height={uniformGalleryLayout?.maxHeight}
       style={{ height: heroHeight }}
     >
       <div
@@ -1084,8 +1125,9 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
               <AspectAwareHeroImage
                 entry={entry}
                 entryKey={entryKey}
-                loading={index === 0 ? "eager" : "lazy"}
-                sideBlur={index === activeIndex && sideBlur}
+                loading={index === 0 || !layoutReady ? "eager" : "lazy"}
+                sideBlur={false}
+                galleryCover
                 aspectReady={aspectReady}
                 expectedAspect={expectedAspect}
                 onAspect={rememberAspect}
@@ -1109,6 +1151,7 @@ function AspectAwareHeroImage({
   entryKey,
   loading,
   sideBlur,
+  galleryCover = false,
   aspectReady,
   expectedAspect,
   onAspect,
@@ -1117,6 +1160,7 @@ function AspectAwareHeroImage({
   entryKey: string;
   loading: "eager" | "lazy";
   sideBlur: boolean;
+  galleryCover?: boolean;
   aspectReady: boolean;
   expectedAspect: number | null;
   onAspect: (key: string, aspect: number) => void;
@@ -1125,8 +1169,8 @@ function AspectAwareHeroImage({
 
   return (
     <div
-      className={`lg2-hero-image-frame${sideBlur ? " is-side-blur" : " is-full-bleed"}`}
-      data-lg-hero-fit={sideBlur ? "side-blur" : "full-bleed"}
+      className={`lg2-hero-image-frame${sideBlur ? " is-side-blur" : galleryCover ? " is-gallery-cover" : " is-full-bleed"}`}
+      data-lg-hero-fit={sideBlur ? "side-blur" : galleryCover ? "gallery-cover" : "full-bleed"}
     >
       {sideBlur && (
         <img
@@ -1145,6 +1189,7 @@ function AspectAwareHeroImage({
         alt=""
         loading={loading}
         decoding="async"
+        style={galleryCover ? imageStyle(entry) : undefined}
         onLoad={(event) => {
           const image = event.currentTarget;
           if (image.naturalWidth > 0 && image.naturalHeight > 0) {

@@ -13,6 +13,7 @@ const heroLayoutModulePath =
   "../../../smart360/src/pages/living-guide/living-guide-hero-layout.ts";
 const {
   calculateLivingGuideHeroLayout,
+  calculateLivingGuideUniformGalleryLayout,
   mediaAspectFromDimensions,
   nearestGalleryIndex,
 } = await import(heroLayoutModulePath);
@@ -104,6 +105,48 @@ test("hero rule caps only images above 89 percent and uses 89 percent height", (
   assert.equal(capped?.naturalHeight, 800);
   assert.equal(capped?.thresholdHeight, 712);
   assert.equal(capped?.heroHeight, 712);
+});
+
+test("multi-photo galleries use the median natural height and clamp it to 45–89 percent", () => {
+  const oddGallery = calculateLivingGuideUniformGalleryLayout({
+    containerWidth: 390,
+    imageAspects: [0.8, 0.75, 0.7],
+    viewportHeight: 844,
+  });
+  assert.equal(oddGallery?.medianHeight, 520);
+  assert.equal(oddGallery?.heroHeight, 520);
+  assert.equal(oddGallery?.minHeight, 379.8);
+  assert.equal(oddGallery?.maxHeight, 751.16);
+
+  const evenGallery = calculateLivingGuideUniformGalleryLayout({
+    containerWidth: 390,
+    imageAspects: [1, 0.5],
+    viewportHeight: 844,
+  });
+  assert.equal(evenGallery?.medianHeight, 585);
+  assert.equal(evenGallery?.heroHeight, 585);
+
+  const clampedShort = calculateLivingGuideUniformGalleryLayout({
+    containerWidth: 390,
+    imageAspects: [4, 3],
+    viewportHeight: 844,
+  });
+  assert.equal(clampedShort?.heroHeight, 380);
+
+  const clampedTall = calculateLivingGuideUniformGalleryLayout({
+    containerWidth: 390,
+    imageAspects: [0.25, 0.3],
+    viewportHeight: 844,
+  });
+  assert.equal(clampedTall?.heroHeight, 751);
+  assert.equal(
+    calculateLivingGuideUniformGalleryLayout({
+      containerWidth: 390,
+      imageAspects: [0.8, null],
+      viewportHeight: 844,
+    }),
+    null,
+  );
 });
 
 test("media aspect uses payload dimensions and rejects missing metadata", () => {

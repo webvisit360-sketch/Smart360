@@ -726,7 +726,8 @@ body[data-t="noc"] .lg2-grid-view {
 }
 
 .lg2-detail-hero--photo.is-awaiting-dimensions,
-.lg2-detail-hero--photo.is-measured-fallback {
+.lg2-detail-hero--photo.is-measured-fallback,
+.lg2-detail-hero--photo.is-uniform-gallery {
   transition: none;
 }
 
@@ -808,6 +809,11 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-hero-image-frame.is-full-bleed .lg2-hero-image-main {
+  object-fit: cover;
+  object-position: center;
+}
+
+.lg2-hero-image-frame.is-gallery-cover .lg2-hero-image-main {
   object-fit: cover;
   object-position: center;
 }

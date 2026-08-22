@@ -75,11 +75,11 @@ The development Meli Pu tenant is a read-mostly production-content copy; refresh
 
 **How to apply:** Snapshot dev first; compare per-category counts and content hashes; sync guest tenant fields, sections, categories, items, media metadata, translations, and plurals. Preserve category keys and operational tenant fields, then require exact post-sync hashes.
 
-Detail hero height follows the active image’s natural full-width aspect at the live container width. If that natural height is at most 89% of the viewport, use the natural height with a whole full-bleed image and no blur, bands, crop, or minimum height. Only a natural height above 89% uses an 89%-of-viewport cap, a contained centered image, and same-image side blur.
+Single-photo detail heroes follow the image’s natural full-width aspect. If that natural height is at most 89% of the viewport, use the whole full-bleed image; above 89%, cap at 89% with a contained image and same-image side blur. Multi-photo galleries instead use one fixed height: the median of every slide’s natural full-width height, clamped to 45–89% of the viewport. Gallery slides use cover cropping with their stored focal point and no blur.
 
-**Why:** The owner’s criterion is “blur only when the sheet would no longer be visible.” They approved 89% globally after validating the actual shower image; the remaining approximately 11% must keep the title and grab handle visible and tappable.
+**Why:** The owner’s “blur only when the sheet would no longer be visible” criterion remains binding for single photos, but they explicitly superseded per-slide adaptive gallery heights because swiping must never move the sheet.
 
-**How to apply:** Reserve the final height before image paint from payload width/height; metadata-backed image load confirms but never restyles. Missing dimensions stay hidden until measured and then fade in at final size without a height transition. Treat exactly 89% as full-bleed and round rendered height to whole pixels. Apply this only to detail/gallery media; no-photo ambient heroes and grid/list thumbnail cover behavior remain unchanged.
+**How to apply:** Reserve single and gallery heights before image paint from payload dimensions. For even gallery counts, average the two middle natural heights. Keep the integer result within ceil(45vh)–floor(89vh), disable gallery height transitions, and preserve snap/dots/sheet layout. Missing dimensions stay hidden until all required measurements exist. No-photo ambient heroes and grid/list thumbnails remain unchanged.
 
 PART 4 ordering scope is fixed: SUP, olive oil, scooter, boat with skipper, and boat transport are orderable; late checkout is not. The allowlist counts category concepts, so every item variant in those five categories is orderable, including textual “Po dogovoru” offers. Pickup is at the host unless authored item text explicitly promises delivery. Skip the help/emergency ordering link.
 
