@@ -1,0 +1,36 @@
+Stage 1b ledger is APPROVED — totals match the authorized allowlist exactly
+(37 + 9 + 262 + 39 + 2 = 349), SHA-256 recorded.
+
+Owner confirmations:
+- The real Meli Pu recipient address and the order password are now set in
+  the PRODUCTION admin. The recipient gate is satisfied.
+- PITR retention: 7 days. Record T0 precisely; the rollback window is one
+  week from cutover.
+
+Proceed to Stage 2 under these conditions:
+
+1. The atomic operation must ABORT if any precondition hash mismatches — no
+   partial application, no retry with relaxed preconditions.
+2. Immediately after the write, re-run the content manifests and report
+   production's new hashes against the expected dev values.
+3. You may append EXACTLY ONE changelog entry summarising the sync (with the
+   ledger SHA-256) if the schema allows it — one entry, not 349. If that
+   complicates the atomic operation, skip it and say so.
+4. Include the MEDIA SECTION of the ledger verbatim in the Stage 2 report
+   (the 3 inserts and 2 removals, all 41 lines) — which photo replaces which,
+   on which item, in which position.
+5. PITR restore point verified and T0 manifests captured BEFORE any write.
+6. guestUiMode implemented with the admin control (NOT NULL, default
+   'legacy', two-value constraint) and X-Robots-Tag: noindex, nofollow added
+   alongside the existing robots.txt and meta tag.
+7. The mandatory end-to-end production order must be UNMISTAKABLY a test, as
+   it reaches the real host's inbox: guest name "TEST Smart360", note
+   "Testno naročilo — prosimo prezrite", quantity 1, on any orderable item.
+   Report the Resend message id, then delete the order and report the
+   deletion, and confirm the recipient was the real address (not staging).
+8. Re-verify: after the switch, https://smart360.info/meli-pu must serve the
+   Living Guide with NO ?ui= parameter, in all four languages, and the legacy
+   UI must still be reachable for any other tenant.
+9. Device matrix with screenshots as specified in Stage 1.
+
+Report at the end of Stage 2 and STOP. Stage 3 needs separate approval.
