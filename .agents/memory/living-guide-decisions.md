@@ -15,6 +15,12 @@ Architecture #29 uses the newest attached virtual-tour prototype as the binding 
 
 **How to apply:** Preserve the full-bleed, bottom-control-only cover contract and do not fold later checkpoint layouts into the initial virtual-tour work without approval.
 
+The Architecture #29 bottom navigation has exactly five tenant-configured slots selected from Domov, Nastanitev, Ponudba, Okolica, Program, and Sporočila; Domov is permanently slot one. Camp defaults omit Ponudba, while Meli Pu defaults omit Program because it has no dated events.
+
+**Why:** The owner requires predictable tenant-specific navigation without making a valid guide feature disappear when it is not one of the five primary slots.
+
+**How to apply:** In the later bottom-navigation checkpoint, offer only features the tenant actually has, keep Domov first, and provide a visible in-guide route to the omitted valid feature. The checkpoint report must name that route for both defaults and include a screenshot of each entry point.
+
 Virtual tours reuse the tenant’s canonical `tourUrl` field. Accept only a canonical HTTPS URL from approved providers; extract it server-side from plain URLs, iframe `src`, or script `data-*` values, and never persist or render pasted markup.
 
 **Why:** The field is shared across guest modes, so malformed or historic markup must not become an iframe or outbound link in either mode.
