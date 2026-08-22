@@ -51,6 +51,12 @@ Visual-parity evidence must use browser-computed styles from the complete protot
 
 **How to apply:** Compare equivalent live/prototype DOM elements property by property; verify the prototype theme token first and trust the final computed cascade rather than a copied CSS fragment.
 
+All shared Living Guide list rows use a 20px/750 title and a 16px subline. There is no intentional typographic distinction between the former near-row and sub-row variants.
+
+**Why:** The owner confirmed that the previous 19px/15.5px variant was a prototype duplication error, not a separate component style.
+
+**How to apply:** Keep the shared row component at 20px/750 and 16px everywhere, and include both values in future production parity tables.
+
 Use the `guestUiMode` cutover flag with legacy as the default and a development-only Living Guide preview. Replace the admin cover preview before removing the legacy cover.
 
 **Why:** The new guest shell must be introduced without breaking admin tools or live tenants.
