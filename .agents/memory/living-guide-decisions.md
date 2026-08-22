@@ -104,3 +104,9 @@ Living Guide orders may use an optional host-managed tenant password, stored sep
 **Why:** The owner chose a simple manually shared gate and explicitly rejected Wi-Fi copying, GPS checks, daily PINs, and per-unit codes. They also required silent same-device prefill despite the normal sensitivity of browser storage.
 
 **How to apply:** Never return, log, e-mail, clone, or store the password with an order. Apply rate limiting before rejecting a genuinely new intent, allow password-free ordering when unset, and reset the password to empty on tenant/template duplication.
+
+PART 5 production content sync requires a separately approved row-level ledger and may touch only the listed category keys, order flags, media dimensions, and media links. Operational history, auth data, dev-only tenants, and storage objects are excluded.
+
+**Why:** Production legitimately trails owner-edited development content, but a whole-database copy would overwrite live renewal, changelog, and authentication history.
+
+**How to apply:** Recheck every old value and content hash before one atomic, allowlisted sync; abort on drift. Keep legacy image files in storage, avoid ordinary admin routes that add changelog rows, and re-lock any temporary production sync path immediately after verification.

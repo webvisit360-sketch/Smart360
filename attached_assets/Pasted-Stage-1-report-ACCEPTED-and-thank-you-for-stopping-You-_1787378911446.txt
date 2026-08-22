@@ -1,0 +1,43 @@
+Stage 1 report ACCEPTED — and thank you for stopping. You are right: the
+"no content writes" wording in the Part 5 brief was my error. The owner did
+his content work in the DEV admin, so production is legitimately behind.
+
+Decisions:
+
+1. CONTENT SYNC IS AUTHORIZED, but only as a narrow, itemized allowlist —
+   never a whole-database copy. Allowed writes, and nothing else:
+   a) the 37 category keys;
+   b) the 9 orderEnabled flags;
+   c) the media width/height backfill for the 131 shared records (derived
+      data — extend the dev-only guard to permit exactly this one production
+      backfill, then re-lock it);
+   d) the 3 dev-only media (SUP 800×800, Skuter 1179×977, Bazen 885×645),
+      including their position/order, and the removal of the 2 superseded
+      legacy strips (IMG_6218, IMG_6219) from their items — the underlying
+      files are not deleted from storage.
+   Operational tables — changelog (205), renewal history (14), admin
+   credentials/sessions/enrolment/auth events — are NEVER written or
+   overwritten. Dev-only tenants (meli-pu-copy, nova-1786785535365) are
+   NEVER copied to production.
+
+2. INSERT A GATE — "Stage 1b": before applying anything, produce a row-level
+   write plan (table, row id, field, old value → new value, one line each,
+   plus totals per category) and WAIT for approval. Apply only after that.
+
+3. guestUiMode: implementing it across DB/API/client/admin is approved as
+   part of Stage 2, with the NOT NULL default 'legacy' and the two-value
+   constraint exactly as you proposed, plus an admin control so the owner can
+   switch a tenant without SQL.
+
+4. Backup: the PITR restore-point approach is accepted. Also capture and
+   report the schema fingerprint and all content manifest hashes at T0, and
+   confirm which retention tier is active (7 or 28 days).
+
+5. Indexing: add the X-Robots-Tag: noindex, nofollow response header as well,
+   so all three controls are in place.
+
+6. The production recipient address and the order password are the owner's
+   to set in the PRODUCTION admin — he is doing that now. Keep the blocking
+   gate: no real-order test until the recipient is set.
+
+Proceed to Stage 1b (write plan only). Do not apply anything yet.
