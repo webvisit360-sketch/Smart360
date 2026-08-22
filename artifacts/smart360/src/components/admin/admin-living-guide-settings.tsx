@@ -40,7 +40,9 @@ export function AdminLivingGuideSettings({ tenant, id }: { tenant: any; id: stri
   const { toast } = useToast();
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const heroFileRef = useRef<HTMLInputElement>(null);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [heroUploadBusy, setHeroUploadBusy] = useState(false);
   const { data: sitePlanImages = [] } = useListSitePlanImages(id, { query: { queryKey: getListSitePlanImagesQueryKey(id) } });
 
   const reorderMutation = useReorderSitePlanImages();
@@ -76,6 +78,56 @@ export function AdminLivingGuideSettings({ tenant, id }: { tenant: any; id: stri
     } finally {
       setUploadBusy(false);
     }
+  };
+
+  const handleHeroUpload = async (file: File) => {
+    setHeroUploadBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(
+        `/api/admin/tenants/${id}/living-guide-hero/upload`,
+        {
+          method: "POST",
+          body: fd,
+          credentials: "include",
+        },
+      );
+      if (!res.ok) throw new Error(await res.text());
+      await queryClient.invalidateQueries({
+        queryKey: getGetTenantQueryKey(id),
+      });
+      toast({
+        title: "Naloženo",
+        description: "Fotografija Domov je bila shranjena.",
+      });
+    } catch {
+      toast({
+        title: "Napaka",
+        description: "Nalaganje fotografije Domov ni uspelo.",
+        variant: "destructive",
+      });
+    } finally {
+      setHeroUploadBusy(false);
+    }
+  };
+
+  const clearHero = () => {
+    updateTenantMutation.mutate(
+      { id, data: { livingGuideHeroUrl: null } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: getGetTenantQueryKey(id),
+          });
+          toast({
+            title: "Odstranjeno",
+            description:
+              "Domov bo uporabil prvo fotografijo galerije ali ambientalno ozadje.",
+          });
+        },
+      },
+    );
   };
 
   const handleDragOver = (draggedId: string, overId: string) => {
@@ -206,8 +258,59 @@ export function AdminLivingGuideSettings({ tenant, id }: { tenant: any; id: stri
 
   return (
     <div className="space-y-8">
-      {/* Site Plan Images */}
       <div>
+        <h3 className="text-lg font-medium mb-2">Fotografija Domov</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Glavna fotografija na vrhu zaslona Domov. Če je ne nastavite, se
+          uporabi prva fotografija galerije, nato ambientalno ozadje teme.
+        </p>
+        {tenant.livingGuideHeroUrl && (
+          <img
+            src={tenant.livingGuideHeroUrl}
+            alt=""
+            className="w-full max-w-md aspect-[3/2] object-cover rounded-xl border mb-3"
+          />
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => heroFileRef.current?.click()}
+            disabled={heroUploadBusy}
+          >
+            {heroUploadBusy ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4 mr-2" />
+            )}
+            {tenant.livingGuideHeroUrl
+              ? "Zamenjaj fotografijo"
+              : "Naloži fotografijo"}
+          </Button>
+          {tenant.livingGuideHeroUrl && (
+            <Button
+              variant="ghost"
+              onClick={clearHero}
+              disabled={updateTenantMutation.isPending}
+            >
+              Odstrani
+            </Button>
+          )}
+          <input
+            ref={heroFileRef}
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) handleHeroUpload(file);
+              event.target.value = "";
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Site Plan Images */}
+      <div className="pt-6 border-t">
         <h3 className="text-lg font-medium mb-4">Mape in tlorisi (Site Plan)</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Naložite slike, ki gostom pomagajo pri orientaciji. Gostje lahko mape povečajo z gestami.

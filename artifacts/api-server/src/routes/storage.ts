@@ -700,7 +700,8 @@ export async function validateLogoUpload(
 }
 
 // ---------------------------------------------------------------------------
-// POST /admin/tenants/:id/hero/upload  — replace the tenant hero image.
+// POST /admin/tenants/:id/hero/upload  — replace the tenant cover hero image.
+// POST /admin/tenants/:id/living-guide-hero/upload — replace the Domov hero.
 // POST /admin/tenants/:id/logo/upload  — replace the tenant logo image.
 // Hero resizes to 620/1400 via storePhotoVariants; the logo derives the
 // transparent + square pair via storeLogoVariants. Both update the DB.
@@ -708,7 +709,7 @@ export async function validateLogoUpload(
 async function handleTenantImageUpload(
   req: import("express").Request,
   res: import("express").Response,
-  column: "heroUrl" | "logoUrl",
+  column: "heroUrl" | "livingGuideHeroUrl" | "logoUrl",
 ): Promise<void> {
   const tenantId = String(req.params["id"] ?? "");
   if (!req.file) {
@@ -777,7 +778,11 @@ async function handleTenantImageUpload(
     } else {
       const name = `${randomUUID()}.jpg`;
       await storePhotoVariants(tenant.slug, name, req.file.buffer);
-      patch = { heroUrl: `/api/storage/img/${tenant.slug}/${name}` };
+      const url = `/api/storage/img/${tenant.slug}/${name}`;
+      patch =
+        column === "livingGuideHeroUrl"
+          ? { livingGuideHeroUrl: url }
+          : { heroUrl: url };
     }
   } catch (err) {
     req.log.error({ err }, "tenant image upload failed");
@@ -791,11 +796,13 @@ async function handleTenantImageUpload(
     .where(eq(tenantsTable.id, tenantId))
     .returning({
       heroUrl: tenantsTable.heroUrl,
+      livingGuideHeroUrl: tenantsTable.livingGuideHeroUrl,
       logoUrl: tenantsTable.logoUrl,
       logoSquareUrl: tenantsTable.logoSquareUrl,
     });
   res.status(200).json({
     heroUrl: updated?.heroUrl,
+    livingGuideHeroUrl: updated?.livingGuideHeroUrl,
     logoUrl: updated?.logoUrl,
     logoSquareUrl: updated?.logoSquareUrl,
     ...(warning ? { warning } : {}),
@@ -807,6 +814,14 @@ router.post(
   requireAdmin,
   upload.single("file"),
   (req, res): Promise<void> => handleTenantImageUpload(req, res, "heroUrl"),
+);
+
+router.post(
+  "/admin/tenants/:id/living-guide-hero/upload",
+  requireAdmin,
+  upload.single("file"),
+  (req, res): Promise<void> =>
+    handleTenantImageUpload(req, res, "livingGuideHeroUrl"),
 );
 
 router.post(

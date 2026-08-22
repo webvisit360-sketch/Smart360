@@ -154,6 +154,18 @@ export const LIVING_GUIDE_UI = {
     de: "ganzes Programm",
     it: "programma completo",
   },
+  "UI.lg.home.more": {
+    sl: "več",
+    en: "more",
+    de: "mehr",
+    it: "altro",
+  },
+  "UI.lg.home.map": {
+    sl: "Zemljevid",
+    en: "Map",
+    de: "Karte",
+    it: "Mappa",
+  },
   "UI.lg.home.forYou": {
     sl: "Za vas",
     en: "For you",

@@ -177,6 +177,8 @@ export interface Tenant {
   /** @nullable */
   heroUrl?: string | null;
   /** @nullable */
+  livingGuideHeroUrl?: string | null;
+  /** @nullable */
   tourUrl?: string | null;
   /** @nullable */
   phone?: string | null;
@@ -332,6 +334,8 @@ export interface TenantUpdate {
   logoSquareUrl?: string | null;
   /** @nullable */
   heroUrl?: string | null;
+  /** @nullable */
+  livingGuideHeroUrl?: string | null;
   /** @nullable */
   tourUrl?: string | null;
   /** @nullable */

@@ -36,7 +36,14 @@ export type MediaIssue = {
   adminPath: string;
   /** Internal handle so dropBrokenReferences knows what to clear. */
   target:
-    | { kind: "tenant"; column: "heroUrl" | "logoUrl" | "logoSquareUrl" }
+    | {
+        kind: "tenant";
+        column:
+          | "heroUrl"
+          | "livingGuideHeroUrl"
+          | "logoUrl"
+          | "logoSquareUrl";
+      }
     | { kind: "section"; id: string }
     | { kind: "mediaUrl"; id: string }
     | { kind: "mediaPoster"; id: string };
@@ -144,6 +151,13 @@ export async function checkTenantMedia(tenantId: string): Promise<MediaIssue[]> 
   };
 
   await push("tenant.heroUrl", "Naslovna fotografija", tenant.heroUrl, "image", { kind: "tenant", column: "heroUrl" });
+  await push(
+    "tenant.livingGuideHeroUrl",
+    "Fotografija Domov v Living Guide",
+    tenant.livingGuideHeroUrl,
+    "image",
+    { kind: "tenant", column: "livingGuideHeroUrl" },
+  );
   await push("tenant.logoUrl", "Logotip (prosojni, na naslovnici)", tenant.logoUrl, "logo-alpha", { kind: "tenant", column: "logoUrl" });
   await push("tenant.logoSquareUrl", "Logotip (kvadratni)", tenant.logoSquareUrl, "image", { kind: "tenant", column: "logoSquareUrl" });
 

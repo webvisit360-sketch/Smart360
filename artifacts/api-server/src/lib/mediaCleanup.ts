@@ -59,7 +59,8 @@ function refKeyFromUrl(url: string | null | undefined): string | null {
 /**
  * Every "slug/file" pair referenced by any DB row, across ALL tenants.
  * MUST cover every column that can hold a storage URL — media.url,
- * media.posterUrl, sections.imageUrl, tenants.heroUrl/logoUrl/logoSquareUrl,
+ * media.posterUrl, sections.imageUrl,
+ * tenants.heroUrl/livingGuideHeroUrl/logoUrl/logoSquareUrl,
  * plus free-text columns that may EMBED storage URLs (items.body,
  * items.noteText, translations.value). A column missed here means cleanup
  * deletes live files. When adding a new *_url or rich-text column anywhere
@@ -74,6 +75,7 @@ async function getReferencedKeys(): Promise<Set<string>> {
     db
       .select({
         heroUrl: tenantsTable.heroUrl,
+        livingGuideHeroUrl: tenantsTable.livingGuideHeroUrl,
         logoUrl: tenantsTable.logoUrl,
         logoSquareUrl: tenantsTable.logoSquareUrl,
       })
@@ -102,6 +104,7 @@ async function getReferencedKeys(): Promise<Set<string>> {
   for (const t of translationRows) scan(t.value);
   for (const t of tenantRows) {
     add(t.heroUrl);
+    add(t.livingGuideHeroUrl);
     add(t.logoUrl);
     add(t.logoSquareUrl);
     // The PWA manifest serves <id>-ikona-{512,192,maskable-512,180}.png next

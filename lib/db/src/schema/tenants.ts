@@ -79,6 +79,7 @@ export const tenantsTable = pgTable("tenants", {
   logoUrl: text("logo_url"),
   logoSquareUrl: text("logo_square_url"),
   heroUrl: text("hero_url"),
+  livingGuideHeroUrl: text("living_guide_hero_url"),
   tourUrl: text("tour_url"),
   phone: text("phone"),
   whatsapp: text("whatsapp"),

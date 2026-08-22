@@ -61,10 +61,13 @@ import { parseVirtualTourInput } from "@/lib/virtual-tour";
 import {
   findDatedEventDestination as datedEventDestination,
   getLivingGuideAvailableFeatures,
-  itemEventTimestamp,
   resolveLivingGuideNav,
   type NavState,
 } from "./living-guide-nav-resolver";
+import {
+  resolveHomeHeroMedia,
+  selectHomeTodayEntries,
+} from "./living-guide-home";
 import { SiteMapGuestView } from "./SiteMapGuestView";
 import { MoreGuestView } from "./MoreGuestView";
 
@@ -314,15 +317,6 @@ function isNewNotice(notice: any): boolean {
   if (timestamp === null) return false;
   const age = Date.now() - timestamp;
   return age >= 0 && age < 72 * 60 * 60 * 1000;
-}
-
-function isToday(timestamp: number, now = new Date()): boolean {
-  const date = new Date(timestamp);
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
 }
 
 function minutesUntilClock(clock: string | null, now = new Date()): number {
@@ -2254,7 +2248,6 @@ function BottomNav({
 function HomeView({
   tenant,
   sections,
-  lang,
   t,
   guest,
   onEditGuest,
@@ -2271,7 +2264,6 @@ function HomeView({
   const now = new Date();
   const eventDestination = datedEventDestination(sections);
   const staySection = sections.find((section: any) => section.key === "stay");
-  const offerSection = sections.find((section: any) => section.key === "offer");
   const wifiCategory = sections
     .flatMap((section: any) => visible(section.categories))
     .find((category: any) => category.layout === "wifi");
@@ -2285,154 +2277,60 @@ function HomeView({
     !!wifiCategory;
   const newNoticesCount = notices.filter(isNewNotice).length;
 
-  const danesItems: any[] = [];
-  for (const section of sections) {
-    for (const category of visible(section.categories)) {
-      for (const item of visible(category.items)) {
-        const eventTimestamp = itemEventTimestamp(item);
-        if (
-          eventTimestamp !== null &&
-          isToday(eventTimestamp, now) &&
-          eventTimestamp >= now.getTime() - 60 * 60 * 1000
-        ) {
-          danesItems.push({
-            id: `event-${item.id}`,
-            badge: new Intl.DateTimeFormat(lang, {
-              hour: "2-digit",
-              minute: "2-digit",
-            }).format(eventTimestamp),
-            title: item.title,
-            subtitle: distinctSubtitle(item.title, item.subtitle),
-            media: item.media?.[0],
-            onClick: () => onOpenItem(category.id, item.id),
-            immediacy: Math.max(
-              0,
-              (eventTimestamp - now.getTime()) / 60_000,
-            ),
-          });
-          continue;
-        }
-        if (item.hoursJson && !item.open24) {
-          const status = getOpenStatus(item.hoursJson, now);
-          if (status?.isOpen && status.closesAt) {
-            danesItems.push({
-              id: `facility-${item.id}`,
-              badge: `${t("UI.lg.hours.openUntil")} ${status.closesAt}`,
-              title: item.title,
-              subtitle: distinctSubtitle(item.title, item.subtitle),
-              media: item.media?.[0],
-              onClick: () => onOpenItem(category.id, item.id),
-              immediacy: 180 + minutesUntilClock(status.closesAt, now),
-            });
-          }
-        }
-      }
-    }
-  }
-
-  for (const notice of notices) {
-    const timestamp = noticeTimestamp(notice);
-    if (isNewNotice(notice) && timestamp !== null) {
-      danesItems.push({
-        id: `notice-${notice.id}`,
-        badge: t("UI.lg.notices.new"),
-        title: notice.title,
-        subtitle: notice.body
-          ? sanitizeHtml(notice.body).replace(/<[^>]+>/g, "")
-          : "",
-        media: notice.media?.[0],
-        onClick: onOpenNotices,
-        immediacy: 360 + (now.getTime() - timestamp) / 3_600_000,
-      });
-    }
-  }
-
-  const zaVasItems = ["offer", "explore", "stay"].flatMap(
-    (sectionKey, index) => {
-      const section = sections.find((row: any) => row.key === sectionKey);
-      if (!section) return [];
-      const categories = visible(section.categories);
-      const category =
-        categories.find((row: any) => categoryMedia(row).length > 0) ??
-        categories.find((row: any) => visible(row.items).length > 0);
-      if (!category) return [];
-      const item = visible(category.items)[0];
-      const media = firstMedia(category);
-      return [
-        {
-          id: section.key,
-          title: section.title,
-          subtitle:
-            distinctSubtitle(section.title, category.label) ||
-            distinctSubtitle(section.title, item?.title),
-          media,
-          path: `/${slug}/s/${encodeURIComponent(section.key)}`,
-          isWide: index === 0,
-        },
-      ];
-    },
+  const heroMedia = resolveHomeHeroMedia(
+    tenant.livingGuideHeroUrl,
+    sections,
   );
-
-  if (danesItems.length === 0 && offerSection) {
-    const offerCategory = visible(offerSection.categories).find(
-      (category: any) => visible(category.items).length > 0,
-    );
-    const offerItem = offerCategory
-      ? visible(offerCategory.items)[0]
-      : null;
-    if (offerCategory && offerItem) {
-      danesItems.push({
-        id: `offer-${offerItem.id}`,
-        badge: t("UI.lg.nav.offer"),
-        title: offerItem.title,
-        subtitle:
-          distinctSubtitle(offerItem.title, offerItem.subtitle) ||
-          offerCategory.label,
-        media: offerItem.media?.[0] ?? firstMedia(offerCategory),
-        onClick: () => onOpenItem(offerCategory.id, offerItem.id),
-        immediacy: 10_000,
-      });
-    }
-  }
-
-  danesItems.sort((a, b) => a.immediacy - b.immediacy);
-  const visibleDanesItems = danesItems.slice(0, 6);
+  const { entries: todayEntries } = selectHomeTodayEntries(sections, now);
+  const visibleDanesItems = todayEntries.slice(0, 6);
   const firstName = guest?.name?.trim().split(/\s+/)[0] ?? "";
+  const guestSignedIn = Boolean(guest?.unit?.trim() && guest?.name?.trim());
+  const fallbackMapQuery = tenant.mapQuery || tenant.address;
+  const mapAvailable = Boolean(navState?.hasSiteMap || fallbackMapQuery);
 
   return (
-    <section
-      className="lg2-view lg2-home-view"
-      data-testid="screen-home"
-    >
-      <header className="lg2-hd">
-        <div className="lg2-tt">
-          <small>{tenant.name}</small>
-          <h1>{t("UI.lg.welcome.title")}</h1>
+    <section className="lg2-view lg2-home-view" data-testid="screen-home">
+      <div className="lg2-screen-scroll lg2-home-scroll-container" data-lg-scroll>
+        <div className="lg2-hhero lg2-hhero-ambient">
+          {heroMedia && (
+            <img
+              src={mediaImgSrc(heroMedia, HERO_IMAGE_WIDTH)}
+              alt=""
+              className="lg2-hhero-pic"
+              style={imageStyle(heroMedia, tenant)}
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
+          )}
+          <div className="lg2-hhero-vg" aria-hidden="true" />
+          <div className="lg2-hhero-top">
+            {tourUrl && (
+              <button
+                className="lg2-hhero-fab"
+                type="button"
+                onClick={() => navigate(`/${slug}`)}
+                aria-label={t("UI.lg.tour.view")}
+              >
+                <span aria-hidden="true">360</span>
+              </button>
+            )}
+            <button
+              className="lg2-hhero-fab"
+              type="button"
+              onClick={onSearch}
+              aria-label={t("UI.lg.search.title")}
+            >
+              <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
+            </button>
+          </div>
         </div>
-        {tourUrl && (
-          <button
-            className="lg2-fab"
-            type="button"
-            onClick={() => navigate(`/${slug}`)}
-            aria-label={t("UI.lg.tour.view")}
-            data-testid="button-home-tour"
-          >
-            <span aria-hidden="true">360°</span>
-          </button>
-        )}
-        <button
-          className="lg2-fab"
-          type="button"
-          onClick={onSearch}
-          aria-label={t("UI.lg.search.title")}
-          data-testid="button-home-search"
-        >
-          <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
-        </button>
-      </header>
 
-      <div className="lg2-screen-scroll" data-lg-scroll>
-        {guest && (
+        <div className="lg2-hsheet">
+          <p className="lg2-k3">{tenant.name}</p>
+          <h1>{t("UI.lg.welcome.title")}</h1>
+
+        {guestSignedIn && (
           <button
             className="lg2-hello"
             type="button"
@@ -2442,174 +2340,130 @@ function HomeView({
             <span className="lg2-hd2" aria-hidden="true">
               <svg><use href="#lg-i-usr" /></svg>
             </span>
-            <span>
+            <div className="lg2-hello-tx">
               <b>
                 {firstName
                   ? t("UI.lg.greeting.named", { name: firstName })
                   : t("UI.lg.greeting.generic")}
               </b>
               <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
-            </span>
+            </div>
             <span className="lg2-chg">{t("UI.lg.greeting.change")}</span>
           </button>
         )}
 
-        <div className="lg2-qbar">
-          {hasWifi && (
-            <button
-              className="lg2-q lg2-q--w"
-              type="button"
-              onClick={() => {
-                if (wifiCategory) onOpenCategory(wifiCategory.id);
-                else if (staySection) navigate(`/${slug}/s/stay`);
-              }}
-              data-testid="button-home-wifi"
-            >
-              <svg aria-hidden="true"><use href="#lg-i-wifi" /></svg>
-              <b>WiFi</b>
-            </button>
-          )}
-          {notices.length > 0 && (
-            <button
-              className="lg2-q"
-              type="button"
-              onClick={onOpenNotices}
-              data-testid="button-home-notices"
-            >
-              <svg aria-hidden="true"><use href="#lg-i-bell" /></svg>
-              <b>{t("UI.lg.notices.title")}</b>
-              {newNoticesCount > 0 && (
-                <span
-                  className="lg2-qd"
-                  data-testid="badge-new-notices"
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-          )}
-          {navState?.hasSiteMap && (
-            <button
-              className="lg2-q"
-              type="button"
-              onClick={() => navigate(`/${slug}/site-map`)}
-            >
-              <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
-              <b>{t("UI.lg.siteMap", "Mapa")}</b>
-            </button>
-          )}
-          {navState?.omitted?.length > 0 && (
-            <button
-              className="lg2-q"
-              type="button"
-              onClick={() => navigate(`/${slug}/more`)}
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-              <b>{t("UI.lg.more", "Več")}</b>
-            </button>
-          )}
+        <div className="lg2-hqbar">
+          <button
+            className="lg2-q lg2-q--w"
+            type="button"
+            disabled={!hasWifi || (!wifiCategory && !staySection)}
+            onClick={() => {
+              if (wifiCategory) onOpenCategory(wifiCategory.id);
+              else if (staySection) navigate(`/${slug}/s/stay`);
+            }}
+            data-testid="button-home-wifi"
+          >
+            <svg aria-hidden="true"><use href="#lg-i-wifi" /></svg>
+            <b>WiFi</b>
+          </button>
+          <button
+            className="lg2-q"
+            type="button"
+            onClick={onOpenNotices}
+          >
+            <svg aria-hidden="true"><use href="#lg-i-bell" /></svg>
+            <b>{t("UI.lg.notices.title", "Obvestila")}</b>
+            {newNoticesCount > 0 && <span className="lg2-qd" />}
+          </button>
+          <button
+            className="lg2-q"
+            type="button"
+            onClick={() => navigate(`/${slug}/messages`)}
+          >
+            <svg aria-hidden="true"><use href="#lg-i-chat" /></svg>
+            <b>{t("UI.lg.nav.messages", "Sporočila")}</b>
+          </button>
+          <button
+            className="lg2-q"
+            type="button"
+            disabled={!mapAvailable}
+            onClick={() => {
+              if (navState?.hasSiteMap) navigate(`/${slug}/site-map`);
+              else if (fallbackMapQuery) {
+                window.open(
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallbackMapQuery)}`,
+                  "_blank",
+                  "noopener,noreferrer",
+                );
+              }
+            }}
+          >
+            <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
+            <b>{t("UI.lg.home.map")}</b>
+          </button>
         </div>
 
         {visibleDanesItems.length > 0 && (
           <>
-            <div className="lg2-sect">
-              <h2>{t("UI.lg.home.today")}</h2>
-              {eventDestination && (
+            <div className="lg2-hsect">
+              <h3>{t("UI.lg.home.today")}</h3>
+              {eventDestination ? (
                 <button
                   type="button"
                   onClick={() =>
                     navigate(`/${slug}/c/${eventDestination.category.id}`)
                   }
-                  data-testid="button-all-program"
                 >
                   {t("UI.lg.home.allProgram")}
                 </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/${slug}/s/explore`)}
+                >
+                  {t("UI.lg.home.more")}
+                </button>
               )}
             </div>
-            <div className="lg2-nowtrack" data-testid="list-today">
+            <div className="lg2-hcards">
               {visibleDanesItems.map((item) => (
                 <button
                   key={item.id}
-                  className="lg2-nowcard"
+                  className="lg2-hcard"
                   type="button"
-                  onClick={item.onClick}
-                  data-testid={`card-today-${item.id}`}
+                  onClick={() => onOpenItem(item.categoryId, item.item.id)}
                 >
                   {item.media && (
                     <img
                       src={mediaImgSrc(item.media, CARD_IMAGE_WIDTH)}
                       alt=""
-                      className="lg2-pic"
+                      className="pic"
                       style={imageStyle(item.media)}
                     />
                   )}
-                  <span className="lg2-vg" aria-hidden="true" />
-                  <span className="lg2-t">
-                    <em>{item.badge}</em>
-                    <b>{item.title}</b>
-                    {item.subtitle && <small>{item.subtitle}</small>}
-                  </span>
+                  <div className="vg" aria-hidden="true" />
+                  <div className="tx">
+                    <em>{item.categoryLabel}</em>
+                    <b>{item.item.title}</b>
+                    <small>{item.detail}</small>
+                  </div>
                 </button>
               ))}
             </div>
           </>
         )}
 
-        {zaVasItems.length > 0 && (
-          <>
-            <div className="lg2-sect">
-              <h2>{t("UI.lg.home.forYou")}</h2>
-              {offerSection && (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/${slug}/s/offer`)}
-                  data-testid="button-all-offers"
-                >
-                  {t("UI.lg.home.allOffers")}
-                </button>
-              )}
-            </div>
-            <div className="lg2-grid lg2-home-cards">
-              {zaVasItems.map((item: any) => (
-                <button
-                  key={item.id}
-                  className={`lg2-cardp${item.isWide ? " lg2-cardp--w" : ""}`}
-                  type="button"
-                  onClick={() => navigate(item.path)}
-                  data-testid={`card-for-you-${item.id}`}
-                >
-                  {item.media && (
-                    <img
-                      src={mediaImgSrc(
-                        item.media,
-                        item.isWide ? HERO_IMAGE_WIDTH : CARD_IMAGE_WIDTH,
-                      )}
-                      alt=""
-                      className="lg2-pic"
-                      style={imageStyle(item.media)}
-                    />
-                  )}
-                  <span className="lg2-c2">
-                    <b>{item.title}</b>
-                    {item.subtitle && <small>{item.subtitle}</small>}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {helpCategory && (
-          <div className="lg2-home-help">
-            <button
-              type="button"
-              onClick={() => onOpenCategory(helpCategory.id)}
-              data-testid="button-home-help"
-            >
-              {t("UI.lg.helpEmergency")}
-            </button>
-          </div>
-        )}
+        <div className="lg2-hhelp">
+          <button
+            type="button"
+            disabled={!helpCategory}
+            onClick={() => helpCategory && onOpenCategory(helpCategory.id)}
+          >
+            {t("UI.lg.helpEmergency", "Pomoč in nujni primeri")}
+          </button>
+        </div>
       </div>
+    </div>
     </section>
   );
 }

@@ -26,6 +26,8 @@ export interface TenantUpdate {
   /** @nullable */
   heroUrl?: string | null;
   /** @nullable */
+  livingGuideHeroUrl?: string | null;
+  /** @nullable */
   tourUrl?: string | null;
   /** @nullable */
   phone?: string | null;
