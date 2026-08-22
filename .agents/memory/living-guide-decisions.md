@@ -110,3 +110,9 @@ PART 5 production content sync requires a separately approved row-level ledger a
 **Why:** Production legitimately trails owner-edited development content, but a whole-database copy would overwrite live renewal, changelog, and authentication history.
 
 **How to apply:** Recheck every old value and content hash before one atomic, allowlisted sync; abort on drift. Keep legacy image files in storage, avoid ordinary admin routes that add changelog rows, and re-lock any temporary production sync path immediately after verification.
+
+The mandatory PART 5 production order test uses the explicit test name and note, then closes the order as rejected with the host note “Testno naročilo ob prehodu — brez ukrepanja”. It is not deleted during cutover; ordinary retention removes it after 90 days. A host-facing order-deletion control is deferred to Phase A order administration.
+
+**Why:** The real production e-mail chain must be proven before guest launch, but the current product has no safe supported deletion capability and a cutover must not add one ad hoc.
+
+**How to apply:** Do not claim the test order was deleted. Report the message delivery evidence and rejection status, and scope the deletion control to the existing future order-administration work.
