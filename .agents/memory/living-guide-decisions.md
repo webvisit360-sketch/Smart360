@@ -9,6 +9,18 @@ The guest-app rebuild is reviewed in five parts. Stop after each part for stagin
 
 **How to apply:** Finish and report one part at a time; do not begin the following part until the user accepts the current report.
 
+Architecture #29 uses the newest attached virtual-tour prototype as the binding visual source when it conflicts with the accompanying architecture note. Its first checkpoint is limited to the cover and safe admin tour input; later home, card, and detail work remains gated.
+
+**Why:** The owner explicitly prioritized the latest prototype and requested a report-and-stop checkpoint before broader Living Guide changes.
+
+**How to apply:** Preserve the full-bleed, bottom-control-only cover contract and do not fold later checkpoint layouts into the initial virtual-tour work without approval.
+
+Virtual tours reuse the tenant’s canonical `tourUrl` field. Accept only a canonical HTTPS URL from approved providers; extract it server-side from plain URLs, iframe `src`, or script `data-*` values, and never persist or render pasted markup.
+
+**Why:** The field is shared across guest modes, so malformed or historic markup must not become an iframe or outbound link in either mode.
+
+**How to apply:** Keep server validation authoritative, mirror it defensively on every client render and preview, require exact embed path segments for path-restricted providers, and preserve the allowlist tests when modifying supported services.
+
 The time themes use the guest device clock: Jutro 05:00–09:59, Dan 10:00–16:59, Večer 17:00–20:59, and Noč 21:00–04:59. The new system is scoped to `body[data-t]`; legacy `html[data-theme]` remains until cutover. Re-sync when the page becomes visible.
 
 **Why:** Midnight through 04:59 being night is an explicit correction to the prototype.

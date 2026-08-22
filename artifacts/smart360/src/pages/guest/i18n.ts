@@ -28,6 +28,12 @@ export const LIVING_GUIDE_UI = {
     de: "Reiseführer öffnen",
     it: "Apri la guida",
   },
+  "UI.lg.tour.view": {
+    sl: "360° ogled",
+    en: "360° tour",
+    de: "360°-Rundgang",
+    it: "Tour a 360°",
+  },
   "UI.lg.nav.home": {
     sl: "Domov",
     en: "Home",

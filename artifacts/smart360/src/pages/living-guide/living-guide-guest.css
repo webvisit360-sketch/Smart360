@@ -32,6 +32,11 @@
   box-shadow: 0 0 80px rgba(0, 0, 0, .16);
 }
 
+.lg2-app[data-screen="cover"] .lg2-stage {
+  border: 0;
+  box-shadow: none;
+}
+
 body[data-t="noc"] .lg2-stage {
   background: transparent;
 }
@@ -92,6 +97,7 @@ body[data-t="noc"] .lg2-grid-view {
 }
 
 .lg2-cover-photo,
+.lg2-cover-tour,
 .lg2-cover-veil {
   position: absolute;
   inset: 0;
@@ -108,10 +114,22 @@ body[data-t="noc"] .lg2-grid-view {
   object-fit: cover;
 }
 
+.lg2-cover-tour iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
 .lg2-cover-veil {
   background:
     linear-gradient(to top, var(--scrim) 0%, transparent 45%),
     linear-gradient(to bottom, rgba(0, 0, 0, .25), transparent 22%);
+  pointer-events: none;
+}
+
+.lg2-cover-veil--tour {
+  background: linear-gradient(to top, var(--scrim) 0%, transparent 34%);
 }
 
 @keyframes lg2-cover-photo-in {
@@ -119,13 +137,7 @@ body[data-t="noc"] .lg2-grid-view {
 }
 
 .lg2-cover-top {
-  position: absolute;
-  z-index: 2;
-  top: max(20px, env(safe-area-inset-top));
-  left: 18px;
-  right: 18px;
-  display: flex;
-  justify-content: space-between;
+  display: none; /* Removed as per Checkpoint 1 rules */
 }
 
 .lg2-fab {
@@ -161,7 +173,8 @@ body[data-t="noc"] .lg2-grid-view {
   z-index: 2;
   left: 24px;
   right: 24px;
-  bottom: 118px;
+  bottom: calc(118px + env(safe-area-inset-bottom));
+  pointer-events: none;
 }
 
 .lg2-cover-kicker {
@@ -200,12 +213,38 @@ body[data-t="noc"] .lg2-grid-view {
   font-size: 12px;
 }
 
-.lg2-open-guide {
+.lg2-cbar {
   position: absolute;
-  z-index: 3;
-  left: 24px;
-  right: 24px;
-  bottom: max(34px, calc(18px + env(safe-area-inset-bottom)));
+  left: 20px;
+  right: 20px;
+  bottom: calc(26px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.lg2-cbar > * {
+  pointer-events: auto;
+}
+
+.lg2-cbar .lg2-fab {
+  width: 58px;
+  min-width: 58px;
+  height: 58px;
+  padding: 0;
+  border-radius: 20px;
+}
+
+.lg2-cbar .lg2-language {
+  display: grid;
+  place-items: center;
+}
+
+.lg2-open-guide {
+  flex: 1;
+  min-width: 0;
   height: 58px;
   border: 1px solid rgba(255, 255, 255, .25);
   border-radius: 20px;
@@ -595,6 +634,47 @@ body[data-t="noc"] .lg2-grid-view {
 .lg2-orders-entry-arrow {
   color: var(--tx2);
   font-size: 24px;
+  line-height: 1;
+}
+
+.lg2-tour-return {
+  width: calc(100% - 32px);
+  min-height: 54px;
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card2);
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lg2-tour-return > span {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--acc);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.lg2-tour-return b {
+  flex: 1;
+  font-size: 13px;
+}
+
+.lg2-tour-return em {
+  color: var(--tx2);
+  font-size: 24px;
+  font-style: normal;
   line-height: 1;
 }
 
@@ -1231,6 +1311,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-primary-button:active,
 .lg2-greeting:active,
 .lg2-orders-entry:active,
+.lg2-tour-return:active,
 .lg2-detail-back:active,
 .lg2-sub2:active,
 .lg2-seg button:active,
@@ -1251,6 +1332,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-later:focus-visible,
 .lg2-greeting:focus-visible,
 .lg2-orders-entry:focus-visible,
+.lg2-tour-return:focus-visible,
 .lg2-detail-back:focus-visible,
 .lg2-bottom-nav button:focus-visible,
 .lg2-field:focus-within {

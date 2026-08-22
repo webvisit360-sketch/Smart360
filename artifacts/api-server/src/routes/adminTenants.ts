@@ -35,6 +35,10 @@ import PDFDocument from "pdfkit";
 import SVGtoPDF from "svg-to-pdfkit";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { WORDMARK_SVG } from "../lib/wordmark";
+import {
+  extractVirtualTourUrl,
+  VirtualTourUrlError,
+} from "../lib/virtualTour";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -348,9 +352,21 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   const {
     renewsAt: renewsAtRaw,
     orderPassword: orderPasswordRaw,
+    tourUrl: tourUrlRaw,
     ...restData
   } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
+  if (tourUrlRaw !== undefined) {
+    try {
+      updateData["tourUrl"] = extractVirtualTourUrl(tourUrlRaw);
+    } catch (error) {
+      if (error instanceof VirtualTourUrlError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  }
   if (orderPasswordRaw !== undefined) {
     updateData["orderPassword"] = orderPasswordRaw?.trim() || null;
   }

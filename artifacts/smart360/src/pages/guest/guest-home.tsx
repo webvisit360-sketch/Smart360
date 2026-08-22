@@ -16,6 +16,7 @@ import { isLightHex } from "./use-theme-attr";
 import { makeT, plural, resolveLang, clampLang, switchLang, LANG_NAMES, SL_UI } from "./i18n";
 import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
+import { parseVirtualTourInput } from "@/lib/virtual-tour";
 
 export default function GuestHome() {
   const [, params] = useRoute("/:slug");
@@ -56,6 +57,7 @@ export default function GuestHome() {
   // Un-enabled language silently becomes Slovene once the tenant is known.
   const lang = clampLang(rawLang, tenant.languages);
   const t = makeT(tenant, lang);
+  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
 
   if (tenant.theme === 'swipe') {
     return <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={null} />;
@@ -142,8 +144,8 @@ export default function GuestHome() {
         heroExtras={
           <>
             <button className="hero__heart"><svg viewBox="0 0 24 24"><use href="#i-heart" /></svg></button>
-            {tenant.tourUrl && (
-              <a href={tenant.tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">
+            {tourUrl && (
+              <a href={tourUrl} target="_blank" rel="noopener noreferrer" className="hero__pill">
                 <svg className="ic" viewBox="0 0 24 24"><use href="#i-360" /></svg>{t("UI.tour.pill")}
               </a>
             )}

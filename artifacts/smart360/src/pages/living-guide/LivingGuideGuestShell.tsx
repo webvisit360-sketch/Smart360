@@ -49,6 +49,7 @@ import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 import { OrderSheet, MyOrdersSheet } from "./living-guide-order-sheet";
 import { getDeviceToken } from "./living-guide-orders";
+import { parseVirtualTourInput } from "@/lib/virtual-tour";
 
 type GuestRecord = {
   unit: string;
@@ -335,10 +336,6 @@ export default function LivingGuideGuestShell({
   const t = makeT(tenant, lang);
   const rootRef = useRef<HTMLDivElement>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const welcomeOverride = import.meta.env.DEV
-    ? new URLSearchParams(window.location.search).get("welcome")
-    : null;
-
   const sections = useMemo(() => visible(tenant?.sections), [tenant?.sections]);
   const allCategories = useMemo(
     () =>
@@ -367,12 +364,7 @@ export default function LivingGuideGuestShell({
   else if (routeSectionKey) screen = "grid";
 
   const [guest, setGuest] = useState<GuestRecord | null>(() => readGuest(slug));
-  const [showSignIn, setShowSignIn] = useState(
-    () =>
-      screen === "cover" &&
-      (welcomeOverride === "show" ||
-        (welcomeOverride !== "skip" && !readGuest(slug))),
-  );
+  const [showSignIn, setShowSignIn] = useState(false);
   const [showNotices, setShowNotices] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
     const [showLanguages, setShowLanguages] = useState(false);
@@ -476,6 +468,9 @@ export default function LivingGuideGuestShell({
       localStorage.setItem(GUEST_STORAGE_PREFIX + slug, JSON.stringify(clean));
     } catch {}
     setShowSignIn(false);
+    if (screen === "cover") {
+      navigate(gridPath(staySection));
+    }
   };
 
   const openCategory = (id: string) => navigate(`/${slug}/c/${id}`);
@@ -509,7 +504,10 @@ export default function LivingGuideGuestShell({
 
       <main className="lg2-stage">
         {screen === "cover" && (
-          <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => navigate(gridPath(staySection))} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
+          <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
+            if (guest) navigate(gridPath(staySection));
+            else setShowSignIn(true);
+          }} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
         )}
 
         {screen === "grid" && currentSection && (
@@ -526,6 +524,7 @@ export default function LivingGuideGuestShell({
             notices={currentSection.key === "stay" ? notices : []}
             orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
+            onOpenTour={() => navigate(`/${slug}`)}
           />
         )}
 
@@ -667,31 +666,43 @@ function Starfield({ theme }: { theme: LivingTheme }) {
 
 function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: any; lang: string; t: UiTranslator; onOpen: () => void; onSearch: () => void; onLanguage: () => void; }) {
   const title = tenant.coverTitle || tenant.name;
+  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
 
   return (
     <section className="lg2-view lg2-cover" aria-label={title}>
-      <div className="lg2-cover-photo" aria-hidden="true">
-        {tenant.heroUrl && <img src={tenant.heroUrl} alt="" fetchPriority="high" decoding="async" style={imageStyle(tenant.heroMedia, tenant)} />}
+      <div className={tourUrl ? "lg2-cover-tour" : "lg2-cover-photo"} aria-hidden={tourUrl ? undefined : true}>
+        {tourUrl ? (
+          <iframe
+            src={tourUrl}
+            allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
+            allowFullScreen
+            scrolling="no"
+            loading="eager"
+            title={title}
+          />
+        ) : (
+          tenant.heroUrl && <img src={tenant.heroUrl} alt="" fetchPriority="high" decoding="async" style={imageStyle(tenant.heroMedia, tenant)} />
+        )}
       </div>
-      <div className="lg2-cover-veil" aria-hidden="true" />
-      <div className="lg2-cover-top">
-        <button className="lg2-fab lg2-cover-search" type="button" onClick={onSearch} aria-label={t("UI.lg.search.title")}>
-          <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
-        </button>
-        <button className="lg2-fab lg2-language" type="button" onClick={onLanguage} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })} data-lg-language-trigger>
-          {lang.toUpperCase()}
-        </button>
-      </div>
+      <div className={tourUrl ? "lg2-cover-veil lg2-cover-veil--tour" : "lg2-cover-veil"} aria-hidden="true" />
       <div className="lg2-cover-mast">
         <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
         {tenant.coverSubtitle && <p className="lg2-cover-subtitle">{tenant.coverSubtitle}</p>}
         {tenant.address && <p className="lg2-cover-address">{tenant.address}</p>}
       </div>
-      <button className="lg2-open-guide" type="button" onClick={onOpen}>
-        <svg aria-hidden="true"><use href="#lg-i-down" /></svg>
-        {t("UI.lg.openGuide")}
-      </button>
+      <div className="lg2-cbar">
+        <button className="lg2-fab lg2-cover-search" type="button" onClick={onSearch} aria-label={t("UI.lg.search.title")}>
+          <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
+        </button>
+        <button className="lg2-open-guide" type="button" onClick={onOpen}>
+          <svg aria-hidden="true"><use href="#lg-i-down" /></svg>
+          {t("UI.lg.openGuide")}
+        </button>
+        <button className="lg2-fab lg2-language" type="button" onClick={onLanguage} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })} data-lg-language-trigger>
+          {lang.toUpperCase()}
+        </button>
+      </div>
     </section>
   );
 }
@@ -788,8 +799,9 @@ function NoticeRow({ n, t }: { n: any, t: UiTranslator }) {
   );
 }
 
-function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, orderSummary, onOpenOrders }: any) {
+function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, orderSummary, onOpenOrders, onOpenTour }: any) {
   const categories = visible(section.categories);
+  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
   const featuredCategory = categories.find(isOperationalRulesCategory) ??
     categories.find((c: any) => { const firstItem = visible(c.items)[0]; return !firstItem?.tint && !!firstMedia(c); });
   const orderedCategories = featuredCategory ? [featuredCategory, ...categories.filter((c: any) => c.id !== featuredCategory.id)] : categories;
@@ -845,6 +857,13 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
               </small>
             </span>
             <span className="lg2-orders-entry-arrow" aria-hidden="true">›</span>
+          </button>
+        )}
+        {section.key === "stay" && tourUrl && (
+          <button className="lg2-tour-return" type="button" onClick={onOpenTour}>
+            <span aria-hidden="true">360°</span>
+            <b>{t("UI.lg.tour.view")}</b>
+            <em aria-hidden="true">›</em>
           </button>
         )}
         <div className="lg2-grid lg2-stagger">

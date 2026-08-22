@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Upload, ImageIcon }
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/c
 import { SlugField } from "@/components/admin/slug-field";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
+import { parseVirtualTourInput } from "@/lib/virtual-tour";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -55,13 +57,17 @@ export default function AdminTenantEdit() {
       onSuccess: (data) => {
         queryClient.setQueryData(getGetTenantQueryKey(id), (old: any) => old ? { ...old, ...data } : old);
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+        setFormData((prev) => ({ ...prev, tourUrl: data.tourUrl || "" }));
         toast({ title: "Shranjeno", description: "Spremembe so bile shranjene." });
       },
       onError: (err: any) => {
         if (err?.status === 409) {
           toast({ title: "Naslov je zaseden", description: "Ta naslov je že zaseden. Izberite drugega.", variant: "destructive" });
+        } else if (err?.status === 400 && err?.data?.errors) {
+          const msgs = err.data.errors.map((e: any) => e.message).join(", ");
+          toast({ title: "Neveljavni podatki", description: msgs, variant: "destructive" });
         } else {
-          toast({ title: "Napaka", description: "Shranjevanje ni uspelo.", variant: "destructive" });
+          toast({ title: "Napaka", description: err?.data?.error || err?.data?.message || err?.message || "Shranjevanje ni uspelo.", variant: "destructive" });
         }
       },
     }
@@ -384,9 +390,38 @@ export default function AdminTenantEdit() {
                   <Label>URL naslovnične (Hero) fotografije</Label>
                   <Input value={formData.heroUrl} onChange={e => setFormData({ ...formData, heroUrl: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>URL 360° ogleda</Label>
-                  <Input value={formData.tourUrl} onChange={e => setFormData({ ...formData, tourUrl: e.target.value })} />
+                <div className="col-span-2 space-y-2">
+                  <Label>Virtualni sprehod</Label>
+                  <Textarea
+                    className="min-h-[96px]"
+                    placeholder="Prilepite kodo (iframe/script) ali URL ponudnika..."
+                    value={formData.tourUrl} 
+                    onChange={e => setFormData({ ...formData, tourUrl: e.target.value })} 
+                  />
+                  {(() => {
+                    const parsed = parseVirtualTourInput(formData.tourUrl);
+                    if (parsed.error && formData.tourUrl.trim()) {
+                      return <p className="text-sm text-destructive">{parsed.error}</p>;
+                    }
+                    if (parsed.url) {
+                      return (
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-2">Gumbi in logotipi ponudnika se urejajo pri ponudniku. Predogled:</p>
+                          <div className="relative w-full overflow-hidden rounded-xl border bg-muted" style={{ aspectRatio: "16/9" }}>
+                            <iframe
+                              src={parsed.url}
+                              className="absolute inset-0 w-full h-full border-0"
+                              allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
+                              allowFullScreen
+                              scrolling="no"
+                              title="Predogled virtualnega sprehoda"
+                            />
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
                 <div className="space-y-2">
                   <Label>Kvota za medije (GB)</Label>
