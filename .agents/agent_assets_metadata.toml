@@ -162,3 +162,17 @@ mtime_ms = 1787379403816
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d7214ceb-7757-4896-8175-f10241400e6b/ba72a65d-dc87-4100-9606-01e6c9ee6085"
 storage_version_token = "1787379444833316"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "dgV8BLKCRoJCegmtgPbvz"
+uri = "file://attached_assets/Screenshot_2026-08-22_at_20.52.26_1787424780568.png"
+type = "image"
+title = "Portal proof — fully identified guest threads"
+description = "Development QA portal after the message security fix: every visible thread includes a guest name and unit; no legacy identity-less thread is shown."
+logical_id = "661c34db-68f1-44cf-9cd0-fd419cb13f31"
+content_hash = "sha256:df2ecfbe6f5c60b043996e4304b3f6f93a5232105f54a7630f361f4c04ef9235"
+size = 255224
+mtime_ms = 1787424781603
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/661c34db-68f1-44cf-9cd0-fd419cb13f31/079a3904-4b4c-458f-b9a7-542b1edc7f6d"
+storage_version_token = "1787424804203631"
+content_type = "image/png"
