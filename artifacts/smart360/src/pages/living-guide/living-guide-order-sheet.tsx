@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { useCreateOrder, useListDeviceOrders, getListDeviceOrdersQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   getDeviceToken,
   addOrderRef,
@@ -21,6 +22,7 @@ export function OrderSheet({
   guest,
   passwordRequired,
   onClose,
+  onOpenOrders,
 }: {
   item: any;
   slug: string;
@@ -29,7 +31,9 @@ export function OrderSheet({
   guest: { unit: string; name: string } | null;
   passwordRequired: boolean;
   onClose: () => void;
+  onOpenOrders: () => void;
 }) {
+  const queryClient = useQueryClient();
   const [qty, setQty] = useState(1);
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
@@ -84,11 +88,21 @@ export function OrderSheet({
           lang,
         },
       });
-      addOrderRef(slug, res.orderRef);
+      const orderRef =
+        res && typeof res.orderRef === "string" && res.orderRef.trim()
+          ? res.orderRef.trim()
+          : null;
+      if (!orderRef) {
+        throw new Error("Order response did not include a reference");
+      }
+      addOrderRef(slug, orderRef);
       if (passwordRequired) {
         rememberOrderPassword(slug, orderPassword);
       }
-      setSuccessRef(res.orderRef);
+      setSuccessRef(orderRef);
+      void queryClient.invalidateQueries({
+        queryKey: getListDeviceOrdersQueryKey(slug),
+      });
     } catch (error: unknown) {
       const data =
         typeof error === "object" && error !== null && "data" in error
@@ -120,11 +134,21 @@ export function OrderSheet({
           </svg>
           <style>{`@keyframes lg2-draw-check { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }`}</style>
           <h3 style={{ fontSize: "24px", fontWeight: 800, margin: "0 0 12px" }}>{t("UI.lg.order.success")}</h3>
+          <p style={{ color: "var(--tx)", fontSize: "17px", fontWeight: 750, margin: "0 auto 10px" }}>
+            {t("UI.lg.order.thankYou")}
+          </p>
           <p style={{ color: "var(--tx2)", fontSize: "15px", lineHeight: 1.5, maxWidth: 300, margin: "0 auto 24px" }}>
-            {t("UI.lg.order.successDesc")}
+            {t("UI.lg.order.successNext")}
           </p>
           <p className="lg2-order-ref">{t("UI.lg.order.ref")} {successRef}</p>
-          <button className="lg2-primary-button" onClick={onClose}>{t("UI.lg.action.back")}</button>
+          <div className="lg2-order-success-actions">
+            <button className="lg2-primary-button" type="button" onClick={onOpenOrders}>
+              {t("UI.lg.order.myOrders")}
+            </button>
+            <button className="lg2-primary-button lg2-primary-button--secondary" type="button" onClick={onClose}>
+              {t("UI.lg.order.backToGuide")}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -132,7 +156,7 @@ export function OrderSheet({
 
   return (
     <div className="lg2-sheet-overlay" role="presentation" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <form className="lg2-welcome-sheet v--sheet" id="v-order" role="dialog" aria-modal="true" onSubmit={submit} data-testid="order-form">
+      <form className="lg2-welcome-sheet v--sheet" id="v-order" role="dialog" aria-modal="true" onSubmit={submit} noValidate data-testid="order-form">
         <div className="lg2-grabber" aria-hidden="true" />
         <h2 style={{ fontSize: "23px", fontWeight: 800, letterSpacing: "-.03em", color: "var(--tx)", marginBottom: "14px" }}>
           {t("UI.lg.order.title")} · {item?.title}
@@ -149,24 +173,23 @@ export function OrderSheet({
 
         <label className="lg2-field lg2-field--required">
           <span>{t("UI.lg.order.name")}</span>
-          <input required type="text" maxLength={200} value={guestName} onChange={e => setGuestName(e.target.value)} disabled={submitting} data-testid="input-guest-name" />
+          <input type="text" maxLength={200} value={guestName} onChange={e => setGuestName(e.target.value)} disabled={submitting} data-testid="input-guest-name" />
         </label>
 
         <label className="lg2-field lg2-field--required">
           <span>{t("UI.lg.order.unit")}</span>
-          <input required type="text" maxLength={100} value={guestUnit} onChange={e => setGuestUnit(e.target.value)} disabled={submitting} data-testid="input-guest-unit" />
+          <input type="text" maxLength={100} value={guestUnit} onChange={e => setGuestUnit(e.target.value)} disabled={submitting} data-testid="input-guest-unit" />
         </label>
 
         <label className="lg2-field lg2-field--required">
           <span>{t("UI.lg.order.phone")}</span>
-          <input required type="tel" maxLength={50} value={phone} onChange={e => setPhone(e.target.value)} placeholder={t("UI.lg.order.placeholder.phone")} disabled={submitting} data-testid="input-guest-phone" />
+          <input type="tel" maxLength={50} value={phone} onChange={e => setPhone(e.target.value)} placeholder={t("UI.lg.order.placeholder.phone")} disabled={submitting} data-testid="input-guest-phone" />
         </label>
 
         {passwordRequired && (
           <label className="lg2-field lg2-field--required">
             <span>{t("UI.lg.order.password")}</span>
             <input
-              required
               type="password"
               maxLength={200}
               value={orderPassword}
@@ -190,7 +213,7 @@ export function OrderSheet({
           <button className="lg2-primary-button" style={{ background: "var(--card)", color: "var(--tx)", border: "1px solid var(--line)" }} type="button" onClick={onClose} disabled={submitting}>
             {t("UI.lg.action.back")}
           </button>
-          <button className="lg2-primary-button" type="submit" disabled={!guestUnit.trim() || !guestName.trim() || !phone.trim() || (passwordRequired && !orderPassword.trim()) || submitting} data-testid="submit-order">
+          <button className="lg2-primary-button" type="submit" disabled={submitting} data-testid="submit-order">
             {submitting ? "..." : t("UI.lg.order.submit")}
           </button>
         </div>

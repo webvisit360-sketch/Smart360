@@ -394,11 +394,41 @@ export const LIVING_GUIDE_UI = {
     de: "Der Gastgeber wird die Bestellung so schnell wie möglich bestätigen. Verfolgen Sie sie unter 'Meine Bestellungen'.",
     it: "L'ospite confermerà l'ordine il prima possibile. Seguilo in 'I miei ordini'.",
   },
+  "UI.lg.order.thankYou": {
+    sl: "Hvala za vaše naročilo.",
+    en: "Thank you for your order.",
+    de: "Vielen Dank für Ihre Bestellung.",
+    it: "Grazie per il tuo ordine.",
+  },
+  "UI.lg.order.successNext": {
+    sl: "Gostitelj bo naročilo potrdil. Prevzem pri gostitelju.",
+    en: "The host will confirm the order. Pickup at the host.",
+    de: "Der Gastgeber bestätigt die Bestellung. Abholung beim Gastgeber.",
+    it: "L'host confermerà l'ordine. Ritiro presso l'host.",
+  },
+  "UI.lg.order.backToGuide": {
+    sl: "Nazaj v vodnik",
+    en: "Back to the guide",
+    de: "Zurück zum Reiseführer",
+    it: "Torna alla guida",
+  },
   "UI.lg.order.myOrders": {
     sl: "Moja naročila",
     en: "My orders",
     de: "Meine Bestellungen",
     it: "I miei ordini",
+  },
+  "UI.lg.order.entryOpen": {
+    sl: "{count} v obdelavi",
+    en: "{count} open",
+    de: "{count} offen",
+    it: "{count} in elaborazione",
+  },
+  "UI.lg.order.entryClosed": {
+    sl: "{count} zaključenih",
+    en: "{count} completed",
+    de: "{count} abgeschlossen",
+    it: "{count} completati",
   },
   "UI.lg.order.status.novo": {
     sl: "V obdelavi",
@@ -449,10 +479,10 @@ export const LIVING_GUIDE_UI = {
     it: "Ritiro",
   },
   "UI.lg.order.error": {
-    sl: "Napaka pri naročilu.",
-    en: "Order error.",
-    de: "Bestellfehler.",
-    it: "Errore d'ordine."
+    sl: "Naročilo ni bilo poslano. Preverite podatke in poskusite znova.",
+    en: "The order was not sent. Check your details and try again.",
+    de: "Die Bestellung wurde nicht gesendet. Prüfen Sie Ihre Angaben und versuchen Sie es erneut.",
+    it: "L'ordine non è stato inviato. Controlla i dati e riprova."
   },
   "UI.lg.order.retry": {
     sl: "Poskusi znova",

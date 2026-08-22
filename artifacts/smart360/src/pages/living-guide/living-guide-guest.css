@@ -539,6 +539,65 @@ body[data-t="noc"] .lg2-grid-view {
   font-weight: 750;
 }
 
+.lg2-orders-entry {
+  width: calc(100% - 32px);
+  min-height: 64px;
+  margin: 0 16px 12px;
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--acc) 32%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--acc) 8%, var(--card2));
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lg2-orders-entry-icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 13px;
+  background: var(--card);
+  color: var(--acc);
+  display: grid;
+  place-items: center;
+}
+
+.lg2-orders-entry-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lg2-orders-entry > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.lg2-orders-entry b,
+.lg2-orders-entry small {
+  display: block;
+}
+
+.lg2-orders-entry b {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.lg2-orders-entry small {
+  margin-top: 3px;
+  color: var(--tx2);
+  font-size: 12px;
+}
+
+.lg2-orders-entry-arrow {
+  color: var(--tx2);
+  font-size: 24px;
+  line-height: 1;
+}
+
 .lg2-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1171,6 +1230,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-utility-card:active,
 .lg2-primary-button:active,
 .lg2-greeting:active,
+.lg2-orders-entry:active,
 .lg2-detail-back:active,
 .lg2-sub2:active,
 .lg2-seg button:active,
@@ -1190,6 +1250,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-primary-button:focus-visible,
 .lg2-later:focus-visible,
 .lg2-greeting:focus-visible,
+.lg2-orders-entry:focus-visible,
 .lg2-detail-back:focus-visible,
 .lg2-bottom-nav button:focus-visible,
 .lg2-field:focus-within {
@@ -1651,6 +1712,17 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 
 .lg2-order-ref {
   margin: -10px auto 20px;
+}
+
+.lg2-order-success-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.lg2-primary-button--secondary {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--tx);
 }
 
 .lg2-order-facts,

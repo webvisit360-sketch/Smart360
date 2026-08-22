@@ -8,6 +8,10 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  getListDeviceOrdersQueryKey,
+  useListDeviceOrders,
+} from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { getOpenStatus } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -44,6 +48,7 @@ import {
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 import { OrderSheet, MyOrdersSheet } from "./living-guide-order-sheet";
+import { getDeviceToken } from "./living-guide-orders";
 
 type GuestRecord = {
   unit: string;
@@ -373,6 +378,23 @@ export default function LivingGuideGuestShell({
     const [showLanguages, setShowLanguages] = useState(false);
   const [orderItemId, setOrderItemId] = useState<string | null>(null);
   const [showOrders, setShowOrders] = useState(false);
+  const deviceToken = useMemo(() => getDeviceToken(slug), [slug]);
+  const { data: deviceOrders } = useListDeviceOrders(slug, {
+    query: {
+      refetchInterval: 15000,
+      queryKey: getListDeviceOrdersQueryKey(slug),
+    },
+    request: { headers: { "x-device-token": deviceToken } },
+  });
+  const orderSummary = useMemo(() => {
+    if (!deviceOrders?.length) return null;
+    return {
+      totalCount: deviceOrders.length,
+      openCount: deviceOrders.filter(
+        (order) => order.status === "novo" || order.status === "potrjeno",
+      ).length,
+    };
+  }, [deviceOrders]);
 
   useEffect(() => {
     const previousTheme = document.documentElement.getAttribute("data-theme");
@@ -502,6 +524,7 @@ export default function LivingGuideGuestShell({
             onOpenNotices={() => setShowNotices(true)}
             helpCategoryId={currentSection.key === "stay" ? helpCategory?.id : null}
             notices={currentSection.key === "stay" ? notices : []}
+            orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
           />
         )}
@@ -584,6 +607,10 @@ export default function LivingGuideGuestShell({
             guest={guest}
             passwordRequired={Boolean(tenant.orderPasswordConfigured)}
             onClose={() => setOrderItemId(null)}
+            onOpenOrders={() => {
+              setOrderItemId(null);
+              setShowOrders(true);
+            }}
           />
         );
       })()}
@@ -761,7 +788,7 @@ function NoticeRow({ n, t }: { n: any, t: UiTranslator }) {
   );
 }
 
-function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, onOpenOrders }: any) {
+function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, orderSummary, onOpenOrders }: any) {
   const categories = visible(section.categories);
   const featuredCategory = categories.find(isOperationalRulesCategory) ??
     categories.find((c: any) => { const firstItem = visible(c.items)[0]; return !firstItem?.tint && !!firstMedia(c); });
@@ -784,8 +811,8 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
       </header>
       <div className="lg2-screen-scroll" data-lg-scroll>
         {guest && (
-          <div style={{ margin: "0 16px 12px", display: "flex", gap: "8px" }}>
-            <button className="lg2-greeting" style={{ margin: 0, flex: 1 }} type="button" onClick={onEditGuest}>
+          <div style={{ margin: "0 16px 12px" }}>
+            <button className="lg2-greeting" style={{ margin: 0, width: "100%" }} type="button" onClick={onEditGuest}>
               <span className="lg2-greeting-icon" aria-hidden="true"><svg><use href="#lg-i-usr" /></svg></span>
               <span>
                 <b>{guest.name ? t("UI.lg.greeting.named", { name: guest.name }) : t("UI.lg.greeting.generic")}</b>
@@ -793,10 +820,32 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
               </span>
               <em>{t("UI.lg.greeting.change")}</em>
             </button>
-            <button type="button" onClick={onOpenOrders} style={{ width: "58px", height: "58px", borderRadius: "16px", background: "var(--card2)", color: "var(--tx)", border: "1px solid var(--line)", display: "grid", placeItems: "center", cursor: "pointer", flexShrink: 0 }} aria-label={t("UI.lg.order.myOrders")}>
-              <svg style={{ width: 22, height: 22 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            </button>
           </div>
+        )}
+        {orderSummary && (
+          <button
+            className="lg2-orders-entry"
+            type="button"
+            onClick={onOpenOrders}
+            data-testid="my-orders-entry"
+          >
+            <span className="lg2-orders-entry-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </span>
+            <span>
+              <b>{t("UI.lg.order.myOrders")}</b>
+              <small>
+                {orderSummary.openCount > 0
+                  ? t("UI.lg.order.entryOpen", { count: orderSummary.openCount })
+                  : t("UI.lg.order.entryClosed", { count: orderSummary.totalCount })}
+              </small>
+            </span>
+            <span className="lg2-orders-entry-arrow" aria-hidden="true">›</span>
+          </button>
         )}
         <div className="lg2-grid lg2-stagger">
           {orderedCategories.map((category: any, index: number) => {
