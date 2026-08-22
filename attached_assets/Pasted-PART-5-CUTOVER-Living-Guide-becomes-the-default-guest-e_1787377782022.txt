@@ -1,0 +1,41 @@
+PART 5 — CUTOVER (Living Guide becomes the default guest experience)
+The owner has authorized Part 5. Execute per instruction #27 with the additions below. This is the FIRST checkpoint that writes to the production database — treat every step as reversible-by-design and report before and after each stage. Never invent content.
+
+Deliver in THREE gated stages, one report each, and WAIT for approval between stages. Do not proceed to the next stage on your own.
+
+
+STAGE 1 — Pre-flight report (no changes at all)
+Report, without changing anything:
+
+Schema delta: the exact list of production schema changes required (order_notify_email, status_note, expanded notification-status constraint, distance_meters, media width/height, order password field, and anything else). For each: nullable? default? destructive? reversible?
+Backup: state exactly how the production database will be backed up before any migration, how to verify the backup is valid, and the concrete rollback procedure (commands/steps) if the cutover must be undone.
+Device matrix: the device/browser matrix you will verify against (iPhone Safari + Chrome at minimum, Android Chrome, one tablet, one desktop width), and what "pass" means for each.
+Data parity: confirm production content equals the hash-verified dev copy, or list every difference. State whether any dev-only content (test orders, test tenants, "Apartmaji Meli Pu (Kopija)") exists in production and must be excluded.
+Blockers: anything that would make cutover unsafe today.
+STAGE 2 — Production migration + Living Guide default (after approval)
+Take the backup from Stage 1 and verify it.
+Apply the schema changes. No content writes.
+Set guestUiMode so the Living Guide is the DEFAULT guest experience for the meli-pu tenant — ?ui=living-guide no longer required. Legacy code stays in place but unreachable for that tenant (removal is Stage 3).
+Recipient gate (blocking): the order notification recipient must be Meli Pu's real address, set BY THE OWNER in the admin. Do not hardcode it, do not copy the staging address. If it is still info@webvisit360.com when you reach this step, STOP and report — the owner will set it.
+Indexing must stay off (standing owner rule): robots.txt must disallow crawling of the guest guide, and guest pages must carry <meta name="robots" content="noindex, nofollow">. Verify and report the served robots.txt content and the meta tag on a live guest page.
+Verify on the production domain: cover, all four tabs, one detail per template, gallery, language switch SL/EN/DE/IT, search, order form (including the Geslo field if the owner has set a password), and one real order end-to-end with the real recipient — then delete that test order and report the deletion.
+Report the device matrix results with screenshots.
+STAGE 3 — Legacy removal (after approval)
+Remove the legacy guest UI code paths and any now-dead routes/assets.
+Confirm no tenant still depends on legacy; list what was deleted.
+Re-run the full verification suite and the device matrix.
+Confirm the previous build remains deployable as a rollback for at least 30 days, and say how to trigger that rollback.
+
+
+Standing rules (unchanged)
+prototip-2030.html wins over text (except the C1 night-hours rule).
+No invented content, ever.
+Re-verify the public URL immediately before every report; include build id.
+Report anything NOT done as NOT DONE with the reason — never silently skip.
+Include the DELIBERATELY ABSENT section in every report.
+Explicitly out of scope for Part 5 (next project, already planned)
+Tenant self-service admin accounts (per-tenant login, scoped to their own content) — required for Kamp Menina.
+Program/events template (dated events, today/tomorrow grouping) and the fifth bottom-bar slot.
+Simplified editing UX for non-technical hosts.
+WhatsApp/Telegram channels — deferred by owner decision; e-mail stays the notification bell.
+
