@@ -1,0 +1,277 @@
+<!doctype html><html lang="sl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart360 · koncept zaslonov</title>
+<style>
+:root{
+  --bg:#FFFFFF;--card:#F4F6F2;--card2:#ECF0EA;--tx:#121A14;--tx2:#66716A;
+  --line:#E8EBE6;--acc:#157347;--accg:#1D9159;--onacc:#fff;--warm:#DD9A2B;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font:15px/1.55 var(--sans);color:var(--tx);background:var(--bg);padding:32px 20px 64px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:34px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
+.sub{color:var(--tx2);font-size:16px;margin-bottom:34px;max-width:70ch}
+h2{font-size:21px;font-weight:800;letter-spacing:-.02em;margin:38px 0 4px}
+h2 .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:9px;
+  background:var(--acc);color:#fff;font-size:14px;font-weight:800;margin-right:9px;vertical-align:2px}
+p.lead{color:var(--tx2);margin-bottom:18px;max-width:75ch}
+.row{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap}
+.step{flex:0 0 232px}
+.arrow{align-self:center;font-size:26px;color:var(--accg);padding-top:120px}
+.ph{width:232px;height:420px;border-radius:26px;border:2px solid var(--tx);background:var(--card);
+  position:relative;overflow:hidden;display:flex;flex-direction:column}
+.cap{font-size:14px;color:var(--tx2);margin-top:10px}
+.cap b{color:var(--tx);display:block;font-size:15px;margin-bottom:2px}
+/* naslovnica */
+.pano{position:absolute;inset:0;background:
+  linear-gradient(180deg,#8FBBD9 0%,#B9D3E4 40%,#A9BF8E 41%,#7E9C63 100%)}
+.klogo{position:absolute;left:9px;top:9px;width:38px;height:38px;border-radius:50%;
+  background:var(--warm);color:#3a2a06;font-size:8.5px;font-weight:800;display:grid;place-items:center;text-align:center;line-height:1.1}
+.kbtn{position:absolute;right:9px;top:9px;display:flex;gap:5px}
+.kbtn i{width:22px;height:22px;border-radius:7px;background:rgba(0,0,0,.62)}
+.mast{position:absolute;left:14px;right:14px;bottom:74px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.mast small{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+.mast b{display:block;font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-top:4px}
+.cbar{position:absolute;left:12px;right:12px;bottom:14px;display:flex;gap:7px}
+.cbar .g{height:38px;border-radius:13px;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);
+  display:grid;place-items:center;font-size:12.5px;font-weight:750;color:var(--tx)}
+.cbar .g--f{width:38px}.cbar .g--m{flex:1}.cbar .g--l{width:42px}
+/* splošni zaslon */
+.hd{padding:14px 13px 9px;display:flex;align-items:flex-end;gap:6px;flex:none;background:var(--bg)}
+.hd small{font-size:8.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--acc);display:block}
+.hd b{font-size:19px;font-weight:800;letter-spacing:-.03em;display:block;margin-top:2px}
+.fab{width:30px;height:30px;border-radius:10px;background:var(--card2);display:grid;place-items:center;
+  font-size:11px;font-weight:800;color:var(--acc);flex:none}
+.fab.hi{background:var(--acc);color:#fff;box-shadow:0 0 0 3px rgba(21,115,71,.18)}
+.body{flex:1;overflow:hidden;padding:0 13px;background:var(--bg)}
+.hello{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:8px 10px;font-size:11px;color:var(--tx2);margin-bottom:9px}
+.q{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px}
+.q .b{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px 4px;
+  text-align:center;font-size:10.5px;font-weight:750;position:relative}
+.q .b.w{grid-column:1/-1}
+.q .b i{position:absolute;top:7px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--accg)}
+.sect{font-size:14px;font-weight:800;letter-spacing:-.02em;margin:2px 0 7px;display:flex}
+.sect span{margin-left:auto;font-size:10.5px;font-weight:750;color:var(--accg)}
+.track{display:flex;gap:7px;margin-bottom:11px}
+.tcard{flex:0 0 74%;height:82px;border-radius:14px;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#9AB48A,#6F8C5E)}
+.tcard b{position:absolute;left:9px;bottom:9px;color:#fff;font-size:11.5px;font-weight:800}
+.tcard em{position:absolute;left:9px;top:9px;font-style:normal;font-size:8px;font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;background:var(--acc);color:#fff;padding:3px 6px;border-radius:6px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.cards .c{border-radius:13px;overflow:hidden;border:1px solid var(--line);background:var(--card)}
+.cards .c .im{height:44px;background:linear-gradient(160deg,#A9C29A,#7E9C63)}
+.cards .c .t{padding:6px 8px;font-size:10.5px;font-weight:750}
+.cards .c.w{grid-column:1/-1}
+.nav{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);
+  background:var(--bg);padding:7px 2px 9px}
+.nav div{text-align:center;font-size:8.5px;font-weight:750;color:var(--tx2)}
+.nav div.on{color:var(--acc)}
+.nav div u{display:block;width:15px;height:15px;border-radius:5px;background:var(--card2);margin:0 auto 3px}
+.nav div.on u{background:var(--acc)}
+/* listek */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-radius:20px 20px 0 0;
+  padding:14px 14px 18px;box-shadow:0 -12px 40px rgba(0,0,0,.22)}
+.grab{width:34px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 11px}
+.inp{border:1.5px solid var(--line);border-radius:11px;padding:9px 11px;font-size:11px;color:var(--tx2);margin-bottom:7px}
+.inp.req{border-color:var(--accg)}
+.btnf{height:36px;border-radius:12px;background:var(--acc);color:#fff;display:grid;place-items:center;
+  font-size:12px;font-weight:750;margin-top:4px}
+.later{text-align:center;font-size:10.5px;color:var(--tx2);text-decoration:underline;margin-top:9px}
+/* pojasnila */
+.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);
+  border-radius:14px;padding:14px 16px;margin:20px 0;max-width:75ch}
+.note b{color:var(--acc)}
+table{border-collapse:collapse;margin-top:14px;font-size:14px}
+td,th{border-bottom:1px solid var(--line);padding:8px 16px 8px 0;text-align:left;vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+.pin{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+  background:var(--acc);color:#fff;font-size:11px;font-weight:800;margin-right:7px}
+</style></head><body><div class="wrap">
+
+<h1>Smart360 · koncept zaslonov</h1>
+<p class="sub">Kako se povežejo naslovnica z virtualnim ogledom, prijava gosta in vodnik. Zasnova po vzoru
+kampa Menina — kaj gost potrebuje in kdaj — z našimi izboljšavami.</p>
+
+<div class="note">
+<b>Bistvo, ki dela zmedo:</b> naslovnica <em>ni</em> domači zaslon. Naslovnica je <b>vhod</b> —
+kot vrata z razgledom. Domov je <b>dnevna soba</b>, kjer je vse pri roki. Gost skozi vrata stopi enkrat;
+v dnevno sobo se vrača ves teden.
+</div>
+
+<h2><span class="n">1</span>Pot ob prvem obisku</h2>
+<p class="lead">Gost odpre QR kodo. Vidi virtualni sprehod čez cel zaslon. Klikne »Odpri vodnik«,
+vpiše enoto (ali klikne »Pozneje«) in pristane na Domovu.</p>
+
+<div class="row">
+  <div class="step">
+    <div class="ph">
+      <div class="pano"></div>
+      <div class="klogo">VAŠ<br>LOGO</div>
+      <div class="kbtn"><i></i><i></i></div>
+      <div class="mast"><small>Vaš vodnik · Izola</small><b>Apartmaji<br>Meli Pu</b></div>
+      <div class="cbar"><div class="g g--f">🔍</div><div class="g g--m">Odpri vodnik</div><div class="g g--l">SL</div></div>
+    </div>
+    <div class="cap"><b>Naslovnica</b>Virtualni ogled čez cel zaslon. Zgornji rob je prazen — tam sta
+      tvoj logotip in gumbi Kuule. Naši trije gumbi so spodaj.</div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <div class="step">
+    <div class="ph">
+      <div class="pano" style="filter:brightness(.72)"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:5px">Dobrodošli</div>
+        <div style="font-size:10.5px;color:var(--tx2);margin-bottom:10px">Vpišite številko apartmaja — naročila bodo označena z njo.</div>
+        <div class="inp req">Apartma · obvezno</div>
+        <div class="inp">Ime in priimek · neobvezno</div>
+        <div class="btnf">Shrani</div>
+        <div class="later">Pozneje — najprej si samo ogledam</div>
+      </div>
+    </div>
+    <div class="cap"><b>Prijava</b>Dvigne se šele po kliku, in samo prvič. Obe poti — »Shrani« in
+      »Pozneje« — peljeta na Domov.</div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <div class="step">
+    <div class="ph">
+      <div class="hd">
+        <div style="flex:1"><small>Apartmaji Meli Pu</small><b>Dobrodošli</b></div>
+        <div class="fab hi">360</div><div class="fab">🔍</div>
+      </div>
+      <div class="body">
+        <div class="hello">Frenk, dobrodošli · apartma 4</div>
+        <div class="q">
+          <div class="b w">WiFi</div>
+          <div class="b"><i></i>Obvestila</div><div class="b">Sporočila</div><div class="b">Zemljevid</div>
+        </div>
+        <div class="sect">Danes <span>ves program</span></div>
+        <div class="track">
+          <div class="tcard"><em>čez 40 min</em><b>Peka kruha</b></div>
+          <div class="tcard"><em>odprto</em><b>Bazen</b></div>
+        </div>
+        <div class="sect">Za vas <span>vsa ponudba</span></div>
+        <div class="cards"><div class="c w"><div class="im"></div><div class="t">Domači izdelki in najem</div></div></div>
+      </div>
+      <div class="nav">
+        <div class="on"><u></u>Domov</div><div><u></u>Nastanitev</div><div><u></u>Ponudba</div>
+        <div><u></u>Okolica</div><div><u></u>Sporočila</div>
+      </div>
+    </div>
+    <div class="cap"><b>Domov</b>Pravi domači zaslon. Tu je <span class="pin">360</span>ikona, ki gosta
+      kadarkoli vrne v virtualni sprehod.</div>
+  </div>
+</div>
+
+<h2><span class="n">2</span>Kje je ikona 360 in zakaj tam</h2>
+<p class="lead">Na naslovnici ikone ni — tam je panorama sama. Ikona živi v glavi Domova, levo od lupe.
+Tako virtualni sprehod ni le uvod, ki ga gost vidi enkrat, ampak funkcija, ki jo pokaže tudi domačim.</p>
+<table>
+  <tr><th>Element</th><th>Kje stoji</th><th>Zakaj</th></tr>
+  <tr><td><b>Logotip gostitelja</b></td><td>Naslovnica, levo zgoraj</td><td>Nariše ga Kuula znotraj panorame — mi tega prostora ne zasedamo.</td></tr>
+  <tr><td><b>Gumbi Kuule</b> (očala, info)</td><td>Naslovnica, desno zgoraj</td><td>Isto — zgornji rob je v celoti njihov.</td></tr>
+  <tr><td><b>Lupa · Odpri vodnik · SL</b></td><td>Naslovnica, spodaj</td><td>Edini prostor, ki ni Kuulin. Steklen slog CGP.</td></tr>
+  <tr><td><b>Ikona 360</b></td><td>Domov, glava, levo od lupe</td><td>Vrnitev v panoramo kadarkoli, brez velikega gumba.</td></tr>
+  <tr><td><b>Lupa</b></td><td>Domov, glava, desno</td><td>Iskanje ima smisel tam, kjer je vsebina.</td></tr>
+</table>
+
+<h2><span class="n">3</span>Pet zavihkov spodaj</h2>
+<p class="lead">Vrstica ima pet mest, kandidatov pa je šest. Gostitelj izbere, kaj vanjo spada;
+kar pade ven, mora imeti jasno pot od drugod.</p>
+<table>
+  <tr><th></th><th>Spodnja vrstica</th><th>Kaj pade ven in kje je</th></tr>
+  <tr><td><b>Kamp Menina</b></td><td>Domov · Nastanitev · Okolica · Program · Sporočila</td><td>Ponudba — dosegljiva iz Nastanitve in s kartice »Za vas« na Domovu</td></tr>
+  <tr><td><b>Apartmaji Meli Pu</b></td><td>Domov · Nastanitev · Ponudba · Okolica · Sporočila</td><td>Program — nastanitev nima datiranih dogodkov, zato ne obstaja</td></tr>
+</table>
+
+<h2><span class="n">4</span>Kaj je na katerem zavihku</h2>
+<div class="row">
+  <div class="step"><div class="ph">
+    <div class="hd"><div style="flex:1"><small>Meli Pu</small><b>Nastanitev</b></div><div class="fab">🔔</div></div>
+    <div class="body">
+      <div class="cards" style="margin-top:4px">
+        <div class="c w"><div class="im"></div><div class="t">Dobrodošli in kontakt</div></div>
+        <div class="c"><div class="im"></div><div class="t">Apartmaji</div></div>
+        <div class="c"><div class="im"></div><div class="t">Parkirišče</div></div>
+        <div class="c"><div class="im"></div><div class="t">Hišni red</div></div>
+        <div class="c"><div class="im"></div><div class="t">Prijava / odjava</div></div>
+      </div>
+    </div>
+    <div class="nav"><div><u></u>Domov</div><div class="on"><u></u>Nastanitev</div><div><u></u>Ponudba</div><div><u></u>Okolica</div><div><u></u>Sporočila</div></div>
+  </div><div class="cap"><b>Nastanitev</b>Vse o bivanju: WiFi, prijava, hišni red, oprema, enote.</div></div>
+
+  <div class="step"><div class="ph">
+    <div class="hd"><div style="flex:1"><small>Meli Pu</small><b>Ponudba</b></div></div>
+    <div class="body">
+      <div class="hello" style="border-color:var(--accg);color:var(--acc)">Moja naročila · 1 v obdelavi</div>
+      <div class="cards">
+        <div class="c w"><div class="im"></div><div class="t">SUP · 25 € / dan</div></div>
+        <div class="c"><div class="im"></div><div class="t">Skuter</div></div>
+        <div class="c"><div class="im"></div><div class="t">Oljčno olje</div></div>
+      </div>
+    </div>
+    <div class="nav"><div><u></u>Domov</div><div><u></u>Nastanitev</div><div class="on"><u></u>Ponudba</div><div><u></u>Okolica</div><div><u></u>Sporočila</div></div>
+  </div><div class="cap"><b>Ponudba</b>Najem, izleti, domači izdelki. Zgoraj »Moja naročila«, ko gost že naroči.</div></div>
+
+  <div class="step"><div class="ph">
+    <div class="hd"><div style="flex:1"><small>Meli Pu</small><b>Odkrij okolico</b></div></div>
+    <div class="body">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px">
+        <span style="font-size:9.5px;font-weight:750;background:var(--acc);color:#fff;padding:4px 8px;border-radius:99px">Kulinarika</span>
+        <span style="font-size:9.5px;font-weight:750;background:var(--card2);padding:4px 8px;border-radius:99px">Plaže</span>
+        <span style="font-size:9.5px;font-weight:750;background:var(--card2);padding:4px 8px;border-radius:99px">Izleti</span>
+      </div>
+      <div class="cards"><div class="c w"><div class="im"></div><div class="t">Gostilna Ravnikar<br><span style="color:var(--accg);font-weight:700">1,2 km · odprto do 22:00</span></div></div></div>
+    </div>
+    <div class="nav"><div><u></u>Domov</div><div><u></u>Nastanitev</div><div><u></u>Ponudba</div><div class="on"><u></u>Okolica</div><div><u></u>Sporočila</div></div>
+  </div><div class="cap"><b>Okolica</b>12 kategorij. Na vsaki kartici razdalja in stanje odprto/zaprto.</div></div>
+
+  <div class="step"><div class="ph">
+    <div class="hd"><div style="flex:1"><small>Kamp Menina</small><b>Program</b></div></div>
+    <div class="body">
+      <div style="display:flex;gap:4px;margin-bottom:9px">
+        <div style="flex:1;text-align:center;font-size:9px;font-weight:800;background:var(--acc);color:#fff;border-radius:9px;padding:5px 0">so 22</div>
+        <div style="flex:1;text-align:center;font-size:9px;font-weight:750;background:var(--card2);border-radius:9px;padding:5px 0">ne 23</div>
+        <div style="flex:1;text-align:center;font-size:9px;font-weight:750;background:var(--card2);border-radius:9px;padding:5px 0">po 24</div>
+        <div style="flex:1;text-align:center;font-size:9px;font-weight:750;background:var(--card2);border-radius:9px;padding:5px 0">to 25</div>
+      </div>
+      <div class="cards" style="grid-template-columns:1fr">
+        <div class="c" style="display:flex;align-items:center;gap:8px;padding:6px">
+          <div class="im" style="width:38px;height:38px;border-radius:9px;flex:none"></div>
+          <div class="t" style="padding:0"><span style="color:var(--accg);font-weight:800">09:00</span><br>Jutranja joga</div></div>
+        <div class="c" style="display:flex;align-items:center;gap:8px;padding:6px">
+          <div class="im" style="width:38px;height:38px;border-radius:9px;flex:none"></div>
+          <div class="t" style="padding:0"><span style="color:var(--accg);font-weight:800">18:00</span><br>Peka kruha</div></div>
+      </div>
+    </div>
+    <div class="nav"><div><u></u>Domov</div><div><u></u>Nastanitev</div><div><u></u>Okolica</div><div class="on"><u></u>Program</div><div><u></u>Sporočila</div></div>
+  </div><div class="cap"><b>Program</b>Tedenski trak in urnik po urah. Samo pri gostiteljih z dogodki.</div></div>
+
+  <div class="step"><div class="ph">
+    <div class="hd"><div style="flex:1"><small>Meli Pu</small><b>Sporočila</b></div></div>
+    <div class="body">
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:13px;border-bottom-left-radius:4px;padding:8px 10px;font-size:10.5px;margin-bottom:7px">Tu smo za vsa vprašanja — odgovorimo v 15 minutah.</div>
+      <div style="background:var(--acc);color:#fff;border-radius:13px;border-bottom-right-radius:4px;padding:8px 10px;font-size:10.5px;margin-left:auto;width:75%">Ali je bazen odprt zvečer?</div>
+      <div style="margin-top:auto"></div>
+    </div>
+    <div style="padding:0 13px 9px;display:flex;gap:6px">
+      <div style="flex:1;border:1.5px solid var(--line);border-radius:11px;padding:8px 10px;font-size:10.5px;color:var(--tx2)">Napišite sporočilo…</div>
+      <div style="width:34px;border-radius:11px;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:12px">➤</div>
+    </div>
+    <div class="nav"><div><u></u>Domov</div><div><u></u>Nastanitev</div><div><u></u>Ponudba</div><div><u></u>Okolica</div><div class="on"><u></u>Sporočila</div></div>
+  </div><div class="cap"><b>Sporočila</b>Gost vpraša, gostitelj odgovori iz portala. Iz brošure naredi prisotnost.</div></div>
+</div>
+
+<div class="note" style="margin-top:34px">
+<b>Kaj je naša izboljšava nad Menino:</b> barve, ki sledijo uri dneva; cele fotografije brez obrezovanja;
+virtualni sprehod na vhodu; naročila s statusi, lozinko in opombo gostitelja; štirje jeziki povsod.
+<b>Kaj prevzemamo od njih:</b> živi Domov s hitrimi gumbi, pas »Danes«, program s tedenskim trakom,
+obvestila z oznako »novo«, sporočila, zemljevid objekta in razdalje na vsaki kartici okolice.
+</div>
+
+</div></body></html>

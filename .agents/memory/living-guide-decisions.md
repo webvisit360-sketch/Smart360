@@ -39,11 +39,17 @@ Guest sign-in persists locally per tenant slug and does not introduce server-sid
 
 **How to apply:** Do not add numeric price fields, aggregate amounts, or server guest-auth requirements while building Living Guide flows.
 
-“New” notices are derived from publication time being under 72 hours, never stored. Event-specific UI activates only when event start data exists. Meli Pu starts with four configurable bottom tabs and no Program tab.
+“New” notices are derived from publication time being under 72 hours, never stored. Event-specific UI activates only when event start data exists. Meli Pu uses five default tabs and no Program; Messages may remain visibly disabled until its checkpoint.
 
 **Why:** The UI must reflect real content and avoid stored derived state or fabricated event/navigation features.
 
 **How to apply:** Gate event templates on actual event dates, calculate notice freshness, and keep tab configuration tenant-driven.
+
+Visual-parity evidence must use browser-computed styles from the complete prototype after its scripts initialize, with the intended time theme re-applied immediately before measurement.
+
+**Why:** Prototype scripts can change the active theme, and CSS specificity can make an isolated source rule differ from the actual rendered value.
+
+**How to apply:** Compare equivalent live/prototype DOM elements property by property; verify the prototype theme token first and trust the final computed cascade rather than a copied CSS fragment.
 
 Use the `guestUiMode` cutover flag with legacy as the default and a development-only Living Guide preview. Replace the admin cover preview before removing the legacy cover.
 

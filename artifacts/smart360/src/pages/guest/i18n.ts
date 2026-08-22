@@ -34,6 +34,12 @@ export const LIVING_GUIDE_UI = {
     de: "360°-Rundgang",
     it: "Tour a 360°",
   },
+  "UI.lg.tour.hint": {
+    sl: "Povlecite za pogled naokoli",
+    en: "Drag to look around",
+    de: "Ziehen, um sich umzusehen",
+    it: "Trascina per guardarti intorno",
+  },
   "UI.lg.nav.home": {
     sl: "Domov",
     en: "Home",
@@ -63,6 +69,42 @@ export const LIVING_GUIDE_UI = {
     en: "Programme",
     de: "Programm",
     it: "Programma",
+  },
+  "UI.lg.nav.messages": {
+    sl: "Sporočila",
+    en: "Messages",
+    de: "Nachrichten",
+    it: "Messaggi",
+  },
+  "UI.lg.nav.messagesUnavailable": {
+    sl: "na voljo v naslednjem koraku",
+    en: "available in the next step",
+    de: "im nächsten Schritt verfügbar",
+    it: "disponibile nel prossimo passaggio",
+  },
+  "UI.lg.home.today": {
+    sl: "Danes",
+    en: "Today",
+    de: "Heute",
+    it: "Oggi",
+  },
+  "UI.lg.home.allProgram": {
+    sl: "ves program",
+    en: "full programme",
+    de: "ganzes Programm",
+    it: "programma completo",
+  },
+  "UI.lg.home.forYou": {
+    sl: "Za vas",
+    en: "For you",
+    de: "Für Sie",
+    it: "Per voi",
+  },
+  "UI.lg.home.allOffers": {
+    sl: "vsa ponudba",
+    en: "all offers",
+    de: "alle Angebote",
+    it: "tutte le offerte",
   },
   "UI.lg.exploreTitle": {
     sl: "Odkrij okolico",

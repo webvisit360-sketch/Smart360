@@ -56,7 +56,7 @@ type GuestRecord = {
   name: string;
 };
 
-type ScreenName = "cover" | "grid" | "detail" | "explore";
+type ScreenName = "cover" | "home" | "grid" | "detail" | "explore";
 
 const GUEST_STORAGE_PREFIX = "smart360:living-guide:guest:";
 
@@ -315,6 +315,61 @@ function isNewNotice(notice: any): boolean {
   return age >= 0 && age < 72 * 60 * 60 * 1000;
 }
 
+function itemEventTimestamp(item: any): number | null {
+  const value =
+    item?.eventStart ??
+    item?.startsAt ??
+    item?.startAt ??
+    item?.startDate ??
+    null;
+  if (!value) return null;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function datedEventDestination(
+  sections: any[],
+): { section: any; category: any } | null {
+  for (const section of sections) {
+    for (const category of visible(section.categories)) {
+      const isEventSurface =
+        category.layout === "events" ||
+        section.key === "events" ||
+        section.key === "program";
+      if (
+        isEventSurface &&
+        visible(category.items).some(
+          (item: any) => itemEventTimestamp(item) !== null,
+        )
+      ) {
+        return { section, category };
+      }
+    }
+  }
+  return null;
+}
+
+function isToday(timestamp: number, now = new Date()): boolean {
+  const date = new Date(timestamp);
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+function minutesUntilClock(clock: string | null, now = new Date()): number {
+  if (!clock) return Number.POSITIVE_INFINITY;
+  const [hours, minutes] = clock.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+    return Number.POSITIVE_INFINITY;
+  }
+  let delta =
+    hours * 60 + minutes - (now.getHours() * 60 + now.getMinutes());
+  if (delta <= 0) delta += 24 * 60;
+  return delta;
+}
+
 export default function LivingGuideGuestShell({
   tenant,
   slug,
@@ -359,7 +414,8 @@ export default function LivingGuideGuestShell({
   const currentSection = categoryContext?.section ?? (routeSectionKey ? sections.find((section: any) => section.key === routeSectionKey) ?? null : staySection);
 
   let screen: ScreenName = "cover";
-  if (categoryContext) screen = "detail";
+  if (pathParts[1] === "home") screen = "home";
+  else if (categoryContext) screen = "detail";
   else if (routeSectionKey === "explore") screen = "explore";
   else if (routeSectionKey) screen = "grid";
 
@@ -469,7 +525,7 @@ export default function LivingGuideGuestShell({
     } catch {}
     setShowSignIn(false);
     if (screen === "cover") {
-      navigate(gridPath(staySection));
+      navigate(`/${slug}/home`);
     }
   };
 
@@ -505,9 +561,27 @@ export default function LivingGuideGuestShell({
       <main className="lg2-stage">
         {screen === "cover" && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
-            if (guest) navigate(gridPath(staySection));
+            if (guest) navigate(`/${slug}/home`);
             else setShowSignIn(true);
           }} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
+        )}
+
+        {screen === "home" && (
+          <HomeView
+            tenant={tenant}
+            sections={sections}
+            lang={lang}
+            t={t}
+            guest={guest}
+            onEditGuest={() => setShowSignIn(true)}
+            onOpenCategory={openCategory}
+            onOpenItem={openItem}
+            onOpenNotices={() => setShowNotices(true)}
+            notices={notices}
+            navigate={navigate}
+            slug={slug}
+            onSearch={() => setShowSearch(true)}
+          />
         )}
 
         {screen === "grid" && currentSection && (
@@ -524,7 +598,13 @@ export default function LivingGuideGuestShell({
             notices={currentSection.key === "stay" ? notices : []}
             orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
-            onOpenTour={() => navigate(`/${slug}`)}
+            onOpenOffer={
+              currentSection.key === "stay" &&
+              datedEventDestination(sections) &&
+              sections.some((section: any) => section.key === "offer")
+                ? () => navigate(`/${slug}/s/offer`)
+                : undefined
+            }
           />
         )}
 
@@ -568,7 +648,9 @@ export default function LivingGuideGuestShell({
           slug={slug}
           t={t}
           activeSectionKey={currentSection?.key ?? null}
+          activeCategoryId={categoryContext?.category?.id ?? null}
           onNavigate={navigate}
+          screen={screen}
         />
       )}
 
@@ -625,7 +707,7 @@ export default function LivingGuideGuestShell({
           onClose={() => setShowSignIn(false)}
           onLater={() => {
             setShowSignIn(false);
-            navigate(gridPath(staySection));
+            navigate(`/${slug}/home`);
           }}
           onSave={saveGuest}
         />
@@ -679,7 +761,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
   const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
 
   return (
-    <section className="lg2-view lg2-cover" aria-label={title}>
+    <section className="lg2-view lg2-cover is-on" aria-label={title} data-testid="screen-cover">
       <div className={tourUrl ? "lg2-cover-tour" : "lg2-cover-photo"} aria-hidden={tourUrl ? undefined : true}>
         {tourUrl ? (
           <iframe
@@ -695,6 +777,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
         )}
       </div>
       <div className={tourUrl ? "lg2-cover-veil lg2-cover-veil--tour" : "lg2-cover-veil"} aria-hidden="true" />
+      {tourUrl && <div className="lg2-hint360">{t("UI.lg.tour.hint")}</div>}
       <div className="lg2-cover-mast">
         <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
@@ -702,14 +785,14 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
         {tenant.address && <p className="lg2-cover-address">{tenant.address}</p>}
       </div>
       <div className="lg2-cbar">
-        <button className="lg2-fab lg2-cover-search" type="button" onClick={onSearch} aria-label={t("UI.lg.search.title")}>
+        <button className="lg2-fab lg2-cover-search" type="button" onClick={onSearch} aria-label={t("UI.lg.search.title")} data-testid="button-cover-search">
           <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
         </button>
-        <button className="lg2-open-guide" type="button" onClick={onOpen}>
+        <button className="lg2-open-guide" type="button" onClick={onOpen} data-testid="button-open-guide">
           <svg aria-hidden="true"><use href="#lg-i-down" /></svg>
           {t("UI.lg.openGuide")}
         </button>
-        <button className="lg2-fab lg2-language" type="button" onClick={onLanguage} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })} data-lg-language-trigger>
+        <button className="lg2-fab lg2-language" type="button" onClick={onLanguage} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })} data-lg-language-trigger data-testid="button-cover-language">
           {lang.toUpperCase()}
         </button>
       </div>
@@ -809,9 +892,8 @@ function NoticeRow({ n, t }: { n: any, t: UiTranslator }) {
   );
 }
 
-function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, orderSummary, onOpenOrders, onOpenTour }: any) {
+function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, orderSummary, onOpenOrders, onOpenOffer }: any) {
   const categories = visible(section.categories);
-  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
   const featuredCategory = categories.find(isOperationalRulesCategory) ??
     categories.find((c: any) => { const firstItem = visible(c.items)[0]; return !firstItem?.tint && !!firstMedia(c); });
   const orderedCategories = featuredCategory ? [featuredCategory, ...categories.filter((c: any) => c.id !== featuredCategory.id)] : categories;
@@ -869,13 +951,6 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
             <span className="lg2-orders-entry-arrow" aria-hidden="true">›</span>
           </button>
         )}
-        {section.key === "stay" && tourUrl && (
-          <button className="lg2-tour-return" type="button" onClick={onOpenTour}>
-            <span aria-hidden="true">360°</span>
-            <b>{t("UI.lg.tour.view")}</b>
-            <em aria-hidden="true">›</em>
-          </button>
-        )}
         <div className="lg2-grid lg2-stagger">
           {orderedCategories.map((category: any, index: number) => {
             const item = visible(category.items)[0];
@@ -904,6 +979,19 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
               </button>
             );
           })}
+          {onOpenOffer && (
+            <button
+              className="lg2-utility-card"
+              type="button"
+              onClick={onOpenOffer}
+              data-testid="button-stay-offer"
+            >
+              <span className="lg2-utility-icon" aria-hidden="true">
+                <svg><use href="#lg-i-bag" /></svg>
+              </span>
+              <span><b>{t("UI.lg.nav.offer")}</b></span>
+            </button>
+          )}
         </div>
         {helpCategoryId && (
           <div className="lg2-help-entry">
@@ -1822,29 +1910,455 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
   );
 }
 
-function BottomNav({ sections, slug, t, activeSectionKey, onNavigate }: any) {
-  const sectionFor = (key: string) => sections.find((section: any) => section.key === key);
-  const tabs = [
-    { key: "home", label: t("UI.lg.nav.home"), icon: "home", path: `/${slug}` },
-    { key: "stay", label: t("UI.lg.nav.stay"), icon: "tent", section: sectionFor("stay") },
-    { key: "offer", label: t("UI.lg.nav.offer"), icon: "bag", section: sectionFor("offer") },
-    { key: "explore", label: t("UI.lg.nav.area"), icon: "comp", section: sectionFor("explore") },
-  ].filter((tab) => tab.key === "home" || tab.section);
+function BottomNav({
+  sections,
+  slug,
+  t,
+  activeSectionKey,
+  activeCategoryId,
+  onNavigate,
+  screen,
+}: any) {
+  const sectionFor = (key: string) =>
+    sections.find((section: any) => section.key === key);
+  const eventDestination = datedEventDestination(sections);
+  const normalizedActive =
+    activeSectionKey === "services" ? "explore" : activeSectionKey;
+  const home = {
+    key: "home",
+    label: t("UI.lg.nav.home"),
+    icon: "home",
+    path: `/${slug}/home`,
+  };
+  const stay = {
+    key: "stay",
+    label: t("UI.lg.nav.stay"),
+    icon: "tent",
+    section: sectionFor("stay"),
+  };
+  const offer = {
+    key: "offer",
+    label: t("UI.lg.nav.offer"),
+    icon: "bag",
+    section: sectionFor("offer"),
+  };
+  const explore = {
+    key: "explore",
+    label: t("UI.lg.nav.area"),
+    icon: "comp",
+    section: sectionFor("explore"),
+  };
+  const program = eventDestination
+    ? {
+        key: "program",
+        label: t("UI.lg.nav.program"),
+        icon: "cal",
+        path: `/${slug}/c/${eventDestination.category.id}`,
+        categoryId: eventDestination.category.id,
+      }
+    : null;
+  const messages = {
+    key: "messages",
+    label: t("UI.lg.nav.messages"),
+    icon: "chat",
+    disabled: true,
+  };
 
-  const normalizedActive = activeSectionKey === "services" ? "explore" : activeSectionKey;
+  const candidates = program
+    ? [home, stay, explore, program, messages]
+    : [home, stay, offer, explore, messages];
+  const tabs = candidates.filter(
+    (tab: any) =>
+      tab &&
+      (tab.key === "home" ||
+        tab.key === "messages" ||
+        tab.section ||
+        tab.path),
+  );
 
   return (
-    <nav className="lg2-bottom-nav" aria-label={t("UI.lg.nav.primary")}>
-      {tabs.map((tab) => {
-        const isActive = tab.key !== "home" && normalizedActive === tab.key;
-        const path = tab.path ?? `/${slug}/s/${encodeURIComponent((tab.section as any).key)}`;
+    <nav
+      className="lg2-bottom-nav"
+      aria-label={t("UI.lg.nav.primary")}
+      data-testid="nav-primary"
+    >
+      {tabs.map((tab: any) => {
+        const isActive =
+          (tab.key === "home" && screen === "home") ||
+          (screen !== "home" &&
+            tab.categoryId &&
+            activeCategoryId === tab.categoryId) ||
+          (screen !== "home" &&
+            tab.key !== "home" &&
+            tab.key !== "program" &&
+            normalizedActive === tab.key);
+        const path =
+          tab.path ??
+          (tab.section
+            ? `/${slug}/s/${encodeURIComponent(tab.section.key)}`
+            : "");
         return (
-          <button key={tab.key} className={isActive ? "is-active" : undefined} type="button" onClick={() => onNavigate(path)}>
+          <button
+            key={tab.key}
+            className={`${isActive ? "is-active" : ""}${tab.disabled ? " is-disabled" : ""}`.trim() || undefined}
+            type="button"
+            disabled={tab.disabled}
+            aria-disabled={tab.disabled || undefined}
+            aria-label={
+              tab.disabled
+                ? `${tab.label} — ${t("UI.lg.nav.messagesUnavailable")}`
+                : tab.label
+            }
+            onClick={tab.disabled ? undefined : () => onNavigate(path)}
+            data-testid={`nav-${tab.key}`}
+          >
             <svg aria-hidden="true"><use href={`#lg-i-${tab.icon}`} /></svg>
             <b>{tab.label}</b>
           </button>
         );
       })}
     </nav>
+  );
+}
+
+function HomeView({
+  tenant,
+  sections,
+  lang,
+  t,
+  guest,
+  onEditGuest,
+  onOpenCategory,
+  onOpenItem,
+  onOpenNotices,
+  notices,
+  navigate,
+  slug,
+  onSearch,
+}: any) {
+  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
+  const now = new Date();
+  const eventDestination = datedEventDestination(sections);
+  const staySection = sections.find((section: any) => section.key === "stay");
+  const offerSection = sections.find((section: any) => section.key === "offer");
+  const wifiCategory = sections
+    .flatMap((section: any) => visible(section.categories))
+    .find((category: any) => category.layout === "wifi");
+  const helpCategory = sections
+    .flatMap((section: any) => visible(section.categories))
+    .find((category: any) => category.layout === "help");
+  const hasWifi =
+    !!tenant.wifiSsid ||
+    !!tenant.wifiNetwork ||
+    !!tenant.wifiPassword ||
+    !!wifiCategory;
+  const newNoticesCount = notices.filter(isNewNotice).length;
+
+  const danesItems: any[] = [];
+  for (const section of sections) {
+    for (const category of visible(section.categories)) {
+      for (const item of visible(category.items)) {
+        const eventTimestamp = itemEventTimestamp(item);
+        if (
+          eventTimestamp !== null &&
+          isToday(eventTimestamp, now) &&
+          eventTimestamp >= now.getTime() - 60 * 60 * 1000
+        ) {
+          danesItems.push({
+            id: `event-${item.id}`,
+            badge: new Intl.DateTimeFormat(lang, {
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(eventTimestamp),
+            title: item.title,
+            subtitle: distinctSubtitle(item.title, item.subtitle),
+            media: item.media?.[0],
+            onClick: () => onOpenItem(category.id, item.id),
+            immediacy: Math.max(
+              0,
+              (eventTimestamp - now.getTime()) / 60_000,
+            ),
+          });
+          continue;
+        }
+        if (item.hoursJson && !item.open24) {
+          const status = getOpenStatus(item.hoursJson, now);
+          if (status?.isOpen && status.closesAt) {
+            danesItems.push({
+              id: `facility-${item.id}`,
+              badge: `${t("UI.lg.hours.openUntil")} ${status.closesAt}`,
+              title: item.title,
+              subtitle: distinctSubtitle(item.title, item.subtitle),
+              media: item.media?.[0],
+              onClick: () => onOpenItem(category.id, item.id),
+              immediacy: 180 + minutesUntilClock(status.closesAt, now),
+            });
+          }
+        }
+      }
+    }
+  }
+
+  for (const notice of notices) {
+    const timestamp = noticeTimestamp(notice);
+    if (isNewNotice(notice) && timestamp !== null) {
+      danesItems.push({
+        id: `notice-${notice.id}`,
+        badge: t("UI.lg.notices.new"),
+        title: notice.title,
+        subtitle: notice.body
+          ? sanitizeHtml(notice.body).replace(/<[^>]+>/g, "")
+          : "",
+        media: notice.media?.[0],
+        onClick: onOpenNotices,
+        immediacy: 360 + (now.getTime() - timestamp) / 3_600_000,
+      });
+    }
+  }
+
+  const zaVasItems = ["offer", "explore", "stay"].flatMap(
+    (sectionKey, index) => {
+      const section = sections.find((row: any) => row.key === sectionKey);
+      if (!section) return [];
+      const categories = visible(section.categories);
+      const category =
+        categories.find((row: any) => categoryMedia(row).length > 0) ??
+        categories.find((row: any) => visible(row.items).length > 0);
+      if (!category) return [];
+      const item = visible(category.items)[0];
+      const media = firstMedia(category);
+      return [
+        {
+          id: section.key,
+          title: section.title,
+          subtitle:
+            distinctSubtitle(section.title, category.label) ||
+            distinctSubtitle(section.title, item?.title),
+          media,
+          path: `/${slug}/s/${encodeURIComponent(section.key)}`,
+          isWide: index === 0,
+        },
+      ];
+    },
+  );
+
+  if (danesItems.length === 0 && offerSection) {
+    const offerCategory = visible(offerSection.categories).find(
+      (category: any) => visible(category.items).length > 0,
+    );
+    const offerItem = offerCategory
+      ? visible(offerCategory.items)[0]
+      : null;
+    if (offerCategory && offerItem) {
+      danesItems.push({
+        id: `offer-${offerItem.id}`,
+        badge: t("UI.lg.nav.offer"),
+        title: offerItem.title,
+        subtitle:
+          distinctSubtitle(offerItem.title, offerItem.subtitle) ||
+          offerCategory.label,
+        media: offerItem.media?.[0] ?? firstMedia(offerCategory),
+        onClick: () => onOpenItem(offerCategory.id, offerItem.id),
+        immediacy: 10_000,
+      });
+    }
+  }
+
+  danesItems.sort((a, b) => a.immediacy - b.immediacy);
+  const visibleDanesItems = danesItems.slice(0, 6);
+  const firstName = guest?.name?.trim().split(/\s+/)[0] ?? "";
+
+  return (
+    <section
+      className="lg2-view lg2-home-view"
+      data-testid="screen-home"
+    >
+      <header className="lg2-hd">
+        <div className="lg2-tt">
+          <small>{tenant.name}</small>
+          <h1>{t("UI.lg.welcome.title")}</h1>
+        </div>
+        {tourUrl && (
+          <button
+            className="lg2-fab"
+            type="button"
+            onClick={() => navigate(`/${slug}`)}
+            aria-label={t("UI.lg.tour.view")}
+            data-testid="button-home-tour"
+          >
+            <span aria-hidden="true">360°</span>
+          </button>
+        )}
+        <button
+          className="lg2-fab"
+          type="button"
+          onClick={onSearch}
+          aria-label={t("UI.lg.search.title")}
+          data-testid="button-home-search"
+        >
+          <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
+        </button>
+      </header>
+
+      <div className="lg2-screen-scroll" data-lg-scroll>
+        {guest && (
+          <button
+            className="lg2-hello"
+            type="button"
+            onClick={onEditGuest}
+            data-testid="button-edit-guest"
+          >
+            <span className="lg2-hd2" aria-hidden="true">
+              <svg><use href="#lg-i-usr" /></svg>
+            </span>
+            <span>
+              <b>
+                {firstName
+                  ? t("UI.lg.greeting.named", { name: firstName })
+                  : t("UI.lg.greeting.generic")}
+              </b>
+              <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
+            </span>
+            <span className="lg2-chg">{t("UI.lg.greeting.change")}</span>
+          </button>
+        )}
+
+        <div className="lg2-qbar">
+          {hasWifi && (
+            <button
+              className="lg2-q lg2-q--w"
+              type="button"
+              onClick={() => {
+                if (wifiCategory) onOpenCategory(wifiCategory.id);
+                else if (staySection) navigate(`/${slug}/s/stay`);
+              }}
+              data-testid="button-home-wifi"
+            >
+              <svg aria-hidden="true"><use href="#lg-i-wifi" /></svg>
+              <b>WiFi</b>
+            </button>
+          )}
+          {notices.length > 0 && (
+            <button
+              className="lg2-q"
+              type="button"
+              onClick={onOpenNotices}
+              data-testid="button-home-notices"
+            >
+              <svg aria-hidden="true"><use href="#lg-i-bell" /></svg>
+              <b>{t("UI.lg.notices.title")}</b>
+              {newNoticesCount > 0 && (
+                <span
+                  className="lg2-qd"
+                  data-testid="badge-new-notices"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          )}
+        </div>
+
+        {visibleDanesItems.length > 0 && (
+          <>
+            <div className="lg2-sect">
+              <h2>{t("UI.lg.home.today")}</h2>
+              {eventDestination && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/${slug}/c/${eventDestination.category.id}`)
+                  }
+                  data-testid="button-all-program"
+                >
+                  {t("UI.lg.home.allProgram")}
+                </button>
+              )}
+            </div>
+            <div className="lg2-nowtrack" data-testid="list-today">
+              {visibleDanesItems.map((item) => (
+                <button
+                  key={item.id}
+                  className="lg2-nowcard"
+                  type="button"
+                  onClick={item.onClick}
+                  data-testid={`card-today-${item.id}`}
+                >
+                  {item.media && (
+                    <img
+                      src={mediaImgSrc(item.media, CARD_IMAGE_WIDTH)}
+                      alt=""
+                      className="lg2-pic"
+                      style={imageStyle(item.media)}
+                    />
+                  )}
+                  <span className="lg2-vg" aria-hidden="true" />
+                  <span className="lg2-t">
+                    <em>{item.badge}</em>
+                    <b>{item.title}</b>
+                    {item.subtitle && <small>{item.subtitle}</small>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {zaVasItems.length > 0 && (
+          <>
+            <div className="lg2-sect">
+              <h2>{t("UI.lg.home.forYou")}</h2>
+              {offerSection && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/${slug}/s/offer`)}
+                  data-testid="button-all-offers"
+                >
+                  {t("UI.lg.home.allOffers")}
+                </button>
+              )}
+            </div>
+            <div className="lg2-grid lg2-home-cards">
+              {zaVasItems.map((item: any) => (
+                <button
+                  key={item.id}
+                  className={`lg2-cardp${item.isWide ? " lg2-cardp--w" : ""}`}
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                  data-testid={`card-for-you-${item.id}`}
+                >
+                  {item.media && (
+                    <img
+                      src={mediaImgSrc(
+                        item.media,
+                        item.isWide ? HERO_IMAGE_WIDTH : CARD_IMAGE_WIDTH,
+                      )}
+                      alt=""
+                      className="lg2-pic"
+                      style={imageStyle(item.media)}
+                    />
+                  )}
+                  <span className="lg2-c2">
+                    <b>{item.title}</b>
+                    {item.subtitle && <small>{item.subtitle}</small>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {helpCategory && (
+          <div className="lg2-home-help">
+            <button
+              type="button"
+              onClick={() => onOpenCategory(helpCategory.id)}
+              data-testid="button-home-help"
+            >
+              {t("UI.lg.helpEmergency")}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
