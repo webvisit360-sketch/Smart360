@@ -62,6 +62,7 @@ import {
   findDatedEventDestination as datedEventDestination,
   getLivingGuideAvailableFeatures,
   resolveLivingGuideNav,
+  shouldShowLivingGuideBottomNav,
   type NavState,
 } from "./living-guide-nav-resolver";
 import {
@@ -743,7 +744,7 @@ export default function LivingGuideGuestShell({
         )}
       </main>
 
-      {screen !== "cover" && screen !== "site-map" && screen !== "more" && (
+      {shouldShowLivingGuideBottomNav(screen) && (
         <BottomNav
           resolvedNav={navState.resolved}
           sections={sections}

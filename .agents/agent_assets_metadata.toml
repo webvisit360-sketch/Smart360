@@ -204,3 +204,17 @@ mtime_ms = 1787435033806
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a3dc34fa-de85-4734-b25b-c8289529fc9b/ee9dbde4-99f5-4836-8e8e-fba2fd5bcf9b"
 storage_version_token = "1787435052722224"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "iz3GTyetZMw0fQi9TrJxQ"
+uri = "file://screenshots/checkpoint4-no-maps-390.jpg"
+type = "image"
+title = "Checkpoint 4 — no site maps at 390px"
+description = "Actual Meli Pu tenant after the unavailable site-map route safely returned to Home; 390×844 JPEG."
+logical_id = "33027ec3-ec5e-49af-9524-f8d9416824c9"
+content_hash = "sha256:606cde4b4c77db3623a5db29eae187a77d2ca5a346bd72fd05f3f3e23d9f2b6a"
+size = 35339
+mtime_ms = 1787437801958
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/33027ec3-ec5e-49af-9524-f8d9416824c9/62fa2c9a-796e-471c-a090-d2aee0d24030"
+storage_version_token = "1787437987085663"
+content_type = "image/jpeg"

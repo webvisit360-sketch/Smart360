@@ -6,6 +6,10 @@ export interface NavState {
   hasSiteMap: boolean;
 }
 
+export function shouldShowLivingGuideBottomNav(screen: string): boolean {
+  return screen !== "cover" && screen !== "site-map";
+}
+
 function visible<T extends { isVisible?: boolean; deletedAt?: unknown }>(
   rows: T[] | null | undefined,
 ): T[] {

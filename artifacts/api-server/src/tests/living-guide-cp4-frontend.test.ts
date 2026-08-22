@@ -38,6 +38,10 @@ const getLivingGuideAvailableFeatures =
   resolverModule.getLivingGuideAvailableFeatures as (
     sections: unknown[],
   ) => Set<NavItem>;
+const shouldShowLivingGuideBottomNav =
+  resolverModule.shouldShowLivingGuideBottomNav as (
+    screen: string,
+  ) => boolean;
 const calculatePinchZoom = gesturesModule.calculatePinchZoom as (
   currentScale: number,
   currentX: number,
@@ -146,6 +150,13 @@ test("malformed duplicate legacy settings are de-duplicated before backfill", ()
   assert.equal(state.resolved.length, 5);
   assert.equal(new Set(state.resolved).size, 5);
   assert.equal(state.resolved[0], "home");
+});
+
+test("More keeps the bottom bar while Cover and fullscreen Map hide it", () => {
+  assert.equal(shouldShowLivingGuideBottomNav("more"), true);
+  assert.equal(shouldShowLivingGuideBottomNav("home"), true);
+  assert.equal(shouldShowLivingGuideBottomNav("cover"), false);
+  assert.equal(shouldShowLivingGuideBottomNav("site-map"), false);
 });
 
 test("availability requires renderable content and a dated Program item", () => {
