@@ -15,4 +15,11 @@ export const CategoryExploreGroup = {
   nature_trails: 'nature_trails',
   sights: 'sights',
   services: 'services',
+  najem: 'najem',
+  izleti_prevozi: 'izleti_prevozi',
+  domaci_izdelki: 'domaci_izdelki',
+  pri_hisi: 'pri_hisi',
+  vase_bivanje: 'vase_bivanje',
+  prihod_dostop: 'prihod_dostop',
+  prakticno: 'prakticno',
 } as const;

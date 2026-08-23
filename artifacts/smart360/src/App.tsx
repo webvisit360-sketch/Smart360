@@ -21,6 +21,7 @@ import GuestLayout from '@/pages/guest/guest-layout';
 import { GuestSwipe } from '@/pages/guest/GuestSwipe';
 import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages/guest/i18n';
 import { usePageBg } from '@/pages/guest/use-theme-attr';
+import { useBundleFreshness } from '@/lib/bundle-freshness';
 
 const queryClient = new QueryClient();
 const LivingGuideTokensPage = lazy(
@@ -41,6 +42,10 @@ const LivingGuideGuestShell = lazy(
  * which handle their own data fetching and loading states.
  */
 function GuestHost() {
+  // Stale-bundle self-recovery for ALL guest UI modes (Living Guide and
+  // legacy themes). Reloads once, silently, when a newer build is live —
+  // never while an order/sign-in flow is open or a draft is typed.
+  useBundleFreshness();
   const [location] = useLocation();
   const segments = location.split('/').filter(Boolean);
   const slug = segments[0] ? decodeURIComponent(segments[0]) : '';

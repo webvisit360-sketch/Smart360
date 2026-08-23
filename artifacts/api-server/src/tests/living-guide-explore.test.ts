@@ -139,8 +139,11 @@ test("Okolica UI selects the first populated group, resets scroll, and omits opt
     ),
     "utf8",
   );
+  // The tab-state behavior (first populated group, scroll reset) is shared by
+  // Okolica/Ponudba/Nastanitev via GroupTabs/PCard/useGroupTabsState, defined
+  // immediately before ExploreView — slice from the shared block.
   const exploreView = shell.slice(
-    shell.indexOf("function ExploreView"),
+    shell.indexOf("function GroupTabs"),
     shell.indexOf("function MessagesView"),
   );
 

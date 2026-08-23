@@ -15,13 +15,24 @@ localPort = 26044
 run = "pnpm --filter @workspace/smart360 run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/smart360", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/smart360/dist/public"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+[services.production.build]
+args = [ "pnpm", "--filter", "@workspace/smart360", "run", "build" ]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+# self-owned static server so cache headers are correct:
+# hashed assets immutable, index.html no-cache, version.json no-store
+args = [ "node", "artifacts/smart360/server.mjs" ]
+
+[services.production.run.env]
+PORT = "26044"
+NODE_ENV = "production"
+
+[services.production.health.startup]
+path = "/healthz"
 
 [services.env]
 PORT = "26044"

@@ -2461,7 +2461,7 @@ components:
         layout: { type: string }
         exploreGroup:
           type: string
-          enum: [experiences, food_drink, nature_trails, sights, services]
+          enum: [experiences, food_drink, nature_trails, sights, services, najem, izleti_prevozi, domaci_izdelki, pri_hisi, vase_bivanje, prihod_dostop, prakticno]
         position: { type: number }
         isVisible: { type: boolean }
       required: [id, sectionId, label, icon, layout, exploreGroup, position, isVisible]
@@ -2473,7 +2473,7 @@ components:
         layout: { type: string }
         exploreGroup:
           type: string
-          enum: [experiences, food_drink, nature_trails, sights, services]
+          enum: [experiences, food_drink, nature_trails, sights, services, najem, izleti_prevozi, domaci_izdelki, pri_hisi, vase_bivanje, prihod_dostop, prakticno]
         position: { type: number }
       required: [label, icon, layout, exploreGroup]
     CategoryUpdate:
@@ -2484,7 +2484,7 @@ components:
         layout: { type: string }
         exploreGroup:
           type: string
-          enum: [experiences, food_drink, nature_trails, sights, services]
+          enum: [experiences, food_drink, nature_trails, sights, services, najem, izleti_prevozi, domaci_izdelki, pri_hisi, vase_bivanje, prihod_dostop, prakticno]
         position: { type: number }
         isVisible: { type: boolean }
     Item:

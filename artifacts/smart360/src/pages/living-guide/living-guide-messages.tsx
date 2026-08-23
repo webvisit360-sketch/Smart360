@@ -7,6 +7,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import type { UiTranslator } from "../guest/i18n";
 import { getDeviceToken } from "./living-guide-orders";
+import { beginGuestActivity, endGuestActivity } from "@/lib/bundle-freshness";
 
 export function MessagesView({
   tenant,
@@ -38,6 +39,14 @@ export function MessagesView({
   const queryClient = useQueryClient();
   const [body, setBody] = useState("");
   const [pendingSend, setPendingSend] = useState(false);
+
+  // A typed draft or an in-flight send must never be lost to the
+  // stale-bundle self-reload.
+  useEffect(() => {
+    if (body.trim().length > 0 || pendingSend) beginGuestActivity("message-draft");
+    else endGuestActivity("message-draft");
+    return () => endGuestActivity("message-draft");
+  }, [body, pendingSend]);
   const deviceToken = useMemo(() => getDeviceToken(slug), [slug]);
 
   const { data: thread, isLoading, isError, refetch } = useGetGuestMessages(slug, {

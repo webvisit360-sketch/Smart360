@@ -4,6 +4,7 @@ import { ensureAdminAccount, rpID, rpOrigin, listCredentials } from "./lib/admin
 import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention";
 import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRetention";
 import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
+import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
 
 const rawPort = process.env["PORT"];
 
@@ -79,6 +80,8 @@ ensureAdminAccount()
   )
   // One-time Okolica explore-group data repair (best-effort, self-disabling)
   .then(() => runExploreGroupBackfillAtStartup())
+  // One-time Ponudba/Nastanitev group assignment (best-effort, self-disabling)
+  .then(() => runSectionGroupBackfillAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();

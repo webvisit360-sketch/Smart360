@@ -29,10 +29,32 @@ if (!basePath) {
   );
 }
 
+// Stale-bundle recovery: the same id is baked into the bundle (__BUILD_ID__)
+// and emitted as /version.json; the guest app reloads once when they diverge.
+const buildId =
+  process.env.BUILD_ID ??
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+const emitVersionJson = () => ({
+  name: 'emit-version-json',
+  apply: 'build' as const,
+  generateBundle() {
+    this.emitFile({
+      type: 'asset' as const,
+      fileName: 'version.json',
+      source: JSON.stringify({ buildId }),
+    });
+  },
+});
+
 export default defineConfig({
   base: basePath,
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
   plugins: [
     scopeThemes(),
+    emitVersionJson(),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),

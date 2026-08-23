@@ -220,6 +220,48 @@ export const LIVING_GUIDE_UI = {
     de: "Dienstleistungen",
     it: "Servizi",
   },
+  "UI.lg.offerGroup.najem": {
+    sl: "Najem",
+    en: "Rental",
+    de: "Verleih",
+    it: "Noleggio",
+  },
+  "UI.lg.offerGroup.izletiPrevozi": {
+    sl: "Izleti in prevozi",
+    en: "Trips and transfers",
+    de: "Ausflüge und Transfers",
+    it: "Gite e trasferimenti",
+  },
+  "UI.lg.offerGroup.domaciIzdelki": {
+    sl: "Domači izdelki",
+    en: "Local products",
+    de: "Hausgemachte Produkte",
+    it: "Prodotti locali",
+  },
+  "UI.lg.offerGroup.priHisi": {
+    sl: "Pri hiši",
+    en: "On site",
+    de: "Vor Ort",
+    it: "In loco",
+  },
+  "UI.lg.stayGroup.vaseBivanje": {
+    sl: "Vaše bivanje",
+    en: "Your stay",
+    de: "Ihr Aufenthalt",
+    it: "Il vostro soggiorno",
+  },
+  "UI.lg.stayGroup.prihodDostop": {
+    sl: "Prihod in dostop",
+    en: "Arrival and access",
+    de: "Anreise und Zugang",
+    it: "Arrivo e accesso",
+  },
+  "UI.lg.stayGroup.prakticno": {
+    sl: "Praktično",
+    en: "Practical",
+    de: "Praktisches",
+    it: "Info pratiche",
+  },
   "UI.lg.search.title": {
     sl: "Iskanje",
     en: "Search",

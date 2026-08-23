@@ -45,8 +45,9 @@ import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { formatDistanceMeters } from "@/pages/living-guide/living-guide-formatters";
 import {
   EXPLORE_GROUPS,
-  type ExploreGroupKey,
 } from "@/pages/living-guide/living-guide-explore";
+import { sectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
+import type { CategoryInputExploreGroup } from "@workspace/api-client-react";
 
 // ---------- Types ----------
 
@@ -77,7 +78,7 @@ type Category = {
   label: string;
   icon: string;
   layout: string;
-  exploreGroup: ExploreGroupKey;
+  exploreGroup: string;
   isVisible: boolean;
   position: number;
   items?: Item[];
@@ -497,26 +498,49 @@ function EditDialog({
 // ==========================================
 
 type CategoryDialogProps =
-  | { mode: "create"; tenantId: string; sectionId: string; category?: undefined; onDone: () => void }
-  | { mode: "edit"; tenantId: string; sectionId: string; category: Category; onDone: () => void };
+  | { mode: "create"; tenantId: string; sectionId: string; sectionKey?: string; category?: undefined; onDone: () => void }
+  | { mode: "edit"; tenantId: string; sectionId: string; sectionKey?: string; category: Category; onDone: () => void };
 
-function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: CategoryDialogProps) {
+function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDone }: CategoryDialogProps) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+
+  // Ponudba/Nastanitev use their own group sets; everything else keeps the
+  // Okolica groups. A stored value outside the section's set (e.g. the column
+  // default) is displayed — and saved — as the section's first group, exactly
+  // matching the guest-side fallback.
+  const groupDefs = sectionGroupDefs(sectionKey) ?? EXPLORE_GROUPS;
+  // Edit mode keeps the RAW stored value — a value outside the section's set
+  // (legacy data) renders the select empty and is preserved on save unless the
+  // host explicitly picks a group. The guest side already shows such
+  // categories under the section's first group without rewriting data.
+  const initialGroup = category
+    ? (category.exploreGroup ?? "")
+    : groupDefs[0]!.key;
+  const groupFieldLabel =
+    sectionKey === "offer"
+      ? "Skupina v Ponudbi *"
+      : sectionKey === "stay"
+        ? "Skupina v Nastanitvi *"
+        : "Skupina v Okolici *";
+  const groupFieldHint =
+    sectionKey === "offer"
+      ? "Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Ponudba."
+      : sectionKey === "stay"
+        ? "Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Nastanitev."
+        : "Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Okolica.";
 
   const [label, setLabel] = useState(category?.label ?? "");
   const [icon, setIcon] = useState(category?.icon ?? "");
   const [layout, setLayout] = useState(category?.layout ?? "text");
-  const [exploreGroup, setExploreGroup] = useState<ExploreGroupKey>(
-    category?.exploreGroup ?? "experiences",
-  );
+  const [exploreGroup, setExploreGroup] = useState<string>(initialGroup);
   const [isVisible, setIsVisible] = useState(category?.isVisible ?? true);
 
   const baseline = {
     label: category?.label ?? "",
     icon: category?.icon ?? "",
     layout: category?.layout ?? "text",
-    exploreGroup: category?.exploreGroup ?? "experiences",
+    exploreGroup: initialGroup,
     isVisible: category?.isVisible ?? true,
   };
   const current = { label, icon, layout, exploreGroup, isVisible };
@@ -532,7 +556,7 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
       setLabel(restored.label);
       setIcon(restored.icon);
       setLayout(restored.layout);
-      setExploreGroup(restored.exploreGroup ?? "experiences");
+      setExploreGroup(restored.exploreGroup ?? groupDefs[0]!.key);
       setIsVisible(restored.isVisible);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -552,14 +576,18 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
           label: label.trim(),
           icon: icon.trim(),
           layout,
-          exploreGroup,
+          exploreGroup: exploreGroup as CategoryInputExploreGroup,
         });
       } else {
         await updateCategory(category.id, {
           label: label.trim(),
           icon: icon.trim(),
           layout,
-          exploreGroup,
+          // Only persist a group the host actually changed — an untouched
+          // legacy value stays exactly as stored.
+          ...(exploreGroup !== initialGroup
+            ? { exploreGroup: exploreGroup as CategoryInputExploreGroup }
+            : {}),
           isVisible,
         });
       }
@@ -635,26 +663,24 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Skupina v Okolici *</Label>
+        <Label>{groupFieldLabel}</Label>
         <Select
           value={exploreGroup}
-          onValueChange={(value) => setExploreGroup(value as ExploreGroupKey)}
+          onValueChange={(value) => setExploreGroup(value)}
           disabled={busy}
         >
           <SelectTrigger>
             <SelectValue placeholder="Izberite skupino" />
           </SelectTrigger>
           <SelectContent>
-            {EXPLORE_GROUPS.map((group) => (
+            {groupDefs.map((group) => (
               <SelectItem key={group.key} value={group.key}>
                 {group.adminLabel}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Okolica.
-        </p>
+        <p className="text-xs text-muted-foreground">{groupFieldHint}</p>
       </div>
       {mode === "edit" && (
         <div className="flex items-center gap-2">
@@ -1226,7 +1252,7 @@ function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string;
 // Category block
 // ==========================================
 
-function CategoryBlock({ category, tenantId }: { category: Category; tenantId: string }) {
+function CategoryBlock({ category, tenantId, sectionKey }: { category: Category; tenantId: string; sectionKey?: string }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -1275,6 +1301,7 @@ function CategoryBlock({ category, tenantId }: { category: Category; tenantId: s
             mode="edit"
             tenantId={tenantId}
             sectionId={category.id /* unused in edit */}
+            sectionKey={sectionKey}
             category={category}
             onDone={() => setEditOpen(false)}
           />
@@ -1325,7 +1352,7 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
 
         <div className="pl-4 border-l-2 border-border/50 ml-4 space-y-3">
           {(section.categories || []).map((cat) => (
-            <CategoryBlock key={cat.id} category={cat} tenantId={tenantId} />
+            <CategoryBlock key={cat.id} category={cat} tenantId={tenantId} sectionKey={section.key} />
           ))}
           <Button
             variant="outline"
@@ -1355,6 +1382,7 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
             mode="create"
             tenantId={tenantId}
             sectionId={section.id}
+            sectionKey={section.key}
             onDone={() => setAddCatOpen(false)}
           />
       </EditDialog>

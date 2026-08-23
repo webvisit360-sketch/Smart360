@@ -13,5 +13,5 @@
 - [Living Guide prototype parity](living-guide-prototype-parity.md) — trust 390×844 computed styles; stage percentages and descendant font cascades can differ from prose tables.
 - [Guest sign-in delivery status](guest-sign-in-delivery.md) — unified sheet is production-approved; do not reimplement unless the owner reports a regression.
 - [Distance review pipeline](distance-review-pipeline.md) — link-only host location input, mapQuery URL = destination, manual-wins conditional approve, DB-wide Nominatim 1 rps throttle.
-- [Stale guest bundles](stale-guest-bundles.md) — cache-control: private lets guest devices run pre-publish bundles for hours; verify via lazy-chunk grep + tester tapping the real prod button.
+- [Stale guest bundles](stale-guest-bundles.md) — fix built: self-owned static server + version.json one-shot safe reload; platform static headers are NOT configurable; verify needs two publishes.
 - [Prod data backfills](prod-data-backfills.md) — prod SQL is read-only; publish syncs schema not data; fix via self-disabling startup backfill with race-safe predicates. Also: itemMapsHref is the only POI maps builder.

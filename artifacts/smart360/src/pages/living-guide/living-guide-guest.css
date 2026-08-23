@@ -554,7 +554,7 @@ body[data-t="noc"] .lg2-grid-view {
   margin: 0;
   color: var(--tx);
   font-size: 28px;
-  line-height: 1;
+  line-height: 42px; /* prototype .hd h2 computed (inherited 1.5) — same as .lg2-explore-header h1 */
   font-weight: 800;
   letter-spacing: -.035em;
 }
@@ -619,27 +619,28 @@ body[data-t="noc"] .lg2-grid-view {
   font-weight: 750;
 }
 
+/* Prototype `.hello` row with border-color var(--accg) (spec: 358×62, r16). */
 .lg2-orders-entry {
   width: calc(100% - 32px);
-  min-height: 64px;
-  margin: 0 16px 12px;
-  padding: 11px 14px;
-  border: 1px solid color-mix(in srgb, var(--acc) 32%, var(--line));
+  min-height: 62px;
+  margin: 0 16px 14px;
+  padding: 11px 15px;
+  border: 1px solid var(--accg);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--acc) 8%, var(--card2));
+  background: var(--card2);
   color: var(--tx);
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   text-align: left;
   cursor: pointer;
 }
 
 .lg2-orders-entry-icon {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
-  border-radius: 13px;
+  border-radius: 12px;
   background: var(--card);
   color: var(--acc);
   display: grid;
@@ -647,8 +648,8 @@ body[data-t="noc"] .lg2-grid-view {
 }
 
 .lg2-orders-entry-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .lg2-orders-entry > span:nth-child(2) {
@@ -662,14 +663,17 @@ body[data-t="noc"] .lg2-grid-view {
 }
 
 .lg2-orders-entry b {
-  font-size: 14px;
+  font-size: 13.5px;
+  /* prototype: <b> inside a 650-weight .hello row — UA "bolder" resolves to 900 */
+  font-weight: 900;
   line-height: 1.25;
 }
 
 .lg2-orders-entry small {
   margin-top: 3px;
   color: var(--tx2);
-  font-size: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
 .lg2-orders-entry-arrow {

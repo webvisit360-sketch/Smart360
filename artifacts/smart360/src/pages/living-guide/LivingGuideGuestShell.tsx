@@ -20,6 +20,7 @@ import {
   resolveTenantMapsUrl,
 } from "@/lib/tenant-maps";
 import { itemMapsHref } from "@/lib/maps-href";
+import { beginGuestActivity, endGuestActivity } from "@/lib/bundle-freshness";
 import {
   CARD_IMAGE_WIDTH,
   HERO_IMAGE_WIDTH,
@@ -81,6 +82,11 @@ import {
   exploreItemDescription,
   populatedExploreGroups,
 } from "./living-guide-explore";
+import {
+  OFFER_GROUPS,
+  STAY_GROUPS,
+  populatedSectionGroups,
+} from "./living-guide-groups";
 
 type GuestRecord = {
   unit: string;
@@ -428,6 +434,15 @@ export default function LivingGuideGuestShell({
   const [orderItemId, setOrderItemId] = useState<string | null>(null);
   const [showOrders, setShowOrders] = useState(false);
   const messagePasswordRequired = Boolean(tenant.orderPasswordConfigured);
+
+  // Reload safety for the stale-bundle check (mounted in GuestHost): never
+  // reload while an order flow or the sign-in sheet is open.
+  useEffect(() => {
+    const busy = Boolean(orderItemId || pendingOrderItemId || showSignIn);
+    if (busy) beginGuestActivity("order-flow");
+    else endGuestActivity("order-flow");
+    return () => endGuestActivity("order-flow");
+  }, [orderItemId, pendingOrderItemId, showSignIn]);
   const guestSignedIn = Boolean(guest?.unit.trim() && guest?.name.trim());
   const guestIdentityComplete = Boolean(
     guestSignedIn &&
@@ -674,27 +689,45 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "grid" && currentSection && (
+        {screen === "grid" && currentSection && currentSection.key === "offer" && (
+          <ShopView
+            tenant={tenant}
+            section={currentSection}
+            t={t}
+            orderSummary={orderSummary}
+            onOpenOrders={() => setShowOrders(true)}
+            onOpenItem={openItem}
+          />
+        )}
+
+        {screen === "grid" && currentSection && currentSection.key === "stay" && (
+          <StayView
+            tenant={tenant}
+            section={currentSection}
+            t={t}
+            guest={guest}
+            onEditGuest={requestCredentials}
+            onOpenCategory={openCategory}
+            onOpenNotices={() => setShowNotices(true)}
+            notices={notices}
+            helpCategoryId={helpCategory?.id}
+          />
+        )}
+
+        {screen === "grid" && currentSection && currentSection.key !== "offer" && currentSection.key !== "stay" && (
           <GridView
             tenant={tenant}
             section={currentSection}
             lang={lang}
             t={t}
-            guest={currentSection.key === "stay" ? guest : null}
+            guest={null}
             onEditGuest={requestCredentials}
             onOpenCategory={openCategory}
             onOpenNotices={() => setShowNotices(true)}
-            helpCategoryId={currentSection.key === "stay" ? helpCategory?.id : null}
-            notices={currentSection.key === "stay" ? notices : []}
+            helpCategoryId={null}
+            notices={[]}
             orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
-            onOpenOffer={
-              currentSection.key === "stay" &&
-              datedEventDestination(sections) &&
-              sections.some((section: any) => section.key === "offer")
-                ? () => navigate(`/${slug}/s/offer`)
-                : undefined
-            }
           />
         )}
 
@@ -1222,11 +1255,63 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
   );
 }
 
-function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }: any) {
-  const groups = useMemo(
-    () => populatedExploreGroups(categories),
-    [categories],
+// Shared Okolica building blocks (prototype .gtabs / .pcard), reused verbatim
+// by the Okolica, Ponudba and Nastanitev screens — never re-implemented.
+function GroupTabs({ groups, selectedKey, onSelect, label }: any) {
+  return (
+    <div className="lg2-gtabs" role="tablist" aria-label={label}>
+      {groups.map((group: any) => (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={group.key === selectedKey}
+          className={group.key === selectedKey ? "is-active" : undefined}
+          key={group.key}
+          onClick={() => onSelect(group.key)}
+        >
+          {group.label}
+        </button>
+      ))}
+    </div>
   );
+}
+
+function PCard({ ariaLabel, onOpen, media, meta, title, description }: any) {
+  return (
+    <article
+      className="lg2-pcard"
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+    >
+      <div className={`lg2-pcard-photo${media ? "" : " lg2-card-ambient"}`}>
+        {media && (
+          <img
+            src={mediaImgSrc(media, CARD_IMAGE_WIDTH)}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            style={imageStyle(media)}
+          />
+        )}
+      </div>
+      <div className="lg2-pcard-body">
+        <div className="lg2-pcard-meta">{meta}</div>
+        <h3>{title}</h3>
+        {description && <p>{description}</p>}
+      </div>
+    </article>
+  );
+}
+
+function useGroupTabsState(groups: any[]) {
   const [activeGroup, setActiveGroup] = useState<string | null>(
     groups[0]?.key ?? null,
   );
@@ -1247,6 +1332,16 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
     navigator.vibrate?.(6);
   };
 
+  return { listRef, selectedGroup, selectGroup };
+}
+
+function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }: any) {
+  const groups = useMemo(
+    () => populatedExploreGroups(categories),
+    [categories],
+  );
+  const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
+
   const openPlace = (categoryId: string, itemId: string) => {
     navigator.vibrate?.(6);
     onOpenItem(categoryId, itemId);
@@ -1258,59 +1353,28 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
         <p>{tenant.name}</p>
         <h1>{t("UI.lg.exploreTitle")}</h1>
       </header>
-      <div className="lg2-gtabs" role="tablist" aria-label={t("UI.lg.exploreTitle")}>
-        {groups.map((group) => (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={group.key === selectedGroup?.key}
-            className={group.key === selectedGroup?.key ? "is-active" : undefined}
-            key={group.key}
-            onClick={() => selectGroup(group.key)}
-          >
-            {t(group.labelKey)}
-          </button>
-        ))}
-      </div>
+      <GroupTabs
+        groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+        selectedKey={selectedGroup?.key}
+        onSelect={selectGroup}
+        label={t("UI.lg.exploreTitle")}
+      />
       <div
         className="lg2-screen-scroll lg2-explore-list"
         data-lg-scroll
         ref={listRef}
       >
         {selectedGroup?.items.map(({ item, category }: any) => {
-          const media = item.media?.[0];
           const distance = itemDistanceText(item);
           const status = itemOpenStatus(item, t);
-          const description = exploreItemDescription(item);
-          const open = () => openPlace(category.id, item.id);
           return (
-            <article
-              className="lg2-pcard"
+            <PCard
               key={item.id}
-              role="button"
-              tabIndex={0}
-              aria-label={item.title || category.label}
-              onClick={open}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  open();
-                }
-              }}
-            >
-              <div className={`lg2-pcard-photo${media ? "" : " lg2-card-ambient"}`}>
-                {media && (
-                  <img
-                    src={mediaImgSrc(media, CARD_IMAGE_WIDTH)}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    style={imageStyle(media)}
-                  />
-                )}
-              </div>
-              <div className="lg2-pcard-body">
-                <div className="lg2-pcard-meta">
+              ariaLabel={item.title || category.label}
+              onOpen={() => openPlace(category.id, item.id)}
+              media={item.media?.[0]}
+              meta={
+                <>
                   {distance && <span className="lg2-pcard-distance">{distance}</span>}
                   {distance && <i aria-hidden="true" />}
                   {status ? (
@@ -1320,13 +1384,193 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
                   ) : (
                     <span className="lg2-pcard-category">{category.label}</span>
                   )}
-                </div>
-                <h3>{item.title || category.label}</h3>
-                {description && <p>{description}</p>}
-              </div>
-            </article>
+                </>
+              }
+              title={item.title || category.label}
+              description={exploreItemDescription(item)}
+            />
           );
         })}
+        {groups.length === 0 && (
+          <div className="lg2-empty">{t("UI.lg.search.empty")}</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// Ponudba (prototype #v-shop): one card per ITEM, meta = authored price
+// text · CATEGORY; "Moja naročila" row on top when this device has orders.
+function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem }: any) {
+  const groups = useMemo(
+    () =>
+      populatedSectionGroups(section.categories, OFFER_GROUPS).filter(
+        (group) => group.items.length > 0,
+      ),
+    [section.categories],
+  );
+  const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
+
+  const openOffer = (categoryId: string, itemId: string) => {
+    navigator.vibrate?.(6);
+    onOpenItem(categoryId, itemId);
+  };
+
+  return (
+    <section className="lg2-view lg2-explore-view" data-testid="screen-offer">
+      <header className="lg2-grid-header">
+        <div>
+          <p>{tenant.name}</p>
+          <h1>{section.title}</h1>
+        </div>
+      </header>
+      <GroupTabs
+        groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+        selectedKey={selectedGroup?.key}
+        onSelect={selectGroup}
+        label={section.title}
+      />
+      <div
+        className="lg2-screen-scroll lg2-explore-list"
+        data-lg-scroll
+        ref={listRef}
+      >
+        {orderSummary && (
+          <button
+            className="lg2-orders-entry"
+            type="button"
+            onClick={onOpenOrders}
+            data-testid="my-orders-entry"
+          >
+            <span className="lg2-orders-entry-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </span>
+            <span>
+              <b>{t("UI.lg.order.myOrders")}</b>
+              <small>
+                {orderSummary.openCount > 0
+                  ? t("UI.lg.order.entryOpen", { count: orderSummary.openCount })
+                  : t("UI.lg.order.entryClosed", { count: orderSummary.totalCount })}
+              </small>
+            </span>
+            <span className="lg2-orders-entry-arrow" aria-hidden="true">›</span>
+          </button>
+        )}
+        {selectedGroup?.items.map(({ item, category }: any) => {
+          const price = itemPriceText(item);
+          return (
+            <PCard
+              key={item.id}
+              ariaLabel={item.title || category.label}
+              onOpen={() => openOffer(category.id, item.id)}
+              media={item.media?.[0] ?? firstMedia(category)}
+              meta={
+                <>
+                  {price && <span>{price}</span>}
+                  {price && <i aria-hidden="true" />}
+                  <span className="lg2-pcard-category">{category.label}</span>
+                </>
+              }
+              title={item.title || category.label}
+              description={exploreItemDescription(item)}
+            />
+          );
+        })}
+        {groups.length === 0 && (
+          <div className="lg2-empty">{t("UI.lg.search.empty")}</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// Nastanitev (prototype #v-grid): one card per CATEGORY, meta = optional live
+// status · category label; greeting strip directly under the tabs, quiet help
+// link at the bottom of the list.
+function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, helpCategoryId }: any) {
+  const groups = useMemo(
+    () =>
+      populatedSectionGroups(section.categories, STAY_GROUPS).filter(
+        (group) => group.categories.length > 0,
+      ),
+    [section.categories],
+  );
+  const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
+  const hasNew = notices.some(isNewNotice);
+
+  const openStayCategory = (categoryId: string) => {
+    navigator.vibrate?.(6);
+    onOpenCategory(categoryId);
+  };
+
+  return (
+    <section className="lg2-view lg2-explore-view" data-testid="screen-stay">
+      <header className="lg2-grid-header">
+        <div>
+          <p>{tenant.name}</p>
+          <h1>{section.title}</h1>
+        </div>
+        {notices.length > 0 && (
+          <button className={`lg2-bell${hasNew ? " lg2-bell--dot" : ""}`} type="button" onClick={onOpenNotices} aria-label={t("UI.lg.notices.title")}>
+            <svg aria-hidden="true"><use href="#lg-i-bell"/></svg>
+          </button>
+        )}
+      </header>
+      <GroupTabs
+        groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+        selectedKey={selectedGroup?.key}
+        onSelect={selectGroup}
+        label={section.title}
+      />
+      <div
+        className="lg2-screen-scroll lg2-explore-list"
+        data-lg-scroll
+        ref={listRef}
+      >
+        {guest && (
+          <button className="lg2-greeting" type="button" onClick={onEditGuest}>
+            <span className="lg2-greeting-icon" aria-hidden="true"><svg><use href="#lg-i-usr" /></svg></span>
+            <span>
+              <b>{guest.name ? t("UI.lg.greeting.named", { name: guest.name }) : t("UI.lg.greeting.generic")}</b>
+              <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
+            </span>
+            <em>{t("UI.lg.greeting.change")}</em>
+          </button>
+        )}
+        {selectedGroup?.categories.map((category: any) => {
+          const item = visible(category.items)[0];
+          const status = item ? itemOpenStatus(item, t) : null;
+          return (
+            <PCard
+              key={category.id}
+              ariaLabel={category.label}
+              onOpen={() => openStayCategory(category.id)}
+              media={firstMedia(category)}
+              meta={
+                <>
+                  {status && (
+                    <span className={`lg2-pcard-status${status.isOpen ? " is-open" : ""}`}>
+                      {status.text}
+                    </span>
+                  )}
+                  {status && <i aria-hidden="true" />}
+                  <span className="lg2-pcard-category">{category.label}</span>
+                </>
+              }
+              title={item?.title || category.label}
+              description={item ? exploreItemDescription(item) : null}
+            />
+          );
+        })}
+        {helpCategoryId && (
+          <div className="lg2-help-entry">
+            <button type="button" onClick={() => onOpenCategory(helpCategoryId)}>{t("UI.lg.helpEmergency")}</button>
+          </div>
+        )}
         {groups.length === 0 && (
           <div className="lg2-empty">{t("UI.lg.search.empty")}</div>
         )}
