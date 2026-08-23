@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -9,6 +10,12 @@ const app: Express = express();
 
 // Behind the Replit proxy: derive client IP from X-Forwarded-For (first hop).
 app.set("trust proxy", 1);
+
+// Compress JSON/text responses (the guest guide payload is ~160 KB raw and
+// the platform front end does not compress API responses). The default
+// filter skips already-compressed content types, so /api/storage image and
+// video streams (incl. Range/206) pass through untouched.
+app.use(compression());
 
 // Search engines must never index anything.
 app.use((_req, res, next) => {

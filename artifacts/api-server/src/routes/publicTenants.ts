@@ -5,7 +5,7 @@ import {
   GetPublicTenantResponse,
   SearchPublicTenantResponse,
 } from "@workspace/api-zod";
-import { buildTenantContent } from "../lib/contentTree";
+import { buildTenantContent, type TenantContentTree } from "../lib/contentTree";
 import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { wifiQrSvg } from "../lib/wifiQr";
@@ -34,6 +34,54 @@ const TENANT_CACHE_TTL_MS = 60 * 1000;
 
 export function invalidateTenantCache(): void {
   tenantCache.clear();
+  payloadCache.clear();
+}
+
+// Built guide payload per (tenant id, lang) — the guest hot path. A cache hit
+// skips the ~10 content queries and the zod parse entirely.
+// Same-process invalidation is immediate: every admin save calls
+// invalidateTenantCache() above. The short TTL only bounds staleness on OTHER
+// autoscale instances, which a save on this one cannot reach.
+type PayloadEntry = {
+  payload: unknown;
+  tree: TenantContentTree;
+  expiresAt: number;
+};
+const payloadCache = new Map<string, PayloadEntry>();
+const PAYLOAD_CACHE_TTL_MS = 30 * 1000;
+
+async function buildPublicPayload(
+  tenant: TenantRow,
+  lang: string | undefined,
+): Promise<PayloadEntry> {
+  const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
+  const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
+  const publicUrl = guestUrl(tenant.slug);
+  const qrSvg = await guestQrSvg(publicUrl);
+  // Join-network QR — derived from the CURRENT tenant row. A Wi-Fi password
+  // change is a tenant save, which clears this cache before guests can read
+  // a stale code.
+  const joinQr = tenant.wifiSsid
+    ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
+    : null;
+  const payload = GetPublicTenantResponse.parse(
+    serialize({ ...tree, publicUrl, qrSvg, wifiQrSvg: joinQr, ui, plurals }),
+  );
+  return { payload, tree, expiresAt: Date.now() + PAYLOAD_CACHE_TTL_MS };
+}
+
+async function getPublicPayload(
+  tenant: TenantRow,
+  lang: string | undefined,
+  opts: { bypassCache: boolean },
+): Promise<PayloadEntry> {
+  if (opts.bypassCache) return buildPublicPayload(tenant, lang);
+  const key = `${tenant.id}|${lang ?? "sl"}`;
+  const hit = payloadCache.get(key);
+  if (hit && hit.expiresAt > Date.now()) return hit;
+  const entry = await buildPublicPayload(tenant, lang);
+  payloadCache.set(key, entry);
+  return entry;
 }
 
 async function resolveTenantBySlugOrDomain(
@@ -123,22 +171,15 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   }
 
   const lang = enabledLang(tenant, req);
-  const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
-  const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
-  const publicUrl = guestUrl(tenant.slug);
-  const qrSvg = await guestQrSvg(publicUrl);
-  // Join-network QR — always rendered fresh from the CURRENT ssid/password.
-  const joinQr = tenant.wifiSsid
-    ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
-    : null;
+  // Preview (and unpublished) requests bypass the payload cache: the operator
+  // must always see the database as it is right now.
+  const { payload } = await getPublicPayload(tenant, lang, {
+    bypassCache: preview || !tenant.isPublished,
+  });
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
-  res.json(
-    GetPublicTenantResponse.parse(
-      serialize({ ...tree, publicUrl, qrSvg, wifiQrSvg: joinQr, ui, plurals })
-    )
-  );
+  res.json(payload);
 });
 
 // GET /public/tenants/:slug/manifest.webmanifest
@@ -222,23 +263,15 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
     return;
   }
   const lang = enabledLang(tenant, req);
-  const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
-  const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
-  const publicUrl = guestUrl(tenant.slug);
-  const qrSvg = await guestQrSvg(publicUrl);
-  // Join-network QR — rendered fresh from the CURRENT ssid/password on every
-  // request (never cached by tenant id: a password change must change the code).
-  const joinQr = tenant.wifiSsid
-    ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
-    : null;
+  // Preview (and unpublished) requests bypass the payload cache: the operator
+  // must always see the database as it is right now.
+  const { payload } = await getPublicPayload(tenant, lang, {
+    bypassCache: preview || !tenant.isPublished,
+  });
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
-  res.json(
-    GetPublicTenantResponse.parse(
-      serialize({ ...tree, publicUrl, qrSvg, wifiQrSvg: joinQr, ui, plurals })
-    )
-  );
+  res.json(payload);
 });
 
 router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
@@ -258,7 +291,11 @@ router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
     return;
   }
   const lang = enabledLang(tenant, req);
-  const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
+  // Search shares the guest payload cache — it must never rebuild the full
+  // tree per keystroke.
+  const { tree } = await getPublicPayload(tenant, lang, {
+    bypassCache: !tenant.isPublished,
+  });
   const results: Array<{
     itemId: string;
     categoryId: string;

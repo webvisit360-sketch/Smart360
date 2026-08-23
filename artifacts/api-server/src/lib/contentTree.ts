@@ -173,11 +173,19 @@ export async function buildTenantContent(
       ...categoryIds,
       ...itemIds,
     ];
+    // Language filter lives in SQL so only the requested language's rows
+    // travel; writers lowercase `lang` on save (see translationKeys.ts), and
+    // the JS re-check below stays as a guard for any legacy mixed-case row.
     const translations = recordIds.length
       ? await db
           .select()
           .from(translationsTable)
-          .where(inArray(translationsTable.recordId, recordIds))
+          .where(
+            and(
+              inArray(translationsTable.recordId, recordIds),
+              eq(translationsTable.lang, lang),
+            ),
+          )
       : [];
     const byRecord = new Map<string, Record<string, string>>();
     for (const t of translations) {

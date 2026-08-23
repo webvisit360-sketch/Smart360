@@ -11,7 +11,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Explicit pool ceiling (was the node-postgres default of 10, undocumented).
+// One pool per api-server process; autoscale multiplies this by instance
+// count, so keep instances × max well under the managed-Postgres cap (~100).
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+});
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";

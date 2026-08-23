@@ -15,4 +15,4 @@
 - [Distance review pipeline](distance-review-pipeline.md) — link-only host location input, mapQuery URL = destination, manual-wins conditional approve, DB-wide Nominatim 1 rps throttle.
 - [Stale guest bundles](stale-guest-bundles.md) — fix built: self-owned static server + version.json one-shot safe reload; platform static headers are NOT configurable; verify needs two publishes.
 - [Prod data backfills](prod-data-backfills.md) — prod SQL is read-only; publish syncs schema not data; fix via self-disabling startup backfill with race-safe predicates. Also: itemMapsHref is the only POI maps builder.
-- [Scale audit 150 tenants](scale-audit-150-tenants.md) — one app suffices; gaps: missing FK indexes, translations JS lang filter, uncompressed 160 KB payload rebuilt per request, default pool.
+- [Scale audit 150 tenants](scale-audit-150-tenants.md) — one app suffices; hardening shipped (indexes, brotli, payload cache); guest-cache invalidation is CENTRALIZED middleware — never per-route.

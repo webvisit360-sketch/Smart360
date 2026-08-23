@@ -28,7 +28,10 @@ export const sectionsTable = pgTable("sections", {
   imageUrl: text("image_url"),
   position: integer("position").notNull().default(0),
   isVisible: boolean("is_visible").notNull().default(true),
-});
+}, (t) => [
+  // Guest payload render path: every guide open filters by tenant.
+  index("sections_tenant_idx").on(t.tenantId),
+]);
 
 export const categoriesTable = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -47,7 +50,10 @@ export const categoriesTable = pgTable("categories", {
   isVisible: boolean("is_visible").notNull().default(true),
   // Soft delete: rows stay (with photos and translations) for the 30-day trash.
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
-});
+}, (t) => [
+  // Guest payload render path: categories are fetched by their sections.
+  index("categories_section_idx").on(t.sectionId),
+]);
 
 export const itemsTable = pgTable("items", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -90,7 +96,10 @@ export const itemsTable = pgTable("items", {
   soldOut: boolean("sold_out").notNull().default(false),
   producerName: text("producer_name"),
   producerNote: text("producer_note"),
-});
+}, (t) => [
+  // Guest payload render path: items are fetched by their categories.
+  index("items_category_idx").on(t.categoryId),
+]);
 
 // Cached road-distance candidates are deliberately separate from item content:
 // a distance reaches guests only after an administrator approves the proposal.
@@ -189,6 +198,8 @@ export const mediaTable = pgTable("media", {
     "media_site_plan_scope_v2",
     sql`${t.purpose} != 'site-plan' OR (${t.tenantId} IS NOT NULL AND ${t.itemId} IS NULL AND ${t.kind} = 'image')`,
   ),
+  // Guest payload render path: gallery rows are fetched by their items.
+  index("media_item_idx").on(t.itemId),
 ]);
 
 export const translationsTable = pgTable(
@@ -211,7 +222,13 @@ export const translationsTable = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (t) => [uniqueIndex("translations_ref_idx").on(t.model, t.recordId, t.field, t.lang)]
+  (t) => [
+    uniqueIndex("translations_ref_idx").on(t.model, t.recordId, t.field, t.lang),
+    // Guest payload render path: content overlay looks translations up by
+    // record + language; translations_ref_idx leads with `model`, which that
+    // query does not constrain, so it needs its own index.
+    index("translations_record_lang_idx").on(t.recordId, t.lang),
+  ]
 );
 
 // Plural forms per language ("1 ocena / 2 oceni / 3 ocene / 5 ocen").
