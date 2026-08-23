@@ -1,0 +1,115 @@
+INSTRUCTION #28 — Host portal (accounts, guide creator, daily editor)
+Binding references, both attached:
+
+admin-prototip.html — the portal. Copy its values; do not re-derive them.
+prototip-2030.html — the guest guide, unchanged, for the preview panel.
+
+Measured at 1480 × 1000, the portal's own palette (the guest guide's dan tokens). The portal is NOT time-of-day themed.
+Why this shape
+The guide is a Christmas tree: the structure is identical for every tenant, the content is what differs. We (the owner) prepare the surroundings — places, distances, descriptions, translations. The host supplies their own material and CONFIRMS ours. So the portal is not a full CMS. It is:
+
+A. a creator that walks a new host to a finished guide, and B. a small daily editor for what actually changes.
+
+A host who is not comfortable with software must never face an empty editor.
+
+Deliver in gated checkpoints, one report each, and WAIT for approval between them. Established format: re-verified public URL, build id, per-item verification, computed-style pairs, DELIBERATELY ABSENT section. Never invent content. Production content is the single source of truth.
+
+
+CHECKPOINT 1 — Access model (PLAN ONLY, no code)
+Report before building:
+
+ONE account per tenant for now; design so multi-user can be added later without migration pain.
+Owner/super-admin sees ALL tenants, can create new ones, and can enter any tenant and edit everything as that host would — see CHECKPOINT 2b.
+Strict scoping: describe how you guarantee centrally — not per route — that a host can never read or modify another tenant's data, including by supplying another tenant's id in a request.
+Password storage (algorithm and parameters), sessions, cookie flags, lifetime, logout, login rate limiting and lockout.
+Self-service password reset by e-mail; expiry and single use.
+Changelog records WHO made every change; super-admin actions inside a tenant are marked as such.
+Name the three biggest security risks in your design and how each is mitigated.
+CHECKPOINT 2 — Accounts and scoping (implementation)
+Binding rules:
+
+One account per tenant. The host manages all of their own content and settings. There is NO approval step by us.
+Draft/publish is the HOST's control: edits save continuously; guests see them when the host presses Objavi. Every item carries a state.
+The host may change their own login password, the guest order password, the notification recipient and all content.
+Passwords are readable by nobody, including the owner and us. Hosts set and reset their own. Never send a password or reset link to the owner.
+
+Verification: a negative-access suite — authenticated as tenant A, attempt to read and modify tenant B's categories, items, media, orders, messages, settings and password, covering id-in-URL, id-in-body and query-parameter variants; every attempt must fail with the correct status. Report the endpoints covered and the count. Prove passwords are hashed and never logged. Demonstrate rate limiting and a full password reset on an address we control, then clean up.
+CHECKPOINT 2b — The owner's cockpit (super-admin)
+The owner does not merely supervise: for smaller apartments he BUILDS and MAINTAINS the guide himself. This is his daily working screen, not an administrative afterthought. It must exist from the start.
+
+Requirements:
+
+Tenant list — every client on one screen: name, slug, published state, readiness percentage, and what is pending (locations to confirm, orders, messages, missing photos). Sortable and searchable. This is the owner's landing screen, the way Pregled is the host's.
+Create a new tenant from this screen: name, slug (proposed automatically from the name, editable before first publish, frozen after), type (kamp / hotel / apartmaji), which seeds the default sections, categories, groups and bottom bar.
+Enter any tenant with one click and work exactly as that host would — every editor, every setting, no reduced mode. Leaving returns to the list.
+While inside a tenant, the header must state unmistakably WHOSE guide is open — the tenant name, plus a clear marker that this is the owner acting on their behalf. The owner has already lost work once by editing the wrong tenant; a copy tenant must additionally be marked.
+Every change the owner makes inside a tenant is recorded in that tenant's changelog as performed by the owner on their behalf.
+The owner can set a host's e-mail and trigger a password reset TO THE HOST, but never sees or sets a host's password.
+Hosts see none of this: no tenant list, no switcher, no hint that other tenants exist.
+
+Verification: create a tenant end to end, enter it, edit content, leave, and show the changelog attributing the change to the owner acting for that tenant; plus proof that a host account cannot reach any of these screens or endpoints.
+CHECKPOINT 3 — Portal shell and the live preview
+Per the prototype:
+
+Left sidebar 264 px, padding 22/14, item 47 px high, radius 14, font 16px/650, gap 11; active item = --acc background, --onacc text; count badge = --danger pill, 24 px high.
+Sidebar groups: (top) Pregled · Kreator vodnika · Naročila · Sporočila; VSAK DAN: Dogodki · Obvestila · Ponudba in cene; VSEBINA: Okolica · Nastanitev · Nastavitve. Foot: signed-in address and logout.
+Sticky header 80 px, padding 18/30, title 26px/800, the published-state chip, and a single primary button Objavi. No "Poglej vodnik" button — the preview replaces it.
+Persistent preview rail, 305 px, sticky: a device frame 289 × 629 (radius 32, 7 px bezel) rendering the guest guide at the iPhone 17 Pro ratio, 402 × 874, labelled underneath exactly: iPhone 17 Pro · 402 × 874. The preview FOLLOWS the section being edited, updates on every change, and carries the line "Predogled se osveži ob vsaki spremembi. Gostje vidijo šele objavljeno različico." Two quick buttons switch the shown screen. Below 1240 px viewport width the rail is hidden.
+Cards: radius 22, padding 22, title 20px/800, sub 15px in --tx2.
+Buttons: radius 14, padding 12/20, 16px/700.
+Inputs: radius 14, padding 13/15, 16px/650, label 14px/800 uppercase with .04em tracking, focus border --acc.
+CHECKPOINT 4 — Pregled and Kreator vodnika
+Pregled answers one question: what is waiting for the host.
+
+"Kaj čaka na vas": new orders, unanswered messages, locations to confirm, categories without a photo, events without a date — each a row with a count that links to the right screen. A zero row still renders, showing 0.
+"Ta teden": views, orders, messages.
+Full-width card Povezava in QR koda: the QR, the label "Naslov vašega vodnika", the full URL in 19px (https://smart360.info/<slug>), the note that the address is generated from the accommodation name and never changes so printed codes stay valid, and three buttons: Prenesi QR · Nalepka (PDF) · Kopiraj naslov.
+Full-width progress card: a 96 px conic ring with the percentage, the line "Vaš vodnik je N % pripravljen", and Nadaljuj.
+
+Kreator vodnika — seven steps, done in any order, resumable:
+
+Osnovni podatki · 2. Vaša nastanitev · 3. Potrdite okolico ·
+Ponudba in naročila · 5. Program in obvestila (optional) ·
+Videz vodnika · 7. Objava in QR kode.
+
+Each step row (691 × ~121, radius 20, padding 18/20, gap 16) carries:
+
+a 38 × 38 number chip (done = --accg, current = --acc);
+title 18px/800; one line of what belongs in it;
+a "why" line in --accg, 14px/700 — this is not decoration: a host who does not know software needs the reason, not only the field. Use the prototype's wording;
+a state chip (urejeno / N čaka / ni obvezno) and an action button.
+
+The completion percentage is computed from real data, never hardcoded. A tenant with nothing entered opens on the Kreator, not on an empty editor.
+CHECKPOINT 5 — Okolica: the confirmation screen
+Extend the existing distance-review screen into the full location review, per the prototype:
+
+Header with counts: N čaka · N potrjenih · N zavrnjenih.
+Each row: photo, name (18px/800), distance · time · CATEGORY in --accg (15px/750, category 12.5px uppercase in --tx2), and the description clamped to two lines.
+Actions: Potrdi · Uredi · Zavrni; a failed or implausible row shows the resolved address in red with Prilepi povezavo; a handled row keeps its state chip and a Razveljavi. Rows never vanish.
+A Predlagaj lokacijo button so the host can propose a place we missed.
+Nothing reaches guests until the host confirms the row.
+Where our rule forbids a description (hospitality, shops, bakeries, pharmacies, hospital, fuel, ATMs) the row states plainly why there is none, as in the prototype. The portal must never invite the host to write one there either — offer only name, hours and phone.
+CHECKPOINT 6 — The daily editor
+Dogodki: title, date, time, place, optional price, description, and recurrence (enkratno / vsak torek / vsak dan / izberi dneve) — entered once, shown every week; otherwise a receptionist retypes the same yoga class all season. Language tabs SL/EN/DE/IT with the Prevedi button; languages missing a translation are marked in --warm.
+
+Obvestila: title and text, published to guests, "novo" for 72 h.
+
+Naročila: the inbox already built, with the new-order highlight, guest name + unit + tap-to-call phone, the item and quantity, status actions and the optional note to the guest.
+
+Ponudba in cene: per item — title, price as TEXT, orderable yes/no, description, photos — with the phone preview beside the form.
+CHECKPOINT 7 — Nastavitve
+Two cards: Osnovno (name, address, Google Maps link with the note that coordinates fill in automatically, phone, order e-mail, guest order password with its explanation) and Videz in jeziki (languages, the five bottom-bar slots with the note that what is left out stays reachable from Domov, the virtual tour field accepting a link or embed code, and the Domov hero photo).
+
+
+DELIBERATELY ABSENT — do not build
+The guest-facing Program screen (week strip and day timeline). It is prepared in prototip-2030.html and will be commissioned separately. This instruction covers only the ADMIN side of events.
+Multiple accounts per tenant.
+Payments, commissions, push notifications, WhatsApp/Telegram.
+Any automatic translation other than the approved DeepL "Prevedi" button.
+Standing rules
+Design stays inside the established CGP: existing tokens, type scale, glass and rounded geometry. No new colours, fonts or component shapes.
+Plain language everywhere — the host is a receptionist, not a developer.
+Nothing renders in a disabled state without explanation; hide instead.
+Report anything not done as NOT DONE with the reason.
+Report and STOP at each checkpoint.
+
