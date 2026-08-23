@@ -15,6 +15,8 @@ description: How to fix wrong production DATA (not schema) when prod SQL is read
 - Re-check the guard columns (label, default value) inside the UPDATE predicate itself — the pre-read check alone races with concurrent host edits; predicate + `.returning()` count makes a race a skip, never a stale write.
 - Make the applier accept injectable tenantId/ledger so tests can exercise apply/no-op/skip paths on scratch fixtures.
 - Watch for this whenever a new admin-managed column ships after content already exists in prod.
+- Match ledger rows by the STABLE key column, never by host-editable labels (owner-mandated after review); report a full per-row before/after table and log skips at ERROR level.
+- The deployment log capture can drop early boot INFO lines (the backfill's result table never surfaced there) — verify a prod data repair via read-only prod SQL before/after, not by log spelunking.
 
 # POI maps links (regression guard)
 
