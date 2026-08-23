@@ -88,5 +88,10 @@ export interface Item {
      * @nullable
      */
   longitude?: number | null;
+  /**
+     * Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved
+     * @nullable
+     */
+  resolvedAddress?: string | null;
   media: MediaEntry[];
 }

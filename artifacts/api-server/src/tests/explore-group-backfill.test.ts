@@ -123,8 +123,8 @@ test("guest payload exposes approved review coordinates and hides unapproved one
       categoryId: category!.id, title: "Pending", mapQuery: "Izola",
     }).returning();
     await db.insert(itemDistanceProposalsTable).values([
-      { itemId: approvedItem!.id, tenantId, status: "approved", latitude: 45.528, longitude: 13.605, inputFingerprint: "a" },
-      { itemId: pendingItem!.id, tenantId, status: "pending", latitude: 45.5, longitude: 13.6, inputFingerprint: "b" },
+      { itemId: approvedItem!.id, tenantId, status: "approved", latitude: 45.528, longitude: 13.605, resolvedAddress: "Strunjan 148, 6320 Portorož", inputFingerprint: "a" },
+      { itemId: pendingItem!.id, tenantId, status: "pending", latitude: 45.5, longitude: 13.6, resolvedAddress: "Izola, Slovenija", inputFingerprint: "b" },
     ]);
 
     const tree = await buildTenantContent(tenant!, { visibleOnly: true });
@@ -133,9 +133,11 @@ test("guest payload exposes approved review coordinates and hides unapproved one
     const pending = items.find((i) => i.id === pendingItem!.id);
     assert.equal(approved!.latitude, 45.528);
     assert.equal(approved!.longitude, 13.605);
+    assert.equal(approved!.resolvedAddress, "Strunjan 148, 6320 Portorož");
     // Unapproved candidates must never leak to guests.
     assert.equal(pending!.latitude, null);
     assert.equal(pending!.longitude, null);
+    assert.equal(pending!.resolvedAddress, null);
   } finally {
     if (tenantId) await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
   }

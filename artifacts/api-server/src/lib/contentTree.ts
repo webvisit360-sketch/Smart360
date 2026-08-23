@@ -47,13 +47,14 @@ export type SitePlanImageEntry = {
   height: number | null;
 };
 
-// latitude/longitude come from the APPROVED distance proposal (if any):
-// guests need the reviewed point so the Maps action opens the exact place
-// instead of falling back to an ambiguous text search.
+// latitude/longitude/resolvedAddress come from the APPROVED distance proposal
+// (if any): guests need the reviewed point and address so the Maps action
+// opens the exact NAMED place instead of an ambiguous search or a bare pin.
 export type ItemWithMedia = Item & {
   media: MediaRow[];
   latitude: number | null;
   longitude: number | null;
+  resolvedAddress: string | null;
 };
 export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
@@ -239,6 +240,7 @@ export async function buildTenantContent(
           itemId: itemDistanceProposalsTable.itemId,
           latitude: itemDistanceProposalsTable.latitude,
           longitude: itemDistanceProposalsTable.longitude,
+          resolvedAddress: itemDistanceProposalsTable.resolvedAddress,
         })
         .from(itemDistanceProposalsTable)
         .where(
@@ -268,6 +270,7 @@ export async function buildTenantContent(
       media: mediaByItem.get(i.id) ?? [],
       latitude: coords?.latitude ?? null,
       longitude: coords?.longitude ?? null,
+      resolvedAddress: coords?.resolvedAddress?.trim() || null,
     });
     itemsByCategory.set(i.categoryId, arr);
   }

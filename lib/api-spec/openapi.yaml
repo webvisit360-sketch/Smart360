@@ -2542,6 +2542,9 @@ components:
         longitude:
           type: ["number", "null"]
           description: Approved POI longitude from the distance review; null until a proposal is approved
+        resolvedAddress:
+          type: ["string", "null"]
+          description: Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved
         media:
           type: array
           items:

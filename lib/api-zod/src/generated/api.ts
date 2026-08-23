@@ -159,6 +159,7 @@ export const GetPublicTenantResponse = zod.object({
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
   "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
+  "resolvedAddress": zod.string().nullish().describe('Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -771,6 +772,7 @@ export const GetTenantResponse = zod.object({
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
   "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
+  "resolvedAddress": zod.string().nullish().describe('Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1709,6 +1711,7 @@ export const CreateItemResponse = zod.object({
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
   "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
+  "resolvedAddress": zod.string().nullish().describe('Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1804,6 +1807,7 @@ export const UpdateItemResponse = zod.object({
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
   "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
+  "resolvedAddress": zod.string().nullish().describe('Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1869,6 +1873,7 @@ export const DuplicateItemResponse = zod.object({
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
   "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
   "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
+  "resolvedAddress": zod.string().nullish().describe('Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
