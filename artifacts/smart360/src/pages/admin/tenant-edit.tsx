@@ -1,6 +1,8 @@
-import { useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
+import { useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Upload, ImageIcon } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
+import { actorLabel } from "@/pages/admin/dashboard";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -341,13 +343,28 @@ export default function AdminTenantEdit() {
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
-      <div className="flex items-center gap-4 sticky top-0 bg-background/95 backdrop-blur z-10 py-4 -my-4 mb-4 border-b">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/admin")}>
+      {/* CP2b: the header states unmistakably WHOSE guide is open — the owner
+          once lost work by editing the wrong tenant. Copies carry an extra
+          loud marker. */}
+      <div className="flex items-center gap-4 sticky top-0 z-10 py-4 -my-4 mb-4 border-b-2 border-emerald-600/60 bg-emerald-50/95 dark:bg-emerald-950/90 backdrop-blur px-4 -mx-4 rounded-b-lg">
+        <Button variant="ghost" size="icon" onClick={() => setLocation("/admin")} title="Nazaj na seznam">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tenant.name}</h1>
-          <p className="text-sm text-muted-foreground">Urejanje namestitve</p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Odprt vodnik</span>
+            {tenant.copiedFromTenantId && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-500 border-none">KOPIJA</Badge>
+            )}
+            {tenant.tenantType && (
+              <Badge variant="outline" className="border-emerald-300 text-emerald-700">{tenant.tenantType}</Badge>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight truncate">{tenant.name}</h1>
+          <p className="text-sm text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
+            <UserRoundCog className="h-3.5 w-3.5 shrink-0" />
+            Urejate kot Smart360 — v imenu gostitelja
+          </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" asChild>
@@ -372,6 +389,7 @@ export default function AdminTenantEdit() {
           <TabsTrigger value="translations">Prevodi</TabsTrigger>
           <TabsTrigger value="orders">Naročila in Sporočila</TabsTrigger>
           <TabsTrigger value="guide">Living Guide</TabsTrigger>
+          <TabsTrigger value="changelog">Dnevnik</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -1064,7 +1082,55 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="changelog">
+          <TenantChangelogCard tenantId={tenant.id} />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/** Per-tenant changelog with central actor attribution (CP2b): every change
+ *  the owner makes inside a tenant is recorded as performed on the host's
+ *  behalf; host changes carry the host's e-mail. */
+function TenantChangelogCard({ tenantId }: { tenantId: string }) {
+  const { data: entries, isLoading } = useListTenantChangelog(tenantId, {
+    query: { enabled: !!tenantId, queryKey: getListTenantChangelogQueryKey(tenantId) },
+  });
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Dnevnik sprememb</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-6">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : !entries || entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4">Za to namestitev še ni zabeleženih sprememb.</p>
+        ) : (
+          <div className="space-y-3">
+            {entries.map((e) => (
+              <div key={e.id} className="flex items-start justify-between gap-3 border-b last:border-b-0 pb-3 last:pb-0">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {e.action} {e.entity}
+                    {e.detail && <span className="text-muted-foreground font-normal"> · {e.detail}</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {actorLabel(e)}
+                  </p>
+                </div>
+                <span className="text-xs text-muted-foreground/70 whitespace-nowrap shrink-0">
+                  {new Date(e.createdAt).toLocaleString("sl-SI")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

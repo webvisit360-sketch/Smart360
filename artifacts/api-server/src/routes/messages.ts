@@ -514,6 +514,7 @@ router.post(
         void sendMessageNotification({
           to: tenant.email,
           tenantName: tenant.name,
+          guestUnit,
           messageId: capturedMessageId,
           threadRef: capturedThreadRef,
         }).then((result) => {

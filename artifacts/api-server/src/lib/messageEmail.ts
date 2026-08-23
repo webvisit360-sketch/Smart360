@@ -15,6 +15,7 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { logger } from "./logger";
 import { emailFrom as orderEmailFrom } from "./orderEmail";
+import { cta, p as par, portalUrl, renderEmail } from "./emailTemplate";
 
 const connectors = new ReplitConnectors();
 
@@ -36,6 +37,12 @@ export interface MessageNotifyPayload {
   /** Tenant display name. Never the guest's name. */
   tenantName: string;
   /**
+   * Guest's accommodation unit (e.g. "Apartma 3"). The ONLY guest datum the
+   * approved template shows — it identifies the stay, not the person. Message
+   * content, guest name and phone stay in the portal.
+   */
+  guestUnit: string;
+  /**
    * The UUID of the newly inserted message row.
    * Used to build the Resend idempotency key: "message-<messageId>".
    * Ensures one notification attempt per guest message, not per thread.
@@ -49,44 +56,43 @@ export interface MessageNotifyPayload {
   threadRef: string;
 }
 
-function escHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 /**
  * Build the Resend request body for a message notification.
  * Pure function — no I/O; exported for unit tests.
  *
- * Contains: only tenant name and a portal link prompt. No message content, no
- * guest data.
+ * Approved template #3 (emaili-gostitelju): tenant brand, guest UNIT only
+ * (deliberately no message content, name or phone), green "Odpri portal" CTA.
  */
 export function buildMessageEmailBody(
   p: MessageNotifyPayload,
   from: string,
 ): Record<string, unknown> {
-  const html = `<!DOCTYPE html>
-<html lang="sl">
-<head><meta charset="utf-8"><title>Novo sporočilo – ${escHtml(p.tenantName)}</title></head>
-<body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-  <h1 style="font-size:20px;margin-bottom:4px">Novo sporočilo gosta</h1>
-  <p style="color:#666;margin-top:0;font-size:14px">
-    Gost je poslal sporočilo. Odprite skrbniški portal za ogled in odgovor.
-  </p>
-  <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
-  <p style="color:#999;font-size:12px">Smart360 · ${escHtml(p.tenantName)}</p>
-</body>
-</html>`;
+  const subject = `Novo sporočilo · ${p.guestUnit}`;
+  const { html, text } = renderEmail({
+    subject,
+    preheader: "Odprite portal za odgovor",
+    brand: p.tenantName,
+    title: "Novo sporočilo",
+    blocks: [
+      par("Gost iz enote ", { b: p.guestUnit }, " vam je poslal sporočilo."),
+      par(
+        "Vsebine sporočila v e-pošto namenoma ne pošiljamo — preberete in odgovorite jo v portalu.",
+      ),
+      cta("Odpri portal", portalUrl()),
+    ],
+    footerLines: [
+      "Smart360 · digitalni vodnik za goste",
+      "Obveščanje o sporočilih lahko izklopite v portalu pod Nastavitve.",
+    ],
+  });
 
   return {
     from: `${MESSAGE_EMAIL_FROM_NAME} <${from}>`,
     reply_to: from,
     to: [p.to],
-    subject: `Novo sporočilo – odprite portal`,
+    subject,
     html,
+    text,
   };
 }
 

@@ -197,11 +197,12 @@ describe("buildMessageEmailBody (PII safety)", () => {
   const payload: MessageNotifyPayload = {
     to: "host@example.com",
     tenantName: "Vila Mare",
+    guestUnit: "Apartma 3",
     messageId: "aaaabbbb-1111-2222-3333-ccccddddeeee",
     threadRef: "ffffffff-5555-6666-7777-888899990000",
   };
 
-  test("contains tenant name", () => {
+  test("contains tenant name as the brand kicker", () => {
     const body = buildMessageEmailBody(payload, "notifications@example.com");
     const html = body["html"] as string;
     assert.ok(html.includes("Vila Mare"), "tenant name should appear");
@@ -219,20 +220,33 @@ describe("buildMessageEmailBody (PII safety)", () => {
     assert.ok(!html.includes("ffffffff"), "threadRef must not appear in HTML body");
   });
 
-  test("does not include guest-identifying field names", () => {
+  test("shows the guest UNIT (approved template) but no message content, name or phone", () => {
     const body = buildMessageEmailBody(payload, "notifications@example.com");
     const html = body["html"] as string;
+    assert.ok(html.includes("Apartma 3"), "unit identifies the stay (approved design)");
     assert.ok(!html.includes("guestName"), "guestName key must not appear");
-    assert.ok(!html.includes("guestUnit"), "guestUnit key must not appear");
     assert.ok(!html.includes("guestPhone"), "guestPhone key must not appear");
+    assert.ok(
+      html.includes("namenoma ne pošiljamo"),
+      "body states message content is deliberately not e-mailed",
+    );
   });
 
-  test("subject is a generic portal prompt", () => {
+  test("subject and preview follow the approved file", () => {
     const body = buildMessageEmailBody(payload, "notifications@example.com");
+    assert.equal(body["subject"], "Novo sporočilo · Apartma 3");
     assert.ok(
-      (body["subject"] as string).includes("portal"),
-      "subject should prompt admin to open portal",
+      (body["html"] as string).includes("Odprite portal za odgovor"),
+      "preview line matches the file",
     );
+  });
+
+  test("carries a plain-text alternative without HTML", () => {
+    const body = buildMessageEmailBody(payload, "notifications@example.com");
+    const text = body["text"] as string;
+    assert.ok(text.includes("Novo sporočilo"), "title present");
+    assert.ok(text.includes("Apartma 3"), "unit present");
+    assert.ok(!text.includes("<"), "no HTML in text version");
   });
 
   test("from field contains correct sender name and address", () => {

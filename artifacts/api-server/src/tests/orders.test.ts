@@ -612,6 +612,8 @@ describe("buildEmailBody", () => {
     orderRef: "aaaabbbb-cccc-dddd-eeee-ffff00001111",
     itemTitle: "Bio jabolka",
     qty: 3,
+    price: "25 €",
+    priceUnit: "dan",
     guestName: "Ana Novak",
     guestPhone: "+386 41 123 456",
     guestUnit: "B-14",
@@ -634,30 +636,43 @@ describe("buildEmailBody", () => {
     assert.ok(nameIndex < itemIndex, "full name must be the first data row");
   });
 
-  test("quantity and accommodation unit are shown separately", () => {
+  test("quantity and accommodation unit are separate rows (approved template)", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
-    assert.ok(html.includes("Količina</td><td>3</td>"), "quantity must appear");
+    assert.match(html, /Količina<\/td><td[^>]*>3</, "quantity row must appear");
     assert.ok(!html.includes("3 × B-14"), "guest accommodation unit must not be treated as a product unit");
-    assert.ok(!html.includes("Cena"), "notification email must not imply totals or checkout");
+    assert.match(html, /Enota<\/td><td[^>]*>B-14</, "guest unit must be its own row");
   });
 
-  test("includes guestUnit in the email body", () => {
+  test("snapshot price renders as 'Cena' row in guest-guide format", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
-    assert.ok(html.includes("Enota gosta"), "guest accommodation label must appear");
-    assert.ok(html.includes("B-14"), "guestUnit must appear");
+    assert.match(html, /Cena<\/td><td[^>]*>25 € \/ dan</, "price row must render as '25 € / dan'");
   });
 
-  test("is a notification bell with no action link or extended product details", () => {
+  test("price row is omitted when snapshot has no price", () => {
+    const body = buildEmailBody({ ...BASE_PAYLOAD, price: null }, "no-reply@smart360.com");
+    const html = body["html"] as string;
+    assert.ok(!html.includes("Cena"), "no price row without a snapshot price");
+  });
+
+  test("approved design: green bar, tenant brand kicker, CTA to plain portal login", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
-    assert.ok(html.includes("Odprite skrbniški portal"), "email must direct the host to the primary in-app workflow");
-    assert.ok(!html.includes("<a "), "email must not contain action or login links");
-    assert.ok(!html.includes("Cena"), "price is not part of the notification summary");
-    assert.ok(!html.includes("Prevzem / dostava"), "fulfillment details stay in the portal");
-    assert.ok(!html.includes("Pridelovalec"), "producer details stay in the portal");
+    assert.ok(html.includes("#157347"), "approved green accent must be present");
+    assert.ok(html.includes("Kmetija Testna"), "brand kicker is the tenant name");
+    assert.match(html, /<a href="https?:\/\/[^"]*\/admin"/, "CTA links the plain portal login page");
+    assert.ok(!/href="[^"]*token/i.test(html), "no auto-login or token links");
+    assert.ok(!html.includes("<img"), "no external images or tracking pixels");
     assert.ok(!html.includes(BASE_PAYLOAD.orderRef), "email stays short; order reference is available in the portal");
+  });
+
+  test("carries a plain-text alternative that reads correctly on its own", () => {
+    const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
+    const text = body["text"] as string;
+    assert.ok(text.includes("Novo naročilo"), "text version has the title");
+    assert.ok(text.includes("Ime in priimek: Ana Novak"), "text version has data rows");
+    assert.ok(!text.includes("<"), "text version contains no HTML");
   });
 
   test("guestNote row is omitted when null", () => {
@@ -694,11 +709,20 @@ describe("buildEmailBody", () => {
     assert.deepEqual(body["to"], ["host@example.com"]);
   });
 
-  test("subject contains Slovenian 'naročilo' (not Croatian 'narudžba')", () => {
+  test("subject follows the approved file: 'Novo naročilo · <enota> · <artikel>'", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "from@example.com");
     const subject = body["subject"] as string;
-    assert.ok(subject.includes("naročilo"), "subject must use Slovenian copy");
+    assert.equal(subject, "Novo naročilo · B-14 · Bio jabolka");
     assert.ok(!subject.includes("narudžba"), "Croatian copy must not appear");
+  });
+
+  test("inbox preview line follows the approved file", () => {
+    const body = buildEmailBody(BASE_PAYLOAD, "from@example.com");
+    const html = body["html"] as string;
+    assert.ok(
+      html.includes("Ana Novak, 3 × · odprite portal za potrditev"),
+      "hidden preheader must match '<gost>, <n> × · odprite portal za potrditev'",
+    );
   });
 
   test("HTML uses Slovenian copy: 'naročilo'", () => {
@@ -738,6 +762,8 @@ describe("stored-snapshot retry semantics", () => {
       orderRef: stored.orderRef,
       itemTitle: stored.snapshotTitle,
       qty: stored.qty,
+      price: stored.snapshotPrice,
+      priceUnit: stored.snapshotPriceUnit,
       guestName: stored.guestName,
       guestPhone: stored.guestPhone,
       guestUnit: stored.guestUnit,

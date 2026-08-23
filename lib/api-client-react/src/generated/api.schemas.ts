@@ -399,6 +399,21 @@ export interface Tenant {
   livingGuideNav?: TenantLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
+  /**
+     * Set once on the first publish; freezes the slug forever after
+     * @nullable
+     */
+  firstPublishedAt?: string | null;
+  /**
+     * Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants
+     * @nullable
+     */
+  tenantType?: string | null;
+  /**
+     * Source tenant when this one was duplicated; copies must be marked in the admin header
+     * @nullable
+     */
+  copiedFromTenantId?: string | null;
   mediaQuotaBytes: number;
   createdAt: string;
   /** @nullable */
@@ -406,11 +421,25 @@ export interface Tenant {
   updatedAt: string;
 }
 
+/**
+ * Seeds the default sections, categories and groups for this establishment type
+ */
+export type TenantInputType = typeof TenantInputType[keyof typeof TenantInputType];
+
+
+export const TenantInputType = {
+  kamp: 'kamp',
+  hotel: 'hotel',
+  apartmaji: 'apartmaji',
+} as const;
+
 export interface TenantInput {
   slug: string;
   name: string;
   subtitle?: string;
   fromTemplate?: boolean;
+  /** Seeds the default sections, categories and groups for this establishment type */
+  type?: TenantInputType;
 }
 
 export interface TenantDuplicateInput {
@@ -1610,6 +1639,18 @@ export interface SearchResult {
   sectionTitle: string;
 }
 
+/**
+ * Central attribution from the actor gate — owner acts on the host's behalf
+ */
+export type ChangelogEntryActorType = typeof ChangelogEntryActorType[keyof typeof ChangelogEntryActorType];
+
+
+export const ChangelogEntryActorType = {
+  owner: 'owner',
+  host: 'host',
+  system: 'system',
+} as const;
+
 export interface ChangelogEntry {
   id: string;
   /** @nullable */
@@ -1620,6 +1661,10 @@ export interface ChangelogEntry {
   entity: string;
   /** @nullable */
   detail?: string | null;
+  /** Central attribution from the actor gate — owner acts on the host's behalf */
+  actorType?: ChangelogEntryActorType;
+  /** @nullable */
+  actorEmail?: string | null;
   createdAt: string;
 }
 
@@ -1647,6 +1692,22 @@ export interface RenewalEntry {
   /** @nullable */
   actor?: string | null;
   createdAt: string;
+}
+
+export interface ReadinessCheck {
+  key: string;
+  label: string;
+  done: boolean;
+}
+
+export interface TenantOverview {
+  tenantId: string;
+  readinessPct: number;
+  checks: ReadinessCheck[];
+  pendingOrders: number;
+  pendingMessages: number;
+  pendingLocations: number;
+  missingPhotos: number;
 }
 
 export type GetPublicTenantParams = {

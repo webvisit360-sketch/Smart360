@@ -103,6 +103,9 @@ export const GetPublicTenantResponse = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(getPublicTenantResponseOneLivingGuideNavMin).max(getPublicTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
@@ -368,6 +371,8 @@ export const GetAdminOverviewResponse = zod.object({
   "action": zod.string(),
   "entity": zod.string(),
   "detail": zod.string().nullish(),
+  "actorType": zod.enum(['owner', 'host', 'system']).optional().describe('Central attribution from the actor gate — owner acts on the host\'s behalf'),
+  "actorEmail": zod.string().nullish(),
   "createdAt": zod.string()
 })),
   "renewalsDue": zod.array(zod.object({
@@ -541,6 +546,9 @@ export const ListTenantsResponseItem = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(listTenantsResponseLivingGuideNavMin).max(listTenantsResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
@@ -553,7 +561,8 @@ export const CreateTenantBody = zod.object({
   "slug": zod.string(),
   "name": zod.string(),
   "subtitle": zod.string().optional(),
-  "fromTemplate": zod.boolean().optional()
+  "fromTemplate": zod.boolean().optional(),
+  "type": zod.enum(['kamp', 'hotel', 'apartmaji']).optional().describe('Seeds the default sections, categories and groups for this establishment type')
 })
 
 export const createTenantResponseLatitudeMin = -90;
@@ -627,11 +636,54 @@ export const CreateTenantResponse = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(createTenantResponseLivingGuideNavMin).max(createTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 })
+
+
+/**
+ * @summary Owner cockpit — readiness and pending work per tenant
+ */
+export const ListTenantOverviewResponseItem = zod.object({
+  "tenantId": zod.string(),
+  "readinessPct": zod.number(),
+  "checks": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "done": zod.boolean()
+})),
+  "pendingOrders": zod.number(),
+  "pendingMessages": zod.number(),
+  "pendingLocations": zod.number(),
+  "missingPhotos": zod.number()
+})
+export const ListTenantOverviewResponse = zod.array(ListTenantOverviewResponseItem)
+
+
+/**
+ * @summary Per-tenant changelog with actor attribution
+ */
+export const ListTenantChangelogParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListTenantChangelogResponseItem = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string().nullish(),
+  "tenantName": zod.string().nullish(),
+  "action": zod.string(),
+  "entity": zod.string(),
+  "detail": zod.string().nullish(),
+  "actorType": zod.enum(['owner', 'host', 'system']).optional().describe('Central attribution from the actor gate — owner acts on the host\'s behalf'),
+  "actorEmail": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListTenantChangelogResponse = zod.array(ListTenantChangelogResponseItem)
 
 
 /**
@@ -716,6 +768,9 @@ export const GetTenantResponse = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(getTenantResponseOneLivingGuideNavMin).max(getTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
@@ -961,6 +1016,9 @@ export const UpdateTenantResponse = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(updateTenantResponseLivingGuideNavMin).max(updateTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
@@ -1304,6 +1362,9 @@ export const DuplicateTenantResponse = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(duplicateTenantResponseTenantLivingGuideNavMin).max(duplicateTenantResponseTenantLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
@@ -1398,6 +1459,9 @@ export const RenewTenantResponse = zod.object({
   "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(renewTenantResponseLivingGuideNavMin).max(renewTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
+  "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),

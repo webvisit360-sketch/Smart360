@@ -101,6 +101,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   // ── Tenants (adminTenants.ts) ────────────────────────────────────────────
   { method: "get", path: "/admin/overview", binding: OWNER },
   { method: "get", path: "/admin/tenants", binding: OWNER },
+  { method: "get", path: "/admin/tenants/overview", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/changelog", binding: OWNER },
   { method: "post", path: "/admin/tenants", binding: OWNER },
   { method: "get", path: "/admin/slug-check", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/qr.png", binding: T_ID },

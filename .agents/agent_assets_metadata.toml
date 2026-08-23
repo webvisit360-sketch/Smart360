@@ -218,3 +218,17 @@ mtime_ms = 1787437801958
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/33027ec3-ec5e-49af-9524-f8d9416824c9/62fa2c9a-796e-471c-a090-d2aee0d24030"
 storage_version_token = "1787437987085663"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "NDBX9huTJxqhWPsin4rtv"
+uri = "file://exports/emaili-rendered.html"
+type = "text"
+title = "Šest predlog — dejansko poslani izrisi"
+description = "Vseh šest e-poštnih predlog, kot so bile res poslane prek Resend na testni naslov: pošiljatelj, zadeva, predogledna vrstica, HTML-izris in besedilna različica."
+logical_id = "4287ef46-a944-45d1-97a9-742beb14da1d"
+content_hash = "sha256:13d6622f5948d2d6077482a0b93e5c1d034d3c2899dd6bc344422f4264ead6e7"
+size = 38660
+mtime_ms = 1787518658346
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4287ef46-a944-45d1-97a9-742beb14da1d/5b833406-e96c-4cb0-8abe-19fa26601a5d"
+storage_version_token = "1787518714592753"
+content_type = "text/html"

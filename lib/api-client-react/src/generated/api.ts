@@ -28,6 +28,7 @@ import type {
   Category,
   CategoryInput,
   CategoryUpdate,
+  ChangelogEntry,
   CheckSlugParams,
   CleanupRestoreRequest,
   CleanupRestoreResult,
@@ -91,6 +92,7 @@ import type {
   TenantContent,
   TenantDuplicateInput,
   TenantInput,
+  TenantOverview,
   TenantUpdate,
   Translation,
   TranslationEntry,
@@ -1811,6 +1813,160 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getCreateTenantMutationOptions(options));
     }
+
+export const getListTenantOverviewUrl = () => {
+
+
+
+
+  return `/api/admin/tenants/overview`
+}
+
+/**
+ * @summary Owner cockpit — readiness and pending work per tenant
+ */
+export const listTenantOverview = async ( options?: Parameters<typeof customFetch>[1]): Promise<TenantOverview[]> => {
+
+  return customFetch<TenantOverview[]>(getListTenantOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTenantOverviewQueryKey = () => {
+    return [
+    `/api/admin/tenants/overview`
+    ] as const;
+    }
+
+
+export const getListTenantOverviewQueryOptions = <TData = Awaited<ReturnType<typeof listTenantOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTenantOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTenantOverview>>> = ({ signal }) => listTenantOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTenantOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTenantOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof listTenantOverview>>>
+export type ListTenantOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Owner cockpit — readiness and pending work per tenant
+ */
+
+export function useListTenantOverview<TData = Awaited<ReturnType<typeof listTenantOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTenantOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListTenantChangelogUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/changelog`
+}
+
+/**
+ * @summary Per-tenant changelog with actor attribution
+ */
+export const listTenantChangelog = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ChangelogEntry[]> => {
+
+  return customFetch<ChangelogEntry[]>(getListTenantChangelogUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTenantChangelogQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/changelog`
+    ] as const;
+    }
+
+
+export const getListTenantChangelogQueryOptions = <TData = Awaited<ReturnType<typeof listTenantChangelog>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantChangelog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTenantChangelogQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTenantChangelog>>> = ({ signal }) => listTenantChangelog(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTenantChangelog>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTenantChangelogQueryResult = NonNullable<Awaited<ReturnType<typeof listTenantChangelog>>>
+export type ListTenantChangelogQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Per-tenant changelog with actor attribution
+ */
+
+export function useListTenantChangelog<TData = Awaited<ReturnType<typeof listTenantChangelog>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTenantChangelog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTenantChangelogQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetTenantUrl = (id: string,) => {
 

@@ -533,6 +533,8 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     orderRef: canonical.orderRef,
     itemTitle: canonical.snapshotTitle,
     qty: canonical.qty,
+    price: canonical.snapshotPrice,
+    priceUnit: canonical.snapshotPriceUnit,
     guestName: canonical.guestName,
     guestPhone: canonical.guestPhone,
     guestUnit: canonical.guestUnit,

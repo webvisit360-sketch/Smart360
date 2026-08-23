@@ -141,6 +141,21 @@ export interface Tenant {
   livingGuideNav?: TenantLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
+  /**
+     * Set once on the first publish; freezes the slug forever after
+     * @nullable
+     */
+  firstPublishedAt?: string | null;
+  /**
+     * Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants
+     * @nullable
+     */
+  tenantType?: string | null;
+  /**
+     * Source tenant when this one was duplicated; copies must be marked in the admin header
+     * @nullable
+     */
+  copiedFromTenantId?: string | null;
   mediaQuotaBytes: number;
   createdAt: string;
   /** @nullable */

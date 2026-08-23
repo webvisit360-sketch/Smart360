@@ -1,6 +1,7 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { rpOrigin } from "./adminAuth";
 import { logger } from "./logger";
+import { cta, p as par, renderEmail, small } from "./emailTemplate";
 
 /**
  * Password-reset e-mail for HOST accounts, via the Resend connector.
@@ -32,20 +33,30 @@ export function resetLink(token: string): string {
   return `${rpOrigin()}/portal/ponastavitev?token=${encodeURIComponent(token)}`;
 }
 
-/** Pure function — no I/O; exported for unit tests. */
+/**
+ * Pure function — no I/O; exported for unit tests.
+ *
+ * Approved template #5 (emaili-gostitelju): Smart360 brand, bolded account
+ * address, green "Nastavite novo geslo" CTA, 60-minute validity small-print.
+ */
 export function buildResetEmailBody(to: string, link: string, from: string) {
-  return {
-    from,
-    to: [to],
-    subject: "Ponastavitev gesla – Smart360 portal",
-    html: [
-      `<p>Pozdravljeni,</p>`,
-      `<p>prejeli smo zahtevo za ponastavitev gesla za vaš Smart360 portal.</p>`,
-      `<p><a href="${link}">Nastavite novo geslo</a></p>`,
-      `<p>Povezava velja 60 minut in jo je mogoče uporabiti samo enkrat.</p>`,
-      `<p>Če gesla niste zahtevali vi, to sporočilo prezrite — geslo ostane nespremenjeno.</p>`,
-    ].join("\n"),
-  };
+  const subject = "Ponastavitev gesla za Smart360";
+  const { html, text } = renderEmail({
+    subject,
+    preheader: "Povezava velja 60 minut",
+    brand: "Smart360",
+    title: "Ponastavitev gesla",
+    blocks: [
+      par("Prejeli smo zahtevo za ponastavitev gesla za račun ", { b: to }, "."),
+      cta("Nastavite novo geslo", link),
+      small("Povezava velja 60 minut in jo je mogoče uporabiti enkrat."),
+      par(
+        "Če zahteve niste poslali vi, tega sporočila ni treba upoštevati — vaše geslo ostane nespremenjeno.",
+      ),
+    ],
+    footerLines: ["Smart360 · digitalni vodnik za goste"],
+  });
+  return { from, to: [to], subject, html, text };
 }
 
 export type ResetEmailResult = { ok: true } | { ok: false };

@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { ChangelogEntryActorType } from './changelogEntryActorType';
 
 export interface ChangelogEntry {
   id: string;
@@ -16,5 +17,9 @@ export interface ChangelogEntry {
   entity: string;
   /** @nullable */
   detail?: string | null;
+  /** Central attribution from the actor gate — owner acts on the host's behalf */
+  actorType?: ChangelogEntryActorType;
+  /** @nullable */
+  actorEmail?: string | null;
   createdAt: string;
 }

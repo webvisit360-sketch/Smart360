@@ -18,6 +18,7 @@
  */
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { logger } from "./logger";
+import { cta, p as par, portalUrl, renderEmail, rows, small } from "./emailTemplate";
 
 const connectors = new ReplitConnectors();
 export const ORDER_EMAIL_FROM_ADDRESS = "info@webvisit360.com";
@@ -51,6 +52,10 @@ export interface OrderEmailPayload {
   orderRef: string;
   itemTitle: string | null | undefined;
   qty: number;
+  /** Snapshot price at order time, e.g. "25 €" (free text, may be null). */
+  price: string | null | undefined;
+  /** Snapshot price unit at order time, e.g. "dan" (free text, may be null). */
+  priceUnit: string | null | undefined;
   /** Required full name shown first so the host can identify the guest. */
   guestName: string;
   /** Phone shown in email — operator needs it to call back. */
@@ -60,51 +65,60 @@ export interface OrderEmailPayload {
   guestNote: string | null | undefined;
 }
 
-function escHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 /**
  * Build the Resend request body for an order notification.
  * Pure function — no I/O; exported for unit tests.
+ *
+ * Approved template #2 (emaili-gostitelju): brand = tenant name, data rows for
+ * name/unit/phone/item/qty/price/note, green "Odpri portal" CTA (a plain link
+ * to the login page — no auto-login), pickup small-print, footer with the
+ * opt-out hint. Subject and inbox preview follow the approved file exactly.
  */
 export function buildEmailBody(
   p: OrderEmailPayload,
   from: string,
 ): Record<string, unknown> {
-  const noteRow = p.guestNote
-    ? `<tr><td style="padding:6px 0;color:#666;vertical-align:top">Opomba gosta</td><td>${escHtml(p.guestNote)}</td></tr>`
-    : "";
-
-  const html = `<!DOCTYPE html>
-<html lang="sl">
-<head><meta charset="utf-8"><title>Novo naročilo – ${escHtml(p.tenantName)}</title></head>
-<body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-  <h1 style="font-size:20px;margin-bottom:4px">Novo naročilo</h1>
-  <p style="color:#666;margin-top:0;font-size:14px">Odprite skrbniški portal za obdelavo naročila.</p>
-  <table style="border-collapse:collapse;width:100%;margin-top:16px">
-    <tr><td style="padding:6px 0;color:#666;width:140px">Ime in priimek</td><td><strong>${escHtml(p.guestName)}</strong></td></tr>
-    <tr><td style="padding:6px 0;color:#666;width:140px">Artikel</td><td><strong>${escHtml(p.itemTitle ?? "—")}</strong></td></tr>
-    <tr><td style="padding:6px 0;color:#666">Količina</td><td>${p.qty}</td></tr>
-    <tr><td style="padding:6px 0;color:#666">Enota gosta</td><td>${escHtml(p.guestUnit)}</td></tr>
-    <tr><td style="padding:6px 0;color:#666">Telefon gosta</td><td>${escHtml(p.guestPhone)}</td></tr>
-    ${noteRow}
-  </table>
-  <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
-  <p style="color:#999;font-size:12px">Smart360 · ${escHtml(p.tenantName)}</p>
-</body>
-</html>`;
+  const subject = `Novo naročilo · ${p.guestUnit} · ${p.itemTitle ?? "—"}`;
+  const priceLabel = p.price
+    ? `${p.price}${p.priceUnit ? ` / ${p.priceUnit}` : ""}`
+    : null;
+  const { html, text } = renderEmail({
+    subject,
+    preheader: `${p.guestName}, ${p.qty} × · odprite portal za potrditev`,
+    brand: p.tenantName,
+    title: "Novo naročilo",
+    blocks: [
+      par("Gost je pravkar oddal naročilo prek vašega digitalnega vodnika."),
+      rows([
+        { label: "Ime in priimek", value: p.guestName },
+        { label: "Enota", value: p.guestUnit },
+        { label: "Telefon", value: p.guestPhone },
+        { label: "Artikel", value: p.itemTitle ?? "—" },
+        { label: "Količina", value: String(p.qty) },
+        priceLabel ? { label: "Cena", value: priceLabel } : null,
+        p.guestNote ? { label: "Opomba gosta", value: p.guestNote } : null,
+      ]),
+      par(
+        "Naročilo potrdite ali zavrnete v portalu. Gost stanje vidi v vodniku pod ",
+        { b: "Moja naročila" },
+        ".",
+      ),
+      cta("Odpri portal", portalUrl()),
+      small("Prevzem je pri vas, razen če je pri artiklu izrecno napisana dostava."),
+    ],
+    footerLines: [
+      "Smart360 · digitalni vodnik za goste",
+      "Obveščanje o naročilih lahko izklopite v portalu pod Nastavitve.",
+    ],
+  });
 
   return {
     from: `${ORDER_EMAIL_FROM_NAME} <${from}>`,
     reply_to: from,
     to: [p.to],
-    subject: `Novo naročilo – odprite portal`,
+    subject,
     html,
+    text,
   };
 }
 

@@ -1,29 +1,57 @@
-import { useGetAdminOverview, useListTenants, useDuplicateTenant, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
+import { useGetAdminOverview, useListTenants, useListTenantOverview, useDuplicateTenant, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
 import { fmtGb, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Home, FileText, CheckCircle2, FileCheck2, CalendarClock } from "lucide-react";
-import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader2, Plus, Search, ExternalLink, Copy, Edit2, Home, FileText, CheckCircle2, FileCheck2, CalendarClock, ClipboardList, MessageSquare, MapPin, ImageOff } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getListTenantsQueryKey, getGetAdminOverviewQueryKey } from "@workspace/api-client-react";
+import { getListTenantsQueryKey, getGetAdminOverviewQueryKey, getListTenantOverviewQueryKey } from "@workspace/api-client-react";
 import { QrDialog } from "@/components/admin/qr-dialog";
 import { MediaCheckDialog } from "@/components/admin/media-check-dialog";
 import { CleanupTrashDialog } from "@/components/admin/cleanup-trash-dialog";
+import { slugify } from "@/components/admin/slug-field";
+
+const TENANT_TYPES = [
+  { value: "apartmaji", label: "Apartmaji" },
+  { value: "kamp", label: "Kamp" },
+  { value: "hotel", label: "Hotel" },
+] as const;
+
+/** Central attribution labels (CP2b): who performed a changelog action. */
+export function actorLabel(change: { actorType?: string; actorEmail?: string | null }): string {
+  if (change.actorType === "host") return change.actorEmail || "Gostitelj";
+  if (change.actorType === "system") return "Sistem";
+  return "Smart360 · v imenu gostitelja";
+}
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { data: overview, isLoading: loadingOverview } = useGetAdminOverview();
   const { data: tenants, isLoading: loadingTenants } = useListTenants();
+  const { data: tenantOverviews } = useListTenantOverview();
   const { data: storageUsage } = useGetStorageUsage();
   const usageByTenant = new Map(storageUsage?.tenants.map(t => [t.tenantId, t]) ?? []);
-  
+  const overviewByTenant = useMemo(
+    () => new Map(tenantOverviews?.map(o => [o.tenantId, o]) ?? []),
+    [tenantOverviews],
+  );
+
   const [search, setSearch] = useState("");
   // Card grid, so sorting is a toggle rather than a column header.
-  const [sortBy, setSortBy] = useState<"name" | "renewal">("name");
+  const [sortBy, setSortBy] = useState<"name" | "renewal" | "readiness">("name");
+
+  // Create-tenant dialog (CP2b): name proposes the slug, type seeds content.
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newSlug, setNewSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [newType, setNewType] = useState<string>("apartmaji");
 
   const duplicateMutation = useDuplicateTenant({
     mutation: {
@@ -65,10 +93,20 @@ export default function AdminDashboard() {
   const createMutation = useCreateTenant({
     mutation: {
       onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() });
+        setCreateOpen(false);
         setLocation(`/admin/tenants/${data.id}`);
       }
     }
   });
+
+  const submitCreate = () => {
+    const name = newName.trim();
+    const slug = (slugTouched ? newSlug : slugify(newName)).trim();
+    if (!name || slug.length < 3) return;
+    createMutation.mutate({ data: { name, slug, type: newType as "kamp" | "hotel" | "apartmaji" } });
+  };
 
   const filteredTenants = (tenants?.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -78,6 +116,12 @@ export default function AdminDashboard() {
       // Soonest (or most overdue) first; tenants without a date go last.
       const av = a.renewsAt ? new Date(a.renewsAt).getTime() : Infinity;
       const bv = b.renewsAt ? new Date(b.renewsAt).getTime() : Infinity;
+      return av - bv;
+    }
+    if (sortBy === "readiness") {
+      // Least ready first — those need the owner's attention.
+      const av = overviewByTenant.get(a.id)?.readinessPct ?? 101;
+      const bv = overviewByTenant.get(b.id)?.readinessPct ?? 101;
       return av - bv;
     }
     return a.name.localeCompare(b.name, "sl");
@@ -97,10 +141,72 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Nadzorna plošča</h1>
           <p className="text-muted-foreground mt-1">Pregled in upravljanje namestitev</p>
         </div>
-        <Button onClick={() => createMutation.mutate({ data: { name: "Nova namestitev", slug: `nova-${Date.now()}` } })}>
+        <Button onClick={() => { setNewName(""); setNewSlug(""); setSlugTouched(false); setNewType("apartmaji"); setCreateOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Nova namestitev
         </Button>
       </div>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova namestitev</DialogTitle>
+            <DialogDescription>
+              Tip določi privzete razdelke in kategorije. Naslov (slug) se predlaga iz imena
+              in ga lahko spreminjate do prve objave — potem je zamrznjen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Ime nastanitve</Label>
+              <Input
+                autoFocus
+                value={newName}
+                placeholder="npr. Apartmaji Pri Lipi"
+                onChange={(e) => setNewName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Naslov vodnika (slug)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground shrink-0">smart360.info/</span>
+                <Input
+                  value={slugTouched ? newSlug : slugify(newName)}
+                  onChange={(e) => { setSlugTouched(true); setNewSlug(slugify(e.target.value)); }}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Tip nastanitve</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {TENANT_TYPES.map(t => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setNewType(t.value)}
+                    className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                      newType === t.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-input hover:bg-muted"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Prekliči</Button>
+            <Button
+              onClick={submitCreate}
+              disabled={createMutation.isPending || !newName.trim() || (slugTouched ? newSlug : slugify(newName)).length < 3}
+            >
+              {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Ustvari
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -149,10 +255,10 @@ export default function AdminDashboard() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSortBy(s => (s === "name" ? "renewal" : "name"))}
+              onClick={() => setSortBy(s => (s === "name" ? "renewal" : s === "renewal" ? "readiness" : "name"))}
             >
               <CalendarClock className="h-4 w-4 mr-2" />
-              {sortBy === "name" ? "Razvrsti: Ime" : "Razvrsti: Obnova"}
+              {sortBy === "name" ? "Razvrsti: Ime" : sortBy === "renewal" ? "Razvrsti: Obnova" : "Razvrsti: Pripravljenost"}
             </Button>
           </div>
 
@@ -220,6 +326,45 @@ export default function AdminDashboard() {
                             );
                           })()}
                         </p>
+
+                        {(() => {
+                          const o = overviewByTenant.get(tenant.id);
+                          if (!o) return null;
+                          const undone = o.checks.filter(c => !c.done).map(c => c.label);
+                          const pendingBadges = [
+                            { n: o.pendingOrders, label: "naročil", Icon: ClipboardList, to: "orders" },
+                            { n: o.pendingMessages, label: "sporočil", Icon: MessageSquare, to: "orders" },
+                            { n: o.pendingLocations, label: "lokacij", Icon: MapPin, to: "distances" },
+                            { n: o.missingPhotos, label: "brez fotografij", Icon: ImageOff, to: "content" },
+                          ].filter(b => b.n > 0);
+                          return (
+                            <div className="mb-4 -mt-1 space-y-2">
+                              <div className="flex items-center gap-2" title={undone.length ? `Manjka: ${undone.join(", ")}` : "Vse pripravljeno"}>
+                                <div className="h-1.5 w-28 rounded-full bg-muted overflow-hidden shrink-0">
+                                  <div
+                                    className={`h-full rounded-full ${o.readinessPct >= 100 ? "bg-green-500" : o.readinessPct >= 60 ? "bg-primary" : "bg-amber-500"}`}
+                                    style={{ width: `${o.readinessPct}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs font-medium text-muted-foreground">{o.readinessPct} % pripravljen</span>
+                              </div>
+                              {pendingBadges.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {pendingBadges.map(b => (
+                                    <button
+                                      key={b.label}
+                                      type="button"
+                                      onClick={() => setLocation(`/admin/tenants/${tenant.id}`)}
+                                      className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 text-xs font-medium hover:bg-red-100"
+                                    >
+                                      <b.Icon className="h-3 w-3" /> {b.n} {b.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                         
                         <div className="flex flex-wrap items-center gap-2 mt-auto">
                           <Button variant="secondary" size="sm" onClick={() => setLocation(`/admin/tenants/${tenant.id}`)}>
@@ -378,7 +523,7 @@ export default function AdminDashboard() {
                           <p className="text-xs text-muted-foreground">{change.tenantName}</p>
                         )}
                         <p className="text-xs text-muted-foreground/60 mt-1">
-                          {new Date(change.createdAt).toLocaleString('sl-SI')}
+                          {actorLabel(change)} · {new Date(change.createdAt).toLocaleString('sl-SI')}
                         </p>
                       </div>
                     </div>

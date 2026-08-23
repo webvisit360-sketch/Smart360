@@ -168,6 +168,19 @@ export const tenantsTable = pgTable("tenants", {
     .default(2_147_483_648),
   isTemplate: boolean("is_template").notNull().default(false),
   isPublished: boolean("is_published").notNull().default(false),
+  // Set exactly once, on the FIRST transition to published. Drives two rules
+  // (Instruction #28 CP2b): the slug freezes after first publish, and the
+  // "guide published" e-mail is sent only for this transition — never for
+  // later unpublish/republish toggles.
+  firstPublishedAt: timestamp("first_published_at", { withTimezone: true }),
+  // Cockpit provenance: which tenant this one was duplicated from. The owner
+  // once edited the wrong tenant, so copies must be unmistakably marked in
+  // the admin header. Plain UUID (no FK) — the source may be deleted later.
+  copiedFromTenantId: uuid("copied_from_tenant_id"),
+  // Creation type chosen in the cockpit (kamp / hotel / apartmaji); decides
+  // the seeded default sections and categories. NULL for tenants created
+  // before types existed or via template copy.
+  tenantType: text("tenant_type"),
   // Yearly maintenance (datum-in-obnova-narocnine.md). createdAt is shown as
   // "Vzpostavljeno" on the tenant card; existing rows get the migration date.
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -183,6 +196,10 @@ export const tenantsTable = pgTable("tenants", {
 }, (t) => [
   // DB-level guard: only the two approved UI modes are stored.
   check("tenants_guest_ui_mode_enum", sql`${t.guestUiMode} IN ('legacy','living-guide')`),
+  check(
+    "tenants_tenant_type_enum_v1",
+    sql`${t.tenantType} IS NULL OR ${t.tenantType} IN ('kamp','hotel','apartmaji')`,
+  ),
   check(
     "tenants_location_coordinates_v1",
     sql`(${t.latitude} IS NULL AND ${t.longitude} IS NULL) OR (${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`,

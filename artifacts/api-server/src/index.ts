@@ -5,6 +5,7 @@ import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention
 import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRetention";
 import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
 import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
+import { runFirstPublishedBackfillAtStartup } from "./lib/firstPublishBackfill";
 import { ensureRowLevelSecurity } from "./lib/rls";
 
 const rawPort = process.env["PORT"];
@@ -87,6 +88,8 @@ ensureAdminAccount()
   .then(() => runExploreGroupBackfillAtStartup())
   // One-time Ponudba/Nastanitev group assignment (best-effort, self-disabling)
   .then(() => runSectionGroupBackfillAtStartup())
+  // Stamp first_published_at for tenants published before the column existed
+  .then(() => runFirstPublishedBackfillAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();

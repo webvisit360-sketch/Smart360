@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   tenantsTable,
@@ -14,6 +14,8 @@ import {
 import {
   GetAdminOverviewResponse,
   ListTenantsResponse,
+  ListTenantOverviewResponse,
+  ListTenantChangelogResponse,
   CreateTenantBody,
   CreateTenantResponse,
   GetTenantResponse,
@@ -26,6 +28,9 @@ import {
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
+import { buildTenantOverviews } from "../lib/tenantOverview";
+import { seedTenantContent, TENANT_TYPES, type TenantType } from "../lib/tenantSeeds";
+import { sendPublishedEmail } from "../lib/lifecycleEmails";
 import { buildTenantContent } from "../lib/contentTree";
 import { checkSlugAvailability } from "../lib/slug";
 import { checkTenantMedia, dropBrokenReferences } from "../lib/mediaCheck";
@@ -114,6 +119,13 @@ router.get("/admin/tenants", async (_req, res): Promise<void> => {
   res.json(ListTenantsResponse.parse(serialize(tenants)));
 });
 
+// Owner's cockpit landing data (CP2b): readiness + pending work per tenant.
+// NOTE: must stay declared BEFORE any /admin/tenants/:id matching.
+router.get("/admin/tenants/overview", async (_req, res): Promise<void> => {
+  const rows = await buildTenantOverviews();
+  res.json(ListTenantOverviewResponse.parse(serialize(rows)));
+});
+
 router.post("/admin/tenants", async (req, res): Promise<void> => {
   const parsed = CreateTenantBody.safeParse(req.body);
   if (!parsed.success) {
@@ -121,6 +133,15 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     return;
   }
   const { slug, name, subtitle, fromTemplate } = parsed.data;
+  const typeRaw = (parsed.data as Record<string, unknown>)["type"];
+  const tenantType: TenantType | null =
+    typeof typeRaw === "string" && (TENANT_TYPES as readonly string[]).includes(typeRaw)
+      ? (typeRaw as TenantType)
+      : null;
+  if (typeRaw !== undefined && tenantType === null) {
+    res.status(400).json({ error: `type must be one of: ${TENANT_TYPES.join(", ")}` });
+    return;
+  }
   const verdict = await checkSlugAvailability(slug);
   if (!verdict.available) {
     res.status(409).json({ error: `slug ${verdict.reason}` });
@@ -159,18 +180,46 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     }
   }
 
-  const [tenant] = await db
-    .insert(tenantsTable)
-    .values({ slug, name, subtitle: subtitle ?? null, renewsAt: plusOneYear(new Date()) })
-    .returning();
+  // Creation and type seeding are one transaction: a seed failure must not
+  // leave a structureless tenant squatting on the slug.
+  const [tenant] = await db.transaction(async (tx) => {
+    const rows = await tx
+      .insert(tenantsTable)
+      .values({
+        slug,
+        name,
+        subtitle: subtitle ?? null,
+        tenantType,
+        renewsAt: plusOneYear(new Date()),
+      })
+      .returning();
+    // The chosen type seeds the default sections, categories and groups
+    // (CP2b). The bottom bar derives from sections / the Living Guide default.
+    if (tenantType) await seedTenantContent(rows[0]!.id, tenantType, tx);
+    return rows;
+  });
   invalidateTenantCache();
   await logChange({
     tenantId: tenant!.id,
     tenantName: name,
     action: "create",
     entity: "tenant",
+    detail: tenantType ? `tip: ${tenantType}` : null,
   });
   res.status(201).json(CreateTenantResponse.parse(serialize(tenant)));
+});
+
+// Per-tenant changelog for the cockpit: every change inside a tenant with
+// central attribution (owner acting on the host's behalf vs the host).
+router.get("/admin/tenants/:id/changelog", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const rows = await db
+    .select()
+    .from(changelogTable)
+    .where(eq(changelogTable.tenantId, id))
+    .orderBy(desc(changelogTable.createdAt))
+    .limit(50);
+  res.json(ListTenantChangelogResponse.parse(serialize(rows)));
 });
 
 router.get("/admin/slug-check", async (req, res): Promise<void> => {
@@ -350,6 +399,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       renewsAt: tenantsTable.renewsAt,
       latitude: tenantsTable.latitude,
       longitude: tenantsTable.longitude,
+      firstPublishedAt: tenantsTable.firstPublishedAt,
     })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, id));
@@ -382,6 +432,15 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   }
   const newSlug = (parsed.data as Record<string, unknown>)["slug"];
   if (typeof newSlug === "string" && newSlug !== before.slug) {
+    // The slug is editable only until the FIRST publish; printed QR codes
+    // must stay valid forever after that (CP2b).
+    if (before.firstPublishedAt) {
+      res.status(409).json({
+        error:
+          "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne.",
+      });
+      return;
+    }
     const verdict = await checkSlugAvailability(newSlug, id);
     if (!verdict.available) {
       res.status(409).json({ error: `slug ${verdict.reason}` });
@@ -454,14 +513,53 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     renewsAtChanged =
       (next?.getTime() ?? null) !== (before.renewsAt?.getTime() ?? null);
   }
-  const [tenant] = await db
+  const wantsPublish = updateData["isPublished"] === true;
+  const slugChanging = typeof newSlug === "string" && newSlug !== before.slug;
+  // When the slug changes, the update itself re-checks the freeze (first
+  // publish may have landed between our read above and this write) — the
+  // WHERE clause makes "rename only while never published" atomic.
+  const [updated] = await db
     .update(tenantsTable)
     .set(updateData)
-    .where(eq(tenantsTable.id, id))
+    .where(
+      slugChanging
+        ? and(eq(tenantsTable.id, id), isNull(tenantsTable.firstPublishedAt))
+        : eq(tenantsTable.id, id),
+    )
     .returning();
-  if (!tenant) {
+  if (!updated) {
+    if (slugChanging) {
+      const [still] = await db
+        .select({ id: tenantsTable.id })
+        .from(tenantsTable)
+        .where(eq(tenantsTable.id, id));
+      if (still) {
+        res.status(409).json({
+          error:
+            "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne.",
+        });
+        return;
+      }
+    }
     res.status(404).json({ error: "Not found" });
     return;
+  }
+  let tenant = updated;
+  // FIRST transition to published: compare-and-set stamps first_published_at
+  // exactly once — with two concurrent publishes only one wins, logs
+  // "publish" and sends the e-mail; the stamp is never overwritten and
+  // unpublish/republish toggles never resend.
+  let firstPublish = false;
+  if (wantsPublish && tenant.firstPublishedAt === null) {
+    const [won] = await db
+      .update(tenantsTable)
+      .set({ firstPublishedAt: new Date() })
+      .where(and(eq(tenantsTable.id, id), isNull(tenantsTable.firstPublishedAt)))
+      .returning({ firstPublishedAt: tenantsTable.firstPublishedAt });
+    if (won) {
+      firstPublish = true;
+      tenant = { ...tenant, firstPublishedAt: won.firstPublishedAt };
+    }
   }
   if (typeof newSlug === "string" && newSlug !== before.slug) {
     // Keep the old address working forever: permanent alias -> 301.
@@ -489,9 +587,20 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   await logChange({
     tenantId: tenant.id,
     tenantName: tenant.name,
-    action: "update",
+    action: firstPublish ? "publish" : "update",
     entity: "tenant",
+    detail: firstPublish ? "prva objava" : null,
   });
+  if (firstPublish && tenant.email?.trim()) {
+    // Best-effort congratulation mail (template 6); idempotency key is bound
+    // to the tenant so even a concurrent double-PATCH sends at most once.
+    await sendPublishedEmail(
+      { to: tenant.email.trim(), tenantName: tenant.name, slug: tenant.slug },
+      `published-${tenant.id}`,
+    ).catch(() => {
+      /* logged inside; publish itself must never fail on e-mail */
+    });
+  }
   res.json(
     UpdateTenantResponse.parse(
       serialize({
@@ -665,6 +774,11 @@ export async function copyTenant(
       // so the frontend applies the approved default rather than silently
       // inheriting a nav layout that may not fit the new establishment's content.
       livingGuideNav: null,
+      // Provenance marker (CP2b): copies must be unmistakably flagged in the
+      // admin header — the owner once edited the wrong tenant.
+      copiedFromTenantId: sourceId,
+      // The copy has never been published; its slug stays editable.
+      firstPublishedAt: null,
       renewsAt: plusOneYear(new Date()),
     })
     .returning();
