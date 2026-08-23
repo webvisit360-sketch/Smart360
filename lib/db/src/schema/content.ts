@@ -260,6 +260,13 @@ export const changelogTable = pgTable("changelog", {
   action: text("action").notNull(),
   entity: text("entity").notNull(),
   detail: text("detail"),
+  // WHO made the change (Instruction #28 CP1 §6). Existing rows predate host
+  // accounts and were all made by the single operator, so the column default
+  // 'owner' doubles as the backfill. Owner actions inside a tenant are shown
+  // as "performed by the owner on the host's behalf".
+  actorType: text("actor_type").notNull().default("owner"), // owner | host | system
+  actorId: uuid("actor_id"),
+  actorEmail: text("actor_email"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

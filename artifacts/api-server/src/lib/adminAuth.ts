@@ -291,15 +291,17 @@ export async function revokeAllSessions(): Promise<void> {
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  isAuthenticated(req)
-    .then((ok) => {
-      if (!ok) {
-        res.status(401).json({ error: "Not authenticated" });
-        return;
-      }
-      next();
-    })
-    .catch(next);
+  // The central admin gate (lib/actorGate.ts) resolves the actor — owner or
+  // host — for every /admin request before any router runs, enforces the
+  // deny-by-default fence for hosts, and opens the tenant-scoped DB context.
+  // By the time a handler runs, "is authenticated" simply means "the gate
+  // pinned an actor"; tenant scoping is the gate's and RLS's job, not this
+  // function's.
+  if (req.actor) {
+    next();
+    return;
+  }
+  res.status(401).json({ error: "Not authenticated" });
 }
 
 // ---------- Audit log ----------

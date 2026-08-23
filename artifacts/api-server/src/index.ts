@@ -5,6 +5,7 @@ import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention
 import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRetention";
 import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
 import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
+import { ensureRowLevelSecurity } from "./lib/rls";
 
 const rawPort = process.env["PORT"];
 
@@ -58,6 +59,10 @@ async function logBootstrapEnrollLink(): Promise<void> {
 }
 
 ensureAdminAccount()
+  // Row-level security is the fail-closed backstop for host accounts. NOT
+  // best-effort: if the policies cannot be applied, the server must not
+  // start, because host requests would then rely on the fence alone.
+  .then(() => ensureRowLevelSecurity())
   .then(() =>
     // Bootstrap is best-effort: a transient DB error here must not take the
     // whole deployment down (a fresh code is minted on the next restart).
