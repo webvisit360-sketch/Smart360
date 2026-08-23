@@ -107,6 +107,43 @@ test("Living Guide guest sources contain no directions intent", () => {
   );
 });
 
+// Source-level guard over EVERY guest-facing surface (legacy themes included):
+// the only permitted "directions" intents are tenant-level — navigating to the
+// property itself. An item-level POI may never request directions.
+test("no guest surface builds item-level directions", () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const roots = ["living-guide", "guest"];
+  const offenders: string[] = [];
+  for (const root of roots) {
+    const dir = join(here, "..", "pages", root);
+    for (const file of readdirSync(dir)) {
+      if (!/\.(ts|tsx)$/.test(file)) continue;
+      const lines = readFileSync(join(dir, file), "utf8").split("\n");
+      lines.forEach((line, i) => {
+        if (!line.includes('"directions"') && !line.includes("/maps/dir")) return;
+        // Allowed: tenant-level navigation to the property itself.
+        if (line.includes('resolveTenantMapsUrl(tenant, "directions")')) return;
+        // Allowed: legacy themes render a directions action only for the item
+        // that IS the property, guarded by equality with the tenant's own
+        // mapQuery on the same or immediately preceding line.
+        const context = `${lines[i - 1] ?? ""}\n${line}`;
+        if (
+          line.includes('mapsHrefForQuery(item.mapQuery, "directions")') &&
+          context.includes("item.mapQuery === tenant.mapQuery")
+        ) {
+          return;
+        }
+        offenders.push(`${root}/${file}:${i + 1}`);
+      });
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `item-level directions are forbidden on every guest surface: ${offenders.join(", ")}`,
+  );
+});
+
 test("the guest shell's POI Maps buttons go through itemMapsHref", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const source = readFileSync(
