@@ -28,6 +28,12 @@ export const GetPublicTenantQueryParams = zod.object({
   "preview": zod.coerce.boolean().optional()
 })
 
+export const getPublicTenantResponseOneLatitudeMin = -90;
+export const getPublicTenantResponseOneLatitudeMax = 90;
+
+export const getPublicTenantResponseOneLongitudeMin = -180;
+export const getPublicTenantResponseOneLongitudeMax = 180;
+
 export const getPublicTenantResponseOneLivingGuideNavMin = 5;
 export const getPublicTenantResponseOneLivingGuideNavMax = 5;
 
@@ -60,6 +66,9 @@ export const GetPublicTenantResponse = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(getPublicTenantResponseOneLatitudeMin).max(getPublicTenantResponseOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getPublicTenantResponseOneLongitudeMin).max(getPublicTenantResponseOneLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -457,6 +466,12 @@ export const ApplyPart5MeliPuCutoverResponse = zod.object({
 }))
 
 
+export const listTenantsResponseLatitudeMin = -90;
+export const listTenantsResponseLatitudeMax = 90;
+
+export const listTenantsResponseLongitudeMin = -180;
+export const listTenantsResponseLongitudeMax = 180;
+
 export const listTenantsResponseLivingGuideNavMin = 5;
 export const listTenantsResponseLivingGuideNavMax = 5;
 
@@ -485,6 +500,9 @@ export const ListTenantsResponseItem = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(listTenantsResponseLatitudeMin).max(listTenantsResponseLatitudeMax).nullish(),
+  "longitude": zod.number().min(listTenantsResponseLongitudeMin).max(listTenantsResponseLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -533,6 +551,12 @@ export const CreateTenantBody = zod.object({
   "fromTemplate": zod.boolean().optional()
 })
 
+export const createTenantResponseLatitudeMin = -90;
+export const createTenantResponseLatitudeMax = 90;
+
+export const createTenantResponseLongitudeMin = -180;
+export const createTenantResponseLongitudeMax = 180;
+
 export const createTenantResponseLivingGuideNavMin = 5;
 export const createTenantResponseLivingGuideNavMax = 5;
 
@@ -561,6 +585,9 @@ export const CreateTenantResponse = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(createTenantResponseLatitudeMin).max(createTenantResponseLatitudeMax).nullish(),
+  "longitude": zod.number().min(createTenantResponseLongitudeMin).max(createTenantResponseLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -608,6 +635,12 @@ export const GetTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getTenantResponseOneLatitudeMin = -90;
+export const getTenantResponseOneLatitudeMax = 90;
+
+export const getTenantResponseOneLongitudeMin = -180;
+export const getTenantResponseOneLongitudeMax = 180;
+
 export const getTenantResponseOneLivingGuideNavMin = 5;
 export const getTenantResponseOneLivingGuideNavMax = 5;
 
@@ -640,6 +673,9 @@ export const GetTenantResponse = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(getTenantResponseOneLatitudeMin).max(getTenantResponseOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getTenantResponseOneLongitudeMin).max(getTenantResponseOneLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -768,6 +804,12 @@ export const UpdateTenantParams = zod.object({
 
 export const updateTenantBodyOrderPasswordMax = 200;
 
+export const updateTenantBodyLatitudeMin = -90;
+export const updateTenantBodyLatitudeMax = 90;
+
+export const updateTenantBodyLongitudeMin = -180;
+export const updateTenantBodyLongitudeMax = 180;
+
 export const updateTenantBodyLivingGuideNavMin = 5;
 export const updateTenantBodyLivingGuideNavMax = 5;
 
@@ -797,6 +839,9 @@ export const UpdateTenantBody = zod.object({
   "orderPassword": zod.string().max(updateTenantBodyOrderPasswordMax).nullish().describe('Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(updateTenantBodyLatitudeMin).max(updateTenantBodyLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateTenantBodyLongitudeMin).max(updateTenantBodyLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish(),
@@ -834,6 +879,12 @@ export const UpdateTenantBody = zod.object({
   "mediaQuotaBytes": zod.number().min(updateTenantBodyMediaQuotaBytesMin).optional()
 })
 
+export const updateTenantResponseLatitudeMin = -90;
+export const updateTenantResponseLatitudeMax = 90;
+
+export const updateTenantResponseLongitudeMin = -180;
+export const updateTenantResponseLongitudeMax = 180;
+
 export const updateTenantResponseLivingGuideNavMin = 5;
 export const updateTenantResponseLivingGuideNavMax = 5;
 
@@ -862,6 +913,9 @@ export const UpdateTenantResponse = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(updateTenantResponseLatitudeMin).max(updateTenantResponseLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateTenantResponseLongitudeMin).max(updateTenantResponseLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -922,6 +976,12 @@ export const DuplicateTenantBody = zod.object({
   "copyContent": zod.boolean().optional().describe('Copy item contents too; false copies only the section\/category structure')
 })
 
+export const duplicateTenantResponseTenantLatitudeMin = -90;
+export const duplicateTenantResponseTenantLatitudeMax = 90;
+
+export const duplicateTenantResponseTenantLongitudeMin = -180;
+export const duplicateTenantResponseTenantLongitudeMax = 180;
+
 export const duplicateTenantResponseTenantLivingGuideNavMin = 5;
 export const duplicateTenantResponseTenantLivingGuideNavMax = 5;
 
@@ -951,6 +1011,9 @@ export const DuplicateTenantResponse = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(duplicateTenantResponseTenantLatitudeMin).max(duplicateTenantResponseTenantLatitudeMax).nullish(),
+  "longitude": zod.number().min(duplicateTenantResponseTenantLongitudeMin).max(duplicateTenantResponseTenantLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -1007,6 +1070,12 @@ export const RenewTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const renewTenantResponseLatitudeMin = -90;
+export const renewTenantResponseLatitudeMax = 90;
+
+export const renewTenantResponseLongitudeMin = -180;
+export const renewTenantResponseLongitudeMax = 180;
+
 export const renewTenantResponseLivingGuideNavMin = 5;
 export const renewTenantResponseLivingGuideNavMax = 5;
 
@@ -1035,6 +1104,9 @@ export const RenewTenantResponse = zod.object({
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
+  "mapUrl": zod.string().nullish(),
+  "latitude": zod.number().min(renewTenantResponseLatitudeMin).max(renewTenantResponseLatitudeMax).nullish(),
+  "longitude": zod.number().min(renewTenantResponseLongitudeMin).max(renewTenantResponseLongitudeMax).nullish(),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),

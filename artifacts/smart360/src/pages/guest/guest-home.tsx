@@ -17,6 +17,10 @@ import { makeT, plural, resolveLang, clampLang, switchLang, LANG_NAMES, SL_UI } 
 import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
+import {
+  openExternalMapsUrl,
+  resolveTenantMapsUrl,
+} from "@/lib/tenant-maps";
 
 export default function GuestHome() {
   const [, params] = useRoute("/:slug");
@@ -57,6 +61,7 @@ export default function GuestHome() {
   // Un-enabled language silently becomes Slovene once the tenant is known.
   const lang = clampLang(rawLang, tenant.languages);
   const t = makeT(tenant, lang);
+  const tenantDirectionsUrl = resolveTenantMapsUrl(tenant, "directions");
   const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
 
   if (tenant.theme === 'swipe') {
@@ -187,7 +192,7 @@ export default function GuestHome() {
             <div className="qk">
               {tenant.wifiSsid && <button onClick={() => { navigator.clipboard.writeText(tenant.wifiPass || ""); alert(t("UI.share.copied")); }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-wifi" /></svg>WiFi</button>}
               {tenant.phone && <button onClick={() => window.location.href = `tel:${tenant.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg>{t("UI.contact.call")}</button>}
-              {tenant.mapQuery && <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery || "")}`, '_blank')}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</button>}
+              {tenantDirectionsUrl && <button onClick={() => openExternalMapsUrl(tenantDirectionsUrl)}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</button>}
             </div>
           </section>
         )}

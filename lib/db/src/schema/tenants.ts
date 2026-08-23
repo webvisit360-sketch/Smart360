@@ -101,6 +101,11 @@ export const tenantsTable = pgTable("tenants", {
   orderPassword: text("order_password"),
   address: text("address"),
   mapQuery: text("map_query"),
+  // Canonical property location. An explicit Maps URL wins over coordinates;
+  // mapQuery/address remain legacy fallbacks only.
+  mapUrl: text("map_url"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
   wifiSsid: text("wifi_ssid"),
   wifiPass: text("wifi_pass"),
   // WiFi encryption for the join-by-scan QR: "WPA" | "WEP" | "nopass".
@@ -178,6 +183,10 @@ export const tenantsTable = pgTable("tenants", {
 }, (t) => [
   // DB-level guard: only the two approved UI modes are stored.
   check("tenants_guest_ui_mode_enum", sql`${t.guestUiMode} IN ('legacy','living-guide')`),
+  check(
+    "tenants_location_coordinates_v1",
+    sql`(${t.latitude} IS NULL AND ${t.longitude} IS NULL) OR (${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`,
+  ),
 ]);
 
 /**

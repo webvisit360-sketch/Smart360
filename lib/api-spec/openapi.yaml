@@ -1784,6 +1784,15 @@ components:
           description: Whether this tenant currently requires a password for new orders; the password itself is never returned
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
+        mapUrl: { type: ["string", "null"] }
+        latitude:
+          type: ["number", "null"]
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: ["number", "null"]
+          minimum: -180
+          maximum: 180
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
         wifiEnc: { type: ["string", "null"], description: "WPA | WEP | nopass; null = WPA" }
@@ -1880,6 +1889,15 @@ components:
           description: Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
         address: { type: ["string", "null"] }
         mapQuery: { type: ["string", "null"] }
+        mapUrl: { type: ["string", "null"] }
+        latitude:
+          type: ["number", "null"]
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: ["number", "null"]
+          minimum: -180
+          maximum: 180
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
         wifiEnc: { type: ["string", "null"] }

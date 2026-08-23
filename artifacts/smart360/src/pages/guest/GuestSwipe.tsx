@@ -12,6 +12,7 @@ import { isLightHex } from "./use-theme-attr";
 import { imgSrc, mediaImgSrc } from "./img";
 import { GalleryStrip, MediaThumb, frameStyle } from "./media-viewer";
 import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
+import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
@@ -31,6 +32,8 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
   useThemeAttr(tenant?.theme);
   // Barvo ozadja nanaša IZKLJUČNO GuestHost (App.tsx) — en vir resnice.
   const t = makeT(tenant, lang);
+  const tenantSearchUrl = resolveTenantMapsUrl(tenant, "search");
+  const tenantDirectionsUrl = resolveTenantMapsUrl(tenant, "directions");
   const sections = tenant.sections?.filter((s: any) => s.isVisible) || [];
   const totalScreens = 1 + sections.length + 1; // cover + sections + contact
 
@@ -374,16 +377,16 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                   <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                 </a>
               )}
-              {tenant.address && (
-                <a className="srow" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.address)}`} target="_blank" rel="noopener noreferrer">
+              {tenant.address && tenantSearchUrl && (
+                <a className="srow" href={tenantSearchUrl} target="_blank" rel="noopener noreferrer">
                   <svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>
                   <span className="t"><b>{t("UI.contact.address")}</b><span>{tenant.address}</span></span>
                   <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                 </a>
               )}
             </div>
-            {tenant.mapQuery && (
-              <a className="btn" style={{ marginTop: 24 }} href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery)}`} target="_blank" rel="noopener noreferrer">
+            {tenantDirectionsUrl && (
+              <a className="btn" style={{ marginTop: 24 }} href={tenantDirectionsUrl} target="_blank" rel="noopener noreferrer">
                 <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}
               </a>
             )}

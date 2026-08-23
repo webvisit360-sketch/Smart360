@@ -1,7 +1,9 @@
 import { SheetTop } from "./SheetTop";
 import { makeT } from "./i18n";
+import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 export function ContactSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant: any, lang?: string, isOpen: boolean, onClose: () => void }) {
   const t = makeT(tenant, lang);
+  const tenantMapsUrl = resolveTenantMapsUrl(tenant, "directions");
   return (
     <>
       <div className={`mask ${isOpen ? 'on' : ''}`} onClick={onClose}></div>
@@ -50,8 +52,8 @@ export function ContactSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant:
             <div className="t"><b>{t("UI.contact.address")}</b><span>{tenant.address}</span></div>
           </div>
         )}
-        {tenant?.mapQuery && (
-          <a className="srow" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(tenant.mapQuery)}`} target="_blank" rel="noopener noreferrer">
+        {tenantMapsUrl && (
+          <a className="srow" href={tenantMapsUrl} target="_blank" rel="noopener noreferrer">
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>
             <div className="t"><b>{t("UI.contact.directions")}</b><span>{t("UI.maps.open")}</span></div>
           </a>

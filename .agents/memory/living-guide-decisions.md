@@ -164,3 +164,9 @@ Okolica category groups are saved category data, never inferred from translated 
 **Why:** Hosts must be able to reassign categories later without making guest grouping depend on mutable or translated category names.
 
 **How to apply:** Preserve the five stable group keys and product order. Keep custom group creation, naming, and ordering out of this model unless the owner explicitly changes the product boundary.
+
+Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then a complete valid latitude/longitude pair, then the legacy map query/address fallback. Configured invalid or partial higher-priority data must block fallback, and Maps always opens outside the guide.
+
+**Why:** Address search can resolve to a neighbouring property, so silently dropping to a lower-priority address sends guests to the wrong door.
+
+**How to apply:** Keep property navigation separate from item-specific POI destinations. Preserve external `_blank`/noopener behavior across Living Guide and legacy guest surfaces.

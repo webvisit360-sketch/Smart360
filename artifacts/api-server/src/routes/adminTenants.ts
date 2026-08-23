@@ -40,6 +40,11 @@ import {
   extractVirtualTourUrl,
   VirtualTourUrlError,
 } from "../lib/virtualTour";
+import {
+  normalizeTenantMapUrl,
+  TenantLocationError,
+  validateTenantCoordinatePair,
+} from "../lib/tenant-location";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -339,11 +344,32 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     return;
   }
   const [before] = await db
-    .select({ slug: tenantsTable.slug, renewsAt: tenantsTable.renewsAt })
+    .select({
+      slug: tenantsTable.slug,
+      renewsAt: tenantsTable.renewsAt,
+      latitude: tenantsTable.latitude,
+      longitude: tenantsTable.longitude,
+    })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, id));
   if (!before) {
     res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const nextLatitude =
+    parsed.data.latitude === undefined
+      ? before.latitude
+      : parsed.data.latitude;
+  const nextLongitude =
+    parsed.data.longitude === undefined
+      ? before.longitude
+      : parsed.data.longitude;
+  const coordinateError = validateTenantCoordinatePair(
+    nextLatitude,
+    nextLongitude,
+  );
+  if (coordinateError) {
+    res.status(400).json({ error: coordinateError });
     return;
   }
   const newSlug = (parsed.data as Record<string, unknown>)["slug"];
@@ -360,6 +386,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     orderPassword: orderPasswordRaw,
     tourUrl: tourUrlRaw,
     livingGuideNav: livingGuideNavRaw,
+    mapUrl: mapUrlRaw,
     ...restData
   } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
@@ -372,6 +399,17 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       updateData["tourUrl"] = extractVirtualTourUrl(tourUrlRaw);
     } catch (error) {
       if (error instanceof VirtualTourUrlError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  }
+  if (mapUrlRaw !== undefined) {
+    try {
+      updateData["mapUrl"] = normalizeTenantMapUrl(mapUrlRaw);
+    } catch (error) {
+      if (error instanceof TenantLocationError) {
         res.status(400).json({ error: error.message });
         return;
       }

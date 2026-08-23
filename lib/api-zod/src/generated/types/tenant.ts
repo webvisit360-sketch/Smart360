@@ -51,6 +51,20 @@ export interface Tenant {
   /** @nullable */
   mapQuery?: string | null;
   /** @nullable */
+  mapUrl?: string | null;
+  /**
+     * @minimum -90
+     * @maximum 90
+     * @nullable
+     */
+  latitude?: number | null;
+  /**
+     * @minimum -180
+     * @maximum 180
+     * @nullable
+     */
+  longitude?: number | null;
+  /** @nullable */
   wifiSsid?: string | null;
   /** @nullable */
   wifiPass?: string | null;

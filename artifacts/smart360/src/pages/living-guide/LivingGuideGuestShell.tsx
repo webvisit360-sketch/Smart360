@@ -16,6 +16,10 @@ import { useLocation } from "wouter";
 import { getOpenStatus } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
+  openExternalMapsUrl,
+  resolveTenantMapsUrl,
+} from "@/lib/tenant-maps";
+import {
   CARD_IMAGE_WIDTH,
   HERO_IMAGE_WIDTH,
   mediaImgSrc,
@@ -1734,6 +1738,7 @@ function OrderDock({ item, t, onOrderClick }: { item: any; t: UiTranslator; onOr
 
 // Template A: Content page (Bazen)
 function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
+  const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
   const contacts = [
     tenant?.phone
       ? { key: "phone", icon: "phone", label: t("UI.contact.call"), value: tenant.phone, href: `tel:${tenant.phone}` }
@@ -1744,8 +1749,8 @@ function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
     tenant?.email
       ? { key: "email", icon: "mail", label: t("UI.contact.email"), value: tenant.email, href: `mailto:${tenant.email}` }
       : null,
-    tenant?.address
-      ? { key: "address", icon: "pin", label: t("UI.contact.address"), value: tenant.address, href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.mapQuery || tenant.address)}`, external: true }
+    tenant?.address && tenantMapsUrl
+      ? { key: "address", icon: "pin", label: t("UI.contact.address"), value: tenant.address, href: tenantMapsUrl, external: true }
       : null,
   ].filter(Boolean) as Array<{ key: string; icon: string; label: string; value: string; href: string; external?: boolean }>;
 
@@ -2363,8 +2368,8 @@ function HomeView({
   const visibleDanesItems = todayEntries.slice(0, 6);
   const firstName = guest?.name?.trim().split(/\s+/)[0] ?? "";
   const guestSignedIn = Boolean(guest?.unit?.trim() && guest?.name?.trim());
-  const fallbackMapQuery = tenant.mapQuery || tenant.address;
-  const mapAvailable = Boolean(navState?.hasSiteMap || fallbackMapQuery);
+  const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
+  const mapAvailable = Boolean(tenantMapsUrl);
 
   return (
     <section className="lg2-view lg2-home-view" data-testid="screen-home">
@@ -2464,14 +2469,7 @@ function HomeView({
             type="button"
             disabled={!mapAvailable}
             onClick={() => {
-              if (navState?.hasSiteMap) navigate(`/${slug}/site-map`);
-              else if (fallbackMapQuery) {
-                window.open(
-                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallbackMapQuery)}`,
-                  "_blank",
-                  "noopener,noreferrer",
-                );
-              }
+              if (tenantMapsUrl) openExternalMapsUrl(tenantMapsUrl);
             }}
           >
             <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>

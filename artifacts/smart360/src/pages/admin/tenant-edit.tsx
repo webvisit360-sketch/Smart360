@@ -90,6 +90,9 @@ export default function AdminTenantEdit() {
     orderNotifyEmail: true,
     messageNotifyEmail: true,
     mapQuery: "",
+    mapUrl: "",
+    latitude: "",
+    longitude: "",
     tourUrl: "",
     heroUrl: "",
     logoUrl: "",
@@ -206,6 +209,9 @@ export default function AdminTenantEdit() {
         orderNotifyEmail: tenant.orderNotifyEmail,
         messageNotifyEmail: tenant.messageNotifyEmail ?? true,
         mapQuery: tenant.mapQuery || "",
+        mapUrl: tenant.mapUrl || "",
+        latitude: tenant.latitude?.toString() ?? "",
+        longitude: tenant.longitude?.toString() ?? "",
         tourUrl: tenant.tourUrl || "",
         heroUrl: tenant.heroUrl || "",
         logoUrl: tenant.logoUrl || "",
@@ -289,12 +295,49 @@ export default function AdminTenantEdit() {
   }
 
   const handleSave = () => {
+    const latitudeRaw = formData.latitude.trim().replace(",", ".");
+    const longitudeRaw = formData.longitude.trim().replace(",", ".");
+    const latitude = latitudeRaw ? Number(latitudeRaw) : null;
+    const longitude = longitudeRaw ? Number(longitudeRaw) : null;
+    if ((latitude === null) !== (longitude === null)) {
+      toast({
+        title: "Neveljavna lokacija",
+        description: "Latitude in longitude morata biti vpisana skupaj.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (
+      latitude !== null &&
+      (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)
+    ) {
+      toast({
+        title: "Neveljavna lokacija",
+        description: "Latitude mora biti število med -90 in 90.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (
+      longitude !== null &&
+      (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)
+    ) {
+      toast({
+        title: "Neveljavna lokacija",
+        description: "Longitude mora biti število med -180 in 180.",
+        variant: "destructive",
+      });
+      return;
+    }
     updateMutation.mutate({
       id,
       data: { 
         ...formData, 
         customDomain: formData.customDomain.trim() || null,
         email: formData.email.trim() || null,
+        mapUrl: formData.mapUrl.trim() || null,
+        latitude,
+        longitude,
         wifiSsid: formData.wifiSsid.trim() || null,
         wifiPass: formData.wifiPass || null,
         // min 0.1 GB — a zero/invalid quota would block every upload
@@ -904,7 +947,37 @@ export default function AdminTenantEdit() {
                   <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="info@primer.si" />
                 </div>
                 <div className="space-y-2 col-span-2">
-                  <Label>Poizvedba za zemljevid (Map Query)</Label>
+                  <Label>Google Maps povezava</Label>
+                  <Input
+                    type="url"
+                    value={formData.mapUrl}
+                    onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                    placeholder="https://www.google.com/maps/place/..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Če je vpisana, ima prednost pred koordinatami in naslovom.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Latitude (zemljepisna širina)</Label>
+                  <Input
+                    inputMode="decimal"
+                    value={formData.latitude}
+                    onChange={e => setFormData({ ...formData, latitude: e.target.value })}
+                    placeholder="45.5126898"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Longitude (zemljepisna dolžina)</Label>
+                  <Input
+                    inputMode="decimal"
+                    value={formData.longitude}
+                    onChange={e => setFormData({ ...formData, longitude: e.target.value })}
+                    placeholder="13.6339282"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>Nadomestna poizvedba za zemljevid (Map Query)</Label>
                   <Input value={formData.mapQuery} onChange={e => setFormData({ ...formData, mapQuery: e.target.value })} placeholder="npr. Malija 143b, Izola" />
                 </div>
               </div>
