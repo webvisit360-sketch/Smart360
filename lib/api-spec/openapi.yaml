@@ -2536,6 +2536,12 @@ components:
         producerNote:
           type: ["string", "null"]
           description: Optional producer / fulfilment note shown on the order form
+        latitude:
+          type: ["number", "null"]
+          description: Approved POI latitude from the distance review; null until a proposal is approved
+        longitude:
+          type: ["number", "null"]
+          description: Approved POI longitude from the distance review; null until a proposal is approved
         media:
           type: array
           items:

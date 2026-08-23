@@ -157,6 +157,8 @@ export const GetPublicTenantResponse = zod.object({
   "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
   "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
+  "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
+  "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -767,6 +769,8 @@ export const GetTenantResponse = zod.object({
   "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
   "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
+  "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
+  "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1703,6 +1707,8 @@ export const CreateItemResponse = zod.object({
   "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
   "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
+  "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
+  "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1796,6 +1802,8 @@ export const UpdateItemResponse = zod.object({
   "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
   "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
+  "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
+  "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),
@@ -1859,6 +1867,8 @@ export const DuplicateItemResponse = zod.object({
   "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
   "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
   "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
+  "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
+  "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
   "media": zod.array(zod.object({
   "id": zod.string(),
   "itemId": zod.string().nullish(),

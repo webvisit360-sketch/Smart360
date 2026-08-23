@@ -1137,6 +1137,16 @@ export interface Item {
      * @nullable
      */
   producerNote?: string | null;
+  /**
+     * Approved POI latitude from the distance review; null until a proposal is approved
+     * @nullable
+     */
+  latitude?: number | null;
+  /**
+     * Approved POI longitude from the distance review; null until a proposal is approved
+     * @nullable
+     */
+  longitude?: number | null;
   media: MediaEntry[];
 }
 

@@ -5,6 +5,7 @@ import {
   sectionsTable,
   categoriesTable,
   itemsTable,
+  itemDistanceProposalsTable,
   mediaTable,
   translationsTable,
   type Tenant,
@@ -46,7 +47,14 @@ export type SitePlanImageEntry = {
   height: number | null;
 };
 
-export type ItemWithMedia = Item & { media: MediaRow[] };
+// latitude/longitude come from the APPROVED distance proposal (if any):
+// guests need the reviewed point so the Maps action opens the exact place
+// instead of falling back to an ambiguous text search.
+export type ItemWithMedia = Item & {
+  media: MediaRow[];
+  latitude: number | null;
+  longitude: number | null;
+};
 export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
 export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
@@ -223,6 +231,27 @@ export async function buildTenantContent(
     height: row.height ?? null,
   }));
 
+  // Approved review coordinates, keyed by item. Only approved proposals may
+  // reach guests — pending/failed candidates stay admin-only.
+  const approvedCoords = itemIds.length
+    ? await db
+        .select({
+          itemId: itemDistanceProposalsTable.itemId,
+          latitude: itemDistanceProposalsTable.latitude,
+          longitude: itemDistanceProposalsTable.longitude,
+        })
+        .from(itemDistanceProposalsTable)
+        .where(
+          and(
+            inArray(itemDistanceProposalsTable.itemId, itemIds),
+            eq(itemDistanceProposalsTable.status, "approved"),
+          ),
+        )
+    : [];
+  const coordsByItem = new Map(
+    approvedCoords.map((p) => [p.itemId, p] as const),
+  );
+
   const mediaByItem = new Map<string, MediaRow[]>();
   for (const m of media) {
     if (!m.itemId) continue;
@@ -233,7 +262,13 @@ export async function buildTenantContent(
   const itemsByCategory = new Map<string, ItemWithMedia[]>();
   for (const i of itemsOut) {
     const arr = itemsByCategory.get(i.categoryId) ?? [];
-    arr.push({ ...i, media: mediaByItem.get(i.id) ?? [] });
+    const coords = coordsByItem.get(i.id);
+    arr.push({
+      ...i,
+      media: mediaByItem.get(i.id) ?? [],
+      latitude: coords?.latitude ?? null,
+      longitude: coords?.longitude ?? null,
+    });
     itemsByCategory.set(i.categoryId, arr);
   }
   const categoriesBySection = new Map<string, CategoryContent[]>();

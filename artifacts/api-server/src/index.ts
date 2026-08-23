@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { ensureAdminAccount, rpID, rpOrigin, listCredentials } from "./lib/adminAuth";
 import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention";
 import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRetention";
+import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
 
 const rawPort = process.env["PORT"];
 
@@ -76,6 +77,8 @@ ensureAdminAccount()
       logger.error({ err }, "[messageRetention] startup purge failed");
     }),
   )
+  // One-time Okolica explore-group data repair (best-effort, self-disabling)
+  .then(() => runExploreGroupBackfillAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();
