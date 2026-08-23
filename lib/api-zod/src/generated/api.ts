@@ -115,6 +115,7 @@ export const GetPublicTenantResponse = zod.object({
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
+  "exploreGroup": zod.enum(['experiences', 'food_drink', 'nature_trails', 'sights', 'services']),
   "position": zod.number(),
   "isVisible": zod.boolean()
 }).and(zod.object({
@@ -694,6 +695,7 @@ export const GetTenantResponse = zod.object({
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
+  "exploreGroup": zod.enum(['experiences', 'food_drink', 'nature_trails', 'sights', 'services']),
   "position": zod.number(),
   "isVisible": zod.boolean()
 }).and(zod.object({
@@ -1250,6 +1252,7 @@ export const CreateCategoryBody = zod.object({
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
+  "exploreGroup": zod.enum(['experiences', 'food_drink', 'nature_trails', 'sights', 'services']),
   "position": zod.number().optional()
 })
 
@@ -1259,6 +1262,7 @@ export const CreateCategoryResponse = zod.object({
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
+  "exploreGroup": zod.enum(['experiences', 'food_drink', 'nature_trails', 'sights', 'services']),
   "position": zod.number(),
   "isVisible": zod.boolean()
 })
@@ -1272,6 +1276,7 @@ export const UpdateCategoryBody = zod.object({
   "label": zod.string().optional(),
   "icon": zod.string().optional(),
   "layout": zod.string().optional(),
+  "exploreGroup": zod.enum(['experiences', 'food_drink', 'nature_trails', 'sights', 'services']).optional(),
   "position": zod.number().optional(),
   "isVisible": zod.boolean().optional()
 })
@@ -1282,6 +1287,7 @@ export const UpdateCategoryResponse = zod.object({
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
+  "exploreGroup": zod.enum(['experiences', 'food_drink', 'nature_trails', 'sights', 'services']),
   "position": zod.number(),
   "isVisible": zod.boolean()
 })

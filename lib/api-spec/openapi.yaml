@@ -2286,23 +2286,32 @@ components:
         label: { type: string }
         icon: { type: string }
         layout: { type: string }
+        exploreGroup:
+          type: string
+          enum: [experiences, food_drink, nature_trails, sights, services]
         position: { type: number }
         isVisible: { type: boolean }
-      required: [id, sectionId, label, icon, layout, position, isVisible]
+      required: [id, sectionId, label, icon, layout, exploreGroup, position, isVisible]
     CategoryInput:
       type: object
       properties:
         label: { type: string }
         icon: { type: string }
         layout: { type: string }
+        exploreGroup:
+          type: string
+          enum: [experiences, food_drink, nature_trails, sights, services]
         position: { type: number }
-      required: [label, icon, layout]
+      required: [label, icon, layout, exploreGroup]
     CategoryUpdate:
       type: object
       properties:
         label: { type: string }
         icon: { type: string }
         layout: { type: string }
+        exploreGroup:
+          type: string
+          enum: [experiences, food_drink, nature_trails, sights, services]
         position: { type: number }
         isVisible: { type: boolean }
     Item:

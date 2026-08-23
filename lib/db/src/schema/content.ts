@@ -38,6 +38,9 @@ export const categoriesTable = pgTable("categories", {
   label: text("label").notNull(),
   icon: text("icon").notNull().default("doc"),
   layout: text("layout").notNull().default("text"),
+  // Persisted Living Guide Okolica group. Guest rendering never infers this
+  // from translated labels; hosts can reassign it in the category editor.
+  exploreGroup: text("explore_group").notNull().default("experiences"),
   position: integer("position").notNull().default(0),
   // "published" in the product spec: hide without deleting (seasonal offers).
   isVisible: boolean("is_visible").notNull().default(true),

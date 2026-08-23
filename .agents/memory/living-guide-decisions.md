@@ -158,3 +158,9 @@ Domov’s Today cards require a visible item title and an image, not a distance 
 **Why:** The owner found that the prior distance/duration gate hid all meaningful Meli Pu recommendations even though the content already had titles and photographs.
 
 **How to apply:** Never use generic subtitles as the detail fallback. Match the approved categories across Slovenian, English, German, and Italian labels; exclude commercial and utility categories such as shops, pharmacies, fuel, and ATMs.
+
+Okolica category groups are saved category data, never inferred from translated labels. The five group identities and their localized names are product-defined; empty groups do not render and the first populated group opens by default.
+
+**Why:** Hosts must be able to reassign categories later without making guest grouping depend on mutable or translated category names.
+
+**How to apply:** Preserve the five stable group keys and product order. Keep custom group creation, naming, and ordering out of this model unless the owner explicitly changes the product boundary.

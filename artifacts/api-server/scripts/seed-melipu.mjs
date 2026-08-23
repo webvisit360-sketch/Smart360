@@ -126,11 +126,32 @@ async function insertSection(key, title, subtitle, icon, position) {
   );
   return r.rows[0].id;
 }
-async function insertCategory(sectionId, key, label, icon, layout, position) {
+const EXPLORE_GROUP_BY_CATEGORY_KEY = new Map([
+  ["act", "experiences"],
+  ["trips", "experiences"],
+  ["events", "experiences"],
+  ["breakfast", "food_drink"],
+  ["culinary", "food_drink"],
+  ["pizza", "food_drink"],
+  ["night", "food_drink"],
+  ["hike", "nature_trails"],
+  ["bike", "nature_trails"],
+  ["beach", "nature_trails"],
+  ["culture", "sights"],
+  ["nature", "sights"],
+  ["shops", "services"],
+  ["bakery", "services"],
+  ["gas", "services"],
+  ["atm", "services"],
+  ["pharm", "services"],
+  ["hosp", "services"],
+]);
+
+async function insertCategory(sectionId, key, label, icon, layout, exploreGroup, position) {
   const r = await q(
-    `insert into categories (section_id, key, label, icon, layout, position)
-     values ($1,$2,$3,$4,$5,$6) returning id`,
-    [sectionId, key, label, icon, layout, position],
+    `insert into categories (section_id, key, label, icon, layout, explore_group, position)
+     values ($1,$2,$3,$4,$5,$6,$7) returning id`,
+    [sectionId, key, label, icon, layout, exploreGroup, position],
   );
   return r.rows[0].id;
 }
@@ -232,6 +253,7 @@ for (const key of ["stay", "offer", "explore", "services"]) {
       cat.label,
       cat.icon ?? "doc",
       layout,
+      EXPLORE_GROUP_BY_CATEGORY_KEY.get(cat.id) ?? "experiences",
       catPos++,
     );
     let itemPos = 0;

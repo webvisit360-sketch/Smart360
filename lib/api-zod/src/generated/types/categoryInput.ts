@@ -5,10 +5,12 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { CategoryInputExploreGroup } from './categoryInputExploreGroup';
 
 export interface CategoryInput {
   label: string;
   icon: string;
   layout: string;
+  exploreGroup: CategoryInputExploreGroup;
   position?: number;
 }

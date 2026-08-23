@@ -818,27 +818,63 @@ export interface SectionUpdate {
   isVisible?: boolean;
 }
 
+export type CategoryExploreGroup = typeof CategoryExploreGroup[keyof typeof CategoryExploreGroup];
+
+
+export const CategoryExploreGroup = {
+  experiences: 'experiences',
+  food_drink: 'food_drink',
+  nature_trails: 'nature_trails',
+  sights: 'sights',
+  services: 'services',
+} as const;
+
 export interface Category {
   id: string;
   sectionId: string;
   label: string;
   icon: string;
   layout: string;
+  exploreGroup: CategoryExploreGroup;
   position: number;
   isVisible: boolean;
 }
+
+export type CategoryInputExploreGroup = typeof CategoryInputExploreGroup[keyof typeof CategoryInputExploreGroup];
+
+
+export const CategoryInputExploreGroup = {
+  experiences: 'experiences',
+  food_drink: 'food_drink',
+  nature_trails: 'nature_trails',
+  sights: 'sights',
+  services: 'services',
+} as const;
 
 export interface CategoryInput {
   label: string;
   icon: string;
   layout: string;
+  exploreGroup: CategoryInputExploreGroup;
   position?: number;
 }
+
+export type CategoryUpdateExploreGroup = typeof CategoryUpdateExploreGroup[keyof typeof CategoryUpdateExploreGroup];
+
+
+export const CategoryUpdateExploreGroup = {
+  experiences: 'experiences',
+  food_drink: 'food_drink',
+  nature_trails: 'nature_trails',
+  sights: 'sights',
+  services: 'services',
+} as const;
 
 export interface CategoryUpdate {
   label?: string;
   icon?: string;
   layout?: string;
+  exploreGroup?: CategoryUpdateExploreGroup;
   position?: number;
   isVisible?: boolean;
 }

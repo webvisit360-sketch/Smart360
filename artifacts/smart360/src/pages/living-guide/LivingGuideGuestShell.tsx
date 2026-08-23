@@ -36,6 +36,7 @@ import {
 import { LivingGuideSearchSheet } from "./LivingGuideSearchSheet";
 import { LivingGuideLanguageSheet } from "./LivingGuideLanguageSheet";
 import {
+  itemDistanceText,
   itemPriceText,
   itemSupportingText,
 } from "./living-guide-formatters";
@@ -71,6 +72,10 @@ import {
 } from "./living-guide-home";
 import { SiteMapGuestView } from "./SiteMapGuestView";
 import { MoreGuestView } from "./MoreGuestView";
+import {
+  exploreItemDescription,
+  populatedExploreGroups,
+} from "./living-guide-explore";
 
 type GuestRecord = {
   unit: string;
@@ -1213,40 +1218,113 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
 }
 
 function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }: any) {
-  const allItems = categories.flatMap((c: any) => visible(c.items).map((i: any) => ({ ...i, categoryId: c.id })));
+  const groups = useMemo(
+    () => populatedExploreGroups(categories),
+    [categories],
+  );
+  const [activeGroup, setActiveGroup] = useState<string | null>(
+    groups[0]?.key ?? null,
+  );
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!groups.some((group) => group.key === activeGroup)) {
+      setActiveGroup(groups[0]?.key ?? null);
+    }
+  }, [activeGroup, groups]);
+
+  const selectedGroup =
+    groups.find((group) => group.key === activeGroup) ?? groups[0];
+
+  const selectGroup = (groupKey: string) => {
+    setActiveGroup(groupKey);
+    listRef.current?.scrollTo({ top: 0, behavior: "auto" });
+    navigator.vibrate?.(6);
+  };
+
+  const openPlace = (categoryId: string, itemId: string) => {
+    navigator.vibrate?.(6);
+    onOpenItem(categoryId, itemId);
+  };
 
   return (
-    <section className="lg2-view lg2-explore-view">
-      <header className="lg2-grid-header">
-        <div>
-          <p>{tenant.name}</p>
-          <h1>{t("UI.lg.exploreTitle")}</h1>
-        </div>
+    <section className="lg2-view lg2-explore-view" data-testid="screen-explore">
+      <header className="lg2-explore-header">
+        <p>{tenant.name}</p>
+        <h1>{t("UI.lg.exploreTitle")}</h1>
       </header>
-      <div className="lg2-screen-scroll" data-lg-scroll>
-        <div className="lg2-chips lg2-explore-chips">
-          {categories.map((c: any) => (
-             <button type="button" key={c.id} className="lg2-chip" onClick={() => onOpenCategory(c.id)}>{c.label}</button>
-          ))}
-        </div>
-        <div className="lg2-ngrp">{t("UI.lg.nearby")}</div>
-        <div className="lg2-subs lg2-nearby-list">
-          {allItems.map((item: any) => {
-            const status = itemOpenStatus(item, t);
-            const supporting = itemSupportingText(
-              item,
-              distinctSubtitle(item.title, item.subtitle),
-              status?.text,
-            );
-            return (
-              <button type="button" className="lg2-sub2 lg2-nrow" key={item.id} onClick={() => onOpenItem(item.categoryId, item.id)}>
-                {item.media?.[0] ? <img className="lg2-list-thumb" src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} /> : <span className="lg2-sub-icon"><svg><use href="#lg-i-pin"/></svg></span>}
-                <div><b>{item.title}</b>{supporting && <small>{supporting}</small>}</div>
-                <span className="lg2-chevron">›</span>
-              </button>
-            );
-          })}
-        </div>
+      <div className="lg2-gtabs" role="tablist" aria-label={t("UI.lg.exploreTitle")}>
+        {groups.map((group) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={group.key === selectedGroup?.key}
+            className={group.key === selectedGroup?.key ? "is-active" : undefined}
+            key={group.key}
+            onClick={() => selectGroup(group.key)}
+          >
+            {t(group.labelKey)}
+          </button>
+        ))}
+      </div>
+      <div
+        className="lg2-screen-scroll lg2-explore-list"
+        data-lg-scroll
+        ref={listRef}
+      >
+        {selectedGroup?.items.map(({ item, category }: any) => {
+          const media = item.media?.[0];
+          const distance = itemDistanceText(item);
+          const status = itemOpenStatus(item, t);
+          const description = exploreItemDescription(item);
+          const open = () => openPlace(category.id, item.id);
+          return (
+            <article
+              className="lg2-pcard"
+              key={item.id}
+              role="button"
+              tabIndex={0}
+              aria-label={item.title || category.label}
+              onClick={open}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  open();
+                }
+              }}
+            >
+              <div className={`lg2-pcard-photo${media ? "" : " lg2-card-ambient"}`}>
+                {media && (
+                  <img
+                    src={mediaImgSrc(media, CARD_IMAGE_WIDTH)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    style={imageStyle(media)}
+                  />
+                )}
+              </div>
+              <div className="lg2-pcard-body">
+                <div className="lg2-pcard-meta">
+                  {distance && <span className="lg2-pcard-distance">{distance}</span>}
+                  {distance && <i aria-hidden="true" />}
+                  {status ? (
+                    <span className={`lg2-pcard-status${status.isOpen ? " is-open" : ""}`}>
+                      {status.text}
+                    </span>
+                  ) : (
+                    <span className="lg2-pcard-category">{category.label}</span>
+                  )}
+                </div>
+                <h3>{item.title || category.label}</h3>
+                {description && <p>{description}</p>}
+              </div>
+            </article>
+          );
+        })}
+        {groups.length === 0 && (
+          <div className="lg2-empty">{t("UI.lg.search.empty")}</div>
+        )}
       </div>
     </section>
   );

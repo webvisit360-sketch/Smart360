@@ -190,6 +190,36 @@ export const LIVING_GUIDE_UI = {
     de: "In der Nähe",
     it: "Più vicini",
   },
+  "UI.lg.exploreGroup.experiences": {
+    sl: "Doživetja",
+    en: "Experiences",
+    de: "Erlebnisse",
+    it: "Esperienze",
+  },
+  "UI.lg.exploreGroup.foodDrink": {
+    sl: "Hrana in pijača",
+    en: "Food and drink",
+    de: "Essen und Trinken",
+    it: "Cibo e bevande",
+  },
+  "UI.lg.exploreGroup.natureTrails": {
+    sl: "Narava in poti",
+    en: "Nature and trails",
+    de: "Natur und Wege",
+    it: "Natura e sentieri",
+  },
+  "UI.lg.exploreGroup.sights": {
+    sl: "Znamenitosti",
+    en: "Sights",
+    de: "Sehenswürdigkeiten",
+    it: "Attrazioni",
+  },
+  "UI.lg.exploreGroup.services": {
+    sl: "Storitve",
+    en: "Services",
+    de: "Dienstleistungen",
+    it: "Servizi",
+  },
   "UI.lg.search.title": {
     sl: "Iskanje",
     en: "Search",

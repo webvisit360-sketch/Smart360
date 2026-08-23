@@ -43,6 +43,10 @@ import { Switch } from "@/components/ui/switch";
 import { ItemMediaEditor } from "@/components/admin/item-media-editor";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { formatDistanceMeters } from "@/pages/living-guide/living-guide-formatters";
+import {
+  EXPLORE_GROUPS,
+  type ExploreGroupKey,
+} from "@/pages/living-guide/living-guide-explore";
 
 // ---------- Types ----------
 
@@ -73,6 +77,7 @@ type Category = {
   label: string;
   icon: string;
   layout: string;
+  exploreGroup: ExploreGroupKey;
   isVisible: boolean;
   position: number;
   items?: Item[];
@@ -502,15 +507,19 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
   const [label, setLabel] = useState(category?.label ?? "");
   const [icon, setIcon] = useState(category?.icon ?? "");
   const [layout, setLayout] = useState(category?.layout ?? "text");
+  const [exploreGroup, setExploreGroup] = useState<ExploreGroupKey>(
+    category?.exploreGroup ?? "experiences",
+  );
   const [isVisible, setIsVisible] = useState(category?.isVisible ?? true);
 
   const baseline = {
     label: category?.label ?? "",
     icon: category?.icon ?? "",
     layout: category?.layout ?? "text",
+    exploreGroup: category?.exploreGroup ?? "experiences",
     isVisible: category?.isVisible ?? true,
   };
-  const current = { label, icon, layout, isVisible };
+  const current = { label, icon, layout, exploreGroup, isVisible };
   const { restored, clear, discardRestored } = useDraft(
     "category",
     mode === "edit" ? category.id : `new-${sectionId}`,
@@ -523,6 +532,7 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
       setLabel(restored.label);
       setIcon(restored.icon);
       setLayout(restored.layout);
+      setExploreGroup(restored.exploreGroup ?? "experiences");
       setIsVisible(restored.isVisible);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -538,9 +548,20 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
     setBusy(true);
     try {
       if (mode === "create") {
-        await createCategory(sectionId, { label: label.trim(), icon: icon.trim(), layout });
+        await createCategory(sectionId, {
+          label: label.trim(),
+          icon: icon.trim(),
+          layout,
+          exploreGroup,
+        });
       } else {
-        await updateCategory(category.id, { label: label.trim(), icon: icon.trim(), layout, isVisible });
+        await updateCategory(category.id, {
+          label: label.trim(),
+          icon: icon.trim(),
+          layout,
+          exploreGroup,
+          isVisible,
+        });
       }
       clear();
       await refresh();
@@ -612,6 +633,28 @@ function CategoryDialog({ mode, tenantId, sectionId, category, onDone }: Categor
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="space-y-1">
+        <Label>Skupina v Okolici *</Label>
+        <Select
+          value={exploreGroup}
+          onValueChange={(value) => setExploreGroup(value as ExploreGroupKey)}
+          disabled={busy}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Izberite skupino" />
+          </SelectTrigger>
+          <SelectContent>
+            {EXPLORE_GROUPS.map((group) => (
+              <SelectItem key={group.key} value={group.key}>
+                {group.adminLabel}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Okolica.
+        </p>
       </div>
       {mode === "edit" && (
         <div className="flex items-center gap-2">
