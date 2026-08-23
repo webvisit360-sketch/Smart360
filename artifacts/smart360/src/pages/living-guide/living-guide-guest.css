@@ -2081,6 +2081,7 @@ body[data-t="swipe"] .lg2-order-dock {
   padding: 0 20px;
   color: var(--acc);
   font: 800 11px var(--sans);
+  line-height: 1.5;
   letter-spacing: .14em;
   text-transform: uppercase;
 }
@@ -2091,7 +2092,7 @@ body[data-t="swipe"] .lg2-order-dock {
   color: var(--tx);
   font: 800 30px var(--sans);
   letter-spacing: -.035em;
-  line-height: normal;
+  line-height: 1.5;
 }
 
 .lg2-home-view .lg2-hello {
@@ -2108,6 +2109,7 @@ body[data-t="swipe"] .lg2-order-dock {
   color: var(--tx);
   text-align: left;
   font: 650 13.5px var(--sans);
+  line-height: 1.5;
   transition: transform .15s var(--ease);
 }
 
@@ -2173,6 +2175,7 @@ body[data-t="swipe"] .lg2-order-dock {
   justify-content: center;
   gap: 7px;
   font: 400 15px var(--sans);
+  line-height: 1.5;
   cursor: pointer;
   position: relative;
   transition: transform .2s, background .9s;
@@ -2202,10 +2205,6 @@ body[data-t="swipe"] .lg2-order-dock {
   color: var(--tx);
   font-size: 15px;
   font-weight: 750;
-}
-
-.lg2-hqbar .lg2-q:not(.lg2-q--w) {
-  height: 83px;
 }
 
 .lg2-hqbar .lg2-q:not(.lg2-q--w) svg {
@@ -2242,6 +2241,7 @@ body[data-t="swipe"] .lg2-order-dock {
   margin: 0;
   color: var(--tx);
   font: 800 22px var(--sans);
+  line-height: 1.5;
   letter-spacing: -.03em;
 }
 
@@ -2252,6 +2252,7 @@ body[data-t="swipe"] .lg2-order-dock {
   background: transparent;
   color: var(--accg);
   font: 700 14px var(--sans);
+  line-height: 1.5;
   cursor: pointer;
 }
 
@@ -2317,6 +2318,7 @@ body[data-t="swipe"] .lg2-order-dock {
   background: var(--acc);
   color: var(--onacc);
   font: 800 12px var(--sans);
+  line-height: 1.5;
   letter-spacing: .1em;
   text-transform: uppercase;
   font-style: normal;
@@ -2334,6 +2336,7 @@ body[data-t="swipe"] .lg2-order-dock {
   display: block;
   margin-top: 3px;
   font: 400 14px var(--sans);
+  line-height: 1.5;
   opacity: .92;
 }
 

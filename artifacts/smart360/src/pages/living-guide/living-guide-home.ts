@@ -9,6 +9,21 @@ const FALLBACK_CATEGORY_LABELS = new Set([
   "izleti",
   "kulturna dediščina",
   "naravna dediščina",
+  "cycling",
+  "hiking",
+  "day trips",
+  "heritage",
+  "nature",
+  "radfahren",
+  "wandern",
+  "ausflüge",
+  "kulturerbe",
+  "naturerbe",
+  "in bicicletta",
+  "escursioni a piedi",
+  "gite",
+  "patrimonio culturale",
+  "patrimonio naturale",
 ]);
 
 function visible<T extends { isVisible?: boolean; deletedAt?: unknown }>(
@@ -33,6 +48,39 @@ function firstImage(media: any[] | null | undefined): any | null {
         (entry?.kind == null && typeof entry?.url === "string"),
     ) ?? null
   );
+}
+
+const HOME_EXCERPT_LIMIT = 72;
+
+function plainText(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/p>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(?:39|x27);/gi, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function shortExcerpt(item: any): string {
+  const candidates = [
+    item?.body,
+    item?.noteText,
+    ...(Array.isArray(item?.bullets) ? item.bullets : []),
+  ];
+  const source = candidates.map(plainText).find(Boolean) ?? "";
+  if (source.length <= HOME_EXCERPT_LIMIT) return source;
+
+  const clipped = source.slice(0, HOME_EXCERPT_LIMIT - 1);
+  const lastSpace = clipped.lastIndexOf(" ");
+  const boundary = lastSpace >= HOME_EXCERPT_LIMIT / 2 ? lastSpace : clipped.length;
+  return `${clipped.slice(0, boundary).trimEnd()}…`;
 }
 
 export function resolveHomeHeroMedia(
@@ -67,8 +115,8 @@ export type HomeTodayEntry = {
   sortValue: number;
 };
 
-function usefulDetail(item: any): string {
-  return [item?.distance, item?.duration]
+function cardDetail(item: any): string {
+  return [item?.distance, item?.duration, shortExcerpt(item)]
     .filter(
       (value): value is string =>
         typeof value === "string" && value.trim().length > 0,
@@ -104,8 +152,11 @@ export function selectHomeTodayEntries(
         section.key === "program";
 
       for (const item of visible<any>(category.items)) {
-        const detail = usefulDetail(item);
-        if (!detail) continue;
+        const title =
+          typeof item?.title === "string" ? item.title.trim() : "";
+        const media = firstImage(item.media);
+        if (!title || !media) continue;
+        const detail = cardDetail(item);
 
         if (hasProgramme) {
           if (!isProgrammeSurface) continue;
@@ -117,7 +168,7 @@ export function selectHomeTodayEntries(
             categoryLabel,
             detail,
             item,
-            media: firstImage(item.media),
+            media,
             sortValue: timestamp,
           });
           continue;
@@ -132,7 +183,7 @@ export function selectHomeTodayEntries(
           categoryLabel,
           detail,
           item,
-          media: firstImage(item.media),
+          media,
           sortValue:
             typeof item.distanceMeters === "number"
               ? item.distanceMeters

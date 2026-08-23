@@ -249,7 +249,7 @@ test("Domov hero prefers its tenant field, then the first gallery image", () => 
   assert.equal(resolveHomeHeroMedia(null, []), null);
 });
 
-test("Domov with a programme shows only today's dated events, nearest first", () => {
+test("Domov with a programme requires a title and photo, then orders today's events by time", () => {
   const now = new Date(2026, 7, 23, 12, 0, 0);
   const result = selectHomeTodayEntries(
     [
@@ -266,24 +266,28 @@ test("Domov with a programme shows only today's dated events, nearest first", ()
                 title: "Večerni koncert",
                 eventStart: "2026-08-23T18:00:00",
                 duration: "90 min",
+                media: [{ kind: "image", url: "/evening.jpg" }],
               },
               {
                 id: "morning",
                 title: "Jutranja vadba",
                 eventStart: "2026-08-23T09:00:00",
                 distance: "200 m",
+                media: [{ kind: "image", url: "/morning.jpg" }],
               },
               {
                 id: "tomorrow",
                 title: "Jutri",
                 eventStart: "2026-08-24T09:00:00",
                 duration: "1 h",
+                media: [{ kind: "image", url: "/tomorrow.jpg" }],
               },
               {
                 id: "missing-detail",
                 title: "Brez uporabne vrstice",
                 eventStart: "2026-08-23T14:00:00",
                 subtitle: "Splošen opis",
+                media: [{ kind: "image", url: "/title-only.jpg" }],
               },
             ],
           },
@@ -312,11 +316,11 @@ test("Domov with a programme shows only today's dated events, nearest first", ()
   assert.equal(result.hasProgramme, true);
   assert.deepEqual(
     result.entries.map((entry) => entry.item.id),
-    ["morning", "evening"],
+    ["morning", "missing-detail", "evening"],
   );
   assert.deepEqual(
     result.entries.map((entry) => entry.categoryLabel),
-    ["Dogodki", "Dogodki"],
+    ["Dogodki", "Dogodki", "Dogodki"],
   );
 });
 
@@ -334,23 +338,37 @@ test("Domov without a programme uses only approved nearby categories", () => {
               title: "Daljša pot",
               distance: "8 km",
               distanceMeters: 8000,
+              media: [{ kind: "image", url: "/far.jpg" }],
             },
             {
               id: "no-detail",
               title: "Brez razdalje",
-              subtitle: "Lep razgled",
+              body: "<p>Lep razgled &amp; mirna pot skozi gozd.</p>",
+              media: [{ kind: "image", url: "/no-distance.jpg" }],
+            },
+            {
+              id: "title-only",
+              title: "Samo naslov",
+              media: [{ kind: "image", url: "/title-only.jpg" }],
+            },
+            {
+              id: "missing-photo",
+              title: "Brez fotografije",
             },
           ],
         },
         {
           id: "heritage",
-          label: "Kulturna dediščina",
+          label: "Heritage",
           items: [
             {
               id: "near",
               title: "Grad",
+              distance: "900 m",
               duration: "15 min",
               distanceMeters: 900,
+              body: "Kratek zgodovinski opis.",
+              media: [{ kind: "image", url: "/castle.jpg" }],
             },
           ],
         },
@@ -363,6 +381,7 @@ test("Domov without a programme uses only approved nearby categories", () => {
               title: "Trgovina",
               distance: "100 m",
               distanceMeters: 100,
+              media: [{ kind: "image", url: "/shop.jpg" }],
             },
           ],
         },
@@ -373,7 +392,19 @@ test("Domov without a programme uses only approved nearby categories", () => {
   assert.equal(result.hasProgramme, false);
   assert.deepEqual(
     result.entries.map((entry) => entry.item.id),
-    ["near", "far"],
+    ["near", "far", "no-detail", "title-only"],
+  );
+  assert.equal(
+    result.entries.find((entry) => entry.item.id === "near")?.detail,
+    "900 m · 15 min · Kratek zgodovinski opis.",
+  );
+  assert.equal(
+    result.entries.find((entry) => entry.item.id === "no-detail")?.detail,
+    "Lep razgled & mirna pot skozi gozd.",
+  );
+  assert.equal(
+    result.entries.find((entry) => entry.item.id === "title-only")?.detail,
+    "",
   );
   assert.equal(selectHomeTodayEntries([]).entries.length, 0);
 });

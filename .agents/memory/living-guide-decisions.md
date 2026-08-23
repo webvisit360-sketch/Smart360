@@ -152,3 +152,9 @@ Guest-host message retention is a strict privacy boundary: a device thread at or
 **Why:** Extending an expired row would silently retain and expose a conversation beyond its promised deletion period.
 
 **How to apply:** Enforce expiry inside each message write transaction, not only in the scheduled sweep or read filters. Preserve the tenant/device uniqueness invariant for the fresh thread, and test both concurrent guest sends and expired host writes.
+
+Domov’s Today cards require a visible item title and an image, not a distance or duration. Their optional detail combines distance, duration, and a short item-text excerpt in that order; the section hides only when no eligible card exists. The fallback sources remain the five approved activity and heritage categories in every supported language.
+
+**Why:** The owner found that the prior distance/duration gate hid all meaningful Meli Pu recommendations even though the content already had titles and photographs.
+
+**How to apply:** Never use generic subtitles as the detail fallback. Match the approved categories across Slovenian, English, German, and Italian labels; exclude commercial and utility categories such as shops, pharmacies, fuel, and ATMs.

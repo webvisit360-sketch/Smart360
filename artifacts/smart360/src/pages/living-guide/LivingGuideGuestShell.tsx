@@ -2261,7 +2261,6 @@ function HomeView({
   onSearch,
   navState,
 }: any) {
-  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
   const now = new Date();
   const eventDestination = datedEventDestination(sections);
   const staySection = sections.find((section: any) => section.key === "stay");
@@ -2306,16 +2305,14 @@ function HomeView({
           )}
           <div className="lg2-hhero-vg" aria-hidden="true" />
           <div className="lg2-hhero-top">
-            {tourUrl && (
-              <button
-                className="lg2-hhero-fab"
-                type="button"
-                onClick={() => navigate(`/${slug}`)}
-                aria-label={t("UI.lg.tour.view")}
-              >
-                <span aria-hidden="true">360</span>
-              </button>
-            )}
+            <button
+              className="lg2-hhero-fab"
+              type="button"
+              onClick={() => navigate(`/${slug}`)}
+              aria-label={t("UI.lg.tour.view")}
+            >
+              <span aria-hidden="true">360</span>
+            </button>
             <button
               className="lg2-hhero-fab"
               type="button"
@@ -2446,7 +2443,7 @@ function HomeView({
                   <div className="tx">
                     <em>{item.categoryLabel}</em>
                     <b>{item.item.title}</b>
-                    <small>{item.detail}</small>
+                      {item.detail && <small>{item.detail}</small>}
                   </div>
                 </button>
               ))}
