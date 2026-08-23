@@ -9,7 +9,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
-import { approveDistanceProposal, runDistanceComputation } from "../lib/distanceEngine";
+import { approveDistanceProposal, revertDistanceProposal, runDistanceComputation } from "../lib/distanceEngine";
 import { invalidateTenantCache } from "./publicTenants";
 
 const router: IRouter = Router();
@@ -17,7 +17,7 @@ router.use("/admin", requireAdmin);
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
 const serialize = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
-async function review(tenantId: string) {
+export async function review(tenantId: string) {
   const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId));
   const data = await db.select({ proposal: itemDistanceProposalsTable, item: itemsTable, category: categoriesTable })
     .from(itemsTable)
@@ -27,15 +27,19 @@ async function review(tenantId: string) {
     .where(and(eq(sectionsTable.tenantId, tenantId), eq(categoriesTable.layout, "poi"), isNull(itemsTable.deletedAt)));
   const counts = { link: 0, coordinates: 0, geocoded: 0, failed: 0, manual: 0, pending: 0, approved: 0, skipped: 0 };
   const rows = data.map(({ proposal, item, category }) => {
-    const manual = item.distanceMeters !== null;
-    const status = manual ? "manual" : proposal?.status ?? "new";
-    if (manual) counts.manual++;
-    else if (proposal && proposal.status in counts) counts[proposal.status as keyof typeof counts]++;
+    // An item value that matches its approved proposal was written BY the
+    // review — show it as "approved", not "manual". Any other stored value
+    // is a manual host decision (typed in Uredi or in the item editor).
+    const approvedByReview = item.distanceMeters !== null &&
+      proposal?.status === "approved" && proposal.distanceMeters === item.distanceMeters;
+    const manual = item.distanceMeters !== null && !approvedByReview;
+    const status = approvedByReview ? "approved" : manual ? "manual" : proposal?.status ?? "new";
+    if (status in counts) counts[status as keyof typeof counts]++;
     if (proposal?.source) counts[proposal.source as "link" | "coordinates" | "geocoded"]++;
     return {
       id: proposal?.id ?? null, itemId: item.id, itemTitle: item.title, categoryLabel: category.label,
       status, source: proposal?.source ?? null, confidence: proposal?.confidence ?? null,
-      latitude: proposal?.latitude ?? null, longitude: proposal?.longitude ?? null, distanceMeters: manual ? item.distanceMeters : proposal?.distanceMeters ?? null,
+      latitude: proposal?.latitude ?? null, longitude: proposal?.longitude ?? null, distanceMeters: item.distanceMeters ?? proposal?.distanceMeters ?? null,
       durationMinutes: proposal?.durationMinutes ?? null, resolvedAddress: proposal?.resolvedAddress ?? null,
       error: proposal?.error ?? null,
       mapsCheckUrl: proposal?.latitude !== null && proposal?.latitude !== undefined && proposal.longitude !== null
@@ -43,7 +47,7 @@ async function review(tenantId: string) {
       manual,
     };
   }).sort((a, b) => {
-    const rank = (row: typeof a) => row.status === "failed" ? 0 : row.status === "pending" && row.confidence === "low" ? 1 : row.status === "pending" ? 2 : row.status === "new" ? 3 : row.status === "manual" ? 5 : 4;
+    const rank = (row: typeof a) => row.status === "failed" ? 0 : row.status === "pending" && row.confidence === "low" ? 1 : row.status === "pending" ? 2 : row.status === "new" ? 3 : row.status === "skipped" ? 4 : row.status === "approved" ? 5 : 6;
     return rank(a) - rank(b) || ((b.distanceMeters ?? Infinity) - (a.distanceMeters ?? Infinity));
   });
   return { tenantReady: Boolean(tenant?.latitude !== null && tenant?.longitude !== null), originLatitude: tenant?.latitude ?? null, originLongitude: tenant?.longitude ?? null, rows, counts };
@@ -98,6 +102,14 @@ router.post("/admin/tenants/:id/distance-review/rows/:rowId/link", async (req, r
   if (!row) return void res.status(404).json({ error: "Predlog ni najden." });
   await db.update(itemsTable).set({ mapQuery: parsed.data.mapUrl }).where(eq(itemsTable.id, row.itemId));
   await runDistanceComputation(tenantId, { limit: 100 });
+  res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
+});
+router.post("/admin/tenants/:id/distance-review/rows/:rowId/revert", async (req, res) => {
+  const tenantId = first(req.params["id"]); const rowId = first(req.params["rowId"]);
+  const [row] = await db.select().from(itemDistanceProposalsTable).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
+  if (!row) return void res.status(404).json({ error: "Predlog ni najden." });
+  await revertDistanceProposal(rowId);
+  await changed(tenantId, "Razveljavljena odločitev pregleda razdalje.");
   res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
 });
 router.post("/admin/tenants/:id/distance-review/approve-bulk", async (req, res) => {

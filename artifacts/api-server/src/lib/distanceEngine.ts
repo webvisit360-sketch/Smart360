@@ -268,3 +268,25 @@ export async function approveDistanceProposal(rowId: string): Promise<number> {
   });
   return row.proposal.distanceMeters;
 }
+
+/**
+ * Undo a review decision (approve, edit, or skip): clears the item's stored
+ * distance and returns the proposal to pending so the host can decide again.
+ * Proposals without a computed distance go back to failed instead of pending.
+ */
+export async function revertDistanceProposal(rowId: string): Promise<void> {
+  const [row] = await db
+    .select({ proposal: itemDistanceProposalsTable, item: itemsTable })
+    .from(itemDistanceProposalsTable)
+    .innerJoin(itemsTable, eq(itemsTable.id, itemDistanceProposalsTable.itemId))
+    .where(eq(itemDistanceProposalsTable.id, rowId));
+  if (!row) throw new Error("Predlog ni najden.");
+  const nextStatus = row.proposal.distanceMeters !== null ? "pending" : "failed";
+  await db.transaction(async (tx) => {
+    await tx.update(itemsTable).set({ distanceMeters: null }).where(eq(itemsTable.id, row.item.id));
+    await tx
+      .update(itemDistanceProposalsTable)
+      .set({ status: nextStatus })
+      .where(eq(itemDistanceProposalsTable.id, rowId));
+  });
+}

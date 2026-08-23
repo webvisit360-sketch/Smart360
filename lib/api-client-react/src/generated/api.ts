@@ -2493,6 +2493,79 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getSetDistanceReviewRowLinkMutationOptions(options));
     }
 
+export const getRevertDistanceReviewRowUrl = (id: string,
+    rowId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review/rows/${rowId}/revert`
+}
+
+/**
+ * @summary Undo an approve/edit/skip decision, returning the row to pending review
+ */
+export const revertDistanceReviewRow = async (id: string,
+    rowId: string, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReviewRow> => {
+
+  return customFetch<DistanceReviewRow>(getRevertDistanceReviewRowUrl(id,rowId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevertDistanceReviewRowMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revertDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revertDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext> => {
+
+const mutationKey = ['revertDistanceReviewRow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revertDistanceReviewRow>>, {id: string;rowId: string}> = (props) => {
+          const {id,rowId} = props ?? {};
+
+          return  revertDistanceReviewRow(id,rowId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevertDistanceReviewRowMutationResult = NonNullable<Awaited<ReturnType<typeof revertDistanceReviewRow>>>
+
+    export type RevertDistanceReviewRowMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Undo an approve/edit/skip decision, returning the row to pending review
+ */
+export const useRevertDistanceReviewRow = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revertDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revertDistanceReviewRow>>,
+        TError,
+        {id: string;rowId: string},
+        TContext
+      > => {
+      return useMutation(getRevertDistanceReviewRowMutationOptions(options));
+    }
+
 export const getDuplicateTenantUrl = (id: string,) => {
 
 

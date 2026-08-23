@@ -1187,6 +1187,33 @@ export const SetDistanceReviewRowLinkResponse = zod.object({
 
 
 /**
+ * @summary Undo an approve/edit/skip decision, returning the row to pending review
+ */
+export const RevertDistanceReviewRowParams = zod.object({
+  "id": zod.coerce.string(),
+  "rowId": zod.coerce.string()
+})
+
+export const RevertDistanceReviewRowResponse = zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})
+
+
+/**
  * @summary Duplicate a tenant with its full section/category tree
  */
 export const DuplicateTenantParams = zod.object({

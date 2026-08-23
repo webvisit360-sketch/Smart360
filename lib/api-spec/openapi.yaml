@@ -533,6 +533,14 @@ paths:
         content: { application/json: { schema: { $ref: "#/components/schemas/DistanceLinkInput" } } }
       responses:
         "200": { description: Recomputed, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
+  /admin/tenants/{id}/distance-review/rows/{rowId}/revert:
+    post:
+      operationId: revertDistanceReviewRow
+      tags: [tenants]
+      summary: Undo an approve/edit/skip decision, returning the row to pending review
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: rowId, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: Reverted, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
   /admin/tenants/{id}/duplicate:
     post:
       operationId: duplicateTenant

@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { distanceInputFingerprint, resolveItemLocation } from "../lib/distanceEngine";
 import { extractCoordsFromGoogleMapsUrl } from "../lib/maps-link";
-import { approveDistanceProposal, runDistanceComputation } from "../lib/distanceEngine";
+import { approveDistanceProposal, revertDistanceProposal, runDistanceComputation } from "../lib/distanceEngine";
+import { review } from "../routes/adminDistanceReview";
 import { db, categoriesTable, geocodeCacheTable, itemDistanceProposalsTable, itemsTable, sectionsTable, tenantsTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 
@@ -92,6 +93,19 @@ test("DB pipeline keeps proposals private, approves explicitly, and preserves ma
     await approveDistanceProposal(pendingProposal!.id);
     const [afterApproval] = await db.select().from(itemsTable).where(eq(itemsTable.id, pendingItem!.id));
     assert.equal(afterApproval!.distanceMeters, 1234);
+    // A review-approved row must stay visible as "approved" — never relabeled "manual".
+    const approvedReview = await review(tenantId);
+    const approvedRow = approvedReview.rows.find((r) => r.itemId === pendingItem!.id);
+    assert.equal(approvedRow!.status, "approved");
+    assert.equal(approvedReview.rows.find((r) => r.itemId === manualItem!.id)!.status, "manual");
+    // Undo returns the row to pending and clears the item value.
+    await revertDistanceProposal(pendingProposal!.id);
+    const [afterRevert] = await db.select().from(itemsTable).where(eq(itemsTable.id, pendingItem!.id));
+    assert.equal(afterRevert!.distanceMeters, null);
+    const revertedReview = await review(tenantId);
+    assert.equal(revertedReview.rows.find((r) => r.itemId === pendingItem!.id)!.status, "pending");
+    // Re-approve so the remainder of the fixture continues from the approved state.
+    await approveDistanceProposal(pendingProposal!.id);
     const manualProposals = await db.select().from(itemDistanceProposalsTable).where(eq(itemDistanceProposalsTable.itemId, manualItem!.id));
     assert.equal(manualProposals.length, 0);
     const [stale] = await db.insert(itemDistanceProposalsTable).values({ itemId: manualItem!.id, tenantId, inputFingerprint: "stale", status: "pending", distanceMeters: 123 }).returning();
