@@ -54,19 +54,62 @@ function cacheControlFor(pathname) {
   return "public, max-age=3600";
 }
 
+/**
+ * Every 4xx/5xx is logged so a broken path never fails silently — but public
+ * scanners can probe missing paths at will, so log volume is bounded: at most
+ * ERROR_LOG_LIMIT lines per minute, then one explicit suppression summary per
+ * window. Nothing is ever dropped silently. URLs are truncated and stripped of
+ * control characters before logging.
+ */
+const ERROR_LOG_LIMIT = 120;
+let errWindowStart = 0;
+let errWindowCount = 0;
+let errSuppressed = 0;
+
+function safeUrl(url) {
+  return String(url ?? "?").slice(0, 200).replace(/[^\x20-\x7e]/g, "?");
+}
+
+function logError(line) {
+  const now = Date.now();
+  if (now - errWindowStart >= 60_000) {
+    if (errSuppressed > 0) {
+      console.error(`[static] ${errSuppressed} error log(s) were suppressed in the last window`);
+    }
+    errWindowStart = now;
+    errWindowCount = 0;
+    errSuppressed = 0;
+  }
+  errWindowCount += 1;
+  if (errWindowCount <= ERROR_LOG_LIMIT) {
+    console.error(line);
+    if (errWindowCount === ERROR_LOG_LIMIT) {
+      console.error(`[static] error-log limit (${ERROR_LOG_LIMIT}/min) reached — suppressing further error logs this window`);
+    }
+  } else {
+    errSuppressed += 1;
+  }
+}
+
+function fail(res, status, req, reason) {
+  logError(`[static] ${status} ${req.method ?? "?"} ${safeUrl(req.url)} — ${reason}`);
+  if (!res.headersSent) {
+    res.writeHead(status, status === 405 ? { allow: "GET, HEAD" } : { "content-type": "text/plain" });
+  }
+  res.end();
+}
+
 const server = createServer(async (req, res) => {
   try {
     if (req.method !== "GET" && req.method !== "HEAD") {
-      res.writeHead(405, { allow: "GET, HEAD" });
-      res.end();
+      fail(res, 405, req, "method not allowed");
       return;
     }
     let pathname;
     try {
       pathname = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
     } catch {
-      res.writeHead(400);
-      res.end();
+      fail(res, 400, req, "malformed URL");
       return;
     }
     if (pathname === "/healthz") {
@@ -76,19 +119,23 @@ const server = createServer(async (req, res) => {
     }
     let filePath = normalize(join(root, pathname));
     if (filePath !== root && !filePath.startsWith(root + "/")) {
-      res.writeHead(403);
-      res.end();
+      fail(res, 403, req, "path escapes web root");
       return;
     }
     let st = await stat(filePath).then((s) => (s.isFile() ? s : null)).catch(() => null);
     if (!st) {
-      // SPA fallback — client-side routing owns every unknown path.
+      // Build artifacts must 404 loudly — serving index.html for a missing
+      // hashed asset would hand HTML to a <script> tag and hide the problem.
+      if (pathname.startsWith("/assets/") || pathname === "/version.json") {
+        fail(res, 404, req, "build artifact missing from dist");
+        return;
+      }
+      // SPA fallback — client-side routing owns every other unknown path.
       pathname = "/index.html";
       filePath = join(root, "index.html");
       st = await stat(filePath).catch(() => null);
       if (!st) {
-        res.writeHead(404, { "content-type": "text/plain" });
-        res.end("not found");
+        fail(res, 404, req, "index.html missing from dist");
         return;
       }
     }
@@ -122,13 +169,17 @@ const server = createServer(async (req, res) => {
       return;
     }
     const stream = createReadStream(filePath);
-    stream.on("error", () => res.destroy());
+    stream.on("error", (err) => {
+      logError(`[static] stream error ${req.method} ${safeUrl(req.url)} — ${err?.message ?? err}`);
+      res.destroy();
+    });
     if (wantsGzip) {
       stream.pipe(createGzip({ level: 6 })).pipe(res);
     } else {
       stream.pipe(res);
     }
-  } catch {
+  } catch (err) {
+    logError(`[static] 500 ${req?.method ?? "?"} ${safeUrl(req?.url)} — ${err?.message ?? err}`);
     if (!res.headersSent) res.writeHead(500);
     res.end();
   }
