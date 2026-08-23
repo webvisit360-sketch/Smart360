@@ -178,3 +178,7 @@ POI Maps link priority: pasted place link > named search "<title>, <SHORT addres
 ## External-link policy (approved via blank-tab bugfix)
 Links the OS hands to a native app (Google Maps URLs, wa.me, viber://, tel:) must be plain same-tab anchors — never window.open, never target="_blank". On iOS, window.open created a tab that the Maps/WhatsApp app then orphaned, stranding guests on a blank page. Regular website links keep target="_blank" + noopener (they render real content, so no blank tab). openExternalMapsUrl was deliberately deleted; do not reintroduce a window.open helper for guest links.
 **How to apply:** any new guest-facing external link: app-handoff → bare `<a href>`; website → `<a target="_blank" rel="noopener noreferrer">`.
+
+## Real-sun themes (Aug 2026)
+Themes follow NOAA-computed sun times at the tenant's coordinates (civil dawn/dusk −6°, sunrise/sunset zenith 90.833°); noc=dusk→dawn, jutro=dawn→sunrise+90, dan=…→sunset−90, vecer=…→dusk. SunCalc's simplified algorithm is 1–2 min off the owner's binding reference table — only NOAA matches to the minute.
+**Seam rule:** solar times are computed per UTC day, so theme + next-boundary MUST come from one resolver that merges UTC day −1/0/+1 boundaries (resolveSunWindow); a single-day lookup mis-themes eastern longitudes. Null (no coords, polar day/night) → fixed-hour fallback, never crash.

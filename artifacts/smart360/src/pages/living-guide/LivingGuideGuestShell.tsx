@@ -363,7 +363,13 @@ export default function LivingGuideGuestShell({
     import.meta.env.DEV && isLivingTheme(requestedTheme)
       ? requestedTheme
       : undefined;
-  const theme = useLivingTheme(themeOverride);
+  // Real-sun themes: tenant coordinates (derived from the pasted Maps link)
+  // drive dawn/sunrise/sunset/dusk; tenants without coordinates keep the
+  // fixed-hour clock (handled inside the hook — never crashes).
+  const theme = useLivingTheme(themeOverride, {
+    latitude: tenant?.latitude ?? null,
+    longitude: tenant?.longitude ?? null,
+  });
   const t = makeT(tenant, lang);
   const rootRef = useRef<HTMLDivElement>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
