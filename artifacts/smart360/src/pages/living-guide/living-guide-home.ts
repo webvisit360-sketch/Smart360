@@ -2,6 +2,7 @@ import {
   findDatedEventDestination,
   itemEventTimestamp,
 } from "./living-guide-nav-resolver";
+import { itemDistanceText } from "./living-guide-formatters";
 
 const FALLBACK_CATEGORY_LABELS = new Set([
   "kolesarjenje",
@@ -116,7 +117,9 @@ export type HomeTodayEntry = {
 };
 
 function cardDetail(item: any): string {
-  return [item?.distance, item?.duration, shortExcerpt(item)]
+  // Computed distance (distanceMeters) first — same value and formatting the
+  // Okolica cards use — with the legacy free-text field as fallback.
+  return [itemDistanceText(item), item?.duration, shortExcerpt(item)]
     .filter(
       (value): value is string =>
         typeof value === "string" && value.trim().length > 0,
