@@ -1,3 +1,5 @@
+import { mapsHrefForQuery } from "./maps-href";
+
 export type TenantMapsIntent = "search" | "directions";
 
 type TenantLocation = {
@@ -67,7 +69,12 @@ export function resolveTenantMapsUrl(
   // mapQuery is the existing manually authored address/search fallback.
   const fallback =
     nonBlankString(tenant.mapQuery) ?? nonBlankString(tenant.address);
-  return fallback ? googleMapsUrl(fallback, intent) : null;
+  if (!fallback) return null;
+  // A legacy mapQuery can itself be a pasted destination link. It must never
+  // become the text of a Google search URL.
+  if (intent === "search") return mapsHrefForQuery(fallback);
+  if (safeExplicitUrl(fallback)) return safeExplicitUrl(fallback);
+  return googleMapsUrl(fallback, intent);
 }
 
 export function openExternalMapsUrl(

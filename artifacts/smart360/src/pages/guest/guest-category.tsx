@@ -14,6 +14,7 @@ import { GalleryStrip, MediaThumb, frameStyle } from "./media-viewer";
 import { getTextVars } from "./cover-vars";
 import { useThemeAttr } from "./use-theme-attr";
 import { makeT, plural, resolveLang, clampLang, SL_UI, DIFFICULTY_KEYS } from "./i18n";
+import { mapsHrefForQuery } from "@/lib/maps-href";
 
 export default function GuestCategory() {
   const [, params] = useRoute("/:slug/c/:categoryId");
@@ -146,8 +147,8 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
             <div className="actions">
               {item.phone && <a className="act act--w" href={`tel:${item.phone}`} aria-label={t("UI.contact.call")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg></a>}
               {item.mapQuery && (item.mapQuery === tenant.mapQuery
-                ? <a className="act act--fill" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
-                : <a className="act act--fill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
+                ? <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery, "directions") ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
+                : <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
             </div>
           )}
         </div>
@@ -242,7 +243,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
           {(item.mapQuery) && (
             <div className="actions">
-              <a className="act act--fill" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.mapQuery || "")}`} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
+              <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
             </div>
           )}
         </div>

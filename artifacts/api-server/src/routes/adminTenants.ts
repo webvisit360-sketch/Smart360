@@ -45,6 +45,7 @@ import {
   TenantLocationError,
   validateTenantCoordinatePair,
 } from "../lib/tenant-location";
+import { extractCoordsFromGoogleMapsUrl } from "../lib/maps-link";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -356,21 +357,28 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  const nextLatitude =
-    parsed.data.latitude === undefined
-      ? before.latitude
-      : parsed.data.latitude;
-  const nextLongitude =
-    parsed.data.longitude === undefined
-      ? before.longitude
-      : parsed.data.longitude;
-  const coordinateError = validateTenantCoordinatePair(
-    nextLatitude,
-    nextLongitude,
-  );
-  if (coordinateError) {
-    res.status(400).json({ error: coordinateError });
+  const requestData = parsed.data as Record<string, unknown>;
+  const coordinateOverride = requestData["coordinateOverride"] === true;
+  const requestedLatitude = requestData["latitude"];
+  const requestedLongitude = requestData["longitude"];
+  if (
+    !coordinateOverride &&
+    (requestedLatitude !== undefined || requestedLongitude !== undefined)
+  ) {
+    res.status(400).json({
+      error: "Koordinate se samodejno določijo iz Google Maps povezave.",
+    });
     return;
+  }
+  if (coordinateOverride) {
+    const coordinateError = validateTenantCoordinatePair(
+      requestedLatitude === undefined ? before.latitude : requestedLatitude as number | null,
+      requestedLongitude === undefined ? before.longitude : requestedLongitude as number | null,
+    );
+    if (coordinateError) {
+      res.status(400).json({ error: coordinateError });
+      return;
+    }
   }
   const newSlug = (parsed.data as Record<string, unknown>)["slug"];
   if (typeof newSlug === "string" && newSlug !== before.slug) {
@@ -387,6 +395,8 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     tourUrl: tourUrlRaw,
     livingGuideNav: livingGuideNavRaw,
     mapUrl: mapUrlRaw,
+    latitude: _latitude,
+    longitude: _longitude,
     ...restData
   } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
@@ -407,7 +417,15 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   }
   if (mapUrlRaw !== undefined) {
     try {
-      updateData["mapUrl"] = normalizeTenantMapUrl(mapUrlRaw);
+      const mapUrl = normalizeTenantMapUrl(mapUrlRaw);
+      updateData["mapUrl"] = mapUrl;
+      // Location is owned by the pasted Maps URL; a short link is retained as
+      // a destination, but cannot be resolved without expanding it.
+      if (!coordinateOverride) {
+        const coords = extractCoordsFromGoogleMapsUrl(mapUrl);
+        updateData["latitude"] = coords?.lat ?? null;
+        updateData["longitude"] = coords?.lng ?? null;
+      }
     } catch (error) {
       if (error instanceof TenantLocationError) {
         res.status(400).json({ error: error.message });
@@ -415,6 +433,12 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       }
       throw error;
     }
+  }
+  if (coordinateOverride) {
+    updateData["latitude"] =
+      requestedLatitude === undefined ? before.latitude : requestedLatitude;
+    updateData["longitude"] =
+      requestedLongitude === undefined ? before.longitude : requestedLongitude;
   }
   if (orderPasswordRaw !== undefined) {
     updateData["orderPassword"] = orderPasswordRaw?.trim() || null;

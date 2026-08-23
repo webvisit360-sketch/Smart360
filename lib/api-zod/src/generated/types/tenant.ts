@@ -53,17 +53,21 @@ export interface Tenant {
   /** @nullable */
   mapUrl?: string | null;
   /**
+     * Derived from mapUrl; writable only with coordinateOverride
      * @minimum -90
      * @maximum 90
      * @nullable
      */
   latitude?: number | null;
   /**
+     * Derived from mapUrl; writable only with coordinateOverride
      * @minimum -180
      * @maximum 180
      * @nullable
      */
   longitude?: number | null;
+  /** Super-admin correction path for derived coordinates */
+  coordinateOverride?: boolean;
   /** @nullable */
   wifiSsid?: string | null;
   /** @nullable */

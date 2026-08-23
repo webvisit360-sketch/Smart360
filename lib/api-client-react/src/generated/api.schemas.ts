@@ -135,6 +135,114 @@ export interface AuthEventList {
   events: AuthEvent[];
 }
 
+export interface DistanceRunInput {
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  limit?: number;
+  retryFailed?: boolean;
+}
+
+export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];
+
+
+export const DistanceBulkApproveInputConfidence = {
+  high: 'high',
+} as const;
+
+export interface DistanceBulkApproveInput {
+  confidence: DistanceBulkApproveInputConfidence;
+}
+
+export interface DistanceValueInput {
+  /** @minimum 0 */
+  distanceMeters: number;
+}
+
+export interface DistanceLinkInput {
+  mapUrl: string;
+}
+
+export type DistanceReviewRowStatus = typeof DistanceReviewRowStatus[keyof typeof DistanceReviewRowStatus];
+
+
+export const DistanceReviewRowStatus = {
+  new: 'new',
+  pending: 'pending',
+  approved: 'approved',
+  skipped: 'skipped',
+  failed: 'failed',
+  manual: 'manual',
+} as const;
+
+export interface DistanceReviewRow {
+  /** @nullable */
+  id: string | null;
+  itemId: string;
+  /** @nullable */
+  itemTitle?: string | null;
+  categoryLabel: string;
+  status: DistanceReviewRowStatus;
+  /** @nullable */
+  source?: string | null;
+  /** @nullable */
+  confidence?: string | null;
+  /** @nullable */
+  latitude?: number | null;
+  /** @nullable */
+  longitude?: number | null;
+  /** @nullable */
+  distanceMeters?: number | null;
+  /** @nullable */
+  durationMinutes?: number | null;
+  /** @nullable */
+  resolvedAddress?: string | null;
+  /** @nullable */
+  error?: string | null;
+  /** @nullable */
+  mapsCheckUrl?: string | null;
+  manual: boolean;
+}
+
+export type DistanceReviewCounts = {
+  link: number;
+  coordinates: number;
+  geocoded: number;
+  failed: number;
+  manual: number;
+  pending: number;
+  approved: number;
+  skipped: number;
+};
+
+export interface DistanceReview {
+  tenantReady: boolean;
+  /** @nullable */
+  originLatitude: number | null;
+  /** @nullable */
+  originLongitude: number | null;
+  rows: DistanceReviewRow[];
+  counts: DistanceReviewCounts;
+}
+
+export type DistanceRunResultCounts = {
+  link: number;
+  coordinates: number;
+  geocoded: number;
+  failed: number;
+  manual: number;
+  pending: number;
+  approved: number;
+  skipped: number;
+};
+
+export interface DistanceRunResult {
+  processed: number;
+  remaining: number;
+  counts: DistanceRunResultCounts;
+}
+
 /**
  * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
  */
@@ -203,17 +311,21 @@ export interface Tenant {
   /** @nullable */
   mapUrl?: string | null;
   /**
+     * Derived from mapUrl; writable only with coordinateOverride
      * @minimum -90
      * @maximum 90
      * @nullable
      */
   latitude?: number | null;
   /**
+     * Derived from mapUrl; writable only with coordinateOverride
      * @minimum -180
      * @maximum 180
      * @nullable
      */
   longitude?: number | null;
+  /** Super-admin correction path for derived coordinates */
+  coordinateOverride?: boolean;
   /** @nullable */
   wifiSsid?: string | null;
   /** @nullable */
@@ -377,17 +489,21 @@ export interface TenantUpdate {
   /** @nullable */
   mapUrl?: string | null;
   /**
+     * Derived from mapUrl; writable only with coordinateOverride
      * @minimum -90
      * @maximum 90
      * @nullable
      */
   latitude?: number | null;
   /**
+     * Derived from mapUrl; writable only with coordinateOverride
      * @minimum -180
      * @maximum 180
      * @nullable
      */
   longitude?: number | null;
+  /** Super-admin correction path for derived coordinates */
+  coordinateOverride?: boolean;
   /** @nullable */
   wifiSsid?: string | null;
   /** @nullable */

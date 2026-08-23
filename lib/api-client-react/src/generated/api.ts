@@ -32,6 +32,13 @@ import type {
   CleanupRestoreRequest,
   CleanupRestoreResult,
   CleanupRunsResult,
+  DistanceBulkApproveInput,
+  DistanceLinkInput,
+  DistanceReview,
+  DistanceReviewRow,
+  DistanceRunInput,
+  DistanceRunResult,
+  DistanceValueInput,
   DuplicateTenantResult,
   EnrollOptionsBody,
   EnrollResult,
@@ -2011,6 +2018,479 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteTenantMutationOptions(options));
+    }
+
+export const getGetDistanceReviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review`
+}
+
+export const getDistanceReview = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReview> => {
+
+  return customFetch<DistanceReview>(getGetDistanceReviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDistanceReviewQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/distance-review`
+    ] as const;
+    }
+
+
+export const getGetDistanceReviewQueryOptions = <TData = Awaited<ReturnType<typeof getDistanceReview>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDistanceReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDistanceReviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDistanceReview>>> = ({ signal }) => getDistanceReview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDistanceReview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDistanceReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getDistanceReview>>>
+export type GetDistanceReviewQueryError = ErrorType<unknown>
+
+
+
+export function useGetDistanceReview<TData = Awaited<ReturnType<typeof getDistanceReview>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDistanceReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDistanceReviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRunDistanceReviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review`
+}
+
+export const runDistanceReview = async (id: string,
+    distanceRunInput?: DistanceRunInput, options?: Parameters<typeof customFetch>[1]): Promise<DistanceRunResult> => {
+
+  return customFetch<DistanceRunResult>(getRunDistanceReviewUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(distanceRunInput)
+  }
+);}
+
+
+
+
+
+export const getRunDistanceReviewMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDistanceReview>>, TError,{id: string;data?: BodyType<DistanceRunInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDistanceReview>>, TError,{id: string;data?: BodyType<DistanceRunInput>}, TContext> => {
+
+const mutationKey = ['runDistanceReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDistanceReview>>, {id: string;data?: BodyType<DistanceRunInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  runDistanceReview(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDistanceReviewMutationResult = NonNullable<Awaited<ReturnType<typeof runDistanceReview>>>
+    export type RunDistanceReviewMutationBody = BodyType<DistanceRunInput> | undefined
+    export type RunDistanceReviewMutationError = ErrorType<unknown>
+
+    export const useRunDistanceReview = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDistanceReview>>, TError,{id: string;data?: BodyType<DistanceRunInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runDistanceReview>>,
+        TError,
+        {id: string;data?: BodyType<DistanceRunInput>},
+        TContext
+      > => {
+      return useMutation(getRunDistanceReviewMutationOptions(options));
+    }
+
+export const getApproveDistanceReviewBulkUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review/approve-bulk`
+}
+
+export const approveDistanceReviewBulk = async (id: string,
+    distanceBulkApproveInput: DistanceBulkApproveInput, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReview> => {
+
+  return customFetch<DistanceReview>(getApproveDistanceReviewBulkUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(distanceBulkApproveInput)
+  }
+);}
+
+
+
+
+
+export const getApproveDistanceReviewBulkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveDistanceReviewBulk>>, TError,{id: string;data: BodyType<DistanceBulkApproveInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveDistanceReviewBulk>>, TError,{id: string;data: BodyType<DistanceBulkApproveInput>}, TContext> => {
+
+const mutationKey = ['approveDistanceReviewBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveDistanceReviewBulk>>, {id: string;data: BodyType<DistanceBulkApproveInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  approveDistanceReviewBulk(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveDistanceReviewBulkMutationResult = NonNullable<Awaited<ReturnType<typeof approveDistanceReviewBulk>>>
+    export type ApproveDistanceReviewBulkMutationBody = BodyType<DistanceBulkApproveInput>
+    export type ApproveDistanceReviewBulkMutationError = ErrorType<unknown>
+
+    export const useApproveDistanceReviewBulk = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveDistanceReviewBulk>>, TError,{id: string;data: BodyType<DistanceBulkApproveInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveDistanceReviewBulk>>,
+        TError,
+        {id: string;data: BodyType<DistanceBulkApproveInput>},
+        TContext
+      > => {
+      return useMutation(getApproveDistanceReviewBulkMutationOptions(options));
+    }
+
+export const getApproveDistanceReviewRowUrl = (id: string,
+    rowId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review/rows/${rowId}/approve`
+}
+
+export const approveDistanceReviewRow = async (id: string,
+    rowId: string, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReviewRow> => {
+
+  return customFetch<DistanceReviewRow>(getApproveDistanceReviewRowUrl(id,rowId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveDistanceReviewRowMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext> => {
+
+const mutationKey = ['approveDistanceReviewRow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveDistanceReviewRow>>, {id: string;rowId: string}> = (props) => {
+          const {id,rowId} = props ?? {};
+
+          return  approveDistanceReviewRow(id,rowId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveDistanceReviewRowMutationResult = NonNullable<Awaited<ReturnType<typeof approveDistanceReviewRow>>>
+
+    export type ApproveDistanceReviewRowMutationError = ErrorType<unknown>
+
+    export const useApproveDistanceReviewRow = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveDistanceReviewRow>>,
+        TError,
+        {id: string;rowId: string},
+        TContext
+      > => {
+      return useMutation(getApproveDistanceReviewRowMutationOptions(options));
+    }
+
+export const getSkipDistanceReviewRowUrl = (id: string,
+    rowId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review/rows/${rowId}/skip`
+}
+
+export const skipDistanceReviewRow = async (id: string,
+    rowId: string, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReviewRow> => {
+
+  return customFetch<DistanceReviewRow>(getSkipDistanceReviewRowUrl(id,rowId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSkipDistanceReviewRowMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skipDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof skipDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext> => {
+
+const mutationKey = ['skipDistanceReviewRow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skipDistanceReviewRow>>, {id: string;rowId: string}> = (props) => {
+          const {id,rowId} = props ?? {};
+
+          return  skipDistanceReviewRow(id,rowId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkipDistanceReviewRowMutationResult = NonNullable<Awaited<ReturnType<typeof skipDistanceReviewRow>>>
+
+    export type SkipDistanceReviewRowMutationError = ErrorType<unknown>
+
+    export const useSkipDistanceReviewRow = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skipDistanceReviewRow>>, TError,{id: string;rowId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof skipDistanceReviewRow>>,
+        TError,
+        {id: string;rowId: string},
+        TContext
+      > => {
+      return useMutation(getSkipDistanceReviewRowMutationOptions(options));
+    }
+
+export const getSetDistanceReviewRowValueUrl = (id: string,
+    rowId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review/rows/${rowId}/value`
+}
+
+export const setDistanceReviewRowValue = async (id: string,
+    rowId: string,
+    distanceValueInput: DistanceValueInput, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReviewRow> => {
+
+  return customFetch<DistanceReviewRow>(getSetDistanceReviewRowValueUrl(id,rowId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(distanceValueInput)
+  }
+);}
+
+
+
+
+
+export const getSetDistanceReviewRowValueMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDistanceReviewRowValue>>, TError,{id: string;rowId: string;data: BodyType<DistanceValueInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDistanceReviewRowValue>>, TError,{id: string;rowId: string;data: BodyType<DistanceValueInput>}, TContext> => {
+
+const mutationKey = ['setDistanceReviewRowValue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDistanceReviewRowValue>>, {id: string;rowId: string;data: BodyType<DistanceValueInput>}> = (props) => {
+          const {id,rowId,data} = props ?? {};
+
+          return  setDistanceReviewRowValue(id,rowId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDistanceReviewRowValueMutationResult = NonNullable<Awaited<ReturnType<typeof setDistanceReviewRowValue>>>
+    export type SetDistanceReviewRowValueMutationBody = BodyType<DistanceValueInput>
+    export type SetDistanceReviewRowValueMutationError = ErrorType<unknown>
+
+    export const useSetDistanceReviewRowValue = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDistanceReviewRowValue>>, TError,{id: string;rowId: string;data: BodyType<DistanceValueInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setDistanceReviewRowValue>>,
+        TError,
+        {id: string;rowId: string;data: BodyType<DistanceValueInput>},
+        TContext
+      > => {
+      return useMutation(getSetDistanceReviewRowValueMutationOptions(options));
+    }
+
+export const getSetDistanceReviewRowLinkUrl = (id: string,
+    rowId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/distance-review/rows/${rowId}/link`
+}
+
+export const setDistanceReviewRowLink = async (id: string,
+    rowId: string,
+    distanceLinkInput: DistanceLinkInput, options?: Parameters<typeof customFetch>[1]): Promise<DistanceReviewRow> => {
+
+  return customFetch<DistanceReviewRow>(getSetDistanceReviewRowLinkUrl(id,rowId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(distanceLinkInput)
+  }
+);}
+
+
+
+
+
+export const getSetDistanceReviewRowLinkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDistanceReviewRowLink>>, TError,{id: string;rowId: string;data: BodyType<DistanceLinkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDistanceReviewRowLink>>, TError,{id: string;rowId: string;data: BodyType<DistanceLinkInput>}, TContext> => {
+
+const mutationKey = ['setDistanceReviewRowLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDistanceReviewRowLink>>, {id: string;rowId: string;data: BodyType<DistanceLinkInput>}> = (props) => {
+          const {id,rowId,data} = props ?? {};
+
+          return  setDistanceReviewRowLink(id,rowId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDistanceReviewRowLinkMutationResult = NonNullable<Awaited<ReturnType<typeof setDistanceReviewRowLink>>>
+    export type SetDistanceReviewRowLinkMutationBody = BodyType<DistanceLinkInput>
+    export type SetDistanceReviewRowLinkMutationError = ErrorType<unknown>
+
+    export const useSetDistanceReviewRowLink = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDistanceReviewRowLink>>, TError,{id: string;rowId: string;data: BodyType<DistanceLinkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setDistanceReviewRowLink>>,
+        TError,
+        {id: string;rowId: string;data: BodyType<DistanceLinkInput>},
+        TContext
+      > => {
+      return useMutation(getSetDistanceReviewRowLinkMutationOptions(options));
     }
 
 export const getDuplicateTenantUrl = (id: string,) => {

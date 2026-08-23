@@ -470,6 +470,69 @@ paths:
       responses:
         "204":
           description: Deleted
+  /admin/tenants/{id}/distance-review:
+    get:
+      operationId: getDistanceReview
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200":
+          description: Distance review rows
+          content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReview" } } }
+    post:
+      operationId: runDistanceReview
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { $ref: "#/components/schemas/DistanceRunInput" } } }
+      responses:
+        "200":
+          description: Computation progress
+          content: { application/json: { schema: { $ref: "#/components/schemas/DistanceRunResult" } } }
+  /admin/tenants/{id}/distance-review/approve-bulk:
+    post:
+      operationId: approveDistanceReviewBulk
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/DistanceBulkApproveInput" } } }
+      responses:
+        "200": { description: Approved, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReview" } } } }
+  /admin/tenants/{id}/distance-review/rows/{rowId}/approve:
+    post:
+      operationId: approveDistanceReviewRow
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: rowId, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: Approved, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
+  /admin/tenants/{id}/distance-review/rows/{rowId}/skip:
+    post:
+      operationId: skipDistanceReviewRow
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: rowId, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: Skipped, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
+  /admin/tenants/{id}/distance-review/rows/{rowId}/value:
+    post:
+      operationId: setDistanceReviewRowValue
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: rowId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/DistanceValueInput" } } }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
+  /admin/tenants/{id}/distance-review/rows/{rowId}/link:
+    post:
+      operationId: setDistanceReviewRowLink
+      tags: [tenants]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: rowId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/DistanceLinkInput" } } }
+      responses:
+        "200": { description: Recomputed, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
   /admin/tenants/{id}/duplicate:
     post:
       operationId: duplicateTenant
@@ -1753,6 +1816,80 @@ components:
           items:
             $ref: "#/components/schemas/AuthEvent"
       required: [events]
+    DistanceRunInput:
+      type: object
+      properties:
+        limit: { type: number, minimum: 1, maximum: 100 }
+        retryFailed: { type: boolean }
+    DistanceBulkApproveInput:
+      type: object
+      properties: { confidence: { type: string, enum: [high] } }
+      required: [confidence]
+    DistanceValueInput:
+      type: object
+      properties: { distanceMeters: { type: number, minimum: 0 } }
+      required: [distanceMeters]
+    DistanceLinkInput:
+      type: object
+      properties: { mapUrl: { type: string } }
+      required: [mapUrl]
+    DistanceReviewRow:
+      type: object
+      properties:
+        id: { type: ["string", "null"] }
+        itemId: { type: string }
+        itemTitle: { type: ["string", "null"] }
+        categoryLabel: { type: string }
+        status: { type: string, enum: [new, pending, approved, skipped, failed, manual] }
+        source: { type: ["string", "null"] }
+        confidence: { type: ["string", "null"] }
+        latitude: { type: ["number", "null"] }
+        longitude: { type: ["number", "null"] }
+        distanceMeters: { type: ["number", "null"] }
+        durationMinutes: { type: ["number", "null"] }
+        resolvedAddress: { type: ["string", "null"] }
+        error: { type: ["string", "null"] }
+        mapsCheckUrl: { type: ["string", "null"] }
+        manual: { type: boolean }
+      required: [id, itemId, categoryLabel, status, manual]
+    DistanceReview:
+      type: object
+      properties:
+        tenantReady: { type: boolean }
+        originLatitude: { type: ["number", "null"] }
+        originLongitude: { type: ["number", "null"] }
+        rows: { type: array, items: { $ref: "#/components/schemas/DistanceReviewRow" } }
+        counts:
+          type: object
+          properties:
+            link: { type: number }
+            coordinates: { type: number }
+            geocoded: { type: number }
+            failed: { type: number }
+            manual: { type: number }
+            pending: { type: number }
+            approved: { type: number }
+            skipped: { type: number }
+          required: [link, coordinates, geocoded, failed, manual, pending, approved, skipped]
+      required: [tenantReady, originLatitude, originLongitude, rows, counts]
+    DistanceRunResult:
+      type: object
+      properties:
+        processed: { type: number }
+        remaining: { type: number }
+        counts:
+          type: object
+          properties:
+            link: { type: number }
+            coordinates: { type: number }
+            geocoded: { type: number }
+            failed: { type: number }
+            manual: { type: number }
+            pending: { type: number }
+            approved: { type: number }
+            skipped: { type: number }
+          required: [link, coordinates, geocoded, failed, manual, pending, approved, skipped]
+      required: [processed, remaining, counts]
     Tenant:
       type: object
       properties:
@@ -1789,10 +1926,15 @@ components:
           type: ["number", "null"]
           minimum: -90
           maximum: 90
+          description: Derived from mapUrl; writable only with coordinateOverride
         longitude:
           type: ["number", "null"]
           minimum: -180
           maximum: 180
+          description: Derived from mapUrl; writable only with coordinateOverride
+        coordinateOverride:
+          type: boolean
+          description: Super-admin correction path for derived coordinates
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
         wifiEnc: { type: ["string", "null"], description: "WPA | WEP | nopass; null = WPA" }
@@ -1894,10 +2036,15 @@ components:
           type: ["number", "null"]
           minimum: -90
           maximum: 90
+          description: Derived from mapUrl; writable only with coordinateOverride
         longitude:
           type: ["number", "null"]
           minimum: -180
           maximum: 180
+          description: Derived from mapUrl; writable only with coordinateOverride
+        coordinateOverride:
+          type: boolean
+          description: Super-admin correction path for derived coordinates
         wifiSsid: { type: ["string", "null"] }
         wifiPass: { type: ["string", "null"] }
         wifiEnc: { type: ["string", "null"] }

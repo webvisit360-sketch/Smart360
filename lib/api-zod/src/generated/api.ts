@@ -67,8 +67,9 @@ export const GetPublicTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(getPublicTenantResponseOneLatitudeMin).max(getPublicTenantResponseOneLatitudeMax).nullish(),
-  "longitude": zod.number().min(getPublicTenantResponseOneLongitudeMin).max(getPublicTenantResponseOneLongitudeMax).nullish(),
+  "latitude": zod.number().min(getPublicTenantResponseOneLatitudeMin).max(getPublicTenantResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(getPublicTenantResponseOneLongitudeMin).max(getPublicTenantResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -501,8 +502,9 @@ export const ListTenantsResponseItem = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(listTenantsResponseLatitudeMin).max(listTenantsResponseLatitudeMax).nullish(),
-  "longitude": zod.number().min(listTenantsResponseLongitudeMin).max(listTenantsResponseLongitudeMax).nullish(),
+  "latitude": zod.number().min(listTenantsResponseLatitudeMin).max(listTenantsResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(listTenantsResponseLongitudeMin).max(listTenantsResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -586,8 +588,9 @@ export const CreateTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(createTenantResponseLatitudeMin).max(createTenantResponseLatitudeMax).nullish(),
-  "longitude": zod.number().min(createTenantResponseLongitudeMin).max(createTenantResponseLongitudeMax).nullish(),
+  "latitude": zod.number().min(createTenantResponseLatitudeMin).max(createTenantResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(createTenantResponseLongitudeMin).max(createTenantResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -674,8 +677,9 @@ export const GetTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(getTenantResponseOneLatitudeMin).max(getTenantResponseOneLatitudeMax).nullish(),
-  "longitude": zod.number().min(getTenantResponseOneLongitudeMin).max(getTenantResponseOneLongitudeMax).nullish(),
+  "latitude": zod.number().min(getTenantResponseOneLatitudeMin).max(getTenantResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(getTenantResponseOneLongitudeMin).max(getTenantResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -840,8 +844,9 @@ export const UpdateTenantBody = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(updateTenantBodyLatitudeMin).max(updateTenantBodyLatitudeMax).nullish(),
-  "longitude": zod.number().min(updateTenantBodyLongitudeMin).max(updateTenantBodyLongitudeMax).nullish(),
+  "latitude": zod.number().min(updateTenantBodyLatitudeMin).max(updateTenantBodyLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(updateTenantBodyLongitudeMin).max(updateTenantBodyLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish(),
@@ -914,8 +919,9 @@ export const UpdateTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(updateTenantResponseLatitudeMin).max(updateTenantResponseLatitudeMax).nullish(),
-  "longitude": zod.number().min(updateTenantResponseLongitudeMin).max(updateTenantResponseLongitudeMax).nullish(),
+  "latitude": zod.number().min(updateTenantResponseLatitudeMin).max(updateTenantResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(updateTenantResponseLongitudeMin).max(updateTenantResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -961,6 +967,223 @@ export const DeleteTenantParams = zod.object({
 })
 
 export const DeleteTenantResponse = zod.void()
+
+
+export const GetDistanceReviewParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetDistanceReviewResponse = zod.object({
+  "tenantReady": zod.boolean(),
+  "originLatitude": zod.number().nullable(),
+  "originLongitude": zod.number().nullable(),
+  "rows": zod.array(zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})),
+  "counts": zod.object({
+  "link": zod.number(),
+  "coordinates": zod.number(),
+  "geocoded": zod.number(),
+  "failed": zod.number(),
+  "manual": zod.number(),
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "skipped": zod.number()
+})
+})
+
+
+export const RunDistanceReviewParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const runDistanceReviewBodyLimitMax = 100;
+
+
+
+export const RunDistanceReviewBody = zod.object({
+  "limit": zod.number().min(1).max(runDistanceReviewBodyLimitMax).optional(),
+  "retryFailed": zod.boolean().optional()
+})
+
+export const RunDistanceReviewResponse = zod.object({
+  "processed": zod.number(),
+  "remaining": zod.number(),
+  "counts": zod.object({
+  "link": zod.number(),
+  "coordinates": zod.number(),
+  "geocoded": zod.number(),
+  "failed": zod.number(),
+  "manual": zod.number(),
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "skipped": zod.number()
+})
+})
+
+
+export const ApproveDistanceReviewBulkParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ApproveDistanceReviewBulkBody = zod.object({
+  "confidence": zod.enum(['high'])
+})
+
+export const ApproveDistanceReviewBulkResponse = zod.object({
+  "tenantReady": zod.boolean(),
+  "originLatitude": zod.number().nullable(),
+  "originLongitude": zod.number().nullable(),
+  "rows": zod.array(zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})),
+  "counts": zod.object({
+  "link": zod.number(),
+  "coordinates": zod.number(),
+  "geocoded": zod.number(),
+  "failed": zod.number(),
+  "manual": zod.number(),
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "skipped": zod.number()
+})
+})
+
+
+export const ApproveDistanceReviewRowParams = zod.object({
+  "id": zod.coerce.string(),
+  "rowId": zod.coerce.string()
+})
+
+export const ApproveDistanceReviewRowResponse = zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})
+
+
+export const SkipDistanceReviewRowParams = zod.object({
+  "id": zod.coerce.string(),
+  "rowId": zod.coerce.string()
+})
+
+export const SkipDistanceReviewRowResponse = zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})
+
+
+export const SetDistanceReviewRowValueParams = zod.object({
+  "id": zod.coerce.string(),
+  "rowId": zod.coerce.string()
+})
+
+export const setDistanceReviewRowValueBodyDistanceMetersMin = 0;
+
+
+
+export const SetDistanceReviewRowValueBody = zod.object({
+  "distanceMeters": zod.number().min(setDistanceReviewRowValueBodyDistanceMetersMin)
+})
+
+export const SetDistanceReviewRowValueResponse = zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})
+
+
+export const SetDistanceReviewRowLinkParams = zod.object({
+  "id": zod.coerce.string(),
+  "rowId": zod.coerce.string()
+})
+
+export const SetDistanceReviewRowLinkBody = zod.object({
+  "mapUrl": zod.string()
+})
+
+export const SetDistanceReviewRowLinkResponse = zod.object({
+  "id": zod.string().nullable(),
+  "itemId": zod.string(),
+  "itemTitle": zod.string().nullish(),
+  "categoryLabel": zod.string(),
+  "status": zod.enum(['new', 'pending', 'approved', 'skipped', 'failed', 'manual']),
+  "source": zod.string().nullish(),
+  "confidence": zod.string().nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "distanceMeters": zod.number().nullish(),
+  "durationMinutes": zod.number().nullish(),
+  "resolvedAddress": zod.string().nullish(),
+  "error": zod.string().nullish(),
+  "mapsCheckUrl": zod.string().nullish(),
+  "manual": zod.boolean()
+})
 
 
 /**
@@ -1012,8 +1235,9 @@ export const DuplicateTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(duplicateTenantResponseTenantLatitudeMin).max(duplicateTenantResponseTenantLatitudeMax).nullish(),
-  "longitude": zod.number().min(duplicateTenantResponseTenantLongitudeMin).max(duplicateTenantResponseTenantLongitudeMax).nullish(),
+  "latitude": zod.number().min(duplicateTenantResponseTenantLatitudeMin).max(duplicateTenantResponseTenantLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(duplicateTenantResponseTenantLongitudeMin).max(duplicateTenantResponseTenantLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
@@ -1105,8 +1329,9 @@ export const RenewTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(renewTenantResponseLatitudeMin).max(renewTenantResponseLatitudeMax).nullish(),
-  "longitude": zod.number().min(renewTenantResponseLongitudeMin).max(renewTenantResponseLongitudeMax).nullish(),
+  "latitude": zod.number().min(renewTenantResponseLatitudeMin).max(renewTenantResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(renewTenantResponseLongitudeMin).max(renewTenantResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),

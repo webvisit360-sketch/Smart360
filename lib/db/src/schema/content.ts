@@ -3,6 +3,7 @@ import {
   text,
   boolean,
   integer,
+  smallint,
   timestamp,
   uuid,
   doublePrecision,
@@ -90,6 +91,69 @@ export const itemsTable = pgTable("items", {
   producerName: text("producer_name"),
   producerNote: text("producer_note"),
 });
+
+// Cached road-distance candidates are deliberately separate from item content:
+// a distance reaches guests only after an administrator approves the proposal.
+export const itemDistanceProposalsTable = pgTable(
+  "item_distance_proposals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => itemsTable.id, { onDelete: "cascade" }),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenantsTable.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    source: text("source"),
+    confidence: text("confidence"),
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
+    distanceMeters: doublePrecision("distance_meters"),
+    durationMinutes: doublePrecision("duration_minutes"),
+    resolvedAddress: text("resolved_address"),
+    geocodeQuery: text("geocode_query"),
+    inputFingerprint: text("input_fingerprint").notNull(),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [uniqueIndex("item_distance_proposals_item_idx").on(t.itemId)],
+);
+
+// Nominatim answers, including misses, are permanent to respect its rate limit
+// and avoid repeatedly looking up an ambiguous legacy query.
+export const geocodeCacheTable = pgTable(
+  "geocode_cache",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    query: text("query").notNull(),
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
+    displayName: text("display_name"),
+    ok: boolean("ok").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("geocode_cache_query_idx").on(t.query)],
+);
+
+// Singleton lease row used to coordinate Nominatim's one-request-per-second
+// policy across every API process sharing this database.
+export const geocodeThrottleTable = pgTable(
+  "geocode_throttle",
+  {
+    id: smallint("id").primaryKey().default(1),
+    lastRequestAt: timestamp("last_request_at", { withTimezone: true }),
+  },
+  (t) => [check("geocode_throttle_singleton", sql`${t.id} = 1`)],
+);
 
 export const mediaTable = pgTable("media", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -197,6 +261,8 @@ export const insertItemSchema = createInsertSchema(itemsTable).omit({
 export type Section = typeof sectionsTable.$inferSelect;
 export type Category = typeof categoriesTable.$inferSelect;
 export type Item = typeof itemsTable.$inferSelect;
+export type ItemDistanceProposal = typeof itemDistanceProposalsTable.$inferSelect;
+export type GeocodeCache = typeof geocodeCacheTable.$inferSelect;
 export type MediaRow = typeof mediaTable.$inferSelect;
 export type TranslationRow = typeof translationsTable.$inferSelect;
 export type PluralFormRow = typeof pluralFormsTable.$inferSelect;

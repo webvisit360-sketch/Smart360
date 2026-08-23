@@ -12,3 +12,4 @@
 - [CodeExecution runtime quirks](codeexecution-runtime-quirks.md) — deterministic test runtime may disable clock/random globals; use database IDs or fixed fixtures with cleanup.
 - [Living Guide prototype parity](living-guide-prototype-parity.md) — trust 390×844 computed styles; stage percentages and descendant font cascades can differ from prose tables.
 - [Guest sign-in delivery status](guest-sign-in-delivery.md) — unified sheet is production-approved; do not reimplement unless the owner reports a regression.
+- [Distance review pipeline](distance-review-pipeline.md) — link-only host location input, mapQuery URL = destination, manual-wins conditional approve, DB-wide Nominatim 1 rps throttle.

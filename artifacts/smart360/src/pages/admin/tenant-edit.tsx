@@ -19,6 +19,8 @@ import { SlugField } from "@/components/admin/slug-field";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
+import { DistanceReview } from "@/components/admin/distance-review";
+import { isLikelyUrl } from "@/lib/maps-href";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -295,49 +297,14 @@ export default function AdminTenantEdit() {
   }
 
   const handleSave = () => {
-    const latitudeRaw = formData.latitude.trim().replace(",", ".");
-    const longitudeRaw = formData.longitude.trim().replace(",", ".");
-    const latitude = latitudeRaw ? Number(latitudeRaw) : null;
-    const longitude = longitudeRaw ? Number(longitudeRaw) : null;
-    if ((latitude === null) !== (longitude === null)) {
-      toast({
-        title: "Neveljavna lokacija",
-        description: "Latitude in longitude morata biti vpisana skupaj.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (
-      latitude !== null &&
-      (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)
-    ) {
-      toast({
-        title: "Neveljavna lokacija",
-        description: "Latitude mora biti število med -90 in 90.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (
-      longitude !== null &&
-      (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)
-    ) {
-      toast({
-        title: "Neveljavna lokacija",
-        description: "Longitude mora biti število med -180 in 180.",
-        variant: "destructive",
-      });
-      return;
-    }
+    const { latitude: _latitude, longitude: _longitude, ...saveFormData } = formData;
     updateMutation.mutate({
       id,
       data: { 
-        ...formData, 
+        ...saveFormData, 
         customDomain: formData.customDomain.trim() || null,
         email: formData.email.trim() || null,
         mapUrl: formData.mapUrl.trim() || null,
-        latitude,
-        longitude,
         wifiSsid: formData.wifiSsid.trim() || null,
         wifiPass: formData.wifiPass || null,
         // min 0.1 GB — a zero/invalid quota would block every upload
@@ -400,6 +367,7 @@ export default function AdminTenantEdit() {
           <TabsTrigger value="general">Splošno</TabsTrigger>
           <TabsTrigger value="appearance">Videz</TabsTrigger>
           <TabsTrigger value="contacts">Stiki & Lokacija</TabsTrigger>
+          <TabsTrigger value="distances">Razdalje</TabsTrigger>
           <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
           <TabsTrigger value="translations">Prevodi</TabsTrigger>
           <TabsTrigger value="orders">Naročila in Sporočila</TabsTrigger>
@@ -959,31 +927,36 @@ export default function AdminTenantEdit() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Latitude (zemljepisna širina)</Label>
+                  <Label>Latitude (zemljepisna širina) <span className="text-muted-foreground">samodejno iz povezave</span></Label>
                   <Input
-                    inputMode="decimal"
                     value={formData.latitude}
-                    onChange={e => setFormData({ ...formData, latitude: e.target.value })}
-                    placeholder="45.5126898"
+                    readOnly
+                    placeholder="—"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Longitude (zemljepisna dolžina)</Label>
+                  <Label>Longitude (zemljepisna dolžina) <span className="text-muted-foreground">samodejno iz povezave</span></Label>
                   <Input
-                    inputMode="decimal"
                     value={formData.longitude}
-                    onChange={e => setFormData({ ...formData, longitude: e.target.value })}
-                    placeholder="13.6339282"
+                    readOnly
+                    placeholder="—"
                   />
+                  <Button type="button" variant="link" className="px-0" onClick={() => {
+                    const latitude = prompt("Latitude"); const longitude = prompt("Longitude");
+                    if (latitude === null || longitude === null) return;
+                    updateMutation.mutate({ id, data: { latitude: Number(latitude), longitude: Number(longitude), coordinateOverride: true } });
+                  }}>Popravi koordinate (skrbnik)</Button>
                 </div>
                 <div className="space-y-2 col-span-2">
                   <Label>Nadomestna poizvedba za zemljevid (Map Query)</Label>
                   <Input value={formData.mapQuery} onChange={e => setFormData({ ...formData, mapQuery: e.target.value })} placeholder="npr. Malija 143b, Izola" />
+                  {isLikelyUrl(formData.mapQuery) && <p className="text-xs text-amber-700">To je povezava — uporabljena bo kot cilj. Za samodejne razdalje jo prilepite v polje »Google Maps povezava«.</p>}
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="distances"><Card><CardHeader><CardTitle>Razdalje</CardTitle></CardHeader><CardContent><DistanceReview tenantId={id} /></CardContent></Card></TabsContent>
 
         <TabsContent value="content">
           <Card>

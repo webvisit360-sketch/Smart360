@@ -9,3 +9,4 @@ export type {
   ListTenantTranslationsParams,
   ExportTranslationsParams,
 } from "./generated/types";
+export * from './generated/types';

@@ -19,6 +19,7 @@ import {
   openExternalMapsUrl,
   resolveTenantMapsUrl,
 } from "@/lib/tenant-maps";
+import { mapsHrefForQuery } from "@/lib/maps-href";
 import {
   CARD_IMAGE_WIDTH,
   HERO_IMAGE_WIDTH,
@@ -1826,7 +1827,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
           )}
           {(firstItem?.mapQuery || firstItem?.phone || firstItem?.website) && (
             <div className="lg2-actions">
-              {firstItem?.mapQuery && <a className="lg2-primary-button" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(firstItem.mapQuery)}`} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
+              {firstItem?.mapQuery && <a className="lg2-primary-button" href={mapsHrefForQuery(firstItem.mapQuery, "directions") ?? undefined} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
               {firstItem?.phone && <a className="lg2-primary-button lg2-secondary-button" href={`tel:${firstItem.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
               {firstItem?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(firstItem.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
             </div>
@@ -2163,7 +2164,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
 
            {(item?.mapQuery || item?.phone || item?.website) && (
              <div className="lg2-actions lg2-actions--spaced">
-               {item?.mapQuery && <a className="lg2-primary-button" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.mapQuery)}`} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
+               {item?.mapQuery && <a className="lg2-primary-button" href={mapsHrefForQuery(item.mapQuery, "directions") ?? undefined} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
                {item?.phone && <a className="lg2-primary-button lg2-secondary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
                 {item?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(item.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
              </div>
