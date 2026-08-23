@@ -15,7 +15,7 @@ import {
 } from "../lib/exploreGroupBackfill";
 import { buildTenantContent } from "../lib/contentTree";
 
-test("explore-group backfill applies once, honours labels, and never reruns", async () => {
+test("explore-group backfill applies once, matches stable keys, and never reruns", async () => {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let tenantId = "";
   try {
@@ -28,26 +28,40 @@ test("explore-group backfill applies once, honours labels, and never reruns", as
       tenantId, key: `explore-${suffix}`, title: "Okolica",
     }).returning();
     // Broken production signature: every category sits in the default group.
+    // Label carries stray whitespace — key matching must not care.
     const [food] = await db.insert(categoriesTable).values({
-      sectionId: section!.id, label: "Zajtrk", layout: "poi",
+      sectionId: section!.id, key: "breakfast", label: " Zajtrk ", layout: "poi",
     }).returning();
+    // Repurposed since the ledger was written: the stable key changed.
     const [repurposed] = await db.insert(categoriesTable).values({
-      sectionId: section!.id, label: "Ni več Trgovine", layout: "poi",
+      sectionId: section!.id, key: "boats", label: "Izposoja čolnov", layout: "poi",
     }).returning();
     const [untouched] = await db.insert(categoriesTable).values({
-      sectionId: section!.id, label: "Izleti", layout: "poi",
+      sectionId: section!.id, key: "trips", label: "Izleti", layout: "poi",
     }).returning();
 
     const ledger = [
-      { categoryId: food!.id, expectedLabel: "Zajtrk", exploreGroup: "food_drink" },
-      // Label changed since the ledger was written — must be skipped, not regrouped.
-      { categoryId: repurposed!.id, expectedLabel: "Trgovine", exploreGroup: "services" },
+      { categoryId: food!.id, key: "breakfast", exploreGroup: "food_drink" },
+      { categoryId: repurposed!.id, key: "shops", exploreGroup: "services" },
+      { categoryId: "00000000-0000-0000-0000-000000000000", key: "ghost", exploreGroup: "sights" },
     ];
 
     const first = await applyExploreGroupBackfill(tenantId, ledger);
     assert.equal(first.applied, true);
     assert.equal(first.updated, 1);
-    assert.deepEqual(first.skipped, ["Trgovine"]);
+    assert.equal(first.skipped, 2);
+    // The report must account for EVERY ledger row with before/after states.
+    assert.equal(first.report.length, 3);
+    const breakfastRow = first.report.find((r) => r.key === "breakfast")!;
+    assert.equal(breakfastRow.outcome, "updated");
+    assert.equal(breakfastRow.groupBefore, "experiences");
+    assert.equal(breakfastRow.groupAfter, "food_drink");
+    const shopsRow = first.report.find((r) => r.key === "shops")!;
+    assert.equal(shopsRow.outcome, "skipped");
+    assert.match(shopsRow.reason, /repurposed/);
+    const ghostRow = first.report.find((r) => r.key === "ghost")!;
+    assert.equal(ghostRow.outcome, "skipped");
+    assert.match(ghostRow.reason, /no longer exists/);
 
     const [foodAfter] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, food!.id));
     assert.equal(foodAfter!.exploreGroup, "food_drink");
@@ -61,6 +75,7 @@ test("explore-group backfill applies once, honours labels, and never reruns", as
     const second = await applyExploreGroupBackfill(tenantId, ledger);
     assert.equal(second.applied, false);
     assert.equal(second.updated, 0);
+    assert.equal(second.report.length, 0);
     const [foodFinal] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, food!.id));
     assert.equal(foodFinal!.exploreGroup, "sights");
   } finally {
@@ -74,12 +89,16 @@ test("real ledger is a no-op against the development database (groups already as
   assert.equal(result.updated, 0);
 });
 
-test("real ledger rows stay consistent with the five approved groups", () => {
+test("real ledger rows stay consistent with the approved groups and carry keys", () => {
   const allowed = new Set(["food_drink", "nature_trails", "sights", "services"]);
   assert.equal(EXPLORE_GROUP_LEDGER.length, 15);
+  const keys = new Set<string>();
   for (const entry of EXPLORE_GROUP_LEDGER) {
-    assert.ok(allowed.has(entry.exploreGroup), `${entry.expectedLabel}: ${entry.exploreGroup}`);
+    assert.ok(allowed.has(entry.exploreGroup), `${entry.key}: ${entry.exploreGroup}`);
+    assert.ok(entry.key.length > 0, `empty key for ${entry.categoryId}`);
+    keys.add(entry.key);
   }
+  assert.equal(keys.size, 15, "ledger keys must be unique");
 });
 
 test("guest payload exposes approved review coordinates and hides unapproved ones", async () => {
