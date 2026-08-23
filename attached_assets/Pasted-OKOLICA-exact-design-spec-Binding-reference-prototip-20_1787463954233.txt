@@ -1,0 +1,145 @@
+OKOLICA — exact design spec
+Binding reference: prototip-2030.html, view #v-okolica. Copy the values; do not re-derive them. Measured at 390 × 844, theme dan. Colours are theme tokens — the dan values are shown only for identification. Use the tokens so the other three themes follow automatically.
+
+Why this changes: the previous screen wrapped 18 category chips over seven rows, consuming half the viewport before a single place was visible. The new screen shows ONE scrolling row of groups and gives the rest of the screen to large, readable place cards.
+Structure
+Header: kicker (tenant name) + title "Odkrij okolico"
+One horizontally scrolling row of GROUP tabs — never wrapping
+Scrolling list of large place cards
+Bottom bar
+
+The separate "Najbližje" section is removed; distance now lives on each card.
+Exact values
+Header
+Element
+Size
+Font
+Padding
+Colour
+.hd
+390 × 98
+—
+22px 18px 12px, gap 8px
+—
+kicker
+—
+11px/750, letter-spacing 1.43px, uppercase
+0
+var(--acc)
+title
+—
+28px/800, letter-spacing -0.98px, line-height 42px
+0
+var(--tx)
+
+Group tabs (.gtabs)
+Property
+Value
+Row
+height 60, padding 2px 16px 14px, gap 8px
+Scroll
+horizontal, overflow-x:auto, scrollbar hidden, no wrapping
+Button
+height 44, padding 11px 18px, radius 999px, font 16px/750, white-space:nowrap
+Selected
+bg var(--acc), text var(--onacc), border-color transparent
+Unselected
+bg var(--card), text var(--tx2), 1px border var(--line)
+Transition
+background/color/border-color .2s
+
+
+Selecting a group scrolls the list back to the top and gives the usual tap feedback (vibration + press scale).
+Place card (.pcard)
+Element
+Size
+Font
+Radius
+Padding
+Colour
+Card
+358 wide, margin 0 16px 14px
+—
+24px
+0
+bg var(--card), 1px border var(--line)
+Photo
+356 × 200
+—
+0 (clipped by the card)
+—
+aspect-ratio: 16/9, object-fit: cover + focal point
+Body
+—
+—
+—
+14px 16px 16px
+—
+Meta row
+height 23, gap 8px
+15px/750
+—
+margin-bottom 6px
+distance var(--accg)
+Meta separator dot
+4 × 4
+—
+50%
+—
+var(--tx2), opacity .5
+Category label
+—
+12px/700, letter-spacing 0.96px, uppercase
+—
+—
+var(--tx2)
+Title
+—
+22px/800, letter-spacing -0.55px, line-height 26.4px
+—
+—
+var(--tx)
+Description
+—
+16px/400, line-height 24px, margin-top 6px
+—
+—
+var(--tx2), clamped to 2 lines
+Press feedback
+—
+—
+—
+—
+transform: scale(.985) on :active
+
+
+The WHOLE card is tappable. There is no "Preberi več" button — that is a competitor defect the owner explicitly rejected.
+Groups → categories (default mapping)
+Group
+Categories
+Doživetja
+Aktivnosti, Izleti, Dogodki
+Hrana in pijača
+Zajtrk, Kulinarika, Picerije, Nočno življenje
+Narava in poti
+Pohodništvo, Kolesarjenje, Plaže
+Znamenitosti
+Kulturna dediščina, Naravna dediščina
+Storitve
+Trgovine, Pekarne, Bencinske črpalke, Bankomati, Lekarne, Bolnišnica
+
+
+Rules:
+
+The mapping is DATA, not hardcoded: store a group per category so the host can reassign them later in the admin. Ship these as the defaults.
+A group with no visible content is not rendered at all.
+The first group with content is selected on open.
+Localize the five group names in SL/EN/DE/IT.
+Card content rules
+Photo: the item's first image, cover with focal point. When the item has no photo, use the theme ambient gradient — never a blank or broken box.
+Meta line: distance · CATEGORY. Distance is omitted entirely when distanceMeters is null (do not print "0.0 km" — the competitor does that and it looks broken). Format: 850 m below 1 km, 1,2 km at or above.
+For venues with opening hours, the meta line may carry the status instead of the category: 1,2 km · odprto do 22:00 / zaprto · odpre se ob 12:00, using the rules already implemented.
+Description: the item's own text, clamped to two lines — never cut mid-sentence with an ellipsis button.
+Verification
+Computed-style pairs (prototype vs live) for: header kicker and title, tab row padding and gap, a selected and an unselected tab (height, padding, radius, font, colours), card width and radius, photo aspect ratio, body padding, meta row, category label, title, description and its clamp. Plus screenshots at 390 × 844 of: the default group, a switched group, a card without a distance, and a card for a venue showing open/closed status.
+
