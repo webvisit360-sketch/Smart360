@@ -11,3 +11,4 @@
 - [Drizzle check constraints](drizzle-check-constraints.md) — changing a same-named CHECK body may be skipped by db push; rename it and verify the live definition.
 - [CodeExecution runtime quirks](codeexecution-runtime-quirks.md) — deterministic test runtime may disable clock/random globals; use database IDs or fixed fixtures with cleanup.
 - [Living Guide prototype parity](living-guide-prototype-parity.md) — trust 390×844 computed styles; stage percentages and descendant font cascades can differ from prose tables.
+- [Guest sign-in delivery status](guest-sign-in-delivery.md) — unified sheet is production-approved; do not reimplement unless the owner reports a regression.
