@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { itemMapsHref, mapsHrefForQuery, sanitizePastedMapsUrl } from "../lib/maps-href";
+import { itemMapsHref, mapsHrefForQuery, sanitizePastedMapsUrl, shortMapsQuery } from "../lib/maps-href";
 
 // REGRESSION GUARD (third occurrence protection): a POI "Google Maps" action
 // must open the PLACE, never turn-by-turn navigation from the guest's current
@@ -34,7 +34,7 @@ test("itemMapsHref builds a NAMED search from title + approved address, beating 
       resolvedAddress: "Portopiccolo, Sistiana Mare, 34011, Italia",
     }),
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      "Portopiccolo Sistiana, Portopiccolo, Sistiana Mare, 34011, Italia",
+      "Portopiccolo Sistiana, Portopiccolo, Sistiana Mare, Italia",
     )}`,
   );
   // Address without a title still searches the address alone.
@@ -47,6 +47,58 @@ test("itemMapsHref builds a NAMED search from title + approved address, beating 
     itemMapsHref({ resolvedAddress: "  ", latitude: 45.5, longitude: 13.6 }),
     "https://www.google.com/maps/search/?api=1&query=45.5,13.6",
   );
+});
+
+const GEOCODER_SAMPLES: Array<[string, string]> = [
+  [
+    "Pretorska palača, Koper",
+    "Pretorska palača, 3, Titov trg / Piazza Tito, Olmo, Koper / Capodistria (naselje), Koper / Capodistria, Upravna enota Koper / Unità amministrativa Capodistria, 6000, Slovenija",
+  ],
+  [
+    "Restavracija Kamin",
+    "Restavracija Kamin, 1A, Dobrava, Dobrava / Dobrava presso Isola (naselje), Dobrava, Izola / Isola, Upravna enota Izola / Unità amministrativa Isola, 6310, Slovenija",
+  ],
+  [
+    "Portopiccolo Sistiana",
+    "Portopiccolo, Sistiana Mare / Sesljan Morje, Borgo San Mauro / Naselje Svetega Mavra, Sistiana / Sesljan, Duino Aurisina / Devin - Nabrežina, Trieste, Friuli-Venezia Giulia, 34011, Italia",
+  ],
+  [
+    "Plaža Strunjan",
+    "Plaža Mesečev Zaliv, Strunjan, Strunjan / Strugnano (naselje), Strunjan / Strugnano, Piran / Pirano, Upravna enota Piran / Unità amministrativa Pirano, 6320, Slovenija",
+  ],
+];
+
+test("shortMapsQuery compresses geocoder display names to title, street, city, country", () => {
+  assert.equal(
+    shortMapsQuery(GEOCODER_SAMPLES[0]![0], GEOCODER_SAMPLES[0]![1]),
+    "Pretorska palača, Koper, Titov trg 3, Slovenija",
+  );
+  assert.equal(
+    shortMapsQuery(GEOCODER_SAMPLES[1]![0], GEOCODER_SAMPLES[1]![1]),
+    "Restavracija Kamin, Dobrava 1A, Izola, Slovenija",
+  );
+  assert.equal(
+    shortMapsQuery(GEOCODER_SAMPLES[2]![0], GEOCODER_SAMPLES[2]![1]),
+    "Portopiccolo Sistiana, Friuli-Venezia Giulia, Italia",
+  );
+  assert.equal(
+    shortMapsQuery(GEOCODER_SAMPLES[3]![0], GEOCODER_SAMPLES[3]![1]),
+    "Plaža Strunjan, Piran, Slovenija",
+  );
+});
+
+test("named search queries stay short and free of administrative noise", () => {
+  for (const [title, displayName] of GEOCODER_SAMPLES) {
+    const q = shortMapsQuery(title, displayName);
+    assert.ok(q.length <= 130, `query too long (${q.length}): ${q}`);
+    assert.ok(
+      !/upravna enota|amministrativ|naselje/i.test(q),
+      `administrative noise leaked: ${q}`,
+    );
+    assert.ok(!/\b\d{4,6}\b/.test(q), `postcode leaked: ${q}`);
+    const href = itemMapsHref({ title, mapQuery: title, resolvedAddress: displayName });
+    assert.equal(href, `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`);
+  }
 });
 
 test("itemMapsHref uses coordinates only as the last resort, labelled with the title", () => {

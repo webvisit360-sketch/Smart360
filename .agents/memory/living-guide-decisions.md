@@ -170,3 +170,7 @@ Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then 
 **Why:** Address search can resolve to a neighbouring property, so silently dropping to a lower-priority address sends guests to the wrong door.
 
 **How to apply:** Keep property navigation separate from item-specific POI destinations. Preserve external `_blank`/noopener behavior across Living Guide and legacy guest surfaces.
+## Named Maps query (2026-08-23)
+POI Maps link priority: pasted place link > named search "<title>, <SHORT address>" > labelled coords `q=lat,lng(title)` > text search. The named query MUST use `shortMapsQuery` (maps-href.ts) — never the raw Nominatim display name.
+**Why:** Full display names carry "Upravna enota / Unità amministrativa", bilingual duplicates and postcodes; long queries make Google return nothing or the wrong place — same defect, different cause.
+**How to apply:** Any new surface building a search query from `resolvedAddress` goes through `shortMapsQuery`; tests assert ≤130 chars and no administrative fragments.
