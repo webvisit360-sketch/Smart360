@@ -17,10 +17,7 @@ import { makeT, plural, resolveLang, clampLang, switchLang, LANG_NAMES, SL_UI } 
 import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
-import {
-  openExternalMapsUrl,
-  resolveTenantMapsUrl,
-} from "@/lib/tenant-maps";
+import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 
 export default function GuestHome() {
   const [, params] = useRoute("/:slug");
@@ -192,7 +189,9 @@ export default function GuestHome() {
             <div className="qk">
               {tenant.wifiSsid && <button onClick={() => { navigator.clipboard.writeText(tenant.wifiPass || ""); alert(t("UI.share.copied")); }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-wifi" /></svg>WiFi</button>}
               {tenant.phone && <button onClick={() => window.location.href = `tel:${tenant.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg>{t("UI.contact.call")}</button>}
-              {tenantDirectionsUrl && <button onClick={() => openExternalMapsUrl(tenantDirectionsUrl)}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</button>}
+              {/* Ista raba kot tel: zgoraj — navigacija v istem zavihku; window.open
+                  je na iOS pustil prazen zavihek, ko je URL prestregla aplikacija. */}
+              {tenantDirectionsUrl && <button onClick={() => { window.location.href = tenantDirectionsUrl; }}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</button>}
             </div>
           </section>
         )}

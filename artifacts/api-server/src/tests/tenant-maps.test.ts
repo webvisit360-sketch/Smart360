@@ -13,10 +13,6 @@ const frontendModuleUrl = new URL(
 ).href;
 
 async function loadFrontendResolver(): Promise<{
-  openExternalMapsUrl: (
-    url: string,
-    opener: (url?: string | URL, target?: string, features?: string) => unknown,
-  ) => unknown;
   resolveTenantMapsUrl: (
     tenant: Record<string, unknown>,
     intent?: "search" | "directions",
@@ -76,19 +72,9 @@ test("configured invalid links or incomplete coordinates never fall back to addr
   );
 });
 
-test("Maps opener always requests an external noopener tab", async () => {
-  const { openExternalMapsUrl } = await loadFrontendResolver();
-  const calls: unknown[][] = [];
-  openExternalMapsUrl("https://www.google.com/maps", (...args) => {
-    calls.push(args);
-    return null;
-  });
-  assert.deepEqual(calls, [[
-    "https://www.google.com/maps",
-    "_blank",
-    "noopener,noreferrer",
-  ]]);
-});
+/* openExternalMapsUrl (window.open) je odstranjen: na iOS je puščal prazen
+   zavihek, ko je URL prestregla aplikacija Zemljevidi. Zunanje povezave so
+   zdaj navadni <a> brez target="_blank". */
 
 test("tenant location validation enforces HTTPS and complete coordinate pairs", () => {
   assert.equal(

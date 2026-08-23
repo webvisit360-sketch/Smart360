@@ -20,8 +20,9 @@ export function ContactSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant:
           </a>
         )}
         
+        {/* wa.me prestreže aplikacija — brez target="_blank", da ne ostane prazen zavihek */}
         {tenant?.whatsapp && (
-          <a href={`https://wa.me/${tenant.whatsapp.replace(/\+/g, '')}`} target="_blank" rel="noopener noreferrer" className="srow">
+          <a href={`https://wa.me/${tenant.whatsapp.replace(/\+/g, '')}`} className="srow">
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
             <div className="t"><b>WhatsApp</b><span>{t("UI.contact.sub")}</span></div>
             <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
@@ -53,7 +54,7 @@ export function ContactSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant:
           </div>
         )}
         {tenantMapsUrl && (
-          <a className="srow" href={tenantMapsUrl} target="_blank" rel="noopener noreferrer">
+          <a className="srow" href={tenantMapsUrl}>
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>
             <div className="t"><b>{t("UI.contact.directions")}</b><span>{t("UI.maps.open")}</span></div>
           </a>

@@ -77,13 +77,7 @@ export function resolveTenantMapsUrl(
   return googleMapsUrl(fallback, intent);
 }
 
-export function openExternalMapsUrl(
-  url: string,
-  opener: (
-    url?: string | URL,
-    target?: string,
-    features?: string,
-  ) => Window | null = window.open.bind(window),
-): Window | null {
-  return opener(url, "_blank", "noopener,noreferrer");
-}
+/* Namenoma ni pomočnika z window.open: na iOS je window.open pustil prazen
+   zavihek, ko je maps/wa.me URL prestregla domača aplikacija. Zunanje
+   povezave, ki jih prestrežejo aplikacije, so navadni <a> brez target,
+   spletne strani pa <a target="_blank">. */

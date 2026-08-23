@@ -147,8 +147,8 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
             <div className="actions">
               {item.phone && <a className="act act--w" href={`tel:${item.phone}`} aria-label={t("UI.contact.call")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg></a>}
               {item.mapQuery && (item.mapQuery === tenant.mapQuery
-                ? <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery, "directions") ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
-                : <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
+                ? <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery, "directions") ?? undefined}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
+                : <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined}><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
             </div>
           )}
         </div>
@@ -243,7 +243,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
           {(item.mapQuery) && (
             <div className="actions">
-              <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
+              <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined}><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
             </div>
           )}
         </div>

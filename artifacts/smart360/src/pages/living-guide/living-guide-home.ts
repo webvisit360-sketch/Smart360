@@ -199,3 +199,82 @@ export function selectHomeTodayEntries(
   entries.sort((a, b) => a.sortValue - b.sortValue);
   return { hasProgramme, entries };
 }
+/* Pas Danes se ob prihodu na Domov sam počasi pomakne do konca in tam
+   obstane, da gost vidi, da je kartic več. Vrednosti so iz prototipa
+   (prototip-2030): zamik 650 ms, ~11 ms na piksel, omejeno na 4–14 s,
+   mehak začetek prvih 12 %, scroll-snap izklopljen med animacijo. */
+export const TODAY_NUDGE_DELAY_MS = 650;
+export const TODAY_NUDGE_MS_PER_PX = 11;
+export const TODAY_NUDGE_MIN_MS = 4000;
+export const TODAY_NUDGE_MAX_MS = 14000;
+export const TODAY_NUDGE_SOFT_START = 0.12;
+export const TODAY_NUDGE_MIN_OVERFLOW_PX = 8;
+
+export function todayNudgeDuration(maxScroll: number): number {
+  return Math.min(
+    TODAY_NUDGE_MAX_MS,
+    Math.max(TODAY_NUDGE_MIN_MS, maxScroll * TODAY_NUDGE_MS_PER_PX),
+  );
+}
+
+export function todayNudgeEase(k: number): number {
+  if (k >= TODAY_NUDGE_SOFT_START) return k;
+  const s = k / TODAY_NUDGE_SOFT_START;
+  return s * s * TODAY_NUDGE_SOFT_START;
+}
+
+let todayNudged = false;
+
+export function resetTodayNudgeForTests(): void {
+  todayNudged = false;
+}
+
+/**
+ * Auto-scrolls the Danes strip to its end, once per page load. Returns a
+ * cleanup function (safe to call repeatedly) that cancels the animation
+ * and restores scroll-snap — used both by the touch/wheel cancel and by
+ * React unmount.
+ */
+export function nudgeTodayStrip(track: HTMLElement | null): () => void {
+  if (todayNudged || !track) return () => {};
+  const max = track.scrollWidth - track.clientWidth;
+  if (max < TODAY_NUDGE_MIN_OVERFLOW_PX) return () => {};
+  todayNudged = true;
+
+  const dur = todayNudgeDuration(max);
+  let raf = 0;
+  let timer = 0;
+  let t0: number | null = null;
+  let done = false;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    window.clearTimeout(timer);
+    cancelAnimationFrame(raf);
+    track.removeEventListener("touchstart", finish);
+    track.removeEventListener("wheel", finish);
+    /* zaskok bi animacijo vlekel nazaj — vrnemo ga šele na koncu */
+    track.style.scrollSnapType = "";
+  };
+
+  const step = (ts: number) => {
+    if (t0 === null) t0 = ts;
+    const k = Math.min(1, (ts - t0) / dur);
+    track.scrollLeft = max * todayNudgeEase(k);
+    if (k < 1) {
+      raf = requestAnimationFrame(step);
+    } else {
+      track.scrollLeft = max;
+      finish();
+    }
+  };
+
+  track.style.scrollSnapType = "none";
+  timer = window.setTimeout(() => {
+    raf = requestAnimationFrame(step);
+  }, TODAY_NUDGE_DELAY_MS);
+  track.addEventListener("touchstart", finish, { once: true, passive: true });
+  track.addEventListener("wheel", finish, { once: true, passive: true });
+  return finish;
+}

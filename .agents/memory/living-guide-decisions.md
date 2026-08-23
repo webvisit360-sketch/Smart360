@@ -174,3 +174,7 @@ Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then 
 POI Maps link priority: pasted place link > named search "<title>, <SHORT address>" > labelled coords `q=lat,lng(title)` > text search. The named query MUST use `shortMapsQuery` (maps-href.ts) — never the raw Nominatim display name.
 **Why:** Full display names carry "Upravna enota / Unità amministrativa", bilingual duplicates and postcodes; long queries make Google return nothing or the wrong place — same defect, different cause.
 **How to apply:** Any new surface building a search query from `resolvedAddress` goes through `shortMapsQuery`; tests assert ≤130 chars and no administrative fragments.
+
+## External-link policy (approved via blank-tab bugfix)
+Links the OS hands to a native app (Google Maps URLs, wa.me, viber://, tel:) must be plain same-tab anchors — never window.open, never target="_blank". On iOS, window.open created a tab that the Maps/WhatsApp app then orphaned, stranding guests on a blank page. Regular website links keep target="_blank" + noopener (they render real content, so no blank tab). openExternalMapsUrl was deliberately deleted; do not reintroduce a window.open helper for guest links.
+**How to apply:** any new guest-facing external link: app-handoff → bare `<a href>`; website → `<a target="_blank" rel="noopener noreferrer">`.

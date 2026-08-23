@@ -353,17 +353,19 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
             <div style={{ marginTop: 22 }}>
               {tenant.phone && (
                 <>
-                  <a className="srow" href={`tel:${tenant.phone}`} target="_blank" rel="noopener noreferrer">
+                  {/* Povezave, ki jih prestreže aplikacija (tel, wa.me, viber),
+                      so brez target="_blank", da na iOS ne ostane prazen zavihek. */}
+                  <a className="srow" href={`tel:${tenant.phone}`}>
                     <svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg>
                     <span className="t"><b>{t("UI.contact.call")}</b><span>{tenant.phone}</span></span>
                     <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                   </a>
-                  <a className="srow" href={`https://wa.me/${tenant.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                  <a className="srow" href={`https://wa.me/${tenant.phone.replace(/[^0-9]/g, '')}`}>
                     <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
                     <span className="t"><b>WhatsApp</b><span>{t("UI.contact.message")}</span></span>
                     <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                   </a>
-                  <a className="srow" href={`viber://chat?number=${tenant.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                  <a className="srow" href={`viber://chat?number=${tenant.phone.replace(/[^0-9]/g, '')}`}>
                     <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
                     <span className="t"><b>Viber</b><span>{t("UI.contact.message")}</span></span>
                     <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
@@ -379,7 +381,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                 </a>
               )}
               {tenant.address && tenantSearchUrl && (
-                <a className="srow" href={tenantSearchUrl} target="_blank" rel="noopener noreferrer">
+                <a className="srow" href={tenantSearchUrl}>
                   <svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>
                   <span className="t"><b>{t("UI.contact.address")}</b><span>{tenant.address}</span></span>
                   <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
@@ -387,7 +389,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               )}
             </div>
             {tenantDirectionsUrl && (
-              <a className="btn" style={{ marginTop: 24 }} href={tenantDirectionsUrl} target="_blank" rel="noopener noreferrer">
+              <a className="btn" style={{ marginTop: 24 }} href={tenantDirectionsUrl}>
                 <svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}
               </a>
             )}
@@ -599,8 +601,8 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
             <div className="actions">
               {item.phone && <a className="act act--w" href={`tel:${item.phone}`} aria-label={t("UI.contact.call")}><svg className="ic" viewBox="0 0 24 24"><use href="#i-phone" /></svg></a>}
               {item.mapQuery && (item.mapQuery === tenant.mapQuery
-                ? <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery, "directions") ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
-                : <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
+                ? <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery, "directions") ?? undefined}><svg className="ic" viewBox="0 0 24 24"><use href="#i-nav" /></svg>{t("UI.contact.directions")}</a>
+                : <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined}><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>)}
             </div>
           )}
         </div>
@@ -695,7 +697,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
           {(item.mapQuery) && (
             <div className="actions">
-              <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined} target="_blank" rel="noopener noreferrer"><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
+              <a className="act act--fill" href={mapsHrefForQuery(item.mapQuery) ?? undefined}><svg className="ic" viewBox="0 0 24 24"><use href="#i-pin" /></svg>Google Maps</a>
             </div>
           )}
         </div>

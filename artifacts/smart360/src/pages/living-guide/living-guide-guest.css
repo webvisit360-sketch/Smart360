@@ -2235,66 +2235,6 @@ body[data-t="swipe"] .lg2-order-dock {
   line-height: 1.5;
 }
 
-.lg2-home-view .lg2-hello {
-  width: calc(100% - 32px);
-  margin: 0 16px 14px;
-  padding: 11px 15px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--card2);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  color: var(--tx);
-  text-align: left;
-  font: 650 13.5px var(--sans);
-  line-height: 1.5;
-  transition: transform .15s var(--ease);
-}
-
-.lg2-home-view .lg2-hello:active {
-  transform: scale(.97);
-}
-
-.lg2-hello .lg2-hd2 {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  background: var(--card);
-  display: grid;
-  place-items: center;
-  flex: none;
-  color: var(--acc);
-}
-
-.lg2-hello .lg2-hd2 svg {
-  width: 18px;
-  height: 18px;
-}
-
-.lg2-hello-tx {
-  flex: 1;
-  min-width: 0;
-}
-.lg2-hello-tx b {
-  display: block;
-  font: 650 13.5px var(--sans);
-  line-height: 1.2;
-}
-.lg2-hello-tx small {
-  display: block;
-  margin-top: 2px;
-  color: var(--tx2);
-  font: 500 11.5px var(--sans);
-}
-
-.lg2-hello .lg2-chg {
-  color: var(--accg);
-  font: 750 11.5px var(--sans);
-  flex: none;
-}
-
 .lg2-hqbar {
   padding: 2px 16px 14px;
   display: grid;

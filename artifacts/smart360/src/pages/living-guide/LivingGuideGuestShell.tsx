@@ -15,10 +15,7 @@ import {
 import { useLocation } from "wouter";
 import { getOpenStatus } from "@/lib/hours";
 import { sanitizeHtml } from "@/lib/sanitize";
-import {
-  openExternalMapsUrl,
-  resolveTenantMapsUrl,
-} from "@/lib/tenant-maps";
+import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 import { itemMapsHref } from "@/lib/maps-href";
 import { beginGuestActivity, endGuestActivity } from "@/lib/bundle-freshness";
 import {
@@ -73,6 +70,7 @@ import {
   type NavState,
 } from "./living-guide-nav-resolver";
 import {
+  nudgeTodayStrip,
   resolveHomeHeroMedia,
   selectHomeTodayEntries,
 } from "./living-guide-home";
@@ -657,8 +655,6 @@ export default function LivingGuideGuestShell({
             sections={sections}
             lang={lang}
             t={t}
-            guest={guest}
-            onEditGuest={requestCredentials}
             onOpenCategory={openCategory}
             onOpenItem={openItem}
             onOpenNotices={() => setShowNotices(true)}
@@ -1989,13 +1985,14 @@ function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
       ? { key: "phone", icon: "phone", label: t("UI.contact.call"), value: tenant.phone, href: `tel:${tenant.phone}` }
       : null,
     tenant?.whatsapp
-      ? { key: "whatsapp", icon: "chat", label: "WhatsApp", value: tenant.whatsapp, href: `https://wa.me/${String(tenant.whatsapp).replace(/\D/g, "")}`, external: true }
+      /* wa.me prestreže aplikacija — brez target="_blank", da ne ostane prazen zavihek */
+      ? { key: "whatsapp", icon: "chat", label: "WhatsApp", value: tenant.whatsapp, href: `https://wa.me/${String(tenant.whatsapp).replace(/\D/g, "")}` }
       : null,
     tenant?.email
       ? { key: "email", icon: "mail", label: t("UI.contact.email"), value: tenant.email, href: `mailto:${tenant.email}` }
       : null,
     tenant?.address && tenantMapsUrl
-      ? { key: "address", icon: "pin", label: t("UI.contact.address"), value: tenant.address, href: tenantMapsUrl, external: true }
+      ? { key: "address", icon: "pin", label: t("UI.contact.address"), value: tenant.address, href: tenantMapsUrl }
       : null,
   ].filter(Boolean) as Array<{ key: string; icon: string; label: string; value: string; href: string; external?: boolean }>;
 
@@ -2071,7 +2068,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
           )}
           {(itemMapsHref(firstItem) || firstItem?.phone || firstItem?.website) && (
             <div className="lg2-actions">
-              {itemMapsHref(firstItem) && <a className="lg2-primary-button" href={itemMapsHref(firstItem) ?? undefined} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
+              {itemMapsHref(firstItem) && <a className="lg2-primary-button" href={itemMapsHref(firstItem) ?? undefined}><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
               {firstItem?.phone && <a className="lg2-primary-button lg2-secondary-button" href={`tel:${firstItem.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
               {firstItem?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(firstItem.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
             </div>
@@ -2408,7 +2405,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
 
            {(itemMapsHref(item) || item?.phone || item?.website) && (
              <div className="lg2-actions lg2-actions--spaced">
-               {itemMapsHref(item) && <a className="lg2-primary-button" href={itemMapsHref(item) ?? undefined} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
+               {itemMapsHref(item) && <a className="lg2-primary-button" href={itemMapsHref(item) ?? undefined}><svg aria-hidden="true"><use href="#lg-i-nav2"/></svg>{t("UI.lg.action.maps")}</a>}
                {item?.phone && <a className="lg2-primary-button lg2-secondary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>}
                 {item?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(item.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
              </div>
@@ -2578,8 +2575,6 @@ function HomeView({
   tenant,
   sections,
   t,
-  guest,
-  onEditGuest,
   onOpenCategory,
   onOpenItem,
   onOpenNotices,
@@ -2611,10 +2606,13 @@ function HomeView({
   );
   const { entries: todayEntries } = selectHomeTodayEntries(sections, now);
   const visibleDanesItems = todayEntries.slice(0, 6);
-  const firstName = guest?.name?.trim().split(/\s+/)[0] ?? "";
-  const guestSignedIn = Boolean(guest?.unit?.trim() && guest?.name?.trim());
   const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
   const mapAvailable = Boolean(tenantMapsUrl);
+
+  // Pas Danes se ob prihodu sam pomakne do konca (vrednosti iz prototipa).
+  const danesTrackRef = useRef<HTMLDivElement | null>(null);
+  const danesCount = visibleDanesItems.length;
+  useEffect(() => nudgeTodayStrip(danesTrackRef.current), [danesCount]);
 
   return (
     <section className="lg2-view lg2-home-view" data-testid="screen-home">
@@ -2656,28 +2654,6 @@ function HomeView({
           <p className="lg2-k3">{tenant.name}</p>
           <h1>{t("UI.lg.welcome.title")}</h1>
 
-        {guestSignedIn && (
-          <button
-            className="lg2-hello"
-            type="button"
-            onClick={onEditGuest}
-            data-testid="button-edit-guest"
-          >
-            <span className="lg2-hd2" aria-hidden="true">
-              <svg><use href="#lg-i-usr" /></svg>
-            </span>
-            <div className="lg2-hello-tx">
-              <b>
-                {firstName
-                  ? t("UI.lg.greeting.named", { name: firstName })
-                  : t("UI.lg.greeting.generic")}
-              </b>
-              <small>{t("UI.lg.greeting.ordersTo")} {guest.unit}</small>
-            </div>
-            <span className="lg2-chg">{t("UI.lg.greeting.change")}</span>
-          </button>
-        )}
-
         <div className="lg2-hqbar">
           <button
             className="lg2-q lg2-q--w"
@@ -2709,17 +2685,19 @@ function HomeView({
             <svg aria-hidden="true"><use href="#lg-i-chat" /></svg>
             <b>{t("UI.lg.nav.messages", "Sporočila")}</b>
           </button>
-          <button
-            className="lg2-q"
-            type="button"
-            disabled={!mapAvailable}
-            onClick={() => {
-              if (tenantMapsUrl) openExternalMapsUrl(tenantMapsUrl);
-            }}
-          >
-            <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
-            <b>{t("UI.lg.home.map")}</b>
-          </button>
+          {/* Navaden <a> brez target="_blank": window.open je na iOS pustil
+              prazen zavihek, ko je povezavo prestregla aplikacija Zemljevidi. */}
+          {mapAvailable ? (
+            <a className="lg2-q" href={tenantMapsUrl ?? undefined}>
+              <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
+              <b>{t("UI.lg.home.map")}</b>
+            </a>
+          ) : (
+            <button className="lg2-q" type="button" disabled>
+              <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
+              <b>{t("UI.lg.home.map")}</b>
+            </button>
+          )}
         </div>
 
         {visibleDanesItems.length > 0 && (
@@ -2744,7 +2722,7 @@ function HomeView({
                 </button>
               )}
             </div>
-            <div className="lg2-hcards">
+            <div className="lg2-hcards" ref={danesTrackRef}>
               {visibleDanesItems.map((item) => (
                 <button
                   key={item.id}
