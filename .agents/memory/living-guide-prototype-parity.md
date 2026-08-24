@@ -31,3 +31,9 @@ A held visual surface must include route chrome outside the route body (especial
 **How to apply:** Store offsets as clone metadata, insert and force layout, then restore them. Verify source/held/restored pixels exactly; inspect both held wrappers during list → category → item flows; run mixed phone/on-screen close cycles; and pixel-diff the complete source view against the first post-close handoff frame.
 
 Also compare the final real route after the held surface is removed: a perfect held clone can hide a replayed route-entry animation or a lost scroll offset at the actual swap.
+
+Any non-zero close-fidelity pixel mismatch is a defect until a diff mask localizes and explains it; never attribute it to antialiasing without that evidence. The close-fidelity pixel test belongs in the normal test suite, not only incident-driven verification.
+
+**Why:** The first small mismatch exposed real corner-clipping drift, and hard-state comparisons then exposed a hidden route-entry animation at the actual swap.
+
+**How to apply:** Always retain and inspect the diff mask, test held and post-swap frames, and keep close fidelity in routine validation.
