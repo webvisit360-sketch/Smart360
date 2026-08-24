@@ -93,6 +93,11 @@ type GuestRecord = {
 };
 
 type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages" | "site-map" | "more";
+type LivingGuidePresentation = "standard" | "tab" | "detail";
+type DetailTransitionPhase = "idle" | "preparing" | "open" | "closing";
+
+const DETAIL_CLOSE_MS = 340;
+const DETAIL_FALLBACK_ASPECT = 16 / 9;
 
 function visible(rows: any[] | null | undefined): any[] {
   return (rows ?? []).filter((row) => row.isVisible !== false);
@@ -372,8 +377,29 @@ export default function LivingGuideGuestShell({
   });
   const t = makeT(tenant, lang);
   const rootRef = useRef<HTMLDivElement>(null);
+  const heldLayerRef = useRef<HTMLDivElement>(null);
+  const heldViewRef = useRef<HTMLElement | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const detailTriggerSelectorRef = useRef<string | null>(null);
+  const restoreDetailFocusRef = useRef(false);
+  const [detailTransitionPhase, setDetailTransitionPhase] =
+    useState<DetailTransitionPhase>("idle");
   const [galleryIndex, setGalleryIndex] = useState(0);
   const sections = useMemo(() => visible(tenant?.sections), [tenant?.sections]);
+  const detailHeroUrls = useMemo(() => {
+    const urls = new Set<string>();
+    sections.forEach((section: any) => {
+      visible(section.categories).forEach((category: any) => {
+        [...visible(category.media), ...visible(category.items).flatMap((item: any) => visible(item.media))]
+          .forEach((entry: any) => {
+            const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
+            if (source) urls.add(source);
+          });
+      });
+    });
+    return [...urls];
+  }, [sections]);
+  const preloadedDetailImagesRef = useRef<HTMLImageElement[]>([]);
   const allCategories = useMemo(
     () =>
       sections.flatMap((section: any) =>
@@ -418,6 +444,8 @@ export default function LivingGuideGuestShell({
     (screen === "site-map" && !navState.hasSiteMap) ||
     (screen === "more" && navState.omitted.length === 0);
   if (unavailableGuestSubroute) screen = "home";
+  const isDetailPresentation =
+    window.history.state?.livingGuidePresentation === "detail";
 
   const [guest, setGuest] = useState<GuestRecord | null>(() =>
     getRememberedGuestIdentity(slug),
@@ -456,6 +484,21 @@ export default function LivingGuideGuestShell({
   const messageAccessReady =
     guestIdentityComplete &&
     (!messagePasswordRequired || Boolean(messagePassword.trim()));
+
+  useEffect(() => {
+    // The prototype keeps every detail view in the document, so its hero
+    // requests begin before a tap. Mirror that behavior while retaining React
+    // routes: warm the exact detail-size sources as soon as the payload lands.
+    preloadedDetailImagesRef.current = detailHeroUrls.map((source) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = source;
+      return image;
+    });
+    return () => {
+      preloadedDetailImagesRef.current = [];
+    };
+  }, [detailHeroUrls]);
   const deviceToken = useMemo(() => getDeviceToken(slug), [slug]);
   const { data: deviceOrders } = useListDeviceOrders(slug, {
     query: {
@@ -502,16 +545,161 @@ export default function LivingGuideGuestShell({
     resetNavigationState();
   }, [location, resetNavigationState]);
 
+  const captureHeldView = useCallback(() => {
+    const source = rootRef.current?.querySelector<HTMLElement>(
+      ".lg2-route-layer > .lg2-view",
+    );
+    if (!source) {
+      heldViewRef.current = null;
+      return;
+    }
+
+    const clone = source.cloneNode(true) as HTMLElement;
+    const sourceScrollers = source.querySelectorAll<HTMLElement>("[data-lg-scroll]");
+    const cloneScrollers = clone.querySelectorAll<HTMLElement>("[data-lg-scroll]");
+    sourceScrollers.forEach((scroller, index) => {
+      if (cloneScrollers[index]) cloneScrollers[index]!.scrollTop = scroller.scrollTop;
+    });
+    clone.setAttribute("aria-hidden", "true");
+    clone.setAttribute("inert", "");
+    heldViewRef.current = clone;
+  }, []);
+
   const navigate = useCallback(
-    (path: string, replace = false) => {
+    (
+      path: string,
+      replace = false,
+      presentation: LivingGuidePresentation = "standard",
+    ) => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      if (presentation === "detail") {
+        const trigger = document.activeElement;
+        if (trigger instanceof HTMLElement) {
+          const testId = trigger.getAttribute("data-testid");
+          const cardId = trigger.getAttribute("data-lg-card");
+          const ariaLabel = trigger.getAttribute("aria-label");
+          detailTriggerSelectorRef.current = testId
+            ? `[data-testid="${CSS.escape(testId)}"]`
+            : cardId
+              ? `[data-lg-card="${CSS.escape(cardId)}"]`
+              : ariaLabel
+                ? `[aria-label="${CSS.escape(ariaLabel)}"]`
+                : null;
+        }
+        captureHeldView();
+        performance.clearMarks("lg2-detail-tap");
+        performance.clearMarks("lg2-detail-title-painted");
+        performance.clearMeasures("lg2-detail-tap-to-title-paint");
+        performance.mark("lg2-detail-tap");
+        setDetailTransitionPhase("preparing");
+      } else {
+        heldViewRef.current = null;
+        setDetailTransitionPhase("idle");
+      }
       resetNavigationState();
+      // buildGuestPath keeps the authenticated draft preview, language and
+      // development Living Guide override across in-shell routes.
       setLocation(buildGuestPath(path), {
         replace,
-        state: { livingGuide: true, from: location },
+        state: {
+          livingGuide: true,
+          from: location,
+          livingGuidePresentation: presentation,
+        },
       });
     },
-    [location, resetNavigationState, setLocation],
+    [captureHeldView, location, resetNavigationState, setLocation],
   );
+
+  const navigateDetail = useCallback(
+    (path: string) => navigate(path, false, "detail"),
+    [navigate],
+  );
+
+  useLayoutEffect(() => {
+    if (!isDetailPresentation) {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      heldViewRef.current = null;
+      if (detailTransitionPhase !== "idle") setDetailTransitionPhase("idle");
+      if (restoreDetailFocusRef.current) {
+        restoreDetailFocusRef.current = false;
+        window.requestAnimationFrame(() => {
+          const selector = detailTriggerSelectorRef.current;
+          const trigger = selector
+            ? rootRef.current?.querySelector<HTMLElement>(selector)
+            : null;
+          trigger?.focus({ preventScroll: true });
+        });
+      }
+      return;
+    }
+
+    if (!window.history.state?.livingGuideCloseGuard) {
+      window.history.pushState(
+        { ...window.history.state, livingGuideCloseGuard: true },
+        "",
+        window.location.href,
+      );
+    }
+
+    const heldLayer = heldLayerRef.current;
+    if (heldLayer && heldViewRef.current) {
+      heldLayer.replaceChildren(heldViewRef.current);
+    }
+
+    // First frame: the complete destination view is laid out off-screen.
+    // Second frame: measure that pre-paint interval, then start movement.
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const sheet = rootRef.current?.querySelector<HTMLElement>(
+          ".lg2-route-layer.v--det",
+        );
+        const title = sheet?.querySelector<HTMLElement>("h1, h2, [data-lg-detail-title]");
+        if (sheet && title) {
+          const tap = performance.getEntriesByName("lg2-detail-tap", "mark").at(-1);
+          const tapToPaintMs = tap ? performance.now() - tap.startTime : 0;
+          sheet.dataset.tapToTitlePaintMs = tapToPaintMs.toFixed(1);
+          performance.mark("lg2-detail-title-painted");
+          if (tap) {
+            performance.measure(
+              "lg2-detail-tap-to-title-paint",
+              "lg2-detail-tap",
+              "lg2-detail-title-painted",
+            );
+          }
+        }
+        setDetailTransitionPhase("open");
+        window.requestAnimationFrame(() => {
+          rootRef.current
+            ?.querySelector<HTMLElement>(".lg2-route-layer.v--det .lg2-detail-back")
+            ?.focus({ preventScroll: true });
+        });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+    // The destination location starts one transition. Phase changes must not
+    // restart the two-frame paint gate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDetailPresentation, location]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (unavailableGuestSubroute) {
@@ -522,18 +710,68 @@ export default function LivingGuideGuestShell({
   const gridPath = (section = currentSection) =>
     `/${slug}/s/${encodeURIComponent(section?.key ?? "stay")}`;
 
+  const closePresentedView = useCallback(
+    (fallbackPath: string) => {
+      const finish = () => {
+        closeTimerRef.current = null;
+        heldViewRef.current = null;
+        restoreDetailFocusRef.current = true;
+        if (window.history.state?.livingGuideCloseGuard) {
+          window.history.go(-2);
+        } else if (window.history.length > 1 && window.history.state?.livingGuide) {
+          window.history.back();
+        } else {
+          navigate(fallbackPath, true);
+        }
+      };
+
+      if (!isDetailPresentation) {
+        finish();
+        return;
+      }
+      if (detailTransitionPhase === "closing") return;
+      setDetailTransitionPhase("closing");
+      closeTimerRef.current = window.setTimeout(finish, DETAIL_CLOSE_MS);
+    },
+    [detailTransitionPhase, isDetailPresentation, navigate],
+  );
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (
+        !isDetailPresentation ||
+        window.history.state?.livingGuideCloseGuard ||
+        closeTimerRef.current !== null
+      ) {
+        return;
+      }
+      setDetailTransitionPhase("closing");
+      closeTimerRef.current = window.setTimeout(() => {
+        closeTimerRef.current = null;
+        heldViewRef.current = null;
+        restoreDetailFocusRef.current = true;
+        window.history.back();
+      }, DETAIL_CLOSE_MS);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [isDetailPresentation]);
+
   const goBack = useCallback(() => {
     if (screen !== "detail") return;
-    if (window.history.length > 1 && window.history.state?.livingGuide) {
-      window.history.back();
-      return;
-    }
-    if (routeItemId) {
-      navigate(`/${slug}/c/${routeCategoryId}`, true);
-    } else {
-      navigate(gridPath(categoryContext?.section ?? staySection), true);
-    }
-  }, [categoryContext?.section, navigate, screen, slug, staySection, routeItemId, routeCategoryId]);
+    const fallbackPath = routeItemId
+      ? `/${slug}/c/${routeCategoryId}`
+      : gridPath(categoryContext?.section ?? staySection);
+    closePresentedView(fallbackPath);
+  }, [
+    categoryContext?.section,
+    closePresentedView,
+    routeCategoryId,
+    routeItemId,
+    screen,
+    slug,
+    staySection,
+  ]);
 
   const cancelSignIn = useCallback(() => {
     setShowSignIn(false);
@@ -551,6 +789,7 @@ export default function LivingGuideGuestShell({
         else if (showLanguages) setShowLanguages(false);
         else if (orderItemId) setOrderItemId(null);
         else if (showOrders) setShowOrders(false);
+        else if (isDetailPresentation) closePresentedView(`/${slug}/home`);
         else goBack();
       }
     };
@@ -558,7 +797,9 @@ export default function LivingGuideGuestShell({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
     cancelSignIn,
+    closePresentedView,
     goBack,
+    isDetailPresentation,
     orderItemId,
     screen,
     showLanguages,
@@ -618,8 +859,9 @@ export default function LivingGuideGuestShell({
     requestCredentials();
   };
 
-  const openCategory = (id: string) => navigate(`/${slug}/c/${id}`);
-  const openItem = (categoryId: string, itemId: string) => navigate(`/${slug}/c/${categoryId}/i/${itemId}`);
+  const openCategory = (id: string) => navigateDetail(`/${slug}/c/${id}`);
+  const openItem = (categoryId: string, itemId: string) =>
+    navigateDetail(`/${slug}/c/${categoryId}/i/${itemId}`);
 
   const helpCategory = allCategories.find((c: any) => c.category.layout === "help")?.category;
 
@@ -648,6 +890,28 @@ export default function LivingGuideGuestShell({
       <Starfield theme={theme} />
 
       <main className="lg2-stage">
+        {isDetailPresentation && (
+          <div
+            ref={heldLayerRef}
+            className={`lg2-held-view v on${
+              detailTransitionPhase !== "idle"
+                ? " hold"
+                : ""
+            }`}
+            aria-hidden="true"
+          />
+        )}
+        <div
+          key={isDetailPresentation ? location : "standard-route-layer"}
+          className={`lg2-route-layer${
+            isDetailPresentation
+              ? ` v v--det${
+                  detailTransitionPhase === "open" ? " on" : ""
+                }`
+              : ""
+          }`}
+          data-detail-transition={detailTransitionPhase}
+        >
         {screen === "cover" && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
             if (guest) navigate(`/${slug}/home`);
@@ -666,6 +930,7 @@ export default function LivingGuideGuestShell({
             onOpenNotices={() => setShowNotices(true)}
             notices={notices}
             navigate={navigate}
+            navigateDetail={navigateDetail}
             slug={slug}
             onSearch={() => setShowSearch(true)}
             navState={navState}
@@ -676,7 +941,7 @@ export default function LivingGuideGuestShell({
           <SiteMapGuestView
             images={sitePlanImages}
             t={t}
-            onBack={() => navigate(`/${slug}/home`)}
+            onBack={() => closePresentedView(`/${slug}/home`)}
           />
         )}
 
@@ -684,8 +949,8 @@ export default function LivingGuideGuestShell({
           <MoreGuestView
             omitted={navState.omitted}
             t={t}
-            onBack={() => navigate(`/${slug}/home`)}
-            onNavigate={navigate}
+            onBack={() => closePresentedView(`/${slug}/home`)}
+            onNavigate={navigateDetail}
             sections={sections}
             slug={slug}
           />
@@ -755,7 +1020,7 @@ export default function LivingGuideGuestShell({
             credentialsCancelRevision={credentialsCancelRevision}
             lang={lang}
             t={t}
-            onBack={() => navigate(`/${slug}/home`)}
+            onBack={() => closePresentedView(`/${slug}/home`)}
             onCredentialsRequired={requestCredentials}
             onCredentialsRejected={(message) => {
               setMessagePassword("");
@@ -787,9 +1052,10 @@ export default function LivingGuideGuestShell({
             onOrderClick={requestOrder}
           />
         )}
+        </div>
       </main>
 
-      {shouldShowLivingGuideBottomNav(screen) && (
+      {shouldShowLivingGuideBottomNav(screen) && !isDetailPresentation && (
         <BottomNav
           resolvedNav={navState.resolved}
           sections={sections}
@@ -797,7 +1063,7 @@ export default function LivingGuideGuestShell({
           t={t}
           activeSectionKey={currentSection?.key ?? null}
           activeCategoryId={categoryContext?.category?.id ?? null}
-          onNavigate={navigate}
+          onNavigate={(path: string) => navigate(path, false, "tab")}
           screen={screen}
         />
       )}
@@ -1606,13 +1872,14 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     activeEntry?.height,
   );
   const activeMeasuredAspect = imageAspects[activeKey];
-  const activeAspect = activeMetadataAspect ?? activeMeasuredAspect;
+  const activeAspect =
+    activeMetadataAspect ?? activeMeasuredAspect ?? DETAIL_FALLBACK_ASPECT;
   const galleryAspects = (media ?? []).map((entry: any, index: number) => {
     const entryKey = String(entry.id ?? entry.url ?? index);
     return (
       mediaAspectFromDimensions(entry.width, entry.height) ??
       imageAspects[entryKey] ??
-      null
+      DETAIL_FALLBACK_ASPECT
     );
   });
   const galleryHasOnlyPayloadAspects = (media ?? []).every(
@@ -1642,7 +1909,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       ? "payload"
       : activeMeasuredAspect
         ? "measured"
-        : "pending";
+        : "fallback";
   const heroLayout = singleHeroLayout;
   const heroHeight =
     uniformGalleryLayout?.heroHeight ?? singleHeroLayout?.heroHeight ?? 0;
@@ -1761,9 +2028,9 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   if (isSingleHero) {
     const entry = media[0];
     const entryKey = String(entry.id ?? entry.url ?? 0);
-    const entryAspectReady =
-      mediaAspectFromDimensions(entry.width, entry.height) !== null ||
-      Boolean(imageAspects[entryKey]);
+    const expectedAspect =
+      mediaAspectFromDimensions(entry.width, entry.height) ??
+      DETAIL_FALLBACK_ASPECT;
     return (
       <div
         ref={heroRef}
@@ -1782,8 +2049,8 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
               entryKey={entryKey}
               loading="eager"
               sideBlur={sideBlur}
-              aspectReady={entryAspectReady}
-              expectedAspect={mediaAspectFromDimensions(entry.width, entry.height)}
+              aspectReady
+              expectedAspect={expectedAspect}
               onAspect={rememberAspect}
             />
           </div>
@@ -1818,12 +2085,9 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       >
         {media.map((entry: any, index: number) => {
           const entryKey = String(entry.id ?? entry.url ?? index);
-          const expectedAspect = mediaAspectFromDimensions(
-            entry.width,
-            entry.height,
-          );
-          const aspectReady =
-            expectedAspect !== null || Boolean(imageAspects[entryKey]);
+          const expectedAspect =
+            mediaAspectFromDimensions(entry.width, entry.height) ??
+            DETAIL_FALLBACK_ASPECT;
           return (
             <div className="lg2-gallery-slide" key={entryKey}>
               <AspectAwareHeroImage
@@ -1832,7 +2096,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
                 loading={index === 0 || !layoutReady ? "eager" : "lazy"}
                 sideBlur={false}
                 galleryCover
-                aspectReady={aspectReady}
+                aspectReady
                 expectedAspect={expectedAspect}
                 onAspect={rememberAspect}
               />
@@ -2586,6 +2850,7 @@ function HomeView({
   onOpenNotices,
   notices,
   navigate,
+  navigateDetail,
   slug,
   onSearch,
   navState,
@@ -2667,7 +2932,7 @@ function HomeView({
             disabled={!hasWifi || (!wifiCategory && !staySection)}
             onClick={() => {
               if (wifiCategory) onOpenCategory(wifiCategory.id);
-              else if (staySection) navigate(`/${slug}/s/stay`);
+              else if (staySection) navigateDetail(`/${slug}/s/stay`);
             }}
             data-testid="button-home-wifi"
           >
@@ -2686,7 +2951,7 @@ function HomeView({
           <button
             className="lg2-q"
             type="button"
-            onClick={() => navigate(`/${slug}/messages`)}
+            onClick={() => navigateDetail(`/${slug}/messages`)}
           >
             <svg aria-hidden="true"><use href="#lg-i-chat" /></svg>
             <b>{t("UI.lg.nav.messages", "Sporočila")}</b>
@@ -2714,7 +2979,7 @@ function HomeView({
                 <button
                   type="button"
                   onClick={() =>
-                    navigate(`/${slug}/c/${eventDestination.category.id}`)
+                    navigateDetail(`/${slug}/c/${eventDestination.category.id}`)
                   }
                 >
                   {t("UI.lg.home.allProgram")}
@@ -2722,7 +2987,7 @@ function HomeView({
               ) : (
                 <button
                   type="button"
-                  onClick={() => navigate(`/${slug}/s/explore`)}
+                  onClick={() => navigateDetail(`/${slug}/s/explore`)}
                 >
                   {t("UI.lg.home.more")}
                 </button>

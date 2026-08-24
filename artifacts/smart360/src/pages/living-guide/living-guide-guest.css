@@ -59,6 +59,88 @@ body[data-t="noc"] .lg2-stage {
   animation: lg2-view-in .55s var(--ease) both;
 }
 
+/*
+ * Prototype-bound detail presentation. Ordinary and bottom-tab navigation
+ * keeps the wrapper transparent to layout; card/list/quick navigation turns
+ * it into the moving full-height sheet.
+ */
+.lg2-route-layer {
+  display: contents;
+}
+
+.lg2-app .v {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(26px) scale(.98);
+  transition:
+    transform .55s cubic-bezier(.22, 1, .36, 1),
+    opacity .55s cubic-bezier(.22, 1, .36, 1),
+    background .9s cubic-bezier(.22, 1, .36, 1);
+}
+
+.lg2-app .v.on {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.lg2-app .v.hold {
+  opacity: 1;
+  transform: scale(.955);
+  filter: brightness(.75);
+  pointer-events: none;
+}
+
+.lg2-app .v--det {
+  z-index: 3;
+  opacity: 1;
+  transform: translateY(100%);
+  border-radius: 30px 30px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -24px 70px rgba(0, 0, 0, .28);
+  will-change: transform;
+  transition:
+    transform .34s cubic-bezier(.32, 0, .24, 1),
+    background .9s cubic-bezier(.22, 1, .36, 1);
+}
+
+.lg2-app .v--det[data-detail-transition="preparing"] {
+  transition: none;
+}
+
+.lg2-app .v--det.on {
+  transform: none;
+  transition:
+    transform .55s cubic-bezier(.22, 1, .36, 1),
+    background .9s cubic-bezier(.22, 1, .36, 1);
+}
+
+.lg2-app .v--det > .lg2-view,
+.lg2-held-view > .lg2-view {
+  animation: none;
+}
+
+.lg2-app .v--det .lg2-hero-image-main {
+  opacity: 1;
+  transition: none;
+}
+
+.lg2-held-view {
+  z-index: 1;
+}
+
+.lg2-held-view > .lg2-view {
+  position: absolute;
+  inset: 0;
+}
+
 body[data-t="noc"] .lg2-grid-view {
   background: rgba(12, 19, 34, .94);
 }
@@ -1390,6 +1472,22 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lg2-app .v,
+  .lg2-app .v--det,
+  .lg2-app .v--det.on {
+    transition: opacity .2s !important;
+    transition-delay: 0ms !important;
+  }
+
+  .lg2-app .v--det {
+    transform: none;
+    opacity: 0;
+  }
+
+  .lg2-app .v--det.on {
+    opacity: 1;
+  }
+
   .lg2-view,
   .lg2-welcome-sheet {
     animation-duration: .2s;
