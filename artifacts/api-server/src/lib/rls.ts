@@ -89,7 +89,7 @@ export const HOST_DB_ROLE = "smart360_host";
 /**
  * LEAST PRIVILEGE: the host role gets exactly the tables and operations the
  * host-allowed /admin handlers use — nothing else. Owner-secret tables
- * (admin_*, host_password_resets) and owner bookkeeping (cleanup_runs,
+ * (admin_*, host_invites, host_password_resets) and owner bookkeeping (cleanup_runs,
  * tenant_renewals) have NO grants at all, and FUTURE tables are fail-closed:
  * a new table is invisible to hosts until it is deliberately added here.
  */

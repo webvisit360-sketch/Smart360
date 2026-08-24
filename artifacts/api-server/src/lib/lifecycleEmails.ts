@@ -36,11 +36,13 @@ export interface WelcomeEmailPayload {
   hostName?: string | null;
   /** Property display name, e.g. "Apartmaji Meli Pu". */
   propertyName: string;
+  /** Single-use 72-hour account-claim link. NEVER an auto-login link. */
+  setPasswordUrl: string;
 }
 
 /** Pure builder — exported for unit tests. */
 export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
-  const subject = "Dobrodošli — začenjamo z vašim vodnikom";
+  const subject = "Dobrodošli v Smart360 · vaš paket je aktiviran";
   const greeting = p.hostName ? `Pozdravljeni, ${p.hostName}.` : "Pozdravljeni.";
   const { html, text } = renderEmail({
     subject,
@@ -53,6 +55,11 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
         { b: p.propertyName },
         " pripravljamo digitalni vodnik za vaše goste.",
       ),
+      par("Najprej si varno nastavite geslo za svoj Smart360 račun:"),
+      cta("Nastavite geslo", p.setPasswordUrl),
+      small(
+        "Povezava velja 72 ur in jo je mogoče uporabiti enkrat. Gesla ne pošiljamo po e-pošti in ga tudi mi ne vidimo.",
+      ),
       par(
         "Vodnik v celoti sestavimo mi — ničesar vam ni treba graditi ali urejati. Od vas potrebujemo samo gradivo:",
       ),
@@ -63,7 +70,7 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
       ]),
       cta("Pošljite gradivo", "mailto:info@webvisit360.com"),
       par(
-        "Gradivo lahko pošljete kar kot odgovor na to sporočilo. Ko bo vodnik pripravljen, prejmete povezavo za nastavitev gesla in pregled.",
+        "Gradivo lahko pošljete kar kot odgovor na to sporočilo. Ko bo vodnik pripravljen, prejmete še povabilo za pregled.",
       ),
     ],
     footerLines: AGENCY_FOOTER,
@@ -101,7 +108,7 @@ export function buildGuideReadyEmailBody(p: GuideReadyEmailPayload, from: string
       par("Da ga dokončate, si najprej nastavite geslo:"),
       cta("Nastavite geslo", p.setPasswordUrl),
       small(
-        "Povezava velja 24 ur in jo je mogoče uporabiti enkrat. Gesla ne pošiljamo po e-pošti in ga tudi mi ne vidimo.",
+        "Povezava velja 72 ur in jo je mogoče uporabiti enkrat. Gesla ne pošiljamo po e-pošti in ga tudi mi ne vidimo.",
       ),
       par(
         "Ko se prijavite, vas ",

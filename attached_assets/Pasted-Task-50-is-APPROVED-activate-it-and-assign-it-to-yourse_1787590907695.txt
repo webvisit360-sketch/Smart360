@@ -1,0 +1,39 @@
+Task #50 is APPROVED — activate it and assign it to yourself.
+
+Four constraints before you start:
+
+1. THE PREVIEW MUST NOT BE A SECOND IMPLEMENTATION. The rail renders the real
+   guest guide — the same code that serves smart360.info/<slug> — in an iframe
+   at 402 × 874, scaled to the 289 × 629 frame, pointed at the tenant's DRAFT
+   state. Do not re-create the guide's screens inside the portal. If the guest
+   guide changes, the preview must change with it, with no second edit. If you
+   believe an iframe cannot work here, report why and STOP rather than
+   building a copy.
+
+2. INVITE AND RESET ARE DIFFERENT TOKEN TYPES, not one table with a longer
+   expiry. An invite token must not be usable to reset an existing account's
+   password, and a reset token must not be usable to claim an account. Each is
+   single use; issuing a new invite invalidates the previous one; using either
+   revokes all existing sessions for that account. Rate-limit the cockpit's
+   resend button per account, and log every issue and use with the actor.
+
+3. TOKEN HYGIENE IN THE BROWSER. The set-password page must remove the token
+   from the URL as soon as it has been read (replaceState), send no third-party
+   requests, and set Referrer-Policy: no-referrer on that route, so the token
+   never leaks through a referrer header or browser history.
+
+4. PREVIEW REFRESH MUST NOT HAMMER THE SERVER. Debounce at 400–600 ms after
+   the last keystroke; never one request per character. Report the measured
+   refresh latency for a typical text edit.
+
+The sender-name change is display-name only — the domain, DKIM and SPF stay as
+they are, so no re-warming. Confirm that in the report.
+
+Verification I expect: the four CHECKPOINT 3 measurement groups (sidebar,
+header, rail, cards/buttons/inputs) as computed-style pairs against the
+prototype; proof that editing alone never changes what a guest sees, taken by
+loading the public URL before and after an unpublished edit; a full invite
+flow on an address we control, including a second invite invalidating the
+first and an expired token being refused; and the DELIBERATELY ABSENT section.
+
+Report and STOP.

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, KeyRound } from "lucide-react";
+import { Loader2, KeyRound, Mail } from "lucide-react";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -18,6 +18,11 @@ export default function AdminLogin() {
   
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isProcessingLogin, setIsProcessingLogin] = useState(false);
+  const [hostEmail, setHostEmail] = useState("");
+  const [hostPassword, setHostPassword] = useState("");
+  const [hostBusy, setHostBusy] = useState(false);
+  const [hostError, setHostError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   const getLoginOptionsMutation = useGetPasskeyLoginOptions();
   const verifyLoginMutation = useVerifyPasskeyLogin();
@@ -78,6 +83,57 @@ export default function AdminLogin() {
     useRecoveryMutation.mutate({ data: { code: recoveryCode } });
   };
 
+  const handleHostLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setHostError(null);
+    setResetSent(false);
+    setHostBusy(true);
+    try {
+      const response = await fetch("/api/admin/host/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: hostEmail, password: hostPassword }),
+      });
+      const body = await response.json().catch(() => ({})) as {
+        error?: string;
+        tenantId?: string;
+      };
+      if (!response.ok || !body.tenantId) {
+        throw new Error(body.error || "Napačen e-naslov ali geslo.");
+      }
+      setLocation(`/admin/tenants/${body.tenantId}`);
+    } catch (error) {
+      setHostError(error instanceof Error ? error.message : "Prijava ni uspela.");
+    } finally {
+      setHostBusy(false);
+    }
+  };
+
+  const requestHostReset = async () => {
+    if (!hostEmail.trim()) {
+      setHostError("Najprej vnesite svoj e-poštni naslov.");
+      return;
+    }
+    setHostError(null);
+    setHostBusy(true);
+    try {
+      await fetch("/api/admin/host/reset/request", {
+        method: "POST",
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: hostEmail }),
+      });
+      // Uniform confirmation: never reveal whether the address has an account.
+      setResetSent(true);
+    } catch {
+      setHostError("Zahteve trenutno ni bilo mogoče poslati. Poskusite znova.");
+    } finally {
+      setHostBusy(false);
+    }
+  };
+
   if (isRecoveryMode) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-muted p-4">
@@ -127,25 +183,79 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-muted p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center pb-8">
           <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <CardTitle className="text-2xl">Smart360 Admin</CardTitle>
-          <CardDescription>Prijavite se v nadzorno ploščo</CardDescription>
+          <CardTitle className="text-2xl">Smart360 portal</CardTitle>
+          <CardDescription>Prijavite se in uredite vodnik za svoje goste.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <form onSubmit={handleHostLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="host-login-email">E-poštni naslov</Label>
+              <Input
+                id="host-login-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={hostEmail}
+                onChange={(event) => setHostEmail(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="host-login-password">Geslo</Label>
+              <Input
+                id="host-login-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={hostPassword}
+                onChange={(event) => setHostPassword(event.target.value)}
+              />
+            </div>
+            {hostError && (
+              <p role="alert" className="text-sm font-semibold text-destructive text-center">
+                {hostError}
+              </p>
+            )}
+            {resetSent && (
+              <p className="text-sm font-semibold text-primary text-center">
+                Če račun obstaja, smo poslali 60-minutno povezavo za ponastavitev.
+              </p>
+            )}
+            <Button type="submit" className="w-full" disabled={hostBusy}>
+              {hostBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Prijava za gostitelja
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              className="w-full text-muted-foreground"
+              onClick={() => void requestHostReset()}
+              disabled={hostBusy}
+            >
+              Pozabljeno geslo?
+            </Button>
+          </form>
+
+          <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.04em] text-muted-foreground">
+            <span className="h-px bg-border flex-1" />
+            Smart360 ekipa
+            <span className="h-px bg-border flex-1" />
+          </div>
+
           <Button
-            size="lg"
-            className="w-full text-base"
+            variant="outline"
+            className="w-full"
             onClick={handlePasskeyLogin}
             disabled={isProcessingLogin}
           >
             {isProcessingLogin && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-            Prijava s passkeyjem
+            Prijava s passkeyjem za ekipo
           </Button>
 
           {loginError && (

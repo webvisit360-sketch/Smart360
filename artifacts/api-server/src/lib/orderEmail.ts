@@ -22,7 +22,7 @@ import { cta, p as par, portalUrl, renderEmail, rows, small } from "./emailTempl
 
 const connectors = new ReplitConnectors();
 export const ORDER_EMAIL_FROM_ADDRESS = "info@webvisit360.com";
-export const ORDER_EMAIL_FROM_NAME = "Smart360 naročila";
+export const ORDER_EMAIL_FROM_NAME = "Smart360";
 
 /**
  * Sender address from environment.  Must be configured — no fallback.

@@ -1,6 +1,6 @@
-import { useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey } from "@workspace/api-client-react";
+import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { Loader2, ArrowLeft, ExternalLink, Save, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
+import { Loader2, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
 import { actorLabel } from "@/pages/admin/dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ import { useEffect, useRef, useState } from "react";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
 import { DistanceReview } from "@/components/admin/distance-review";
 import { isLikelyUrl } from "@/lib/maps-href";
+import { HostInvitePanel } from "@/components/admin/host-invite-panel";
+import { useHostSession } from "@/hooks/use-host-session";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -56,15 +58,30 @@ export default function AdminTenantEdit() {
   const id = params?.id || "";
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { data: session } = useGetAdminSession();
+  const { data: hostSession } = useHostSession();
+  const isOwner = Boolean(session?.authenticated);
 
   const { data: tenant, isLoading } = useGetTenant(id, { query: { enabled: !!id, queryKey: getGetTenantQueryKey(id) } });
+  const { data: previewTenant } = useGetPublicTenant(
+    tenant?.slug || "",
+    { preview: true },
+    {
+      query: {
+        enabled: Boolean(tenant?.slug),
+        queryKey: ["portalPreviewTenant", tenant?.slug],
+      },
+    },
+  );
   const updateMutation = useUpdateTenant({
     mutation: {
       onSuccess: (data) => {
         queryClient.setQueryData(getGetTenantQueryKey(id), (old: any) => old ? { ...old, ...data } : old);
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
-        setFormData((prev) => ({ ...prev, tourUrl: data.tourUrl || "" }));
-        toast({ title: "Shranjeno", description: "Spremembe so bile shranjene." });
+        setFormData((prev) => {
+          if (prev.tourUrl === (data.tourUrl || "")) return prev;
+          return { ...prev, tourUrl: data.tourUrl || "" };
+        });
       },
       onError: (err: any) => {
         if (err?.status === 409) {
@@ -161,6 +178,59 @@ export default function AdminTenantEdit() {
   const logoFileRef = useRef<HTMLInputElement>(null);
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
+  const [activeTab, setActiveTab] = useState("pregled");
+  const isSettings = ["general", "appearance", "contacts", "translations", "guide", "changelog"].includes(activeTab);
+  const [previewScreen, setPreviewScreen] = useState<"home" | "category">("home");
+
+  // Reload the real guest iframe only after a draft mutation succeeds. Text
+  // editors already debounce their writes; this avoids a request per keystroke
+  // and means the reloaded iframe always receives persisted preview data.
+  const [previewKey, setPreviewKey] = useState(0);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return queryClient.getMutationCache().subscribe((event: any) => {
+      if (event?.type !== "updated" || event?.action?.type !== "success") return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setPreviewKey((key) => key + 1), 40);
+    });
+  }, [queryClient]);
+
+  useEffect(() => {
+    setPreviewScreen(["content", "distances", "guide"].includes(activeTab) ? "category" : "home");
+  }, [activeTab]);
+
+  // Auto-save logic
+  const lastSaved = useRef(formData);
+  useEffect(() => {
+    if (initRef.current !== id) return;
+    const currentStr = JSON.stringify(formData);
+    const lastStr = JSON.stringify(lastSaved.current);
+    if (currentStr !== lastStr) {
+      const snapshot = formData;
+      const t = setTimeout(() => {
+        const { latitude: _l, longitude: _lo, ...saveData } = formData;
+        updateMutation.mutate({
+          id,
+          data: {
+            ...saveData,
+            customDomain: formData.customDomain.trim() || null,
+            email: formData.email.trim() || null,
+            mapUrl: formData.mapUrl.trim() || null,
+            wifiSsid: formData.wifiSsid.trim() || null,
+            wifiPass: formData.wifiPass || null,
+            mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1024 ** 3),
+          },
+        }, {
+          onSuccess: () => {
+            lastSaved.current = snapshot;
+          },
+        });
+      }, 500);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [formData, id, mediaQuotaGb]);
+
   // Average luminance of the cover photo — for the contrast warning on the cover icons.
   const [coverLum, setCoverLum] = useState<number | null>(null);
   useEffect(() => {
@@ -198,7 +268,7 @@ export default function AdminTenantEdit() {
       setOrderPasswordConfigured(Boolean(tenant.orderPasswordConfigured));
       setOrderPasswordDraft("");
       setMediaQuotaGb(((tenant.mediaQuotaBytes ?? 2 * 1024 ** 3) / 1024 ** 3).toFixed(1).replace(/\.0$/, ""));
-      setFormData({
+      const initialForm = {
         name: tenant.name || "",
         slug: tenant.slug || "",
         customDomain: tenant.customDomain || "",
@@ -253,7 +323,9 @@ export default function AdminTenantEdit() {
         wifiEnc: tenant.wifiEnc ?? null,
         bgColor: tenant.bgColor ?? null,
         guestUiMode: (tenant.guestUiMode === "living-guide" ? "living-guide" : "legacy") as "legacy" | "living-guide",
-      });
+      };
+      lastSaved.current = initialForm;
+      setFormData(initialForm);
     }
   }, [tenant]);
 
@@ -298,20 +370,36 @@ export default function AdminTenantEdit() {
     return <div className="p-8">Namestitev ni najdena.</div>;
   }
 
-  const handleSave = () => {
+  const firstPreviewCategoryId =
+    ((previewTenant as any)?.sections || [])
+      .flatMap((section: any) => section.categories || [])
+      .find((category: any) => typeof category?.id === "string")?.id ?? null;
+  const previewBase = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  const previewPath =
+    previewScreen === "category" && firstPreviewCategoryId
+      ? `/${tenant.slug}/c/${encodeURIComponent(firstPreviewCategoryId)}`
+      : `/${tenant.slug}`;
+  const previewUrl = `${previewBase}${previewPath}?preview=1`;
+
+  const handlePublish = () => {
     const { latitude: _latitude, longitude: _longitude, ...saveFormData } = formData;
+    setFormData(prev => ({ ...prev, isPublished: true }));
     updateMutation.mutate({
       id,
       data: { 
         ...saveFormData, 
+        isPublished: true,
         customDomain: formData.customDomain.trim() || null,
         email: formData.email.trim() || null,
         mapUrl: formData.mapUrl.trim() || null,
         wifiSsid: formData.wifiSsid.trim() || null,
         wifiPass: formData.wifiPass || null,
-        // min 0.1 GB — a zero/invalid quota would block every upload
         mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1024 ** 3),
       },
+    }, {
+      onSuccess: () => {
+        toast({ title: "Objavljeno", description: "Spremembe so vidne gostom." });
+      }
     });
   };
 
@@ -342,56 +430,106 @@ export default function AdminTenantEdit() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
-      {/* CP2b: the header states unmistakably WHOSE guide is open — the owner
-          once lost work by editing the wrong tenant. Copies carry an extra
-          loud marker. */}
-      <div className="flex items-center gap-4 sticky top-0 z-10 py-4 -my-4 mb-4 border-b-2 border-emerald-600/60 bg-emerald-50/95 dark:bg-emerald-950/90 backdrop-blur px-4 -mx-4 rounded-b-lg">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/admin")} title="Nazaj na seznam">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Odprt vodnik</span>
-            {tenant.copiedFromTenantId && (
-              <Badge className="bg-amber-500 text-white hover:bg-amber-500 border-none">KOPIJA</Badge>
+    <div className="flex h-[100dvh] bg-[#F5F5F7] text-[#14201F] overflow-hidden font-sans">
+
+      {/* SIDEBAR */}
+      <aside className="w-[264px] bg-white border-r border-black/5 flex flex-col shrink-0 px-[14px] py-[22px] overflow-y-auto">
+        <div className="flex flex-col gap-[11px] mb-8">
+          <button onClick={() => setActiveTab('pregled')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Pregled</button>
+          <button onClick={() => setActiveTab('kreator')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Kreator vodnika</button>
+          <button onClick={() => setActiveTab('orders')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center justify-between px-4 transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+            <span>Naročila</span>
+            <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">2</span>
+          </button>
+          <button onClick={() => setActiveTab('messages')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'messages' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Sporočila</button>
+        </div>
+
+        <div className="mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
+        <div className="flex flex-col gap-[11px] mb-8">
+          <button onClick={() => setActiveTab('dogodki')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'dogodki' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Dogodki</button>
+          <button onClick={() => setActiveTab('obvestila')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Obvestila</button>
+          <button onClick={() => setActiveTab('ponudba')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Ponudba in cene</button>
+        </div>
+
+        <div className="mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
+        <div className="flex flex-col gap-[11px] mb-auto">
+          <button onClick={() => setActiveTab('distances')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Okolica</button>
+          <button onClick={() => setActiveTab('content')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastanitev</button>
+          <button onClick={() => setActiveTab('general')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastavitve</button>
+        </div>
+
+        <div className="mt-8 pt-4 border-t border-black/5 px-4 flex flex-col gap-1">
+          <p className="text-sm font-semibold truncate">
+            {isOwner ? "Smart360 Admin" : hostSession?.email || "Gostitelj"}
+          </p>
+          <button
+            onClick={async () => {
+              if (isOwner) {
+                setLocation("/admin");
+                return;
+              }
+              await fetch("/api/admin/host/logout", {
+                method: "POST",
+                credentials: "include",
+              }).catch(() => undefined);
+              setLocation("/admin/login");
+            }}
+            className="text-sm text-muted-foreground hover:text-foreground text-left"
+          >
+            {isOwner ? "Nazaj na namestitve" : "Odjava"}
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+        {/* HEADER */}
+        <header className="h-[80px] px-[30px] bg-white/95 backdrop-blur border-b border-black/5 sticky top-0 z-20 flex items-center justify-between shrink-0">
+          <div className="min-w-0 flex items-center gap-3">
+            <h1 className="text-[26px] font-[800] tracking-tight truncate">{tenant.name}</h1>
+            {tenant.isPublished ? (
+              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-none shrink-0">Objavljeno</Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none shrink-0">Osnutek</Badge>
             )}
-            {tenant.tenantType && (
-              <Badge variant="outline" className="border-emerald-300 text-emerald-700">{tenant.tenantType}</Badge>
+            {isOwner && (
+              <div className="ml-2 flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md shrink-0 border border-emerald-200">
+                <UserRoundCog className="h-4 w-4" />
+                Smart360 · v imenu gostitelja
+              </div>
+            )}
+            {tenant.copiedFromTenantId && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-500 border-none shrink-0">KOPIJA</Badge>
             )}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight truncate">{tenant.name}</h1>
-          <p className="text-sm text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
-            <UserRoundCog className="h-3.5 w-3.5 shrink-0" />
-            Urejate kot Smart360 — v imenu gostitelja
-          </p>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <a href={`/${tenant.slug}?preview=1`} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-4 h-4 mr-2" /> Poglej
-            </a>
-          </Button>
-          <Button onClick={handleSave} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Shrani
-          </Button>
-        </div>
-      </div>
 
-      <Tabs defaultValue="general">
-        <TabsList className="mb-4">
-          <TabsTrigger value="general">Splošno</TabsTrigger>
-          <TabsTrigger value="appearance">Videz</TabsTrigger>
-          <TabsTrigger value="contacts">Stiki & Lokacija</TabsTrigger>
-          <TabsTrigger value="distances">Razdalje</TabsTrigger>
-          <TabsTrigger value="content">Vsebina (Drevo)</TabsTrigger>
-          <TabsTrigger value="translations">Prevodi</TabsTrigger>
-          <TabsTrigger value="orders">Naročila in Sporočila</TabsTrigger>
-          <TabsTrigger value="guide">Living Guide</TabsTrigger>
-          <TabsTrigger value="changelog">Dnevnik</TabsTrigger>
-        </TabsList>
+          <Button onClick={handlePublish} disabled={updateMutation.isPending} className="rounded-[14px] px-[20px] py-[12px] text-[16px] font-[700] h-auto">
+            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            Objavi
+          </Button>
+        </header>
 
+        {/* SCROLLABLE VIEW */}
+        <div className="flex-1 overflow-auto p-[30px]">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {isSettings && (
+              <TabsList className="mb-6 bg-white border border-black/5 rounded-[14px] p-1">
+                <TabsTrigger value="general" className="rounded-[10px]">Splošno</TabsTrigger>
+                <TabsTrigger value="appearance" className="rounded-[10px]">Videz</TabsTrigger>
+                <TabsTrigger value="contacts" className="rounded-[10px]">Stiki & Lokacija</TabsTrigger>
+                <TabsTrigger value="translations" className="rounded-[10px]">Prevodi</TabsTrigger>
+                <TabsTrigger value="guide" className="rounded-[10px]">Living Guide</TabsTrigger>
+                <TabsTrigger value="changelog" className="rounded-[10px]">Dnevnik</TabsTrigger>
+              </TabsList>
+            )}
+
+            <TabsContent value="pregled"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Pregled (CP4)</div></TabsContent>
+            <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika (CP4)</div></TabsContent>
+            <TabsContent value="dogodki"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki (CP6)</div></TabsContent>
+            <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
+            <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
+            <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
@@ -644,6 +782,7 @@ export default function AdminTenantEdit() {
               )}
             </CardContent>
           </Card>
+          {isOwner && <HostInvitePanel tenantId={id} />}
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
@@ -1070,7 +1209,6 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
           <AdminTenantOrders tenantId={id} />
-          <AdminTenantMessages tenantId={id} />
         </TabsContent>
         <TabsContent value="guide" className="space-y-6">
           <Card>
@@ -1087,6 +1225,46 @@ export default function AdminTenantEdit() {
           <TenantChangelogCard tenantId={tenant.id} />
         </TabsContent>
       </Tabs>
+
+      </div>
+      </main>
+
+      {/* PREVIEW RAIL */}
+      <aside className="w-[305px] bg-[#F5F5F7] border-l border-black/5 shrink-0 hidden min-[1240px]:flex flex-col items-center py-[30px]">
+        <div className="w-[289px] h-[629px] rounded-[32px] border-[7px] border-black bg-black overflow-hidden shadow-xl mb-4 relative shrink-0">
+          <iframe
+            key={previewKey}
+            src={previewUrl}
+            className="w-[402px] h-[874px] origin-top-left border-0 bg-white"
+            style={{ transform: 'scale(0.684)' }}
+            title="Predogled"
+          />
+        </div>
+        <p className="text-[14px] font-[650] text-[#14201F] mb-2">iPhone 17 Pro · 402 × 874</p>
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full text-xs h-7 px-4"
+            onClick={() => setPreviewScreen("home")}
+          >
+            Domov
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full text-xs h-7 px-4"
+            onClick={() => setPreviewScreen("category")}
+          >
+            Kategorija
+          </Button>
+        </div>
+        <p className="text-[12px] text-muted-foreground text-center px-4 leading-relaxed">
+          Predogled se osveži ob vsaki spremembi.
+          <br/>
+          Gostje vidijo šele objavljeno različico.
+        </p>
+      </aside>
     </div>
   );
 }

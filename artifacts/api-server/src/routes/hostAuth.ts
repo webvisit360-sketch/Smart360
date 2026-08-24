@@ -4,13 +4,16 @@ import {
   destroyHostSession,
   findHostActor,
   changeHostPassword,
+  issueHostInviteForTenant,
+  consumeHostInvite,
   issueHostPasswordReset,
   consumeHostPasswordReset,
   getHostAccountForTenant,
   upsertHostAccountForTenant,
 } from "../lib/hostAuth";
 import { sendHostResetEmail } from "../lib/hostResetEmail";
-import { requireAdmin } from "../lib/adminAuth";
+import { requireAdmin, rpOrigin } from "../lib/adminAuth";
+import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
 
@@ -102,6 +105,18 @@ router.post("/admin/host/reset/confirm", async (req, res): Promise<void> => {
   res.status(204).end();
 });
 
+// ── Anonymous: account claim through a distinct 72-hour invite ───────────────
+
+router.post("/admin/host/invite/confirm", async (req, res): Promise<void> => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const result = await consumeHostInvite(body["token"], body["newPassword"], req);
+  if (!result.ok) {
+    res.status(400).json({ error: result.error });
+    return;
+  }
+  res.status(204).end();
+});
+
 // ── Owner-only: host account management per tenant ──────────────────────────
 
 function tenantParam(req: Request, res: Response): string | null {
@@ -142,6 +157,67 @@ router.put("/admin/tenants/:id/host", requireAdmin, async (req, res): Promise<vo
 });
 
 router.post(
+  "/admin/tenants/:id/host/send-invite",
+  requireAdmin,
+  async (req, res): Promise<void> => {
+    const tenantId = tenantParam(req, res);
+    if (!tenantId) return;
+    const rawTemplate = (req.body as Record<string, unknown> | undefined)?.["template"];
+    if (rawTemplate !== "welcome" && rawTemplate !== "guide-ready") {
+      res.status(400).json({ error: "template must be welcome or guide-ready" });
+      return;
+    }
+    const issued = await issueHostInviteForTenant(tenantId, rawTemplate, req);
+    if (!issued.ok) {
+      res.status(issued.status).json({ error: issued.error });
+      return;
+    }
+
+    const setPasswordUrl =
+      `${rpOrigin()}/portal/povabilo?token=${encodeURIComponent(issued.token)}`;
+    const sent =
+      issued.template === "welcome"
+        ? await sendWelcomeEmail(
+            {
+              to: issued.email,
+              propertyName: issued.propertyName,
+              setPasswordUrl,
+            },
+            `invite-${issued.inviteId}`,
+          )
+        : await sendGuideReadyEmail(
+            {
+              to: issued.email,
+              propertyName: issued.propertyName,
+              slug: issued.slug,
+              setPasswordUrl,
+            },
+            `invite-${issued.inviteId}`,
+          );
+    if (!sent.ok) {
+      res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });
+      return;
+    }
+    await logChange({
+      tenantId,
+      tenantName: issued.propertyName,
+      action: "send",
+      entity: "host-invite",
+      detail:
+        issued.template === "welcome"
+          ? "Poslano 72-urno vabilo: dobrodošlica"
+          : "Poslano 72-urno vabilo: vodnik pripravljen",
+    });
+    res.json({
+      sent: true,
+      to: issued.email,
+      template: issued.template,
+      expiresAt: issued.expiresAt.toISOString(),
+    });
+  },
+);
+
+router.post(
   "/admin/tenants/:id/host/send-reset",
   requireAdmin,
   async (req, res): Promise<void> => {
@@ -150,6 +226,12 @@ router.post(
     const account = await getHostAccountForTenant(tenantId);
     if (!account) {
       res.status(409).json({ error: "Ta namestitev še nima gostiteljskega računa." });
+      return;
+    }
+    if (!account.hasPassword) {
+      res.status(409).json({
+        error: "Račun še ni aktiviran. Pošljite 72-urno vabilo namesto ponastavitve.",
+      });
       return;
     }
     // No IP limiter here (owner cockpit), but the per-account 3/hour cap in

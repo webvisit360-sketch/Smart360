@@ -16,7 +16,7 @@ import { cta, p as par, renderEmail, small } from "./emailTemplate";
 
 const connectors = new ReplitConnectors();
 
-export const HOST_RESET_FROM_NAME = "Smart360 portal";
+export const HOST_RESET_FROM_NAME = "Smart360";
 
 function emailFrom(): string {
   const addr = process.env["ORDER_EMAIL_FROM"];
@@ -56,7 +56,7 @@ export function buildResetEmailBody(to: string, link: string, from: string) {
     ],
     footerLines: ["Smart360 · digitalni vodnik za goste"],
   });
-  return { from, to: [to], subject, html, text };
+  return { from, reply_to: "info@webvisit360.com", to: [to], subject, html, text };
 }
 
 export type ResetEmailResult = { ok: true } | { ok: false };

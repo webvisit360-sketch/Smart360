@@ -6,12 +6,13 @@ import {
   hostUsersTable,
   hostMembershipsTable,
   hostSessionsTable,
+  hostInvitesTable,
   hostPasswordResetsTable,
   hostAuthEventsTable,
   tenantsTable,
   type HostUser,
 } from "@workspace/db";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 
 /**
  * Host account authentication (Instruction #28, CHECKPOINT 2).
@@ -31,6 +32,7 @@ import { and, eq, gt, isNull, sql } from "drizzle-orm";
 
 export const HOST_SESSION_COOKIE = "__Host-s360_host";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+export const INVITE_TTL_MS = 72 * 60 * 60 * 1000; // 72 hours, single use
 const RESET_TTL_MS = 60 * 60 * 1000; // 60 minutes, single use
 
 export const ARGON2ID_PARAMS = {
@@ -320,6 +322,189 @@ export async function changeHostPassword(
   return { ok: true };
 }
 
+// ---------- Account invitation (owner-issued, single-use, 72 h) ----------
+
+export type HostInviteTemplate = "welcome" | "guide-ready";
+
+export type HostInviteIssue =
+  | {
+      ok: true;
+      token: string;
+      inviteId: string;
+      expiresAt: Date;
+      email: string;
+      propertyName: string;
+      slug: string;
+      template: HostInviteTemplate;
+    }
+  | { ok: false; status: 404 | 409 | 429; error: string };
+
+function inviteActor(req: Request | null): string {
+  if (!req?.actor) return "anonymous";
+  if (req.actor.kind === "host") return `host:${req.actor.email}`;
+  return "owner";
+}
+
+/**
+ * Reserve one invitation under a host-account row lock. The audit event is
+ * also the cross-instance per-account rate-limit counter. Invalidating older
+ * pending invitations and inserting the new one commit together.
+ */
+export async function issueHostInviteForTenant(
+  tenantId: string,
+  template: HostInviteTemplate,
+  req: Request,
+): Promise<HostInviteIssue> {
+  const token = crypto.randomBytes(32).toString("base64url");
+  return db.transaction(async (tx) => {
+    const [membership] = await tx
+      .select({ hostUserId: hostMembershipsTable.hostUserId })
+      .from(hostMembershipsTable)
+      .where(eq(hostMembershipsTable.tenantId, tenantId))
+      .limit(1);
+    if (!membership) {
+      return { ok: false, status: 409, error: "Ta namestitev še nima gostiteljskega računa." };
+    }
+
+    const [user] = await tx
+      .select()
+      .from(hostUsersTable)
+      .where(eq(hostUsersTable.id, membership.hostUserId))
+      .limit(1)
+      .for("update");
+    if (!user) return { ok: false, status: 404, error: "Not found" };
+    if (user.passwordHash) {
+      return {
+        ok: false,
+        status: 409,
+        error: "Račun je že aktiviran. Uporabite 60-minutno ponastavitev gesla.",
+      };
+    }
+
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const recent = await tx
+      .select({ id: hostAuthEventsTable.id })
+      .from(hostAuthEventsTable)
+      .where(
+        and(
+          eq(hostAuthEventsTable.type, "invite_issued"),
+          eq(hostAuthEventsTable.hostUserId, user.id),
+          gt(hostAuthEventsTable.createdAt, since),
+        ),
+      );
+    if (recent.length >= 3) {
+      return {
+        ok: false,
+        status: 429,
+        error: "Omejitev: največ 3 vabila na uro za ta račun.",
+      };
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + INVITE_TTL_MS);
+    await tx
+      .update(hostInvitesTable)
+      .set({ invalidatedAt: now })
+      .where(
+        and(
+          eq(hostInvitesTable.hostUserId, user.id),
+          isNull(hostInvitesTable.usedAt),
+          isNull(hostInvitesTable.invalidatedAt),
+        ),
+      );
+    const [invite] = await tx
+      .insert(hostInvitesTable)
+      .values({
+        hostUserId: user.id,
+        tokenHash: sha256(token),
+        expiresAt,
+      })
+      .returning({ id: hostInvitesTable.id });
+    await tx.insert(hostAuthEventsTable).values({
+      hostUserId: user.id,
+      type: "invite_issued",
+      detail: `actor=${inviteActor(req)};template=${template}`,
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+    });
+
+    const [tenant] = await tx
+      .select({ name: tenantsTable.name, slug: tenantsTable.slug })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1);
+    if (!tenant) return { ok: false, status: 404, error: "Not found" };
+    return {
+      ok: true,
+      token,
+      inviteId: invite!.id,
+      expiresAt,
+      email: user.email,
+      propertyName: tenant.name,
+      slug: tenant.slug,
+      template,
+    };
+  });
+}
+
+export async function consumeHostInvite(
+  tokenRaw: unknown,
+  passwordRaw: unknown,
+  req: Request | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const next = validateNewPassword(passwordRaw);
+  if (!next.ok) return { ok: false, error: next.error };
+  const token = typeof tokenRaw === "string" ? tokenRaw.trim() : "";
+  if (token.length < 20) return { ok: false, error: "Povezava ni veljavna ali je potekla." };
+  const newHash = await hashPassword(next.value);
+  const claimed = await db.transaction(async (tx) => {
+    const [invite] = await tx
+      .select()
+      .from(hostInvitesTable)
+      .where(
+        and(
+          eq(hostInvitesTable.tokenHash, sha256(token)),
+          isNull(hostInvitesTable.usedAt),
+          isNull(hostInvitesTable.invalidatedAt),
+          gt(hostInvitesTable.expiresAt, new Date()),
+        ),
+      )
+      .limit(1)
+      .for("update");
+    if (!invite) return null;
+
+    // This conditional is the hard type boundary: an invite can CLAIM an
+    // account once, but can never RESET an account that already has a password.
+    const [user] = await tx
+      .update(hostUsersTable)
+      .set({
+        passwordHash: newHash,
+        passwordChangedAt: new Date(),
+        failedLoginCount: 0,
+        lastFailedAt: null,
+      })
+      .where(and(eq(hostUsersTable.id, invite.hostUserId), isNull(hostUsersTable.passwordHash)))
+      .returning({ id: hostUsersTable.id });
+    if (!user) return null;
+
+    await tx
+      .update(hostInvitesTable)
+      .set({ usedAt: new Date() })
+      .where(eq(hostInvitesTable.id, invite.id));
+    await tx.delete(hostSessionsTable).where(eq(hostSessionsTable.hostUserId, invite.hostUserId));
+    await tx.insert(hostAuthEventsTable).values({
+      hostUserId: invite.hostUserId,
+      type: "invite_used",
+      detail: `actor=${inviteActor(req)}`,
+      ip: req?.ip ?? null,
+      userAgent: req?.get("user-agent") ?? null,
+    });
+    return invite.hostUserId;
+  });
+  if (!claimed) return { ok: false, error: "Povezava ni veljavna ali je potekla." };
+  return { ok: true };
+}
+
 // ---------- Password reset (self-service, single-use, 60 min) ----------
 
 export type ResetIssue = { token: string; hostUserId: string; email: string } | null;
@@ -343,7 +528,9 @@ export async function issueHostPasswordReset(emailRaw: unknown, req: Request | n
       .where(eq(hostUsersTable.email, email))
       .limit(1)
       .for("update");
-    if (!user) return null;
+    // A reset may only replace an EXISTING password. Passwordless accounts
+    // must be claimed through a 72-hour invite of the distinct token type.
+    if (!user?.passwordHash) return null;
     const since = new Date(Date.now() - 60 * 60 * 1000);
     const recent = await tx
       .select({ id: hostAuthEventsTable.id })
@@ -365,7 +552,7 @@ export async function issueHostPasswordReset(emailRaw: unknown, req: Request | n
     await tx.insert(hostAuthEventsTable).values({
       hostUserId: user.id,
       type: "reset_requested",
-      detail: null,
+      detail: `actor=${inviteActor(req)}`,
       ip: req?.ip ?? null,
       userAgent: req?.get("user-agent") ?? null,
     });
@@ -387,10 +574,9 @@ export async function consumeHostPasswordReset(
   // session together. Either the reset fully happens or the token stays
   // valid — no half-state where the token is burned but nothing changed.
   const burnedUserId = await db.transaction(async (tx) => {
-    // Atomic single use: two racing submissions cannot both pass this UPDATE.
-    const [burned] = await tx
-      .update(hostPasswordResetsTable)
-      .set({ usedAt: new Date() })
+    const [reset] = await tx
+      .select()
+      .from(hostPasswordResetsTable)
       .where(
         and(
           eq(hostPasswordResetsTable.tokenHash, sha256(token)),
@@ -398,9 +584,10 @@ export async function consumeHostPasswordReset(
           gt(hostPasswordResetsTable.expiresAt, new Date()),
         ),
       )
-      .returning();
-    if (!burned) return null;
-    await tx
+      .limit(1)
+      .for("update");
+    if (!reset) return null;
+    const [user] = await tx
       .update(hostUsersTable)
       .set({
         passwordHash: newHash,
@@ -408,15 +595,32 @@ export async function consumeHostPasswordReset(
         failedLoginCount: 0,
         lastFailedAt: null,
       })
-      .where(eq(hostUsersTable.id, burned.hostUserId));
+      .where(
+        and(
+          eq(hostUsersTable.id, reset.hostUserId),
+          isNotNull(hostUsersTable.passwordHash),
+        ),
+      )
+      .returning({ id: hostUsersTable.id });
+    if (!user) return null;
+    await tx
+      .update(hostPasswordResetsTable)
+      .set({ usedAt: new Date() })
+      .where(eq(hostPasswordResetsTable.id, reset.id));
     // A reset proves control of the mailbox, not of existing sessions: sign out everything.
     await tx
       .delete(hostSessionsTable)
-      .where(eq(hostSessionsTable.hostUserId, burned.hostUserId));
-    return burned.hostUserId;
+      .where(eq(hostSessionsTable.hostUserId, reset.hostUserId));
+    await tx.insert(hostAuthEventsTable).values({
+      hostUserId: reset.hostUserId,
+      type: "reset_completed",
+      detail: `actor=${inviteActor(req)}`,
+      ip: req?.ip ?? null,
+      userAgent: req?.get("user-agent") ?? null,
+    });
+    return reset.hostUserId;
   });
   if (!burnedUserId) return { ok: false, error: "Povezava ni veljavna ali je potekla." };
-  await audit("reset_completed", burnedUserId, req);
   return { ok: true };
 }
 

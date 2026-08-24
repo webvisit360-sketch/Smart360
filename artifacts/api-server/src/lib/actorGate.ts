@@ -94,8 +94,10 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/host/password", binding: SELF },
   { method: "post", path: "/admin/host/reset/request", binding: ANON },
   { method: "post", path: "/admin/host/reset/confirm", binding: ANON },
+  { method: "post", path: "/admin/host/invite/confirm", binding: ANON },
   { method: "get", path: "/admin/tenants/:id/host", binding: OWNER },
   { method: "put", path: "/admin/tenants/:id/host", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/host/send-invite", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/host/send-reset", binding: OWNER },
 
   // ── Tenants (adminTenants.ts) ────────────────────────────────────────────

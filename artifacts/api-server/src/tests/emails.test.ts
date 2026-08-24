@@ -42,7 +42,12 @@ function allSix() {
     [
       "welcome",
       buildWelcomeEmailBody(
-        { to: "g@example.com", hostName: "Melita", propertyName: "Apartmaji Meli Pu" },
+        {
+          to: "g@example.com",
+          hostName: "Melita",
+          propertyName: "Apartmaji Meli Pu",
+          setPasswordUrl: "https://example.com/portal/povabilo?token=welcome-abc",
+        },
         FROM,
       ),
     ],
@@ -68,7 +73,7 @@ function allSix() {
           hostName: "Melita",
           propertyName: "Apartmaji Meli Pu",
           slug: "meli-pu",
-          setPasswordUrl: "https://example.com/portal/ponastavitev?token=abc",
+          setPasswordUrl: "https://example.com/portal/povabilo?token=abc",
         },
         FROM,
       ),
@@ -108,7 +113,7 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
     const b = allSix()[3][1] as Record<string, unknown>;
     assert.equal(b["subject"], "Vaš digitalni vodnik je pripravljen");
     assert.ok((b["html"] as string).includes("Nastavite geslo in preglejte, kar smo pripravili"));
-    assert.ok((b["html"] as string).includes("Povezava velja 24 ur"));
+    assert.ok((b["html"] as string).includes("Povezava velja 72 ur"));
   });
 
   test("reset: subject + preview match the file", () => {
@@ -124,14 +129,15 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
     assert.ok((b["html"] as string).includes("QR kode za apartmaje so pripravljene za tisk"));
   });
 
-  test("welcome: collects materials and does NOT teach the creator", () => {
+  test("welcome: approved subject, 72-hour account claim and materials", () => {
     const b = allSix()[0][1] as Record<string, unknown>;
     const html = b["html"] as string;
-    assert.equal(b["subject"], "Dobrodošli — začenjamo z vašim vodnikom");
+    assert.equal(b["subject"], "Dobrodošli v Smart360 · vaš paket je aktiviran");
     assert.ok(html.includes("Fotografije"), "asks for photos");
     assert.ok(html.includes("sestavimo mi"), "states the guide is built by us");
     assert.ok(!html.includes("Kreator"), "must not teach the creator");
-    assert.ok(!/geslo/i.test(html), "no password talk at purchase time");
+    assert.ok(html.includes("Povezava velja 72 ur"), "invite lifetime is explicit");
+    assert.ok(html.includes("/portal/povabilo?token=welcome-abc"), "uses invite page");
   });
 });
 
@@ -158,8 +164,22 @@ describe("global rules hold for every template", () => {
       // dedicated reset page — never a link that logs the user in.
       const tokenLinks = [...html.matchAll(/href="([^"]*token[^"]*)"/gi)].map((m) => m[1]);
       for (const l of tokenLinks) {
-        assert.ok(l!.includes("/portal/ponastavitev"), `token link must be the set-password page, got ${l}`);
+        assert.ok(
+          l!.includes("/portal/povabilo") || l!.includes("/portal/ponastavitev"),
+          `token link must be an invite/reset password page, got ${l}`,
+        );
       }
+    });
+
+    test(`${name}: unified Smart360 sender`, () => {
+      assert.equal(
+        (body as Record<string, unknown>)["from"],
+        "Smart360 <info@webvisit360.com>",
+      );
+      assert.equal(
+        (body as Record<string, unknown>)["reply_to"],
+        "info@webvisit360.com",
+      );
     });
 
     test(`${name}: plain-text alternative reads on its own`, () => {

@@ -3,10 +3,12 @@ import { useGetAdminSession, useAdminLogout } from "@workspace/api-client-react"
 import { useLocation, Link } from "wouter";
 import { Loader2, LogOut, LayoutDashboard, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useHostSession } from "@/hooks/use-host-session";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { data: session, isLoading, isError } = useGetAdminSession();
+  const { data: hostSession, isLoading: hostLoading } = useHostSession();
   
   const logoutMutation = useAdminLogout({
     mutation: {
@@ -16,12 +18,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   });
 
-  const unauthenticated = !isLoading && (isError || !session?.authenticated);
+  const ownerAuthenticated = !isError && Boolean(session?.authenticated);
+  const hostAuthenticated = Boolean(hostSession?.authenticated && hostSession.tenantId);
+  const authLoading = isLoading || hostLoading;
+  const unauthenticated = !authLoading && !ownerAuthenticated && !hostAuthenticated;
   useEffect(() => {
     if (unauthenticated) setLocation("/admin/login");
-  }, [unauthenticated, setLocation]);
+    if (
+      !authLoading &&
+      hostAuthenticated &&
+      location !== `/admin/tenants/${hostSession!.tenantId}`
+    ) {
+      setLocation(`/admin/tenants/${hostSession!.tenantId}`);
+    }
+  }, [authLoading, hostAuthenticated, hostSession, location, unauthenticated, setLocation]);
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-muted">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -32,6 +44,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (unauthenticated) {
     return null;
   }
+
+  const isTenantEdit = location.startsWith("/admin/tenants/");
+  if (isTenantEdit) {
+    return <div className="min-h-[100dvh] bg-[#F5F5F7] font-sans">{children}</div>;
+  }
+
+  // A host is centrally redirected to their one tenant above. Never render
+  // owner cockpit navigation during that transition.
+  if (hostAuthenticated) return null;
 
   return (
     <div className="min-h-[100dvh] flex bg-muted/30">

@@ -19,7 +19,7 @@ import { cta, p as par, portalUrl, renderEmail } from "./emailTemplate";
 
 const connectors = new ReplitConnectors();
 
-export const MESSAGE_EMAIL_FROM_NAME = "Smart360 sporočila";
+export const MESSAGE_EMAIL_FROM_NAME = "Smart360";
 
 /**
  * Returns the sender address for message notifications.
