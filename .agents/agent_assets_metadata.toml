@@ -232,3 +232,17 @@ mtime_ms = 1787518658346
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4287ef46-a944-45d1-97a9-742beb14da1d/5b833406-e96c-4cb0-8abe-19fa26601a5d"
 storage_version_token = "1787518714592753"
 content_type = "text/html"
+
+[[outputs]]
+id = "XEeTTyxRAAoMkFEo5OkBz"
+uri = "file://reports/living-guide-close-fidelity.png"
+type = "image"
+title = "Living Guide close fidelity — before vs after"
+description = "Left: source immediately before detail open. Right: first handoff frame after close. Top pair includes the five-tab bottom bar; bottom pair is the nested list route."
+logical_id = "863d0d59-2084-4b23-88f0-47298ed1250f"
+content_hash = "sha256:71541c868aa8cf39062ee81e118926cff642132285a35b484f5f97d76e5721bf"
+size = 442474
+mtime_ms = 1787607426056
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/863d0d59-2084-4b23-88f0-47298ed1250f/570ff456-b298-453b-9665-01b9d35931e5"
+storage_version_token = "1787607566359608"
+content_type = "image/png"

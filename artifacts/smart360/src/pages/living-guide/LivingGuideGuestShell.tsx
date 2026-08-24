@@ -95,14 +95,19 @@ type GuestRecord = {
 
 type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages" | "site-map" | "more";
 type LivingGuidePresentation = "standard" | "tab" | "detail";
-type DetailTransitionPhase = "idle" | "preparing" | "armed" | "open" | "closing";
+type DetailTransitionPhase =
+  | "idle"
+  | "preparing"
+  | "armed"
+  | "open"
+  | "closing"
+  | "restoring";
 type LivingGuideScrollSnapshot = {
   scrollTops: number[];
   galleryScrollLefts: number[];
   galleryIndex: number;
 };
 
-const DETAIL_CLOSE_MS = 340;
 const DETAIL_FALLBACK_ASPECT = 16 / 9;
 const MAX_HELD_VIEW_DEPTH = 2;
 const HELD_LIVE_STATE_SELECTOR =
@@ -441,7 +446,8 @@ export default function LivingGuideGuestShell({
     new Map<string, LivingGuideScrollSnapshot>(),
   );
   const compactHistoryAfterCloseRef = useRef(false);
-  const closeTimerRef = useRef<number | null>(null);
+  const closeTransitionCleanupRef = useRef<(() => void) | null>(null);
+  const closeSourceLocationRef = useRef<string | null>(null);
   const detailTriggerSelectorRef = useRef<string | null>(null);
   const restoreDetailFocusRef = useRef(false);
   const [detailTransitionPhase, setDetailTransitionPhase] =
@@ -599,7 +605,10 @@ export default function LivingGuideGuestShell({
     selfAndDescendants(routeView, "[data-lg-scroll]").forEach((element) => {
       element.scrollTop = 0;
     });
-    selfAndDescendants(routeView, "[data-lg-gallery]").forEach((element) => {
+    selfAndDescendants(
+      routeView,
+      "[data-lg-gallery],[data-lg-scroll-x]",
+    ).forEach((element) => {
       element.scrollLeft = 0;
     });
     setGalleryIndex(0);
@@ -616,7 +625,7 @@ export default function LivingGuideGuestShell({
       ),
       galleryScrollLefts: selfAndDescendants(
         routeView,
-        "[data-lg-gallery]",
+        "[data-lg-gallery],[data-lg-scroll-x]",
       ).map((element) => element.scrollLeft),
       galleryIndex,
     });
@@ -636,7 +645,10 @@ export default function LivingGuideGuestShell({
         element.scrollTop = snapshot.scrollTops[index] ?? 0;
       },
     );
-    selfAndDescendants(routeView, "[data-lg-gallery]").forEach(
+    selfAndDescendants(
+      routeView,
+      "[data-lg-gallery],[data-lg-scroll-x]",
+    ).forEach(
       (element, index) => {
         element.scrollLeft = snapshot.galleryScrollLefts[index] ?? 0;
       },
@@ -658,6 +670,19 @@ export default function LivingGuideGuestShell({
       if (resetStack) heldViewStackRef.current = [];
       return;
     }
+    const sourceBottomNav =
+      rootRef.current?.querySelector<HTMLElement>(":scope > .lg2-bottom-nav");
+    const bottomNavClone = sourceBottomNav?.cloneNode(true) as
+      | HTMLElement
+      | undefined;
+    if (
+      sourceBottomNav &&
+      bottomNavClone &&
+      !sanitizeHeldClone(sourceBottomNav, bottomNavClone)
+    ) {
+      if (resetStack) heldViewStackRef.current = [];
+      return;
+    }
     const sourceScrollers = selfAndDescendants(source, "[data-lg-scroll]");
     const cloneScrollers = selfAndDescendants(clone, "[data-lg-scroll]");
     sourceScrollers.forEach((scroller, index) => {
@@ -667,8 +692,14 @@ export default function LivingGuideGuestShell({
         );
       }
     });
-    const sourceGalleries = selfAndDescendants(source, "[data-lg-gallery]");
-    const cloneGalleries = selfAndDescendants(clone, "[data-lg-gallery]");
+    const sourceGalleries = selfAndDescendants(
+      source,
+      "[data-lg-gallery],[data-lg-scroll-x]",
+    );
+    const cloneGalleries = selfAndDescendants(
+      clone,
+      "[data-lg-gallery],[data-lg-scroll-x]",
+    );
     sourceGalleries.forEach((gallery, index) => {
       if (cloneGalleries[index]) {
         cloneGalleries[index]!.dataset.lgHeldScrollLeft = String(
@@ -676,15 +707,20 @@ export default function LivingGuideGuestShell({
         );
       }
     });
-    clone.setAttribute("aria-hidden", "true");
-    clone.setAttribute("inert", "");
+    const surface = document.createElement("div");
+    surface.className = "lg2-held-surface";
+    surface.dataset.lgHeldCompleteRoute = "true";
+    surface.setAttribute("aria-hidden", "true");
+    surface.setAttribute("inert", "");
+    surface.append(clone);
+    if (bottomNavClone) surface.append(bottomNavClone);
     heldViewStackRef.current = [
       ...(resetStack ? [] : heldViewStackRef.current),
-      clone,
+      surface,
     ].slice(-MAX_HELD_VIEW_DEPTH);
   }, []);
 
-  const syncHeldViewStack = useCallback(() => {
+  const syncHeldViewStack = useCallback((holdImmediate = true) => {
     const heldLayer = heldLayerRef.current;
     if (!heldLayer) return;
     const lastIndex = heldViewStackRef.current.length - 1;
@@ -692,7 +728,9 @@ export default function LivingGuideGuestShell({
       const wrapper = document.createElement("div");
       wrapper.className =
         index === lastIndex
-          ? "lg2-held-view v on hold"
+          ? holdImmediate
+            ? "lg2-held-view v on hold"
+            : "lg2-held-view lg2-held-view--closing v on"
           : "lg2-held-view lg2-held-view--deep v on";
       wrapper.dataset.lgHeldDepth = String(index);
       wrapper.setAttribute("aria-hidden", "true");
@@ -716,16 +754,168 @@ export default function LivingGuideGuestShell({
       });
   }, []);
 
+  const cancelPendingDetailClose = useCallback(() => {
+    closeTransitionCleanupRef.current?.();
+    closeTransitionCleanupRef.current = null;
+    closeSourceLocationRef.current = null;
+  }, []);
+
+  const beginDetailCloseTransition = useCallback(
+    (afterAnimation: () => void) => {
+      if (closeTransitionCleanupRef.current) return;
+
+      const sheet = rootRef.current?.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      );
+      closeSourceLocationRef.current = location;
+      performance.clearMarks("lg2-detail-close-animation-end");
+      performance.clearMarks("lg2-detail-close-swap");
+      performance.clearMeasures("lg2-detail-close-end-to-swap");
+
+      let zeroDurationFrame = 0;
+      let completed = false;
+      const cleanup = () => {
+        sheet?.removeEventListener("transitionend", onTransitionFinished);
+        sheet?.removeEventListener("transitioncancel", onTransitionFinished);
+        if (zeroDurationFrame) window.cancelAnimationFrame(zeroDurationFrame);
+        if (closeTransitionCleanupRef.current === cleanup) {
+          closeTransitionCleanupRef.current = null;
+        }
+      };
+      const complete = () => {
+        if (completed) return;
+        completed = true;
+        cleanup();
+        performance.mark("lg2-detail-close-animation-end");
+        window.dispatchEvent(new CustomEvent("lg2:detail-close-animation-end"));
+        flushSync(() => setDetailTransitionPhase("restoring"));
+        afterAnimation();
+      };
+      function onTransitionFinished(event: TransitionEvent) {
+        if (
+          event.target === sheet &&
+          (event.propertyName === "transform" ||
+            event.propertyName === "opacity")
+        ) {
+          complete();
+        }
+      }
+
+      sheet?.addEventListener("transitionend", onTransitionFinished);
+      sheet?.addEventListener("transitioncancel", onTransitionFinished);
+      closeTransitionCleanupRef.current = cleanup;
+      syncHeldViewStack(false);
+      flushSync(() => setDetailTransitionPhase("closing"));
+
+      // A zero-duration transition has no transitionend event. Resolve that
+      // accessibility/test case on the next frame, never with a close timer.
+      zeroDurationFrame = window.requestAnimationFrame(() => {
+        if (!sheet) {
+          complete();
+          return;
+        }
+        const style = window.getComputedStyle(sheet);
+        const durations = style.transitionDuration
+          .split(",")
+          .map((value) =>
+            value.trim().endsWith("ms")
+              ? Number.parseFloat(value)
+              : Number.parseFloat(value) * 1000,
+          );
+        if (durations.every((duration) => !Number.isFinite(duration) || duration <= 0)) {
+          complete();
+        }
+      });
+    },
+    [location, syncHeldViewStack],
+  );
+
+  const scheduleClosePaintHandoff = useCallback(
+    (targetHeldDepth: number, targetIsDetail: boolean) => {
+      syncHeldViewStack(false);
+      let secondFrame = 0;
+      let releaseTestGate: (() => void) | null = null;
+      const swapToRealRoute = () => {
+        performance.mark("lg2-detail-close-swap");
+        performance.measure(
+          "lg2-detail-close-end-to-swap",
+          "lg2-detail-close-animation-end",
+          "lg2-detail-close-swap",
+        );
+        const delay = performance
+          .getEntriesByName("lg2-detail-close-end-to-swap", "measure")
+          .at(-1)?.duration;
+        if (delay !== undefined && rootRef.current) {
+          rootRef.current.dataset.closeSwapDelayMs = delay.toFixed(1);
+        }
+        window.dispatchEvent(
+          new CustomEvent("lg2:detail-close-swap", {
+            detail: { delayMs: delay ?? null },
+          }),
+        );
+
+        heldViewStackRef.current = heldViewStackRef.current.slice(
+          0,
+          Math.max(0, targetHeldDepth),
+        );
+        syncHeldViewStack();
+        closeSourceLocationRef.current = null;
+
+        if (restoreDetailFocusRef.current) {
+          restoreDetailFocusRef.current = false;
+          const selector = detailTriggerSelectorRef.current;
+          const trigger = selector
+            ? rootRef.current?.querySelector<HTMLElement>(selector)
+            : null;
+          trigger?.focus({ preventScroll: true });
+        }
+        flushSync(() =>
+          setDetailTransitionPhase(targetIsDetail ? "open" : "idle"),
+        );
+      };
+      const scheduleSwap = () => {
+        secondFrame = window.requestAnimationFrame(swapToRealRoute);
+      };
+      const firstFrame = window.requestAnimationFrame(() => {
+        window.dispatchEvent(new CustomEvent("lg2:detail-close-handoff-frame"));
+        const testWindow = window as Window & {
+          __LG2_TEST_HOLD_CLOSE_SWAP__?: boolean;
+        };
+        if (import.meta.env.DEV && testWindow.__LG2_TEST_HOLD_CLOSE_SWAP__) {
+          releaseTestGate = () => {
+            releaseTestGate = null;
+            scheduleSwap();
+          };
+          window.addEventListener(
+            "lg2:test-release-close-swap",
+            releaseTestGate,
+            { once: true },
+          );
+          return;
+        }
+        scheduleSwap();
+      });
+      return () => {
+        window.cancelAnimationFrame(firstFrame);
+        if (secondFrame) window.cancelAnimationFrame(secondFrame);
+        if (releaseTestGate) {
+          window.removeEventListener(
+            "lg2:test-release-close-swap",
+            releaseTestGate,
+          );
+        }
+      };
+    },
+    [syncHeldViewStack],
+  );
+
   const navigate = useCallback(
     (
       path: string,
       replace = false,
       presentation: LivingGuidePresentation = "standard",
     ) => {
-      if (closeTimerRef.current !== null) {
-        window.clearTimeout(closeTimerRef.current);
-        closeTimerRef.current = null;
-      }
+      cancelPendingDetailClose();
       if (presentation === "detail") {
         captureRouteScroll();
         const trigger = document.activeElement;
@@ -770,6 +960,7 @@ export default function LivingGuideGuestShell({
     [
       captureHeldView,
       captureRouteScroll,
+      cancelPendingDetailClose,
       isDetailPresentation,
       location,
       setLocation,
@@ -821,10 +1012,13 @@ export default function LivingGuideGuestShell({
 
   useLayoutEffect(() => {
     if (!isDetailPresentation) {
-      if (closeTimerRef.current !== null) {
-        window.clearTimeout(closeTimerRef.current);
-        closeTimerRef.current = null;
+      if (
+        detailTransitionPhase === "restoring" &&
+        closeSourceLocationRef.current !== location
+      ) {
+        return scheduleClosePaintHandoff(0, false);
       }
+      cancelPendingDetailClose();
       heldViewStackRef.current = [];
       syncHeldViewStack();
       if (detailTransitionPhase !== "idle") setDetailTransitionPhase("idle");
@@ -852,6 +1046,16 @@ export default function LivingGuideGuestShell({
     const expectedHeldDepth = Number(
       window.history.state?.livingGuideHeldDepth,
     );
+    if (
+      detailTransitionPhase === "restoring" &&
+      closeSourceLocationRef.current !== location
+    ) {
+      const targetHeldDepth =
+        Number.isInteger(expectedHeldDepth) && expectedHeldDepth >= 0
+          ? expectedHeldDepth
+          : Math.max(0, heldViewStackRef.current.length - 1);
+      return scheduleClosePaintHandoff(targetHeldDepth, true);
+    }
     if (
       Number.isInteger(expectedHeldDepth) &&
       expectedHeldDepth >= 0 &&
@@ -911,13 +1115,17 @@ export default function LivingGuideGuestShell({
     // The destination location starts one transition. Phase changes must not
     // restart the two-frame paint gate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDetailPresentation, location, syncHeldViewStack]);
+  }, [
+    cancelPendingDetailClose,
+    isDetailPresentation,
+    location,
+    scheduleClosePaintHandoff,
+    syncHeldViewStack,
+  ]);
 
   useEffect(() => {
     return () => {
-      if (closeTimerRef.current !== null) {
-        window.clearTimeout(closeTimerRef.current);
-      }
+      closeTransitionCleanupRef.current?.();
       heldViewStackRef.current = [];
     };
   }, []);
@@ -933,10 +1141,7 @@ export default function LivingGuideGuestShell({
 
   const closePresentedView = useCallback(
     (fallbackPath: string) => {
-      const finish = () => {
-        closeTimerRef.current = null;
-        heldViewStackRef.current = heldViewStackRef.current.slice(0, -1);
-        syncHeldViewStack();
+      const navigateAfterAnimation = () => {
         restoreDetailFocusRef.current = true;
         const returnsToDetail =
           window.history.state?.livingGuideFromPresentation === "detail";
@@ -947,23 +1152,37 @@ export default function LivingGuideGuestShell({
           compactHistoryAfterCloseRef.current = !returnsToDetail;
           window.history.back();
         } else {
-          navigate(fallbackPath, true);
+          setLocation(buildGuestPath(fallbackPath), {
+            replace: true,
+            state: {
+              livingGuide: true,
+              from: location,
+              livingGuidePresentation: "standard",
+              livingGuideFromPresentation: "standard",
+              livingGuideHeldDepth: 0,
+            },
+          });
         }
       };
 
       if (!isDetailPresentation) {
-        finish();
+        navigateAfterAnimation();
         return;
       }
-      if (detailTransitionPhase === "closing") return;
-      setDetailTransitionPhase("closing");
-      closeTimerRef.current = window.setTimeout(finish, DETAIL_CLOSE_MS);
+      if (
+        detailTransitionPhase === "closing" ||
+        detailTransitionPhase === "restoring"
+      ) {
+        return;
+      }
+      beginDetailCloseTransition(navigateAfterAnimation);
     },
     [
+      beginDetailCloseTransition,
       detailTransitionPhase,
       isDetailPresentation,
-      navigate,
-      syncHeldViewStack,
+      location,
+      setLocation,
     ],
   );
 
@@ -984,23 +1203,24 @@ export default function LivingGuideGuestShell({
         !isDetailPresentation ||
         compactHistoryAfterCloseRef.current ||
         window.history.state?.livingGuideCloseGuard ||
-        closeTimerRef.current !== null
+        closeTransitionCleanupRef.current !== null ||
+        detailTransitionPhase === "restoring"
       ) {
         return;
       }
-      setDetailTransitionPhase("closing");
-      closeTimerRef.current = window.setTimeout(() => {
-        closeTimerRef.current = null;
-        heldViewStackRef.current = heldViewStackRef.current.slice(0, -1);
-        syncHeldViewStack();
+      beginDetailCloseTransition(() => {
         restoreDetailFocusRef.current = true;
         compactHistoryAfterCloseRef.current = compactAfterClose;
         window.history.back();
-      }, DETAIL_CLOSE_MS);
+      });
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [isDetailPresentation, syncHeldViewStack]);
+  }, [
+    beginDetailCloseTransition,
+    detailTransitionPhase,
+    isDetailPresentation,
+  ]);
 
   const goBack = useCallback(() => {
     if (screen !== "detail") return;
@@ -1135,7 +1355,7 @@ export default function LivingGuideGuestShell({
       <Starfield theme={theme} />
 
       <main className="lg2-stage">
-        {isDetailPresentation && (
+        {(isDetailPresentation || detailTransitionPhase === "restoring") && (
           <div
             ref={heldLayerRef}
             className="lg2-held-stack"
@@ -1147,7 +1367,11 @@ export default function LivingGuideGuestShell({
           className={`lg2-route-layer${
             isDetailPresentation
               ? ` v v--det${
-                  detailTransitionPhase === "open" ? " on" : ""
+                  detailTransitionPhase === "open" ||
+                  (detailTransitionPhase === "restoring" &&
+                    closeSourceLocationRef.current !== location)
+                    ? " on"
+                    : ""
                 }`
               : ""
           }`}
@@ -1768,7 +1992,12 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
 // by the Okolica, Ponudba and Nastanitev screens — never re-implemented.
 function GroupTabs({ groups, selectedKey, onSelect, label }: any) {
   return (
-    <div className="lg2-gtabs" role="tablist" aria-label={label}>
+    <div
+      className="lg2-gtabs"
+      role="tablist"
+      aria-label={label}
+      data-lg-scroll-x
+    >
       {groups.map((group: any) => (
         <button
           type="button"

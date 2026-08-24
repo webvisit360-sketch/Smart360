@@ -24,6 +24,8 @@ Preserve a source view's scroll offset before detail navigation, but apply it to
 
 Held clones are visual-only: remove IDs and ID-reference attributes, strip active embeds, refuse sources containing live form/media state, and cap the sibling stack at two. Detail history uses a resting base/guard pair; replace the guard on open, then compact forward detail entries after close so the resting length stays constant. Nested closes record their source presentation/depth and return to the parent sheet without triggering standard-route compaction.
 
-**Why:** Besides duplicate IDs and doubled embeds, ordinary `pushState` + `back` leaves forward entries counted in `history.length`; repeated modal navigation can appear bounded while still trapping Back navigation.
+A held visual surface must include route chrome outside the route body (especially the bottom tab bar), preserve every horizontal scroller, and remain on top until the matching real route has painted.
 
-**How to apply:** Store offsets as clone metadata, insert and force layout, then restore them. Verify source/held/restored pixels exactly; inspect both held wrappers during list → category → item flows; and run mixed phone/on-screen close cycles checking duplicate IDs, active clone content, node counts, and resting history length.
+**Why:** Besides duplicate IDs and doubled embeds, ordinary `pushState` + `back` leaves forward entries counted in `history.length`; repeated modal navigation can appear bounded while still trapping Back navigation. Scroll/node checks cannot detect a missing tab bar, stale horizontal offset, or a post-animation clone-to-real flinch.
+
+**How to apply:** Store offsets as clone metadata, insert and force layout, then restore them. Verify source/held/restored pixels exactly; inspect both held wrappers during list → category → item flows; run mixed phone/on-screen close cycles; and pixel-diff the complete source view against the first post-close handoff frame.

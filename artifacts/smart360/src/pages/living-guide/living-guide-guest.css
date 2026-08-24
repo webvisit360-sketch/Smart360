@@ -115,6 +115,10 @@ body[data-t="noc"] .lg2-stage {
   transition: none;
 }
 
+.lg2-app .v--det[data-detail-transition="restoring"] {
+  transition: none;
+}
+
 .lg2-app .v--det.on {
   transform: none;
   transition:
@@ -123,7 +127,7 @@ body[data-t="noc"] .lg2-stage {
 }
 
 .lg2-app .v--det > .lg2-view,
-.lg2-held-view > .lg2-view {
+.lg2-held-view > .lg2-held-surface > .lg2-view {
   animation: none;
 }
 
@@ -151,12 +155,32 @@ body[data-t="noc"] .lg2-stage {
   transition: none;
 }
 
+.lg2-app .v.lg2-held-view--closing {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: none;
+  transition:
+    transform .34s cubic-bezier(.32, 0, .24, 1),
+    background .9s cubic-bezier(.22, 1, .36, 1);
+}
+
 .lg2-held-stack .lg2-held-view {
   z-index: 1;
 }
 
 .lg2-held-stack .lg2-held-view:last-child {
   z-index: 2;
+}
+
+.lg2-held-surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.lg2-held-surface > .lg2-bottom-nav {
+  position: absolute;
 }
 
 .lg2-held-embed-placeholder {
@@ -166,7 +190,7 @@ body[data-t="noc"] .lg2-stage {
   opacity: .08;
 }
 
-.lg2-held-view > .lg2-view {
+.lg2-held-view > .lg2-held-surface > .lg2-view {
   position: absolute;
   inset: 0;
 }
