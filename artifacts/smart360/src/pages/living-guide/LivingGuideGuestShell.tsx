@@ -104,6 +104,11 @@ type LivingGuideScrollSnapshot = {
 
 const DETAIL_CLOSE_MS = 340;
 const DETAIL_FALLBACK_ASPECT = 16 / 9;
+const MAX_HELD_VIEW_DEPTH = 2;
+const HELD_LIVE_STATE_SELECTOR =
+  "form,input,textarea,select,[contenteditable='true'],video,audio";
+const HELD_ACTIVE_EMBED_SELECTOR =
+  "iframe,video,audio,object,embed,source,track,script,link";
 
 function selfAndDescendants(
   root: HTMLElement,
@@ -113,6 +118,43 @@ function selfAndDescendants(
     ...(root.matches(selector) ? [root] : []),
     ...root.querySelectorAll<HTMLElement>(selector),
   ];
+}
+
+function hasSelfOrDescendant(root: HTMLElement, selector: string): boolean {
+  return root.matches(selector) || Boolean(root.querySelector(selector));
+}
+
+function sanitizeHeldClone(source: HTMLElement, clone: HTMLElement): boolean {
+  // A detached visual clone must never become a second owner of live state.
+  if (hasSelfOrDescendant(source, HELD_LIVE_STATE_SELECTOR)) return false;
+
+  const sourceEmbeds = selfAndDescendants(source, HELD_ACTIVE_EMBED_SELECTOR);
+  selfAndDescendants(clone, HELD_ACTIVE_EMBED_SELECTOR).forEach(
+    (element, index) => {
+      const placeholder = document.createElement("div");
+      const sourceElement = sourceEmbeds[index];
+      const rect = sourceElement?.getBoundingClientRect();
+      placeholder.className = "lg2-held-embed-placeholder";
+      placeholder.setAttribute("aria-hidden", "true");
+      if (rect?.height) placeholder.style.height = `${rect.height}px`;
+      element.replaceWith(placeholder);
+    },
+  );
+
+  selfAndDescendants(clone, "[id]").forEach((element) => {
+    element.removeAttribute("id");
+  });
+  selfAndDescendants(
+    clone,
+    "[for],[aria-labelledby],[aria-describedby],[aria-controls],[aria-owns]",
+  ).forEach((element) => {
+    element.removeAttribute("for");
+    element.removeAttribute("aria-labelledby");
+    element.removeAttribute("aria-describedby");
+    element.removeAttribute("aria-controls");
+    element.removeAttribute("aria-owns");
+  });
+  return true;
 }
 
 function visible(rows: any[] | null | undefined): any[] {
@@ -398,6 +440,7 @@ export default function LivingGuideGuestShell({
   const routeScrollSnapshotsRef = useRef(
     new Map<string, LivingGuideScrollSnapshot>(),
   );
+  const compactHistoryAfterCloseRef = useRef(false);
   const closeTimerRef = useRef<number | null>(null);
   const detailTriggerSelectorRef = useRef<string | null>(null);
   const restoreDetailFocusRef = useRef(false);
@@ -611,6 +654,10 @@ export default function LivingGuideGuestShell({
     }
 
     const clone = source.cloneNode(true) as HTMLElement;
+    if (!sanitizeHeldClone(source, clone)) {
+      if (resetStack) heldViewStackRef.current = [];
+      return;
+    }
     const sourceScrollers = selfAndDescendants(source, "[data-lg-scroll]");
     const cloneScrollers = selfAndDescendants(clone, "[data-lg-scroll]");
     sourceScrollers.forEach((scroller, index) => {
@@ -634,7 +681,7 @@ export default function LivingGuideGuestShell({
     heldViewStackRef.current = [
       ...(resetStack ? [] : heldViewStackRef.current),
       clone,
-    ];
+    ].slice(-MAX_HELD_VIEW_DEPTH);
   }, []);
 
   const syncHeldViewStack = useCallback(() => {
@@ -707,11 +754,16 @@ export default function LivingGuideGuestShell({
       // buildGuestPath keeps the authenticated draft preview, language and
       // development Living Guide override across in-shell routes.
       setLocation(buildGuestPath(path), {
-        replace,
+        replace: presentation === "detail" ? true : replace,
         state: {
           livingGuide: true,
           from: location,
           livingGuidePresentation: presentation,
+          livingGuideFromPresentation: isDetailPresentation
+            ? "detail"
+            : "standard",
+          livingGuideHeldDepth:
+            presentation === "detail" ? heldViewStackRef.current.length : 0,
         },
       });
     },
@@ -728,6 +780,44 @@ export default function LivingGuideGuestShell({
     (path: string) => navigate(path, false, "detail"),
     [navigate],
   );
+
+  useLayoutEffect(() => {
+    if (isDetailPresentation) return;
+    const state = window.history.state ?? {};
+
+    if (compactHistoryAfterCloseRef.current) {
+      compactHistoryAfterCloseRef.current = false;
+      window.history.pushState(
+        {
+          ...state,
+          livingGuideRestingBase: false,
+          livingGuideRestingGuard: true,
+          livingGuideCloseGuard: false,
+        },
+        "",
+        window.location.href,
+      );
+      return;
+    }
+
+    if (state.livingGuideRestingGuard || state.livingGuideRestingBase) return;
+    const baseState = {
+      ...state,
+      livingGuideRestingBase: true,
+      livingGuideRestingGuard: false,
+      livingGuideCloseGuard: false,
+    };
+    window.history.replaceState(baseState, "", window.location.href);
+    window.history.pushState(
+      {
+        ...baseState,
+        livingGuideRestingBase: false,
+        livingGuideRestingGuard: true,
+      },
+      "",
+      window.location.href,
+    );
+  }, [isDetailPresentation, location]);
 
   useLayoutEffect(() => {
     if (!isDetailPresentation) {
@@ -759,6 +849,19 @@ export default function LivingGuideGuestShell({
       );
     }
 
+    const expectedHeldDepth = Number(
+      window.history.state?.livingGuideHeldDepth,
+    );
+    if (
+      Number.isInteger(expectedHeldDepth) &&
+      expectedHeldDepth >= 0 &&
+      heldViewStackRef.current.length > expectedHeldDepth
+    ) {
+      heldViewStackRef.current = heldViewStackRef.current.slice(
+        0,
+        expectedHeldDepth,
+      );
+    }
     syncHeldViewStack();
 
     // First frame: the complete destination view is laid out off-screen.
@@ -815,6 +918,7 @@ export default function LivingGuideGuestShell({
       if (closeTimerRef.current !== null) {
         window.clearTimeout(closeTimerRef.current);
       }
+      heldViewStackRef.current = [];
     };
   }, []);
 
@@ -834,9 +938,13 @@ export default function LivingGuideGuestShell({
         heldViewStackRef.current = heldViewStackRef.current.slice(0, -1);
         syncHeldViewStack();
         restoreDetailFocusRef.current = true;
+        const returnsToDetail =
+          window.history.state?.livingGuideFromPresentation === "detail";
         if (window.history.state?.livingGuideCloseGuard) {
+          compactHistoryAfterCloseRef.current = !returnsToDetail;
           window.history.go(-2);
         } else if (window.history.length > 1 && window.history.state?.livingGuide) {
+          compactHistoryAfterCloseRef.current = !returnsToDetail;
           window.history.back();
         } else {
           navigate(fallbackPath, true);
@@ -862,7 +970,19 @@ export default function LivingGuideGuestShell({
   useEffect(() => {
     const onPopState = () => {
       if (
+        !isDetailPresentation &&
+        window.history.state?.livingGuideRestingBase &&
+        !compactHistoryAfterCloseRef.current
+      ) {
+        // One phone-Back action skips the invisible resting duplicate.
+        window.history.back();
+        return;
+      }
+      const compactAfterClose =
+        window.history.state?.livingGuideFromPresentation !== "detail";
+      if (
         !isDetailPresentation ||
+        compactHistoryAfterCloseRef.current ||
         window.history.state?.livingGuideCloseGuard ||
         closeTimerRef.current !== null
       ) {
@@ -874,6 +994,7 @@ export default function LivingGuideGuestShell({
         heldViewStackRef.current = heldViewStackRef.current.slice(0, -1);
         syncHeldViewStack();
         restoreDetailFocusRef.current = true;
+        compactHistoryAfterCloseRef.current = compactAfterClose;
         window.history.back();
       }, DETAIL_CLOSE_MS);
     };

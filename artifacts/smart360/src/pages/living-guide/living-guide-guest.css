@@ -159,6 +159,13 @@ body[data-t="noc"] .lg2-stage {
   z-index: 2;
 }
 
+.lg2-held-embed-placeholder {
+  width: 100%;
+  min-height: 1px;
+  background: currentColor;
+  opacity: .08;
+}
+
 .lg2-held-view > .lg2-view {
   position: absolute;
   inset: 0;

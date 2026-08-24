@@ -22,4 +22,8 @@ Preserve a source view's scroll offset before detail navigation, but apply it to
 
 **Why:** Browsers clamp `scrollTop` assigned to a detached overflow clone back to zero, and resetting every marked scroller also resets the visible held background. Nesting held views compounds scale and brightness.
 
-**How to apply:** Store offsets as clone metadata, insert and force layout, then restore them. Verify source/held/restored pixels exactly and inspect both held wrappers during list → category → item flows.
+Held clones are visual-only: remove IDs and ID-reference attributes, strip active embeds, refuse sources containing live form/media state, and cap the sibling stack at two. Detail history uses a resting base/guard pair; replace the guard on open, then compact forward detail entries after close so the resting length stays constant. Nested closes record their source presentation/depth and return to the parent sheet without triggering standard-route compaction.
+
+**Why:** Besides duplicate IDs and doubled embeds, ordinary `pushState` + `back` leaves forward entries counted in `history.length`; repeated modal navigation can appear bounded while still trapping Back navigation.
+
+**How to apply:** Store offsets as clone metadata, insert and force layout, then restore them. Verify source/held/restored pixels exactly; inspect both held wrappers during list → category → item flows; and run mixed phone/on-screen close cycles checking duplicate IDs, active clone content, node counts, and resting history length.
