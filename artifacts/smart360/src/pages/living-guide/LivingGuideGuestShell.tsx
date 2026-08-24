@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import {
   getListDeviceOrdersQueryKey,
   useListDeviceOrders,
@@ -94,10 +95,25 @@ type GuestRecord = {
 
 type ScreenName = "cover" | "home" | "grid" | "detail" | "explore" | "messages" | "site-map" | "more";
 type LivingGuidePresentation = "standard" | "tab" | "detail";
-type DetailTransitionPhase = "idle" | "preparing" | "open" | "closing";
+type DetailTransitionPhase = "idle" | "preparing" | "armed" | "open" | "closing";
+type LivingGuideScrollSnapshot = {
+  scrollTops: number[];
+  galleryScrollLefts: number[];
+  galleryIndex: number;
+};
 
 const DETAIL_CLOSE_MS = 340;
 const DETAIL_FALLBACK_ASPECT = 16 / 9;
+
+function selfAndDescendants(
+  root: HTMLElement,
+  selector: string,
+): HTMLElement[] {
+  return [
+    ...(root.matches(selector) ? [root] : []),
+    ...root.querySelectorAll<HTMLElement>(selector),
+  ];
+}
 
 function visible(rows: any[] | null | undefined): any[] {
   return (rows ?? []).filter((row) => row.isVisible !== false);
@@ -378,7 +394,10 @@ export default function LivingGuideGuestShell({
   const t = makeT(tenant, lang);
   const rootRef = useRef<HTMLDivElement>(null);
   const heldLayerRef = useRef<HTMLDivElement>(null);
-  const heldViewRef = useRef<HTMLElement | null>(null);
+  const heldViewStackRef = useRef<HTMLElement[]>([]);
+  const routeScrollSnapshotsRef = useRef(
+    new Map<string, LivingGuideScrollSnapshot>(),
+  );
   const closeTimerRef = useRef<number | null>(null);
   const detailTriggerSelectorRef = useRef<string | null>(null);
   const restoreDetailFocusRef = useRef(false);
@@ -530,39 +549,124 @@ export default function LivingGuideGuestShell({
   }, [theme]);
 
   const resetNavigationState = useCallback(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    root.querySelectorAll<HTMLElement>("[data-lg-scroll]").forEach((element) => {
+    const routeView = rootRef.current?.querySelector<HTMLElement>(
+      ".lg2-route-layer > .lg2-view",
+    );
+    if (!routeView) return;
+    selfAndDescendants(routeView, "[data-lg-scroll]").forEach((element) => {
       element.scrollTop = 0;
     });
-    root.querySelectorAll<HTMLElement>("[data-lg-gallery]").forEach((element) => {
+    selfAndDescendants(routeView, "[data-lg-gallery]").forEach((element) => {
       element.scrollLeft = 0;
     });
     setGalleryIndex(0);
   }, []);
 
+  const captureRouteScroll = useCallback(() => {
+    const routeView = rootRef.current?.querySelector<HTMLElement>(
+      ".lg2-route-layer > .lg2-view",
+    );
+    if (!routeView) return;
+    routeScrollSnapshotsRef.current.set(location, {
+      scrollTops: selfAndDescendants(routeView, "[data-lg-scroll]").map(
+        (element) => element.scrollTop,
+      ),
+      galleryScrollLefts: selfAndDescendants(
+        routeView,
+        "[data-lg-gallery]",
+      ).map((element) => element.scrollLeft),
+      galleryIndex,
+    });
+  }, [galleryIndex, location]);
+
   useLayoutEffect(() => {
-    resetNavigationState();
+    const routeView = rootRef.current?.querySelector<HTMLElement>(
+      ".lg2-route-layer > .lg2-view",
+    );
+    const snapshot = routeScrollSnapshotsRef.current.get(location);
+    if (!routeView || !snapshot) {
+      resetNavigationState();
+      return;
+    }
+    selfAndDescendants(routeView, "[data-lg-scroll]").forEach(
+      (element, index) => {
+        element.scrollTop = snapshot.scrollTops[index] ?? 0;
+      },
+    );
+    selfAndDescendants(routeView, "[data-lg-gallery]").forEach(
+      (element, index) => {
+        element.scrollLeft = snapshot.galleryScrollLefts[index] ?? 0;
+      },
+    );
+    setGalleryIndex(snapshot.galleryIndex);
   }, [location, resetNavigationState]);
 
-  const captureHeldView = useCallback(() => {
+  const captureHeldView = useCallback((resetStack: boolean) => {
     const source = rootRef.current?.querySelector<HTMLElement>(
       ".lg2-route-layer > .lg2-view",
     );
     if (!source) {
-      heldViewRef.current = null;
+      if (resetStack) heldViewStackRef.current = [];
       return;
     }
 
     const clone = source.cloneNode(true) as HTMLElement;
-    const sourceScrollers = source.querySelectorAll<HTMLElement>("[data-lg-scroll]");
-    const cloneScrollers = clone.querySelectorAll<HTMLElement>("[data-lg-scroll]");
+    const sourceScrollers = selfAndDescendants(source, "[data-lg-scroll]");
+    const cloneScrollers = selfAndDescendants(clone, "[data-lg-scroll]");
     sourceScrollers.forEach((scroller, index) => {
-      if (cloneScrollers[index]) cloneScrollers[index]!.scrollTop = scroller.scrollTop;
+      if (cloneScrollers[index]) {
+        cloneScrollers[index]!.dataset.lgHeldScrollTop = String(
+          scroller.scrollTop,
+        );
+      }
+    });
+    const sourceGalleries = selfAndDescendants(source, "[data-lg-gallery]");
+    const cloneGalleries = selfAndDescendants(clone, "[data-lg-gallery]");
+    sourceGalleries.forEach((gallery, index) => {
+      if (cloneGalleries[index]) {
+        cloneGalleries[index]!.dataset.lgHeldScrollLeft = String(
+          gallery.scrollLeft,
+        );
+      }
     });
     clone.setAttribute("aria-hidden", "true");
     clone.setAttribute("inert", "");
-    heldViewRef.current = clone;
+    heldViewStackRef.current = [
+      ...(resetStack ? [] : heldViewStackRef.current),
+      clone,
+    ];
+  }, []);
+
+  const syncHeldViewStack = useCallback(() => {
+    const heldLayer = heldLayerRef.current;
+    if (!heldLayer) return;
+    const lastIndex = heldViewStackRef.current.length - 1;
+    const wrappers = heldViewStackRef.current.map((view, index) => {
+      const wrapper = document.createElement("div");
+      wrapper.className =
+        index === lastIndex
+          ? "lg2-held-view v on hold"
+          : "lg2-held-view lg2-held-view--deep v on";
+      wrapper.dataset.lgHeldDepth = String(index);
+      wrapper.setAttribute("aria-hidden", "true");
+      wrapper.setAttribute("inert", "");
+      wrapper.append(view);
+      return wrapper;
+    });
+    heldLayer.replaceChildren(...wrappers);
+    // Detached overflow elements clamp scrollTop/scrollLeft to zero. Restore
+    // them only after the clone participates in layout.
+    void heldLayer.offsetHeight;
+    heldLayer
+      .querySelectorAll<HTMLElement>("[data-lg-held-scroll-top]")
+      .forEach((element) => {
+        element.scrollTop = Number(element.dataset.lgHeldScrollTop ?? 0);
+      });
+    heldLayer
+      .querySelectorAll<HTMLElement>("[data-lg-held-scroll-left]")
+      .forEach((element) => {
+        element.scrollLeft = Number(element.dataset.lgHeldScrollLeft ?? 0);
+      });
   }, []);
 
   const navigate = useCallback(
@@ -576,6 +680,7 @@ export default function LivingGuideGuestShell({
         closeTimerRef.current = null;
       }
       if (presentation === "detail") {
+        captureRouteScroll();
         const trigger = document.activeElement;
         if (trigger instanceof HTMLElement) {
           const testId = trigger.getAttribute("data-testid");
@@ -589,17 +694,16 @@ export default function LivingGuideGuestShell({
                 ? `[aria-label="${CSS.escape(ariaLabel)}"]`
                 : null;
         }
-        captureHeldView();
+        captureHeldView(!isDetailPresentation);
         performance.clearMarks("lg2-detail-tap");
         performance.clearMarks("lg2-detail-title-painted");
         performance.clearMeasures("lg2-detail-tap-to-title-paint");
         performance.mark("lg2-detail-tap");
         setDetailTransitionPhase("preparing");
       } else {
-        heldViewRef.current = null;
+        heldViewStackRef.current = [];
         setDetailTransitionPhase("idle");
       }
-      resetNavigationState();
       // buildGuestPath keeps the authenticated draft preview, language and
       // development Living Guide override across in-shell routes.
       setLocation(buildGuestPath(path), {
@@ -611,7 +715,13 @@ export default function LivingGuideGuestShell({
         },
       });
     },
-    [captureHeldView, location, resetNavigationState, setLocation],
+    [
+      captureHeldView,
+      captureRouteScroll,
+      isDetailPresentation,
+      location,
+      setLocation,
+    ],
   );
 
   const navigateDetail = useCallback(
@@ -625,7 +735,8 @@ export default function LivingGuideGuestShell({
         window.clearTimeout(closeTimerRef.current);
         closeTimerRef.current = null;
       }
-      heldViewRef.current = null;
+      heldViewStackRef.current = [];
+      syncHeldViewStack();
       if (detailTransitionPhase !== "idle") setDetailTransitionPhase("idle");
       if (restoreDetailFocusRef.current) {
         restoreDetailFocusRef.current = false;
@@ -648,10 +759,7 @@ export default function LivingGuideGuestShell({
       );
     }
 
-    const heldLayer = heldLayerRef.current;
-    if (heldLayer && heldViewRef.current) {
-      heldLayer.replaceChildren(heldViewRef.current);
-    }
+    syncHeldViewStack();
 
     // First frame: the complete destination view is laid out off-screen.
     // Second frame: measure that pre-paint interval, then start movement.
@@ -675,6 +783,15 @@ export default function LivingGuideGuestShell({
             );
           }
         }
+        flushSync(() => setDetailTransitionPhase("armed"));
+        const armedSheet = rootRef.current?.querySelector<HTMLElement>(
+          ".lg2-route-layer.v--det",
+        );
+        if (armedSheet) {
+          // Re-enable the transition while the sheet is still at 100%, then
+          // force that state to layout before `.on` is committed.
+          void armedSheet.offsetHeight;
+        }
         setDetailTransitionPhase("open");
         window.requestAnimationFrame(() => {
           rootRef.current
@@ -691,7 +808,7 @@ export default function LivingGuideGuestShell({
     // The destination location starts one transition. Phase changes must not
     // restart the two-frame paint gate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDetailPresentation, location]);
+  }, [isDetailPresentation, location, syncHeldViewStack]);
 
   useEffect(() => {
     return () => {
@@ -714,7 +831,8 @@ export default function LivingGuideGuestShell({
     (fallbackPath: string) => {
       const finish = () => {
         closeTimerRef.current = null;
-        heldViewRef.current = null;
+        heldViewStackRef.current = heldViewStackRef.current.slice(0, -1);
+        syncHeldViewStack();
         restoreDetailFocusRef.current = true;
         if (window.history.state?.livingGuideCloseGuard) {
           window.history.go(-2);
@@ -733,7 +851,12 @@ export default function LivingGuideGuestShell({
       setDetailTransitionPhase("closing");
       closeTimerRef.current = window.setTimeout(finish, DETAIL_CLOSE_MS);
     },
-    [detailTransitionPhase, isDetailPresentation, navigate],
+    [
+      detailTransitionPhase,
+      isDetailPresentation,
+      navigate,
+      syncHeldViewStack,
+    ],
   );
 
   useEffect(() => {
@@ -748,14 +871,15 @@ export default function LivingGuideGuestShell({
       setDetailTransitionPhase("closing");
       closeTimerRef.current = window.setTimeout(() => {
         closeTimerRef.current = null;
-        heldViewRef.current = null;
+        heldViewStackRef.current = heldViewStackRef.current.slice(0, -1);
+        syncHeldViewStack();
         restoreDetailFocusRef.current = true;
         window.history.back();
       }, DETAIL_CLOSE_MS);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [isDetailPresentation]);
+  }, [isDetailPresentation, syncHeldViewStack]);
 
   const goBack = useCallback(() => {
     if (screen !== "detail") return;
@@ -893,11 +1017,7 @@ export default function LivingGuideGuestShell({
         {isDetailPresentation && (
           <div
             ref={heldLayerRef}
-            className={`lg2-held-view v on${
-              detailTransitionPhase !== "idle"
-                ? " hold"
-                : ""
-            }`}
+            className="lg2-held-stack"
             aria-hidden="true"
           />
         )}

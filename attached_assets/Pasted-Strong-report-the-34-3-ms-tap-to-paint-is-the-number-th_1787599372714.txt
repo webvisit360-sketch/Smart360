@@ -1,0 +1,34 @@
+Strong report — the 34.3 ms tap-to-paint is the number that matters, and the
+focus handling was a good addition. Three things before I approve.
+
+1. SCROLL POSITION. Closing a sheet returns to a list the guest had scrolled.
+   Does that list keep its scroll position, or does it reset to the top? The
+   background is now visible the whole time, so a reset is not a hidden flaw
+   any more — the guest watches the list jump. Requirement: opening a detail
+   preserves the source view's scroll position, and closing returns to exactly
+   the pixel the guest left. Show the scrollTop of the source view before
+   opening, while open, and after closing, for a list scrolled well past the
+   first screen.
+
+2. NESTED HOLD. With two sheets open (list -> category -> item), report the
+   computed transform and filter of BOTH the original list and the middle
+   sheet. If brightness(.75) and scale(.955) compound, the deepest background
+   goes almost black. Only the layer immediately beneath the top sheet may
+   carry .hold; anything further back keeps a single, non-compounding state.
+
+3. THE PAINT GATE. You disable the transition while the sheet sits at
+   translateY(100%). Confirm there is a forced reflow between re-enabling the
+   transition and adding .on, otherwise some frames will show the sheet JUMP
+   into place instead of sliding. State the cap on the gate: if content paint
+   is slow, the sheet must still start moving within one or two frames — a
+   detail that hesitates on tap is worse than one that slides in over empty
+   space. Report the gate's maximum wait in ms.
+
+Also confirm: does opening a detail push a history entry, and what does the
+phone's Back do from the FIRST detail — return to the list, or leave the guide?
+
+For the four slowed captures, state the measured translateY at each capture
+rather than "early/late", so the positions can be checked against the curve.
+
+Fix 1 and 2 if they are wrong, answer 3, then report and STOP. After that we
+return to CHECKPOINT 2c — the draft/publish plan is still the open item.
