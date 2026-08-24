@@ -119,6 +119,11 @@ body[data-t="noc"] .lg2-stage {
   transition: none;
 }
 
+.lg2-route-layer[data-detail-transition="restoring"] > .lg2-view,
+.lg2-route-layer[data-suppress-entry-animation="true"] > .lg2-view {
+  animation: none;
+}
+
 .lg2-app .v--det.on {
   transform: none;
   transition:
@@ -162,6 +167,7 @@ body[data-t="noc"] .lg2-stage {
   pointer-events: none;
   transition:
     transform .34s cubic-bezier(.32, 0, .24, 1),
+    filter .34s cubic-bezier(.32, 0, .24, 1),
     background .9s cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -173,14 +179,37 @@ body[data-t="noc"] .lg2-stage {
   z-index: 2;
 }
 
+.lg2-held-bottom-nav {
+  pointer-events: none;
+}
+
+.lg2-bottom-nav.lg2-held-bottom-nav--hold,
+.lg2-bottom-nav.lg2-held-bottom-nav--deep {
+  transform: translateX(-50%) scale(.955);
+  filter: brightness(.75);
+}
+
+.lg2-bottom-nav.lg2-held-bottom-nav--deep {
+  transition: none;
+}
+
+.lg2-bottom-nav.lg2-held-bottom-nav--closing {
+  transform: translateX(-50%);
+  filter: none;
+  transition:
+    transform .34s cubic-bezier(.32, 0, .24, 1),
+    filter .34s cubic-bezier(.32, 0, .24, 1),
+    background .9s cubic-bezier(.22, 1, .36, 1);
+}
+
 .lg2-held-surface {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-.lg2-held-surface > .lg2-bottom-nav {
-  position: absolute;
+.lg2-held-surface[data-lg-held-detail="true"] {
+  border-radius: 30px 30px 0 0;
 }
 
 .lg2-held-embed-placeholder {

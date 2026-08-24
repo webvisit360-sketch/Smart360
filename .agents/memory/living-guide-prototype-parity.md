@@ -29,3 +29,5 @@ A held visual surface must include route chrome outside the route body (especial
 **Why:** Besides duplicate IDs and doubled embeds, ordinary `pushState` + `back` leaves forward entries counted in `history.length`; repeated modal navigation can appear bounded while still trapping Back navigation. Scroll/node checks cannot detect a missing tab bar, stale horizontal offset, or a post-animation clone-to-real flinch.
 
 **How to apply:** Store offsets as clone metadata, insert and force layout, then restore them. Verify source/held/restored pixels exactly; inspect both held wrappers during list → category → item flows; run mixed phone/on-screen close cycles; and pixel-diff the complete source view against the first post-close handoff frame.
+
+Also compare the final real route after the held surface is removed: a perfect held clone can hide a replayed route-entry animation or a lost scroll offset at the actual swap.

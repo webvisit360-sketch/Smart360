@@ -246,3 +246,31 @@ mtime_ms = 1787607426056
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/863d0d59-2084-4b23-88f0-47298ed1250f/570ff456-b298-453b-9665-01b9d35931e5"
 storage_version_token = "1787607566359608"
 content_type = "image/png"
+
+[[outputs]]
+id = "_PXQyNuJbYF7SgS_xcd6O"
+uri = "file://reports/living-guide-original-01109-diff-mask.png"
+type = "image"
+title = "Original nested-list 0.1109% diff mask"
+description = "Red pixels are the complete original mismatch: 365 pixels, confined to the two rounded top corners at y=0–23."
+logical_id = "4b4639b2-91e9-4fa4-8400-b0bb378ed6c8"
+content_hash = "sha256:21a5178bbc766617ea894e4c34cbeecf871b12740b9e932e9ebc77df93339279"
+size = 2730
+mtime_ms = 1787609316463
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4b4639b2-91e9-4fa4-8400-b0bb378ed6c8/a2705a9f-d8b2-45fe-8329-177c16730fc8"
+storage_version_token = "1787609354667835"
+content_type = "image/png"
+
+[[outputs]]
+id = "Zq2Vr8Iyjera6GQGpsjyT"
+uri = "file://reports/living-guide-close-hard-states.png"
+type = "image"
+title = "Close fidelity — scrolled Surroundings and offset tabs"
+description = "Each row is before, held handoff, and real route after swap. Top: scrollTop 750. Bottom: horizontal tab strip scrollLeft 240."
+logical_id = "aaa7b29a-032d-406d-af36-a4c3ffe258a5"
+content_hash = "sha256:12ddf412f103ba1ead6ce21e3effc0bd65d0f4328d766fa5872c2dc37abac7ed"
+size = 1137105
+mtime_ms = 1787609317731
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/aaa7b29a-032d-406d-af36-a4c3ffe258a5/08cd71a6-491b-477c-9571-6219a783d388"
+storage_version_token = "1787609355350628"
+content_type = "image/png"

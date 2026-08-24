@@ -17,7 +17,14 @@ async function settleVisibleRoute(page: Page) {
     await document.fonts.ready;
     await Promise.all(
       [...document.images]
-        .filter((image) => image.offsetParent !== null)
+        .filter((image) => {
+          const rect = image.getBoundingClientRect();
+          return (
+            image.offsetParent !== null &&
+            rect.bottom > 0 &&
+            rect.top < window.innerHeight
+          );
+        })
         .map((image) =>
           image.complete
             ? image.decode().catch(() => undefined)
@@ -102,7 +109,9 @@ async function captureOneFrameAfterClose(
     () => (window as CloseTestWindow).__lg2CloseHandoffReady === true,
   );
 
-  const heldTop = page.locator(".lg2-held-stack .lg2-held-view:last-child");
+  const heldTop = page.locator(
+    ".lg2-held-stack > .lg2-held-view.lg2-held-view--closing",
+  );
   await expect(heldTop).toHaveClass(/lg2-held-view--closing/);
   await expect(heldTop).toHaveCSS("transform", "none");
   await expect(heldTop).toHaveCSS("filter", "none");
@@ -157,6 +166,31 @@ async function openHowThingsWork(page: Page) {
   await settleVisibleRoute(page);
 }
 
+async function setScrollPosition(
+  locator: ReturnType<Page["locator"]>,
+  axis: "top" | "left",
+  value: number,
+) {
+  await locator.evaluate(
+    (element, position) => {
+      if (position.axis === "top") element.scrollTop = position.value;
+      else element.scrollLeft = position.value;
+      element.dispatchEvent(new Event("scroll"));
+    },
+    { axis, value },
+  );
+  await pageWaitForPaint(locator.page());
+}
+
+async function pageWaitForPaint(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+}
+
 test("detail close preserves the exact source route through the paint-gated swap", async ({
   page,
 }, testInfo) => {
@@ -180,7 +214,7 @@ test("detail close preserves the exact source route through the paint-gated swap
   await openHowThingsWork(page);
   await expect(
     page.locator(
-      ".lg2-held-stack .lg2-held-view:last-child .lg2-bottom-nav button",
+      ".lg2-held-stack > .lg2-held-bottom-nav button",
     ),
   ).toHaveCount(5);
 
@@ -247,6 +281,158 @@ test("detail close preserves the exact source route through the paint-gated swap
     {
       type: "list-mismatch",
       description: `${(listMismatch * 100).toFixed(3)}%`,
+    },
+  );
+});
+
+test("close fidelity preserves a deeply scrolled Surroundings list and offset tabs", async ({
+  page,
+}, testInfo) => {
+  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+  const closeDevBanner = page.getByRole("button", { name: /^Close banner$/i });
+  if (await closeDevBanner.isVisible()) {
+    await closeDevBanner.click();
+  }
+  await settleVisibleRoute(page);
+  await page.getByRole("button", { name: /^Surroundings$/i }).click();
+  await expect(page).toHaveURL(/\/s\/explore\?/);
+  await settleVisibleRoute(page);
+
+  const surroundingsList = page.locator(".lg2-explore-list");
+  const surroundingsTabs = page.locator(".lg2-gtabs");
+
+  const scrolledBeforePath = testInfo.outputPath(
+    "surroundings-scroll-750-before.png",
+  );
+  const scrolledHandoffPath = testInfo.outputPath(
+    "surroundings-scroll-750-handoff.png",
+  );
+  const scrolledSwapPath = testInfo.outputPath(
+    "surroundings-scroll-750-swap.png",
+  );
+  const scrolledHandoffDiffPath = testInfo.outputPath(
+    "surroundings-scroll-750-handoff-diff.png",
+  );
+  const scrolledSwapDiffPath = testInfo.outputPath(
+    "surroundings-scroll-750-swap-diff.png",
+  );
+
+  await setScrollPosition(surroundingsList, "top", 750);
+  expect(await surroundingsList.evaluate((element) => element.scrollTop)).toBe(
+    750,
+  );
+  const scrolledBefore = await screenshotApp(page, scrolledBeforePath);
+  await page
+    .getByRole("button", { name: /Istralandia Aquapark/i })
+    .click();
+  await settleVisibleRoute(page);
+  const scrolledHandoff = await captureOneFrameAfterClose(
+    page,
+    ".lg2-route-layer.v--det .lg2-detail-back",
+    scrolledHandoffPath,
+    0,
+  );
+  expect(await surroundingsList.evaluate((element) => element.scrollTop)).toBe(
+    750,
+  );
+  const scrolledSwap = await screenshotApp(page, scrolledSwapPath);
+  const scrolledHandoffMismatch = assertSmallPixelDiff(
+    scrolledBefore,
+    scrolledHandoff,
+    scrolledHandoffDiffPath,
+  );
+  const scrolledSwapMismatch = assertSmallPixelDiff(
+    scrolledBefore,
+    scrolledSwap,
+    scrolledSwapDiffPath,
+  );
+
+  const tabsBeforePath = testInfo.outputPath("offset-tabs-before.png");
+  const tabsHandoffPath = testInfo.outputPath("offset-tabs-handoff.png");
+  const tabsSwapPath = testInfo.outputPath("offset-tabs-swap.png");
+  const tabsHandoffDiffPath = testInfo.outputPath(
+    "offset-tabs-handoff-diff.png",
+  );
+  const tabsSwapDiffPath = testInfo.outputPath("offset-tabs-swap-diff.png");
+
+  await setScrollPosition(surroundingsList, "top", 0);
+  await setScrollPosition(surroundingsTabs, "left", 240);
+  expect(await surroundingsTabs.evaluate((element) => element.scrollLeft)).toBe(
+    240,
+  );
+  const tabsBefore = await screenshotApp(page, tabsBeforePath);
+  await page
+    .getByRole("button", { name: /Marezige Wine Fountain/i })
+    .click();
+  await settleVisibleRoute(page);
+  const tabsHandoff = await captureOneFrameAfterClose(
+    page,
+    ".lg2-route-layer.v--det .lg2-detail-back",
+    tabsHandoffPath,
+    0,
+  );
+  expect(await surroundingsTabs.evaluate((element) => element.scrollLeft)).toBe(
+    240,
+  );
+  const tabsSwap = await screenshotApp(page, tabsSwapPath);
+  const tabsHandoffMismatch = assertSmallPixelDiff(
+    tabsBefore,
+    tabsHandoff,
+    tabsHandoffDiffPath,
+  );
+  const tabsSwapMismatch = assertSmallPixelDiff(
+    tabsBefore,
+    tabsSwap,
+    tabsSwapDiffPath,
+  );
+
+  await attachCapturePair(
+    testInfo,
+    "surroundings-scroll-750-handoff",
+    scrolledBeforePath,
+    scrolledHandoffPath,
+    scrolledHandoffDiffPath,
+  );
+  await testInfo.attach("surroundings-scroll-750-after-swap", {
+    path: scrolledSwapPath,
+    contentType: "image/png",
+  });
+  await testInfo.attach("surroundings-scroll-750-swap-diff", {
+    path: scrolledSwapDiffPath,
+    contentType: "image/png",
+  });
+  await attachCapturePair(
+    testInfo,
+    "offset-tabs-handoff",
+    tabsBeforePath,
+    tabsHandoffPath,
+    tabsHandoffDiffPath,
+  );
+  await testInfo.attach("offset-tabs-after-swap", {
+    path: tabsSwapPath,
+    contentType: "image/png",
+  });
+  await testInfo.attach("offset-tabs-swap-diff", {
+    path: tabsSwapDiffPath,
+    contentType: "image/png",
+  });
+
+  testInfo.annotations.push(
+    {
+      type: "surroundings-scroll-750-handoff-mismatch",
+      description: `${(scrolledHandoffMismatch * 100).toFixed(3)}%`,
+    },
+    {
+      type: "surroundings-scroll-750-swap-mismatch",
+      description: `${(scrolledSwapMismatch * 100).toFixed(3)}%`,
+    },
+    {
+      type: "offset-tabs-handoff-mismatch",
+      description: `${(tabsHandoffMismatch * 100).toFixed(3)}%`,
+    },
+    {
+      type: "offset-tabs-swap-mismatch",
+      description: `${(tabsSwapMismatch * 100).toFixed(3)}%`,
     },
   );
 });

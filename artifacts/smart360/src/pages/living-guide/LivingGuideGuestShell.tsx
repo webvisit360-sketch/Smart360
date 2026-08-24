@@ -107,6 +107,10 @@ type LivingGuideScrollSnapshot = {
   galleryScrollLefts: number[];
   galleryIndex: number;
 };
+type HeldRouteSurface = {
+  surface: HTMLElement;
+  bottomNav: HTMLElement | null;
+};
 
 const DETAIL_FALLBACK_ASPECT = 16 / 9;
 const MAX_HELD_VIEW_DEPTH = 2;
@@ -441,7 +445,7 @@ export default function LivingGuideGuestShell({
   const t = makeT(tenant, lang);
   const rootRef = useRef<HTMLDivElement>(null);
   const heldLayerRef = useRef<HTMLDivElement>(null);
-  const heldViewStackRef = useRef<HTMLElement[]>([]);
+  const heldViewStackRef = useRef<HeldRouteSurface[]>([]);
   const routeScrollSnapshotsRef = useRef(
     new Map<string, LivingGuideScrollSnapshot>(),
   );
@@ -452,6 +456,8 @@ export default function LivingGuideGuestShell({
   const restoreDetailFocusRef = useRef(false);
   const [detailTransitionPhase, setDetailTransitionPhase] =
     useState<DetailTransitionPhase>("idle");
+  const [suppressRouteEntryAnimation, setSuppressRouteEntryAnimation] =
+    useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const sections = useMemo(() => visible(tenant?.sections), [tenant?.sections]);
   const detailHeroUrls = useMemo(() => {
@@ -710,13 +716,15 @@ export default function LivingGuideGuestShell({
     const surface = document.createElement("div");
     surface.className = "lg2-held-surface";
     surface.dataset.lgHeldCompleteRoute = "true";
+    surface.dataset.lgHeldDetail = String(
+      source.parentElement?.classList.contains("v--det") === true,
+    );
     surface.setAttribute("aria-hidden", "true");
     surface.setAttribute("inert", "");
     surface.append(clone);
-    if (bottomNavClone) surface.append(bottomNavClone);
     heldViewStackRef.current = [
       ...(resetStack ? [] : heldViewStackRef.current),
-      surface,
+      { surface, bottomNav: bottomNavClone ?? null },
     ].slice(-MAX_HELD_VIEW_DEPTH);
   }, []);
 
@@ -724,21 +732,92 @@ export default function LivingGuideGuestShell({
     const heldLayer = heldLayerRef.current;
     if (!heldLayer) return;
     const lastIndex = heldViewStackRef.current.length - 1;
-    const wrappers = heldViewStackRef.current.map((view, index) => {
-      const wrapper = document.createElement("div");
+    const stateForIndex = (index: number) =>
+      index === lastIndex
+        ? holdImmediate
+          ? "hold"
+          : "closing"
+        : "deep";
+    const applyWrapperState = (
+      wrapper: HTMLElement,
+      index: number,
+    ) => {
+      const state = stateForIndex(index);
       wrapper.className =
-        index === lastIndex
-          ? holdImmediate
-            ? "lg2-held-view v on hold"
-            : "lg2-held-view lg2-held-view--closing v on"
-          : "lg2-held-view lg2-held-view--deep v on";
+        state === "hold"
+          ? "lg2-held-view v on hold"
+          : state === "closing"
+            ? "lg2-held-view lg2-held-view--closing v on"
+            : "lg2-held-view lg2-held-view--deep v on";
       wrapper.dataset.lgHeldDepth = String(index);
+      wrapper.style.zIndex = String(index * 2 + 1);
+    };
+    const applyBottomNavState = (
+      bottomNav: HTMLElement,
+      index: number,
+    ) => {
+      const state = stateForIndex(index);
+      bottomNav.classList.add("lg2-held-bottom-nav");
+      bottomNav.classList.toggle(
+        "lg2-held-bottom-nav--hold",
+        state === "hold",
+      );
+      bottomNav.classList.toggle(
+        "lg2-held-bottom-nav--closing",
+        state === "closing",
+      );
+      bottomNav.classList.toggle(
+        "lg2-held-bottom-nav--deep",
+        state === "deep",
+      );
+      bottomNav.dataset.lgHeldDepth = String(index);
+      bottomNav.style.zIndex = String(index * 2 + 2);
+    };
+    const existingWrappers = Array.from(
+      heldLayer.querySelectorAll<HTMLElement>(":scope > .lg2-held-view"),
+    );
+    const expectedBottomNavs = heldViewStackRef.current.flatMap(
+      ({ bottomNav }, index) => (bottomNav ? [{ bottomNav, index }] : []),
+    );
+    const existingBottomNavs = Array.from(
+      heldLayer.querySelectorAll<HTMLElement>(
+        ":scope > .lg2-held-bottom-nav",
+      ),
+    );
+    const canReuseExisting =
+      !holdImmediate &&
+      existingWrappers.length === heldViewStackRef.current.length &&
+      existingWrappers.every(
+        (wrapper, index) =>
+          wrapper.firstElementChild ===
+          heldViewStackRef.current[index]?.surface,
+      ) &&
+      existingBottomNavs.length === expectedBottomNavs.length &&
+      existingBottomNavs.every(
+        (bottomNav, index) =>
+          bottomNav === expectedBottomNavs[index]?.bottomNav,
+      );
+    if (canReuseExisting) {
+      existingWrappers.forEach(applyWrapperState);
+      expectedBottomNavs.forEach(({ bottomNav, index }) =>
+        applyBottomNavState(bottomNav, index),
+      );
+      return;
+    }
+
+    const wrappers = heldViewStackRef.current.map(({ surface }, index) => {
+      const wrapper = document.createElement("div");
+      applyWrapperState(wrapper, index);
       wrapper.setAttribute("aria-hidden", "true");
       wrapper.setAttribute("inert", "");
-      wrapper.append(view);
+      wrapper.append(surface);
       return wrapper;
     });
-    heldLayer.replaceChildren(...wrappers);
+    const bottomNavs = expectedBottomNavs.map(({ bottomNav, index }) => {
+      applyBottomNavState(bottomNav, index);
+      return bottomNav;
+    });
+    heldLayer.replaceChildren(...wrappers, ...bottomNavs);
     // Detached overflow elements clamp scrollTop/scrollLeft to zero. Restore
     // them only after the clone participates in layout.
     void heldLayer.offsetHeight;
@@ -833,6 +912,18 @@ export default function LivingGuideGuestShell({
   const scheduleClosePaintHandoff = useCallback(
     (targetHeldDepth: number, targetIsDetail: boolean) => {
       syncHeldViewStack(false);
+      if (!targetIsDetail) {
+        // The destination's real fixed nav is already mounted above the held
+        // route. Retire only its clone now so backdrop-filter samples the same
+        // pixels before and after the route surface swap.
+        heldLayerRef.current
+          ?.querySelectorAll<HTMLElement>(
+            ":scope > .lg2-held-bottom-nav",
+          )
+          .forEach((bottomNav) => {
+            bottomNav.style.visibility = "hidden";
+          });
+      }
       let secondFrame = 0;
       let releaseTestGate: (() => void) | null = null;
       const swapToRealRoute = () => {
@@ -939,6 +1030,7 @@ export default function LivingGuideGuestShell({
         setDetailTransitionPhase("preparing");
       } else {
         heldViewStackRef.current = [];
+        setSuppressRouteEntryAnimation(false);
         setDetailTransitionPhase("idle");
       }
       // buildGuestPath keeps the authenticated draft preview, language and
@@ -1016,6 +1108,7 @@ export default function LivingGuideGuestShell({
         detailTransitionPhase === "restoring" &&
         closeSourceLocationRef.current !== location
       ) {
+        setSuppressRouteEntryAnimation(true);
         return scheduleClosePaintHandoff(0, false);
       }
       cancelPendingDetailClose();
@@ -1376,6 +1469,9 @@ export default function LivingGuideGuestShell({
               : ""
           }`}
           data-detail-transition={detailTransitionPhase}
+          data-suppress-entry-animation={
+            suppressRouteEntryAnimation ? "true" : undefined
+          }
         >
         {screen === "cover" && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
