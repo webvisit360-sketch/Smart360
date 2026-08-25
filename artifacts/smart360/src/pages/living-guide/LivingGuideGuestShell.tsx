@@ -3029,7 +3029,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
@@ -3082,7 +3082,7 @@ function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick }: any
   const media = firstMedia(category) ? [firstMedia(category)] : [];
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
@@ -3138,7 +3138,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
   const media = categoryMedia(category);
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
@@ -3258,7 +3258,7 @@ function TabbedDetail({
 
   return (
     <div className={`lg2-screen-scroll lg2-detail-scroll${activeItem.orderEnabled ? " lg2-detail-scroll--orderable" : ""}`} data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
           <div className="lg2-grabber" aria-hidden="true" />
@@ -3332,7 +3332,7 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
@@ -3379,7 +3379,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
@@ -3422,7 +3422,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
   const routeFacts = [item?.difficulty, item?.duration, item?.distance].filter(Boolean);
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
-      <div className="lg2-detail-layout">
+      <div className="lg2-detail-sheet-root">
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
