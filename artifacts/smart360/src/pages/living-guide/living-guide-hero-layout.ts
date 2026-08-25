@@ -2,6 +2,7 @@ export const HERO_FULL_WIDTH_THRESHOLD = 0.89;
 export const HERO_SIDE_BLUR_HEIGHT = 0.89;
 export const HERO_GALLERY_MIN_HEIGHT = 0.45;
 export const HERO_GALLERY_MAX_HEIGHT = 0.89;
+export const DETAIL_FALLBACK_ASPECT = 16 / 9;
 
 export type LivingGuideHeroBranch = "full-bleed" | "side-blur";
 
@@ -35,6 +36,19 @@ export function mediaAspectFromDimensions(
     return null;
   }
   return numericWidth / numericHeight;
+}
+
+export function stableMediaAspect(
+  width: unknown,
+  height: unknown,
+): {
+  aspect: number;
+  source: "payload" | "fallback";
+} {
+  const payloadAspect = mediaAspectFromDimensions(width, height);
+  return payloadAspect === null
+    ? { aspect: DETAIL_FALLBACK_ASPECT, source: "fallback" }
+    : { aspect: payloadAspect, source: "payload" };
 }
 
 export function calculateLivingGuideHeroLayout({

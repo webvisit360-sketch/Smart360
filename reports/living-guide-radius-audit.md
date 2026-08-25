@@ -1,6 +1,6 @@
 # Living Guide guest radius audit
 
-**Acceptance status: UNVERIFIED — WEBKIT OPEN.** Chromium regression checks pass, but only a real Safari/WebKit recording or frame series can accept the clipping remedy.
+**Acceptance status: UNVERIFIED — IPHONE REFILM PENDING.** The clipping diagnosis was rejected. Hero height is now deterministic from stored dimensions or a fixed fallback; only the owner's new iPhone recording can accept the opening fix.
 
 Audit scope:
 

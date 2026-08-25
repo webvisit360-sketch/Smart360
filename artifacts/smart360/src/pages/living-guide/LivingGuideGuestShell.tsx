@@ -47,7 +47,7 @@ import {
 import {
   calculateLivingGuideHeroLayout,
   calculateLivingGuideUniformGalleryLayout,
-  mediaAspectFromDimensions,
+  stableMediaAspect,
   nearestGalleryIndex,
 } from "./living-guide-hero-layout";
 import "./living-guide-tokens.css";
@@ -112,7 +112,6 @@ type HeldRouteSurface = {
   bottomNav: HTMLElement | null;
 };
 
-const DETAIL_FALLBACK_ASPECT = 16 / 9;
 const MAX_HELD_VIEW_DEPTH = 2;
 const HELD_LIVE_STATE_SELECTOR =
   "form,input,textarea,select,[contenteditable='true'],video,audio";
@@ -2578,33 +2577,22 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const [viewportHeight, setViewportHeight] = useState(() =>
     typeof window === "undefined" ? 844 : window.innerHeight,
   );
-  const [imageAspects, setImageAspects] = useState<Record<string, number>>({});
   const activeIndex = singleOnly
     ? 0
     : Math.max(0, Math.min((media?.length ?? 1) - 1, galleryIndex ?? 0));
   const isUniformGallery = !singleOnly && (media?.length ?? 0) > 1;
   const isSingleHero = !isUniformGallery;
   const activeEntry = media?.[activeIndex] ?? media?.[0];
-  const activeKey = activeEntry
-    ? String(activeEntry.id ?? activeEntry.url ?? activeIndex)
-    : "";
-  const activeMetadataAspect = mediaAspectFromDimensions(
+  const activeStableAspect = stableMediaAspect(
     activeEntry?.width,
     activeEntry?.height,
   );
-  const activeMeasuredAspect = imageAspects[activeKey];
-  const activeAspect =
-    activeMetadataAspect ?? activeMeasuredAspect ?? DETAIL_FALLBACK_ASPECT;
-  const galleryAspects = (media ?? []).map((entry: any, index: number) => {
-    const entryKey = String(entry.id ?? entry.url ?? index);
-    return (
-      mediaAspectFromDimensions(entry.width, entry.height) ??
-      imageAspects[entryKey] ??
-      DETAIL_FALLBACK_ASPECT
-    );
-  });
-  const galleryHasOnlyPayloadAspects = (media ?? []).every(
-    (entry: any) => mediaAspectFromDimensions(entry.width, entry.height) !== null,
+  const galleryStableAspects: ReturnType<typeof stableMediaAspect>[] = (
+    media ?? []
+  ).map((entry: any) => stableMediaAspect(entry.width, entry.height));
+  const galleryAspects = galleryStableAspects.map(({ aspect }) => aspect);
+  const galleryUsesFallback = galleryStableAspects.some(
+    ({ source }) => source === "fallback",
   );
   const uniformGalleryLayout = isUniformGallery
     ? calculateLivingGuideUniformGalleryLayout({
@@ -2616,21 +2604,15 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const singleHeroLayout = isSingleHero
     ? calculateLivingGuideHeroLayout({
         containerWidth: frameWidth,
-        imageAspect: activeAspect,
+        imageAspect: activeStableAspect.aspect,
         viewportHeight,
       })
     : null;
   const activeAspectSource = isUniformGallery
-    ? uniformGalleryLayout
-      ? galleryHasOnlyPayloadAspects
-        ? "payload"
-        : "measured"
-      : "pending"
-    : activeMetadataAspect
-      ? "payload"
-      : activeMeasuredAspect
-        ? "measured"
-        : "fallback";
+    ? galleryUsesFallback
+      ? "fallback"
+      : "payload"
+    : activeStableAspect.source;
   const heroLayout = singleHeroLayout;
   const heroHeight =
     uniformGalleryLayout?.heroHeight ?? singleHeroLayout?.heroHeight ?? 0;
@@ -2673,13 +2655,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       window.removeEventListener("orientationchange", measure);
     };
   }, [mediaKey, media?.length]);
-
-  const rememberAspect = useCallback((key: string, aspect: number) => {
-    if (!Number.isFinite(aspect) || aspect <= 0) return;
-    setImageAspects((current) =>
-      current[key] === aspect ? current : { ...current, [key]: aspect },
-    );
-  }, []);
 
   const settleGallery = useCallback(
     (track: HTMLDivElement) => {
@@ -2748,14 +2723,11 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   );
   if (isSingleHero) {
     const entry = media[0];
-    const entryKey = String(entry.id ?? entry.url ?? 0);
-    const expectedAspect =
-      mediaAspectFromDimensions(entry.width, entry.height) ??
-      DETAIL_FALLBACK_ASPECT;
+    const expected = stableMediaAspect(entry.width, entry.height);
     return (
       <div
         ref={heroRef}
-        className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}${activeAspectSource === "measured" ? " is-measured-fallback" : ""}`}
+        className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}`}
         data-lg-hero-height={Math.round(heroHeight)}
         data-lg-hero-natural-height={heroLayout?.naturalHeight}
         data-lg-hero-branch={heroLayout?.branch}
@@ -2767,12 +2739,11 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
           <div className="lg2-gallery-slide">
             <AspectAwareHeroImage
               entry={entry}
-              entryKey={entryKey}
               loading="eager"
               sideBlur={sideBlur}
               aspectReady
-              expectedAspect={expectedAspect}
-              onAspect={rememberAspect}
+              expectedAspect={expected.aspect}
+              aspectSource={expected.source}
             />
           </div>
         </div>
@@ -2783,7 +2754,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   return (
     <div
       ref={heroRef}
-      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}${activeAspectSource === "measured" ? " is-measured-fallback" : ""} is-uniform-gallery`}
+      className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"} is-uniform-gallery`}
       data-lg-active-slide={activeIndex}
       data-lg-hero-height={Math.round(heroHeight)}
       data-lg-hero-natural-height={activeNaturalHeight}
@@ -2806,20 +2777,17 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       >
         {media.map((entry: any, index: number) => {
           const entryKey = String(entry.id ?? entry.url ?? index);
-          const expectedAspect =
-            mediaAspectFromDimensions(entry.width, entry.height) ??
-            DETAIL_FALLBACK_ASPECT;
+          const expected = stableMediaAspect(entry.width, entry.height);
           return (
             <div className="lg2-gallery-slide" key={entryKey}>
               <AspectAwareHeroImage
                 entry={entry}
-                entryKey={entryKey}
                 loading={index === 0 || !layoutReady ? "eager" : "lazy"}
                 sideBlur={false}
                 galleryCover
                 aspectReady
-                expectedAspect={expectedAspect}
-                onAspect={rememberAspect}
+                expectedAspect={expected.aspect}
+                aspectSource={expected.source}
               />
             </div>
           );
@@ -2837,22 +2805,20 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
 
 function AspectAwareHeroImage({
   entry,
-  entryKey,
   loading,
   sideBlur,
   galleryCover = false,
   aspectReady,
   expectedAspect,
-  onAspect,
+  aspectSource,
 }: {
   entry: any;
-  entryKey: string;
   loading: "eager" | "lazy";
   sideBlur: boolean;
   galleryCover?: boolean;
   aspectReady: boolean;
-  expectedAspect: number | null;
-  onAspect: (key: string, aspect: number) => void;
+  expectedAspect: number;
+  aspectSource: "payload" | "fallback";
 }) {
   const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
 
@@ -2873,7 +2839,7 @@ function AspectAwareHeroImage({
       <img
         className={`lg2-hero-image-main${aspectReady ? " is-ready" : ""}`}
         data-lg-hero-image
-        data-lg-aspect-source={expectedAspect === null ? "measured" : "payload"}
+        data-lg-aspect-source={aspectSource}
         src={source}
         alt=""
         loading={loading}
@@ -2883,15 +2849,10 @@ function AspectAwareHeroImage({
           const image = event.currentTarget;
           if (image.naturalWidth > 0 && image.naturalHeight > 0) {
             const naturalAspect = image.naturalWidth / image.naturalHeight;
-            if (expectedAspect === null) {
-              image.dataset.lgDimensionsConfirmed = "measured";
-              onAspect(entryKey, naturalAspect);
-            } else {
-              const relativeError =
-                Math.abs(naturalAspect - expectedAspect) / expectedAspect;
-              image.dataset.lgDimensionsConfirmed =
-                relativeError <= 0.01 ? "true" : "mismatch";
-            }
+            const relativeError =
+              Math.abs(naturalAspect - expectedAspect) / expectedAspect;
+            image.dataset.lgDimensionsConfirmed =
+              relativeError <= 0.01 ? "true" : "mismatch";
           }
         }}
       />

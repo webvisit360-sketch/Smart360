@@ -21,6 +21,15 @@ type CloseTestWindow = Window & {
   };
   __LG2_TEST_CAPTURE_OPEN_MOTION__?: boolean;
   __lg2OpenMotionStage?: "waiting" | "25" | "60" | "released";
+  __lg2DelayedHeroFrames?: Array<{
+    t: number;
+    phase: string;
+    routeTop: number | null;
+    heroHeight: number | null;
+    panelTop: number | null;
+    grabberPresent: boolean;
+    panelRadius: string | null;
+  }>;
 };
 
 async function settleVisibleRoute(page: Page) {
@@ -901,6 +910,122 @@ const OPEN_FIDELITY_CASES = [
     expectedImages: 0,
   },
 ] as const;
+
+test("detail hero geometry is fixed while the image response is delayed", async ({
+  context,
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium",
+    "Chromium route-delay regression; WebKit acceptance remains a real-device recording.",
+  );
+
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Network.enable");
+  await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
+
+  let releaseHeroResponse = () => {};
+  const heroResponseReleased = new Promise<void>((resolve) => {
+    releaseHeroResponse = resolve;
+  });
+  let markHeroRequestStarted = () => {};
+  const heroRequestStarted = new Promise<void>((resolve) => {
+    markHeroRequestStarted = resolve;
+  });
+
+  await page.route(
+    "**/meli-pu_apartma-1_02-d139.jpg?w=1400",
+    async (route) => {
+      markHeroRequestStarted();
+      await heroResponseReleased;
+      const response = await route.fetch();
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          "cache-control": "no-store",
+        },
+      });
+    },
+  );
+
+  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+  await heroRequestStarted;
+
+  await page.evaluate(() => {
+    const testWindow = window as CloseTestWindow;
+    testWindow.__lg2DelayedHeroFrames = [];
+    const startedAt = performance.now();
+    const sample = () => {
+      const route = document.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      );
+      const hero = route?.querySelector<HTMLElement>(".lg2-detail-hero");
+      const panel = route?.querySelector<HTMLElement>(".lg2-detail-sheet");
+      const routeRect = route?.getBoundingClientRect();
+      const heroRect = hero?.getBoundingClientRect();
+      const panelRect = panel?.getBoundingClientRect();
+      testWindow.__lg2DelayedHeroFrames!.push({
+        t: Number((performance.now() - startedAt).toFixed(1)),
+        phase: route?.dataset.detailTransition ?? "missing",
+        routeTop: routeRect ? Number(routeRect.top.toFixed(2)) : null,
+        heroHeight: heroRect ? Number(heroRect.height.toFixed(2)) : null,
+        panelTop: panelRect ? Number(panelRect.top.toFixed(2)) : null,
+        grabberPresent: Boolean(panel?.querySelector(".lg2-grabber")),
+        panelRadius: panel
+          ? getComputedStyle(panel).borderTopLeftRadius
+          : null,
+      });
+      if (performance.now() - startedAt < 6_000) {
+        requestAnimationFrame(sample);
+      }
+    };
+    requestAnimationFrame(sample);
+  });
+
+  const releaseTimer = setTimeout(releaseHeroResponse, 800);
+  await page.getByRole("button", { name: /^Apartments$/i }).click();
+  await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+    "data-detail-transition",
+    "open",
+    { timeout: 5_000 },
+  );
+  await page.waitForTimeout(700);
+  clearTimeout(releaseTimer);
+
+  const frames = await page.evaluate(
+    () => (window as CloseTestWindow).__lg2DelayedHeroFrames ?? [],
+  );
+  const mountedFrames = frames.filter(
+    (frame) =>
+      frame.phase !== "missing" &&
+      frame.routeTop !== null &&
+      frame.heroHeight !== null &&
+      frame.panelTop !== null,
+  );
+  const openFrames = mountedFrames.filter((frame) => frame.phase === "open");
+
+  expect(mountedFrames.length).toBeGreaterThan(0);
+  expect(openFrames.length).toBeGreaterThan(0);
+  expect(openFrames[0]!.t).toBeGreaterThanOrEqual(750);
+
+  const expectedHeroHeight = mountedFrames[0]!.heroHeight!;
+  for (const frame of mountedFrames) {
+    expect(frame.heroHeight).toBe(expectedHeroHeight);
+    expect(frame.panelTop! - frame.routeTop!).toBeCloseTo(
+      expectedHeroHeight - 26,
+      1,
+    );
+    expect(frame.grabberPresent).toBe(true);
+    expect(frame.panelRadius).toBe("28px");
+  }
+
+  await testInfo.attach("delayed-hero-frame-series", {
+    body: JSON.stringify(mountedFrames, null, 2),
+    contentType: "application/json",
+  });
+});
 
 for (const scenario of OPEN_FIDELITY_CASES) {
   test(`detail open is visually complete at transitionend: ${scenario.name}`, async ({

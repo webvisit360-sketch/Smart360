@@ -1,8 +1,8 @@
 # Living Guide WebKit opening audit
 
-**Status: UNVERIFIED — WEBKIT OPEN**
+**Status: SUPERSEDED DIAGNOSIS**
 
-Chromium results below are regression checks only. They do not prove that the iOS WebKit clipping defect is fixed.
+The measured follow-up phone recording rejected the clipping diagnosis documented below. This file is retained as the historical containment/performance audit; the active status is **UNVERIFIED — IPHONE REFILM PENDING** for the deterministic hero-height fix.
 
 ## The two unstable clipping surfaces
 

@@ -1,0 +1,46 @@
+The recording is measured, and it rules out both the clip hypothesis and the
+conditional-render hypothesis. Your inventory was right: the grabber and the
+radius are unconditional. The variable is the HERO HEIGHT.
+
+Measured, first open, 60 fps, iPhone:
+  1.30 - 1.45 s   panel top edge at y=347, square corners, no grabber visible
+  1.467 s         panel top edge JUMPS UP to y=321 — exactly 26 px — and in the
+                  same frame the rounded corners and the grabber appear
+  The title does not move. The panel grows upward by 26 px.
+
+Those 26 px are the overlap band by which the panel covers the bottom of the
+hero — the strip that carries the grabber and the corner radius. During the
+slide that overlap is absent, so the panel sits 26 px lower and its top edge is
+square because the rounded part is the part that is missing.
+
+The cause is the hero's height, not the panel. While the hero image is not yet
+decoded the hero renders at a provisional height; the panel is positioned
+relative to it; when the real height lands, everything shifts. Your Chromium
+runs never show it because the image is cached and decodes in a few ms. The
+owner's phone on mobile data shows it every single time.
+
+Three things, in this order:
+
+1. REPRODUCE IT IN CHROMIUM. You do not need WebKit for this. Re-run the
+   opening tests with the hero image request delayed by 800 ms using route
+   interception, and with the cache disabled. If the panel jumps, you have the
+   bug on a runner you can actually use. Report the frame series.
+
+2. FIND THE 26 PX. Report exactly what positions the panel relative to the hero
+   — a negative margin, an absolute offset, a computed value — and where the
+   hero's height comes from during the motion versus at rest. I expect to find a
+   measurement of the decoded image somewhere in that path.
+
+3. MAKE THE HEIGHT DETERMINISTIC BEFORE MOTION. We already store each media
+   item's width and height; the guide's first-paint stability work depends on
+   it. The hero's height must be computed from those stored dimensions BEFORE
+   the sheet starts moving, and must not change afterwards for any reason. If an
+   item has no stored dimensions, use a fixed fallback aspect and keep it — a
+   slightly wrong height that never moves is better than a correct one that
+   jumps. Report any media item in production that lacks stored dimensions.
+
+Then state your readiness gate's cap again and what it does on expiry. If it
+lets the motion start on a provisional height, that is the whole defect in one
+line.
+
+Report and STOP. The owner will re-film once, and that is acceptance.

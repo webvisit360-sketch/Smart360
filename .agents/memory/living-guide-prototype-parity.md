@@ -46,10 +46,10 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 
 **How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.
 
-## Detail-open contradiction
+## Deterministic detail hero height
 
-Do not treat rounded `clip-path` as the cause of the iPhone opening defect. The post-fix phone recording still showed a square panel with no grabber, followed by the grabber appearing and the title moving down when motion ended. A paint-only clipping fault cannot move layout.
+Do not derive detail hero geometry from decoded-image measurements. Use stored media dimensions from the payload; if they are missing or invalid, use one fixed 16:9 fallback for the mounted detail and never replace it after decode.
 
-**Why:** The owner’s real-device retest disproved the earlier compositor hypothesis. Direct production-asset inspection found the grabber/readiness markers and clip CSS, while the published bundle’s Chromium path mounted the grabber and 28 px radius from its first detail frame. The production WebKit contradiction remains unresolved.
+**Why:** The measured iPhone recording showed the panel top jumping upward by exactly the panel’s 26 px negative overlap band while the title stayed fixed relative to the panel. A decode failure can be swallowed by the readiness wait and let later image load state alter geometry on WebKit even when Chromium waits. The clipping and conditional-render diagnoses were both disproved.
 
-**How to apply:** Do not make further clip-path changes or claim this defect fixed. First identify why the owner’s WebKit execution path differs from the fetched published bundle and the real-card production Chromium path; require evidence of the actual late render/state change before editing.
+**How to apply:** Treat image `onLoad` dimensions as diagnostics only. Delay the selected hero response with cache disabled and assert every mounted/open frame keeps one hero height, a panel offset of `heroHeight - 26`, the grabber, and 28 px radius. Real-device acceptance still requires the owner’s iPhone re-film.
