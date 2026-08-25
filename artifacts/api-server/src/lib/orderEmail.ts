@@ -114,7 +114,7 @@ export function buildEmailBody(
 
   return {
     from: `${ORDER_EMAIL_FROM_NAME} <${from}>`,
-    reply_to: from,
+    reply_to: "webvisit360@gmail.com",
     to: [p.to],
     subject,
     html,

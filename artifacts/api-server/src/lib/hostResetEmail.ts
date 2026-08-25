@@ -56,7 +56,7 @@ export function buildResetEmailBody(to: string, link: string, from: string) {
     ],
     footerLines: ["Smart360 · digitalni vodnik za goste"],
   });
-  return { from, reply_to: "info@webvisit360.com", to: [to], subject, html, text };
+  return { from, reply_to: "webvisit360@gmail.com", to: [to], subject, html, text };
 }
 
 export type ResetEmailResult = { ok: true } | { ok: false };

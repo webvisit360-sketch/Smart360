@@ -3,8 +3,8 @@
  *
  * Pins for ALL SIX templates:
  *  - subject and inbox-preview lines exactly as approved,
- *  - the shared design system (green bar, brand kicker, CTA, footer),
- *  - the global rules: inline styles only, no web fonts, no external images,
+ *  - the shared design system (seven-cell band, marked kicker, CTA, footer),
+ *  - the global rules: inline styles only, no web fonts, one hosted brand mark,
  *    no tracking pixels, no auto-login links, plain-text alternative.
  */
 import { describe, test } from "node:test";
@@ -147,13 +147,26 @@ describe("global rules hold for every template", () => {
     const text = (body as Record<string, unknown>)["text"] as string;
 
     test(`${name}: design system present`, () => {
-      assert.ok(html.includes("#157347"), "green accent bar/CTA");
+      assert.equal((html.match(/height:5px;line-height:5px;font-size:0;background:/g) ?? []).length, 7);
+      assert.ok(html.includes("#E8801B"), "orange band color");
+      if (html.includes("<a href=")) {
+        assert.ok(html.includes("background:#E8801B"), "orange CTA");
+        assert.ok(html.includes("color:#150C03"), "CTA ink");
+      }
+      assert.ok(html.includes("color:#121A14"), "dark brand kicker");
+      assert.ok(
+        html.includes("https://smart360.info/brand/smart360-znak-40.png"),
+        "stable hosted brand mark",
+      );
+      assert.ok(html.includes('width="20" height="20" alt=""'), "20px decorative mark");
+      assert.ok(!html.includes("#157347"), "old green removed");
       assert.match(html, /letter-spacing:\.14em/, "brand kicker style");
       assert.match(html, /font-size:24px;font-weight:800/, "24px title");
     });
 
-    test(`${name}: no external images, no web fonts, no tracking, no <style> block`, () => {
-      assert.ok(!html.includes("<img"), "no images at all — nothing external to load");
+    test(`${name}: only hosted mark image, no web fonts, tracking, or <style> block`, () => {
+      assert.equal((html.match(/<img/g) ?? []).length, 1, "only the brand mark image");
+      assert.ok(!html.includes("data:image"), "mark is never a data URI");
       assert.ok(!/url\(|@font-face|fonts\.googleapis/.test(html), "no web fonts");
       assert.ok(!html.includes("<style"), "inline styles only");
       assert.ok(!/href="https?:\/\/[^"]*(utm_|track|pixel)/i.test(html), "no tracking params");
@@ -178,7 +191,7 @@ describe("global rules hold for every template", () => {
       );
       assert.equal(
         (body as Record<string, unknown>)["reply_to"],
-        "info@webvisit360.com",
+        "webvisit360@gmail.com",
       );
     });
 
