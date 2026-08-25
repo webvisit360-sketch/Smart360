@@ -683,6 +683,12 @@ export default function LivingGuideGuestShell({
   if (unavailableGuestSubroute) screen = "home";
   const isDetailPresentation =
     window.history.state?.livingGuidePresentation === "detail";
+  const [baseScreen, setBaseScreen] = useState<ScreenName>(() =>
+    screen === "detail" ? "home" : screen,
+  );
+  useLayoutEffect(() => {
+    if (screen !== "detail") setBaseScreen(screen);
+  }, [screen]);
   const detailHeroHeightLockRef = useRef<{
     location: string;
     height: number;
@@ -824,6 +830,7 @@ export default function LivingGuideGuestShell({
   }, [galleryIndex, location]);
 
   useLayoutEffect(() => {
+    if (isDetailPresentation) return;
     const routeView = rootRef.current?.querySelector<HTMLElement>(
       ".lg2-route-layer > .lg2-view",
     );
@@ -846,7 +853,7 @@ export default function LivingGuideGuestShell({
       },
     );
     setGalleryIndex(snapshot.galleryIndex);
-  }, [location, resetNavigationState]);
+  }, [isDetailPresentation, location, resetNavigationState]);
 
   const captureHeldView = useCallback((resetStack: boolean) => {
     const source = rootRef.current?.querySelector<HTMLElement>(
@@ -1208,7 +1215,10 @@ export default function LivingGuideGuestShell({
                 ? `[aria-label="${CSS.escape(ariaLabel)}"]`
                 : null;
         }
-        captureHeldView(!isDetailPresentation);
+        // The standard source route remains mounted beneath the first detail.
+        // Only nested detail navigation still needs a held detail surface.
+        if (isDetailPresentation) captureHeldView(false);
+        else heldViewStackRef.current = [];
         performance.clearMarks("lg2-detail-tap");
         performance.clearMarks("lg2-detail-title-painted");
         performance.clearMeasures("lg2-detail-tap-to-title-paint");
@@ -1476,11 +1486,25 @@ export default function LivingGuideGuestShell({
         restoreDetailFocusRef.current = true;
         const returnsToDetail =
           window.history.state?.livingGuideFromPresentation === "detail";
+        if (!returnsToDetail) {
+          compactHistoryAfterCloseRef.current = false;
+          setLocation(buildGuestPath(fallbackPath), {
+            replace: true,
+            state: {
+              livingGuide: true,
+              from: location,
+              livingGuidePresentation: "standard",
+              livingGuideFromPresentation: "standard",
+              livingGuideHeldDepth: 0,
+            },
+          });
+          return;
+        }
         if (window.history.state?.livingGuideCloseGuard) {
-          compactHistoryAfterCloseRef.current = !returnsToDetail;
+          compactHistoryAfterCloseRef.current = false;
           window.history.go(-2);
         } else if (window.history.length > 1 && window.history.state?.livingGuide) {
-          compactHistoryAfterCloseRef.current = !returnsToDetail;
+          compactHistoryAfterCloseRef.current = false;
           window.history.back();
         } else {
           setLocation(buildGuestPath(fallbackPath), {
@@ -1679,6 +1703,7 @@ export default function LivingGuideGuestShell({
       data-living-guide
       data-living-guide-app
       data-screen={screen}
+      data-detail-open={isDetailPresentation ? "true" : undefined}
       translate="no"
     >
       <style>{`@font-face{font-family:"Inter";src:url("${livingGuideInterWoff2}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`}</style>
@@ -1686,7 +1711,7 @@ export default function LivingGuideGuestShell({
       <Starfield theme={theme} />
 
       <main className="lg2-stage">
-        {(isDetailPresentation || detailTransitionPhase === "restoring") && (
+        {heldViewStackRef.current.length > 0 && (
           <div
             ref={heldLayerRef}
             className="lg2-held-stack"
@@ -1694,32 +1719,21 @@ export default function LivingGuideGuestShell({
           />
         )}
         <div
-          key={isDetailPresentation ? location : "standard-route-layer"}
-          className={`lg2-route-layer${
-            isDetailPresentation
-              ? ` v v--det${
-                  detailTransitionPhase === "open" ||
-                  (detailTransitionPhase === "restoring" &&
-                    closeSourceLocationRef.current !== location)
-                    ? " on"
-                    : ""
-                }`
-              : ""
+          className={`lg2-route-layer lg2-base-route-layer${
+            isDetailPresentation ? " v on hold" : ""
           }`}
-          data-detail-transition={detailTransitionPhase}
           data-suppress-entry-animation={
             suppressRouteEntryAnimation ? "true" : undefined
           }
-          style={detailRouteStyle}
         >
-        {screen === "cover" && (
+        {baseScreen === "cover" && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
             if (guest) navigate(`/${slug}/home`);
             else setShowSignIn(true);
           }} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
         )}
 
-        {screen === "home" && (
+        {baseScreen === "home" && (
           <HomeView
             tenant={tenant}
             sections={sections}
@@ -1737,7 +1751,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "site-map" && navState.hasSiteMap && (
+        {baseScreen === "site-map" && navState.hasSiteMap && (
           <SiteMapGuestView
             images={sitePlanImages}
             t={t}
@@ -1745,7 +1759,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "more" && navState.omitted.length > 0 && (
+        {baseScreen === "more" && navState.omitted.length > 0 && (
           <MoreGuestView
             omitted={navState.omitted}
             t={t}
@@ -1756,7 +1770,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "grid" && currentSection && currentSection.key === "offer" && (
+        {baseScreen === "grid" && currentSection && currentSection.key === "offer" && (
           <ShopView
             tenant={tenant}
             section={currentSection}
@@ -1767,7 +1781,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "grid" && currentSection && currentSection.key === "stay" && (
+        {baseScreen === "grid" && currentSection && currentSection.key === "stay" && (
           <StayView
             tenant={tenant}
             section={currentSection}
@@ -1781,7 +1795,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "grid" && currentSection && currentSection.key !== "offer" && currentSection.key !== "stay" && (
+        {baseScreen === "grid" && currentSection && currentSection.key !== "offer" && currentSection.key !== "stay" && (
           <GridView
             tenant={tenant}
             section={currentSection}
@@ -1798,7 +1812,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "explore" && (
+        {baseScreen === "explore" && (
           <ExploreView
             tenant={tenant}
             categories={exploreCategories}
@@ -1809,7 +1823,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {screen === "messages" && (
+        {baseScreen === "messages" && (
           <MessagesView
             tenant={tenant}
             slug={slug}
@@ -1831,7 +1845,21 @@ export default function LivingGuideGuestShell({
           />
         )}
 
+        </div>
+
         {screen === "detail" && categoryContext && (
+          <div
+            key={location}
+            className={`lg2-route-layer v v--det${
+              detailTransitionPhase === "open" ||
+              (detailTransitionPhase === "restoring" &&
+                closeSourceLocationRef.current !== location)
+                ? " on"
+                : ""
+            }`}
+            data-detail-transition={detailTransitionPhase}
+            style={detailRouteStyle}
+          >
           <DetailView
             category={categoryContext.category}
             itemId={routeItemId}
@@ -1851,11 +1879,11 @@ export default function LivingGuideGuestShell({
             }
             onOrderClick={requestOrder}
           />
+          </div>
         )}
-        </div>
       </main>
 
-      {shouldShowLivingGuideBottomNav(screen) && !isDetailPresentation && (
+      {shouldShowLivingGuideBottomNav(baseScreen) && (
         <BottomNav
           resolvedNav={navState.resolved}
           sections={sections}
@@ -1864,7 +1892,7 @@ export default function LivingGuideGuestShell({
           activeSectionKey={currentSection?.key ?? null}
           activeCategoryId={categoryContext?.category?.id ?? null}
           onNavigate={(path: string) => navigate(path, false, "tab")}
-          screen={screen}
+          screen={baseScreen}
         />
       )}
 

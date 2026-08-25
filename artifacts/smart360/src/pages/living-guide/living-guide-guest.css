@@ -98,6 +98,20 @@ body[data-t="noc"] .lg2-stage {
   pointer-events: none;
 }
 
+/*
+ * The real source route stays mounted beneath detail. Its image elements,
+ * decoded pixels and native scroll state therefore survive every close.
+ */
+.lg2-app .lg2-base-route-layer.v.hold {
+  z-index: 1;
+}
+
+.lg2-app[data-detail-open="true"] > .lg2-bottom-nav {
+  transform: translateX(-50%) scale(.955);
+  filter: brightness(.75);
+  pointer-events: none;
+}
+
 .lg2-app .v--det {
   z-index: 3;
   opacity: 1;
