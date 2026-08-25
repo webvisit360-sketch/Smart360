@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -32,6 +32,65 @@ const LivingGuideGuestShell = lazy(
   () => import('@/pages/living-guide/LivingGuideGuestShell'),
 );
 
+function GuestEntrySplash({ ready }: { ready: boolean }) {
+  const startedAtRef = useRef(performance.now());
+  const [phase, setPhase] = useState<'visible' | 'out' | 'gone'>('visible');
+  const exitTimerRef = useRef<number | null>(null);
+
+  const hide = useCallback(() => {
+    setPhase((current) => {
+      if (current !== 'visible') return current;
+      exitTimerRef.current = window.setTimeout(() => setPhase('gone'), 420);
+      return 'out';
+    });
+  }, []);
+
+  useEffect(() => {
+    const safetyTimer = window.setTimeout(hide, 3_200);
+    return () => {
+      window.clearTimeout(safetyTimer);
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+      }
+    };
+  }, [hide]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const remaining = Math.max(0, 2_500 - (performance.now() - startedAtRef.current));
+    const intendedTimer = window.setTimeout(hide, remaining);
+    return () => window.clearTimeout(intendedTimer);
+  }, [hide, ready]);
+
+  if (phase === 'gone') return null;
+
+  const wordmarkStyle = {
+    '--guest-splash-wordmark': `url("${import.meta.env.BASE_URL}brand/logo-smart360-moder.png")`,
+  } as CSSProperties;
+
+  return (
+    <div
+      className={`guest-entry-splash${phase === 'out' ? ' is-out' : ''}`}
+      role="status"
+      aria-label="Smart360 Digitalni vodnik"
+      onClick={hide}
+    >
+      <span className="guest-entry-splash__mark" aria-hidden="true">
+        <img
+          src={`${import.meta.env.BASE_URL}brand/ikona-smart360-512.png`}
+          alt=""
+        />
+      </span>
+      <span
+        className="guest-entry-splash__wordmark"
+        style={wordmarkStyle}
+        aria-hidden="true"
+      />
+      <span className="guest-entry-splash__subtitle">Digitalni vodnik</span>
+    </div>
+  );
+}
+
 /**
  * GuestHost — single component rendered for ALL guest paths (/:slug and /:slug/c/:categoryId).
  *
@@ -61,6 +120,8 @@ function GuestHost() {
   const livingGuidePreview =
     import.meta.env.DEV && sp.get('ui') === 'living-guide';
   const [livingGuideLang, setLivingGuideLang] = useState(rawLang);
+  const [guestAppReady, setGuestAppReady] = useState(false);
+  const signalGuestAppReady = useCallback(() => setGuestAppReady(true), []);
 
   useEffect(() => {
     setLivingGuideLang(rawLang);
@@ -110,6 +171,10 @@ function GuestHost() {
   const isLivingGuideMode =
     livingGuidePreview || (tenant != null && tenant.guestUiMode === 'living-guide');
 
+  useEffect(() => {
+    if (tenant != null && !isLivingGuideMode) signalGuestAppReady();
+  }, [isLivingGuideMode, signalGuestAppReady, tenant]);
+
   // EDINI vir resnice za barvo ozadja (pike-brisanje-ozadje.md, točka 4):
   // shranjena barva namestitve, uporabljena TU in nikjer drugje. data-dark se
   // izpelje iz nje v istem trenutku (usePageBg). Nobena podkomponenta ne sme
@@ -131,26 +196,39 @@ function GuestHost() {
   // so the operator can preview the mode before publishing it.
   if (isLivingGuideMode && tenant != null) {
     return (
-      <Suspense fallback={null}>
-        <LivingGuideGuestShell
-          tenant={tenant}
-          slug={slug}
-          lang={lang}
-          onLanguageChange={changeLivingGuideLanguage}
-        />
-      </Suspense>
+      <>
+        <GuestEntrySplash ready={guestAppReady} />
+        <Suspense fallback={null}>
+          <LivingGuideGuestShell
+            tenant={tenant}
+            slug={slug}
+            lang={lang}
+            onLanguageChange={changeLivingGuideLanguage}
+            onReady={signalGuestAppReady}
+          />
+        </Suspense>
+      </>
     );
   }
 
   // Swipe theme: one mounted GuestSwipe instance handles both the pager and the detail overlay.
   // categoryId prop changes drive the detail open/close animation via CSS class toggling.
   if (tenant?.theme === 'swipe') {
-    return <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={categoryId} />;
+    return (
+      <>
+        <GuestEntrySplash ready={guestAppReady} />
+        <GuestSwipe tenant={tenant} slug={slug} lang={lang} categoryId={categoryId} />
+      </>
+    );
   }
 
   // Mediterranean theme: original route-aware components (they fetch via cache too).
-  if (isCategoryPath) return <GuestCategory />;
-  return <GuestHome />;
+  return (
+    <>
+      <GuestEntrySplash ready={guestAppReady} />
+      {isCategoryPath ? <GuestCategory /> : <GuestHome />}
+    </>
+  );
 }
 
 /**

@@ -2,6 +2,94 @@
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 
+.guest-entry-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #fff;
+  opacity: 1;
+  transition: opacity .42s cubic-bezier(.22, 1, .36, 1);
+}
+
+.guest-entry-splash.is-out {
+  opacity: 0;
+}
+
+.guest-entry-splash__mark {
+  width: 104px;
+  height: 104px;
+  opacity: 0;
+  transform: scale(.86);
+  animation: guest-splash-mark-in .62s cubic-bezier(.22, 1, .36, 1) .06s forwards;
+}
+
+.guest-entry-splash__mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: guest-splash-turn 5.4s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+.guest-entry-splash__wordmark {
+  width: 134px;
+  height: 25px;
+  background: #121a14;
+  opacity: 0;
+  -webkit-mask: var(--guest-splash-wordmark) center / contain no-repeat;
+  mask: var(--guest-splash-wordmark) center / contain no-repeat;
+  animation: guest-splash-fade .5s cubic-bezier(.22, 1, .36, 1) .3s forwards;
+}
+
+.guest-entry-splash__subtitle {
+  color: #66716a;
+  font: 600 12px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: guest-splash-fade .5s cubic-bezier(.22, 1, .36, 1) .46s forwards;
+}
+
+@keyframes guest-splash-mark-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes guest-splash-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes guest-splash-fade {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guest-entry-splash__mark,
+  .guest-entry-splash__wordmark,
+  .guest-entry-splash__subtitle {
+    animation: guest-splash-reduced-entry .2s linear forwards;
+    transform: none;
+  }
+
+  .guest-entry-splash__mark img {
+    animation: none;
+    transform: none;
+  }
+}
+
+@keyframes guest-splash-reduced-entry {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

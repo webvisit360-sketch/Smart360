@@ -580,11 +580,13 @@ export default function LivingGuideGuestShell({
   slug,
   lang,
   onLanguageChange,
+  onReady,
 }: {
   tenant: any;
   slug: string;
   lang: string;
   onLanguageChange: (lang: string) => void;
+  onReady?: () => void;
 }) {
   const [location, setLocation] = useLocation();
   const requestedTheme = new URLSearchParams(window.location.search).get("theme");
@@ -631,6 +633,10 @@ export default function LivingGuideGuestShell({
     return [...urls];
   }, [sections]);
   const preloadedDetailImagesRef = useRef<HTMLImageElement[]>([]);
+
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
   const allCategories = useMemo(
     () =>
       sections.flatMap((section: any) =>
