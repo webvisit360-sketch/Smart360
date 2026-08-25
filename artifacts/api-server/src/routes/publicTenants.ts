@@ -204,8 +204,8 @@ router.get(
       return;
     }
     const icons = [
-      { src: "/brand/ikona-smart360-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/brand/ikona-smart360-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/ikona-smart360-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: "/brand/ikona-smart360-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
     ];
     res
       // Short client cache: a rename/publish change must reach installers
