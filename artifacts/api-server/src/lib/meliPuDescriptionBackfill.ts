@@ -24,6 +24,7 @@ culture|Tartinijev trg, Piran|40c4d14b-3228-4876-85c3-791bbf91a40e|6f4b5883-1171
 culture|Cerkev sv. Jurija, Piran|041dfb05-504c-460c-8cdb-dfccbc79c8c2|6f4b5883-1171-41d0-b215-46285d12322c
 culture|Pretorska palača, Koper|99c32f2a-f852-4808-9499-f5414b751fea|6f4b5883-1171-41d0-b215-46285d12322c
 culture|Muzej Izolana — hiša morja|8fba6248-2c10-43be-b337-519784a1ee3e|6f4b5883-1171-41d0-b215-46285d12322c
+culture|Grad Miramare|dd8cb7d0-3065-40a7-b0ff-2811b6bff55d|6f4b5883-1171-41d0-b215-46285d12322c
 culture|Motovun|89d393c9-628e-4514-99f0-25a3a89bf1f4|6f4b5883-1171-41d0-b215-46285d12322c
 nature|Krajinski park Sečoveljske soline|2817074f-bc7d-4182-902d-b03cc691011a|d955e77a-ae1d-403c-9d73-da1abdc2fc5f
 nature|Strunjanske soline|d48a8d27-138e-45fd-8338-f05e1fab7e4e|d955e77a-ae1d-403c-9d73-da1abdc2fc5f
@@ -33,11 +34,13 @@ act|Akvarij Piran|fedef95e-df10-45df-97e7-cbd4b006f746|98631274-2c83-42c8-8e75-8
 act|Vinska fontana Marezige|79500f33-bbbc-41e6-9d16-0f94650cd24e|98631274-2c83-42c8-8e75-8be310c5ce1a
 act|Grad Socerb|3de8a292-d64d-46fc-afcb-4928d16cbfe9|98631274-2c83-42c8-8e75-8be310c5ce1a
 act|Aquapark Istralandia|00daf11a-2631-4244-ac86-10adabdfb6cf|98631274-2c83-42c8-8e75-8be310c5ce1a
+trips|Portopiccolo Sistiana|95bd0777-60b2-4333-bc4f-1f2e259b7bdd|cfcb60a5-a705-4246-aec2-8d98b59d08a9
 trips|Kobilarna Lipica|d4b1ca6a-8f15-4c7b-a67b-2be1281d8a19|cfcb60a5-a705-4246-aec2-8d98b59d08a9
 trips|Postojnska jama|e6eb93f0-7d38-4dfd-b6a6-cf4e7d41a995|cfcb60a5-a705-4246-aec2-8d98b59d08a9
 trips|Predjamski grad|3fcdcc01-89f8-43a7-8dcf-38a96b298ccd|cfcb60a5-a705-4246-aec2-8d98b59d08a9
 trips|Trst|4e13555e-eaf4-471a-a5e8-061d90589b83|cfcb60a5-a705-4246-aec2-8d98b59d08a9
 beach|Plaža Svetilnik, Izola|129f8518-2ad7-4147-bf73-b7377734834e|f8941ef0-5321-4265-b161-c34f770154ee
+beach|Plaža San Simon|0f690296-1957-4e00-a396-a16bc7087a52|f8941ef0-5321-4265-b161-c34f770154ee
 beach|Pomol pod Belvederjem, Izola|57af2e20-10d3-4c46-8208-61ed4abc0091|f8941ef0-5321-4265-b161-c34f770154ee
 beach|Plaža Strunjan|4d0faa82-9a80-4197-9472-e48a04f2da1b|f8941ef0-5321-4265-b161-c34f770154ee
 beach|Plaža Fiesa|333b70dc-fa4a-4b3a-9401-d0ebd1c3b46e|f8941ef0-5321-4265-b161-c34f770154ee
@@ -75,7 +78,7 @@ export const MELI_PU_DESCRIPTION_LEDGER: ReadonlyArray<DescriptionLedgerEntry> =
     return { ...target, ...matches[0]! };
   });
 
-if (sourceLedger.length !== 40 || MELI_PU_DESCRIPTION_LEDGER.length !== 37) {
+if (sourceLedger.length !== 40 || MELI_PU_DESCRIPTION_LEDGER.length !== 40) {
   throw new Error("Invalid Meli Pu description ledger cardinality");
 }
 

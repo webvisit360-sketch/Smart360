@@ -101,14 +101,14 @@ const descriptionLedgerPlugin = {
         readFile(
           path.resolve(
             artifactDir,
-            "../../attached_assets/opisi-lokacij-meli-pu_1787695056732.md",
+            "../../attached_assets/opisi-lokacij-meli-pu_3_1787697226786.md",
           ),
           "utf8",
         ),
         readFile(
           path.resolve(
             artifactDir,
-            "../../attached_assets/prevodi-meli-pu-vsi_1_1787695500570.md",
+            "../../attached_assets/prevodi-meli-pu-vsi_2_1787697226787.md",
           ),
           "utf8",
         ),

@@ -69,6 +69,12 @@ Demo-only examples are allowed on the Living Guide tokens page. Parts 2–5 must
 
 **How to apply:** Treat every real temperature, phone number, opening time, route fact, price, and similar value as optional source data; omit its UI when absent.
 
+A described place carries no phone or opening hours; an office may carry phone and hours but no place description.
+
+**Why:** The owner requires content identity to stay coherent: city/attraction descriptions must not inherit operational data from an information office.
+
+**How to apply:** When converting an office record into a described place, clear phone and every hours representation, update localized titles, and point Maps at the place centre rather than the office door.
+
 Every checkpoint report must include an exact development URL that was re-verified immediately before sending; derive its path from the registered artifact configuration, never from the artifact directory name.
 
 **Why:** A guessed artifact-directory prefix produced a tenant-not-found URL even though the tenant and server were healthy.

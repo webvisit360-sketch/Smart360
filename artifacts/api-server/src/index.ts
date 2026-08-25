@@ -8,6 +8,7 @@ import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
 import { runFirstPublishedBackfillAtStartup } from "./lib/firstPublishBackfill";
 import { runTriesteCityRenameAtStartup } from "./lib/triesteCityRenameBackfill";
 import { runMeliPuDescriptionBackfillAtStartup } from "./lib/meliPuDescriptionBackfill";
+import { runMeliPuContentFinalizationAtStartup } from "./lib/meliPuContentFinalizationBackfill";
 import { ensureRowLevelSecurity } from "./lib/rls";
 
 const rawPort = process.env["PORT"];
@@ -96,6 +97,8 @@ ensureAdminAccount()
   .then(() => runTriesteCityRenameAtStartup())
   // Fill only empty descriptions after the Trst source-title rename has run.
   .then(() => runMeliPuDescriptionBackfillAtStartup())
+  // Apply the owner's final duplicate and Trst city-metadata decisions.
+  .then(() => runMeliPuContentFinalizationAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();
