@@ -52,6 +52,12 @@ The opening transform carrier must be the final resting DOM node, with the same 
 
 **How to apply:** Retain the carrier and every ancestor by JavaScript reference on the first animation frame; later assert strict equality, unchanged probe IDs, grabber presence, radius, and transform-corrected top.
 
+For nested detail tests, fully settle the parent transition before arming the child probe, and bind observations to the child carrier object rather than the first matching selector.
+
+**Why:** A probe armed during the parent category transition attributed the parent’s 488 px hero to the child’s first frame, then compared it with the child gallery’s 380 px rest state. That false cross-route comparison looked exactly like a late geometry rewrite.
+
+**How to apply:** Wait until the parent carrier transform is `none`, then arm the child transition. Retain the child carrier reference and assert it is still the queried carrier at rest.
+
 ## Structural detail panel
 
 The moving detail sheet has square top corners. The rounded 28 px white panel, grabber, background, and content are one element that overlaps the photo by 26 px. Its position and hero height both come from one immutable root CSS variable set before first paint.

@@ -1216,90 +1216,152 @@ test("panel top is independent of hero layout from mount through one second afte
   expect([...new Set(probe.offsets)]).toHaveLength(1);
 });
 
-test("detail root hero-height variable is written exactly once", async ({
-  page,
-}) => {
-  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
-  await settleVisibleRoute(page);
+const HERO_HEIGHT_IMMUTABILITY_CASES = [
+  {
+    name: "gallery",
+    startPath: "meli-pu/s/stay?ui=living-guide&theme=dan",
+    prepare: async (page: Page) => {
+      await page.getByRole("button", { name: /^Apartments$/i }).click();
+      await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+        "data-detail-transition",
+        "open",
+      );
+    },
+    trigger: (page: Page) =>
+      page.getByRole("button", { name: /^Apartment 1/i }),
+  },
+  {
+    name: "multi-photo-poi",
+    startPath: "meli-pu/s/explore?ui=living-guide&theme=dan",
+    prepare: async () => undefined,
+    trigger: (page: Page) =>
+      page.getByRole("button", {
+        name: /Trieste — tourist information point/i,
+      }),
+  },
+  {
+    name: "single-photo-poi",
+    startPath: "meli-pu/s/explore?ui=living-guide&theme=dan",
+    prepare: async (page: Page) => {
+      await page.getByRole("tab", { name: "Sights" }).click();
+    },
+    trigger: (page: Page) =>
+      page.getByRole("button", { name: /Izolana Museum/i }),
+  },
+  {
+    name: "no-photo",
+    startPath: "meli-pu/home?ui=living-guide&theme=dan",
+    prepare: async () => undefined,
+    trigger: (page: Page) => page.getByRole("button", { name: "WiFi" }),
+  },
+] as const;
 
-  await page.evaluate(() => {
-    const propertyName = "--lg2-detail-hero-height";
-    const probe = {
-      writes: 0,
-      values: [] as string[],
-      complete: false,
-    };
-    let root: HTMLElement | null = null;
-    let styleObserver: MutationObserver | null = null;
-    const findRoot = () => {
-      if (root) return;
-      root = document.querySelector<HTMLElement>(
+for (const scenario of HERO_HEIGHT_IMMUTABILITY_CASES) {
+  test(`detail hero-height value stays immutable: ${scenario.name}`, async ({
+    page,
+  }, testInfo) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Network.enable");
+    await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
+    await page.route("**/*", async (route) => {
+      if (route.request().resourceType() === "image") {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+      await route.continue();
+    });
+
+    await page.goto(scenario.startPath);
+    await settleVisibleRoute(page);
+    await scenario.prepare(page);
+    await settleVisibleRoute(page);
+
+    await page.evaluate(() => {
+      const propertyName = "--lg2-detail-hero-height";
+      const previousRoot = document.querySelector<HTMLElement>(
         ".lg2-route-layer.v--det",
       );
-      if (!root) return;
-      const initialValue = root.style.getPropertyValue(propertyName);
-      if (initialValue) {
-        probe.writes += 1;
-        probe.values.push(initialValue);
-      }
-      styleObserver = new MutationObserver((records) => {
-        for (const record of records) {
-          if (record.attributeName !== "style" || record.target !== root) {
-            continue;
+      const probe = {
+        values: [] as string[],
+        styleMutations: 0,
+        complete: false,
+      };
+      let root: HTMLElement | null = null;
+      let styleObserver: MutationObserver | null = null;
+      const recordValue = () => {
+        if (!root) return;
+        const value = root.style.getPropertyValue(propertyName).trim();
+        if (value && probe.values.at(-1) !== value) probe.values.push(value);
+      };
+      const findTargetRoot = () => {
+        if (root) return;
+        const candidate = document.querySelector<HTMLElement>(
+          ".lg2-route-layer.v--det",
+        );
+        if (!candidate || candidate === previousRoot) return;
+        root = candidate;
+        recordValue();
+        styleObserver = new MutationObserver((records) => {
+          probe.styleMutations += records.filter(
+            (record) =>
+              record.attributeName === "style" && record.target === root,
+          ).length;
+          recordValue();
+        });
+        styleObserver.observe(root, {
+          attributes: true,
+          attributeFilter: ["style"],
+          attributeOldValue: true,
+        });
+        root.addEventListener("transitionend", (event) => {
+          if (
+            event.target === root &&
+            (event as TransitionEvent).propertyName === "transform"
+          ) {
+            window.setTimeout(() => {
+              recordValue();
+              probe.complete = true;
+              styleObserver?.disconnect();
+            }, 1_000);
           }
-          probe.writes += 1;
-          probe.values.push(root!.style.getPropertyValue(propertyName));
-        }
-      });
-      styleObserver.observe(root, {
-        attributes: true,
-        attributeFilter: ["style"],
-        attributeOldValue: true,
-      });
-      root.addEventListener("transitionend", (event) => {
-        if (
-          event.target === root &&
-          (event as TransitionEvent).propertyName === "transform"
-        ) {
-          window.setTimeout(() => {
-            probe.complete = true;
-          }, 1_000);
-        }
-      });
-    };
-    const treeObserver = new MutationObserver(findRoot);
-    treeObserver.observe(document.body, { childList: true, subtree: true });
-    const poll = () => {
-      findRoot();
-      (window as any).__lg2HeroVariableWriteProbe = probe;
-      if (!root) requestAnimationFrame(poll);
-    };
-    requestAnimationFrame(poll);
+        });
+      };
+      const treeObserver = new MutationObserver(findTargetRoot);
+      treeObserver.observe(document.body, { childList: true, subtree: true });
+      const sample = () => {
+        findTargetRoot();
+        recordValue();
+        (window as any).__lg2HeroVariableValueProbe = probe;
+        if (!probe.complete) requestAnimationFrame(sample);
+        else treeObserver.disconnect();
+      };
+      requestAnimationFrame(sample);
+    });
+
+    await scenario.trigger(page).click();
+    await page.waitForFunction(
+      () => (window as any).__lg2HeroVariableValueProbe?.complete === true,
+      undefined,
+      { timeout: 15_000 },
+    );
+
+    const probe = await page.evaluate(
+      () =>
+        (window as any).__lg2HeroVariableValueProbe as {
+          values: string[];
+          styleMutations: number;
+        },
+    );
+    console.log(
+      `LG2_HERO_HEIGHT_IMMUTABILITY ${scenario.name} ${JSON.stringify(probe)}`,
+    );
+    await testInfo.attach(`${scenario.name}-hero-height-values`, {
+      body: JSON.stringify(probe, null, 2),
+      contentType: "application/json",
+    });
+    expect(probe.values).toHaveLength(1);
+    expect(probe.values[0]).toMatch(/px$/);
   });
-
-  await page.getByRole("button", { name: /^Apartments$/i }).click();
-  await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
-    "data-detail-transition",
-    "open",
-    { timeout: 5_000 },
-  );
-  await page.waitForFunction(
-    () => (window as any).__lg2HeroVariableWriteProbe?.complete === true,
-    undefined,
-    { timeout: 10_000 },
-  );
-
-  const probe = await page.evaluate(
-    () =>
-      (window as any).__lg2HeroVariableWriteProbe as {
-        writes: number;
-        values: string[];
-      },
-  );
-  expect(probe.writes).toBe(1);
-  expect(probe.values).toHaveLength(1);
-  expect(probe.values[0]).toMatch(/px$/);
-});
+}
 
 test("the transformed detail node and every ancestor keep object identity", async ({
   page,
