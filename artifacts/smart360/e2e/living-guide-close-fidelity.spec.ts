@@ -1315,6 +1315,22 @@ test("the transformed detail node and every ancestor keep object identity", asyn
       translateY: number;
       correctedTop: number;
       appRelativeCorrectedTop: number;
+      panel: {
+        insideCarrierTop: number;
+        borderRadius: string;
+        offsetHeight: number;
+      };
+      hero: {
+        offsetHeight: number;
+        resolvedRootHeight: string;
+      };
+      grabber: {
+        offsetHeight: number;
+        offsetWidth: number;
+        display: string;
+        visibility: string;
+        opacity: string;
+      };
     };
     type IdentityProbe = {
       complete: boolean;
@@ -1334,11 +1350,17 @@ test("the transformed detail node and every ancestor keep object identity", asyn
     const transformCarrierSelector = ".lg2-route-layer.v--det";
     const frame = (node: HTMLElement): IdentityFrame => {
       const style = getComputedStyle(node);
+      const panel = node.querySelector<HTMLElement>(".lg2-detail-sheet")!;
+      const hero = node.querySelector<HTMLElement>(".lg2-detail-hero")!;
+      const grabber = panel.querySelector<HTMLElement>(".lg2-grabber")!;
+      const panelStyle = getComputedStyle(panel);
+      const grabberStyle = getComputedStyle(grabber);
       const transform =
         style.transform === "none"
           ? new DOMMatrixReadOnly()
           : new DOMMatrixReadOnly(style.transform);
       const rect = node.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
       const appRect = document
         .querySelector<HTMLElement>(".lg2-app")!
         .getBoundingClientRect();
@@ -1351,6 +1373,24 @@ test("the transformed detail node and every ancestor keep object identity", asyn
         appRelativeCorrectedTop: Number(
           (rect.top - appRect.top - transform.m42).toFixed(3),
         ),
+        panel: {
+          insideCarrierTop: Number((panelRect.top - rect.top).toFixed(3)),
+          borderRadius: panelStyle.borderRadius,
+          offsetHeight: panel.offsetHeight,
+        },
+        hero: {
+          offsetHeight: hero.offsetHeight,
+          resolvedRootHeight: style
+            .getPropertyValue("--lg2-detail-hero-height")
+            .trim(),
+        },
+        grabber: {
+          offsetHeight: grabber.offsetHeight,
+          offsetWidth: grabber.offsetWidth,
+          display: grabberStyle.display,
+          visibility: grabberStyle.visibility,
+          opacity: grabberStyle.opacity,
+        },
       };
     };
     const ancestorsOf = (node: HTMLElement) => {
@@ -1447,6 +1487,9 @@ test("the transformed detail node and every ancestor keep object identity", asyn
     probe.rest.appRelativeCorrectedTop,
     2,
   );
+  expect(probe.first.panel).toEqual(probe.rest.panel);
+  expect(probe.first.hero).toEqual(probe.rest.hero);
+  expect(probe.first.grabber).toEqual(probe.rest.grabber);
 });
 
 test("sheet and panel geometry are correct at 25%, 60%, and rest", async ({
