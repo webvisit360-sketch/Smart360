@@ -1,0 +1,43 @@
+The owner re-filmed on the phone after your fix. It is NOT fixed, and the
+recording rules out the clipping hypothesis I gave you — that was my error, not
+yours. Stop working on clip-path.
+
+What the frames show, first open, 60 fps:
+  0.90 - 1.47 s  sheet slides. Panel top edge SQUARE, no grabber, title high.
+  ~1.50 s        rounded corners AND grabber appear AND THE TITLE MOVES DOWN.
+
+The title moving is the tell. A clipping failure changes how corners are
+PAINTED; it cannot change layout. Content shifting means an element is being
+ADDED to the panel after the animation — the grabber — and the radius comes
+with the same state change. This is conditional rendering keyed to animation
+state, not a WebKit paint bug.
+
+Now the contradiction that matters: your report says "First RAF: visible
+grabber". On the owner's phone there is no grabber for 570 ms. Same fix, two
+different results. Only three things explain that, and I want to know which:
+
+1. THE SERVED BUNDLE IS NOT YOUR BUILD. Fetch the production JS bundle over the
+   network — not from the workspace — and grep it for the grabber markup and
+   the new clip-path rules. Report the build id served by production, the build
+   id you tested, and whether the strings are present in the served asset.
+
+2. YOUR TEST DOES NOT TAKE THE PRODUCTION PATH. State exactly how the test
+   opens the detail: does it navigate the way a guest does — tapping a card in
+   a list — or does it mount the detail route directly? If the latter, it never
+   exercises the code that gates on animation state, and it will pass forever.
+   Re-write it to tap a real card.
+
+3. A FLAG OR PROP DIFFERS between test and production — reduced motion, a
+   preview mode, a test-only prop that skips the animated path. List every
+   condition that changes the detail sheet's render, and its value in the test
+   versus in production.
+
+Then find the actual gate: search the detail-sheet code for transitionend,
+animationend, onAnimationComplete, isAnimating, isEntering, hasEntered,
+settled, or any state set when motion finishes, and report every place the
+panel's radius, the grabber or the gallery dots depend on it. The rule is
+unchanged: the sheet must be complete before it moves, and nothing may be added
+to it after.
+
+Report the three answers and the list of gates. Change no code until we agree
+which of the three it is. Report and STOP.

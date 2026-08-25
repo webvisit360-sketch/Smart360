@@ -46,10 +46,10 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 
 **How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.
 
-## Transform-time rounded clipping
+## Detail-open contradiction
 
-For a rounded surface inside a transform-animated detail route, do not rely on `border-radius` plus an ancestor’s `overflow: hidden` alone. Give each visual clipping surface its own matching rounded `clip-path`, include the WebKit-prefixed form, and explicitly remove that clip from square variants.
+Do not treat rounded `clip-path` as the cause of the iPhone opening defect. The post-fix phone recording still showed a square panel with no grabber, followed by the grabber appearing and the title moving down when motion ended. A paint-only clipping fault cannot move layout.
 
-**Why:** iOS WebKit can keep the content and animation timing correct while dropping a descendant panel’s rounded clip for the full transform. The radius and grabber then reappear only after motion ends. A readiness gate and post-transition screenshots cannot detect this compositor behavior.
+**Why:** The owner’s real-device retest disproved the earlier compositor hypothesis. Direct production-asset inspection found the grabber/readiness markers and clip CSS, while the published bundle’s Chromium path mounted the grabber and 28 px radius from its first detail frame. The production WebKit contradiction remains unresolved.
 
-**How to apply:** Assert radius/grabber/dot state on the first RAF after opening starts. Pause the real animation near 25% and 60%, align its translation to an integer pixel, retain full screenshots, and compare sheet-local normalized pixels with the settled frame. Exclude only a separately explained outer-corner compositor-antialias band, never the inner panel boundary under test.
+**How to apply:** Do not make further clip-path changes or claim this defect fixed. First identify why the owner’s WebKit execution path differs from the fetched published bundle and the real-card production Chromium path; require evidence of the actual late render/state change before editing.
