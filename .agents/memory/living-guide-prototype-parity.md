@@ -46,6 +46,12 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 
 **How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.
 
+The opening transform carrier must be the final resting DOM node, with the same ancestor objects throughout travel. Treat object identity as an acceptance invariant, not something pixel comparison can substitute for.
+
+**Why:** A device recording appeared to show a clone-to-real swap. Strict first-frame-to-one-second-post-transition identity proof is required to distinguish replacement from paint or bundle-version symptoms.
+
+**How to apply:** Retain the carrier and every ancestor by JavaScript reference on the first animation frame; later assert strict equality, unchanged probe IDs, grabber presence, radius, and transform-corrected top.
+
 ## Structural detail panel
 
 The moving detail sheet has square top corners. The rounded 28 px white panel, grabber, background, and content are one element that overlaps the photo by 26 px. Its position and hero height both come from one immutable root CSS variable set before first paint.

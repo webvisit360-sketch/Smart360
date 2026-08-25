@@ -1301,6 +1301,154 @@ test("detail root hero-height variable is written exactly once", async ({
   expect(probe.values[0]).toMatch(/px$/);
 });
 
+test("the transformed detail node and every ancestor keep object identity", async ({
+  page,
+}, testInfo) => {
+  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+
+  await page.evaluate(() => {
+    type IdentityFrame = {
+      borderRadius: string;
+      grabberIsChild: boolean;
+      rectTop: number;
+      translateY: number;
+      correctedTop: number;
+      appRelativeCorrectedTop: number;
+    };
+    type IdentityProbe = {
+      complete: boolean;
+      first?: IdentityFrame;
+      rest?: IdentityFrame;
+      sameNode?: boolean;
+      sameAncestors?: boolean;
+      instanceIdUnchanged?: boolean;
+      ancestorIdsUnchanged?: boolean;
+      instanceId?: string;
+      ancestorIds?: string[];
+      ancestorCount?: number;
+    };
+
+    const probe: IdentityProbe = { complete: false };
+    (window as any).__lg2DetailIdentityProbe = probe;
+    const transformCarrierSelector = ".lg2-route-layer.v--det";
+    const frame = (node: HTMLElement): IdentityFrame => {
+      const style = getComputedStyle(node);
+      const transform =
+        style.transform === "none"
+          ? new DOMMatrixReadOnly()
+          : new DOMMatrixReadOnly(style.transform);
+      const rect = node.getBoundingClientRect();
+      const appRect = document
+        .querySelector<HTMLElement>(".lg2-app")!
+        .getBoundingClientRect();
+      return {
+        borderRadius: style.borderRadius,
+        grabberIsChild: Boolean(node.querySelector(".lg2-grabber")),
+        rectTop: Number(rect.top.toFixed(3)),
+        translateY: Number(transform.m42.toFixed(3)),
+        correctedTop: Number((rect.top - transform.m42).toFixed(3)),
+        appRelativeCorrectedTop: Number(
+          (rect.top - appRect.top - transform.m42).toFixed(3),
+        ),
+      };
+    };
+    const ancestorsOf = (node: HTMLElement) => {
+      const ancestors: HTMLElement[] = [];
+      let ancestor = node.parentElement;
+      while (ancestor) {
+        ancestors.push(ancestor);
+        ancestor = ancestor.parentElement;
+      }
+      return ancestors;
+    };
+
+    window.addEventListener(
+      "lg2:detail-open-transition-start",
+      () => {
+        requestAnimationFrame(() => {
+          const a = document.querySelector<HTMLElement>(
+            transformCarrierSelector,
+          );
+          if (!a) return;
+          const ancestorA = ancestorsOf(a);
+          const instanceId = "lg2-transform-carrier-identity";
+          const ancestorIds = ancestorA.map(
+            (_, index) => `lg2-transform-ancestor-${index}`,
+          );
+          a.dataset.lgIdentityProbeId = instanceId;
+          ancestorA.forEach((ancestor, index) => {
+            ancestor.dataset.lgIdentityProbeId = ancestorIds[index]!;
+          });
+          probe.first = frame(a);
+          probe.instanceId = instanceId;
+          probe.ancestorIds = ancestorIds;
+          probe.ancestorCount = ancestorA.length;
+
+          window.addEventListener(
+            "lg2:detail-open-transition-end",
+            () => {
+              window.setTimeout(() => {
+                const b = document.querySelector<HTMLElement>(
+                  transformCarrierSelector,
+                );
+                const ancestorB = b ? ancestorsOf(b) : [];
+                probe.sameNode = a === b;
+                probe.sameAncestors =
+                  ancestorA.length === ancestorB.length &&
+                  ancestorA.every(
+                    (ancestor, index) => ancestor === ancestorB[index],
+                  );
+                probe.instanceIdUnchanged =
+                  b?.dataset.lgIdentityProbeId === instanceId;
+                probe.ancestorIdsUnchanged =
+                  ancestorB.length === ancestorIds.length &&
+                  ancestorB.every(
+                    (ancestor, index) =>
+                      ancestor.dataset.lgIdentityProbeId ===
+                      ancestorIds[index],
+                  );
+                if (b) probe.rest = frame(b);
+                probe.complete = true;
+              }, 1_000);
+            },
+            { once: true },
+          );
+        });
+      },
+      { once: true },
+    );
+  });
+
+  await page.getByRole("button", { name: /^Apartments$/i }).click();
+  await page.waitForFunction(
+    () => (window as any).__lg2DetailIdentityProbe?.complete === true,
+    undefined,
+    { timeout: 10_000 },
+  );
+
+  const probe = await page.evaluate(
+    () => (window as any).__lg2DetailIdentityProbe,
+  );
+  console.log(`LG2_DETAIL_IDENTITY ${JSON.stringify(probe)}`);
+  await testInfo.attach("detail-transform-carrier-identity", {
+    body: JSON.stringify(probe, null, 2),
+    contentType: "application/json",
+  });
+
+  expect(probe.sameNode).toBe(true);
+  expect(probe.sameAncestors).toBe(true);
+  expect(probe.instanceIdUnchanged).toBe(true);
+  expect(probe.ancestorIdsUnchanged).toBe(true);
+  expect(probe.first.borderRadius).toBe(probe.rest.borderRadius);
+  expect(probe.first.grabberIsChild).toBe(true);
+  expect(probe.rest.grabberIsChild).toBe(true);
+  expect(probe.first.appRelativeCorrectedTop).toBeCloseTo(
+    probe.rest.appRelativeCorrectedTop,
+    2,
+  );
+});
+
 test("sheet and panel geometry are correct at 25%, 60%, and rest", async ({
   page,
 }, testInfo) => {
