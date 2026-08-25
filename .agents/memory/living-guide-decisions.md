@@ -182,3 +182,9 @@ Links the OS hands to a native app (Google Maps URLs, wa.me, viber://, tel:) mus
 ## Real-sun themes (Aug 2026)
 Themes follow NOAA-computed sun times at the tenant's coordinates (civil dawn/dusk −6°, sunrise/sunset zenith 90.833°); noc=dusk→dawn, jutro=dawn→sunrise+90, dan=…→sunset−90, vecer=…→dusk. SunCalc's simplified algorithm is 1–2 min off the owner's binding reference table — only NOAA matches to the minute.
 **Seam rule:** solar times are computed per UTC day, so theme + next-boundary MUST come from one resolver that merges UTC day −1/0/+1 boundaries (resolveSunWindow); a single-day lookup mis-themes eastern longitudes. Null (no coords, polar day/night) → fixed-hour fallback, never crash.
+
+Grouped-list detail returns are verified by strict DOM identity: retain the live source list, its selected group, exact scroll offset, and image node references while detail is open.
+
+**Why:** Visual image comparison hid list remounts, while an automation click on an off-screen first card caused a false scroll-reset failure by scrolling it into view before detail opened.
+
+**How to apply:** Open an already-visible card without test-runner auto-scroll, wait until the detail layer is fully removed, then compare the same scroller’s exact numeric offset and each retained image with strict object identity.

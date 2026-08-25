@@ -1843,3 +1843,85 @@ test("held-background failure never blocks nested navigation", async ({ page }) 
   );
   await expect(page.getByText(/^Water heater$/i).first()).toBeVisible();
 });
+
+test("grouped source lists survive detail by strict DOM identity", async ({
+  page,
+}) => {
+  const scenarios = [
+    { name: "Okolica", path: "meli-pu/s/explore?ui=living-guide&theme=dan", screen: "screen-explore" },
+    { name: "Nastanitev", path: "meli-pu/s/stay?ui=living-guide&theme=dan", screen: "screen-stay" },
+    { name: "Ponudba", path: "meli-pu/s/offer?ui=living-guide&theme=dan", screen: "screen-offer" },
+  ];
+
+  for (const scenario of scenarios) {
+    await test.step(scenario.name, async () => {
+      await page.goto(scenario.path);
+      await settleVisibleRoute(page);
+      const source = page.getByTestId(scenario.screen);
+      const tabs = source.getByRole("tab");
+      expect(await tabs.count()).toBeGreaterThan(1);
+      await tabs.nth(1).click();
+      const selectedBefore = await source
+        .getByRole("tab", { selected: true })
+        .textContent();
+      const scroller = source.locator("[data-lg-scroll]");
+      await scroller.evaluate((element) => {
+        element.scrollTop = Math.min(
+          320,
+          Math.max(1, element.scrollHeight - element.clientHeight),
+        );
+      });
+      const scrollBefore = await scroller.evaluate((element) => element.scrollTop);
+      expect(scrollBefore).toBeGreaterThan(0);
+
+      const cards = source.locator(".lg2-pcard:has(img)");
+      expect(await cards.count()).toBeGreaterThanOrEqual(3);
+      await page.evaluate(() => {
+        const list = document.querySelector(
+          '[data-testid^="screen-"] .lg2-pcard',
+        )?.closest("[data-testid]") as HTMLElement | null;
+        const images = list
+          ? [...list.querySelectorAll<HTMLImageElement>(".lg2-pcard img")].slice(0, 3)
+          : [];
+        (window as Window & { __lg2SourceImages?: HTMLImageElement[] })
+          .__lg2SourceImages = images;
+      });
+
+      await cards.nth(1).evaluate((card) => {
+        (card as HTMLElement).click();
+      });
+      await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+        "data-detail-transition",
+        "open",
+      );
+      await page.locator(".lg2-route-layer.v--det .lg2-detail-back").click();
+      await expect(page.locator(".lg2-route-layer.v--det")).toHaveCount(0);
+      await expect(source).toBeVisible();
+
+      await expect(source.getByRole("tab", { selected: true })).toHaveText(
+        selectedBefore?.trim() ?? "",
+      );
+      expect(await scroller.evaluate((element) => element.scrollTop)).toBe(
+        scrollBefore,
+      );
+      const identity = await page.evaluate(() => {
+        const retained =
+          (window as Window & { __lg2SourceImages?: HTMLImageElement[] })
+            .__lg2SourceImages ?? [];
+        const screen = retained[0]?.closest("[data-testid]");
+        const current = screen
+          ? [...screen.querySelectorAll<HTMLImageElement>(".lg2-pcard img")].slice(0, 3)
+          : [];
+        return retained.map((image, index) => ({
+          same: image === current[index],
+          connected: image.isConnected,
+        }));
+      });
+      expect(identity).toEqual([
+        { same: true, connected: true },
+        { same: true, connected: true },
+        { same: true, connected: true },
+      ]);
+    });
+  }
+});

@@ -611,6 +611,11 @@ export default function LivingGuideGuestShell({
   const compactHistoryAfterCloseRef = useRef(false);
   const closeTransitionCleanupRef = useRef<(() => void) | null>(null);
   const closeSourceLocationRef = useRef<string | null>(null);
+  const detailSourceLocationRef = useRef<string | null>(null);
+  const detailSourceScrollRef = useRef<{
+    element: HTMLElement;
+    scrollTop: number;
+  } | null>(null);
   const detailTriggerSelectorRef = useRef<string | null>(null);
   const restoreDetailFocusRef = useRef(false);
   const [detailTransitionPhase, setDetailTransitionPhase] =
@@ -686,9 +691,18 @@ export default function LivingGuideGuestShell({
   const [baseScreen, setBaseScreen] = useState<ScreenName>(() =>
     screen === "detail" ? "home" : screen,
   );
+  const [baseSectionKey, setBaseSectionKey] = useState<string | null>(
+    currentSection?.key ?? null,
+  );
+  const baseSection =
+    sections.find((section: any) => section.key === baseSectionKey) ??
+    currentSection;
   useLayoutEffect(() => {
-    if (screen !== "detail") setBaseScreen(screen);
-  }, [screen]);
+    if (isDetailPresentation) return;
+    setBaseScreen(screen);
+    setBaseSectionKey(currentSection?.key ?? null);
+    detailSourceLocationRef.current = location;
+  }, [currentSection?.key, isDetailPresentation, location, screen]);
   const detailHeroHeightLockRef = useRef<{
     location: string;
     height: number;
@@ -832,6 +846,9 @@ export default function LivingGuideGuestShell({
 
   useLayoutEffect(() => {
     if (isDetailPresentation) return;
+    if (detailSourceScrollRef.current?.element.isConnected) {
+      return;
+    }
     const routeView = rootRef.current?.querySelector<HTMLElement>(
       ".lg2-route-layer > .lg2-view",
     );
@@ -1134,6 +1151,8 @@ export default function LivingGuideGuestShell({
           });
       }
       let secondFrame = 0;
+      let firstScrollRestoreFrame = 0;
+      let secondScrollRestoreFrame = 0;
       let releaseTestGate: (() => void) | null = null;
       const swapToRealRoute = () => {
         performance.mark("lg2-detail-close-swap");
@@ -1172,6 +1191,24 @@ export default function LivingGuideGuestShell({
         flushSync(() =>
           setDetailTransitionPhase(targetIsDetail ? "open" : "idle"),
         );
+        if (!targetIsDetail && detailSourceScrollRef.current) {
+          const sourceScroll = detailSourceScrollRef.current;
+          const restoreSourceScroll = () => {
+            if (sourceScroll.element.isConnected) {
+              sourceScroll.element.scrollTop = sourceScroll.scrollTop;
+            }
+          };
+          restoreSourceScroll();
+          firstScrollRestoreFrame = window.requestAnimationFrame(() => {
+            restoreSourceScroll();
+            secondScrollRestoreFrame = window.requestAnimationFrame(() => {
+              restoreSourceScroll();
+              if (detailSourceScrollRef.current === sourceScroll) {
+                detailSourceScrollRef.current = null;
+              }
+            });
+          });
+        }
       };
       const scheduleSwap = () => {
         secondFrame = window.requestAnimationFrame(swapToRealRoute);
@@ -1198,6 +1235,12 @@ export default function LivingGuideGuestShell({
       return () => {
         window.cancelAnimationFrame(firstFrame);
         if (secondFrame) window.cancelAnimationFrame(secondFrame);
+        if (firstScrollRestoreFrame) {
+          window.cancelAnimationFrame(firstScrollRestoreFrame);
+        }
+        if (secondScrollRestoreFrame) {
+          window.cancelAnimationFrame(secondScrollRestoreFrame);
+        }
         if (releaseTestGate) {
           window.removeEventListener(
             "lg2:test-release-close-swap",
@@ -1217,6 +1260,16 @@ export default function LivingGuideGuestShell({
     ) => {
       cancelPendingDetailClose();
       if (presentation === "detail") {
+        if (!isDetailPresentation) {
+          detailSourceLocationRef.current = location;
+          const sourceScroller =
+            rootRef.current?.querySelector<HTMLElement>(
+              ".lg2-base-route-layer [data-lg-scroll]",
+            ) ?? null;
+          detailSourceScrollRef.current = sourceScroller
+            ? { element: sourceScroller, scrollTop: sourceScroller.scrollTop }
+            : null;
+        }
         captureRouteScroll();
         const trigger = document.activeElement;
         if (trigger instanceof HTMLElement) {
@@ -1600,9 +1653,14 @@ export default function LivingGuideGuestShell({
 
   const goBack = useCallback(() => {
     if (screen !== "detail") return;
-    const fallbackPath = routeItemId
-      ? `/${slug}/c/${routeCategoryId}`
-      : gridPath(categoryContext?.section ?? staySection);
+    const returnsToDetail =
+      window.history.state?.livingGuideFromPresentation === "detail";
+    const fallbackPath =
+      !returnsToDetail && detailSourceLocationRef.current
+        ? detailSourceLocationRef.current
+        : routeItemId
+          ? `/${slug}/c/${routeCategoryId}`
+          : gridPath(categoryContext?.section ?? staySection);
     closePresentedView(fallbackPath);
   }, [
     categoryContext?.section,
@@ -1741,7 +1799,7 @@ export default function LivingGuideGuestShell({
         )}
         <div
           className={`lg2-route-layer lg2-base-route-layer${
-            isDetailPresentation ? " v on hold" : ""
+            isDetailPresentation ? " lg2-base-route-layer--held" : ""
           }`}
           data-suppress-entry-animation={
             suppressRouteEntryAnimation ? "true" : undefined
@@ -1791,10 +1849,10 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "grid" && currentSection && currentSection.key === "offer" && (
+        {baseScreen === "grid" && baseSection && baseSection.key === "offer" && (
           <ShopView
             tenant={tenant}
-            section={currentSection}
+            section={baseSection}
             t={t}
             orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
@@ -1802,10 +1860,10 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "grid" && currentSection && currentSection.key === "stay" && (
+        {baseScreen === "grid" && baseSection && baseSection.key === "stay" && (
           <StayView
             tenant={tenant}
-            section={currentSection}
+            section={baseSection}
             t={t}
             guest={guest}
             onEditGuest={requestCredentials}
@@ -1816,10 +1874,10 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "grid" && currentSection && currentSection.key !== "offer" && currentSection.key !== "stay" && (
+        {baseScreen === "grid" && baseSection && baseSection.key !== "offer" && baseSection.key !== "stay" && (
           <GridView
             tenant={tenant}
-            section={currentSection}
+            section={baseSection}
             lang={lang}
             t={t}
             guest={null}
@@ -1937,7 +1995,7 @@ export default function LivingGuideGuestShell({
           sections={sections}
           slug={slug}
           t={t}
-          activeSectionKey={currentSection?.key ?? null}
+          activeSectionKey={baseSection?.key ?? null}
           activeCategoryId={categoryContext?.category?.id ?? null}
           onNavigate={(path: string) => navigate(path, false, "tab")}
           screen={baseScreen}

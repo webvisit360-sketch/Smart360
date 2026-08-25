@@ -102,8 +102,27 @@ body[data-t="noc"] .lg2-stage {
  * The real source route stays mounted beneath detail. Its image elements,
  * decoded pixels and native scroll state therefore survive every close.
  */
-.lg2-app .lg2-base-route-layer.v.hold {
+.lg2-app .lg2-base-route-layer {
+  position: absolute;
+  inset: 0;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    transform .55s cubic-bezier(.22, 1, .36, 1),
+    filter .55s cubic-bezier(.22, 1, .36, 1),
+    background .9s cubic-bezier(.22, 1, .36, 1);
+}
+
+.lg2-app .lg2-base-route-layer--held {
+  transform: scale(.955);
+  filter: brightness(.75);
+  pointer-events: none;
 }
 
 .lg2-app[data-detail-open="true"] > .lg2-bottom-nav {
