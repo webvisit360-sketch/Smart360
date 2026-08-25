@@ -48,8 +48,8 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 
 ## Structural detail panel
 
-The rounded top band, grabber, background, and content are one panel element. Its position and the hero height must both come from one immutable root CSS variable set before first paint; never position the panel by flowing or overlapping it from the rendered hero.
+The moving detail sheet has square top corners. The rounded 28 px white panel, grabber, background, and content are one element that overlaps the photo by 26 px. Its position and hero height both come from one immutable root CSS variable set before first paint.
 
-**Why:** The owner identified the structural fault after symptom-level clone, clipping, and image-height fixes failed. On the prior structure, perturbing hero height produced 13 panel offsets, and the required root variable had zero writes. The negative 26 px detail-panel overlap allowed the panel to appear split on WebKit.
+**Why:** The owner corrected the diagnosis: overlap is visually required and safe once it is derived from write-once root geometry. The real fault was measurement-derived height. The route’s own rounded corners incorrectly cut the photo; only the white panel should be rounded.
 
-**How to apply:** Use a root-owned fixed grid row for both hero and panel placement, with no negative detail-panel margin and no hero resize observer or inline height writer. Dependency tests must cover mount through one second after transition end and assert one root-variable write.
+**How to apply:** Use a root-owned grid boundary at `heroHeight - 26px`, let the fixed-height hero overflow beneath the rounded panel, and keep route radius at zero. Test photo pixels and coordinates at 25%, 60%, and rest, plus one root-variable write.

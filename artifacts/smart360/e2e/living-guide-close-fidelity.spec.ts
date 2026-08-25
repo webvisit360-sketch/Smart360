@@ -15,9 +15,12 @@ type CloseTestWindow = Window & {
   __lg2OpenTransitionStartMs?: number;
   __lg2OpenTransitionDurationMs?: number;
   __lg2OpenFirstFrameState?: {
+    routeRadius: string;
     panelRadius: string;
     grabberPresent: boolean;
     dotCount: number;
+    heroHeight: number | null;
+    panelOffset: number | null;
   };
   __LG2_TEST_CAPTURE_OPEN_MOTION__?: boolean;
   __lg2OpenMotionStage?: "waiting" | "25" | "60" | "released";
@@ -154,6 +157,77 @@ function cropPngRows(
   return PNG.sync.write(crop);
 }
 
+type DetailMotionGeometry = {
+  route: { left: number; top: number };
+  heroHeight: number;
+  panel: { left: number; top: number; width: number };
+  panelOffset: number;
+  routeRadius: string;
+  panelRadius: string;
+};
+
+async function readDetailMotionGeometry(
+  page: Page,
+): Promise<DetailMotionGeometry> {
+  return page.evaluate(() => {
+    const app = document.querySelector<HTMLElement>(".lg2-app")!;
+    const route = document.querySelector<HTMLElement>(
+      ".lg2-route-layer.v--det",
+    )!;
+    const hero = route.querySelector<HTMLElement>(".lg2-detail-hero")!;
+    const panel = route.querySelector<HTMLElement>(".lg2-detail-sheet")!;
+    const appRect = app.getBoundingClientRect();
+    const routeRect = route.getBoundingClientRect();
+    const heroRect = hero.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    return {
+      route: {
+        left: routeRect.left - appRect.left,
+        top: routeRect.top - appRect.top,
+      },
+      heroHeight: heroRect.height,
+      panel: {
+        left: panelRect.left - appRect.left,
+        top: panelRect.top - appRect.top,
+        width: panelRect.width,
+      },
+      panelOffset: panelRect.top - routeRect.top,
+      routeRadius: getComputedStyle(route).borderTopLeftRadius,
+      panelRadius: getComputedStyle(panel).borderTopLeftRadius,
+    };
+  });
+}
+
+function rgbaAt(buffer: Buffer, x: number, y: number) {
+  const image = PNG.sync.read(buffer);
+  const sampleX = Math.max(0, Math.min(image.width - 1, Math.round(x)));
+  const sampleY = Math.max(0, Math.min(image.height - 1, Math.round(y)));
+  const index = (sampleY * image.width + sampleX) * 4;
+  const color = {
+    r: image.data[index],
+    g: image.data[index + 1],
+    b: image.data[index + 2],
+    a: image.data[index + 3],
+  };
+  return {
+    x: sampleX,
+    y: sampleY,
+    color,
+    css: `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`,
+  };
+}
+
+function rgbDistance(
+  left: ReturnType<typeof rgbaAt>["color"],
+  right: ReturnType<typeof rgbaAt>["color"],
+) {
+  return Math.hypot(
+    left.r - right.r,
+    left.g - right.g,
+    left.b - right.b,
+  );
+}
+
 async function armOpenVisualChangeProbe(
   page: Page,
   captureMotion = false,
@@ -221,7 +295,15 @@ async function armOpenVisualChangeProbe(
           );
           const panel =
             sheet?.querySelector<HTMLElement>(".lg2-detail-sheet") ?? null;
+          const hero =
+            sheet?.querySelector<HTMLElement>(".lg2-detail-hero") ?? null;
+          const sheetRect = sheet?.getBoundingClientRect() ?? null;
+          const panelRect = panel?.getBoundingClientRect() ?? null;
+          const heroRect = hero?.getBoundingClientRect() ?? null;
           testWindow.__lg2OpenFirstFrameState = {
+            routeRadius: sheet
+              ? getComputedStyle(sheet).borderTopLeftRadius
+              : "missing",
             panelRadius: panel
               ? getComputedStyle(panel).borderTopLeftRadius
               : "missing",
@@ -230,6 +312,9 @@ async function armOpenVisualChangeProbe(
             ),
             dotCount:
               sheet?.querySelectorAll(".lg2-gallery-dots i").length ?? -1,
+            heroHeight: heroRect?.height ?? null,
+            panelOffset:
+              sheetRect && panelRect ? panelRect.top - sheetRect.top : null,
           };
         });
 
@@ -365,6 +450,7 @@ async function captureMotionFrame(
   const sheetTop = await page
     .locator(".lg2-route-layer.v--det")
     .evaluate((sheet) => sheet.getBoundingClientRect().top);
+  const geometry = await readDetailMotionGeometry(page);
   const fullBuffer = await screenshotApp(page, fullPath);
   const outerCornerInset = 32;
   const startRow = Math.max(
@@ -382,6 +468,8 @@ async function captureMotionFrame(
     height: PNG.sync.read(normalized).height,
     sheetTop,
     outerCornerInset,
+    fullBuffer,
+    geometry,
   };
 }
 
@@ -400,8 +488,8 @@ async function captureOpenEndAndSettled(
 
   const sheet = page.locator(".lg2-route-layer.v--det");
   await expect(sheet).toHaveAttribute("data-detail-transition", "open");
-  await expect(sheet).toHaveCSS("border-top-left-radius", "30px");
-  await expect(sheet).toHaveCSS("border-top-right-radius", "30px");
+  await expect(sheet).toHaveCSS("border-top-left-radius", "0px");
+  await expect(sheet).toHaveCSS("border-top-right-radius", "0px");
   const panel = sheet.locator(".lg2-detail-sheet");
   await expect(panel).toHaveCSS("border-top-left-radius", "28px");
   await expect(panel).toHaveCSS("border-top-right-radius", "28px");
@@ -425,8 +513,12 @@ async function captureOpenEndAndSettled(
 async function captureOpenMotionAndSettled(
   page: Page,
   trigger: ReturnType<Page["locator"]>,
-  scenario: (typeof OPEN_FIDELITY_CASES)[number],
+  scenario: {
+    name: string;
+    expectedDots: number;
+  },
   testInfo: TestInfo,
+  assertNormalizedMotionMatch = true,
 ) {
   await armOpenVisualChangeProbe(page, true);
   await trigger.click();
@@ -438,9 +530,15 @@ async function captureOpenMotionAndSettled(
   const firstFrameState = await page.evaluate(
     () => (window as CloseTestWindow).__lg2OpenFirstFrameState!,
   );
+  expect(firstFrameState.routeRadius).toBe("0px");
   expect(firstFrameState.panelRadius).toBe("28px");
   expect(firstFrameState.grabberPresent).toBe(true);
   expect(firstFrameState.dotCount).toBe(scenario.expectedDots);
+  expect(firstFrameState.heroHeight).not.toBeNull();
+  expect(firstFrameState.panelOffset).toBeCloseTo(
+    firstFrameState.heroHeight! - 26,
+    1,
+  );
 
   const pathsFor = (label: string) => testInfo.outputPath(
     `${scenario.name}-open-${label}.png`,
@@ -467,6 +565,7 @@ async function captureOpenMotionAndSettled(
   await page.waitForFunction(
     () => (window as CloseTestWindow).__lg2OpenTransitionEnded === true,
   );
+  const restGeometry = await readDetailMotionGeometry(page);
   const transitionEnd = await screenshotApp(page, pathsFor("transitionend"));
   await page.waitForFunction(
     () => (window as CloseTestWindow).__lg2OpenObservationComplete === true,
@@ -501,14 +600,16 @@ async function captureOpenMotionAndSettled(
     settledFor60,
     pathsFor("60pct-diff"),
   );
-  expect(
-    mismatch25,
-    `${scenario.name} changed by ${mismatch25} pixels at 25% motion`,
-  ).toBe(0);
-  expect(
-    mismatch60,
-    `${scenario.name} changed by ${mismatch60} pixels at 60% motion`,
-  ).toBe(0);
+  if (assertNormalizedMotionMatch) {
+    expect(
+      mismatch25,
+      `${scenario.name} changed by ${mismatch25} pixels at 25% motion`,
+    ).toBe(0);
+    expect(
+      mismatch60,
+      `${scenario.name} changed by ${mismatch60} pixels at 60% motion`,
+    ).toBe(0);
+  }
 
   const lastVisualChangeDelayMs = await page.evaluate(
     () =>
@@ -524,6 +625,10 @@ async function captureOpenMotionAndSettled(
     lastVisualChangeDelayMs,
     sheetTop25: at25.sheetTop,
     sheetTop60: at60.sheetTop,
+    at25,
+    at60,
+    restGeometry,
+    restBuffer: transitionEnd,
   };
 }
 
@@ -1014,7 +1119,7 @@ test("detail hero geometry is fixed while the image response is delayed", async 
   for (const frame of mountedFrames) {
     expect(frame.heroHeight).toBe(expectedHeroHeight);
     expect(frame.panelTop! - frame.routeTop!).toBeCloseTo(
-      expectedHeroHeight,
+      expectedHeroHeight - 26,
       1,
     );
     expect(frame.grabberPresent).toBe(true);
@@ -1194,6 +1299,126 @@ test("detail root hero-height variable is written exactly once", async ({
   expect(probe.writes).toBe(1);
   expect(probe.values).toHaveLength(1);
   expect(probe.values[0]).toMatch(/px$/);
+});
+
+test("sheet and panel geometry are correct at 25%, 60%, and rest", async ({
+  page,
+}, testInfo) => {
+  await page.goto("meli-pu/s/offer?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+  await page.getByRole("tab", { name: /^Local products$/i }).click();
+  await settleVisibleRoute(page);
+
+  const scenario = {
+    name: "square-sheet-rounded-panel-overlap",
+    expectedDots: 0,
+  };
+  const trigger = page.getByRole("button", {
+    name: /^Homegrown organic olive oil/i,
+  });
+  const result = await captureOpenMotionAndSettled(
+    page,
+    trigger,
+    scenario,
+    testInfo,
+    false,
+  );
+
+  const stages = [
+    {
+      name: "25%",
+      buffer: result.at25.fullBuffer,
+      geometry: result.at25.geometry,
+    },
+    {
+      name: "60%",
+      buffer: result.at60.fullBuffer,
+      geometry: result.at60.geometry,
+    },
+    {
+      name: "rest",
+      buffer: result.restBuffer,
+      geometry: result.restGeometry,
+    },
+  ];
+  const report = stages.map(({ name, buffer, geometry }) => {
+    const sheetCorner = rgbaAt(
+      buffer,
+      geometry.route.left + 1,
+      geometry.route.top + 1,
+    );
+    const panelCorner = rgbaAt(
+      buffer,
+      geometry.panel.left + 2,
+      geometry.panel.top + 2,
+    );
+    const panelInterior = rgbaAt(
+      buffer,
+      geometry.panel.left + geometry.panel.width / 2,
+      geometry.panel.top + 2,
+    );
+    return {
+      stage: name,
+      routeRadius: geometry.routeRadius,
+      panelRadius: geometry.panelRadius,
+      panelInteriorReference: panelInterior,
+      samples: [
+        {
+          point: "a-sheet-top-left",
+          coordinate: { x: sheetCorner.x, y: sheetCorner.y },
+          color: sheetCorner.css,
+          photoDistanceFromPanel: rgbDistance(
+            sheetCorner.color,
+            panelInterior.color,
+          ),
+        },
+        {
+          point: "b-panel-curve-outside",
+          coordinate: { x: panelCorner.x, y: panelCorner.y },
+          color: panelCorner.css,
+          photoDistanceFromPanel: rgbDistance(
+            panelCorner.color,
+            panelInterior.color,
+          ),
+        },
+        {
+          point: "c-panel-top",
+          heroHeight: geometry.heroHeight,
+          actualPanelTop: geometry.panelOffset,
+          expectedPanelTop: geometry.heroHeight - 26,
+        },
+      ],
+    };
+  });
+
+  console.log(`LG2_OVERLAP_NINE_SAMPLES ${JSON.stringify(report)}`);
+  await testInfo.attach("overlap-nine-samples", {
+    body: JSON.stringify(report, null, 2),
+    contentType: "application/json",
+  });
+
+  for (const stage of report) {
+    expect.soft(stage.routeRadius, `${stage.stage} sheet radius`).toBe("0px");
+    expect.soft(stage.panelRadius, `${stage.stage} panel radius`).toBe("28px");
+    expect
+      .soft(
+        stage.samples[0]!.photoDistanceFromPanel,
+        `${stage.stage} sheet top-left must be photo`,
+      )
+      .toBeGreaterThan(15);
+    expect
+      .soft(
+        stage.samples[1]!.photoDistanceFromPanel,
+        `${stage.stage} outside panel curve must be photo`,
+      )
+      .toBeGreaterThan(15);
+    expect
+      .soft(
+        stage.samples[2]!.actualPanelTop,
+        `${stage.stage} panel top`,
+      )
+      .toBeCloseTo(stage.samples[2]!.expectedPanelTop!, 1);
+  }
 });
 
 for (const scenario of OPEN_FIDELITY_CASES) {

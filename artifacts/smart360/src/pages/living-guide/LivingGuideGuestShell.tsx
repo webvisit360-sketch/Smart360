@@ -152,8 +152,8 @@ function detailVisualSignature(sheet: HTMLElement): string | null {
 
   const sheetStyle = getComputedStyle(sheet);
   if (
-    Number.parseFloat(sheetStyle.borderTopLeftRadius) !== 30 ||
-    Number.parseFloat(sheetStyle.borderTopRightRadius) !== 30
+    Number.parseFloat(sheetStyle.borderTopLeftRadius) !== 0 ||
+    Number.parseFloat(sheetStyle.borderTopRightRadius) !== 0
   ) {
     return null;
   }

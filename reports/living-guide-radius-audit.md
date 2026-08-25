@@ -1,6 +1,6 @@
 # Living Guide guest radius audit
 
-**Acceptance status: STRUCTURAL REBUILD — DEVICE ACCEPTANCE PENDING.** The detail panel is now one grid element positioned by the root's immutable hero-height variable; the detail-panel `margin-top: -26px` dependency is gone. Chromium dependency and opening checks pass; real-device acceptance remains pending.
+**Acceptance status: STRUCTURAL REBUILD — DEVICE ACCEPTANCE PENDING.** The moving detail sheet has square top corners. The white panel keeps its 28 px top radius and overlaps the photo by 26 px through the root's immutable hero-height grid calculation, with no measurement dependency. Chromium dependency and nine-point motion checks pass; real-device acceptance remains pending.
 
 Audit scope:
 
