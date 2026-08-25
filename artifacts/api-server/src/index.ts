@@ -7,6 +7,7 @@ import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
 import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
 import { runFirstPublishedBackfillAtStartup } from "./lib/firstPublishBackfill";
 import { runTriesteCityRenameAtStartup } from "./lib/triesteCityRenameBackfill";
+import { runMeliPuDescriptionBackfillAtStartup } from "./lib/meliPuDescriptionBackfill";
 import { ensureRowLevelSecurity } from "./lib/rls";
 
 const rawPort = process.env["PORT"];
@@ -93,6 +94,8 @@ ensureAdminAccount()
   .then(() => runFirstPublishedBackfillAtStartup())
   // Rename the approved Okolica/Izleti entry from the tourist office to the city.
   .then(() => runTriesteCityRenameAtStartup())
+  // Fill only empty descriptions after the Trst source-title rename has run.
+  .then(() => runMeliPuDescriptionBackfillAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();

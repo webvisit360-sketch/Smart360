@@ -17,6 +17,11 @@ description: How to fix wrong production DATA (not schema) when prod SQL is read
 - Watch for this whenever a new admin-managed column ships after content already exists in prod.
 - Match ledger rows by the STABLE key column, never by host-editable labels (owner-mandated after review); report a full per-row before/after table and log skips at ERROR level.
 - The deployment log capture can drop early boot INFO lines (the backfill's result table never surfaced there) — verify a prod data repair via read-only prod SQL before/after, not by log spelunking.
+- For large owner-supplied content ledgers, validate and bundle the authoritative upload at build time rather than reading `attached_assets` at runtime or manually transcribing it. The build must fail on count/order/language mismatches, while the runtime applier still uses stable IDs and empty-only guards.
+
+**Why:** deployment runtimes should not depend on workspace upload paths, and manual duplication of long multilingual copy creates silent wording drift.
+
+**How to apply:** expose the validated build output as a typed virtual module consumed only by the production startup wrapper; keep the database mutation core data-injectable so tests do not depend on the virtual module.
 
 # POI maps links (regression guard)
 

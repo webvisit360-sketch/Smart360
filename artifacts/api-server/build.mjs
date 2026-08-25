@@ -3,12 +3,148 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+
+const DESCRIPTION_LEDGER_MODULE = "virtual:meli-pu-description-ledger";
+
+function collapseDescription(lines) {
+  const paragraphs = [];
+  let current = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || line === "---") {
+      if (current.length) paragraphs.push(current.join(" "));
+      current = [];
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length) paragraphs.push(current.join(" "));
+  return paragraphs.join("\n\n");
+}
+
+function parseSourceDescriptions(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  const entries = [];
+  let group = "";
+  for (let i = 0; i < lines.length; i++) {
+    const groupMatch = lines[i].match(/^## ([^#].*)$/);
+    if (groupMatch) {
+      group = groupMatch[1].trim();
+      continue;
+    }
+    const headingMatch = lines[i].match(/^### (.+)$/);
+    if (!headingMatch) continue;
+    const body = [];
+    for (i += 1; i < lines.length && !/^#{2,3} /.test(lines[i]); i++) {
+      body.push(lines[i]);
+    }
+    i -= 1;
+    entries.push({
+      group,
+      name: headingMatch[1].trim(),
+      sl: collapseDescription(body),
+    });
+  }
+  return entries;
+}
+
+function parseTranslatedDescriptions(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  const entries = [];
+  for (let i = 0; i < lines.length; i++) {
+    const headingMatch = lines[i].match(/^## ([^#].*)$/);
+    if (!headingMatch) continue;
+    const entry = { name: headingMatch[1].trim(), en: "", de: "", it: "" };
+    let language = null;
+    let body = [];
+    const flush = () => {
+      if (language) entry[language] = collapseDescription(body);
+      body = [];
+    };
+    for (
+      i += 1;
+      i < lines.length &&
+      !/^## [^#]/.test(lines[i]) &&
+      !/^# [^#]/.test(lines[i]);
+      i++
+    ) {
+      const languageMatch = lines[i].match(/^\*\*(EN|DE|IT) — .*\*\*$/);
+      if (languageMatch) {
+        flush();
+        language = languageMatch[1].toLowerCase();
+      } else if (language) {
+        body.push(lines[i]);
+      }
+    }
+    flush();
+    i -= 1;
+    entries.push(entry);
+  }
+  return entries;
+}
+
+const descriptionLedgerPlugin = {
+  name: "meli-pu-description-ledger",
+  setup(build) {
+    build.onResolve({ filter: /^virtual:meli-pu-description-ledger$/ }, () => ({
+      path: DESCRIPTION_LEDGER_MODULE,
+      namespace: "description-ledger",
+    }));
+    build.onLoad({ filter: /.*/, namespace: "description-ledger" }, async () => {
+      const [sourceMarkdown, translatedMarkdown] = await Promise.all([
+        readFile(
+          path.resolve(
+            artifactDir,
+            "../../attached_assets/opisi-lokacij-meli-pu_1787695056732.md",
+          ),
+          "utf8",
+        ),
+        readFile(
+          path.resolve(
+            artifactDir,
+            "../../attached_assets/prevodi-meli-pu-vsi_1_1787695500570.md",
+          ),
+          "utf8",
+        ),
+      ]);
+      const source = parseSourceDescriptions(sourceMarkdown);
+      const translations = parseTranslatedDescriptions(translatedMarkdown);
+      if (source.length !== 40 || translations.length !== 40) {
+        throw new Error(
+          `Meli Pu description ledger must contain 40 source and 40 translated entries; found ${source.length}/${translations.length}`,
+        );
+      }
+      const ledger = source.map((entry, index) => {
+        const translated = translations[index];
+        if (!translated || translated.name !== entry.name) {
+          throw new Error(
+            `Meli Pu description heading mismatch at entry ${index + 1}`,
+          );
+        }
+        const complete = { ...entry, ...translated };
+        for (const language of ["sl", "en", "de", "it"]) {
+          const value = complete[language];
+          if (!value || /(^|\n)#{1,3} /.test(value)) {
+            throw new Error(
+              `Meli Pu description entry ${index + 1} has an invalid ${language} body`,
+            );
+          }
+        }
+        return complete;
+      });
+      return {
+        contents: `export default ${JSON.stringify(ledger)};`,
+        loader: "js",
+      };
+    });
+  },
+};
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
@@ -108,6 +244,7 @@ async function buildAll() {
     ],
     sourcemap: "linked",
     plugins: [
+      descriptionLedgerPlugin,
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
       esbuildPluginPino({ transports: ["pino-pretty"] })
     ],
