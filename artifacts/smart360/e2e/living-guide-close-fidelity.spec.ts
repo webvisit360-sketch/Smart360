@@ -9,6 +9,9 @@ type CloseTestWindow = Window & {
   __LG2_TEST_HOLD_CLOSE_SWAP__?: boolean;
   __lg2CloseHandoffReady?: boolean;
   __lg2CloseSwapComplete?: boolean;
+  __lg2OpenTransitionEnded?: boolean;
+  __lg2OpenObservationComplete?: boolean;
+  __lg2OpenLastVisualChangeDelayMs?: number;
 };
 
 async function settleVisibleRoute(page: Page) {
@@ -75,6 +78,155 @@ function assertSmallPixelDiff(
     `close handoff changed ${(ratio * 100).toFixed(3)}% of the source view`,
   ).toBeLessThanOrEqual(MAX_MISMATCH_RATIO);
   return ratio;
+}
+
+function assertExactPixelMatch(
+  transitionEndBuffer: Buffer,
+  settledBuffer: Buffer,
+  diffPath: string,
+) {
+  const transitionEnd = PNG.sync.read(transitionEndBuffer);
+  const settled = PNG.sync.read(settledBuffer);
+  expect(settled.width).toBe(transitionEnd.width);
+  expect(settled.height).toBe(transitionEnd.height);
+
+  const diff = new PNG({
+    width: transitionEnd.width,
+    height: transitionEnd.height,
+  });
+  const mismatchedPixels = pixelmatch(
+    transitionEnd.data,
+    settled.data,
+    diff.data,
+    transitionEnd.width,
+    transitionEnd.height,
+    {
+      threshold: 0,
+      includeAA: true,
+    },
+  );
+  writeFileSync(diffPath, PNG.sync.write(diff));
+  expect(
+    mismatchedPixels,
+    `detail changed by ${mismatchedPixels} pixels after open transitionend`,
+  ).toBe(0);
+}
+
+async function armOpenVisualChangeProbe(page: Page) {
+  await page.evaluate(() => {
+    const testWindow = window as CloseTestWindow;
+    testWindow.__lg2OpenTransitionEnded = false;
+    testWindow.__lg2OpenObservationComplete = false;
+    testWindow.__lg2OpenLastVisualChangeDelayMs = undefined;
+
+    const visualSignature = () => {
+      const sheet = document.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      );
+      if (!sheet) return "missing";
+      const values = [
+        sheet,
+        sheet.querySelector<HTMLElement>(".lg2-detail-hero"),
+        sheet.querySelector<HTMLElement>(".lg2-detail-sheet"),
+        sheet.querySelector<HTMLElement>(".lg2-grabber"),
+        sheet.querySelector<HTMLElement>(".lg2-gallery-dots"),
+      ].map((element) => {
+        if (!element) return null;
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          className: element.className,
+          childCount: element.childElementCount,
+          x: Number(rect.x.toFixed(3)),
+          y: Number(rect.y.toFixed(3)),
+          width: Number(rect.width.toFixed(3)),
+          height: Number(rect.height.toFixed(3)),
+          borderTopLeftRadius: style.borderTopLeftRadius,
+          borderTopRightRadius: style.borderTopRightRadius,
+          display: style.display,
+          visibility: style.visibility,
+        };
+      });
+      const images = [
+        ...sheet.querySelectorAll<HTMLImageElement>(
+          ".lg2-gallery-slide:first-child img",
+        ),
+      ].map((image) => ({
+        className: image.className,
+        complete: image.complete,
+        naturalWidth: image.naturalWidth,
+        naturalHeight: image.naturalHeight,
+        confirmed: image.dataset.lgDimensionsConfirmed ?? null,
+      }));
+      return JSON.stringify({ values, images });
+    };
+
+    window.addEventListener(
+      "lg2:detail-open-transition-end",
+      () => {
+        const transitionEnd = performance.now();
+        testWindow.__lg2OpenTransitionEnded = true;
+        let previous = visualSignature();
+        let lastVisualChange = transitionEnd;
+        const sample = () => {
+          const now = performance.now();
+          const current = visualSignature();
+          if (current !== previous) {
+            previous = current;
+            lastVisualChange = now;
+          }
+          if (now - transitionEnd < 500) {
+            requestAnimationFrame(sample);
+            return;
+          }
+          testWindow.__lg2OpenLastVisualChangeDelayMs =
+            lastVisualChange === transitionEnd
+              ? 0
+              : lastVisualChange - transitionEnd;
+          testWindow.__lg2OpenObservationComplete = true;
+        };
+        requestAnimationFrame(sample);
+      },
+      { once: true },
+    );
+  });
+}
+
+async function captureOpenEndAndSettled(
+  page: Page,
+  trigger: ReturnType<Page["locator"]>,
+  transitionEndPath: string,
+  settledPath: string,
+  diffPath: string,
+) {
+  await armOpenVisualChangeProbe(page);
+  await trigger.click();
+  await page.waitForFunction(
+    () => (window as CloseTestWindow).__lg2OpenTransitionEnded === true,
+  );
+
+  const sheet = page.locator(".lg2-route-layer.v--det");
+  await expect(sheet).toHaveAttribute("data-detail-transition", "open");
+  await expect(sheet).toHaveCSS("border-top-left-radius", "30px");
+  await expect(sheet).toHaveCSS("border-top-right-radius", "30px");
+  const panel = sheet.locator(".lg2-detail-sheet");
+  await expect(panel).toHaveCSS("border-top-left-radius", "28px");
+  await expect(panel).toHaveCSS("border-top-right-radius", "28px");
+  await expect(panel.locator(".lg2-grabber")).toBeVisible();
+  const transitionEnd = await screenshotApp(page, transitionEndPath);
+
+  await page.waitForFunction(
+    () => (window as CloseTestWindow).__lg2OpenObservationComplete === true,
+  );
+  const settled = await screenshotApp(page, settledPath);
+  assertExactPixelMatch(transitionEnd, settled, diffPath);
+  const lastVisualChangeDelayMs = await page.evaluate(
+    () =>
+      (window as CloseTestWindow).__lg2OpenLastVisualChangeDelayMs ??
+      Number.NaN,
+  );
+  expect(lastVisualChangeDelayMs).toBe(0);
+  return { lastVisualChangeDelayMs };
 }
 
 async function captureOneFrameAfterClose(
@@ -436,3 +588,101 @@ test("close fidelity preserves a deeply scrolled Surroundings list and offset ta
     },
   );
 });
+
+const OPEN_FIDELITY_CASES = [
+  {
+    name: "gallery",
+    categoryLabel: /^Apartments$/i,
+    nestedItemLabel: /^Apartment 1/i,
+    expectedDots: 6,
+    expectedImages: 1,
+  },
+  {
+    name: "single-photo",
+    tabLabel: /^Arrival and access$/i,
+    categoryLabel: /^Location$/i,
+    expectedDots: 0,
+    expectedImages: 1,
+  },
+  {
+    name: "no-photo",
+    tabLabel: /^Practical$/i,
+    categoryLabel: /^WiFi$/i,
+    expectedDots: 0,
+    expectedImages: 0,
+  },
+] as const;
+
+for (const scenario of OPEN_FIDELITY_CASES) {
+  test(`detail open is visually complete at transitionend: ${scenario.name}`, async ({
+    page,
+  }, testInfo) => {
+    await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+    const closeDevBanner = page.getByRole("button", { name: /^Close banner$/i });
+    if (await closeDevBanner.isVisible()) {
+      await closeDevBanner.click();
+    }
+    await settleVisibleRoute(page);
+
+    if ("tabLabel" in scenario) {
+      await page.getByRole("tab", { name: scenario.tabLabel }).click();
+      await settleVisibleRoute(page);
+    }
+
+    let trigger = page.getByRole("button", {
+      name: scenario.categoryLabel,
+    });
+    if ("nestedItemLabel" in scenario) {
+      await trigger.click();
+      await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+        "data-detail-transition",
+        "open",
+      );
+      await settleVisibleRoute(page);
+      trigger = page.getByRole("button", {
+        name: scenario.nestedItemLabel,
+      });
+    }
+
+    const transitionEndPath = testInfo.outputPath(
+      `${scenario.name}-open-transitionend.png`,
+    );
+    const settledPath = testInfo.outputPath(
+      `${scenario.name}-open-plus-500ms.png`,
+    );
+    const diffPath = testInfo.outputPath(`${scenario.name}-open-diff.png`);
+    const result = await captureOpenEndAndSettled(
+      page,
+      trigger,
+      transitionEndPath,
+      settledPath,
+      diffPath,
+    );
+
+    await expect(
+      page.locator(".lg2-route-layer.v--det .lg2-gallery-dots i"),
+    ).toHaveCount(scenario.expectedDots);
+    await expect(
+      page.locator(
+        ".lg2-route-layer.v--det .lg2-gallery-slide:first-child .lg2-hero-image-main",
+      ),
+    ).toHaveCount(scenario.expectedImages);
+
+    await testInfo.attach(`${scenario.name}-transitionend`, {
+      path: transitionEndPath,
+      contentType: "image/png",
+    });
+    await testInfo.attach(`${scenario.name}-plus-500ms`, {
+      path: settledPath,
+      contentType: "image/png",
+    });
+    await testInfo.attach(`${scenario.name}-diff`, {
+      path: diffPath,
+      contentType: "image/png",
+    });
+    testInfo.annotations.push({
+      type: `${scenario.name}-last-visual-change-delay`,
+      description: `${result.lastVisualChangeDelayMs.toFixed(1)} ms`,
+    });
+  });
+}

@@ -37,3 +37,11 @@ Any non-zero close-fidelity pixel mismatch is a defect until a diff mask localiz
 **Why:** The first small mismatch exposed real corner-clipping drift, and hard-state comparisons then exposed a hidden route-entry animation at the actual swap.
 
 **How to apply:** Always retain and inspect the diff mask, test held and post-swap frames, and keep close fidelity in routine validation.
+
+## Detail opening readiness
+
+Do not start the detail-sheet transform until fonts are ready, the visible hero is decoded, required chrome is present, and first-screen geometry is unchanged across consecutive paints. Readiness checks must be template-aware: if an optional visual branch exists, require its ready state; if it is absent by design, do not block the sheet.
+
+**Why:** Title-only/two-frame gating allowed radius, grabber, dots, and hero geometry to appear after the sheet landed. A negative optional-chain comparison also treated a deliberately absent photo hero as “not ready” forever.
+
+**How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.

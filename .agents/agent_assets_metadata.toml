@@ -274,3 +274,17 @@ mtime_ms = 1787609317731
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/aaa7b29a-032d-406d-af36-a4c3ffe258a5/08cd71a6-491b-477c-9571-6219a783d388"
 storage_version_token = "1787609355350628"
 content_type = "image/png"
+
+[[outputs]]
+id = "VR5UM1S2346t1QzLvdkA9"
+uri = "file://reports/living-guide-open-hard-states.png"
+type = "image"
+title = "Living Guide opening hard states"
+description = "Gallery, single-photo, and no-photo detail sheets at opening transitionend versus 500 ms later. All three pairs are pixel-identical."
+logical_id = "b37255c0-a3f1-4548-afca-2914c0101ed8"
+content_hash = "sha256:46c53e7e835b16e353d7cb2b8e4c8326c631f915bb9de126202dc9cc842ed367"
+size = 816460
+mtime_ms = 1787636552336
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b37255c0-a3f1-4548-afca-2914c0101ed8/70346636-7e43-4aec-b8f7-d50945ae9f7c"
+storage_version_token = "1787636586121613"
+content_type = "image/png"

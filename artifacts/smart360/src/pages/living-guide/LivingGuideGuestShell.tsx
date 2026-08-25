@@ -119,6 +119,109 @@ const HELD_LIVE_STATE_SELECTOR =
 const HELD_ACTIVE_EMBED_SELECTOR =
   "iframe,video,audio,object,embed,source,track,script,link";
 
+function nextPaintFrame(): Promise<void> {
+  return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
+}
+
+function detailVisualSignature(sheet: HTMLElement): string | null {
+  const panel = sheet.querySelector<HTMLElement>(".lg2-detail-sheet");
+  const hero = sheet.querySelector<HTMLElement>(".lg2-detail-hero");
+  const photoHero = sheet.querySelector<HTMLElement>(
+    ".lg2-detail-hero--photo",
+  );
+  const grabber = panel?.querySelector<HTMLElement>(".lg2-grabber") ?? null;
+  const slides = [
+    ...sheet.querySelectorAll<HTMLElement>(".lg2-gallery-slide"),
+  ];
+  const dots = [
+    ...sheet.querySelectorAll<HTMLElement>(".lg2-gallery-dots i"),
+  ];
+  const title = sheet.querySelector<HTMLElement>(
+    "h1, h2, [data-lg-detail-title]",
+  );
+
+  if (!title || !hero) return null;
+  if (photoHero && photoHero.dataset.lgHeroLayoutReady !== "true") return null;
+  if (
+    panel &&
+    !panel.classList.contains("lg2-detail-sheet--solo") &&
+    !grabber
+  ) {
+    return null;
+  }
+  if (slides.length > 1 && dots.length !== slides.length) return null;
+
+  const sheetStyle = getComputedStyle(sheet);
+  if (
+    Number.parseFloat(sheetStyle.borderTopLeftRadius) !== 30 ||
+    Number.parseFloat(sheetStyle.borderTopRightRadius) !== 30
+  ) {
+    return null;
+  }
+
+  const rectValue = (element: HTMLElement | null) => {
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return {
+      x: Number(rect.x.toFixed(3)),
+      y: Number(rect.y.toFixed(3)),
+      width: Number(rect.width.toFixed(3)),
+      height: Number(rect.height.toFixed(3)),
+      borderTopLeftRadius: style.borderTopLeftRadius,
+      borderTopRightRadius: style.borderTopRightRadius,
+      display: style.display,
+      visibility: style.visibility,
+    };
+  };
+
+  return JSON.stringify({
+    panel: rectValue(panel),
+    hero: rectValue(hero),
+    grabber: rectValue(grabber),
+    dots: dots.map((dot) => rectValue(dot)),
+    images: [
+      ...sheet.querySelectorAll<HTMLImageElement>(
+        ".lg2-gallery-slide:first-child .lg2-hero-image-main",
+      ),
+    ].map((image) => ({
+      complete: image.complete,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+      confirmed: image.dataset.lgDimensionsConfirmed ?? null,
+    })),
+  });
+}
+
+async function waitForDetailVisualReadiness(
+  sheet: HTMLElement,
+  isCancelled: () => boolean,
+): Promise<boolean> {
+  await document.fonts.ready;
+  const firstScreenImages = [
+    ...sheet.querySelectorAll<HTMLImageElement>(
+      ".lg2-gallery-slide:first-child .lg2-hero-image-main",
+    ),
+  ];
+  await Promise.all(
+    firstScreenImages.map((image) => image.decode().catch(() => undefined)),
+  );
+  let previousSignature: string | null = null;
+  let stableFrames = 0;
+  while (!isCancelled() && sheet.isConnected) {
+    await nextPaintFrame();
+    const signature = detailVisualSignature(sheet);
+    if (signature && signature === previousSignature) {
+      stableFrames += 1;
+      if (stableFrames >= 2) return true;
+    } else {
+      previousSignature = signature;
+      stableFrames = signature ? 1 : 0;
+    }
+  }
+  return false;
+}
+
 function selfAndDescendants(
   root: HTMLElement,
   selector: string,
@@ -1161,49 +1264,91 @@ export default function LivingGuideGuestShell({
     }
     syncHeldViewStack();
 
-    // First frame: the complete destination view is laid out off-screen.
-    // Second frame: measure that pre-paint interval, then start movement.
-    let secondFrame = 0;
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        const sheet = rootRef.current?.querySelector<HTMLElement>(
-          ".lg2-route-layer.v--det",
+    // The sheet remains at translateY(100%) until its complete first screenful
+    // is decoded, composed, and geometrically stable for consecutive paints.
+    // Only then may the opening transform begin.
+    let cancelled = false;
+    let armedSheet: HTMLElement | null = null;
+    let removeTransitionEndListener: (() => void) | null = null;
+    const prepareAndOpen = async () => {
+      const sheet = rootRef.current?.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      );
+      if (!sheet) return;
+      const ready = await waitForDetailVisualReadiness(
+        sheet,
+        () => cancelled,
+      );
+      if (!ready || cancelled) return;
+
+      const tap = performance.getEntriesByName("lg2-detail-tap", "mark").at(-1);
+      const tapToReadyMs = tap ? performance.now() - tap.startTime : 0;
+      sheet.dataset.tapToTitlePaintMs = tapToReadyMs.toFixed(1);
+      sheet.dataset.tapToVisualReadyMs = tapToReadyMs.toFixed(1);
+      performance.mark("lg2-detail-title-painted");
+      performance.mark("lg2-detail-visual-ready");
+      if (tap) {
+        performance.measure(
+          "lg2-detail-tap-to-title-paint",
+          "lg2-detail-tap",
+          "lg2-detail-title-painted",
         );
-        const title = sheet?.querySelector<HTMLElement>("h1, h2, [data-lg-detail-title]");
-        if (sheet && title) {
-          const tap = performance.getEntriesByName("lg2-detail-tap", "mark").at(-1);
-          const tapToPaintMs = tap ? performance.now() - tap.startTime : 0;
-          sheet.dataset.tapToTitlePaintMs = tapToPaintMs.toFixed(1);
-          performance.mark("lg2-detail-title-painted");
-          if (tap) {
-            performance.measure(
-              "lg2-detail-tap-to-title-paint",
-              "lg2-detail-tap",
-              "lg2-detail-title-painted",
-            );
-          }
-        }
-        flushSync(() => setDetailTransitionPhase("armed"));
-        const armedSheet = rootRef.current?.querySelector<HTMLElement>(
-          ".lg2-route-layer.v--det",
+        performance.measure(
+          "lg2-detail-tap-to-visual-ready",
+          "lg2-detail-tap",
+          "lg2-detail-visual-ready",
         );
-        if (armedSheet) {
-          // Re-enable the transition while the sheet is still at 100%, then
-          // force that state to layout before `.on` is committed.
-          void armedSheet.offsetHeight;
+      }
+      window.dispatchEvent(
+        new CustomEvent("lg2:detail-open-visual-ready", {
+          detail: { delayMs: tapToReadyMs },
+        }),
+      );
+
+      flushSync(() => setDetailTransitionPhase("armed"));
+      armedSheet = rootRef.current?.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      ) ?? null;
+      if (!armedSheet || cancelled) return;
+      const transitionSheet = armedSheet;
+
+      // Re-enable the transition while the complete sheet is still at 100%,
+      // then force that state to layout before `.on` is committed.
+      void transitionSheet.offsetHeight;
+      const onTransitionEnd = (event: TransitionEvent) => {
+        if (
+          event.target !== transitionSheet ||
+          event.propertyName !== "transform"
+        ) {
+          return;
         }
-        setDetailTransitionPhase("open");
-        window.requestAnimationFrame(() => {
-          rootRef.current
-            ?.querySelector<HTMLElement>(".lg2-route-layer.v--det .lg2-detail-back")
-            ?.focus({ preventScroll: true });
-        });
+        performance.mark("lg2-detail-open-transition-end");
+        transitionSheet.dataset.openTransitionEndMs =
+          performance.now().toFixed(1);
+        window.dispatchEvent(
+          new CustomEvent("lg2:detail-open-transition-end", {
+            detail: { endTimeMs: performance.now() },
+          }),
+        );
+      };
+      transitionSheet.addEventListener("transitionend", onTransitionEnd, {
+        once: true,
       });
-    });
+      removeTransitionEndListener = () =>
+        transitionSheet.removeEventListener("transitionend", onTransitionEnd);
+
+      flushSync(() => setDetailTransitionPhase("open"));
+      window.requestAnimationFrame(() => {
+        rootRef.current
+          ?.querySelector<HTMLElement>(".lg2-route-layer.v--det .lg2-detail-back")
+          ?.focus({ preventScroll: true });
+      });
+    };
+    void prepareAndOpen();
 
     return () => {
-      window.cancelAnimationFrame(firstFrame);
-      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+      cancelled = true;
+      removeTransitionEndListener?.();
     };
     // The destination location starts one transition. Phase changes must not
     // restart the two-frame paint gate.
