@@ -2,4 +2,4 @@
 
 ## Unreleased
 
-- **UNVERIFIED — IPHONE REFILM PENDING:** Living Guide detail hero height is now derived only from stored media dimensions or a fixed 16:9 fallback. Decoded image dimensions can no longer replace that value or move the panel after motion starts. The clipping diagnosis was rejected by the measured phone recording; Chromium delay and opening checks pass, but acceptance requires the owner's new iPhone recording.
+- **STRUCTURAL REBUILD — DEVICE ACCEPTANCE PENDING:** The Living Guide detail root now writes one immutable hero-height variable before first paint. The hero and panel use that same root-owned grid value, the panel no longer overlaps with `margin-top: -26px`, and its rounded top, grabber, background, and content remain one element and paint layer. Dependency tests were proven red on the prior structure and green after the rebuild.

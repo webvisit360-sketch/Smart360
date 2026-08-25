@@ -1,0 +1,44 @@
+STOP. We have been treating symptoms for six rounds — the clone, the clip, the
+hero height — and each fix was plausible and wrong. The owner has named the
+actual defect in the structure, and he is right. Rebuild it his way.
+
+THE RULE, and it is not negotiable:
+
+The rounded band with the two top corners and the grabber is NOT a separate
+strip layered over the hero. It is the TOP OF THE PANEL ITSELF. The band and
+the content beneath it are ONE element, with ONE background, ONE border-radius
+and ONE paint layer. Nothing about that element's shape or position may be
+derived at runtime from the hero, from a measurement, or from any image event.
+
+What that means concretely:
+
+1. DELETE `margin-top: -26px`. It makes the panel's position a function of the
+   hero's rendered height. That is the door every one of these bugs came
+   through. There must be no property anywhere whose value depends on how tall
+   the hero turned out to be.
+
+2. ONE VARIABLE, SET ONCE. Put the hero height on the detail root as a CSS
+   custom property computed from the stored media dimensions BEFORE first
+   paint. The hero reads it. The panel is positioned from the SAME variable —
+   from the root, not from the hero. The variable is written once when the
+   detail mounts and is never written again for the life of that detail. No
+   effect, no observer, no load handler may touch it.
+
+3. ONE ELEMENT, ONE LAYER. The panel — rounded top, grabber, content — is a
+   single element. The grabber is drawn inside it, not appended to it. If the
+   hero were to be the wrong height, the panel would sit in the wrong place but
+   would still be WHOLE. Today it comes apart, and that is what the owner keeps
+   filming.
+
+4. PROVE THE DEPENDENCE IS GONE, not that the pixels match. Add a test that
+   fails if the panel's computed top offset changes at any point between mount
+   and one second after the transition ends, and a test that fails if the CSS
+   variable is written more than once. Those tests fail on the OLD code — run
+   them against it and show me that they do. A test that cannot fail on the
+   broken version proves nothing, and that is why three rounds of green tests
+   sat on top of a live defect.
+
+Do not touch anything else. No clip-path work, no readiness-gate work, no new
+hypotheses. Rebuild the panel as one element positioned from one write-once
+variable, show the two tests failing on the old code and passing on the new,
+and report.

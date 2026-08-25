@@ -46,10 +46,10 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 
 **How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.
 
-## Deterministic detail hero height
+## Structural detail panel
 
-Do not derive detail hero geometry from decoded-image measurements. Use stored media dimensions from the payload; if they are missing or invalid, use one fixed 16:9 fallback for the mounted detail and never replace it after decode.
+The rounded top band, grabber, background, and content are one panel element. Its position and the hero height must both come from one immutable root CSS variable set before first paint; never position the panel by flowing or overlapping it from the rendered hero.
 
-**Why:** The measured iPhone recording showed the panel top jumping upward by exactly the panel’s 26 px negative overlap band while the title stayed fixed relative to the panel. A decode failure can be swallowed by the readiness wait and let later image load state alter geometry on WebKit even when Chromium waits. The clipping and conditional-render diagnoses were both disproved.
+**Why:** The owner identified the structural fault after symptom-level clone, clipping, and image-height fixes failed. On the prior structure, perturbing hero height produced 13 panel offsets, and the required root variable had zero writes. The negative 26 px detail-panel overlap allowed the panel to appear split on WebKit.
 
-**How to apply:** Treat image `onLoad` dimensions as diagnostics only. Delay the selected hero response with cache disabled and assert every mounted/open frame keeps one hero height, a panel offset of `heroHeight - 26`, the grabber, and 28 px radius. Real-device acceptance still requires the owner’s iPhone re-film.
+**How to apply:** Use a root-owned fixed grid row for both hero and panel placement, with no negative detail-panel margin and no hero resize observer or inline height writer. Dependency tests must cover mount through one second after transition end and assert one root-variable write.

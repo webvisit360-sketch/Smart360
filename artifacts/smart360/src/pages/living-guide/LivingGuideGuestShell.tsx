@@ -428,6 +428,61 @@ function categoryMedia(category: any): any[] {
   return result;
 }
 
+const DETAIL_SHELL_MAX_WIDTH = 430;
+
+function detailHeroMedia(category: any, itemId: string | null): any[] {
+  const items = visible(category?.items);
+  const activeItem = itemId
+    ? items.find((item: any) => item.id === itemId)
+    : null;
+  if (activeItem) return visible(activeItem.media);
+
+  const layout = category?.layout ?? "";
+  if (layout === "tabs" && items.length === 2) {
+    return visible(items[0]?.media);
+  }
+  if (
+    layout === "tabs" ||
+    layout === "apartments" ||
+    layout === "products" ||
+    layout === "poi" ||
+    layout === "routes" ||
+    layout === "events"
+  ) {
+    const media = firstMedia(category);
+    return media ? [media] : [];
+  }
+  return categoryMedia(category);
+}
+
+function detailHeroHeight(media: any[]): number {
+  const frameWidth =
+    typeof window === "undefined"
+      ? 390
+      : Math.min(window.innerWidth, DETAIL_SHELL_MAX_WIDTH);
+  const viewportHeight =
+    typeof window === "undefined" ? 844 : window.innerHeight;
+
+  if (media.length > 1) {
+    const galleryLayout = calculateLivingGuideUniformGalleryLayout({
+      containerWidth: frameWidth,
+      imageAspects: media.map(
+        (entry: any) => stableMediaAspect(entry.width, entry.height).aspect,
+      ),
+      viewportHeight,
+    });
+    if (galleryLayout) return galleryLayout.heroHeight;
+  }
+
+  const entry = media[0];
+  const layout = calculateLivingGuideHeroLayout({
+    containerWidth: frameWidth,
+    imageAspect: stableMediaAspect(entry?.width, entry?.height).aspect,
+    viewportHeight,
+  });
+  return layout?.heroHeight ?? 1;
+}
+
 function categoryIcon(category: any): string {
   const firstItem = visible(category?.items)[0];
   if (category?.layout === "wifi") return "wifi";
@@ -622,6 +677,29 @@ export default function LivingGuideGuestShell({
   if (unavailableGuestSubroute) screen = "home";
   const isDetailPresentation =
     window.history.state?.livingGuidePresentation === "detail";
+  const detailHeroHeightLockRef = useRef<{
+    location: string;
+    height: number;
+  } | null>(null);
+  if (
+    screen === "detail" &&
+    categoryContext &&
+    detailHeroHeightLockRef.current?.location !== location
+  ) {
+    detailHeroHeightLockRef.current = {
+      location,
+      height: detailHeroHeight(
+        detailHeroMedia(categoryContext.category, routeItemId),
+      ),
+    };
+  }
+  const detailRouteStyle =
+    screen === "detail" &&
+    detailHeroHeightLockRef.current?.location === location
+      ? ({
+          "--lg2-detail-hero-height": `${detailHeroHeightLockRef.current.height}px`,
+        } as CSSProperties)
+      : undefined;
 
   const [guest, setGuest] = useState<GuestRecord | null>(() =>
     getRememberedGuestIdentity(slug),
@@ -1626,6 +1704,7 @@ export default function LivingGuideGuestShell({
           data-suppress-entry-animation={
             suppressRouteEntryAnimation ? "true" : undefined
           }
+          style={detailRouteStyle}
         >
         {screen === "cover" && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
@@ -2568,15 +2647,14 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
 }
 
 function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
-  const heroRef = useRef<HTMLDivElement>(null);
   const galleryTrackRef = useRef<HTMLDivElement>(null);
   const settleTimeoutRef = useRef<number | null>(null);
-  const [frameWidth, setFrameWidth] = useState(() =>
-    typeof window === "undefined" ? 0 : window.innerWidth,
-  );
-  const [viewportHeight, setViewportHeight] = useState(() =>
-    typeof window === "undefined" ? 844 : window.innerHeight,
-  );
+  const frameWidth =
+    typeof window === "undefined"
+      ? 390
+      : Math.min(window.innerWidth, DETAIL_SHELL_MAX_WIDTH);
+  const viewportHeight =
+    typeof window === "undefined" ? 844 : window.innerHeight;
   const activeIndex = singleOnly
     ? 0
     : Math.max(0, Math.min((media?.length ?? 1) - 1, galleryIndex ?? 0));
@@ -2626,35 +2704,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const mediaKey = (media ?? [])
     .map((entry: any, index: number) => entry.id ?? entry.url ?? index)
     .join("|");
-
-  useLayoutEffect(() => {
-    const hero = heroRef.current;
-    if (!hero || !media?.length) return;
-    const measure = () => {
-      if (!hero.isConnected) return;
-      const nextFrameWidth = hero.clientWidth;
-      const nextViewportHeight = window.innerHeight;
-      setFrameWidth((current) =>
-        current === nextFrameWidth ? current : nextFrameWidth,
-      );
-      setViewportHeight((current) =>
-        current === nextViewportHeight ? current : nextViewportHeight,
-      );
-    };
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(measure);
-    observer?.observe(hero);
-    window.addEventListener("resize", measure);
-    window.addEventListener("orientationchange", measure);
-    measure();
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("orientationchange", measure);
-    };
-  }, [mediaKey, media?.length]);
 
   const settleGallery = useCallback(
     (track: HTMLDivElement) => {
@@ -2726,14 +2775,12 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     const expected = stableMediaAspect(entry.width, entry.height);
     return (
       <div
-        ref={heroRef}
         className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"}`}
         data-lg-hero-height={Math.round(heroHeight)}
         data-lg-hero-natural-height={heroLayout?.naturalHeight}
         data-lg-hero-branch={heroLayout?.branch}
         data-lg-hero-aspect-source={activeAspectSource}
         data-lg-hero-layout-ready={layoutReady}
-        style={{ height: heroHeight }}
       >
         <div className="lg2-gallery-track">
           <div className="lg2-gallery-slide">
@@ -2753,7 +2800,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   }
   return (
     <div
-      ref={heroRef}
       className={`lg2-detail-hero lg2-detail-hero--photo${layoutReady ? " is-layout-ready" : " is-awaiting-dimensions"} is-uniform-gallery`}
       data-lg-active-slide={activeIndex}
       data-lg-hero-height={Math.round(heroHeight)}
@@ -2767,7 +2813,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
       data-lg-gallery-natural-heights={uniformGalleryLayout ? JSON.stringify(uniformGalleryLayout.naturalHeights) : undefined}
       data-lg-gallery-min-height={uniformGalleryLayout?.minHeight}
       data-lg-gallery-max-height={uniformGalleryLayout?.maxHeight}
-      style={{ height: heroHeight }}
     >
       <div
         ref={galleryTrackRef}

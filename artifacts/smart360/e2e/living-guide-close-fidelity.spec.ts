@@ -1014,7 +1014,7 @@ test("detail hero geometry is fixed while the image response is delayed", async 
   for (const frame of mountedFrames) {
     expect(frame.heroHeight).toBe(expectedHeroHeight);
     expect(frame.panelTop! - frame.routeTop!).toBeCloseTo(
-      expectedHeroHeight - 26,
+      expectedHeroHeight,
       1,
     );
     expect(frame.grabberPresent).toBe(true);
@@ -1025,6 +1025,175 @@ test("detail hero geometry is fixed while the image response is delayed", async 
     body: JSON.stringify(mountedFrames, null, 2),
     contentType: "application/json",
   });
+});
+
+test("panel top is independent of hero layout from mount through one second after open", async ({
+  page,
+}) => {
+  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+
+  await page.evaluate(() => {
+    const offsets: number[] = [];
+    const startedAt = performance.now();
+    let mountedFrames = 0;
+    let heroPerturbed = false;
+    let transitionListenerAttached = false;
+    let stopAt: number | null = null;
+    const sample = () => {
+      const root = document.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      );
+      const hero = root?.querySelector<HTMLElement>(".lg2-detail-hero");
+      const panel = root?.querySelector<HTMLElement>(".lg2-detail-sheet");
+      if (root && hero && panel) {
+        if (!transitionListenerAttached) {
+          transitionListenerAttached = true;
+          root.addEventListener("transitionend", (event) => {
+            if (
+              event.target === root &&
+              (event as TransitionEvent).propertyName === "transform"
+            ) {
+              stopAt = performance.now() + 1_000;
+            }
+          });
+        }
+        mountedFrames += 1;
+        offsets.push(
+          Number(
+            (
+              panel.getBoundingClientRect().top -
+              root.getBoundingClientRect().top
+            ).toFixed(2),
+          ),
+        );
+        if (mountedFrames === 3) {
+          hero.style.setProperty("height", "321px", "important");
+          heroPerturbed = true;
+        }
+      }
+      (window as any).__lg2PanelDependencyProbe = {
+        offsets,
+        heroPerturbed,
+        complete: stopAt !== null && performance.now() >= stopAt,
+      };
+      if (
+        (stopAt === null || performance.now() < stopAt) &&
+        performance.now() - startedAt < 8_000
+      ) {
+        requestAnimationFrame(sample);
+      }
+    };
+    requestAnimationFrame(sample);
+  });
+
+  await page.getByRole("button", { name: /^Apartments$/i }).click();
+  await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+    "data-detail-transition",
+    "open",
+    { timeout: 5_000 },
+  );
+  await page.waitForFunction(
+    () => (window as any).__lg2PanelDependencyProbe?.complete === true,
+    undefined,
+    { timeout: 10_000 },
+  );
+
+  const probe = await page.evaluate(
+    () =>
+      (window as any).__lg2PanelDependencyProbe as {
+        offsets: number[];
+        heroPerturbed: boolean;
+      },
+  );
+  expect(probe.heroPerturbed).toBe(true);
+  expect(probe.offsets.length).toBeGreaterThan(3);
+  expect([...new Set(probe.offsets)]).toHaveLength(1);
+});
+
+test("detail root hero-height variable is written exactly once", async ({
+  page,
+}) => {
+  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+
+  await page.evaluate(() => {
+    const propertyName = "--lg2-detail-hero-height";
+    const probe = {
+      writes: 0,
+      values: [] as string[],
+      complete: false,
+    };
+    let root: HTMLElement | null = null;
+    let styleObserver: MutationObserver | null = null;
+    const findRoot = () => {
+      if (root) return;
+      root = document.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det",
+      );
+      if (!root) return;
+      const initialValue = root.style.getPropertyValue(propertyName);
+      if (initialValue) {
+        probe.writes += 1;
+        probe.values.push(initialValue);
+      }
+      styleObserver = new MutationObserver((records) => {
+        for (const record of records) {
+          if (record.attributeName !== "style" || record.target !== root) {
+            continue;
+          }
+          probe.writes += 1;
+          probe.values.push(root!.style.getPropertyValue(propertyName));
+        }
+      });
+      styleObserver.observe(root, {
+        attributes: true,
+        attributeFilter: ["style"],
+        attributeOldValue: true,
+      });
+      root.addEventListener("transitionend", (event) => {
+        if (
+          event.target === root &&
+          (event as TransitionEvent).propertyName === "transform"
+        ) {
+          window.setTimeout(() => {
+            probe.complete = true;
+          }, 1_000);
+        }
+      });
+    };
+    const treeObserver = new MutationObserver(findRoot);
+    treeObserver.observe(document.body, { childList: true, subtree: true });
+    const poll = () => {
+      findRoot();
+      (window as any).__lg2HeroVariableWriteProbe = probe;
+      if (!root) requestAnimationFrame(poll);
+    };
+    requestAnimationFrame(poll);
+  });
+
+  await page.getByRole("button", { name: /^Apartments$/i }).click();
+  await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+    "data-detail-transition",
+    "open",
+    { timeout: 5_000 },
+  );
+  await page.waitForFunction(
+    () => (window as any).__lg2HeroVariableWriteProbe?.complete === true,
+    undefined,
+    { timeout: 10_000 },
+  );
+
+  const probe = await page.evaluate(
+    () =>
+      (window as any).__lg2HeroVariableWriteProbe as {
+        writes: number;
+        values: string[];
+      },
+  );
+  expect(probe.writes).toBe(1);
+  expect(probe.values).toHaveLength(1);
+  expect(probe.values[0]).toMatch(/px$/);
 });
 
 for (const scenario of OPEN_FIDELITY_CASES) {

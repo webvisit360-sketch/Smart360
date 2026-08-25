@@ -1,6 +1,6 @@
 # Living Guide guest radius audit
 
-**Acceptance status: UNVERIFIED — IPHONE REFILM PENDING.** The clipping diagnosis was rejected. Hero height is now deterministic from stored dimensions or a fixed fallback; only the owner's new iPhone recording can accept the opening fix.
+**Acceptance status: STRUCTURAL REBUILD — DEVICE ACCEPTANCE PENDING.** The detail panel is now one grid element positioned by the root's immutable hero-height variable; the detail-panel `margin-top: -26px` dependency is gone. Chromium dependency and opening checks pass; real-device acceptance remains pending.
 
 Audit scope:
 
