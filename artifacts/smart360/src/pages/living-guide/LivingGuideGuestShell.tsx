@@ -3763,6 +3763,14 @@ function HomeView({
             {t("UI.lg.helpEmergency", "Pomoč in nujni primeri")}
           </button>
         </div>
+        <div className="lg2-made">
+          <img
+            src={`${import.meta.env.BASE_URL}brand/smart360-kolobar-temno.svg`}
+            alt=""
+            aria-hidden="true"
+          />
+          <span>Vodnik ustvarja Smart360</span>
+        </div>
       </div>
     </div>
     </section>
