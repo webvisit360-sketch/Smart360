@@ -1,5 +1,7 @@
 # Living Guide guest radius audit
 
+**Acceptance status: UNVERIFIED — WEBKIT OPEN.** Chromium regression checks pass, but only a real Safari/WebKit recording or frame series can accept the clipping remedy.
+
 Audit scope:
 
 - `living-guide-guest.css`

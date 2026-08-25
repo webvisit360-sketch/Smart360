@@ -316,3 +316,17 @@ mtime_ms = 1787649779582
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6c5c0276-43e4-42c5-978c-997b962fe649/c32fb5e2-5fc1-4dcc-9310-894509150cf6"
 storage_version_token = "1787649979757146"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "YdOybKFHcINp4bZAKkuGJ"
+uri = "file://reports/living-guide-webkit-open-audit.md"
+type = "text"
+title = "Living Guide WebKit open audit"
+description = "UNVERIFIED status, fixed-descendant geometry, Okolica scroll measurements, and the remaining Safari/WebKit acceptance gate."
+logical_id = "f409a924-dbae-4ef5-9f28-95889a900393"
+content_hash = "sha256:6ce674040e6239429dfac4824b891c946ee48e31a8dba8777b208ac58a01843a"
+size = 4026
+mtime_ms = 1787661651992
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f409a924-dbae-4ef5-9f28-95889a900393/79d3cbe0-2cd6-4b3d-bba4-cd905ae184d0"
+storage_version_token = "1787661661630231"
+content_type = "text/markdown"
