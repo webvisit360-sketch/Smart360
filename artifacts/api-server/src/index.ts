@@ -6,6 +6,7 @@ import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRete
 import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
 import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
 import { runFirstPublishedBackfillAtStartup } from "./lib/firstPublishBackfill";
+import { runTriesteCityRenameAtStartup } from "./lib/triesteCityRenameBackfill";
 import { ensureRowLevelSecurity } from "./lib/rls";
 
 const rawPort = process.env["PORT"];
@@ -90,6 +91,8 @@ ensureAdminAccount()
   .then(() => runSectionGroupBackfillAtStartup())
   // Stamp first_published_at for tenants published before the column existed
   .then(() => runFirstPublishedBackfillAtStartup())
+  // Rename the approved Okolica/Izleti entry from the tourist office to the city.
+  .then(() => runTriesteCityRenameAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();
