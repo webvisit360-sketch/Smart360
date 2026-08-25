@@ -288,3 +288,31 @@ mtime_ms = 1787636552336
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b37255c0-a3f1-4548-afca-2914c0101ed8/70346636-7e43-4aec-b8f7-d50945ae9f7c"
 storage_version_token = "1787636586121613"
 content_type = "image/png"
+
+[[outputs]]
+id = "6oN0lz6MSlkt3rlOtoIKG"
+uri = "file://reports/living-guide-open-motion-chromium.png"
+type = "image"
+title = "Living Guide opening motion — Chromium"
+description = "Gallery, single-photo, and no-photo details at 25%, 60%, transition end, and +500 ms. All normalized comparisons passed at zero differing pixels."
+logical_id = "b55be5d6-ccb9-4349-be53-077d4ec5b1c8"
+content_hash = "sha256:c6b0662060ceb85ca70d444b1de9fa4120869318db02e90ed062d7891e852ecd"
+size = 2419593
+mtime_ms = 1787649909962
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b55be5d6-ccb9-4349-be53-077d4ec5b1c8/7102633b-d968-40d3-9594-7b809c7795b8"
+storage_version_token = "1787649978452498"
+content_type = "image/png"
+
+[[outputs]]
+id = "DFwn2zkqwoCy8wOB99E40"
+uri = "file://reports/living-guide-radius-audit.md"
+type = "text"
+title = "Living Guide radius audit"
+description = "Exhaustive 90-selector radius and clipping inventory, including parent/child mismatch classification and the applied clipping remedy."
+logical_id = "6c5c0276-43e4-42c5-978c-997b962fe649"
+content_hash = "sha256:46b8c6d09187f9671c73c9ce74bd75fbd6db5b23ab8d3dade19f468c195cad61"
+size = 6562
+mtime_ms = 1787649779582
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6c5c0276-43e4-42c5-978c-997b962fe649/c32fb5e2-5fc1-4dcc-9310-894509150cf6"
+storage_version_token = "1787649979757146"
+content_type = "text/markdown"

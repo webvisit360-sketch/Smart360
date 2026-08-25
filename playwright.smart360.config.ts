@@ -3,6 +3,8 @@ import { defineConfig } from "@playwright/test";
 const defaultBaseUrl = process.env.REPLIT_DEV_DOMAIN
   ? `https://${process.env.REPLIT_DEV_DOMAIN}/`
   : "http://localhost:26044/";
+const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
+const webkitExecutable = process.env.PLAYWRIGHT_WEBKIT_EXECUTABLE;
 
 export default defineConfig({
   testDir: "./artifacts/smart360/e2e",
@@ -17,10 +19,27 @@ export default defineConfig({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,
     colorScheme: "light",
-    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
-      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
-      : undefined,
     trace: "retain-on-failure",
   },
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        browserName: "chromium",
+        launchOptions: chromiumExecutable
+          ? { executablePath: chromiumExecutable }
+          : undefined,
+      },
+    },
+    {
+      name: "webkit",
+      use: {
+        browserName: "webkit",
+        launchOptions: webkitExecutable
+          ? { executablePath: webkitExecutable }
+          : undefined,
+      },
+    },
+  ],
   reporter: [["list"]],
 });

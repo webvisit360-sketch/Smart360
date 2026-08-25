@@ -136,6 +136,12 @@ body[data-t="noc"] .lg2-stage {
   animation: none;
 }
 
+.lg2-app .v--det > .lg2-view {
+  border-radius: 30px 30px 0 0;
+  -webkit-clip-path: inset(0 round 30px 30px 0 0);
+  clip-path: inset(0 round 30px 30px 0 0);
+}
+
 .lg2-app .v--det .lg2-hero-image-main {
   opacity: 1;
   transition: none;
@@ -1237,6 +1243,8 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   margin-top: -26px;
   padding: 22px 20px 26px;
   border-radius: 28px 28px 0 0;
+  -webkit-clip-path: inset(0 round 28px 28px 0 0);
+  clip-path: inset(0 round 28px 28px 0 0);
   background: var(--bg);
   color: var(--tx);
 }
@@ -1250,6 +1258,8 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   margin-top: 0;
   padding-top: max(28px, env(safe-area-inset-top));
   border-radius: 0;
+  -webkit-clip-path: none;
+  clip-path: none;
 }
 
 .lg2-detail-sheet h1 {

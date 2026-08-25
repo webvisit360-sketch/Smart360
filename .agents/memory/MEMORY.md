@@ -18,3 +18,4 @@
 - [Scale audit 150 tenants](scale-audit-150-tenants.md) — one app suffices; hardening shipped (indexes, brotli, payload cache); guest-cache invalidation is CENTRALIZED middleware — never per-route.
 - [Host portal access model](host-portal.md) — CP2 three-ring fence (central actor gate + registry + RLS); hosts get 404 on everything unlisted; changelog carries actorType/actorEmail.
 - [Owner cockpit](owner-cockpit.md) — slug frozen after first publish (CAS stamp!), published e-mail fires once via CAS winner, type seeding in one tx, buildTenantOverviews is the single readiness source.
+- [Playwright WebKit runtime](playwright-webkit-runtime.md) — local WPE starts but cannot create EGL; only claim WebKit after a real page opens on a supported host.

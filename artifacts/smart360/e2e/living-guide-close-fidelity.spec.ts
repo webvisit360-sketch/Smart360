@@ -12,6 +12,15 @@ type CloseTestWindow = Window & {
   __lg2OpenTransitionEnded?: boolean;
   __lg2OpenObservationComplete?: boolean;
   __lg2OpenLastVisualChangeDelayMs?: number;
+  __lg2OpenTransitionStartMs?: number;
+  __lg2OpenTransitionDurationMs?: number;
+  __lg2OpenFirstFrameState?: {
+    panelRadius: string;
+    grabberPresent: boolean;
+    dotCount: number;
+  };
+  __LG2_TEST_CAPTURE_OPEN_MOTION__?: boolean;
+  __lg2OpenMotionStage?: "waiting" | "25" | "60" | "released";
 };
 
 async function settleVisibleRoute(page: Page) {
@@ -80,44 +89,75 @@ function assertSmallPixelDiff(
   return ratio;
 }
 
-function assertExactPixelMatch(
-  transitionEndBuffer: Buffer,
-  settledBuffer: Buffer,
+function exactPixelMismatch(
+  beforeBuffer: Buffer,
+  afterBuffer: Buffer,
   diffPath: string,
 ) {
-  const transitionEnd = PNG.sync.read(transitionEndBuffer);
-  const settled = PNG.sync.read(settledBuffer);
-  expect(settled.width).toBe(transitionEnd.width);
-  expect(settled.height).toBe(transitionEnd.height);
+  const before = PNG.sync.read(beforeBuffer);
+  const after = PNG.sync.read(afterBuffer);
+  expect(after.width).toBe(before.width);
+  expect(after.height).toBe(before.height);
 
   const diff = new PNG({
-    width: transitionEnd.width,
-    height: transitionEnd.height,
+    width: before.width,
+    height: before.height,
   });
   const mismatchedPixels = pixelmatch(
-    transitionEnd.data,
-    settled.data,
+    before.data,
+    after.data,
     diff.data,
-    transitionEnd.width,
-    transitionEnd.height,
+    before.width,
+    before.height,
     {
       threshold: 0,
       includeAA: true,
     },
   );
   writeFileSync(diffPath, PNG.sync.write(diff));
+  return mismatchedPixels;
+}
+
+function assertExactPixelMatch(
+  transitionEndBuffer: Buffer,
+  settledBuffer: Buffer,
+  diffPath: string,
+) {
+  const mismatchedPixels = exactPixelMismatch(
+    transitionEndBuffer,
+    settledBuffer,
+    diffPath,
+  );
   expect(
     mismatchedPixels,
     `detail changed by ${mismatchedPixels} pixels after open transitionend`,
   ).toBe(0);
 }
 
-async function armOpenVisualChangeProbe(page: Page) {
+function cropPngRows(
+  sourceBuffer: Buffer,
+  startRow: number,
+  height: number,
+) {
+  const source = PNG.sync.read(sourceBuffer);
+  const crop = new PNG({ width: source.width, height });
+  PNG.bitblt(source, crop, 0, startRow, source.width, height, 0, 0);
+  return PNG.sync.write(crop);
+}
+
+async function armOpenVisualChangeProbe(
+  page: Page,
+  captureMotion = false,
+) {
   await page.evaluate(() => {
     const testWindow = window as CloseTestWindow;
     testWindow.__lg2OpenTransitionEnded = false;
     testWindow.__lg2OpenObservationComplete = false;
     testWindow.__lg2OpenLastVisualChangeDelayMs = undefined;
+    testWindow.__lg2OpenTransitionStartMs = undefined;
+    testWindow.__lg2OpenTransitionDurationMs = undefined;
+    testWindow.__lg2OpenFirstFrameState = undefined;
+    testWindow.__lg2OpenMotionStage = "waiting";
 
     const visualSignature = () => {
       const sheet = document.querySelector<HTMLElement>(
@@ -162,6 +202,112 @@ async function armOpenVisualChangeProbe(page: Page) {
     };
 
     window.addEventListener(
+      "lg2:detail-open-transition-start",
+      ((event: CustomEvent<{ startTimeMs: number; durationMs: number }>) => {
+        testWindow.__lg2OpenTransitionStartMs = event.detail.startTimeMs;
+        testWindow.__lg2OpenTransitionDurationMs = event.detail.durationMs;
+        requestAnimationFrame(() => {
+          const sheet = document.querySelector<HTMLElement>(
+            ".lg2-route-layer.v--det",
+          );
+          const panel =
+            sheet?.querySelector<HTMLElement>(".lg2-detail-sheet") ?? null;
+          testWindow.__lg2OpenFirstFrameState = {
+            panelRadius: panel
+              ? getComputedStyle(panel).borderTopLeftRadius
+              : "missing",
+            grabberPresent: Boolean(
+              panel?.querySelector<HTMLElement>(".lg2-grabber"),
+            ),
+            dotCount:
+              sheet?.querySelectorAll(".lg2-gallery-dots i").length ?? -1,
+          };
+        });
+
+        if (testWindow.__LG2_TEST_CAPTURE_OPEN_MOTION__) {
+          const captureAtProgress = async (
+            animation: Animation,
+            progress: number,
+            stage: "25" | "60",
+            releaseEvent: string,
+          ) => {
+            await new Promise<void>((resolve) => {
+              const sample = () => {
+                const currentTime = Number(animation.currentTime ?? 0);
+                if (currentTime >= event.detail.durationMs * progress) {
+                  animation.pause();
+                  const effect = animation.effect as KeyframeEffect | null;
+                  const target = effect?.target as HTMLElement | null;
+                  if (target) {
+                    const originalTime = currentTime;
+                    const targetY = Math.round(
+                      target.getBoundingClientRect().top,
+                    );
+                    let low = Math.max(0, originalTime - 20);
+                    let high = Math.min(
+                      event.detail.durationMs,
+                      originalTime + 20,
+                    );
+                    for (let index = 0; index < 24; index += 1) {
+                      const midpoint = (low + high) / 2;
+                      animation.currentTime = midpoint;
+                      const y = target.getBoundingClientRect().top;
+                      if (y > targetY) low = midpoint;
+                      else high = midpoint;
+                    }
+                    animation.currentTime = (low + high) / 2;
+                  }
+                  requestAnimationFrame(() =>
+                    requestAnimationFrame(() => resolve()),
+                  );
+                  return;
+                }
+                requestAnimationFrame(sample);
+              };
+              requestAnimationFrame(sample);
+            });
+            testWindow.__lg2OpenMotionStage = stage;
+            await new Promise<void>((resolve) =>
+              window.addEventListener(releaseEvent, () => resolve(), {
+                once: true,
+              }),
+            );
+            animation.play();
+          };
+
+          requestAnimationFrame(() => {
+            const sheet = document.querySelector<HTMLElement>(
+              ".lg2-route-layer.v--det",
+            );
+            const transformAnimation = sheet
+              ?.getAnimations()
+              .find((animation) => {
+                const effect = animation.effect as KeyframeEffect | null;
+                return effect?.target === sheet;
+              });
+            if (!transformAnimation) return;
+            void (async () => {
+              await captureAtProgress(
+                transformAnimation,
+                0.25,
+                "25",
+                "lg2:test-release-open-25",
+              );
+              await captureAtProgress(
+                transformAnimation,
+                0.6,
+                "60",
+                "lg2:test-release-open-60",
+              );
+              testWindow.__lg2OpenMotionStage = "released";
+            })();
+          });
+        }
+      }) as EventListener,
+      { once: true },
+    );
+
+    window.addEventListener(
       "lg2:detail-open-transition-end",
       () => {
         const transitionEnd = performance.now();
@@ -189,7 +335,45 @@ async function armOpenVisualChangeProbe(page: Page) {
       },
       { once: true },
     );
-  });
+  }, captureMotion);
+  await page.evaluate((shouldCaptureMotion) => {
+    (window as CloseTestWindow).__LG2_TEST_CAPTURE_OPEN_MOTION__ =
+      shouldCaptureMotion;
+  }, captureMotion);
+}
+
+async function captureMotionFrame(
+  page: Page,
+  stage: "25" | "60",
+  fullPath: string,
+  normalizedPath: string,
+) {
+  await page.waitForFunction(
+    (expectedStage) =>
+      (window as CloseTestWindow).__lg2OpenMotionStage === expectedStage,
+    stage,
+  );
+  const sheetTop = await page
+    .locator(".lg2-route-layer.v--det")
+    .evaluate((sheet) => sheet.getBoundingClientRect().top);
+  const fullBuffer = await screenshotApp(page, fullPath);
+  const outerCornerInset = 32;
+  const startRow = Math.max(
+    0,
+    Math.round(sheetTop) + outerCornerInset,
+  );
+  const normalized = cropPngRows(
+    fullBuffer,
+    startRow,
+    PNG.sync.read(fullBuffer).height - startRow,
+  );
+  writeFileSync(normalizedPath, normalized);
+  return {
+    normalized,
+    height: PNG.sync.read(normalized).height,
+    sheetTop,
+    outerCornerInset,
+  };
 }
 
 async function captureOpenEndAndSettled(
@@ -227,6 +411,111 @@ async function captureOpenEndAndSettled(
   );
   expect(lastVisualChangeDelayMs).toBe(0);
   return { lastVisualChangeDelayMs };
+}
+
+async function captureOpenMotionAndSettled(
+  page: Page,
+  trigger: ReturnType<Page["locator"]>,
+  scenario: (typeof OPEN_FIDELITY_CASES)[number],
+  testInfo: TestInfo,
+) {
+  await armOpenVisualChangeProbe(page, true);
+  await trigger.click();
+
+  await page.waitForFunction(
+    () =>
+      (window as CloseTestWindow).__lg2OpenFirstFrameState !== undefined,
+  );
+  const firstFrameState = await page.evaluate(
+    () => (window as CloseTestWindow).__lg2OpenFirstFrameState!,
+  );
+  expect(firstFrameState.panelRadius).toBe("28px");
+  expect(firstFrameState.grabberPresent).toBe(true);
+  expect(firstFrameState.dotCount).toBe(scenario.expectedDots);
+
+  const pathsFor = (label: string) => testInfo.outputPath(
+    `${scenario.name}-open-${label}.png`,
+  );
+  const at25 = await captureMotionFrame(
+    page,
+    "25",
+    pathsFor("25pct"),
+    pathsFor("25pct-normalized"),
+  );
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("lg2:test-release-open-25")),
+  );
+  const at60 = await captureMotionFrame(
+    page,
+    "60",
+    pathsFor("60pct"),
+    pathsFor("60pct-normalized"),
+  );
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("lg2:test-release-open-60")),
+  );
+
+  await page.waitForFunction(
+    () => (window as CloseTestWindow).__lg2OpenTransitionEnded === true,
+  );
+  const transitionEnd = await screenshotApp(page, pathsFor("transitionend"));
+  await page.waitForFunction(
+    () => (window as CloseTestWindow).__lg2OpenObservationComplete === true,
+  );
+  const settled = await screenshotApp(page, pathsFor("plus-500ms"));
+  const endMismatch = exactPixelMismatch(
+    transitionEnd,
+    settled,
+    pathsFor("transitionend-diff"),
+  );
+  expect(endMismatch).toBe(0);
+
+  const settledFor25 = cropPngRows(
+    settled,
+    at25.outerCornerInset,
+    at25.height,
+  );
+  const settledFor60 = cropPngRows(
+    settled,
+    at60.outerCornerInset,
+    at60.height,
+  );
+  writeFileSync(pathsFor("settled-for-25pct"), settledFor25);
+  writeFileSync(pathsFor("settled-for-60pct"), settledFor60);
+  const mismatch25 = exactPixelMismatch(
+    at25.normalized,
+    settledFor25,
+    pathsFor("25pct-diff"),
+  );
+  const mismatch60 = exactPixelMismatch(
+    at60.normalized,
+    settledFor60,
+    pathsFor("60pct-diff"),
+  );
+  expect(
+    mismatch25,
+    `${scenario.name} changed by ${mismatch25} pixels at 25% motion`,
+  ).toBe(0);
+  expect(
+    mismatch60,
+    `${scenario.name} changed by ${mismatch60} pixels at 60% motion`,
+  ).toBe(0);
+
+  const lastVisualChangeDelayMs = await page.evaluate(
+    () =>
+      (window as CloseTestWindow).__lg2OpenLastVisualChangeDelayMs ??
+      Number.NaN,
+  );
+  expect(lastVisualChangeDelayMs).toBe(0);
+  return {
+    pathsFor,
+    mismatch25,
+    mismatch60,
+    endMismatch,
+    lastVisualChangeDelayMs,
+    sheetTop25: at25.sheetTop,
+    sheetTop60: at60.sheetTop,
+  };
 }
 
 async function captureOneFrameAfterClose(
@@ -644,19 +933,11 @@ for (const scenario of OPEN_FIDELITY_CASES) {
       });
     }
 
-    const transitionEndPath = testInfo.outputPath(
-      `${scenario.name}-open-transitionend.png`,
-    );
-    const settledPath = testInfo.outputPath(
-      `${scenario.name}-open-plus-500ms.png`,
-    );
-    const diffPath = testInfo.outputPath(`${scenario.name}-open-diff.png`);
-    const result = await captureOpenEndAndSettled(
+    const result = await captureOpenMotionAndSettled(
       page,
       trigger,
-      transitionEndPath,
-      settledPath,
-      diffPath,
+      scenario,
+      testInfo,
     );
 
     await expect(
@@ -668,21 +949,31 @@ for (const scenario of OPEN_FIDELITY_CASES) {
       ),
     ).toHaveCount(scenario.expectedImages);
 
+    await testInfo.attach(`${scenario.name}-25pct`, {
+      path: result.pathsFor("25pct"),
+      contentType: "image/png",
+    });
+    await testInfo.attach(`${scenario.name}-60pct`, {
+      path: result.pathsFor("60pct"),
+      contentType: "image/png",
+    });
     await testInfo.attach(`${scenario.name}-transitionend`, {
-      path: transitionEndPath,
+      path: result.pathsFor("transitionend"),
       contentType: "image/png",
     });
     await testInfo.attach(`${scenario.name}-plus-500ms`, {
-      path: settledPath,
+      path: result.pathsFor("plus-500ms"),
       contentType: "image/png",
     });
-    await testInfo.attach(`${scenario.name}-diff`, {
-      path: diffPath,
-      contentType: "image/png",
-    });
-    testInfo.annotations.push({
-      type: `${scenario.name}-last-visual-change-delay`,
-      description: `${result.lastVisualChangeDelayMs.toFixed(1)} ms`,
-    });
+    testInfo.annotations.push(
+      {
+        type: `${testInfo.project.name}-${scenario.name}-motion-mismatch`,
+        description: `25% ${result.mismatch25}px; 60% ${result.mismatch60}px`,
+      },
+      {
+        type: `${scenario.name}-last-visual-change-delay`,
+        description: `${result.lastVisualChangeDelayMs.toFixed(1)} ms`,
+      },
+    );
   });
 }

@@ -1,0 +1,45 @@
+The owner filmed this in a PRIVATE window, so it is not a stale bundle. The
+defect is unchanged. Measured from his 60 fps capture:
+
+  1.73 s        sheet starts rising
+  1.73 - 2.28 s the content panel has SQUARE top corners and NO grabber for the
+                entire 550 ms of the slide
+  ~2.30 s       within ~40 ms of transitionend both appear
+
+So nothing is painted late. The rounded corners are MISSING THROUGHOUT THE
+ANIMATION and return when the transform ends. That is why your test passes:
+both frames you compare — transitionend and +500 ms — are after the change.
+
+PRIMARY HYPOTHESIS, test it first: on iOS Safari, `overflow: hidden` combined
+with `border-radius` is not reliably clipped while an ANCESTOR is animating a
+`transform`. Safari drops the clip for the duration. Our sheet is exactly that
+shape: a transformed ancestor containing a radius + overflow:hidden panel.
+Standard remedies, in order of preference:
+  a) put the radius on the element that is itself transformed, not on a
+     descendant of it;
+  b) replace `overflow:hidden` clipping with `clip-path: inset(0 round 30px)`
+     or a `mask-image`, which Safari composites correctly;
+  c) promote the clipping element to its own layer for the duration.
+Report which you used and why.
+
+FIX THE TEST TOO — it is measuring the wrong instant. The requirement is not
+"the sheet looks right when it stops". It is: THE SHEET LOOKS EXACTLY AS IT
+WILL AT REST FROM THE FIRST FRAME IT MOVES. Assert it two ways:
+  1. Computed state at the first animation frame: inside a requestAnimationFrame
+     immediately after the opening class is applied, read the panel's computed
+     border-radius, the presence of the grabber node, and the gallery dots.
+     Fail if any differs from its settled value.
+  2. Pixel test in the sheet's own coordinate space: capture a frame at ~25% and
+     ~60% of the transition, translate the crop by the sheet's current
+     translateY, and compare against the settled frame. Zero differing pixels.
+Run both on real WebKit, not only Chromium — this is a Safari-specific clip
+bug and Chromium will not reproduce it.
+
+SEPARATELY, audit every radius in the guest guide. The owner reports corners
+that do not meet the straight edges cleanly in places. List every element with
+a border-radius, its value, whether it clips children, and whether any child
+carries a different radius than its parent's inner edge. A child inside a
+parent with radius R and border B must carry radius R−B, never R. Report the
+mismatches you find before changing anything.
+
+Report and STOP.

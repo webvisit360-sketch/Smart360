@@ -1338,6 +1338,16 @@ export default function LivingGuideGuestShell({
         transitionSheet.removeEventListener("transitionend", onTransitionEnd);
 
       flushSync(() => setDetailTransitionPhase("open"));
+      const openStartTimeMs = performance.now();
+      performance.mark("lg2-detail-open-transition-start");
+      window.dispatchEvent(
+        new CustomEvent("lg2:detail-open-transition-start", {
+          detail: {
+            startTimeMs: openStartTimeMs,
+            durationMs: 550,
+          },
+        }),
+      );
       window.requestAnimationFrame(() => {
         rootRef.current
           ?.querySelector<HTMLElement>(".lg2-route-layer.v--det .lg2-detail-back")

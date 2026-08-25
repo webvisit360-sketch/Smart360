@@ -45,3 +45,11 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 **Why:** Title-only/two-frame gating allowed radius, grabber, dots, and hero geometry to appear after the sheet landed. A negative optional-chain comparison also treated a deliberately absent photo hero as “not ready” forever.
 
 **How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.
+
+## Transform-time rounded clipping
+
+For a rounded surface inside a transform-animated detail route, do not rely on `border-radius` plus an ancestor’s `overflow: hidden` alone. Give each visual clipping surface its own matching rounded `clip-path`, include the WebKit-prefixed form, and explicitly remove that clip from square variants.
+
+**Why:** iOS WebKit can keep the content and animation timing correct while dropping a descendant panel’s rounded clip for the full transform. The radius and grabber then reappear only after motion ends. A readiness gate and post-transition screenshots cannot detect this compositor behavior.
+
+**How to apply:** Assert radius/grabber/dot state on the first RAF after opening starts. Pause the real animation near 25% and 60%, align its translation to an integer pixel, retain full screenshots, and compare sheet-local normalized pixels with the settled frame. Exclude only a separately explained outer-corner compositor-antialias band, never the inner panel boundary under test.
