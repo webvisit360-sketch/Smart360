@@ -731,6 +731,7 @@ export default function LivingGuideGuestShell({
     const [showLanguages, setShowLanguages] = useState(false);
   const [orderItemId, setOrderItemId] = useState<string | null>(null);
   const [showOrders, setShowOrders] = useState(false);
+  const [messageDraft, setMessageDraft] = useState("");
   const messagePasswordRequired = Boolean(tenant.orderPasswordConfigured);
 
   // Reload safety for the stale-bundle check (mounted in GuestHost): never
@@ -856,69 +857,84 @@ export default function LivingGuideGuestShell({
   }, [isDetailPresentation, location, resetNavigationState]);
 
   const captureHeldView = useCallback((resetStack: boolean) => {
-    const source = rootRef.current?.querySelector<HTMLElement>(
-      ".lg2-route-layer > .lg2-view",
-    );
-    if (!source) {
-      if (resetStack) heldViewStackRef.current = [];
-      return;
-    }
+    try {
+      const source = rootRef.current?.querySelector<HTMLElement>(
+        ".lg2-route-layer > .lg2-view",
+      );
+      if (!source) {
+        if (resetStack) heldViewStackRef.current = [];
+        console.warn("[living-guide] Held background unavailable: source view missing");
+        return;
+      }
 
-    const clone = source.cloneNode(true) as HTMLElement;
-    if (!sanitizeHeldClone(source, clone)) {
-      if (resetStack) heldViewStackRef.current = [];
-      return;
-    }
-    const sourceBottomNav =
-      rootRef.current?.querySelector<HTMLElement>(":scope > .lg2-bottom-nav");
-    const bottomNavClone = sourceBottomNav?.cloneNode(true) as
-      | HTMLElement
-      | undefined;
-    if (
-      sourceBottomNav &&
-      bottomNavClone &&
-      !sanitizeHeldClone(sourceBottomNav, bottomNavClone)
-    ) {
-      if (resetStack) heldViewStackRef.current = [];
-      return;
-    }
-    const sourceScrollers = selfAndDescendants(source, "[data-lg-scroll]");
-    const cloneScrollers = selfAndDescendants(clone, "[data-lg-scroll]");
-    sourceScrollers.forEach((scroller, index) => {
+      const clone = source.cloneNode(true) as HTMLElement;
+      if (!sanitizeHeldClone(source, clone)) {
+        if (resetStack) heldViewStackRef.current = [];
+        console.warn(
+          "[living-guide] Held background refused because the source owns live form/media state; navigation continues with the real view",
+        );
+        return;
+      }
+      const sourceBottomNav =
+        rootRef.current?.querySelector<HTMLElement>(":scope > .lg2-bottom-nav");
+      const bottomNavClone = sourceBottomNav?.cloneNode(true) as
+        | HTMLElement
+        | undefined;
+      if (
+        sourceBottomNav &&
+        bottomNavClone &&
+        !sanitizeHeldClone(sourceBottomNav, bottomNavClone)
+      ) {
+        if (resetStack) heldViewStackRef.current = [];
+        console.warn(
+          "[living-guide] Held bottom navigation refused; route navigation continues",
+        );
+        return;
+      }
+      const sourceScrollers = selfAndDescendants(source, "[data-lg-scroll]");
+      const cloneScrollers = selfAndDescendants(clone, "[data-lg-scroll]");
+      sourceScrollers.forEach((scroller, index) => {
       if (cloneScrollers[index]) {
         cloneScrollers[index]!.dataset.lgHeldScrollTop = String(
           scroller.scrollTop,
         );
       }
-    });
-    const sourceGalleries = selfAndDescendants(
+      });
+      const sourceGalleries = selfAndDescendants(
       source,
       "[data-lg-gallery],[data-lg-scroll-x]",
     );
-    const cloneGalleries = selfAndDescendants(
+      const cloneGalleries = selfAndDescendants(
       clone,
       "[data-lg-gallery],[data-lg-scroll-x]",
     );
-    sourceGalleries.forEach((gallery, index) => {
+      sourceGalleries.forEach((gallery, index) => {
       if (cloneGalleries[index]) {
         cloneGalleries[index]!.dataset.lgHeldScrollLeft = String(
           gallery.scrollLeft,
         );
       }
-    });
-    const surface = document.createElement("div");
-    surface.className = "lg2-held-surface";
-    surface.dataset.lgHeldCompleteRoute = "true";
-    surface.dataset.lgHeldDetail = String(
+      });
+      const surface = document.createElement("div");
+      surface.className = "lg2-held-surface";
+      surface.dataset.lgHeldCompleteRoute = "true";
+      surface.dataset.lgHeldDetail = String(
       source.parentElement?.classList.contains("v--det") === true,
     );
-    surface.setAttribute("aria-hidden", "true");
-    surface.setAttribute("inert", "");
-    surface.append(clone);
-    heldViewStackRef.current = [
+      surface.setAttribute("aria-hidden", "true");
+      surface.setAttribute("inert", "");
+      surface.append(clone);
+      heldViewStackRef.current = [
       ...(resetStack ? [] : heldViewStackRef.current),
       { surface, bottomNav: bottomNavClone ?? null },
-    ].slice(-MAX_HELD_VIEW_DEPTH);
+      ].slice(-MAX_HELD_VIEW_DEPTH);
+    } catch (error) {
+      if (resetStack) heldViewStackRef.current = [];
+      console.warn(
+        "[living-guide] Held background capture failed; navigation continues with the real view",
+        error,
+      );
+    }
   }, []);
 
   const syncHeldViewStack = useCallback((holdImmediate = true) => {
@@ -1368,10 +1384,15 @@ export default function LivingGuideGuestShell({
         ".lg2-route-layer.v--det",
       );
       if (!sheet) return;
-      const ready = await waitForDetailVisualReadiness(
-        sheet,
-        () => cancelled,
-      );
+      const ready =
+        screen === "messages"
+          ? await (async () => {
+              await document.fonts.ready;
+              await nextPaintFrame();
+              await nextPaintFrame();
+              return !cancelled && sheet.isConnected;
+            })()
+          : await waitForDetailVisualReadiness(sheet, () => cancelled);
       if (!ready || cancelled) return;
 
       const tap = performance.getEntriesByName("lg2-detail-tap", "mark").at(-1);
@@ -1842,12 +1863,15 @@ export default function LivingGuideGuestShell({
               setMessageAccessError(message);
               setShowSignIn(true);
             }}
+            draft={messageDraft}
+            onDraftChange={setMessageDraft}
           />
         )}
 
         </div>
 
-        {screen === "detail" && categoryContext && (
+        {((screen === "detail" && categoryContext) ||
+          (screen === "messages" && isDetailPresentation)) && (
           <div
             key={location}
             className={`lg2-route-layer v v--det${
@@ -1860,6 +1884,7 @@ export default function LivingGuideGuestShell({
             data-detail-transition={detailTransitionPhase}
             style={detailRouteStyle}
           >
+          {screen === "detail" && categoryContext ? (
           <DetailView
             category={categoryContext.category}
             itemId={routeItemId}
@@ -1879,6 +1904,29 @@ export default function LivingGuideGuestShell({
             }
             onOrderClick={requestOrder}
           />
+          ) : (
+            <MessagesView
+              tenant={tenant}
+              slug={slug}
+              guest={guest}
+              canSend={messageAccessReady}
+              password={messagePasswordRequired ? messagePassword : undefined}
+              credentialsRevision={credentialsRevision}
+              credentialsCancelRevision={credentialsCancelRevision}
+              lang={lang}
+              t={t}
+              onBack={() => closePresentedView(`/${slug}/home`)}
+              onCredentialsRequired={requestCredentials}
+              onCredentialsRejected={(message) => {
+                setMessagePassword("");
+                forgetRememberedOrderPassword(slug);
+                setMessageAccessError(message);
+                setShowSignIn(true);
+              }}
+              draft={messageDraft}
+              onDraftChange={setMessageDraft}
+            />
+          )}
           </div>
         )}
       </main>

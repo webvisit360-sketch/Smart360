@@ -1749,3 +1749,97 @@ for (const scenario of OPEN_FIDELITY_CASES) {
     );
   });
 }
+
+test("input-bearing Living Guide surfaces always open and close", async ({
+  page,
+}) => {
+  await page.goto("meli-pu/home?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+
+  const messagesButton = page.getByRole("button", { name: /^Sporočila$/i });
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await messagesButton.click();
+    await expect(page.getByTestId("screen-messages")).toBeVisible();
+    await page.getByTestId("messages-back").click();
+    await expect(page.getByTestId("screen-home")).toBeVisible();
+  }
+
+  await messagesButton.click();
+  const draft = `Osnutek ${Date.now()}`;
+  await page.getByTestId("messages-input").fill(draft);
+  await page.getByTestId("messages-back").click();
+  await messagesButton.click();
+  await expect(page.getByTestId("messages-input")).toHaveValue(draft);
+  await page.getByTestId("messages-back").click();
+
+  await page
+    .getByRole("button", { name: /iskanje|search/i })
+    .first()
+    .click();
+  await expect(page.locator("[data-lg-search-sheet] input[type=search]")).toBeVisible();
+  await page.locator("[data-lg-search-sheet] input[type=search]").fill("morje");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-lg-search-sheet]")).toHaveCount(0);
+
+  await page.evaluate(() => {
+    localStorage.removeItem("smart360:living-guide:guest:meli-pu");
+    localStorage.removeItem("smart360:living-guide:order-password:meli-pu");
+  });
+  await page.reload();
+  await settleVisibleRoute(page);
+  await messagesButton.click();
+  await page.getByTestId("messages-input").fill("Prijavni preizkus");
+  await page.getByTestId("messages-send").click();
+  await expect(page.getByRole("dialog").locator("input").first()).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: /pozneje|later/i }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByTestId("messages-input")).toHaveValue("Prijavni preizkus");
+
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "smart360:living-guide:guest:meli-pu",
+      JSON.stringify({ unit: "E2E", name: "E2E", phone: "040000000" }),
+    );
+    localStorage.setItem(
+      "smart360:living-guide:order-password:meli-pu",
+      "e2e-non-submitting-password",
+    );
+  });
+  await page.goto("meli-pu/s/offer?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+  await page.getByRole("tab", { name: /^Local products$/i }).click();
+  await page.getByRole("button", {
+    name: /^Homegrown organic olive oil/i,
+  }).click();
+  await expect(page.locator("[data-testid^=order-cta-]")).toBeVisible();
+  await page.locator("[data-testid^=order-cta-]").click();
+  await expect(page.getByTestId("order-form")).toBeVisible();
+  await page.getByTestId("order-form").getByRole("button", {
+    name: /nazaj|back/i,
+  }).click();
+  await expect(page.getByTestId("order-form")).toHaveCount(0);
+});
+
+test("held-background failure never blocks nested navigation", async ({ page }) => {
+  await page.goto("meli-pu/s/stay?ui=living-guide&theme=dan");
+  await settleVisibleRoute(page);
+  await openHowThingsWork(page);
+  await page.evaluate(() => {
+    const original = Element.prototype.cloneNode;
+    let failOnce = true;
+    Element.prototype.cloneNode = function patchedCloneNode(deep?: boolean) {
+      if (failOnce) {
+        failOnce = false;
+        Element.prototype.cloneNode = original;
+        throw new DOMException("Intentional held-background test failure");
+      }
+      return original.call(this, deep);
+    };
+  });
+  await page.getByRole("button", { name: /^Water heater$/i }).click();
+  await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+    "data-detail-transition",
+    "open",
+  );
+  await expect(page.getByText(/^Water heater$/i).first()).toBeVisible();
+});

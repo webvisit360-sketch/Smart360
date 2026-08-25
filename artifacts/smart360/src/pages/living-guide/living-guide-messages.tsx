@@ -22,6 +22,8 @@ export function MessagesView({
   onBack,
   onCredentialsRequired,
   onCredentialsRejected,
+  draft,
+  onDraftChange,
 }: {
   tenant: any;
   slug: string;
@@ -35,9 +37,12 @@ export function MessagesView({
   onBack: () => void;
   onCredentialsRequired: () => void;
   onCredentialsRejected: (message: string) => void;
+  draft: string;
+  onDraftChange: (draft: string) => void;
 }) {
   const queryClient = useQueryClient();
-  const [body, setBody] = useState("");
+  const body = draft;
+  const setBody = onDraftChange;
   const [pendingSend, setPendingSend] = useState(false);
 
   // A typed draft or an in-flight send must never be lost to the
