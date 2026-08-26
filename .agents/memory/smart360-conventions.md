@@ -46,6 +46,11 @@ description: Durable decisions for the Smart360 multi-tenant guest PWA
 
 ## Kanonični naslov (publicUrl/QR)
 - `guestUrl()` bere APP_DOMAIN → REPLIT_DOMAINS → REPLIT_DEV_DOMAIN; brez trdo kodirane domene (vrže napako, če ni nobene). Nalepke ne smejo v tisk, dokler produkcijska domena res ne deluje — menjava domene NI pokrita s TenantAlias (ta pokriva samo preimenovanje sluga znotraj iste domene). Ob preklopu na smart360.info nastavi APP_DOMAIN v produkciji.
+- Produkcijske QR-kode in deljene povezave morajo ostati izključno na branded domeni `smart360.info`; `replit.app` ni dovoljen kot vidni gostujoči nadomestni naslov.
+
+**Why:** Lastnik je ob težavi z združljivostjo certifikata izrecno izbral odpravo TLS-verige pri Replitu namesto spremembe QR-kod ali javne domene.
+
+**How to apply:** Napake zaupanja certifikatu rešuj na ravni Replitove custom-domain infrastrukture; brez nove izrecne odobritve ne preusmerjaj QR-kod ali `publicUrl` na generirano Replitovo domeno.
 
 ## Passkey/WebAuthn produkcija (avg 2026)
 - Deployment ima LOČEN komplet skrivnosti od delovnega prostora — posodobitev workspace secrets NE vpliva na objavo; produkcijske vrednosti nastavi kot production env vars (setEnvVars environment:"production") ali v Publishing UI.
