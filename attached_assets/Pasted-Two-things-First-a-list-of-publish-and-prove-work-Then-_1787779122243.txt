@@ -1,0 +1,49 @@
+Two things. First a list of publish-and-prove work. Then one question I need
+answered before the owner sends a single sales letter.
+
+PART 1 — SHIP WHAT IS ALREADY DONE, IN THIS ORDER
+
+A. Publish the frontend. Items 7 and 9 are done in dev and broken in
+   production. The owner personally reported the Messages button. It is still
+   broken for guests. Publish, then run a real-device check on a phone:
+   the home Messages button, the Back button inside Messages, and the first
+   opening of a detail sheet with a cold image cache. Keep the evidence.
+
+B. The SPA fallback. /definitely-missing.xyz still returns 200 text/html. The
+   standing rule is that the fallback must never answer a request carrying a
+   file extension. Return 404. This is the rule that broke the brand PNG in
+   e-mail; it is still broken for everything else.
+
+C. Prove the e-mail. Not the renderer tests — the delivery. Send all six
+   templates and one real host invitation to a real inbox. Open each one twice,
+   once with images enabled and once with images blocked. Report for each:
+   did it arrive, did it land in inbox or spam, did the colour band survive,
+   did the mark appear, is the claim link clickable and does claiming work.
+   An invitation system that has never delivered an invitation is not finished.
+
+D. The theme. Prove data-t changes across two real runs at different times, on
+   a device, with retained evidence. A deterministic clock test is not proof.
+
+PART 2 — THE QUESTION
+
+The owner is about to send sales letters to campsites and hotels. Those letters
+promise specific capabilities. For EACH of the following state exactly one of:
+EXISTS and live · EXISTS in dev · PARTIAL · DOES NOT EXIST — and one sentence.
+
+ 1. Creating events and showing a calendar of local happenings, entered by the
+    host, with date, time and place.
+ 2. Push notifications sent to every guest currently at the property.
+ 3. Renting out equipment — bikes, SUP, e-bikes, loungers — shown to the guest
+    with availability.
+ 4. Selling local farm produce to guests through the guide.
+ 5. Multiple editor accounts for one tenant. You already said no. Confirm what
+    it would take.
+ 6. Per-tenant branding: the host's own name, colours and photographs, so the
+    guide looks like their house and not like our tool.
+ 7. GPX trail files a guest can take into their own phone.
+ 8. A map of the property itself — pitches, sanitary blocks, reception.
+
+Do not soften any answer. The owner will put these claims in writing to paying
+customers, and I would rather he changes the letter than the customer finds out.
+
+Report and STOP.
