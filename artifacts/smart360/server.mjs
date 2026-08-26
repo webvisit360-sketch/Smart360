@@ -11,9 +11,10 @@
  *   /version.json  -> no-store                        (stale-bundle check)
  *   other files    -> public, max-age=3600
  *
- * SPA fallback: any unknown GET path serves index.html (replaces the
- * platform rewrite rule). Conditional requests answered with 304 via
- * Last-Modified so "no-cache" stays cheap.
+ * SPA fallback: an unknown extensionless GET path serves index.html (replaces
+ * the platform rewrite rule). A missing path with a file extension always
+ * returns 404. Conditional requests are answered with 304 via Last-Modified
+ * so "no-cache" stays cheap.
  */
 import { createServer } from "node:http";
 import { createReadStream } from "node:fs";
@@ -124,10 +125,11 @@ const server = createServer(async (req, res) => {
     }
     let st = await stat(filePath).then((s) => (s.isFile() ? s : null)).catch(() => null);
     if (!st) {
-      // Build artifacts must 404 loudly — serving index.html for a missing
-      // hashed asset would hand HTML to a <script> tag and hide the problem.
-      if (pathname.startsWith("/assets/") || pathname === "/version.json") {
-        fail(res, 404, req, "build artifact missing from dist");
+      // Missing file-like requests must never receive the SPA document. That
+      // would turn absent images, manifests, fonts, and arbitrary extensions
+      // into a misleading 200 text/html response.
+      if (extname(pathname)) {
+        fail(res, 404, req, "file-like path missing from dist");
         return;
       }
       // SPA fallback — client-side routing owns every other unknown path.
