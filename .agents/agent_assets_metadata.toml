@@ -330,3 +330,17 @@ mtime_ms = 1787661651992
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f409a924-dbae-4ef5-9f28-95889a900393/79d3cbe0-2cd6-4b3d-bba4-cd905ae184d0"
 storage_version_token = "1787661661630231"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "7LeQbP7HkFaHSmGW7TnXz"
+uri = "file://exports/smart360-living-guide-nine-locale-worksheet.txt"
+type = "text"
+title = "Living Guide nine-locale worksheet"
+description = "UTF-8 worksheet with all 133 unique Living Guide UI keys, current SL/EN/DE/IT values, blank NL/FR/CS/HU/HR fields, 11 plural concepts, and the 12 binding-key references."
+logical_id = "80e5deac-8294-4b1f-b6c3-409a586d6b8e"
+content_hash = "sha256:b3758fceee02301ed24d84ad5eb5398db5fe1eb965aaf9a65bb2d233a922aede"
+size = 24942
+mtime_ms = 1787775738486
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/80e5deac-8294-4b1f-b6c3-409a586d6b8e/faf761b5-adcb-4284-96c1-d700201ebed1"
+storage_version_token = "1787776510692830"
+content_type = "text/plain"

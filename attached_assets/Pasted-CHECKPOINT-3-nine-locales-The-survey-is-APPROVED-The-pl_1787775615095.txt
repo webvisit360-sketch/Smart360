@@ -1,0 +1,48 @@
+CHECKPOINT 3 — nine locales. The survey is APPROVED. The plan is approved with
+cuts. Do not start implementing until the two measurements below are in.
+
+WHAT I ACCEPT AS YOU WROTE IT
+· One shared locale catalog replacing all 15-17 independent lists.
+· sl and en mandatory, the other seven tenant-selectable.
+· The enablement gate: a locale cannot be turned on until reviewed English
+  coverage is complete. This is better than what I specified. Keep it.
+· Layout hardening before any locale is enabled.
+
+WHAT I CUT — do not build these now
+· The 102 admin cockpit strings stay Slovenian. The host is Slovenian. Revisit
+  only when we sell to a non-Slovenian host.
+· reviewed_by. There is one editor.
+· origin: manual | import | machine, and the draft/reviewed dual publication
+  state. No machine translation exists in this pipeline and none is planned —
+  all translations are written by hand and reviewed before they arrive. Keep
+  source_hash, stale, and reviewed_at. That is what stops the guide lying.
+  Drop the rest of Phase 6.
+· The 73 legacy keys stay tenant-overridable Slovenian defaults for now.
+
+WHAT MOVES TO THE FRONT, SEPARATE FROM THIS WORK
+Stale translations are currently served to guests as if they were current. That
+is a live defect at four locales, today, before any new language exists. Fix it
+on its own: a stale translation must not be presented as the translated value.
+Propose the smallest correct behaviour — fall back to reviewed English, or to
+the source — and ship that first, independently.
+
+TWO MEASUREMENTS I REQUIRE BEFORE IMPLEMENTATION
+1. Repeat the full 390 px overflow audit for FRENCH and CROATIAN. You measured
+   only nl, cs and hu. French is the likeliest of the five to break the layout.
+   Measure at minimum: every bottom-nav slot, the detail back control, the 360°
+   control, the map action, the cover CTA and the native language name.
+2. Report which of the nine locales fail any compact control, with available
+   and required widths, as you did for Dutch.
+
+ONE THING I NEED FROM YOU AS A FILE
+Export the 145 Living Guide UI keys with their current sl/en/de/it values as a
+single UTF-8 file — one key per block, key name, then each locale on its own
+line. I will write the nl, fr, cs, hu and hr values by hand and return the file.
+Include the 11 plural concepts with all their Slovenian forms and the English
+fallback forms, and mark clearly which keys are plural. Do not translate
+anything yourself.
+
+Then give me a revised plan with the cuts applied, an effort estimate per phase,
+and one sentence naming what ships first.
+
+Report and STOP.

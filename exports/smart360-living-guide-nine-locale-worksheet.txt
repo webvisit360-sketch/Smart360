@@ -1,0 +1,2010 @@
+# Smart360 Living Guide — hand-translation worksheet
+# UTF-8. Values copied verbatim from artifacts/smart360/src/pages/guest/i18n.ts.
+# SOURCE-VERIFIED UNIQUE UI KEYS: 133
+# Correction: the earlier survey count of 145 double-counted 12 binding sign-in references.
+# Those 12 references are listed in the appendix; they point to existing keys and are not duplicate translation blocks.
+# Fill only blank nl/fr/cs/hu/hr values. Preserve placeholders exactly: {name}, {lang}, {count}, {n}, {{index}}.
+
+TYPE: UI
+KEY: UI.lg.guide
+sl: Vaš vodnik
+en: Your guide
+de: Ihr Reiseführer
+it: La vostra guida
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.openGuide
+sl: Odpri vodnik
+en: Open guide
+de: Reiseführer öffnen
+it: Apri la guida
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.tour.view
+sl: 360° ogled
+en: 360° tour
+de: 360°-Rundgang
+it: Tour a 360°
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.tour.hint
+sl: Povlecite za pogled naokoli
+en: Drag to look around
+de: Ziehen, um sich umzusehen
+it: Trascina per guardarti intorno
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.home
+sl: Domov
+en: Home
+de: Start
+it: Home
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.stay
+sl: Nastanitev
+en: Accommodation
+de: Unterkunft
+it: Alloggio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.offer
+sl: Ponudba
+en: Offers
+de: Angebot
+it: Offerta
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.area
+sl: Okolica
+en: Surroundings
+de: Umgebung
+it: Dintorni
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.program
+sl: Program
+en: Programme
+de: Programm
+it: Programma
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.messages
+sl: Sporočila
+en: Messages
+de: Nachrichten
+it: Messaggi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.closed
+sl: Ta pogovor je zaprt.
+en: This conversation is closed.
+de: Diese Unterhaltung ist geschlossen.
+it: Questa conversazione è chiusa.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.empty
+sl: Pošljite vprašanje gostitelju. Odgovor se bo prikazal tukaj.
+en: Send your host a question. Their reply will appear here.
+de: Senden Sie Ihrem Gastgeber eine Frage. Die Antwort erscheint hier.
+it: Invia una domanda al tuo host. La risposta apparirà qui.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.placeholder
+sl: Napišite sporočilo…
+en: Write a message…
+de: Nachricht schreiben…
+it: Scrivi un messaggio…
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.send
+sl: Pošlji sporočilo
+en: Send message
+de: Nachricht senden
+it: Invia messaggio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.you
+sl: Vi
+en: You
+de: Sie
+it: Tu
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.sendError
+sl: Sporočila ni bilo mogoče poslati. Poskusite znova.
+en: The message could not be sent. Please try again.
+de: Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.
+it: Impossibile inviare il messaggio. Riprova.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.rateLimit
+sl: Poslali ste preveč sporočil naenkrat. Počakajte minuto in poskusite znova.
+en: You sent too many messages at once. Wait a minute and try again.
+de: Sie haben zu viele Nachrichten auf einmal gesendet. Warten Sie eine Minute und versuchen Sie es erneut.
+it: Hai inviato troppi messaggi insieme. Attendi un minuto e riprova.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.accessRequired
+sl: Za pošiljanje sporočil vpišite ime ter parcelo, sobo ali apartma. Če je nastanitev zaščitena, vpišite tudi geslo.
+en: To send messages, enter your name and pitch, room or apartment. If the property is protected, also enter the password.
+de: Geben Sie zum Senden von Nachrichten Ihren Namen und Ihren Stellplatz, Ihr Zimmer oder Apartment ein. Wenn die Unterkunft geschützt ist, geben Sie auch das Passwort ein.
+it: Per inviare messaggi, inserisci il nome e la piazzola, la camera o l'appartamento. Se la struttura è protetta, inserisci anche la password.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.invalidPassword
+sl: Napačno geslo. Prijavite se znova.
+en: Wrong password. Sign in again.
+de: Falsches Passwort. Melden Sie sich erneut an.
+it: Password errata. Accedi di nuovo.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.msg.signIn
+sl: Prijava za sporočila
+en: Sign in for messages
+de: Für Nachrichten anmelden
+it: Accedi per i messaggi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.messagesUnavailable
+sl: na voljo v naslednjem koraku
+en: available in the next step
+de: im nächsten Schritt verfügbar
+it: disponibile nel prossimo passaggio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.home.today
+sl: Danes
+en: Today
+de: Heute
+it: Oggi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.home.allProgram
+sl: ves program
+en: full programme
+de: ganzes Programm
+it: programma completo
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.home.more
+sl: več
+en: more
+de: mehr
+it: altro
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.home.map
+sl: Zemljevid
+en: Map
+de: Karte
+it: Mappa
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.home.forYou
+sl: Za vas
+en: For you
+de: Für Sie
+it: Per voi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.home.allOffers
+sl: vsa ponudba
+en: all offers
+de: alle Angebote
+it: tutte le offerte
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.exploreTitle
+sl: Odkrij okolico
+en: Explore the area
+de: Umgebung entdecken
+it: Scopri i dintorni
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nearby
+sl: Najbližje
+en: Nearest
+de: In der Nähe
+it: Più vicini
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.exploreGroup.experiences
+sl: Doživetja
+en: Experiences
+de: Erlebnisse
+it: Esperienze
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.exploreGroup.foodDrink
+sl: Hrana in pijača
+en: Food and drink
+de: Essen und Trinken
+it: Cibo e bevande
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.exploreGroup.natureTrails
+sl: Narava in poti
+en: Nature and trails
+de: Natur und Wege
+it: Natura e sentieri
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.exploreGroup.sights
+sl: Znamenitosti
+en: Sights
+de: Sehenswürdigkeiten
+it: Attrazioni
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.exploreGroup.services
+sl: Storitve
+en: Services
+de: Dienstleistungen
+it: Servizi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.offerGroup.najem
+sl: Najem
+en: Rental
+de: Verleih
+it: Noleggio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.offerGroup.izletiPrevozi
+sl: Izleti in prevozi
+en: Trips and transfers
+de: Ausflüge und Transfers
+it: Gite e trasferimenti
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.offerGroup.domaciIzdelki
+sl: Domači izdelki
+en: Local products
+de: Hausgemachte Produkte
+it: Prodotti locali
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.offerGroup.priHisi
+sl: Pri hiši
+en: On site
+de: Vor Ort
+it: In loco
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.stayGroup.vaseBivanje
+sl: Vaše bivanje
+en: Your stay
+de: Ihr Aufenthalt
+it: Il vostro soggiorno
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.stayGroup.prihodDostop
+sl: Prihod in dostop
+en: Arrival and access
+de: Anreise und Zugang
+it: Arrivo e accesso
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.stayGroup.prakticno
+sl: Praktično
+en: Practical
+de: Praktisches
+it: Info pratiche
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.search.title
+sl: Iskanje
+en: Search
+de: Suche
+it: Cerca
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.search.placeholder
+sl: Poiščite vsebino
+en: Search the guide
+de: Im Reiseführer suchen
+it: Cerca nella guida
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.search.empty
+sl: Ni zadetkov.
+en: No results.
+de: Keine Ergebnisse.
+it: Nessun risultato.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.nav.primary
+sl: Glavna navigacija
+en: Main navigation
+de: Hauptnavigation
+it: Navigazione principale
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.language
+sl: Jezik: {lang}
+en: Language: {lang}
+de: Sprache: {lang}
+it: Lingua: {lang}
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.languagePicker.title
+sl: Izberite jezik
+en: Choose a language
+de: Sprache auswählen
+it: Scegli la lingua
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.title
+sl: Dobrodošli
+en: Welcome
+de: Willkommen
+it: Benvenuti
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.description
+sl: Za naročila in sporočila potrebujemo vaše podatke in geslo, ki vam ga je povedal gostitelj.
+en: For orders and messages, we need your details and the password your host gave you.
+de: Für Bestellungen und Nachrichten benötigen wir Ihre Daten und das Passwort, das Sie von Ihrem Gastgeber erhalten haben.
+it: Per ordini e messaggi abbiamo bisogno dei tuoi dati e della password che ti ha fornito l’host.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.unit
+sl: Parcela / soba / apartma · obvezno
+en: Pitch / room / apartment · required
+de: Stellplatz / Zimmer / Apartment · erforderlich
+it: Piazzola / camera / appartamento · obbligatorio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.unitPlaceholder
+sl: npr. B-14
+en: e.g. B-14
+de: z. B. B-14
+it: ad es. B-14
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.name
+sl: Ime in priimek · obvezno
+en: Full name · required
+de: Vor- und Nachname · erforderlich
+it: Nome e cognome · obbligatorio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.namePlaceholder
+sl: npr. Ana Novak
+en: e.g. Ana Novak
+de: z. B. Ana Novak
+it: ad es. Ana Novak
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.phone
+sl: Telefon · obvezno
+en: Phone · required
+de: Telefon · erforderlich
+it: Telefono · obbligatorio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.phonePlaceholder
+sl: npr. +386 41 998 660
+en: +1 234 567 8900
+de: +49 151 0000000
+it: +39 300 000 0000
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.password
+sl: Geslo · obvezno
+en: Password · required
+de: Passwort · erforderlich
+it: Password · obbligatorio
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.passwordPlaceholder
+sl: geslo, ki vam ga je povedal gostitelj
+en: the password your host gave you
+de: das Passwort, das Sie von Ihrem Gastgeber erhalten haben
+it: la password che ti ha fornito l’host
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.save
+sl: Shrani
+en: Save
+de: Speichern
+it: Salva
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.welcome.later
+sl: Pozneje — najprej si samo ogledam
+en: Later — I just want to look around first
+de: Später — ich möchte mich zuerst nur umsehen
+it: Più tardi — per ora voglio solo dare un’occhiata
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.greeting.generic
+sl: Dobrodošli
+en: Welcome
+de: Willkommen
+it: Benvenuti
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.greeting.named
+sl: {name}, dobrodošli
+en: Welcome, {name}
+de: Willkommen, {name}
+it: Benvenuto/a, {name}
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.greeting.ordersTo
+sl: naročila gredo na:
+en: orders go to:
+de: Bestellungen gehen an:
+it: gli ordini vanno a:
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.greeting.change
+sl: spremeni
+en: change
+de: ändern
+it: modifica
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.call
+sl: Pokliči
+en: Call
+de: Anrufen
+it: Chiama
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.directions
+sl: Kje je
+en: Where is it?
+de: Wo ist es?
+it: Dov’è?
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.website
+sl: Spletna stran
+en: Website
+de: Webseite
+it: Sito web
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.back
+sl: Nazaj
+en: Back
+de: Zurück
+it: Indietro
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.maps
+sl: Google Maps
+en: Google Maps
+de: Google Maps
+it: Google Maps
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.copy
+sl: Kopiraj
+en: Copy
+de: Kopieren
+it: Copia
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.report
+sl: Prijavi napako
+en: Report a problem
+de: Problem melden
+it: Segnala un problema
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.route
+sl: Vodenje po trasi
+en: Route guidance
+de: Routenführung
+it: Guida sul percorso
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.action.gpx
+sl: Prenesi GPX
+en: Download GPX
+de: GPX herunterladen
+it: Scarica GPX
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.hours.alwaysValue
+sl: 24/7
+en: 24/7
+de: 24/7
+it: 24/7
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.hours.alwaysLabel
+sl: odprto
+en: open
+de: geöffnet
+it: aperto
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.hours.openUntil
+sl: odprto do
+en: open until
+de: geöffnet bis
+it: aperto fino alle
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.hours.title
+sl: Odpiralni čas
+en: Opening hours
+de: Öffnungszeiten
+it: Orari di apertura
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.hours.closed
+sl: zaprto
+en: closed
+de: geschlossen
+it: chiuso
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.hours.opensAt
+sl: odpre se ob
+en: opens at
+de: öffnet um
+it: apre alle
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.fromSignIn
+sl: iz prijave
+en: from sign-in
+de: aus der Anmeldung
+it: dalla registrazione
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.wifi.network
+sl: Ime omrežja
+en: Network name
+de: Netzwerkname
+it: Nome della rete
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.wifi.password
+sl: Geslo
+en: Password
+de: Passwort
+it: Password
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.wifi.scan
+sl: Skenirajte s kamero
+en: Scan with your camera
+de: Mit der Kamera scannen
+it: Scansiona con la fotocamera
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.notices.title
+sl: Obvestila
+en: Notices
+de: Mitteilungen
+it: Avvisi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.notices.empty
+sl: Ni novih obvestil.
+en: There are no new notices.
+de: Es gibt keine neuen Mitteilungen.
+it: Non ci sono nuovi avvisi.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.notices.today
+sl: Danes
+en: Today
+de: Heute
+it: Oggi
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.notices.yesterday
+sl: Včeraj
+en: Yesterday
+de: Gestern
+it: Ieri
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.notices.new
+sl: novo
+en: new
+de: neu
+it: nuovo
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.helpEmergency
+sl: Pomoč in nujni primeri
+en: Help and emergencies
+de: Hilfe und Notfälle
+it: Aiuto ed emergenze
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.title
+sl: Naročilo
+en: Order
+de: Bestellung
+it: Ordine
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.soldOut
+sl: Razprodano
+en: Sold out
+de: Ausverkauft
+it: Esaurito
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.qty
+sl: Količina
+en: Quantity
+de: Menge
+it: Quantità
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.unit
+sl: Soba / parcela (obvezno)
+en: Room / pitch (required)
+de: Zimmer / Stellplatz (erforderlich)
+it: Camera / piazzola (obbligatorio)
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.name
+sl: Ime in priimek
+en: Full name
+de: Vor- und Nachname
+it: Nome e cognome
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.phone
+sl: Telefon (obvezno)
+en: Phone (required)
+de: Telefon (erforderlich)
+it: Telefono (obbligatorio)
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.password
+sl: Geslo
+en: Password
+de: Passwort
+it: Password
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.note
+sl: Opomba (neobvezno)
+en: Note (optional)
+de: Notiz (optional)
+it: Nota (opzionale)
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.submit
+sl: Pošlji naročilo
+en: Send order
+de: Bestellung senden
+it: Invia ordine
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.success
+sl: Naročilo poslano
+en: Order sent
+de: Bestellung gesendet
+it: Ordine inviato
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.successDesc
+sl: Gostitelj bo naročilo potrdil v najkrajšem možnem času. Sledite mu pod 'Moja naročila'.
+en: The host will confirm the order as soon as possible. Track it under 'My orders'.
+de: Der Gastgeber wird die Bestellung so schnell wie möglich bestätigen. Verfolgen Sie sie unter 'Meine Bestellungen'.
+it: L'ospite confermerà l'ordine il prima possibile. Seguilo in 'I miei ordini'.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.thankYou
+sl: Hvala za vaše naročilo.
+en: Thank you for your order.
+de: Vielen Dank für Ihre Bestellung.
+it: Grazie per il tuo ordine.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.successNext
+sl: Gostitelj bo naročilo potrdil. Prevzem pri gostitelju.
+en: The host will confirm the order. Pickup at the host.
+de: Der Gastgeber bestätigt die Bestellung. Abholung beim Gastgeber.
+it: L'host confermerà l'ordine. Ritiro presso l'host.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.backToGuide
+sl: Nazaj v vodnik
+en: Back to the guide
+de: Zurück zum Reiseführer
+it: Torna alla guida
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.myOrders
+sl: Moja naročila
+en: My orders
+de: Meine Bestellungen
+it: I miei ordini
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.entryOpen
+sl: {count} v obdelavi
+en: {count} open
+de: {count} offen
+it: {count} in elaborazione
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.entryClosed
+sl: {count} zaključenih
+en: {count} completed
+de: {count} abgeschlossen
+it: {count} completati
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.status.novo
+sl: V obdelavi
+en: Processing
+de: In Bearbeitung
+it: In elaborazione
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.status.potrjeno
+sl: Potrjeno
+en: Confirmed
+de: Bestätigt
+it: Confermato
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.status.prevzeto
+sl: Prevzeto
+en: Completed
+de: Abgeschlossen
+it: Completato
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.status.zavrnjeno
+sl: Zavrnjeno
+en: Declined
+de: Abgelehnt
+it: Rifiutato
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.statusNote
+sl: Opomba gostitelja
+en: Host note
+de: Hinweis des Gastgebers
+it: Nota dell'host
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.empty
+sl: Nimate še nobenih naročil.
+en: You have no orders yet.
+de: Sie haben noch keine Bestellungen.
+it: Non hai ancora ordini.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.pickupDefault
+sl: Prevzem pri gostitelju.
+en: Pickup at the host.
+de: Abholung beim Gastgeber.
+it: Ritiro presso l'ospite.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.pickupExplicit
+sl: Prevzem
+en: Pickup
+de: Abholung
+it: Ritiro
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.error
+sl: Naročilo ni bilo poslano. Preverite podatke in poskusite znova.
+en: The order was not sent. Check your details and try again.
+de: Die Bestellung wurde nicht gesendet. Prüfen Sie Ihre Angaben und versuchen Sie es erneut.
+it: L'ordine non è stato inviato. Controlla i dati e riprova.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.retry
+sl: Poskusi znova
+en: Retry
+de: Erneut versuchen
+it: Riprova
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.qtyInc
+sl: Povečaj količino
+en: Increase quantity
+de: Menge erhöhen
+it: Aumenta quantità
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.qtyDec
+sl: Zmanjšaj količino
+en: Decrease quantity
+de: Menge verringern
+it: Riduci quantità
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.validation.required
+sl: To polje je obvezno.
+en: This field is required.
+de: Dieses Feld ist erforderlich.
+it: Questo campo è obbligatorio.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.validation.phoneDigits
+sl: Telefonska številka mora vsebovati vsaj 6 števk.
+en: The phone number must contain at least 6 digits.
+de: Die Telefonnummer muss mindestens 6 Ziffern enthalten.
+it: Il numero di telefono deve contenere almeno 6 cifre.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.validation.password
+sl: Napačno geslo
+en: Wrong password
+de: Falsches Passwort
+it: Password errata
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.placeholder.phone
+sl: +386 41 000 000
+en: +1 234 567 8900
+de: +49 151 0000000
+it: +39 300 000 0000
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.placeholder.note
+sl: Posebne želje...
+en: Special requests...
+de: Sonderwünsche...
+it: Richieste speciali...
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.ref
+sl: Ref:
+en: Ref:
+de: Ref:
+it: Rif:
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.loading
+sl: Nalagam...
+en: Loading...
+de: Wird geladen...
+it: Caricamento in corso...
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.failedQuery
+sl: Napaka pri nalaganju naročil.
+en: Failed to load orders.
+de: Bestellungen konnten nicht geladen werden.
+it: Impossibile caricare gli ordini.
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.price
+sl: Cena
+en: Price
+de: Preis
+it: Prezzo
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.order.created
+sl: Oddano
+en: Placed
+de: Aufgegeben
+it: Inviato
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.siteMap
+sl: Mapa / Tloris
+en: Map / Site Plan
+de: Karte / Lageplan
+it: Mappa / Piantina
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.siteMapDot
+sl: Prikaži sliko {{index}}
+en: Show image {{index}}
+de: Bild {{index}} anzeigen
+it: Mostra immagine {{index}}
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.siteMapZoomIn
+sl: Povečaj zemljevid
+en: Zoom in on the map
+de: Karte vergrößern
+it: Ingrandisci la mappa
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.siteMapZoomOut
+sl: Pomanjšaj zemljevid
+en: Zoom out of the map
+de: Karte verkleinern
+it: Riduci la mappa
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.siteMapReset
+sl: Ponastavi povečavo
+en: Reset map zoom
+de: Kartenzoom zurücksetzen
+it: Reimposta lo zoom della mappa
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+TYPE: UI
+KEY: UI.lg.more
+sl: Več
+en: More
+de: Mehr
+it: Altro
+nl:
+fr:
+cs:
+hu:
+hr:
+---
+
+# PLURAL CONCEPTS: 11
+# Existing Slovenian forms and existing English fallback forms are copied verbatim.
+# “[not defined]” means there is no current built-in English fallback for that concept.
+
+TYPE: PLURAL
+KEY: reviews
+sl.one: {n} ocena
+sl.two: {n} oceni
+sl.few: {n} ocene
+sl.other: {n} ocen
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: info
+sl.one: {n} informacija
+sl.two: {n} informaciji
+sl.few: {n} informacije
+sl.other: {n} informacij
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: experiences
+sl.one: {n} doživetje
+sl.two: {n} doživetji
+sl.few: {n} doživetja
+sl.other: {n} doživetij
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: places
+sl.one: {n} kraj
+sl.two: {n} kraja
+sl.few: {n} kraji
+sl.other: {n} krajev
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: routes
+sl.one: {n} pot
+sl.two: {n} poti
+sl.few: {n} poti
+sl.other: {n} poti
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: products
+sl.one: {n} izdelek
+sl.two: {n} izdelka
+sl.few: {n} izdelki
+sl.other: {n} izdelkov
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: rules
+sl.one: {n} pravilo
+sl.two: {n} pravili
+sl.few: {n} pravila
+sl.other: {n} pravil
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: events
+sl.one: {n} dogodek
+sl.two: {n} dogodka
+sl.few: {n} dogodki
+sl.other: {n} dogodkov
+en: [not defined in current fallback table]
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: entries
+sl.one: {n} vnos
+sl.two: {n} vnosa
+sl.few: {n} vnosi
+sl.other: {n} vnosov
+en.one: {n} entry
+en.other: {n} entries
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: options
+sl.one: {n} možnost
+sl.two: {n} možnosti
+sl.few: {n} možnosti
+sl.other: {n} možnosti
+en.one: {n} option
+en.other: {n} options
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+TYPE: PLURAL
+KEY: apartments
+sl.one: {n} apartma
+sl.two: {n} apartmaja
+sl.few: {n} apartmaji
+sl.other: {n} apartmajev
+en.one: {n} apartment
+en.other: {n} apartments
+nl.one:
+nl.other:
+fr.one:
+fr.many:
+fr.other:
+cs.one:
+cs.few:
+cs.many:
+cs.other:
+hu.one:
+hu.other:
+hr.one:
+hr.few:
+hr.other:
+---
+
+# APPENDIX — 12 BINDING SIGN-IN REFERENCES
+# These are already present among the 133 UI blocks above and must not be translated twice.
+BINDING_REF: UI.lg.welcome.title
+BINDING_REF: UI.lg.welcome.description
+BINDING_REF: UI.lg.welcome.unit
+BINDING_REF: UI.lg.welcome.unitPlaceholder
+BINDING_REF: UI.lg.welcome.name
+BINDING_REF: UI.lg.welcome.namePlaceholder
+BINDING_REF: UI.lg.welcome.phone
+BINDING_REF: UI.lg.welcome.phonePlaceholder
+BINDING_REF: UI.lg.welcome.password
+BINDING_REF: UI.lg.welcome.passwordPlaceholder
+BINDING_REF: UI.lg.welcome.save
+BINDING_REF: UI.lg.welcome.later
