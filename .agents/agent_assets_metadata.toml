@@ -344,3 +344,17 @@ mtime_ms = 1787775738486
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/80e5deac-8294-4b1f-b6c3-409a586d6b8e/faf761b5-adcb-4284-96c1-d700201ebed1"
 storage_version_token = "1787776510692830"
 content_type = "text/plain"
+
+[[outputs]]
+id = "pUTDt3CvPrfptfBkPqtlr"
+uri = "file://reports/smart360-production-detail-route-audit-2026-08-27.html"
+type = "text"
+title = "Smart360 production detail-route audit"
+description = "Complete 173-row production measurement table at 390×844, with last-child bottom, navigation top, difference, and pass/fail for every deployed detail route."
+logical_id = "f9f47d5d-e5d7-4cef-a4bf-50531c5e8ae4"
+content_hash = "sha256:5cff97761d3df07fabf6adc19f607264fa6dea4d4594f40070422022cb650b2d"
+size = 38207
+mtime_ms = 1787868596861
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f9f47d5d-e5d7-4cef-a4bf-50531c5e8ae4/9dd9e665-74db-4033-8883-855cd5fbb47c"
+storage_version_token = "1787868598069398"
+content_type = "text/html"
