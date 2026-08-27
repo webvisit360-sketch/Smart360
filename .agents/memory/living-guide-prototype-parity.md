@@ -46,6 +46,12 @@ Do not start the detail-sheet transform until fonts are ready, the visible hero 
 
 **How to apply:** Gate the motion on final rendered structure and geometry, then compare the exact `transitionend` frame with a frame 500 ms later for gallery, single-photo, and no-photo templates. Any non-zero pixel difference or post-end signature change is a defect.
 
+Presentation mode, route rendering, and readiness must agree before the base layer is held. Derive the held state from an actually active sheet, not from navigation intent alone, and release it if no active sheet exists.
+
+**Why:** A standard Explore route was requested as a detail presentation, but its sheet renderer and non-hero readiness path were absent. The URL changed without an exception while the base became permanently non-interactive.
+
+**How to apply:** For every presented route, register its sheet renderer and template-appropriate readiness gate together. Test every route and close by asserting that the top active view computes to `pointer-events:auto` and that a held base always has an active sheet.
+
 The opening transform carrier must be the final resting DOM node, with the same ancestor objects throughout travel. Treat object identity as an acceptance invariant, not something pixel comparison can substitute for.
 
 **Why:** A device recording appeared to show a clone-to-real swap. Strict first-frame-to-one-second-post-transition identity proof is required to distinguish replacement from paint or bundle-version symptoms.

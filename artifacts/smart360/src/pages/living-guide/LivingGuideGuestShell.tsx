@@ -686,8 +686,14 @@ export default function LivingGuideGuestShell({
     (screen === "site-map" && !navState.hasSiteMap) ||
     (screen === "more" && navState.omitted.length === 0);
   if (unavailableGuestSubroute) screen = "home";
-  const isDetailPresentation =
+  const detailPresentationRequested =
     window.history.state?.livingGuidePresentation === "detail";
+  const canRenderDetailSheet =
+    (screen === "detail" && Boolean(categoryContext)) ||
+    screen === "messages" ||
+    screen === "explore";
+  const isDetailPresentation =
+    detailPresentationRequested && canRenderDetailSheet;
   const [baseScreen, setBaseScreen] = useState<ScreenName>(() =>
     screen === "detail" ? "home" : screen,
   );
@@ -726,6 +732,11 @@ export default function LivingGuideGuestShell({
           "--lg2-detail-hero-height": `${detailHeroHeightLockRef.current.height}px`,
         } as CSSProperties)
       : undefined;
+  const detailSheetActive =
+    isDetailPresentation &&
+    (detailTransitionPhase === "open" ||
+      (detailTransitionPhase === "restoring" &&
+        closeSourceLocationRef.current !== location));
 
   const [guest, setGuest] = useState<GuestRecord | null>(() =>
     getRememberedGuestIdentity(slug),
@@ -872,6 +883,12 @@ export default function LivingGuideGuestShell({
     );
     setGalleryIndex(snapshot.galleryIndex);
   }, [isDetailPresentation, location, resetNavigationState]);
+
+  useLayoutEffect(() => {
+    if (!detailSheetActive) return;
+    if (!rootRef.current?.querySelector(".lg2-route-layer.v--det.on"))
+      setDetailTransitionPhase("idle");
+  }, [detailSheetActive, location]);
 
   const captureHeldView = useCallback((resetStack: boolean) => {
     try {
@@ -1438,7 +1455,7 @@ export default function LivingGuideGuestShell({
       );
       if (!sheet) return;
       const ready =
-        screen === "messages"
+        screen === "messages" || screen === "explore"
           ? await (async () => {
               await document.fonts.ready;
               await nextPaintFrame();
@@ -1782,7 +1799,7 @@ export default function LivingGuideGuestShell({
       data-living-guide
       data-living-guide-app
       data-screen={screen}
-      data-detail-open={isDetailPresentation ? "true" : undefined}
+      data-detail-open={detailSheetActive ? "true" : undefined}
       translate="no"
     >
       <style>{`@font-face{font-family:"Inter";src:url("${livingGuideInterWoff2}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`}</style>
@@ -1799,7 +1816,7 @@ export default function LivingGuideGuestShell({
         )}
         <div
           className={`lg2-route-layer lg2-base-route-layer${
-            isDetailPresentation ? " lg2-base-route-layer--held" : ""
+            detailSheetActive ? " lg2-base-route-layer--held" : ""
           }`}
           data-suppress-entry-animation={
             suppressRouteEntryAnimation ? "true" : undefined
@@ -1928,16 +1945,11 @@ export default function LivingGuideGuestShell({
 
         </div>
 
-        {((screen === "detail" && categoryContext) ||
-          (screen === "messages" && isDetailPresentation)) && (
+        {isDetailPresentation && canRenderDetailSheet && (
           <div
             key={location}
             className={`lg2-route-layer v v--det${
-              detailTransitionPhase === "open" ||
-              (detailTransitionPhase === "restoring" &&
-                closeSourceLocationRef.current !== location)
-                ? " on"
-                : ""
+              detailSheetActive ? " on" : ""
             }`}
             data-detail-transition={detailTransitionPhase}
             style={detailRouteStyle}
@@ -1962,6 +1974,16 @@ export default function LivingGuideGuestShell({
             }
             onOrderClick={requestOrder}
           />
+          ) : screen === "explore" ? (
+            <ExploreView
+              tenant={tenant}
+              categories={exploreCategories}
+              lang={lang}
+              t={t}
+              onOpenCategory={openCategory}
+              onOpenItem={openItem}
+              onBack={() => closePresentedView(`/${slug}/home`)}
+            />
           ) : (
             <MessagesView
               tenant={tenant}
@@ -2542,7 +2564,15 @@ function useGroupTabsState(groups: any[]) {
   return { listRef, selectedGroup, selectGroup };
 }
 
-function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }: any) {
+function ExploreView({
+  tenant,
+  categories,
+  lang,
+  t,
+  onOpenCategory,
+  onOpenItem,
+  onBack,
+}: any) {
   const groups = useMemo(
     () => populatedExploreGroups(categories),
     [categories],
@@ -2556,6 +2586,17 @@ function ExploreView({ tenant, categories, lang, t, onOpenCategory, onOpenItem }
 
   return (
     <section className="lg2-view lg2-explore-view" data-testid="screen-explore">
+      {onBack && (
+        <button
+          className="lg2-detail-back"
+          type="button"
+          onClick={onBack}
+          aria-label={t("UI.lg.action.back")}
+          data-testid="explore-sheet-back"
+        >
+          <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
+        </button>
+      )}
       <header className="lg2-explore-header">
         <p>{tenant.name}</p>
         <h1>{t("UI.lg.exploreTitle")}</h1>
