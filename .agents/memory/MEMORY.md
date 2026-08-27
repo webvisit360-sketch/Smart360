@@ -19,3 +19,4 @@
 - [Host portal access model](host-portal.md) — CP2 three-ring fence (central actor gate + registry + RLS); hosts get 404 on everything unlisted; changelog carries actorType/actorEmail.
 - [Owner cockpit](owner-cockpit.md) — slug frozen after first publish (CAS stamp!), published e-mail fires once via CAS winner, type seeding in one tx, buildTenantOverviews is the single readiness source.
 - [Playwright WebKit runtime](playwright-webkit-runtime.md) — local WPE starts but cannot create EGL; only claim WebKit after a real page opens on a supported host.
+- [Town-pack onboarding direction](town-pack-onboarding.md) — shared place catalogue is deferred; optimize tenant-local onboarding and require provenance for every new photograph.

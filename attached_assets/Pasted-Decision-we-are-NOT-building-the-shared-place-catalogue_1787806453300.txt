@@ -1,0 +1,44 @@
+Decision: we are NOT building the shared place catalogue now. Your cost report
+is accepted and the reasoning is sound, but 22-43 developer days before the
+first campsite is signed is the wrong spend. The catalogue solves cross-tenant
+maintenance. The owner's problem is onboarding time, and that is a different
+and much cheaper problem.
+
+Keep the catalogue on the table. Do nothing that forecloses it.
+
+BUILD THIS INSTEAD — cost it first, do not implement yet.
+
+1. A tenant-agnostic town-pack importer.
+   Today the Meli Pu importer is hard-coded to one tenant UUID, its item UUIDs
+   and its category names. Generalise it: it takes a target tenant, a content
+   file, and an origin, and creates sections, categories, items AND all
+   translations in one run.
+   · It must be idempotent and re-runnable.
+   · Re-running an updated file must update content the host has NOT edited,
+     and must never overwrite content the host HAS edited. Report how you would
+     tell those apart.
+   · Report the file format you want from me. I author the packs by hand in
+     Markdown and will produce them in that format.
+
+2. Automatic origin geocoding at tenant creation.
+   The address becomes a proposed origin with source and confidence, created
+   asynchronously, never blocking tenant creation, never silently authoritative.
+   The Maps URL and manual coordinates stay as the override.
+
+3. Automatic distance and duration proposals.
+   Once an origin exists, select every location in radius, compute road distance
+   and duration through the existing OSRM integration, and store them as pending
+   proposals for host confirmation. Manual values stay protected.
+
+4. One owner action: create a tenant from a town pack.
+   Name, address, type, pack. Everything above runs from that.
+
+Report the effort in developer days for each of the four, and say plainly how
+many minutes of owner time a second tenant in Izola would then cost.
+
+One standing rule from now on: every photograph added to the system records its
+source and its usage rights. You reported that this provenance does not exist
+for the current media and cannot be reconstructed. Mark the existing ones
+unknown and require the fields on everything new.
+
+Report and STOP.
