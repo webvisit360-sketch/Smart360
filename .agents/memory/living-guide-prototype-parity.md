@@ -52,6 +52,12 @@ Presentation mode, route rendering, and readiness must agree before the base lay
 
 **How to apply:** For every presented route, register its sheet renderer and template-appropriate readiness gate together. Test every route and close by asserting that the top active view computes to `pointer-events:auto` and that a held base always has an active sheet.
 
+Every Living Guide scroller shown above the fixed bottom navigation must reserve enough end space for its final visible child to finish above the navigation, including safe-area inset. Detail presentations use 94 px plus the inset; transient bottom sheets use 28 px plus the inset.
+
+**Why:** At 402×874, list and detail content extended 50–59 px behind the navigation. Final descriptions remained in the DOM but appeared missing because only their card titles cleared the bar.
+
+**How to apply:** For every route and presented detail, scroll the actual active vertical scroller to its maximum and assert the final visible child's bottom is no lower than the bottom navigation's top. Run this geometry check alongside the pointer-events invariant.
+
 The opening transform carrier must be the final resting DOM node, with the same ancestor objects throughout travel. Treat object identity as an acceptance invariant, not something pixel comparison can substitute for.
 
 **Why:** A device recording appeared to show a clone-to-real swap. Strict first-frame-to-one-second-post-transition identity proof is required to distinguish replacement from paint or bundle-version symptoms.

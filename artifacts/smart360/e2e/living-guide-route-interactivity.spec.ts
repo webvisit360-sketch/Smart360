@@ -54,6 +54,75 @@ async function assertNavigationInvariant(page: Page, context: string) {
     .toBe("false:auto");
 }
 
+async function assertEndContentAboveNavigation(page: Page, context: string) {
+  await expect
+    .poll(
+      async () =>
+        page.locator(".lg2-app").evaluate(async (app) => {
+          const active =
+            app.querySelector<HTMLElement>(
+              ".lg2-route-layer.v--det.on > .lg2-view",
+            ) ??
+            app.querySelector<HTMLElement>(
+              ".lg2-base-route-layer > .lg2-view",
+            );
+          const navigation = app.querySelector<HTMLElement>(
+            ":scope > .lg2-bottom-nav",
+          );
+          if (!active || !navigation) return "not-applicable";
+
+          const candidates = [
+            ...active.querySelectorAll<HTMLElement>(
+              "[data-lg-scroll], .lg2-detail-sheet, .lg2-msg-sc",
+            ),
+          ];
+          const scroller =
+            candidates
+              .filter((element) => {
+                const overflowY = getComputedStyle(element).overflowY;
+                return overflowY === "auto" || overflowY === "scroll";
+              })
+              .sort(
+                (left, right) =>
+                  right.scrollHeight -
+                  right.clientHeight -
+                  (left.scrollHeight - left.clientHeight),
+              )[0] ?? null;
+          if (!scroller) return "not-applicable";
+
+          scroller.scrollTop = scroller.scrollHeight;
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          );
+
+          const lastVisibleChild = [...scroller.children]
+            .reverse()
+            .find((child) => {
+              const element = child as HTMLElement;
+              const style = getComputedStyle(element);
+              const rect = element.getBoundingClientRect();
+              return (
+                style.display !== "none" &&
+                style.visibility !== "hidden" &&
+                rect.width > 0 &&
+                rect.height > 0
+              );
+            }) as HTMLElement | undefined;
+          if (!lastVisibleChild) return "not-applicable";
+
+          const lastBottom = lastVisibleChild.getBoundingClientRect().bottom;
+          const navigationTop = navigation.getBoundingClientRect().top;
+          return lastBottom <= navigationTop
+            ? "clear"
+            : `clipped:${(lastBottom - navigationTop).toFixed(2)}`;
+        }),
+      {
+        message: `${context}: end content must clear the bottom navigation`,
+      },
+    )
+    .toMatch(/^(clear|not-applicable)$/);
+}
+
 test("every Living Guide route and close leaves an interactive active view", async ({
   page,
   browserName,
@@ -65,6 +134,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       await page.goto(route.path);
       await settle(page);
       await assertNavigationInvariant(page, route.name);
+      await assertEndContentAboveNavigation(page, route.name);
     });
   }
 
@@ -80,6 +150,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "home more open");
+    await assertEndContentAboveNavigation(page, "home more open");
     await expect(home).toHaveCSS("pointer-events", "none");
 
     await page.getByTestId("explore-sheet-back").click();
@@ -99,6 +170,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "category open");
+    await assertEndContentAboveNavigation(page, "category open");
     await page.locator(".lg2-route-layer.v--det .lg2-detail-back").click();
     await assertNavigationInvariant(page, "category close");
 
@@ -110,6 +182,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "item open");
+    await assertEndContentAboveNavigation(page, "item open");
     await page.locator(".lg2-route-layer.v--det .lg2-detail-back").click();
     await assertNavigationInvariant(page, "item close");
   });
@@ -123,6 +196,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "messages open");
+    await assertEndContentAboveNavigation(page, "messages open");
     await page.getByTestId("messages-back").click();
     await assertNavigationInvariant(page, "messages close");
   });

@@ -1455,7 +1455,10 @@ export default function LivingGuideGuestShell({
       );
       if (!sheet) return;
       const ready =
-        screen === "messages" || screen === "explore"
+        screen === "messages" ||
+        screen === "explore" ||
+        (screen === "detail" &&
+          categoryContext?.category.layout === "apartments")
           ? await (async () => {
               await document.fonts.ready;
               await nextPaintFrame();
@@ -3109,7 +3112,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
     } else if (layout === "tabs" && items.length === 2) {
       content = <TemplateD category={category} items={items} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "tabs" || layout === "apartments" || layout === "products" || layout === "poi" || layout === "routes" || layout === "events") {
-      content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} onOrderClick={onOrderClick} />;
+      content = <TemplateB category={category} items={items} t={t} onBack={onBack} onOpenItem={onOpenItem} onOrderClick={onOrderClick} fullHeight={layout === "apartments"} />;
     } else if (layout === "rules") {
       if (isOperationalRulesCategory(category)) {
         content = <TemplateA category={category} items={items} tenant={tenant} onOrderClick={onOrderClick} showHostContacts={showHostContacts} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
@@ -3259,13 +3262,19 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
 }
 
 // Template B: List page
-function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick }: any) {
+function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick, fullHeight = false }: any) {
   const media = firstMedia(category) ? [firstMedia(category)] : [];
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
-        <article className="lg2-detail-sheet">
+        {fullHeight ? (
+          <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}>
+            <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
+          </button>
+        ) : (
+          <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
+        )}
+        <article className={`lg2-detail-sheet${fullHeight ? " lg2-detail-sheet--full-height" : ""}`}>
            <div className="lg2-grabber" aria-hidden="true" />
            <h1>{category.label}</h1>
            <div className="lg2-subs">
