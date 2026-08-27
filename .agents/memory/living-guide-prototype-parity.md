@@ -58,6 +58,12 @@ Every Living Guide scroller shown above the fixed bottom navigation must reserve
 
 **How to apply:** For every route and presented detail, scroll the actual active vertical scroller to its maximum and assert the final visible child's bottom is no lower than the bottom navigation's top. Run this geometry check alongside the pointer-events invariant.
 
+The primary bottom navigation remains visible and interactive above every detail. A tab tap must close the entire detail stack and navigate directly in one step, leaving no held or inactive layer behind.
+
+**Why:** Guests use the five tabs to switch categories directly from details. Production showed the bar but made it inert, forcing an unwanted Back tap; hiding it matched the prototype but contradicted the owner-confirmed workflow.
+
+**How to apply:** With a detail settled, require all five tab centers to hit their own controls above the sheet. Test each tab independently and require its destination, zero detail/held layers, no detail-open state, and an interactive base afterward.
+
 The opening transform carrier must be the final resting DOM node, with the same ancestor objects throughout travel. Treat object identity as an acceptance invariant, not something pixel comparison can substitute for.
 
 **Why:** A device recording appeared to show a clone-to-real swap. Strict first-frame-to-one-second-post-transition identity proof is required to distinguish replacement from paint or bundle-version symptoms.

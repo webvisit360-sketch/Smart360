@@ -1,0 +1,45 @@
+Two separate defects. Do not merge them.
+
+1 — MISSING DETAIL TEXT IS A DATA PROBLEM, NOT LAYOUT
+The owner compared: SUP and scooter rental details HAVE body text. Boat and
+ship excursion details do NOT. Same layout, different outcome — so the padding
+fix worked and these items simply have no description stored.
+Report: for every item under Izleti and Najem opreme, its id, title, and whether
+body text exists in sl/en/de/it. List the empty ones. Do not write any text
+yourself — the owner and I author content.
+
+2 — THE BOTTOM NAVIGATION IS DEAD WHILE A DETAIL IS OPEN
+This is the third defect from the same family. Symptoms: the bottom menu does
+not respond once any detail is open; category buttons respond poorly at times;
+in Safari the category buttons do not work at all. Safari is not an edge case —
+it is most iPhone guests, and every in-app browser on iOS is WebKit too.
+
+Likely mechanism: the bottom navigation lives inside the base route layer, and
+that layer receives pointer-events:none when a detail opens. The bar stays
+visible and becomes inert.
+
+MEASURE FIRST, in production, at 390×844, in BOTH WebKit and Chromium:
+· open a detail;
+· report the bottom navigation's computed pointer-events and which ancestor
+  sets it;
+· report what document.elementFromPoint returns at the centre of each of the
+  five category buttons;
+· report whether any transparent overlay sits above the bar;
+· do the same with no detail open, for comparison.
+Safari must be measured separately. If the buttons fail there but not in
+Chromium, report the difference precisely.
+
+THE RULE, and it is a decision, not a preference:
+No visible control may be inert. Either the bottom navigation works while a
+detail is open, or the detail covers it so it is not visible. My prototype
+covers it — the detail sheet is full height and the bar is not shown. Production
+shows the bar. That divergence created this defect.
+Choose one, implement it, and say which you chose.
+
+EXTEND THE REGRESSION TEST YOU ALREADY BUILT
+It asserts pointer-events on views. Add: with a detail open, every VISIBLE
+interactive control must be hit-testable at its own centre. Run it in WebKit as
+well as Chromium. Three defects of this family have now reached the owner's
+phone and none of them produced a console error.
+
+Report and STOP.

@@ -1802,7 +1802,9 @@ export default function LivingGuideGuestShell({
       data-living-guide
       data-living-guide-app
       data-screen={screen}
-      data-detail-open={detailSheetActive ? "true" : undefined}
+      data-detail-open={
+        isDetailPresentation || screen === "detail" ? "true" : undefined
+      }
       translate="no"
     >
       <style>{`@font-face{font-family:"Inter";src:url("${livingGuideInterWoff2}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`}</style>

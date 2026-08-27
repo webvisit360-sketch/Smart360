@@ -54,6 +54,123 @@ async function assertNavigationInvariant(page: Page, context: string) {
     .toBe("false:auto");
 }
 
+async function assertVisibleControlsAreHitTestable(
+  page: Page,
+  context: string,
+) {
+  await expect
+    .poll(
+      async () =>
+        page.locator(".lg2-app").evaluate((app) => {
+          const activeSurface =
+            app.querySelector<HTMLElement>(
+              ".lg2-route-layer.v--det.on > .lg2-view",
+            ) ??
+            app.querySelector<HTMLElement>(
+              ".lg2-base-route-layer > .lg2-view",
+            );
+          const primaryNavigation = app.querySelector<HTMLElement>(
+            ":scope > .lg2-bottom-nav",
+          );
+          const selector =
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="button"]:not([aria-disabled="true"])';
+          const controls = [
+            ...(activeSurface?.querySelectorAll<HTMLElement>(selector) ?? []),
+            ...(primaryNavigation &&
+            getComputedStyle(primaryNavigation).visibility !== "hidden"
+              ? primaryNavigation.querySelectorAll<HTMLElement>(selector)
+              : []),
+          ];
+          const failures: string[] = [];
+
+          for (const control of controls) {
+            const style = getComputedStyle(control);
+            const rect = control.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const visible =
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              Number(style.opacity) > 0 &&
+              rect.width > 0 &&
+              rect.height > 0 &&
+              centerX >= 0 &&
+              centerX < window.innerWidth &&
+              centerY >= 0 &&
+              centerY < window.innerHeight;
+            if (!visible) continue;
+
+            const hit = document.elementFromPoint(centerX, centerY);
+            if (!hit || (hit !== control && !control.contains(hit))) {
+              const identity =
+                control.getAttribute("data-testid") ??
+                control.getAttribute("aria-label") ??
+                control.textContent?.trim().slice(0, 50) ??
+                control.tagName;
+              const hitIdentity = hit
+                ? `${hit.tagName.toLowerCase()}.${(hit as HTMLElement).className}`
+                : "null";
+              failures.push(`${identity} -> ${hitIdentity}`);
+            }
+          }
+
+          return failures;
+        }),
+      {
+        message: `${context}: every visible interactive control must win its center hit test`,
+      },
+    )
+    .toEqual([]);
+}
+
+async function assertTabNavigationFromDetail(page: Page) {
+  const cases = [
+    { testId: "nav-home", path: /\/meli-pu\/home(?:\?|$)/ },
+    { testId: "nav-stay", path: /\/meli-pu\/s\/stay(?:\?|$)/ },
+    { testId: "nav-offer", path: /\/meli-pu\/s\/offer(?:\?|$)/ },
+    { testId: "nav-explore", path: /\/meli-pu\/s\/explore(?:\?|$)/ },
+    { testId: "nav-messages", path: /\/meli-pu\/messages(?:\?|$)/ },
+  ] as const;
+
+  for (const route of cases) {
+    await page.goto("meli-pu/home?ui=living-guide&theme=dan");
+    await settle(page);
+    await page.getByRole("button", { name: /^WiFi$/i }).click();
+    await expect(page.locator(".lg2-route-layer.v--det")).toHaveAttribute(
+      "data-detail-transition",
+      "open",
+    );
+
+    const tab = page.getByTestId(route.testId);
+    await expect(tab).toBeVisible();
+    await expect(tab).toHaveCSS("pointer-events", "auto");
+    await expect
+      .poll(async () =>
+        tab.evaluate((control) => {
+          const rect = control.getBoundingClientRect();
+          const hit = document.elementFromPoint(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2,
+          );
+          return Boolean(hit && (hit === control || control.contains(hit)));
+        }),
+      )
+      .toBe(true);
+
+    await tab.click();
+    await expect(page).toHaveURL(route.path);
+    await expect(page.locator(".lg2-route-layer.v--det")).toHaveCount(0);
+    await expect(page.locator(".lg2-base-route-layer--held, .v.hold")).toHaveCount(
+      0,
+    );
+    await expect(page.locator(".lg2-app")).not.toHaveAttribute(
+      "data-detail-open",
+      "true",
+    );
+    await assertNavigationInvariant(page, `${route.testId} after detail`);
+  }
+}
+
 async function assertEndContentAboveNavigation(page: Page, context: string) {
   await expect
     .poll(
@@ -125,15 +242,13 @@ async function assertEndContentAboveNavigation(page: Page, context: string) {
 
 test("every Living Guide route and close leaves an interactive active view", async ({
   page,
-  browserName,
 }) => {
-  test.skip(browserName === "webkit", "Local WebKit cannot create an EGL page");
-
   for (const route of ROUTE_CASES) {
     await test.step(`direct route: ${route.name}`, async () => {
       await page.goto(route.path);
       await settle(page);
       await assertNavigationInvariant(page, route.name);
+      await assertVisibleControlsAreHitTestable(page, route.name);
       await assertEndContentAboveNavigation(page, route.name);
     });
   }
@@ -150,6 +265,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "home more open");
+    await assertVisibleControlsAreHitTestable(page, "home more open");
     await assertEndContentAboveNavigation(page, "home more open");
     await expect(home).toHaveCSS("pointer-events", "none");
 
@@ -159,6 +275,7 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "auto",
     );
     await assertNavigationInvariant(page, "home more close");
+    await assertVisibleControlsAreHitTestable(page, "home more close");
   });
 
   await test.step("category and item presentation close interactively", async () => {
@@ -170,9 +287,11 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "category open");
+    await assertVisibleControlsAreHitTestable(page, "category open");
     await assertEndContentAboveNavigation(page, "category open");
     await page.locator(".lg2-route-layer.v--det .lg2-detail-back").click();
     await assertNavigationInvariant(page, "category close");
+    await assertVisibleControlsAreHitTestable(page, "category close");
 
     const todayCard = page.locator(".lg2-hcard").first();
     await expect(todayCard).toBeVisible();
@@ -182,9 +301,11 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "item open");
+    await assertVisibleControlsAreHitTestable(page, "item open");
     await assertEndContentAboveNavigation(page, "item open");
     await page.locator(".lg2-route-layer.v--det .lg2-detail-back").click();
     await assertNavigationInvariant(page, "item close");
+    await assertVisibleControlsAreHitTestable(page, "item close");
   });
 
   await test.step("messages presentation closes interactively", async () => {
@@ -196,9 +317,15 @@ test("every Living Guide route and close leaves an interactive active view", asy
       "open",
     );
     await assertNavigationInvariant(page, "messages open");
+    await assertVisibleControlsAreHitTestable(page, "messages open");
     await assertEndContentAboveNavigation(page, "messages open");
     await page.getByTestId("messages-back").click();
     await assertNavigationInvariant(page, "messages close");
+    await assertVisibleControlsAreHitTestable(page, "messages close");
+  });
+
+  await test.step("every bottom tab closes an open detail and navigates directly", async () => {
+    await assertTabNavigationFromDetail(page);
   });
 
   await expect(await activeView(page)).toHaveCSS("pointer-events", "auto");

@@ -126,9 +126,11 @@ body[data-t="noc"] .lg2-stage {
 }
 
 .lg2-app[data-detail-open="true"] > .lg2-bottom-nav {
-  transform: translateX(-50%) scale(.955);
-  filter: brightness(.75);
-  pointer-events: none;
+  transform: translateX(-50%);
+  filter: none;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .lg2-app .v--det {
