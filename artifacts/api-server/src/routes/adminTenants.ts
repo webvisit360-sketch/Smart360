@@ -64,6 +64,10 @@ function firstParam(v: string | string[] | undefined): string {
   return (Array.isArray(v) ? v[0] : v) ?? "";
 }
 
+function tenantCopyIsEnabled(): boolean {
+  return false;
+}
+
 /** renewsAt default on create: exactly one year after createdAt. */
 function plusOneYear(d: Date): Date {
   const out = new Date(d);
@@ -681,6 +685,14 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
   const parsed = DuplicateTenantBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  if (!tenantCopyIsEnabled()) {
+    res.status(409).json({
+      code: "TENANT_COPY_DISABLED",
+      error:
+        "Tenant copy is disabled until translations can be copied with the tenant.",
+    });
     return;
   }
   const { slug, name, copyContent } = parsed.data;

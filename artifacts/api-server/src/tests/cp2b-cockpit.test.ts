@@ -216,6 +216,33 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     }
   });
 
+  await t.test("tenant copy refuses before creating an incomplete multilingual tenant", async () => {
+    const copySlug = `${slug}-copy-disabled`;
+    const res = await jreq(
+      base,
+      "POST",
+      `/admin/tenants/${tenantId}/duplicate`,
+      ownerCookie,
+      {
+        slug: copySlug,
+        name: `Blocked copy ${stamp}`,
+        copyContent: true,
+      },
+    );
+    assert.equal(res.status, 409);
+    assert.deepEqual(await res.json(), {
+      code: "TENANT_COPY_DISABLED",
+      error:
+        "Tenant copy is disabled until translations can be copied with the tenant.",
+    });
+
+    const copied = await db
+      .select({ id: tenantsTable.id })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.slug, copySlug));
+    assert.equal(copied.length, 0, "refused copy must not create a tenant");
+  });
+
   // ---------- Concurrency: double publish races the CAS ----------
   await t.test("two parallel first publishes: one stamp, one log entry, one e-mail", async () => {
     const [race] = await db
