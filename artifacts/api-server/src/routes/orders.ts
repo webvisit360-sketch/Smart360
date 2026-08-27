@@ -76,6 +76,7 @@ import {
   UpdateOrderStatusResponse,
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/adminAuth";
+import { logChange, orderStatusSummary } from "../lib/changelog";
 import { logger } from "../lib/logger";
 import {
   sha256hex,
@@ -832,6 +833,12 @@ router.patch("/admin/orders/:orderRef/status", requireAdmin, async (req, res): P
   }
 
   logger.info({ orderRef, fromStatus: order.status, toStatus }, "[orders] status updated");
+  await logChange({
+    tenantId: updated.tenantId,
+    action: "update",
+    entity: "order-status",
+    summary: orderStatusSummary(updated.orderRef, toStatus),
+  });
   res.json(formatOrderAdmin(updated));
 });
 

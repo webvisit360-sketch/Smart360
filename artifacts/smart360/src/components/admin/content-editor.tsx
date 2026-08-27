@@ -17,6 +17,7 @@ import {
   purgeCategory,
   purgeItem,
   getGetTrashQueryKey,
+  useGetAdminSession,
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1396,6 +1397,8 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
 
 function TrashPanel({ tenantId }: { tenantId: string }) {
   const queryClient = useQueryClient();
+  const { data: session } = useGetAdminSession();
+  const isOwner = Boolean(session?.authenticated);
   const [open, setOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const { data, isLoading } = useGetTrash(tenantId);
@@ -1488,16 +1491,18 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                           {busyId === cat.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                           Obnovi
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                          disabled={busyId === cat.id}
-                          onClick={() => onPurgeCategory(cat.id, cat.label)}
-                        >
-                          <XCircle className="w-3 h-3 mr-1" />
-                          Izbriši za vedno
-                        </Button>
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                            disabled={busyId === cat.id}
+                            onClick={() => onPurgeCategory(cat.id, cat.label)}
+                          >
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Izbriši za vedno
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1526,16 +1531,18 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                             {busyId === it.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                             Obnovi
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                            disabled={busyId === it.id}
-                            onClick={() => onPurgeItem(it.id, title)}
-                          >
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Izbriši za vedno
-                          </Button>
+                          {isOwner && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                              disabled={busyId === it.id}
+                              onClick={() => onPurgeItem(it.id, title)}
+                            >
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Izbriši za vedno
+                            </Button>
+                          )}
                         </div>
                       </div>
                     );

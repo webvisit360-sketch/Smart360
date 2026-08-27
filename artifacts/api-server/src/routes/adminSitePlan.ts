@@ -33,6 +33,7 @@ import {
 } from "drizzle-orm";
 import { db, mediaTable, tenantsTable } from "@workspace/db";
 import { requireAdmin } from "../lib/adminAuth";
+import { logChange } from "../lib/changelog";
 import {
   admitUpload,
   formatGb,
@@ -210,6 +211,12 @@ router.post(
           .where(eq(mediaTable.id, ids[i]!));
       }
     });
+    await logChange({
+      tenantId,
+      action: "reorder",
+      entity: "site-plan-image",
+      summary: "Spremenjen je bil vrstni red slik načrta lokacije.",
+    });
     res.json({ ok: true });
   },
 );
@@ -256,6 +263,12 @@ router.patch("/admin/site-plan-images/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  await logChange({
+    tenantId: existing.tenantId,
+    action: "update",
+    entity: "site-plan-image",
+    summary: "Posodobljen je bil opis slike načrta lokacije.",
+  });
   res.json(UpdateSitePlanImageResponse.parse(toSitePlanImage(updated)));
 });
 
@@ -296,6 +309,12 @@ router.delete("/admin/site-plan-images/:id", async (req, res): Promise<void> => 
     await tx.delete(mediaTable).where(eq(mediaTable.id, id));
   });
   invalidateMediaUsage();
+  await logChange({
+    tenantId: existing.tenantId,
+    action: "delete",
+    entity: "site-plan-image",
+    summary: "Odstranjena je bila slika načrta lokacije.",
+  });
   res.sendStatus(204);
 });
 
@@ -415,6 +434,12 @@ router.post(
       return;
     }
     invalidateMediaUsage();
+    await logChange({
+      tenantId,
+      action: "create",
+      entity: "site-plan-image",
+      summary: "Dodana je bila slika načrta lokacije.",
+    });
     res.status(201).json(toSitePlanImage(media));
   },
 );

@@ -75,6 +75,54 @@ function plusOneYear(d: Date): Date {
   return out;
 }
 
+/** A tenant name is useful context in the audit trail, but never without a bound. */
+function auditTenantName(name: string): string {
+  const normalized = name.replace(/\s+/g, " ").trim().slice(0, 80);
+  return normalized || "neimenovana nastanitev";
+}
+
+const tenantSettingCategories: ReadonlyArray<readonly [readonly string[], string]> = [
+  [["slug", "name", "subtitle", "rating", "reviewsCount"], "osnovni podatki"],
+  [["customDomain"], "povezava z domeno"],
+  [["logoUrl", "logoSquareUrl", "heroUrl", "livingGuideHeroUrl", "tourUrl"], "predstavitev in podoba"],
+  [["phone", "whatsapp", "viber", "instagram", "email"], "kontaktni podatki"],
+  [["orderNotifyEmail", "messageNotifyEmail"], "obvestila"],
+  [["orderPassword"], "dostop do naročil"],
+  [["address", "mapQuery", "mapUrl", "latitude", "longitude", "coordinateOverride"], "lokacija"],
+  [["wifiSsid", "wifiPass", "wifiEnc"], "Wi-Fi dostop"],
+  [[
+    "bgColor", "theme", "coverTitle", "coverSubtitle", "coverTitleSize",
+    "coverTitleOpacity", "coverTextColor", "coverSubSize", "coverSubOpacity",
+    "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil", "textScale",
+    "textFont", "textColor", "coverAlign", "coverShowRating", "logoX", "logoY",
+    "logoW", "logoOpacity", "navColorCover", "navColor", "navColorOn",
+  ], "videz"],
+  [["guestUiMode", "languages", "livingGuideNav"], "uporabniški vmesnik za goste"],
+  [["renewsAt"], "obdobje veljavnosti"],
+  [["isTemplate", "mediaQuotaBytes"], "skrbniške nastavitve"],
+];
+
+function changedTenantSettingCategories(data: Record<string, unknown>): string[] {
+  return tenantSettingCategories
+    .filter(([keys]) => keys.some((key) => data[key] !== undefined))
+    .map(([, category]) => category);
+}
+
+function tenantSettingsSummary(name: string, data: Record<string, unknown>): string {
+  const categories = changedTenantSettingCategories(data);
+  const label = auditTenantName(name);
+  return categories.length
+    ? `Posodobljene so nastavitve nastanitve »${label}«: ${categories.join(", ")}.`
+    : `Posodobitev nastanitve »${label}« ni spremenila nastavitev.`;
+}
+
+function tenantSettingsSuffix(data: Record<string, unknown>): string {
+  const categories = changedTenantSettingCategories(data);
+  return categories.length
+    ? ` Hkrati so posodobljene nastavitve: ${categories.join(", ")}.`
+    : "";
+}
+
 router.get("/admin/overview", async (_req, res): Promise<void> => {
   const [tenantCounts] = await db
     .select({
@@ -177,7 +225,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         tenantName: name,
         action: "create",
         entity: "tenant",
-        detail: "iz predloge",
+        summary: `Ustvarjena je nastanitev »${auditTenantName(name)}« iz predloge.`,
       });
       res.status(201).json(CreateTenantResponse.parse(serialize(created)));
       return;
@@ -208,7 +256,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     tenantName: name,
     action: "create",
     entity: "tenant",
-    detail: tenantType ? `tip: ${tenantType}` : null,
+    summary: `Ustvarjena je nova nastanitev »${auditTenantName(name)}«.`,
   });
   res.status(201).json(CreateTenantResponse.parse(serialize(tenant)));
 });
@@ -218,12 +266,50 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
 router.get("/admin/tenants/:id/changelog", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
   const rows = await db
-    .select()
+    .select({
+      id: changelogTable.id,
+      tenantId: changelogTable.tenantId,
+      action: changelogTable.action,
+      entity: changelogTable.entity,
+      summary: changelogTable.summary,
+      // Derive from durable actor type as well as the new display column so
+      // historic host rows (written before actor_label existed) are labelled
+      // correctly without exposing the underlying role.
+      actorLabel: sql<string>`case when ${changelogTable.actorType} = 'host' then 'Stranka' else 'Smart360' end`,
+      // Host IPs are useful to the tenant as an audit signal. Operator and
+      // background IPs are never disclosed through this endpoint.
+      requestIp: sql<string | null>`case when ${changelogTable.actorType} = 'host' then ${changelogTable.requestIp} else null end`,
+      createdAt: changelogTable.createdAt,
+    })
     .from(changelogTable)
     .where(eq(changelogTable.tenantId, id))
-    .orderBy(desc(changelogTable.createdAt))
-    .limit(50);
+    .orderBy(desc(changelogTable.createdAt));
+  // This explicit projection is the API privacy boundary: actor identity and
+  // legacy detail never leave it, and request IP is host-action-only.
   res.json(ListTenantChangelogResponse.parse(serialize(rows)));
+});
+
+/** Explicit owner cockpit event; GET history remains read-only. */
+router.post("/admin/tenants/:id/operator-entry", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const key = req.get("Idempotency-Key")?.trim();
+  if (!key || key.length > 200 || !/^[A-Za-z0-9._:-]+$/.test(key)) {
+    res.status(400).json({ error: "Manjka veljaven Idempotency-Key." });
+    return;
+  }
+  const [tenant] = await db.select({ id: tenantsTable.id }).from(tenantsTable).where(eq(tenantsTable.id, id));
+  if (!tenant) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  await logChange({
+    tenantId: id,
+    action: "cockpit-entry",
+    entity: "tenant",
+    summary: "Smart360 je odprl pregled nastanitve.",
+    operationKey: `operator-entry:${id}:${key}`,
+  });
+  res.sendStatus(204);
 });
 
 router.get("/admin/slug-check", async (req, res): Promise<void> => {
@@ -404,6 +490,8 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       latitude: tenantsTable.latitude,
       longitude: tenantsTable.longitude,
       firstPublishedAt: tenantsTable.firstPublishedAt,
+      isPublished: tenantsTable.isPublished,
+      name: tenantsTable.name,
     })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, id));
@@ -588,12 +676,31 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       actor: admin?.email ?? null,
     });
   }
+  const publicationTransition =
+    typeof requestData["isPublished"] === "boolean" &&
+    before.isPublished !== tenant.isPublished;
+  const action = firstPublish
+    ? "publish"
+    : publicationTransition && tenant.isPublished && before.firstPublishedAt !== null
+      ? "republish"
+      : publicationTransition && !tenant.isPublished
+        ? "unpublish"
+        : "update";
+  const settingSummary = tenantSettingsSummary(tenant.name, requestData);
+  const settingsSuffix = tenantSettingsSuffix(requestData);
+  const summary = firstPublish
+    ? `Nastanitev »${auditTenantName(tenant.name)}« je prvič objavljena.${settingsSuffix}`
+    : action === "republish"
+      ? `Nastanitev »${auditTenantName(tenant.name)}« je ponovno objavljena.${settingsSuffix}`
+      : action === "unpublish"
+        ? `Nastanitev »${auditTenantName(tenant.name)}« je umaknjena iz objave.${settingsSuffix}`
+        : settingSummary;
   await logChange({
     tenantId: tenant.id,
     tenantName: tenant.name,
-    action: firstPublish ? "publish" : "update",
+    action,
     entity: "tenant",
-    detail: firstPublish ? "prva objava" : null,
+    summary,
   });
   if (firstPublish && tenant.email?.trim()) {
     // Best-effort congratulation mail (template 6); idempotency key is bound
@@ -646,7 +753,7 @@ router.post("/admin/tenants/:id/renew", async (req, res): Promise<void> => {
     tenantName: before.name,
     action: "renew",
     entity: "tenant",
-    detail: `obnova do ${next.toISOString().slice(0, 10)}`,
+    summary: `Podaljšana je veljavnost nastanitve »${auditTenantName(before.name)}«.`,
   });
   res.json(RenewTenantResponse.parse(serialize(tenant)));
 });
@@ -676,6 +783,7 @@ router.delete("/admin/tenants/:id", async (req, res): Promise<void> => {
     tenantName: tenant.name,
     action: "delete",
     entity: "tenant",
+    summary: `Odstranjena je nastanitev »${auditTenantName(tenant.name)}«.`,
   });
   res.sendStatus(204);
 });
@@ -725,7 +833,7 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
     tenantName: name,
     action: "duplicate",
     entity: "tenant",
-    detail: dropped.length ? `kopija (izpuščenih ${dropped.length} neveljavnih referenc)` : `kopija`,
+    summary: `Ustvarjena je kopija nastanitve »${auditTenantName(name)}«.`,
   });
   res.status(201).json(
     DuplicateTenantResponse.parse({

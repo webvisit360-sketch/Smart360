@@ -23,10 +23,14 @@ const TENANT_TYPES = [
 ] as const;
 
 /** Central attribution labels (CP2b): who performed a changelog action. */
-export function actorLabel(change: { actorType?: string; actorEmail?: string | null }): string {
-  if (change.actorType === "host") return change.actorEmail || "Gostitelj";
+export function actorLabel(change: {
+  actorLabel?: "Stranka" | "Smart360";
+  actorType?: "owner" | "host" | "system";
+}): string {
+  if (change.actorLabel) return change.actorLabel;
+  if (change.actorType === "host") return "Stranka";
   if (change.actorType === "system") return "Sistem";
-  return "Smart360 · v imenu gostitelja";
+  return "Smart360";
 }
 
 export default function AdminDashboard() {
@@ -368,7 +372,7 @@ export default function AdminDashboard() {
                         
                         <div className="flex flex-wrap items-center gap-2 mt-auto">
                           <Button variant="secondary" size="sm" onClick={() => setLocation(`/admin/tenants/${tenant.id}`)}>
-                            <Edit2 className="h-4 w-4 mr-2" /> Uredi
+                            <Edit2 className="h-4 w-4 mr-2" /> Odpri kot Smart360 operater
                           </Button>
                           <Button variant="outline" size="sm" asChild>
                             <a

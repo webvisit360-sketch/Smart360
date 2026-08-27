@@ -33,6 +33,7 @@ import {
 } from "@workspace/db";
 import app from "../app";
 import { hashPassword, _clearHostRateLimiters } from "../lib/hostAuth";
+import { ensureRowLevelSecurity } from "../lib/rls";
 
 const PASSWORD_A = "geslo-za-testA-123";
 
@@ -70,6 +71,7 @@ async function jreq(
 
 test("CP2 host access model: fence + RLS + positive controls", async (t) => {
   _clearHostRateLimiters();
+  await ensureRowLevelSecurity();
   const server = app.listen(0);
   await once(server, "listening");
   const address = server.address();
@@ -177,6 +179,7 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     await expectDenied("GET", `/admin/tenants/${fx.tenantB}/translations/overview`);
     await expectDenied("GET", `/admin/tenants/${fx.tenantB}/site-plan-images`);
     await expectDenied("GET", `/admin/tenants/${fx.tenantB}/distance-review`);
+    await expectDenied("GET", `/admin/tenants/${fx.tenantB}/changelog`);
     await expectDenied("GET", `/admin/tenants/${fx.tenantB}/messages`);
     await expectDenied("GET", `/admin/tenants/${fx.tenantB}/qr.png`);
     await expectDenied("POST", `/admin/tenants/${fx.tenantB}/sections`, { key: "x", title: "X" });
@@ -232,6 +235,9 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/renewals`);
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/duplicate`, {});
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/media-check`);
+    await expectDenied("POST", `/admin/tenants/${fx.tenantA}/operator-entry`, {});
+    await expectDenied("DELETE", `/admin/categories/${fx.categoryA}/purge`);
+    await expectDenied("DELETE", `/admin/items/${fx.itemA}/purge`);
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/translations/import`, {});
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/translations/export`);
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/host`);
@@ -321,18 +327,27 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     const sBody = (await session.json()) as { authenticated: boolean; tenantId?: string };
     assert.equal(sBody.authenticated, true);
     assert.equal(sBody.tenantId, fx.tenantA);
+
+    const history = await jreq(base, "GET", `/admin/tenants/${fx.tenantA}/changelog`, cookie);
+    assert.equal(history.status, 200);
+    const historyRows = (await history.json()) as Array<{ actorLabel: string; summary: string; requestIp: string | null; actorEmail?: unknown }>;
+    assert.ok(historyRows.length > 0);
+    assert.ok(historyRows.every((r) => r.actorLabel === "Stranka" && typeof r.summary === "string"));
+    assert.ok(historyRows.some((r) => r.actorLabel === "Stranka" && typeof r.requestIp === "string"), "host audit IP is visible");
+    assert.ok(historyRows.every((r) => r.actorLabel === "Stranka" ? typeof r.requestIp === "string" : r.requestIp === null));
+    assert.ok(historyRows.every((r) => r.actorEmail === undefined));
   });
 
   // ---------- Changelog attribution ----------
   await t.test("host changes are recorded as the host in the changelog", async () => {
     const rows = await db
-      .select({ actorType: changelogTable.actorType, actorEmail: changelogTable.actorEmail })
+      .select({ actorType: changelogTable.actorType, actorEmail: changelogTable.actorEmail, actorLabel: changelogTable.actorLabel })
       .from(changelogTable)
       .where(eq(changelogTable.tenantId, fx.tenantA));
     assert.ok(rows.length > 0, "host edits must produce changelog rows");
     assert.ok(
-      rows.every((r) => r.actorType === "host" && r.actorEmail === fx.hostAEmail),
-      "every row from this session must be attributed to the host",
+      rows.every((r) => r.actorType === "host" && r.actorEmail === null && r.actorLabel === "Stranka"),
+      "host attribution must not store the host e-mail",
     );
   });
 

@@ -22,16 +22,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const hostAuthenticated = Boolean(hostSession?.authenticated && hostSession.tenantId);
   const authLoading = isLoading || hostLoading;
   const unauthenticated = !authLoading && !ownerAuthenticated && !hostAuthenticated;
+  const hostTenantPath = `/admin/tenants/${hostSession?.tenantId ?? ""}`;
+  const isHostAccount = hostAuthenticated && location === "/admin/account";
   useEffect(() => {
     if (unauthenticated) setLocation("/admin/login");
     if (
       !authLoading &&
       hostAuthenticated &&
-      location !== `/admin/tenants/${hostSession!.tenantId}`
+      location !== hostTenantPath &&
+      location !== "/admin/account"
     ) {
-      setLocation(`/admin/tenants/${hostSession!.tenantId}`);
+      setLocation(hostTenantPath);
     }
-  }, [authLoading, hostAuthenticated, hostSession, location, unauthenticated, setLocation]);
+  }, [authLoading, hostAuthenticated, hostTenantPath, location, unauthenticated, setLocation]);
 
   if (authLoading) {
     return (
@@ -50,8 +53,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return <div className="min-h-[100dvh] bg-[#F5F5F7] font-sans">{children}</div>;
   }
 
-  // A host is centrally redirected to their one tenant above. Never render
-  // owner cockpit navigation during that transition.
+  if (isHostAccount) {
+    return (
+      <div className="min-h-[100dvh] bg-muted/30">
+        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-5">
+          <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
+          <Button variant="outline" onClick={() => setLocation(hostTenantPath)} data-testid="button-back-to-tenant">
+            Nazaj na nastanitev
+          </Button>
+        </header>
+        <main>{children}</main>
+      </div>
+    );
+  }
+
+  // A host is centrally redirected to their tenant or account page above.
+  // Never render owner cockpit navigation during that transition.
   if (hostAuthenticated) return null;
 
   return (

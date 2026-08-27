@@ -17,6 +17,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import { once } from "node:events";
+import type { Request } from "express";
 import { eq } from "drizzle-orm";
 import {
   db,
@@ -36,6 +37,7 @@ import {
   upsertHostAccountForTenant,
   getHostAccountForTenant,
   issueHostPasswordReset,
+  issueHostInviteForTenant,
 } from "../lib/hostAuth";
 import {
   _setHostResetDeliveryOverride,
@@ -264,17 +266,62 @@ test("CP2 host auth end-to-end", async (t) => {
 
     const good = await fetch(`${base}/api/admin/host/reset/confirm`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "198.51.100.41",
+        "user-agent": "reset-confirm-test-agent",
+      },
       body: JSON.stringify({ token, newPassword: "cisto-novo-geslo-9" }),
     });
     assert.equal(good.status, 204);
 
     const reuse = await fetch(`${base}/api/admin/host/reset/confirm`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "198.51.100.41",
+        "user-agent": "reset-confirm-test-agent",
+      },
       body: JSON.stringify({ token, newPassword: "se-eno-geslo-10" }),
     });
     assert.equal(reuse.status, 400, "token is single-use");
+    const resetAuditRows = await db
+      .select({
+        actorType: changelogTable.actorType,
+        actorLabel: changelogTable.actorLabel,
+        actorId: changelogTable.actorId,
+        actorEmail: changelogTable.actorEmail,
+        requestIp: changelogTable.requestIp,
+        detail: changelogTable.detail,
+        summary: changelogTable.summary,
+      })
+      .from(changelogTable)
+      .where(eq(changelogTable.tenantId, tenantId));
+    const resetAudit = resetAuditRows.filter(
+      (row) => row.summary === "Stranka je potrdila ponastavitev gesla.",
+    );
+    assert.equal(resetAudit.length, 1, "only a successful reset confirmation is logged");
+    assert.deepEqual(
+      resetAudit[0],
+      {
+        actorType: "host",
+        actorLabel: "Stranka",
+        actorId: null,
+        actorEmail: null,
+        requestIp: "198.51.100.41",
+        detail: null,
+        summary: "Stranka je potrdila ponastavitev gesla.",
+      },
+      "the confirmation is attributed to Stranka with only the request IP",
+    );
+    assert.ok(
+      !JSON.stringify(resetAudit[0]).includes(token) &&
+        !JSON.stringify(resetAudit[0]).includes("cisto-novo-geslo-9") &&
+        !JSON.stringify(resetAudit[0]).includes(email) &&
+        !JSON.stringify(resetAudit[0]).includes(userId) &&
+        !JSON.stringify(resetAudit[0]).includes("reset-confirm-test-agent"),
+      "the changelog excludes token, password, e-mail, host ID, and user-agent",
+    );
 
     const aliveCheck = await fetch(`${base}/api/admin/host/session`, { headers: { cookie: alive } });
     assert.deepEqual(await aliveCheck.json(), { authenticated: false },
@@ -301,6 +348,80 @@ test("CP2 host auth end-to-end", async (t) => {
     assert.equal(captured.length, 3, "second and third request still delivered");
     const capped = await issueHostPasswordReset(email, null);
     assert.equal(capped, null, "fourth request within the hour is silently capped");
+  });
+
+  await t.test("invite activation changelog is host-attributed and excludes credentials", async (t) => {
+    const [inviteTenant] = await db
+      .insert(tenantsTable)
+      .values({ slug: `cp2-invite-audit-${stamp}`, name: "CP2 Invite Audit" })
+      .returning({ id: tenantsTable.id });
+    const inviteEmail = `cp2-invite-audit-${stamp}@example.com`;
+    const [inviteUser] = await db
+      .insert(hostUsersTable)
+      .values({ email: inviteEmail, passwordHash: null })
+      .returning({ id: hostUsersTable.id });
+    await db.insert(hostMembershipsTable).values({
+      hostUserId: inviteUser!.id,
+      tenantId: inviteTenant!.id,
+    });
+    t.after(async () => {
+      await db.delete(changelogTable).where(eq(changelogTable.tenantId, inviteTenant!.id));
+      await db.delete(hostUsersTable).where(eq(hostUsersTable.id, inviteUser!.id));
+      await db.delete(tenantsTable).where(eq(tenantsTable.id, inviteTenant!.id));
+    });
+
+    const issued = await issueHostInviteForTenant(
+      inviteTenant!.id,
+      "welcome",
+      { actor: { kind: "owner" }, ip: "127.0.0.1", get: () => undefined } as unknown as Request,
+    );
+    assert.ok(issued.ok);
+    if (!issued.ok) return;
+
+    const invalid = await fetch(`${base}/api/admin/host/invite/confirm`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": "198.51.100.42" },
+      body: JSON.stringify({ token: "invalid-invite-token-value", newPassword: "novo-vabilo-geslo" }),
+    });
+    assert.equal(invalid.status, 400);
+
+    const activated = await fetch(`${base}/api/admin/host/invite/confirm`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "198.51.100.42",
+        "user-agent": "invite-confirm-test-agent",
+      },
+      body: JSON.stringify({ token: issued.token, newPassword: "novo-vabilo-geslo" }),
+    });
+    assert.equal(activated.status, 204);
+    const reused = await fetch(`${base}/api/admin/host/invite/confirm`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": "198.51.100.42" },
+      body: JSON.stringify({ token: issued.token, newPassword: "drugo-vabilo-geslo" }),
+    });
+    assert.equal(reused.status, 400);
+
+    const rows = await db
+      .select()
+      .from(changelogTable)
+      .where(eq(changelogTable.tenantId, inviteTenant!.id));
+    assert.equal(rows.length, 1, "failed and reused invite tokens write no changelog");
+    const [row] = rows;
+    assert.equal(row!.actorType, "host");
+    assert.equal(row!.actorLabel, "Stranka");
+    assert.equal(row!.requestIp, "198.51.100.42");
+    assert.equal(row!.detail, null);
+    assert.equal(row!.actorId, null);
+    assert.equal(row!.actorEmail, null);
+    assert.ok(
+      !JSON.stringify(row).includes(issued.token) &&
+        !JSON.stringify(row).includes("novo-vabilo-geslo") &&
+        !JSON.stringify(row).includes(inviteEmail) &&
+        !JSON.stringify(row).includes(inviteUser!.id) &&
+        !JSON.stringify(row).includes("invite-confirm-test-agent"),
+      "the invite changelog contains no sensitive request or account data",
+    );
   });
 
   await t.test("owner-side account management (library level)", async () => {

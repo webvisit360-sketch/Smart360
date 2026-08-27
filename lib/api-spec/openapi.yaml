@@ -437,7 +437,7 @@ paths:
     get:
       operationId: listTenantChangelog
       tags: [tenants]
-      summary: Per-tenant changelog with actor attribution
+      summary: Per-tenant audit history with privacy-safe attribution
       parameters:
         - name: id
           in: path
@@ -452,6 +452,23 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ChangelogEntry"
+  /admin/tenants/{id}/operator-entry:
+    post:
+      operationId: recordOperatorEntry
+      tags: [tenants]
+      summary: Record a deliberate Smart360 cockpit entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 200 }
+      responses:
+        "204":
+          description: Entry recorded, or an existing entry with this key reused
   /admin/tenants/{id}:
     get:
       operationId: getTenant
@@ -3003,14 +3020,21 @@ components:
         tenantName: { type: ["string", "null"] }
         action: { type: string }
         entity: { type: string }
-        detail: { type: ["string", "null"] }
         actorType:
           type: string
           enum: [owner, host, system]
-          description: Central attribution from the actor gate — owner acts on the host's behalf
-        actorEmail: { type: ["string", "null"] }
+        summary:
+          type: string
+          description: Safe Slovenian plain-language audit summary
+        actorLabel:
+          type: string
+          enum: [Stranka, Smart360]
+          description: Safe actor label; no account identity or IP address
+        requestIp:
+          type: ["string", "null"]
+          description: IP only for actions by Stranka; Smart360/system IPs are always null
         createdAt: { type: string }
-      required: [id, action, entity, createdAt]
+      required: [id, action, entity, summary, actorLabel, createdAt]
     ReadinessCheck:
       type: object
       properties:

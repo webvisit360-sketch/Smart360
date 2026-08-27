@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { ensureAdminAccount, rpID, rpOrigin, listCredentials } from "./lib/adminAuth";
 import { purgeExpiredOrders, scheduleOrderRetention } from "./lib/orderRetention";
 import { purgeExpiredThreads, scheduleMessageRetention } from "./lib/messageRetention";
+import { clearExpiredChangelogIps, scheduleChangelogRetention } from "./lib/changelogRetention";
 import { runExploreGroupBackfillAtStartup } from "./lib/exploreGroupBackfill";
 import { runSectionGroupBackfillAtStartup } from "./lib/sectionGroupBackfill";
 import { runFirstPublishedBackfillAtStartup } from "./lib/firstPublishBackfill";
@@ -67,6 +68,7 @@ ensureAdminAccount()
   // best-effort: if the policies cannot be applied, the server must not
   // start, because host requests would then rely on the fence alone.
   .then(() => ensureRowLevelSecurity())
+  .then(() => clearExpiredChangelogIps())
   .then(() =>
     // Bootstrap is best-effort: a transient DB error here must not take the
     // whole deployment down (a fresh code is minted on the next restart).
@@ -102,6 +104,7 @@ ensureAdminAccount()
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();
+    scheduleChangelogRetention();
     app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");

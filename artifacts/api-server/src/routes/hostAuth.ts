@@ -16,6 +16,7 @@ import { requireAdmin, rpOrigin } from "../lib/adminAuth";
 import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
+import { actorStorage } from "../lib/actorContext";
 
 /**
  * Host account routes (Instruction #28, CHECKPOINT 2).
@@ -30,6 +31,31 @@ import { logger } from "../lib/logger";
 const router: IRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function logAnonymousHostConfirmation(
+  result: { hostUserId: string; tenantId: string },
+  req: Request,
+  entity: string,
+  summary: string,
+): Promise<void> {
+  // These endpoints have no session actor. Set a tightly-scoped, server-derived
+  // host context only after the atomic token operation has succeeded.
+  await actorStorage.run(
+    {
+      kind: "host",
+      hostUserId: result.hostUserId,
+      tenantId: result.tenantId,
+      requestIp: req.ip ?? null,
+    },
+    () =>
+      logChange({
+        tenantId: result.tenantId,
+        action: "update",
+        entity,
+        summary,
+      }),
+  );
+}
 
 // ── Anonymous: login / session / logout ──────────────────────────────────────
 
@@ -76,6 +102,12 @@ router.post("/admin/host/password", async (req, res): Promise<void> => {
     res.status(400).json({ error: result.error });
     return;
   }
+  await logChange({
+    tenantId: actor.tenantId,
+    action: "update",
+    entity: "host-password-change",
+    summary: "Geslo stranke je bilo spremenjeno.",
+  });
   res.status(204).end();
 });
 
@@ -102,6 +134,12 @@ router.post("/admin/host/reset/confirm", async (req, res): Promise<void> => {
     res.status(400).json({ error: result.error });
     return;
   }
+  await logAnonymousHostConfirmation(
+    result,
+    req,
+    "host-password-reset-confirmed",
+    "Stranka je potrdila ponastavitev gesla.",
+  );
   res.status(204).end();
 });
 
@@ -114,6 +152,12 @@ router.post("/admin/host/invite/confirm", async (req, res): Promise<void> => {
     res.status(400).json({ error: result.error });
     return;
   }
+  await logAnonymousHostConfirmation(
+    result,
+    req,
+    "host-invite-confirmed",
+    "Stranka je aktivirala dostop.",
+  );
   res.status(204).end();
 });
 
@@ -148,10 +192,10 @@ router.put("/admin/tenants/:id/host", requireAdmin, async (req, res): Promise<vo
   await logChange({
     tenantId,
     action: result.created ? "create" : "update",
-    entity: "host-account",
-    detail: result.created
-      ? `Gostiteljski račun ustvarjen (${result.email})`
-      : `E-naslov gostitelja spremenjen (${result.email})`,
+    entity: result.created ? "host-account-created" : "host-account-email-changed",
+    summary: result.created
+      ? "Ustvarjen je bil dostop stranke."
+      : "Spremenjen je bil e-naslov dostopa stranke.",
   });
   res.json({ ok: true, created: result.created, email: result.email });
 });
@@ -203,10 +247,7 @@ router.post(
       tenantName: issued.propertyName,
       action: "send",
       entity: "host-invite",
-      detail:
-        issued.template === "welcome"
-          ? "Poslano 72-urno vabilo: dobrodošlica"
-          : "Poslano 72-urno vabilo: vodnik pripravljen",
+      summary: "Poslano je bilo povabilo stranki.",
     });
     res.json({
       sent: true,
@@ -246,6 +287,12 @@ router.post(
       res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });
       return;
     }
+    await logChange({
+      tenantId,
+      action: "send",
+      entity: "host-password-reset",
+      summary: "Poslana je bila ponastavitev gesla stranke.",
+    });
     res.json({ sent: true, to: issued.email });
   },
 );

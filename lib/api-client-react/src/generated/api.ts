@@ -1900,7 +1900,7 @@ export const getListTenantChangelogUrl = (id: string,) => {
 }
 
 /**
- * @summary Per-tenant changelog with actor attribution
+ * @summary Per-tenant audit history with privacy-safe attribution
  */
 export const listTenantChangelog = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ChangelogEntry[]> => {
 
@@ -1947,7 +1947,7 @@ export type ListTenantChangelogQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Per-tenant changelog with actor attribution
+ * @summary Per-tenant audit history with privacy-safe attribution
  */
 
 export function useListTenantChangelog<TData = Awaited<ReturnType<typeof listTenantChangelog>>, TError = ErrorType<unknown>>(
@@ -1967,6 +1967,77 @@ export function useListTenantChangelog<TData = Awaited<ReturnType<typeof listTen
 
 
 
+
+export const getRecordOperatorEntryUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/operator-entry`
+}
+
+/**
+ * @summary Record a deliberate Smart360 cockpit entry
+ */
+export const recordOperatorEntry = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRecordOperatorEntryUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRecordOperatorEntryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOperatorEntry>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordOperatorEntry>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['recordOperatorEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordOperatorEntry>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  recordOperatorEntry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordOperatorEntryMutationResult = NonNullable<Awaited<ReturnType<typeof recordOperatorEntry>>>
+
+    export type RecordOperatorEntryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Record a deliberate Smart360 cockpit entry
+ */
+export const useRecordOperatorEntry = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOperatorEntry>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordOperatorEntry>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRecordOperatorEntryMutationOptions(options));
+    }
 
 export const getGetTenantUrl = (id: string,) => {
 

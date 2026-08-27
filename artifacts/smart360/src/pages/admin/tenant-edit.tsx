@@ -62,6 +62,17 @@ export default function AdminTenantEdit() {
   const { data: hostSession } = useHostSession();
   const isOwner = Boolean(session?.authenticated);
 
+  const operatorEntryCalled = useRef(false);
+  useEffect(() => {
+    if (isOwner && id && !operatorEntryCalled.current) {
+      operatorEntryCalled.current = true;
+      fetch(`/api/admin/tenants/${id}/operator-entry`, {
+        method: "POST",
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+      }).catch(() => undefined);
+    }
+  }, [isOwner, id]);
+
   const { data: tenant, isLoading } = useGetTenant(id, { query: { enabled: !!id, queryKey: getGetTenantQueryKey(id) } });
   const { data: previewTenant } = useGetPublicTenant(
     tenant?.slug || "",
@@ -159,7 +170,12 @@ export default function AdminTenantEdit() {
 
   // Renewal ("Obnova"): a real editable date, edited directly (not via
   // formData — saving it immediately keeps the history trail on the server).
-  const { data: renewals } = useListTenantRenewals(id);
+  const { data: renewals } = useListTenantRenewals(id, {
+    query: {
+      enabled: isOwner && Boolean(id),
+      queryKey: getListTenantRenewalsQueryKey(id),
+    },
+  });
   const renewMutation = useRenewTenant({
     mutation: {
       onSuccess: () => {
@@ -460,24 +476,38 @@ export default function AdminTenantEdit() {
 
         <div className="mt-8 pt-4 border-t border-black/5 px-4 flex flex-col gap-1">
           <p className="text-sm font-semibold truncate">
-            {isOwner ? "Smart360 Admin" : hostSession?.email || "Gostitelj"}
+            {isOwner ? "Smart360 operater" : hostSession?.email || "Gostitelj"}
           </p>
-          <button
-            onClick={async () => {
-              if (isOwner) {
-                setLocation("/admin");
-                return;
-              }
-              await fetch("/api/admin/host/logout", {
-                method: "POST",
-                credentials: "include",
-              }).catch(() => undefined);
-              setLocation("/admin/login");
-            }}
-            className="text-sm text-muted-foreground hover:text-foreground text-left"
-          >
-            {isOwner ? "Nazaj na namestitve" : "Odjava"}
-          </button>
+          {isOwner ? (
+            <button
+              onClick={() => setLocation("/admin")}
+              className="text-sm text-muted-foreground hover:text-foreground text-left"
+            >
+              Nazaj na namestitve
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setLocation("/admin/account")}
+                className="text-sm text-muted-foreground hover:text-foreground text-left"
+                data-testid="button-open-account"
+              >
+                Moj račun
+              </button>
+              <button
+                onClick={async () => {
+                  await fetch("/api/admin/host/logout", {
+                    method: "POST",
+                    credentials: "include",
+                  }).catch(() => undefined);
+                  setLocation("/admin/login");
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground text-left"
+              >
+                Odjava
+              </button>
+            </>
+          )}
         </div>
       </aside>
 
@@ -496,7 +526,7 @@ export default function AdminTenantEdit() {
             {isOwner && (
               <div className="ml-2 flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md shrink-0 border border-emerald-200">
                 <UserRoundCog className="h-4 w-4" />
-                Smart360 · v imenu gostitelja
+                Smart360 operater
               </div>
             )}
             {tenant.copiedFromTenantId && (
@@ -520,7 +550,7 @@ export default function AdminTenantEdit() {
                 <TabsTrigger value="contacts" className="rounded-[10px]">Stiki & Lokacija</TabsTrigger>
                 <TabsTrigger value="translations" className="rounded-[10px]">Prevodi</TabsTrigger>
                 <TabsTrigger value="guide" className="rounded-[10px]">Living Guide</TabsTrigger>
-                <TabsTrigger value="changelog" className="rounded-[10px]">Dnevnik</TabsTrigger>
+                <TabsTrigger value="changelog" className="rounded-[10px]">Zgodovina sprememb</TabsTrigger>
               </TabsList>
             )}
 
@@ -1269,46 +1299,60 @@ export default function AdminTenantEdit() {
   );
 }
 
-/** Per-tenant changelog with central actor attribution (CP2b): every change
- *  the owner makes inside a tenant is recorded as performed on the host's
- *  behalf; host changes carry the host's e-mail. */
+/** Per-tenant changelog with central actor attribution */
 function TenantChangelogCard({ tenantId }: { tenantId: string }) {
   const { data: entries, isLoading } = useListTenantChangelog(tenantId, {
     query: { enabled: !!tenantId, queryKey: getListTenantChangelogQueryKey(tenantId) },
   });
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dnevnik sprememb</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : !entries || entries.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">Za to namestitev še ni zabeleženih sprememb.</p>
-        ) : (
-          <div className="space-y-3">
-            {entries.map((e) => (
-              <div key={e.id} className="flex items-start justify-between gap-3 border-b last:border-b-0 pb-3 last:pb-0">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">
-                    {e.action} {e.entity}
-                    {e.detail && <span className="text-muted-foreground font-normal"> · {e.detail}</span>}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {actorLabel(e)}
-                  </p>
+    <div className="space-y-4 max-w-4xl" data-testid="section-changelog">
+      <div className="bg-muted p-4 rounded-lg text-sm text-muted-foreground border">
+        Ob vsaki spremembi v administraciji zabeležimo IP-naslov — zaradi varnosti in sledljivosti. IP-naslov hranimo 12 mesecev in ga nato izbrišemo; zapis o spremembi ostane.
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Zgodovina sprememb</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : !entries || entries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="empty-changelog">
+              <p className="text-lg font-medium">Ni zabeleženih sprememb</p>
+              <p className="text-sm text-muted-foreground">Za to namestitev še ni zgodovine.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {entries.map((entry) => {
+                const e = entry as typeof entry & { summary?: string; requestIp?: string };
+                return (
+                <div key={e.id} className="flex items-start justify-between gap-4 border-b last:border-b-0 pb-4 last:pb-0" data-testid={`row-changelog-${e.id}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {e.summary}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground/80">{actorLabel(e)}</span>
+                      {e.requestIp && (
+                        <>
+                          <span className="opacity-50">•</span>
+                          <span className="font-mono bg-muted px-1.5 rounded">{e.requestIp}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground/80 whitespace-nowrap shrink-0 bg-muted/50 px-2 py-1 rounded">
+                    {new Date(e.createdAt).toLocaleString("sl-SI")}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground/70 whitespace-nowrap shrink-0">
-                  {new Date(e.createdAt).toLocaleString("sl-SI")}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

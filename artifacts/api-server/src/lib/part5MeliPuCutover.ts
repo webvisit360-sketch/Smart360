@@ -11,12 +11,37 @@ import {
   PART5_MEDIA_REMOVALS,
   PART5_ORDER_FLAG_UPDATES,
 } from "./part5MeliPuLedger";
+import { currentActor } from "./actorContext";
 
 const TARGET_SLUG = "meli-pu";
 const CUTOVER_LOCK_KEY = 537_360_005;
 const CUTOVER_OPERATION_KEY = `part5-meli-pu:${PART5_LEDGER_SHA256}`;
 const EXPECTED_GUEST_UI_CONSTRAINT =
   "CHECK ((guest_ui_mode = ANY (ARRAY['legacy'::text, 'living-guide'::text])))";
+
+export function part5CutoverAuditFields(
+  actor = currentActor(),
+): {
+  tenantName: null;
+  detail: null;
+  summary: string;
+  actorType: "owner" | "system";
+  actorId: null;
+  actorEmail: null;
+  actorLabel: "Smart360";
+  requestIp: string | null;
+} {
+  return {
+    tenantName: null,
+    detail: null,
+    summary: "Smart360 je izvedel uskladitev vsebine.",
+    actorType: actor?.kind === "owner" ? "owner" : "system",
+    actorId: null,
+    actorEmail: null,
+    actorLabel: "Smart360",
+    requestIp: actor?.kind === "owner" ? actor.requestIp ?? null : null,
+  };
+}
 
 type Manifest = {
   count: number;
@@ -634,16 +659,21 @@ async function executeApprovedMutations(
     mediaRemovals += 1;
   }
 
+  const audit = part5CutoverAuditFields();
   const changelog = await client.query(
     `INSERT INTO changelog (
-       tenant_id, tenant_name, operation_key, action, entity, detail
+       tenant_id, tenant_name, operation_key, action, entity, detail,
+       summary, actor_type, actor_id, actor_email, actor_label, request_ip
      )
-     VALUES ($1, $2, $3, 'sync', 'part5-cutover', $4)`,
+     VALUES (
+       $1, NULL, $2, 'sync', 'part5-cutover', NULL,
+       'Smart360 je izvedel uskladitev vsebine.', $3, NULL, NULL, 'Smart360', $4
+     )`,
     [
       tenant.id,
-      tenant.name,
       CUTOVER_OPERATION_KEY,
-      `PART 5 content sync; ledger SHA-256 ${PART5_LEDGER_SHA256}; 349 approved ledger lines`,
+      audit.actorType,
+      audit.requestIp,
     ],
   );
   if (changelog.rowCount !== 1) {

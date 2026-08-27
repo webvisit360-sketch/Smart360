@@ -15,8 +15,10 @@ import {
 import {
   applyPart5MeliPuCutover,
   computePart5CompiledPayloadSha256,
+  part5CutoverAuditFields,
   Part5CutoverPreconditionError,
 } from "../lib/part5MeliPuCutover";
+import { actorStorage } from "../lib/actorContext";
 
 test("compiled PART 5 ledger is the exact signed allowlist", () => {
   assert.equal(
@@ -104,4 +106,31 @@ test("cutover write is locked outside a Replit production deployment", async () 
     if (previousDeployment === undefined) delete process.env["REPLIT_DEPLOYMENT"];
     else process.env["REPLIT_DEPLOYMENT"] = previousDeployment;
   }
+});
+
+test("cutover audit attribution is private and keeps the operator IP", () => {
+  const audit = actorStorage.run(
+    { kind: "owner", requestIp: "198.51.100.55" },
+    () => part5CutoverAuditFields(),
+  );
+  assert.deepEqual(audit, {
+    tenantName: null,
+    detail: null,
+    summary: "Smart360 je izvedel uskladitev vsebine.",
+    actorType: "owner",
+    actorId: null,
+    actorEmail: null,
+    actorLabel: "Smart360",
+    requestIp: "198.51.100.55",
+  });
+  assert.deepEqual(part5CutoverAuditFields(), {
+    tenantName: null,
+    detail: null,
+    summary: "Smart360 je izvedel uskladitev vsebine.",
+    actorType: "system",
+    actorId: null,
+    actorEmail: null,
+    actorLabel: "Smart360",
+    requestIp: null,
+  });
 });

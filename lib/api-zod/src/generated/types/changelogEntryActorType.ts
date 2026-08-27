@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-/**
- * Central attribution from the actor gate — owner acts on the host's behalf
- */
 export type ChangelogEntryActorType = typeof ChangelogEntryActorType[keyof typeof ChangelogEntryActorType];
 
 

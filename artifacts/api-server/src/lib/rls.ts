@@ -94,10 +94,12 @@ export const HOST_DB_ROLE = "smart360_host";
  * a new table is invisible to hosts until it is deliberately added here.
  */
 const HOST_ROLE_GRANTS: Record<string, string> = {
-  // Content the host manages (incl. trash restore/purge and duplicates).
+  // Content the host manages. Categories/items are soft-deleted with UPDATE;
+  // DELETE is intentionally absent so permanent purge stays owner-only even
+  // when a handler-level fence regresses.
   sections: "SELECT, INSERT, UPDATE, DELETE",
-  categories: "SELECT, INSERT, UPDATE, DELETE",
-  items: "SELECT, INSERT, UPDATE, DELETE",
+  categories: "SELECT, INSERT, UPDATE",
+  items: "SELECT, INSERT, UPDATE",
   media: "SELECT, INSERT, UPDATE, DELETE",
   translations: "SELECT, INSERT, UPDATE, DELETE",
   plural_forms: "SELECT, INSERT, UPDATE, DELETE",

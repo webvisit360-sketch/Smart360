@@ -31,3 +31,15 @@ Three concentric rings; each must hold alone:
 - All credential mutations are **transactional and conditional**: password change is `UPDATE ... WHERE password_hash = <verified hash>` (stale sessions can't reinstate a password after a reset); reset burns token + sets password + revokes ALL sessions in one tx; the 3/hr reset quota locks the user row (`FOR UPDATE`) so concurrent requests can't bypass the count.
 - Account model remains exactly one client account per tenant; do not evolve it into staff membership or multi-property personal accounts.
 - Operator never sets/sees client passwords. Client performs password set/change alone; changing the account email remains an operator action.
+
+## Audit and deletion decisions (owner-approved)
+
+- There is one tenant history, **Zgodovina sprememb**, visible to both roles. It combines client and Smart360 changes rather than maintaining a separate or redacted operator log.
+- Client-action IP addresses are visible in that history. Smart360/system IP addresses are stored for internal evidence but must always be projected as null to clients.
+- Clear stored IP values after 12 calendar months while retaining the timestamped audit rows and their safe descriptions.
+- Slovenian summaries may identify the bounded entity title and affected language because the history must explain what changed and where. Centrally redact recognizable contact data, and never persist bodies, URLs, passwords, tokens, guest contact data, messages, or legacy free-form detail.
+- Clients may soft-delete and restore categories/items. Permanent purge, including expiry cleanup that physically deletes rows, is Smart360-operator-only.
+
+**Why:** The owner chose transparent shared accountability while limiting security metadata and sensitive content exposure. Permanent deletion remains an operator responsibility so a client cannot irreversibly destroy content.
+
+**How to apply:** Route every approved mutation—including cutovers, site-plan media, invite activation, and password reset—through the same actor/IP/privacy policy. New client reads must never trigger physical purge as a side effect.

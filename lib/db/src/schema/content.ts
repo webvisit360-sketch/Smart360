@@ -259,6 +259,10 @@ export const changelogTable = pgTable("changelog", {
   operationKey: text("operation_key").unique(),
   action: text("action").notNull(),
   entity: text("entity").notNull(),
+  // A deliberately small, Slovenian audit vocabulary. Unlike the legacy
+  // `detail`, this field is never derived from a submitted content value,
+  // contact, password, or other personal data.
+  summary: text("summary").notNull().default("Sprememba v vodniku"),
   detail: text("detail"),
   // WHO made the change (Instruction #28 CP1 §6). Existing rows predate host
   // accounts and were all made by the single operator, so the column default
@@ -267,10 +271,19 @@ export const changelogTable = pgTable("changelog", {
   actorType: text("actor_type").notNull().default("owner"), // owner | host | system
   actorId: uuid("actor_id"),
   actorEmail: text("actor_email"),
+  // Display-only attribution; it intentionally contains no account identity.
+  actorLabel: text("actor_label").notNull().default("Smart360"),
+  // Request IP is retained for incident investigation only. It is cleared,
+  // rather than deleting the audit row, after twelve months.
+  requestIp: text("request_ip"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [
+  // Tenant history is always read newest-first; this keeps the complete audit
+  // list efficient without imposing an artificial response cap.
+  index("changelog_tenant_created_idx").on(t.tenantId, t.createdAt),
+]);
 
 export const insertSectionSchema = createInsertSchema(sectionsTable).omit({
   id: true,

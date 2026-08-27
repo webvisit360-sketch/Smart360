@@ -56,6 +56,7 @@ import {
   PostHostReplyResponse,
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/adminAuth";
+import { hostReplySummary, logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
 import {
   sha256hex,
@@ -711,6 +712,14 @@ router.post(
       { threadRef: thread.threadRef, tenantId },
       "[messages] host reply stored",
     );
+    // The host actor is attributed centrally by logChange; reply text is not
+    // suitable for an audit detail.
+    await logChange({
+      tenantId,
+      action: "create",
+      entity: "host-message",
+      summary: hostReplySummary(thread.threadRef),
+    });
 
     // Re-read updated thread + messages
     const [updatedThread] = await db

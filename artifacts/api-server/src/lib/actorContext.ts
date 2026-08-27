@@ -7,8 +7,8 @@ import { AsyncLocalStorage } from "node:async_hooks";
  * inside a tenant, which is what the changelog attribution relies on.
  */
 export type Actor =
-  | { kind: "owner" }
-  | { kind: "host"; hostUserId: string; tenantId: string; email: string };
+  | { kind: "owner"; requestIp?: string | null }
+  | { kind: "host"; hostUserId: string; tenantId: string; requestIp?: string | null };
 
 export const actorStorage = new AsyncLocalStorage<Actor>();
 

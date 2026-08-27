@@ -31,6 +31,7 @@ import {
   objectStorageClient,
 } from "../lib/objectStorage";
 import { orientedImageDimensions } from "../lib/mediaDimensions";
+import { logChange } from "../lib/changelog";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -366,6 +367,7 @@ router.post(
         itemId: itemsTable.id,
         slug: tenantsTable.slug,
         tenantId: tenantsTable.id,
+        tenantName: tenantsTable.name,
         quotaBytes: tenantsTable.mediaQuotaBytes,
       })
       .from(itemsTable)
@@ -476,6 +478,16 @@ router.post(
         .returning();
     });
     invalidateMediaUsage();
+    await logChange({
+      tenantId: row.tenantId,
+      tenantName: row.tenantName,
+      action: "create",
+      entity: "media-upload",
+      // Deliberately metadata only: neither the original filename nor URL is
+      // useful in an audit record, and they may contain personal information.
+      detail: `${itemTitle ?? "Item"} · ${video ? "video" : "image"} · ${mediaWidth ?? "?"}×${mediaHeight ?? "?"}`,
+      summary: `Dodana predstavnost · ${(itemTitle ?? "Vnos").replace(/\s+/g, " ").trim().slice(0, 120) || "Vnos"}`,
+    });
     res.status(201).json(media);
   },
 );
@@ -720,6 +732,7 @@ async function handleTenantImageUpload(
     .select({
       id: tenantsTable.id,
       slug: tenantsTable.slug,
+      name: tenantsTable.name,
       quotaBytes: tenantsTable.mediaQuotaBytes,
     })
     .from(tenantsTable)
@@ -800,6 +813,14 @@ async function handleTenantImageUpload(
       logoUrl: tenantsTable.logoUrl,
       logoSquareUrl: tenantsTable.logoSquareUrl,
     });
+  await logChange({
+    tenantId: tenant.id,
+    tenantName: tenant.name,
+    action: "replace",
+    entity: column === "logoUrl" ? "tenant-logo" : column === "heroUrl" ? "tenant-hero" : "living-guide-hero",
+    detail: column === "logoUrl" ? "Logo replaced" : "Cover image replaced",
+    summary: `${column === "logoUrl" ? "Zamenjan logotip" : "Zamenjana naslovna slika"} · ${tenant.name.replace(/\s+/g, " ").trim().slice(0, 120)}`,
+  });
   res.status(200).json({
     heroUrl: updated?.heroUrl,
     livingGuideHeroUrl: updated?.livingGuideHeroUrl,

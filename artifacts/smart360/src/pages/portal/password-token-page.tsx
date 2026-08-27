@@ -94,6 +94,7 @@ export function PasswordTokenPage({ mode }: { mode: TokenMode }) {
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              data-testid="input-new-password"
             />
           </div>
           <div className="space-y-2">
@@ -106,14 +107,20 @@ export function PasswordTokenPage({ mode }: { mode: TokenMode }) {
               required
               value={confirm}
               onChange={(event) => setConfirm(event.target.value)}
+              data-testid="input-confirm-password"
             />
           </div>
+          {mode === "invite" && (
+            <div className="bg-muted p-4 rounded-lg text-sm text-muted-foreground border leading-relaxed text-center" data-testid="text-disclosure">
+              Ob vsaki spremembi v administraciji zabeležimo IP-naslov — zaradi varnosti in sledljivosti. IP-naslov hranimo 12 mesecev in ga nato izbrišemo; zapis o spremembi ostane.
+            </div>
+          )}
           {error && (
-            <p role="alert" className="rounded-[14px] bg-destructive/10 text-destructive p-3 text-sm font-semibold">
+            <p role="alert" className="rounded-[14px] bg-destructive/10 text-destructive p-3 text-sm font-semibold" data-testid="text-error">
               {error}
             </p>
           )}
-          <Button className="w-full" type="submit" disabled={busy || !token}>
+          <Button className="w-full" type="submit" disabled={busy || !token} data-testid="button-submit-password">
             {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {mode === "invite" ? "Aktiviraj račun" : "Shrani novo geslo"}
           </Button>

@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { ChangelogEntryActorLabel } from './changelogEntryActorLabel';
 import type { ChangelogEntryActorType } from './changelogEntryActorType';
 
 export interface ChangelogEntry {
@@ -15,11 +16,15 @@ export interface ChangelogEntry {
   tenantName?: string | null;
   action: string;
   entity: string;
-  /** @nullable */
-  detail?: string | null;
-  /** Central attribution from the actor gate — owner acts on the host's behalf */
   actorType?: ChangelogEntryActorType;
-  /** @nullable */
-  actorEmail?: string | null;
+  /** Safe Slovenian plain-language audit summary */
+  summary: string;
+  /** Safe actor label; no account identity or IP address */
+  actorLabel: ChangelogEntryActorLabel;
+  /**
+     * IP only for actions by Stranka; Smart360/system IPs are always null
+     * @nullable
+     */
+  requestIp?: string | null;
   createdAt: string;
 }

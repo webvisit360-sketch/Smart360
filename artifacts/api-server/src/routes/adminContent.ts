@@ -36,6 +36,7 @@ import {
   UpsertTranslationResponse,
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/adminAuth";
+import { currentActor } from "../lib/actorContext";
 import { logChange } from "../lib/changelog";
 import { sanitizeBody, sanitizePlain, sanitizeUrl } from "../lib/sanitizeBody";
 import { isRichField, normalizeAllContent } from "../lib/normalizeContent";
@@ -87,6 +88,113 @@ async function tenantNameForSection(
   return row ?? null;
 }
 
+async function tenantContextForCategory(categoryId: string) {
+  const [row] = await db
+    .select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name })
+    .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .innerJoin(tenantsTable, eq(sectionsTable.tenantId, tenantsTable.id))
+    .where(eq(categoriesTable.id, categoryId));
+  return row ?? null;
+}
+
+async function tenantContextForItem(itemId: string) {
+  const [row] = await db
+    .select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name, title: itemsTable.title })
+    .from(itemsTable)
+    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .innerJoin(tenantsTable, eq(sectionsTable.tenantId, tenantsTable.id))
+    .where(eq(itemsTable.id, itemId));
+  return row ?? null;
+}
+
+async function translationAuditContext(
+  model: string,
+  recordId: string,
+): Promise<{ tenantId: string; tenantName: string; title: string } | null> {
+  if (model === "tenant") {
+    const [row] = await db.select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name, title: tenantsTable.name })
+      .from(tenantsTable).where(eq(tenantsTable.id, recordId));
+    return row ?? null;
+  }
+  if (model === "section") {
+    const [row] = await db.select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name, title: sectionsTable.title })
+      .from(sectionsTable).innerJoin(tenantsTable, eq(sectionsTable.tenantId, tenantsTable.id))
+      .where(eq(sectionsTable.id, recordId));
+    return row ?? null;
+  }
+  if (model === "category") {
+    const [row] = await db.select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name, title: categoriesTable.label })
+      .from(categoriesTable).innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+      .innerJoin(tenantsTable, eq(sectionsTable.tenantId, tenantsTable.id)).where(eq(categoriesTable.id, recordId));
+    return row ?? null;
+  }
+  if (model === "item") {
+    const [row] = await db.select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name, title: itemsTable.title })
+      .from(itemsTable).innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+      .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+      .innerJoin(tenantsTable, eq(sectionsTable.tenantId, tenantsTable.id)).where(eq(itemsTable.id, recordId));
+    return row ? { ...row, title: row.title ?? "Item" } : null;
+  }
+  return null;
+}
+
+/** Titles and visibility are safe audit metadata; never put content bodies here. */
+function contentUpdateDetail(
+  before: { title?: string | null; label?: string | null; isVisible?: boolean },
+  after: { title?: string | null; label?: string | null; isVisible?: boolean },
+): string | undefined {
+  const name = after.title ?? after.label ?? before.title ?? before.label ?? undefined;
+  if (before.isVisible !== undefined && before.isVisible !== after.isVisible) {
+    return `${name ?? "Vnos"}: ${before.isVisible ? "vidno" : "skrito"} → ${after.isVisible ? "vidno" : "skrito"}`;
+  }
+  const oldName = before.title ?? before.label;
+  const newName = after.title ?? after.label;
+  return oldName !== newName && oldName && newName ? `${oldName} → ${newName}` : name;
+}
+
+function auditLabel(value: string | null | undefined): string {
+  return (value ?? "Vnos").replace(/\s+/g, " ").trim().slice(0, 120) || "Vnos";
+}
+
+function auditSummary(verb: string, label?: string | null, language?: string): string {
+  return [verb, auditLabel(label), language].filter(Boolean).join(" · ");
+}
+
+/** Field names, not values, drive the audit wording: content itself never enters it. */
+export function contentMutationSummary(
+  entity: "section" | "category" | "item",
+  patch: object,
+  label: string | null | undefined,
+): string {
+  const fields = new Set(Object.keys(patch));
+  const noun = entity === "section" ? "razdelka" : entity === "category" ? "kategorije" : "vnosa";
+  let change = "Spremenjeni podatki";
+  if (fields.has("isVisible")) change = "Spremenjena vidnost";
+  else if (["title", "label", "subtitle", "sublabel"].some((key) => fields.has(key))) change = "Spremenjen naslov";
+  else if (["body", "noteText", "bullets"].some((key) => fields.has(key))) change = "Spremenjeno besedilo";
+  else if (["phone", "hours", "website", "mapUrl"].some((key) => fields.has(key))) change = "Spremenjeni kontaktni podatki";
+  else if (["price", "priceUnit"].some((key) => fields.has(key))) change = "Spremenjena cena";
+  return auditSummary(`${change} ${noun}`, label);
+}
+
+export function mediaMutationSummary(
+  patch: object,
+  itemTitle: string | null | undefined,
+): string {
+  const fields = new Set(Object.keys(patch));
+  const change = fields.has("position") ? "Spremenjen vrstni red predstavnosti"
+    : ["focusX", "focusY"].some((key) => fields.has(key)) ? "Spremenjen izrez predstavnosti"
+    : ["width", "height", "durationSec", "posterUrl"].some((key) => fields.has(key)) ? "Spremenjeni podatki predstavnosti"
+    : "Spremenjeni podatki predstavnosti";
+  return auditSummary(change, itemTitle);
+}
+
+function languageLabel(lang: string): string {
+  return ({ sl: "slovenščina", en: "angleščina", de: "nemščina", it: "italijanščina" } as Record<string, string>)[lang] ?? auditLabel(lang);
+}
+
 // ---------- Sections ----------
 
 router.post("/admin/tenants/:id/sections", async (req, res): Promise<void> => {
@@ -121,6 +229,7 @@ router.post("/admin/tenants/:id/sections", async (req, res): Promise<void> => {
     action: "create",
     entity: "section",
     detail: parsed.data.title,
+    summary: auditSummary("Ustvarjen razdelek", section!.title),
   });
   res.status(201).json(CreateSectionResponse.parse(section));
 });
@@ -153,7 +262,8 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
     ...ctx,
     action: "update",
     entity: "section",
-    detail: section.title,
+    detail: contentUpdateDetail(prevSection ?? {}, section),
+    summary: contentMutationSummary("section", parsed.data, section.title),
   });
   res.json(UpdateSectionResponse.parse(section));
 });
@@ -174,6 +284,7 @@ router.delete("/admin/sections/:id", async (req, res): Promise<void> => {
     action: "delete",
     entity: "section",
     detail: section.title,
+    summary: auditSummary("Odstranjen razdelek", section.title),
   });
   res.sendStatus(204);
 });
@@ -214,6 +325,8 @@ router.post("/admin/sections/reorder", async (req, res): Promise<void> => {
         .where(eq(sectionsTable.id, ids[i]!));
     }
   });
+  const ctx = await tenantNameForSection(ids[0]!);
+  await logChange({ ...ctx, action: "reorder", entity: "section", detail: `${ids.length} sections`, summary: "Spremenjen vrstni red razdelkov" });
   res.json({ ok: true });
 });
 
@@ -253,6 +366,7 @@ router.post(
       action: "create",
       entity: "category",
       detail: parsed.data.label,
+      summary: auditSummary("Ustvarjena kategorija", category!.label),
     });
     res.status(201).json(CreateCategoryResponse.parse(category));
   },
@@ -286,7 +400,8 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
     ...ctx,
     action: "update",
     entity: "category",
-    detail: category.label,
+    detail: contentUpdateDetail(prevCategory ?? {}, category),
+    summary: contentMutationSummary("category", parsed.data, category.label),
   });
   res.json(UpdateCategoryResponse.parse(category));
 });
@@ -310,6 +425,7 @@ router.delete("/admin/categories/:id", async (req, res): Promise<void> => {
     action: "delete",
     entity: "category",
     detail: category.label,
+    summary: auditSummary("Premaknjena v koš kategorija", category.label),
   });
   res.sendStatus(204);
 });
@@ -351,6 +467,8 @@ router.post("/admin/categories/reorder", async (req, res): Promise<void> => {
         .where(eq(categoriesTable.id, ids[i]!));
     }
   });
+  const ctx = await tenantContextForCategory(ids[0]!);
+  await logChange({ ...ctx, action: "reorder", entity: "category", detail: `${ids.length} categories`, summary: "Spremenjen vrstni red kategorij" });
   res.json({ ok: true });
 });
 
@@ -399,6 +517,7 @@ router.post("/admin/categories/:id/items", async (req, res): Promise<void> => {
     action: "create",
     entity: "item",
     detail: parsed.data.title ?? category.label,
+    summary: auditSummary("Ustvarjen vnos", item!.title ?? category.label),
   });
   res.status(201).json(CreateItemResponse.parse(await itemWithMedia(item!)));
 });
@@ -435,7 +554,8 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     ...ctx,
     action: "update",
     entity: "item",
-    detail: item.title ?? undefined,
+    detail: contentUpdateDetail(prevItem ?? {}, item),
+    summary: contentMutationSummary("item", parsed.data, item.title),
   });
   res.json(UpdateItemResponse.parse(await itemWithMedia(item)));
 });
@@ -452,10 +572,13 @@ router.delete("/admin/items/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  const ctx = await tenantContextForItem(item.id);
   await logChange({
+    ...ctx,
     action: "delete",
     entity: "item",
     detail: item.title ?? undefined,
+    summary: auditSummary("Premaknjen v koš vnos", item.title),
   });
   res.sendStatus(204);
 });
@@ -499,10 +622,13 @@ router.post("/admin/items/:id/duplicate", async (req, res): Promise<void> => {
       })),
     );
   }
+  const ctx = await tenantContextForItem(item!.id);
   await logChange({
+    ...ctx,
     action: "duplicate",
     entity: "item",
     detail: item!.title ?? undefined,
+    summary: auditSummary("Podvojen vnos", item!.title),
   });
   res.status(201).json(DuplicateItemResponse.parse(await itemWithMedia(item!)));
 });
@@ -544,6 +670,8 @@ router.post("/admin/items/reorder", async (req, res): Promise<void> => {
         .where(eq(itemsTable.id, ids[i]!));
     }
   });
+  const ctx = await tenantContextForItem(ids[0]!);
+  await logChange({ ...ctx, action: "reorder", entity: "item", detail: `${ids.length} items`, summary: "Spremenjen vrstni red vnosov" });
   res.json({ ok: true });
 });
 
@@ -575,6 +703,8 @@ router.post("/admin/items/:id/media", async (req, res): Promise<void> => {
     .insert(mediaTable)
     .values({ ...parsed.data, position, itemId })
     .returning();
+  const ctx = await tenantContextForItem(itemId);
+  await logChange({ ...ctx, action: "create", entity: "media", detail: item.title ?? "Media added", summary: auditSummary("Dodana predstavnost", item.title) });
   res.status(201).json(AddItemMediaResponse.parse(media));
 });
 
@@ -587,6 +717,7 @@ router.patch("/admin/media/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const [before] = await db.select().from(mediaTable).where(eq(mediaTable.id, id));
   const [media] = await db
     .update(mediaTable)
     .set(parsed.data)
@@ -596,6 +727,14 @@ router.patch("/admin/media/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  const ctx = media.itemId ? await tenantContextForItem(media.itemId) : null;
+  await logChange({
+    ...ctx,
+    action: "update",
+    entity: "media",
+    detail: before?.position !== media.position ? "Media position updated" : "Media metadata updated",
+    summary: mediaMutationSummary(parsed.data, ctx?.title),
+  });
   res.json(UpdateMediaResponse.parse(media));
 });
 
@@ -609,6 +748,8 @@ router.delete("/admin/media/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  const ctx = media.itemId ? await tenantContextForItem(media.itemId) : null;
+  await logChange({ ...ctx, action: "delete", entity: "media", detail: "Media removed", summary: auditSummary("Odstranjena predstavnost", ctx?.title) });
   res.sendStatus(204);
 });
 
@@ -640,6 +781,8 @@ router.post("/admin/media/reorder", async (req, res): Promise<void> => {
         .where(eq(mediaTable.id, ids[i]!));
     }
   });
+  const ctx = rows[0]!.parent ? await tenantContextForItem(rows[0]!.parent) : null;
+  await logChange({ ...ctx, action: "reorder", entity: "media", detail: `${ids.length} media`, summary: auditSummary("Spremenjen vrstni red predstavnosti", ctx?.title) });
   res.json({ ok: true });
 });
 
@@ -746,6 +889,14 @@ router.put("/admin/translations", async (req, res): Promise<void> => {
     });
   }
   invalidateTenantCache();
+  const ctx = await translationAuditContext(model, recordId);
+  await logChange({
+    ...ctx,
+    action: value === "" ? "delete" : match ? "update" : "create",
+    entity: "translation",
+    detail: `${ctx?.title ?? model} · ${lang} · ${field}`,
+    summary: auditSummary(value === "" ? "Odstranjen prevod" : "Spremenjeno besedilo", ctx?.title, languageLabel(lang)),
+  });
   res.json(UpsertTranslationResponse.parse({ ok: true }));
 });
 
@@ -766,6 +917,7 @@ router.post("/admin/maintenance/normalize-content", async (_req, res): Promise<v
     action: "maintenance",
     entity: "normalize-content",
     detail: `Normalizacija vsebine: ${count} spremenjenih polj`,
+    summary: "Normalizirana vsebina vodnika",
   });
   invalidateTenantCache();
   res.json({
@@ -827,7 +979,11 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Tenant not found" });
     return;
   }
-  await purgeExpired(tenantId);
+  // Expiry cleanup is permanent deletion, so it must never run inside a
+  // client request. Smart360 performs it when an operator opens the trash.
+  if (currentActor()?.kind === "owner") {
+    await purgeExpired(tenantId);
+  }
   const categories = await db
     .select({
       id: categoriesTable.id,
@@ -887,7 +1043,7 @@ router.post("/admin/categories/:id/restore", async (req, res): Promise<void> => 
     return;
   }
   const ctx = await tenantNameForSection(category.sectionId);
-  await logChange({ ...ctx, action: "restore", entity: "category", detail: category.label });
+  await logChange({ ...ctx, action: "restore", entity: "category", detail: category.label, summary: auditSummary("Obnovljena kategorija", category.label) });
   res.json({ ok: true });
 });
 
@@ -908,7 +1064,8 @@ router.post("/admin/items/:id/restore", async (req, res): Promise<void> => {
     .update(categoriesTable)
     .set({ deletedAt: null })
     .where(and(eq(categoriesTable.id, item.categoryId), sql`${categoriesTable.deletedAt} IS NOT NULL`));
-  await logChange({ action: "restore", entity: "item", detail: item.title ?? undefined });
+  const ctx = await tenantContextForItem(item.id);
+  await logChange({ ...ctx, action: "restore", entity: "item", detail: item.title ?? undefined, summary: auditSummary("Obnovljen vnos", item.title) });
   res.json({ ok: true });
 });
 
@@ -922,7 +1079,8 @@ router.delete("/admin/categories/:id/purge", async (req, res): Promise<void> => 
     res.status(404).json({ error: "Not found" });
     return;
   }
-  await logChange({ action: "purge", entity: "category", detail: category.label });
+  const ctx = await tenantNameForSection(category.sectionId);
+  await logChange({ ...ctx, action: "purge", entity: "category", detail: category.label, summary: auditSummary("Trajno odstranjena kategorija", category.label) });
   res.sendStatus(204);
 });
 
@@ -936,7 +1094,8 @@ router.delete("/admin/items/:id/purge", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  await logChange({ action: "purge", entity: "item", detail: item.title ?? undefined });
+  const ctx = await tenantContextForItem(item.id);
+  await logChange({ ...ctx, action: "purge", entity: "item", detail: item.title ?? undefined, summary: auditSummary("Trajno odstranjen vnos", item.title) });
   res.sendStatus(204);
 });
 

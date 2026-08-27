@@ -1,0 +1,41 @@
+Regression, not a new bug. The "več" button on the home screen worked before the
+detail-sheet and radius work, and stopped afterwards.
+
+MECHANISM
+That work introduced the `hold` class. CSS sets `.v.hold { pointer-events:none }`
+alongside the scale and brightness. A view carrying `hold` is dimmed and cannot
+be touched. `hold` is applied to the background when a detail or sheet opens and
+is removed only when go() navigates to a non-sheet target.
+
+A frozen home screen therefore means `hold` stayed on it. The whole screen is
+dead, not just that one button — the owner simply pressed that one.
+
+MEASURE THIS FIRST, one line, before changing anything:
+On the production home screen, click "več", then report:
+· does the home view element carry the class `hold`;
+· its computed pointer-events;
+· which element, if any, has the class `on`;
+· the console output at that moment.
+
+TWO CANDIDATES
+1. `hold` survives a return path that does not go through go(). Find every place
+   a detail or sheet is closed and confirm each removes `hold` from the
+   background.
+2. The target of "več" was included in the .v--det conversion. If it is now a
+   detail sheet, clicking it correctly puts home into `hold` while the sheet
+   fails to appear — dimmed, dead, nothing else visible.
+
+THEN FIX THE CLASS, NOT THE BUTTON
+Two rules for go(), both of which I have already applied to the prototype:
+· go() must never throw and never fail silently. If the target view does not
+  exist, log it and show a toast. It must not leave the DOM half-changed. I
+  found two such dead targets in my own prototype and fixed them the same way.
+· `hold` must never outlive the thing that caused it. Add a self-heal: if any
+  view carries `hold` while no view carries `on`, that state is impossible —
+  clear `hold`. It is three lines and it closes this entire class of freeze.
+
+Add a test that fails if any view is left with pointer-events:none after a
+detail is closed. This is the second time this class of defect has reached the
+owner's phone.
+
+Report and STOP.

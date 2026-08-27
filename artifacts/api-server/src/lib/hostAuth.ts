@@ -341,7 +341,9 @@ export type HostInviteIssue =
 
 function inviteActor(req: Request | null): string {
   if (!req?.actor) return "anonymous";
-  if (req.actor.kind === "host") return `host:${req.actor.email}`;
+  // Authentication-event detail is intentionally metadata-only. E-mail
+  // addresses, passwords, and tokens are never copied into audit detail.
+  if (req.actor.kind === "host") return "host";
   return "owner";
 }
 
@@ -451,7 +453,10 @@ export async function consumeHostInvite(
   tokenRaw: unknown,
   passwordRaw: unknown,
   req: Request | null,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; hostUserId: string; tenantId: string }
+  | { ok: false; error: string }
+> {
   const next = validateNewPassword(passwordRaw);
   if (!next.ok) return { ok: false, error: next.error };
   const token = typeof tokenRaw === "string" ? tokenRaw.trim() : "";
@@ -472,6 +477,16 @@ export async function consumeHostInvite(
       .limit(1)
       .for("update");
     if (!invite) return null;
+    // Resolve the tenant while the token is locked. This is returned only to
+    // establish the server-owned actor context for the post-commit changelog;
+    // neither identifier is exposed to the anonymous caller.
+    const [membership] = await tx
+      .select({ tenantId: hostMembershipsTable.tenantId })
+      .from(hostMembershipsTable)
+      .where(eq(hostMembershipsTable.hostUserId, invite.hostUserId))
+      .limit(1)
+      .for("update");
+    if (!membership) return null;
 
     // This conditional is the hard type boundary: an invite can CLAIM an
     // account once, but can never RESET an account that already has a password.
@@ -499,10 +514,10 @@ export async function consumeHostInvite(
       ip: req?.ip ?? null,
       userAgent: req?.get("user-agent") ?? null,
     });
-    return invite.hostUserId;
+    return { hostUserId: user.id, tenantId: membership.tenantId };
   });
   if (!claimed) return { ok: false, error: "Povezava ni veljavna ali je potekla." };
-  return { ok: true };
+  return { ok: true, ...claimed };
 }
 
 // ---------- Password reset (self-service, single-use, 60 min) ----------
@@ -564,7 +579,10 @@ export async function consumeHostPasswordReset(
   tokenRaw: unknown,
   passwordRaw: unknown,
   req: Request | null,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; hostUserId: string; tenantId: string }
+  | { ok: false; error: string }
+> {
   const next = validateNewPassword(passwordRaw);
   if (!next.ok) return { ok: false, error: next.error };
   const token = typeof tokenRaw === "string" ? tokenRaw.trim() : "";
@@ -587,6 +605,15 @@ export async function consumeHostPasswordReset(
       .limit(1)
       .for("update");
     if (!reset) return null;
+    // Keep the actor identity coupled to the same successful token
+    // consumption transaction. It is used only for the post-commit audit row.
+    const [membership] = await tx
+      .select({ tenantId: hostMembershipsTable.tenantId })
+      .from(hostMembershipsTable)
+      .where(eq(hostMembershipsTable.hostUserId, reset.hostUserId))
+      .limit(1)
+      .for("update");
+    if (!membership) return null;
     const [user] = await tx
       .update(hostUsersTable)
       .set({
@@ -618,10 +645,10 @@ export async function consumeHostPasswordReset(
       ip: req?.ip ?? null,
       userAgent: req?.get("user-agent") ?? null,
     });
-    return reset.hostUserId;
+    return { hostUserId: user.id, tenantId: membership.tenantId };
   });
   if (!burnedUserId) return { ok: false, error: "Povezava ni veljavna ali je potekla." };
-  return { ok: true };
+  return { ok: true, ...burnedUserId };
 }
 
 // ---------- Owner-side account management (never touches passwords) ----------
@@ -680,7 +707,7 @@ export async function upsertHostAccountForTenant(
       .update(hostUsersTable)
       .set({ email })
       .where(eq(hostUsersTable.id, membership.hostUserId));
-    await audit("email_changed", membership.hostUserId, req, email);
+    await audit("email_changed", membership.hostUserId, req);
     return { ok: true, created: false, email };
   }
   if (taken) {
@@ -694,6 +721,6 @@ export async function upsertHostAccountForTenant(
     .values({ email, passwordHash: null })
     .returning();
   await db.insert(hostMembershipsTable).values({ hostUserId: user!.id, tenantId });
-  await audit("account_created", user!.id, req, email);
+  await audit("account_created", user!.id, req);
   return { ok: true, created: true, email };
 }

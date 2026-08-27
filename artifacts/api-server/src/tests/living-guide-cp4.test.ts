@@ -13,6 +13,7 @@
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   validateLivingGuideNav,
   LIVING_GUIDE_NAV_KEYS,
@@ -377,5 +378,55 @@ describe("delete cleanup contract", () => {
     const row = { id: "y", purpose: "site-plan", itemId: null };
     const isSitePlan = row.purpose === "site-plan" && row.itemId === null;
     assert.ok(isSitePlan);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Site-plan audit coverage
+// ---------------------------------------------------------------------------
+describe("site-plan audit coverage", () => {
+  const routeSource = readFileSync(
+    new URL("../routes/adminSitePlan.ts", import.meta.url),
+    "utf8",
+  );
+
+  test("records fixed Slovenian audit summaries for every successful mutation", () => {
+    const expectedEvents = [
+      {
+        action: "create",
+        summary: "Dodana je bila slika načrta lokacije.",
+      },
+      {
+        action: "reorder",
+        summary: "Spremenjen je bil vrstni red slik načrta lokacije.",
+      },
+      {
+        action: "update",
+        summary: "Posodobljen je bil opis slike načrta lokacije.",
+      },
+      {
+        action: "delete",
+        summary: "Odstranjena je bila slika načrta lokacije.",
+      },
+    ];
+
+    for (const event of expectedEvents) {
+      assert.match(
+        routeSource,
+        new RegExp(
+          `logChange\\(\\{\\s*tenantId(?:\\s*:\\s*existing\\.tenantId)?,\\s*action:\\s*"${event.action}",\\s*entity:\\s*"site-plan-image",\\s*summary:\\s*"${event.summary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`,
+          "s",
+        ),
+      );
+    }
+  });
+
+  test("site-plan audit calls do not include request-controlled media content", () => {
+    const auditCalls = routeSource.match(/logChange\(\{[\s\S]*?\}\);/g) ?? [];
+    assert.equal(auditCalls.length, 4);
+    for (const call of auditCalls) {
+      assert.match(call, /tenantId/);
+      assert.doesNotMatch(call, /\b(caption|filename|url|alt|buffer)\b/i);
+    }
   });
 });

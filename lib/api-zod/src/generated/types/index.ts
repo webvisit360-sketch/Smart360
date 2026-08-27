@@ -21,6 +21,7 @@ export * from './categoryInputExploreGroup';
 export * from './categoryUpdate';
 export * from './categoryUpdateExploreGroup';
 export * from './changelogEntry';
+export * from './changelogEntryActorLabel';
 export * from './changelogEntryActorType';
 export * from './checkSlugParams';
 export * from './cleanupRestoreRequest';

@@ -9,7 +9,7 @@ import {
   useRevokeAllSessions,
   useGetRecoveryCodeStatus,
   useRotateRecoveryCodes,
-  useListAuthEvents,
+  useListAuthEvents, useGetAdminSession,
   getGetRecoveryCodeStatusQueryKey,
   getListAuthEventsQueryKey,
 } from "@workspace/api-client-react";
@@ -33,9 +33,138 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { useHostSession } from "@/hooks/use-host-session";
 import { getListPasskeysQueryKey } from "@workspace/api-client-react";
 
+
 export default function AdminAccount() {
+  const { data: session, isLoading: sessionLoading } = useGetAdminSession();
+  const { data: hostSession, isLoading: hostLoading } = useHostSession();
+
+  if (sessionLoading || hostLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[100dvh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const isOwner = Boolean(session?.authenticated);
+
+  if (isOwner) {
+    return <OwnerAccount />;
+  }
+
+  return <HostAccount />;
+}
+
+function HostAccount() {
+  const [pwdCurrent, setPwdCurrent] = useState("");
+  const [pwdNew, setPwdNew] = useState("");
+  const [pwdConfirm, setPwdConfirm] = useState("");
+  const [pwdBusy, setPwdBusy] = useState(false);
+  const { toast } = useToast();
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pwdCurrent || !pwdNew || !pwdConfirm) return;
+    if (pwdNew !== pwdConfirm) {
+      toast({ title: "Napaka", description: "Novi gesli se ne ujemata.", variant: "destructive" });
+      return;
+    }
+    if (pwdNew.length < 12) {
+      toast({ title: "Napaka", description: "Geslo mora biti dolgo vsaj 12 znakov.", variant: "destructive" });
+      return;
+    }
+    setPwdBusy(true);
+    try {
+      const res = await fetch("/api/admin/host/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwdCurrent, newPassword: pwdNew }),
+        credentials: "include"
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Sprememba gesla ni uspela.");
+      }
+      toast({ title: "Geslo spremenjeno", description: "Vaše geslo je bilo uspešno posodobljeno." });
+      setPwdCurrent("");
+      setPwdNew("");
+      setPwdConfirm("");
+    } catch (err: any) {
+      toast({ title: "Napaka", description: err.message, variant: "destructive" });
+    } finally {
+      setPwdBusy(false);
+    }
+  };
+
+  return (
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Moj račun</h1>
+          <p className="text-sm text-muted-foreground">Upravljanje nastavitev vašega računa</p>
+        </div>
+      </div>
+      <Card data-testid="card-password-rotation">
+        <CardHeader>
+          <CardTitle>Sprememba gesla</CardTitle>
+          <CardDescription>Zamenjajte svoje trenutno geslo.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordChange} className="space-y-4 max-w-sm">
+            <div className="space-y-2">
+              <Label htmlFor="pwd-current">Trenutno geslo</Label>
+              <Input
+                id="pwd-current"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={pwdCurrent}
+                onChange={(e) => setPwdCurrent(e.target.value)}
+                data-testid="input-pwd-current"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pwd-new">Novo geslo</Label>
+              <Input
+                id="pwd-new"
+                type="password"
+                required
+                minLength={12}
+                autoComplete="new-password"
+                value={pwdNew}
+                onChange={(e) => setPwdNew(e.target.value)}
+                data-testid="input-pwd-new"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pwd-confirm">Ponovite novo geslo</Label>
+              <Input
+                id="pwd-confirm"
+                type="password"
+                required
+                minLength={12}
+                autoComplete="new-password"
+                value={pwdConfirm}
+                onChange={(e) => setPwdConfirm(e.target.value)}
+                data-testid="input-pwd-confirm"
+              />
+            </div>
+            <Button type="submit" disabled={pwdBusy || !pwdCurrent || !pwdNew || !pwdConfirm} data-testid="button-submit-password-change">
+              {pwdBusy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Spremeni geslo
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function OwnerAccount() {
+
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();

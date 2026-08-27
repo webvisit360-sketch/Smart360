@@ -148,6 +148,7 @@ router.post(
       action: "update",
       entity: "translations",
       detail: `uvoz ${lang}: ${report.set} zapisanih, ${report.skippedUnknown} neznanih, ${report.unchanged} nespremenjenih`,
+      summary: `Uvoženi prevodi · ${tenant.name.replace(/\s+/g, " ").trim().slice(0, 120)} · ${({ sl: "slovenščina", en: "angleščina", de: "nemščina", it: "italijanščina" } as Record<string, string>)[lang] ?? lang.slice(0, 32)}`,
     });
     res.json(ImportTranslationsResponse.parse(report));
   }

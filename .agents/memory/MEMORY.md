@@ -16,7 +16,7 @@
 - [Stale guest bundles](stale-guest-bundles.md) — fix built: self-owned static server + version.json one-shot safe reload; platform static headers are NOT configurable; verify needs two publishes.
 - [Prod data backfills](prod-data-backfills.md) — prod SQL is read-only; publish syncs schema not data; fix via self-disabling startup backfill with race-safe predicates. Also: itemMapsHref is the only POI maps builder.
 - [Scale audit 150 tenants](scale-audit-150-tenants.md) — one app suffices; hardening shipped (indexes, brotli, payload cache); guest-cache invalidation is CENTRALIZED middleware — never per-route.
-- [Operator and client access](host-portal.md) — exactly two roles: global Smart360 operator and one shared client account per tenant, protected by gate/fence/RLS.
+- [Operator and client access](host-portal.md) — two roles, shared audit/IP policy, client-owned passwords, and operator-only permanent purge.
 - [Owner cockpit](owner-cockpit.md) — slug frozen after first publish (CAS stamp!), published e-mail fires once via CAS winner, type seeding in one tx, buildTenantOverviews is the single readiness source.
 - [Playwright WebKit runtime](playwright-webkit-runtime.md) — local WPE starts but cannot create EGL; only claim WebKit after a real page opens on a supported host.
 - [Town-pack onboarding direction](town-pack-onboarding.md) — shared place catalogue is deferred; optimize tenant-local onboarding and require provenance for every new photograph.

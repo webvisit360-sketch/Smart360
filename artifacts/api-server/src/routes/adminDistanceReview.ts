@@ -53,11 +53,15 @@ export async function review(tenantId: string) {
   return { tenantReady: Boolean(tenant?.latitude !== null && tenant?.longitude !== null), originLatitude: tenant?.latitude ?? null, originLongitude: tenant?.longitude ?? null, rows, counts };
 }
 
-async function changed(tenantId: string, detail: string) {
+function auditLabel(value: string | null | undefined): string {
+  return (value ?? "Vnos").replace(/\s+/g, " ").trim().slice(0, 120) || "Vnos";
+}
+
+async function changed(tenantId: string, detail: string, summary: string) {
   const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId));
   if (!tenant) return;
   invalidateTenantCache();
-  await logChange({ tenantId, tenantName: tenant.name, action: "update", entity: "distance-review", detail });
+  await logChange({ tenantId, tenantName: tenant.name, action: "update", entity: "distance-review", detail, summary });
 }
 
 router.get("/admin/tenants/:id/distance-review", async (req, res) => {
@@ -67,7 +71,10 @@ router.post("/admin/tenants/:id/distance-review", async (req, res) => {
   const parsed = RunDistanceReviewBody.safeParse(req.body);
   if (!parsed.success) return void res.status(400).json({ error: parsed.error.message });
   try {
-    res.json(RunDistanceReviewResponse.parse(serialize(await runDistanceComputation(first(req.params["id"]), parsed.data))));
+    const tenantId = first(req.params["id"]);
+    const result = await runDistanceComputation(tenantId, parsed.data);
+    await changed(tenantId, `Izračun predlogov razdalj: ${result.processed} obdelanih.`, "Izračunani predlogi razdalj");
+    res.json(RunDistanceReviewResponse.parse(serialize(result)));
   } catch (error) { res.status(400).json({ error: error instanceof Error ? error.message : "Izračun ni uspel." }); }
 });
 router.post("/admin/tenants/:id/distance-review/rows/:rowId/approve", async (req, res) => {
@@ -79,37 +86,43 @@ router.post("/admin/tenants/:id/distance-review/rows/:rowId/approve", async (req
   } catch (error) {
     return void res.status(row.item.distanceMeters !== null ? 409 : 400).json({ error: error instanceof Error ? error.message : "Predloga ni mogoče potrditi." });
   }
-  await changed(tenantId, "Potrjena predlagana razdalja.");
+  await changed(tenantId, `Potrjena predlagana razdalja · ${row.item.title ?? "Item"}.`, `Potrjena razdalja · ${auditLabel(row.item.title)}`);
   res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
 });
 router.post("/admin/tenants/:id/distance-review/rows/:rowId/skip", async (req, res) => {
   const tenantId = first(req.params["id"]); const rowId = first(req.params["rowId"]);
-  await db.update(itemDistanceProposalsTable).set({ status: "skipped" }).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
+  const [row] = await db.select({ item: itemsTable }).from(itemDistanceProposalsTable)
+    .innerJoin(itemsTable, eq(itemsTable.id, itemDistanceProposalsTable.itemId))
+    .where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
+  if (!row) return void res.status(404).json({ error: "Predlog ni najden." });
+  await db.update(itemDistanceProposalsTable).set({ status: "skipped" }).where(eq(itemDistanceProposalsTable.id, rowId));
+  await changed(tenantId, `Preskočen predlog razdalje · ${row.item.title ?? "Item"}.`, `Preskočen predlog razdalje · ${auditLabel(row.item.title)}`);
   res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
 });
 router.post("/admin/tenants/:id/distance-review/rows/:rowId/value", async (req, res) => {
   const parsed = SetDistanceReviewRowValueBody.safeParse(req.body); if (!parsed.success) return void res.status(400).json({ error: parsed.error.message });
   const tenantId = first(req.params["id"]); const rowId = first(req.params["rowId"]);
-  const [row] = await db.select().from(itemDistanceProposalsTable).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
+  const [row] = await db.select({ proposal: itemDistanceProposalsTable, item: itemsTable }).from(itemDistanceProposalsTable).innerJoin(itemsTable, eq(itemsTable.id, itemDistanceProposalsTable.itemId)).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
   if (!row) return void res.status(404).json({ error: "Predlog ni najden." });
-  await db.transaction(async (tx) => { await tx.update(itemsTable).set({ distanceMeters: parsed.data.distanceMeters }).where(eq(itemsTable.id, row.itemId)); await tx.update(itemDistanceProposalsTable).set({ status: "approved" }).where(eq(itemDistanceProposalsTable.id, rowId)); });
-  await changed(tenantId, "Ročno popravljena razdalja."); res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
+  await db.transaction(async (tx) => { await tx.update(itemsTable).set({ distanceMeters: parsed.data.distanceMeters }).where(eq(itemsTable.id, row.proposal.itemId)); await tx.update(itemDistanceProposalsTable).set({ status: "approved" }).where(eq(itemDistanceProposalsTable.id, rowId)); });
+  await changed(tenantId, `Ročno popravljena razdalja · ${row.item.title ?? "Item"}.`, `Ročno spremenjena razdalja · ${auditLabel(row.item.title)}`); res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
 });
 router.post("/admin/tenants/:id/distance-review/rows/:rowId/link", async (req, res) => {
   const parsed = SetDistanceReviewRowLinkBody.safeParse(req.body); if (!parsed.success) return void res.status(400).json({ error: parsed.error.message });
   const tenantId = first(req.params["id"]); const rowId = first(req.params["rowId"]);
-  const [row] = await db.select().from(itemDistanceProposalsTable).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
+  const [row] = await db.select({ proposal: itemDistanceProposalsTable, item: itemsTable }).from(itemDistanceProposalsTable).innerJoin(itemsTable, eq(itemsTable.id, itemDistanceProposalsTable.itemId)).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
   if (!row) return void res.status(404).json({ error: "Predlog ni najden." });
-  await db.update(itemsTable).set({ mapQuery: parsed.data.mapUrl }).where(eq(itemsTable.id, row.itemId));
+  await db.update(itemsTable).set({ mapQuery: parsed.data.mapUrl }).where(eq(itemsTable.id, row.proposal.itemId));
   await runDistanceComputation(tenantId, { limit: 100 });
+  await changed(tenantId, `Posodobljena povezava in ponovno izračunana razdalja · ${row.item.title ?? "Item"}.`, `Ponovno izračunana razdalja · ${auditLabel(row.item.title)}`);
   res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
 });
 router.post("/admin/tenants/:id/distance-review/rows/:rowId/revert", async (req, res) => {
   const tenantId = first(req.params["id"]); const rowId = first(req.params["rowId"]);
-  const [row] = await db.select().from(itemDistanceProposalsTable).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
+  const [row] = await db.select({ proposal: itemDistanceProposalsTable, item: itemsTable }).from(itemDistanceProposalsTable).innerJoin(itemsTable, eq(itemsTable.id, itemDistanceProposalsTable.itemId)).where(and(eq(itemDistanceProposalsTable.id, rowId), eq(itemDistanceProposalsTable.tenantId, tenantId)));
   if (!row) return void res.status(404).json({ error: "Predlog ni najden." });
   await revertDistanceProposal(rowId);
-  await changed(tenantId, "Razveljavljena odločitev pregleda razdalje.");
+  await changed(tenantId, `Razveljavljena odločitev pregleda razdalje · ${row.item.title ?? "Item"}.`, `Razveljavljena razdalja · ${auditLabel(row.item.title)}`);
   res.json((await review(tenantId)).rows.find((v) => v.id === rowId));
 });
 router.post("/admin/tenants/:id/distance-review/approve-bulk", async (req, res) => {
@@ -124,6 +137,6 @@ router.post("/admin/tenants/:id/distance-review/approve-bulk", async (req, res) 
       // A concurrent manual value wins; continue approving independent rows.
     }
   }
-  await changed(tenantId, "Potrjene vse zanesljive predlagane razdalje."); res.json(GetDistanceReviewResponse.parse(serialize(await review(tenantId))));
+  await changed(tenantId, `Potrjene zanesljive predlagane razdalje: ${rows.length}.`, "Potrjene zanesljive razdalje"); res.json(GetDistanceReviewResponse.parse(serialize(await review(tenantId))));
 });
 export default router;

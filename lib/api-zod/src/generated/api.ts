@@ -370,9 +370,10 @@ export const GetAdminOverviewResponse = zod.object({
   "tenantName": zod.string().nullish(),
   "action": zod.string(),
   "entity": zod.string(),
-  "detail": zod.string().nullish(),
-  "actorType": zod.enum(['owner', 'host', 'system']).optional().describe('Central attribution from the actor gate — owner acts on the host\'s behalf'),
-  "actorEmail": zod.string().nullish(),
+  "actorType": zod.enum(['owner', 'host', 'system']).optional(),
+  "summary": zod.string().describe('Safe Slovenian plain-language audit summary'),
+  "actorLabel": zod.enum(['Stranka', 'Smart360']).describe('Safe actor label; no account identity or IP address'),
+  "requestIp": zod.string().nullish().describe('IP only for actions by Stranka; Smart360\/system IPs are always null'),
   "createdAt": zod.string()
 })),
   "renewalsDue": zod.array(zod.object({
@@ -666,7 +667,7 @@ export const ListTenantOverviewResponse = zod.array(ListTenantOverviewResponseIt
 
 
 /**
- * @summary Per-tenant changelog with actor attribution
+ * @summary Per-tenant audit history with privacy-safe attribution
  */
 export const ListTenantChangelogParams = zod.object({
   "id": zod.coerce.string()
@@ -678,12 +679,31 @@ export const ListTenantChangelogResponseItem = zod.object({
   "tenantName": zod.string().nullish(),
   "action": zod.string(),
   "entity": zod.string(),
-  "detail": zod.string().nullish(),
-  "actorType": zod.enum(['owner', 'host', 'system']).optional().describe('Central attribution from the actor gate — owner acts on the host\'s behalf'),
-  "actorEmail": zod.string().nullish(),
+  "actorType": zod.enum(['owner', 'host', 'system']).optional(),
+  "summary": zod.string().describe('Safe Slovenian plain-language audit summary'),
+  "actorLabel": zod.enum(['Stranka', 'Smart360']).describe('Safe actor label; no account identity or IP address'),
+  "requestIp": zod.string().nullish().describe('IP only for actions by Stranka; Smart360\/system IPs are always null'),
   "createdAt": zod.string()
 })
 export const ListTenantChangelogResponse = zod.array(ListTenantChangelogResponseItem)
+
+
+/**
+ * @summary Record a deliberate Smart360 cockpit entry
+ */
+export const RecordOperatorEntryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const recordOperatorEntryHeaderIdempotencyKeyMax = 200;
+
+
+
+export const RecordOperatorEntryHeader = zod.object({
+  "Idempotency-Key": zod.string().max(recordOperatorEntryHeaderIdempotencyKeyMax)
+})
+
+export const RecordOperatorEntryResponse = zod.void()
 
 
 /**

@@ -104,7 +104,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/overview", binding: OWNER },
   { method: "get", path: "/admin/tenants", binding: OWNER },
   { method: "get", path: "/admin/tenants/overview", binding: OWNER },
-  { method: "get", path: "/admin/tenants/:id/changelog", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/changelog", binding: T_ID },
+  { method: "post", path: "/admin/tenants/:id/operator-entry", binding: OWNER },
   { method: "post", path: "/admin/tenants", binding: OWNER },
   { method: "get", path: "/admin/slug-check", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/qr.png", binding: T_ID },
@@ -147,8 +148,10 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/tenants/:id/trash", binding: T_ID },
   { method: "post", path: "/admin/categories/:id/restore", binding: e("category") },
   { method: "post", path: "/admin/items/:id/restore", binding: e("item") },
-  { method: "delete", path: "/admin/categories/:id/purge", binding: e("category") },
-  { method: "delete", path: "/admin/items/:id/purge", binding: e("item") },
+  // Permanent content removal is a Smart360-only capability. Hosts retain
+  // soft-delete/restore editing, but cannot invoke the purge endpoints.
+  { method: "delete", path: "/admin/categories/:id/purge", binding: OWNER },
+  { method: "delete", path: "/admin/items/:id/purge", binding: OWNER },
 
   // ── Tenant translations bundle (adminTranslations.ts) ───────────────────
   { method: "get", path: "/admin/tenants/:id/translations", binding: T_ID },
@@ -269,10 +272,13 @@ async function entityTenantId(entity: EntityKind, id: string): Promise<string | 
 }
 
 async function resolveActor(req: Request): Promise<Actor | null> {
-  if (await isAuthenticated(req)) return { kind: "owner" };
+  // Express derives this from the configured trusted proxy. No request
+  // metadata besides this retention-limited IP is carried into auditing.
+  const requestIp = req.ip || null;
+  if (await isAuthenticated(req)) return { kind: "owner", requestIp };
   const host = await findHostActor(req);
   if (host) {
-    return { kind: "host", hostUserId: host.hostUserId, tenantId: host.tenantId, email: host.email };
+    return { kind: "host", hostUserId: host.hostUserId, tenantId: host.tenantId, requestIp };
   }
   return null;
 }
