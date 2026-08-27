@@ -1,9 +1,17 @@
 ---
-name: Host portal access model
-description: Three-ring host isolation (gate/fence/RLS) — invariants, BYPASSRLS gotcha, and how to onboard new tables/routes safely
+name: Operator and client access model
+description: Two-role model plus three-ring client isolation, password ownership, and audit invariants.
 ---
 
-# Host portal (per-tenant host accounts) — Instruction #28
+# Operator and client access
+
+Exactly two roles exist:
+- **Smart360 operator:** the business owner, globally trusted, enters any tenant cockpit using the operator session without impersonating the client or knowing its password.
+- **Client account:** exactly one shared account per tenant, opened on the client's email address. The client alone sets and changes its password; there are no staff accounts or staff invitation flow.
+
+**Why:** The client company needs one shared tenant identity, while the Smart360 operator needs global operational access with separate attribution. Per-person staff membership would add complexity without serving the approved workflow.
+
+**How to apply:** Preserve owner/client actor separation. Never mint a client session for operator access. Attribute every mutation and timestamp it. Client password set/change remains a single client-only action.
 
 Three concentric rings; each must hold alone:
 1. **Actor gate**: every /admin request resolves an actor (owner WebAuthn or host cookie) before anything else runs.
@@ -21,5 +29,5 @@ Three concentric rings; each must hold alone:
 - Argon2id m=64MiB t=3 p=1; session + reset tokens stored only as SHA-256; uniform 401s.
 - **No lockout** (lockout = DoS): per-IP 10/15min limiter + DB-backed per-account capped exponential backoff (3 free tries, then 1s→60s cap). Success resets counter.
 - All credential mutations are **transactional and conditional**: password change is `UPDATE ... WHERE password_hash = <verified hash>` (stale sessions can't reinstate a password after a reset); reset burns token + sets password + revokes ALL sessions in one tx; the 3/hr reset quota locks the user row (`FOR UPDATE`) so concurrent requests can't bypass the count.
-- Account model: `host_users` (account) split from `host_memberships` (unique(tenant)+unique(user)); multi-property later = drop the user-unique index + role column.
-- Owner never sets/sees host passwords; owner-side management is email + send-reset only (409 if email bound to another account).
+- Account model remains exactly one client account per tenant; do not evolve it into staff membership or multi-property personal accounts.
+- Operator never sets/sees client passwords. Client performs password set/change alone; changing the account email remains an operator action.
