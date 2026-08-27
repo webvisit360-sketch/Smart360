@@ -1,0 +1,37 @@
+Approved with a correction to scope. The separate operator session and the
+refusal to impersonate the client are correct — keep both exactly as they are.
+
+BUILD NOW
+1. Make operator mode explicit. Rename the dashboard action to "Odpri kot
+   Smart360 operater" and show a persistent banner inside the cockpit naming
+   the mode and the tenant. Derive it from the existing owner session. Never
+   create a client session.
+2. Name the operator in the change history. "Smart360 operater" is enough.
+   Never expose the client email as the actor for our changes.
+3. Do the exhaustive mutation-history audit — the 4-7 day figure, not the 2-4.
+   This is not hardening. It is the condition on which the owner accepted one
+   shared client password: if we cannot say who, we must be able to say when.
+   Prove timestamped history for all eleven operations you listed, and add the
+   missing logger calls. Report which ones were missing.
+4. Log operator cockpit entry as its own event. This protects the operator: if
+   a client ever claims we changed something, the record shows exactly when he
+   was in there and when he was not.
+5. Build the client password-change screen: current password, new password,
+   confirm, submit, session policy applied. The API exists; the screen does not.
+   Without it the shared password can never be rotated, and rotation was the
+   whole mitigation.
+
+DO NOT DO
+· Do not remove the invitation flow. Staff invitations are gone, but the FIRST
+  invitation to the client account stays — it is the only way a new client sets
+  a first password. Removing it locks every future client out.
+· Do not rename hosts, memberships or host terminology yet. Naming costs money
+  and changes nothing for the client. It waits.
+
+REPORT, DO NOT BUILD
+List every endpoint the client account cannot currently reach that touches its
+own tenant's content. For each, say whether the client should have it. I expect
+translation import/export and backfill tools to stay operator-only; I want to
+see the rest.
+
+Report and STOP.
