@@ -1828,20 +1828,24 @@ components:
             - type: "null"
     HostAccount:
       type: object
-      required: [email, hasPassword, lastLoginAt, createdAt, latestInvite]
+      required: [email, hasPassword, lastLoginAt, createdAt, inviteHistory]
       properties:
         email: { type: string }
         hasPassword: { type: boolean }
         lastLoginAt: { type: ["string", "null"] }
         createdAt: { type: string }
-        latestInvite:
-          oneOf:
-            - $ref: "#/components/schemas/HostInviteDelivery"
-            - type: "null"
+        inviteHistory:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/HostInviteDelivery"
     HostInviteDelivery:
       type: object
-      required: [deliveryStatus, providerMessageId, providerEventName, providerEventAt, deliveryAttemptedAt]
+      required: [createdAt, invalidatedAt, usedAt, deliveryStatus, providerMessageId, providerEventName, providerEventAt, deliveryAttemptedAt]
       properties:
+        createdAt: { type: string }
+        invalidatedAt: { type: ["string", "null"] }
+        usedAt: { type: ["string", "null"] }
         deliveryStatus:
           type: string
           enum: [pending, accepted, failed, delivered, bounced, complained]

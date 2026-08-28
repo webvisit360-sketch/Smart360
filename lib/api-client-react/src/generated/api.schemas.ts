@@ -90,6 +90,11 @@ export const HostInviteDeliveryDeliveryStatus = {
 } as const;
 
 export interface HostInviteDelivery {
+  createdAt: string;
+  /** @nullable */
+  invalidatedAt: string | null;
+  /** @nullable */
+  usedAt: string | null;
   deliveryStatus: HostInviteDeliveryDeliveryStatus;
   /** @nullable */
   providerMessageId: string | null;
@@ -107,7 +112,8 @@ export interface HostAccount {
   /** @nullable */
   lastLoginAt: string | null;
   createdAt: string;
-  latestInvite: HostInviteDelivery | null;
+  /** @maxItems 10 */
+  inviteHistory: HostInviteDelivery[];
 }
 
 export interface HostAccountResponse {

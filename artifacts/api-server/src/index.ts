@@ -13,6 +13,7 @@ import { runMeliPuContentFinalizationAtStartup } from "./lib/meliPuContentFinali
 import { ensureRowLevelSecurity } from "./lib/rls";
 import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRetention";
 import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill";
+import { runTriesteDistanceCorrectionAtStartup } from "./lib/triesteDistanceCorrection";
 
 const rawPort = process.env["PORT"];
 
@@ -106,6 +107,9 @@ ensureAdminAccount()
   .then(() => runMeliPuContentFinalizationAtStartup())
   // Align former untouched 2 GiB defaults with the displayed decimal 2 GB.
   .then(() => runDecimalMediaQuotaBackfillAtStartup())
+  // One-deploy production-only correction for the approved Trieste city-centre distance.
+  // Remove this hook and its file immediately after production verification.
+  .then(() => runTriesteDistanceCorrectionAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();

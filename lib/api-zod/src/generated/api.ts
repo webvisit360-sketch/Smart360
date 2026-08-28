@@ -71,19 +71,26 @@ export const GetAdminTenantHostAccountParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getAdminTenantHostAccountResponseAccountOneInviteHistoryMax = 10;
+
+
+
 export const GetAdminTenantHostAccountResponse = zod.object({
   "account": zod.union([zod.object({
   "email": zod.string(),
   "hasPassword": zod.boolean(),
   "lastLoginAt": zod.string().nullable(),
   "createdAt": zod.string(),
-  "latestInvite": zod.union([zod.object({
+  "inviteHistory": zod.array(zod.object({
+  "createdAt": zod.string(),
+  "invalidatedAt": zod.string().nullable(),
+  "usedAt": zod.string().nullable(),
   "deliveryStatus": zod.enum(['pending', 'accepted', 'failed', 'delivered', 'bounced', 'complained']),
   "providerMessageId": zod.string().nullable(),
   "providerEventName": zod.string().nullable(),
   "providerEventAt": zod.string().nullable(),
   "deliveryAttemptedAt": zod.string().nullable()
-}),zod.null()])
+})).max(getAdminTenantHostAccountResponseAccountOneInviteHistoryMax)
 }),zod.null()])
 })
 

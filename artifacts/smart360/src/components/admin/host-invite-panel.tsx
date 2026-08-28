@@ -12,13 +12,16 @@ type HostAccount = {
   passwordChangedAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;
-  latestInvite: {
+  inviteHistory: Array<{
+    createdAt: string;
+    invalidatedAt: string | null;
+    usedAt: string | null;
     deliveryStatus: "pending" | "accepted" | "failed" | "delivered" | "bounced" | "complained";
     providerMessageId: string | null;
     providerEventName: string | null;
     providerEventAt: string | null;
     deliveryAttemptedAt: string | null;
-  } | null;
+  }>;
 };
 
 const inviteDeliveryDetails = {
@@ -209,26 +212,42 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
               </div>
             )}
 
-            {account?.latestInvite && (() => {
-              const delivery = inviteDeliveryDetails[account.latestInvite.deliveryStatus];
-              const DeliveryIcon = delivery.icon;
-              return (
-                <div className={`rounded-[18px] border p-4 space-y-2 ${account.latestInvite.deliveryStatus === "bounced" || account.latestInvite.deliveryStatus === "complained" ? "border-red-300 bg-red-50" : "bg-muted/30"}`}>
-                  <div className={`flex items-center gap-2 ${delivery.className}`}>
-                    <DeliveryIcon className={`h-4 w-4 ${account.latestInvite.deliveryStatus === "pending" ? "animate-spin" : ""}`} />
-                    <p className="font-medium">{delivery.label}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    ID ponudnika: <span className="font-mono">{account.latestInvite.providerMessageId || "—"}</span>
-                  </p>
-                  {account.latestInvite.providerEventName && account.latestInvite.providerEventAt && (
-                    <p className="text-xs text-muted-foreground">
-                      Zadnji dogodek ponudnika: <span className="font-medium">{account.latestInvite.providerEventName}</span> · {new Date(account.latestInvite.providerEventAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
+            {account && account.inviteHistory.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-bold">Zgodovina poslanih vabil</p>
+                {account.inviteHistory.map((invite, index) => {
+                  const delivery = inviteDeliveryDetails[invite.deliveryStatus];
+                  const DeliveryIcon = delivery.icon;
+                  const critical = invite.deliveryStatus === "bounced" || invite.deliveryStatus === "complained";
+                  return (
+                    <div key={`${invite.createdAt}-${index}`} className={`rounded-[18px] border p-4 space-y-2 ${critical ? "border-red-300 bg-red-50" : "bg-muted/30"}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className={`flex items-center gap-2 ${delivery.className}`}>
+                          <DeliveryIcon className={`h-4 w-4 ${invite.deliveryStatus === "pending" ? "animate-spin" : ""}`} />
+                          <p className="font-medium">{delivery.label}</p>
+                        </div>
+                        <time className="text-xs text-muted-foreground">
+                          {new Date(invite.createdAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}
+                        </time>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        ID ponudnika: <span className="font-mono">{invite.providerMessageId || "—"}</span>
+                      </p>
+                      {invite.providerEventName && invite.providerEventAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Zadnji dogodek ponudnika: <span className="font-medium">{invite.providerEventName}</span> · {new Date(invite.providerEventAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}
+                        </p>
+                      )}
+                      {(invite.usedAt || invite.invalidatedAt) && (
+                        <p className="text-xs text-muted-foreground">
+                          {invite.usedAt ? "Vabilo je bilo uporabljeno." : "Vabilo je bilo razveljavljeno."}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {account?.hasPassword && (
               <div className="rounded-[18px] border bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

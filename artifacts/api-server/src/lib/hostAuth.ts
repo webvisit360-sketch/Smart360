@@ -658,13 +658,16 @@ export type HostAccountView = {
   hasPassword: boolean;
   lastLoginAt: string | null;
   createdAt: string;
-  latestInvite: {
+  inviteHistory: Array<{
+    createdAt: string;
+    invalidatedAt: string | null;
+    usedAt: string | null;
     deliveryStatus: string;
     providerMessageId: string | null;
     providerEventName: string | null;
     providerEventAt: string | null;
     deliveryAttemptedAt: string | null;
-  } | null;
+  }>;
 };
 
 export async function getHostAccountForTenant(tenantId: string): Promise<HostAccountView | null> {
@@ -675,8 +678,11 @@ export async function getHostAccountForTenant(tenantId: string): Promise<HostAcc
     .where(eq(hostMembershipsTable.tenantId, tenantId))
     .limit(1);
   if (!row) return null;
-  const [invite] = await db
+  const invites = await db
     .select({
+      createdAt: hostInvitesTable.createdAt,
+      invalidatedAt: hostInvitesTable.invalidatedAt,
+      usedAt: hostInvitesTable.usedAt,
       deliveryStatus: hostInvitesTable.deliveryStatus,
       providerMessageId: hostInvitesTable.providerMessageId,
       providerEventName: hostInvitesTable.providerEventName,
@@ -686,19 +692,20 @@ export async function getHostAccountForTenant(tenantId: string): Promise<HostAcc
     .from(hostInvitesTable)
     .where(eq(hostInvitesTable.hostUserId, row.user.id))
     .orderBy(desc(hostInvitesTable.createdAt))
-    .limit(1);
+    .limit(10);
   return {
     email: row.user.email,
     hasPassword: !!row.user.passwordHash,
     lastLoginAt: row.user.lastLoginAt?.toISOString() ?? null,
     createdAt: row.user.createdAt.toISOString(),
-    latestInvite: invite
-      ? {
-          ...invite,
-          providerEventAt: invite.providerEventAt?.toISOString() ?? null,
-          deliveryAttemptedAt: invite.deliveryAttemptedAt?.toISOString() ?? null,
-        }
-      : null,
+    inviteHistory: invites.map((invite) => ({
+      ...invite,
+      createdAt: invite.createdAt.toISOString(),
+      invalidatedAt: invite.invalidatedAt?.toISOString() ?? null,
+      usedAt: invite.usedAt?.toISOString() ?? null,
+      providerEventAt: invite.providerEventAt?.toISOString() ?? null,
+      deliveryAttemptedAt: invite.deliveryAttemptedAt?.toISOString() ?? null,
+    })),
   };
 }
 

@@ -13,5 +13,6 @@ export interface HostAccount {
   /** @nullable */
   lastLoginAt: string | null;
   createdAt: string;
-  latestInvite: HostInviteDelivery | null;
+  /** @maxItems 10 */
+  inviteHistory: HostInviteDelivery[];
 }

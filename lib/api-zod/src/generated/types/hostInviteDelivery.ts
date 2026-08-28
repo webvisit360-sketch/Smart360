@@ -8,6 +8,11 @@
 import type { HostInviteDeliveryDeliveryStatus } from './hostInviteDeliveryDeliveryStatus';
 
 export interface HostInviteDelivery {
+  createdAt: string;
+  /** @nullable */
+  invalidatedAt: string | null;
+  /** @nullable */
+  usedAt: string | null;
   deliveryStatus: HostInviteDeliveryDeliveryStatus;
   /** @nullable */
   providerMessageId: string | null;
