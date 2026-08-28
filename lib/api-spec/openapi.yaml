@@ -1793,8 +1793,10 @@ components:
         message: { type: ["string", "null"] }
         deliveryStatus:
           type: string
-          enum: [pending, accepted, failed]
+          enum: [pending, accepted, failed, delivered, bounced, complained]
         providerMessageId: { type: ["string", "null"] }
+        providerEventName: { type: ["string", "null"] }
+        providerEventAt: { type: ["string", "null"] }
         submittedAt: { type: string }
         deliveryAttemptedAt: { type: ["string", "null"] }
     HealthStatus:

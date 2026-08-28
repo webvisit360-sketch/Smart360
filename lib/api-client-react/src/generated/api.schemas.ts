@@ -51,6 +51,9 @@ export const AdminEnquiryDeliveryStatus = {
   pending: 'pending',
   accepted: 'accepted',
   failed: 'failed',
+  delivered: 'delivered',
+  bounced: 'bounced',
+  complained: 'complained',
 } as const;
 
 export interface AdminEnquiry {
@@ -65,6 +68,10 @@ export interface AdminEnquiry {
   deliveryStatus: AdminEnquiryDeliveryStatus;
   /** @nullable */
   providerMessageId?: string | null;
+  /** @nullable */
+  providerEventName?: string | null;
+  /** @nullable */
+  providerEventAt?: string | null;
   submittedAt: string;
   /** @nullable */
   deliveryAttemptedAt?: string | null;

@@ -32,6 +32,7 @@ router.get("/admin/enquiries", async (_req: Request, res: Response): Promise<voi
     ...row,
     submittedAt: row.submittedAt.toISOString(),
     deliveryAttemptedAt: row.deliveryAttemptedAt?.toISOString() ?? null,
+    providerEventAt: row.providerEventAt?.toISOString() ?? null,
   })));
 });
 

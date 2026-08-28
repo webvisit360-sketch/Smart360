@@ -54,8 +54,10 @@ export const ListAdminEnquiriesResponseItem = zod.object({
   "address": zod.string(),
   "propertyType": zod.string(),
   "message": zod.string().nullish(),
-  "deliveryStatus": zod.enum(['pending', 'accepted', 'failed']),
+  "deliveryStatus": zod.enum(['pending', 'accepted', 'failed', 'delivered', 'bounced', 'complained']),
   "providerMessageId": zod.string().nullish(),
+  "providerEventName": zod.string().nullish(),
+  "providerEventAt": zod.string().nullish(),
   "submittedAt": zod.string(),
   "deliveryAttemptedAt": zod.string().nullish()
 })

@@ -31,7 +31,8 @@
     "qrcode": "^1.5.4",
     "sanitize-html": "^2.17.7",
     "sharp": "^0.35.3",
-    "svg-to-pdfkit": "^0.1.8"
+    "svg-to-pdfkit": "^0.1.8",
+    "svix": "^2.1.0"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",

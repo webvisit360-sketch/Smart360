@@ -1,12 +1,15 @@
 import { getListAdminEnquiriesQueryKey, useListAdminEnquiries } from "@workspace/api-client-react";
-import { AlertCircle, CheckCircle2, Clock3, Loader2, Mail } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, Loader2, Mail, MailCheck, MailWarning, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 const statusDetails = {
-  accepted: { label: "E-pošta sprejeta", icon: CheckCircle2, className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  accepted: { label: "Sprejeto pri ponudniku — čaka na končni izid", icon: CheckCircle2, className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   failed: { label: "E-pošta ni bila poslana", icon: AlertCircle, className: "bg-red-50 text-red-700 border-red-200" },
   pending: { label: "Dostava še ni potrjena", icon: Clock3, className: "bg-amber-50 text-amber-700 border-amber-200" },
+  delivered: { label: "E-pošta dostavljena", icon: MailCheck, className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  bounced: { label: "E-pošta zavrnjena — Pokličite stranko", icon: MailWarning, className: "bg-red-100 text-red-800 border-red-300" },
+  complained: { label: "Prejemnik je označil e-pošto kot neželeno", icon: ShieldAlert, className: "bg-red-100 text-red-800 border-red-300" },
 } as const;
 
 export default function AdminEnquiriesPage() {
@@ -57,6 +60,9 @@ export default function AdminEnquiriesPage() {
                 </dl>
                 <div className="pt-3 border-t text-xs text-muted-foreground">
                   ID ponudnika: <span className="font-mono">{enquiry.providerMessageId || "—"}</span>
+                  {enquiry.providerEventName && enquiry.providerEventAt && (
+                    <div className="mt-1">Zadnji dogodek ponudnika: <span className="font-medium">{enquiry.providerEventName}</span> · {new Date(enquiry.providerEventAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}</div>
+                  )}
                 </div>
               </CardContent>
             </Card>

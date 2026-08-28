@@ -1,0 +1,49 @@
+Accepted, and two things in it deserve saying: you found the host_invites
+evidence gap without being asked, and you reported that the seven-day change was
+never applied instead of quietly applying it now. Keep doing both.
+
+Build the webhook once and use it for both enquiries and invitations.
+
+1 — THE WEBHOOK
+As you proposed: signed endpoint, svix verification against the unmodified raw
+body, idempotent, tolerant of out-of-order events, complained able to supersede
+delivered. Add these constraints:
+· the endpoint may only UPDATE rows matched by a stored provider_message_id. It
+  must never create a row. A forged event must not be able to inject anything.
+· an event for an unknown message id is ignored quietly and logged, not an
+  error;
+· reject unsigned or badly signed requests before parsing, and cap the body
+  size;
+· store the provider's event name and its timestamp, not a free-text status.
+In Povpraševanja show delivered, bounced with a prominent "Pokličite stranko",
+and complained. Never show a bare "sent" once events are flowing.
+
+2 — INVITATIONS MUST CARRY THE SAME EVIDENCE
+Add provider_message_id, delivery status and last event time to host_invites,
+fed by the same webhook. Until an invitation can be measured, it cannot be
+called delivered, and no paying client is onboarded on it.
+
+3 — SEVEN DAYS, AND AN EXIT FROM AN EXPIRED LINK
+Raise validity from 72 hours to 7 days, keeping single use and keeping the
+revocation of earlier invitations. Then build the failure path, which does not
+exist today: a visitor opening an expired, used, or unknown invitation link
+sees a plain page in the Smart360 design saying the link is no longer valid,
+with one button that requests a fresh invitation to the same account. It must
+never be a bare error, and it must never reveal whether the address exists.
+Report what that page currently shows before you change it.
+
+4 — THE SENDING DOMAIN IS NOW BLOCKING
+The enquiry notification goes to the owner, so its domain does not matter. The
+invitation goes to a paying client, from a domain they have never seen, and it
+contains a password-setting link. That is the shape of a phishing mail and it
+is the first thing that client ever receives from us.
+Add smart360.info to Resend as a sending domain and report the exact DNS
+records the owner must enter at his registrar — the SPF, DKIM and DMARC values,
+written out so he can copy them. He will enter them; you will not.
+Sending domain and receiving mailbox are separate decisions: the mailbox stays
+webvisit360@gmail.com for now, and only the From address moves. Do not change
+the From until the domain shows verified.
+
+Order: 1, then 2, then 3. Report after each. Do not do 4's DNS yourself.
+
+Report and STOP.

@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import resendWebhooksRouter from "./routes/resendWebhooks";
 
 const app: Express = express();
 
@@ -48,6 +49,10 @@ app.use(
 // CORS only on the public tenant API; /admin/* stays same-origin-only (no CORS headers at all).
 app.use("/api/public", cors());
 app.use("/api/healthz", cors());
+
+// Svix signatures cover the exact request bytes. This route deliberately
+// precedes parsers and the /api actor gate, and has its own constrained body.
+app.use("/api/webhooks/resend", express.raw({ type: "application/json", limit: "64kb" }), resendWebhooksRouter);
 
 // WebAuthn: passkeys only work when the request host matches the configured RP_ID.
 // Log a clear, throttled error on mismatch instead of failing silently during registration.

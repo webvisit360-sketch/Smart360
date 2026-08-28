@@ -13,4 +13,7 @@ export const AdminEnquiryDeliveryStatus = {
   pending: 'pending',
   accepted: 'accepted',
   failed: 'failed',
+  delivered: 'delivered',
+  bounced: 'bounced',
+  complained: 'complained',
 } as const;

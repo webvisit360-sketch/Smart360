@@ -19,6 +19,10 @@ export interface AdminEnquiry {
   deliveryStatus: AdminEnquiryDeliveryStatus;
   /** @nullable */
   providerMessageId?: string | null;
+  /** @nullable */
+  providerEventName?: string | null;
+  /** @nullable */
+  providerEventAt?: string | null;
   submittedAt: string;
   /** @nullable */
   deliveryAttemptedAt?: string | null;
