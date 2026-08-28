@@ -1,0 +1,366 @@
+<!doctype html><html lang="sl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart360 — dogodki</title>
+<style>
+@font-face{font-family:Archivo;src:url('file:///home/claude/smart360/logo/font/Archivo-VariableFont_wdth,wght.ttf') format('truetype');font-weight:100 900;font-display:swap}
+:root{
+  --bg:#FFFFFF;--card:#F4F6F2;--card2:#ECF0EA;--tx:#121A14;--tx2:#66716A;
+  --line:#E8EBE6;--acc:#157347;--accg:#1D9159;--warm:#DD9A2B;--danger:#D93A2B;
+  --sans:Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font:15px/1.5 var(--sans);color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased}
+.sw{position:fixed;z-index:99;left:50%;transform:translateX(-50%);bottom:16px;display:flex;gap:4px;
+  background:rgba(18,26,20,.9);padding:5px;border-radius:14px}
+.sw button{border:0;background:transparent;color:#C9D2C9;font:700 12.5px var(--sans);padding:8px 13px;border-radius:10px;cursor:pointer}
+.sw button.on{background:#fff;color:var(--tx)}
+.screen{display:none}.screen.on{display:block}
+
+/* ---------- admin ogrodje ---------- */
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+.side{background:var(--card);border-right:1px solid var(--line);padding:22px 16px 18px;display:flex;flex-direction:column}
+.side .lk{width:158px;margin:2px 6px 26px;font:800 20px var(--sans);letter-spacing:-.03em;color:var(--acc)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:block;padding:10px 12px;border-radius:12px;font:700 14.5px var(--sans);color:var(--tx);text-decoration:none}
+.nav a.on{background:var(--acc);color:#fff}
+.grp{font:800 11px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:#9AA69E;margin:22px 12px 8px}
+.main{display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;gap:12px;padding:18px 30px;border-bottom:1px solid var(--line)}
+.top h1{font:800 21px var(--sans);letter-spacing:-.02em}
+.top .sp{flex:1}
+.pill{font:800 11.5px var(--sans);padding:5px 11px;border-radius:9px}
+.pill--dr{background:#FBF1DC;color:#8A6A1E}
+.body{padding:26px 30px 90px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+
+.btn{border:0;border-radius:13px;padding:11px 17px;font:800 14px var(--sans);cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn--p{background:var(--acc);color:#fff}
+.btn--s{background:var(--bg);color:var(--tx);border:1.5px solid var(--line)}
+.btn--sm{padding:8px 13px;font-size:13px;border-radius:11px}
+.c{background:var(--card);border-radius:22px;padding:22px 24px}
+.c+.c{margin-top:18px}
+.c h2{font:800 17px var(--sans)}
+.c .cs{font:500 14px var(--sans);color:var(--tx2);margin-top:3px}
+.hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.hd .sp{flex:1}
+
+.ev{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:14px 17px;
+  display:grid;grid-template-columns:78px 1fr auto;gap:14px;align-items:center}
+.ev+.ev{margin-top:10px}
+.ev .when{font:800 14px var(--sans);color:var(--acc);line-height:1.3}
+.ev .when i{display:block;font:600 12px var(--sans);color:var(--tx2);font-style:normal}
+.ev h4{font:800 15.5px var(--sans)}
+.ev .m{font:500 13px var(--sans);color:var(--tx2);margin-top:2px}
+.ev .lg{display:flex;gap:5px;margin-top:7px}
+.lgc{font:800 10.5px var(--sans);letter-spacing:.06em;padding:3px 7px;border-radius:6px;
+  background:#E4F2EA;color:#116B41}
+.lgc.miss{background:#FBF1DC;color:#8A6A1E}
+.ev--rep{border-left:3px solid var(--accg)}
+.ev--done{opacity:.55}
+
+.field{margin-bottom:16px}
+.field label{display:block;font:800 11.5px var(--sans);letter-spacing:.11em;text-transform:uppercase;color:var(--tx2);margin-bottom:7px}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--line);background:var(--bg);
+  border-radius:14px;padding:13px 15px;font:600 15px var(--sans);color:var(--tx);outline:none;font-family:var(--sans)}
+.field textarea{min-height:80px;font-weight:500;resize:vertical}
+.field .hint{font:500 13px var(--sans);color:var(--tx2);margin-top:7px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.seg button{border:1.5px solid var(--line);background:var(--bg);border-radius:13px;padding:12px 8px;
+  font:700 14px var(--sans);color:var(--tx);cursor:pointer}
+.seg button.on{border-color:var(--acc);background:#F1F8F4;color:var(--acc);font-weight:800}
+.days{display:flex;gap:7px;flex-wrap:wrap}
+.days button{width:44px;height:40px;border:1.5px solid var(--line);background:var(--bg);border-radius:12px;
+  font:800 13px var(--sans);color:var(--tx2);cursor:pointer}
+.days button.on{border-color:var(--acc);background:var(--acc);color:#fff}
+.note{display:flex;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:15px 17px}
+.note .ic{font:800 15px var(--sans);color:var(--warm)}
+.note .t{font:800 14.5px var(--sans)}
+.note .s{font:500 13.5px var(--sans);color:var(--tx2);margin-top:3px}
+
+/* ---------- telefon ---------- */
+.phwrap{position:sticky;top:24px}
+.ph{width:100%;max-width:300px;aspect-ratio:402/874;background:#0B0F0C;border-radius:36px;padding:9px;
+  box-shadow:0 20px 44px rgba(18,26,20,.16);margin:0 auto}
+.ph .sc{width:100%;height:100%;border-radius:28px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+.phcap{text-align:center;font:800 13px var(--sans);margin-top:14px}
+.phcap i{display:block;font:500 12.5px var(--sans);color:var(--tx2);font-style:normal;margin-top:5px}
+
+/* gost — domača stran */
+.g-hero{height:44%;background:linear-gradient(170deg,#8FB6D8,#7FA8C4 40%,#6E8F63 68%,#4E6B44);
+  position:relative;flex:none}
+.g-hero .lb{position:absolute;left:16px;bottom:16px;color:#fff}
+.g-hero .k{font:800 9px var(--sans);letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+.g-hero .n{font:800 18px var(--sans);letter-spacing:-.02em;margin-top:2px}
+.g-body{flex:1;padding:14px 14px 0;overflow:hidden}
+.g-strip{background:var(--bg);border-radius:18px;padding:13px 15px;border:1px solid var(--line);
+  box-shadow:0 6px 18px rgba(18,26,20,.06);position:relative;overflow:hidden}
+.g-strip:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--warm)}
+.g-strip .k{font:800 9.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--warm)}
+.g-strip .t{font:800 15px var(--sans);margin-top:5px;letter-spacing:-.01em}
+.g-strip .m{font:600 12.5px var(--sans);color:var(--tx2);margin-top:3px}
+.g-strip .go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font:800 16px var(--sans);color:var(--tx2)}
+.g-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.g-tile{background:var(--bg);border-radius:16px;height:66px;border:1px solid var(--line);
+  display:flex;align-items:flex-end;padding:10px 12px;font:800 13px var(--sans)}
+.g-tabs{display:flex;justify-content:space-around;padding:9px 4px 12px;background:var(--bg);border-top:1px solid var(--line)}
+.g-tabs div{font:700 9.5px var(--sans);color:var(--tx2);text-align:center}
+.g-tabs div.on{color:var(--acc);font-weight:800}
+.g-tabs .d{width:18px;height:18px;border-radius:6px;background:var(--card2);margin:0 auto 4px}
+.g-tabs div.on .d{background:#D7EADF}
+
+/* gost — dogodki */
+.g-head{padding:16px 16px 10px;background:var(--bg);border-bottom:1px solid var(--line);flex:none}
+.g-head h3{font:800 19px var(--sans);letter-spacing:-.02em}
+.g-head p{font:500 12.5px var(--sans);color:var(--tx2);margin-top:2px}
+.g-list{flex:1;overflow:hidden;padding:14px}
+.g-day{font:800 10.5px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);
+  margin:14px 0 8px}
+.g-day:first-child{margin-top:0}
+.g-ev{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 14px;
+  display:grid;grid-template-columns:52px 1fr;gap:12px}
+.g-ev+.g-ev{margin-top:8px}
+.g-ev .h{font:800 14px var(--sans);color:var(--acc)}
+.g-ev .t{font:800 14px var(--sans);letter-spacing:-.01em}
+.g-ev .m{font:600 12px var(--sans);color:var(--tx2);margin-top:2px}
+.g-ev--now{border-color:#E7D4AC;background:#FEFBF4}
+.g-ev--now .h{color:var(--warm)}
+.nowtag{display:inline-block;font:800 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  background:var(--warm);color:#fff;padding:2px 6px;border-radius:5px;margin-left:6px;vertical-align:1px}
+</style></head><body>
+
+<!-- ============ 1 · ADMIN — DOGODKI ============ -->
+<section class="screen on" id="a1">
+<div class="app">
+  <aside class="side">
+    <div class="lk">Smart360</div>
+    <nav class="nav">
+      <a href="#">Pregled</a><a href="#">Kreator vodnika</a><a href="#">Naročila</a><a href="#">Sporočila</a>
+      <div class="grp">Vsak dan</div>
+      <a href="#" class="on">Dogodki</a><a href="#">Obvestila</a><a href="#">Ponudba in cene</a>
+      <div class="grp">Vsebina</div>
+      <a href="#">Okolica</a><a href="#">Nastanitev</a><a href="#">Nastavitve</a>
+    </nav>
+  </aside>
+  <div class="main">
+    <div class="top"><h1>Dogodki</h1><span class="pill pill--dr">Osnutek — 1 sprememba</span>
+      <div class="sp"></div><button class="btn btn--s btn--sm">Kopiraj lansko sezono</button>
+      <button class="btn btn--p">Objavi</button></div>
+    <div class="body">
+      <div>
+        <div class="c">
+          <div class="hd"><div class="sp"><h2>Ta teden</h2><div class="cs">Kar gost vidi zdaj.</div></div>
+            <button class="btn btn--p btn--sm">+ Nov dogodek</button></div>
+          <div class="ev">
+            <div class="when">Danes<i>19.00</i></div>
+            <div><h4>Živa glasba na terasi</h4><div class="m">Bar ob bazenu · brezplačno</div>
+              <div class="lg"><span class="lgc">SL</span><span class="lgc">EN</span><span class="lgc">DE</span><span class="lgc">IT</span></div></div>
+            <button class="btn btn--s btn--sm">Uredi</button>
+          </div>
+          <div class="ev ev--rep">
+            <div class="when">Jutri<i>10.00</i></div>
+            <div><h4>Jutranja joga</h4><div class="m">Travnik pri recepciji · 8 € · vsak torek in četrtek</div>
+              <div class="lg"><span class="lgc">SL</span><span class="lgc">EN</span><span class="lgc">DE</span><span class="lgc miss">IT manjka</span></div></div>
+            <button class="btn btn--s btn--sm">Uredi</button>
+          </div>
+          <div class="ev">
+            <div class="when">Sob 5. 9.<i>17.00</i></div>
+            <div><h4>Delavnica za otroke — školjke</h4><div class="m">Otroški kotiček · brezplačno</div>
+              <div class="lg"><span class="lgc">SL</span><span class="lgc">EN</span><span class="lgc">DE</span><span class="lgc">IT</span></div></div>
+            <button class="btn btn--s btn--sm">Uredi</button>
+          </div>
+        </div>
+
+        <div class="c">
+          <div class="hd"><div class="sp"><h2>Ponavljajoči se</h2>
+            <div class="cs">Tečejo do svojega zadnjega dne in nato same izginejo.</div></div></div>
+          <div class="ev ev--rep">
+            <div class="when">Tor, čet<i>10.00</i></div>
+            <div><h4>Jutranja joga</h4><div class="m">1. 7. – 15. 9. 2026 · še 14 ponovitev</div></div>
+            <button class="btn btn--s btn--sm">Uredi</button>
+          </div>
+          <div class="ev ev--rep">
+            <div class="when">Vsak dan<i>21.30</i></div>
+            <div><h4>Kino pod zvezdami</h4><div class="m">1. 8. – 31. 8. 2026 · <b>zaključeno pred 3 dnevi</b></div></div>
+            <button class="btn btn--s btn--sm">Podaljšaj</button>
+          </div>
+        </div>
+
+        <div class="c">
+          <div class="hd"><div class="sp"><h2>Končani</h2>
+            <div class="cs">Gostu niso vidni. Ostanejo, da jih naslednjo sezono prekopirate.</div></div></div>
+          <div class="ev ev--done">
+            <div class="when">26. 8.<i>20.00</i></div>
+            <div><h4>Ribji večer</h4><div class="m">Terasa · 22 €</div></div>
+            <button class="btn btn--s btn--sm">Ponovi</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="c" style="padding:19px 21px">
+          <div class="note"><div class="ic">!</div>
+            <div><div class="t">Italijanščina manjka pri enem dogodku</div>
+              <div class="s">Italijanski gost bo videl slovenski naslov. Dogodek se ne skrije — ura je pomembnejša od jezika.</div></div></div>
+        </div>
+        <div class="c" style="padding:19px 21px">
+          <h2 style="font-size:15.5px">Kaj vidi gost danes</h2>
+          <div class="cs" style="margin-bottom:12px">Na domači strani se prikaže naslednji dogodek, ki se še ni začel.</div>
+          <div class="g-strip"><div class="k">Danes ob 19.00</div>
+            <div class="t">Živa glasba na terasi</div>
+            <div class="m">Bar ob bazenu · brezplačno</div><div class="go">›</div></div>
+          <div class="cs" style="margin-top:12px">Ko danes in jutri ni ničesar, se ta pas <b>ne prikaže</b>. Gost nikoli ne vidi praznega koledarja.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 2 · ADMIN — UREJANJE DOGODKA ============ -->
+<section class="screen" id="a2">
+<div class="app">
+  <aside class="side">
+    <div class="lk">Smart360</div>
+    <nav class="nav">
+      <a href="#">Pregled</a><a href="#">Kreator vodnika</a><a href="#">Naročila</a><a href="#">Sporočila</a>
+      <div class="grp">Vsak dan</div>
+      <a href="#" class="on">Dogodki</a><a href="#">Obvestila</a><a href="#">Ponudba in cene</a>
+      <div class="grp">Vsebina</div>
+      <a href="#">Okolica</a><a href="#">Nastanitev</a><a href="#">Nastavitve</a>
+    </nav>
+  </aside>
+  <div class="main">
+    <div class="top"><h1>Jutranja joga</h1><span class="pill pill--dr">Osnutek</span>
+      <div class="sp"></div><button class="btn btn--s btn--sm">Prekliči</button>
+      <button class="btn btn--p">Shrani</button></div>
+    <div class="body">
+      <div>
+        <div class="c">
+          <div class="field"><label>Naslov</label><input value="Jutranja joga"></div>
+          <div class="two">
+            <div class="field"><label>Kraj</label><input value="Travnik pri recepciji"></div>
+            <div class="field"><label>Cena — neobvezno</label><input value="8 €" placeholder="pustite prazno, če je brezplačno"></div>
+          </div>
+          <div class="field"><label>Opis — neobvezno</label>
+            <textarea>Ura umirjene jutranje vadbe na travniku nad kampom. Blazine so na voljo. Primerno tudi za začetnike.</textarea></div>
+        </div>
+
+        <div class="c">
+          <div class="hd"><div class="sp"><h2>Kdaj</h2></div></div>
+          <div class="field"><label>Pogostost</label>
+            <div class="seg"><button>Enkrat</button><button>Vsak dan</button><button class="on">Izbrani dnevi</button></div>
+            <div class="hint">Več od tega ne ponujamo namenoma. Zapleten urnik se vsako sezono vnaša znova in se vsako sezono zalomi.</div>
+          </div>
+          <div class="field"><label>Dnevi v tednu</label>
+            <div class="days"><button>PON</button><button class="on">TOR</button><button>SRE</button>
+              <button class="on">ČET</button><button>PET</button><button>SOB</button><button>NED</button></div></div>
+          <div class="three">
+            <div class="field"><label>Ura</label><input value="10.00"></div>
+            <div class="field"><label>Od</label><input value="1. 7. 2026"></div>
+            <div class="field"><label>Do</label><input value="15. 9. 2026"></div>
+          </div>
+          <div class="note"><div class="ic">!</div>
+            <div><div class="t">Zadnji dan je obvezen</div>
+              <div class="s">Brez njega bi vodnik novembra oglaševal jutranjo jogo na travniku. Po tem dnevu dogodek sam izgine gostu in se preseli med končane.</div></div></div>
+        </div>
+
+        <div class="c">
+          <div class="hd"><div class="sp"><h2>Jeziki</h2>
+            <div class="cs">Naslov in kraj prevedemo mi. Če prevoda ni, gost vidi izvirnik — ura je pomembnejša od jezika.</div></div></div>
+          <div class="ev"><div class="when">DE</div>
+            <div><h4>Morgen-Yoga</h4><div class="m">Wiese bei der Rezeption</div></div>
+            <button class="btn btn--s btn--sm">Uredi</button></div>
+          <div class="ev"><div class="when" style="color:var(--warm)">IT</div>
+            <div><h4 style="color:var(--tx2)">Prevoda še ni</h4><div class="m">Italijanski gost bo videl »Jutranja joga«.</div></div>
+            <button class="btn btn--s btn--sm">Prevedi</button></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="phwrap">
+          <div class="ph"><div class="sc">
+            <div class="g-head"><h3>Dogajanje</h3><p>Kamp Menina · ta teden</p></div>
+            <div class="g-list">
+              <div class="g-day">Danes, sreda 2. 9.</div>
+              <div class="g-ev g-ev--now"><div class="h">19.00</div>
+                <div><div class="t">Živa glasba na terasi<span class="nowtag">kmalu</span></div>
+                  <div class="m">Bar ob bazenu · brezplačno</div></div></div>
+              <div class="g-day">Jutri, četrtek</div>
+              <div class="g-ev"><div class="h">10.00</div>
+                <div><div class="t">Jutranja joga</div><div class="m">Travnik pri recepciji · 8 €</div></div></div>
+              <div class="g-ev"><div class="h">21.30</div>
+                <div><div class="t">Kino pod zvezdami</div><div class="m">Amfiteater · brezplačno</div></div></div>
+              <div class="g-day">Sobota 5. 9.</div>
+              <div class="g-ev"><div class="h">17.00</div>
+                <div><div class="t">Delavnica za otroke</div><div class="m">Otroški kotiček · brezplačno</div></div></div>
+            </div>
+          </div></div>
+          <div class="phcap">Gostov pogled<i>Preteklih dogodkov ni. Nikoli.</i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 3 · GOST — DOMAČA STRAN ============ -->
+<section class="screen" id="g1">
+<div style="display:flex;gap:56px;justify-content:center;padding:52px 24px 100px;flex-wrap:wrap;background:var(--card);min-height:100vh">
+  <div>
+    <div class="ph" style="max-width:320px"><div class="sc">
+      <div class="g-hero"><div class="lb"><div class="k">Vaš vodnik</div><div class="n">Kamp Menina</div></div></div>
+      <div class="g-body">
+        <div class="g-strip"><div class="k">Danes ob 19.00</div>
+          <div class="t">Živa glasba na terasi</div>
+          <div class="m">Bar ob bazenu · brezplačno</div><div class="go">›</div></div>
+        <div class="g-grid">
+          <div class="g-tile">Nastanitev</div><div class="g-tile">Okolica</div>
+          <div class="g-tile">Ponudba</div><div class="g-tile">WiFi</div>
+        </div>
+      </div>
+      <div class="g-tabs">
+        <div class="on"><div class="d"></div>Domov</div><div><div class="d"></div>Nastanitev</div>
+        <div><div class="d"></div>Ponudba</div><div><div class="d"></div>Okolica</div>
+        <div><div class="d"></div>Sporočila</div>
+      </div>
+    </div></div>
+    <div class="phcap">Nekaj se dogaja<i>Pas se prikaže samo, kadar je kaj danes ali jutri.</i></div>
+  </div>
+
+  <div>
+    <div class="ph" style="max-width:320px"><div class="sc">
+      <div class="g-hero"><div class="lb"><div class="k">Vaš vodnik</div><div class="n">Kamp Menina</div></div></div>
+      <div class="g-body">
+        <div class="g-grid" style="margin-top:0">
+          <div class="g-tile">Nastanitev</div><div class="g-tile">Okolica</div>
+          <div class="g-tile">Ponudba</div><div class="g-tile">WiFi</div>
+        </div>
+      </div>
+      <div class="g-tabs">
+        <div class="on"><div class="d"></div>Domov</div><div><div class="d"></div>Nastanitev</div>
+        <div><div class="d"></div>Ponudba</div><div><div class="d"></div>Okolica</div>
+        <div><div class="d"></div>Sporočila</div>
+      </div>
+    </div></div>
+    <div class="phcap">Nič se ne dogaja<i>Ni pasu, ni praznega okvirja, ni besedila »Ni dogodkov«.</i></div>
+  </div>
+</div>
+</section>
+
+<div class="sw">
+  <button class="on" data-s="a1">Admin · seznam</button>
+  <button data-s="a2">Admin · urejanje</button>
+  <button data-s="g1">Gost · domača stran</button>
+</div>
+<script>
+document.querySelectorAll('.sw button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('.sw button').forEach(function(x){x.classList.remove('on')});
+    document.querySelectorAll('.screen').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');document.getElementById(b.dataset.s).classList.add('on');window.scrollTo(0,0);
+  };
+});
+</script>
+</body></html>

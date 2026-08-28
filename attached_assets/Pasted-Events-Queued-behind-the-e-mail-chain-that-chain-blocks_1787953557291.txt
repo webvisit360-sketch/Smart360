@@ -1,0 +1,45 @@
+Events. Queued behind the e-mail chain — that chain blocks onboarding any
+paying client at all, this blocks only one sales argument. Do not start until
+invitations are proven.
+
+Design is in the attached dogodki-2030.html, three screens. Read it before
+proposing a model.
+
+THE DATA
+An event has: title, place, optional price, optional description, a time, and a
+recurrence. Recurrence has exactly three shapes and no more: once on a date;
+every day between two dates; chosen weekdays between two dates.
+An end date is mandatory for both recurring shapes. There is no open-ended
+event. Report how you would store this — a single row with a rule, or generated
+occurrences — and which makes "what is on today" a cheap query.
+
+WHAT THE GUEST SEES
+· A strip on the home screen showing the next event that has not yet started,
+  today or tomorrow. If there is none, the strip is absent — no empty frame, no
+  "no events" text. This is the rule the whole feature stands on.
+· Tapping it opens Dogajanje: today, tomorrow, and the coming days, grouped by
+  day, times ascending.
+· A past event is never visible. An event in progress stays visible until
+  midnight.
+· The Dogodki tab exists in a guide only when that tenant has events at all. An
+  apartment host with none gets no dead tab, the same way the admin nav item is
+  hidden today.
+
+WHAT THE HOST SEES
+Three groups: this week, recurring, finished. Finished events are kept, not
+deleted — "Ponovi" and "Kopiraj lansko sezono" are what make a camp renew, and
+a camp that must retype its programme every spring will not.
+A recurring series whose end date has passed appears in the recurring group
+marked as ended, with "Podaljšaj". It does not silently vanish from the host's
+view while vanishing from the guest's.
+
+TRANSLATIONS — A DELIBERATE EXCEPTION
+A missing translation does not hide an event. The guest sees the source
+language. This departs from the standing rule that a stale translation is never
+shown, and the departure is intentional: for a description the language matters
+more, for a 19.00 concert the time does. Show the missing-language warning to
+the host, never to the guest.
+
+Report the data model and the query for "what is on today" before building.
+
+Report and STOP.
