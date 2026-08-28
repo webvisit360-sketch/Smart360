@@ -3,8 +3,8 @@ name: Drizzle check constraints
 description: Development schema-push quirk for changed PostgreSQL CHECK constraint bodies.
 ---
 
-When expanding or otherwise changing a PostgreSQL `CHECK` constraint, do not assume a successful development `drizzle-kit push` updated the live constraint if its name stayed the same. Rename the constraint in the Drizzle schema to force replacement, then inspect `pg_constraint` and `pg_get_constraintdef` before exercising the new value.
+Keep PostgreSQL `CHECK` constraints under stable semantic names, without `_v1`, `_v2`, or similar suffixes. When the body changes, replace the constraint explicitly with approved `DROP CONSTRAINT` and `ADD CONSTRAINT` statements, then inspect `pg_constraint` and `pg_get_constraintdef`.
 
-**Why:** A push reported success while the database retained the old allowed-value set, causing runtime inserts of a newly documented enum value to fail.
+**Why:** A push once retained an old allowed-value set under the same name. Versioned names avoid that one symptom but create an unbounded naming trail whose current member becomes unclear. Development and production can also have different constraint histories, so copying a development repair script into production can fail at rollout.
 
-**How to apply:** After any CHECK-body change, use the normal schema push, query the live definition read-only, and rename/re-push when the same-named definition was not replaced. Apply the corresponding generated migration during production rollout.
+**How to apply:** Before each environment's migration, read that environment's exact constraint names and definitions plus related columns/indexes. Write and approve a transaction against those observed facts; never reuse a script that assumes another environment's migration history.
