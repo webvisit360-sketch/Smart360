@@ -12,6 +12,7 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 
 ## Ključne odločitve
 
+- `vrsta-dela.md` je edini merodajni seznam dela. Stanje projektne kartice ga ne prekliče ali zaključi; zaključek zahteva produkcijo in v datoteki zahtevani dokaz.
 - Admin avtentikacija: env poverilnice `ADMIN_USER` / `ADMIN_PASSWORD` (dev fallback admin/smart360, v produkciji obvezen `ADMIN_PASSWORD`), HMAC podpisan HTTP-only piškotek (30 dni, `SESSION_SECRET`), rate limit prijave 5/15 min. Brez registracije, brez gostujočih računov.
 - Iskalniki povsod blokirani: `X-Robots-Tag` header + `/robots.txt` Disallow.
 - Neobjavljeni najemniki na javnem endpointu vrnejo 404; `?preview=1` jih pokaže (za operaterja).

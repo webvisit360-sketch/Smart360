@@ -1,0 +1,101 @@
+# Vrsta dela — Smart360
+
+Stanje na dan **28. 8. 2026**.
+
+**Ta datoteka je merodajna.** Če se kartica v Replitu ne ujema z njo, velja ta
+datoteka. Kartice so se že samodejno preklicale; ta seznam se ne prekliče sam.
+
+---
+
+## Zdaj — to blokira prvo plačljivo stranko
+
+Vrstni red je zavezujoč. Vsaka točka je končana šele, ko je v produkciji in
+preverjena, ne ko je zelena v razvoju.
+
+**1 · Skupni webhook za dostavne dogodke**
+Podpisan endpoint, preverjen nad surovim telesom. Sme samo posodabljati vrstice,
+ujete prek `provider_message_id` — nikoli ustvarjati. Dogodek za neznan ID se
+tiho zavrže. `bounced` in `complained` sta končna; poznejši `delivered` ju ne
+sme povoziti. Streže povpraševanjem in vabilom hkrati.
+*Narejeno, ko:* v Povpraševanjih piše dostavljeno ali odbito, ne »poslano«.
+
+**2 · Dokazila o dostavi vabil**
+`host_invites` že ima stolpce. Manjka priklop na webhook.
+*Narejeno, ko:* eno resnično vabilo ima shranjeno vrstico, message ID in
+ponudnikov dogodek, Frenk pa ga je videl v nabiralniku in si nastavil geslo.
+
+**3 · Sedem dni in stran za poteklo povezavo**
+Veljavnost s 72 ur na 7 dni, enkratna uporaba ostane. Stran v CGP, ki pove, da
+povezava ne velja več, in ima en gumb za novo vabilo. Nikoli gola napaka in
+nikoli razkritje, ali račun obstaja.
+
+**4 · DNS zapisi za `smart360.info`**
+Agent doda domeno pri Resendu in izpiše SPF, DKIM in DMARC. **Vnese jih Frenk**
+pri registrarju. Naslov pošiljatelja se premakne šele, ko domena kaže verified.
+*Zakaj:* vabilo s povezavo za geslo z domene, ki je stranka ni nikoli videla, je
+po obliki prevara.
+
+**5 · Dogodki**
+Specifikacija je zaključena in odobrena — `dogodki-2030.html` in dopolnili o
+nespremenljivih preteklih pojavitvah ter znani omejitvi čez polnoč.
+
+---
+
+## Odprto, ne blokira
+
+- **Urejanje naslova ne sproži preračuna razdalje.** Najdražja od odprtih:
+  gostitelj popravi lokacijo, gost vidi staro številko, gostitelj misli, da je
+  popravljeno. Ko pridejo razdalje na vrsto, ima to prednost.
+- `item_distance_reviews` — nespremenljiv dnevnik odločitev, trije števci v
+  Pregledu, obstoječe vrstice označene kot »človeški pregled ni dokazan«.
+  Popravek Trsta z 28. 8. se vpiše kot `individual` / `owner`.
+- Preimenovanje gumba **»Potrdi vse zanesljive (high)«** — filtrira izvor
+  koordinat, ne kakovosti.
+- **Dvojniki iz uvoza:** Motovun, Portopiccolo Sistiana, Grad Miramare so v
+  viru enkrat, v bazi dvakrat. Uvoz podvoji kraj, ki sodi v dve kategoriji, in
+  vsak dvojnik dobi svojo razdaljo. Ponovi se pri vsaki stranki.
+- Geokodirnik razrešuje iz naslova; opis pogosto imenuje točno lokacijo
+  (»Trg Enotnosti Italije«). Naj ga upošteva.
+- Kartica **Vsebine (elementi)** šteje vse vrstice brez filtra po najemniku in
+  z mehko izbrisanimi. Pri eni stranki nedolžno, pri petnajstih nesmiselno.
+- Odstranitev začasne startup datoteke za popravek Trsta.
+- Prazno polje **»Vprašanje ali opomba«** naj se izpusti, ne izpiše s
+  pomišljajem.
+- Potrdilo obiskovalcu po oddaji obrazca — šele po verifikaciji domene.
+
+---
+
+## Na Frenku
+
+- Pritisniti **Odgovori** na testnem sporočilu in preveriti, ali se izpiše
+  naslov obiskovalca.
+- Odločiti se za poslovni e-naslov. Zdaj je to pet minut; po prvi stranki
+  pomeni popravljanje Pogojev, obvestila o zasebnosti, vabil in pisem.
+- Vnesti DNS zapise, ko jih agent izpiše.
+- Po objavi pogledati **Trst** v vodniku — mora pisati približno 30 km, ne 57.
+
+---
+
+## Na meni
+
+- **Prodajna pisma** — čakam sedem odgovorov o tem, kaj še obljubljamo
+  (obvestila push, najem opreme, domači pridelki, lastna znamka, GPX, načrt
+  posesti). Vprašano štirikrat. Koledar dogodkov je odgovorjen: gradimo ga.
+- Paket istrskih krajev, ko bo oblika potrjena.
+- Knjižnica Savinjske za Kamp Menina.
+- Prevodi 133 ključev vmesnika v NL, FR, CS, HU, HR — odloženo na oktober.
+- Pregled zbirke lokacij: **Mesečev zaliv** je pri meni trikrat (naravna
+  dediščina, plaža, pohodništvo). En kraj, en zapis.
+
+---
+
+## Kaj pomeni »narejeno«
+
+V produkciji in preverjeno na resnični napravi ali v resničnem nabiralniku.
+Zelena zbirka testov ni dokaz. Odgovor 2xx ponudnika pošte pomeni *sprejeto v
+pošiljanje*, ne *dostavljeno* — trikrat v tem projektu je bil sprejet kot
+dokaz, in trikrat ni bil.
+
+Merilo je zapisano v `administracija-pravila.md`, razdelek **Dokazana dostava**:
+28. 8. 2026, oddaja 22.10.48,990, ponudnikov zadnji dogodek `delivered`,
+videno na telefonu ob 22.14 v mapi Nabiralnik.
