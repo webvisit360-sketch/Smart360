@@ -21,7 +21,7 @@ export const enquiriesTable = pgTable(
   },
   (table) => [
     check(
-      "enquiries_delivery_status_enum_v2",
+      "enquiries_delivery_status_enum",
       sql`${table.deliveryStatus} IN ('pending','accepted','failed','delivered','bounced','complained')`,
     ),
     index("enquiries_submitted_at_idx").on(table.submittedAt),

@@ -106,7 +106,7 @@ export const hostInvitesTable = pgTable(
   (t) => [
     index("host_invites_user_idx").on(t.hostUserId),
     check(
-      "host_invites_delivery_status_enum_v1",
+      "host_invites_delivery_status_enum",
       sql`${t.deliveryStatus} IN ('pending','accepted','failed','delivered','bounced','complained')`,
     ),
     uniqueIndex("host_invites_provider_message_id_unique")
