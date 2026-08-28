@@ -14,5 +14,7 @@ description: Binding rules for POI distance proposals, geocoding, and host locat
 - **Review list is one row per POI**, least-confident first: failed → pending low (farthest first) → pending high → new → manual.
 - Origin is always the tenant's derived coordinates; a run errors when the tenant has no stored link ("Namestitev nima shranjene Google Maps povezave.").
 - Geocoding quality on Meli Pu data: ~20% of free-text addresses fail and some resolve to wrong far-away places (e.g. namesakes abroad) — the human review gate is essential; never bulk-approve low-confidence rows.
+- **Legacy provenance exception:** the owner explicitly approved the Trieste city-centre correction on 2026-08-28. When the immutable review ledger is introduced, this one legacy decision must be backfilled as an individual owner review; all other pre-ledger approvals remain “human review not proven.”
+  - **Why:** the correction is a documented human decision made before the ledger exists and would otherwise become indistinguishable from bulk approvals.
 
 **Review UX rule:** handled rows (approved/manual/skipped) must never disappear or get relabeled — they stay in the list with an explicit status badge and a Razveljavi (undo) path. "Approved" means the stored item value matches the approved proposal; any other stored value is "manual". **Why:** the owner reported approved rows as "vanished" when they were silently relabeled manual and sorted last.
