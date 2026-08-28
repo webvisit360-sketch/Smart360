@@ -1,0 +1,45 @@
+Nothing in your last two reports is in production. That is now the largest risk
+in this project, and it outranks every feature on your list.
+
+Unpublished and stacking: enquiry storage, the enquiries list, /zasebnost,
+/pogoji without the login gate, hidden Dogodki, the wired Pregled, the size
+display, and a mobile cockpit layout change. Eight changes, each verified in
+dev, none real. When eight ship at once and something breaks, neither of us
+will know which one did it.
+
+1 — PUBLISH, THEN PROVE IT
+Publish everything you have. Then report, from the live site, not from dev:
+· the deployed bundle time;
+· /zasebnost and /pogoji returning 200 to an anonymous browser;
+· the Dogodki nav item absent;
+· Pregled rendering real numbers for the Meli Pu tenant;
+· the media figure shown on the dashboard.
+Confirm no existing table was altered by the migration.
+
+2 — THE MAIL DIAGNOSIS IS STILL OUTSTANDING
+You have not answered it. Report, unchanged from the previous block: the From
+address production uses, the domains verified in Resend and their state,
+whether the production API key is set and whether it matches dev (presence and
+last four characters only), and whether the account is in a restricted mode.
+Mail has never been delivered in this project. Until these four facts exist, no
+feature that depends on e-mail can be called finished.
+
+3 — MAKE THE QUOTA DECIMAL
+You confirmed the quota is 2 GiB while the interface labels it "2 GB". Those
+differ by 7 %. Change the stored quota to 2,000,000,000 bytes and use decimal
+MB and GB everywhere — display, warning threshold, and the dashboard. One unit
+family, and the label tells the truth.
+
+4 — ACTIONS ON EVERY ORDER, NOT ONLY THE FIRST
+My wording caused this: I wrote that the first order is actionable in place,
+and you built exactly that. It was a description of a mockup, not a rule. Every
+order in the Danes list carries Potrdi, Zavrni and Pokliči. A host with three
+waiting orders answers all three where he sees them.
+
+5 — REPORT THE MOBILE CHANGE PROPERLY
+"Mobilna konzola je popravljena: navigacija je vodoravna" is a layout change to
+the whole cockpit, mentioned in a subordinate clause. State which screens it
+affects, what the navigation looked like before, and what a host with eleven
+menu items sees at 390 px now.
+
+Report and STOP.
