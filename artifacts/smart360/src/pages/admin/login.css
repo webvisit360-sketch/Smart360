@@ -1,0 +1,64 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap");
+
+.smart-login {
+  --login-green: #157347;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 52px 20px 96px;
+  color: #121a14;
+  background: #f4f6f2;
+  font-family: Archivo, Arial, sans-serif;
+}
+.smart-login__ring {
+  position: fixed;
+  z-index: 0;
+  width: min(520px, 74vw);
+  height: auto;
+  right: -18%;
+  top: -22%;
+  opacity: .2;
+  pointer-events: none;
+}
+.smart-login__card {
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 38px 34px 30px;
+  border: 1px solid #e8ebe6;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(18, 26, 20, .07);
+}
+.smart-login__header { text-align: center; }
+.smart-login__logo { width: 204px; margin: 0 auto; }
+.smart-login__logo svg { display: block; width: 100%; height: auto; }
+.smart-login__header h1 { margin-top: 20px; font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }
+.smart-login__header p { margin: 5px 0 26px; color: #66716a; font-size: 15px; }
+.smart-login__form { display: grid; gap: 16px; }
+.smart-login__field { display: grid; gap: 7px; }
+.smart-login__field label { color: #66716a; font-size: 12.5px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.smart-login__field input { height: 50px; border: 1.5px solid #e8ebe6; border-radius: 14px; background: #fff; color: #121a14; font: 600 16px Archivo, Arial, sans-serif; }
+.smart-login__field input:focus-visible { border-color: var(--login-green); box-shadow: 0 0 0 3px rgba(21,115,71,.1); }
+.smart-login__primary { width: 100%; height: 50px; margin-top: 6px; border-radius: 14px; background: var(--login-green) !important; color: #fff; font-weight: 800; box-shadow: none !important; }
+.smart-login__primary:hover { background: #12643d !important; }
+.smart-login__forgot { width: 100%; height: auto; padding: 0; color: var(--login-green) !important; font-weight: 700; }
+.smart-login__separator { display: flex; align-items: center; gap: 14px; margin: 28px 0 18px; color: #9aa69e; font-size: 11.5px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.smart-login__separator span { height: 1px; flex: 1; background: #e8ebe6; }
+.smart-login__team { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.smart-login__passkey { width: auto; height: 42px; padding: 0 18px; border-color: #e8ebe6; border-radius: 12px; background: #f4f6f2; color: #66716a; font-weight: 700; }
+.smart-login__recovery { height: auto; padding: 0; color: #66716a !important; font-size: 13px; font-weight: 700; }
+.smart-login__footer { position: absolute; z-index: 1; bottom: 28px; display: flex; gap: 5px; color: #8b958a; font-size: 13px; }
+.smart-login__footer a { color: inherit; font-weight: 650; text-decoration: none; }
+.smart-login__footer a:hover { color: #66716a; text-decoration: underline; }
+@media (max-width: 420px) {
+  .smart-login { align-items: start; padding: 78px 24px 110px; }
+  .smart-login__ring { width: 360px; right: -155px; top: -128px; }
+  .smart-login__card { padding: 30px 26px 26px; border-radius: 24px; }
+  .smart-login__logo { width: 172px; }
+  .smart-login__header h1 { margin-top: 24px; font-size: 24px; }
+  .smart-login__header p { font-size: 16px; }
+  .smart-login__footer { bottom: 24px; }
+}

@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, KeyRound, Mail } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
+import loginDesignHtml from "@assets/Smart360-prijava_1787872268224.html?raw";
+import "./login.css";
+
+const suppliedLogoSvg =
+  loginDesignHtml.match(/<div class="brand"><div class="lk">([\s\S]*?<\/svg>)<\/div><\/div>/)?.[1] ?? "";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -182,40 +187,27 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-muted p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center pb-8">
-          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <CardTitle className="text-2xl">Smart360 portal</CardTitle>
-          <CardDescription>Prijavite se in uredite vodnik za svoje goste.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleHostLogin} className="space-y-4">
-            <div className="space-y-2">
+    <div className="smart-login">
+      <img className="smart-login__ring" src="/brand/smart360-kolobar-temno.svg" alt="" aria-hidden="true" />
+      <main className="smart-login__card">
+        <header className="smart-login__header">
+          <div
+            className="smart-login__logo"
+            role="img"
+            aria-label="Smart360"
+            dangerouslySetInnerHTML={{ __html: suppliedLogoSvg }}
+          />
+          <h1>Portal za gostitelje</h1>
+          <p>Prijavite se in uredite vodnik za svoje goste.</p>
+        </header>
+        <form onSubmit={handleHostLogin} className="smart-login__form">
+            <div className="smart-login__field">
               <Label htmlFor="host-login-email">E-poštni naslov</Label>
-              <Input
-                id="host-login-email"
-                type="email"
-                autoComplete="email"
-                required
-                value={hostEmail}
-                onChange={(event) => setHostEmail(event.target.value)}
-              />
+              <Input id="host-login-email" type="email" autoComplete="email" placeholder="ime@primer.si" required value={hostEmail} onChange={(event) => setHostEmail(event.target.value)} />
             </div>
-            <div className="space-y-2">
+            <div className="smart-login__field">
               <Label htmlFor="host-login-password">Geslo</Label>
-              <Input
-                id="host-login-password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={hostPassword}
-                onChange={(event) => setHostPassword(event.target.value)}
-              />
+              <Input id="host-login-password" type="password" autoComplete="current-password" placeholder="••••••••" required value={hostPassword} onChange={(event) => setHostPassword(event.target.value)} />
             </div>
             {hostError && (
               <p role="alert" className="text-sm font-semibold text-destructive text-center">
@@ -227,35 +219,35 @@ export default function AdminLogin() {
                 Če račun obstaja, smo poslali 60-minutno povezavo za ponastavitev.
               </p>
             )}
-            <Button type="submit" className="w-full" disabled={hostBusy}>
-              {hostBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+            <Button type="submit" className="smart-login__primary" disabled={hostBusy}>
+              {hostBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Prijava za gostitelja
             </Button>
             <Button
               type="button"
               variant="link"
-              className="w-full text-muted-foreground"
+              className="smart-login__forgot"
               onClick={() => void requestHostReset()}
               disabled={hostBusy}
             >
               Pozabljeno geslo?
             </Button>
-          </form>
-
-          <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.04em] text-muted-foreground">
+        </form>
+          <div className="smart-login__separator">
             <span className="h-px bg-border flex-1" />
             Smart360 ekipa
             <span className="h-px bg-border flex-1" />
           </div>
 
+          <div className="smart-login__team">
           <Button
             variant="outline"
-            className="w-full"
+            className="smart-login__passkey"
             onClick={handlePasskeyLogin}
             disabled={isProcessingLogin}
           >
             {isProcessingLogin && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-            Prijava s passkeyjem za ekipo
+            Prijava s ključem
           </Button>
 
           {loginError && (
@@ -264,13 +256,16 @@ export default function AdminLogin() {
             </div>
           )}
 
-          <div className="text-center pt-2">
-            <Button type="button" variant="link" onClick={() => setIsRecoveryMode(true)} className="text-muted-foreground text-sm">
+          <div>
+            <Button type="button" variant="link" onClick={() => setIsRecoveryMode(true)} className="smart-login__recovery">
               Obnovitev dostopa
             </Button>
           </div>
-        </CardContent>
-      </Card>
+          </div>
+      </main>
+      <footer className="smart-login__footer">
+        <a href="/pogoji">Pogoji uporabe</a><span>·</span><a href="/pogoji#priloga">Obdelava podatkov</a>
+      </footer>
     </div>
   );
 }

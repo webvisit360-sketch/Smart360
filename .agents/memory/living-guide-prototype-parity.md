@@ -38,6 +38,14 @@ Any non-zero close-fidelity pixel mismatch is a defect until a diff mask localiz
 
 **How to apply:** Always retain and inspect the diff mask, test held and post-swap frames, and keep close fidelity in routine validation.
 
+## Opening splash cadence
+
+The guest opening splash remains on every real page open for four seconds. Returning through the iOS app switcher does not reload the page, so the splash does not replay there. Keep the existing ring rotation timing unless the owner separately approves synchronizing one full turn to the fade.
+
+**Why:** The owner explicitly chose predictable branding on infrequent real opens; app-switcher returns already avoid repetition.
+
+**How to apply:** Do not add once-per-session suppression or shorten the splash. Treat rotation-duration changes as a separate, still-open design decision.
+
 ## Detail opening readiness
 
 Do not start the detail-sheet transform until fonts are ready, the visible hero is decoded, required chrome is present, and first-screen geometry is unchanged across consecutive paints. Readiness checks must be template-aware: if an optional visual branch exists, require its ready state; if it is absent by design, do not block the sheet.

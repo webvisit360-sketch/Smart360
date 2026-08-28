@@ -23,6 +23,7 @@ import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages
 import { usePageBg } from '@/pages/guest/use-theme-attr';
 import { useBundleFreshness } from '@/lib/bundle-freshness';
 import { PasswordTokenPage } from '@/pages/portal/password-token-page';
+import TermsPage from '@/pages/admin/terms';
 
 const queryClient = new QueryClient();
 const LivingGuideTokensPage = lazy(
@@ -72,7 +73,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
     <div
       className={`guest-entry-splash${phase === 'out' ? ' is-out' : ''}`}
       role="status"
-      aria-label="Smart360 Digitalni vodnik"
+      aria-label="Smart360 Smart travel guide"
       onClick={hide}
     >
       <span className="guest-entry-splash__mark" aria-hidden="true">
@@ -86,7 +87,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
         style={wordmarkStyle}
         aria-hidden="true"
       />
-      <span className="guest-entry-splash__subtitle">Digitalni vodnik</span>
+      <span className="guest-entry-splash__subtitle">Smart travel guide</span>
     </div>
   );
 }
@@ -283,6 +284,7 @@ function Router() {
         <Route path="/portal/ponastavitev">
           <PasswordTokenPage mode="reset" />
         </Route>
+        <Route path="/pogoji" component={TermsPage} />
 
         {/* Isolated Part 1 design-system proof. It intentionally bypasses GuestLayout,
             legacy theme CSS and tenant data. */}
