@@ -5,6 +5,7 @@ import AdminAccount from "@/pages/admin/account";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminLayout from "@/components/admin/admin-layout";
 import AdminTenantEdit from "@/pages/admin/tenant-edit";
+import AdminEnquiriesPage from "@/pages/admin/enquiries";
 
 export function AdminRouter() {
   const [location] = useLocation();
@@ -22,6 +23,7 @@ export function AdminRouter() {
       <Switch>
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/account" component={AdminAccount} />
+        <Route path="/admin/enquiries" component={AdminEnquiriesPage} />
         <Route path="/admin/tenants/:id" component={AdminTenantEdit} />
       </Switch>
     </AdminLayout>

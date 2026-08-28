@@ -26,7 +26,7 @@ paths:
     post:
       operationId: sendPublicEnquiry
       tags: [public]
-      summary: Send a public sales enquiry without storing it
+      summary: Capture a public sales enquiry and notify the owner
       requestBody:
         required: true
         content:
@@ -35,7 +35,7 @@ paths:
               $ref: "#/components/schemas/PublicEnquiry"
       responses:
         "200":
-          description: Enquiry accepted and sent
+          description: Enquiry safely captured
           content:
             application/json:
               schema:
@@ -44,8 +44,24 @@ paths:
           description: Invalid input
         "429":
           description: Rate limited
-        "502":
-          description: Email provider rejected the message
+        "503":
+          description: Enquiry could not be safely captured
+  /admin/enquiries:
+    get:
+      operationId: listAdminEnquiries
+      tags: [overview]
+      summary: List captured sales enquiries, newest first
+      responses:
+        "200":
+          description: Captured enquiries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminEnquiry"
+        "401":
+          description: Not authenticated
   /healthz:
     get:
       operationId: healthCheck
@@ -1756,6 +1772,31 @@ components:
       required: [sent]
       properties:
         sent: { type: boolean }
+    AdminEnquiry:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - propertyName
+        - address
+        - propertyType
+        - deliveryStatus
+        - submittedAt
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        propertyName: { type: string }
+        address: { type: string }
+        propertyType: { type: string }
+        message: { type: ["string", "null"] }
+        deliveryStatus:
+          type: string
+          enum: [pending, accepted, failed]
+        providerMessageId: { type: ["string", "null"] }
+        submittedAt: { type: string }
+        deliveryAttemptedAt: { type: ["string", "null"] }
     HealthStatus:
       type: object
       properties:

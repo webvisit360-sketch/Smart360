@@ -9,7 +9,7 @@ import * as zod from 'zod';
 
 
 /**
- * @summary Send a public sales enquiry without storing it
+ * @summary Capture a public sales enquiry and notify the owner
  */
 export const sendPublicEnquiryBodyNameMin = 2;
 export const sendPublicEnquiryBodyNameMax = 120;
@@ -41,6 +41,25 @@ export const SendPublicEnquiryBody = zod.object({
 export const SendPublicEnquiryResponse = zod.object({
   "sent": zod.boolean()
 })
+
+
+/**
+ * @summary List captured sales enquiries, newest first
+ */
+export const ListAdminEnquiriesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "propertyName": zod.string(),
+  "address": zod.string(),
+  "propertyType": zod.string(),
+  "message": zod.string().nullish(),
+  "deliveryStatus": zod.enum(['pending', 'accepted', 'failed']),
+  "providerMessageId": zod.string().nullish(),
+  "submittedAt": zod.string(),
+  "deliveryAttemptedAt": zod.string().nullish()
+})
+export const ListAdminEnquiriesResponse = zod.array(ListAdminEnquiriesResponseItem)
 
 
 /**

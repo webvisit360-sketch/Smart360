@@ -8,6 +8,8 @@
 
 export * from './addPasskeyVerifyBody';
 export * from './addPasskeyVerifyBodyResponse';
+export * from './adminEnquiry';
+export * from './adminEnquiryDeliveryStatus';
 export * from './adminOverview';
 export * from './adminSession';
 export * from './adminThreadView';

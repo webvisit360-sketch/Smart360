@@ -21,6 +21,7 @@ import type {
 
 import type {
   AddPasskeyVerifyBody,
+  AdminEnquiry,
   AdminOverview,
   AdminSession,
   AdminThreadView,
@@ -144,7 +145,7 @@ export const getSendPublicEnquiryUrl = () => {
 }
 
 /**
- * @summary Send a public sales enquiry without storing it
+ * @summary Capture a public sales enquiry and notify the owner
  */
 export const sendPublicEnquiry = async (publicEnquiry: PublicEnquiry, options?: Parameters<typeof customFetch>[1]): Promise<PublicEnquiryResponse> => {
 
@@ -193,7 +194,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SendPublicEnquiryMutationError = ErrorType<void>
 
     /**
- * @summary Send a public sales enquiry without storing it
+ * @summary Capture a public sales enquiry and notify the owner
  */
 export const useSendPublicEnquiry = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendPublicEnquiry>>, TError,{data: BodyType<PublicEnquiry>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -205,6 +206,83 @@ export const useSendPublicEnquiry = <TError = ErrorType<void>,
       > => {
       return useMutation(getSendPublicEnquiryMutationOptions(options));
     }
+
+export const getListAdminEnquiriesUrl = () => {
+
+
+
+
+  return `/api/admin/enquiries`
+}
+
+/**
+ * @summary List captured sales enquiries, newest first
+ */
+export const listAdminEnquiries = async ( options?: Parameters<typeof customFetch>[1]): Promise<AdminEnquiry[]> => {
+
+  return customFetch<AdminEnquiry[]>(getListAdminEnquiriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminEnquiriesQueryKey = () => {
+    return [
+    `/api/admin/enquiries`
+    ] as const;
+    }
+
+
+export const getListAdminEnquiriesQueryOptions = <TData = Awaited<ReturnType<typeof listAdminEnquiries>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminEnquiries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminEnquiriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminEnquiries>>> = ({ signal }) => listAdminEnquiries({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminEnquiries>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminEnquiriesQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminEnquiries>>>
+export type ListAdminEnquiriesQueryError = ErrorType<void>
+
+
+/**
+ * @summary List captured sales enquiries, newest first
+ */
+
+export function useListAdminEnquiries<TData = Awaited<ReturnType<typeof listAdminEnquiries>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminEnquiries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminEnquiriesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getHealthCheckUrl = () => {
 

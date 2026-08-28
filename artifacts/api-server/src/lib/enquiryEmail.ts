@@ -14,7 +14,11 @@ export type Enquiry = {
   message?: string;
 };
 
-type Delivery = (body: ReturnType<typeof buildEnquiryEmail>) => Promise<boolean>;
+export type EnquiryDeliveryResult = {
+  status: "accepted" | "failed";
+  providerMessageId: string | null;
+};
+type Delivery = (body: ReturnType<typeof buildEnquiryEmail>) => Promise<EnquiryDeliveryResult>;
 let deliveryOverride: Delivery | null = null;
 
 export function _setEnquiryDeliveryOverride(delivery: Delivery | null): void {
@@ -54,7 +58,7 @@ export function buildEnquiryEmail(enquiry: Enquiry) {
   };
 }
 
-export async function sendEnquiry(enquiry: Enquiry): Promise<boolean> {
+export async function sendEnquiry(enquiry: Enquiry): Promise<EnquiryDeliveryResult> {
   const body = buildEnquiryEmail(enquiry);
   if (deliveryOverride) return deliveryOverride(body);
   try {
@@ -65,14 +69,18 @@ export async function sendEnquiry(enquiry: Enquiry): Promise<boolean> {
     });
     if (!response.ok) {
       logger.error({ httpStatus: response.status }, "[enquiryEmail] Resend rejected");
-      return false;
+      return { status: "failed", providerMessageId: null };
     }
-    return true;
+    const payload = await response.json().catch(() => null) as { id?: unknown } | null;
+    return {
+      status: "accepted",
+      providerMessageId: typeof payload?.id === "string" ? payload.id : null,
+    };
   } catch (error) {
     logger.error(
       { errName: error instanceof Error ? error.name : "Error" },
       "[enquiryEmail] send failed",
     );
-    return false;
+    return { status: "failed", providerMessageId: null };
   }
 }

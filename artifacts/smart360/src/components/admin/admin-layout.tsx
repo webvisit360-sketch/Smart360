@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { useGetAdminSession, useAdminLogout } from "@workspace/api-client-react";
 import { useLocation, Link } from "wouter";
-import { Loader2, LogOut, LayoutDashboard, Settings, User } from "lucide-react";
+import { Loader2, LogOut, LayoutDashboard, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHostSession } from "@/hooks/use-host-session";
 
@@ -79,9 +79,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
         </div>
         <div className="flex-1 py-6 px-4 space-y-2">
-          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-semibold">
+          <Link href="/admin" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold ${location === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
             <LayoutDashboard className="h-5 w-5" />
             Nadzorna plošča
+          </Link>
+          <Link href="/admin/enquiries" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold ${location === "/admin/enquiries" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
+            <Mail className="h-5 w-5" />
+            Povpraševanja
           </Link>
           <Link href="/admin/account" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted font-medium transition-colors">
             <User className="h-5 w-5" />

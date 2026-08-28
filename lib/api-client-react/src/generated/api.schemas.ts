@@ -44,6 +44,32 @@ export interface PublicEnquiryResponse {
   sent: boolean;
 }
 
+export type AdminEnquiryDeliveryStatus = typeof AdminEnquiryDeliveryStatus[keyof typeof AdminEnquiryDeliveryStatus];
+
+
+export const AdminEnquiryDeliveryStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+} as const;
+
+export interface AdminEnquiry {
+  id: string;
+  name: string;
+  email: string;
+  propertyName: string;
+  address: string;
+  propertyType: string;
+  /** @nullable */
+  message?: string | null;
+  deliveryStatus: AdminEnquiryDeliveryStatus;
+  /** @nullable */
+  providerMessageId?: string | null;
+  submittedAt: string;
+  /** @nullable */
+  deliveryAttemptedAt?: string | null;
+}
+
 export interface HealthStatus {
   status: string;
 }

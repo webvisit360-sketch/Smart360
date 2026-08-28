@@ -11,6 +11,7 @@ import { runTriesteCityRenameAtStartup } from "./lib/triesteCityRenameBackfill";
 import { runMeliPuDescriptionBackfillAtStartup } from "./lib/meliPuDescriptionBackfill";
 import { runMeliPuContentFinalizationAtStartup } from "./lib/meliPuContentFinalizationBackfill";
 import { ensureRowLevelSecurity } from "./lib/rls";
+import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRetention";
 
 const rawPort = process.env["PORT"];
 
@@ -89,6 +90,7 @@ ensureAdminAccount()
       logger.error({ err }, "[messageRetention] startup purge failed");
     }),
   )
+  .then(() => purgeExpiredEnquiries())
   // One-time Okolica explore-group data repair (best-effort, self-disabling)
   .then(() => runExploreGroupBackfillAtStartup())
   // One-time Ponudba/Nastanitev group assignment (best-effort, self-disabling)
@@ -105,6 +107,7 @@ ensureAdminAccount()
     scheduleOrderRetention();
     scheduleMessageRetention();
     scheduleChangelogRetention();
+    scheduleEnquiryRetention();
     app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");

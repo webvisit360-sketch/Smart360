@@ -25,6 +25,7 @@ import { useBundleFreshness } from '@/lib/bundle-freshness';
 import { PasswordTokenPage } from '@/pages/portal/password-token-page';
 import TermsPage from '@/pages/admin/terms';
 import EnquiryPage from '@/pages/enquiry';
+import PrivacyPage from '@/pages/privacy';
 
 const queryClient = new QueryClient();
 const LivingGuideTokensPage = lazy(
@@ -287,6 +288,7 @@ function Router() {
         </Route>
         <Route path="/pogoji" component={TermsPage} />
         <Route path="/povprasevanje" component={EnquiryPage} />
+        <Route path="/zasebnost" component={PrivacyPage} />
 
         {/* Isolated Part 1 design-system proof. It intentionally bypasses GuestLayout,
             legacy theme CSS and tenant data. */}

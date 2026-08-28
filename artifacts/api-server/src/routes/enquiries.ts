@@ -1,6 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { createHash } from "node:crypto";
 import { SendPublicEnquiryBody } from "@workspace/api-zod";
+import { db, enquiriesTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
 import { ProcessLocalRateLimiter } from "../lib/orderHelpers";
 import { sendEnquiry } from "../lib/enquiryEmail";
 
@@ -20,6 +22,18 @@ function rateKey(value: string): string {
 function singleLine(value: string): string {
   return value.trim().replace(/[\r\n]+/g, " ");
 }
+
+router.get("/admin/enquiries", async (_req: Request, res: Response): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(enquiriesTable)
+    .orderBy(desc(enquiriesTable.submittedAt));
+  res.json(rows.map((row) => ({
+    ...row,
+    submittedAt: row.submittedAt.toISOString(),
+    deliveryAttemptedAt: row.deliveryAttemptedAt?.toISOString() ?? null,
+  })));
+});
 
 router.post("/public/enquiries", async (req: Request, res: Response): Promise<void> => {
   const parsed = SendPublicEnquiryBody.safeParse(req.body);
@@ -58,10 +72,36 @@ router.post("/public/enquiries", async (req: Request, res: Response): Promise<vo
   }
 
   const { website: _website, ...enquiry } = normalized;
-  const sent = await sendEnquiry(enquiry);
-  if (!sent) {
-    res.status(502).json({ error: "Pošiljanje ni uspelo. Poskusite znova." });
+  const deleteAfter = new Date();
+  deleteAfter.setUTCMonth(deleteAfter.getUTCMonth() + 24);
+  let captured: { id: string };
+  try {
+    [captured] = await db
+      .insert(enquiriesTable)
+      .values({ ...enquiry, deleteAfter })
+      .returning({ id: enquiriesTable.id });
+    if (!captured) throw new Error("Insert returned no row");
+  } catch (error) {
+    req.log.error({ errName: error instanceof Error ? error.name : "Error" }, "Enquiry capture failed");
+    res.status(503).json({ error: "Oddaja trenutno ni mogoča. Poskusite znova." });
     return;
+  }
+
+  const delivery = await sendEnquiry(enquiry);
+  try {
+    await db
+      .update(enquiriesTable)
+      .set({
+        deliveryStatus: delivery.status,
+        providerMessageId: delivery.providerMessageId,
+        deliveryAttemptedAt: new Date(),
+      })
+      .where(eq(enquiriesTable.id, captured.id));
+  } catch (error) {
+    req.log.error(
+      { enquiryId: captured.id, errName: error instanceof Error ? error.name : "Error" },
+      "Enquiry delivery outcome update failed",
+    );
   }
   res.status(200).json({ sent: true });
 });
