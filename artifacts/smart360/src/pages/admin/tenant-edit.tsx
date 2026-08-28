@@ -1,4 +1,4 @@
-import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey } from "@workspace/api-client-react";
+import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
 import { Loader2, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
 import { actorLabel } from "@/pages/admin/dashboard";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
+import { AdminTenantOverview } from "@/components/admin/admin-tenant-overview";
 import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
 import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
 import { ContentEditor } from "@/components/admin/content-editor";
@@ -74,6 +75,11 @@ export default function AdminTenantEdit() {
   }, [isOwner, id]);
 
   const { data: tenant, isLoading } = useGetTenant(id, { query: { enabled: !!id, queryKey: getGetTenantQueryKey(id) } });
+  const { data: tenantOverviews } = useListTenantOverview({
+    query: { queryKey: getListTenantOverviewQueryKey() },
+  });
+  const tenantOverview = tenantOverviews?.find((row) => row.tenantId === id);
+
   const { data: previewTenant } = useGetPublicTenant(
     tenant?.slug || "",
     { preview: true },
@@ -446,35 +452,41 @@ export default function AdminTenantEdit() {
   };
 
   return (
-    <div className="flex h-[100dvh] bg-[#F5F5F7] text-[#14201F] overflow-hidden font-sans">
+    <div className="flex flex-col md:flex-row h-[100dvh] bg-[#F5F5F7] text-[#14201F] overflow-hidden font-sans">
 
       {/* SIDEBAR */}
-      <aside className="w-[264px] bg-white border-r border-black/5 flex flex-col shrink-0 px-[14px] py-[22px] overflow-y-auto">
-        <div className="flex flex-col gap-[11px] mb-8">
-          <button onClick={() => setActiveTab('pregled')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Pregled</button>
-          <button onClick={() => setActiveTab('kreator')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Kreator vodnika</button>
-          <button onClick={() => setActiveTab('orders')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center justify-between px-4 transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+      <aside className="w-full md:w-[264px] bg-white border-b md:border-b-0 md:border-r border-black/5 flex flex-row md:flex-col shrink-0 px-3 md:px-[14px] py-3 md:py-[22px] overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
+        <div className="flex flex-row md:flex-col gap-2 md:gap-[11px] mb-0 md:mb-8 shrink-0">
+          <button onClick={() => setActiveTab('pregled')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Pregled</button>
+          <button onClick={() => setActiveTab('kreator')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Kreator vodnika</button>
+          <button onClick={() => setActiveTab('orders')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between gap-2 px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
             <span>Naročila</span>
-            <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">2</span>
+            {(tenantOverview?.pendingOrders ?? 0) > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">{tenantOverview?.pendingOrders}</span>
+            )}
           </button>
-          <button onClick={() => setActiveTab('messages')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'messages' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Sporočila</button>
+          <button onClick={() => setActiveTab('messages')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between gap-2 px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'messages' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+            <span>Sporočila</span>
+            {(tenantOverview?.pendingMessages ?? 0) > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">{tenantOverview?.pendingMessages}</span>
+            )}
+          </button>
         </div>
 
-        <div className="mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
-        <div className="flex flex-col gap-[11px] mb-8">
-          <button onClick={() => setActiveTab('dogodki')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'dogodki' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Dogodki</button>
-          <button onClick={() => setActiveTab('obvestila')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Obvestila</button>
-          <button onClick={() => setActiveTab('ponudba')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Ponudba in cene</button>
+        <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
+        <div className="flex flex-row md:flex-col gap-2 md:gap-[11px] mb-0 md:mb-8 shrink-0">
+          <button onClick={() => setActiveTab('obvestila')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Obvestila</button>
+          <button onClick={() => setActiveTab('ponudba')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Ponudba in cene</button>
         </div>
 
-        <div className="mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
-        <div className="flex flex-col gap-[11px] mb-auto">
-          <button onClick={() => setActiveTab('distances')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Okolica</button>
-          <button onClick={() => setActiveTab('content')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastanitev</button>
-          <button onClick={() => setActiveTab('general')} className={`h-[47px] rounded-[14px] text-[16px] font-[650] flex items-center px-4 transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastavitve</button>
+        <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
+        <div className="flex flex-row md:flex-col gap-2 md:gap-[11px] md:mb-auto shrink-0">
+          <button onClick={() => setActiveTab('distances')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Okolica</button>
+          <button onClick={() => setActiveTab('content')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastanitev</button>
+          <button onClick={() => setActiveTab('general')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastavitve</button>
         </div>
 
-        <div className="mt-8 pt-4 border-t border-black/5 px-4 flex flex-col gap-1">
+        <div className="hidden md:flex mt-8 pt-4 border-t border-black/5 px-4 flex-col gap-1">
           <p className="text-sm font-semibold truncate">
             {isOwner ? "Smart360 operater" : hostSession?.email || "Gostitelj"}
           </p>
@@ -515,9 +527,9 @@ export default function AdminTenantEdit() {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
         {/* HEADER */}
-        <header className="h-[80px] px-[30px] bg-white/95 backdrop-blur border-b border-black/5 sticky top-0 z-20 flex items-center justify-between shrink-0">
+        <header className="min-h-[68px] md:h-[80px] px-4 md:px-[30px] py-3 md:py-0 bg-white/95 backdrop-blur border-b border-black/5 sticky top-0 z-20 flex items-center justify-between gap-3 shrink-0">
           <div className="min-w-0 flex items-center gap-3">
-            <h1 className="text-[26px] font-[800] tracking-tight truncate">{tenant.name}</h1>
+            <h1 className="text-[18px] md:text-[26px] font-[800] tracking-tight truncate">{tenant.name}</h1>
             {tenant.isPublished ? (
               <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-none shrink-0">Objavljeno</Badge>
             ) : (
@@ -534,14 +546,14 @@ export default function AdminTenantEdit() {
             )}
           </div>
 
-          <Button onClick={handlePublish} disabled={updateMutation.isPending} className="rounded-[14px] px-[20px] py-[12px] text-[16px] font-[700] h-auto">
+          <Button onClick={handlePublish} disabled={updateMutation.isPending} className="rounded-[12px] md:rounded-[14px] px-3 md:px-[20px] py-2 md:py-[12px] text-[14px] md:text-[16px] font-[700] h-auto shrink-0">
             {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Objavi
           </Button>
         </header>
 
         {/* SCROLLABLE VIEW */}
-        <div className="flex-1 overflow-auto p-[30px]">
+        <div className="flex-1 overflow-auto p-4 md:p-[30px]">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {isSettings && (
               <TabsList className="mb-6 bg-white border border-black/5 rounded-[14px] p-1">
@@ -554,11 +566,13 @@ export default function AdminTenantEdit() {
               </TabsList>
             )}
 
-            <TabsContent value="pregled"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Pregled (CP4)</div></TabsContent>
+            <TabsContent value="pregled">
+              <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
+            </TabsContent>
             <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika (CP4)</div></TabsContent>
-            <TabsContent value="dogodki"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki (CP6)</div></TabsContent>
             <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
             <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
+            <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
         <TabsContent value="general" className="space-y-4">
           <Card>

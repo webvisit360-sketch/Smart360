@@ -1,5 +1,5 @@
 import { useGetAdminOverview, useListTenants, useListTenantOverview, useDuplicateTenant, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
-import { fmtGb, usagePct } from "@/lib/format-bytes";
+import { fmtMediaSize, fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
                             const pct = usagePct(u.usedBytes, u.quotaBytes);
                             return (
                               <span className={pct >= 100 ? "text-destructive font-medium" : pct >= 80 ? "text-amber-600 font-medium" : ""}>
-                                {" • "}{fmtGb(u.usedBytes)} / {fmtGb(u.quotaBytes)}
+                                {" • "}{fmtMediaUsage(u.usedBytes, u.quotaBytes)}
                               </span>
                             );
                           })()}
@@ -455,7 +455,7 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="text-lg">Prostor za medije</CardTitle>
               <CardDescription>
-                Skupaj: {storageUsage ? fmtGb(storageUsage.totalBytes) : "…"} — največje namestitve najprej
+                Skupaj: {storageUsage ? fmtMediaSize(storageUsage.totalBytes) : "…"} — največje namestitve najprej
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -472,7 +472,7 @@ export default function AdminDashboard() {
                         <div className="flex justify-between text-sm mb-1">
                           <span className="font-medium truncate mr-2">{t.name}</span>
                           <span className={`shrink-0 ${pct >= 100 ? "text-destructive font-medium" : pct >= 80 ? "text-amber-600 font-medium" : "text-muted-foreground"}`}>
-                            {fmtGb(t.usedBytes)} / {fmtGb(t.quotaBytes)}
+                            {fmtMediaUsage(t.usedBytes, t.quotaBytes)}
                           </span>
                         </div>
                         <div className="h-1.5 rounded-full bg-muted overflow-hidden">

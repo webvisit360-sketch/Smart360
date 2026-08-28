@@ -1,0 +1,40 @@
+Publish the prepared version. Then diagnose, do not fix.
+
+Context you did not have: the owner submitted the form this morning against the
+OLD production bundle, before your version was published. Nothing arrived. That
+enquiry is gone — no mailbox copy, no database row, because the old code stored
+nothing. Treat that as the baseline fact: mail delivery was already failing
+before your changes, and publishing your work does not by itself repair it. It
+repairs the losing of enquiries, which is a different defect.
+
+1 — PUBLISH
+Publish the prepared version, including the additive enquiries table. Confirm
+afterwards that no existing table was altered and no row rewritten, and that
+/zasebnost and /pogoji return 200 to an anonymous browser in production, not
+just in dev.
+
+2 — THE GMAIL CONNECTION IS CLOSED PERMANENTLY
+The owner declined it, and that decision stands — it was correct, not a
+mistake. Do not request it again, and do not propose an app password, IMAP, or
+any other route into that mailbox. You no longer need it: the stored delivery
+status and provider response answer whether sending succeeded. Folder and
+Reply-To are the owner's ten seconds of looking, once.
+
+3 — REPORT THE FOUR CONFIGURATION FACTS
+Before the owner re-tests, report:
+· the exact From address the production code will use;
+· which domains are verified in the Resend account right now and their state;
+· whether the production environment has the API key set, and whether it is the
+  same one dev uses — presence and last four characters only, never the key;
+· whether the account is in a restricted mode that limits recipients.
+
+An earlier instruction told you to send from smart360.info rather than
+webvisit360.com. If that address was changed while smart360.info is unverified,
+every send is rejected and nothing reaches any folder — which matches this
+morning exactly. Confirm or rule it out.
+
+Then the owner submits one test. After that, report the stored row: delivery
+state, provider message id, provider response, submit time. Do not send test
+mail to his address yourself.
+
+Report and STOP.

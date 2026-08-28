@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetTenantQueryKey, useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
-import { fmtGb, usagePct } from "@/lib/format-bytes";
+import { fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { Loader2, Plus, Play, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -189,7 +189,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
 
   const enqueue = (files: FileList | File[]) => {
     if (quotaFull && tenantUsage) {
-      alert(`Prostor za medije je poln (${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto v nastavitvah namestitve.`);
+      alert(`Prostor za medije je poln (${fmtMediaUsage(tenantUsage.usedBytes, tenantUsage.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto v nastavitvah namestitve.`);
       return;
     }
     const deferred = !targetIdRef.current;
@@ -452,8 +452,8 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
       {tenantUsage && quotaPct >= 80 && (
         <p className={`text-[11px] mt-1 font-medium ${quotaFull ? "text-destructive" : "text-amber-600"}`}>
           {quotaFull
-            ? `Prostor za medije je poln: ${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}. Nova nalaganja so zavrnjena — povečajte kvoto v nastavitvah namestitve. Nič se ne briše samodejno.`
-            : `Porabljenega ${quotaPct} % prostora za medije (${fmtGb(tenantUsage.usedBytes)} / ${fmtGb(tenantUsage.quotaBytes)}).`}
+            ? `Prostor za medije je poln: ${fmtMediaUsage(tenantUsage.usedBytes, tenantUsage.quotaBytes)}. Nova nalaganja so zavrnjena — povečajte kvoto v nastavitvah namestitve. Nič se ne briše samodejno.`
+            : `Porabljenega ${quotaPct} % prostora za medije (${fmtMediaUsage(tenantUsage.usedBytes, tenantUsage.quotaBytes)}).`}
         </p>
       )}
       {focusEdit && (
