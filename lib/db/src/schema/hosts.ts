@@ -6,7 +6,9 @@ import {
   integer,
   uniqueIndex,
   index,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { tenantsTable } from "./tenants";
 
 /**
@@ -95,8 +97,22 @@ export const hostInvitesTable = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     usedAt: timestamp("used_at", { withTimezone: true }),
     invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+    providerMessageId: text("provider_message_id"),
+    deliveryStatus: text("delivery_status").notNull().default("pending"),
+    providerEventName: text("provider_event_name"),
+    providerEventAt: timestamp("provider_event_at", { withTimezone: true }),
+    deliveryAttemptedAt: timestamp("delivery_attempted_at", { withTimezone: true }),
   },
-  (t) => [index("host_invites_user_idx").on(t.hostUserId)],
+  (t) => [
+    index("host_invites_user_idx").on(t.hostUserId),
+    check(
+      "host_invites_delivery_status_enum_v1",
+      sql`${t.deliveryStatus} IN ('pending','accepted','failed','delivered','bounced','complained')`,
+    ),
+    uniqueIndex("host_invites_provider_message_id_unique")
+      .on(t.providerMessageId)
+      .where(sql`${t.providerMessageId} IS NOT NULL`),
+  ],
 );
 
 /** Single-use password-reset tokens, 60 minutes, SHA-256 hash only. */

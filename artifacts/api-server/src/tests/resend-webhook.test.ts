@@ -4,9 +4,11 @@ import { randomBytes } from "node:crypto";
 import { Webhook } from "svix";
 import {
   parseResendEmailEvent,
+  isUnknownProviderMessage,
   shouldApplyProviderEvent,
   verifyResendPayload,
 } from "../lib/resendWebhook";
+import { providerMessageIdFromResendResponse } from "../lib/lifecycleEmails";
 
 const secret = `whsec_${randomBytes(32).toString("base64")}`;
 const webhook = new Webhook(secret);
@@ -37,6 +39,12 @@ test("rejects invalid or unsigned Resend payloads", () => {
   }, secret));
 });
 
+test("extracts only a string Resend send id", () => {
+  assert.equal(providerMessageIdFromResendResponse({ id: "email_123" }), "email_123");
+  assert.equal(providerMessageIdFromResendResponse({ id: 123 }), null);
+  assert.equal(providerMessageIdFromResendResponse(null), null);
+});
+
 test("provider state transitions are duplicate and out-of-order safe", () => {
   const delivered = parseResendEmailEvent(JSON.parse(raw.toString()));
   const bounced = parseResendEmailEvent({
@@ -54,4 +62,12 @@ test("a complaint supersedes a delivered email", () => {
   });
   assert.ok(complaint);
   assert.equal(shouldApplyProviderEvent("delivered", new Date("2026-02-01T00:00:00.000Z"), complaint), true);
+});
+
+test("the shared webhook treats host-invite transitions like enquiry transitions and warns only for unknown IDs", () => {
+  const delivered = parseResendEmailEvent(JSON.parse(raw.toString()));
+  assert.ok(delivered);
+  assert.equal(shouldApplyProviderEvent("accepted", new Date("2026-01-01T00:00:00.000Z"), delivered), true);
+  assert.equal(isUnknownProviderMessage(false, true), false);
+  assert.equal(isUnknownProviderMessage(false, false), true);
 });

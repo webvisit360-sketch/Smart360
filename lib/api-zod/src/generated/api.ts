@@ -65,6 +65,30 @@ export const ListAdminEnquiriesResponse = zod.array(ListAdminEnquiriesResponseIt
 
 
 /**
+ * @summary Read the owner-visible host account and latest invitation delivery evidence
+ */
+export const GetAdminTenantHostAccountParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetAdminTenantHostAccountResponse = zod.object({
+  "account": zod.union([zod.object({
+  "email": zod.string(),
+  "hasPassword": zod.boolean(),
+  "lastLoginAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "latestInvite": zod.union([zod.object({
+  "deliveryStatus": zod.enum(['pending', 'accepted', 'failed', 'delivered', 'bounced', 'complained']),
+  "providerMessageId": zod.string().nullable(),
+  "providerEventName": zod.string().nullable(),
+  "providerEventAt": zod.string().nullable(),
+  "deliveryAttemptedAt": zod.string().nullable()
+}),zod.null()])
+}),zod.null()])
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

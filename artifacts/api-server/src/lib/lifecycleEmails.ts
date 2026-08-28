@@ -163,10 +163,16 @@ export function buildPublishedEmailBody(p: PublishedEmailPayload, from: string) 
 
 // ── Shared sender ────────────────────────────────────────────────────────────
 
-export type LifecycleEmailResult = { ok: true } | { ok: false };
+export type LifecycleEmailResult = { ok: true; providerMessageId: string | null } | { ok: false };
 
 type BuiltBody = Record<string, unknown>;
-type Delivery = (body: BuiltBody) => Promise<LifecycleEmailResult>;
+type Delivery = (body: BuiltBody) => Promise<LifecycleEmailResult | { ok: true }>;
+
+export function providerMessageIdFromResendResponse(response: unknown): string | null {
+  return response && typeof response === "object" && "id" in response && typeof response.id === "string"
+    ? response.id
+    : null;
+}
 
 let deliveryOverride: Delivery | null = null;
 /** Test hook: capture the outgoing mail instead of calling Resend. */
@@ -179,7 +185,12 @@ async function deliver(
   body: BuiltBody,
   idempotencyKey?: string,
 ): Promise<LifecycleEmailResult> {
-  if (deliveryOverride) return deliveryOverride(body);
+  if (deliveryOverride) {
+    const overridden = await deliveryOverride(body);
+    return overridden.ok
+      ? { ok: true, providerMessageId: "providerMessageId" in overridden ? overridden.providerMessageId : null }
+      : overridden;
+  }
   try {
     const resp = await connectors.proxy("resend", "/emails", {
       method: "POST",
@@ -194,8 +205,10 @@ async function deliver(
       logger.error({ kind, httpStatus: resp.status }, "[lifecycleEmail] Resend rejected");
       return { ok: false };
     }
-    logger.info({ kind }, "[lifecycleEmail] accepted by Resend");
-    return { ok: true };
+    const accepted = await resp.json().catch(() => null);
+    const providerMessageId = providerMessageIdFromResendResponse(accepted);
+    logger.info({ kind, providerMessageId }, "[lifecycleEmail] accepted by Resend");
+    return { ok: true, providerMessageId };
   } catch (err) {
     logger.error(
       { kind, errName: err instanceof Error ? err.name : "Error" },

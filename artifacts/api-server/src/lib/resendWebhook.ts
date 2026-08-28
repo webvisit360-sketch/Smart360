@@ -52,3 +52,8 @@ export function shouldApplyProviderEvent(
   return incoming.severity > currentSeverity
     || (incoming.severity === currentSeverity && (!currentEventAt || incoming.occurredAt > currentEventAt));
 }
+
+/** A stale event is known and intentionally quiet; only no matching record warns. */
+export function isUnknownProviderMessage(enquiryMatched: boolean, inviteMatched: boolean): boolean {
+  return !enquiryMatched && !inviteMatched;
+}

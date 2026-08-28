@@ -51,6 +51,7 @@ import type {
   GuestMessageInput,
   GuestThreadView,
   HealthStatus,
+  HostAccountResponse,
   HostReplyInput,
   Item,
   ItemInput,
@@ -272,6 +273,83 @@ export function useListAdminEnquiries<TData = Awaited<ReturnType<typeof listAdmi
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListAdminEnquiriesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAdminTenantHostAccountUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host`
+}
+
+/**
+ * @summary Read the owner-visible host account and latest invitation delivery evidence
+ */
+export const getAdminTenantHostAccount = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<HostAccountResponse> => {
+
+  return customFetch<HostAccountResponse>(getGetAdminTenantHostAccountUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminTenantHostAccountQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/host`
+    ] as const;
+    }
+
+
+export const getGetAdminTenantHostAccountQueryOptions = <TData = Awaited<ReturnType<typeof getAdminTenantHostAccount>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminTenantHostAccount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminTenantHostAccountQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminTenantHostAccount>>> = ({ signal }) => getAdminTenantHostAccount(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminTenantHostAccount>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminTenantHostAccountQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminTenantHostAccount>>>
+export type GetAdminTenantHostAccountQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read the owner-visible host account and latest invitation delivery evidence
+ */
+
+export function useGetAdminTenantHostAccount<TData = Awaited<ReturnType<typeof getAdminTenantHostAccount>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminTenantHostAccount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminTenantHostAccountQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

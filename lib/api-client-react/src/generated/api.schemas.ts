@@ -77,6 +77,43 @@ export interface AdminEnquiry {
   deliveryAttemptedAt?: string | null;
 }
 
+export type HostInviteDeliveryDeliveryStatus = typeof HostInviteDeliveryDeliveryStatus[keyof typeof HostInviteDeliveryDeliveryStatus];
+
+
+export const HostInviteDeliveryDeliveryStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  delivered: 'delivered',
+  bounced: 'bounced',
+  complained: 'complained',
+} as const;
+
+export interface HostInviteDelivery {
+  deliveryStatus: HostInviteDeliveryDeliveryStatus;
+  /** @nullable */
+  providerMessageId: string | null;
+  /** @nullable */
+  providerEventName: string | null;
+  /** @nullable */
+  providerEventAt: string | null;
+  /** @nullable */
+  deliveryAttemptedAt: string | null;
+}
+
+export interface HostAccount {
+  email: string;
+  hasPassword: boolean;
+  /** @nullable */
+  lastLoginAt: string | null;
+  createdAt: string;
+  latestInvite: HostInviteDelivery | null;
+}
+
+export interface HostAccountResponse {
+  account: HostAccount | null;
+}
+
 export interface HealthStatus {
   status: string;
 }

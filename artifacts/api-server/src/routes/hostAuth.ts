@@ -17,6 +17,8 @@ import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
 import { actorStorage } from "../lib/actorContext";
+import { db, hostInvitesTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 /**
  * Host account routes (Instruction #28, CHECKPOINT 2).
@@ -239,9 +241,21 @@ router.post(
             `invite-${issued.inviteId}`,
           );
     if (!sent.ok) {
+      await db
+        .update(hostInvitesTable)
+        .set({ deliveryStatus: "failed", providerMessageId: null, deliveryAttemptedAt: new Date() })
+        .where(eq(hostInvitesTable.id, issued.inviteId));
       res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });
       return;
     }
+    await db
+      .update(hostInvitesTable)
+      .set({
+        deliveryStatus: "accepted",
+        providerMessageId: sent.providerMessageId,
+        deliveryAttemptedAt: new Date(),
+      })
+      .where(eq(hostInvitesTable.id, issued.inviteId));
     await logChange({
       tenantId,
       tenantName: issued.propertyName,

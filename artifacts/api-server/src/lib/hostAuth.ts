@@ -12,7 +12,7 @@ import {
   tenantsTable,
   type HostUser,
 } from "@workspace/db";
-import { and, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 
 /**
  * Host account authentication (Instruction #28, CHECKPOINT 2).
@@ -658,6 +658,13 @@ export type HostAccountView = {
   hasPassword: boolean;
   lastLoginAt: string | null;
   createdAt: string;
+  latestInvite: {
+    deliveryStatus: string;
+    providerMessageId: string | null;
+    providerEventName: string | null;
+    providerEventAt: string | null;
+    deliveryAttemptedAt: string | null;
+  } | null;
 };
 
 export async function getHostAccountForTenant(tenantId: string): Promise<HostAccountView | null> {
@@ -668,11 +675,30 @@ export async function getHostAccountForTenant(tenantId: string): Promise<HostAcc
     .where(eq(hostMembershipsTable.tenantId, tenantId))
     .limit(1);
   if (!row) return null;
+  const [invite] = await db
+    .select({
+      deliveryStatus: hostInvitesTable.deliveryStatus,
+      providerMessageId: hostInvitesTable.providerMessageId,
+      providerEventName: hostInvitesTable.providerEventName,
+      providerEventAt: hostInvitesTable.providerEventAt,
+      deliveryAttemptedAt: hostInvitesTable.deliveryAttemptedAt,
+    })
+    .from(hostInvitesTable)
+    .where(eq(hostInvitesTable.hostUserId, row.user.id))
+    .orderBy(desc(hostInvitesTable.createdAt))
+    .limit(1);
   return {
     email: row.user.email,
     hasPassword: !!row.user.passwordHash,
     lastLoginAt: row.user.lastLoginAt?.toISOString() ?? null,
     createdAt: row.user.createdAt.toISOString(),
+    latestInvite: invite
+      ? {
+          ...invite,
+          providerEventAt: invite.providerEventAt?.toISOString() ?? null,
+          deliveryAttemptedAt: invite.deliveryAttemptedAt?.toISOString() ?? null,
+        }
+      : null,
   };
 }
 

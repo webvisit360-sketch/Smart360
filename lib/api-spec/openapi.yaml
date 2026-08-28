@@ -62,6 +62,25 @@ paths:
                   $ref: "#/components/schemas/AdminEnquiry"
         "401":
           description: Not authenticated
+  /admin/tenants/{id}/host:
+    get:
+      operationId: getAdminTenantHostAccount
+      tags: [tenants]
+      summary: Read the owner-visible host account and latest invitation delivery evidence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Host account, without credentials or invite tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostAccountResponse"
+        "401":
+          description: Not authenticated
   /healthz:
     get:
       operationId: healthCheck
@@ -1798,6 +1817,37 @@ components:
         providerEventName: { type: ["string", "null"] }
         providerEventAt: { type: ["string", "null"] }
         submittedAt: { type: string }
+        deliveryAttemptedAt: { type: ["string", "null"] }
+    HostAccountResponse:
+      type: object
+      required: [account]
+      properties:
+        account:
+          oneOf:
+            - $ref: "#/components/schemas/HostAccount"
+            - type: "null"
+    HostAccount:
+      type: object
+      required: [email, hasPassword, lastLoginAt, createdAt, latestInvite]
+      properties:
+        email: { type: string }
+        hasPassword: { type: boolean }
+        lastLoginAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+        latestInvite:
+          oneOf:
+            - $ref: "#/components/schemas/HostInviteDelivery"
+            - type: "null"
+    HostInviteDelivery:
+      type: object
+      required: [deliveryStatus, providerMessageId, providerEventName, providerEventAt, deliveryAttemptedAt]
+      properties:
+        deliveryStatus:
+          type: string
+          enum: [pending, accepted, failed, delivered, bounced, complained]
+        providerMessageId: { type: ["string", "null"] }
+        providerEventName: { type: ["string", "null"] }
+        providerEventAt: { type: ["string", "null"] }
         deliveryAttemptedAt: { type: ["string", "null"] }
     HealthStatus:
       type: object
