@@ -9,6 +9,41 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Send a public sales enquiry without storing it
+ */
+export const sendPublicEnquiryBodyNameMin = 2;
+export const sendPublicEnquiryBodyNameMax = 120;
+
+export const sendPublicEnquiryBodyEmailMax = 254;
+
+export const sendPublicEnquiryBodyPropertyNameMin = 2;
+export const sendPublicEnquiryBodyPropertyNameMax = 160;
+
+export const sendPublicEnquiryBodyAddressMin = 3;
+export const sendPublicEnquiryBodyAddressMax = 240;
+
+export const sendPublicEnquiryBodyMessageMax = 2000;
+
+export const sendPublicEnquiryBodyWebsiteMax = 200;
+
+
+
+export const SendPublicEnquiryBody = zod.object({
+  "name": zod.string().min(sendPublicEnquiryBodyNameMin).max(sendPublicEnquiryBodyNameMax),
+  "email": zod.string().max(sendPublicEnquiryBodyEmailMax),
+  "propertyName": zod.string().min(sendPublicEnquiryBodyPropertyNameMin).max(sendPublicEnquiryBodyPropertyNameMax),
+  "address": zod.string().min(sendPublicEnquiryBodyAddressMin).max(sendPublicEnquiryBodyAddressMax),
+  "propertyType": zod.enum(['Apartma', 'Hiša do 6 enot', 'Kamp', 'Hotel']),
+  "message": zod.string().max(sendPublicEnquiryBodyMessageMax).optional(),
+  "website": zod.string().max(sendPublicEnquiryBodyWebsiteMax).optional()
+})
+
+export const SendPublicEnquiryResponse = zod.object({
+  "sent": zod.boolean()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

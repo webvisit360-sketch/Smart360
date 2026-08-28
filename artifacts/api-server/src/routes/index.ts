@@ -12,6 +12,7 @@ import messagesRouter from "./messages";
 import part5MeliPuCutoverRouter from "./part5MeliPuCutover";
 import adminDistanceReviewRouter from "./adminDistanceReview";
 import hostAuthRouter from "./hostAuth";
+import enquiriesRouter from "./enquiries";
 import { adminGate, assertAdminRoutesClassified } from "../lib/actorGate";
 
 const router: IRouter = Router();
@@ -49,6 +50,7 @@ router.use(adminGate);
 router.use(healthRouter);
 router.use(storageRouter);
 router.use(publicTenantsRouter);
+router.use(enquiriesRouter);
 router.use(adminAuthRouter);
 // Before the routers with blanket `router.use("/admin", requireAdmin)` so the
 // anonymous host endpoints (login/reset) stay reachable.

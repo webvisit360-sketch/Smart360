@@ -5,6 +5,45 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export type PublicEnquiryPropertyType = typeof PublicEnquiryPropertyType[keyof typeof PublicEnquiryPropertyType];
+
+
+export const PublicEnquiryPropertyType = {
+  Apartma: 'Apartma',
+  Hiša_do_6_enot: 'Hiša do 6 enot',
+  Kamp: 'Kamp',
+  Hotel: 'Hotel',
+} as const;
+
+export interface PublicEnquiry {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+  /** @maxLength 254 */
+  email: string;
+  /**
+     * @minLength 2
+     * @maxLength 160
+     */
+  propertyName: string;
+  /**
+     * @minLength 3
+     * @maxLength 240
+     */
+  address: string;
+  propertyType: PublicEnquiryPropertyType;
+  /** @maxLength 2000 */
+  message?: string;
+  /** @maxLength 200 */
+  website?: string;
+}
+
+export interface PublicEnquiryResponse {
+  sent: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }

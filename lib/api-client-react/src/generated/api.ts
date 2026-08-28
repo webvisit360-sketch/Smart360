@@ -69,6 +69,8 @@ import type {
   Part5MeliPuCutoverPreflight,
   Part5MeliPuCutoverResult,
   PasskeyList,
+  PublicEnquiry,
+  PublicEnquiryResponse,
   RecoveryBody,
   RecoveryCodeStatus,
   RecoveryCodesRotated,
@@ -132,6 +134,77 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getSendPublicEnquiryUrl = () => {
+
+
+
+
+  return `/api/public/enquiries`
+}
+
+/**
+ * @summary Send a public sales enquiry without storing it
+ */
+export const sendPublicEnquiry = async (publicEnquiry: PublicEnquiry, options?: Parameters<typeof customFetch>[1]): Promise<PublicEnquiryResponse> => {
+
+  return customFetch<PublicEnquiryResponse>(getSendPublicEnquiryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(publicEnquiry)
+  }
+);}
+
+
+
+
+
+export const getSendPublicEnquiryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendPublicEnquiry>>, TError,{data: BodyType<PublicEnquiry>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendPublicEnquiry>>, TError,{data: BodyType<PublicEnquiry>}, TContext> => {
+
+const mutationKey = ['sendPublicEnquiry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendPublicEnquiry>>, {data: BodyType<PublicEnquiry>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendPublicEnquiry(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendPublicEnquiryMutationResult = NonNullable<Awaited<ReturnType<typeof sendPublicEnquiry>>>
+    export type SendPublicEnquiryMutationBody = BodyType<PublicEnquiry>
+    export type SendPublicEnquiryMutationError = ErrorType<void>
+
+    /**
+ * @summary Send a public sales enquiry without storing it
+ */
+export const useSendPublicEnquiry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendPublicEnquiry>>, TError,{data: BodyType<PublicEnquiry>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendPublicEnquiry>>,
+        TError,
+        {data: BodyType<PublicEnquiry>},
+        TContext
+      > => {
+      return useMutation(getSendPublicEnquiryMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

@@ -24,6 +24,7 @@ import { usePageBg } from '@/pages/guest/use-theme-attr';
 import { useBundleFreshness } from '@/lib/bundle-freshness';
 import { PasswordTokenPage } from '@/pages/portal/password-token-page';
 import TermsPage from '@/pages/admin/terms';
+import EnquiryPage from '@/pages/enquiry';
 
 const queryClient = new QueryClient();
 const LivingGuideTokensPage = lazy(
@@ -242,7 +243,7 @@ const RESERVED_SEGMENTS = new Set([
   'manifest.json', 'sw.js', 'health', 'status', 'login', 'auth', 'logout',
   'account', 'my', 'help', 'support', 'docs', 'blog', 'about', 'contact',
   'privacy', 'terms', 'www', 'mail', 'cdn', 'preview', 'test', 'demo',
-  'dev', 'staging', 'g', 'portal',
+  'dev', 'staging', 'g', 'portal', 'povprasevanje', 'pogoji', 'zasebnost',
 ]);
 const SLUG_SHAPE = /^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/;
 
@@ -285,6 +286,7 @@ function Router() {
           <PasswordTokenPage mode="reset" />
         </Route>
         <Route path="/pogoji" component={TermsPage} />
+        <Route path="/povprasevanje" component={EnquiryPage} />
 
         {/* Isolated Part 1 design-system proof. It intentionally bypasses GuestLayout,
             legacy theme CSS and tenant data. */}
