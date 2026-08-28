@@ -22,3 +22,4 @@
 - [Town-pack onboarding direction](town-pack-onboarding.md) — shared place catalogue is deferred; optimize tenant-local onboarding and require provenance for every new photograph.
 - [Enquiry delivery diagnosis](enquiry-delivery-diagnosis.md) — Gmail access is permanently declined; use persisted delivery state and provider status, never mailbox workarounds.
 - [Migration approval boundaries](migration-approval-boundaries.md) — additive approval never covers existing-schema changes or backfills; show exact SQL and wait.
+- [Events scheduling model](events-scheduling-model.md) — generated occurrences, tenant-local days, translation fallback, immutable history, and cross-midnight limit.
