@@ -12,6 +12,7 @@ import { runMeliPuDescriptionBackfillAtStartup } from "./lib/meliPuDescriptionBa
 import { runMeliPuContentFinalizationAtStartup } from "./lib/meliPuContentFinalizationBackfill";
 import { ensureRowLevelSecurity } from "./lib/rls";
 import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRetention";
+import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill";
 
 const rawPort = process.env["PORT"];
 
@@ -103,6 +104,8 @@ ensureAdminAccount()
   .then(() => runMeliPuDescriptionBackfillAtStartup())
   // Apply the owner's final duplicate and Trst city-metadata decisions.
   .then(() => runMeliPuContentFinalizationAtStartup())
+  // Align former untouched 2 GiB defaults with the displayed decimal 2 GB.
+  .then(() => runDecimalMediaQuotaBackfillAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();

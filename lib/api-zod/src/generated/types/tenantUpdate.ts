@@ -138,6 +138,6 @@ export interface TenantUpdate {
   livingGuideNav?: TenantUpdateLivingGuideNavItem[] | null;
   isTemplate?: boolean;
   isPublished?: boolean;
-  /** @minimum 104857600 */
+  /** @minimum 100000000 */
   mediaQuotaBytes?: number;
 }

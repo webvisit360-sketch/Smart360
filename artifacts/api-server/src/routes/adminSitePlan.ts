@@ -387,7 +387,7 @@ router.post(
     const admission: Admission = await admitUpload(tenant.id, slugs, tenant.quotaBytes, req.file.size);
     if (!admission.ok) {
       res.status(400).json({
-        error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} / ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče.`,
+        error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} od ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče.`,
       });
       return;
     }

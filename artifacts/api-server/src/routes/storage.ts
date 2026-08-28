@@ -385,7 +385,7 @@ router.post(
     const admission = await admitTenantUpload(row.tenantId, row.quotaBytes, req.file.size);
     if (!admission.ok) {
       res.status(400).json({
-        error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} / ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto ali se obrnite na skrbnika.`,
+        error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} od ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto ali se obrnite na skrbnika.`,
       });
       return;
     }
@@ -745,7 +745,7 @@ async function handleTenantImageUpload(
   const admission = await admitTenantUpload(tenant.id, tenant.quotaBytes, req.file.size);
   if (!admission.ok) {
     res.status(400).json({
-      error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} / ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto.`,
+      error: `Prostor za medije te namestitve je poln (${formatGb(admission.usedBytes)} od ${formatGb(admission.quotaBytes)}). Novo nalaganje ni mogoče — povečajte kvoto.`,
     });
     return;
   }

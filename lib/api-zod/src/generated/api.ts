@@ -952,7 +952,7 @@ export const updateTenantBodyLongitudeMax = 180;
 export const updateTenantBodyLivingGuideNavMin = 5;
 export const updateTenantBodyLivingGuideNavMax = 5;
 
-export const updateTenantBodyMediaQuotaBytesMin = 104857600;
+export const updateTenantBodyMediaQuotaBytesMin = 100000000;
 
 
 

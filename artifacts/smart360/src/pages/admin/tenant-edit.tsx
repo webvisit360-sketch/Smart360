@@ -240,7 +240,7 @@ export default function AdminTenantEdit() {
             mapUrl: formData.mapUrl.trim() || null,
             wifiSsid: formData.wifiSsid.trim() || null,
             wifiPass: formData.wifiPass || null,
-            mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1024 ** 3),
+            mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
           },
         }, {
           onSuccess: () => {
@@ -289,7 +289,7 @@ export default function AdminTenantEdit() {
       setOriginalSlug(tenant.slug || "");
       setOrderPasswordConfigured(Boolean(tenant.orderPasswordConfigured));
       setOrderPasswordDraft("");
-      setMediaQuotaGb(((tenant.mediaQuotaBytes ?? 2 * 1024 ** 3) / 1024 ** 3).toFixed(1).replace(/\.0$/, ""));
+      setMediaQuotaGb(((tenant.mediaQuotaBytes ?? 2_000_000_000) / 1_000_000_000).toFixed(1).replace(/\.0$/, ""));
       const initialForm = {
         name: tenant.name || "",
         slug: tenant.slug || "",
@@ -416,7 +416,7 @@ export default function AdminTenantEdit() {
         mapUrl: formData.mapUrl.trim() || null,
         wifiSsid: formData.wifiSsid.trim() || null,
         wifiPass: formData.wifiPass || null,
-        mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1024 ** 3),
+        mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
       },
     }, {
       onSuccess: () => {

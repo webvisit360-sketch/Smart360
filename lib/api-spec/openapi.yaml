@@ -2247,7 +2247,7 @@ components:
             from the allowed set with 'home' first.
         isTemplate: { type: boolean }
         isPublished: { type: boolean }
-        mediaQuotaBytes: { type: number, minimum: 104857600 }
+        mediaQuotaBytes: { type: number, minimum: 100000000 }
     SitePlanImage:
       type: object
       properties:

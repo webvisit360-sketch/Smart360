@@ -165,7 +165,7 @@ export const tenantsTable = pgTable("tenants", {
   // nothing is ever deleted automatically. Default 2 GB.
   mediaQuotaBytes: bigint("media_quota_bytes", { mode: "number" })
     .notNull()
-    .default(2_147_483_648),
+    .default(2_000_000_000),
   isTemplate: boolean("is_template").notNull().default(false),
   isPublished: boolean("is_published").notNull().default(false),
   // Set exactly once, on the FIRST transition to published. Drives two rules

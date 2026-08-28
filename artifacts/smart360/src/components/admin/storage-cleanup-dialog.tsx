@@ -11,11 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trash2, Play } from "lucide-react";
-import { fmtGb } from "@/lib/format-bytes";
+import { fmtMediaSize } from "@/lib/format-bytes";
 
 function fmtSize(bytes: number): string {
-  if (bytes >= 1024 ** 3) return fmtGb(bytes);
-  return `${(bytes / 1024 ** 2).toFixed(1).replace(".", ",")} MB`;
+  return fmtMediaSize(bytes);
 }
 
 /**

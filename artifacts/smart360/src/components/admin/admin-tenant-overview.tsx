@@ -76,7 +76,6 @@ export function AdminTenantOverview({ tenantId, onTabChange }: { tenantId: strin
     return work.sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [orders, threads]);
 
-  const firstOrderRef = pendingWork.find((item) => item.type === "order")?.data.orderRef as string | undefined;
   const distancesCount = overview?.pendingLocations ?? 0;
   const photolessCount = overview?.missingPhotos ?? 0;
   const latestPublish = changelog?.find(
@@ -135,14 +134,13 @@ export function AdminTenantOverview({ tenantId, onTabChange }: { tenantId: strin
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {pendingWork.map((item, index) => {
+            {pendingWork.map((item) => {
               if (item.type === 'order') {
                 const o = item.data;
-                const isActionable = o.orderRef === firstOrderRef;
                 const waitTime = formatWaitTime(item.date);
                 
                 return (
-                  <div key={`order-${o.orderRef}`} className={`rounded-[18px] p-[17px] md:p-[19px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-[16px] border ${isActionable ? 'bg-[#FBFDFB] border-[#D6E7DC]' : 'bg-white border-[#E8EBE6]'}`}>
+                  <div key={`order-${o.orderRef}`} className="rounded-[18px] p-[17px] md:p-[19px] grid grid-cols-1 md:grid-cols-[1fr_auto] gap-[16px] border bg-[#FBFDFB] border-[#D6E7DC]">
                     <div>
                       <h4 className="font-[800] text-[16px] text-[#121A14]">Naročilo ({o.guestUnit})</h4>
                       <div className="text-[13px] font-[600] text-[#66716A] mt-[2px]">{o.guestName}</div>
@@ -153,24 +151,16 @@ export function AdminTenantOverview({ tenantId, onTabChange }: { tenantId: strin
                     </div>
                     
                     <div className="flex flex-col md:items-end justify-start gap-[8px]">
-                      {isActionable ? (
-                        <>
-                          <button onClick={() => handleOrderStatus(o.orderRef, 'potrjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === o.orderRef} className="bg-[#157347] text-white px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:bg-[#12643D] transition-colors w-full md:w-auto text-center border border-transparent">
-                            Potrdi
-                          </button>
-                          <button onClick={() => handleOrderStatus(o.orderRef, 'zavrnjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === o.orderRef} className="bg-white border-[1.5px] border-[#E8EBE6] text-[#121A14] px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:border-[#D3DBD1] transition-colors w-full md:w-auto text-center">
-                            Zavrni
-                          </button>
-                          {o.guestPhone && (
-                             <a href={`tel:${o.guestPhone}`} className="bg-white border-[1.5px] border-[#E8EBE6] text-[#121A14] px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:border-[#D3DBD1] transition-colors w-full md:w-auto mt-auto flex items-center justify-center gap-2">
-                               <PhoneCall className="w-[16px] h-[16px] stroke-[2]" /> Pokliči
-                             </a>
-                          )}
-                        </>
-                      ) : (
-                        <button onClick={() => onTabChange('orders')} className="bg-[#F4F6F2] text-[#121A14] px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:bg-[#E8EBE6] transition-colors w-full md:w-auto text-center border border-transparent">
-                          Preglej naročilo
-                        </button>
+                      <button onClick={() => handleOrderStatus(o.orderRef, 'potrjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === o.orderRef} className="bg-[#157347] text-white px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:bg-[#12643D] transition-colors w-full md:w-auto text-center border border-transparent">
+                        Potrdi
+                      </button>
+                      <button onClick={() => handleOrderStatus(o.orderRef, 'zavrnjeno')} disabled={updateStatus.isPending && updateStatus.variables?.orderRef === o.orderRef} className="bg-white border-[1.5px] border-[#E8EBE6] text-[#121A14] px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:border-[#D3DBD1] transition-colors w-full md:w-auto text-center">
+                        Zavrni
+                      </button>
+                      {o.guestPhone && (
+                        <a href={`tel:${o.guestPhone}`} className="bg-white border-[1.5px] border-[#E8EBE6] text-[#121A14] px-[17px] py-[11px] rounded-[13px] font-[800] text-[14px] hover:border-[#D3DBD1] transition-colors w-full md:w-auto mt-auto flex items-center justify-center gap-2">
+                          <PhoneCall className="w-[16px] h-[16px] stroke-[2]" /> Pokliči
+                        </a>
                       )}
                     </div>
                   </div>

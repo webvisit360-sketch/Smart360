@@ -118,5 +118,8 @@ export async function admitUpload(
 }
 
 export function formatGb(bytes: number): string {
-  return `${(bytes / 1024 ** 3).toFixed(1).replace(".", ",")} GB`;
+  if (bytes < 1_000_000_000) {
+    return `${Math.round(bytes / 1_000_000)} MB`;
+  }
+  return `${(bytes / 1_000_000_000).toFixed(1).replace(".", ",")} GB`;
 }
