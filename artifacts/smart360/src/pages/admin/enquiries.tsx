@@ -18,7 +18,7 @@ export default function AdminEnquiriesPage() {
   });
 
   return (
-    <div className="admin-page max-w-5xl space-y-6" data-surface="admin">
+    <div className="admin-page admin-page--wide space-y-6" data-surface="admin">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Povpraševanja</h1>
         <p className="text-muted-foreground mt-1">Povpraševanja iz javnega obrazca, najnovejša najprej.</p>

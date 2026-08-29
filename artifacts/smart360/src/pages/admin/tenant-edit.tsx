@@ -203,6 +203,17 @@ export default function AdminTenantEdit() {
 
   const [activeTab, setActiveTab] = useState("pregled");
   const isSettings = ["general", "appearance", "contacts", "translations", "guide", "changelog"].includes(activeTab);
+  const isWideLayout = [
+    "kreator",
+    "orders",
+    "messages",
+    "obvestila",
+    "ponudba",
+    "distances",
+    "content",
+    "translations",
+    "changelog",
+  ].includes(activeTab);
   const [previewScreen, setPreviewScreen] = useState<"home" | "category">("home");
 
   // Reload the real guest iframe only after a draft mutation succeeds. Text
@@ -453,7 +464,10 @@ export default function AdminTenantEdit() {
   };
 
   return (
-    <div className="admin-tenant-console flex flex-col md:flex-row h-[100dvh] overflow-hidden font-sans" data-surface="admin">
+    <div
+      className={`admin-tenant-console ${isWideLayout ? "admin-tenant-console--wide" : "admin-tenant-console--form"} flex flex-col md:flex-row h-[100dvh] overflow-hidden font-sans`}
+      data-surface="admin"
+    >
 
       {/* SIDEBAR */}
       <aside className="w-full md:w-[264px] bg-white border-b md:border-b-0 md:border-r border-black/5 flex flex-row md:flex-col shrink-0 px-3 md:px-[14px] py-3 md:py-[22px] overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
@@ -554,7 +568,7 @@ export default function AdminTenantEdit() {
         </header>
 
         {/* SCROLLABLE VIEW */}
-        <div className="flex-1 overflow-auto p-4 md:p-[30px]">
+        <div className="admin-tenant-scroll flex-1 overflow-auto p-4 md:p-[30px]">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {isSettings && (
               <TabsList className="mb-6 bg-white border border-black/5 rounded-[14px] p-1">
@@ -1313,7 +1327,7 @@ export default function AdminTenantEdit() {
       </main>
 
       {/* PREVIEW RAIL */}
-      <aside className="w-[305px] bg-[#F5F5F7] border-l border-black/5 shrink-0 hidden min-[1240px]:flex flex-col items-center py-[30px]">
+      <aside className="admin-tenant-preview w-full bg-[#F5F5F7] border-l border-black/5 shrink-0 hidden flex-col items-center py-[30px]">
         <div className="w-[289px] h-[629px] rounded-[32px] border-[7px] border-black bg-black overflow-hidden shadow-xl mb-4 relative shrink-0">
           <iframe
             key={previewKey}
@@ -1362,7 +1376,7 @@ function TenantChangelogCard({ tenantId }: { tenantId: string }) {
     [entries],
   );
   return (
-    <div className="space-y-4 max-w-4xl" data-testid="section-changelog">
+    <div className="space-y-4" data-testid="section-changelog">
       <div className="bg-muted p-4 rounded-lg text-sm text-muted-foreground border">
         Ob vsaki spremembi v administraciji zabeležimo IP-naslov — zaradi varnosti in sledljivosti. IP-naslov hranimo 12 mesecev in ga nato izbrišemo; zapis o spremembi ostane.
       </div>

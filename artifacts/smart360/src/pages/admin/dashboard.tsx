@@ -144,7 +144,7 @@ export default function AdminDashboard() {
     days < 0 ? "text-destructive font-medium" : days <= 30 ? "text-amber-600 font-medium" : "text-muted-foreground";
 
   return (
-    <div className="admin-page space-y-8" data-surface="admin">
+    <div className="admin-page admin-page--wide space-y-8" data-surface="admin">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Nadzorna plošča</h1>

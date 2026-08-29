@@ -105,7 +105,7 @@ function HostAccount() {
   };
 
   return (
-    <div className="admin-page max-w-4xl space-y-6" data-surface="admin">
+    <div className="admin-page admin-page--form space-y-6" data-surface="admin">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Moj račun</h1>
@@ -351,7 +351,7 @@ function OwnerAccount() {
   };
 
   return (
-    <div className="admin-page max-w-4xl space-y-6" data-surface="admin">
+    <div className="admin-page admin-page--form space-y-6" data-surface="admin">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Varnost in ključi</h1>

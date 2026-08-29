@@ -407,10 +407,12 @@
 
 [data-surface="admin"] .admin-page {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 26px 30px 90px;
 }
+[data-surface="admin"] .admin-page--form { max-width: 880px; }
+[data-surface="admin"] .admin-page--wide { max-width: 1120px; }
 [data-surface="admin"] .admin-page > :first-child h1 { font-size: 26px; font-weight: 800; }
 
 /* Tenant console: retain its horizontal mobile navigation while replacing
@@ -425,11 +427,88 @@
 [data-surface="admin"] .admin-tenant-console [role="tabpanel"] > .admin-ui-card,
 [data-surface="admin"] .admin-tenant-console [role="tabpanel"] .admin-ui-card { background: var(--card); }
 
-@media (max-width: 767px) {
+@media (min-width: 900px) {
+  [data-surface="admin"] .admin-tenant-console {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  [data-surface="admin"] .admin-tenant-console--form {
+    grid-template-columns: 248px minmax(30px, 1fr) minmax(0, 880px) minmax(30px, 1fr);
+  }
+  [data-surface="admin"] .admin-tenant-console--wide {
+    grid-template-columns: 248px minmax(30px, 1fr) minmax(0, 1120px) minmax(30px, 1fr);
+  }
+  [data-surface="admin"] .admin-tenant-console > aside:first-child {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: 248px !important;
+  }
+  [data-surface="admin"] .admin-tenant-console > main {
+    display: contents;
+  }
+  [data-surface="admin"] .admin-tenant-console > main > header {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+  [data-surface="admin"] .admin-tenant-console > main > .admin-tenant-scroll {
+    grid-column: 3;
+    grid-row: 2;
+    min-width: 0;
+    min-height: 0;
+  }
+  [data-surface="admin"] .admin-tenant-console > .admin-tenant-preview {
+    display: none !important;
+  }
+  [data-surface="admin"] .admin-tenant-scroll {
+    padding: 30px 0 90px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  [data-surface="admin"] .admin-tenant-console--form {
+    grid-template-columns: 248px minmax(30px, 1fr) minmax(0, 880px) 32px 340px minmax(30px, 1fr);
+  }
+  [data-surface="admin"] .admin-tenant-console--wide {
+    grid-template-columns: 248px minmax(30px, 1fr) minmax(0, 1120px) 32px 340px minmax(30px, 1fr);
+  }
+  [data-surface="admin"] .admin-tenant-console > .admin-tenant-preview {
+    grid-column: 5;
+    grid-row: 2;
+    width: 340px !important;
+    display: flex !important;
+  }
+}
+
+@media (max-width: 899px) {
   [data-surface="admin"] .admin-shell { display: block; }
   [data-surface="admin"] .admin-shell__sidebar { display: none; }
+  [data-surface="admin"] .admin-shell__main > header { display: flex !important; }
   [data-surface="admin"] .admin-page { padding: 22px 18px 72px; }
   [data-surface="admin"] .admin-page > :first-child h1 { font-size: 23px; }
+  [data-surface="admin"] .admin-tenant-console {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  [data-surface="admin"] .admin-tenant-console > aside:first-child {
+    width: 100% !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-right: 0 !important;
+  }
+  [data-surface="admin"] .admin-tenant-console > aside:first-child > div:not(.hidden) {
+    flex-direction: row !important;
+    margin-bottom: 0 !important;
+  }
+  [data-surface="admin"] .admin-tenant-console > aside:first-child > .hidden {
+    display: none !important;
+  }
+  [data-surface="admin"] .admin-tenant-console > main {
+    display: flex !important;
+  }
+  [data-surface="admin"] .admin-tenant-console > .admin-tenant-preview {
+    display: none !important;
+  }
   [data-surface="admin"] [role="dialog"] { max-height: calc(100dvh - 24px); border-radius: 22px; }
 }
 
