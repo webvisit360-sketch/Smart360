@@ -20,13 +20,12 @@ import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
 import { DistanceReview } from "@/components/admin/distance-review";
 import { isLikelyUrl } from "@/lib/maps-href";
 import { HostInvitePanel } from "@/components/admin/host-invite-panel";
 import { useHostSession } from "@/hooks/use-host-session";
-import { collapseConsecutiveChangelog } from "@/lib/changelog-collapse";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -1319,10 +1318,6 @@ function TenantChangelogCard({ tenantId }: { tenantId: string }) {
   const { data: entries, isLoading } = useListTenantChangelog(tenantId, {
     query: { enabled: !!tenantId, queryKey: getListTenantChangelogQueryKey(tenantId) },
   });
-  const collapsedEntries = useMemo(
-    () => collapseConsecutiveChangelog(entries ?? []),
-    [entries],
-  );
   return (
     <div className="space-y-4 max-w-4xl" data-testid="section-changelog">
       <div className="bg-muted p-4 rounded-lg text-sm text-muted-foreground border">
@@ -1344,21 +1339,13 @@ function TenantChangelogCard({ tenantId }: { tenantId: string }) {
             </div>
           ) : (
             <div className="space-y-4">
-               {collapsedEntries.map((entry) => {
+              {entries.map((entry) => {
                 const e = entry as typeof entry & { summary?: string; requestIp?: string };
                 return (
                 <div key={e.id} className="flex items-start justify-between gap-4 border-b last:border-b-0 pb-4 last:pb-0" data-testid={`row-changelog-${e.id}`}>
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-                      <span>{e.summary}</span>
-                      {e.repeatCount > 1 && (
-                        <span
-                          className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground"
-                          aria-label={`${e.repeatCount} enaki zaporedni dogodki`}
-                        >
-                          ×{e.repeatCount}
-                        </span>
-                      )}
+                    <p className="text-sm font-medium text-foreground">
+                      {e.summary}
                     </p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span className="font-semibold text-foreground/80">{actorLabel(e)}</span>
