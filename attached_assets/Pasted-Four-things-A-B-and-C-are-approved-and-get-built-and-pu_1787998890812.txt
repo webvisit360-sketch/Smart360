@@ -1,0 +1,120 @@
+Four things. A, B and C are approved and get built and published together.
+D is a report only — do not build any of it until the owner has approved the
+assignment.
+
+═══════════════════════════════════════════════
+A — LIVING GUIDE IDENTITY AND CONTACT PARITY
+═══════════════════════════════════════════════
+
+Living Guide renders neither logoUrl nor logoSquareUrl and omits Viber, and
+Instagram is stored and labelled but rendered by neither guest system. Three
+pieces of information the host has already entered never reach a guest. Close
+all three as one change.
+
+Reference: lg-identiteta.html, attached — three phone mockups showing exactly
+this.
+
+1 · Logo on the cover
+Above the cover title, left-aligned in the same column as the kicker and the
+property name, 52 px square, on a soft light plate so it reads on any
+photograph. Rendered only when a logo is uploaded.
+
+2 · Square mark on Home
+logoSquareUrl, falling back to logoUrl, 34 px, in the Living Guide Home header
+beside the property name.
+
+3 · Viber and Instagram in the contact rows
+Order: Pokliči, WhatsApp, Viber, Instagram, E-pošta. A row renders only when
+its field has a value. Normalise Instagram from @name, plain username or a full
+profile URL into a safe https link — never render an arbitrary raw URL.
+Translations and accessible names in every enabled language, not Slovenian only.
+
+4 · No placement controls, now or later
+One position, one size, decided here. Do not add sliders for logo size,
+opacity, horizontal or vertical placement in Living Guide. If a particular logo
+sits badly there, that is one design problem for us to solve once — not a knob
+for every host to adjust.
+
+═══════════════════════════════════════════════
+B — THE APP DECIDES THE TOUR PLAYER'S CHROME
+═══════════════════════════════════════════════
+
+Correction to an earlier premise: hosts never paste the tour URL. The owner
+shoots the drone panoramas and configures Kuula himself, for every tenant. The
+reason for this change is therefore not host error — it is that he should not
+retype six display parameters from memory for the fifteenth tenant.
+
+When embedding a Kuula tour, force the display parameters at render time
+regardless of what is stored: thumbnails off, info off, fullscreen off, vr off,
+gyro off, provider logo hidden, gentle autorotate preserved. Pass through any
+parameter that identifies which tour or collection to show. Leave the stored
+value untouched — normalise for display only, so tours already stored are
+covered and nothing typed is destroyed.
+
+The thumbnail strip in particular is not merely noise: the owner navigates
+between panoramas with hotspot icons placed on the panoramas themselves, so the
+strip is a second and worse navigation.
+
+Report which parameters you force and which you pass through before building.
+If one is ambiguous, say so rather than guessing.
+
+═══════════════════════════════════════════════
+C — THE PLURAL HELPER, ONE LINE
+═══════════════════════════════════════════════
+
+Your diagnosis was right: Intl.PluralRules.select() is typed as possibly
+returning zero or many, which Slovenian never yields, so SloveneForms has no
+entry for them. Fall back to "other" when the returned category has no entry.
+No behaviour changes; a type hole closes and an impossible case becomes
+harmless instead of undefined. Carry it with this publish and stop reporting it
+as pre-existing.
+
+═══════════════════════════════════════════════
+D — OPERATOR VERSUS HOST: REPORT ONLY
+═══════════════════════════════════════════════
+
+The owner has decided the product's shape. Build nothing here yet.
+
+HOST — everything about the guide's content and its structure: sections,
+categories, items, texts, photographs, prices, visibility, events, orders,
+messages, notifications, wifi, contacts. Create, edit and delete, including
+creating and deleting categories. His reasoning: every activity and every
+region has its own specifics, and each host should shape an individual guide
+for their own place.
+
+OPERATOR ONLY — three small groups, none of them content:
+· appearance: colours, logo, cover, theme, guest UI mode;
+· technical: slug, custom domain, tour URL, media quota;
+· commercial: renewal date and the renewal action.
+
+Nothing else. Discard any wider version of this line from earlier reports.
+
+Report:
+1 · every control from your inventory assigned to operator-only or
+    host-visible under that line, with anything genuinely ambiguous in a third
+    list and the argument each way;
+2 · for each operator-only control, what breaks for the host if they change it
+    by accident, and whether they would understand what went wrong;
+3 · the mechanism. Hidden, not disabled — a greyed control a host cannot press
+    is an invitation to telephone. One interface with two visibilities, not two
+    interfaces;
+4 · what happens today when a host deletes a category that still holds items.
+    Hosts will do this and the items must not vanish without a way back;
+5 · how a host-created category will show that it has no translation yet. A
+    German guest correctly sees the Slovenian name under the standing fallback
+    rule, but the host must know — a quiet marker, not a warning and not a
+    block;
+6 · anything a camp or hotel would genuinely lose daily under this line. Say it
+    plainly now rather than letting us discover it with a client.
+
+═══════════════════════════════════════════════
+HOW THIS PUBLISHES
+═══════════════════════════════════════════════
+
+A, B and C ship together as one publish. Before it: read the actual diff
+against the revision deployed at that moment and report that it contains only
+what is approved here. Then development screenshots — cover with logo, Home
+with the mark, the contact rows, and the tour without its chrome — and the
+owner looks before anything goes live.
+
+D is a report. Report and STOP.
