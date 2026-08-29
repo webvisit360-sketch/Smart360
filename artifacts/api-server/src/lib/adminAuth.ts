@@ -61,10 +61,16 @@ export function rpOrigin(): string {
 // ---------- Admin account ----------
 
 export async function ensureAdminAccount(): Promise<void> {
-  await db
-    .insert(adminUsersTable)
-    .values({ email: ADMIN_EMAIL, displayName: "Upravitelj" })
-    .onConflictDoNothing({ target: adminUsersTable.email });
+  // The app has exactly one operator identity. Seed only an empty table:
+  // changing ADMIN_EMAIL must never create a second operator beside the
+  // existing account. ON CONFLICT also makes concurrent empty-table starts
+  // harmless when both try to insert the same configured address.
+  await db.execute(sql`
+    INSERT INTO ${adminUsersTable} ("email", "display_name")
+    SELECT ${ADMIN_EMAIL}, 'Upravitelj'
+    WHERE NOT EXISTS (SELECT 1 FROM ${adminUsersTable})
+    ON CONFLICT DO NOTHING
+  `);
 }
 
 export async function getAdminUser(): Promise<AdminUser | undefined> {
