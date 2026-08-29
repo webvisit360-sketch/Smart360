@@ -25,6 +25,11 @@ const AGENCY_FOOTER = [
   "Tomšičeva ulica 12, SI-2310 Slovenska Bistrica · info@webvisit360.com",
 ];
 
+const INVITATION_SENDER_NOTE_SL =
+  "To sporočilo pošilja Smart360 prek svojega poštnega sistema na domeni webvisit360.com. Povezava vodi na smart360.info.";
+const INVITATION_SENDER_NOTE_EN =
+  "This message is sent by Smart360 through its mail system at webvisit360.com. The link points to smart360.info.";
+
 function fromHeader(): string {
   return `${LIFECYCLE_FROM_NAME} <${verifiedFrom()}>`;
 }
@@ -73,6 +78,8 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
       par(
         "Gradivo lahko pošljete kar kot odgovor na to sporočilo. Ko bo vodnik pripravljen, prejmete še povabilo za pregled.",
       ),
+      small(INVITATION_SENDER_NOTE_SL),
+      small(INVITATION_SENDER_NOTE_EN),
     ],
     footerLines: AGENCY_FOOTER,
   });
@@ -120,6 +127,8 @@ export function buildGuideReadyEmailBody(p: GuideReadyEmailPayload, from: string
         { label: "Naslov vodnika", value: `${displayHost()}/${p.slug}` },
         { label: "Portal", value: `${displayHost()}/admin` },
       ]),
+      small(INVITATION_SENDER_NOTE_SL),
+      small(INVITATION_SENDER_NOTE_EN),
     ],
     footerLines: AGENCY_FOOTER,
   });

@@ -111,9 +111,21 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
 
   test("guide ready: subject + preview match the file", () => {
     const b = allSix()[3][1] as Record<string, unknown>;
+    const html = b["html"] as string;
+    const text = b["text"] as string;
     assert.equal(b["subject"], "Vaš digitalni vodnik je pripravljen");
-    assert.ok((b["html"] as string).includes("Nastavite geslo in preglejte, kar smo pripravili"));
-    assert.ok((b["html"] as string).includes("Povezava velja 72 ur"));
+    assert.ok(html.includes("Nastavite geslo in preglejte, kar smo pripravili"));
+    assert.ok(html.includes("Povezava velja 72 ur"));
+    assert.ok(
+      html.includes(
+        "To sporočilo pošilja Smart360 prek svojega poštnega sistema na domeni webvisit360.com. Povezava vodi na smart360.info.",
+      ),
+    );
+    assert.ok(
+      text.includes(
+        "This message is sent by Smart360 through its mail system at webvisit360.com. The link points to smart360.info.",
+      ),
+    );
   });
 
   test("reset: subject + preview match the file", () => {
@@ -138,6 +150,16 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
     assert.ok(!html.includes("Kreator"), "must not teach the creator");
     assert.ok(html.includes("Povezava velja 72 ur"), "invite lifetime is explicit");
     assert.ok(html.includes("/portal/povabilo?token=welcome-abc"), "uses invite page");
+    assert.ok(
+      html.includes(
+        "To sporočilo pošilja Smart360 prek svojega poštnega sistema na domeni webvisit360.com. Povezava vodi na smart360.info.",
+      ),
+    );
+    assert.ok(
+      (b["text"] as string).includes(
+        "This message is sent by Smart360 through its mail system at webvisit360.com. The link points to smart360.info.",
+      ),
+    );
   });
 });
 
