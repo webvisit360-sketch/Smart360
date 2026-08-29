@@ -7,14 +7,14 @@ import { review } from "../routes/adminDistanceReview";
 import { db, categoriesTable, geocodeCacheTable, itemDistanceProposalsTable, itemsTable, sectionsTable, tenantsTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 
-test("Google Maps extraction prefers place coordinates to map centre", () => {
+test("Google Maps extraction accepts pin coordinates and rejects map centre", () => {
   assert.deepEqual(
     extractCoordsFromGoogleMapsUrl("https://www.google.com/maps/place/x/@45.1,13.1,12z/data=!3d45.55!4d13.66"),
     { lat: 45.55, lng: 13.66 },
   );
-  assert.deepEqual(
+  assert.equal(
     extractCoordsFromGoogleMapsUrl("https://www.google.com/maps/@45.1,13.1,12z"),
-    { lat: 45.1, lng: 13.1 },
+    null,
   );
   assert.equal(extractCoordsFromGoogleMapsUrl("https://www.google.com/maps/place/x"), null);
   assert.equal(extractCoordsFromGoogleMapsUrl("https://maps.app.goo.gl/abc"), null);
