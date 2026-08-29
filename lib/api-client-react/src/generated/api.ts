@@ -27,6 +27,8 @@ import type {
   AdminPasswordStatus,
   AdminPasswordUpdate,
   AdminSession,
+  AdminSessionRevocationResult,
+  AdminSessionsStatus,
   AdminThreadView,
   AuthEventList,
   Category,
@@ -1492,9 +1494,9 @@ export const getRevokeAllSessionsUrl = () => {
   return `/api/admin/sessions/revoke-all`
 }
 
-export const revokeAllSessions = async ( options?: Parameters<typeof customFetch>[1]): Promise<OkStatus> => {
+export const revokeAllSessions = async ( options?: Parameters<typeof customFetch>[1]): Promise<AdminSessionRevocationResult> => {
 
-  return customFetch<OkStatus>(getRevokeAllSessionsUrl(),
+  return customFetch<AdminSessionRevocationResult>(getRevokeAllSessionsUrl(),
   {
     ...options,
     method: 'POST'
@@ -1548,6 +1550,77 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getRevokeAllSessionsMutationOptions(options));
     }
+
+export const getGetAdminSessionsStatusUrl = () => {
+
+
+
+
+  return `/api/admin/sessions/status`
+}
+
+export const getAdminSessionsStatus = async ( options?: Parameters<typeof customFetch>[1]): Promise<AdminSessionsStatus> => {
+
+  return customFetch<AdminSessionsStatus>(getGetAdminSessionsStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminSessionsStatusQueryKey = () => {
+    return [
+    `/api/admin/sessions/status`
+    ] as const;
+    }
+
+
+export const getGetAdminSessionsStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAdminSessionsStatus>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminSessionsStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminSessionsStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminSessionsStatus>>> = ({ signal }) => getAdminSessionsStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminSessionsStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminSessionsStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminSessionsStatus>>>
+export type GetAdminSessionsStatusQueryError = ErrorType<void>
+
+
+
+export function useGetAdminSessionsStatus<TData = Awaited<ReturnType<typeof getAdminSessionsStatus>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminSessionsStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminSessionsStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetRecoveryCodeStatusUrl = () => {
 

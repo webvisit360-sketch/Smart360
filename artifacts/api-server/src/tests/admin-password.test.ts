@@ -17,10 +17,12 @@ import {
   SESSION_COOKIE,
   _setAdminPasswordVerifierOverride,
   adminPasswordBackoffMs,
+  countActiveSessions,
   hashAdminPassword,
   issueRecoveryCodes,
   loginAdminPassword,
   recordRecoveryAttempt,
+  revokeAllSessions,
   resetAdminPasswordWithRecovery,
   setOrChangeAdminPassword,
 } from "../lib/adminAuth";
@@ -274,6 +276,28 @@ test("operator password security scope", { concurrency: false }, async (t) => {
     );
     assert.equal(changed.ok, true);
     assert.equal((await db.select().from(adminSessionsTable)).length, 1);
+  });
+
+  await t.test("sign out everywhere counts active sessions and removes every session row", async () => {
+    await db.delete(adminSessionsTable);
+    await db.insert(adminSessionsTable).values([
+      {
+        tokenHash: tokenHash("active-session-1"),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+      {
+        tokenHash: tokenHash("active-session-2"),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+      {
+        tokenHash: tokenHash("expired-session"),
+        expiresAt: new Date(Date.now() - 60_000),
+      },
+    ]);
+    assert.equal(await countActiveSessions(), 2);
+    assert.equal(await revokeAllSessions(), 2);
+    assert.equal(await countActiveSessions(), 0);
+    assert.equal((await db.select().from(adminSessionsTable)).length, 0);
   });
 
   await t.test("security notifications use the permanent mailbox without real delivery", async () => {

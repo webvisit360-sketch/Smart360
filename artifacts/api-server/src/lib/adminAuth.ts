@@ -169,6 +169,7 @@ export function generateRecoveryCode(): string {
 // Advisory-lock keys serialize security-critical writes across instances.
 const LOCK_RECOVERY_ROTATE = 729401;
 const LOCK_RECOVERY_ATTEMPT = 729402;
+const LOCK_ADMIN_SESSIONS = 729403;
 
 export async function issueRecoveryCodes(count = 10): Promise<string[]> {
   const codes = Array.from({ length: count }, generateRecoveryCode);
@@ -314,11 +315,14 @@ export async function consumeChallenge(
 
 export async function createSession(req: Request, res: Response): Promise<void> {
   const token = crypto.randomBytes(32).toString("base64url");
-  await db.insert(adminSessionsTable).values({
-    tokenHash: sha256(token),
-    ip: req.ip ?? null,
-    userAgent: req.get("user-agent") ?? null,
-    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ADMIN_SESSIONS})`);
+    await tx.insert(adminSessionsTable).values({
+      tokenHash: sha256(token),
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    });
   });
   setSessionCookie(res, token);
 }
@@ -357,8 +361,24 @@ export async function destroyCurrentSession(req: Request, res: Response): Promis
   res.clearCookie(SESSION_COOKIE, { path: "/" });
 }
 
-export async function revokeAllSessions(): Promise<void> {
-  await db.delete(adminSessionsTable);
+export async function countActiveSessions(): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(adminSessionsTable)
+    .where(gt(adminSessionsTable.expiresAt, new Date()));
+  return row?.count ?? 0;
+}
+
+export async function revokeAllSessions(): Promise<number> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ADMIN_SESSIONS})`);
+    const removed = await tx
+      .delete(adminSessionsTable)
+      .returning({
+        active: sql<boolean>`${adminSessionsTable.expiresAt} > NOW()`,
+      });
+    return removed.filter((session) => session.active).length;
+  });
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
@@ -534,6 +554,7 @@ export async function loginAdminPassword(
       .update(adminPasswordStateTable)
       .set({ failedLoginCount: 0, lastFailedAt: null })
       .where(eq(adminPasswordStateTable.singleton, true));
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ADMIN_SESSIONS})`);
     await tx.insert(adminSessionsTable).values({
       tokenHash: sha256(token),
       ip,
@@ -672,6 +693,7 @@ export async function resetAdminPasswordWithRecovery(
         target: adminPasswordStateTable.singleton,
         set: { failedLoginCount: 0, lastFailedAt: null },
       });
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ADMIN_SESSIONS})`);
     await tx.delete(adminSessionsTable);
     await tx.insert(adminSessionsTable).values({
       tokenHash: sha256(token),

@@ -27,6 +27,7 @@ Three concentric rings; each must hold alone:
 
 ## Credential decisions (owner-approved)
 - Argon2id m=64MiB t=3 p=1; session + reset tokens stored only as SHA-256; uniform 401s.
+- Owner session cookies use the `__Host-` prefix with HttpOnly, Secure, SameSite=Strict, Path=/, no Domain, and a fixed 30-day absolute lifetime. Never make this sliding on activity.
 - **No lockout** (lockout = DoS): per-IP 10/15min limiter + DB-backed per-account capped exponential backoff (3 free tries, then 1s→60s cap). Success resets counter.
 - All credential mutations are **transactional and conditional**: password change is `UPDATE ... WHERE password_hash = <verified hash>` (stale sessions can't reinstate a password after a reset); reset burns token + sets password + revokes ALL sessions in one tx; the 3/hr reset quota locks the user row (`FOR UPDATE`) so concurrent requests can't bypass the count.
 - Operator recovery may create a fresh authenticated session and redirect immediately after resetting the password. It must still revoke all old sessions, close the audit attempt, and send the security notification.
@@ -36,6 +37,8 @@ Three concentric rings; each must hold alone:
 **Why:** The person who successfully completed recovery already knows the new password; forcing an immediate second sign-in adds friction without meaningful protection.
 
 **How to apply:** Keep recovery completion atomic for password replacement, old-session revocation, fresh-session creation, and audit closure. Send the approved notification after success; tests should assert this session behavior.
+
+The fixed session expiry is deliberate: a sliding lifetime could let a stolen cookie remain valid indefinitely through attacker activity, while the absolute deadline always ends it.
 
 Production proof was completed on 2026-08-29: the owner set the operator password and signed in with e-mail and password on the first attempt from his own machine.
 

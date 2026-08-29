@@ -395,7 +395,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkStatus"
+                $ref: "#/components/schemas/AdminSessionRevocationResult"
+        "401":
+          description: Not authenticated
+  /admin/sessions/status:
+    get:
+      operationId: getAdminSessionsStatus
+      tags: [auth]
+      responses:
+        "200":
+          description: Number of currently active owner sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSessionsStatus"
         "401":
           description: Not authenticated
   /admin/recovery-codes:
@@ -2059,6 +2072,17 @@ components:
       properties:
         authenticated: { type: boolean }
       required: [authenticated]
+    AdminSessionsStatus:
+      type: object
+      properties:
+        activeCount: { type: number }
+      required: [activeCount]
+    AdminSessionRevocationResult:
+      type: object
+      properties:
+        ok: { type: boolean }
+        revokedCount: { type: number }
+      required: [ok, revokedCount]
     RecoveryCodeStatus:
       type: object
       properties:

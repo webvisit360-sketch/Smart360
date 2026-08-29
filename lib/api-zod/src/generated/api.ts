@@ -453,7 +453,13 @@ export const VerifyAddPasskeyResponse = zod.object({
 
 
 export const RevokeAllSessionsResponse = zod.object({
-  "ok": zod.boolean()
+  "ok": zod.boolean(),
+  "revokedCount": zod.number()
+})
+
+
+export const GetAdminSessionsStatusResponse = zod.object({
+  "activeCount": zod.number()
 })
 
 

@@ -252,6 +252,15 @@ export interface AdminSession {
   authenticated: boolean;
 }
 
+export interface AdminSessionsStatus {
+  activeCount: number;
+}
+
+export interface AdminSessionRevocationResult {
+  ok: boolean;
+  revokedCount: number;
+}
+
 export interface RecoveryCodeStatus {
   active: number;
   consumed: number;

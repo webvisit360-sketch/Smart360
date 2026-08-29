@@ -88,6 +88,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "delete", path: "/admin/credentials/:id", binding: OWNER },
   { method: "post", path: "/admin/credentials/options", binding: OWNER },
   { method: "post", path: "/admin/credentials/verify", binding: OWNER },
+  { method: "get", path: "/admin/sessions/status", binding: OWNER },
   { method: "post", path: "/admin/sessions/revoke-all", binding: OWNER },
 
   // ── Host auth (routes/hostAuth.ts) ───────────────────────────────────────

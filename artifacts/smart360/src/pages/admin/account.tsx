@@ -7,6 +7,7 @@ import {
   useGetAddPasskeyOptions, 
   useVerifyAddPasskey, 
   useRevokeAllSessions,
+  useGetAdminSessionsStatus,
   useGetRecoveryCodeStatus,
   useRotateRecoveryCodes,
   useListAuthEvents, useGetAdminSession,
@@ -236,12 +237,16 @@ function OwnerAccount() {
 
   const revokeMutation = useRevokeAllSessions({
     mutation: {
-      onSuccess: () => {
-        toast({ title: "Seje odjavljene", description: "Vse ostale seje so bile uspešno odjavljene." });
+      onSuccess: (result) => {
+        toast({
+          title: "Seje odjavljene",
+          description: `Preklicanih aktivnih sej: ${result.revokedCount}.`,
+        });
         setLocation("/admin/login");
       }
     }
   });
+  const { data: sessionsStatus, isLoading: sessionsLoading } = useGetAdminSessionsStatus();
 
   const getAddOptionsMutation = useGetAddPasskeyOptions();
   const verifyAddMutation = useVerifyAddPasskey();
@@ -356,14 +361,15 @@ function OwnerAccount() {
           <AlertDialogTrigger asChild>
             <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
               <LogOut className="w-4 h-4 mr-2" />
-              Odjavi vse seje
+              Odjavi povsod{sessionsLoading ? "" : ` (${sessionsStatus?.activeCount ?? 0})`}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Odjava vseh sej</AlertDialogTitle>
               <AlertDialogDescription>
-                Ali ste prepričani, da želite odjaviti vse seje? To vas bo odjavilo iz vseh naprav, tudi te.
+                Ali ste prepričani, da želite odjaviti vseh {sessionsStatus?.activeCount ?? 0} aktivnih sej?
+                Odjavljeni boste iz vseh naprav, tudi te.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

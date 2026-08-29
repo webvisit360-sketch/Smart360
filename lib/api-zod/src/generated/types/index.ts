@@ -15,6 +15,8 @@ export * from './adminPasswordLoginInput';
 export * from './adminPasswordStatus';
 export * from './adminPasswordUpdate';
 export * from './adminSession';
+export * from './adminSessionRevocationResult';
+export * from './adminSessionsStatus';
 export * from './adminThreadView';
 export * from './authEvent';
 export * from './authEventList';

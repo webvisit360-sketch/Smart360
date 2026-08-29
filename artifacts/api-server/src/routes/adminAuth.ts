@@ -29,6 +29,7 @@ import {
   destroyCurrentSession,
   isAuthenticated,
   requireAdmin,
+  countActiveSessions,
   revokeAllSessions,
   logAuthEvent,
   loginRateLimited,
@@ -479,11 +480,15 @@ router.post("/admin/credentials/verify", requireAdmin, async (req, res): Promise
   res.json({ ok: true });
 });
 
+router.get("/admin/sessions/status", requireAdmin, async (_req, res): Promise<void> => {
+  res.json({ activeCount: await countActiveSessions() });
+});
+
 router.post("/admin/sessions/revoke-all", requireAdmin, async (req, res): Promise<void> => {
-  await revokeAllSessions();
+  const revokedCount = await revokeAllSessions();
   res.clearCookie(SESSION_COOKIE, { path: "/" });
-  await logAuthEvent(req, "revoke_all");
-  res.json({ ok: true });
+  await logAuthEvent(req, "revoke_all", `count:${revokedCount}`);
+  res.json({ ok: true, revokedCount });
 });
 
 export default router;
