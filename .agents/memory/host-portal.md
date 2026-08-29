@@ -29,8 +29,13 @@ Three concentric rings; each must hold alone:
 - Argon2id m=64MiB t=3 p=1; session + reset tokens stored only as SHA-256; uniform 401s.
 - **No lockout** (lockout = DoS): per-IP 10/15min limiter + DB-backed per-account capped exponential backoff (3 free tries, then 1s→60s cap). Success resets counter.
 - All credential mutations are **transactional and conditional**: password change is `UPDATE ... WHERE password_hash = <verified hash>` (stale sessions can't reinstate a password after a reset); reset burns token + sets password + revokes ALL sessions in one tx; the 3/hr reset quota locks the user row (`FOR UPDATE`) so concurrent requests can't bypass the count.
+- Operator recovery may create a fresh authenticated session and redirect immediately after resetting the password. It must still revoke all old sessions, close the audit attempt, and send the security notification.
 - Account model remains exactly one client account per tenant; do not evolve it into staff membership or multi-property personal accounts.
 - Operator never sets/sees client passwords. Client performs password set/change alone; changing the account email remains an operator action.
+
+**Why:** The person who successfully completed recovery already knows the new password; forcing an immediate second sign-in adds friction without meaningful protection.
+
+**How to apply:** Keep recovery completion atomic for password replacement, old-session revocation, fresh-session creation, and audit closure. Send the approved notification after success; tests should assert this session behavior.
 
 ## Audit and deletion decisions (owner-approved)
 
