@@ -189,11 +189,11 @@ Living Guide Home screenshots must be captured only after the four-second Smart3
 
 **How to apply:** Use a fresh page, wait more than four seconds after load, assert the Home screen and localized welcome heading in the DOM, save to a new path, then inspect that path itself—not only a tester screenshot ID.
 
-Authenticated preview screenshots must never require the owner's real operator password. Serve the unchanged production bundle in isolation and stub only the protected preview responses needed by the screen.
+Before requesting any credential for visual evidence, test whether the target surface is public. The Living Guide guest page is public at the tenant URL and must be captured there without a session, login, or fixture.
 
-**Why:** The operator credential opens every tenant and is intentionally known by one person only. Moving it into process-readable storage weakens that boundary even when the store itself is protected.
+**Why:** The operator credential opens every tenant and was nearly requested to photograph a page already open to the world. Moving it into process-readable storage would weaken that boundary for no benefit.
 
-**How to apply:** Prefer a fixture-backed protected preview with no session or credential. Keep HTML, JavaScript, CSS, and DOM untouched; use a development-only credential only as an explicitly approved fallback.
+**How to apply:** Open the exact public target first. Use protected fixtures only for genuinely protected surfaces, never as a substitute for checking whether authentication is required; never request the owner's real operator password.
 
 Kuula presentation is normalized only at render time: force `logo=-1`, `info=0`, `fs=0`, `vr=0`, `gyro=0`, `thumbs=-1`, and `pause=0`; preserve the stored URL, tour identity, autorotate, and unknown parameters. Every guest renderer and the admin preview must use the same helper and delegate no fullscreen, XR, gyroscope, or accelerometer permissions.
 
