@@ -20,11 +20,11 @@ import {
   useGetAdminSession,
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { AdminBadge as Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,

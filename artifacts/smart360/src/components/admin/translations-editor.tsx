@@ -13,8 +13,8 @@ import {
   type TranslationEntry,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { AdminButton as Button } from "@/components/ui/button";
+import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Download, Upload, Check } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";

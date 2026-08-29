@@ -60,4 +60,52 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export { Button, buttonVariants }
+const adminButtonVariants = cva(
+  "admin-ui-button inline-flex items-center justify-center whitespace-nowrap text-[14px] font-[800] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#157347] focus-visible:ring-offset-2 disabled:pointer-events-none",
+  {
+    variants: {
+      variant: {
+        default: "admin-ui-button--default",
+        destructive: "admin-ui-button--destructive",
+        outline: "admin-ui-button--outline",
+        secondary: "admin-ui-button--secondary",
+        ghost: "admin-ui-button--ghost",
+        link: "admin-ui-button--link",
+      },
+      size: {
+        default: "h-[40px] px-[17px] py-[11px]",
+        sm: "h-[34px] px-[13px] text-[13px]",
+        lg: "h-12 px-7 text-[15px]",
+        icon: "h-10 w-10 p-0",
+      },
+    },
+    defaultVariants: { variant: "default", size: "default" },
+  },
+)
+
+export interface AdminButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof adminButtonVariants> {
+  asChild?: boolean
+}
+
+const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>(
+  ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      vibrate()
+      onClick?.(event)
+    }
+    return (
+      <Comp
+        className={cn(adminButtonVariants({ variant, size, className }))}
+        ref={ref}
+        onClick={handleClick}
+        {...props}
+      />
+    )
+  },
+)
+AdminButton.displayName = "AdminButton"
+
+export { Button, buttonVariants, AdminButton, adminButtonVariants }

@@ -1,7 +1,7 @@
 import { getListAdminEnquiriesQueryKey, useListAdminEnquiries } from "@workspace/api-client-react";
 import { AlertCircle, CheckCircle2, Clock3, Loader2, Mail, MailCheck, MailWarning, ShieldAlert } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { AdminBadge as Badge } from "@/components/ui/badge";
+import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 
 const statusDetails = {
   accepted: { label: "Sprejeto pri ponudniku — čaka na končni izid", icon: CheckCircle2, className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
@@ -18,7 +18,7 @@ export default function AdminEnquiriesPage() {
   });
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="admin-page max-w-5xl space-y-6" data-surface="admin">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Povpraševanja</h1>
         <p className="text-muted-foreground mt-1">Povpraševanja iz javnega obrazca, najnovejša najprej.</p>

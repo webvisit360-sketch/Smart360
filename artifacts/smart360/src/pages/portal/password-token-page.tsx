@@ -1,7 +1,7 @@
 import { FormEvent, useLayoutEffect, useState } from "react";
 import { Loader2, LockKeyhole } from "lucide-react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
+import { AdminButton } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -69,9 +69,9 @@ export function PasswordTokenPage({ mode }: { mode: TokenMode }) {
   };
 
   return (
-    <main className="min-h-[100dvh] bg-[#F5F5F7] flex items-center justify-center p-5">
+    <main data-surface="admin" className="min-h-[100dvh] flex items-center justify-center p-5">
       <section className="w-full max-w-md rounded-[22px] border bg-white p-[22px] shadow-sm">
-        <div className="h-12 w-12 rounded-[14px] bg-primary text-primary-foreground flex items-center justify-center mb-5">
+        <div className="h-12 w-12 rounded-[14px] bg-[#157347] text-white flex items-center justify-center mb-5">
           <LockKeyhole className="h-6 w-6" />
         </div>
         <p className="text-sm font-extrabold text-primary mb-2">Smart360</p>
@@ -120,10 +120,10 @@ export function PasswordTokenPage({ mode }: { mode: TokenMode }) {
               {error}
             </p>
           )}
-          <Button className="w-full" type="submit" disabled={busy || !token} data-testid="button-submit-password">
+          <AdminButton className="w-full" type="submit" disabled={busy || !token} data-testid="button-submit-password">
             {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {mode === "invite" ? "Aktiviraj račun" : "Shrani novo geslo"}
-          </Button>
+          </AdminButton>
           {!token && (
             <p className="text-sm text-muted-foreground text-center">
               Povezava ni veljavna ali je že potekla. Zahtevajte novo.

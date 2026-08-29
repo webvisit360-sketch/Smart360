@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetTenantQueryKey, useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
 import { fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { Loader2, Plus, Play, RotateCcw, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 
 type Media = {
   id: string;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, RefreshCcw, ShieldAlert, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminButton as Button } from "@/components/ui/button";
+import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";

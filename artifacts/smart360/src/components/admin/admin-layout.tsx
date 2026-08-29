@@ -2,7 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { useGetAdminSession, useAdminLogout } from "@workspace/api-client-react";
 import { useLocation, Link } from "wouter";
 import { Loader2, LogOut, LayoutDashboard, Mail, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { useHostSession } from "@/hooks/use-host-session";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   if (authLoading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-muted">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-muted" data-surface="admin">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -50,12 +50,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const isTenantEdit = location.startsWith("/admin/tenants/");
   if (isTenantEdit) {
-    return <div className="min-h-[100dvh] bg-[#F5F5F7] font-sans">{children}</div>;
+    return <div className="min-h-[100dvh] font-sans" data-surface="admin">{children}</div>;
   }
 
   if (isHostAccount) {
     return (
-      <div className="min-h-[100dvh] bg-muted/30">
+      <div className="min-h-[100dvh] bg-muted/30" data-surface="admin">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-5">
           <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
           <Button variant="outline" onClick={() => setLocation(hostTenantPath)} data-testid="button-back-to-tenant">
@@ -72,27 +72,27 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (hostAuthenticated) return null;
 
   return (
-    <div className="min-h-[100dvh] flex bg-muted/30">
+    <div className="admin-shell" data-surface="admin">
       {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border hidden md:flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-border">
+      <aside className="admin-shell__sidebar hidden md:flex">
+        <div className="admin-shell__brand flex items-center">
           <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
         </div>
-        <div className="flex-1 py-6 px-4 space-y-2">
-          <Link href="/admin" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold ${location === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
+        <div className="admin-shell__nav flex-1 space-y-1">
+          <Link href="/admin" aria-current={location === "/admin" ? "page" : undefined} className="flex items-center gap-3">
             <LayoutDashboard className="h-5 w-5" />
             Nadzorna plošča
           </Link>
-          <Link href="/admin/enquiries" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold ${location === "/admin/enquiries" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
+          <Link href="/admin/enquiries" aria-current={location === "/admin/enquiries" ? "page" : undefined} className="flex items-center gap-3">
             <Mail className="h-5 w-5" />
             Povpraševanja
           </Link>
-          <Link href="/admin/account" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted font-medium transition-colors">
+          <Link href="/admin/account" aria-current={location === "/admin/account" ? "page" : undefined} className="flex items-center gap-3">
             <User className="h-5 w-5" />
             Ključi
           </Link>
         </div>
-        <div className="p-4 border-t border-border">
+        <div className="admin-shell__footer">
           <Button 
             variant="ghost" 
             className="w-full justify-start text-muted-foreground"
@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="admin-shell__main flex flex-col">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 md:hidden">
           <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
           <Button variant="ghost" size="icon" onClick={() => logoutMutation.mutate()}>

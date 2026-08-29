@@ -4,7 +4,7 @@ import {
   useSetDistanceReviewRowLink, useSetDistanceReviewRowValue, useSkipDistanceReviewRow,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { useState } from "react";
 
 const fmt = (meters: number | null | undefined) => meters == null ? "—" : meters >= 1000 ? `${(meters / 1000).toLocaleString("sl-SI", { maximumFractionDigits: 1 })} km` : `${Math.round(meters)} m`;

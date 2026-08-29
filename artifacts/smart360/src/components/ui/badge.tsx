@@ -16,4 +16,15 @@ const Badge = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
 )
 Badge.displayName = "Badge"
 
-export { Badge }
+const AdminBadge = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { variant?: "default" | "secondary" | "outline" | "destructive" }>(
+  ({ className, variant = "default", ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("admin-ui-badge", `admin-ui-badge--${variant}`, className)}
+      {...props}
+    />
+  ),
+)
+AdminBadge.displayName = "AdminBadge"
+
+export { Badge, AdminBadge }

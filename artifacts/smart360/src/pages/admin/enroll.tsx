@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useGetEnrollOptions, useVerifyEnroll } from "@workspace/api-client-react";
 import { startRegistration } from "@simplewebauthn/browser";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, KeyRound, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

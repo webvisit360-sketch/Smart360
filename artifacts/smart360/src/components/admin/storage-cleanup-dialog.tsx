@@ -9,7 +9,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { Loader2, Trash2, Play } from "lucide-react";
 import { fmtMediaSize } from "@/lib/format-bytes";
 

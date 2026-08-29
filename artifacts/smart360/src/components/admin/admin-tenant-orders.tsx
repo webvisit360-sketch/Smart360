@@ -1,9 +1,9 @@
 import { useListTenantOrders, useUpdateOrderStatus, getListTenantOrdersQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Phone, MessageCircle, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { AdminButton as Button } from "@/components/ui/button";
+import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AdminBadge as Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";

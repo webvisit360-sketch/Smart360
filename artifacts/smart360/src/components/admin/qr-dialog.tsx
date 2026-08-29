@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 
 function guestUrl(slug: string, customDomain?: string | null): string {
   if (customDomain) return `https://${customDomain}`;

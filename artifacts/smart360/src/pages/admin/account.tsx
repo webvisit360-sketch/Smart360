@@ -18,10 +18,10 @@ import {
   getGetAdminPasswordStatusQueryKey,
 } from "@workspace/api-client-react";
 import { startRegistration } from "@simplewebauthn/browser";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, LogOut, KeyRound, AlertTriangle } from "lucide-react";
@@ -105,7 +105,7 @@ function HostAccount() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="admin-page max-w-4xl space-y-6" data-surface="admin">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Moj račun</h1>
@@ -351,7 +351,7 @@ function OwnerAccount() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="admin-page max-w-4xl space-y-6" data-surface="admin">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Varnost in ključi</h1>

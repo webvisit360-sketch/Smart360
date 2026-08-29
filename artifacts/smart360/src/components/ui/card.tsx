@@ -31,4 +31,22 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
+const AdminCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("admin-ui-card", className)} {...props} />
+))
+AdminCard.displayName = "AdminCard"
+
+const AdminCardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("admin-ui-card-header", className)} {...props} />
+))
+AdminCardHeader.displayName = "AdminCardHeader"
+
+const AdminCardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("admin-ui-card-content", className)} {...props} />
+))
+AdminCardContent.displayName = "AdminCardContent"
+
+export {
+  Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter,
+  AdminCard, AdminCardHeader, AdminCardContent,
+}

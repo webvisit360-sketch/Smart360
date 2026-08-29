@@ -11,21 +11,23 @@ export function AdminRouter() {
   const [location] = useLocation();
 
   if (location === "/admin/login") {
-    return <AdminLogin />;
+    return <div data-surface="admin" className="admin-scope"><AdminLogin /></div>;
   }
 
   if (location === "/admin/enroll") {
-    return <AdminEnroll />;
+    return <div data-surface="admin" className="admin-scope"><AdminEnroll /></div>;
   }
 
   return (
-    <AdminLayout>
-      <Switch>
-        <Route path="/admin" component={AdminDashboard} />
-        <Route path="/admin/account" component={AdminAccount} />
-        <Route path="/admin/enquiries" component={AdminEnquiriesPage} />
-        <Route path="/admin/tenants/:id" component={AdminTenantEdit} />
-      </Switch>
-    </AdminLayout>
+    <div data-surface="admin" className="admin-scope">
+      <AdminLayout>
+        <Switch>
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/account" component={AdminAccount} />
+          <Route path="/admin/enquiries" component={AdminEnquiriesPage} />
+          <Route path="/admin/tenants/:id" component={AdminTenantEdit} />
+        </Switch>
+      </AdminLayout>
+    </div>
   );
 }

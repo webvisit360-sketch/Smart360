@@ -7,10 +7,10 @@ import {
   useLoginAdminPassword,
 } from "@workspace/api-client-react";
 import { startAuthentication, WebAuthnAbortService } from "@simplewebauthn/browser";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, KeyRound } from "lucide-react";
 import loginDesignHtml from "@assets/Smart360-prijava_1787872268224.html?raw";
@@ -291,7 +291,7 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="smart-login">
+    <div className="smart-login" data-surface="admin">
       <img className="smart-login__ring" src="/brand/smart360-kolobar-temno.svg" alt="" aria-hidden="true" />
       <main className="smart-login__card">
         <header className="smart-login__header">

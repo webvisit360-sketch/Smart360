@@ -2,9 +2,9 @@ import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, 
 import { useRoute, useLocation } from "wouter";
 import { Loader2, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
 import { actorLabel } from "@/pages/admin/dashboard";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminBadge as Badge } from "@/components/ui/badge";
+import { AdminButton as Button } from "@/components/ui/button";
+import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -453,7 +453,7 @@ export default function AdminTenantEdit() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] bg-[#F5F5F7] text-[#14201F] overflow-hidden font-sans">
+    <div className="admin-tenant-console flex flex-col md:flex-row h-[100dvh] overflow-hidden font-sans" data-surface="admin">
 
       {/* SIDEBAR */}
       <aside className="w-full md:w-[264px] bg-white border-b md:border-b-0 md:border-r border-black/5 flex flex-row md:flex-col shrink-0 px-3 md:px-[14px] py-3 md:py-[22px] overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
@@ -992,8 +992,9 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
 
-          <CoverEditor
-            form={{
+          <div data-admin-preserve="cover-editor">
+            <CoverEditor
+              form={{
               name: formData.name,
               subtitle: formData.subtitle,
               heroUrl: formData.heroUrl,
@@ -1021,10 +1022,11 @@ export default function AdminTenantEdit() {
               logoY: formData.logoY,
               logoW: formData.logoW,
               logoOpacity: formData.logoOpacity,
-            }}
-            onChange={(patch) => setFormData(prev => ({ ...prev, ...patch }))}
-            onReset={handleResetCover}
-          />
+              }}
+              onChange={(patch) => setFormData(prev => ({ ...prev, ...patch }))}
+              onReset={handleResetCover}
+            />
+          </div>
 
           {formData.theme === 'swipe' && (
             <Card>

@@ -8,7 +8,26 @@ const Dialog = DialogPrimitive.Root
 
 const DialogTrigger = DialogPrimitive.Trigger
 
-const DialogPortal = DialogPrimitive.Portal
+const DialogPortal = ({
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal>) => {
+  const isAdmin =
+    typeof document !== "undefined" &&
+    document.querySelector('[data-surface="admin"]') !== null
+
+  return (
+    <DialogPrimitive.Portal {...props}>
+      {isAdmin ? (
+        <div data-surface="admin" style={{ display: "contents" }}>
+          {children}
+        </div>
+      ) : (
+        children
+      )}
+    </DialogPrimitive.Portal>
+  )
+}
 
 const DialogClose = DialogPrimitive.Close
 

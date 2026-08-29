@@ -7,7 +7,26 @@ const AlertDialog = AlertDialogPrimitive.Root;
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
-const AlertDialogPortal = AlertDialogPrimitive.Portal;
+const AlertDialogPortal = ({
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Portal>) => {
+  const isAdmin =
+    typeof document !== 'undefined' &&
+    document.querySelector('[data-surface="admin"]') !== null;
+
+  return (
+    <AlertDialogPrimitive.Portal {...props}>
+      {isAdmin ? (
+        <div data-surface="admin" style={{ display: 'contents' }}>
+          {children}
+        </div>
+      ) : (
+        children
+      )}
+    </AlertDialogPrimitive.Portal>
+  );
+};
 
 const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,

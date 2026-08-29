@@ -204,3 +204,242 @@
   height: 0;
   pointer-events: none;
 }
+
+/* Smart360 administration 2030.
+   All declarations are intentionally contained by the admin surface: the
+   public guide continues to use the original primitives and theme. */
+[data-surface="admin"] {
+  --bg: #FFFFFF;
+  --card: #F4F6F2;
+  --card2: #ECF0EA;
+  --tx: #121A14;
+  --tx2: #66716A;
+  --line: #E8EBE6;
+  --acc: #157347;
+  --accg: #1D9159;
+  --warm: #DD9A2B;
+  --danger: #D93A2B;
+  min-height: 100dvh;
+  color: var(--tx);
+  background: var(--bg);
+  font-family: Archivo, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-surface="admin"] *,
+[data-surface="admin"] *::before,
+[data-surface="admin"] *::after {
+  border-color: var(--line);
+}
+
+[data-surface="admin"] .admin-ui-button {
+  gap: 8px;
+  border: 1.5px solid transparent;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, transform .1s ease;
+}
+[data-surface="admin"] .admin-ui-button:active { transform: scale(.985); }
+[data-surface="admin"] .admin-ui-button:disabled {
+  cursor: not-allowed;
+  background: var(--card2);
+  color: #A9B2A8;
+  opacity: 1;
+}
+[data-surface="admin"] .admin-ui-button--default { background: var(--acc); color: #fff; }
+[data-surface="admin"] .admin-ui-button--default:hover { background: #12643D; }
+[data-surface="admin"] .admin-ui-button--outline { background: var(--bg); color: var(--tx); border-color: var(--line); }
+[data-surface="admin"] .admin-ui-button--outline:hover { border-color: #D3DBD1; background: var(--bg); }
+[data-surface="admin"] .admin-ui-button--secondary { background: var(--card); color: var(--tx); }
+[data-surface="admin"] .admin-ui-button--secondary:hover,
+[data-surface="admin"] .admin-ui-button--ghost:hover { background: var(--card2); }
+[data-surface="admin"] .admin-ui-button--ghost { background: transparent; color: var(--tx2); }
+[data-surface="admin"] .admin-ui-button--destructive { background: var(--bg); color: var(--danger); border-color: #F2D6D2; }
+[data-surface="admin"] .admin-ui-button--link { height: auto; padding: 0; color: var(--acc); background: transparent; }
+[data-surface="admin"] .admin-ui-button--link:hover { text-decoration: underline; }
+[data-surface="admin"] .admin-ui-button[class*="rounded-full"] { border-radius: 13px !important; }
+[data-surface="admin"] button.rounded-full:not([data-admin-preserve] *) { border-radius: 13px; }
+
+[data-surface="admin"] .admin-ui-card {
+  border: 0;
+  border-radius: 22px;
+  background: var(--card);
+  color: var(--tx);
+  box-shadow: none;
+}
+[data-surface="admin"] .admin-ui-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 22px 24px 16px;
+}
+[data-surface="admin"] .admin-ui-card-content { padding: 0 24px 22px; }
+[data-surface="admin"] .admin-ui-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: .04em;
+}
+[data-surface="admin"] .admin-ui-badge--default { background: #E4F2EA; color: #116B41; }
+[data-surface="admin"] .admin-ui-badge--secondary { background: var(--card2); color: var(--tx2); }
+[data-surface="admin"] .admin-ui-badge--outline { border: 1px solid var(--line); background: var(--bg); color: var(--tx); }
+[data-surface="admin"] .admin-ui-badge--destructive { background: #F2D6D2; color: var(--danger); }
+
+/* Forms, menus, dialogs and tables share the same compact, flat language. */
+[data-surface="admin"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([data-admin-preserve] *),
+[data-surface="admin"] textarea:not([data-admin-preserve] *),
+[data-surface="admin"] select:not([data-admin-preserve] *) {
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  background: var(--bg);
+  color: var(--tx);
+  box-shadow: none;
+  font-family: inherit;
+  font-weight: 600;
+}
+[data-surface="admin"] input:not([data-admin-preserve] *):focus-visible,
+[data-surface="admin"] textarea:not([data-admin-preserve] *):focus-visible,
+[data-surface="admin"] select:not([data-admin-preserve] *):focus-visible {
+  border-color: var(--acc);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(21,115,71,.10);
+}
+[data-surface="admin"] input:not([data-admin-preserve] *)::placeholder,
+[data-surface="admin"] textarea:not([data-admin-preserve] *)::placeholder { color: #A9B2A8; font-weight: 500; }
+[data-surface="admin"] label:not([data-admin-preserve] *) { color: var(--tx2); font-weight: 750; }
+[data-surface="admin"] [role="dialog"] {
+  border: 0;
+  border-radius: 26px;
+  background: var(--bg);
+  color: var(--tx);
+  box-shadow: 0 30px 70px rgba(18,26,20,.22);
+}
+[data-surface="admin"] [role="alertdialog"] {
+  border-radius: 26px;
+  background: var(--bg);
+}
+[data-surface="admin"] [role="tablist"] {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: none;
+}
+[data-surface="admin"] [role="tab"] {
+  border-radius: 10px;
+  color: var(--tx2);
+  font-weight: 750;
+}
+[data-surface="admin"] [role="tab"][data-state="active"] {
+  background: var(--bg);
+  color: var(--acc);
+  box-shadow: none;
+}
+[data-surface="admin"] table { width: 100%; border-collapse: collapse; }
+[data-surface="admin"] th {
+  color: var(--tx2);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+[data-surface="admin"] th,
+[data-surface="admin"] td { border-color: var(--line); }
+
+[data-surface="admin"] h1,
+[data-surface="admin"] h2,
+[data-surface="admin"] h3 { letter-spacing: -.02em; }
+[data-surface="admin"] .text-blue-500,
+[data-surface="admin"] .text-blue-600,
+[data-surface="admin"] .text-blue-700,
+[data-surface="admin"] .text-blue-800,
+[data-surface="admin"] .text-blue-900,
+[data-surface="admin"] .text-indigo-600 { color: var(--acc) !important; }
+[data-surface="admin"] .bg-blue-50,
+[data-surface="admin"] .bg-blue-100,
+[data-surface="admin"] .bg-indigo-50 { background-color: #E4F2EA !important; }
+[data-surface="admin"] .border-blue-200,
+[data-surface="admin"] .border-indigo-200 { border-color: #CBE2D4 !important; }
+
+/* Owner and host shells. */
+[data-surface="admin"] .admin-shell {
+  min-height: 100dvh;
+  display: flex;
+  background: var(--bg);
+}
+[data-surface="admin"] .admin-shell__sidebar {
+  width: 248px;
+  flex: 0 0 248px;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px 18px;
+  border-right: 1px solid var(--line);
+  background: var(--card);
+}
+[data-surface="admin"] .admin-shell__brand {
+  height: auto;
+  padding: 2px 6px 24px;
+  border: 0;
+}
+[data-surface="admin"] .admin-shell__brand img { width: 158px; height: auto !important; }
+[data-surface="admin"] .admin-shell__nav { padding: 0; }
+[data-surface="admin"] .admin-shell__nav a {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--tx);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+[data-surface="admin"] .admin-shell__nav a:hover { background: var(--card2); }
+[data-surface="admin"] .admin-shell__nav a[aria-current="page"] { background: var(--acc); color: #fff; }
+[data-surface="admin"] .admin-shell__footer {
+  margin-top: auto;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+}
+[data-surface="admin"] .admin-shell__main { min-width: 0; flex: 1; background: var(--bg); }
+
+[data-surface="admin"] .admin-page {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 26px 30px 90px;
+}
+[data-surface="admin"] .admin-page > :first-child h1 { font-size: 26px; font-weight: 800; }
+
+/* Tenant console: retain its horizontal mobile navigation while replacing
+   the former cool-grey/blue chrome. Guest preview iframe is not targeted. */
+[data-surface="admin"] .admin-tenant-console {
+  background: var(--bg);
+  color: var(--tx);
+}
+[data-surface="admin"] .admin-tenant-console > aside { background: var(--card); border-color: var(--line); }
+[data-surface="admin"] .admin-tenant-console > aside button { border-radius: 12px; font-weight: 700; }
+[data-surface="admin"] .admin-tenant-console > main > header { background: rgba(255,255,255,.96); border-color: var(--line); }
+[data-surface="admin"] .admin-tenant-console [role="tabpanel"] > .admin-ui-card,
+[data-surface="admin"] .admin-tenant-console [role="tabpanel"] .admin-ui-card { background: var(--card); }
+
+@media (max-width: 767px) {
+  [data-surface="admin"] .admin-shell { display: block; }
+  [data-surface="admin"] .admin-shell__sidebar { display: none; }
+  [data-surface="admin"] .admin-page { padding: 22px 18px 72px; }
+  [data-surface="admin"] .admin-page > :first-child h1 { font-size: 23px; }
+  [data-surface="admin"] [role="dialog"] { max-height: calc(100dvh - 24px); border-radius: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-surface="admin"] *,
+  [data-surface="admin"] *::before,
+  [data-surface="admin"] *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

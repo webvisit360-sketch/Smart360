@@ -4,7 +4,7 @@ import { useCheckTenantMedia, getCheckTenantMediaQueryKey } from "@workspace/api
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { AdminButton as Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const REASON: Record<string, string> = {

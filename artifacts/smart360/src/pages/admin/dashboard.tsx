@@ -1,9 +1,9 @@
 import { useGetAdminOverview, useListTenants, useListTenantOverview, useDuplicateTenant, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
 import { fmtMediaSize, fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AdminButton as Button } from "@/components/ui/button";
+import { AdminBadge as Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
     days < 0 ? "text-destructive font-medium" : days <= 30 ? "text-amber-600 font-medium" : "text-muted-foreground";
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="admin-page space-y-8" data-surface="admin">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Nadzorna plošča</h1>
