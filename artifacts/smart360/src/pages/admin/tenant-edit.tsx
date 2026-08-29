@@ -208,8 +208,12 @@ export default function AdminTenantEdit() {
   const [activeTab, setActiveTab] = useState("pregled");
   const isSettings = ["general", "appearance", "contacts", "translations", "guide", "changelog"].includes(activeTab);
   const isWideLayout = [
+    "kreator",
     "orders",
     "messages",
+    "events",
+    "obvestila",
+    "ponudba",
     "distances",
     "content",
     "translations",
@@ -475,7 +479,7 @@ export default function AdminTenantEdit() {
         <AdminSidebarLockup className="admin-tenant-sidebar__lockup hidden md:block shrink-0" />
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
           <button data-active={activeTab === 'pregled'} onClick={() => setActiveTab('pregled')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="overview" /><span>Pregled</span></button>
-          {/* Kreator is a future operator build instrument. It must never render in this shared operator/host tenant console. */}
+          <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>
           <button data-active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between whitespace-nowrap transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
             <span className="flex items-center gap-[11px]"><SidebarNavIcon name="orders" /><span>Naročila</span></span>
             {(tenantOverview?.pendingOrders ?? 0) > 0 && (
@@ -488,6 +492,13 @@ export default function AdminTenantEdit() {
               <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">{tenantOverview?.pendingMessages}</span>
             )}
           </button>
+        </div>
+
+        <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
+        <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col mb-0 md:mb-8 shrink-0">
+          <button data-active={activeTab === 'events'} onClick={() => setActiveTab('events')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="events" /><span>Dogodki</span></button>
+          <button data-active={activeTab === 'obvestila'} onClick={() => setActiveTab('obvestila')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="notices" /><span>Obvestila</span></button>
+          <button data-active={activeTab === 'ponudba'} onClick={() => setActiveTab('ponudba')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="offers" /><span>Ponudba in cene</span></button>
         </div>
 
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
@@ -580,6 +591,10 @@ export default function AdminTenantEdit() {
             <TabsContent value="pregled">
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
             </TabsContent>
+            <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika (CP4)</div></TabsContent>
+            <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki (CP6)</div></TabsContent>
+            <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
+            <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
         <TabsContent value="general" className="space-y-4">
