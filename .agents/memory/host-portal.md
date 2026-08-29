@@ -48,6 +48,12 @@ Only one unused operator enrolment token may exist at a time, across all sources
 
 **How to apply:** Keep replacement global rather than source-specific, and make the invalidation, new-token insertion, and issuance audit one transaction.
 
+The replacement invariant and issuance-audit hash correlation are proven in development. Production has no owner-accessible exec/shell path, so production proof is limited to read-only catalog and runtime checks; never present workspace-shell issuance as production evidence.
+
+**Why:** The workspace shell targets development, while the supported production database channel is read-only. Manufacturing a production credential merely to prove session behavior would create unnecessary operator-account cleanup.
+
+**How to apply:** Label shell issuance/invalidation evidence as development-proven and production schema evidence as production-proven. Let the next real security event prove production e-mail delivery rather than changing credentials for a test.
+
 Production proof was completed on 2026-08-29: the owner set the operator password and signed in with e-mail and password on the first attempt from his own machine.
 
 ## Audit and deletion decisions (owner-approved)
