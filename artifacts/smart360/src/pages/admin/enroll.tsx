@@ -19,6 +19,7 @@ export default function AdminEnroll() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
 
   const getOptionsMutation = useGetEnrollOptions();
@@ -67,9 +68,12 @@ export default function AdminEnroll() {
           response: response as any,
         }
       });
+      setAuthenticated(verifyRes.authenticated);
 
       if (verifyRes.recoveryCodes && verifyRes.recoveryCodes.length > 0) {
         setRecoveryCodes(verifyRes.recoveryCodes);
+      } else if (!verifyRes.authenticated) {
+        return;
       } else {
         toast({ title: "Uspešna registracija", description: "Vaš ključ je dodan." });
         setLocation("/admin");
@@ -118,8 +122,38 @@ export default function AdminEnroll() {
               {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
               Kopiraj vse
             </Button>
-            <Button onClick={() => setLocation("/admin")} className="w-full" variant="default">
-              Nadaljuj v nadzorno ploščo
+            <Button
+              onClick={() => {
+                if (authenticated) setLocation("/admin");
+                else setRecoveryCodes(null);
+              }}
+              className="w-full"
+              variant="default"
+            >
+              {authenticated ? "Nadaljuj v nadzorno ploščo" : "Nadaljuj"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (authenticated === false) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-muted p-4">
+        <Card className="w-full max-w-sm text-center">
+          <CardHeader className="space-y-3">
+            <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
+              <Check className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Ključ je registriran</CardTitle>
+            <CardDescription>
+              Novi passkey je pripravljen. Z njim se lahko zdaj prijavite.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => setLocation("/admin/login")} className="w-full">
+              Prijavite se
             </Button>
           </CardContent>
         </Card>

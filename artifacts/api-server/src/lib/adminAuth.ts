@@ -15,11 +15,11 @@ import {
   type AdminUser,
   type AdminCredential,
 } from "@workspace/db";
-import { eq, lt, and, isNull, gt, desc, sql } from "drizzle-orm";
+import { eq, lt, and, isNull, gt, desc, sql, gte } from "drizzle-orm";
 
 const SESSION_COOKIE = "__Host-s360_admin";
 export { SESSION_COOKIE };
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const ENROLL_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -170,6 +170,8 @@ export function generateRecoveryCode(): string {
 const LOCK_RECOVERY_ROTATE = 729401;
 const LOCK_RECOVERY_ATTEMPT = 729402;
 const LOCK_ADMIN_SESSIONS = 729403;
+const LOCK_ENROLL_TOKENS = 729404;
+const LOCK_ENROLL_RATE_LIMIT = 729405;
 
 export async function issueRecoveryCodes(count = 10): Promise<string[]> {
   const codes = Array.from({ length: count }, generateRecoveryCode);
@@ -227,15 +229,111 @@ export async function consumeRecoveryCode(code: string): Promise<boolean> {
 
 export async function createEnrollToken(source: "shell" | "recovery"): Promise<string> {
   const token = crypto.randomBytes(32).toString("base64url");
-  await db.insert(adminEnrollTokensTable).values({
-    tokenHash: sha256(token),
-    source,
-    expiresAt: new Date(Date.now() + ENROLL_TTL_MS),
+  const tokenHash = sha256(token);
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ENROLL_TOKENS})`);
+    await tx
+      .update(adminEnrollTokensTable)
+      .set({ usedAt: new Date() })
+      .where(isNull(adminEnrollTokensTable.usedAt));
+    await tx.insert(adminEnrollTokensTable).values({
+      tokenHash,
+      source,
+      expiresAt: new Date(Date.now() + ENROLL_TTL_MS),
+    });
+    await tx.insert(adminAuthEventsTable).values({
+      type: "enroll_token_issued",
+      detail: `source:${source} token_hash:${tokenHash}`,
+    });
   });
-  await db
-    .delete(adminEnrollTokensTable)
-    .where(lt(adminEnrollTokensTable.expiresAt, new Date()));
   return token;
+}
+
+export type EnrollTokenState =
+  | { status: "valid"; source: "shell" | "recovery"; tokenHash: string }
+  | { status: "expired" | "already_used" | "rejected"; tokenHash: string };
+
+export async function inspectEnrollToken(token: unknown): Promise<EnrollTokenState> {
+  const value = typeof token === "string" ? token : "";
+  const tokenHash = sha256(value);
+  if (!value || value.length > 256) return { status: "rejected", tokenHash };
+  const [row] = await db
+    .select()
+    .from(adminEnrollTokensTable)
+    .where(eq(adminEnrollTokensTable.tokenHash, tokenHash))
+    .limit(1);
+  if (!row) return { status: "rejected", tokenHash };
+  if (row.usedAt) return { status: "already_used", tokenHash };
+  if (row.expiresAt.getTime() <= Date.now()) return { status: "expired", tokenHash };
+  return { status: "valid", source: row.source as "shell" | "recovery", tokenHash };
+}
+
+export async function recordEnrollOutcome(
+  req: Request,
+  outcome: "failed" | "expired" | "already_used" | "rejected" | "rate_limited",
+  token: unknown,
+): Promise<void> {
+  await db.insert(adminAuthEventsTable).values({
+    type: `enroll_${outcome}`,
+    detail: `token_hash:${sha256(typeof token === "string" ? token : "")}`,
+    ip: req.ip ?? null,
+    userAgent: req.get("user-agent") ?? null,
+  });
+}
+
+export async function beginEnrollRequest(req: Request): Promise<string | null> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ENROLL_RATE_LIMIT})`);
+    const since = new Date(Date.now() - 15 * 60 * 1000);
+    const [row] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(adminAuthEventsTable)
+      .where(and(
+        eq(adminAuthEventsTable.ip, req.ip ?? ""),
+        gte(adminAuthEventsTable.createdAt, since),
+        eq(adminAuthEventsTable.type, "enroll_request"),
+      ));
+    if ((row?.count ?? 0) >= 10) {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const [recent] = await tx
+        .select({ id: adminAuthEventsTable.id })
+        .from(adminAuthEventsTable)
+        .where(and(
+          eq(adminAuthEventsTable.ip, req.ip ?? ""),
+          eq(adminAuthEventsTable.type, "enroll_rate_limited"),
+          gte(adminAuthEventsTable.createdAt, tenMinutesAgo),
+        ))
+        .limit(1);
+      if (!recent) {
+        await tx.insert(adminAuthEventsTable).values({
+          type: "enroll_rate_limited",
+          detail: "noise_limit",
+          ip: req.ip ?? null,
+          userAgent: req.get("user-agent") ?? null,
+        });
+      }
+      return null;
+    }
+    const [reservation] = await tx
+      .insert(adminAuthEventsTable)
+      .values({
+        type: "enroll_request",
+        detail: "noise_limit_reservation",
+        ip: req.ip ?? null,
+        userAgent: req.get("user-agent") ?? null,
+      })
+      .returning({ id: adminAuthEventsTable.id });
+    return reservation?.id ?? null;
+  });
+}
+
+export async function completeEnrollRequest(reservationId: string): Promise<void> {
+  await db
+    .delete(adminAuthEventsTable)
+    .where(and(
+      eq(adminAuthEventsTable.id, reservationId),
+      eq(adminAuthEventsTable.type, "enroll_request"),
+    ));
 }
 
 /** Checks the token is valid without burning it (burn happens on successful registration). */
@@ -268,6 +366,80 @@ export async function consumeEnrollToken(token: string): Promise<"shell" | "reco
     )
     .returning();
   return row ? (row.source as "shell" | "recovery") : null;
+}
+
+export async function finalizeEnrollRegistration(
+  token: string,
+  credential: {
+    credentialId: string;
+    publicKey: string;
+    counter: number;
+    transports: string;
+    deviceName: string;
+  },
+  req: Request,
+  res: Response,
+): Promise<{ source: "shell" | "recovery"; authenticated: boolean; recoveryCodes?: string[] } | null> {
+  const preparedCodes = await Promise.all(Array.from({ length: 10 }, async () => {
+    const code = generateRecoveryCode();
+    return { code, hash: await argonHash(normalizeRecoveryCode(code), ARGON2ID) };
+  }));
+  const sessionToken = crypto.randomBytes(32).toString("base64url");
+  const tokenHash = sha256(token);
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ENROLL_TOKENS})`);
+    const [burned] = await tx
+      .update(adminEnrollTokensTable)
+      .set({ usedAt: new Date() })
+      .where(and(
+        eq(adminEnrollTokensTable.tokenHash, tokenHash),
+        isNull(adminEnrollTokensTable.usedAt),
+        gt(adminEnrollTokensTable.expiresAt, new Date()),
+      ))
+      .returning({ source: adminEnrollTokensTable.source });
+    if (!burned) return null;
+    const source = burned.source as "shell" | "recovery";
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_RECOVERY_ROTATE})`);
+    const [credentialCount] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(adminCredentialsTable);
+    const [unusedCodeCount] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(adminRecoveryCodesTable)
+      .where(isNull(adminRecoveryCodesTable.usedAt));
+    const replaceCodes = (credentialCount?.count ?? 0) === 0 || (unusedCodeCount?.count ?? 0) === 0;
+    await tx.insert(adminCredentialsTable).values(credential);
+    if (replaceCodes) {
+      await tx.delete(adminRecoveryCodesTable);
+      await tx.insert(adminRecoveryCodesTable).values(
+        preparedCodes.map(({ hash }) => ({ codeHash: hash })),
+      );
+    }
+    if (source === "recovery") {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_ADMIN_SESSIONS})`);
+      await tx.insert(adminSessionsTable).values({
+        tokenHash: sha256(sessionToken),
+        ip: req.ip ?? null,
+        userAgent: req.get("user-agent") ?? null,
+        expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      });
+    }
+    await tx.insert(adminAuthEventsTable).values({
+      type: "enroll",
+      detail: `outcome:success source:${source} token_hash:${tokenHash}`,
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+    });
+    return { source, authenticated: source === "recovery", recoveryCodesIssued: replaceCodes };
+  });
+  if (!result) return null;
+  if (result.authenticated) setSessionCookie(res, sessionToken);
+  return {
+    ...result,
+    recoveryCodes: result.recoveryCodesIssued
+      ? preparedCodes.map(({ code }) => code)
+      : undefined,
+  };
 }
 
 // ---------- WebAuthn challenges (DB-backed, single use) ----------

@@ -187,6 +187,8 @@ export interface EnrollVerifyBody {
 
 export interface EnrollResult {
   ok: boolean;
+  /** True only for recovery-source enrolment; shell enrolment never creates a session */
+  authenticated: boolean;
   recoveryCodes?: string[];
 }
 

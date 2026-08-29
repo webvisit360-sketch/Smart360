@@ -383,6 +383,7 @@ export const VerifyEnrollBody = zod.object({
 
 export const VerifyEnrollResponse = zod.object({
   "ok": zod.boolean(),
+  "authenticated": zod.boolean().describe('True only for recovery-source enrolment; shell enrolment never creates a session'),
   "recoveryCodes": zod.array(zod.string()).optional()
 })
 

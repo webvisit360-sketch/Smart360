@@ -2004,10 +2004,13 @@ components:
       type: object
       properties:
         ok: { type: boolean }
+        authenticated:
+          type: boolean
+          description: True only for recovery-source enrolment; shell enrolment never creates a session
         recoveryCodes:
           type: array
           items: { type: string }
-      required: [ok]
+      required: [ok, authenticated]
     RecoveryBody:
       type: object
       properties:

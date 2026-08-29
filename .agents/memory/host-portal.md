@@ -40,6 +40,14 @@ Three concentric rings; each must hold alone:
 
 The fixed session expiry is deliberate: a sliding lifetime could let a stolen cookie remain valid indefinitely through attacker activity, while the absolute deadline always ends it.
 
+## Enrolment-token replacement
+
+Only one unused operator enrolment token may exist at a time, across all sources. Issuing any new token invalidates every older unused token.
+
+**Why:** This prevents forgotten enrolment links from remaining valid. The accepted consequence is that issuing a shell token while a recovery enrolment is mid-flow invalidates that recovery link; the operator must use another recovery code.
+
+**How to apply:** Keep replacement global rather than source-specific, and make the invalidation, new-token insertion, and issuance audit one transaction.
+
 Production proof was completed on 2026-08-29: the owner set the operator password and signed in with e-mail and password on the first attempt from his own machine.
 
 ## Audit and deletion decisions (owner-approved)

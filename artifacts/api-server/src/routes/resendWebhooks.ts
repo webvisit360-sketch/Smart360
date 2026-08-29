@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, enquiriesTable, hostInvitesTable } from "@workspace/db";
+import { db, enquiriesTable, hostInvitesTable, adminSecurityEmailsTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import {
@@ -20,6 +20,14 @@ const statusSeverity = sql<number>`CASE ${enquiriesTable.deliveryStatus}
   WHEN 'accepted' THEN 1
   ELSE 0 END`;
 const inviteStatusSeverity = sql<number>`CASE ${hostInvitesTable.deliveryStatus}
+  WHEN 'complained' THEN 6
+  WHEN 'bounced' THEN 5
+  WHEN 'failed' THEN 4
+  WHEN 'delivered' THEN 3
+  WHEN 'pending' THEN 2
+  WHEN 'accepted' THEN 1
+  ELSE 0 END`;
+const securityStatusSeverity = sql<number>`CASE ${adminSecurityEmailsTable.deliveryStatus}
   WHEN 'complained' THEN 6
   WHEN 'bounced' THEN 5
   WHEN 'failed' THEN 4
@@ -108,14 +116,39 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     `)
     .returning({ id: hostInvitesTable.id });
 
-  if (enquiryUpdated.length === 0 && inviteUpdated.length === 0) {
-    const [enquiryMatch, inviteMatch] = await Promise.all([
+  const securityUpdated = await db
+    .update(adminSecurityEmailsTable)
+    .set({
+      deliveryStatus: event.status,
+      providerEventName: event.name,
+      providerEventAt: event.occurredAt,
+    })
+    .where(sql`
+      ${adminSecurityEmailsTable.providerMessageId} = ${event.messageId}
+      AND ${adminSecurityEmailsTable.providerMessageId} IS NOT NULL
+      AND (
+        ${newSeverity} > ${securityStatusSeverity}
+        OR (${newSeverity} = ${securityStatusSeverity} AND (
+          ${adminSecurityEmailsTable.providerEventAt} IS NULL
+          OR ${event.occurredAt} > ${adminSecurityEmailsTable.providerEventAt}
+        ))
+      )
+    `)
+    .returning({ id: adminSecurityEmailsTable.id });
+
+  if (enquiryUpdated.length === 0 && inviteUpdated.length === 0 && securityUpdated.length === 0) {
+    const [enquiryMatch, inviteMatch, securityMatch] = await Promise.all([
       db.select({ id: enquiriesTable.id }).from(enquiriesTable)
         .where(sql`${enquiriesTable.providerMessageId} = ${event.messageId} AND ${enquiriesTable.providerMessageId} IS NOT NULL`).limit(1),
       db.select({ id: hostInvitesTable.id }).from(hostInvitesTable)
         .where(sql`${hostInvitesTable.providerMessageId} = ${event.messageId} AND ${hostInvitesTable.providerMessageId} IS NOT NULL`).limit(1),
+      db.select({ id: adminSecurityEmailsTable.id }).from(adminSecurityEmailsTable)
+        .where(sql`${adminSecurityEmailsTable.providerMessageId} = ${event.messageId} AND ${adminSecurityEmailsTable.providerMessageId} IS NOT NULL`).limit(1),
     ]);
-    if (isUnknownProviderMessage(enquiryMatch.length > 0, inviteMatch.length > 0)) {
+    if (isUnknownProviderMessage(
+      enquiryMatch.length > 0,
+      inviteMatch.length > 0 || securityMatch.length > 0,
+    )) {
       logger.warn({ webhook: "resend", eventName: event.name, reason: "unknown_message_id" }, "Resend webhook did not match a delivery record");
     }
   }

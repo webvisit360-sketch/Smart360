@@ -8,6 +8,7 @@ import {
   jsonb,
   boolean,
   check,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -104,6 +105,30 @@ export const adminAuthEventsTable = pgTable("admin_auth_events", {
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Provider-backed delivery evidence for operator security notifications. */
+export const adminSecurityEmailsTable = pgTable(
+  "admin_security_emails",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    event: text("event").notNull(),
+    deliveryStatus: text("delivery_status").notNull().default("pending"),
+    providerMessageId: text("provider_message_id"),
+    providerEventName: text("provider_event_name"),
+    providerEventAt: timestamp("provider_event_at", { withTimezone: true }),
+    deliveryAttemptedAt: timestamp("delivery_attempted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "admin_security_emails_delivery_status_check",
+      sql`${table.deliveryStatus} IN ('pending','accepted','failed','delivered','bounced','complained')`,
+    ),
+    uniqueIndex("admin_security_emails_provider_message_id_unique")
+      .on(table.providerMessageId)
+      .where(sql`${table.providerMessageId} IS NOT NULL`),
+  ],
+);
 
 /** One file moved to trash by a cleanup run. Paths are bucket object names. */
 export type CleanupRunFile = {

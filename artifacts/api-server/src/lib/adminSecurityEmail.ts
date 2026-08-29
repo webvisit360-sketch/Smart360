@@ -2,6 +2,9 @@ import { ReplitConnectors } from "@replit/connectors-sdk";
 import { emailFrom } from "./orderEmail";
 import { p, renderEmail, small } from "./emailTemplate";
 import { logger } from "./logger";
+import { db, adminSecurityEmailsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { providerMessageIdFromResendResponse } from "./lifecycleEmails";
 
 const connectors = new ReplitConnectors();
 export const ADMIN_SECURITY_MAILBOX = "smart360hq@gmail.com";
@@ -60,7 +63,7 @@ export function buildAdminSecurityEmail(event: AdminSecurityEvent) {
   };
 }
 
-type Delivery = (body: Record<string, unknown>) => Promise<{ ok: boolean }>;
+type Delivery = (body: Record<string, unknown>) => Promise<{ ok: boolean; providerMessageId?: string | null }>;
 let deliveryOverride: Delivery | null = null;
 
 export function _setAdminSecurityDeliveryOverride(fn: Delivery | null): void {
@@ -69,7 +72,27 @@ export function _setAdminSecurityDeliveryOverride(fn: Delivery | null): void {
 
 export async function sendAdminSecurityEmail(event: AdminSecurityEvent): Promise<boolean> {
   const body = buildAdminSecurityEmail(event);
-  if (deliveryOverride) return (await deliveryOverride(body)).ok;
+  const [evidence] = await db
+    .insert(adminSecurityEmailsTable)
+    .values({ event })
+    .returning({ id: adminSecurityEmailsTable.id });
+  if (!evidence) throw new Error("Security e-mail evidence could not be created");
+  const finish = async (ok: boolean, providerMessageId: string | null) => {
+    const accepted = ok && !!providerMessageId;
+    await db
+      .update(adminSecurityEmailsTable)
+      .set({
+        deliveryStatus: accepted ? "accepted" : "failed",
+        providerMessageId: accepted ? providerMessageId : null,
+        deliveryAttemptedAt: new Date(),
+      })
+      .where(eq(adminSecurityEmailsTable.id, evidence.id));
+    return accepted;
+  };
+  if (deliveryOverride) {
+    const result = await deliveryOverride(body);
+    return finish(result.ok, result.providerMessageId ?? (result.ok ? `test-${evidence.id}` : null));
+  }
   try {
     const response = await connectors.proxy("resend", "/emails", {
       method: "POST",
@@ -78,15 +101,22 @@ export async function sendAdminSecurityEmail(event: AdminSecurityEvent): Promise
     });
     if (!response.ok) {
       logger.error({ event, httpStatus: response.status }, "[adminSecurityEmail] Resend rejected");
-      return false;
+      return finish(false, null);
     }
-    logger.info({ event }, "[adminSecurityEmail] accepted by Resend");
-    return true;
+    const providerMessageId = providerMessageIdFromResendResponse(
+      await response.json().catch(() => null),
+    );
+    if (!providerMessageId) {
+      logger.error({ event }, "[adminSecurityEmail] Resend response missing message id");
+      return finish(false, null);
+    }
+    logger.info({ event, providerMessageId }, "[adminSecurityEmail] accepted by Resend");
+    return finish(true, providerMessageId);
   } catch (error) {
     logger.error(
       { event, errName: error instanceof Error ? error.name : "Error" },
       "[adminSecurityEmail] send failed",
     );
-    return false;
+    return finish(false, null);
   }
 }

@@ -21,8 +21,11 @@ import {
   listCredentials,
   countUnusedRecoveryCodes,
   issueRecoveryCodes,
-  isEnrollTokenValid,
-  consumeEnrollToken,
+  inspectEnrollToken,
+  recordEnrollOutcome,
+  beginEnrollRequest,
+  completeEnrollRequest,
+  finalizeEnrollRegistration,
   storeChallenge,
   consumeChallenge,
   createSession,
@@ -179,7 +182,14 @@ router.get("/admin/session", async (req, res): Promise<void> => {
 
 router.post("/admin/enroll/options", async (req, res): Promise<void> => {
   const { token } = req.body ?? {};
-  if (typeof token !== "string" || !(await isEnrollTokenValid(token))) {
+  const requestReservation = await beginEnrollRequest(req);
+  if (!requestReservation) {
+    res.status(429).json({ error: "Preveč neuspelih poskusov. Poskusite znova čez 15 minut." });
+    return;
+  }
+  const tokenState = await inspectEnrollToken(token);
+  if (tokenState.status !== "valid") {
+    await recordEnrollOutcome(req, tokenState.status, token);
     res.status(400).json({ error: "Povezava ni veljavna ali je potekla." });
     return;
   }
@@ -205,22 +215,32 @@ router.post("/admin/enroll/options", async (req, res): Promise<void> => {
     options.challenge,
     `enroll:${crypto.createHash("sha256").update(token).digest("hex")}`,
   );
+  await completeEnrollRequest(requestReservation);
   res.json({ challengeId, options });
 });
 
 router.post("/admin/enroll/verify", async (req, res): Promise<void> => {
   const { token, challengeId, response, deviceName } = req.body ?? {};
+  const requestReservation = await beginEnrollRequest(req);
+  if (!requestReservation) {
+    res.status(429).json({ error: "Preveč neuspelih poskusov. Poskusite znova čez 15 minut." });
+    return;
+  }
   if (typeof token !== "string" || typeof challengeId !== "string" || !response) {
+    await recordEnrollOutcome(req, "rejected", token);
     res.status(400).json({ error: "Neveljavna zahteva." });
     return;
   }
   const stored = await consumeChallenge(challengeId, "registration");
   const expectedContext = `enroll:${crypto.createHash("sha256").update(token).digest("hex")}`;
   if (!stored || stored.context !== expectedContext) {
+    await recordEnrollOutcome(req, "rejected", token);
     res.status(400).json({ error: "Seja registracije je potekla. Poskusite znova." });
     return;
   }
-  if (!(await isEnrollTokenValid(token))) {
+  const tokenState = await inspectEnrollToken(token);
+  if (tokenState.status !== "valid") {
+    await recordEnrollOutcome(req, tokenState.status, token);
     res.status(400).json({ error: "Povezava ni veljavna ali je potekla." });
     return;
   }
@@ -235,22 +255,17 @@ router.post("/admin/enroll/verify", async (req, res): Promise<void> => {
     });
   } catch (err) {
     req.log.warn({ err }, "Passkey registration failed");
+    await recordEnrollOutcome(req, "failed", token);
     res.status(400).json({ error: "Registracija ključa ni uspela." });
     return;
   }
   if (!verification.verified || !verification.registrationInfo) {
+    await recordEnrollOutcome(req, "failed", token);
     res.status(400).json({ error: "Registracija ključa ni uspela." });
     return;
   }
-  // Verification succeeded — only now burn the single-use token.
-  const source = await consumeEnrollToken(token);
-  if (!source) {
-    res.status(400).json({ error: "Povezava ni veljavna ali je potekla." });
-    return;
-  }
   const info = verification.registrationInfo;
-  const isFirst = (await listCredentials()).length === 0;
-  await db.insert(adminCredentialsTable).values({
+  const finalized = await finalizeEnrollRegistration(token, {
     credentialId: info.credential.id,
     publicKey: Buffer.from(info.credential.publicKey).toString("base64url"),
     counter: info.credential.counter,
@@ -259,16 +274,19 @@ router.post("/admin/enroll/verify", async (req, res): Promise<void> => {
       typeof deviceName === "string" && deviceName.trim()
         ? deviceName.trim().slice(0, 80)
         : "Passkey",
-  });
-  await logAuthEvent(req, "enroll", `source:${source}`);
-  await createSession(req, res);
-  await sendAdminSecurityEmail("passkey_enrolled");
-  // Recovery codes are issued exactly once — on first enrolment (or shell re-enrolment when none exist).
-  let recoveryCodes: string[] | undefined;
-  if (isFirst || (await countUnusedRecoveryCodes()) === 0) {
-    recoveryCodes = await issueRecoveryCodes(10);
+  }, req, res);
+  if (!finalized) {
+    await recordEnrollOutcome(req, "rejected", token);
+    res.status(400).json({ error: "Povezava ni veljavna ali je potekla." });
+    return;
   }
-  res.json({ ok: true, recoveryCodes });
+  await sendAdminSecurityEmail("passkey_enrolled");
+  await completeEnrollRequest(requestReservation);
+  res.json({
+    ok: true,
+    authenticated: finalized.authenticated,
+    recoveryCodes: finalized.recoveryCodes,
+  });
 });
 
 // ---------- Recovery ----------
