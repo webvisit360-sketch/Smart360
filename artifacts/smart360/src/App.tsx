@@ -28,9 +28,9 @@ import EnquiryPage from '@/pages/enquiry';
 import PrivacyPage from '@/pages/privacy';
 
 const queryClient = new QueryClient();
-const LivingGuideTokensPage = lazy(
-  () => import('@/pages/living-guide/LivingGuideTokensPage'),
-);
+const LivingGuideTokensPage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/living-guide/LivingGuideTokensPage'))
+  : null;
 const LivingGuideGuestShell = lazy(
   () => import('@/pages/living-guide/LivingGuideGuestShell'),
 );
@@ -290,13 +290,13 @@ function Router() {
         <Route path="/povprasevanje" component={EnquiryPage} />
         <Route path="/zasebnost" component={PrivacyPage} />
 
-        {/* Isolated Part 1 design-system proof. It intentionally bypasses GuestLayout,
-            legacy theme CSS and tenant data. */}
-        <Route path="/__living-guide/tokens">
-          <Suspense fallback={null}>
-            <LivingGuideTokensPage />
-          </Suspense>
-        </Route>
+        {LivingGuideTokensPage && (
+          <Route path="/__living-guide/tokens">
+            <Suspense fallback={null}>
+              <LivingGuideTokensPage />
+            </Suspense>
+          </Route>
+        )}
 
         {/* Legacy /g/ prefix: permanent client redirect to the canonical short path. */}
         <Route path="/g/*?" component={LegacyGRedirect} />

@@ -9,6 +9,12 @@ For Architecture 29 binding work, use browser-computed styles at 390×844 as the
 
 **How to apply:** Activate the prototype’s target view, render the live state with equivalent content, and compare computed geometry, padding, radius, typography, line height, and descendant styles before declaring parity.
 
+Visual prototypes define how an existing screen looks, not which screens currently exist. When a prototype and the active product disagree on feature availability, `vrsta-dela.md` is authoritative.
+
+**Why:** The admin prototype showed Dogodki as a finished-state navigation item, but its editor remains queued and the live route was deliberately absent. Restoring the prototype menu exposed a broken CP6 placeholder.
+
+**How to apply:** Copy visual treatment only onto currently available screens. Before adding any prototype-only navigation or route, check `vrsta-dela.md`; queued features remain hidden until implemented.
+
 Two recurring inheritance traps in this prototype:
 - A bare `<b>` inside a container with a numeric font-weight resolves via UA `bolder` (e.g. 650 → **900**); replicate the computed weight, not the container's declared one.
 - Prototype headings often declare no line-height and inherit ~1.5 from an ancestor (28px heading → 42px computed); a live rule with `line-height: 1` will mismatch even though every declared property looks identical.

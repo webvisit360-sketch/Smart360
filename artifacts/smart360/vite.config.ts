@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'node:fs';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
@@ -47,6 +48,66 @@ const emitVersionJson = () => ({
   },
 });
 
+const adminSidebarLockup = () => {
+  const publicId = 'virtual:admin-sidebar-lockup';
+  const resolvedId = `\0${publicId}`;
+  const fontPublicId = 'virtual:living-guide-inter-font';
+  const fontResolvedId = `\0${fontPublicId}`;
+  return {
+    name: 'prototype-asset-extraction',
+    resolveId(id: string) {
+      if (id === publicId) return resolvedId;
+      if (id === fontPublicId) return fontResolvedId;
+      return null;
+    },
+    load(id: string) {
+      if (id === resolvedId) {
+        const prototypeHtml = fs.readFileSync(
+          path.resolve(
+            import.meta.dirname,
+            '..',
+            '..',
+            'attached_assets',
+            'admin-2030_5_1788002851001.html',
+          ),
+          'utf8',
+        );
+        const svg = prototypeHtml.match(
+          /<div class="lk">([\s\S]*?)<\/div>/,
+        )?.[1];
+        if (!svg) {
+          throw new Error(
+            'Smart360 sidebar lockup is missing from admin-2030.html',
+          );
+        }
+        return `export default ${JSON.stringify(svg)};`;
+      }
+      if (id === fontResolvedId) {
+        const prototypeHtml = fs.readFileSync(
+          path.resolve(
+            import.meta.dirname,
+            '..',
+            '..',
+            'attached_assets',
+            'prototip-2030_18_1787174221045.html',
+          ),
+          'utf8',
+        );
+        const font = prototypeHtml.match(
+          /src:url\((data:font\/woff2;base64,[^)]+)\)/,
+        )?.[1];
+        if (!font) {
+          throw new Error(
+            'Inter WOFF2 is missing from the Living Guide prototype',
+          );
+        }
+        return `export default ${JSON.stringify(font)};`;
+      }
+      return null;
+    },
+  };
+};
+
 export default defineConfig({
   base: basePath,
   define: {
@@ -55,6 +116,7 @@ export default defineConfig({
   plugins: [
     scopeThemes(),
     emitVersionJson(),
+    adminSidebarLockup(),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),

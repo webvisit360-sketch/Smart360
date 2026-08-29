@@ -27,26 +27,13 @@ import { isLikelyUrl } from "@/lib/maps-href";
 import { HostInvitePanel } from "@/components/admin/host-invite-panel";
 import { useHostSession } from "@/hooks/use-host-session";
 import { collapseConsecutiveChangelog } from "@/lib/changelog-collapse";
-import admin2030Html from "@assets/admin-2030_5_1788002851001.html?raw";
-
-function extractSmart360Lockup(): string {
-  const svg = admin2030Html.match(
-    /<div class="lk">([\s\S]*?)<\/div>/,
-  )?.[1];
-  if (!svg) {
-    throw new Error("Smart360 sidebar lockup is missing from admin-2030.html");
-  }
-  return svg;
-}
-
-const SMART360_LOCKUP_SVG = extractSmart360Lockup();
+import SMART360_LOCKUP_SVG from "virtual:admin-sidebar-lockup";
 
 type SidebarIconName =
   | "overview"
   | "creator"
   | "orders"
   | "messages"
-  | "events"
   | "notices"
   | "offers"
   | "area"
@@ -60,12 +47,6 @@ function SidebarNavIcon({ name }: { name: SidebarIconName }) {
       {name === "creator" && <path d="M4 6h16M4 12h16M4 18h10" />}
       {name === "orders" && <path d="M6 2h12v20l-6-3-6 3z" />}
       {name === "messages" && <path d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />}
-      {name === "events" && (
-        <>
-          <rect x="3" y="5" width="18" height="16" rx="3" />
-          <path d="M8 3v4M16 3v4M3 11h18" />
-        </>
-      )}
       {name === "notices" && <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9z" />}
       {name === "offers" && (
         <>
@@ -274,7 +255,6 @@ export default function AdminTenantEdit() {
     "kreator",
     "orders",
     "messages",
-    "events",
     "obvestila",
     "ponudba",
     "distances",
@@ -564,7 +544,6 @@ export default function AdminTenantEdit() {
 
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col mb-0 md:mb-8 shrink-0">
-          <button data-active={activeTab === 'events'} onClick={() => setActiveTab('events')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="events" /><span>Dogodki</span></button>
           <button data-active={activeTab === 'obvestila'} onClick={() => setActiveTab('obvestila')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="notices" /><span>Obvestila</span></button>
           <button data-active={activeTab === 'ponudba'} onClick={() => setActiveTab('ponudba')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="offers" /><span>Ponudba in cene</span></button>
         </div>
@@ -660,7 +639,6 @@ export default function AdminTenantEdit() {
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
             </TabsContent>
             <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika (CP4)</div></TabsContent>
-            <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki (CP6)</div></TabsContent>
             <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
             <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
