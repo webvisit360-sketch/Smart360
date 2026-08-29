@@ -60,6 +60,12 @@ Presentation mode, route rendering, and readiness must agree before the base lay
 
 **How to apply:** For every presented route, register its sheet renderer and template-appropriate readiness gate together. Test every route and close by asserting that the top active view computes to `pointer-events:auto` and that a held base always has an active sheet.
 
+Synthetic fixtures prove only the fixture they contain; they cannot substantiate a claim about the owner's actual rows or screenshot.
+
+**Why:** A four-row synthetic sequence inside five minutes correctly produced ×4, but the owner's real four timestamps span minutes and days and correctly produce three rendered rows with only ×2. Reporting the synthetic result as if it measured the screenshot created a false claim even though the test passed.
+
+**How to apply:** When a report names real rows, recreate those exact values in unmodified production assets, inspect the rendered DOM, retain a screenshot, and state separately what any synthetic unit test actually measured.
+
 Every Living Guide scroller shown above the fixed bottom navigation must reserve enough end space for its final visible child to finish above the navigation, including safe-area inset. Detail presentations use 94 px plus the inset; transient bottom sheets use 28 px plus the inset.
 
 **Why:** At 402×874, list and detail content extended 50–59 px behind the navigation. Final descriptions remained in the DOM but appeared missing because only their card titles cleared the bar.
