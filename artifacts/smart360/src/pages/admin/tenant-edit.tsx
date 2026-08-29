@@ -847,6 +847,12 @@ export default function AdminTenantEdit() {
             onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "logo"); e.target.value = ""; }}
           />
 
+          {formData.guestUiMode === "living-guide" && (
+            <div className="rounded-[18px] border border-border/70 bg-muted/35 px-4 py-3 text-sm text-muted-foreground">
+              Videz starega prikaza je shranjen, vendar ni aktiven, dokler je vključen Living Guide.
+            </div>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Ozadje strani</CardTitle>
@@ -885,7 +891,7 @@ export default function AdminTenantEdit() {
               <CardTitle>Fotografije gostitelja</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={`grid grid-cols-1 gap-6 ${formData.guestUiMode === "legacy" ? "md:grid-cols-2" : ""}`}>
                 {/* Hero image */}
                 <div className="space-y-3">
                   <Label className="font-semibold">Naslovnica (Hero)</Label>
@@ -921,7 +927,7 @@ export default function AdminTenantEdit() {
                 </div>
 
                 {/* Logo image */}
-                <div className="space-y-3">
+                <div className={formData.guestUiMode === "living-guide" ? "hidden" : "space-y-3"}>
                   <Label className="font-semibold">Logotip gostitelja</Label>
                   <div
                     className="relative rounded-xl overflow-hidden border-2 border-dashed border-muted-foreground/25 bg-muted flex items-center justify-center"
@@ -957,7 +963,7 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={formData.guestUiMode === "living-guide" ? "hidden" : undefined}>
             <CardHeader>
               <CardTitle>Tema vmesnika</CardTitle>
             </CardHeader>
@@ -992,7 +998,10 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
 
-          <div data-admin-preserve="cover-editor">
+          <div
+            data-admin-preserve="cover-editor"
+            className={formData.guestUiMode === "living-guide" ? "hidden" : undefined}
+          >
             <CoverEditor
               form={{
               name: formData.name,
@@ -1028,7 +1037,35 @@ export default function AdminTenantEdit() {
             />
           </div>
 
-          {formData.theme === 'swipe' && (
+          {formData.guestUiMode === "living-guide" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Besedilo naslovnice</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Naslov</Label>
+                    <Input
+                      placeholder={formData.name || "Ime namestitve"}
+                      value={formData.coverTitle || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, coverTitle: e.target.value || null }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Podnaslov</Label>
+                    <Input
+                      placeholder={formData.subtitle || "Podnaslov nastanitve"}
+                      value={formData.coverSubtitle || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, coverSubtitle: e.target.value || null }))}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {formData.guestUiMode === "legacy" && formData.theme === 'swipe' && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Ikone spodaj</CardTitle>

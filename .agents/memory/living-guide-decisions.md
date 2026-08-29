@@ -176,6 +176,12 @@ Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then 
 **Why:** Address search can resolve to a neighbouring property, so silently dropping to a lower-priority address sends guests to the wrong door.
 
 **How to apply:** Keep property navigation separate from item-specific POI destinations. Preserve external `_blank`/noopener behavior across Living Guide and legacy guest surfaces.
+
+Living Guide currently trails the legacy renderer in host identity and contact parity: it renders neither tenant logo field and omits Viber; Instagram is stored and labelled but rendered by neither guest system. These are one product gap, not unrelated dead fields.
+
+**Why:** Meli Pu has a logo and Viber number configured, yet Living Guide guests cannot see them; Instagram has the same host-entered-information path missing at the rendering boundary.
+
+**How to apply:** Treat logo placement plus Viber and Instagram contact rows as one owner-approved Living Guide change with one explicit decision about where the host logo belongs. In admin Videz, show controls only when the active renderer consumes them; preserve dormant legacy values and warn before any future mode switch reactivates them.
 ## Named Maps query (2026-08-23)
 POI Maps link priority: pasted place link > named search "<title>, <SHORT address>" > labelled coords `q=lat,lng(title)` > text search. The named query MUST use `shortMapsQuery` (maps-href.ts) — never the raw Nominatim display name.
 **Why:** Full display names carry "Upravna enota / Unità amministrativa", bilingual duplicates and postcodes; long queries make Google return nothing or the wrong place — same defect, different cause.
