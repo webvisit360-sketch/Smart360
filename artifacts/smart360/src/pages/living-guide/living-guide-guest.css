@@ -419,25 +419,6 @@ body[data-t="noc"] .lg2-grid-view {
   bottom: 112px;
 }
 
-.lg2-cover-logo {
-  width: 52px;
-  height: 52px;
-  margin-bottom: 12px;
-  border-radius: 13px;
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.lg2-cover-logo img {
-  width: 42px;
-  height: 42px;
-  display: block;
-  object-fit: contain;
-}
-
 .lg2-cover-kicker {
   margin: 0;
   font-size: 11.5px;
@@ -2488,26 +2469,6 @@ body[data-t="swipe"] .lg2-order-dock {
   margin: 0 20px;
   display: flex;
   align-items: center;
-  gap: 11px;
-}
-
-.lg2-home-mark {
-  width: 34px;
-  height: 34px;
-  flex: none;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card2);
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.lg2-home-mark img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
 }
 
 .lg2-home-identity .lg2-k3 {
@@ -2527,13 +2488,33 @@ body[data-t="swipe"] .lg2-order-dock {
   line-height: 1.25;
 }
 
-.lg2-hsheet h1 {
-  margin: 0;
+.lg2-home-welcome {
   padding: 10px 20px 14px;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.lg2-home-welcome h1 {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
   color: var(--tx);
   font: 800 30px var(--sans);
   letter-spacing: -.035em;
   line-height: 1.5;
+}
+
+.lg2-home-logo {
+  width: auto;
+  height: 46px;
+  max-width: min(42vw, 150px);
+  flex: none;
+  display: block;
+  object-fit: contain;
+  object-position: right center;
 }
 
 .lg2-hqbar {

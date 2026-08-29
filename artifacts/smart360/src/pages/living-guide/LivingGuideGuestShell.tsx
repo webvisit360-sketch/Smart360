@@ -2174,11 +2174,6 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
       <div className={tourUrl ? "lg2-cover-veil lg2-cover-veil--tour" : "lg2-cover-veil"} aria-hidden="true" />
       {tourUrl && <div className="lg2-hint360">{t("UI.lg.tour.hint")}</div>}
       <div className="lg2-cover-mast">
-        {tenant.logoUrl && (
-          <span className="lg2-cover-logo">
-            <img src={imgSrc(tenant.logoUrl, CARD_IMAGE_WIDTH)} alt="" />
-          </span>
-        )}
         <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
         {tenant.coverSubtitle && <p className="lg2-cover-subtitle">{tenant.coverSubtitle}</p>}
@@ -3811,7 +3806,6 @@ function HomeView({
   const visibleDanesItems = todayEntries.slice(0, 6);
   const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
   const mapAvailable = Boolean(tenantMapsUrl);
-  const homeLogoUrl = tenant.logoSquareUrl || tenant.logoUrl;
 
   // Pas Danes se ob prihodu sam pomakne do konca (vrednosti iz prototipa).
   const danesTrackRef = useRef<HTMLDivElement | null>(null);
@@ -3856,17 +3850,21 @@ function HomeView({
 
         <div className="lg2-hsheet">
           <div className="lg2-home-identity">
-            {homeLogoUrl && (
-              <span className="lg2-home-mark">
-                <img src={imgSrc(homeLogoUrl, CARD_IMAGE_WIDTH)} alt="" />
-              </span>
-            )}
             <div>
               <p className="lg2-k3">{tenant.name}</p>
               {tenant.address && <p className="lg2-home-address">{tenant.address}</p>}
             </div>
           </div>
-          <h1>{t("UI.lg.welcome.title")}</h1>
+          <div className="lg2-home-welcome">
+            <h1>{t("UI.lg.welcome.title")}</h1>
+            {tenant.logoUrl && (
+              <img
+                className="lg2-home-logo"
+                src={imgSrc(tenant.logoUrl, CARD_IMAGE_WIDTH)}
+                alt=""
+              />
+            )}
+          </div>
 
         <div className="lg2-hqbar">
           <button

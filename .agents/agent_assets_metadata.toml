@@ -428,3 +428,17 @@ mtime_ms = 1788000446491
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6e1d3d7f-fdc0-43b1-9622-b81d584dde8e/8f6d1066-e791-4eff-9e07-50b630803286"
 storage_version_token = "1788000501103536"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "qJW5Z09srvhEPYPSxEopV"
+uri = "file://screenshots/lg-identity-home-final-dev.jpg"
+type = "image"
+title = "Living Guide — final Home logo placement"
+description = "Development preview: full tenant logo beside the Welcome heading on the white surface; no cover logo or square mark."
+logical_id = "c9fd532f-aed0-4f3b-bd06-7cb7df47f0ad"
+content_hash = "sha256:a42a1b8a4d20e0b25ee86068983fb542234f79a2e40301a966c781da3ce7bd1a"
+size = 11198
+mtime_ms = 1788001658286
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c9fd532f-aed0-4f3b-bd06-7cb7df47f0ad/fd163d6f-175b-48cb-8120-228989e88247"
+storage_version_token = "1788001689064935"
+content_type = "image/jpeg"

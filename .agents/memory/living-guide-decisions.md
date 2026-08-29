@@ -177,11 +177,11 @@ Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then 
 
 **How to apply:** Keep property navigation separate from item-specific POI destinations. Preserve external `_blank`/noopener behavior across Living Guide and legacy guest surfaces.
 
-Living Guide currently trails the legacy renderer in host identity and contact parity: it renders neither tenant logo field and omits Viber; Instagram is stored and labelled but rendered by neither guest system. These are one product gap, not unrelated dead fields.
+Living Guide shows the full `logoUrl` only beside the welcome heading on Home’s white surface. It has no cover logo and no square Home mark. The logo is proportional at about 44–48px high, undecorated, and conditional; the heading position must not change when no logo exists.
 
-**Why:** Meli Pu has a logo and Viber number configured, yet Living Guide guests cannot see them; Instagram has the same host-entered-information path missing at the rendering boundary.
+**Why:** A coloured logo with its own type needs a calm background. Over the photograph it competes with the cover title and unpredictable image content; on the white welcome surface it reads deliberately.
 
-**How to apply:** Treat logo placement plus Viber and Instagram contact rows as one owner-approved Living Guide change with one explicit decision about where the host logo belongs. In admin Videz, show controls only when the active renderer consumes them; preserve dormant legacy values and warn before any future mode switch reactivates them.
+**How to apply:** Keep property name/address in their own stable row, use `logoUrl` rather than `logoSquareUrl`, and verify exact heading coordinates with and without the logo. Viber and Instagram remain part of the same approved identity/contact parity release.
 
 Kuula presentation is normalized only at render time: force `logo=-1`, `info=0`, `fs=0`, `vr=0`, `gyro=0`, `thumbs=-1`, and `pause=0`; preserve the stored URL, tour identity, autorotate, and unknown parameters. Every guest renderer and the admin preview must use the same helper and delegate no fullscreen, XR, gyroscope, or accelerometer permissions.
 
