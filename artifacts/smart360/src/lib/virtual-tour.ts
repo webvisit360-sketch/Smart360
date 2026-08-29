@@ -127,3 +127,33 @@ export function parseVirtualTourInput(input: string | null | undefined): Virtual
 
   return { url: url.toString(), error: null };
 }
+
+const KUULA_EMBED_PRESENTATION = {
+  logo: "-1",
+  info: "0",
+  fs: "0",
+  vr: "0",
+  gyro: "0",
+  thumbs: "-1",
+  pause: "0",
+} as const;
+
+/**
+ * Applies Smart360's Kuula presentation contract without mutating the URL
+ * stored for the tenant. Unknown parameters and tour identity pass through.
+ */
+export function virtualTourEmbedUrl(
+  input: string | null | undefined,
+): string | null {
+  const parsed = parseVirtualTourInput(input).url;
+  if (!parsed) return null;
+
+  const url = new URL(parsed);
+  if (hostMatches(url.hostname.toLowerCase(), "kuula.co")) {
+    for (const [key, value] of Object.entries(KUULA_EMBED_PRESENTATION)) {
+      url.searchParams.set(key, value);
+    }
+  }
+
+  return url.toString();
+}

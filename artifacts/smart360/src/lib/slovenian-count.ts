@@ -5,10 +5,10 @@ type SloveneForms = {
   two: string;
   few: string;
   other: string;
-};
+} & Partial<Record<Intl.LDMLPluralRule, string>>;
 
 export function formatSlovenianCount(count: number, forms: SloveneForms): string {
-  return `${count} ${forms[slovenePluralRules.select(count)]}`;
+  return `${count} ${forms[slovenePluralRules.select(count)] ?? forms.other}`;
 }
 
 export const ORDER_COUNT_FORMS: SloveneForms = {

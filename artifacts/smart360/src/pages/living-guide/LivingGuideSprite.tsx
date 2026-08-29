@@ -43,6 +43,8 @@ export function LivingGuideSprite() {
         <symbol id="lg-i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3.5 7 8.5 6 8.5-6" /></symbol>
         <symbol id="lg-i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12 4 4l6 8-6 8Z" /></symbol>
         <symbol id="lg-i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12.5c0 3.9-3.6 7-8 7-1 0-2-.2-2.9-.5L4 20.5l1.6-3.7A6.7 6.7 0 0 1 4 12.5c0-3.9 3.6-7 8-7s8 3.1 8 7Z" /></symbol>
+        <symbol id="lg-i-viber" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3.5c5 0 8.5 3.1 8.5 7.6 0 4.4-3.6 7.5-8.5 7.5-.9 0-1.8-.1-2.6-.3L5 20.5l.8-3.4a7.2 7.2 0 0 1-2.3-5.6C3.5 6.8 7 3.5 12 3.5Z" /><path d="M9.1 8.2c.5 2.4 2.3 4.2 4.7 4.7M13.1 7.4c1.8.2 3 1.4 3.2 3.2M13.2 5.2c3 .3 5 2.3 5.3 5.3" /></symbol>
+        <symbol id="lg-i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.3" cy="6.8" r=".9" fill="currentColor" stroke="none" /></symbol>
         <symbol id="lg-i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h16l-1.2 12H5.2L4 8ZM9 8V6a3 3 0 0 1 6 0v2" /></symbol>
       </defs>
     </svg>

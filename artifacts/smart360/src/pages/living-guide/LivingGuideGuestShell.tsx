@@ -22,6 +22,7 @@ import { beginGuestActivity, endGuestActivity } from "@/lib/bundle-freshness";
 import {
   CARD_IMAGE_WIDTH,
   HERO_IMAGE_WIDTH,
+  imgSrc,
   mediaImgSrc,
 } from "../guest/img";
 import { buildGuestPath } from "../guest/guest-url";
@@ -62,7 +63,8 @@ import {
   rememberGuestIdentity,
   rememberOrderPassword,
 } from "./living-guide-orders";
-import { parseVirtualTourInput } from "@/lib/virtual-tour";
+import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
+import { instagramLink, viberHref } from "@/lib/contact-links";
 import {
   findDatedEventDestination as datedEventDestination,
   getLivingGuideAvailableFeatures,
@@ -2153,7 +2155,7 @@ function Starfield({ theme }: { theme: LivingTheme }) {
 
 function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: any; lang: string; t: UiTranslator; onOpen: () => void; onSearch: () => void; onLanguage: () => void; }) {
   const title = tenant.coverTitle || tenant.name;
-  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
+  const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
 
   return (
     <section className="lg2-view lg2-cover is-on" aria-label={title} data-testid="screen-cover">
@@ -2161,8 +2163,6 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
         {tourUrl ? (
           <iframe
             src={tourUrl}
-            allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
-            allowFullScreen
             scrolling="no"
             loading="eager"
             title={title}
@@ -2174,6 +2174,11 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
       <div className={tourUrl ? "lg2-cover-veil lg2-cover-veil--tour" : "lg2-cover-veil"} aria-hidden="true" />
       {tourUrl && <div className="lg2-hint360">{t("UI.lg.tour.hint")}</div>}
       <div className="lg2-cover-mast">
+        {tenant.logoUrl && (
+          <span className="lg2-cover-logo">
+            <img src={imgSrc(tenant.logoUrl, CARD_IMAGE_WIDTH)} alt="" />
+          </span>
+        )}
         <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
         {tenant.coverSubtitle && <p className="lg2-cover-subtitle">{tenant.coverSubtitle}</p>}
@@ -3163,6 +3168,8 @@ function OrderDock({ item, t, onOrderClick }: { item: any; t: UiTranslator; onOr
 // Template A: Content page (Bazen)
 function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
   const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
+  const viber = viberHref(tenant?.viber);
+  const instagram = instagramLink(tenant?.instagram);
   const contacts = [
     tenant?.phone
       ? { key: "phone", icon: "phone", label: t("UI.contact.call"), value: tenant.phone, href: `tel:${tenant.phone}` }
@@ -3170,6 +3177,12 @@ function TenantContactRows({ tenant, t }: { tenant: any; t: UiTranslator }) {
     tenant?.whatsapp
       /* wa.me prestreže aplikacija — brez target="_blank", da ne ostane prazen zavihek */
       ? { key: "whatsapp", icon: "chat", label: "WhatsApp", value: tenant.whatsapp, href: `https://wa.me/${String(tenant.whatsapp).replace(/\D/g, "")}` }
+      : null,
+    viber
+      ? { key: "viber", icon: "viber", label: "Viber", value: tenant.viber, href: viber }
+      : null,
+    instagram
+      ? { key: "instagram", icon: "instagram", label: "Instagram", value: instagram.label, href: instagram.href, external: true }
       : null,
     tenant?.email
       ? { key: "email", icon: "mail", label: t("UI.contact.email"), value: tenant.email, href: `mailto:${tenant.email}` }
@@ -3798,6 +3811,7 @@ function HomeView({
   const visibleDanesItems = todayEntries.slice(0, 6);
   const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
   const mapAvailable = Boolean(tenantMapsUrl);
+  const homeLogoUrl = tenant.logoSquareUrl || tenant.logoUrl;
 
   // Pas Danes se ob prihodu sam pomakne do konca (vrednosti iz prototipa).
   const danesTrackRef = useRef<HTMLDivElement | null>(null);
@@ -3841,7 +3855,17 @@ function HomeView({
         </div>
 
         <div className="lg2-hsheet">
-          <p className="lg2-k3">{tenant.name}</p>
+          <div className="lg2-home-identity">
+            {homeLogoUrl && (
+              <span className="lg2-home-mark">
+                <img src={imgSrc(homeLogoUrl, CARD_IMAGE_WIDTH)} alt="" />
+              </span>
+            )}
+            <div>
+              <p className="lg2-k3">{tenant.name}</p>
+              {tenant.address && <p className="lg2-home-address">{tenant.address}</p>}
+            </div>
+          </div>
           <h1>{t("UI.lg.welcome.title")}</h1>
 
         <div className="lg2-hqbar">

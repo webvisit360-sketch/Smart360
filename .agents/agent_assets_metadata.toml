@@ -358,3 +358,73 @@ mtime_ms = 1787868596861
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f9f47d5d-e5d7-4cef-a4bf-50531c5e8ae4/9dd9e665-74db-4033-8883-855cd5fbb47c"
 storage_version_token = "1787868598069398"
 content_type = "text/html"
+
+[[outputs]]
+id = "5EqYahz3Wi28RL4cb3Vrn"
+uri = "file://screenshots/lg-identity-cover-dev.jpg"
+type = "image"
+title = "Living Guide — cover logo"
+description = "Development preview: fixed 52px full-logo plate above the cover title."
+logical_id = "1fe60c2a-febd-448c-ac79-9e11812352c3"
+content_hash = "sha256:79fab9ebba4cdb7138f72fca1fc541113c8131151c8d69b9deadcf8ab28ade63"
+size = 58760
+mtime_ms = 1787999651922
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1fe60c2a-febd-448c-ac79-9e11812352c3/40f79424-586b-4244-a309-e37f7688c207"
+storage_version_token = "1788000243534352"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "kCeyKz4FBKYGwQCP1otJP"
+uri = "file://screenshots/lg-identity-home-dev.jpg"
+type = "image"
+title = "Living Guide — Home mark"
+description = "Development preview: 34px square mark beside the property name and address."
+logical_id = "951d493a-092f-49ad-ae00-af19ae2d416e"
+content_hash = "sha256:ea5292656c2cae89be5ce6ed798a2deffaba2393c369e4c7b9004fe463102b6b"
+size = 60680
+mtime_ms = 1787999656230
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/951d493a-092f-49ad-ae00-af19ae2d416e/68c6fff7-b46c-45b8-a331-eda3b1ab542e"
+storage_version_token = "1788000244366982"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "Vn1VDtgICjmGSeY4gybWr"
+uri = "file://screenshots/lg-identity-contacts-dev.jpg"
+type = "image"
+title = "Living Guide — Viber and Instagram"
+description = "Development preview: conditional Viber and safe Instagram rows among the existing contacts."
+logical_id = "c2a399e5-768a-4afb-a9ad-adf81de54414"
+content_hash = "sha256:2af9082ad55cd3bc391cab08a70db50a4edec3806be5e49fb73a41b3bdaa8a3c"
+size = 82876
+mtime_ms = 1788000218206
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c2a399e5-768a-4afb-a9ad-adf81de54414/ca6644b3-ec54-4f70-a97f-c33ce0062a51"
+storage_version_token = "1788000245245198"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "yUzlejI4wyYSYnW37nxg4"
+uri = "file://screenshots/lg-kuula-no-chrome-dev.jpg"
+type = "image"
+title = "Living Guide — Kuula presentation"
+description = "Development preview: thumbnails, info, fullscreen, VR, gyro and provider branding suppressed; drag-to-look remains."
+logical_id = "87b939d4-d274-499f-a7b7-4a7301bbda5c"
+content_hash = "sha256:1865db889a89c0a44e95d7870ff351701ef5457ba29ba0756b26f18fb0f265b6"
+size = 76045
+mtime_ms = 1788000218282
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/87b939d4-d274-499f-a7b7-4a7301bbda5c/312b0f6a-cc11-4a4e-ae34-9f0fc4f2d97b"
+storage_version_token = "1788000246029002"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "2DBble4SSC_YK3oOLtua8"
+uri = "file://screenshots/lg-kuula-no-controls-dev.jpg"
+type = "image"
+title = "Living Guide — final Kuula cover"
+description = "Corrected development preview: no thumbnails, navigation arrows, or pause square; gentle autorotation remains active."
+logical_id = "6e1d3d7f-fdc0-43b1-9622-b81d584dde8e"
+content_hash = "sha256:26fb798fbf79b0ed48165f06bbc4d7041b9a11f8a01e1bdf80435ccb55e6825e"
+size = 68775
+mtime_ms = 1788000446491
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6e1d3d7f-fdc0-43b1-9622-b81d584dde8e/8f6d1066-e791-4eff-9e07-50b630803286"
+storage_version_token = "1788000501103536"
+content_type = "image/jpeg"

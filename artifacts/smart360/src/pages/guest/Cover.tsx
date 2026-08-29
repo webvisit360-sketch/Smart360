@@ -13,7 +13,7 @@ import type { CSSProperties, ReactNode, RefObject, PointerEvent } from "react";
 import { getCoverVars, getLogoVars } from "./cover-vars";
 import { imgSrc } from "./img";
 import { plural } from "./i18n";
-import { parseVirtualTourInput } from "@/lib/virtual-tour";
+import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 
 export type CoverEdit = {
   /** Fixed preview height for the swipe cover (guest uses 100dvh). */
@@ -63,7 +63,7 @@ function BrandLogo({ tenant, edit }: { tenant: any; edit?: CoverEdit }) {
 export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardExtra, coverClass, coverTopClass }: CoverProps) {
   const cTitle = tenant.coverTitle || tenant.name;
   const cSub = tenant.coverSubtitle || tenant.subtitle;
-  const tourUrl = parseVirtualTourInput(tenant.tourUrl).url;
+  const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
   const showRating = tenant.coverShowRating !== false;
   const rating = (
     <>
@@ -78,7 +78,7 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
     return (
       <div className={coverClass ? `cover ${coverClass}` : "cover"} style={style}>
         {tourUrl && !edit ? (
-          <iframe src={tourUrl} className="cover__bg" frameBorder="0" allowFullScreen></iframe>
+          <iframe src={tourUrl} className="cover__bg" frameBorder="0"></iframe>
         ) : tenant.heroUrl ? (
           <img src={imgSrc(tenant.heroUrl, 1400)} alt="" className="cover__bg" loading="eager" decoding="sync" fetchPriority="high" />
         ) : (

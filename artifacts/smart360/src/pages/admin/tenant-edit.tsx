@@ -21,7 +21,7 @@ import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/c
 import { SlugField } from "@/components/admin/slug-field";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { parseVirtualTourInput } from "@/lib/virtual-tour";
+import { parseVirtualTourInput, virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { DistanceReview } from "@/components/admin/distance-review";
 import { isLikelyUrl } from "@/lib/maps-href";
 import { HostInvitePanel } from "@/components/admin/host-invite-panel";
@@ -617,19 +617,18 @@ export default function AdminTenantEdit() {
                   />
                   {(() => {
                     const parsed = parseVirtualTourInput(formData.tourUrl);
+                    const embedUrl = virtualTourEmbedUrl(formData.tourUrl);
                     if (parsed.error && formData.tourUrl.trim()) {
                       return <p className="text-sm text-destructive">{parsed.error}</p>;
                     }
-                    if (parsed.url) {
+                    if (embedUrl) {
                       return (
                         <div className="mt-2">
-                          <p className="text-xs text-muted-foreground mb-2">Gumbi in logotipi ponudnika se urejajo pri ponudniku. Predogled:</p>
+                          <p className="text-xs text-muted-foreground mb-2">Predogled prikaza za goste:</p>
                           <div className="relative w-full overflow-hidden rounded-xl border bg-muted" style={{ aspectRatio: "16/9" }}>
                             <iframe
-                              src={parsed.url}
+                              src={embedUrl}
                               className="absolute inset-0 w-full h-full border-0"
-                              allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
-                              allowFullScreen
                               scrolling="no"
                               title="Predogled virtualnega sprehoda"
                             />

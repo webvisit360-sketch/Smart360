@@ -419,6 +419,25 @@ body[data-t="noc"] .lg2-grid-view {
   bottom: 112px;
 }
 
+.lg2-cover-logo {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 12px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.lg2-cover-logo img {
+  width: 42px;
+  height: 42px;
+  display: block;
+  object-fit: contain;
+}
+
 .lg2-cover-kicker {
   margin: 0;
   font-size: 11.5px;
@@ -2464,9 +2483,53 @@ body[data-t="swipe"] .lg2-order-dock {
   text-transform: uppercase;
 }
 
+.lg2-home-identity {
+  min-height: 34px;
+  margin: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.lg2-home-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card2);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.lg2-home-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.lg2-home-identity .lg2-k3 {
+  padding: 0;
+  color: var(--tx);
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  text-transform: none;
+}
+
+.lg2-home-address {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
 .lg2-hsheet h1 {
   margin: 0;
-  padding: 4px 20px 14px;
+  padding: 10px 20px 14px;
   color: var(--tx);
   font: 800 30px var(--sans);
   letter-spacing: -.035em;

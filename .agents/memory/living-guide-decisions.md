@@ -182,6 +182,12 @@ Living Guide currently trails the legacy renderer in host identity and contact p
 **Why:** Meli Pu has a logo and Viber number configured, yet Living Guide guests cannot see them; Instagram has the same host-entered-information path missing at the rendering boundary.
 
 **How to apply:** Treat logo placement plus Viber and Instagram contact rows as one owner-approved Living Guide change with one explicit decision about where the host logo belongs. In admin Videz, show controls only when the active renderer consumes them; preserve dormant legacy values and warn before any future mode switch reactivates them.
+
+Kuula presentation is normalized only at render time: force `logo=-1`, `info=0`, `fs=0`, `vr=0`, `gyro=0`, `thumbs=-1`, and `pause=0`; preserve the stored URL, tour identity, autorotate, and unknown parameters. Every guest renderer and the admin preview must use the same helper and delegate no fullscreen, XR, gyroscope, or accelerometer permissions.
+
+**Why:** The owner live-tested that `thumbs=0` replaces thumbnails with arrows while `thumbs=-1` removes navigation entirely. Kuula’s player gate confirms `pause=0` hides its sharp pause/play square without disabling gentle autorotation. Tilt-to-look feels like a fault when a phone moves.
+
+**How to apply:** Keep drag as the only manual panorama movement, keep configured autorotation alive, and test both URL normalization and an inventory of all active tour iframe surfaces whenever the policy changes.
 ## Named Maps query (2026-08-23)
 POI Maps link priority: pasted place link > named search "<title>, <SHORT address>" > labelled coords `q=lat,lng(title)` > text search. The named query MUST use `shortMapsQuery` (maps-href.ts) — never the raw Nominatim display name.
 **Why:** Full display names carry "Upravna enota / Unità amministrativa", bilingual duplicates and postcodes; long queries make Google return nothing or the wrong place — same defect, different cause.
