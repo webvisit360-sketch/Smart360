@@ -442,3 +442,17 @@ mtime_ms = 1788001658286
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c9fd532f-aed0-4f3b-bd06-7cb7df47f0ad/fd163d6f-175b-48cb-8120-228989e88247"
 storage_version_token = "1788001689064935"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "4sz5IqmdS8tYY5F10IEPa"
+uri = "file://screenshots/lg-identity-home-after-splash-dev.jpg"
+type = "image"
+title = "Living Guide Home — verified after splash"
+description = "Verified saved file: Slovenian Home screen after the timed splash, with Dobrodošli and the host’s full seahorse logo on the white welcome surface."
+logical_id = "d44d9713-18bb-4565-9ef9-b763d9c1984d"
+content_hash = "sha256:5e40f0af1e17534cd7b8b9bc6bbca45356d0520906020ccfe8f530657c29ff91"
+size = 86925
+mtime_ms = 1788001885826
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d44d9713-18bb-4565-9ef9-b763d9c1984d/e7888f84-075f-4a27-b2ad-6a2082293797"
+storage_version_token = "1788001912480690"
+content_type = "image/jpeg"
