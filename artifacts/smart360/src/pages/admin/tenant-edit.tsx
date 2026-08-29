@@ -27,6 +27,73 @@ import { isLikelyUrl } from "@/lib/maps-href";
 import { HostInvitePanel } from "@/components/admin/host-invite-panel";
 import { useHostSession } from "@/hooks/use-host-session";
 import { collapseConsecutiveChangelog } from "@/lib/changelog-collapse";
+import admin2030Html from "@assets/admin-2030_5_1788002851001.html?raw";
+
+function extractSmart360Lockup(): string {
+  const svg = admin2030Html.match(
+    /<div class="lk">([\s\S]*?)<\/div>/,
+  )?.[1];
+  if (!svg) {
+    throw new Error("Smart360 sidebar lockup is missing from admin-2030.html");
+  }
+  return svg;
+}
+
+const SMART360_LOCKUP_SVG = extractSmart360Lockup();
+
+type SidebarIconName =
+  | "overview"
+  | "creator"
+  | "orders"
+  | "messages"
+  | "events"
+  | "notices"
+  | "offers"
+  | "area"
+  | "accommodation"
+  | "settings";
+
+function SidebarNavIcon({ name }: { name: SidebarIconName }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {name === "overview" && <path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" />}
+      {name === "creator" && <path d="M4 6h16M4 12h16M4 18h10" />}
+      {name === "orders" && <path d="M6 2h12v20l-6-3-6 3z" />}
+      {name === "messages" && <path d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6.4A8 8 0 1121 12z" />}
+      {name === "events" && (
+        <>
+          <rect x="3" y="5" width="18" height="16" rx="3" />
+          <path d="M8 3v4M16 3v4M3 11h18" />
+        </>
+      )}
+      {name === "notices" && <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9z" />}
+      {name === "offers" && (
+        <>
+          <path d="M6 2h9l5 5v15H6z" />
+          <path d="M9 13h7M9 17h5" />
+        </>
+      )}
+      {name === "area" && (
+        <>
+          <circle cx="12" cy="10" r="3" />
+          <path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z" />
+        </>
+      )}
+      {name === "accommodation" && (
+        <>
+          <path d="M4 21V9l8-6 8 6v12" />
+          <path d="M10 21v-6h4v6" />
+        </>
+      )}
+      {name === "settings" && (
+        <>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1V21a2 2 0 11-4 0v-.1A1.6 1.6 0 006.6 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.6 1.6 0 003 15H3a2 2 0 110-4h.1A1.6 1.6 0 005 8.6l-.1-.1a2 2 0 112.8-2.8l.1.1A1.6 1.6 0 0010.5 5V5a2 2 0 114 0v.1A1.6 1.6 0 0017.4 6l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 001.1 2.7H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z" />
+        </>
+      )}
+    </svg>
+  );
+}
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -207,6 +274,7 @@ export default function AdminTenantEdit() {
     "kreator",
     "orders",
     "messages",
+    "events",
     "obvestila",
     "ponudba",
     "distances",
@@ -470,18 +538,24 @@ export default function AdminTenantEdit() {
     >
 
       {/* SIDEBAR */}
-      <aside className="w-full md:w-[264px] bg-white border-b md:border-b-0 md:border-r border-black/5 flex flex-row md:flex-col shrink-0 px-3 md:px-[14px] py-3 md:py-[22px] overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
-        <div className="flex flex-row md:flex-col gap-2 md:gap-[11px] mb-0 md:mb-8 shrink-0">
-          <button onClick={() => setActiveTab('pregled')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Pregled</button>
-          <button onClick={() => setActiveTab('kreator')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Kreator vodnika</button>
-          <button onClick={() => setActiveTab('orders')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between gap-2 px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
-            <span>Naročila</span>
+      <aside className="admin-tenant-sidebar w-full md:w-[264px] border-b md:border-b-0 flex flex-row md:flex-col shrink-0 overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
+        <div
+          className="admin-tenant-sidebar__lockup hidden md:block shrink-0"
+          role="img"
+          aria-label="Smart360"
+          dangerouslySetInnerHTML={{ __html: SMART360_LOCKUP_SVG }}
+        />
+        <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
+          <button data-active={activeTab === 'pregled'} onClick={() => setActiveTab('pregled')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="overview" /><span>Pregled</span></button>
+          <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>
+          <button data-active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between whitespace-nowrap transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+            <span className="flex items-center gap-[11px]"><SidebarNavIcon name="orders" /><span>Naročila</span></span>
             {(tenantOverview?.pendingOrders ?? 0) > 0 && (
               <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">{tenantOverview?.pendingOrders}</span>
             )}
           </button>
-          <button onClick={() => setActiveTab('messages')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between gap-2 px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'messages' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
-            <span>Sporočila</span>
+          <button data-active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between whitespace-nowrap transition-colors ${activeTab === 'messages' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+            <span className="flex items-center gap-[11px]"><SidebarNavIcon name="messages" /><span>Sporočila</span></span>
             {(tenantOverview?.pendingMessages ?? 0) > 0 && (
               <span className="bg-destructive text-destructive-foreground text-[13px] font-[800] h-[24px] px-2 rounded-full flex items-center justify-center">{tenantOverview?.pendingMessages}</span>
             )}
@@ -489,16 +563,17 @@ export default function AdminTenantEdit() {
         </div>
 
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
-        <div className="flex flex-row md:flex-col gap-2 md:gap-[11px] mb-0 md:mb-8 shrink-0">
-          <button onClick={() => setActiveTab('obvestila')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Obvestila</button>
-          <button onClick={() => setActiveTab('ponudba')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Ponudba in cene</button>
+        <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col mb-0 md:mb-8 shrink-0">
+          <button data-active={activeTab === 'events'} onClick={() => setActiveTab('events')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="events" /><span>Dogodki</span></button>
+          <button data-active={activeTab === 'obvestila'} onClick={() => setActiveTab('obvestila')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="notices" /><span>Obvestila</span></button>
+          <button data-active={activeTab === 'ponudba'} onClick={() => setActiveTab('ponudba')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="offers" /><span>Ponudba in cene</span></button>
         </div>
 
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
-        <div className="flex flex-row md:flex-col gap-2 md:gap-[11px] md:mb-auto shrink-0">
-          <button onClick={() => setActiveTab('distances')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Okolica</button>
-          <button onClick={() => setActiveTab('content')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastanitev</button>
-          <button onClick={() => setActiveTab('general')} className={`h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center px-3 md:px-4 whitespace-nowrap transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>Nastavitve</button>
+        <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col md:mb-auto shrink-0">
+          <button data-active={activeTab === 'distances'} onClick={() => setActiveTab('distances')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="area" /><span>Okolica</span></button>
+          <button data-active={activeTab === 'content'} onClick={() => setActiveTab('content')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="accommodation" /><span>Nastanitev</span></button>
+          <button data-active={isSettings} onClick={() => setActiveTab('general')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="settings" /><span>Nastavitve</span></button>
         </div>
 
         <div className="hidden md:flex mt-8 pt-4 border-t border-black/5 px-4 flex-col gap-1">
@@ -585,6 +660,7 @@ export default function AdminTenantEdit() {
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
             </TabsContent>
             <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika (CP4)</div></TabsContent>
+            <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki (CP6)</div></TabsContent>
             <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
             <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>

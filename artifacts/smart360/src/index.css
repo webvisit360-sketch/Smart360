@@ -427,6 +427,42 @@
 [data-surface="admin"] .admin-tenant-console [role="tabpanel"] > .admin-ui-card,
 [data-surface="admin"] .admin-tenant-console [role="tabpanel"] .admin-ui-card { background: var(--card); }
 
+[data-surface="admin"] .admin-tenant-sidebar {
+  padding: 22px 16px 18px;
+  background: #F4F6F2;
+  border-right: 1px solid #E8EBE6;
+}
+[data-surface="admin"] .admin-tenant-sidebar__lockup {
+  width: 158px;
+  margin: 0 6px 26px;
+}
+[data-surface="admin"] .admin-tenant-sidebar__lockup svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+[data-surface="admin"] .admin-tenant-sidebar__nav {
+  gap: 2px;
+}
+[data-surface="admin"] .admin-tenant-sidebar__item {
+  gap: 11px;
+  padding: 10px 12px;
+}
+[data-surface="admin"] .admin-tenant-sidebar__item svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .72;
+}
+[data-surface="admin"] .admin-tenant-sidebar__item[data-active="true"] svg {
+  opacity: 1;
+}
+
 @media (min-width: 900px) {
   [data-surface="admin"] .admin-tenant-console {
     display: grid !important;
@@ -495,6 +531,7 @@
     overflow-x: auto !important;
     overflow-y: hidden !important;
     border-right: 0 !important;
+    padding: 12px !important;
   }
   [data-surface="admin"] .admin-tenant-console > aside:first-child > div:not(.hidden) {
     flex-direction: row !important;
