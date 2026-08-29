@@ -1,0 +1,43 @@
+Step A is revised before you build it. The owner's real link exposed a URL
+shape my specification did not cover.
+
+THREE ACCEPTED SHAPES, ONE ALWAYS REJECTED
+
+1 · Short link. https://maps.app.goo.gl/... carries no coordinates and no
+name. Expand it server-side by following the HTTP redirect, then parse the
+destination. Restrict expansion to Google Maps hosts, follow at most three
+redirects, and refuse anything that lands off Google — the parser must not
+become a general-purpose URL fetcher.
+
+2 · Search form. The expanded destination may be
+    /maps/search/46.311167,+14.909133?entry=tts...
+Those are the pin's coordinates, in the path. They are valid and must be
+used. Note the URL-encoded comma-space. This form carries NO place name, so
+step 1 must ask for the name separately rather than leaving it blank.
+
+3 · Place form. /maps/place/Hotel+A+plus/@.../!3d46.2680471!4d15.188617
+Use !3d and !4d. The name is the path segment after /place/, URL-decoded.
+
+Always rejected: @lat,lng,zoom on its own. It is the map viewport, roughly
+two hundred metres off in the Hotel A plus example, and must never be used as
+a fallback when the other markers are missing. A link that yields no usable
+coordinate fails loudly and asks for a different link.
+
+TEST CASES, BOTH REQUIRED TO PASS
+· https://maps.app.goo.gl/7TptijjPqZXsX7bw6
+  expands to a /maps/search/ URL, yields 46.311167, 14.909133, no name.
+· https://www.google.com/maps/place/Hotel+A+plus/@46.2680508,15.1860367,794m/data=!3m2!1e3!4b1!4m9!3m8!1s0x47656f63b402157b:0xc1f9c11df0f2a827!5m2!4m1!1i2!8m2!3d46.2680471!4d15.188617!16s%2Fg%2F11g_zf9hs1
+  yields name "Hotel A plus", 46.2680471, 15.188617 — and specifically NOT
+  the @ values 46.2680508, 15.1860367.
+
+AFTER PARSING
+Show the point on a map with the reverse-geocoded address beside it and
+require explicit confirmation before it becomes the tenant origin. The
+operator confirms the pin, not the parser.
+
+The first Creator run will be Kamp Menina, Varpolje 105, 3332 Rečica ob
+Savinji, in the Upper Savinja valley. Do not create a tenant or write any
+guide content for it yet — step A is the parser and its two test results
+only.
+
+Report and STOP.
