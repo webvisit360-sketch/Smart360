@@ -1,0 +1,46 @@
+Next item is the Kreator, not invitations. The specification is attached as
+kreator-specifikacija.md and the two screens as kreator-2030.html.
+
+Report first, build nothing.
+
+THE SHAPE
+Three stages, and each does only what it is good at:
+· a language model proposes about sixty places — name, category, description in
+  the house voice, translations into EN, DE and IT;
+· the existing Nominatim geocoder is the sieve: anything that does not resolve
+  to a real place does not exist and drops out, into a visible "could not be
+  confirmed" list rather than silently;
+· OSRM computes road distance and time from the tenant origin;
+· a human confirms every survivor. Unconfirmed places never reach a guest.
+
+THE RULE THAT MAKES IT TRUSTWORTHY
+The model may propose and write. It may never be the source of a fact a machine
+can check. Names, categories, descriptions and translations: yes. Coordinates,
+distances, travel times, opening hours, prices, telephone numbers: never.
+It writes just as fluently when it knows and when it does not, and the
+difference is invisible in the text.
+
+REPORT, BEFORE ANY CODE
+1 · Which model API you propose, how the call is structured, and what exactly
+    goes into it: origin coordinates, tenant type, radius, the existing category
+    catalogue, the style rules, and the standing rule that we never write
+    descriptions for hospitality, shops, pharmacies, filling stations or health
+    services.
+2 · The data model for a proposal and for the confirmation queue, including how
+    a rejected proposal is remembered so a re-run does not resurrect it.
+3 · How one place belonging to two categories stays one record with two
+    attachments. The Meli Pu import duplicated Motovun, Portopiccolo and Grad
+    Miramare, each duplicate carrying its own distance — the Kreator must make
+    that impossible from the start.
+4 · How a proposed new category is handled: it must fit the existing catalogue
+    first, needs at least three places to justify itself, joins the shared
+    catalogue rather than one tenant, and arrives with names in four languages
+    and an icon chosen from the existing set.
+5 · Where photographs come from. Wikimedia Commons where a freely licensed image
+    exists, nothing from Google Maps, and a deliberately plain "fotografija
+    manjka" tile otherwise, flagged in the data as provisional so the guide can
+    report how many remain before publication.
+6 · A rough cost per tenant for the model call, so the owner can see it against
+    a 350–890 € subscription.
+
+Report and STOP.
