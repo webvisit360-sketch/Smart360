@@ -64,6 +64,7 @@ router.post("/admin/webauthn/login/options", async (req, res): Promise<void> => 
   const credentials = await listCredentials();
   const options = await generateAuthenticationOptions({
     rpID: rpID(),
+    timeout: 60_000,
     userVerification: "required",
     // Empty allowCredentials keeps discoverable-credential + cross-device QR flow available.
     allowCredentials: credentials.map((c) => ({

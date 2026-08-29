@@ -15,6 +15,11 @@ import { QrDialog } from "@/components/admin/qr-dialog";
 import { MediaCheckDialog } from "@/components/admin/media-check-dialog";
 import { CleanupTrashDialog } from "@/components/admin/cleanup-trash-dialog";
 import { slugify } from "@/components/admin/slug-field";
+import {
+  formatSlovenianCount,
+  MESSAGE_COUNT_FORMS,
+  ORDER_COUNT_FORMS,
+} from "@/lib/slovenian-count";
 
 const TENANT_TYPES = [
   { value: "apartmaji", label: "Apartmaji" },
@@ -336,10 +341,10 @@ export default function AdminDashboard() {
                           if (!o) return null;
                           const undone = o.checks.filter(c => !c.done).map(c => c.label);
                           const pendingBadges = [
-                            { n: o.pendingOrders, label: "naročil", Icon: ClipboardList, to: "orders" },
-                            { n: o.pendingMessages, label: "sporočil", Icon: MessageSquare, to: "orders" },
-                            { n: o.pendingLocations, label: "lokacij", Icon: MapPin, to: "distances" },
-                            { n: o.missingPhotos, label: "brez fotografij", Icon: ImageOff, to: "content" },
+                            { n: o.pendingOrders, text: formatSlovenianCount(o.pendingOrders, ORDER_COUNT_FORMS), Icon: ClipboardList, to: "orders" },
+                            { n: o.pendingMessages, text: formatSlovenianCount(o.pendingMessages, MESSAGE_COUNT_FORMS), Icon: MessageSquare, to: "orders" },
+                            { n: o.pendingLocations, text: `${o.pendingLocations} lokacij`, Icon: MapPin, to: "distances" },
+                            { n: o.missingPhotos, text: `${o.missingPhotos} brez fotografij`, Icon: ImageOff, to: "content" },
                           ].filter(b => b.n > 0);
                           return (
                             <div className="mb-4 -mt-1 space-y-2">
@@ -356,12 +361,12 @@ export default function AdminDashboard() {
                                 <div className="flex flex-wrap gap-1.5">
                                   {pendingBadges.map(b => (
                                     <button
-                                      key={b.label}
+                                       key={b.text}
                                       type="button"
                                       onClick={() => setLocation(`/admin/tenants/${tenant.id}`)}
                                       className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 text-xs font-medium hover:bg-red-100"
                                     >
-                                      <b.Icon className="h-3 w-3" /> {b.n} {b.label}
+                                       <b.Icon className="h-3 w-3" /> {b.text}
                                     </button>
                                   ))}
                                 </div>
@@ -521,7 +526,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex-1 pb-1">
                         <p className="text-sm font-medium">
-                          {change.action} {change.entity}
+                          {change.summary || "Sprememba v vodniku."}
                         </p>
                         {change.tenantName && (
                           <p className="text-xs text-muted-foreground">{change.tenantName}</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useGetPasskeyLoginOptions, useVerifyPasskeyLogin, useUseRecoveryCode } from "@workspace/api-client-react";
 import { startAuthentication } from "@simplewebauthn/browser";
@@ -10,9 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, KeyRound } from "lucide-react";
 import loginDesignHtml from "@assets/Smart360-prijava_1787872268224.html?raw";
 import "./login.css";
+import { withAbortTimeout } from "@/lib/passkey-timeout";
 
 const suppliedLogoSvg =
   loginDesignHtml.match(/<div class="brand"><div class="lk">([\s\S]*?<\/svg>)<\/div><\/div>/)?.[1] ?? "";
+const PASSKEY_TIMEOUT_MS = 60_000;
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -28,9 +30,14 @@ export default function AdminLogin() {
   const [hostBusy, setHostBusy] = useState(false);
   const [hostError, setHostError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const passkeyAbortRef = useRef<AbortController | null>(null);
 
   const getLoginOptionsMutation = useGetPasskeyLoginOptions();
   const verifyLoginMutation = useVerifyPasskeyLogin();
+
+  useEffect(() => () => {
+    passkeyAbortRef.current?.abort();
+  }, []);
   
   const useRecoveryMutation = useUseRecoveryCode({
     mutation: {
@@ -56,13 +63,20 @@ export default function AdminLogin() {
   });
 
   const handlePasskeyLogin = async () => {
+    passkeyAbortRef.current?.abort();
+    const controller = new AbortController();
+    passkeyAbortRef.current = controller;
     setLoginError(null);
     setIsProcessingLogin(true);
     try {
       const optionsRes = await getLoginOptionsMutation.mutateAsync();
       const { challengeId, options } = optionsRes;
 
-      const response = await startAuthentication({ optionsJSON: options as any });
+      const response = await withAbortTimeout(
+        startAuthentication({ optionsJSON: options as any }),
+        controller,
+        PASSKEY_TIMEOUT_MS,
+      );
 
       await verifyLoginMutation.mutateAsync({
         data: {
@@ -73,12 +87,15 @@ export default function AdminLogin() {
       
       setLocation("/admin");
     } catch (err: any) {
-      if (err?.response?.status === 429) {
+      if (controller.signal.aborted || err?.name === "TimeoutError") {
+        setLoginError("Prijava s ključem je potekla. Poskusite znova.");
+      } else if (err?.response?.status === 429) {
         setLoginError("Preveč poskusov. Prosimo, poskusite znova kasneje.");
       } else {
         setLoginError("Prijava ni uspela. Preverite brskalnik ali uporabite drugo napravo.");
       }
     } finally {
+      if (passkeyAbortRef.current === controller) passkeyAbortRef.current = null;
       setIsProcessingLogin(false);
     }
   };
