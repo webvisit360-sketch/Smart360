@@ -591,10 +591,10 @@ export default function AdminTenantEdit() {
             <TabsContent value="pregled">
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
             </TabsContent>
-            <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika (CP4)</div></TabsContent>
-            <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki (CP6)</div></TabsContent>
-            <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
-            <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
+            <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika — V pripravi. Orodje Smart360 za pripravo vodnika, preden se gostitelj prvič prijavi.</div></TabsContent>
+            <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki — V pripravi. Koledar dogodkov, ki jih gost vidi na domači strani.</div></TabsContent>
+            <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila — V pripravi. Obvestila, ki jih gost vidi v vodniku.</div></TabsContent>
+            <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene — V pripravi. Izdelki, cene in oprema za najem.</div></TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
         <TabsContent value="general" className="space-y-4">
