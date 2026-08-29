@@ -381,11 +381,22 @@
   border-right: 1px solid #E8EBE6;
   background: #F4F6F2;
 }
-[data-surface="admin"] .admin-shell__nav { padding: 0; gap: 2px; }
+[data-surface="admin"] .admin-shell__nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 2px;
+}
 [data-surface="admin"] .admin-shell__nav a {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
   min-height: 42px;
   padding: 10px 12px;
   border-radius: 12px;
+  white-space: nowrap;
   color: var(--tx);
   font-size: 14.5px;
   font-weight: 700;

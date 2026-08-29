@@ -526,3 +526,17 @@ mtime_ms = 1788039716839
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/172613c8-13bf-4860-849b-8f6cee795216/5d3c560f-d05a-4017-95c2-6e98978348c1"
 storage_version_token = "1788039738801513"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "F9uTE95XrMZxyx8ee4WKq"
+uri = "file://screenshots/operator-sidebar-1920-crop.png"
+type = "image"
+title = "Operator sidebar — 1920px viewport crop"
+description = "Final post-restart crop showing the corrected active pill and horizontal icon-label alignment."
+logical_id = "d888108c-069a-4e34-8b62-6cf41c24ed46"
+content_hash = "sha256:f5dbe8668db79f5e9f38ba2c94658bfb17c819f871f7edd148559d051fae53d1"
+size = 15822
+mtime_ms = 1788041158411
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d888108c-069a-4e34-8b62-6cf41c24ed46/28be7cd5-6a7c-4682-bb3e-d58041e6e437"
+storage_version_token = "1788041168063038"
+content_type = "image/png"
