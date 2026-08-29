@@ -1,0 +1,39 @@
+Your reading of the production catalog beat both my hypothesis and the deploy
+tool. The application list was already correct; the production CHECK was never
+widened.
+
+THE HEADLINE IS NOT THIS BUG
+That constraint change was approved and published, and the publish reported
+hasDiff: false. The schema diff does not see CHECK constraints. The two new
+columns reached production because it does see columns. The constraint did not,
+and nothing said so. From now on hasDiff: false is not evidence that production
+matches intent — it is evidence only about the object types the tool inspects.
+
+1 — APPROVED, AS ONE TRANSACTION
+Wrap your two statements in BEGIN/COMMIT. Between the DROP and the ADD the
+table has no constraint at all; it must not be possible to stop there. No data
+is touched, no row is patched.
+
+2 — AUDIT EVERYTHING THE DIFF CANNOT SEE
+Before you run it, read the production catalog and report, for both enquiries
+and host_invites, what actually exists versus what we approved:
+· every CHECK constraint, with its exact definition;
+· the partial unique indexes on provider_message_id;
+· the columns added to host_invites.
+host_invites is empty, so the same missing constraint there would surface no
+error today and would surface during the first real invitation instead. Find it
+now rather than during item 2.
+
+3 — HOW WILL THIS NOT HAPPEN AGAIN
+Report how constraint-level changes are to be applied and verified from here
+on, given that the publish mechanism cannot detect them. A short answer is
+enough: what you will run, and what you will read back to prove it took.
+
+4 — THE ROW STILL HEALS ITSELF
+No manual UPDATE. After the constraint is widened, a pending provider retry
+must be what turns the row to delivered. Report the retry's timestamp and HTTP
+code, the stored status, the event name and time, and what Povpraševanja shows.
+If every retry has by then been exhausted, say so and stop — we will decide
+together, and a fresh test enquiry is the honest way, not an UPDATE.
+
+Report and STOP.
