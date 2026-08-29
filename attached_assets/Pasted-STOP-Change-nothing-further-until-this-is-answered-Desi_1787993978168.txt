@@ -1,0 +1,47 @@
+STOP. Change nothing further until this is answered.
+
+Design Mode was switched on by mistake. It is built to generate new visual
+mockups and static front-ends from a description; when asked for functional
+behaviour it produces a mockup rather than a working implementation. That is the
+wrong instrument for this task, which is not a new design but a restyle of a
+working application with 105 classified routes, authentication, RLS policies,
+audit trails and a live webhook.
+
+1 — REPORT WHAT WAS TOUCHED, BEFORE UNDOING ANYTHING
+List every file created, modified or deleted while Design Mode was active, and
+whether any of it was committed or published. If nothing was touched, say so
+plainly. Do not revert anything yet — a blind revert can remove work that was
+wanted.
+
+2 — THEN RESTORE THE STATE THAT WAS DEPLOYED
+Bring the working branch back in line with the revision currently deployed,
+report that it matches, and confirm production is unchanged and healthy.
+
+3 — THEN RESUME ITEM 3 THE ORDINARY WAY
+The brief is unchanged:
+
+· Scope: everything an operator or a host sees in the admin — the owner
+  dashboard and the whole tenant console — restyled in one pass from the shared
+  tokens and components. Not two visual systems in one codebase.
+· Reference: admin-2030_1 HTML, screens s1–s6.
+· Tokens: bg #FFFFFF, card #F4F6F2, card2 #ECF0EA, text #121A14, muted #66716A,
+  line #E8EBE6, accent #157347, accent-light #1D9159, warm #DD9A2B,
+  danger #D93A2B. Typeface Archivo. Radii 13 px buttons and inputs, 18 px inner
+  cards, 22 px cards, 26 px modals. No fully-rounded pill buttons. Every blue —
+  wordmark, active nav item, primary buttons — becomes the accent green.
+· Screens the prototype does not cover — Kreator, Sporočila, Obvestila, Ponudba
+  in cene, Nastanitev, Prevodi, Living Guide, Videz — are derived from the same
+  tokens and components. Do not invent new patterns and do not stall because a
+  screen is missing from the prototype; use the nearest of the six and say so in
+  the report.
+· Touch no table, no column, no stored value, and nothing the guest guide reads.
+  The tenant's own appearance settings under Videz belong to the host and their
+  guests, not to our console chrome. If a change would alter what a guest sees,
+  stop and report instead.
+· Evidence: screenshots from production at 1440 and 390 px of the owner
+  dashboard, the tenant Pregled, Nastavitve and one long screen such as Okolica.
+  Not a test suite — pictures.
+· Before the publish, read the actual diff against the revision deployed at that
+  moment and report that it contains only what was approved.
+
+Report and STOP.
