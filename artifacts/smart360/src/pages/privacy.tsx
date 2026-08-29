@@ -1,4 +1,4 @@
-import rawPrivacyHtml from "@assets/zasebnost_1_1787944560129.html?raw";
+import rawPrivacyHtml from "@assets/zasebnost_2_1787975884194.html?raw";
 
 const privacyHtml = rawPrivacyHtml.replace(
   "</head>",

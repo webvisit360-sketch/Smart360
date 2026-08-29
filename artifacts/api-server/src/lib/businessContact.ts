@@ -1,0 +1,1 @@
+export const BUSINESS_CONTACT_EMAIL = "smart360hq@gmail.com";

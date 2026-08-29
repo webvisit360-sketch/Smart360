@@ -54,7 +54,7 @@ test("public enquiry validates, addresses the owner, and uses enquiry reply-to",
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { sent: true });
   assert.equal(delivered.length, 1);
-  assert.deepEqual(delivered[0]?.to, ["webvisit360@gmail.com"]);
+  assert.deepEqual(delivered[0]?.to, ["smart360hq@gmail.com"]);
   assert.equal(delivered[0]?.reply_to, "ana@example.com");
   const [stored] = await db.select().from(enquiriesTable).where(eq(enquiriesTable.email, "ana@example.com"));
   assert.equal(stored?.deliveryStatus, "accepted");

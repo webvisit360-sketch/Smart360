@@ -1,8 +1,8 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { logger } from "./logger";
+import { BUSINESS_CONTACT_EMAIL } from "./businessContact";
 
 const connectors = new ReplitConnectors();
-const OWNER_EMAIL = "webvisit360@gmail.com";
 const FROM_EMAIL = "info@webvisit360.com";
 
 export type Enquiry = {
@@ -51,7 +51,7 @@ export function buildEnquiryEmail(enquiry: Enquiry) {
   return {
     from: `Smart360 <${FROM_EMAIL}>`,
     reply_to: enquiry.email,
-    to: [OWNER_EMAIL],
+    to: [BUSINESS_CONTACT_EMAIL],
     subject: `Povpraševanje · ${enquiry.propertyName}`,
     text,
     html,

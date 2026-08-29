@@ -1,5 +1,6 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { rpOrigin } from "./adminAuth";
+import { BUSINESS_CONTACT_EMAIL } from "./businessContact";
 import { logger } from "./logger";
 import { cta, p as par, renderEmail, small } from "./emailTemplate";
 
@@ -56,7 +57,7 @@ export function buildResetEmailBody(to: string, link: string, from: string) {
     ],
     footerLines: ["Smart360 · digitalni vodnik za goste"],
   });
-  return { from, reply_to: "webvisit360@gmail.com", to: [to], subject, html, text };
+  return { from, reply_to: BUSINESS_CONTACT_EMAIL, to: [to], subject, html, text };
 }
 
 export type ResetEmailResult = { ok: true } | { ok: false };

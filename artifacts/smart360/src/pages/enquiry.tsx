@@ -3,6 +3,7 @@ import enquiryHtml from "@assets/Smart360-povprasevanje_1_1787894314826.html?raw
 import "./enquiry.css";
 
 const propertyTypes = ["Apartma", "Hiša do 6 enot", "Kamp", "Hotel"] as const;
+const BUSINESS_CONTACT_EMAIL = "smart360hq@gmail.com";
 const logoSvg = enquiryHtml.match(/<div class="lk">([\s\S]*?<\/svg>)<\/div>/)?.[1] ?? "";
 const ringSvg = enquiryHtml.match(/<div class="bgring"[^>]*>([\s\S]*?<\/svg>)<\/div>/)?.[1] ?? "";
 
@@ -86,7 +87,7 @@ export default function EnquiryPage() {
           <section className="enquiry-success" aria-live="polite">
             <div className="tick"><svg viewBox="0 0 24 24"><path d="m4 12.5 5.5 5.5L20 7" /></svg></div>
             <h2>Prejeto, hvala.</h2>
-            <p>Oglasim se v enem delovnem dnevu. Če je nujno, pišite na webvisit360@gmail.com.</p>
+            <p>Oglasim se v enem delovnem dnevu. Če je nujno, pišite na {BUSINESS_CONTACT_EMAIL}.</p>
           </section>
         </main>
         <footer className="enquiry-foot"><a href="/pogoji">Pogoji uporabe</a> · Agencija Sinhron d.o.o.</footer>

@@ -704,7 +704,7 @@ describe("buildEmailBody", () => {
 
   test("reply-to is the approved monitored inbox", () => {
     const body = buildEmailBody(BASE_PAYLOAD, ORDER_EMAIL_FROM_ADDRESS);
-    assert.equal(body["reply_to"], "webvisit360@gmail.com");
+    assert.equal(body["reply_to"], "smart360hq@gmail.com");
   });
 
   test("to is an array containing the payload.to address", () => {
