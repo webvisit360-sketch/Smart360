@@ -210,8 +210,6 @@ export default function AdminTenantEdit() {
   const isWideLayout = [
     "orders",
     "messages",
-    "obvestila",
-    "ponudba",
     "distances",
     "content",
     "translations",
@@ -492,12 +490,6 @@ export default function AdminTenantEdit() {
           </button>
         </div>
 
-        <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
-        <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col mb-0 md:mb-8 shrink-0">
-          <button data-active={activeTab === 'obvestila'} onClick={() => setActiveTab('obvestila')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="notices" /><span>Obvestila</span></button>
-          <button data-active={activeTab === 'ponudba'} onClick={() => setActiveTab('ponudba')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="offers" /><span>Ponudba in cene</span></button>
-        </div>
-
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col md:mb-auto shrink-0">
           <button data-active={activeTab === 'distances'} onClick={() => setActiveTab('distances')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="area" /><span>Okolica</span></button>
@@ -588,8 +580,6 @@ export default function AdminTenantEdit() {
             <TabsContent value="pregled">
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
             </TabsContent>
-            <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila (CP6)</div></TabsContent>
-            <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene (CP6)</div></TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
         <TabsContent value="general" className="space-y-4">

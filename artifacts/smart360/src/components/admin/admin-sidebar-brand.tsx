@@ -7,8 +7,6 @@ export type AdminSidebarIconName =
   | "overview"
   | "orders"
   | "messages"
-  | "notices"
-  | "offers"
   | "area"
   | "accommodation"
   | "settings";
@@ -46,13 +44,6 @@ export function AdminSidebarIcon({ name }: { name: AdminSidebarIconName }) {
       )}
       {name === "overview" && <path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" />}
       {name === "orders" && <path d="M6 2h12v20l-6-3-6 3z" />}
-      {name === "notices" && <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9z" />}
-      {name === "offers" && (
-        <>
-          <path d="M6 2h9l5 5v15H6z" />
-          <path d="M9 13h7M9 17h5" />
-        </>
-      )}
       {name === "area" && (
         <>
           <circle cx="12" cy="10" r="3" />

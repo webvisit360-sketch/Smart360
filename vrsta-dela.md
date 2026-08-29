@@ -118,6 +118,11 @@ nespremenljivih preteklih pojavitvah ter znani omejitvi čez polnoč.
   (obvestila push, najem opreme, domači pridelki, lastna znamka, GPX, načrt
   posesti). Vprašano štirikrat. Koledar dogodkov je odgovorjen: gradimo ga.
 - Paket istrskih krajev, ko bo oblika potrjena.
+- **Skupna knjižnica krajev — obvezno pred postavitvijo drugega najemnika v isti
+  regiji.** Kraj je zapis v lasti Smart360 z lastnim imenom, kategorijo,
+  koordinatami, opisom in prevodi. Najemnik se na kraj pripne, razdalja pa se
+  ponovno izračuna od izvora tega najemnika. Če gostitelj spremeni pripeto polje,
+  postane ta vrednost njegova in za to polje ne sledi več knjižnici.
 - Knjižnica Savinjske za Kamp Menina.
 - Prevodi 133 ključev vmesnika v NL, FR, CS, HU, HR — odloženo na oktober.
 - Pregled zbirke lokacij: **Mesečev zaliv** je pri meni trikrat (naravna
