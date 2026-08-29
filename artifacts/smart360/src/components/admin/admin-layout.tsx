@@ -1,9 +1,10 @@
 import { ReactNode, useEffect } from "react";
 import { useGetAdminSession, useAdminLogout } from "@workspace/api-client-react";
 import { useLocation, Link } from "wouter";
-import { Loader2, LogOut, LayoutDashboard, Mail, User } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { useHostSession } from "@/hooks/use-host-session";
+import { AdminSidebarIcon, AdminSidebarLockup } from "@/components/admin/admin-sidebar-brand";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -74,21 +75,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="admin-shell" data-surface="admin">
       {/* Sidebar */}
-      <aside className="admin-shell__sidebar hidden md:flex">
-        <div className="admin-shell__brand flex items-center">
-          <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
-        </div>
-        <div className="admin-shell__nav flex-1 space-y-1">
-          <Link href="/admin" aria-current={location === "/admin" ? "page" : undefined} className="flex items-center gap-3">
-            <LayoutDashboard className="h-5 w-5" />
+      <aside className="admin-shell__sidebar admin-sidebar hidden md:flex">
+        <AdminSidebarLockup />
+        <div className="admin-shell__nav admin-sidebar__nav flex-1">
+          <Link href="/admin" aria-current={location === "/admin" ? "page" : undefined} className="admin-sidebar__item">
+            <AdminSidebarIcon name="dashboard" />
             Nadzorna plošča
           </Link>
-          <Link href="/admin/enquiries" aria-current={location === "/admin/enquiries" ? "page" : undefined} className="flex items-center gap-3">
-            <Mail className="h-5 w-5" />
+          <Link href="/admin/enquiries" aria-current={location === "/admin/enquiries" ? "page" : undefined} className="admin-sidebar__item">
+            <AdminSidebarIcon name="enquiries" />
             Povpraševanja
           </Link>
-          <Link href="/admin/account" aria-current={location === "/admin/account" ? "page" : undefined} className="flex items-center gap-3">
-            <User className="h-5 w-5" />
+          <Link href="/admin/account" aria-current={location === "/admin/account" ? "page" : undefined} className="admin-sidebar__item">
+            <AdminSidebarIcon name="keys" />
             Ključi
           </Link>
         </div>

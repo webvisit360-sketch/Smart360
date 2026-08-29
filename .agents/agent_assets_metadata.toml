@@ -498,3 +498,31 @@ mtime_ms = 1788004421698
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/87deb8ce-9bbf-4510-8117-637de4a32a0d/61b0632a-4f55-44aa-9ef3-a487f9c9278c"
 storage_version_token = "1788004477278134"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "HpxXjxbeLWegZV5Mv4pg1"
+uri = "file://screenshots/admin-operator-1920-before-publish.jpg"
+type = "image"
+title = "Operator level — 1920px before publishing"
+description = "Shared Smart360 shell on /admin with left-aligned 1120px content."
+logical_id = "b6973a9b-50a3-41f6-9711-57544712b531"
+content_hash = "sha256:51e620309538a17de7f2a0790c0ab6adda2c7c179809bbbab41140925f235141"
+size = 112327
+mtime_ms = 1788039714903
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b6973a9b-50a3-41f6-9711-57544712b531/2fefbe5d-5035-446a-9b2f-84cc91fca72a"
+storage_version_token = "1788039737354015"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "Spid-Y1jY0f2GejvSaKvj"
+uri = "file://screenshots/admin-tenant-1920-before-publish.jpg"
+type = "image"
+title = "Tenant console — 1920px before publishing"
+description = "Shared Smart360 shell on the tenant console with left-aligned 880px content."
+logical_id = "172613c8-13bf-4860-849b-8f6cee795216"
+content_hash = "sha256:8302c6ea5f4331dc12674be8fd241b47a9aacb87153fcfcad83c55463be11787"
+size = 111725
+mtime_ms = 1788039716839
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/172613c8-13bf-4860-849b-8f6cee795216/5d3c560f-d05a-4017-95c2-6e98978348c1"
+storage_version_token = "1788039738801513"
+content_type = "image/jpeg"

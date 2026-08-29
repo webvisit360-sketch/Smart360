@@ -68,7 +68,7 @@ const adminSidebarLockup = () => {
             '..',
             '..',
             'attached_assets',
-            'admin-2030_5_1788002851001.html',
+            'admin-2030_7_1788039435751.html',
           ),
           'utf8',
         );
