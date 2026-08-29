@@ -456,3 +456,17 @@ mtime_ms = 1788001885826
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d44d9713-18bb-4565-9ef9-b763d9c1984d/e7888f84-075f-4a27-b2ad-6a2082293797"
 storage_version_token = "1788001912480690"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "-ebdqYGMUmGo5S9-reOdZ"
+uri = "file://screenshots/lg-identity-home-exact-56-dev.jpg"
+type = "image"
+title = "Living Guide Home — exact 56px host logo"
+description = "Verified post-splash 402px development screenshot: Dobrodošli and the full host logo in one white-surface row, 56px high and right-aligned."
+logical_id = "bddc6207-8c64-45af-b2ea-05b5d3738378"
+content_hash = "sha256:bb8d7464942e72fb1613d0081821f5f0050e2a3592a2a6cedafd782f91d58483"
+size = 82208
+mtime_ms = 1788002409390
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/bddc6207-8c64-45af-b2ea-05b5d3738378/3823019b-a1dc-4e1a-9d22-dc4b5ccfa567"
+storage_version_token = "1788002452894094"
+content_type = "image/jpeg"

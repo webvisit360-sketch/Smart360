@@ -177,11 +177,17 @@ Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then 
 
 **How to apply:** Keep property navigation separate from item-specific POI destinations. Preserve external `_blank`/noopener behavior across Living Guide and legacy guest surfaces.
 
-Living Guide shows the full `logoUrl` only beside the welcome heading on Home’s white surface. It has no cover logo and no square Home mark. The logo is proportional at about 44–48px high, undecorated, and conditional; the heading position must not change when no logo exists.
+Living Guide shows the full `logoUrl` only beside the welcome heading on Home’s white surface. It has no cover logo and no square Home mark. At both 402px and 390px, the logo is 56px high, proportional, capped at 120px wide, undecorated, and conditional.
 
 **Why:** A coloured logo with its own type needs a calm background. Over the photograph it competes with the cover title and unpredictable image content; on the white welcome surface it reads deliberately.
 
-**How to apply:** Keep property name/address in their own stable row, use `logoUrl` rather than `logoSquareUrl`, and verify exact heading coordinates with and without the logo. Viber and Instagram remain part of the same approved identity/contact parity release.
+**How to apply:** Use a single heading/logo row with 20px sides, 16px minimum gap, space-between/center alignment, a non-shrinking logo, and a truncating heading. Verify exact heading coordinates with and without the logo. Viber and Instagram remain part of the same approved identity/contact parity release.
+
+Living Guide Home screenshots must be captured only after the four-second Smart360 splash is gone, with the real welcome heading and host logo asserted visible; the exact saved disk file must then be opened before presentation.
+
+**Why:** A browser-state screenshot once showed Home correctly while the separately exported evidence file still contained the timed splash, so presenting it falsely claimed evidence for host-logo placement.
+
+**How to apply:** Use a fresh page, wait more than four seconds after load, assert the Home screen and localized welcome heading in the DOM, save to a new path, then inspect that path itself—not only a tester screenshot ID.
 
 Kuula presentation is normalized only at render time: force `logo=-1`, `info=0`, `fs=0`, `vr=0`, `gyro=0`, `thumbs=-1`, and `pause=0`; preserve the stored URL, tour identity, autorotate, and unknown parameters. Every guest renderer and the admin preview must use the same helper and delegate no fullscreen, XR, gyroscope, or accelerometer permissions.
 
