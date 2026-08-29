@@ -25,3 +25,4 @@
 - [Events scheduling model](events-scheduling-model.md) — generated occurrences, tenant-local days, translation fallback, immutable history, and cross-midnight limit.
 - [Passkey cancellation](passkey-cancellation.md) — SimpleWebAuthn owns the native ceremony signal; external watchdogs must also cancel its internal ceremony.
 - [Release diff isolation](release-diff-isolation.md) — compare every publish to the deployed revision; include untracked files and re-read schema diff after startup security setup.
+- [Slovenian plural helper](slovenian-plural-helper.md) — with the next code change, fall back to `other` for impossible Intl plural categories; do not amend the current publish.
