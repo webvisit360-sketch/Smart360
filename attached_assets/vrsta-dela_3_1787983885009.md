@@ -16,37 +16,60 @@ preverjena, ne ko je zelena v razvoju.
 Dokazano v produkciji: povpraševanje `app444`, ID ponudnika
 `f1ff068d-b5a8-45b2-b59e-2f4c09a0f3b5`, zadnji dogodek `email.delivered`,
 v Povpraševanjih piše **E-pošta dostavljena**. Prvi poskus je padel, ker CHECK
-constraint ni nikoli prišel v produkcijo; vrstico je nato brez ročnega posega
-pozdravil ponudnikov retry ob 05.09 z odgovorom 200.
+constraint ni nikoli prišel v produkcijo; popravljeno ročno v SQL konzoli,
+vrstico pa je pozdravil ponudnikov retry ob 05.09 z odgovorom 200 — brez
+ročnega posega v podatke.
 Podpisan endpoint, preverjen nad surovim telesom. Sme samo posodabljati vrstice,
 ujete prek `provider_message_id` — nikoli ustvarjati. Dogodek za neznan ID se
 tiho zavrže. `bounced` in `complained` sta končna; poznejši `delivered` ju ne
 sme povoziti. Streže povpraševanjem in vabilom hkrati.
 *Narejeno, ko:* v Povpraševanjih piše dostavljeno ali odbito, ne »poslano«.
 
-**2 · Operaterjeva prijava z geslom**
-Najprej se samostojno objavi popravek zamrznitve passkeya: strežniški timeout,
-odjemalski `AbortController` in zanesljiv izhod iz loading stanja. Nato lastna
-Argon2id poverilnica, trajna per-IP omejitev, progresivni zamik, password
-recovery, audit neuspehov in uporabna sporočila. Passkey ostane dodatna metoda.
-*Narejeno, ko:* lastnik se v produkciji na svojem računalniku prijavi z
-e-pošto in geslom v prvem poskusu.
+**2 · Operaterjeva prijava z geslom — prestavljeno naprej 29. 8. 2026**
+Doslej je bila za vabili. Prestavljena, ker lastnikova prijava blokira vse
+ostalo: passkey uspe približno vsak četrti poskus in zamrzne brskalnik, vsaka
+naslednja točka pa se konča z njegovim pogledom v konzolo.
+Obsega: časovna omejitev in `AbortController` na klicu za ključ (najprej,
+samostojno in takoj objaviti), lastna operaterjeva poverilnica z Argon2id,
+trda per-IP omejitev in progresivni zamik namesto zaklepa računa, recovery koda
+mora znati obnoviti geslo, trajno beleženje neuspelih poskusov, uporabna
+sporočila o napaki. Passkey ostane kot dodatna metoda, ne izbrisan.
+*Narejeno, ko:* lastnik se v produkciji prijavi z e-pošto in geslom, v prvem
+poskusu, na svojem računalniku.
 
-**3 · Dokazila o dostavi vabil**
+**3 · Redizajn administracije — naročeno 29. 8. 2026**
+Ena aplikacija, dve ravni, ena sprememba: operaterjeva plošča in strankina
+konzola sta zgrajeni iz istih komponent. Načrt je `admin-2030.html`, šest
+zaslonov. Zdaj, ker ni še nobene stranke — vsak teden odlašanja veča možnost,
+da bo nekdo že notri, ko se barva zamenja.
+Ne dotakne se nobene tabele in ničesar, kar bere vodnik za goste; nastavitve
+videza pod zavihkom Videz pripadajo gostitelju in ostanejo nedotaknjene.
+*Narejeno, ko:* posnetki iz produkcije pri 1440 in 390 px — nadzorna plošča,
+Pregled, Nastavitve in en dolg zaslon — in lastnik jih pogleda.
+
+**4 · Dokazila o dostavi vabil**
 `host_invites` že ima stolpce. Manjka priklop na webhook.
 *Narejeno, ko:* eno resnično vabilo ima shranjeno vrstico, message ID in
 ponudnikov dogodek, Frenk pa ga je videl v nabiralniku in si nastavil geslo.
 
-**4 · Sedem dni in stran za poteklo povezavo**
+**5 · Sedem dni in stran za poteklo povezavo**
 Veljavnost s 72 ur na 7 dni, enkratna uporaba ostane. Stran v CGP, ki pove, da
 povezava ne velja več, in ima en gumb za novo vabilo. Nikoli gola napaka in
 nikoli razkritje, ali račun obstaja.
 
-**5 · Pošiljatelj — odločeno 29. 8. 2026**
-Pošiljatelj ostane `Smart360 <info@webvisit360.com>`. Vabili vsebujeta odobreno
-pojasnilo domene. DMARC je preverjen; DNS se ne spreminja.
+**6 · Pošiljatelj — odločeno 29. 8. 2026**
+Naslov pošiljatelja **ostane `Smart360 <info@webvisit360.com>`**. Lastnikova
+odločitev: webvisit360 je domena iz iste družine projektov. Selitve na
+`smart360.info` ne izvajamo in te točke naj nihče ne odpira znova.
 
-**6 · Dogodki**
+Ker pošiljatelj ostane, sta obvezni dve dopolnili:
+- v vabilu ena poved, ki pove, da sporočilo pošilja Smart360 prek svojega
+  sistema na webvisit360.com — da previden prejemnik najde pojasnilo, namesto
+  da naleti na neujemanje;
+- preveriti, ali ima `webvisit360.com` zapis DMARC; brez njega je domeno lažje
+  zlorabiti in dostava je slabša.
+
+**7 · Dogodki**
 Specifikacija je zaključena in odobrena — `dogodki-2030.html` in dopolnili o
 nespremenljivih preteklih pojavitvah ter znani omejitvi čez polnoč.
 
@@ -73,20 +96,8 @@ nespremenljivih preteklih pojavitvah ter znani omejitvi čez polnoč.
 - Prazno polje **»Vprašanje ali opomba«** naj se izpusti, ne izpiše s
   pomišljajem.
 - Potrdilo obiskovalcu po oddaji obrazca — šele po verifikaciji domene.
-- **Redizajn administracije po CGP aplikacije.** `admin-2030.html` ima šest
-  potrjenih zaslonov, vendar ostaja načrt, ne naročena celovita prenova.
-  Naročila: `Potrdi` je poln accent, izjemni `Zavrni` je danger outline,
-  čakalni čas stoji ob imenu gosta. Okolica: kraj/kategorija, razdalja, resnična
-  provenienca koordinat (`človek je vpisal` / `stroj je uganil`), nato majhen
-  skrajšan naslov; zgoraj je število lokacij brez človeškega pregleda. Stanje
-  dvojnika se sme izrisati, review log in zaznavanje dvojnikov pa sta ločeni
-  podatkovni nalogi. Ne začni prenove brez novega izrecnega naročila.
-- **Dvojina v vmesniku.** Popraviti »3 naročil« in »2 sporočil« prek skupnega
-  pluralnega helperja.
-- **Zgodovina sprememb.** Ne prikazovati surovih `cockpit-entry tenant`,
-  `update item` in `update distance-review`, ampak varen slovenski povzetek.
-  Tenantova zgodovina ohrani obstoječa slovenska besedila; enake zaporedne
-  dogodke istega akterja v petih minutah združi v eno vrstico s števcem.
+- **Zgodovina govori angleško razvijalsko** — `cockpit-entry tenant`,
+  `update item`, `update distance-review`. Stranka tega ne bere.
 
 ---
 

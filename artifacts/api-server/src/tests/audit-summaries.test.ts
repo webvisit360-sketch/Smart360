@@ -23,6 +23,10 @@ test("audit summaries for managed actions are fixed Slovenian values", () => {
     hostReplySummary("0b56f1e5-2fca-4421-b58d-3f98c6d18cd7"),
     "Poslan je bil odgovor v pogovoru 0b56f1e5-2fca-4421-b58d-3f98c6d18cd7.",
   );
+  assert.equal(
+    safeSummary("update", "distance-review"),
+    "je posodobil pregled razdalj.",
+  );
 });
 
 test("audit summaries reject unsafe references and exclude sensitive content", () => {
