@@ -23,3 +23,4 @@
 - [Enquiry delivery diagnosis](enquiry-delivery-diagnosis.md) — Gmail access is permanently declined; use persisted delivery state and provider status, never mailbox workarounds.
 - [Migration approval boundaries](migration-approval-boundaries.md) — additive approval never covers existing-schema changes or backfills; show exact SQL and wait.
 - [Events scheduling model](events-scheduling-model.md) — generated occurrences, tenant-local days, translation fallback, immutable history, and cross-midnight limit.
+- [Passkey cancellation](passkey-cancellation.md) — SimpleWebAuthn owns the native ceremony signal; external watchdogs must also cancel its internal ceremony.

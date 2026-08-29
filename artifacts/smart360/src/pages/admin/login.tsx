@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useGetPasskeyLoginOptions, useVerifyPasskeyLogin, useUseRecoveryCode } from "@workspace/api-client-react";
-import { startAuthentication } from "@simplewebauthn/browser";
+import { startAuthentication, WebAuthnAbortService } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,9 @@ import { withAbortTimeout } from "@/lib/passkey-timeout";
 const suppliedLogoSvg =
   loginDesignHtml.match(/<div class="brand"><div class="lk">([\s\S]*?<\/svg>)<\/div><\/div>/)?.[1] ?? "";
 const PASSKEY_TIMEOUT_MS = 60_000;
+const PASSKEY_CANCEL_OFFER_MS = 10_000;
+const PASSKEY_BROWSER_HELP =
+  "Prijava s ključem v tem brskalniku ni uspela. Poskusite znova ali odprite administracijo v drugem brskalniku.";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -25,6 +28,7 @@ export default function AdminLogin() {
   
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isProcessingLogin, setIsProcessingLogin] = useState(false);
+  const [showPasskeyCancel, setShowPasskeyCancel] = useState(false);
   const [hostEmail, setHostEmail] = useState("");
   const [hostPassword, setHostPassword] = useState("");
   const [hostBusy, setHostBusy] = useState(false);
@@ -68,9 +72,17 @@ export default function AdminLogin() {
     passkeyAbortRef.current = controller;
     setLoginError(null);
     setIsProcessingLogin(true);
+    setShowPasskeyCancel(false);
+    let cancelOfferId: number | undefined;
+    const cancelBrowserCeremony = () => WebAuthnAbortService.cancelCeremony();
+    controller.signal.addEventListener("abort", cancelBrowserCeremony, { once: true });
     try {
       const optionsRes = await getLoginOptionsMutation.mutateAsync();
       const { challengeId, options } = optionsRes;
+      cancelOfferId = window.setTimeout(
+        () => setShowPasskeyCancel(true),
+        PASSKEY_CANCEL_OFFER_MS,
+      );
 
       const response = await withAbortTimeout(
         startAuthentication({ optionsJSON: options as any }),
@@ -87,17 +99,26 @@ export default function AdminLogin() {
       
       setLocation("/admin");
     } catch (err: any) {
-      if (controller.signal.aborted || err?.name === "TimeoutError") {
-        setLoginError("Prijava s ključem je potekla. Poskusite znova.");
+      if (controller.signal.aborted || err?.name === "TimeoutError" || err?.name === "AbortError") {
+        setLoginError(PASSKEY_BROWSER_HELP);
       } else if (err?.response?.status === 429) {
         setLoginError("Preveč poskusov. Prosimo, poskusite znova kasneje.");
       } else {
-        setLoginError("Prijava ni uspela. Preverite brskalnik ali uporabite drugo napravo.");
+        setLoginError(PASSKEY_BROWSER_HELP);
       }
     } finally {
+      if (cancelOfferId !== undefined) window.clearTimeout(cancelOfferId);
+      controller.signal.removeEventListener("abort", cancelBrowserCeremony);
       if (passkeyAbortRef.current === controller) passkeyAbortRef.current = null;
+      setShowPasskeyCancel(false);
       setIsProcessingLogin(false);
     }
+  };
+
+  const cancelPasskeyLogin = () => {
+    passkeyAbortRef.current?.abort(
+      new DOMException("Passkey login was cancelled", "AbortError"),
+    );
   };
 
   const handleRecoverySubmit = (e: React.FormEvent) => {
@@ -266,6 +287,20 @@ export default function AdminLogin() {
             {isProcessingLogin && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
             Prijava s ključem
           </Button>
+
+          {isProcessingLogin && showPasskeyCancel && (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <span>Se nič ne zgodi?</span>
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-sm font-semibold"
+                onClick={cancelPasskeyLogin}
+              >
+                Prekliči poskus
+              </Button>
+            </div>
+          )}
 
           {loginError && (
             <div className="text-sm font-medium text-destructive text-center">

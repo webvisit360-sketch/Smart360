@@ -20,3 +20,16 @@ test("passkey watchdog preserves a result that completes before the deadline", a
   assert.equal(result, "ok");
   assert.equal(controller.signal.aborted, false);
 });
+
+test("manual abort immediately releases a ceremony that never settles", async () => {
+  const controller = new AbortController();
+  const never = new Promise<never>(() => {});
+  const result = withAbortTimeout(never, controller, 60_000);
+
+  controller.abort(new DOMException("Passkey login was cancelled", "AbortError"));
+
+  await assert.rejects(
+    result,
+    (error: unknown) => error instanceof DOMException && error.name === "AbortError",
+  );
+});

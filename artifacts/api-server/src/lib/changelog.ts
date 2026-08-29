@@ -118,7 +118,6 @@ export function safeSummary(action: string, entity: string): string {
     "host-invite": "povabilo stranki",
     "order-status": "status naročila",
     "host-message": "odgovor stranki",
-    "distance-review": "pregled razdalj",
   };
   return `${actions[action] ?? "je spremenil"} ${entities[entity] ?? "vodnik"}.`;
 }

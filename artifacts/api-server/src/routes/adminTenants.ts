@@ -27,7 +27,7 @@ import {
   ListTenantRenewalsResponse,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
-import { logChange, safeSummary } from "../lib/changelog";
+import { logChange } from "../lib/changelog";
 import { buildTenantOverviews } from "../lib/tenantOverview";
 import { seedTenantContent, TENANT_TYPES, type TenantType } from "../lib/tenantSeeds";
 import { sendPublishedEmail } from "../lib/lifecycleEmails";
@@ -157,10 +157,7 @@ router.get("/admin/overview", async (_req, res): Promise<void> => {
       tenantsCount: tenantCounts?.total ?? 0,
       publishedCount: tenantCounts?.published ?? 0,
       itemsCount: itemCounts?.total ?? 0,
-      recentChanges: recentChanges.map((change) => ({
-        ...change,
-        summary: change.summary || safeSummary(change.action, change.entity),
-      })),
+      recentChanges,
       renewalsDue,
     })),
   );
