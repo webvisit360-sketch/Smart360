@@ -315,6 +315,45 @@ export const GetPasskeyLoginOptionsResponse = zod.object({
 })
 
 
+/**
+ * @summary Primary operator e-mail and password login
+ */
+export const loginAdminPasswordBodyPasswordMax = 200;
+
+
+
+export const LoginAdminPasswordBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string().max(loginAdminPasswordBodyPasswordMax)
+})
+
+export const LoginAdminPasswordResponse = zod.object({
+  "authenticated": zod.boolean()
+})
+
+
+export const GetAdminPasswordStatusResponse = zod.object({
+  "hasPassword": zod.boolean()
+})
+
+
+export const setAdminPasswordBodyCurrentPasswordMax = 200;
+
+export const setAdminPasswordBodyNewPasswordMin = 12;
+export const setAdminPasswordBodyNewPasswordMax = 200;
+
+
+
+export const SetAdminPasswordBody = zod.object({
+  "currentPassword": zod.string().max(setAdminPasswordBodyCurrentPasswordMax).optional(),
+  "newPassword": zod.string().min(setAdminPasswordBodyNewPasswordMin).max(setAdminPasswordBodyNewPasswordMax)
+})
+
+export const SetAdminPasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
 export const VerifyPasskeyLoginBody = zod.object({
   "challengeId": zod.string(),
   "response": zod.record(zod.string(), zod.unknown())
@@ -348,12 +387,18 @@ export const VerifyEnrollResponse = zod.object({
 })
 
 
+export const useRecoveryCodeBodyNewPasswordMin = 12;
+export const useRecoveryCodeBodyNewPasswordMax = 200;
+
+
+
 export const UseRecoveryCodeBody = zod.object({
-  "code": zod.string()
+  "code": zod.string(),
+  "newPassword": zod.string().min(useRecoveryCodeBodyNewPasswordMin).max(useRecoveryCodeBodyNewPasswordMax)
 })
 
 export const UseRecoveryCodeResponse = zod.object({
-  "enrollToken": zod.string()
+  "authenticated": zod.boolean()
 })
 
 

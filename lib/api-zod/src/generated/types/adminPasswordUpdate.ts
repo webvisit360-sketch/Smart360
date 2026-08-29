@@ -6,8 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RecoveryBody {
-  code: string;
+export interface AdminPasswordUpdate {
+  /** @maxLength 200 */
+  currentPassword?: string;
   /**
      * @minLength 12
      * @maxLength 200

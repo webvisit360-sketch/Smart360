@@ -6,7 +6,10 @@ import {
   integer,
   bigint,
   jsonb,
+  boolean,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 /** Single-operator admin account. Email is a label only (no mail is ever sent). */
 export const adminUsersTable = pgTable("admin_users", {
@@ -15,6 +18,32 @@ export const adminUsersTable = pgTable("admin_users", {
   displayName: text("display_name").notNull().default("Upravitelj"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * The single operator password credential. A boolean primary key makes a
+ * second credential impossible while keeping the existing admin_users row
+ * untouched.
+ */
+export const adminPasswordCredentialsTable = pgTable(
+  "admin_password_credentials",
+  {
+    singleton: boolean("singleton").primaryKey().notNull().default(true),
+    passwordHash: text("password_hash").notNull(),
+    changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [check("admin_password_credentials_singleton", sql`${table.singleton} = true`)],
+);
+
+/** Cross-instance progressive-delay state for the single operator account. */
+export const adminPasswordStateTable = pgTable(
+  "admin_password_state",
+  {
+    singleton: boolean("singleton").primaryKey().notNull().default(true),
+    failedLoginCount: integer("failed_login_count").notNull().default(0),
+    lastFailedAt: timestamp("last_failed_at", { withTimezone: true }),
+  },
+  (table) => [check("admin_password_state_singleton", sql`${table.singleton} = true`)],
+);
 
 /** WebAuthn passkey credentials. */
 export const adminCredentialsTable = pgTable("admin_credentials", {

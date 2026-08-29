@@ -70,6 +70,9 @@ function e(entity: EntityKind, param = "id"): Binding {
 
 export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   // ── Owner passkey auth (adminAuth.ts) ────────────────────────────────────
+  { method: "post", path: "/admin/password/login", binding: ANON },
+  { method: "get", path: "/admin/password", binding: OWNER },
+  { method: "put", path: "/admin/password", binding: OWNER },
   { method: "post", path: "/admin/webauthn/login/options", binding: ANON },
   { method: "post", path: "/admin/webauthn/login/verify", binding: ANON },
   { method: "post", path: "/admin/logout", binding: ANON },

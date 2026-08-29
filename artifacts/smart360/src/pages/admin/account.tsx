@@ -12,6 +12,9 @@ import {
   useListAuthEvents, useGetAdminSession,
   getGetRecoveryCodeStatusQueryKey,
   getListAuthEventsQueryKey,
+  useGetAdminPasswordStatus,
+  useSetAdminPassword,
+  getGetAdminPasswordStatusQueryKey,
 } from "@workspace/api-client-react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
@@ -35,6 +38,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useHostSession } from "@/hooks/use-host-session";
 import { getListPasskeysQueryKey } from "@workspace/api-client-react";
+import { recoveryCodeCountSl } from "@/lib/recovery-code-plural";
 
 
 export default function AdminAccount() {
@@ -168,6 +172,46 @@ function OwnerAccount() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: passwordStatus } = useGetAdminPasswordStatus();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const passwordMutation = useSetAdminPassword({
+    mutation: {
+      onSuccess: () => {
+        toast({
+          title: passwordStatus?.hasPassword ? "Geslo spremenjeno" : "Geslo nastavljeno",
+          description: "Druge upravljavske seje so bile odjavljene.",
+        });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        queryClient.invalidateQueries({ queryKey: getGetAdminPasswordStatusQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListAuthEventsQueryKey() });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Gesla ni bilo mogoče shraniti",
+          description: error?.data?.error ?? "Preverite vnesena gesla in poskusite znova.",
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
+  const handleOwnerPassword = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Gesli se ne ujemata", variant: "destructive" });
+      return;
+    }
+    passwordMutation.mutate({
+      data: {
+        newPassword,
+        ...(passwordStatus?.hasPassword ? { currentPassword } : {}),
+      },
+    });
+  };
 
   const { data: passkeyData, isLoading: isLoadingPasskeys } = useListPasskeys();
   
@@ -337,6 +381,72 @@ function OwnerAccount() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Geslo upravljavca</CardTitle>
+          <CardDescription>
+            {passwordStatus?.hasPassword
+              ? "Spremenite glavno geslo za prijavo Smart360 ekipe."
+              : "Nastavite glavno geslo za prijavo Smart360 ekipe."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleOwnerPassword} className="space-y-4 max-w-sm">
+            {passwordStatus?.hasPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="owner-current-password">Trenutno geslo</Label>
+                <Input
+                  id="owner-current-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="owner-new-password">Novo geslo</Label>
+              <Input
+                id="owner-new-password"
+                type="password"
+                autoComplete="new-password"
+                minLength={12}
+                maxLength={200}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="owner-confirm-password">Ponovite novo geslo</Label>
+              <Input
+                id="owner-confirm-password"
+                type="password"
+                autoComplete="new-password"
+                minLength={12}
+                maxLength={200}
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={
+                passwordMutation.isPending ||
+                newPassword.length < 12 ||
+                !confirmPassword ||
+                Boolean(passwordStatus?.hasPassword && !currentPassword)
+              }
+            >
+              {passwordMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {passwordStatus?.hasPassword ? "Spremeni geslo" : "Nastavi geslo"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-primary" />
             Registrirani ključi (Passkeys)
@@ -436,10 +546,10 @@ function OwnerAccount() {
                     Število neuporabljenih kod: <strong className="text-foreground">{passkeyData?.unusedRecoveryCodes || 0}</strong>
                   </p>
                 </div>
-                {passkeyData?.unusedRecoveryCodes === 0 && (
+                {(passkeyData?.unusedRecoveryCodes ?? 10) <= 5 && (
                   <div className="text-xs text-destructive flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    Nimate več obnovitvenih kod!
+                    {recoveryCodeCountSl(passkeyData?.unusedRecoveryCodes ?? 0)}
                   </div>
                 )}
               </div>

@@ -21,8 +21,6 @@ import {
   listCredentials,
   countUnusedRecoveryCodes,
   issueRecoveryCodes,
-  consumeRecoveryCode,
-  createEnrollToken,
   isEnrollTokenValid,
   consumeEnrollToken,
   storeChallenge,
@@ -35,11 +33,15 @@ import {
   logAuthEvent,
   loginRateLimited,
   recordRecoveryAttempt,
-  markRecoveryAttemptSuccess,
   recoveryCodeCounts,
   SESSION_COOKIE,
+  loginAdminPassword,
+  adminPasswordStatus,
+  setOrChangeAdminPassword,
+  resetAdminPasswordWithRecovery,
 } from "../lib/adminAuth";
 import crypto from "node:crypto";
+import { sendAdminSecurityEmail } from "../lib/adminSecurityEmail";
 
 const router: IRouter = Router();
 
@@ -53,7 +55,30 @@ function parseTransports(json: string | null): AuthenticatorTransportFuture[] | 
   }
 }
 
-// ---------- Login (passkey) ----------
+// ---------- Login (password primary; passkey additional) ----------
+
+router.post("/admin/password/login", async (req, res): Promise<void> => {
+  const result = await loginAdminPassword(req.body?.email, req.body?.password, req, res);
+  if (!result.ok) {
+    if (result.status === 400) {
+      res.status(400).json({ error: "Geslo je predolgo." });
+      return;
+    }
+    if (result.status === 429) {
+      res.status(429).json({
+        error: "Preveč napačnih poskusov s tega naslova. Poskusite znova čez 15 minut.",
+      });
+      return;
+    }
+    res.status(401).json({
+      error: result.retryAfterSeconds
+        ? `Počakajte ${result.retryAfterSeconds} s in nato poskusite znova.`
+        : "E-poštni naslov ali geslo ni pravilno.",
+    });
+    return;
+  }
+  res.json({ authenticated: true });
+});
 
 router.post("/admin/webauthn/login/options", async (req, res): Promise<void> => {
   const ip = req.ip ?? "unknown";
@@ -236,6 +261,7 @@ router.post("/admin/enroll/verify", async (req, res): Promise<void> => {
   });
   await logAuthEvent(req, "enroll", `source:${source}`);
   await createSession(req, res);
+  await sendAdminSecurityEmail("passkey_enrolled");
   // Recovery codes are issued exactly once — on first enrolment (or shell re-enrolment when none exist).
   let recoveryCodes: string[] | undefined;
   if (isFirst || (await countUnusedRecoveryCodes()) === 0) {
@@ -260,20 +286,35 @@ router.post("/admin/recovery", async (req, res): Promise<void> => {
     });
     return;
   }
-  const { code } = req.body ?? {};
-  const ok = typeof code === "string" && (await consumeRecoveryCode(code));
-  if (!ok) {
-    res.status(401).json({ error: "Koda ni veljavna." });
+  const { code, newPassword } = req.body ?? {};
+  const result = await resetAdminPasswordWithRecovery(code, newPassword, attemptId, req, res);
+  if (!result.ok) {
+    res.status(401).json({ error: result.error });
     return;
   }
-  if (attemptId) await markRecoveryAttemptSuccess(attemptId);
-  // No session is created here: the enroll token only allows registering a
-  // passkey; every other admin action still requires a passkey login.
-  const token = await createEnrollToken("recovery");
-  res.json({ enrollToken: token });
+  await sendAdminSecurityEmail("password_recovered");
+  res.json({ authenticated: true });
 });
 
-// ---------- Recovery codes management (authenticated) ----------
+// ---------- Password and recovery-code management (authenticated) ----------
+
+router.get("/admin/password", requireAdmin, async (_req, res): Promise<void> => {
+  res.json(await adminPasswordStatus());
+});
+
+router.put("/admin/password", requireAdmin, async (req, res): Promise<void> => {
+  const result = await setOrChangeAdminPassword(
+    req.body?.currentPassword,
+    req.body?.newPassword,
+    req,
+  );
+  if (!result.ok) {
+    res.status(400).json({ error: result.error });
+    return;
+  }
+  await sendAdminSecurityEmail("password_changed");
+  res.json({ ok: true });
+});
 
 router.get("/admin/recovery-codes", requireAdmin, async (_req, res): Promise<void> => {
   res.json(await recoveryCodeCounts());
@@ -284,6 +325,7 @@ router.post("/admin/recovery-codes/rotate", requireAdmin, async (req, res): Prom
   // only into this response (admin's screen); DB stores argon2 hashes.
   const recoveryCodes = await issueRecoveryCodes(10);
   await logAuthEvent(req, "recovery_codes_rotated", "count:10");
+  await sendAdminSecurityEmail("recovery_codes_replaced");
   res.json({ recoveryCodes });
 });
 
@@ -433,6 +475,7 @@ router.post("/admin/credentials/verify", requireAdmin, async (req, res): Promise
         : "Passkey",
   });
   await logAuthEvent(req, "enroll", "source:session");
+  await sendAdminSecurityEmail("passkey_enrolled");
   res.json({ ok: true });
 });
 

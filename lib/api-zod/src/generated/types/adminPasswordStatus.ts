@@ -6,6 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RecoveryResult {
-  authenticated: boolean;
+export interface AdminPasswordStatus {
+  hasPassword: boolean;
 }

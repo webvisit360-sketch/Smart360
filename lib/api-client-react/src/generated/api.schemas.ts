@@ -192,10 +192,35 @@ export interface EnrollResult {
 
 export interface RecoveryBody {
   code: string;
+  /**
+     * @minLength 12
+     * @maxLength 200
+     */
+  newPassword: string;
 }
 
 export interface RecoveryResult {
-  enrollToken: string;
+  authenticated: boolean;
+}
+
+export interface AdminPasswordLoginInput {
+  email: string;
+  /** @maxLength 200 */
+  password: string;
+}
+
+export interface AdminPasswordUpdate {
+  /** @maxLength 200 */
+  currentPassword?: string;
+  /**
+     * @minLength 12
+     * @maxLength 200
+     */
+  newPassword: string;
+}
+
+export interface AdminPasswordStatus {
+  hasPassword: boolean;
 }
 
 export interface Passkey {

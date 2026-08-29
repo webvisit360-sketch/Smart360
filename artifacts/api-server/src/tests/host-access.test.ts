@@ -431,6 +431,8 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
         "admin_credentials",
         "admin_users",
         "admin_recovery_codes",
+        "admin_password_credentials",
+        "admin_password_state",
         "host_invites",
         "host_password_resets",
         "tenant_renewals",

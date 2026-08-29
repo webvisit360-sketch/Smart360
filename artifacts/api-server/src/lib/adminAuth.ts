@@ -10,6 +10,8 @@ import {
   adminEnrollTokensTable,
   adminChallengesTable,
   adminAuthEventsTable,
+  adminPasswordCredentialsTable,
+  adminPasswordStateTable,
   type AdminUser,
   type AdminCredential,
 } from "@workspace/db";
@@ -21,12 +23,71 @@ const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const ENROLL_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-export const ADMIN_EMAIL = "pi4.doo@gmail.com";
+export const ADMIN_EMAIL = "smart360hq@gmail.com";
 
 const ARGON2ID = { algorithm: 2 } as const; // argon2id
+export const ADMIN_ARGON2ID_PARAMS = {
+  algorithm: 2,
+  memoryCost: 65536,
+  timeCost: 3,
+  parallelism: 1,
+} as const;
+export const ADMIN_PASSWORD_MIN_LENGTH = 12;
+const ADMIN_PASSWORD_MAX_LENGTH = 200;
 
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+export function validateAdminPassword(
+  value: unknown,
+): { ok: true; value: string } | { ok: false; error: string } {
+  if (typeof value !== "string") return { ok: false, error: "Vnesite novo geslo." };
+  if (value.length < ADMIN_PASSWORD_MIN_LENGTH) {
+    return {
+      ok: false,
+      error: `Geslo mora imeti vsaj ${ADMIN_PASSWORD_MIN_LENGTH} znakov.`,
+    };
+  }
+  if (value.length > ADMIN_PASSWORD_MAX_LENGTH) {
+    return { ok: false, error: "Geslo je predolgo." };
+  }
+  return { ok: true, value };
+}
+
+export function adminPasswordBackoffMs(failures: number): number {
+  if (failures < 3) return 0;
+  return Math.min(2 ** (failures - 3), 60) * 1000;
+}
+
+export async function hashAdminPassword(password: string): Promise<string> {
+  return argonHash(password, ADMIN_ARGON2ID_PARAMS);
+}
+
+// A valid hash with the exact production cost profile. It is not a credential;
+// keeping it constant avoids making the first missing-account request pay an
+// extra hash operation (which would itself create a timing distinction).
+const DUMMY_PASSWORD_HASH =
+  "$argon2id$v=19$m=65536,t=3,p=1$vxKAUGYBuC/qYkW24IboGQ$1Y0YPDKkV8EBvWrItesthHQFAR3+G0MnktDqridD/1Q";
+
+type PasswordVerifier = (
+  hash: string,
+  password: string,
+  dummy: boolean,
+) => Promise<boolean>;
+let passwordVerifierOverride: PasswordVerifier | null = null;
+/** Test hook. Production always uses Argon2 verification. */
+export function _setAdminPasswordVerifierOverride(fn: PasswordVerifier | null): void {
+  passwordVerifierOverride = fn;
+}
+
+async function verifyPassword(hash: string, password: string, dummy: boolean): Promise<boolean> {
+  if (passwordVerifierOverride) return passwordVerifierOverride(hash, password, dummy);
+  try {
+    return await argonVerify(hash, password);
+  } catch {
+    return false;
+  }
 }
 
 // ---------- Relying party configuration ----------
@@ -259,6 +320,10 @@ export async function createSession(req: Request, res: Response): Promise<void> 
     userAgent: req.get("user-agent") ?? null,
     expiresAt: new Date(Date.now() + SESSION_TTL_MS),
   });
+  setSessionCookie(res, token);
+}
+
+function setSessionCookie(res: Response, token: string): void {
   // __Host- prefix requires Secure + Path=/ + no Domain; the preview/prod are always HTTPS.
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -269,7 +334,7 @@ export async function createSession(req: Request, res: Response): Promise<void> 
   });
 }
 
-async function findSessionId(req: Request): Promise<string | null> {
+export async function findSessionId(req: Request): Promise<string | null> {
   const cookies = (req as Request & { cookies?: Record<string, string> }).cookies;
   const token = cookies?.[SESSION_COOKIE];
   if (!token) return null;
@@ -325,25 +390,320 @@ export async function logAuthEvent(
   });
 }
 
-// ---------- Rate limiting (in-memory) ----------
+// ---------- Operator password ----------
 
-const attempts = new Map<string, { count: number; resetAt: number }>();
-
-function limited(key: string, max: number, windowMs: number, record: boolean): boolean {
+const LOCK_PASSWORD_LOGIN = 729403;
+const passkeyAttempts = new Map<string, { count: number; resetAt: number }>();
+/** Existing passkey ceremony throttle; password attempts use the DB path below. */
+export function loginRateLimited(ip: string, record = true): boolean {
   const now = Date.now();
-  const entry = attempts.get(key);
+  const entry = passkeyAttempts.get(ip);
   if (!entry || entry.resetAt < now) {
-    if (record) attempts.set(key, { count: 1, resetAt: now + windowMs });
+    if (record) passkeyAttempts.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 });
     return false;
   }
-  if (entry.count >= max) return true;
+  if (entry.count >= 10) return true;
   if (record) entry.count += 1;
   return false;
 }
 
-/** Login: 10 attempts / 15 minutes per IP. Only verify attempts count. */
-export function loginRateLimited(ip: string, record = true): boolean {
-  return limited(`login:${ip}`, 10, 15 * 60 * 1000, record);
+export type AdminPasswordLoginResult =
+  | { ok: true }
+  | { ok: false; status: 400 | 401 | 429; retryAfterSeconds?: number };
+
+/**
+ * Verifies the operator password under a cross-instance advisory lock.
+ * The audit row pessimistically reserves the IP attempt before Argon2 runs, so
+ * concurrent bursts cannot pass a stale quota check. Any DB/audit failure
+ * aborts the request (fail closed).
+ */
+export async function loginAdminPassword(
+  emailRaw: unknown,
+  passwordRaw: unknown,
+  req: Request,
+  res: Response,
+): Promise<AdminPasswordLoginResult> {
+  const ip = req.ip ?? "unknown";
+  const userAgent = req.get("user-agent") ?? null;
+  const email = typeof emailRaw === "string" ? emailRaw.trim().toLowerCase() : "";
+  const password = typeof passwordRaw === "string" ? passwordRaw : "";
+  if (password.length > ADMIN_PASSWORD_MAX_LENGTH) {
+    return { ok: false, status: 400 };
+  }
+  const token = crypto.randomBytes(32).toString("base64url");
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_PASSWORD_LOGIN})`);
+    await tx
+      .insert(adminPasswordStateTable)
+      .values({ singleton: true })
+      .onConflictDoNothing();
+    const [state] = await tx
+      .select()
+      .from(adminPasswordStateTable)
+      .where(eq(adminPasswordStateTable.singleton, true))
+      .limit(1)
+      .for("update");
+    if (!state) throw new Error("Operator password state unavailable");
+
+    const delay = adminPasswordBackoffMs(state.failedLoginCount);
+    const remaining = state.lastFailedAt
+      ? state.lastFailedAt.getTime() + delay - Date.now()
+      : 0;
+    if (remaining > 0) {
+      // Early retries do not verify, count as failures, or extend the delay.
+      return {
+        ok: false as const,
+        status: 401 as const,
+        retryAfterSeconds: Math.max(1, Math.ceil(remaining / 1000)),
+      };
+    }
+
+    const since = new Date(Date.now() - 15 * 60 * 1000);
+    const failures = await tx
+      .select({ id: adminAuthEventsTable.id })
+      .from(adminAuthEventsTable)
+      .where(
+        and(
+          eq(adminAuthEventsTable.type, "password_login_attempt"),
+          eq(adminAuthEventsTable.detail, "failure"),
+          eq(adminAuthEventsTable.ip, ip),
+          gt(adminAuthEventsTable.createdAt, since),
+        ),
+      );
+    if (failures.length >= 5) {
+      // Keep blocked attempts observable without allowing unauthenticated
+      // callers to amplify the audit table indefinitely.
+      const [recentLimited] = await tx
+        .select({ id: adminAuthEventsTable.id })
+        .from(adminAuthEventsTable)
+        .where(
+          and(
+            eq(adminAuthEventsTable.type, "password_login_attempt"),
+            eq(adminAuthEventsTable.detail, "rate_limited"),
+            eq(adminAuthEventsTable.ip, ip),
+            gt(adminAuthEventsTable.createdAt, new Date(Date.now() - 10 * 60 * 1000)),
+          ),
+        )
+        .limit(1);
+      if (!recentLimited) {
+        await tx.insert(adminAuthEventsTable).values({
+          type: "password_login_attempt",
+          detail: "rate_limited",
+          ip,
+          userAgent,
+        });
+      }
+      return { ok: false as const, status: 429 as const };
+    }
+
+    const [attempt] = await tx
+      .insert(adminAuthEventsTable)
+      .values({
+        type: "password_login_attempt",
+        detail: "failure",
+        ip,
+        userAgent,
+      })
+      .returning({ id: adminAuthEventsTable.id });
+    if (!attempt) throw new Error("Password login attempt could not be reserved");
+
+    const [credential] = await tx
+      .select()
+      .from(adminPasswordCredentialsTable)
+      .where(eq(adminPasswordCredentialsTable.singleton, true))
+      .limit(1);
+    const useDummy = email !== ADMIN_EMAIL || !credential;
+    const hash = useDummy ? DUMMY_PASSWORD_HASH : credential.passwordHash;
+    const verified = await verifyPassword(hash, password || "x", useDummy);
+    if (!verified || useDummy) {
+      await tx
+        .update(adminPasswordStateTable)
+        .set({
+          failedLoginCount: sql`${adminPasswordStateTable.failedLoginCount} + 1`,
+          lastFailedAt: new Date(),
+        })
+        .where(eq(adminPasswordStateTable.singleton, true));
+      return { ok: false as const, status: 401 as const };
+    }
+
+    await tx
+      .update(adminAuthEventsTable)
+      .set({ detail: "success" })
+      .where(eq(adminAuthEventsTable.id, attempt.id));
+    await tx
+      .update(adminPasswordStateTable)
+      .set({ failedLoginCount: 0, lastFailedAt: null })
+      .where(eq(adminPasswordStateTable.singleton, true));
+    await tx.insert(adminSessionsTable).values({
+      tokenHash: sha256(token),
+      ip,
+      userAgent,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    });
+    return { ok: true as const };
+  });
+  if (result.ok) setSessionCookie(res, token);
+  return result;
+}
+
+export async function adminPasswordStatus(): Promise<{ hasPassword: boolean }> {
+  const [row] = await db
+    .select({ singleton: adminPasswordCredentialsTable.singleton })
+    .from(adminPasswordCredentialsTable)
+    .where(eq(adminPasswordCredentialsTable.singleton, true))
+    .limit(1);
+  return { hasPassword: !!row };
+}
+
+export async function setOrChangeAdminPassword(
+  currentRaw: unknown,
+  nextRaw: unknown,
+  req: Request,
+): Promise<{ ok: true; initial: boolean } | { ok: false; error: string }> {
+  const next = validateAdminPassword(nextRaw);
+  if (!next.ok) return next;
+  const [credential] = await db
+    .select()
+    .from(adminPasswordCredentialsTable)
+    .where(eq(adminPasswordCredentialsTable.singleton, true))
+    .limit(1);
+  if (credential) {
+    const current = typeof currentRaw === "string" ? currentRaw : "";
+    if (!(await verifyPassword(credential.passwordHash, current || "x", false))) {
+      return { ok: false, error: "Trenutno geslo ni pravilno." };
+    }
+  }
+  const newHash = await hashAdminPassword(next.value);
+  const currentSessionId = await findSessionId(req);
+  if (!currentSessionId) return { ok: false, error: "Prijavna seja je potekla. Prijavite se znova." };
+  const changed = await db.transaction(async (tx) => {
+    if (credential) {
+      const rows = await tx
+        .update(adminPasswordCredentialsTable)
+        .set({ passwordHash: newHash, changedAt: new Date() })
+        .where(
+          and(
+            eq(adminPasswordCredentialsTable.singleton, true),
+            eq(adminPasswordCredentialsTable.passwordHash, credential.passwordHash),
+          ),
+        )
+        .returning({ singleton: adminPasswordCredentialsTable.singleton });
+      if (rows.length === 0) return false;
+    } else {
+      const rows = await tx
+        .insert(adminPasswordCredentialsTable)
+        .values({ singleton: true, passwordHash: newHash })
+        .onConflictDoNothing()
+        .returning({ singleton: adminPasswordCredentialsTable.singleton });
+      if (rows.length === 0) return false;
+    }
+    await tx
+      .insert(adminPasswordStateTable)
+      .values({ singleton: true, failedLoginCount: 0, lastFailedAt: null })
+      .onConflictDoUpdate({
+        target: adminPasswordStateTable.singleton,
+        set: { failedLoginCount: 0, lastFailedAt: null },
+      });
+    await tx
+      .delete(adminSessionsTable)
+      .where(sql`${adminSessionsTable.id} <> ${currentSessionId}`);
+    await tx.insert(adminAuthEventsTable).values({
+      type: credential ? "password_changed" : "password_set",
+      detail: null,
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+    });
+    return true;
+  });
+  if (!changed) {
+    return { ok: false, error: "Geslo se je medtem spremenilo. Osvežite stran in poskusite znova." };
+  }
+  return { ok: true, initial: !credential };
+}
+
+export async function resetAdminPasswordWithRecovery(
+  codeRaw: unknown,
+  nextRaw: unknown,
+  recoveryAttemptId: string,
+  req: Request,
+  res: Response,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const next = validateAdminPassword(nextRaw);
+  if (!next.ok) return next;
+  const normalized = typeof codeRaw === "string" ? normalizeRecoveryCode(codeRaw) : "";
+  if (normalized.length < 8) return { ok: false, error: "Obnovitvena koda ni veljavna." };
+  const codes = await db
+    .select()
+    .from(adminRecoveryCodesTable)
+    .where(isNull(adminRecoveryCodesTable.usedAt));
+  let matchedId: string | null = null;
+  for (const row of codes) {
+    if (await verifyPassword(row.codeHash, normalized, false)) {
+      matchedId = row.id;
+      break;
+    }
+  }
+  if (!matchedId) return { ok: false, error: "Obnovitvena koda ni veljavna." };
+  const newHash = await hashAdminPassword(next.value);
+  const token = crypto.randomBytes(32).toString("base64url");
+  const reset = await db.transaction(async (tx) => {
+    const [burned] = await tx
+      .update(adminRecoveryCodesTable)
+      .set({ usedAt: new Date() })
+      .where(
+        and(
+          eq(adminRecoveryCodesTable.id, matchedId!),
+          isNull(adminRecoveryCodesTable.usedAt),
+        ),
+      )
+      .returning({ id: adminRecoveryCodesTable.id });
+    if (!burned) return false;
+    await tx
+      .insert(adminPasswordCredentialsTable)
+      .values({ singleton: true, passwordHash: newHash })
+      .onConflictDoUpdate({
+        target: adminPasswordCredentialsTable.singleton,
+        set: { passwordHash: newHash, changedAt: new Date() },
+      });
+    await tx
+      .insert(adminPasswordStateTable)
+      .values({ singleton: true, failedLoginCount: 0, lastFailedAt: null })
+      .onConflictDoUpdate({
+        target: adminPasswordStateTable.singleton,
+        set: { failedLoginCount: 0, lastFailedAt: null },
+      });
+    await tx.delete(adminSessionsTable);
+    await tx.insert(adminSessionsTable).values({
+      tokenHash: sha256(token),
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    });
+    await tx.insert(adminAuthEventsTable).values({
+      type: "password_recovered",
+      detail: null,
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+    });
+    const marked = await tx
+      .update(adminAuthEventsTable)
+      .set({ detail: "success" })
+      .where(
+        and(
+          eq(adminAuthEventsTable.id, recoveryAttemptId),
+          eq(adminAuthEventsTable.type, "recovery_attempt"),
+          eq(adminAuthEventsTable.detail, "failure"),
+        ),
+      )
+      .returning({ id: adminAuthEventsTable.id });
+    if (marked.length !== 1) {
+      throw new Error("Recovery attempt evidence could not be finalized");
+    }
+    return true;
+  });
+  if (!reset) return { ok: false, error: "Obnovitvena koda je bila že uporabljena." };
+  setSessionCookie(res, token);
+  return { ok: true };
 }
 
 /**
@@ -360,7 +720,10 @@ export function loginRateLimited(ip: string, record = true): boolean {
 export async function recordRecoveryAttempt(
   ip: string,
   userAgent: string | null,
-): Promise<{ allowed: boolean; attemptId: string | null }> {
+): Promise<
+  | { allowed: true; attemptId: string }
+  | { allowed: false; attemptId: null }
+> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_RECOVERY_ATTEMPT})`);
     const since = new Date(Date.now() - 60 * 60 * 1000);
@@ -395,16 +758,9 @@ export async function recordRecoveryAttempt(
       .insert(adminAuthEventsTable)
       .values({ type: "recovery_attempt", detail: "failure", ip, userAgent })
       .returning();
-    return { allowed: true, attemptId: row!.id };
+    if (!row) throw new Error("Recovery attempt could not be reserved");
+    return { allowed: true, attemptId: row.id };
   });
-}
-
-/** Flips a reserved attempt to success after the code actually matched. */
-export async function markRecoveryAttemptSuccess(attemptId: string): Promise<void> {
-  await db
-    .update(adminAuthEventsTable)
-    .set({ detail: "success" })
-    .where(eq(adminAuthEventsTable.id, attemptId));
 }
 
 /** Counts for the admin UI — never the values. */

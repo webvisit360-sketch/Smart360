@@ -160,6 +160,63 @@ paths:
                 $ref: "#/components/schemas/WebAuthnOptions"
         "429":
           description: Too many attempts
+  /admin/password/login:
+    post:
+      operationId: loginAdminPassword
+      tags: [auth]
+      summary: Primary operator e-mail and password login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "400":
+          description: Password exceeds the maximum length
+        "401":
+          description: Invalid credentials or progressive delay active
+        "429":
+          description: Five failed password verifications from this IP in 15 minutes
+  /admin/password:
+    get:
+      operationId: getAdminPasswordStatus
+      tags: [auth]
+      responses:
+        "200":
+          description: Whether the operator credential is configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminPasswordStatus"
+        "401":
+          description: Not authenticated
+    put:
+      operationId: setAdminPassword
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordUpdate"
+      responses:
+        "200":
+          description: Password set or changed and other sessions revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+        "400":
+          description: Invalid new password, wrong current password, or concurrent change
+        "401":
+          description: Not authenticated
   /admin/webauthn/login/verify:
     post:
       operationId: verifyPasskeyLogin
@@ -231,7 +288,7 @@ paths:
               $ref: "#/components/schemas/RecoveryBody"
       responses:
         "200":
-          description: Enrolment token issued
+          description: Recovery code consumed, password reset, and fresh operator session created
           content:
             application/json:
               schema:
@@ -1942,12 +1999,30 @@ components:
       type: object
       properties:
         code: { type: string }
-      required: [code]
+        newPassword: { type: string, minLength: 12, maxLength: 200 }
+      required: [code, newPassword]
     RecoveryResult:
       type: object
       properties:
-        enrollToken: { type: string }
-      required: [enrollToken]
+        authenticated: { type: boolean }
+      required: [authenticated]
+    AdminPasswordLoginInput:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string, maxLength: 200 }
+      required: [email, password]
+    AdminPasswordUpdate:
+      type: object
+      properties:
+        currentPassword: { type: string, maxLength: 200 }
+        newPassword: { type: string, minLength: 12, maxLength: 200 }
+      required: [newPassword]
+    AdminPasswordStatus:
+      type: object
+      properties:
+        hasPassword: { type: boolean }
+      required: [hasPassword]
     Passkey:
       type: object
       properties:

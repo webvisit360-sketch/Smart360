@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RecoveryResult {
-  authenticated: boolean;
+export interface AdminPasswordLoginInput {
+  email: string;
+  /** @maxLength 200 */
+  password: string;
 }

@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { useGetPasskeyLoginOptions, useVerifyPasskeyLogin, useUseRecoveryCode } from "@workspace/api-client-react";
+import {
+  useGetPasskeyLoginOptions,
+  useVerifyPasskeyLogin,
+  useUseRecoveryCode,
+  useLoginAdminPassword,
+} from "@workspace/api-client-react";
 import { startAuthentication, WebAuthnAbortService } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +30,13 @@ export default function AdminLogin() {
   
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
+  const [recoveryPassword, setRecoveryPassword] = useState("");
+  const [recoveryPasswordConfirm, setRecoveryPasswordConfirm] = useState("");
   
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isProcessingLogin, setIsProcessingLogin] = useState(false);
   const [showPasskeyCancel, setShowPasskeyCancel] = useState(false);
+  const [operatorPassword, setOperatorPassword] = useState("");
   const [hostEmail, setHostEmail] = useState("");
   const [hostPassword, setHostPassword] = useState("");
   const [hostBusy, setHostBusy] = useState(false);
@@ -38,6 +46,7 @@ export default function AdminLogin() {
 
   const getLoginOptionsMutation = useGetPasskeyLoginOptions();
   const verifyLoginMutation = useVerifyPasskeyLogin();
+  const passwordLoginMutation = useLoginAdminPassword();
 
   useEffect(() => () => {
     passkeyAbortRef.current?.abort();
@@ -46,7 +55,7 @@ export default function AdminLogin() {
   const useRecoveryMutation = useUseRecoveryCode({
     mutation: {
       onSuccess: (data) => {
-        setLocation(`/admin/enroll?token=${data.enrollToken}`);
+        if (data.authenticated) setLocation("/admin");
       },
       onError: (err: any) => {
         if (err?.response?.status === 429) {
@@ -123,7 +132,33 @@ export default function AdminLogin() {
 
   const handleRecoverySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    useRecoveryMutation.mutate({ data: { code: recoveryCode } });
+    if (recoveryPassword !== recoveryPasswordConfirm) {
+      toast({
+        title: "Gesli se ne ujemata",
+        description: "Novo geslo v obeh poljih mora biti enako.",
+        variant: "destructive",
+      });
+      return;
+    }
+    useRecoveryMutation.mutate({
+      data: { code: recoveryCode, newPassword: recoveryPassword },
+    });
+  };
+
+  const handleOperatorPasswordLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoginError(null);
+    try {
+      await passwordLoginMutation.mutateAsync({
+        data: { email: "smart360hq@gmail.com", password: operatorPassword },
+      });
+      setLocation("/admin");
+    } catch (error: any) {
+      setLoginError(
+        error?.data?.error ??
+          "Prijava ni uspela. Preverite geslo in po potrebi počakajte pred ponovnim poskusom.",
+      );
+    }
   };
 
   const handleHostLogin = async (event: React.FormEvent) => {
@@ -202,10 +237,41 @@ export default function AdminLogin() {
                   disabled={useRecoveryMutation.isPending}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="recoveryPassword">Novo geslo</Label>
+                <Input
+                  id="recoveryPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={12}
+                  value={recoveryPassword}
+                  onChange={(e) => setRecoveryPassword(e.target.value)}
+                  required
+                  disabled={useRecoveryMutation.isPending}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="recoveryPasswordConfirm">Ponovite novo geslo</Label>
+                <Input
+                  id="recoveryPasswordConfirm"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={12}
+                  value={recoveryPasswordConfirm}
+                  onChange={(e) => setRecoveryPasswordConfirm(e.target.value)}
+                  required
+                  disabled={useRecoveryMutation.isPending}
+                />
+              </div>
               <Button
                 type="submit"
                 className="w-full mt-4"
-                disabled={useRecoveryMutation.isPending || !recoveryCode.trim()}
+                disabled={
+                  useRecoveryMutation.isPending ||
+                  !recoveryCode.trim() ||
+                  recoveryPassword.length < 12 ||
+                  !recoveryPasswordConfirm
+                }
               >
                 {useRecoveryMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -278,6 +344,39 @@ export default function AdminLogin() {
           </div>
 
           <div className="smart-login__team">
+          <form onSubmit={handleOperatorPasswordLogin} className="smart-login__form">
+            <div className="smart-login__field">
+              <Label htmlFor="operator-login-email">E-poštni naslov</Label>
+              <Input
+                id="operator-login-email"
+                type="email"
+                value="smart360hq@gmail.com"
+                readOnly
+                aria-readonly="true"
+              />
+            </div>
+            <div className="smart-login__field">
+              <Label htmlFor="operator-login-password">Geslo</Label>
+              <Input
+                id="operator-login-password"
+                type="password"
+                autoComplete="current-password"
+                value={operatorPassword}
+                onChange={(event) => setOperatorPassword(event.target.value)}
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="smart-login__primary"
+              disabled={passwordLoginMutation.isPending || !operatorPassword}
+            >
+              {passwordLoginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Prijava za Smart360 ekipo
+            </Button>
+          </form>
+
+          <p className="text-xs text-muted-foreground text-center">Dodatna možnost prijave</p>
           <Button
             variant="outline"
             className="smart-login__passkey"

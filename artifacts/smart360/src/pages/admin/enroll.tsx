@@ -34,7 +34,7 @@ export default function AdminEnroll() {
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">V povezavi manjka žeton za registracijo.</p>
             <div className="p-3 bg-muted-foreground/10 rounded-md text-xs font-mono text-left">
-              $ npm run cli enroll pi4.doo@gmail.com
+              $ npm run cli enroll smart360hq@gmail.com
             </div>
             <Button onClick={() => setLocation("/admin/login")} className="w-full">
               Nazaj na prijavo
@@ -157,7 +157,7 @@ export default function AdminEnroll() {
                 <p>{error}</p>
                 {error.includes("potekla") && (
                   <div className="p-3 bg-destructive/10 rounded-md text-xs font-mono text-left text-foreground">
-                    $ npm run cli enroll pi4.doo@gmail.com
+                    $ npm run cli enroll smart360hq@gmail.com
                   </div>
                 )}
               </div>
