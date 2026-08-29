@@ -1,0 +1,42 @@
+The assignment is approved in full, including all four ambiguity
+recommendations and the fifth proposal:
+
+· permanent purge stays operator-only; the host gets soft delete and restore;
+· raw coordinate override stays operator-only; address and Maps link are the
+  host's tools;
+· the host sees content history, not operator lifecycle or security entries;
+· quota is operator-only but usage, limit and a clear blocked-upload
+  explanation are host-visible — your best finding in this report, because a
+  hidden quota with failing uploads is an unexplained daily failure;
+· translation import and export move to the host, as you proposed. It is
+  content management, and a hotel with a large guide will want a table rather
+  than one field at a time.
+
+D4 and D5 approved as written, including both required sentences on category
+deletion and the "Ni prevoda: EN, DE" marker kept distinct from stale.
+
+TWO CONDITIONS ON THE BUILD
+
+1 — Server authorization decides, not visibility. You said it yourself and it
+is the part that matters: hiding a control is presentation, rejecting the
+request is security. The test that counts is a host session calling the API
+directly to change slug, quota, tour URL, guest UI mode or renewal and being
+refused. Write those tests.
+
+2 — Slug and custom domain are visible to hosts today while the backend already
+rejects their changes. Hiding them removes a confusion that exists right now,
+not only a future one. Note it as a fix, not merely a reassignment.
+
+ON B, THREE ANSWERS
+
+· lg-identiteta.html will be reattached by the owner before A is implemented.
+· The thumbs off-value: the owner is testing thumbs=0 on the live tenant now
+  and will report what he sees. Do not guess in the meantime.
+· The iframe permissions point is correct and was missed on my side: hiding
+  buttons does not revoke capabilities. Remove allowFullScreen, fullscreen and
+  xr-spatial-tracking. Hold gyroscope and accelerometer — the owner is deciding
+  whether he wants tilt-to-look on phones, which is a guest feature rather than
+  chrome, and the URL parameter and the permission must move together either
+  way.
+
+Report and STOP.
