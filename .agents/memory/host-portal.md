@@ -37,6 +37,8 @@ Three concentric rings; each must hold alone:
 
 **How to apply:** Keep recovery completion atomic for password replacement, old-session revocation, fresh-session creation, and audit closure. Send the approved notification after success; tests should assert this session behavior.
 
+Production proof was completed on 2026-08-29: the owner set the operator password and signed in with e-mail and password on the first attempt from his own machine.
+
 ## Audit and deletion decisions (owner-approved)
 
 - There is one tenant history, **Zgodovina sprememb**, visible to both roles. It combines client and Smart360 changes rather than maintaining a separate or redacted operator log.
