@@ -1,0 +1,47 @@
+Approved to build, in this order. The scope is larger than described: the
+operator has no password at all, so this is a new credential, not a switch.
+
+1 — THE FREEZE, FIRST AND SEPARATELY
+Your diagnosis is accepted. Add a timeout to the server-issued WebAuthn
+options, an AbortController with a client-side timer, and a way out of the
+loading state. The passkey path stays available and must never be able to hang
+the page. This is small and independent — do it first and publish it.
+
+2 — THE OPERATOR PASSWORD
+Own credential on the operator identity, Argon2id with the same parameters as
+hosts, including the dummy verification so the response time does not reveal
+whether an account exists. E-mail and password becomes the primary method;
+passkey remains as an additional one.
+
+3 — RECOVERY MUST RESTORE THE PRIMARY METHOD
+You wrote that the recovery path can stay unchanged. That is true today and
+false the moment the password is primary: a recovery code currently issues a
+token to register a passkey, so an owner who loses his password is sent back to
+the method that fails on his machine. A recovery code must be able to issue a
+password-reset token as well. Report how you would do that before building it.
+
+4 — RATE LIMITING MUST OUTLIVE A RESTART
+Today it lives in process memory: forgotten on restart, not shared between
+instances. That barely mattered against a passkey, which cannot be guessed. It
+matters against a password that opens every tenant. Move the operator login
+limit to the same transactional storage the recovery codes already use — they
+were built correctly, the login was not. Report the limit and window you
+propose.
+
+5 — RECORD FAILURES, NOT ONLY SUCCESSES
+admin_auth_events records successful sign-ins. Failed attempts exist only as
+server log warnings. For the credential that opens every tenant, the failures
+are the interesting ones. Persist them with time, IP and user agent.
+Your separation is accepted: operator sign-ins belong in the auth log, not in a
+tenant's change history. An operator signing in is not a change to a tenant.
+
+6 — THE ERROR MESSAGE
+The server already distinguishes 400, 401 and 429 and the frontend discards it.
+Say what actually failed — cancelled, timed out, no credential on this device,
+not supported, network, server rejection — and offer the password form inside
+that message.
+
+The owner sets his own password. It is never requested, echoed, logged or
+stored anywhere but the hash.
+
+Report the plan for point 3 and the numbers for point 4, then stop.
