@@ -20,6 +20,7 @@
 - [Owner cockpit](owner-cockpit.md) — slug frozen after first publish (CAS stamp!), published e-mail fires once via CAS winner, type seeding in one tx, buildTenantOverviews is the single readiness source.
 - [Playwright WebKit runtime](playwright-webkit-runtime.md) — local WPE starts but cannot create EGL; only claim WebKit after a real page opens on a supported host.
 - [Town-pack onboarding direction](town-pack-onboarding.md) — shared place catalogue is deferred; optimize tenant-local onboarding and require provenance for every new photograph.
+- [Guide Creator product rule](guide-creator-product-rule.md) — Creator prebuilds roughly 75% of each guide and is permanently operator-only; hosts must never receive an empty-guide workflow.
 - [Enquiry delivery diagnosis](enquiry-delivery-diagnosis.md) — Gmail access is permanently declined; use persisted delivery state and provider status, never mailbox workarounds.
 - [Migration approval boundaries](migration-approval-boundaries.md) — additive approval never covers existing-schema changes or backfills; show exact SQL and wait.
 - [Events scheduling model](events-scheduling-model.md) — generated occurrences, tenant-local days, translation fallback, immutable history, and cross-midnight limit.
