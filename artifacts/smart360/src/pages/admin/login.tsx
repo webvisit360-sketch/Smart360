@@ -17,7 +17,7 @@ const suppliedLogoSvg =
 const PASSKEY_TIMEOUT_MS = 60_000;
 const PASSKEY_CANCEL_OFFER_MS = 10_000;
 const PASSKEY_BROWSER_HELP =
-  "Prijava s ključem v tem brskalniku ni uspela. Poskusite znova ali odprite administracijo v drugem brskalniku.";
+  "Prijava s ključem v tem brskalniku ni uspela. Odprite administracijo v Brave ali drugem brskalniku.";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
