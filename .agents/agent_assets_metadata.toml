@@ -470,3 +470,31 @@ mtime_ms = 1788002409390
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/bddc6207-8c64-45af-b2ea-05b5d3738378/3823019b-a1dc-4e1a-9d22-dc4b5ccfa567"
 storage_version_token = "1788002452894094"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "0AvQyV7o8xRsJw4Fi6K15"
+uri = "file://screenshots/lg-home-production-assets-402-dev.jpg"
+type = "image"
+title = "Living Guide Home — 402px"
+description = "Verified post-splash production-bundle preview with Dobrodošli and the full 56px host logo."
+logical_id = "57716980-a625-41cf-81ed-468f86173f1c"
+content_hash = "sha256:367bf6bc48f7a160cb797b10893ce7795cce7164bd089d5437f667efe2f96cc6"
+size = 87860
+mtime_ms = 1788004411854
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/57716980-a625-41cf-81ed-468f86173f1c/a7b5bcda-8aca-46bd-bb98-5b53f34e13dd"
+storage_version_token = "1788004476534360"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "doH0gr2ou72eiM7j5uh5T"
+uri = "file://screenshots/lg-home-production-assets-390-dev.jpg"
+type = "image"
+title = "Living Guide Home — 390px"
+description = "Verified post-splash production-bundle preview with identical 20px/56px logo geometry."
+logical_id = "87deb8ce-9bbf-4510-8117-637de4a32a0d"
+content_hash = "sha256:05bbf21d0d8932b0b840c6f3363ca7cd5f3712137569f19da30a0a71f01260aa"
+size = 81791
+mtime_ms = 1788004421698
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/87deb8ce-9bbf-4510-8117-637de4a32a0d/61b0632a-4f55-44aa-9ef3-a487f9c9278c"
+storage_version_token = "1788004477278134"
+content_type = "image/jpeg"

@@ -189,6 +189,12 @@ Living Guide Home screenshots must be captured only after the four-second Smart3
 
 **How to apply:** Use a fresh page, wait more than four seconds after load, assert the Home screen and localized welcome heading in the DOM, save to a new path, then inspect that path itself—not only a tester screenshot ID.
 
+Authenticated preview screenshots must never require the owner's real operator password. Serve the unchanged production bundle in isolation and stub only the protected preview responses needed by the screen.
+
+**Why:** The operator credential opens every tenant and is intentionally known by one person only. Moving it into process-readable storage weakens that boundary even when the store itself is protected.
+
+**How to apply:** Prefer a fixture-backed protected preview with no session or credential. Keep HTML, JavaScript, CSS, and DOM untouched; use a development-only credential only as an explicitly approved fallback.
+
 Kuula presentation is normalized only at render time: force `logo=-1`, `info=0`, `fs=0`, `vr=0`, `gyro=0`, `thumbs=-1`, and `pause=0`; preserve the stored URL, tour identity, autorotate, and unknown parameters. Every guest renderer and the admin preview must use the same helper and delegate no fullscreen, XR, gyroscope, or accelerometer permissions.
 
 **Why:** The owner live-tested that `thumbs=0` replaces thumbnails with arrows while `thumbs=-1` removes navigation entirely. Kuula’s player gate confirms `pause=0` hides its sharp pause/play square without disabling gentle autorotation. Tilt-to-look feels like a fault when a phone moves.
