@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "admin:enroll": "tsx ./scripts/admin-enroll.ts",
     "test": "node --import tsx/esm --test --test-concurrency=1 src/tests/*.test.ts",
-    "test:network:google-maps": "node --import tsx/esm --test src/tests/google-maps-short-link.network-test.ts"
+    "test:network:google-maps": "node --import tsx/esm --test src/tests/google-maps-short-link.network-test.ts",
+    "report:creator-sieve": "tsx ./scripts/creator-sieve-report.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^8.0.0",

@@ -34,6 +34,27 @@ function normalizedQuery(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
+export async function acquireNominatimTurn(): Promise<void> {
+  const turn = nominatimQueue.then(async () => {
+    await db.transaction(async (tx) => {
+      await tx.insert(geocodeThrottleTable).values({ id: 1 }).onConflictDoNothing();
+      const [lease] = await tx
+        .select()
+        .from(geocodeThrottleTable)
+        .where(eq(geocodeThrottleTable.id, 1))
+        .for("update");
+      const wait = 1000 - (Date.now() - (lease?.lastRequestAt?.getTime() ?? 0));
+      if (wait > 0) await sleep(wait);
+      await tx
+        .update(geocodeThrottleTable)
+        .set({ lastRequestAt: new Date() })
+        .where(eq(geocodeThrottleTable.id, 1));
+    });
+  });
+  nominatimQueue = turn.catch(() => undefined);
+  await turn;
+}
+
 async function geocode(
   query: string,
   fetchFn: FetchFn,
@@ -55,24 +76,7 @@ async function geocode(
       : null;
   }
 
-  const turn = nominatimQueue.then(async () => {
-    await db.transaction(async (tx) => {
-      await tx.insert(geocodeThrottleTable).values({ id: 1 }).onConflictDoNothing();
-      const [lease] = await tx
-        .select()
-        .from(geocodeThrottleTable)
-        .where(eq(geocodeThrottleTable.id, 1))
-        .for("update");
-      const wait = 1000 - (Date.now() - (lease?.lastRequestAt?.getTime() ?? 0));
-      if (wait > 0) await sleep(wait);
-      await tx
-        .update(geocodeThrottleTable)
-        .set({ lastRequestAt: new Date() })
-        .where(eq(geocodeThrottleTable.id, 1));
-    });
-  });
-  nominatimQueue = turn.catch(() => undefined);
-  await turn;
+  await acquireNominatimTurn();
   let data: unknown;
   try {
     const response = await fetchFn(
