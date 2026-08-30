@@ -1,0 +1,75 @@
+STEP C1 — THE MODEL, ENDING AT THE QUEUE
+This is the first step whose output cannot be checked against a table. Until
+now everything was measured against something the machine already knew. The
+model writes prose, and prose is correct when a person says it is.
+
+Scope of C1. Later revisions handle the rest, and you do not start them:
+  C2 — proposed new categories
+  C3 — photographs from Wikimedia Commons
+  C4 — materialising approved proposals into guest content
+C1 ends at a confirmation queue full of real places around Camping MENINA,
+plus a run report. Nothing reaches a guest.
+
+READ FIRST
+kreator-specifikacija.md, revised. The single 15 km radius is gone. Three
+ranges, measured in driving minutes, not kilometres:
+· practical — ATM, shop, pharmacy, fuel, doctor, post: not a radius at all.
+  The nearest three to five, whatever the distance, with the distance shown.
+  No descriptions are written for these, ever.
+· near surroundings — up to about 20 minutes' drive.
+· excursions — up to about 90 minutes' drive.
+Times come from OSRM. The ranges sort and label; they never refuse. Only the
+sieve refuses (the place does not exist) or a human does (it does not belong).
+
+1 · STEP 1 MUST NOW SAVE
+The origin confirmation screen currently confirms without saving. Make it
+create a draft tenant from the confirmed origin, name and address. Camping
+MENINA, Varpolje 105, 3332 Rečica ob Savinji, 46.311456, 14.9093051. Draft
+means invisible to guests and unpublished.
+
+2 · THE MODEL CALL
+GPT-5.6 Terra through Replit AI Integrations, structured output, in batches of
+fifteen to twenty places, each batch retried once on schema failure. Not one
+request for sixty.
+
+The server builds the prompt. The browser never supplies or influences the
+rules. Inputs: origin coordinates and machine-resolved region, tenant type,
+the three ranges above, the existing category catalogue, the house style, the
+durable rejection list, and the standing rule that we never write descriptions
+for hospitality, shops, pharmacies, filling stations or health services.
+
+Per place the model returns: proposed name, an existing category id, a
+Slovene description, translations into EN, DE and IT, a geocoding lookup hint,
+and a one-line reason it belongs. Existing categories only in C1 — if nothing
+fits, the model says so in the reason and the place still comes through.
+
+THE SCHEMA MUST MAKE LYING IMPOSSIBLE, NOT MERELY FORBIDDEN. There must be no
+property anywhere in the output for coordinates, distance, travel time,
+opening hours, prices, telephone numbers or street addresses. Not optional
+fields, not ignored fields — absent. The model cannot supply what the schema
+has no room for.
+
+3 · THE PIPELINE
+Model → the sieve you have already built → OSRM for road distance and
+duration → range assignment by minutes → the confirmation queue. Store the
+four language rows per proposal; add that table now, additively, in one
+transaction, and quote the production catalog afterwards as before.
+
+4 · THE RUN REPORT — the tool produces it, not a person
+Every run ends by writing its own report, readable in the admin:
+· proposed, confirmed, could not be confirmed, and the refusal rule for each;
+· how many fell outside each range;
+· duplicates merged;
+· input and output tokens, and the cost in dollars;
+· wall-clock time, and how much of it was the Nominatim throttle.
+Without the tool producing this itself, the first real test gets judged by
+feel, and by feel it will always look good.
+
+5 · RUN ONCE, ON MENINA, THEN STOP
+One run. Report the run report and the first twenty queue rows verbatim —
+name, category, range, road distance, duration, and the Slovene description
+exactly as written. Do not tune the prompt after seeing the output. Do not
+approve anything. The owner reads the list and judges it, and he knows that
+valley by heart.
+
+Report and STOP.
