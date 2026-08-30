@@ -115,6 +115,61 @@ test("C1 geocoding uses the plain name first and lookup hint only after no resul
   assert.equal(result.verdict, "resolved");
 });
 
+test("C1 strips a corroborated multi-word generic type phrase", async () => {
+  const result = await runCreatorSieve(
+    "Krajinski park Golte",
+    { latitude: 46.31, longitude: 14.91 },
+    {
+      fetchFn: async () => new Response(JSON.stringify([{
+        osm_type: "relation",
+        osm_id: 987654321,
+        category: "leisure",
+        type: "protected_area",
+        addresstype: "protected_area",
+        name: "Golte",
+        display_name: "Golte, Mozirje, Slovenija",
+        lat: "46.3700",
+        lon: "14.9000",
+        namedetails: { name: "Golte" },
+        address: { municipality: "Mozirje" },
+        importance: 0.5,
+      }]), { status: 200, headers: { "content-type": "application/json" } }),
+    },
+  );
+
+  assert.equal(result.verdict, "resolved");
+  if (result.verdict === "resolved") {
+    assert.equal(result.confirmationMethod, "generic_type");
+    assert.equal(result.candidate.returnedName, "Golte");
+  }
+});
+
+test("C1 does not strip a multi-word generic phrase without OSM type corroboration", async () => {
+  const result = await runCreatorSieve(
+    "Krajinski park Golte",
+    { latitude: 46.31, longitude: 14.91 },
+    {
+      fetchFn: async () => new Response(JSON.stringify([{
+        osm_type: "node",
+        osm_id: 987654322,
+        category: "tourism",
+        type: "viewpoint",
+        addresstype: "tourism",
+        name: "Golte",
+        display_name: "Golte, Mozirje, Slovenija",
+        lat: "46.3700",
+        lon: "14.9000",
+        namedetails: { name: "Golte" },
+        address: { municipality: "Mozirje" },
+        importance: 0.5,
+      }]), { status: 200, headers: { "content-type": "application/json" } }),
+    },
+  );
+
+  assert.equal(result.verdict, "refused");
+  if (result.verdict === "refused") assert.equal(result.rule, "name-mismatch");
+});
+
 test("later C1 batches receive prior names and practical places are forbidden", () => {
   const prompt = promptFor({
     origin: { latitude: 46.31, longitude: 14.91 },

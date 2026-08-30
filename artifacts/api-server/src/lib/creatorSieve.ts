@@ -104,13 +104,31 @@ export const CREATOR_GENERIC_TYPE_WORDS: ReadonlyArray<{
   { words: ["slap", "slapovi"], osmTypes: ["waterfall"] },
   { words: ["jama"], osmTypes: ["cave", "cave_entrance"] },
   { words: ["grad"], osmTypes: ["castle"] },
-  { words: ["cerkev"], osmTypes: ["church", "place_of_worship"] },
+  {
+    words: ["cerkev", "župnijska cerkev", "podružnična cerkev", "stolnica"],
+    osmTypes: ["cathedral", "church", "place_of_worship"],
+  },
   { words: ["planina"], osmTypes: ["alpine_pasture"] },
   { words: ["jezero"], osmTypes: ["lake"] },
   { words: ["koča", "dom"], osmTypes: ["alpine_hut"] },
-  { words: ["muzej"], osmTypes: ["museum"] },
+  { words: ["muzej", "muzej na prostem"], osmTypes: ["museum"] },
   { words: ["soteska"], osmTypes: ["gorge"] },
   { words: ["izvir"], osmTypes: ["spring"] },
+  {
+    words: ["krajinski park", "regijski park", "narodni park"],
+    osmTypes: ["national_park", "nature_reserve", "protected_area"],
+  },
+  { words: ["alpski vrt", "arboretum"], osmTypes: ["botanical_garden", "garden", "park"] },
+  {
+    words: ["samostan", "frančiškanski samostan", "kartuzija"],
+    osmTypes: ["convent", "monastery", "place_of_worship"],
+  },
+  { words: ["dvorec"], osmTypes: ["castle", "manor"] },
+  { words: ["nekropola", "rimska nekropola"], osmTypes: ["archaeological_site"] },
+  { words: ["skakalni center"], osmTypes: ["ski_jumping", "sports_centre", "stadium"] },
+  { words: ["razgledni stolp"], osmTypes: ["observation_tower", "tower", "viewpoint"] },
+  { words: ["staro mestno jedro"], osmTypes: ["historic", "old_town"] },
+  { words: ["domačija"], osmTypes: ["farm", "farmhouse", "manor", "museum"] },
 ];
 
 function matchesName(query: string, raw: RawResult): Exclude<CreatorConfirmationMethod, "shortened_query"> | null {
@@ -118,11 +136,19 @@ function matchesName(query: string, raw: RawResult): Exclude<CreatorConfirmation
   const candidateNames = namesOf(raw).map(normalizeName);
   if (candidateNames.includes(normalizedQuery)) return "exact";
   let queryTokens = normalizedQuery.split(" ");
-  const genericWords = CREATOR_GENERIC_TYPE_WORDS.find((entry) =>
-    entry.osmTypes.includes(String(raw.type ?? "")),
-  )?.words;
-  if (genericWords?.includes(queryTokens[0]!)) queryTokens = queryTokens.slice(1);
-  else if (genericWords?.includes(queryTokens.at(-1)!)) queryTokens = queryTokens.slice(0, -1);
+  const genericPhrases = CREATOR_GENERIC_TYPE_WORDS
+    .filter((entry) => entry.osmTypes.includes(String(raw.type ?? "")))
+    .flatMap((entry) => entry.words)
+    .map((phrase) => normalizeName(phrase).split(" "))
+    .sort((a, b) => b.length - a.length);
+  const matchingLeadingPhrase = genericPhrases.find((phraseTokens) =>
+    phraseTokens.every((token, index) => queryTokens[index] === token));
+  const matchingTrailingPhrase = genericPhrases.find((phraseTokens) => {
+    const offset = queryTokens.length - phraseTokens.length;
+    return offset >= 0 && phraseTokens.every((token, index) => queryTokens[offset + index] === token);
+  });
+  if (matchingLeadingPhrase) queryTokens = queryTokens.slice(matchingLeadingPhrase.length);
+  else if (matchingTrailingPhrase) queryTokens = queryTokens.slice(0, -matchingTrailingPhrase.length);
   if (candidateNames.includes(queryTokens.join(" "))) return "generic_type";
 
   const address = raw.address && typeof raw.address === "object"

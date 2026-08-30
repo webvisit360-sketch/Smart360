@@ -1,0 +1,46 @@
+Addendum to the run-three instruction, from the owner's observation.
+
+Menina planina and Mozirska planina WERE categorised correctly, under Pohodi
+in kolesarjenje. The model did its job. They died at the sieve, both
+no-results.
+
+Worth stating plainly: Menina planina is the mountain the campsite is named
+after. The sieve cannot confirm it, so Camping MENINA's own guide will not
+contain Menina.
+
+THE PATTERN THIS REVEALS
+Look at these losses together:
+  Krajinski park Golte · Alpski vrt Golte · Frančiškanski samostan Nazarje ·
+  Stolnica svetih Mohorja in Fortunata · Dvorec Novo Celje · Rimska nekropola
+  Šempeter · Skakalni center Savina Ljubno · Vista – razgledni stolp
+
+Every one carries a generic type PHRASE before the name, which OSM does not
+store: krajinski park, alpski vrt, samostan, stolnica, dvorec, nekropola,
+skakalni center, razgledni stolp.
+
+This is slap at Rinka and občina at Rečica, at scale. Our table holds eleven
+single words. Slovene has many more, and a large share of them are two or
+three words long.
+
+The proof is Golte: in Step B the bare name "Golte" resolved cleanly. In run
+three "Krajinski park Golte" and "Alpski vrt Golte" both fail.
+
+So, alongside the two fixes already instructed:
+
+· Extend the generic-term table to multi-word phrases, and make the stripping
+  rule handle a leading phrase, not only a leading word. Each entry still
+  requires corroboration from the OSM type tag, exactly as now — nothing is
+  loosened, the table is simply completed.
+· Add at minimum: krajinski park, regijski park, narodni park, alpski vrt,
+  arboretum, samostan, frančiškanski samostan, stolnica, župnijska cerkev,
+  podružnična cerkev, dvorec, nekropola, rimska nekropola, skakalni center,
+  razgledni stolp, muzej na prostem, staro mestno jedro, domačija, kartuzija.
+· Report which of run three's 32 losses would now resolve under the extended
+  table. Do not re-run yet — just report the count and the names, so we can
+  see how much of the loss is grammar and how much is genuinely absent from
+  OSM.
+
+That number matters: it tells us whether the near ring needs the enumerated
+neighbourhood search, or whether it mostly needs Slovene.
+
+Report and STOP.

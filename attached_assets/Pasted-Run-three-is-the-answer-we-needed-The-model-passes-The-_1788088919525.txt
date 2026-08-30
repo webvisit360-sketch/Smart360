@@ -1,0 +1,64 @@
+Run three is the answer we needed. The model passes. The sieve fails, and the
+failure is now measured rather than suspected.
+
+WHAT WORKED
+Clearing the discouragement list brought the valley back: Logarska dolina,
+Slap Rinka, Solčavska panoramska cesta, Snežna jama, Mozirski gaj, Potočka
+zijalka, all confirmed. Descriptions are specific to their places — "Slap v
+zatrepu Logarske doline, dostopen po gozdni poti" could not describe anywhere
+else. That was the untested question and it is answered.
+
+WHAT FAILED, WITH THE NUMBER
+Of 16 confirmed, exactly ONE is within the near range: Mozirski gaj, 11
+minutes. Everything else is an excursion.
+
+The model proposed the whole valley — Mozirje, Nazarje, Luče, Ljubno, the
+church in Rečica itself, the Nazarje monastery and museum, the Gornji Grad
+cathedral, Menina planina, Mozirska planina, Golte, the Savinja cycle route.
+Twenty-one of the thirty-two losses are in the valley. Every single near place
+was proposed and every single one was killed by the sieve.
+
+The guide now describes the region while the guest stands in the valley. That
+is the outward bias, and it is not an annoyance — it is the product failing at
+its purpose.
+
+TWO FIXES, IN THIS ORDER
+
+1 · THE MANUAL CONFIRMATION PATH — specified in Step B, never built
+An unconfirmed proposal reaches the operator, who can place it on a map by
+hand. Name, model description, refusal rule, and a map to drop the pin on.
+A hand-placed coordinate is marked as operator-sourced, never machine-verified,
+and carries that provenance forward exactly like the shortened-query badge.
+Volume is about thirty per run, mostly nearby, so this is the difference
+between a guide about the region and a guide about the valley.
+
+2 · FOR THE NEAR RING, ENUMERATE INSTEAD OF SEARCHING
+Do not search the world for a small local church. Query OSM for everything
+within the near range of the origin — a bounded set of a few hundred features
+with names — and match the model's proposals against THAT set.
+
+Inside a geographically bounded candidate set, tolerant name matching is safe,
+because there is only one church in Rečica. Against a global search it is not,
+which is why the current sieve must be strict and why strictness costs us the
+neighbourhood. Excursions keep the current strict global sieve; the near ring
+gets the enumerated one.
+
+Report how you would implement this — Overpass or Nominatim bounded search,
+what the candidate set contains, and how a match is decided — before building
+it.
+
+SMALLER, SAME REPORT
+· Two rows exceed the 90-minute ceiling and reached the queue anyway: Slap
+  Bojanca 5,561 s and Planina Loka 5,715 s. I said nothing beyond 90 minutes
+  should be proposed. Enforce it.
+· Rimska nekropola Šempeter was refused as equally-plausible. It is a real and
+  well-known site. Report what the competing candidates were.
+· Duplicates returned: 12 this run against 0 in run two. Say what changed.
+· The nearest-alternative column is right in substance and unreadable in form.
+  Do not list 22 lost alternatives under every row. One line per row — how
+  many same-category proposals were lost — and one list per category at the
+  end of the report.
+
+No approvals. No fourth run yet.
+
+Report and STOP.

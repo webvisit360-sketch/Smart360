@@ -22,3 +22,9 @@ Run reports and proposal rows must show the model’s inclusion reason. Beyond-n
 **Why:** Mapping quality is systematically stronger for famous distant landmarks than small local places, so sieve refusals can bias a guide outward. Hiding unrouteable losses repeats that bias in the evidence layer.
 
 **How to apply:** Group unresolved proposals by category. Sort measured proximity first, but never omit unresolved rows without coordinates or infer distance from a locality. Label those exactly “razdalja neznana — sito ni potrdilo kraja”; keep route failures distinct.
+
+Generic-type grammar and place retrieval are separate sieve stages. Phrase-aware matching can only recover a proposal when Nominatim returned candidate evidence; it cannot repair a `no-results` lookup by itself.
+
+**Why:** Run-three evidence showed that correct Slovenian category phrases frequently produced empty candidate sets. Expanding identity matching alone therefore recovered none of those rows, including the campsite’s namesake Menina planina.
+
+**How to apply:** Keep longest-first, OSM-type-corroborated multi-word matching, but measure zero-candidate losses separately. Any future retrieval retry that strips a generic phrase requires explicit approval and must preserve the two-attempt ceiling.
