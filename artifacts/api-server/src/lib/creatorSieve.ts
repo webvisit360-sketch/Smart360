@@ -96,10 +96,10 @@ function matchesName(query: string, raw: RawResult): boolean {
   });
 }
 
-export async function runCreatorSieve(
+async function runCreatorSieveInternal(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn } = {},
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn; omitLayerForHarness?: boolean } = {},
 ): Promise<CreatorSieveResult> {
   const hardCeilingKm = options.hardCeilingKm ?? CREATOR_DEFAULT_HARD_CEILING_KM;
   const fetchFn = options.fetchFn ?? fetch;
@@ -112,7 +112,9 @@ export async function runCreatorSieve(
     url.searchParams.set("limit", "10");
     url.searchParams.set("namedetails", "1");
     url.searchParams.set("addressdetails", "1");
-    url.searchParams.set("layer", "poi,natural,manmade");
+    if (!options.omitLayerForHarness) {
+      url.searchParams.set("layer", "poi,natural,manmade");
+    }
     url.searchParams.set("viewbox", [
       origin.longitude - lonDelta, origin.latitude + latDelta,
       origin.longitude + lonDelta, origin.latitude - latDelta,
@@ -220,4 +222,24 @@ export async function runCreatorSieve(
     candidate: best.candidate,
     outsideEditorialRadius: best.candidate.distanceKm > CREATOR_EDITORIAL_RADIUS_KM,
   };
+}
+
+export function runCreatorSieve(
+  name: string,
+  origin: { latitude: number; longitude: number },
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn } = {},
+): Promise<CreatorSieveResult> {
+  return runCreatorSieveInternal(name, origin, options);
+}
+
+/** Test harness only: production callers cannot omit the Nominatim layer filter. */
+export function runCreatorSieveClassificationHarness(
+  name: string,
+  origin: { latitude: number; longitude: number },
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn } = {},
+): Promise<CreatorSieveResult> {
+  return runCreatorSieveInternal(name, origin, {
+    ...options,
+    omitLayerForHarness: true,
+  });
 }

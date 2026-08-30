@@ -1,0 +1,54 @@
+Second time in a row you have told me what your own test did not prove. That
+is the habit that makes these reports worth reading.
+
+Round Two admitting nothing after all three fixes is the result that matters:
+the seven real places were not bought with looseness.
+
+1 · TEST THE SECOND LOCK BY UNLOCKING THE FIRST
+Your explanation of why the classification gate stayed untested is correct,
+and it contains its own solution. In the TEST HARNESS ONLY, issue the query
+without the `layer` parameter. Nominatim will then return the settlement, the
+road and the administrative unit, and the local `category`/`addresstype` gate
+must refuse each one by name.
+
+  Varpolje                → settlement, must be refused
+  Mozirje                 → settlement, must be refused
+  Nazarje                 → settlement, must be refused
+  Savinjska cesta         → road, must be refused
+  Občina Rečica ob Savinji → administrative, must be refused
+  3332                    → postcode, must be refused
+
+Production keeps `layer`. The harness drops it purely to prove the backstop
+fires. Report the refusal rule for each — every one must read
+`blocked-class-or-addresstype`, not `no-results` and not `name-mismatch`.
+If any of them still returns nothing without `layer`, say so and give me the
+raw category and addresstype values you did receive, and I will supply
+different names.
+
+2 · THE SHORTENED RETRY IS A WEAKER CONFIRMATION — MAKE IT VISIBLE
+"Snežna jama na Raduhi" → "Snežna jama" worked, but the token we removed is
+exactly the one that distinguishes this cave from every other Snežna jama in
+the country. The only guard left was distance, and distance happened to
+agree.
+
+Do not remove the mechanism. Mark it:
+· record on the proposal that it was confirmed by a shortened query, storing
+  both the original query and the shortened one;
+· show it in the confirmation queue as a distinct badge, with both strings
+  visible — "potrjeno s skrajšano poizvedbo: Snežna jama na Raduhi → Snežna
+  jama";
+· never let a shortened-query proposal be bulk-approved. It requires an
+  individual human decision.
+
+A weakened confirmation is acceptable. A weakened confirmation that looks
+identical to a strong one is not.
+
+3 · WHAT CLOSES STEP B
+Step B is finished when the six names in item 1 are refused by the
+classification rule, and the shortened-retry badge appears in the queue. Then
+we move to the model call, which will arrive with a revised specification: the
+single 15 km radius is gone, replaced by three ranges measured in driving
+minutes rather than kilometres. Do not act on that yet — the specification
+comes with the next instruction.
+
+Report and STOP.
