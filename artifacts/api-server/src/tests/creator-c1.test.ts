@@ -15,7 +15,10 @@ import {
   withCreatorC1DescriptionPolicy,
   runCreatorC1,
 } from "../lib/creatorC1";
-import { claimCreatorRunOnce } from "../lib/creatorMeninaProductionRun";
+import {
+  claimCreatorRunOnce,
+  isPreservedMeninaEvidenceTenant,
+} from "../lib/creatorMeninaProductionRun";
 
 function place(index: number, existingCategoryId: string | null = "category"): unknown {
   return {
@@ -93,6 +96,24 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
   assert.equal(report.nominatimThrottleWaitMs, 123);
   assert.equal(report.outcomes[0].refusalRule, "no-results");
   assert.equal(report.status, "failed");
+});
+
+test("only the exact Camping MENINA evidence tenant receives the terminal run lock", () => {
+  assert.equal(isPreservedMeninaEvidenceTenant({
+    name: "Camping MENINA",
+    latitude: 46.311456,
+    longitude: 14.9093051,
+  }), true);
+  assert.equal(isPreservedMeninaEvidenceTenant({
+    name: "Camping MENINA",
+    latitude: 46.312,
+    longitude: 14.9093051,
+  }), false);
+  assert.equal(isPreservedMeninaEvidenceTenant({
+    name: "Another camp",
+    latitude: 46.311456,
+    longitude: 14.9093051,
+  }), false);
 });
 
 test("failed C1 rows stay hidden while run history allows reruns but blocks concurrent execution", async () => {

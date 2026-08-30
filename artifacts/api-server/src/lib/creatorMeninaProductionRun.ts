@@ -20,6 +20,16 @@ const MENINA_MAP_URL =
 const MENINA_LATITUDE = 46.311456;
 const MENINA_LONGITUDE = 14.9093051;
 
+export function isPreservedMeninaEvidenceTenant(input: {
+  name: string;
+  latitude: number;
+  longitude: number;
+}): boolean {
+  return input.name.trim().toLocaleLowerCase("sl") === MENINA_NAME.toLocaleLowerCase("sl")
+    && Math.abs(input.latitude - MENINA_LATITUDE) <= 0.000001
+    && Math.abs(input.longitude - MENINA_LONGITUDE) <= 0.000001;
+}
+
 function numberedSlug(base: string, number: number): string {
   if (number === 0) return base;
   const suffix = `-${number + 1}`;

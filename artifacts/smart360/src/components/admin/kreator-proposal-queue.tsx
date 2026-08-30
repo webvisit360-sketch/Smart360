@@ -87,6 +87,8 @@ export function KreatorProposalQueue({
   );
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
+  const preservedMeninaEvidence = tenantName.trim().toLocaleLowerCase("sl") === "camping menina"
+    && latestRun.data !== undefined;
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
@@ -112,12 +114,18 @@ export function KreatorProposalQueue({
             </div>
             <Button
               type="button"
-              disabled={startRun.isPending || latestRun.data?.status === "running" || latestRun.data?.status === "completed"}
+              disabled={startRun.isPending || latestRun.data?.status === "running" || preservedMeninaEvidence}
               onClick={() => startRun.mutate({ id: tenantId })}
               className="rounded-[12px]"
             >
               {startRun.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-              {startRun.isPending ? "Kreator dela …" : "Zaženi C1 enkrat"}
+              {startRun.isPending
+                ? "Kreator dela …"
+                : preservedMeninaEvidence
+                  ? "C1 dokaz je ohranjen"
+                  : latestRun.data
+                    ? "Ponovno zaženi C1"
+                    : "Zaženi C1"}
             </Button>
           </div>
           {latestRun.data && (

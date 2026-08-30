@@ -34,6 +34,7 @@ import {
 import { seedTenantContent } from "../lib/tenantSeeds";
 import { RESERVED_SLUGS, slugify } from "../lib/slug";
 import { CREATOR_C1_PRICING, runCreatorC1, type CreatorC1Report } from "../lib/creatorC1";
+import { isPreservedMeninaEvidenceTenant } from "../lib/creatorMeninaProductionRun";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -212,6 +213,7 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
   const tenantId = first(req.params["id"]);
   const [tenant] = await db.select({
     id: tenantsTable.id,
+    name: tenantsTable.name,
     latitude: tenantsTable.latitude,
     longitude: tenantsTable.longitude,
     address: tenantsTable.address,
@@ -235,6 +237,20 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
   ) {
     res.status(400).json({ error: "Osnutek nima popolnega potrjenega izhodišča." });
     return;
+  }
+  if (isPreservedMeninaEvidenceTenant({
+    name: tenant.name,
+    latitude: tenant.latitude,
+    longitude: tenant.longitude,
+  })) {
+    const [preservedRun] = await db.select({ id: creatorRunsTable.id })
+      .from(creatorRunsTable)
+      .where(eq(creatorRunsTable.tenantId, tenantId))
+      .limit(1);
+    if (preservedRun) {
+      res.status(409).json({ error: "Prva produkcijska izvedba C1 za Camping MENINA je dokazno zaklenjena in je ni dovoljeno ponoviti." });
+      return;
+    }
   }
   try {
     const result = await runCreatorC1({
