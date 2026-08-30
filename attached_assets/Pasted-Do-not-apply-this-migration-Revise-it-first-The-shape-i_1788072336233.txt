@@ -1,0 +1,65 @@
+Do not apply this migration. Revise it first. The shape is right — a new
+table, nothing existing touched, and the generated review flag is a good
+idea. What is missing is half the purpose.
+
+1 · A REFUSED PROPOSAL CANNOT BE STORED
+resolved_name, osm_type, osm_id, category, feature_type, latitude and
+longitude are all NOT NULL. A candidate the sieve refused has none of them —
+that is what refused means. So the table can hold only successes.
+
+Consequently the "Ni bilo mogoče potrditi: 14" counter cannot be computed from
+this schema. That counter is the trust mechanism of the entire Creator: it is
+the only visible evidence of how much the model invented. A Creator that
+carefully stores what worked and forgets what did not is precisely backwards.
+
+Make every resolution-derived column nullable, and enforce their presence at
+the application layer only for rows that actually resolved.
+
+2 · THE STATUS LIST IS TOO NARROW, AND WE HAVE PAID FOR THIS BEFORE
+pending / approved / rejected has no state for "could not be confirmed", and a
+too-narrow CHECK constraint is exactly what cost this project days in August.
+Use, at minimum:
+
+  pending             awaiting human review
+  unresolved          the sieve could not confirm it exists
+  approved            a human confirmed it
+  rejected            a human declined it
+  superseded          replaced by a later run
+
+unresolved and rejected must stay distinct. One is the machine failing to
+confirm; the other is a person saying no. They mean different things to the
+next run and to the operator.
+
+3 · NOTHING REMEMBERS A REJECTION
+The specification requires that a rerun never re-proposes what was already
+rejected. This schema has no way to enforce that. Add:
+
+· normalized_name — the proposed name folded to lowercase without diacritics
+  and collapsed whitespace, so unresolved names can be compared;
+· a partial unique index on (tenant_id, osm_type, osm_id) where osm_id is not
+  null — one real place, one row per tenant;
+· a partial unique index on (tenant_id, normalized_name) where osm_id is null
+  — one unresolved name, one row per tenant.
+
+Both are partial indexes, the pattern already used elsewhere in this database.
+
+4 · ALSO ADD, WHILE THE TABLE IS EMPTY AND IT IS FREE
+· run_id — which Creator run produced this row, so a run can report its own
+  counts, be resumed, and have its cost attributed. Adding this later means
+  backfilling; adding it now costs one column.
+· refusal_reason — which rule refused it: no-results, name-mismatch,
+  blocked-class-or-addresstype, missing-classification, beyond-hard-ceiling.
+  Without it the "could not confirm" list is a bare list of names and teaches
+  the operator nothing.
+· reviewed_by — which operator decided. Every other decision in this admin is
+  attributable; this one must be too.
+· road_distance_m and travel_duration_s, nullable, filled by OSRM after the
+  sieve. The queue displays both, so they belong on the row that the queue
+  reads.
+
+Do not add the translation rows or the category-proposal table yet. Those come
+with the model step.
+
+Report the revised schema for approval. Apply nothing.
+
+Report and STOP.
