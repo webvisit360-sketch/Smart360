@@ -5,6 +5,7 @@ import {
   getGetLatestCreatorRunQueryKey,
   useApproveCreatorProposal,
   useApproveCreatorProposalsBulk,
+  useConfirmCreatorProposalCoordinates,
   useGetLatestCreatorRun,
   useEditCreatorProposal,
   useListCreatorCategoryOptions,
@@ -12,7 +13,7 @@ import {
   useRejectCreatorProposal,
   useStartCreatorRun,
 } from "@workspace/api-client-react";
-import { AlertTriangle, CheckCircle2, Loader2, Pencil, Play, ShieldAlert, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, Play, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
@@ -24,12 +25,101 @@ const locationForms = {
   other: "lokacij",
 } as const;
 
+function PinPlacementMap({
+  latitude,
+  longitude,
+  origin,
+  onPlace,
+}: {
+  latitude: string;
+  longitude: string;
+  origin?: { latitude: number; longitude: number };
+  onPlace: (latitude: number, longitude: number) => void;
+}) {
+  const initialLat = Number(latitude) || origin?.latitude || 46.25;
+  const initialLng = Number(longitude) || origin?.longitude || 14.9;
+  const zoom = 15;
+  const tileSize = 256;
+  const scale = 2 ** zoom;
+  const latitudeRadians = (initialLat * Math.PI) / 180;
+  const worldX = ((initialLng + 180) / 360) * scale;
+  const worldY = ((1 - Math.log(Math.tan(latitudeRadians) + 1 / Math.cos(latitudeRadians)) / Math.PI) / 2) * scale;
+  const firstX = Math.floor(worldX) - 1;
+  const firstY = Math.floor(worldY) - 1;
+  const offsetX = (worldX - firstX) * tileSize;
+  const offsetY = (worldY - firstY) * tileSize;
+  const placeFromPointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const pixelX = worldX * tileSize + event.clientX - bounds.left - bounds.width / 2;
+    const pixelY = worldY * tileSize + event.clientY - bounds.top - bounds.height / 2;
+    const nextLng = pixelX / (tileSize * scale) * 360 - 180;
+    const mercator = Math.PI * (1 - 2 * pixelY / (tileSize * scale));
+    const nextLat = Math.atan(Math.sinh(mercator)) * 180 / Math.PI;
+    onPlace(nextLat, nextLng);
+  };
+  return (
+    <div className="overflow-hidden rounded-lg border border-amber-300 bg-slate-100">
+      <div
+        role="application"
+        aria-label="Zemljevid za ročno postavitev pina; kliknite ali povlecite oznako"
+        tabIndex={0}
+        className="relative h-56 w-full touch-none cursor-crosshair overflow-hidden bg-[#d9ddd5]"
+        onPointerDown={placeFromPointer}
+        onPointerMove={(event) => { if (event.buttons === 1) placeFromPointer(event); }}
+      >
+        <div
+          className="absolute grid grid-cols-3 grid-rows-3"
+          style={{
+            width: tileSize * 3,
+            height: tileSize * 3,
+            left: `calc(50% - ${offsetX}px)`,
+            top: `calc(50% - ${offsetY}px)`,
+          }}
+        >
+          {Array.from({ length: 9 }, (_, index) => {
+            const x = firstX + (index % 3);
+            const y = firstY + Math.floor(index / 3);
+            return (
+              <img
+                key={`${x}-${y}`}
+                src={`https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`}
+                alt=""
+                width={tileSize}
+                height={tileSize}
+                draggable={false}
+                className="block h-64 w-64 max-w-none select-none"
+              />
+            );
+          })}
+        </div>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full drop-shadow-md">
+          <MapPin className="h-10 w-10 fill-[#157347] text-white" strokeWidth={1.7} />
+        </div>
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noreferrer"
+          className="absolute bottom-1 right-1 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          © OpenStreetMap
+        </a>
+      </div>
+      <p className="border-t bg-white px-3 py-2 text-xs text-slate-700">
+        Kliknite ali povlecite pin. Natančno vrednost lahko popravite tudi v dostopnih poljih koordinat spodaj.
+      </p>
+    </div>
+  );
+}
+
 export function KreatorProposalQueue({
   tenantId,
   tenantName,
+  origin,
 }: {
   tenantId: string;
   tenantName: string;
+  origin?: { latitude: number; longitude: number };
 }) {
   const queryClient = useQueryClient();
   const queue = useListCreatorProposals(tenantId);
@@ -39,6 +129,9 @@ export function KreatorProposalQueue({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCategoryId, setEditCategoryId] = useState<string>("");
   const [editTranslations, setEditTranslations] = useState<Array<{ language: "sl" | "en" | "de" | "it"; name: string; description: string }>>([]);
+  const [positioningId, setPositioningId] = useState<string | null>(null);
+  const [manualLatitude, setManualLatitude] = useState("");
+  const [manualLongitude, setManualLongitude] = useState("");
   useEffect(() => {
     setSelected([]);
     setEditingId(null);
@@ -80,6 +173,14 @@ export function KreatorProposalQueue({
   const rejectOne = useRejectCreatorProposal({
     mutation: { onSuccess: refresh },
   });
+  const confirmCoordinates = useConfirmCreatorProposalCoordinates({
+    mutation: {
+      onSuccess: async () => {
+        setPositioningId(null);
+        await refresh();
+      },
+    },
+  });
   const rows = queue.data ?? [];
   const eligible = useMemo(
     () => rows.filter((row) => row.status === "pending" && !row.requiresIndividualReview),
@@ -95,6 +196,7 @@ export function KreatorProposalQueue({
     ?? (startRun.error as any)?.data?.error
     ?? (editOne.error as any)?.data?.error
     ?? (rejectOne.error as any)?.data?.error
+    ?? (confirmCoordinates.error as any)?.data?.error
     ?? null;
 
   if (queue.isLoading) {
@@ -143,6 +245,8 @@ export function KreatorProposalQueue({
               <span>Strošek: ${latestRun.data.costUsd.toFixed(6)}</span>
               <span>Čas: {latestRun.data.wallClockMs === null ? "—" : `${(latestRun.data.wallClockMs / 1000).toFixed(1)} s`}</span>
               <span>Nominatim čakanje: {(latestRun.data.nominatimThrottleMs / 1000).toFixed(1)} s</span>
+              <span>Overpass ovojnica: {latestRun.data.nearEnvelopeKm === null ? "ni merjeno" : `${latestRun.data.nearEnvelopeKm} km`}</span>
+              <span>Robni kandidati (1000–1200 s): {latestRun.data.nearEnvelopeEdgeBandCount ?? "ni merjeno"}</span>
               <a
                 className="text-primary underline underline-offset-2 md:col-span-3"
                 href={latestRun.data.pricing.sourceUrl}
@@ -163,15 +267,10 @@ export function KreatorProposalQueue({
                         <strong>{outcome.proposedName}</strong> · {outcome.categoryLabel ?? "Brez kategorije"} · {outcome.outcome}
                         {outcome.refusalRule ? ` · ${outcome.refusalRule}` : ""}
                         <span className="block font-sans text-muted-foreground">Zakaj: {outcome.inclusionReason}</span>
-                        {outcome.nearestAlternatives.map((alternative, alternativeIndex) => (
-                          <span key={`${alternative.proposedName}-${alternativeIndex}`} className="block font-sans text-muted-foreground">
-                            Alternativa: {alternative.proposedName} · {alternative.outcome}
-                            {alternative.refusalRule ? ` · ${alternative.refusalRule}` : ""}
-                            {alternative.proximityKnown && alternative.travelDurationS !== null
-                              ? ` · ${Math.round(alternative.travelDurationS / 60)} min`
-                              : " · razdalja neznana — sito ni potrdilo kraja"}
-                          </span>
-                        ))}
+                        <span className="block font-sans text-muted-foreground">
+                          Izgubljeni v isti kategoriji: {outcome.nearestAlternatives.filter((alternative) =>
+                            alternative.outcome === "unconfirmed" || alternative.outcome === "route_failed").length}
+                        </span>
                       </li>
                     ))}
                   </ol>
@@ -314,20 +413,51 @@ export function KreatorProposalQueue({
                     Zakaj je tukaj: {row.inclusionReason}
                   </p>
                 )}
-                {row.nearestAlternatives.length > 0 && (
+                {row.lostSameCategoryCount > 0 && (
                   <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-                    <strong>Drugi predlogi v isti kategoriji</strong>
-                    <ul className="mt-1 space-y-1">
-                      {row.nearestAlternatives.map((alternative, index) => (
-                        <li key={`${alternative.proposedName}-${index}`}>
-                          {alternative.proposedName} · {alternative.categoryLabel ?? "Brez kategorije"} · {alternative.outcome}
-                          {alternative.refusalRule ? ` · ${alternative.refusalRule}` : ""}
-                          {alternative.proximityKnown && alternative.travelDurationS !== null
-                            ? ` · ${Math.round(alternative.travelDurationS / 60)} min`
-                            : " · razdalja neznana — sito ni potrdilo kraja"}
-                        </li>
-                      ))}
-                    </ul>
+                    Izgubljeni predlogi v isti kategoriji: <strong>{row.lostSameCategoryCount}</strong>
+                  </div>
+                )}
+                {row.confirmationMethod === "operator_coordinates" && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-bold text-amber-950">
+                    <MapPin className="h-4 w-4" />
+                    Koordinate je ročno potrdil {row.coordinateConfirmedByLabel ?? "operater"}
+                    {row.coordinateConfirmedAt ? ` · ${new Date(row.coordinateConfirmedAt).toLocaleString("sl-SI")}` : ""}
+                    {" · obvezen posamični pregled"}
+                  </div>
+                )}
+                {positioningId === row.id && (
+                  <div className="mt-4 space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
+                    <strong className="block">Ročno postavite točko</strong>
+                    <p className="text-xs text-muted-foreground">Kliknite ali povlecite pin na zemljevidu. Vir bo trajno označen kot operaterjev in ga pozneje ni mogoče prepisati.</p>
+                    <PinPlacementMap
+                      latitude={manualLatitude}
+                      longitude={manualLongitude}
+                      origin={origin}
+                      onPlace={(latitude, longitude) => {
+                        setManualLatitude(latitude.toFixed(6));
+                        setManualLongitude(longitude.toFixed(6));
+                      }}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input aria-label="Zemljepisna širina" type="number" step="any" min="-90" max="90" value={manualLatitude} onChange={(event) => setManualLatitude(event.target.value)} placeholder="46.123456" className="h-10 rounded-md border bg-white px-3 text-sm" />
+                      <input aria-label="Zemljepisna dolžina" type="number" step="any" min="-180" max="180" value={manualLongitude} onChange={(event) => setManualLongitude(event.target.value)} placeholder="14.123456" className="h-10 rounded-md border bg-white px-3 text-sm" />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="ghost" onClick={() => setPositioningId(null)}>Prekliči</Button>
+                      <Button
+                        type="button"
+                        disabled={!manualLatitude || !manualLongitude || confirmCoordinates.isPending}
+                        onClick={() => confirmCoordinates.mutate({
+                          id: tenantId,
+                          proposalId: row.id,
+                          data: { latitude: Number(manualLatitude), longitude: Number(manualLongitude) },
+                        })}
+                      >
+                        {confirmCoordinates.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Shrani ročno točko
+                      </Button>
+                    </div>
                   </div>
                 )}
                 {row.geocodingLookupHint && (
@@ -403,6 +533,21 @@ export function KreatorProposalQueue({
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" />
                       Potrdi
+                    </Button>
+                  )}
+                  {row.status === "unresolved" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setPositioningId(row.id);
+                        setManualLatitude(row.latitude === null ? "" : String(row.latitude));
+                        setManualLongitude(row.longitude === null ? "" : String(row.longitude));
+                      }}
+                      className="rounded-[12px]"
+                    >
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Ročno določi
                     </Button>
                   )}
                   {row.status === "pending" && (

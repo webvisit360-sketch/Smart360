@@ -40,6 +40,7 @@ import type {
   CleanupRestoreResult,
   CleanupRunsResult,
   CreatorCategoryOption,
+  CreatorCoordinateConfirmationInput,
   CreatorDraftTenant,
   CreatorDraftTenantInput,
   CreatorOriginPreview,
@@ -3001,6 +3002,80 @@ export const useRejectCreatorProposal = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRejectCreatorProposalMutationOptions(options));
+    }
+
+export const getConfirmCreatorProposalCoordinatesUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}/confirm-coordinates`
+}
+
+/**
+ * @summary Save operator-positioned coordinates with durable provenance
+ */
+export const confirmCreatorProposalCoordinates = async (id: string,
+    proposalId: string,
+    creatorCoordinateConfirmationInput: CreatorCoordinateConfirmationInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal> => {
+
+  return customFetch<CreatorProposal>(getConfirmCreatorProposalCoordinatesUrl(id,proposalId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorCoordinateConfirmationInput)
+  }
+);}
+
+
+
+
+
+export const getConfirmCreatorProposalCoordinatesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmCreatorProposalCoordinates>>, TError,{id: string;proposalId: string;data: BodyType<CreatorCoordinateConfirmationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmCreatorProposalCoordinates>>, TError,{id: string;proposalId: string;data: BodyType<CreatorCoordinateConfirmationInput>}, TContext> => {
+
+const mutationKey = ['confirmCreatorProposalCoordinates'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmCreatorProposalCoordinates>>, {id: string;proposalId: string;data: BodyType<CreatorCoordinateConfirmationInput>}> = (props) => {
+          const {id,proposalId,data} = props ?? {};
+
+          return  confirmCreatorProposalCoordinates(id,proposalId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmCreatorProposalCoordinatesMutationResult = NonNullable<Awaited<ReturnType<typeof confirmCreatorProposalCoordinates>>>
+    export type ConfirmCreatorProposalCoordinatesMutationBody = BodyType<CreatorCoordinateConfirmationInput>
+    export type ConfirmCreatorProposalCoordinatesMutationError = ErrorType<void>
+
+    /**
+ * @summary Save operator-positioned coordinates with durable provenance
+ */
+export const useConfirmCreatorProposalCoordinates = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmCreatorProposalCoordinates>>, TError,{id: string;proposalId: string;data: BodyType<CreatorCoordinateConfirmationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmCreatorProposalCoordinates>>,
+        TError,
+        {id: string;proposalId: string;data: BodyType<CreatorCoordinateConfirmationInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmCreatorProposalCoordinatesMutationOptions(options));
     }
 
 export const getApproveCreatorProposalUrl = (id: string,

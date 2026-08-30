@@ -7,6 +7,8 @@ import {
   ApproveCreatorProposalsBulkResponse,
   CreateCreatorDraftTenantBody,
   CreateCreatorDraftTenantResponse,
+  ConfirmCreatorProposalCoordinatesBody,
+  ConfirmCreatorProposalCoordinatesResponse,
   EditCreatorProposalBody,
   EditCreatorProposalResponse,
   GetLatestCreatorRunResponse,
@@ -21,6 +23,7 @@ import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import {
   approveCreatorProposalIndividually,
   approveCreatorProposalsBulk,
+  confirmCreatorProposalCoordinates,
   CreatorBulkApprovalError,
   editCreatorProposalEditorial,
   listCreatorProposalQueue,
@@ -194,6 +197,9 @@ async function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
     costUsd: row.costUsd ?? 0,
     wallClockMs: report?.wallClockMs ?? null,
     nominatimThrottleMs: row.nominatimThrottleWaitMs,
+    // Pre-near-ring runs did not measure this; do not invent historical data.
+    nearEnvelopeKm: report?.nearEnvelopeKm ?? null,
+    nearEnvelopeEdgeBandCount: report?.nearEnvelopeEdgeBandCount ?? null,
     error: report?.error ?? null,
     startedAt: row.startedAt,
     completedAt: row.completedAt,
@@ -463,6 +469,34 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/reject", async (re
   } catch (error) {
     res.status(404).json({
       error: error instanceof Error ? error.message : "Predloga ni mogoče zavrniti.",
+    });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinates", async (req, res): Promise<void> => {
+  const input = ConfirmCreatorProposalCoordinatesBody.safeParse(req.body);
+  if (!input.success) {
+    res.status(400).json({ error: "Vnesite veljavni koordinati." });
+    return;
+  }
+  try {
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operater ni najden." });
+      return;
+    }
+    const row = await confirmCreatorProposalCoordinates({
+      tenantId: first(req.params["id"]),
+      proposalId: first(req.params["proposalId"]),
+      actorId: actor.id,
+      latitude: input.data.latitude,
+      longitude: input.data.longitude,
+    });
+    if (!row) throw new Error("Predlog po potrditvi koordinat ni najden.");
+    res.json(ConfirmCreatorProposalCoordinatesResponse.parse(serialize(row)));
+  } catch (error) {
+    res.status(404).json({
+      error: error instanceof Error ? error.message : "Koordinat ni mogoče potrditi.",
     });
   }
 });

@@ -21,6 +21,12 @@ export interface CreatorProposal {
   confirmedQuery: string | null;
   /** @nullable */
   confirmationMethod: CreatorProposalConfirmationMethod;
+  /** @nullable */
+  coordinateConfirmedBy: string | null;
+  /** @nullable */
+  coordinateConfirmedByLabel: string | null;
+  /** @nullable */
+  coordinateConfirmedAt: string | null;
   requiresIndividualReview: boolean;
   status: CreatorProposalStatus;
   /** @nullable */
@@ -61,6 +67,7 @@ export interface CreatorProposal {
   geocodingLookupHint: string | null;
   /** @nullable */
   inclusionReason: string | null;
+  lostSameCategoryCount: number;
   nearestAlternatives: CreatorNearestAlternative[];
   translations: CreatorProposalTranslation[];
   /** @nullable */

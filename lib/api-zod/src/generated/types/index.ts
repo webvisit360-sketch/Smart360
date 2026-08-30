@@ -37,6 +37,7 @@ export * from './cleanupRun';
 export * from './cleanupRunFileEntry';
 export * from './cleanupRunsResult';
 export * from './creatorCategoryOption';
+export * from './creatorCoordinateConfirmationInput';
 export * from './creatorDraftTenant';
 export * from './creatorDraftTenantInput';
 export * from './creatorDraftTenantInputTenantType';

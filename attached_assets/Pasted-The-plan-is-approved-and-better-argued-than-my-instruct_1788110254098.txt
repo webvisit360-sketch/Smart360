@@ -1,0 +1,49 @@
+The plan is approved and better argued than my instruction. Build it in the
+order you proposed. Three additions, one of which is a correction of mine.
+
+1 · I WAS WRONG ABOUT THE TWELVE DUPLICATES
+Nothing regressed. Run two had none because run one confirmed nothing to
+collide with. By run three there were 41 canonical identities. Duplicates rose
+because the ledger started working. Your explanation is correct and mine was
+a misreading.
+
+But you carried my rule one step too far. The distinction is a triple, not a
+pair:
+· machine FAILURE — no influence on the prompt, ever;
+· machine SUCCESS — legitimate, and it belongs in the prompt;
+· human REJECTION — hard block in the database and in the prompt.
+
+Telling the model "Logarska dolina is already in this guide, do not propose it
+again" is not feeding it the output of a bug. It is telling it the true state
+of the work. Without it every later run wastes a fifth of its slots
+re-proposing what is already confirmed.
+
+So: pass already-confirmed place names into the prompt as "already in the
+guide". Machine failures still carry no influence at all.
+
+2 · WIDEN THE RETRIEVAL ENVELOPE TO 35 KM
+Twenty minutes towards Celje on fast road reaches beyond 25 km. At 25 the
+retrieval geometry would quietly define the near ring instead of the driving
+time doing it. Make it a named constant, and report how many candidates routed
+between 1,000 and 1,200 seconds fell close to the envelope edge — if any do,
+the envelope is binding and must grow again.
+
+3 · THE NUMBER I ASKED FOR IS STILL MISSING
+Of run three's 32 losses, how many would resolve under the extended
+generic-phrase table? Report the count and the names, without re-running.
+That single number tells us how much of the loss is Slovene grammar and how
+much is genuine absence from OSM — and therefore how much the Overpass
+enumeration actually has to carry.
+
+ONE SENTENCE OF YOURS BECOMES A RULE
+"Never convert infrastructure failure into editorial rejection."
+Apply it everywhere, not only to Overpass: a timeout, a rate limit, a failed
+routing call and an unreachable service all leave a proposal unresolved and
+available for manual confirmation. None of them is ever recorded as a judgement
+about the place.
+
+Build order stands: manual confirmation, near-ring enumeration, the 90-minute
+gate, compact reporting. No fourth run until all four are in and I have seen
+the grammar count.
+
+Report and STOP.

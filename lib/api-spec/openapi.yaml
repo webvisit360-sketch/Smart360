@@ -735,6 +735,35 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreatorProposal"
         "404": { description: Proposal not found }
+  /admin/tenants/{id}/creator/proposals/{proposalId}/confirm-coordinates:
+    post:
+      operationId: confirmCreatorProposalCoordinates
+      tags: [tenants]
+      summary: Save operator-positioned coordinates with durable provenance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorCoordinateConfirmationInput"
+      responses:
+        "200":
+          description: Manually positioned proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorProposal"
+        "400": { description: Invalid coordinates or route beyond the hard gate }
+        "404": { description: Unresolved proposal not found }
   /admin/tenants/{id}/creator/proposals/{proposalId}/approve:
     post:
       operationId: approveCreatorProposal
@@ -2407,6 +2436,13 @@ components:
           items:
             $ref: "#/components/schemas/CreatorProposalTranslation"
       required: [categoryId, translations]
+    CreatorCoordinateConfirmationInput:
+      type: object
+      additionalProperties: false
+      properties:
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+      required: [latitude, longitude]
     CreatorRunReport:
       type: object
       properties:
@@ -2428,6 +2464,8 @@ components:
         costUsd: { type: number }
         wallClockMs: { type: ["number", "null"] }
         nominatimThrottleMs: { type: number }
+        nearEnvelopeKm: { type: ["number", "null"] }
+        nearEnvelopeEdgeBandCount: { type: ["number", "null"] }
         error: { type: ["string", "null"] }
         startedAt: { type: string }
         completedAt: { type: ["string", "null"] }
@@ -2460,6 +2498,8 @@ components:
         - costUsd
         - wallClockMs
         - nominatimThrottleMs
+        - nearEnvelopeKm
+        - nearEnvelopeEdgeBandCount
         - error
         - startedAt
         - completedAt
@@ -2539,7 +2579,10 @@ components:
         confirmedQuery: { type: ["string", "null"] }
         confirmationMethod:
           type: ["string", "null"]
-          enum: [exact, generic_type, address_token, shortened_query, null]
+          enum: [exact, generic_type, address_token, shortened_query, overpass_near, operator_coordinates, null]
+        coordinateConfirmedBy: { type: ["string", "null"] }
+        coordinateConfirmedByLabel: { type: ["string", "null"] }
+        coordinateConfirmedAt: { type: ["string", "null"] }
         requiresIndividualReview: { type: boolean }
         status:
           type: string
@@ -2565,6 +2608,7 @@ components:
           enum: [practical, near, excursion, null]
         geocodingLookupHint: { type: ["string", "null"] }
         inclusionReason: { type: ["string", "null"] }
+        lostSameCategoryCount: { type: number }
         nearestAlternatives:
           type: array
           items:
@@ -2585,6 +2629,9 @@ components:
         - originalQuery
         - confirmedQuery
         - confirmationMethod
+        - coordinateConfirmedBy
+        - coordinateConfirmedByLabel
+        - coordinateConfirmedAt
         - requiresIndividualReview
         - status
         - supersededBy
@@ -2606,6 +2653,7 @@ components:
         - range
         - geocodingLookupHint
         - inclusionReason
+        - lostSameCategoryCount
         - nearestAlternatives
         - translations
         - reviewedBy

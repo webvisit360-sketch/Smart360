@@ -17,4 +17,6 @@ export const CreatorProposalConfirmationMethod = {
   generic_type: 'generic_type',
   address_token: 'address_token',
   shortened_query: 'shortened_query',
+  overpass_near: 'overpass_near',
+  operator_coordinates: 'operator_coordinates',
 } as const;

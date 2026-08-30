@@ -19,7 +19,9 @@ export type CreatorConfirmationMethod =
   | "exact"
   | "generic_type"
   | "address_token"
-  | "shortened_query";
+  | "shortened_query"
+  | "overpass_near"
+  | "operator_coordinates";
 
 export type CreatorSieveAttemptEvidence = {
   attemptNumber: 1 | 2;
@@ -176,11 +178,6 @@ async function runCreatorSieveInternal(
 ): Promise<CreatorSieveResult> {
   const hardCeilingKm = options.hardCeilingKm ?? CREATOR_DEFAULT_HARD_CEILING_KM;
   const fetchFn = options.fetchFn ?? fetch;
-  // Nominatim treats an unbounded viewbox as a ranking hint.  This is not an
-  // editorial radius; existence is only rejected at the 120km hard ceiling.
-  const latDelta = hardCeilingKm / 111.32;
-  const lonDelta = hardCeilingKm /
-    (111.32 * Math.cos(origin.latitude * Math.PI / 180));
   const fetched: Array<{ query: string; data: unknown }> = [];
   const fetchResults = async (query: string): Promise<unknown> => {
     const url = new URL("https://nominatim.openstreetmap.org/search");
@@ -191,24 +188,25 @@ async function runCreatorSieveInternal(
     if (!options.omitLayerForHarness) {
       url.searchParams.set("layer", "poi,natural,manmade");
     }
-    url.searchParams.set("viewbox", [
-      origin.longitude - lonDelta, origin.latitude + latDelta,
-      origin.longitude + lonDelta, origin.latitude - latDelta,
-    ].join(","));
-    url.searchParams.set("bounded", "0");
+    // Excursion lookup is deliberately global. The 120 km guard is applied
+    // only after strict identity matching and never biases Nominatim ranking.
     url.searchParams.set("q", query);
-    options.onNominatimWait?.(await acquireNominatimTurn());
-    const response = await fetchFn(url, {
-      headers: { "User-Agent": "Smart360 Creator sieve (admin contact via replit deployment)" },
-    });
-    if (!response.ok) throw new Error(`Nominatim ${response.status}`);
-    return response.json();
+    try {
+      options.onNominatimWait?.(await acquireNominatimTurn());
+      const response = await fetchFn(url, {
+        headers: { "User-Agent": "Smart360 Creator sieve (admin contact via replit deployment)" },
+      });
+      if (!response.ok) throw new Error(`Nominatim ${response.status}`);
+      return response.json();
+    } catch {
+      return { infrastructureFailure: true };
+    }
   };
 
   let matchedQuery = name;
   let data = await fetchResults(name);
   fetched.push({ query: name, data });
-  if (!Array.isArray(data) || data.length === 0) {
+  if (Array.isArray(data) && data.length === 0) {
     const retryQuery = options.fallbackQuery?.trim()
       || name.replace(/\s+(?:na|pod|pri)\s+\S+(?:\s+\S+)*$/iu, "").trim();
     if (retryQuery !== name) {
@@ -257,6 +255,17 @@ async function runCreatorSieveInternal(
       candidates,
     };
   });
+  if (!Array.isArray(data) && (data as { infrastructureFailure?: boolean })?.infrastructureFailure) {
+    return {
+      verdict: "refused",
+      rule: "nominatim-unavailable",
+      candidates: [],
+      originalQuery: name,
+      confirmedQuery: null,
+      confirmationMethod: null,
+      attempts: attempts("refused", "nominatim-unavailable"),
+    };
+  }
   if (!Array.isArray(data) || data.length === 0) {
     return {
       verdict: "refused",

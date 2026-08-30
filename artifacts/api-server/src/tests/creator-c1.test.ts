@@ -18,6 +18,10 @@ import {
 } from "../lib/creatorC1";
 import { runCreatorSieve } from "../lib/creatorSieve";
 import {
+  CREATOR_NEAR_RING_ENVELOPE_KM,
+  matchUniqueCreatorNearRingCandidate,
+} from "../lib/creatorNearRing";
+import {
   claimCreatorRunOnce,
   isPreservedMeninaEvidenceTenant,
 } from "../lib/creatorMeninaProductionRun";
@@ -170,6 +174,70 @@ test("C1 does not strip a multi-word generic phrase without OSM type corroborati
   if (result.verdict === "refused") assert.equal(result.rule, "name-mismatch");
 });
 
+test("near-ring matching is bounded, tolerant, type-corroborated and unique", () => {
+  assert.equal(CREATOR_NEAR_RING_ENVELOPE_KM, 35);
+  const candidate = {
+    osmType: "relation", osmId: 44, className: "historic", type: "archaeological_site",
+    addresstype: "historic", returnedName: "Rimska nekropola v Šempetru",
+    displayName: "Rimska nekropola v Šempetru", latitude: 46.25, longitude: 15.1,
+    distanceKm: 22, aliases: [], isSettlement: false,
+  };
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Rimska nekropola Šempeter", [candidate])?.osmId,
+    44,
+  );
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Rimska nekropola Šempeter", [
+      candidate,
+      { ...candidate, osmId: 45 },
+    ]),
+    null,
+  );
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Krajinski park Golte", [{
+      ...candidate, osmId: 46, type: "viewpoint", returnedName: "Golte",
+    }]),
+    null,
+  );
+});
+
+test("near-ring enumeration requests only relevant named features and filters noise", async () => {
+  const { enumerateCreatorNearRing } = await import("../lib/creatorNearRing");
+  let requested = "";
+  const candidates = await enumerateCreatorNearRing({ latitude: 46.3, longitude: 14.9 }, async (_url, init) => {
+    requested = String(init?.body);
+    return new Response(JSON.stringify({ elements: [
+      { type: "way", id: 1, center: { lat: 46.31, lon: 14.91 }, tags: { highway: "primary", name: "Road" } },
+      { type: "relation", id: 2, center: { lat: 46.32, lon: 14.92 }, tags: { boundary: "administrative", name: "Noise" } },
+      { type: "node", id: 3, lat: 46.33, lon: 14.93, tags: { tourism: "museum", name: "Muzej", "name:en": "Museum" } },
+    ] }), { status: 200 });
+  });
+  const overpass = new URLSearchParams(requested).get("data") ?? "";
+  assert.match(overpass, /\[tourism\]\[name\]/);
+  assert.match(overpass, /boundary=protected_area/);
+  assert.doesNotMatch(overpass, /nwr\(around:[^\n]*\)\["name"\]/);
+  assert.deepEqual(candidates.map((candidate) => candidate.osmId), [3]);
+  assert.deepEqual(candidates[0]?.aliases, ["Museum"]);
+});
+
+test("settlements require an explicit settlement proposal and never fuzzy-match arbitrary places", () => {
+  const settlement = {
+    osmType: "node", osmId: 91, className: "settlement", type: "village",
+    addresstype: "settlement", returnedName: "Solčava", displayName: "Solčava",
+    latitude: 46.42, longitude: 14.69, distanceKm: 4, aliases: [], isSettlement: true,
+  };
+  assert.equal(matchUniqueCreatorNearRingCandidate("Solčava", [settlement]), null);
+  assert.equal(matchUniqueCreatorNearRingCandidate("Vas Solčava", [settlement])?.osmId, 91);
+});
+
+test("Nominatim infrastructure failures stay unresolved rather than rejected editorially", async () => {
+  const result = await runCreatorSieve("Resnični kraj", { latitude: 46, longitude: 15 }, {
+    fetchFn: async () => { throw new Error("network unavailable"); },
+  });
+  assert.equal(result.verdict, "refused");
+  if (result.verdict === "refused") assert.equal(result.rule, "nominatim-unavailable");
+});
+
 test("later C1 batches receive prior names and practical places are forbidden", () => {
   const prompt = promptFor({
     origin: { latitude: 46.31, longitude: 14.91 },
@@ -178,8 +246,10 @@ test("later C1 batches receive prior names and practical places are forbidden", 
     categories: [],
     rejectedNames: ["Human rejected place"],
     priorProposedNames: ["Mozirski gaj", "Golte"],
+    alreadyConfirmedNames: ["Logarska dolina"],
   });
   assert.match(prompt, /Never propose any durable rejection: \["Human rejected place"\]/);
+  assert.match(prompt, /already in the guide.*\["Logarska dolina"\]/);
   assert.doesNotMatch(prompt, /previously could not be confirmed|unconfirmed names|discouraged/i);
   assert.match(prompt, /Do not repeat any name already proposed by an earlier batch/);
   assert.match(prompt, /\["Mozirski gaj","Golte"\]/);
@@ -221,6 +291,7 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
     routeFailures: 1,
     inputTokens: 100, outputTokens: 50, costUsd: 0.12, wallClockMs: 321,
     nominatimThrottleWaitMs: 123, error: "safe failure",
+    nearEnvelopeKm: 35, nearEnvelopeEdgeBandCount: 1,
     pricing: CREATOR_C1_PRICING,
     outcomes: [{
       proposedName: "Missing place",

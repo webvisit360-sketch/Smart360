@@ -30,16 +30,19 @@ export const creatorPlaceProposalsTable = pgTable(
     range: text("range"),
     geocodingLookupHint: text("geocoding_lookup_hint"),
     inclusionReason: text("inclusion_reason"),
-    // Ready means verification is complete and, for C1, all four editorial
-    // language rows exist and the entire run has completed successfully.
+    // Ready means the full run and all four editorial language rows are
+    // durable. It deliberately includes unresolved rows so infrastructure and
+    // lookup failures remain visible and manually confirmable.
     contentReady: boolean("content_ready").notNull().default(false),
     proposedName: text("proposed_name").notNull(),
     normalizedName: text("normalized_name").notNull(),
     originalQuery: text("original_query").notNull(),
     confirmedQuery: text("confirmed_query"),
     confirmationMethod: text("confirmation_method"),
+    coordinateConfirmedBy: uuid("coordinate_confirmed_by").references(() => adminUsersTable.id),
+    coordinateConfirmedAt: timestamp("coordinate_confirmed_at", { withTimezone: true }),
     requiresIndividualReview: boolean("requires_individual_review").generatedAlwaysAs(
-      sql`COALESCE(${sql.identifier("confirmation_method")} = 'shortened_query', false)`,
+      sql`COALESCE(${sql.identifier("confirmation_method")} IN ('shortened_query','operator_coordinates'), false)`,
     ),
     status: text("status").notNull().default("pending"),
     supersededBy: uuid("superseded_by").references(
@@ -65,7 +68,8 @@ export const creatorPlaceProposalsTable = pgTable(
   },
   (t) => [
     check("creator_place_proposals_status_check", sql`${t.status} IN ('pending','unresolved','approved','rejected','superseded')`),
-    check("creator_place_proposals_confirmation_method_check", sql`${t.confirmationMethod} IS NULL OR ${t.confirmationMethod} IN ('exact','generic_type','address_token','shortened_query')`),
+    check("creator_place_proposals_confirmation_method_check", sql`${t.confirmationMethod} IS NULL OR ${t.confirmationMethod} IN ('exact','generic_type','address_token','shortened_query','overpass_near','operator_coordinates')`),
+    check("creator_place_proposals_operator_provenance_check", sql`${t.confirmationMethod} <> 'operator_coordinates' OR (${t.coordinateConfirmedBy} IS NOT NULL AND ${t.coordinateConfirmedAt} IS NOT NULL AND ${t.latitude} IS NOT NULL AND ${t.longitude} IS NOT NULL)`),
     check("creator_place_proposals_review_check", sql`${t.status} NOT IN ('approved','rejected') OR (${t.reviewedBy} IS NOT NULL AND ${t.reviewedAt} IS NOT NULL)`),
     check("creator_place_proposals_unresolved_reason_check", sql`${t.status} <> 'unresolved' OR ${t.refusalReason} IS NOT NULL`),
     check("creator_place_proposals_superseded_pointer_check", sql`${t.status} <> 'superseded' OR ${t.supersededBy} IS NOT NULL`),

@@ -597,7 +597,13 @@ export default function AdminTenantEdit() {
               {isOwner ? (
                 <>
                   <KreatorOriginConfirmation onCreated={(tenantId) => setLocation(`/admin/tenants/${tenantId}`)} />
-                  <KreatorProposalQueue tenantId={id} tenantName={tenant.name} />
+                  <KreatorProposalQueue
+                    tenantId={id}
+                    tenantName={tenant.name}
+                    origin={typeof tenant.latitude === "number" && typeof tenant.longitude === "number"
+                      ? { latitude: tenant.latitude, longitude: tenant.longitude }
+                      : undefined}
+                  />
                 </>
               ) : (
                 <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">

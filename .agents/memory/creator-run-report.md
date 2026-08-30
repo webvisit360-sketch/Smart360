@@ -11,11 +11,11 @@ The controlled Camping MENINA C1 evidence boundary permits exactly three durable
 
 **Why:** The owner required run one to remain exact for comparison, then authorized one corrected rerun after confirming that the first sieve queried lookup hints instead of plain names.
 
-Machine-unresolved names must not shape later model proposals. Human rejections are hard blocks.
+Creator prompt history has three distinct states: machine failures have no influence; machine-confirmed canonical names are listed as already in the guide; human rejections are hard blocks.
 
-**Why:** A machine miss is evidence about the verifier, not the place. Feeding misses from a known-broken sieve back into the prompt suppressed the strongest nearby places. Only a person’s rejection is durable editorial evidence.
+**Why:** A machine miss is evidence about the verifier, not the place, while machine success is trustworthy guide state that prevents wasting later model slots. Only a person’s rejection is durable negative editorial evidence.
 
-**How to apply:** Do not pass machine-unresolved names into model prompts. Pass human-rejected names as forbidden and block them tenant-wide in persistence. Creator prompts should target roughly half nearby and the rest within 90 driving minutes, with nothing expected beyond 90. Treat every run report as required evidence, preserve unresolved outcomes, keep them out of the ready queue, and never infer permission for a fourth run.
+**How to apply:** Exclude unresolved names from prompts, include confirmed canonical names as already present, and pass human-rejected names as forbidden. Preserve unresolved evidence and never infer permission for a fourth run.
 
 Run reports and proposal rows must show the model’s inclusion reason. Beyond-near proposals must expose same-category alternatives, including unresolved alternatives with unknown proximity.
 
@@ -28,3 +28,9 @@ Generic-type grammar and place retrieval are separate sieve stages. Phrase-aware
 **Why:** Run-three evidence showed that correct Slovenian category phrases frequently produced empty candidate sets. Expanding identity matching alone therefore recovered none of those rows, including the campsite’s namesake Menina planina.
 
 **How to apply:** Keep longest-first, OSM-type-corroborated multi-word matching, but measure zero-candidate losses separately. Any future retrieval retry that strips a generic phrase requires explicit approval and must preserve the two-attempt ceiling.
+
+Infrastructure failure is never editorial rejection.
+
+**Why:** Timeouts, rate limits, routing failures, and unreachable services say nothing about whether a place belongs in a guide.
+
+**How to apply:** Keep affected proposals unresolved and available for manual confirmation. Never add infrastructure-failed names to rejection prompts or durable editorial blocklists.

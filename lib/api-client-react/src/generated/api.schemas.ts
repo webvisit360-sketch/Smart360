@@ -405,6 +405,19 @@ export interface CreatorProposalEditInput {
   translations: CreatorProposalTranslation[];
 }
 
+export interface CreatorCoordinateConfirmationInput {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+}
+
 export type CreatorRunReportStatus = typeof CreatorRunReportStatus[keyof typeof CreatorRunReportStatus];
 
 
@@ -510,6 +523,10 @@ export interface CreatorRunReport {
   wallClockMs: number | null;
   nominatimThrottleMs: number;
   /** @nullable */
+  nearEnvelopeKm: number | null;
+  /** @nullable */
+  nearEnvelopeEdgeBandCount: number | null;
+  /** @nullable */
   error: string | null;
   startedAt: string;
   /** @nullable */
@@ -530,6 +547,8 @@ export const CreatorProposalConfirmationMethod = {
   generic_type: 'generic_type',
   address_token: 'address_token',
   shortened_query: 'shortened_query',
+  overpass_near: 'overpass_near',
+  operator_coordinates: 'operator_coordinates',
 } as const;
 
 export type CreatorProposalStatus = typeof CreatorProposalStatus[keyof typeof CreatorProposalStatus];
@@ -565,6 +584,12 @@ export interface CreatorProposal {
   confirmedQuery: string | null;
   /** @nullable */
   confirmationMethod: CreatorProposalConfirmationMethod;
+  /** @nullable */
+  coordinateConfirmedBy: string | null;
+  /** @nullable */
+  coordinateConfirmedByLabel: string | null;
+  /** @nullable */
+  coordinateConfirmedAt: string | null;
   requiresIndividualReview: boolean;
   status: CreatorProposalStatus;
   /** @nullable */
@@ -605,6 +630,7 @@ export interface CreatorProposal {
   geocodingLookupHint: string | null;
   /** @nullable */
   inclusionReason: string | null;
+  lostSameCategoryCount: number;
   nearestAlternatives: CreatorNearestAlternative[];
   translations: CreatorProposalTranslation[];
   /** @nullable */

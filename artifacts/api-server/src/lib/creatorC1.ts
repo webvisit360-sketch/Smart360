@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
@@ -9,6 +9,13 @@ import {
 } from "@workspace/db";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 import {
+  CREATOR_NEAR_RING_EDGE_BAND_KM,
+  CREATOR_NEAR_RING_ENVELOPE_KM,
+  enumerateCreatorNearRing,
+  matchUniqueCreatorNearRingCandidate,
+} from "./creatorNearRing";
+import {
+  CREATOR_MAX_QUEUE_DURATION_S,
   normalizeCreatorProposalName,
   runAndPersistCreatorSieve,
 } from "./creatorProposalLedger";
@@ -241,11 +248,13 @@ export function promptFor(input: {
   categories: Array<{ id: string; label: string; key: string | null }>;
   rejectedNames: string[];
   priorProposedNames: string[];
+  alreadyConfirmedNames: string[];
 }): string {
   return `You are Creator C1. Produce an object with a "places" array containing exactly ${CREATOR_C1_BATCH_SIZE} real place proposals.
 Origin: ${input.origin.latitude}, ${input.origin.longitude}; machine-resolved region: ${input.region}; accommodation: ${input.tenantType}.
 Use only these existing categories: ${JSON.stringify(input.categories)}.
 Never propose any durable rejection: ${JSON.stringify(input.rejectedNames)}.
+These machine-confirmed canonical places are already in the guide; do not propose them again: ${JSON.stringify(input.alreadyConfirmedNames)}.
 Do not repeat any name already proposed by an earlier batch in this run: ${JSON.stringify(input.priorProposedNames)}. All 15 names in this batch must also be distinct.
 Propose only editorial places for near surroundings and excursions. Never propose proximity-selected practical services such as ATMs, shops, supermarkets, pharmacies, fuel stations, doctors, health centres or post offices; those are machine-query work.
 Anchor every proposal to the stated origin. Target a useful geographic mix: roughly half of the 15 proposals should be places reasonably expected within about 20 minutes' drive of the origin; the rest should be excursions reasonably expected within 90 minutes' drive. Do not propose any place expected to require more than 90 minutes' driving. Never invent or report measurements; the server alone calculates and assigns every range.
@@ -257,6 +266,7 @@ export type CreatorC1Report = {
   proposed: number; confirmed: number; unconfirmed: number; duplicatesMerged: number;
   outsidePractical: number; outsideNear: number; outsideExcursion: number; routeFailures: number; inputTokens: number; outputTokens: number;
   costUsd: number; wallClockMs: number; nominatimThrottleWaitMs: number;
+  nearEnvelopeKm: number | null; nearEnvelopeEdgeBandCount: number | null;
   status: "completed" | "failed";
   pricing: typeof CREATOR_C1_PRICING;
   outcomes: Array<{
@@ -326,6 +336,7 @@ export async function runCreatorC1(input: {
     outsidePractical: 0, outsideNear: 0, outsideExcursion: 0, routeFailures: 0,
     inputTokens: 0, outputTokens: 0, costUsd: 0, wallClockMs: 0,
     nominatimThrottleWaitMs: 0, status: "completed", pricing: CREATOR_C1_PRICING, outcomes,
+    nearEnvelopeKm: CREATOR_NEAR_RING_ENVELOPE_KM, nearEnvelopeEdgeBandCount: 0,
     unconfirmedByCategory: [],
   };
   try {
@@ -338,8 +349,14 @@ export async function runCreatorC1(input: {
       .where(and(
         eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
         eq(creatorPlaceProposalsTable.status, "rejected"),
-        eq(creatorPlaceProposalsTable.contentReady, true),
       ))).map((row) => row.proposedName);
+    const alreadyConfirmedNames = (await db.select({
+      resolvedName: creatorPlaceProposalsTable.resolvedName,
+    }).from(creatorPlaceProposalsTable).where(and(
+      eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+      inArray(creatorPlaceProposalsTable.status, ["pending", "approved"]),
+      ne(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
+    ))).flatMap((row) => row.resolvedName ? [row.resolvedName] : []);
     const model = input.model ?? openAiCreatorC1Model;
     const all: CreatorC1Place[] = [];
     const proposedNames = new Set<string>();
@@ -350,6 +367,7 @@ export async function runCreatorC1(input: {
         tenantType: input.tenantType,
         categories: catalogue,
         rejectedNames,
+        alreadyConfirmedNames,
         priorProposedNames: all.map((place) => place.proposedName),
       });
       const generated = await generateCreatorC1Batch(model, prompt, (places) => {
@@ -372,12 +390,37 @@ export async function runCreatorC1(input: {
       }
     }
     report.proposed = all.length;
+    let nearCandidates: Awaited<ReturnType<typeof enumerateCreatorNearRing>> = [];
+    try {
+      nearCandidates = await enumerateCreatorNearRing(input.origin, input.fetchFn);
+    } catch {
+      // The strict global path remains available. Overpass downtime is never an
+      // editorial rejection and therefore never enters the rejection prompt.
+    }
     const routed: Array<{ proposalId: string; category: { id: string; label: string; key: string | null } | null; duration: number | null; distance: number | null }> = [];
     for (const place of all) {
+      const nearCandidate = matchUniqueCreatorNearRingCandidate(place.proposedName, nearCandidates);
+      const nearRoute = nearCandidate
+        ? await (input.osrm ?? computeRoadRoute)(
+          input.origin,
+          { latitude: nearCandidate.latitude, longitude: nearCandidate.longitude },
+          input.fetchFn,
+        )
+        : null;
+      const useNearCandidate = nearCandidate && nearRoute &&
+        Math.round(nearRoute.durationMinutes * 60) <= 1200
+        ? nearCandidate
+        : undefined;
+      if (
+        useNearCandidate &&
+        useNearCandidate.distanceKm >= CREATOR_NEAR_RING_ENVELOPE_KM - CREATOR_NEAR_RING_EDGE_BAND_KM &&
+        Math.round(nearRoute!.durationMinutes * 60) >= 1000
+      ) report.nearEnvelopeEdgeBandCount = (report.nearEnvelopeEdgeBandCount ?? 0) + 1;
       const output = await runAndPersistCreatorSieve({
         tenantId: input.tenantId, runId: run.id, proposedName: place.proposedName,
         lookupHint: place.geocodingLookupHint, origin: input.origin, fetchFn: input.fetchFn,
         contentReady: false,
+        nearCandidate: useNearCandidate,
         onNominatimWait: (milliseconds) => { nominatimThrottleWaitMs += milliseconds; report.nominatimThrottleWaitMs = nominatimThrottleWaitMs; },
       });
       const isDuplicate = output.duplicate;
@@ -427,10 +470,12 @@ export async function runCreatorC1(input: {
         });
         continue;
       }
-      report.confirmed++;
-      const route = await (input.osrm ?? computeRoadRoute)(input.origin, { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude }, input.fetchFn);
+      const route = useNearCandidate && nearRoute
+        ? nearRoute
+        : await (input.osrm ?? computeRoadRoute)(input.origin, { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude }, input.fetchFn);
       if (!route) {
         report.routeFailures++;
+        report.unconfirmed++;
         outcomes.push({
           proposedName: place.proposedName,
           categoryLabel: category?.label ?? null,
@@ -441,8 +486,32 @@ export async function runCreatorC1(input: {
           travelDurationS: null,
           nearestAlternatives: [],
         });
+        await db.update(creatorPlaceProposalsTable).set({
+          status: "unresolved", refusalReason: "osrm-unavailable",
+        }).where(eq(creatorPlaceProposalsTable.id, output.sourceProposal.id));
         continue;
       }
+      const durationS = Math.round(route.durationMinutes * 60);
+      if (durationS > CREATOR_MAX_QUEUE_DURATION_S) {
+        report.outsideExcursion++;
+        report.unconfirmed++;
+        outcomes.push({
+          proposedName: place.proposedName,
+          categoryLabel: category?.label ?? null,
+          inclusionReason: place.inclusionReason,
+          outcome: "unconfirmed",
+          refusalRule: "duration-ceiling",
+          roadDistanceM: route.distanceMeters,
+          travelDurationS: durationS,
+          nearestAlternatives: [],
+        });
+        await db.update(creatorPlaceProposalsTable).set({
+          status: "unresolved", refusalReason: "duration-ceiling",
+          roadDistanceM: route.distanceMeters, travelDurationS: durationS,
+        }).where(eq(creatorPlaceProposalsTable.id, output.sourceProposal.id));
+        continue;
+      }
+      report.confirmed++;
       outcomes.push({
         proposedName: place.proposedName,
         categoryLabel: category?.label ?? null,
@@ -450,12 +519,12 @@ export async function runCreatorC1(input: {
         outcome: "confirmed",
         refusalRule: null,
         roadDistanceM: route.distanceMeters,
-        travelDurationS: Math.round(route.durationMinutes * 60),
+        travelDurationS: durationS,
         nearestAlternatives: [],
       });
       await db.transaction(async (tx) => {
         await tx.update(creatorPlaceProposalsTable).set({
-          roadDistanceM: route.distanceMeters, travelDurationS: Math.round(route.durationMinutes * 60),
+          roadDistanceM: route.distanceMeters, travelDurationS: durationS,
         }).where(eq(creatorPlaceProposalsTable.id, output.sourceProposal.id));
       });
       routed.push({ proposalId: output.sourceProposal.id, category, duration: route.durationMinutes, distance: route.distanceMeters });
@@ -504,7 +573,7 @@ export async function runCreatorC1(input: {
     }
     const unconfirmedGroups = new Map<string | null, CreatorC1Report["unconfirmedByCategory"][number]["proposals"]>();
     for (const outcome of outcomes) {
-      if (outcome.outcome !== "unconfirmed") continue;
+      if (outcome.outcome !== "unconfirmed" && outcome.outcome !== "route_failed") continue;
       const proposals = unconfirmedGroups.get(outcome.categoryLabel) ?? [];
       proposals.push({
         proposedName: outcome.proposedName,
@@ -530,14 +599,10 @@ export async function runCreatorC1(input: {
         nominatimThrottleWaitMs: report.nominatimThrottleWaitMs,
         completedAt: new Date(),
       }).where(eq(creatorRunsTable.id, run.id));
-      const readyProposalIds = routed.map((row) => row.proposalId);
-      if (readyProposalIds.length > 0) {
-        await tx.update(creatorPlaceProposalsTable).set({ contentReady: true }).where(and(
-          eq(creatorPlaceProposalsTable.runId, run.id),
-          eq(creatorPlaceProposalsTable.status, "pending"),
-          inArray(creatorPlaceProposalsTable.id, readyProposalIds),
-        ));
-      }
+       await tx.update(creatorPlaceProposalsTable).set({ contentReady: true }).where(and(
+         eq(creatorPlaceProposalsTable.runId, run.id),
+         inArray(creatorPlaceProposalsTable.status, ["pending", "unresolved"]),
+       ));
     });
     return { runId: run.id, report };
   } catch (error) {

@@ -31,6 +31,10 @@ export interface CreatorRunReport {
   wallClockMs: number | null;
   nominatimThrottleMs: number;
   /** @nullable */
+  nearEnvelopeKm: number | null;
+  /** @nullable */
+  nearEnvelopeEdgeBandCount: number | null;
+  /** @nullable */
   error: string | null;
   startedAt: string;
   /** @nullable */

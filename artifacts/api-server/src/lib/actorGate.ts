@@ -135,6 +135,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/tenants/:id/creator/catalogue", binding: OWNER },
   { method: "patch", path: "/admin/tenants/:id/creator/proposals/:proposalId", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/reject", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinates", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/creator/proposals", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/approve", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/approve-bulk", binding: OWNER },

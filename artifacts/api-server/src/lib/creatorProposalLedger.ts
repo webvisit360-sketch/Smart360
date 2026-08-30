@@ -16,9 +16,12 @@ import {
   creatorVerificationCandidatesTable,
   db,
   sectionsTable,
+  tenantsTable,
 } from "@workspace/db";
 import { runCreatorSieve } from "./creatorSieve";
-import type { FetchFn } from "./distanceEngine";
+import { computeRoadRoute, type FetchFn } from "./distanceEngine";
+
+export const CREATOR_MAX_QUEUE_DURATION_S = 5400;
 
 export function normalizeCreatorProposalName(value: string): string {
   return value
@@ -94,7 +97,7 @@ export async function upsertPendingCreatorProposal(input: {
 export type CreatorVerificationRecord = {
   originalQuery: string;
   confirmedQuery: string | null;
-  confirmationMethod: "exact" | "generic_type" | "address_token" | "shortened_query" | null;
+  confirmationMethod: "exact" | "generic_type" | "address_token" | "shortened_query" | "overpass_near" | "operator_coordinates" | null;
   status: "pending" | "unresolved";
   refusalReason: string | null;
   resolvedName: string | null;
@@ -268,6 +271,11 @@ export async function runAndPersistCreatorSieve(input: {
   fetchFn?: FetchFn;
   onNominatimWait?: (milliseconds: number) => void;
   contentReady?: boolean;
+  nearCandidate?: {
+    osmType: string; osmId: number; className: string; type: string;
+    addresstype: string; returnedName: string; displayName: string;
+    latitude: number; longitude: number; distanceKm: number;
+  };
 }) {
   const pending = await upsertPendingCreatorProposal({
     tenantId: input.tenantId,
@@ -286,7 +294,31 @@ export async function runAndPersistCreatorSieve(input: {
       result: null,
     };
   }
-  const result = await runCreatorSieve(input.proposedName, input.origin, {
+  const result = input.nearCandidate ? {
+    verdict: "resolved" as const,
+    candidate: input.nearCandidate,
+    originalQuery: input.proposedName,
+    confirmedQuery: input.proposedName,
+    confirmationMethod: "overpass_near" as const,
+    attempts: [{
+      attemptNumber: 1 as const,
+      query: `overpass:${input.proposedName}`,
+      verdict: "resolved" as const,
+      refusalRule: null,
+      candidates: [{
+        osmType: input.nearCandidate.osmType,
+        osmId: input.nearCandidate.osmId,
+        osmCategory: input.nearCandidate.className,
+        osmFeatureType: input.nearCandidate.type,
+        osmAddressType: input.nearCandidate.addresstype,
+        resolvedName: input.nearCandidate.returnedName,
+        latitude: input.nearCandidate.latitude,
+        longitude: input.nearCandidate.longitude,
+        straightLineDistanceM: input.nearCandidate.distanceKm * 1000,
+        selected: true,
+      }],
+    }],
+  } : await runCreatorSieve(input.proposedName, input.origin, {
     fallbackQuery: input.lookupHint,
     hardCeilingKm: input.hardCeilingKm,
     fetchFn: input.fetchFn,
@@ -387,6 +419,13 @@ export async function listCreatorProposalQueue(tenantId: string) {
   const translations = await db.select().from(creatorProposalTranslationsTable)
     .where(inArray(creatorProposalTranslationsTable.proposalId, rows.map(({ proposal }) => proposal.id)))
     .orderBy(asc(creatorProposalTranslationsTable.language));
+  const coordinateActors = [...new Set(rows
+    .flatMap(({ proposal }) => proposal.coordinateConfirmedBy ? [proposal.coordinateConfirmedBy] : []))];
+  const actorNames = coordinateActors.length === 0 ? [] : await db.select({
+    id: adminUsersTable.id,
+    displayName: adminUsersTable.displayName,
+  }).from(adminUsersTable).where(inArray(adminUsersTable.id, coordinateActors));
+  const actorNameById = new Map(actorNames.map((actor) => [actor.id, actor.displayName]));
   const byProposal = new Map<string, Array<{ language: string; name: string; description: string }>>();
   for (const translation of translations) {
     const list = byProposal.get(translation.proposalId) ?? [];
@@ -401,6 +440,14 @@ export async function listCreatorProposalQueue(tenantId: string) {
     ...proposal,
     categoryLabel,
     translations: byProposal.get(proposal.id) ?? [],
+    coordinateConfirmedByLabel: proposal.coordinateConfirmedBy
+      ? actorNameById.get(proposal.coordinateConfirmedBy) ?? null
+      : null,
+    lostSameCategoryCount: evidenceRows.filter(({ proposal: alternative }) =>
+      alternative.id !== proposal.id &&
+      alternative.runId === proposal.runId &&
+      alternative.categoryId === proposal.categoryId &&
+      alternative.status === "unresolved").length,
     nearestAlternatives: proposal.travelDurationS !== null && proposal.travelDurationS > 20 * 60
       ? evidenceRows
         .filter(({ proposal: alternative }) =>
@@ -535,9 +582,85 @@ export async function rejectCreatorProposalIndividually(
   return (await listCreatorProposalQueue(tenantId)).find((row) => row.id === proposalId);
 }
 
+export async function confirmCreatorProposalCoordinates(input: {
+  tenantId: string;
+  proposalId: string;
+  actorId: string;
+  latitude: number;
+  longitude: number;
+  fetchFn?: FetchFn;
+}) {
+  await requireActor(input.actorId);
+  const [proposal] = await db.select().from(creatorPlaceProposalsTable).where(and(
+    eq(creatorPlaceProposalsTable.id, input.proposalId),
+    eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+    eq(creatorPlaceProposalsTable.status, "unresolved"),
+    eq(creatorPlaceProposalsTable.contentReady, true),
+  )).limit(1);
+  if (!proposal) throw new Error("Nerazrešen predlog ni najden.");
+  const alreadyPositioned = proposal.confirmationMethod === "operator_coordinates";
+  if (
+    alreadyPositioned &&
+    (proposal.latitude !== input.latitude || proposal.longitude !== input.longitude)
+  ) {
+    throw new Error("Prvotno ročno določene točke ni mogoče prepisati.");
+  }
+  const [tenant] = await db.select({
+    latitude: tenantsTable.latitude,
+    longitude: tenantsTable.longitude,
+  }).from(tenantsTable)
+    .where(eq(tenantsTable.id, input.tenantId)).limit(1);
+  if (!tenant || tenant.latitude === null || tenant.longitude === null) {
+    throw new Error("Izhodišče nima koordinat.");
+  }
+  const route = await computeRoadRoute(
+    { latitude: tenant.latitude, longitude: tenant.longitude },
+    { latitude: input.latitude, longitude: input.longitude },
+    input.fetchFn,
+  );
+  const now = new Date();
+  const routable = route && Math.round(route.durationMinutes * 60) <= CREATOR_MAX_QUEUE_DURATION_S;
+  const [updated] = await db.update(creatorPlaceProposalsTable).set({
+    ...(alreadyPositioned ? {} : {
+      confirmationMethod: "operator_coordinates",
+      confirmedQuery: "operator-map-pin",
+      coordinateConfirmedBy: input.actorId,
+      coordinateConfirmedAt: now,
+      latitude: input.latitude,
+      longitude: input.longitude,
+    }),
+    straightLineDistanceM: null,
+    roadDistanceM: route?.distanceMeters ?? null,
+    travelDurationS: route ? Math.round(route.durationMinutes * 60) : null,
+    range: route
+      ? route.durationMinutes <= 20 ? "near" : "excursion"
+      : null,
+    resolvedName: proposal.resolvedName ?? proposal.proposedName,
+    status: routable ? "pending" : "unresolved",
+    refusalReason: !route ? "osrm-unavailable" : routable ? null : "duration-ceiling",
+    updatedAt: now,
+  }).where(and(
+    eq(creatorPlaceProposalsTable.id, input.proposalId),
+    eq(creatorPlaceProposalsTable.status, "unresolved"),
+    ...(alreadyPositioned ? [] : [isNull(creatorPlaceProposalsTable.coordinateConfirmedAt)]),
+  )).returning();
+  if (!updated) throw new Error("Koordinat ni bilo mogoče shraniti.");
+  return (await listCreatorProposalQueue(input.tenantId)).find((row) => row.id === input.proposalId);
+}
+
 export class CreatorBulkApprovalError extends Error {}
 
 function hasResolutionEvidence(row: typeof creatorPlaceProposalsTable.$inferSelect): boolean {
+  if (row.confirmationMethod === "operator_coordinates") {
+    return Boolean(
+      row.coordinateConfirmedBy &&
+      row.coordinateConfirmedAt &&
+      row.latitude !== null &&
+      row.longitude !== null &&
+      row.roadDistanceM !== null &&
+      row.travelDurationS !== null,
+    );
+  }
   return Boolean(
     row.confirmedQuery &&
     row.confirmationMethod &&
@@ -569,10 +692,14 @@ export async function approveCreatorProposalIndividually(
     eq(creatorPlaceProposalsTable.id, proposalId),
     eq(creatorPlaceProposalsTable.tenantId, tenantId),
     eq(creatorPlaceProposalsTable.status, "pending"),
+    eq(creatorPlaceProposalsTable.contentReady, true),
   )).limit(1);
   if (!proposal) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
   if (!hasResolutionEvidence(proposal)) {
     throw new Error("Predloga brez popolnih strojnih dokazov ni mogoče potrditi.");
+  }
+  if (proposal.travelDurationS === null || proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S) {
+    throw new Error("Predloga nad 90 minutami ali brez poti ni mogoče potrditi.");
   }
   const [updated] = await db.update(creatorPlaceProposalsTable).set({
     status: "approved",
@@ -585,25 +712,10 @@ export async function approveCreatorProposalIndividually(
     eq(creatorPlaceProposalsTable.status, "pending"),
   )).returning();
   if (!updated) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
-  const [hydrated] = await db.select({
-    proposal: creatorPlaceProposalsTable,
-    categoryLabel: categoriesTable.label,
-  }).from(creatorPlaceProposalsTable)
-    .leftJoin(categoriesTable, eq(creatorPlaceProposalsTable.categoryId, categoriesTable.id))
-    .where(eq(creatorPlaceProposalsTable.id, updated.id))
-    .limit(1);
-  const translations = await db.select({
-    language: creatorProposalTranslationsTable.language,
-    name: creatorProposalTranslationsTable.name,
-    description: creatorProposalTranslationsTable.description,
-  }).from(creatorProposalTranslationsTable)
-    .where(eq(creatorProposalTranslationsTable.proposalId, updated.id))
-    .orderBy(asc(creatorProposalTranslationsTable.language));
-  return {
-    ...(hydrated?.proposal ?? updated),
-    categoryLabel: hydrated?.categoryLabel ?? null,
-    translations,
-  };
+  const hydrated = (await listCreatorProposalQueue(tenantId))
+    .find((row) => row.id === updated.id);
+  if (!hydrated) throw new Error("Potrjenega predloga ni mogoče ponovno prebrati.");
+  return hydrated;
 }
 
 export async function approveCreatorProposalsBulk(
@@ -628,9 +740,22 @@ export async function approveCreatorProposalsBulk(
         "Predloga, potrjenega s skrajšano poizvedbo, ni mogoče množično potrditi.",
       );
     }
+    if (rows.some(({ proposal }) =>
+      proposal.status !== "pending" || !proposal.contentReady)) {
+      throw new CreatorBulkApprovalError(
+        "Potrditi je mogoče samo pripravljene predloge, ki čakajo na pregled.",
+      );
+    }
     if (rows.some(({ proposal }) => !hasResolutionEvidence(proposal))) {
       throw new CreatorBulkApprovalError(
         "Predloga brez popolnih strojnih dokazov ni mogoče potrditi.",
+      );
+    }
+    if (rows.some(({ proposal }) =>
+      proposal.travelDurationS === null ||
+      proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S)) {
+      throw new CreatorBulkApprovalError(
+        "Predloga nad 90 minutami ali brez poti ni mogoče potrditi.",
       );
     }
     return tx.update(creatorPlaceProposalsTable).set({
