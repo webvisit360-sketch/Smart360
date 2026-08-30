@@ -1,0 +1,52 @@
+The grammar count is zero, so my hypothesis was wrong. It is not Slovene word
+order. The real number is the other one: 23 of 32 losses returned ZERO
+candidates. Nominatim gave nothing at all for "Frančiškanski samostan
+Nazarje", "Menina planina", "Mozirje", "Nazarje", "Luče". That is a retrieval
+failure, not a matching failure.
+
+I believe we caused it.
+
+In Step B I required layer=poi,natural,manmade so that settlements would stop
+coming back. It worked. But in Nominatim, settlements, hamlets and localities
+live in the ADDRESS layer, not poi. So Mozirje, Nazarje, Luče and Ljubno ob
+Savinji return nothing because our own parameter discards them before we see
+them. Menina planina goes the same way if OSM records it as place=locality,
+which Slovenian planine often are.
+
+The filter I added against Charman's Bridge deleted the valley.
+
+MEASURE THIS BEFORE BUILDING OVERPASS
+We already built the local classification gate for exactly this reason, and
+run three proves it fires in production: Ljubno ob Savinji and Stari grad
+Celje were both refused by blocked-class-or-addresstype. The second lock is
+loaded and shooting.
+
+So, in the harness only, re-query all 23 zero-candidate names WITHOUT the
+layer parameter, and report for each:
+· how many candidates came back;
+· the raw category and addresstype of each;
+· what the local gate would decide — resolved, or refused and by which rule;
+· whether the name would match.
+
+Then report the count: of the 23, how many would resolve if we dropped `layer`
+and relied on the local gate instead.
+
+If that number is large, the fix is one parameter and the Overpass enumeration
+becomes an enhancement rather than a necessity. If it is small, Overpass is
+confirmed as the right answer and we build it knowing why. Either way we will
+have measured instead of assumed — which is the only reason today's findings
+are worth anything.
+
+Do not change production behaviour yet. Harness only.
+
+SCHEMA: APPROVED
+The migration is correct. The confirmation_method widening is a deliberate
+extension, which is what the August lesson actually asked for. The operator
+provenance check and the regenerated requires_individual_review including
+operator_coordinates are both right: a hand-placed coordinate must never be
+bulk-approvable.
+
+Apply it in one transaction, development first, then quote the production
+catalog as before.
+
+Report and STOP.

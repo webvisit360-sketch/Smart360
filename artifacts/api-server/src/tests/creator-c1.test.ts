@@ -338,7 +338,7 @@ test("only the exact Camping MENINA evidence tenant receives the authorized run 
   }), false);
 });
 
-test("failed C1 rows stay hidden while run history allows reruns but blocks concurrent execution", async () => {
+test("infrastructure-failed C1 rows remain unresolved and run history blocks concurrent execution", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const [tenant] = await db.insert(tenantsTable).values({
     slug: `c1-failure-${suffix}`,
@@ -357,7 +357,7 @@ test("failed C1 rows stay hidden while run history allows reruns but blocks conc
     tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
   }).returning({ id: creatorRunsTable.id });
   assert.ok(claimed);
-  await assert.rejects(runCreatorC1({
+  await runCreatorC1({
     tenantId: tenant.id,
     claimedRunId: claimed.id,
     origin: { latitude: 46.31, longitude: 14.91 },
@@ -374,17 +374,20 @@ test("failed C1 rows stay hidden while run history allows reruns but blocks conc
       }]), { status: 200 });
     },
     osrm: async () => ({ distanceMeters: 1000, durationMinutes: 10 }),
-  }), /injected geocoder failure/);
+  });
   const leaked = await db.select().from(creatorPlaceProposalsTable).where(and(
     eq(creatorPlaceProposalsTable.tenantId, tenant.id),
     like(creatorPlaceProposalsTable.proposedName, `${prefix}%`),
   ));
-  assert.equal(leaked.some((row) => row.contentReady), false);
+  assert.equal(leaked.every((row) => row.contentReady), true);
+  assert.equal(leaked.some((row) => row.status !== "unresolved"), false);
   assert.ok(leaked.length > 0);
-  const failed = await db.select().from(creatorRunsTable).where(and(
-    eq(creatorRunsTable.tenantId, tenant.id), eq(creatorRunsTable.status, "failed"),
+  const completed = await db.select().from(creatorRunsTable).where(and(
+    eq(creatorRunsTable.tenantId, tenant.id), eq(creatorRunsTable.status, "completed"),
   ));
-  assert.ok(failed.some((row) => row.reportJson?.includes("injected geocoder failure")));
+  assert.ok(completed.some((row) =>
+    row.reportJson?.includes("nominatim-unavailable")
+    && !row.reportJson.includes("injected geocoder failure")));
 
   const [claimA, claimB] = await Promise.all([
     claimCreatorRunOnce(tenant.id, { latitude: 46.31, longitude: 14.91 }),

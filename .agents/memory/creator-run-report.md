@@ -29,6 +29,12 @@ Generic-type grammar and place retrieval are separate sieve stages. Phrase-aware
 
 **How to apply:** Keep longest-first, OSM-type-corroborated multi-word matching, but measure zero-candidate losses separately. Any future retrieval retry that strips a generic phrase requires explicit approval and must preserve the two-attempt ceiling.
 
+Dropping Nominatim's `layer` filter is not an adequate replacement for bounded Overpass retrieval.
+
+**Why:** A controlled replay of 23 zero-candidate MENINA losses without `layer` restored results for only six names, and the unchanged local gate resolved zero. The restored set was mostly settlements blocked by design; the other 17 still returned nothing.
+
+**How to apply:** Keep the layerless result as diagnostic evidence only. Use bounded near-ring enumeration for local discovery rather than broadening global Nominatim behavior without a separately designed settlement policy.
+
 Infrastructure failure is never editorial rejection.
 
 **Why:** Timeouts, rate limits, routing failures, and unreachable services say nothing about whether a place belongs in a guide.

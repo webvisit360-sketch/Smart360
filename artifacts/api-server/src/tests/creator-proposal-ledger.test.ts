@@ -156,6 +156,9 @@ test("pending-name upsert suppresses duplicates and shortened rows require indiv
     CreatorBulkApprovalError,
   );
 
+  await db.update(creatorPlaceProposalsTable)
+    .set({ contentReady: true, roadDistanceM: 12_000, travelDurationS: 1_200 })
+    .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
   const approved = await approveCreatorProposalIndividually(
     tenantId,
     first.proposal.id,
