@@ -1,0 +1,44 @@
+Correct call. Reading the catalog is exactly what caught this, and it is the
+second time today that rule has earned its keep.
+
+WHAT HAPPENED
+The migration was one transaction, but the publish did not run it as one. It
+applied a schema diff: additive changes went through — both columns, the
+foreign key, the provenance check — while the two operations that require
+dropping and recreating existing objects were skipped. Publish tooling
+routinely refuses to drop an existing CHECK or regenerate a generated column.
+
+This is August in different clothes: the publish reported success and part of
+the schema never arrived.
+
+1 · CONFIRM THE MECHANISM IN ONE PARAGRAPH
+Say which tool applies the schema on publish and why it skipped those two
+statements, so we know whether this will recur on every future CHECK change.
+If it will, that is a standing fact about this project and I want it recorded,
+not rediscovered next time.
+
+2 · PRODUCE THE EXACT STATEMENTS FOR THE SQL CONSOLE
+The owner will run them in Replit's SQL console, which is the route that
+worked in August. Give him:
+· the statement that drops and recreates the confirmation_method check with
+  all six values;
+· the statements that drop and recreate requires_individual_review with the
+  COALESCE expression covering shortened_query and operator_coordinates.
+
+Write them so they can be pasted and executed as-is. Do NOT include explicit
+BEGIN or COMMIT — that console rejects them and wraps the selected statements
+itself. Say in one line what each statement does before it, so he is not
+executing anything he cannot read.
+
+Note that dropping and re-adding the generated column recomputes it for every
+existing row. Confirm that is harmless here and state the row count.
+
+3 · AFTER HE RUNS THEM
+Re-read the production catalog and quote all four elements verbatim. Only then
+continue to Overpass, the manual map, and run four.
+
+Do not attempt to work around the missing constraint in application code. A
+narrower database than the code expects is exactly the failure we are
+preventing.
+
+Report and STOP.

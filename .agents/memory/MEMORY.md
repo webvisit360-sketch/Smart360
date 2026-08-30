@@ -8,7 +8,7 @@
 - [Smart360 translation layer](translation-layer.md) — ui/plurals overlay maps, two-sided lang enforcement (enabledLang + clampLang), export/import takes tenant row not id.
 - [Poteg CSS pitfalls](poteg-css-pitfalls.md) — `.lb` class collision (lightbox vs grid card label); must override display/background/inset on `.gc .lb`.
 - [Living Guide decisions](living-guide-decisions.md) — approved theme boundaries, guest persistence, price/order rules, event tabs, cutover and staged-review gates.
-- [Drizzle check constraints](drizzle-check-constraints.md) — keep stable semantic names; replace explicitly and derive production SQL from observed production state.
+- [PostgreSQL publish replacements](drizzle-check-constraints.md) — Publish may add objects but skip replacing CHECKs or generated columns; verify catalog and repair explicitly.
 - [CodeExecution runtime quirks](codeexecution-runtime-quirks.md) — deterministic test runtime may disable clock/random globals; use database IDs or fixed fixtures with cleanup.
 - [Living Guide prototype parity](living-guide-prototype-parity.md) — trust 390×844 computed styles; stage percentages and descendant font cascades can differ from prose tables.
 - [Guest sign-in delivery status](guest-sign-in-delivery.md) — unified sheet is production-approved; do not reimplement unless the owner reports a regression.
