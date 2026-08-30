@@ -1,0 +1,46 @@
+This comes AFTER step B. Do not start it until the sieve table is reported.
+
+GUEST HOME — TWO FALSE STATEMENTS AND THREE SMALLER FIXES
+The binding design is gost-domov-2030.html, attached, with an exact
+measurement table at the bottom. Build to those numbers.
+
+The two that matter are not visual.
+
+1 · THE RATING MUST NOT EXIST UNTIL A RATING EXISTS
+The guest preview shows "★ 5,0 · 0 ocen" — a five-star score nobody gave.
+Remove it from the DOM when the review count is zero. Not hidden, not "Novo",
+not empty stars, not a dash. In its place, the line under the title states
+what the place is and where: "Kamp · Zgornja Savinjska dolina" — both facts
+already in the data. When ratings exist, show ★ 4,8 · 12 ocen per the table.
+
+2 · THE RESPONSE TIME MUST BE MEASURED OR ABSENT
+"Običajno odgovorimo v nekaj minutah" is shown for a tenant that has never
+answered a message. Replace it with the host's name — "Odgovarja Matjaž,
+gostitelj" — which is true and more useful. The response-time line appears
+only after at least five answered messages and states the measured median,
+rounded up. If the host name is not set, the line is absent.
+
+These two are the same defect as the reverse geocoder returning a bridge: a
+plausible statement with nothing behind it. The rule for the whole product:
+what has not been measured is not displayed. An empty place is honest; a
+believable number in an empty place is not.
+
+3 · The contact button is blue. There is no blue in the palette, anywhere in
+this product. #157347, height 48, radius 13, full width per the table.
+
+4 · The host avatar must be the host's own photograph, or their initial on
+#ECF0EA. Never a stock image.
+
+5 · The admin preview panel says it refreshes on every change. The tenant name
+was entered in step 1 and the preview still read "Nova namestitev". Either it
+refreshes, or the caption is changed to say what it actually does.
+
+6 · In the admin sidebar, Nastavitve sits under the heading VSEBINA. Settings
+are not content. Move it out, on its own, at the bottom.
+
+One more question, not a task: the guest Home currently runs a warm beige that
+matches no token in the CGP. Was that a deliberate separate palette for the
+guest side? If so, say where it is defined. If it is not defined anywhere, it
+is drift, and the design attached is the correction.
+
+Report and STOP.

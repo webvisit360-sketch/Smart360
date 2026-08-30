@@ -1,0 +1,248 @@
+<meta charset="utf-8">
+<title>Smart360 — Gostova domača stran, popravki po CGP</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --card:#F4F6F2; --card2:#ECF0EA;
+  --tx:#121A14; --tx2:#66716A; --line:#E8EBE6;
+  --acc:#157347; --accg:#1D9159; --warm:#DD9A2B; --danger:#D93A2B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F7F8F6;font-family:Archivo,-apple-system,Segoe UI,sans-serif;color:var(--tx);padding:40px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:26px;font-weight:700;letter-spacing:-.01em}
+.lead{font-size:14px;color:var(--tx2);margin-top:8px;max-width:760px;line-height:1.55}
+.row{display:flex;gap:56px;margin-top:36px;align-items:flex-start}
+.col{flex:none}
+.caption{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);margin-bottom:14px}
+.caption b{color:var(--danger)}
+.caption i{color:var(--acc);font-style:normal}
+
+/* ---------- telefon 402 x 874 ---------- */
+.phone{width:402px;height:874px;background:var(--bg);border-radius:26px;overflow:hidden;
+  border:1px solid var(--line);box-shadow:0 18px 44px rgba(18,26,20,.13);position:relative}
+.cover{height:296px;position:relative;
+  background:linear-gradient(160deg,#8FA98C,#5C7A63 55%,#3F5B49)}
+.cover.warm{background:linear-gradient(160deg,#E8DFD1,#DCCFBB 60%,#CFC0A8)}
+.covtools{position:absolute;top:14px;right:14px;display:flex;gap:8px}
+.tool{width:34px;height:34px;border-radius:13px;background:rgba(255,255,255,.86);
+  display:flex;align-items:center;justify-content:center}
+.tool svg{width:16px;height:16px}
+.hint{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);
+  background:rgba(18,26,20,.62);color:#fff;font-size:12px;font-weight:500;
+  padding:8px 14px;border-radius:13px;white-space:nowrap}
+.body{padding:0 16px 16px;margin-top:-22px;position:relative}
+
+.card{background:var(--bg);border:1px solid var(--line);border-radius:22px;padding:18px}
+.card--soft{background:var(--card);border-color:transparent;margin-top:12px}
+.card--warm{background:#FBF7F0;border-color:#EFE6D8}
+
+.titlerow{display:flex;align-items:flex-start;gap:12px}
+.title{font-size:22px;font-weight:600;line-height:28px;letter-spacing:-.01em;flex:1}
+.sub{font-size:13px;color:var(--tx2);margin-top:4px}
+.logo{width:56px;height:56px;border-radius:13px;background:var(--card);flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);text-align:center;line-height:1.2}
+
+.rating{font-size:13px;color:var(--tx2);margin-top:4px}
+.rating .star{color:var(--warm);font-weight:600}
+.rating .num{color:var(--tx);font-weight:600}
+
+.search{margin-top:14px;height:46px;border-radius:13px;background:var(--card);
+  border:1px solid var(--line);display:flex;align-items:center;gap:9px;padding:0 13px}
+.search.warm{background:#F6EFE4;border-color:#EDE2D2}
+.search svg{width:15px;height:15px;flex:none;color:var(--tx2)}
+.search span{font-size:14px;color:var(--tx2)}
+.chips{margin-top:8px;font-size:13px;color:var(--tx2)}
+
+.host{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:13px;background:var(--card2);flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--tx2)}
+.hname{font-size:15px;font-weight:600}
+.hsub{font-size:13px;color:var(--tx2);margin-top:2px}
+.btn{margin-top:14px;height:48px;border-radius:13px;background:var(--acc);color:#fff;
+  font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.blue{background:#2563EB}
+.btn svg{width:16px;height:16px}
+
+.tabs{position:absolute;left:0;right:0;bottom:0;height:74px;background:var(--bg);
+  border-top:1px solid var(--line);display:flex;padding:10px 6px 0}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--tx2)}
+.tab.on{color:var(--acc);font-weight:600}
+.tab svg{width:21px;height:21px}
+
+/* oznake napak */
+.flag{position:absolute;left:-14px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
+.note{position:absolute;font-size:11.5px;line-height:1.45;color:var(--danger);width:210px;font-weight:500}
+.note.ok{color:var(--acc)}
+
+/* specifikacija */
+.spec{margin-top:52px;background:var(--bg);border:1px solid var(--line);border-radius:22px;padding:28px 30px}
+.spec h2{font-size:17px;font-weight:600;margin-bottom:6px}
+.spec p{font-size:13.5px;color:var(--tx2);line-height:1.6;margin-bottom:18px;max-width:800px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--tx2);
+  padding:0 12px 9px 0;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{font-weight:600;width:190px}
+td code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--card);
+  padding:1px 5px;border-radius:5px}
+.foot{margin-top:26px;font-size:12px;color:var(--tx2)}
+</style>
+
+<div class="wrap">
+<h1>Gostova domača stran — popravki po CGP</h1>
+<p class="lead">Levo je današnje stanje iz predogleda. Desno je zavezujoča različica. Spremembi, ki štejeta, nista barvni: gostu se ne pokaže ocena, ki je ni, in ne obljubi odzivni čas, ki ni izmerjen.</p>
+
+<div class="row">
+
+  <!-- ============ DANES ============ -->
+  <div class="col">
+    <div class="caption">Danes — <b>dve neresnici</b></div>
+    <div class="phone">
+      <div class="cover warm">
+        <div class="covtools">
+          <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="#121A14" stroke-width="2"><path d="M12 3v13M12 3 7 8M12 3l5 5M4 17v3h16v-3"/></svg></div>
+          <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="#121A14" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg></div>
+        </div>
+        <div class="hint">Povlecite za razgled</div>
+      </div>
+      <div class="body">
+        <div class="card card--warm" style="position:relative">
+          <div class="titlerow"><div class="title">Nova namestitev</div></div>
+          <div class="rating"><span class="star">★</span> <span class="num">5,0</span> · 0 ocen</div>
+          <div class="flag" style="top:60px"></div>
+          <div class="search warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Kaj iščete?</span></div>
+          <div class="chips">Nastanitev · Ponudba · Okolica</div>
+        </div>
+        <div class="card card--warm" style="margin-top:12px;position:relative">
+          <div class="host">
+            <div class="avatar">?</div>
+            <div>
+              <div class="hname">Tu smo za vas</div>
+              <div class="hsub">Običajno odgovorimo v nekaj minutah</div>
+            </div>
+          </div>
+          <div class="flag" style="top:44px"></div>
+          <div class="btn blue">Kontaktirajte gostitelja</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11 12 4l8 7v8H4z"/></svg>Domov</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="m15 9-4.5 1.5L9 15l4.5-1.5z"/></svg>Odkrij</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Ponudba</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/></svg>Storitve</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v10H8l-4 3z"/></svg>Kontakt</div>
+      </div>
+    </div>
+    <div style="position:relative;height:96px;margin-top:16px">
+      <div class="note" style="left:0;top:0"><b>★ 5,0 pri nič ocenah.</b> Ocena, ki je nihče ni dal. Gost jo bere kot oceno.</div>
+      <div class="note" style="left:0;top:46px"><b>Odzivni čas, ki ga ni.</b> Nova stranka ni odgovorila še na eno sporočilo.</div>
+    </div>
+  </div>
+
+  <!-- ============ PO CGP ============ -->
+  <div class="col">
+    <div class="caption">Zavezujoče — <i>po CGP</i></div>
+    <div class="phone">
+      <div class="cover">
+        <div class="covtools">
+          <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="#121A14" stroke-width="2"><path d="M12 3v13M12 3 7 8M12 3l5 5M4 17v3h16v-3"/></svg></div>
+          <div class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="#121A14" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg></div>
+        </div>
+        <div class="hint">Povlecite za razgled</div>
+      </div>
+      <div class="body">
+        <div class="card">
+          <div class="titlerow">
+            <div>
+              <div class="title">Camping MENINA</div>
+              <div class="sub">Kamp · Zgornja Savinjska dolina</div>
+            </div>
+            <div class="logo">logotip<br>gostitelja</div>
+          </div>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Kaj iščete?</span></div>
+          <div class="chips">Nastanitev · Ponudba · Okolica</div>
+        </div>
+        <div class="card card--soft">
+          <div class="host">
+            <div class="avatar">M</div>
+            <div>
+              <div class="hname">Tu smo za vas</div>
+              <div class="hsub">Odgovarja Matjaž, gostitelj</div>
+            </div>
+          </div>
+          <div class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v10H8l-4 3z"/></svg>Kontaktirajte gostitelja</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11 12 4l8 7v8H4z"/></svg>Domov</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="m15 9-4.5 1.5L9 15l4.5-1.5z"/></svg>Odkrij</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Ponudba</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/></svg>Storitve</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v10H8l-4 3z"/></svg>Kontakt</div>
+      </div>
+    </div>
+    <div style="position:relative;height:96px;margin-top:16px">
+      <div class="note ok" style="left:0;top:0">Ocene ni. Namesto nje <b style="color:#157347">kaj kraj je in kje</b> — resnično in koristno.</div>
+      <div class="note ok" style="left:0;top:46px">Namesto obljube <b style="color:#157347">ime človeka</b>, ki odgovarja. Odzivni čas se pokaže šele, ko je izmerjen.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ SPECIFIKACIJA ============ -->
+<div class="spec">
+  <h2>Zavezujoče mere in pravila</h2>
+  <p>Telefon 402 × 874. Vse mere so v slikovnih pikah pri tej širini. Kjer piše »se ne pokaže«, pomeni, da elementa v DOM ni — ne skrit, ne prazen, ne nadomeščen z vezajem.</p>
+
+  <table>
+    <tr><th>Element</th><th>Mera in pravilo</th></tr>
+
+    <tr><td>Naslovnica</td>
+      <td>402 × 296. Ikoni desno zgoraj 34 × 34, radij 13, razmik 8, odmik 14 od roba. Namig »Povlecite za razgled« sredinsko, 52 od spodnjega roba naslovnice, radij 13, ozadje <code>rgba(18,26,20,.62)</code>, besedilo 12/500 belo.</td></tr>
+
+    <tr><td>Vsebinski stolpec</td>
+      <td>Stranski odmik 16, torej kartice široke 370. Prva kartica je potegnjena <b>22 navzgor</b> čez naslovnico.</td></tr>
+
+    <tr><td>Kartica imena</td>
+      <td>Ozadje <code>#FFFFFF</code>, obroba 1 px <code>#E8EBE6</code>, radij 22, notranji odmik 18. Naslov Archivo 600, 22/28. Podnaslov 13, <code>#66716A</code>, odmik 4 nad njim.</td></tr>
+
+    <tr><td>Logotip gostitelja</td>
+      <td>56 × 56, radij 13, desno v vrstici z naslovom, razmik 12. Če logotipa ni, se <b>ne pokaže</b> — brez okvirja, brez nadomestka.</td></tr>
+
+    <tr><td>Ocena</td>
+      <td><b>Se ne pokaže, dokler ni vsaj ene ocene.</b> Nikoli »5,0 · 0 ocen«, nikoli »Novo«, nikoli prazne zvezdice. Ko ocene so: <code>★ 4,8 · 12 ocen</code>, zvezdica <code>#DD9A2B</code>, številka 600 v <code>#121A14</code>, ostalo <code>#66716A</code>, 13 px.</td></tr>
+
+    <tr><td>Vrstica pod naslovom</td>
+      <td>Namesto ocene <b>tip in pokrajina</b>: »Kamp · Zgornja Savinjska dolina«. Oboje je v podatkih in oboje drži.</td></tr>
+
+    <tr><td>Iskalno polje</td>
+      <td>Višina 46, radij 13, ozadje <code>#F4F6F2</code>, obroba <code>#E8EBE6</code>, ikona 15, razmik 9, notranji odmik 13, besedilo 14 <code>#66716A</code>. Odmik 14 nad njim.</td></tr>
+
+    <tr><td>Kartica kontakta</td>
+      <td>Ozadje <code>#F4F6F2</code>, brez obrobe, radij 22, notranji odmik 18, odmik 12 nad njo.</td></tr>
+
+    <tr><td>Podoba gostitelja</td>
+      <td>44 × 44, radij 13. Samo <b>gostiteljeva lastna fotografija</b>. Če je ni, začetnica na <code>#ECF0EA</code>, 15/600 v <code>#66716A</code>. Nikoli fotografija iz zbirke.</td></tr>
+
+    <tr><td>Odzivni čas</td>
+      <td><b>Se ne pokaže, dokler ni izmerjen.</b> Pojavi se šele po petih odgovorjenih sporočilih in pove mediano, zaokroženo navzgor: »Običajno odgovorimo v 2 urah«. Do takrat druga vrstica pove <b>ime človeka</b>, ki odgovarja: »Odgovarja Matjaž, gostitelj«. Če ime ni vpisano, vrstice ni.</td></tr>
+
+    <tr><td>Gumb za stik</td>
+      <td>Polna širina 334, višina 48, radij 13, ozadje <code>#157347</code>, besedilo 15/600 belo, ikona 16, razmik 8, odmik 14 nad njim. <b>Modre v paleti ni</b> — nikjer v izdelku.</td></tr>
+
+    <tr><td>Spodnja vrstica</td>
+      <td>Višina 74, ozadje <code>#FFFFFF</code>, zgornja črta 1 px <code>#E8EBE6</code>, pet zavihkov. Ikona 21, napis 11, razmik 5. Dejavni <code>#157347</code> 600, nedejavni <code>#66716A</code> 400.</td></tr>
+
+    <tr><td>Predogled v admin</td>
+      <td>Napis pravi, da se osveži ob vsaki spremembi — torej se mora. Ime, vpisano v koraku 1, se v predogledu pokaže <b>takoj</b>. Če se ne more, se napis spremeni v resnico.</td></tr>
+
+    <tr><td>Meni v admin</td>
+      <td><b>Nastavitve</b> gredo iz skupine <em>Vsebina</em>. Vsebina so Okolica, Nastanitev, Dogodki, Obvestila, Ponudba. Nastavitve stojijo same, na dnu.</td></tr>
+  </table>
+
+  <p class="foot">Pravilo, ki povezuje vse zgornje: <b>kar ni izmerjeno, se ne prikaže.</b> Prazno mesto je pošteno; verjetna številka na praznem mestu ni.</p>
+</div>
+
+<div class="foot" style="text-align:center;margin-top:34px">Smart360 · smart360hq@gmail.com</div>
+</div>
