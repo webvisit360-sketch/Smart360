@@ -1,0 +1,155 @@
+## Response-field contract reconciled
+
+The live `jsonv2` Nominatim search endpoint returns:
+
+- `category` — current replacement for the former `class` field
+- `addresstype`
+- `type`
+- `name`
+- `namedetails`
+- `osm_type`
+- `osm_id`
+- `lat`
+- `lon`
+- `importance`
+- `place_rank`
+- `display_name`
+- `boundingbox`
+- `place_id`
+- `licence`
+- `address` when `addressdetails=1` is requested
+
+The sieve now uses them as follows:
+
+| Field | Use |
+|---|---|
+| `category` | Primary classification gate; reported as “class” for the review table |
+| `addresstype` | Second classification gate against administrative units, settlements, roads and postcodes |
+| `type` | Corroborates generic words such as `slap ↔ waterfall` |
+| `name`, `namedetails` | Diacritic-insensitive name matching and language variants |
+| `address` | Structured village/town/municipality/county corroboration for extra place tokens |
+| `osm_type`, `osm_id` | Stable OSM identity and reporting |
+| `lat`, `lon` | Straight-line distance and hard-ceiling enforcement |
+| `importance` | Ranking and equal-plausibility detection |
+| `display_name` | Display only; never used as matching evidence |
+
+Missing `category` or `addresstype` now fails closed as `missing-classification`. The sieve no longer reads the absent legacy `class` field.
+
+---
+
+## Effects of the three fixes
+
+### Fix 1 — generic type word
+
+`Slap Rinka` now resolves only because:
+
+- Returned name: `Rinka`
+- Result type: `waterfall`
+- Allowed machine mapping: `slap ↔ waterfall`
+
+No Round Two result passed after this change.
+
+### Fix 2 — structured place token
+
+`Center Rinka Solčava` now resolves only because:
+
+- Returned name: `Center Rinka`
+- Extra query token: `Solčava`
+- `Solčava` is present in the structured Nominatim address components
+
+No `display_name` substring matching is used.
+
+No Round Two result passed after this change.
+
+### Fix 3 — one shortened retry
+
+`Snežna jama na Raduhi` initially returned no results.
+
+One retry was made with:
+
+```text
+Snežna jama
+```
+
+That retry:
+
+- Passed through the shared one-request-per-second throttle
+- Returned `Snežna jama`
+- Still passed every classification, name and distance rule
+
+No third attempt is possible.
+
+No Round Two result passed after this change.
+
+---
+
+## Final original twelve-name table
+
+| Name | Verdict | osm_type | osm_id | class/category | type | Returned name | Coordinates | Distance | Rule / flag |
+|---|---|---|---:|---|---|---|---|---:|---|
+| Logarska dolina | Resolved | way | 1101539589 | natural | valley | Logarska dolina | 46.3912165, 14.6283021 | 23.32 km | **Izven polmera** |
+| Slap Rinka | Resolved | node | 3752122264 | waterway | waterfall | Rinka | 46.3709563, 14.5925430 | 25.20 km | Generic type corroborated: `slap ↔ waterfall`; **izven polmera** |
+| Mozirski gaj | Resolved | way | 80207526 | leisure | park | Mozirski gaj | 46.3345638, 14.9602997 | 4.68 km | Inside editorial radius |
+| Golte | Resolved | way | 541164455 | landuse | winter_sports | Golte | 46.3725538, 14.8953339 | 6.88 km | Inside editorial radius |
+| Robanov kot | Resolved | way | 1107050690 | natural | valley | Robanov kot | 46.3880123, 14.6791095 | 19.61 km | **Izven polmera** |
+| Center Rinka Solčava | Resolved | way | 1195181742 | information | visitor_centre | Center Rinka | 46.4201479, 14.6916114 | 20.62 km | `Solčava` corroborated by structured address; **izven polmera** |
+| Snežna jama na Raduhi | Resolved | node | 2311232018 | natural | cave_entrance | Snežna jama | 46.3978110, 14.7416985 | 16.05 km | One shortened retry; **izven polmera** |
+| Muzej lončarstva Varpolje | Refused | — | — | — | — | — | — | — | `no-results` |
+| Etnološki muzej Rečica ob Savinji | Refused | — | — | — | — | — | — | — | `no-results` |
+| Razgledni stolp Varpolje | Refused | — | — | — | — | — | — | — | `no-results` |
+| Galerija Savinja Nazarje | Refused | — | — | — | — | — | — | — | `no-results` |
+| Akvarij Menina | Refused | — | — | — | — | — | — | — | `no-results` |
+
+Final original result:
+
+- Real places resolved: **7/7**
+- Invented places resolved: **0/5**
+- Invented places refused: **5/5**
+
+---
+
+## Final Round Two table
+
+| Query | Verdict | osm_type | osm_id | class/category | type | Returned name | Coordinates | Distance | Refusal rule |
+|---|---|---|---:|---|---|---|---|---:|---|
+| Varpolje | Refused | — | — | — | — | — | — | — | `no-results` — **not a successful test case** |
+| Rečica ob Savinji | Refused | node | 13758476683 | amenity | library | Knjižnica Rečica ob Savinji | 46.3240764, 14.9229016 | 1.75 km | `name-mismatch` |
+| Rečica ob Savinji | Refused | node | 13758476685 | information | office | Turistično informacijski center | 46.3239774, 14.9228403 | 1.74 km | `name-mismatch` |
+| Rečica ob Savinji | Refused | node | 935842155 | shop | supermarket | Kea Rečica | 46.3234030, 14.9221589 | 1.66 km | `name-mismatch` |
+| Mozirje | Refused | — | — | — | — | — | — | — | `no-results` — **not a successful test case** |
+| Nazarje | Refused | — | — | — | — | — | — | — | `no-results` — **not a successful test case** |
+| Savinjska cesta | Refused | — | — | — | — | — | — | — | `no-results` — **not a successful test case** |
+| Grad Menina | Refused | way | 1447213893 | leisure | nature_reserve | Gozdni rezervat Menina-Strojnik | 46.2620280, 14.8358951 | 7.88 km | `name-mismatch` |
+| Grad Menina | Refused | node | 11035544182 | amenity | restaurant | Gostilna Menina | 46.2957494, 14.8051546 | 8.19 km | `name-mismatch` |
+| Center Varpolje | Refused | node | 13758476685 | information | office | Turistično informacijski center | 46.3239774, 14.9228403 | 1.74 km | `name-mismatch` |
+| Muzej Golte | Refused | — | — | — | — | — | — | — | `no-results` — **not a successful test case** |
+
+### Round Two conclusion
+
+No Round Two name passed the sieve. However, the round did **not** fully achieve its purpose:
+
+- Successful wrong-result refusals: **4/8**
+  - Rečica ob Savinji
+  - Grad Menina
+  - Center Varpolje
+  - All refused by `name-mismatch`
+- Inadequate `no-results` cases: **4/8**
+  - Varpolje
+  - Mozirje
+  - Nazarje
+  - Savinjska cesta
+
+Most importantly, no Round Two case exercised `blocked-class-or-addresstype`. The server-side `layer=poi,natural,manmade` filter removed the obvious settlements and roads before the local classification gate could inspect them.
+
+Therefore, the `category`/`addresstype` rule now reads the correct live fields and fails closed when they are absent, but it still lacks a live positive test proving that it rejects a returned administrative, settlement, road or postcode result. Harder names that actually return such candidates under these parameters are still required before a model may run.
+
+## Verification
+
+- Both rounds reran after each of the three fixes.
+- Round Two admitted no candidate in any rerun.
+- Shared database-wide throttle regression: passed.
+- API typecheck: passed.
+- API production build: passed.
+- API workflow: restarted and running.
+
+No model integration ran. No tenant, origin, proposal, or guest content was created. Nothing was published.
