@@ -1,0 +1,55 @@
+The pipe is fixed: 41 of 60 confirmed, zero duplicates, no route failures.
+The run is still unusable, and the cause is my instruction, not your code.
+
+THE NUMBERS THAT MATTER
+  outsidePractical: 0
+  outsideNear: 41
+  outsideExcursion: 6
+Every confirmed place is outside the 20-minute range. Six are beyond 90
+minutes. This is a guide to Kamnik, Celje, Velenje and Pohorje, produced for a
+campsite in Rečica ob Savinji.
+
+WHAT IS MISSING, AND WHY
+Run two never proposed Logarska dolina, Slap Rinka, Mozirski gaj, Golte,
+Solčavska panoramska cesta or Snežna jama. Not refused — never proposed.
+
+My soft-discouragement instruction passed run one's unconfirmed names into run
+two's prompt. But that list was not a list of inventions. It was a list of
+places a broken sieve failed to confirm. I fed the output of a known bug back
+into the chain as evidence, and the model dutifully avoided the best places in
+the valley.
+
+THE RULE, STATED PROPERLY THIS TIME
+A human rejection is evidence about the PLACE.
+A machine failure is evidence about the MACHINE, and must never shape what the
+model proposes.
+
+Corrections for run three:
+
+1 · CLEAR THE DISCOURAGEMENT LIST ENTIRELY
+Run one's unconfirmed names carry no information about those places and must
+not enter any prompt. Going forward, only names unresolved by a sieve version
+that is not known to be broken may be used as discouragement — and if we ever
+fix the sieve again, the discouragement history is cleared again at that
+moment. Human rejections remain blocked; there are none yet.
+
+2 · THE PROMPT MUST BE ANCHORED TO THE ORIGIN
+41 outside near and 0 inside is not a distribution, it is a sign the model was
+not told where it stands. State the three ranges as a target mix: roughly half
+the proposals within about 20 minutes' drive, the rest excursions, and NOTHING
+beyond the 90-minute excursion ceiling. Places that route beyond 90 minutes
+should not be proposed at all.
+This is a change made after seeing output, and I want that on the record. It
+is permitted because the three ranges were already specified and the prompt
+evidently did not carry them, not because the list disappointed me.
+
+3 · RUN THREE, on the same draft tenant, with runs one and two preserved
+intact. Report the run report and the first twenty queue rows verbatim as
+before.
+
+4 · The evidence file with run two's twenty rows did not reach the owner in a
+readable form. Paste the twenty rows directly into your report next time —
+name, category, range, road distance, duration, and the Slovene description
+exactly as written — rather than attaching a file.
+
+Report and STOP.

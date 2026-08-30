@@ -122,16 +122,17 @@ test("later C1 batches receive prior names and practical places are forbidden", 
     tenantType: "kamp",
     categories: [],
     rejectedNames: ["Human rejected place"],
-    previouslyUnconfirmedNames: ["Mozirski gaj", "Golte"],
     priorProposedNames: ["Mozirski gaj", "Golte"],
   });
   assert.match(prompt, /Never propose any durable rejection: \["Human rejected place"\]/);
-  assert.match(prompt, /previously could not be confirmed by machine verification: \["Mozirski gaj","Golte"\]/);
-  assert.match(prompt, /they are discouraged, not forbidden/);
+  assert.doesNotMatch(prompt, /previously could not be confirmed|unconfirmed names|discouraged/i);
   assert.match(prompt, /Do not repeat any name already proposed by an earlier batch/);
   assert.match(prompt, /\["Mozirski gaj","Golte"\]/);
   assert.match(prompt, /Never propose proximity-selected practical services/);
-  assert.doesNotMatch(prompt, /practical means/);
+  assert.match(prompt, /roughly half of the 15 proposals/);
+  assert.match(prompt, /within about 20 minutes' drive/);
+  assert.match(prompt, /within 90 minutes' drive/);
+  assert.match(prompt, /Do not propose any place expected to require more than 90 minutes/);
 });
 
 test("C1 ranges use OSRM minute boundaries and practical descriptions are blank", () => {

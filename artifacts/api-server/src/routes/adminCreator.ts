@@ -256,7 +256,7 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
       )
       : null;
     if (claim?.existingRun) {
-      res.status(409).json({ error: "Dve odobreni produkcijski izvedbi C1 za Camping MENINA sta dokazno zaklenjeni ali pa druga izvedba že teče." });
+      res.status(409).json({ error: "Tri odobrene produkcijske izvedbe C1 za Camping MENINA so dokazno zaklenjene ali pa tretja izvedba že teče." });
       return;
     }
     const result = await runCreatorC1({

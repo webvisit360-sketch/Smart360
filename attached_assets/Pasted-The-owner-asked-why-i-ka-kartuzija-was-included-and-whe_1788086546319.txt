@@ -1,0 +1,43 @@
+The owner asked why Žička kartuzija was included, and whether a nearer place
+with the same attributes was skipped. The answer to the second half is already
+in run two's own report:
+
+  {"proposedName":"Frančiškanski samostan Nazarje","outcome":"unconfirmed",
+   "refusalRule":"no-results"}
+
+The model DID propose the near monastery. The sieve dropped it. The distant
+one survived. Same category, same kind of place, opposite outcome.
+
+THIS IS THE FINDING OF THE RUN
+The sieve does not fail randomly. It fails OUTWARD.
+
+Famous distant landmarks are carefully mapped in OpenStreetMap. Small local
+ones often are not, or are recorded under a different name. So every sieve
+refusal pushes the guide systematically away from the house the guest is
+standing in — which is the opposite of what the guide is for.
+
+Add to the run report, and to the queue:
+
+1 · THE REASON, WHICH WE ALREADY STORE
+Each proposal carries the model's one-line reason for inclusion. Show it — in
+the report and on every queue row. The owner must be able to ask "why is this
+here" and get the tool's answer, not mine.
+
+2 · A NEAREST-ALTERNATIVE CHECK
+For every confirmed proposal beyond the near range, report whether any OTHER
+proposal in the same category — confirmed or unconfirmed — routes closer. If
+one does, name it and give its outcome. That single column answers the owner's
+question mechanically: "did it keep the far one and lose the near one?"
+For run two, Žička kartuzija must show Frančiškanski samostan Nazarje,
+unconfirmed, no-results.
+
+3 · THE UNCONFIRMED LIST IS NOT A FOOTNOTE
+It is the list of places the guide LOST, and it is biased toward the nearby.
+Group it by category in the report and sort by proximity where a coordinate
+was obtained, so the pattern is visible rather than buried in a JSON array.
+
+Run three still waits on the two corrections from my previous instruction:
+clear the discouragement list entirely, and anchor the prompt to the origin
+with roughly half the proposals inside 20 minutes and none beyond 90.
+
+Report and STOP.

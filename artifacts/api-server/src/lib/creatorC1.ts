@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
@@ -240,17 +240,15 @@ export function promptFor(input: {
   tenantType: string;
   categories: Array<{ id: string; label: string; key: string | null }>;
   rejectedNames: string[];
-  previouslyUnconfirmedNames: string[];
   priorProposedNames: string[];
 }): string {
   return `You are Creator C1. Produce an object with a "places" array containing exactly ${CREATOR_C1_BATCH_SIZE} real place proposals.
 Origin: ${input.origin.latitude}, ${input.origin.longitude}; machine-resolved region: ${input.region}; accommodation: ${input.tenantType}.
 Use only these existing categories: ${JSON.stringify(input.categories)}.
 Never propose any durable rejection: ${JSON.stringify(input.rejectedNames)}.
-These names previously could not be confirmed by machine verification: ${JSON.stringify(input.previouslyUnconfirmedNames)}. Avoid repeating them unless you are genuinely confident the place is real and worth rechecking; they are discouraged, not forbidden.
 Do not repeat any name already proposed by an earlier batch in this run: ${JSON.stringify(input.priorProposedNames)}. All 15 names in this batch must also be distinct.
 Propose only editorial places for near surroundings and excursions. Never propose proximity-selected practical services such as ATMs, shops, supermarkets, pharmacies, fuel stations, doctors, health centres or post offices; those are machine-query work.
-Range brief (for editorial selection only; never invent measurements): near means an unplanned activity suitable within about 20 driving minutes; excursion means a planned outing within about 90 driving minutes, with exceptional farther landmarks still allowed for human review. The server alone calculates and assigns every range.
+Anchor every proposal to the stated origin. Target a useful geographic mix: roughly half of the 15 proposals should be places reasonably expected within about 20 minutes' drive of the origin; the rest should be excursions reasonably expected within 90 minutes' drive. Do not propose any place expected to require more than 90 minutes' driving. Never invent or report measurements; the server alone calculates and assigns every range.
 House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful English, German and Italian translations. Descriptions MUST be empty in every language for hospitality categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
 No coordinates, distances, travel times, addresses, opening hours, prices, phone numbers, or other machine facts. A server verifies existence and routing.`;
 }
@@ -314,13 +312,6 @@ export async function runCreatorC1(input: {
         eq(creatorPlaceProposalsTable.status, "rejected"),
         eq(creatorPlaceProposalsTable.contentReady, true),
       ))).map((row) => row.proposedName);
-    const previouslyUnconfirmedNames = (await db.select({
-      proposedName: creatorPlaceProposalsTable.proposedName,
-    }).from(creatorPlaceProposalsTable).where(and(
-      eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
-      ne(creatorPlaceProposalsTable.runId, run.id),
-      eq(creatorPlaceProposalsTable.status, "unresolved"),
-    ))).map((row) => row.proposedName);
     const model = input.model ?? openAiCreatorC1Model;
     const all: CreatorC1Place[] = [];
     const proposedNames = new Set<string>();
@@ -331,7 +322,6 @@ export async function runCreatorC1(input: {
         tenantType: input.tenantType,
         categories: catalogue,
         rejectedNames,
-        previouslyUnconfirmedNames,
         priorProposedNames: all.map((place) => place.proposedName),
       });
       const generated = await generateCreatorC1Batch(model, prompt, (places) => {

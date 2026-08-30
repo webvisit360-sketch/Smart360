@@ -19,7 +19,7 @@ const MENINA_MAP_URL =
   "https://www.google.com/maps/place/Camping+MENINA/@46.3114597,14.9067248,794m/data=!3m2!1e3!4b1!4m9!3m8!1s0x476544b2dceb3c9d:0xfed2eb6fc9373f3d!5m2!4m1!1i2!8m2!3d46.311456!4d14.9093051!16s%2Fg%2F11b76h070l";
 const MENINA_LATITUDE = 46.311456;
 const MENINA_LONGITUDE = 14.9093051;
-export const MENINA_AUTHORIZED_RUN_COUNT = 2;
+export const MENINA_AUTHORIZED_RUN_COUNT = 3;
 
 export function isPreservedMeninaEvidenceTenant(input: {
   name: string;
