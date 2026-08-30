@@ -236,14 +236,6 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
     res.status(400).json({ error: "Osnutek nima popolnega potrjenega izhodišča." });
     return;
   }
-  const [existing] = await db.select({ id: creatorRunsTable.id })
-    .from(creatorRunsTable)
-    .where(eq(creatorRunsTable.tenantId, tenantId))
-    .limit(1);
-  if (existing) {
-    res.status(409).json({ error: "C1 je bil za ta osnutek že zagnan in ga ni dovoljeno ponoviti." });
-    return;
-  }
   try {
     const result = await runCreatorC1({
       tenantId,
@@ -259,7 +251,7 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
   } catch (error) {
     const databaseCode = (error as { code?: string })?.code;
     if (databaseCode === "23505") {
-      res.status(409).json({ error: "C1 je bil za ta osnutek že zagnan in ga ni dovoljeno ponoviti." });
+      res.status(409).json({ error: "C1 za ta osnutek že teče. Počakajte, da se trenutna izvedba zaključi." });
       return;
     }
     req.log.error({ error, tenantId }, "Creator C1 run failed");

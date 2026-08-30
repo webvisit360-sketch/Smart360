@@ -1,0 +1,40 @@
+Audit accepted. Nothing from Task #50 or #44 executed, production is untouched
+by C1, and both publishes predate the task. Resume Task #62 after these two
+schema corrections.
+
+1 · ONE RUN PER TENANT IS WRONG — creator_runs_one_per_tenant_uq
+A rerun of step 3 is a designed feature, not an accident. The entire rejection
+memory exists because runs repeat: the specification says a rerun must never
+re-propose what was already rejected, which presumes there is a rerun.
+
+With this unique index a second run is either impossible or overwrites the
+first, taking its report, token counts and cost with it. Then we cannot
+compare two runs, cannot show a tenant's run history, and cannot answer "what
+did the previous run cost" after the fact.
+
+Replace it with:
+· many runs per tenant, ordered by created_at;
+· a partial unique index allowing at most ONE run in status 'running' per
+  tenant, so two runs cannot execute concurrently for the same tenant.
+That gives the protection the index was reaching for without destroying
+history.
+
+2 · content_ready DEFAULT true IS THE WRONG DEFAULT
+A row counts as ready until something proves otherwise. That is the same shape
+as a 5.0 rating with zero reviews: an optimistic claim nobody verified.
+Default it to false and set it true only when the row actually satisfies
+whatever "ready" means. State in one sentence what that condition is.
+
+3 · Cleanup is now permitted. Remove the failed test run and its fixture
+tenant from development. Separately: that fixture was named "Task 54 A", which
+made the audit read as though Task #54 had executed. Name test fixtures after
+the test that creates them, never after another task.
+
+4 · More task cards may appear — Task #54 is Active but waiting. I will click
+Build only on #62. Do not surface other task plans until C1 is reported.
+
+Then continue Task #62 as specified: one run, Camping MENINA, no tuning after
+seeing the output, no approvals, and report the run report plus the first
+twenty queue rows verbatim.
+
+Report and STOP.

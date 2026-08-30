@@ -94,7 +94,7 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
   assert.equal(report.status, "failed");
 });
 
-test("failed C1 rows never become queue-ready and the tenant run lock stays durable", async () => {
+test("failed C1 rows stay hidden while run history allows reruns but blocks concurrent execution", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const [tenant] = await db.insert(tenantsTable).values({
     slug: `c1-failure-${suffix}`,
@@ -137,8 +137,19 @@ test("failed C1 rows never become queue-ready and the tenant run lock stays dura
   ));
   assert.ok(failed.some((row) => row.reportJson?.includes("injected geocoder failure")));
 
+  const [rerun] = await db.insert(creatorRunsTable).values({
+    tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
+  }).returning({ id: creatorRunsTable.id });
+  assert.ok(rerun);
   await assert.rejects(db.insert(creatorRunsTable).values({
     tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
   }));
+  await db.update(creatorRunsTable).set({
+    status: "completed", completedAt: new Date(),
+  }).where(eq(creatorRunsTable.id, rerun.id));
+  const [laterRun] = await db.insert(creatorRunsTable).values({
+    tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
+  }).returning({ id: creatorRunsTable.id });
+  assert.ok(laterRun);
   await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
 });

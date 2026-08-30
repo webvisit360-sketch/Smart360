@@ -317,10 +317,27 @@ export async function runAndPersistCreatorSieve(input: {
       straightLineDistanceM: null,
       attempts,
     });
+  let sourceProposal = verification.sourceProposal;
+  let canonicalProposal = verification.canonicalProposal;
+  // Step B becomes queue-ready when its verification evidence is complete.
+  // C1 explicitly passes false and exposes the whole run only after all four
+  // translations, routing evidence, and the completed run report are durable.
+  if (input.contentReady !== false && !verification.duplicate) {
+    const [ready] = await db.update(creatorPlaceProposalsTable)
+      .set({ contentReady: true, updatedAt: new Date() })
+      .where(and(
+        eq(creatorPlaceProposalsTable.id, verification.sourceProposal.id),
+        eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+      ))
+      .returning();
+    if (!ready) throw new Error("Preverjenega predloga ni bilo mogoče označiti kot pripravljenega.");
+    sourceProposal = ready;
+    canonicalProposal = ready;
+  }
   return {
-    proposal: verification.canonicalProposal,
-    sourceProposal: verification.sourceProposal,
-    canonicalProposal: verification.canonicalProposal,
+    proposal: canonicalProposal,
+    sourceProposal,
+    canonicalProposal,
     inserted: true,
     duplicate: verification.duplicate,
     result,

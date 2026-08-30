@@ -1,4 +1,4 @@
-import { and, eq, isNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
@@ -374,10 +374,14 @@ export async function runCreatorC1(input: {
         nominatimThrottleWaitMs: report.nominatimThrottleWaitMs,
         completedAt: new Date(),
       }).where(eq(creatorRunsTable.id, run.id));
-      await tx.update(creatorPlaceProposalsTable).set({ contentReady: true }).where(and(
-        eq(creatorPlaceProposalsTable.runId, run.id),
-        ne(creatorPlaceProposalsTable.status, "superseded"),
-      ));
+      const readyProposalIds = routed.map((row) => row.proposalId);
+      if (readyProposalIds.length > 0) {
+        await tx.update(creatorPlaceProposalsTable).set({ contentReady: true }).where(and(
+          eq(creatorPlaceProposalsTable.runId, run.id),
+          eq(creatorPlaceProposalsTable.status, "pending"),
+          inArray(creatorPlaceProposalsTable.id, readyProposalIds),
+        ));
+      }
     });
     return { runId: run.id, report };
   } catch (error) {

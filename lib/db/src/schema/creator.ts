@@ -30,9 +30,9 @@ export const creatorPlaceProposalsTable = pgTable(
     range: text("range"),
     geocodingLookupHint: text("geocoding_lookup_hint"),
     inclusionReason: text("inclusion_reason"),
-    // Legacy Step B rows are ready by default. C1 inserts false and flips true
-    // only in the same transaction that writes all four language rows.
-    contentReady: boolean("content_ready").notNull().default(true),
+    // Ready means verification is complete and, for C1, all four editorial
+    // language rows exist and the entire run has completed successfully.
+    contentReady: boolean("content_ready").notNull().default(false),
     proposedName: text("proposed_name").notNull(),
     normalizedName: text("normalized_name").notNull(),
     originalQuery: text("original_query").notNull(),
@@ -113,9 +113,10 @@ export const creatorRunsTable = pgTable(
     check("creator_runs_tokens_check", sql`${t.inputTokens} >= 0 AND ${t.outputTokens} >= 0`),
     check("creator_runs_wait_check", sql`${t.nominatimThrottleWaitMs} >= 0`),
     index("creator_runs_tenant_status_idx").on(t.tenantId, t.status, t.createdAt),
-    // C1 is a one-shot evidence-producing run. A failed or completed run is
-    // still a run and must not be silently repeated after seeing its output.
-    uniqueIndex("creator_runs_one_per_tenant_uq").on(t.tenantId),
+    // Preserve run history while preventing concurrent C1 execution.
+    uniqueIndex("creator_runs_one_running_per_tenant_uq")
+      .on(t.tenantId)
+      .where(sql`${t.status} = 'running'`),
   ],
 );
 
