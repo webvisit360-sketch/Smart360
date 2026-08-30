@@ -53,7 +53,7 @@ export async function upsertPendingCreatorProposal(input: {
       eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
       eq(creatorPlaceProposalsTable.normalizedName, normalizedName),
       isNull(creatorPlaceProposalsTable.osmId),
-      sql`(${creatorPlaceProposalsTable.runId} = ${input.runId} OR ${creatorPlaceProposalsTable.contentReady} = true)`,
+      sql`(${creatorPlaceProposalsTable.runId} = ${input.runId} OR ${creatorPlaceProposalsTable.status} = 'rejected')`,
     ))
     .limit(1);
   if (!existing) throw new Error("Predloga po konfliktu ni bilo mogoče ponovno prebrati.");

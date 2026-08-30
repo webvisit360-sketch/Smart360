@@ -80,11 +80,11 @@ export const creatorPlaceProposalsTable = pgTable(
     check("creator_place_proposals_duration_check", sql`${t.travelDurationS} IS NULL OR ${t.travelDurationS} >= 0`),
     check("creator_place_proposals_range_check", sql`${t.range} IS NULL OR ${t.range} IN ('practical','near','excursion')`),
     uniqueIndex("creator_place_proposals_osm_identity_uq").on(t.tenantId, t.osmType, t.osmId).where(sql`${t.osmId} IS NOT NULL`),
-    // A completed-but-unresolved Step B row is a durable rejection. Unready C1
-    // evidence may be proposed again by a later run after a pipeline repair.
+    // A human rejection is durable across runs. An unresolved sieve result is
+    // run evidence and may be checked again after the verification pipe changes.
     uniqueIndex("creator_place_proposals_unresolved_name_uq")
       .on(t.tenantId, t.normalizedName)
-      .where(sql`${t.osmId} IS NULL AND ${t.contentReady} = true`),
+      .where(sql`${t.osmId} IS NULL AND ${t.status} = 'rejected'`),
     // Still suppress duplicate names inside one model run.
     uniqueIndex("creator_place_proposals_run_unresolved_name_uq")
       .on(t.runId, t.normalizedName)
