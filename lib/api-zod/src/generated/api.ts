@@ -828,6 +828,127 @@ export const PreviewCreatorOriginResponse = zod.object({
 
 
 /**
+ * @summary List the owner-only Creator confirmation queue
+ */
+export const ListCreatorProposalsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListCreatorProposalsResponseItem = zod.object({
+  "id": zod.string(),
+  "runId": zod.string(),
+  "proposedName": zod.string(),
+  "normalizedName": zod.string(),
+  "originalQuery": zod.string(),
+  "confirmedQuery": zod.string().nullable(),
+  "confirmationMethod": zod.union([zod.literal('exact'),zod.literal('generic_type'),zod.literal('address_token'),zod.literal('shortened_query'),zod.literal(null)]).nullable(),
+  "requiresIndividualReview": zod.boolean(),
+  "status": zod.enum(['pending', 'unresolved', 'approved', 'rejected', 'superseded']),
+  "refusalReason": zod.string().nullable(),
+  "resolvedName": zod.string().nullable(),
+  "resolvedAddress": zod.string().nullable(),
+  "osmType": zod.string().nullable(),
+  "osmId": zod.number().nullable(),
+  "osmCategory": zod.string().nullable(),
+  "osmFeatureType": zod.string().nullable(),
+  "osmAddressType": zod.string().nullable(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "straightLineDistanceM": zod.number().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListCreatorProposalsResponse = zod.array(ListCreatorProposalsResponseItem)
+
+
+/**
+ * @summary Individually approve one Creator proposal
+ */
+export const ApproveCreatorProposalParams = zod.object({
+  "id": zod.coerce.string(),
+  "proposalId": zod.coerce.string()
+})
+
+export const ApproveCreatorProposalResponse = zod.object({
+  "id": zod.string(),
+  "runId": zod.string(),
+  "proposedName": zod.string(),
+  "normalizedName": zod.string(),
+  "originalQuery": zod.string(),
+  "confirmedQuery": zod.string().nullable(),
+  "confirmationMethod": zod.union([zod.literal('exact'),zod.literal('generic_type'),zod.literal('address_token'),zod.literal('shortened_query'),zod.literal(null)]).nullable(),
+  "requiresIndividualReview": zod.boolean(),
+  "status": zod.enum(['pending', 'unresolved', 'approved', 'rejected', 'superseded']),
+  "refusalReason": zod.string().nullable(),
+  "resolvedName": zod.string().nullable(),
+  "resolvedAddress": zod.string().nullable(),
+  "osmType": zod.string().nullable(),
+  "osmId": zod.number().nullable(),
+  "osmCategory": zod.string().nullable(),
+  "osmFeatureType": zod.string().nullable(),
+  "osmAddressType": zod.string().nullable(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "straightLineDistanceM": zod.number().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Approve eligible Creator proposals; shortened-query rows are forbidden
+ */
+export const ApproveCreatorProposalsBulkParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const ApproveCreatorProposalsBulkBody = zod.object({
+  "proposalIds": zod.array(zod.string()).min(1)
+})
+
+export const ApproveCreatorProposalsBulkResponseItem = zod.object({
+  "id": zod.string(),
+  "runId": zod.string(),
+  "proposedName": zod.string(),
+  "normalizedName": zod.string(),
+  "originalQuery": zod.string(),
+  "confirmedQuery": zod.string().nullable(),
+  "confirmationMethod": zod.union([zod.literal('exact'),zod.literal('generic_type'),zod.literal('address_token'),zod.literal('shortened_query'),zod.literal(null)]).nullable(),
+  "requiresIndividualReview": zod.boolean(),
+  "status": zod.enum(['pending', 'unresolved', 'approved', 'rejected', 'superseded']),
+  "refusalReason": zod.string().nullable(),
+  "resolvedName": zod.string().nullable(),
+  "resolvedAddress": zod.string().nullable(),
+  "osmType": zod.string().nullable(),
+  "osmId": zod.number().nullable(),
+  "osmCategory": zod.string().nullable(),
+  "osmFeatureType": zod.string().nullable(),
+  "osmAddressType": zod.string().nullable(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "straightLineDistanceM": zod.number().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ApproveCreatorProposalsBulkResponse = zod.array(ApproveCreatorProposalsBulkResponseItem)
+
+
+/**
  * @summary Per-tenant audit history with privacy-safe attribution
  */
 export const ListTenantChangelogParams = zod.object({

@@ -1,0 +1,68 @@
+No. The comment in this migration reverses the lesson it cites.
+
+"Deliberately no database CHECK: adding another legitimate workflow state must
+not require weakening an already-deployed constraint."
+
+In August the constraint did not hurt us. What hurt us was that the constraint
+NEVER REACHED PRODUCTION while the publish reported hasDiff: false. The lesson
+was "make sure the migration actually arrives", not "stop constraining".
+
+With no CHECK, status accepts 'aproved', 'Pending', 'REJECTED' and ''. Nobody
+notices until the confirmation queue one day shows fifteen proposals instead
+of sixty-seven, and then we are debugging data instead of code.
+
+And it contradicts the premise of the whole Creator: the machine holds the
+rules the human forgets. The sieve does not trust the model. The queue does
+not trust the sieve. The badge does not trust the operator. A schema with no
+constraints asks the APPLICATION to remember — and the application is what has
+already failed this project three times: publish escaped the gate twice, the
+CHECK never arrived, the console ran stale code against fresh data.
+
+Constraints go back in.
+
+1 · status — CHECK on exactly these five, no more:
+    pending, unresolved, approved, rejected, superseded
+  If a sixth state is ever genuinely needed, we widen it deliberately and
+  VERIFY IN PRODUCTION that the migration arrived. That verification is the
+  actual fix from August.
+
+2 · confirmation_method — CHECK on exactly:
+    exact, generic_type, address_token, shortened_query
+
+3 · Conditional requirements as CHECKs, not as prose invariants:
+  · status 'rejected' or 'approved' requires reviewed_by and reviewed_at
+  · status 'unresolved' requires refusal_reason
+  · a row with confirmation_method set requires confirmed_query
+  · confirmation_method 'shortened_query' requires confirmed_query different
+    from original_query
+
+4 · CHECK ((osm_type IS NULL) = (osm_id IS NULL))
+  This was in your previous revision and is gone. Half an identity must be
+  impossible.
+
+5 · RESTORE THE TWO VERIFICATION TABLES
+  I said five corrections and nothing else changes, and then praised these
+  specifically. Deferring the text and category tables to the model step is
+  correct — they belong there. The verification evidence belongs to the SIEVE,
+  which is what we are building right now:
+  · every attempt, with attempt_number capped at 1 or 2 by the database so the
+    two-attempt limit is structural and not a convention;
+  · every returned candidate, with raw osm_category, osm_feature_type and
+    osm_address_type, and which one was selected.
+  Charman's Bridge cost half a day. With these tables it is one query.
+
+6 · One operational note on the unresolved-name unique index: a proposal is
+  inserted before it is geocoded, so it occupies that index while still
+  pending. Writing must therefore be an upsert on the conflict, not a plain
+  insert, or a rerun proposing a name already in flight will error instead of
+  suppressing. Say which you implemented.
+
+Keep everything else from this revision: the COALESCE flag, the nullable
+resolution columns, road_distance_m and travel_duration_s, both partial unique
+indexes, and run_id stored now to avoid backfilling later.
+
+Report the corrected schema. Apply it in one transaction, then confirm from
+the production database that the constraints actually exist — do not report
+success from the migration tool's own output. That check is the August lesson.
+
+Report and STOP.

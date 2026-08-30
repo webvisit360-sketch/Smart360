@@ -583,6 +583,74 @@ paths:
         "400": { description: Missing or invalid request }
         "422": { description: Google Maps link cannot provide a safe pin }
         "502": { description: Reverse geocoding failed }
+  /admin/tenants/{id}/creator/proposals:
+    get:
+      operationId: listCreatorProposals
+      tags: [tenants]
+      summary: List the owner-only Creator confirmation queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Creator proposals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreatorProposal"
+  /admin/tenants/{id}/creator/proposals/{proposalId}/approve:
+    post:
+      operationId: approveCreatorProposal
+      tags: [tenants]
+      summary: Individually approve one Creator proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Approved proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorProposal"
+        "400": { description: Proposal cannot be approved }
+        "404": { description: Proposal not found }
+  /admin/tenants/{id}/creator/proposals/approve-bulk:
+    post:
+      operationId: approveCreatorProposalsBulk
+      tags: [tenants]
+      summary: Approve eligible Creator proposals; shortened-query rows are forbidden
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorProposalBulkApprovalInput"
+      responses:
+        "200":
+          description: Updated queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreatorProposal"
+        "400": { description: Invalid or individually reviewed proposal included }
   /admin/tenants/{id}/changelog:
     get:
       operationId: listTenantChangelog
@@ -2159,6 +2227,74 @@ components:
         nominatimDisplayName: { type: string }
         referenceSource: { type: string, enum: [nominatim] }
       required: [lat, lng, name, placeId, source, expandedUrl, nominatimDisplayName, referenceSource]
+    CreatorProposal:
+      type: object
+      properties:
+        id: { type: string }
+        runId: { type: string }
+        proposedName: { type: string }
+        normalizedName: { type: string }
+        originalQuery: { type: string }
+        confirmedQuery: { type: ["string", "null"] }
+        confirmationMethod:
+          type: ["string", "null"]
+          enum: [exact, generic_type, address_token, shortened_query, null]
+        requiresIndividualReview: { type: boolean }
+        status:
+          type: string
+          enum: [pending, unresolved, approved, rejected, superseded]
+        refusalReason: { type: ["string", "null"] }
+        resolvedName: { type: ["string", "null"] }
+        resolvedAddress: { type: ["string", "null"] }
+        osmType: { type: ["string", "null"] }
+        osmId: { type: ["number", "null"] }
+        osmCategory: { type: ["string", "null"] }
+        osmFeatureType: { type: ["string", "null"] }
+        osmAddressType: { type: ["string", "null"] }
+        latitude: { type: ["number", "null"] }
+        longitude: { type: ["number", "null"] }
+        straightLineDistanceM: { type: ["number", "null"] }
+        roadDistanceM: { type: ["number", "null"] }
+        travelDurationS: { type: ["number", "null"] }
+        reviewedBy: { type: ["string", "null"] }
+        reviewedAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required:
+        - id
+        - runId
+        - proposedName
+        - normalizedName
+        - originalQuery
+        - confirmedQuery
+        - confirmationMethod
+        - requiresIndividualReview
+        - status
+        - refusalReason
+        - resolvedName
+        - resolvedAddress
+        - osmType
+        - osmId
+        - osmCategory
+        - osmFeatureType
+        - osmAddressType
+        - latitude
+        - longitude
+        - straightLineDistanceM
+        - roadDistanceM
+        - travelDurationS
+        - reviewedBy
+        - reviewedAt
+        - createdAt
+        - updatedAt
+    CreatorProposalBulkApprovalInput:
+      type: object
+      properties:
+        proposalIds:
+          type: array
+          minItems: 1
+          items: { type: string }
+      required: [proposalIds]
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

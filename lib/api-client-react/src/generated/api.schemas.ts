@@ -328,6 +328,81 @@ export interface CreatorOriginPreview {
   referenceSource: CreatorOriginPreviewReferenceSource;
 }
 
+/**
+ * @nullable
+ */
+export type CreatorProposalConfirmationMethod = typeof CreatorProposalConfirmationMethod[keyof typeof CreatorProposalConfirmationMethod] | null;
+
+
+export const CreatorProposalConfirmationMethod = {
+  exact: 'exact',
+  generic_type: 'generic_type',
+  address_token: 'address_token',
+  shortened_query: 'shortened_query',
+} as const;
+
+export type CreatorProposalStatus = typeof CreatorProposalStatus[keyof typeof CreatorProposalStatus];
+
+
+export const CreatorProposalStatus = {
+  pending: 'pending',
+  unresolved: 'unresolved',
+  approved: 'approved',
+  rejected: 'rejected',
+  superseded: 'superseded',
+} as const;
+
+export interface CreatorProposal {
+  id: string;
+  runId: string;
+  proposedName: string;
+  normalizedName: string;
+  originalQuery: string;
+  /** @nullable */
+  confirmedQuery: string | null;
+  /** @nullable */
+  confirmationMethod: CreatorProposalConfirmationMethod;
+  requiresIndividualReview: boolean;
+  status: CreatorProposalStatus;
+  /** @nullable */
+  refusalReason: string | null;
+  /** @nullable */
+  resolvedName: string | null;
+  /** @nullable */
+  resolvedAddress: string | null;
+  /** @nullable */
+  osmType: string | null;
+  /** @nullable */
+  osmId: number | null;
+  /** @nullable */
+  osmCategory: string | null;
+  /** @nullable */
+  osmFeatureType: string | null;
+  /** @nullable */
+  osmAddressType: string | null;
+  /** @nullable */
+  latitude: number | null;
+  /** @nullable */
+  longitude: number | null;
+  /** @nullable */
+  straightLineDistanceM: number | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+  /** @nullable */
+  reviewedBy: string | null;
+  /** @nullable */
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatorProposalBulkApprovalInput {
+  /** @minItems 1 */
+  proposalIds: string[];
+}
+
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];
 
 

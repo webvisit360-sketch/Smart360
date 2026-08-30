@@ -1,9 +1,19 @@
 import { Router, type IRouter } from "express";
 import {
+  ApproveCreatorProposalResponse,
+  ApproveCreatorProposalsBulkBody,
+  ApproveCreatorProposalsBulkResponse,
+  ListCreatorProposalsResponse,
   PreviewCreatorOriginBody,
   PreviewCreatorOriginResponse,
 } from "@workspace/api-zod";
-import { requireAdmin } from "../lib/adminAuth";
+import { requireAdmin, getAdminUser } from "../lib/adminAuth";
+import {
+  approveCreatorProposalIndividually,
+  approveCreatorProposalsBulk,
+  CreatorBulkApprovalError,
+  listCreatorProposalQueue,
+} from "../lib/creatorProposalLedger";
 import {
   expandGoogleMapsShortLink,
   GoogleMapsParseError,
@@ -13,6 +23,9 @@ import {
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
+const first = (value: string | string[] | undefined) =>
+  (Array.isArray(value) ? value[0] : value) ?? "";
+const serialize = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
 router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => {
   const input = PreviewCreatorOriginBody.safeParse(req.body);
@@ -69,5 +82,62 @@ router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => 
     res.status(502).json({ error: "Bližnje znane točke pri Nominatimu ni bilo mogoče preveriti.", code: "nominatim-failed" });
   }
 });
+
+router.get("/admin/tenants/:id/creator/proposals", async (req, res): Promise<void> => {
+  const rows = await listCreatorProposalQueue(first(req.params["id"]));
+  res.json(ListCreatorProposalsResponse.parse(serialize(rows)));
+});
+
+router.post(
+  "/admin/tenants/:id/creator/proposals/:proposalId/approve",
+  async (req, res): Promise<void> => {
+    try {
+      const actor = await getAdminUser();
+      if (!actor) {
+        res.status(403).json({ error: "Operater ni najden." });
+        return;
+      }
+      const row = await approveCreatorProposalIndividually(
+        first(req.params["id"]),
+        first(req.params["proposalId"]),
+        actor.id,
+      );
+      res.json(ApproveCreatorProposalResponse.parse(serialize(row)));
+    } catch (error) {
+      res.status(404).json({
+        error: error instanceof Error ? error.message : "Predloga ni mogoče potrditi.",
+      });
+    }
+  },
+);
+
+router.post(
+  "/admin/tenants/:id/creator/proposals/approve-bulk",
+  async (req, res): Promise<void> => {
+    const input = ApproveCreatorProposalsBulkBody.safeParse(req.body);
+    if (!input.success) {
+      res.status(400).json({ error: "Izberite predloge za potrditev." });
+      return;
+    }
+    try {
+      const actor = await getAdminUser();
+      if (!actor) {
+        res.status(403).json({ error: "Operater ni najden." });
+        return;
+      }
+      await approveCreatorProposalsBulk(
+        first(req.params["id"]),
+        input.data.proposalIds,
+        actor.id,
+      );
+      const rows = await listCreatorProposalQueue(first(req.params["id"]));
+      res.json(ApproveCreatorProposalsBulkResponse.parse(serialize(rows)));
+    } catch (error) {
+      res.status(error instanceof CreatorBulkApprovalError ? 400 : 500).json({
+        error: error instanceof Error ? error.message : "Predlogov ni mogoče potrditi.",
+      });
+    }
+  },
+);
 
 export default router;

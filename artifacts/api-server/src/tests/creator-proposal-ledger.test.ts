@@ -1,0 +1,227 @@
+import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import { after, before, test } from "node:test";
+import { and, eq, inArray } from "drizzle-orm";
+import {
+  adminUsersTable,
+  creatorPlaceProposalsTable,
+  creatorVerificationAttemptsTable,
+  creatorVerificationCandidatesTable,
+  db,
+  tenantsTable,
+} from "@workspace/db";
+import {
+  approveCreatorProposalIndividually,
+  approveCreatorProposalsBulk,
+  CreatorBulkApprovalError,
+  recordCreatorVerification,
+  runAndPersistCreatorSieve,
+  upsertPendingCreatorProposal,
+} from "../lib/creatorProposalLedger";
+
+const runIds = [crypto.randomUUID(), crypto.randomUUID()];
+let tenantId = "";
+let actorId = "";
+const proposalIds: string[] = [];
+
+before(async () => {
+  const [tenant] = await db.select({ id: tenantsTable.id }).from(tenantsTable).limit(1);
+  const [actor] = await db.select({ id: adminUsersTable.id }).from(adminUsersTable).limit(1);
+  assert.ok(tenant, "development database needs one tenant");
+  assert.ok(actor, "development database needs one admin user");
+  tenantId = tenant.id;
+  actorId = actor.id;
+});
+
+after(async () => {
+  if (proposalIds.length > 0) {
+    await db.delete(creatorPlaceProposalsTable)
+      .where(inArray(creatorPlaceProposalsTable.id, proposalIds));
+  }
+});
+
+test("pending-name upsert suppresses duplicates and shortened rows require individual approval", async () => {
+  const unique = crypto.randomUUID().slice(0, 8);
+  const originalQuery = `Snežna jama na Raduhi ${unique}`;
+  const first = await upsertPendingCreatorProposal({
+    tenantId,
+    runId: runIds[0]!,
+    proposedName: originalQuery,
+    originalQuery,
+  });
+  proposalIds.push(first.proposal.id);
+  assert.equal(first.inserted, true);
+
+  const duplicate = await upsertPendingCreatorProposal({
+    tenantId,
+    runId: runIds[1]!,
+    proposedName: originalQuery,
+    originalQuery,
+  });
+  assert.equal(duplicate.inserted, false);
+  assert.equal(duplicate.proposal.id, first.proposal.id);
+
+  await recordCreatorVerification(first.proposal.id, {
+    originalQuery,
+    confirmedQuery: `Snežna jama ${unique}`,
+    confirmationMethod: "shortened_query",
+    status: "pending",
+    refusalReason: null,
+    resolvedName: "Snežna jama",
+    resolvedAddress: "Raduha, Slovenija",
+    osmType: "node",
+    osmId: 2_311_232_018,
+    osmCategory: "natural",
+    osmFeatureType: "cave_entrance",
+    osmAddressType: "natural",
+    latitude: 46.397811,
+    longitude: 14.7416985,
+    straightLineDistanceM: 16_051.9,
+    attempts: [
+      {
+        attemptNumber: 1,
+        query: originalQuery,
+        verdict: "refused",
+        refusalRule: "no-results",
+        candidates: [],
+      },
+      {
+        attemptNumber: 2,
+        query: `Snežna jama ${unique}`,
+        verdict: "resolved",
+        refusalRule: null,
+        candidates: [{
+          osmType: "node",
+          osmId: 2_311_232_018,
+          osmCategory: "natural",
+          osmFeatureType: "cave_entrance",
+          osmAddressType: "natural",
+          resolvedName: "Snežna jama",
+          latitude: 46.397811,
+          longitude: 14.7416985,
+          straightLineDistanceM: 16_051.9,
+          selected: true,
+        }],
+      },
+    ],
+  });
+
+  const [stored] = await db.select().from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
+  assert.equal(stored?.originalQuery, originalQuery);
+  assert.equal(stored?.confirmedQuery, `Snežna jama ${unique}`);
+  assert.equal(stored?.requiresIndividualReview, true);
+
+  const attempts = await db.select().from(creatorVerificationAttemptsTable)
+    .where(eq(creatorVerificationAttemptsTable.proposalId, first.proposal.id));
+  assert.equal(attempts.length, 2);
+  const attemptIds = attempts.map((row) => row.id);
+  const candidates = await db.select().from(creatorVerificationCandidatesTable)
+    .where(inArray(creatorVerificationCandidatesTable.attemptId, attemptIds));
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0]?.selected, true);
+  assert.equal(candidates[0]?.osmCategory, "natural");
+
+  await assert.rejects(
+    db.insert(creatorVerificationAttemptsTable).values({
+      proposalId: first.proposal.id,
+      attemptNumber: 3,
+      query: "third-attempt-is-forbidden",
+      verdict: "refused",
+      refusalRule: "no-results",
+    }),
+  );
+  const selectedAttempt = attempts.find((row) => row.attemptNumber === 2);
+  assert.ok(selectedAttempt);
+  await assert.rejects(
+    db.insert(creatorVerificationCandidatesTable).values({
+      attemptId: selectedAttempt.id,
+      candidatePosition: 1,
+      osmType: "node",
+      osmId: 2_311_232_019,
+      selected: true,
+    }),
+  );
+
+  await assert.rejects(
+    approveCreatorProposalsBulk(tenantId, [first.proposal.id], actorId),
+    CreatorBulkApprovalError,
+  );
+
+  const approved = await approveCreatorProposalIndividually(
+    tenantId,
+    first.proposal.id,
+    actorId,
+  );
+  assert.equal(approved.status, "approved");
+  assert.equal(approved.reviewedBy, actorId);
+});
+
+test("database constraints reject invalid workflow values", async () => {
+  const invalidRows = [
+    { status: "aproved" },
+    { confirmationMethod: "model_guess", confirmedQuery: "x" },
+    { status: "approved" },
+    { status: "unresolved" },
+    { confirmationMethod: "shortened_query", confirmedQuery: "same", originalQuery: "same" },
+    { osmType: "node", osmId: null },
+  ];
+  for (const invalid of invalidRows) {
+    const name = `constraint-${crypto.randomUUID().slice(0, 8)}`;
+    await assert.rejects(db.insert(creatorPlaceProposalsTable).values({
+      tenantId,
+      runId: runIds[0]!,
+      proposedName: name,
+      normalizedName: name,
+      originalQuery: name,
+      ...invalid,
+    }));
+    const rows = await db.select({ id: creatorPlaceProposalsTable.id })
+      .from(creatorPlaceProposalsTable)
+      .where(and(
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+        eq(creatorPlaceProposalsTable.normalizedName, name),
+      ));
+    assert.equal(rows.length, 0);
+  }
+});
+
+test("the real sieve path persists shortened-query provenance and both attempts", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const proposedName = `Snežna jama na Raduhi ${suffix}`;
+  let calls = 0;
+  const osmId = 3_000_000_000 + Math.floor(Math.random() * 100_000_000);
+  const output = await runAndPersistCreatorSieve({
+    tenantId,
+    runId: runIds[1]!,
+    proposedName,
+    origin: { latitude: 46.36, longitude: 14.73 },
+    fetchFn: async () => {
+      calls += 1;
+      return new Response(JSON.stringify(calls === 1 ? [] : [{
+        osm_type: "node",
+        osm_id: osmId,
+        category: "natural",
+        type: "cave_entrance",
+        addresstype: "natural",
+        name: "Snežna jama",
+        display_name: "Snežna jama, Raduha, Slovenija",
+        lat: "46.397811",
+        lon: "14.7416985",
+        namedetails: { name: "Snežna jama" },
+        address: { municipality: "Luče" },
+        importance: 0.5,
+      }]), { status: 200, headers: { "content-type": "application/json" } });
+    },
+  });
+  proposalIds.push(output.proposal.id);
+  assert.equal(calls, 2);
+  assert.equal(output.result?.verdict, "resolved");
+  assert.equal(output.proposal.originalQuery, proposedName);
+  assert.equal(output.proposal.confirmedQuery, "Snežna jama");
+  assert.equal(output.proposal.confirmationMethod, "shortened_query");
+  assert.equal(output.proposal.requiresIndividualReview, true);
+  const attempts = await db.select().from(creatorVerificationAttemptsTable)
+    .where(eq(creatorVerificationAttemptsTable.proposalId, output.proposal.id));
+  assert.equal(attempts.length, 2);
+});

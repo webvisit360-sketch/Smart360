@@ -17,6 +17,7 @@ import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { KreatorOriginConfirmation } from "@/components/admin/kreator-origin-confirmation";
+import { KreatorProposalQueue } from "@/components/admin/kreator-proposal-queue";
 import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-settings";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
@@ -594,7 +595,10 @@ export default function AdminTenantEdit() {
             </TabsContent>
             <TabsContent value="kreator">
               {isOwner ? (
-                <KreatorOriginConfirmation />
+                <>
+                  <KreatorOriginConfirmation />
+                  <KreatorProposalQueue tenantId={id} />
+                </>
               ) : (
                 <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">
                   Kreator vodnika — V pripravi. Orodje Smart360 za pripravo vodnika, preden se gostitelj prvič prijavi.

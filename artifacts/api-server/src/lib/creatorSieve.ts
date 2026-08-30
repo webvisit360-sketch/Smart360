@@ -10,14 +10,56 @@ export type CreatorSieveCandidate = {
   type: string;
   addresstype: string;
   returnedName: string;
+  displayName: string;
   latitude: number;
   longitude: number;
   distanceKm: number;
 };
 
+export type CreatorConfirmationMethod =
+  | "exact"
+  | "generic_type"
+  | "address_token"
+  | "shortened_query";
+
+export type CreatorSieveAttemptEvidence = {
+  attemptNumber: 1 | 2;
+  query: string;
+  verdict: "resolved" | "refused";
+  refusalRule: string | null;
+  candidates: Array<{
+    osmType: string | null;
+    osmId: number | null;
+    osmCategory: string | null;
+    osmFeatureType: string | null;
+    osmAddressType: string | null;
+    resolvedName: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    straightLineDistanceM: number | null;
+    selected: boolean;
+  }>;
+};
+
 export type CreatorSieveResult =
-  | { verdict: "resolved"; candidate: CreatorSieveCandidate; outsideEditorialRadius: boolean }
-  | { verdict: "refused"; rule: string; candidates: CreatorSieveCandidate[] };
+  | {
+    verdict: "resolved";
+    candidate: CreatorSieveCandidate;
+    outsideEditorialRadius: boolean;
+    originalQuery: string;
+    confirmedQuery: string;
+    confirmationMethod: CreatorConfirmationMethod;
+    attempts: CreatorSieveAttemptEvidence[];
+  }
+  | {
+    verdict: "refused";
+    rule: string;
+    candidates: CreatorSieveCandidate[];
+    originalQuery: string;
+    confirmedQuery: null;
+    confirmationMethod: null;
+    attempts: CreatorSieveAttemptEvidence[];
+  };
 
 type RawResult = {
   osm_type?: unknown; osm_id?: unknown; category?: unknown; type?: unknown;
@@ -73,17 +115,17 @@ export const CREATOR_GENERIC_TYPE_WORDS: ReadonlyArray<{
   { words: ["izvir"], osmTypes: ["spring"] },
 ];
 
-function matchesName(query: string, raw: RawResult): boolean {
+function matchesName(query: string, raw: RawResult): Exclude<CreatorConfirmationMethod, "shortened_query"> | null {
   const normalizedQuery = normalizeName(query);
   const candidateNames = namesOf(raw).map(normalizeName);
-  if (candidateNames.includes(normalizedQuery)) return true;
+  if (candidateNames.includes(normalizedQuery)) return "exact";
   let queryTokens = normalizedQuery.split(" ");
   const genericWords = CREATOR_GENERIC_TYPE_WORDS.find((entry) =>
     entry.osmTypes.includes(String(raw.type ?? "")),
   )?.words;
   if (genericWords?.includes(queryTokens[0]!)) queryTokens = queryTokens.slice(1);
   else if (genericWords?.includes(queryTokens.at(-1)!)) queryTokens = queryTokens.slice(0, -1);
-  if (candidateNames.includes(queryTokens.join(" "))) return true;
+  if (candidateNames.includes(queryTokens.join(" "))) return "generic_type";
 
   const address = raw.address && typeof raw.address === "object"
     ? raw.address as Record<string, unknown>
@@ -100,7 +142,7 @@ function matchesName(query: string, raw: RawResult): boolean {
       remaining.splice(index, 1);
     }
     return remaining.length > 0 && remaining.every((token) => addressTokens.has(token));
-  });
+  }) ? "address_token" : null;
 }
 
 async function runCreatorSieveInternal(
@@ -113,6 +155,7 @@ async function runCreatorSieveInternal(
   const latDelta = CREATOR_EDITORIAL_RADIUS_KM / 111.32;
   const lonDelta = CREATOR_EDITORIAL_RADIUS_KM /
     (111.32 * Math.cos(origin.latitude * Math.PI / 180));
+  const fetched: Array<{ query: string; data: unknown }> = [];
   const fetchResults = async (query: string): Promise<unknown> => {
     const url = new URL("https://nominatim.openstreetmap.org/search");
     url.searchParams.set("format", "jsonv2");
@@ -138,18 +181,73 @@ async function runCreatorSieveInternal(
 
   let matchedQuery = name;
   let data = await fetchResults(name);
+  fetched.push({ query: name, data });
   if (!Array.isArray(data) || data.length === 0) {
     const shortened = name.replace(/\s+(?:na|pod|pri)\s+\S+(?:\s+\S+)*$/iu, "").trim();
     if (shortened !== name) {
       matchedQuery = shortened;
       data = await fetchResults(shortened);
+      fetched.push({ query: shortened, data });
     }
   }
+  const evidenceCandidates = (rawData: unknown): CreatorSieveAttemptEvidence["candidates"] =>
+    Array.isArray(rawData) ? (rawData as RawResult[]).map((raw) => {
+      const latitude = typeof raw.lat === "string" && Number.isFinite(Number(raw.lat)) ? Number(raw.lat) : null;
+      const longitude = typeof raw.lon === "string" && Number.isFinite(Number(raw.lon)) ? Number(raw.lon) : null;
+      const osmId = Number(raw.osm_id);
+      return {
+        osmType: typeof raw.osm_type === "string" && raw.osm_type ? raw.osm_type : null,
+        osmId: Number.isFinite(osmId) ? osmId : null,
+        osmCategory: typeof raw.category === "string" && raw.category ? raw.category : null,
+        osmFeatureType: typeof raw.type === "string" && raw.type ? raw.type : null,
+        osmAddressType: typeof raw.addresstype === "string" && raw.addresstype ? raw.addresstype : null,
+        resolvedName: namesOf(raw)[0] ?? null,
+        latitude,
+        longitude,
+        straightLineDistanceM: latitude !== null && longitude !== null
+          ? haversineKm(origin.latitude, origin.longitude, latitude, longitude) * 1000
+          : null,
+        selected: false,
+      };
+    }) : [];
+  const attempts = (
+    finalVerdict: "resolved" | "refused",
+    finalRule: string | null,
+    selected: CreatorSieveCandidate | null = null,
+  ): CreatorSieveAttemptEvidence[] => fetched.map((entry, index) => {
+    const isFinal = index === fetched.length - 1;
+    const candidates = evidenceCandidates(entry.data);
+    if (isFinal && selected) {
+      const selectedCandidate = candidates.find((candidate) =>
+        candidate.osmType === selected.osmType && candidate.osmId === selected.osmId);
+      if (selectedCandidate) selectedCandidate.selected = true;
+    }
+    return {
+      attemptNumber: (index + 1) as 1 | 2,
+      query: entry.query,
+      verdict: isFinal ? finalVerdict : "refused",
+      refusalRule: isFinal ? finalRule : "no-results",
+      candidates,
+    };
+  });
   if (!Array.isArray(data) || data.length === 0) {
-    return { verdict: "refused", rule: "no-results", candidates: [] };
+    return {
+      verdict: "refused",
+      rule: "no-results",
+      candidates: [],
+      originalQuery: name,
+      confirmedQuery: null,
+      confirmationMethod: null,
+      attempts: attempts("refused", "no-results"),
+    };
   }
 
-  const structurallyAllowed: Array<{ raw: RawResult; candidate: CreatorSieveCandidate; importance: number }> = [];
+  const structurallyAllowed: Array<{
+    raw: RawResult;
+    candidate: CreatorSieveCandidate;
+    importance: number;
+    confirmationMethod: Exclude<CreatorConfirmationMethod, "shortened_query">;
+  }> = [];
   let sawBlocked = false;
   let sawMissingClassification = false;
   let sawNameMismatch = false;
@@ -173,6 +271,7 @@ async function runCreatorSieveInternal(
       type: String(raw.type ?? ""),
       addresstype: addressType ?? "",
       returnedName: namesOf(raw)[0] ?? "",
+      displayName: typeof raw.display_name === "string" ? raw.display_name : "",
       latitude, longitude,
       distanceKm: haversineKm(origin.latitude, origin.longitude, latitude, longitude),
     };
@@ -185,7 +284,8 @@ async function runCreatorSieveInternal(
       sawBlocked = true;
       continue;
     }
-    if (!matchesName(matchedQuery, raw)) {
+    const confirmationMethod = matchesName(matchedQuery, raw);
+    if (!confirmationMethod) {
       sawNameMismatch = true;
       continue;
     }
@@ -197,6 +297,7 @@ async function runCreatorSieveInternal(
       raw,
       candidate,
       importance: typeof raw.importance === "number" ? raw.importance : 0,
+      confirmationMethod,
     });
   }
 
@@ -206,7 +307,15 @@ async function runCreatorSieveInternal(
       : sawNameMismatch ? "name-mismatch"
       : sawBlocked ? "blocked-class-or-addresstype"
       : "no-usable-result";
-    return { verdict: "refused", rule, candidates: allParsed };
+    return {
+      verdict: "refused",
+      rule,
+      candidates: allParsed,
+      originalQuery: name,
+      confirmedQuery: null,
+      confirmationMethod: null,
+      attempts: attempts("refused", rule),
+    };
   }
 
   structurallyAllowed.sort((a, b) =>
@@ -222,12 +331,20 @@ async function runCreatorSieveInternal(
       verdict: "refused",
       rule: "equally-plausible",
       candidates: [best, ...equallyPlausible].map((entry) => entry.candidate),
+      originalQuery: name,
+      confirmedQuery: null,
+      confirmationMethod: null,
+      attempts: attempts("refused", "equally-plausible"),
     };
   }
   return {
     verdict: "resolved",
     candidate: best.candidate,
     outsideEditorialRadius: best.candidate.distanceKm > CREATOR_EDITORIAL_RADIUS_KM,
+    originalQuery: name,
+    confirmedQuery: matchedQuery,
+    confirmationMethod: matchedQuery !== name ? "shortened_query" : best.confirmationMethod,
+    attempts: attempts("resolved", null, best.candidate),
   };
 }
 

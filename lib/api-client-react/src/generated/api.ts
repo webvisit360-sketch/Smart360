@@ -41,6 +41,8 @@ import type {
   CleanupRunsResult,
   CreatorOriginPreview,
   CreatorOriginPreviewInput,
+  CreatorProposal,
+  CreatorProposalBulkApprovalInput,
   DistanceBulkApproveInput,
   DistanceLinkInput,
   DistanceReview,
@@ -2474,6 +2476,228 @@ export const usePreviewCreatorOrigin = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getPreviewCreatorOriginMutationOptions(options));
+    }
+
+export const getListCreatorProposalsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals`
+}
+
+/**
+ * @summary List the owner-only Creator confirmation queue
+ */
+export const listCreatorProposals = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal[]> => {
+
+  return customFetch<CreatorProposal[]>(getListCreatorProposalsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCreatorProposalsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/creator/proposals`
+    ] as const;
+    }
+
+
+export const getListCreatorProposalsQueryOptions = <TData = Awaited<ReturnType<typeof listCreatorProposals>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCreatorProposalsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCreatorProposals>>> = ({ signal }) => listCreatorProposals(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCreatorProposals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCreatorProposalsQueryResult = NonNullable<Awaited<ReturnType<typeof listCreatorProposals>>>
+export type ListCreatorProposalsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the owner-only Creator confirmation queue
+ */
+
+export function useListCreatorProposals<TData = Awaited<ReturnType<typeof listCreatorProposals>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCreatorProposalsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApproveCreatorProposalUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}/approve`
+}
+
+/**
+ * @summary Individually approve one Creator proposal
+ */
+export const approveCreatorProposal = async (id: string,
+    proposalId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal> => {
+
+  return customFetch<CreatorProposal>(getApproveCreatorProposalUrl(id,proposalId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveCreatorProposalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorProposal>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveCreatorProposal>>, TError,{id: string;proposalId: string}, TContext> => {
+
+const mutationKey = ['approveCreatorProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveCreatorProposal>>, {id: string;proposalId: string}> = (props) => {
+          const {id,proposalId} = props ?? {};
+
+          return  approveCreatorProposal(id,proposalId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveCreatorProposalMutationResult = NonNullable<Awaited<ReturnType<typeof approveCreatorProposal>>>
+
+    export type ApproveCreatorProposalMutationError = ErrorType<void>
+
+    /**
+ * @summary Individually approve one Creator proposal
+ */
+export const useApproveCreatorProposal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorProposal>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveCreatorProposal>>,
+        TError,
+        {id: string;proposalId: string},
+        TContext
+      > => {
+      return useMutation(getApproveCreatorProposalMutationOptions(options));
+    }
+
+export const getApproveCreatorProposalsBulkUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/approve-bulk`
+}
+
+/**
+ * @summary Approve eligible Creator proposals; shortened-query rows are forbidden
+ */
+export const approveCreatorProposalsBulk = async (id: string,
+    creatorProposalBulkApprovalInput: CreatorProposalBulkApprovalInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal[]> => {
+
+  return customFetch<CreatorProposal[]>(getApproveCreatorProposalsBulkUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorProposalBulkApprovalInput)
+  }
+);}
+
+
+
+
+
+export const getApproveCreatorProposalsBulkMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorProposalsBulk>>, TError,{id: string;data: BodyType<CreatorProposalBulkApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveCreatorProposalsBulk>>, TError,{id: string;data: BodyType<CreatorProposalBulkApprovalInput>}, TContext> => {
+
+const mutationKey = ['approveCreatorProposalsBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveCreatorProposalsBulk>>, {id: string;data: BodyType<CreatorProposalBulkApprovalInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  approveCreatorProposalsBulk(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveCreatorProposalsBulkMutationResult = NonNullable<Awaited<ReturnType<typeof approveCreatorProposalsBulk>>>
+    export type ApproveCreatorProposalsBulkMutationBody = BodyType<CreatorProposalBulkApprovalInput>
+    export type ApproveCreatorProposalsBulkMutationError = ErrorType<void>
+
+    /**
+ * @summary Approve eligible Creator proposals; shortened-query rows are forbidden
+ */
+export const useApproveCreatorProposalsBulk = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorProposalsBulk>>, TError,{id: string;data: BodyType<CreatorProposalBulkApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveCreatorProposalsBulk>>,
+        TError,
+        {id: string;data: BodyType<CreatorProposalBulkApprovalInput>},
+        TContext
+      > => {
+      return useMutation(getApproveCreatorProposalsBulkMutationOptions(options));
     }
 
 export const getListTenantChangelogUrl = (id: string,) => {
