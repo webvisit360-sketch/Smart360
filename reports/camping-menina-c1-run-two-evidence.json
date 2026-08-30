@@ -1,0 +1,1511 @@
+{
+  "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+  "runOneId": "1e4fb2ec-f937-49c0-8b82-34f541bab869",
+  "runTwoId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+  "runTwoReport": {
+    "proposed": 60,
+    "confirmed": 41,
+    "unconfirmed": 19,
+    "duplicatesMerged": 0,
+    "outsidePractical": 0,
+    "outsideNear": 41,
+    "outsideExcursion": 6,
+    "routeFailures": 0,
+    "inputTokens": 6270,
+    "outputTokens": 17914,
+    "costUsd": 0.230637,
+    "wallClockMs": 351811,
+    "nominatimThrottleWaitMs": 27837,
+    "status": "completed",
+    "pricing": {
+      "sourceUrl": "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+      "asOf": "2026-08-30",
+      "inputPerMillionUsd": 2,
+      "cachedInputPerMillionUsd": 0.2,
+      "cacheWritePerMillionUsd": 2.5,
+      "outputPerMillionUsd": 12,
+      "longContextThresholdTokens": 272000
+    },
+    "outcomes": [
+      {
+        "proposedName": "Rimska nekropola v Šempetru",
+        "outcome": "unconfirmed",
+        "refusalRule": "name-mismatch"
+      },
+      {
+        "proposedName": "Dvorec Novo Celje",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Muzej usnjarstva na Slovenskem",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Vila Mayer",
+        "outcome": "unconfirmed",
+        "refusalRule": "name-mismatch"
+      },
+      {
+        "proposedName": "Šmartinsko jezero",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Tehnopark Celje",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Pokrajinski muzej Celje",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Knežji dvor",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Fontana piv Zeleno zlato",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Gora Oljka",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Velika planina",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Planšarsko jezero",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Izvir Kamniške Bistrice",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Robanov kot",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Soteska Predaselj",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Žička kartuzija",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Stolna cerkev svetega Danijela",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Muzej novejše zgodovine Celje",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Celjska koča",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Velenjsko jezero",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Grad Šalek",
+        "outcome": "unconfirmed",
+        "refusalRule": "name-mismatch"
+      },
+      {
+        "proposedName": "Kavčnikova domačija",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Terme Dobrna",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Arboretum Volčji Potok",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Grad Bogenšperk",
+        "outcome": "unconfirmed",
+        "refusalRule": "name-mismatch"
+      },
+      {
+        "proposedName": "Rogla",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Pot med krošnjami Pohorje",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Lovrenška jezera",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Muzej na prostem Rogatec",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Grad Podsreda",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Flosarski muzej Ljubno",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Ljubenske rastke",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Menina planina",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Dom na Menini planini",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Smrekovec",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Dom na Smrekovcu",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Terme Topolšica",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Vila Bianca",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Galerija Velenje",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Grad Komenda",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Dvorec Šenek",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Mali grad Kamnik",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Grad Zaprice",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Samostan Mekinje",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Koroška galerija likovnih umetnosti",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Center Noordung",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Muzej motociklov Grom",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Terme Snovik",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Medobčinski muzej Kamnik",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Galerija Miha Maleš",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Stari grad Kamnik",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Kamniško sedlo",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Krvavec",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Češka koča",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Matkov kot",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Ojstrica",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Koča na Loki pod Raduho",
+        "outcome": "confirmed",
+        "refusalRule": null
+      },
+      {
+        "proposedName": "Frančiškanski samostan Nazarje",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Koroški pokrajinski muzej, Slovenj Gradec",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      },
+      {
+        "proposedName": "Cerkev svete Elizabete, Slovenj Gradec",
+        "outcome": "unconfirmed",
+        "refusalRule": "no-results"
+      }
+    ]
+  },
+  "firstTwentyReadyQueueRows": [
+    {
+      "id": "7331f654-9ac2-44f3-aa95-e6e6dc6d226c",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Šmartinsko jezero, Celje, Slovenia",
+      "inclusionReason": "Prijetna izletniška točka ob vodi z možnostjo nezahtevnega gibanja.",
+      "contentReady": true,
+      "proposedName": "Šmartinsko jezero",
+      "normalizedName": "smartinsko jezero",
+      "originalQuery": "Šmartinsko jezero",
+      "confirmedQuery": "Šmartinsko jezero",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Šmartinsko jezero",
+      "resolvedAddress": "Šmartinsko jezero, Spodnja Brezova, Runtole, Celje, Slovenija",
+      "osmType": "way",
+      "osmId": 11301579,
+      "osmCategory": "water",
+      "osmFeatureType": "reservoir",
+      "osmAddressType": "reservoir",
+      "latitude": 46.281146,
+      "longitude": 15.2691259,
+      "straightLineDistanceM": 27848.94979597263,
+      "roadDistanceM": 45812.7,
+      "travelDurationS": 2941,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:30:47.97974+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Šmartinsko-See",
+          "description": "Ein See bei Celje für Spaziergänge am Wasser, Ausblicke und eine ruhige Pause im Freien."
+        },
+        {
+          "language": "en",
+          "name": "Šmartinsko Lake",
+          "description": "A lake near Celje for waterside walks, views and a relaxed outdoor break."
+        },
+        {
+          "language": "it",
+          "name": "Lago di Šmartinsko",
+          "description": "Lago vicino a Celje, adatto a passeggiate lungo l'acqua, panorami e una pausa all'aperto."
+        },
+        {
+          "language": "sl",
+          "name": "Šmartinsko jezero",
+          "description": "Jezero pri Celju za sprehod ob vodi, razgled in miren oddih na prostem."
+        }
+      ]
+    },
+    {
+      "id": "c2972791-575f-44ef-8d79-64838bb132b0",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Tehnopark Celje, Celje, Slovenia",
+      "inclusionReason": "Primerna notranja aktivnost za družine in radovedne obiskovalce.",
+      "contentReady": true,
+      "proposedName": "Tehnopark Celje",
+      "normalizedName": "tehnopark celje",
+      "originalQuery": "Tehnopark Celje",
+      "confirmedQuery": "Tehnopark Celje",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Tehnopark Celje",
+      "resolvedAddress": "Tehnopark Celje, Lilekova ulica, Center, Celje, 3000, Slovenija",
+      "osmType": "node",
+      "osmId": 10680918342,
+      "osmCategory": "tourism",
+      "osmFeatureType": "museum",
+      "osmAddressType": "tourism",
+      "latitude": 46.2293402,
+      "longitude": 15.265885,
+      "straightLineDistanceM": 28889.149841272934,
+      "roadDistanceM": 40520.9,
+      "travelDurationS": 2443,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:30:50.597294+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Tehnopark Celje",
+          "description": "Ein interaktives Zentrum mit Ausstellungen und Mitmachangeboten zu Wissenschaft, Technik und Kreativität."
+        },
+        {
+          "language": "en",
+          "name": "Tehnopark Celje",
+          "description": "An interactive centre with exhibits and hands-on activities in science, technology and creativity."
+        },
+        {
+          "language": "it",
+          "name": "Tehnopark Celje",
+          "description": "Centro interattivo con mostre e attività pratiche dedicate a scienza, tecnologia e creatività."
+        },
+        {
+          "language": "sl",
+          "name": "Tehnopark Celje",
+          "description": "Interaktivni center z razstavami in preizkusi s področij znanosti, tehnike in ustvarjalnosti."
+        }
+      ]
+    },
+    {
+      "id": "9c8542b7-400e-4d72-81d6-b656e3cb213f",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Pokrajinski muzej Celje, Celje, Slovenia",
+      "inclusionReason": "Osrednja muzejska izbira za spoznavanje zgodovine in dediščine Celja.",
+      "contentReady": true,
+      "proposedName": "Pokrajinski muzej Celje",
+      "normalizedName": "pokrajinski muzej celje",
+      "originalQuery": "Pokrajinski muzej Celje",
+      "confirmedQuery": "Pokrajinski muzej Celje",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Pokrajinski muzej Celje",
+      "resolvedAddress": "Pokrajinski muzej Celje, 1, Muzejski trg, Center, Celje, 3000, Slovenija",
+      "osmType": "node",
+      "osmId": 4185674609,
+      "osmCategory": "tourism",
+      "osmFeatureType": "museum",
+      "osmAddressType": "tourism",
+      "latitude": 46.2276849,
+      "longitude": 15.2618902,
+      "straightLineDistanceM": 28657.68386062058,
+      "roadDistanceM": 38635.4,
+      "travelDurationS": 2425,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:30:52.666236+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Regionalmuseum Celje",
+          "description": "Das Museum präsentiert das archäologische, kulturelle und künstlerische Erbe von Celje und der weiteren Region."
+        },
+        {
+          "language": "en",
+          "name": "Celje Regional Museum",
+          "description": "The museum presents the archaeological, cultural and artistic heritage of Celje and the wider region."
+        },
+        {
+          "language": "it",
+          "name": "Museo regionale di Celje",
+          "description": "Il museo presenta il patrimonio archeologico, culturale e artistico di Celje e della regione circostante."
+        },
+        {
+          "language": "sl",
+          "name": "Pokrajinski muzej Celje",
+          "description": "Muzej predstavlja arheološko, kulturno in umetnostno dediščino Celja in širše regije."
+        }
+      ]
+    },
+    {
+      "id": "c77b0f15-fb0a-4ccc-9733-3d0e4577d220",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "cc3b2e2b-40e2-4606-ba4c-cd318a8412b3",
+      "range": "excursion",
+      "geocodingLookupHint": "Fontana piv Zeleno zlato, Žalec, Slovenia",
+      "inclusionReason": "Značilna lokalna kulinarična točka, povezana s hmeljarsko identiteto doline.",
+      "contentReady": true,
+      "proposedName": "Fontana piv Zeleno zlato",
+      "normalizedName": "fontana piv zeleno zlato",
+      "originalQuery": "Fontana piv Zeleno zlato",
+      "confirmedQuery": "Fontana piv Zeleno zlato",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Fontana piv Zeleno zlato",
+      "resolvedAddress": "Fontana piv Zeleno zlato, 11, Savinjska cesta, Žalec, 3310, Slovenija",
+      "osmType": "node",
+      "osmId": 4424870889,
+      "osmCategory": "amenity",
+      "osmFeatureType": "bar",
+      "osmAddressType": "amenity",
+      "latitude": 46.2519331,
+      "longitude": 15.1634078,
+      "straightLineDistanceM": 20618.55851618624,
+      "roadDistanceM": 27575.7,
+      "travelDurationS": 2021,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:30:58.466104+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Hrana in pijača",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Bierbrunnen Grünes Gold",
+          "description": ""
+        },
+        {
+          "language": "en",
+          "name": "Green Gold Beer Fountain",
+          "description": ""
+        },
+        {
+          "language": "it",
+          "name": "Fontana della birra Oro verde",
+          "description": ""
+        },
+        {
+          "language": "sl",
+          "name": "Fontana piv Zeleno zlato",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "id": "53dfeee5-a25b-4d56-846a-56e775e5e11e",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+      "range": "excursion",
+      "geocodingLookupHint": "Gora Oljka, Slovenia",
+      "inclusionReason": "Dober cilj za pohod z razgledi in kulturno znamenitostjo na vrhu.",
+      "contentReady": true,
+      "proposedName": "Gora Oljka",
+      "normalizedName": "gora oljka",
+      "originalQuery": "Gora Oljka",
+      "confirmedQuery": "Gora Oljka",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Gora Oljka",
+      "resolvedAddress": "Gora Oljka, Polzela, 3327, Slovenija",
+      "osmType": "node",
+      "osmId": 9384635416,
+      "osmCategory": "natural",
+      "osmFeatureType": "peak",
+      "osmAddressType": "peak",
+      "latitude": 46.3254883,
+      "longitude": 15.0592215,
+      "straightLineDistanceM": 11618.34939604835,
+      "roadDistanceM": 17219.2,
+      "travelDurationS": 1877,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:00.143258+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Pohodi in kolesarjenje",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Berg Oljka",
+          "description": "Ein Aussichtsberg mit einer Kirche auf dem Gipfel und mehreren Aufstiegswegen."
+        },
+        {
+          "language": "en",
+          "name": "Mount Oljka",
+          "description": "A scenic hill with a church at its summit and several approach paths."
+        },
+        {
+          "language": "it",
+          "name": "Monte Oljka",
+          "description": "Collina panoramica con una chiesa sulla cima e diversi sentieri di accesso."
+        },
+        {
+          "language": "sl",
+          "name": "Gora Oljka",
+          "description": "Razgledni hrib s cerkvijo na vrhu in več pristopnimi potmi."
+        }
+      ]
+    },
+    {
+      "id": "99254aef-1f54-470f-bbe5-7d103d128377",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+      "range": "excursion",
+      "geocodingLookupHint": "Velika planina, Kamnik, Slovenia",
+      "inclusionReason": "Klasičen celodnevni izlet v Kamniško-Savinjske Alpe z izrazito planšarsko dediščino.",
+      "contentReady": true,
+      "proposedName": "Velika planina",
+      "normalizedName": "velika planina",
+      "originalQuery": "Velika planina",
+      "confirmedQuery": "Velika planina",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Velika Planina",
+      "resolvedAddress": "Velika Planina, Sežana, Upravna enota Sežana, 6210, Slovenija",
+      "osmType": "node",
+      "osmId": 2430402097,
+      "osmCategory": "natural",
+      "osmFeatureType": "peak",
+      "osmAddressType": "peak",
+      "latitude": 45.7060862,
+      "longitude": 13.8874912,
+      "straightLineDistanceM": 103722.93868131928,
+      "roadDistanceM": 159783.2,
+      "travelDurationS": 6884,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:02.966259+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Pohodi in kolesarjenje",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Velika Planina",
+          "description": "Eine Hochgebirgsalm, bekannt für Sennhütten, offene Wiesen und Wanderwege."
+        },
+        {
+          "language": "en",
+          "name": "Velika Planina",
+          "description": "A high mountain plateau known for shepherds’ huts, open meadows and hiking paths."
+        },
+        {
+          "language": "it",
+          "name": "Velika Planina",
+          "description": "Altopiano montano noto per le baite dei pastori, i prati aperti e i sentieri escursionistici."
+        },
+        {
+          "language": "sl",
+          "name": "Velika planina",
+          "description": "Visokogorska planota, znana po pastirskih kočah, odprtih travnikih in pohodnih poteh."
+        }
+      ]
+    },
+    {
+      "id": "7c99d69b-0a8c-4669-a2ba-5b8f27c36ab9",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Planšarsko jezero, Zgornje Jezersko, Slovenia",
+      "inclusionReason": "Slikovit alpski postanek, primeren za izlet v smeri Jezerskega.",
+      "contentReady": true,
+      "proposedName": "Planšarsko jezero",
+      "normalizedName": "plansarsko jezero",
+      "originalQuery": "Planšarsko jezero",
+      "confirmedQuery": "Planšarsko jezero",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Planšarsko jezero",
+      "resolvedAddress": "Planšarsko jezero, Zgornje Jezersko, Jezersko, Slovenija",
+      "osmType": "way",
+      "osmId": 455094287,
+      "osmCategory": "water",
+      "osmFeatureType": "lake",
+      "osmAddressType": "lake",
+      "latitude": 46.403154,
+      "longitude": 14.5158257,
+      "straightLineDistanceM": 31871.495863509077,
+      "roadDistanceM": 58228.2,
+      "travelDurationS": 4298,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:05.095453+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Planšarsko-See",
+          "description": "Ein See in Jezersko unter hohen Gipfeln, geeignet für einen kurzen Spaziergang und Ausblicke."
+        },
+        {
+          "language": "en",
+          "name": "Planšarsko Lake",
+          "description": "A lake in Jezersko beneath high peaks, suitable for a short walk and views."
+        },
+        {
+          "language": "it",
+          "name": "Lago Planšarsko",
+          "description": "Lago a Jezersko ai piedi di alte cime, adatto a una breve passeggiata e ai panorami."
+        },
+        {
+          "language": "sl",
+          "name": "Planšarsko jezero",
+          "description": "Jezero v Jezerskem pod visokimi vrhovi, primerno za kratek sprehod in razglede."
+        }
+      ]
+    },
+    {
+      "id": "3f0ee866-ac4f-4bb1-9954-3ee575273f0a",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Izvir Kamniške Bistrice, Kamniška Bistrica, Slovenia",
+      "inclusionReason": "Naravna znamenitost in izhodišče za raziskovanje alpske doline.",
+      "contentReady": true,
+      "proposedName": "Izvir Kamniške Bistrice",
+      "normalizedName": "izvir kamniske bistrice",
+      "originalQuery": "Izvir Kamniške Bistrice",
+      "confirmedQuery": "Izvir Kamniške Bistrice",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Izvir Kamniške Bistrice",
+      "resolvedAddress": "Izvir Kamniške Bistrice, Kamnik, Upravna Enota Kamnik, Slovenija",
+      "osmType": "way",
+      "osmId": 47213386,
+      "osmCategory": "water",
+      "osmFeatureType": "lake",
+      "osmAddressType": "lake",
+      "latitude": 46.3274894,
+      "longitude": 14.5902933,
+      "straightLineDistanceM": 24563.4069358747,
+      "roadDistanceM": 41803.2,
+      "travelDurationS": 2826,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:07.166219+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Quelle der Kamniška Bistrica",
+          "description": "Eine Karstquelle des Flusses Kamniška Bistrica in einem von Wäldern und Bergen umgebenen Alpental."
+        },
+        {
+          "language": "en",
+          "name": "Source of the Kamniška Bistrica",
+          "description": "A karst spring of the Kamniška Bistrica River in an Alpine valley surrounded by forest and mountains."
+        },
+        {
+          "language": "it",
+          "name": "Sorgente della Kamniška Bistrica",
+          "description": "Sorgente carsica del fiume Kamniška Bistrica in una valle alpina circondata da boschi e montagne."
+        },
+        {
+          "language": "sl",
+          "name": "Izvir Kamniške Bistrice",
+          "description": "Kraški izvir reke Kamniške Bistrice v alpski dolini, obdan z gozdovi in gorami."
+        }
+      ]
+    },
+    {
+      "id": "843509ab-3ebb-49ab-a797-bba37d433825",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+      "range": "excursion",
+      "geocodingLookupHint": "Robanov kot, Solčava, Slovenia",
+      "inclusionReason": "Naravna dolina za umirjen izlet in spoznavanje alpske krajine.",
+      "contentReady": true,
+      "proposedName": "Robanov kot",
+      "normalizedName": "robanov kot",
+      "originalQuery": "Robanov kot",
+      "confirmedQuery": "Robanov kot",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Robanov kot",
+      "resolvedAddress": "Robanov kot, Solčava, Slovenija",
+      "osmType": "way",
+      "osmId": 1107050690,
+      "osmCategory": "natural",
+      "osmFeatureType": "valley",
+      "osmAddressType": "valley",
+      "latitude": 46.3880123,
+      "longitude": 14.6791095,
+      "straightLineDistanceM": 19611.987989320878,
+      "roadDistanceM": 33761.1,
+      "travelDurationS": 3785,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:10.166304+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Izleti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Robanov Kot",
+          "description": "Ein ruhiges, eiszeitlich geformtes Tal mit Wäldern, Wiesen und Blicken auf die Kamnik-Savinja-Alpen."
+        },
+        {
+          "language": "en",
+          "name": "Robanov Kot",
+          "description": "A quiet glacial valley with forests, meadows and views of the Kamnik–Savinja Alps."
+        },
+        {
+          "language": "it",
+          "name": "Robanov Kot",
+          "description": "Tranquilla valle di origine glaciale con boschi, prati e vedute sulle Alpi di Kamnik e della Savinja."
+        },
+        {
+          "language": "sl",
+          "name": "Robanov kot",
+          "description": "Mirna ledeniško oblikovana dolina z gozdovi, travniki in razgledi na Kamniško-Savinjske Alpe."
+        }
+      ]
+    },
+    {
+      "id": "8afbc66e-9fee-4ad2-bb0d-e55872fcd738",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Soteska Predaselj, Kamniška Bistrica, Slovenia",
+      "inclusionReason": "Izrazita naravna znamenitost, ki jo je mogoče vključiti v izlet po dolini Kamniške Bistrice.",
+      "contentReady": true,
+      "proposedName": "Soteska Predaselj",
+      "normalizedName": "soteska predaselj",
+      "originalQuery": "Soteska Predaselj",
+      "confirmedQuery": "Soteska Predaselj",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Soteska Predaselj",
+      "resolvedAddress": "Soteska Predaselj, Kamnik, Upravna Enota Kamnik, Slovenija",
+      "osmType": "way",
+      "osmId": 1205521300,
+      "osmCategory": "natural",
+      "osmFeatureType": "valley",
+      "osmAddressType": "valley",
+      "latitude": 46.321143,
+      "longitude": 14.594285,
+      "straightLineDistanceM": 24217.44777102993,
+      "roadDistanceM": 41077.3,
+      "travelDurationS": 2849,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:13.366257+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Predaselj-Schlucht",
+          "description": "Eine enge Felsschlucht der Kamniška Bistrica mit markanten Gumpen und Tiefblicken."
+        },
+        {
+          "language": "en",
+          "name": "Predaselj Gorge",
+          "description": "A narrow rocky gorge of the Kamniška Bistrica River with distinctive potholes and deep views."
+        },
+        {
+          "language": "it",
+          "name": "Gola di Predaselj",
+          "description": "Stretta gola rocciosa della Kamniška Bistrica con caratteristiche marmitte e scorci in profondità."
+        },
+        {
+          "language": "sl",
+          "name": "Soteska Predaselj",
+          "description": "Ozka skalnata soteska reke Kamniške Bistrice z značilnimi koriti in razgledi v globino."
+        }
+      ]
+    },
+    {
+      "id": "270d6aae-6b0c-45ac-8ec6-09ad2860201a",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Žička kartuzija, Špitalič, Slovenija",
+      "inclusionReason": "Pomemben samostanski in kulturni spomenik za izlet.",
+      "contentReady": true,
+      "proposedName": "Žička kartuzija",
+      "normalizedName": "zicka kartuzija",
+      "originalQuery": "Žička kartuzija",
+      "confirmedQuery": "Žička kartuzija",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Žička kartuzija",
+      "resolvedAddress": "Žička kartuzija, Špitalič pri Slov. Konjicah, Stare Slemene, Slovenske Konjice, 3222, Slovenija",
+      "osmType": "way",
+      "osmId": 23131355,
+      "osmCategory": "tourism",
+      "osmFeatureType": "museum",
+      "osmAddressType": "tourism",
+      "latitude": 46.3112703,
+      "longitude": 15.3922269,
+      "straightLineDistanceM": 37091.616907937525,
+      "roadDistanceM": 53542,
+      "travelDurationS": 2948,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:15.297174+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Kartause Žiče",
+          "description": "Überreste eines mittelalterlichen Kartäuserklosters in einem ruhigen Tal."
+        },
+        {
+          "language": "en",
+          "name": "Žička Kartuzija",
+          "description": "Remains of a medieval Carthusian monastery in a quiet valley."
+        },
+        {
+          "language": "it",
+          "name": "Certosa di Žiče",
+          "description": "Resti di un monastero certosino medievale in una tranquilla valle."
+        },
+        {
+          "language": "sl",
+          "name": "Žička kartuzija",
+          "description": "Ostanki srednjeveškega kartuzijanskega samostana v mirni dolini."
+        }
+      ]
+    },
+    {
+      "id": "11ace31b-51b2-4a13-b382-5f42a76ba931",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+      "range": "excursion",
+      "geocodingLookupHint": "Celjska koča, Celje, Slovenija",
+      "inclusionReason": "Naravno območje za aktiven kratek izlet.",
+      "contentReady": true,
+      "proposedName": "Celjska koča",
+      "normalizedName": "celjska koca",
+      "originalQuery": "Celjska koča",
+      "confirmedQuery": "Celjska koča",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Celjska koca",
+      "resolvedAddress": "Celjska koca, Celje, 3000, Slovenija",
+      "osmType": "way",
+      "osmId": 192774134,
+      "osmCategory": "landuse",
+      "osmFeatureType": "winter_sports",
+      "osmAddressType": "winter_sports",
+      "latitude": 46.1930078,
+      "longitude": 15.2781618,
+      "straightLineDistanceM": 31270.29736094552,
+      "roadDistanceM": 47451.6,
+      "travelDurationS": 3674,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:22.87911+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Pohodi in kolesarjenje",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Celjska koča",
+          "description": "Ein bewaldetes Erholungsgebiet oberhalb von Celje mit Ausgangspunkten für Spaziergänge und Wanderungen."
+        },
+        {
+          "language": "en",
+          "name": "Celje Hut",
+          "description": "A wooded recreation area above Celje with starting points for walks and hikes."
+        },
+        {
+          "language": "it",
+          "name": "Celjska koča",
+          "description": "Area ricreativa boschiva sopra Celje, con punti di partenza per passeggiate ed escursioni."
+        },
+        {
+          "language": "sl",
+          "name": "Celjska koča",
+          "description": "Gozdnato rekreacijsko območje nad Celjem z izhodišči za sprehode in pohode."
+        }
+      ]
+    },
+    {
+      "id": "7d34c120-ab86-454d-864a-8e44f92e4f03",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Velenjsko jezero, Velenje, Slovenija",
+      "inclusionReason": "Jezerski izlet za sprehod in aktivnosti na prostem.",
+      "contentReady": true,
+      "proposedName": "Velenjsko jezero",
+      "normalizedName": "velenjsko jezero",
+      "originalQuery": "Velenjsko jezero",
+      "confirmedQuery": "Velenjsko jezero",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Velenjsko jezero",
+      "resolvedAddress": "Velenjsko jezero, Podgorje, Velenje, Slovenija",
+      "osmType": "way",
+      "osmId": 10865594,
+      "osmCategory": "natural",
+      "osmFeatureType": "water",
+      "osmAddressType": "water",
+      "latitude": 46.376195,
+      "longitude": 15.0881189,
+      "straightLineDistanceM": 15499.11622451773,
+      "roadDistanceM": 20699.3,
+      "travelDurationS": 1724,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:26.866129+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Velenjsko jezero",
+          "description": "Ein See mit Wegen am Ufer und Möglichkeiten zur Erholung im Freien."
+        },
+        {
+          "language": "en",
+          "name": "Lake Velenje",
+          "description": "A lake with paths along its shore and space for relaxing outdoors."
+        },
+        {
+          "language": "it",
+          "name": "Lago di Velenje",
+          "description": "Lago con sentieri lungo la riva e spazi per rilassarsi all'aperto."
+        },
+        {
+          "language": "sl",
+          "name": "Velenjsko jezero",
+          "description": "Jezero z urejenimi potmi ob obali in prostorom za sprostitev na prostem."
+        }
+      ]
+    },
+    {
+      "id": "f3492042-726c-400c-8cc3-0bca94708d84",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Kavčnikova domačija, Solčava, Slovenija",
+      "inclusionReason": "Poseben primer lokalne stavbne in etnološke dediščine.",
+      "contentReady": true,
+      "proposedName": "Kavčnikova domačija",
+      "normalizedName": "kavcnikova domacija",
+      "originalQuery": "Kavčnikova domačija",
+      "confirmedQuery": "Kavčnikova domačija",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Kavčnikova domačija",
+      "resolvedAddress": "Kavčnikova domačija, 43, Zavodnje, Šoštanj, 3325, Slovenija",
+      "osmType": "way",
+      "osmId": 835469094,
+      "osmCategory": "tourism",
+      "osmFeatureType": "museum",
+      "osmAddressType": "tourism",
+      "latitude": 46.4296677,
+      "longitude": 14.9912992,
+      "straightLineDistanceM": 14572.39334629051,
+      "roadDistanceM": 31209.9,
+      "travelDurationS": 2551,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:31.666376+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Kavčnik-Hof",
+          "description": "Ein erhaltenes Rauchstubenhaus, das die traditionelle Baukultur der Region Solčava zeigt."
+        },
+        {
+          "language": "en",
+          "name": "Kavčnik Homestead",
+          "description": "A preserved smokehouse representing the traditional building heritage of the Solčava area."
+        },
+        {
+          "language": "it",
+          "name": "Casa rurale Kavčnik",
+          "description": "Dimora a fumo conservata che presenta l'architettura tradizionale dell'area di Solčava."
+        },
+        {
+          "language": "sl",
+          "name": "Kavčnikova domačija",
+          "description": "Ohranjena dimnica, ki predstavlja tradicionalno stavbno dediščino Solčavskega."
+        }
+      ]
+    },
+    {
+      "id": "33b7c5e3-099a-4d9b-ba60-f7188f9e236c",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Terme Dobrna, Dobrna, Slovenija",
+      "inclusionReason": "Možnost sprostitvenega izleta v zdraviliško okolje.",
+      "contentReady": true,
+      "proposedName": "Terme Dobrna",
+      "normalizedName": "terme dobrna",
+      "originalQuery": "Terme Dobrna",
+      "confirmedQuery": "Terme Dobrna",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Terme Dobrna",
+      "resolvedAddress": "Terme Dobrna, 429, Dobrna, 3204, Slovenija",
+      "osmType": "way",
+      "osmId": 298175876,
+      "osmCategory": "amenity",
+      "osmFeatureType": "public_bath",
+      "osmAddressType": "amenity",
+      "latitude": 46.3376367,
+      "longitude": 15.2259185,
+      "straightLineDistanceM": 24485.853191920825,
+      "roadDistanceM": 34291.3,
+      "travelDurationS": 2537,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:35.466129+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Therme Dobrna",
+          "description": "Ein Kurort mit langer Thermalwassertradition und gestalteter Parkanlage."
+        },
+        {
+          "language": "en",
+          "name": "Dobrna Spa",
+          "description": "A spa town with a long thermal-water tradition and a landscaped park setting."
+        },
+        {
+          "language": "it",
+          "name": "Terme di Dobrna",
+          "description": "Località termale dalla lunga tradizione, immersa in un parco curato."
+        },
+        {
+          "language": "sl",
+          "name": "Terme Dobrna",
+          "description": "Zdraviliški kraj z dolgo tradicijo termalne vode in urejenim parkovnim okoljem."
+        }
+      ]
+    },
+    {
+      "id": "a611d6e1-2506-4754-9ebf-3ad444f6d649",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Arboretum Volčji Potok, Radomlje, Slovenija",
+      "inclusionReason": "Parkovna kulturno-naravna znamenitost za celodnevni izlet.",
+      "contentReady": true,
+      "proposedName": "Arboretum Volčji Potok",
+      "normalizedName": "arboretum volcji potok",
+      "originalQuery": "Arboretum Volčji Potok",
+      "confirmedQuery": "Arboretum Volčji Potok",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Arboretum Volčji Potok",
+      "resolvedAddress": "Arboretum Volčji Potok, Volčji Potok, Rudnik pri Radomljah, Kamnik, Upravna Enota Kamnik, Slovenija",
+      "osmType": "way",
+      "osmId": 55124785,
+      "osmCategory": "leisure",
+      "osmFeatureType": "garden",
+      "osmAddressType": "garden",
+      "latitude": 46.1880874,
+      "longitude": 14.6136727,
+      "straightLineDistanceM": 26550.5271565869,
+      "roadDistanceM": 44836.1,
+      "travelDurationS": 3283,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:37.366185+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Arboretum Volčji Potok",
+          "description": "Ein weitläufiger Park mit einer Sammlung von Bäumen, Sträuchern und saisonalen Pflanzungen."
+        },
+        {
+          "language": "en",
+          "name": "Volčji Potok Arboretum",
+          "description": "A large park with a collection of trees, shrubs and seasonal plantings."
+        },
+        {
+          "language": "it",
+          "name": "Arboreto di Volčji Potok",
+          "description": "Ampio parco con una collezione di alberi, arbusti e piantagioni stagionali."
+        },
+        {
+          "language": "sl",
+          "name": "Arboretum Volčji Potok",
+          "description": "Obsežen park z zbirko dreves, grmovnic in sezonskih zasaditev."
+        }
+      ]
+    },
+    {
+      "id": "8d9a4b91-af3e-471b-b445-59fd3de5a1be",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Rogla, Zreče, Slovenija",
+      "inclusionReason": "Prepoznavno pohorsko območje za aktivni izlet.",
+      "contentReady": true,
+      "proposedName": "Rogla",
+      "normalizedName": "rogla",
+      "originalQuery": "Rogla",
+      "confirmedQuery": "Rogla",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Rogla",
+      "resolvedAddress": "Rogla, Slovenska Bistrica, Slovenija",
+      "osmType": "node",
+      "osmId": 260052043,
+      "osmCategory": "natural",
+      "osmFeatureType": "peak",
+      "osmAddressType": "peak",
+      "latitude": 46.456485,
+      "longitude": 15.345948,
+      "straightLineDistanceM": 37172.76380844053,
+      "roadDistanceM": 83701,
+      "travelDurationS": 5183,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:46.979355+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Rogla",
+          "description": "Ein Hochplateau im Pohorje-Gebirge für Aktivitäten im Freien zu jeder Jahreszeit."
+        },
+        {
+          "language": "en",
+          "name": "Rogla",
+          "description": "A Pohorje plateau area for outdoor activities in every season."
+        },
+        {
+          "language": "it",
+          "name": "Rogla",
+          "description": "Area di altopiano del Pohorje per attività all'aperto in ogni stagione."
+        },
+        {
+          "language": "sl",
+          "name": "Rogla",
+          "description": "Planotasto pohorsko območje za aktivnosti na prostem v vseh letnih časih."
+        }
+      ]
+    },
+    {
+      "id": "ae5ac8ba-6a7e-490a-ab91-8cd0803d3fec",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+      "range": "excursion",
+      "geocodingLookupHint": "Pot med krošnjami Pohorje, Rogla, Slovenija",
+      "inclusionReason": "Doživljajska aktivnost, ki se dobro poveže z obiskom Rogle.",
+      "contentReady": true,
+      "proposedName": "Pot med krošnjami Pohorje",
+      "normalizedName": "pot med krosnjami pohorje",
+      "originalQuery": "Pot med krošnjami Pohorje",
+      "confirmedQuery": "Pot med krošnjami Pohorje",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Pot med krošnjami Pohorje",
+      "resolvedAddress": "Pot med krošnjami Pohorje, Rogla, Zreče, Slovenija",
+      "osmType": "way",
+      "osmId": 1089422907,
+      "osmCategory": "tourism",
+      "osmFeatureType": "attraction",
+      "osmAddressType": "tourism",
+      "latitude": 46.4522321,
+      "longitude": 15.3271882,
+      "straightLineDistanceM": 35672.78267191011,
+      "roadDistanceM": 82304.3,
+      "travelDurationS": 5069,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:51.048308+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Aktivnosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Baumwipfelpfad Pohorje",
+          "description": "Ein erhöhter Holzweg zwischen den Baumkronen des Pohorje-Gebirges."
+        },
+        {
+          "language": "en",
+          "name": "Pohorje Treetop Walk",
+          "description": "An elevated wooden walk among the treetops of Pohorje."
+        },
+        {
+          "language": "it",
+          "name": "Passeggiata tra le chiome del Pohorje",
+          "description": "Percorso in legno sopraelevato tra le chiome degli alberi del Pohorje."
+        },
+        {
+          "language": "sl",
+          "name": "Pot med krošnjami Pohorje",
+          "description": "Dvignjena lesena pot med drevesnimi krošnjami na Pohorju."
+        }
+      ]
+    },
+    {
+      "id": "24cd3f54-6cfa-4761-ad44-1061b7c5fa2d",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+      "range": "excursion",
+      "geocodingLookupHint": "Lovrenška jezera, Pohorje, Slovenija",
+      "inclusionReason": "Značilna pohorska pohodniška naravna znamenitost.",
+      "contentReady": true,
+      "proposedName": "Lovrenška jezera",
+      "normalizedName": "lovrenska jezera",
+      "originalQuery": "Lovrenška jezera",
+      "confirmedQuery": "Lovrenška jezera",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Lovrenška jezera",
+      "resolvedAddress": "Lovrenška jezera, Lovrenc na Pohorju, Slovenija",
+      "osmType": "relation",
+      "osmId": 2346714,
+      "osmCategory": "natural",
+      "osmFeatureType": "wetland",
+      "osmAddressType": "wetland",
+      "latitude": 46.4875618,
+      "longitude": 15.3128589,
+      "straightLineDistanceM": 36620.90071419513,
+      "roadDistanceM": 100596.4,
+      "travelDurationS": 9499,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:52.879262+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Pohodi in kolesarjenje",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Lovrenc-Seen",
+          "description": "Ein Hochmoor im Pohorje-Gebirge mit kleinen Seen und Holzstegen."
+        },
+        {
+          "language": "en",
+          "name": "Lovrenc Lakes",
+          "description": "A high peat bog in Pohorje with small lakes and wooden walkways."
+        },
+        {
+          "language": "it",
+          "name": "Laghi di Lovrenc",
+          "description": "Torbera d'alta quota sul Pohorje con piccoli laghi e passerelle di legno."
+        },
+        {
+          "language": "sl",
+          "name": "Lovrenška jezera",
+          "description": "Visoko barje na Pohorju z jezercami in lesenimi prehodi."
+        }
+      ]
+    },
+    {
+      "id": "b41aaf33-295d-42c8-88bc-edb3c9a1a2e3",
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "runId": "eb08ad2a-5264-494b-8834-0aa39168c1a9",
+      "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+      "range": "excursion",
+      "geocodingLookupHint": "Muzej na prostem Rogatec, Rogatec, Slovenija",
+      "inclusionReason": "Etnološka znamenitost za družinski ali kulturni izlet.",
+      "contentReady": true,
+      "proposedName": "Muzej na prostem Rogatec",
+      "normalizedName": "muzej na prostem rogatec",
+      "originalQuery": "Muzej na prostem Rogatec",
+      "confirmedQuery": "Muzej na prostem Rogatec",
+      "confirmationMethod": "exact",
+      "requiresIndividualReview": false,
+      "status": "pending",
+      "supersededBy": null,
+      "refusalReason": null,
+      "resolvedName": "Muzej na prostem Rogatec",
+      "resolvedAddress": "Muzej na prostem Rogatec, Ptujska cesta, Rogatec, 3252, Slovenija",
+      "osmType": "way",
+      "osmId": 143764988,
+      "osmCategory": "tourism",
+      "osmFeatureType": "museum",
+      "osmAddressType": "tourism",
+      "latitude": 46.2343863,
+      "longitude": 15.7025346,
+      "straightLineDistanceM": 61567.255020915516,
+      "roadDistanceM": 82166.6,
+      "travelDurationS": 4971,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "createdAt": "2026-08-30T10:31:56.079472+00:00",
+      "updatedAt": "2026-08-30T10:33:16.859+00:00",
+      "categoryLabel": "Znamenitosti",
+      "translations": [
+        {
+          "language": "de",
+          "name": "Freilichtmuseum Rogatec",
+          "description": "Ein Freilichtmuseum über ländliches Leben und traditionelle Baukultur."
+        },
+        {
+          "language": "en",
+          "name": "Rogatec Open-Air Museum",
+          "description": "An open-air museum presenting rural life and traditional architecture."
+        },
+        {
+          "language": "it",
+          "name": "Museo all'aperto di Rogatec",
+          "description": "Museo all'aperto che presenta la vita rurale e l'architettura tradizionale."
+        },
+        {
+          "language": "sl",
+          "name": "Muzej na prostem Rogatec",
+          "description": "Muzej na prostem s prikazom podeželskega življenja in stavbne dediščine."
+        }
+      ]
+    }
+  ],
+  "productionInvariants": {
+    "slug": "camping-menina",
+    "creatorDraft": true,
+    "isPublished": false,
+    "firstPublishedAt": null,
+    "hostCount": 0,
+    "inviteCount": 0,
+    "runCount": 2,
+    "runningCount": 0,
+    "readyCount": 41,
+    "proposalStatuses": {
+      "pending": 41,
+      "unresolved": 53
+    },
+    "reviewedCount": 0,
+    "decidedCount": 0
+  }
+}

@@ -554,3 +554,17 @@ mtime_ms = 1788049108706
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/70899c25-4245-4567-b1b3-2c595a406356/ed9469f0-c9b9-48d9-b535-bdb2b626c704"
 storage_version_token = "1788049131512679"
 content_type = "image/png"
+
+[[outputs]]
+id = "Nm86ATBEd-Acd_dPUyI04"
+uri = "file://reports/camping-menina-c1-run-two-evidence.json"
+type = "unspecified"
+title = "Camping MENINA C1 run two evidence"
+description = "Exact production report JSON, first 20 ready queue rows in queue order, and verified production invariants."
+logical_id = "c6a62c0e-6e5e-4bd0-8462-885cec1fe0a4"
+content_hash = "sha256:db365f25171bb324828f67f0dbd1a9670e6d2982a14f13b0fb529f3232a74e4a"
+size = 53964
+mtime_ms = 1788086123852
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c6a62c0e-6e5e-4bd0-8462-885cec1fe0a4/284ea547-eecc-4587-85ae-cddb24e7331a"
+storage_version_token = "1788086124627365"
+content_type = "application/octet-stream"
