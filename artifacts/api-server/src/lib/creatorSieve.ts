@@ -20,9 +20,10 @@ export type CreatorSieveResult =
   | { verdict: "refused"; rule: string; candidates: CreatorSieveCandidate[] };
 
 type RawResult = {
-  osm_type?: unknown; osm_id?: unknown; class?: unknown; type?: unknown;
+  osm_type?: unknown; osm_id?: unknown; category?: unknown; type?: unknown;
   addresstype?: unknown; name?: unknown; display_name?: unknown;
   lat?: unknown; lon?: unknown; namedetails?: unknown; importance?: unknown;
+  address?: unknown;
 };
 
 const BLOCKED_CLASSES = new Set(["boundary", "place", "highway"]);
@@ -56,6 +57,45 @@ function namesOf(raw: RawResult): string[] {
   return [direct, ...details].filter(Boolean);
 }
 
+const GENERIC_TYPE_WORDS: Record<string, string> = {
+  waterfall: "slap",
+  cave: "jama",
+  castle: "grad",
+  museum: "muzej",
+  church: "cerkev",
+  lake: "jezero",
+  gorge: "soteska",
+  alpine_pasture: "planina",
+};
+
+function matchesName(query: string, raw: RawResult): boolean {
+  const normalizedQuery = normalizeName(query);
+  const candidateNames = namesOf(raw).map(normalizeName);
+  if (candidateNames.includes(normalizedQuery)) return true;
+  let queryTokens = normalizedQuery.split(" ");
+  const genericWord = GENERIC_TYPE_WORDS[String(raw.type ?? "")];
+  if (genericWord && queryTokens[0] === genericWord) queryTokens = queryTokens.slice(1);
+  else if (genericWord && queryTokens.at(-1) === genericWord) queryTokens = queryTokens.slice(0, -1);
+  if (candidateNames.includes(queryTokens.join(" "))) return true;
+
+  const address = raw.address && typeof raw.address === "object"
+    ? raw.address as Record<string, unknown>
+    : {};
+  const addressTokens = new Set(
+    ["village", "town", "municipality", "county"].flatMap((key) =>
+      typeof address[key] === "string" ? normalizeName(address[key]).split(" ") : []),
+  );
+  return candidateNames.some((candidateName) => {
+    const remaining = [...queryTokens];
+    for (const token of candidateName.split(" ")) {
+      const index = remaining.indexOf(token);
+      if (index < 0) return false;
+      remaining.splice(index, 1);
+    }
+    return remaining.length > 0 && remaining.every((token) => addressTokens.has(token));
+  });
+}
+
 export async function runCreatorSieve(
   name: string,
   origin: { latitude: number; longitude: number },
@@ -66,31 +106,43 @@ export async function runCreatorSieve(
   const latDelta = CREATOR_EDITORIAL_RADIUS_KM / 111.32;
   const lonDelta = CREATOR_EDITORIAL_RADIUS_KM /
     (111.32 * Math.cos(origin.latitude * Math.PI / 180));
-  const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("format", "jsonv2");
-  url.searchParams.set("limit", "10");
-  url.searchParams.set("namedetails", "1");
-  url.searchParams.set("layer", "poi,natural,manmade");
-  url.searchParams.set("viewbox", [
-    origin.longitude - lonDelta, origin.latitude + latDelta,
-    origin.longitude + lonDelta, origin.latitude - latDelta,
-  ].join(","));
-  url.searchParams.set("bounded", "0");
-  url.searchParams.set("q", name);
+  const fetchResults = async (query: string): Promise<unknown> => {
+    const url = new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("limit", "10");
+    url.searchParams.set("namedetails", "1");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("layer", "poi,natural,manmade");
+    url.searchParams.set("viewbox", [
+      origin.longitude - lonDelta, origin.latitude + latDelta,
+      origin.longitude + lonDelta, origin.latitude - latDelta,
+    ].join(","));
+    url.searchParams.set("bounded", "0");
+    url.searchParams.set("q", query);
+    await acquireNominatimTurn();
+    const response = await fetchFn(url, {
+      headers: { "User-Agent": "Smart360 Creator sieve (admin contact via replit deployment)" },
+    });
+    if (!response.ok) throw new Error(`Nominatim ${response.status}`);
+    return response.json();
+  };
 
-  await acquireNominatimTurn();
-  const response = await fetchFn(url, {
-    headers: { "User-Agent": "Smart360 Creator sieve (admin contact via replit deployment)" },
-  });
-  if (!response.ok) throw new Error(`Nominatim ${response.status}`);
-  const data = await response.json();
+  let matchedQuery = name;
+  let data = await fetchResults(name);
+  if (!Array.isArray(data) || data.length === 0) {
+    const shortened = name.replace(/\s+(?:na|pod|pri)\s+\S+(?:\s+\S+)*$/iu, "").trim();
+    if (shortened !== name) {
+      matchedQuery = shortened;
+      data = await fetchResults(shortened);
+    }
+  }
   if (!Array.isArray(data) || data.length === 0) {
     return { verdict: "refused", rule: "no-results", candidates: [] };
   }
 
-  const queryName = normalizeName(name);
   const structurallyAllowed: Array<{ raw: RawResult; candidate: CreatorSieveCandidate; importance: number }> = [];
   let sawBlocked = false;
+  let sawMissingClassification = false;
   let sawNameMismatch = false;
   let sawBeyondCeiling = false;
   const allParsed: CreatorSieveCandidate[] = [];
@@ -99,22 +151,32 @@ export async function runCreatorSieve(
     const latitude = typeof raw.lat === "string" ? Number(raw.lat) : NaN;
     const longitude = typeof raw.lon === "string" ? Number(raw.lon) : NaN;
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
+    const category =
+      typeof raw.category === "string" && raw.category ? raw.category : null;
+    const addressType =
+      typeof raw.addresstype === "string" && raw.addresstype
+        ? raw.addresstype
+        : null;
     const candidate: CreatorSieveCandidate = {
       osmType: String(raw.osm_type ?? ""),
       osmId: Number(raw.osm_id),
-      className: String(raw.class ?? ""),
+      className: category ?? "",
       type: String(raw.type ?? ""),
-      addresstype: String(raw.addresstype ?? ""),
+      addresstype: addressType ?? "",
       returnedName: namesOf(raw)[0] ?? "",
       latitude, longitude,
       distanceKm: haversineKm(origin.latitude, origin.longitude, latitude, longitude),
     };
     allParsed.push(candidate);
+    if (!category || !addressType) {
+      sawMissingClassification = true;
+      continue;
+    }
     if (BLOCKED_CLASSES.has(candidate.className) || BLOCKED_ADDRESS_TYPES.has(candidate.addresstype)) {
       sawBlocked = true;
       continue;
     }
-    if (!namesOf(raw).some((candidateName) => normalizeName(candidateName) === queryName)) {
+    if (!matchesName(matchedQuery, raw)) {
       sawNameMismatch = true;
       continue;
     }
@@ -130,7 +192,8 @@ export async function runCreatorSieve(
   }
 
   if (structurallyAllowed.length === 0) {
-    const rule = sawBeyondCeiling ? "hard-ceiling"
+    const rule = sawMissingClassification ? "missing-classification"
+      : sawBeyondCeiling ? "hard-ceiling"
       : sawNameMismatch ? "name-mismatch"
       : sawBlocked ? "blocked-class-or-addresstype"
       : "no-usable-result";

@@ -1,0 +1,71 @@
+Excellent report, and the field observation is the most valuable line in it.
+Noticing that class was absent and NOT patching or rerunning is exactly right:
+a corrected rerun would have looked flawless and meant nothing.
+
+THE FINDING YOU DID NOT DRAW
+All five invented names were refused by `no-results`. Not one was refused by
+the class/addresstype rule. That rule — the reason the sieve exists, the one
+that must stop a Charman's Bridge — was never exercised in this run.
+
+And it may be inert. If `class` is absent from live responses, a check against
+`result.class` compares undefined and silently passes everything. The rule
+that went untested is the same rule that may be dead. The two could not meet,
+because my test names were too easy.
+
+Do these three, in this order.
+
+1 · RECONCILE THE RESPONSE-FIELD CONTRACT — before anything else
+Determine which fields the live Nominatim search endpoint actually returns for
+our parameters, and make the rejection depend on fields that are genuinely
+present. Any field the code reads that can be missing must fail CLOSED: an
+absent field means "cannot confirm the category", which is a refusal, not a
+pass. Report which fields you found and how each is used.
+
+2 · ROUND TWO — NAMES THAT RESOLVE TO THE WRONG THING
+My invented names were the easy kind. Run the sieve again, unchanged after
+fix 1, on names that Nominatim WILL match to something — a settlement, a road,
+a mountain, an administrative unit. Every one of these must be refused, and
+the refusal reason must name the rule:
+
+  Varpolje
+  Rečica ob Savinji
+  Mozirje
+  Nazarje
+  Savinjska cesta
+  Grad Menina
+  Center Varpolje
+  Muzej Golte
+
+Report the same table, and state for each refusal WHICH rule refused it.
+A refusal by `no-results` in this round is not a success — it means the name
+was still too easy and I need to supply a harder one.
+
+3 · THE THREE FALSE NEGATIVES — fix without loosening
+Each fix must be corroborated by a second machine field. None of them is a
+softer string comparison.
+
+· Generic type word. "Slap Rinka" resolved to "Rinka" with type=waterfall.
+  The word slap IS the type. Strip a leading or trailing generic type word
+  from the query when the result's type tag corresponds to it, and only then:
+  slap↔waterfall, jama↔cave, grad↔castle, muzej↔museum, cerkev↔church,
+  jezero↔lake, soteska↔gorge, planina↔alpine pasture. If the type does not
+  correspond, the mismatch stands.
+
+· Extra place token. "Center Rinka Solčava" resolved to "Center Rinka".
+  Query tokens that do not appear in the name but DO appear in the result's
+  address components — village, town, municipality, county — do not count as
+  a mismatch. Use addressdetails, not a substring of display_name.
+
+· Shortened retry. "Snežna jama na Raduhi" returned nothing. Allow ONE retry
+  with trailing qualifier tokens removed (a prepositional tail such as
+  "na Raduhi", "pod Raduho", "pri Mozirju"). The shortened query must still
+  satisfy every rule, including the name match. Two attempts maximum, and the
+  retry counts against the throttle like any other request.
+
+After each fix, rerun BOTH rounds — the original twelve and round two — and
+report both tables. A fix that repairs a false negative while letting anything
+from round two through is not a fix; report it as a failure and stop.
+
+Still no model, no tenant, no guest content, nothing published.
+
+Report and STOP.
