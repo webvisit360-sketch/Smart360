@@ -11,9 +11,11 @@ import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 import {
   CREATOR_NEAR_RING_EDGE_BAND_KM,
   CREATOR_NEAR_RING_ENVELOPE_KM,
-  deriveNearestSurroundingSettlementNames,
+  CREATOR_SETTLEMENT_FEATURE_RADIUS_KM,
+  deriveCreatorSettlementFeatureCounts,
   enumerateCreatorNearRing,
   matchUniqueCreatorNearRingCandidate,
+  type CreatorSettlementFeatureCount,
 } from "./creatorNearRing";
 import {
   creatorDependencyError,
@@ -41,19 +43,33 @@ export type CreatorC1Place = {
 
 export function validateCreatorC1LocalQuota(
   places: CreatorC1Place[],
-  surroundingSettlements: string[],
+  surroundingSettlements: CreatorSettlementFeatureCount[],
   minimum = 8,
 ): void {
-  const surroundingSettlementNames = new Set(
-    surroundingSettlements.map(normalizeCreatorProposalName),
+  const settlementFeatureCounts = new Map(
+    surroundingSettlements.map((settlement) => [
+      normalizeCreatorProposalName(settlement.name),
+      settlement.featureCount,
+    ]),
   );
+  const targetedCounts = new Map<string, number>();
   for (const place of places) {
-    if (
-      place.targetSettlement !== null &&
-      !surroundingSettlementNames.has(normalizeCreatorProposalName(place.targetSettlement))
-    ) {
+    if (place.targetSettlement === null) continue;
+    const normalizedSettlement = normalizeCreatorProposalName(place.targetSettlement);
+    const featureCount = settlementFeatureCounts.get(normalizedSettlement);
+    if (featureCount === undefined) {
       throw new Error(`C1 proposal targeted an unknown settlement: ${place.targetSettlement}`);
     }
+    if (!Number.isInteger(featureCount) || featureCount <= 0) {
+      throw new Error(`C1 proposal targeted a settlement without catalogue features: ${place.targetSettlement}`);
+    }
+    const targetedCount = (targetedCounts.get(normalizedSettlement) ?? 0) + 1;
+    if (targetedCount > featureCount) {
+      throw new Error(
+        `C1 proposal quota exceeded ${place.targetSettlement}'s ${featureCount} catalogue features.`,
+      );
+    }
+    targetedCounts.set(normalizedSettlement, targetedCount);
   }
   const localCount = places.filter((place) => place.targetSettlement !== null).length;
   if (localCount < minimum) {
@@ -335,7 +351,7 @@ export function promptFor(input: {
   rejectedNames: string[];
   priorProposedNames: string[];
   alreadyConfirmedNames: string[];
-  surroundingSettlements: string[];
+  surroundingSettlements: CreatorSettlementFeatureCount[];
 }): string {
   return `You are Creator C1. Produce an object with a "places" array containing exactly ${CREATOR_C1_BATCH_SIZE} real place proposals.
 Origin: ${input.origin.latitude}, ${input.origin.longitude}; machine-resolved region: ${input.region}; accommodation: ${input.tenantType}.
@@ -343,8 +359,8 @@ Use only these existing categories: ${JSON.stringify(input.categories)}.
 Never propose any durable rejection: ${JSON.stringify(input.rejectedNames)}.
 These machine-confirmed canonical places are already in the guide; do not propose them again: ${JSON.stringify(input.alreadyConfirmedNames)}.
 Do not repeat any name already proposed by an earlier batch in this run: ${JSON.stringify(input.priorProposedNames)}. All 15 names in this batch must also be distinct.
-Machine-resolved local settlement set, nearest first: ${JSON.stringify(input.surroundingSettlements)}.
-For at least 8 of the 15 proposals, target a place in that exact named settlement set and copy its canonical name into targetSettlement. Use null targetSettlement only for the remaining excursions. A non-null targetSettlement must exactly match one supplied name; do not invent, alter or substitute settlement names.
+Machine-resolved local settlement set, nearest first, with the number of distinct whitelisted non-settlement OSM features assigned to each settlement: ${JSON.stringify(input.surroundingSettlements)}. Each listed feature was assigned only to its nearest settlement within ${CREATOR_SETTLEMENT_FEATURE_RADIUS_KM} km; zero-feature settlements were removed.
+For at least 8 of the 15 proposals, target a place in that exact named settlement set and copy its canonical name into targetSettlement. Use null targetSettlement only for the remaining excursions. A non-null targetSettlement must exactly match one supplied name; do not invent, alter or substitute settlement names. Never target more proposals to one settlement than its supplied featureCount. The counts show where real catalogue evidence exists; they are not permission to invent unnamed places.
 Propose only editorial places for near surroundings and excursions. Never propose proximity-selected practical services such as ATMs, shops, supermarkets, pharmacies, fuel stations, doctors, health centres or post offices; those are machine-query work.
 Anchor every proposal to the stated origin. Target a useful geographic mix: roughly half of the 15 proposals should be places reasonably expected within about 20 minutes' drive of the origin; the rest should be excursions reasonably expected within 90 minutes' drive. Do not propose any place expected to require more than 90 minutes' driving. Never invent or report measurements; the server alone calculates and assigns every range.
 House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful English, German and Italian translations. Descriptions MUST be empty in every language for hospitality categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
@@ -368,8 +384,12 @@ export type CreatorC1Report = {
     queries: string[];
   };
   surroundingSettlements: string[];
+  surroundingSettlementFeatureCounts: CreatorSettlementFeatureCount[];
   minimumLocalProposalsPerBatch: number;
   localProposalCount: number;
+  quotaTargetedProposalCount: number;
+  quotaTargetedUnconfirmedCount: number;
+  nearRingResolvedAfterGlobalSieveFailedCount: number;
   status: "completed" | "failed";
   pricing: typeof CREATOR_C1_PRICING;
   outcomes: Array<{
@@ -462,8 +482,12 @@ export async function runCreatorC1(input: {
       queries: [],
     },
     surroundingSettlements: [],
+    surroundingSettlementFeatureCounts: [],
     minimumLocalProposalsPerBatch: 8,
     localProposalCount: 0,
+    quotaTargetedProposalCount: 0,
+    quotaTargetedUnconfirmedCount: 0,
+    nearRingResolvedAfterGlobalSieveFailedCount: 0,
     unconfirmedByCategory: [],
   };
   try {
@@ -520,11 +544,13 @@ export async function runCreatorC1(input: {
         `${attempt.operation}: ${attempt.error ?? "failed"}`).join("; ") || null,
       queries: [...new Set(overpassAttempts.map((attempt) => attempt.query).filter((query): query is string => query !== null))],
     };
-    const surroundingSettlements = [...deriveNearestSurroundingSettlementNames(nearCandidates)];
-    if (surroundingSettlements.length === 0) {
-      throw new Error("Overpass catalogue did not provide surrounding settlements.");
+    const surroundingSettlementFeatureCounts = deriveCreatorSettlementFeatureCounts(nearCandidates);
+    if (surroundingSettlementFeatureCounts.length === 0) {
+      throw new Error("Overpass catalogue did not provide settlements with nearby whitelisted features.");
     }
+    const surroundingSettlements = surroundingSettlementFeatureCounts.map((settlement) => settlement.name);
     report.surroundingSettlements = surroundingSettlements;
+    report.surroundingSettlementFeatureCounts = surroundingSettlementFeatureCounts;
     const model = input.model ?? openAiCreatorC1Model;
     const all: CreatorC1Place[] = [];
     const proposedNames = new Set<string>();
@@ -537,7 +563,7 @@ export async function runCreatorC1(input: {
         rejectedNames,
         alreadyConfirmedNames,
         priorProposedNames: all.map((place) => place.proposedName),
-        surroundingSettlements,
+        surroundingSettlements: surroundingSettlementFeatureCounts,
       });
       const generated = await generateCreatorC1Batch(model, prompt, (places) => {
         const namesInBatch = new Set<string>();
@@ -550,11 +576,13 @@ export async function runCreatorC1(input: {
         }
         validateCreatorC1LocalQuota(
           places,
-          surroundingSettlements,
+          surroundingSettlementFeatureCounts,
           report.minimumLocalProposalsPerBatch,
         );
       });
-      report.localProposalCount += generated.places.filter((place) => place.targetSettlement !== null).length;
+      const quotaTargetedCount = generated.places.filter((place) => place.targetSettlement !== null).length;
+      report.localProposalCount += quotaTargetedCount;
+      report.quotaTargetedProposalCount += quotaTargetedCount;
       inputTokens += generated.inputTokens; outputTokens += generated.outputTokens; costUsd += generated.costUsd;
       report.inputTokens = inputTokens; report.outputTokens = outputTokens; report.costUsd = costUsd;
       for (const place of generated.places) {
@@ -567,29 +595,22 @@ export async function runCreatorC1(input: {
     report.proposed = all.length;
     const routed: Array<{ proposalId: string; category: { id: string; label: string; key: string | null } | null; duration: number | null; distance: number | null }> = [];
     for (const place of all) {
-      const nearCandidate = matchUniqueCreatorNearRingCandidate(place.proposedName, nearCandidates);
-      const nearRoute = nearCandidate
-        ? await (input.osrm ?? computeRoadRoute)(
-          input.origin,
-          { latitude: nearCandidate.latitude, longitude: nearCandidate.longitude },
-          input.fetchFn,
-          recordDependencyAttempt,
-        )
-        : null;
-      const useNearCandidate = nearCandidate && nearRoute &&
-        Math.round(nearRoute.durationMinutes * 60) <= 1200
-        ? nearCandidate
-        : undefined;
-      if (
-        useNearCandidate &&
-        useNearCandidate.distanceKm >= CREATOR_NEAR_RING_ENVELOPE_KM - CREATOR_NEAR_RING_EDGE_BAND_KM &&
-        Math.round(nearRoute!.durationMinutes * 60) >= 1000
-      ) report.nearEnvelopeEdgeBandCount = (report.nearEnvelopeEdgeBandCount ?? 0) + 1;
       const output = await runAndPersistCreatorSieve({
         tenantId: input.tenantId, runId: run.id, proposedName: place.proposedName,
         lookupHint: place.geocodingLookupHint, origin: input.origin, fetchFn: input.fetchFn,
         contentReady: false,
-        nearCandidate: useNearCandidate,
+        nearFallback: async () => {
+          const candidate = matchUniqueCreatorNearRingCandidate(place.proposedName, nearCandidates);
+          if (!candidate) return null;
+          const route = await (input.osrm ?? computeRoadRoute)(
+            input.origin,
+            { latitude: candidate.latitude, longitude: candidate.longitude },
+            input.fetchFn,
+            recordDependencyAttempt,
+          );
+          if (!route || Math.round(route.durationMinutes * 60) > 1200) return null;
+          return { candidate, route };
+        },
         onDependencyAttempt: recordDependencyAttempt,
         onNominatimWait: (milliseconds) => { nominatimThrottleWaitMs += milliseconds; report.nominatimThrottleWaitMs = nominatimThrottleWaitMs; },
       });
@@ -628,6 +649,7 @@ export async function runCreatorC1(input: {
       if (isDuplicate) continue;
       if (output.result?.verdict !== "resolved") {
         report.unconfirmed++;
+        if (place.targetSettlement !== null) report.quotaTargetedUnconfirmedCount++;
         outcomes.push({
           proposedName: place.proposedName,
           categoryLabel: category?.label ?? null,
@@ -640,8 +662,16 @@ export async function runCreatorC1(input: {
         });
         continue;
       }
-      const route = useNearCandidate && nearRoute
-        ? nearRoute
+      if (output.nearRingResolvedAfterGlobalSieveFailed) {
+        report.nearRingResolvedAfterGlobalSieveFailedCount++;
+        if (
+          output.result.candidate.distanceKm >=
+            CREATOR_NEAR_RING_ENVELOPE_KM - CREATOR_NEAR_RING_EDGE_BAND_KM &&
+          Math.round(output.nearRingRoute!.durationMinutes * 60) >= 1000
+        ) report.nearEnvelopeEdgeBandCount = (report.nearEnvelopeEdgeBandCount ?? 0) + 1;
+      }
+      const route = output.nearRingResolvedAfterGlobalSieveFailed && output.nearRingRoute
+        ? output.nearRingRoute
         : input.osrm
           ? await input.osrm(input.origin, { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude }, input.fetchFn)
           : await computeRoadRoute(
@@ -653,6 +683,7 @@ export async function runCreatorC1(input: {
       if (!route) {
         report.routeFailures++;
         report.unconfirmed++;
+        if (place.targetSettlement !== null) report.quotaTargetedUnconfirmedCount++;
         outcomes.push({
           proposedName: place.proposedName,
           categoryLabel: category?.label ?? null,
@@ -672,6 +703,7 @@ export async function runCreatorC1(input: {
       if (durationS > CREATOR_MAX_QUEUE_DURATION_S) {
         report.outsideExcursion++;
         report.unconfirmed++;
+        if (place.targetSettlement !== null) report.quotaTargetedUnconfirmedCount++;
         outcomes.push({
           proposedName: place.proposedName,
           categoryLabel: category?.label ?? null,

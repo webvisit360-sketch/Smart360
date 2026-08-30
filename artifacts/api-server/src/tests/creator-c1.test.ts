@@ -23,7 +23,9 @@ import { computeRoadRoute } from "../lib/distanceEngine";
 import type { CreatorDependencyAttempt } from "../lib/creatorDependencyTelemetry";
 import {
   CREATOR_NEAR_RING_ENVELOPE_KM,
+  CREATOR_SETTLEMENT_FEATURE_RADIUS_KM,
   clearCreatorNearRingCacheForTests,
+  deriveCreatorSettlementFeatureCounts,
   deriveNearestSurroundingSettlementNames,
   enumerateCreatorNearRing,
   getCachedCreatorNearRing,
@@ -115,20 +117,31 @@ test("C1 local quota rejects unknown settlements and fewer than eight local rows
     candidate.targetSettlement = index < 8 ? "Mozirje" : null;
     return candidate;
   });
-  assert.doesNotThrow(() => validateCreatorC1LocalQuota(eightLocal, ["Mozirje", "Nazarje"]));
+  assert.doesNotThrow(() => validateCreatorC1LocalQuota(eightLocal, [
+    { name: "Mozirje", featureCount: 8 },
+    { name: "Nazarje", featureCount: 1 },
+  ]));
   assert.throws(
     () => validateCreatorC1LocalQuota(eightLocal.map((candidate, index) => ({
       ...candidate,
       targetSettlement: index < 7 ? "Mozirje" : null,
-    })), ["Mozirje"]),
+    })), [{ name: "Mozirje", featureCount: 8 }]),
     /at least 8/,
   );
   assert.throws(
     () => validateCreatorC1LocalQuota(eightLocal.map((candidate, index) => ({
       ...candidate,
       targetSettlement: index === 0 ? "Invented town" : candidate.targetSettlement,
-    })), ["Mozirje"]),
+    })), [{ name: "Mozirje", featureCount: 8 }]),
     /unknown settlement/,
+  );
+  assert.throws(
+    () => validateCreatorC1LocalQuota(eightLocal, [{ name: "Mozirje", featureCount: 7 }]),
+    /exceeded.*7 catalogue features/,
+  );
+  assert.throws(
+    () => validateCreatorC1LocalQuota(eightLocal, [{ name: "Mozirje", featureCount: 0 }]),
+    /without catalogue features/,
   );
 });
 
@@ -431,6 +444,27 @@ test("surrounding settlement names are nearest-first, deterministic and normaliz
   assert.deepEqual([...names], ["Luče", "Solčava", "Mozirje"]);
 });
 
+test("quota settlements exclude zero-feature places and count each nearby OSM feature once", () => {
+  assert.equal(CREATOR_SETTLEMENT_FEATURE_RADIUS_KM, 5);
+  const settlement = {
+    osmType: "node", osmId: 91, className: "settlement", type: "village",
+    addresstype: "settlement", returnedName: "Solčava", displayName: "Solčava",
+    latitude: 46.42, longitude: 14.69, distanceKm: 4, aliases: [], isSettlement: true,
+  };
+  const feature = {
+    osmType: "way", osmId: 101, className: "tourism", type: "attraction",
+    addresstype: "tourism", returnedName: "Real attraction", displayName: "Real attraction",
+    latitude: 46.421, longitude: 14.691, distanceKm: 4.1, aliases: [], isSettlement: false,
+  };
+  const counts = deriveCreatorSettlementFeatureCounts([
+    settlement,
+    { ...settlement, osmId: 92, returnedName: "Empty hamlet", displayName: "Empty hamlet", longitude: 14.8 },
+    feature,
+    { ...feature },
+  ]);
+  assert.deepEqual(counts, [{ name: "Solčava", featureCount: 1 }]);
+});
+
 test("Nominatim infrastructure failures stay unresolved rather than rejected editorially", async () => {
   const result = await runCreatorSieve("Resnični kraj", { latitude: 46, longitude: 15 }, {
     fetchFn: async () => { throw new Error("network unavailable"); },
@@ -448,7 +482,10 @@ test("later C1 batches receive prior names and practical places are forbidden", 
     rejectedNames: ["Human rejected place"],
     priorProposedNames: ["Mozirski gaj", "Golte"],
     alreadyConfirmedNames: ["Logarska dolina"],
-    surroundingSettlements: ["Rečica ob Savinji", "Mozirje"],
+    surroundingSettlements: [
+      { name: "Rečica ob Savinji", featureCount: 12 },
+      { name: "Mozirje", featureCount: 9 },
+    ],
   });
   assert.match(prompt, /Never propose any durable rejection: \["Human rejected place"\]/);
   assert.match(prompt, /already in the guide.*\["Logarska dolina"\]/);
@@ -461,7 +498,9 @@ test("later C1 batches receive prior names and practical places are forbidden", 
   assert.match(prompt, /within 90 minutes' drive/);
   assert.match(prompt, /Do not propose any place expected to require more than 90 minutes/);
   assert.match(prompt, /at least 8 of the 15 proposals/);
-  assert.match(prompt, /\["Rečica ob Savinji","Mozirje"\]/);
+  assert.match(prompt, /"name":"Rečica ob Savinji","featureCount":12/);
+  assert.match(prompt, /zero-feature settlements were removed/);
+  assert.match(prompt, /Never target more proposals.*featureCount/);
 });
 
 test("C1 ranges use OSRM minute boundaries and practical descriptions are blank", () => {
@@ -508,8 +547,12 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
       queries: ["query"],
     },
     surroundingSettlements: ["Rečica ob Savinji"],
+    surroundingSettlementFeatureCounts: [{ name: "Rečica ob Savinji", featureCount: 12 }],
     minimumLocalProposalsPerBatch: 8,
     localProposalCount: 8,
+    quotaTargetedProposalCount: 8,
+    quotaTargetedUnconfirmedCount: 3,
+    nearRingResolvedAfterGlobalSieveFailedCount: 2,
     pricing: CREATOR_C1_PRICING,
     outcomes: [{
       proposedName: "Missing place",
@@ -535,6 +578,8 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
   const report = JSON.parse(serialized);
   assert.equal(report.nominatimThrottleWaitMs, 123);
   assert.equal(report.outcomes[0].refusalRule, "no-results");
+  assert.equal(report.quotaTargetedUnconfirmedCount, 3);
+  assert.equal(report.nearRingResolvedAfterGlobalSieveFailedCount, 2);
   assert.equal(report.status, "failed");
 });
 
@@ -574,8 +619,12 @@ test("API run evidence remains identical after its proposal row changes", async 
       queries: ["q"],
     },
     surroundingSettlements: ["Varpolje"],
+    surroundingSettlementFeatureCounts: [{ name: "Varpolje", featureCount: 4 }],
     minimumLocalProposalsPerBatch: 8,
     localProposalCount: 1,
+    quotaTargetedProposalCount: 1,
+    quotaTargetedUnconfirmedCount: 1,
+    nearRingResolvedAfterGlobalSieveFailedCount: 0,
     pricing: CREATOR_C1_PRICING,
     outcomes: [{
       proposedName: "Immutable place",
@@ -625,6 +674,9 @@ test("API run evidence remains identical after its proposal row changes", async 
   assert.deepEqual(after.outcomes, before.outcomes);
   assert.deepEqual(after.unconfirmedByCategory, before.unconfirmedByCategory);
   assert.equal(after.outcomes[0]?.inclusionReason, "Stored reason");
+  assert.equal(after.quotaTargetedProposalCount, 1);
+  assert.equal(after.quotaTargetedUnconfirmedCount, 1);
+  assert.deepEqual(after.surroundingSettlementFeatureCounts, [{ name: "Varpolje", featureCount: 4 }]);
   await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
 });
 
@@ -677,6 +729,96 @@ test("the authorized ceiling permits a fifth durable claim and blocks a sixth", 
   await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
 });
 
+test("C1 routes only the winning global identity or an additive post-refusal near fallback", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const prefix = `c1-precedence-${suffix}`;
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: prefix,
+    name: `C1 precedence ${suffix}`,
+  }).returning({ id: tenantsTable.id });
+  assert.ok(tenant);
+  const proposalNames = Array.from(
+    { length: 15 },
+    (_, index) => `Landmark${String.fromCharCode(65 + index)} ${suffix}`,
+  );
+  const content = Array.from({ length: 15 }, (_, index) => {
+    const candidate = place(index, null) as Record<string, unknown>;
+    candidate.proposedName = proposalNames[index];
+    candidate.geocodingLookupHint = proposalNames[index];
+    candidate.targetSettlement = index < 8 ? "Testville" : null;
+    return candidate;
+  });
+  const routedDestinations: Array<{ latitude: number; longitude: number }> = [];
+  const { report } = await runCreatorC1({
+    tenantId: tenant.id,
+    origin: { latitude: 46.31, longitude: 14.91 },
+    region: "test",
+    tenantType: "camp",
+    batches: 1,
+    model: async () => ({
+      content: { places: content },
+      inputTokens: 12,
+      outputTokens: 34,
+      costUsd: 0.01,
+    }),
+    fetchFn: async (url) => {
+      if (String(url).includes("overpass-api.de")) {
+        return new Response(JSON.stringify({ elements: [
+          {
+            type: "node",
+            id: 7_100_000_001,
+            lat: 46.31,
+            lon: 14.91,
+            tags: { place: "village", name: "Testville" },
+          },
+          ...Array.from({ length: 8 }, (_, index) => ({
+            type: "node",
+            id: 7_100_000_100 + index,
+            lat: 46.311 + index * 0.0001,
+            lon: 14.911,
+            tags: { tourism: "attraction", name: proposalNames[index] },
+          })),
+        ] }), { status: 200 });
+      }
+      const query = new URL(String(url)).searchParams.get("q") ?? "";
+      const index = proposalNames.indexOf(query);
+      return new Response(JSON.stringify(index < 4 ? [{
+        osm_type: "way",
+        osm_id: 7_200_000_000 + index,
+        category: "tourism",
+        type: "attraction",
+        addresstype: "tourism",
+        name: query,
+        display_name: `${query}, global`,
+        lat: String(46.35 + index * 0.001),
+        lon: "14.95",
+        namedetails: { name: query },
+        address: { municipality: "Global town" },
+        importance: 0.5,
+      }] : []), { status: 200, headers: { "content-type": "application/json" } });
+    },
+    osrm: async (_origin, destination) => {
+      routedDestinations.push(destination);
+      return { distanceMeters: 1_000, durationMinutes: 10 };
+    },
+  });
+  assert.equal(report.confirmed, 8);
+  assert.equal(report.unconfirmed, 7);
+  assert.equal(report.quotaTargetedProposalCount, 8);
+  assert.equal(report.quotaTargetedUnconfirmedCount, 0);
+  assert.equal(report.nearRingResolvedAfterGlobalSieveFailedCount, 4);
+  assert.equal(routedDestinations.length, 8);
+  assert.deepEqual(
+    routedDestinations.slice(0, 4).map((destination) => Number(destination.latitude.toFixed(4))),
+    [46.35, 46.351, 46.352, 46.353],
+  );
+  assert.deepEqual(
+    routedDestinations.slice(4).map((destination) => Number(destination.latitude.toFixed(4))),
+    [46.3114, 46.3115, 46.3116, 46.3117],
+  );
+  await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+});
+
 test("infrastructure-failed C1 rows remain unresolved and run history blocks concurrent execution", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const [tenant] = await db.insert(tenantsTable).values({
@@ -705,13 +847,22 @@ test("infrastructure-failed C1 rows remain unresolved and run history blocks con
     model: async () => ({ content: { places: content }, inputTokens: 12, outputTokens: 34, costUsd: 0.01 }),
     fetchFn: async (url) => {
       if (String(url).includes("overpass-api.de")) {
-        return new Response(JSON.stringify({ elements: [{
-          type: "node",
-          id: 7_000_000_001,
-          lat: 46.31,
-          lon: 14.91,
-          tags: { place: "village", name: "Testville" },
-        }] }), { status: 200 });
+        return new Response(JSON.stringify({ elements: [
+          {
+            type: "node",
+            id: 7_000_000_001,
+            lat: 46.31,
+            lon: 14.91,
+            tags: { place: "village", name: "Testville" },
+          },
+          ...Array.from({ length: 8 }, (_, index) => ({
+            type: "node",
+            id: 7_000_000_100 + index,
+            lat: 46.311 + index * 0.0001,
+            lon: 14.911,
+            tags: { tourism: "attraction", name: `Test feature ${index}` },
+          })),
+        ] }), { status: 200 });
       }
       geocodes++;
       throw new Error("injected geocoder failure");
@@ -732,6 +883,15 @@ test("infrastructure-failed C1 rows remain unresolved and run history blocks con
     row.reportJson?.includes("nominatim-unavailable")
     && row.reportJson.includes("injected geocoder failure")
     && row.reportJson.includes("\"dependency\":\"nominatim\"")));
+  const completedReport = completed
+    .map((row) => row.reportJson ? JSON.parse(row.reportJson) as CreatorC1Report : null)
+    .find((candidate) => candidate?.outcomes.some((outcome) => outcome.proposedName.startsWith(prefix)));
+  assert.equal(completedReport?.quotaTargetedProposalCount, 8);
+  assert.equal(completedReport?.quotaTargetedUnconfirmedCount, 8);
+  assert.equal(completedReport?.nearRingResolvedAfterGlobalSieveFailedCount, 0);
+  assert.deepEqual(completedReport?.surroundingSettlementFeatureCounts, [
+    { name: "Testville", featureCount: 8 },
+  ]);
 
   const [claimA, claimB] = await Promise.all([
     claimCreatorRunOnce(tenant.id, { latitude: 46.31, longitude: 14.91 }),

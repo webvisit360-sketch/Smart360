@@ -65,6 +65,7 @@ export * from './creatorRunOutcomeOutcome';
 export * from './creatorRunPricing';
 export * from './creatorRunReport';
 export * from './creatorRunReportStatus';
+export * from './creatorSettlementFeatureCount';
 export * from './creatorUnconfirmedCategoryGroup';
 export * from './creatorUnconfirmedProposal';
 export * from './distanceBulkApproveInput';

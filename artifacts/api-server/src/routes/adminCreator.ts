@@ -122,8 +122,13 @@ export async function creatorRunResponse(row: typeof creatorRunsTable.$inferSele
     dependencyAttempts: report?.dependencyAttempts ?? [],
     nearCatalogue: report?.nearCatalogue ?? null,
     surroundingSettlements: report?.surroundingSettlements ?? [],
+    surroundingSettlementFeatureCounts: report?.surroundingSettlementFeatureCounts ?? [],
     minimumLocalProposalsPerBatch: report?.minimumLocalProposalsPerBatch ?? null,
     localProposalCount: report?.localProposalCount ?? null,
+    quotaTargetedProposalCount: report?.quotaTargetedProposalCount ?? null,
+    quotaTargetedUnconfirmedCount: report?.quotaTargetedUnconfirmedCount ?? null,
+    nearRingResolvedAfterGlobalSieveFailedCount:
+      report?.nearRingResolvedAfterGlobalSieveFailedCount ?? null,
     error: report?.error ?? null,
     startedAt: row.startedAt,
     completedAt: row.completedAt,

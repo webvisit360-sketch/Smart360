@@ -908,8 +908,15 @@ export const StartCreatorRunResponse = zod.object({
   "queries": zod.array(zod.string())
 }),zod.null()]),
   "surroundingSettlements": zod.array(zod.string()),
+  "surroundingSettlementFeatureCounts": zod.array(zod.object({
+  "name": zod.string(),
+  "featureCount": zod.number()
+})),
   "minimumLocalProposalsPerBatch": zod.number().nullable(),
   "localProposalCount": zod.number().nullable(),
+  "quotaTargetedProposalCount": zod.number().nullable(),
+  "quotaTargetedUnconfirmedCount": zod.number().nullable(),
+  "nearRingResolvedAfterGlobalSieveFailedCount": zod.number().nullable(),
   "error": zod.string().nullable(),
   "startedAt": zod.string(),
   "completedAt": zod.string().nullable(),
@@ -1004,8 +1011,15 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "queries": zod.array(zod.string())
 }),zod.null()]),
   "surroundingSettlements": zod.array(zod.string()),
+  "surroundingSettlementFeatureCounts": zod.array(zod.object({
+  "name": zod.string(),
+  "featureCount": zod.number()
+})),
   "minimumLocalProposalsPerBatch": zod.number().nullable(),
   "localProposalCount": zod.number().nullable(),
+  "quotaTargetedProposalCount": zod.number().nullable(),
+  "quotaTargetedUnconfirmedCount": zod.number().nullable(),
+  "nearRingResolvedAfterGlobalSieveFailedCount": zod.number().nullable(),
   "error": zod.string().nullable(),
   "startedAt": zod.string(),
   "completedAt": zod.string().nullable(),

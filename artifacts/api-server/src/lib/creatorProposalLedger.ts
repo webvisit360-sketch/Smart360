@@ -273,11 +273,14 @@ export async function runAndPersistCreatorSieve(input: {
   onNominatimWait?: (milliseconds: number) => void;
   onDependencyAttempt?: CreatorDependencyRecorder;
   contentReady?: boolean;
-  nearCandidate?: {
-    osmType: string; osmId: number; className: string; type: string;
-    addresstype: string; returnedName: string; displayName: string;
-    latitude: number; longitude: number; distanceKm: number;
-  };
+  nearFallback?: () => Promise<{
+    candidate: {
+      osmType: string; osmId: number; className: string; type: string;
+      addresstype: string; returnedName: string; displayName: string;
+      latitude: number; longitude: number; distanceKm: number;
+    };
+    route: { distanceMeters: number; durationMinutes: number };
+  } | null>;
 }) {
   const pending = await upsertPendingCreatorProposal({
     tenantId: input.tenantId,
@@ -294,39 +297,35 @@ export async function runAndPersistCreatorSieve(input: {
       inserted: false,
       duplicate: true,
       result: null,
+      nearRingResolvedAfterGlobalSieveFailed: false,
+      nearRingRoute: null,
     };
   }
-  const result = input.nearCandidate ? {
-    verdict: "resolved" as const,
-    candidate: input.nearCandidate,
-    originalQuery: input.proposedName,
-    confirmedQuery: input.proposedName,
-    confirmationMethod: "overpass_near" as const,
-    attempts: [{
-      attemptNumber: 1 as const,
-      query: `overpass:${input.proposedName}`,
-      verdict: "resolved" as const,
-      refusalRule: null,
-      candidates: [{
-        osmType: input.nearCandidate.osmType,
-        osmId: input.nearCandidate.osmId,
-        osmCategory: input.nearCandidate.className,
-        osmFeatureType: input.nearCandidate.type,
-        osmAddressType: input.nearCandidate.addresstype,
-        resolvedName: input.nearCandidate.returnedName,
-        latitude: input.nearCandidate.latitude,
-        longitude: input.nearCandidate.longitude,
-        straightLineDistanceM: input.nearCandidate.distanceKm * 1000,
-        selected: true,
-      }],
-    }],
-  } : await runCreatorSieve(input.proposedName, input.origin, {
+  // The strict global sieve is authoritative. The bounded near-ring catalogue
+  // is additive fallback evidence only and can never replace or downgrade a
+  // globally resolved identity.
+  const globalResult = await runCreatorSieve(input.proposedName, input.origin, {
     fallbackQuery: input.lookupHint,
     hardCeilingKm: input.hardCeilingKm,
     fetchFn: input.fetchFn,
     onNominatimWait: input.onNominatimWait,
     onDependencyAttempt: input.onDependencyAttempt,
   });
+  const nearFallback = globalResult.verdict !== "resolved"
+    ? await input.nearFallback?.() ?? null
+    : null;
+  const nearRingResolvedAfterGlobalSieveFailed = nearFallback !== null;
+  const result = nearRingResolvedAfterGlobalSieveFailed ? {
+    verdict: "resolved" as const,
+    candidate: nearFallback.candidate,
+    originalQuery: input.proposedName,
+    confirmedQuery: input.proposedName,
+    confirmationMethod: "overpass_near" as const,
+    // Retain the strict global refusal attempts as the evidence that made the
+    // additive fallback eligible. The selected near-ring identity is stored on
+    // the proposal row through recordCreatorVerification below.
+    attempts: globalResult.attempts,
+  } : globalResult;
   const attempts: CreatorVerificationRecord["attempts"] = result.attempts.map((attempt) => ({
     ...attempt,
     candidates: attempt.candidates,
@@ -392,6 +391,8 @@ export async function runAndPersistCreatorSieve(input: {
     inserted: true,
     duplicate: verification.duplicate,
     result,
+    nearRingResolvedAfterGlobalSieveFailed,
+    nearRingRoute: nearFallback?.route ?? null,
   };
 }
 

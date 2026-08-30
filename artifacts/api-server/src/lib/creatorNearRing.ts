@@ -8,6 +8,7 @@ export const CREATOR_NEAR_RING_ENVELOPE_KM = 35;
 export const CREATOR_NEAR_RING_EDGE_BAND_KM = 5;
 export const CREATOR_NEAR_RING_MATCH_THRESHOLD = 2 / 3;
 export const CREATOR_NEAR_RING_MATCH_MARGIN = 0.15;
+export const CREATOR_SETTLEMENT_FEATURE_RADIUS_KM = 5;
 
 const catalogueCache = new Map<string, {
   originKey: string;
@@ -38,6 +39,11 @@ type OverpassElement = {
 export type CreatorNearRingCandidate = CreatorSieveCandidate & {
   aliases: string[];
   isSettlement: boolean;
+};
+
+export type CreatorSettlementFeatureCount = {
+  name: string;
+  featureCount: number;
 };
 
 export type CreatorNearRingAttempt = {
@@ -334,6 +340,80 @@ export function deriveNearestSurroundingSettlementNames(
     if (names.size >= limit) break;
   }
   return names;
+}
+
+/**
+ * Counts distinct whitelisted non-settlement OSM features once, assigning each
+ * to its nearest named settlement only when that settlement is within 5 km.
+ * Zero-feature settlements are deliberately excluded from model context.
+ */
+export function deriveCreatorSettlementFeatureCounts(
+  candidates: CreatorNearRingCandidate[],
+  limit = 16,
+): CreatorSettlementFeatureCount[] {
+  const uniqueSettlements = new Map<string, CreatorNearRingCandidate>();
+  for (const settlement of candidates
+    .filter((candidate) => candidate.isSettlement)
+    .sort((a, b) =>
+      a.distanceKm - b.distanceKm ||
+      normalize(a.returnedName).localeCompare(normalize(b.returnedName), "sl") ||
+      a.osmType.localeCompare(b.osmType) ||
+      a.osmId - b.osmId)) {
+    const normalizedName = normalize(settlement.returnedName);
+    if (normalizedName && !uniqueSettlements.has(normalizedName)) {
+      uniqueSettlements.set(normalizedName, settlement);
+    }
+  }
+
+  const counts = new Map<string, number>(
+    [...uniqueSettlements.keys()].map((name) => [name, 0]),
+  );
+  const uniqueFeatures = new Map<string, CreatorNearRingCandidate>();
+  for (const feature of candidates.filter((candidate) => !candidate.isSettlement)) {
+    const identity = `${feature.osmType}:${feature.osmId}`;
+    if (!uniqueFeatures.has(identity)) uniqueFeatures.set(identity, feature);
+  }
+  for (const feature of uniqueFeatures.values()) {
+    let nearestName: string | null = null;
+    let nearestDistanceKm = Infinity;
+    for (const [normalizedName, settlement] of uniqueSettlements) {
+      const distanceKm = haversineKm(
+        feature.latitude,
+        feature.longitude,
+        settlement.latitude,
+        settlement.longitude,
+      );
+      if (
+        distanceKm < nearestDistanceKm ||
+        (distanceKm === nearestDistanceKm && normalizedName < (nearestName ?? ""))
+      ) {
+        nearestName = normalizedName;
+        nearestDistanceKm = distanceKm;
+      }
+    }
+    if (nearestName !== null && nearestDistanceKm <= CREATOR_SETTLEMENT_FEATURE_RADIUS_KM) {
+      counts.set(nearestName, (counts.get(nearestName) ?? 0) + 1);
+    }
+  }
+
+  return [...uniqueSettlements.entries()]
+    .flatMap(([normalizedName, settlement]) => {
+      const featureCount = counts.get(normalizedName) ?? 0;
+      return featureCount > 0 ? [{
+        name: settlement.returnedName,
+        featureCount,
+        distanceKm: settlement.distanceKm,
+        osmType: settlement.osmType,
+        osmId: settlement.osmId,
+      }] : [];
+    })
+    .sort((a, b) =>
+      a.distanceKm - b.distanceKm ||
+      normalize(a.name).localeCompare(normalize(b.name), "sl") ||
+      a.osmType.localeCompare(b.osmType) ||
+      a.osmId - b.osmId)
+    .slice(0, limit)
+    .map(({ name, featureCount }) => ({ name, featureCount }));
 }
 
 function isExplicitSettlementProposal(name: string): boolean {

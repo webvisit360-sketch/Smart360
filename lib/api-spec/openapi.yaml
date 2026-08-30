@@ -2477,8 +2477,15 @@ components:
         surroundingSettlements:
           type: array
           items: { type: string }
+        surroundingSettlementFeatureCounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorSettlementFeatureCount"
         minimumLocalProposalsPerBatch: { type: ["number", "null"] }
         localProposalCount: { type: ["number", "null"] }
+        quotaTargetedProposalCount: { type: ["number", "null"] }
+        quotaTargetedUnconfirmedCount: { type: ["number", "null"] }
+        nearRingResolvedAfterGlobalSieveFailedCount: { type: ["number", "null"] }
         error: { type: ["string", "null"] }
         startedAt: { type: string }
         completedAt: { type: ["string", "null"] }
@@ -2516,14 +2523,25 @@ components:
         - dependencyAttempts
         - nearCatalogue
         - surroundingSettlements
+        - surroundingSettlementFeatureCounts
         - minimumLocalProposalsPerBatch
         - localProposalCount
+        - quotaTargetedProposalCount
+        - quotaTargetedUnconfirmedCount
+        - nearRingResolvedAfterGlobalSieveFailedCount
         - error
         - startedAt
         - completedAt
         - outcomes
         - unconfirmedByCategory
         - pricing
+    CreatorSettlementFeatureCount:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        featureCount: { type: number }
+      required: [name, featureCount]
     CreatorDependencyAttempt:
       type: object
       additionalProperties: false

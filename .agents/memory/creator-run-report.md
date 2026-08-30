@@ -40,3 +40,9 @@ Infrastructure failure is never editorial rejection.
 **Why:** Timeouts, rate limits, routing failures, and unreachable services say nothing about whether a place belongs in a guide.
 
 **How to apply:** Keep affected proposals unresolved and available for manual confirmation. Never add infrastructure-failed names to rejection prompts or durable editorial blocklists.
+
+The strict global sieve is authoritative; bounded near-ring evidence is additive only and may run only after a global refusal. The quota settlement list may contain only settlements with distinct nearby whitelisted OSM features, with counts disclosed and enforced as per-settlement proposal caps.
+
+**Why:** Local ambiguity must never downgrade a prior exact global confirmation, and a geographic quota must not pressure the model to invent places in empty settlements.
+
+**How to apply:** Skip all near matching and routing when the global sieve resolves. Count local resolutions only after global failure. Report quota-targeted/unconfirmed totals and additive near-ring resolutions in immutable run evidence.

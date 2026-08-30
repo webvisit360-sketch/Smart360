@@ -10,6 +10,7 @@ import type { CreatorNearCatalogueReport } from './creatorNearCatalogueReport';
 import type { CreatorRunOutcome } from './creatorRunOutcome';
 import type { CreatorRunPricing } from './creatorRunPricing';
 import type { CreatorRunReportStatus } from './creatorRunReportStatus';
+import type { CreatorSettlementFeatureCount } from './creatorSettlementFeatureCount';
 import type { CreatorUnconfirmedCategoryGroup } from './creatorUnconfirmedCategoryGroup';
 
 export interface CreatorRunReport {
@@ -39,10 +40,17 @@ export interface CreatorRunReport {
   dependencyAttempts: CreatorDependencyAttempt[];
   nearCatalogue: CreatorNearCatalogueReport | null;
   surroundingSettlements: string[];
+  surroundingSettlementFeatureCounts: CreatorSettlementFeatureCount[];
   /** @nullable */
   minimumLocalProposalsPerBatch: number | null;
   /** @nullable */
   localProposalCount: number | null;
+  /** @nullable */
+  quotaTargetedProposalCount: number | null;
+  /** @nullable */
+  quotaTargetedUnconfirmedCount: number | null;
+  /** @nullable */
+  nearRingResolvedAfterGlobalSieveFailedCount: number | null;
   /** @nullable */
   error: string | null;
   startedAt: string;

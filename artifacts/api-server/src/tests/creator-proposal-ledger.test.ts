@@ -294,6 +294,106 @@ test("the real sieve path persists shortened-query provenance and both attempts"
   assert.equal(attempts.length, 2);
 });
 
+test("a strict global confirmation always wins over a prepared near-ring candidate", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const proposedName = `Mozirski gaj ${suffix}`;
+  const globalOsmId = 3_100_000_000 + Math.floor(Math.random() * 100_000_000);
+  let nearFallbackCalls = 0;
+  const output = await runAndPersistCreatorSieve({
+    tenantId,
+    runId: runIds[1]!,
+    proposedName,
+    origin: { latitude: 46.31, longitude: 14.91 },
+    nearFallback: async () => {
+      nearFallbackCalls++;
+      return {
+        candidate: {
+          osmType: "node",
+          osmId: globalOsmId + 1,
+          className: "tourism",
+          type: "attraction",
+          addresstype: "tourism",
+          returnedName: proposedName,
+          displayName: `${proposedName}, near catalogue`,
+          latitude: 46.32,
+          longitude: 14.92,
+          distanceKm: 2,
+        },
+        route: { distanceMeters: 2_000, durationMinutes: 5 },
+      };
+    },
+    fetchFn: async () => new Response(JSON.stringify([{
+      osm_type: "way",
+      osm_id: globalOsmId,
+      category: "leisure",
+      type: "park",
+      addresstype: "leisure",
+      name: proposedName,
+      display_name: `${proposedName}, global sieve`,
+      lat: "46.339",
+      lon: "14.958",
+      namedetails: { name: proposedName },
+      address: { municipality: "Mozirje" },
+      importance: 0.5,
+    }]), { status: 200, headers: { "content-type": "application/json" } }),
+  });
+  proposalIds.push(output.proposal.id);
+  assert.equal(output.result?.verdict, "resolved");
+  if (output.result?.verdict === "resolved") {
+    assert.equal(output.result.candidate.osmId, globalOsmId);
+    assert.equal(output.result.confirmationMethod, "exact");
+  }
+  assert.equal(output.nearRingResolvedAfterGlobalSieveFailed, false);
+  assert.equal(nearFallbackCalls, 0);
+  assert.equal(output.nearRingRoute, null);
+  assert.equal(output.proposal.osmId, globalOsmId);
+  assert.equal(output.proposal.confirmationMethod, "exact");
+});
+
+test("near-ring resolution is used and marked only after the strict global sieve refuses", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const proposedName = `Local catalogue place ${suffix}`;
+  const nearOsmId = 3_200_000_000 + Math.floor(Math.random() * 100_000_000);
+  const output = await runAndPersistCreatorSieve({
+    tenantId,
+    runId: runIds[1]!,
+    proposedName,
+    origin: { latitude: 46.31, longitude: 14.91 },
+    nearFallback: async () => ({
+      candidate: {
+        osmType: "node",
+        osmId: nearOsmId,
+        className: "tourism",
+        type: "attraction",
+        addresstype: "tourism",
+        returnedName: proposedName,
+        displayName: `${proposedName}, local catalogue`,
+        latitude: 46.32,
+        longitude: 14.92,
+        distanceKm: 2,
+      },
+      route: { distanceMeters: 2_000, durationMinutes: 5 },
+    }),
+    fetchFn: async () =>
+      new Response(JSON.stringify([]), { status: 200, headers: { "content-type": "application/json" } }),
+  });
+  proposalIds.push(output.proposal.id);
+  assert.equal(output.result?.verdict, "resolved");
+  if (output.result?.verdict === "resolved") {
+    assert.equal(output.result.candidate.osmId, nearOsmId);
+    assert.equal(output.result.confirmationMethod, "overpass_near");
+    assert.equal(output.result.attempts[0]?.verdict, "refused");
+  }
+  assert.equal(output.nearRingResolvedAfterGlobalSieveFailed, true);
+  assert.deepEqual(output.nearRingRoute, { distanceMeters: 2_000, durationMinutes: 5 });
+  assert.equal(output.proposal.osmId, nearOsmId);
+  assert.equal(output.proposal.confirmationMethod, "overpass_near");
+  const attempts = await db.select().from(creatorVerificationAttemptsTable)
+    .where(eq(creatorVerificationAttemptsTable.proposalId, output.proposal.id));
+  assert.equal(attempts.length, 1);
+  assert.equal(attempts[0]?.verdict, "refused");
+});
+
 test("operator coordinates require individual approval and cannot be overwritten", async () => {
   const [originalTenant] = await db.select({
     latitude: tenantsTable.latitude,

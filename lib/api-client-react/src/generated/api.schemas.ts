@@ -477,6 +477,11 @@ export interface CreatorNearCatalogueReport {
   queries: string[];
 }
 
+export interface CreatorSettlementFeatureCount {
+  name: string;
+  featureCount: number;
+}
+
 export type CreatorRunOutcomeOutcome = typeof CreatorRunOutcomeOutcome[keyof typeof CreatorRunOutcomeOutcome];
 
 
@@ -579,10 +584,17 @@ export interface CreatorRunReport {
   dependencyAttempts: CreatorDependencyAttempt[];
   nearCatalogue: CreatorNearCatalogueReport | null;
   surroundingSettlements: string[];
+  surroundingSettlementFeatureCounts: CreatorSettlementFeatureCount[];
   /** @nullable */
   minimumLocalProposalsPerBatch: number | null;
   /** @nullable */
   localProposalCount: number | null;
+  /** @nullable */
+  quotaTargetedProposalCount: number | null;
+  /** @nullable */
+  quotaTargetedUnconfirmedCount: number | null;
+  /** @nullable */
+  nearRingResolvedAfterGlobalSieveFailedCount: number | null;
   /** @nullable */
   error: string | null;
   startedAt: string;

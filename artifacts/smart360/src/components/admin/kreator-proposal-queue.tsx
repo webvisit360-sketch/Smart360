@@ -257,6 +257,24 @@ export function KreatorProposalQueue({
                   ? "ni merjeno"
                   : `${latestRun.data.localProposalCount} predlogov · najmanj ${latestRun.data.minimumLocalProposalsPerBatch} na serijo`}
               </span>
+              <span>
+                Kvota ni bila potrjena: {latestRun.data.quotaTargetedProposalCount === null ||
+                  latestRun.data.quotaTargetedUnconfirmedCount === null
+                  ? "ni merjeno"
+                  : `${latestRun.data.quotaTargetedUnconfirmedCount} / ${latestRun.data.quotaTargetedProposalCount}`}
+              </span>
+              <span>
+                Dodatno rešeno z bližnjim katalogom: {
+                  latestRun.data.nearRingResolvedAfterGlobalSieveFailedCount ?? "ni merjeno"
+                }
+              </span>
+              {latestRun.data.surroundingSettlementFeatureCounts.length > 0 && (
+                <span className="md:col-span-3">
+                  Naselja z OSM značilnostmi: {latestRun.data.surroundingSettlementFeatureCounts
+                    .map((settlement) => `${settlement.name} (${settlement.featureCount})`)
+                    .join(", ")}
+                </span>
+              )}
               {latestRun.data.nearCatalogue?.error && (
                 <span className="text-destructive md:col-span-3">
                   Overpass: {latestRun.data.nearCatalogue.error}
