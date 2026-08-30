@@ -193,6 +193,57 @@ test("database constraints reject invalid workflow values", async () => {
   }
 });
 
+test("a rejected unresolved name stays rejected on a later run", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const proposedName = `Zavrnjeni kraj ${suffix}`;
+  const first = await upsertPendingCreatorProposal({
+    tenantId,
+    runId: runIds[0]!,
+    proposedName,
+    originalQuery: proposedName,
+  });
+  proposalIds.push(first.proposal.id);
+  await recordCreatorVerification(first.proposal.id, {
+    originalQuery: proposedName,
+    confirmedQuery: null,
+    confirmationMethod: null,
+    status: "unresolved",
+    refusalReason: "blocked-class-or-addresstype",
+    resolvedName: null,
+    resolvedAddress: null,
+    osmType: null,
+    osmId: null,
+    osmCategory: null,
+    osmFeatureType: null,
+    osmAddressType: null,
+    latitude: null,
+    longitude: null,
+    straightLineDistanceM: null,
+    attempts: [{
+      attemptNumber: 1,
+      query: proposedName,
+      verdict: "refused",
+      refusalRule: "blocked-class-or-addresstype",
+      candidates: [],
+    }],
+  });
+
+  const rerun = await runAndPersistCreatorSieve({
+    tenantId,
+    runId: runIds[1]!,
+    proposedName,
+    origin: { latitude: 46.36, longitude: 14.73 },
+    fetchFn: async () => {
+      throw new Error("the sieve must not rerun a rejected name");
+    },
+  });
+  assert.equal(rerun.inserted, false);
+  assert.equal(rerun.result, null);
+  assert.equal(rerun.proposal.id, first.proposal.id);
+  assert.equal(rerun.proposal.status, "unresolved");
+  assert.equal(rerun.proposal.refusalReason, "blocked-class-or-addresstype");
+});
+
 test("the real sieve path persists shortened-query provenance and both attempts", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const proposedName = `Snežna jama na Raduhi ${suffix}`;
@@ -284,6 +335,15 @@ test("two names resolving to one OSM identity produce one queue row", async () =
   assert.equal(duplicate.supersededBy, canonical.id);
   assert.equal(duplicate.proposedName, secondName);
   assert.equal(duplicate.osmId, null);
+
+  const rerun = await upsertPendingCreatorProposal({
+    tenantId,
+    runId: crypto.randomUUID(),
+    proposedName: secondName,
+    originalQuery: secondName,
+  });
+  assert.equal(rerun.inserted, false);
+  assert.equal(rerun.proposal.id, canonical.id);
 
   const queue = await listCreatorProposalQueue(tenantId);
   const fixtureQueueRows = queue.filter((row) =>

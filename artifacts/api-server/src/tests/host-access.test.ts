@@ -189,6 +189,23 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     assert.equal(bTenant!.name, "CP2 b", "tenant B must be untouched");
   });
 
+  await t.test("every Creator route rejects a real host session", async () => {
+    const proposalId = "00000000-0000-4000-8000-000000000001";
+    await expectDenied("POST", "/admin/creator/origin-preview", {
+      mapUrl: "https://www.google.com/maps?q=46.05,14.51",
+    });
+    await expectDenied("GET", `/admin/tenants/${fx.tenantA}/creator/proposals`);
+    await expectDenied(
+      "POST",
+      `/admin/tenants/${fx.tenantA}/creator/proposals/${proposalId}/approve`,
+    );
+    await expectDenied(
+      "POST",
+      `/admin/tenants/${fx.tenantA}/creator/proposals/approve-bulk`,
+      { proposalIds: [proposalId] },
+    );
+  });
+
   // ---------- Ring 2b: entity-id routes of tenant B ----------
   await t.test("entity routes resolving to the foreign tenant are 404", async () => {
     await expectDenied("PATCH", `/admin/sections/${fx.sectionB}`, { title: "hacked" });

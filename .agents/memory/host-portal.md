@@ -21,6 +21,11 @@ Three concentric rings; each must hold alone:
 ## Critical gotchas (learned the hard way)
 - **The pool user is a BYPASSRLS superuser** (`postgres`, rolsuper=t) — FORCE RLS does NOTHING for it. Host connections must `SET ROLE smart360_host` (NOLOGIN, NOBYPASSRLS, ensured+granted at boot in `rls.ts`). Any RLS test must SET ROLE too, or it silently tests nothing.
 - **Least privilege is deliberate and fail-closed for future tables**: `HOST_ROLE_GRANTS` in `rls.ts` is the single source of truth (boot revokes ALL then grants the list). A NEW table is invisible to host requests until added there (+ a POLICIES entry). If a host-allowed handler starts failing with "permission denied", that's the intended signal — onboard the table, don't broaden grants.
+- **Creator-table temporary exception:** Creator proposal/evidence tables may remain without RLS while the Creator is operator-only, provided hosts have no grants and real HOST-session tests knock every Creator route and receive the uniform owner-only rejection. Add Creator RLS to the pre-public hardening list alongside the final operator/host split.
+
+  **Why:** With application connections currently using the PostgreSQL superuser, meaningful RLS would require a wider role-architecture change; absence of host grants plus the central owner-only gate is the accepted interim boundary.
+
+  **How to apply:** Keep Creator tables out of host grants, expand the negative HOST-session test whenever a Creator route is added, and do not make Creator public until its RLS/role design is completed.
 - **No privileged fallback after context release**: the `db` Proxy THROWS if work outlives its host context (fire-and-forget after response). Deliberate system work from a host request must use `escapeHostDbContext()`. Never restore a silent fallback to the pool — that was a review-flagged cross-tenant leak.
 - **Drizzle wraps pg errors**: RLS violations sit in `error.cause`, so `assert.rejects(p, /row-level security/)` fails — walk the cause chain.
 - Host auth tables (`host_users/sessions/memberships/auth_events`) have membership-scoped policies (password change runs under host ctx); `admin_*`, `host_password_resets`, `cleanup_runs`, `tenant_renewals` have ZERO host grants.

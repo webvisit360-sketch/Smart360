@@ -1,0 +1,52 @@
+Publish again — the last publish predates the merge fix and production has
+none of the three tables. Then verify, and quote what the catalog returns.
+
+1 · ACCESS CONTROL — ACCEPTED AS IT STANDS, WITH ONE CONDITION
+RLS off, protection by absence from host grants plus owner-only route gating.
+I accept that, and here is why I am not demanding the database hold this rule
+when I have demanded it all day for constraints.
+
+A CHECK on an empty table costs one line. RLS costs a change to the database
+role architecture of the whole application — while everything connects as
+postgres, a superuser bypasses RLS anyway without FORCE ROW LEVEL SECURITY.
+That is a change to everything that already exists, in the middle of building
+the Creator.
+
+So: the machine holds the rule when the machine can hold it cheaply. When it
+cannot, ONE place holds it, and that place gets tested.
+
+The condition is evidence, not a second lock:
+· a test that opens a HOST session and hits every Creator route — queue list,
+  individual approve, bulk approve, proposal read — and asserts a rejection on
+  each. Not a description that the route is gated; an actual knock that is
+  actually refused.
+· confirm in one sentence that every Creator query filters by the tenant id
+  from the session, never from the request body or a path parameter.
+
+RLS goes on the pre-public list beside the operator/host split, where it
+belongs, not here.
+
+2 · ONE EDGE IN THE SUPPRESSION REREAD
+A superseded row carries osm_id NULL, so it lives under the unresolved-name
+unique index. A later run proposing that same name will hit ON CONFLICT DO
+NOTHING and then reread — and may find a row whose status is superseded, or
+rejected, not unresolved.
+
+State what happens in each case. A rerun must not re-queue a name whose
+existing row is rejected, and must not treat a superseded row as a fresh
+pending proposal; it should follow superseded_by to the canonical row.
+Add a test for the rejected case specifically, since silent resurrection of a
+rejected place is the failure the specification names by hand.
+
+3 · PRODUCTION VERIFICATION, AS PREVIOUSLY SPECIFIED
+After Publish, read production directly and quote verbatim:
+· the CHECK definition for status, with allowed values;
+· the CHECK definition for confirmation_method;
+· the predicate of each partial unique index;
+· the generation expression of requires_individual_review;
+· the conditional CHECKs for reviewed_by, refusal_reason and confirmed_query.
+Quote the catalog output. Do not summarise it and do not count it.
+
+Step B closes on that quotation plus the two tests above.
+
+Report and STOP.

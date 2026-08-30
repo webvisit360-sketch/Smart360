@@ -52,6 +52,23 @@ export async function upsertPendingCreatorProposal(input: {
     ))
     .limit(1);
   if (!existing) throw new Error("Predloga po konfliktu ni bilo mogoče ponovno prebrati.");
+  if (existing.status === "superseded") {
+    if (!existing.supersededBy) {
+      throw new Error("Združeni predlog nima povezave na kanonični predlog.");
+    }
+    const [canonical] = await db
+      .select()
+      .from(creatorPlaceProposalsTable)
+      .where(and(
+        eq(creatorPlaceProposalsTable.id, existing.supersededBy),
+        eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+      ))
+      .limit(1);
+    if (!canonical) {
+      throw new Error("Kanoničnega predloga po združitvi ni bilo mogoče najti.");
+    }
+    return { proposal: canonical, inserted: false };
+  }
   return { proposal: existing, inserted: false };
 }
 
