@@ -16,6 +16,7 @@ import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
 import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
+import { KreatorOriginConfirmation } from "@/components/admin/kreator-origin-confirmation";
 import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-settings";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
@@ -591,7 +592,15 @@ export default function AdminTenantEdit() {
             <TabsContent value="pregled">
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
             </TabsContent>
-            <TabsContent value="kreator"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Kreator vodnika — V pripravi. Orodje Smart360 za pripravo vodnika, preden se gostitelj prvič prijavi.</div></TabsContent>
+            <TabsContent value="kreator">
+              {isOwner ? (
+                <KreatorOriginConfirmation />
+              ) : (
+                <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">
+                  Kreator vodnika — V pripravi. Orodje Smart360 za pripravo vodnika, preden se gostitelj prvič prijavi.
+                </div>
+              )}
+            </TabsContent>
             <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki — V pripravi. Koledar dogodkov, ki jih gost vidi na domači strani.</div></TabsContent>
             <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila — V pripravi. Obvestila, ki jih gost vidi v vodniku.</div></TabsContent>
             <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene — V pripravi. Izdelki, cene in oprema za najem.</div></TabsContent>

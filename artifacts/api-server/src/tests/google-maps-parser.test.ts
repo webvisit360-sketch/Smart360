@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   expandGoogleMapsShortLink,
+  GoogleMapsParseError,
   GoogleMapsRedirectError,
   parseGoogleMapsLocationUrl,
+  parseGoogleMapsLocationUrlOrThrow,
 } from "../lib/maps-link";
 
 const HOTEL_VIEWPORT = { lat: 46.2680508, lng: 15.1860367 };
@@ -67,12 +69,49 @@ test("offline: @ viewport alone is always rejected", () => {
   );
 });
 
+test("offline: deceptive Google substring hostname is refused", () => {
+  assert.throws(
+    () =>
+      parseGoogleMapsLocationUrlOrThrow(
+        "https://maps.app.goo.gl.example.net/abc",
+      ),
+    (error: unknown) =>
+      error instanceof GoogleMapsParseError && error.kind === "disallowed-url",
+  );
+});
+
+test("offline: named place without pin and viewport-only URL fail distinctly", () => {
+  assert.throws(
+    () =>
+      parseGoogleMapsLocationUrlOrThrow(
+        "https://www.google.com/maps/place/Hotel+A+plus/@46.2680508,15.1860367,794m",
+      ),
+    (error: unknown) =>
+      error instanceof GoogleMapsParseError &&
+      error.kind === "place-missing-pin" &&
+      /!3d\/!4d/.test(error.message),
+  );
+  assert.throws(
+    () =>
+      parseGoogleMapsLocationUrlOrThrow(
+        "https://www.google.com/maps/@46.2680508,15.1860367,794m",
+      ),
+    (error: unknown) =>
+      error instanceof GoogleMapsParseError &&
+      error.kind === "viewport-only" &&
+      /samo središče zemljevida/.test(error.message),
+  );
+});
+
 test("offline: short-link expansion refuses an off-Google redirect", async () => {
-  const fetchFn = (async () =>
-    new Response(null, {
+  const fetched: string[] = [];
+  const fetchFn = (async (input: string | URL | Request) => {
+    fetched.push(String(input));
+    return new Response(null, {
       status: 302,
       headers: { location: "https://example.com/maps/search/46.3,14.9" },
-    })) as typeof fetch;
+    });
+  }) as typeof fetch;
 
   await assert.rejects(
     () =>
@@ -82,6 +121,7 @@ test("offline: short-link expansion refuses an off-Google redirect", async () =>
       error.kind === "disallowed-url" &&
       /example\.com/.test(error.message),
   );
+  assert.equal(fetched.length, 1, "off-Google redirect target must never be fetched");
 });
 
 test("offline: short-link expansion follows at most three redirects", async () => {

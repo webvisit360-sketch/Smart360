@@ -39,6 +39,8 @@ import type {
   CleanupRestoreRequest,
   CleanupRestoreResult,
   CleanupRunsResult,
+  CreatorOriginPreview,
+  CreatorOriginPreviewInput,
   DistanceBulkApproveInput,
   DistanceLinkInput,
   DistanceReview,
@@ -2402,6 +2404,77 @@ export function useListTenantOverview<TData = Awaited<ReturnType<typeof listTena
 
 
 
+
+export const getPreviewCreatorOriginUrl = () => {
+
+
+
+
+  return `/api/admin/creator/origin-preview`
+}
+
+/**
+ * @summary Parse and reverse-geocode a Google Maps origin without saving it
+ */
+export const previewCreatorOrigin = async (creatorOriginPreviewInput: CreatorOriginPreviewInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorOriginPreview> => {
+
+  return customFetch<CreatorOriginPreview>(getPreviewCreatorOriginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorOriginPreviewInput)
+  }
+);}
+
+
+
+
+
+export const getPreviewCreatorOriginMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewCreatorOrigin>>, TError,{data: BodyType<CreatorOriginPreviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewCreatorOrigin>>, TError,{data: BodyType<CreatorOriginPreviewInput>}, TContext> => {
+
+const mutationKey = ['previewCreatorOrigin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewCreatorOrigin>>, {data: BodyType<CreatorOriginPreviewInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewCreatorOrigin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewCreatorOriginMutationResult = NonNullable<Awaited<ReturnType<typeof previewCreatorOrigin>>>
+    export type PreviewCreatorOriginMutationBody = BodyType<CreatorOriginPreviewInput>
+    export type PreviewCreatorOriginMutationError = ErrorType<void>
+
+    /**
+ * @summary Parse and reverse-geocode a Google Maps origin without saving it
+ */
+export const usePreviewCreatorOrigin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewCreatorOrigin>>, TError,{data: BodyType<CreatorOriginPreviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof previewCreatorOrigin>>,
+        TError,
+        {data: BodyType<CreatorOriginPreviewInput>},
+        TContext
+      > => {
+      return useMutation(getPreviewCreatorOriginMutationOptions(options));
+    }
 
 export const getListTenantChangelogUrl = (id: string,) => {
 

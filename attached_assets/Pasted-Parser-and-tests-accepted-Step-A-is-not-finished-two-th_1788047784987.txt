@@ -1,0 +1,50 @@
+Parser and tests accepted. Step A is not finished — two things remain.
+
+1 · VERIFY THE HOST ALLOWLIST COMPARES HOSTNAMES
+Your report lists the approved shapes as google.com/maps, maps.google.*,
+goo.gl/maps — a mixture of hostnames and paths. Show me the actual check.
+
+It must parse the URL and compare url.hostname against a fixed list, exact
+match or a leading-dot suffix (endsWith('.google.com')). It must never test
+whether the URL string contains an approved substring. A substring check
+accepts google.com.example.net and evil.example/?ref=google.com/maps, and it
+looks correct in every test you would think to write.
+
+Add two negative tests:
+· https://maps.app.goo.gl.example.net/abc — refused
+· a Google short link that redirects off Google — refused at the redirect
+  check, not after fetching
+
+Also confirm that the entry rendered in your report as a markdown link,
+[www.google.com/maps](https://www.google.com/maps), is a report artefact and
+not a literal string in the allowlist.
+
+2 · ADD TWO MORE LOUD-FAILURE TESTS
+· a /maps/place/ URL carrying a name but no !3d/!4d pair → fails, asks for
+  another link, and does NOT fall back to @
+· a URL with only @lat,lng,zoom → same
+Assert the error is distinct in each case. Silence and a plausible-looking
+coordinate is the failure mode we are engineering against.
+
+3 · THE CONFIRMATION VIEW, WHICH COMPLETES STEP A
+The parser produces a coordinate. Nobody has looked at it yet, and that is
+the whole point of this step. Build the operator-facing view in the Kreator's
+step 1:
+· paste field for the link, with the parsed result shown beneath it;
+· the point on a map, at a zoom where a building is distinguishable;
+· the reverse-geocoded address beside it, labelled as coming from Nominatim,
+  not from Google and not from the link;
+· the parsed name, editable, and required when the link carried none — the
+  short-link form never carries one;
+· an explicit confirm action. Until it is pressed, nothing is saved.
+Match the admin design in admin-2030.html: sidebar 248 px, 32 px gutter,
+content column capped at 880 px, left-aligned, Archivo, accent #157347.
+
+Then report with a screenshot of the confirmation view showing the Camping
+MENINA link parsed, and assert the heading is present in the DOM before you
+capture it.
+
+Still: no tenant created, no origin saved to any tenant, no model
+integration, no step 3.
+
+Report and STOP.

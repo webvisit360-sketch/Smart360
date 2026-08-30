@@ -562,6 +562,27 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TenantOverview"
+  /admin/creator/origin-preview:
+    post:
+      operationId: previewCreatorOrigin
+      tags: [tenants]
+      summary: Parse and reverse-geocode a Google Maps origin without saving it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorOriginPreviewInput"
+      responses:
+        "200":
+          description: Unsaved origin preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorOriginPreview"
+        "400": { description: Missing or invalid request }
+        "422": { description: Google Maps link cannot provide a safe pin }
+        "502": { description: Reverse geocoding failed }
   /admin/tenants/{id}/changelog:
     get:
       operationId: listTenantChangelog
@@ -2121,6 +2142,23 @@ components:
       properties:
         limit: { type: number, minimum: 1, maximum: 100 }
         retryFailed: { type: boolean }
+    CreatorOriginPreviewInput:
+      type: object
+      properties:
+        mapUrl: { type: string, minLength: 1 }
+      required: [mapUrl]
+    CreatorOriginPreview:
+      type: object
+      properties:
+        lat: { type: number }
+        lng: { type: number }
+        name: { type: ["string", "null"] }
+        placeId: { type: ["string", "null"] }
+        source: { type: string, enum: [search, place] }
+        expandedUrl: { type: string }
+        address: { type: string }
+        addressSource: { type: string, enum: [nominatim] }
+      required: [lat, lng, name, placeId, source, expandedUrl, address, addressSource]
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

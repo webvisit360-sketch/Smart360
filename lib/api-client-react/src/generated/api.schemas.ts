@@ -295,6 +295,39 @@ export interface DistanceRunInput {
   retryFailed?: boolean;
 }
 
+export interface CreatorOriginPreviewInput {
+  /** @minLength 1 */
+  mapUrl: string;
+}
+
+export type CreatorOriginPreviewSource = typeof CreatorOriginPreviewSource[keyof typeof CreatorOriginPreviewSource];
+
+
+export const CreatorOriginPreviewSource = {
+  search: 'search',
+  place: 'place',
+} as const;
+
+export type CreatorOriginPreviewAddressSource = typeof CreatorOriginPreviewAddressSource[keyof typeof CreatorOriginPreviewAddressSource];
+
+
+export const CreatorOriginPreviewAddressSource = {
+  nominatim: 'nominatim',
+} as const;
+
+export interface CreatorOriginPreview {
+  lat: number;
+  lng: number;
+  /** @nullable */
+  name: string | null;
+  /** @nullable */
+  placeId: string | null;
+  source: CreatorOriginPreviewSource;
+  expandedUrl: string;
+  address: string;
+  addressSource: CreatorOriginPreviewAddressSource;
+}
+
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];
 
 

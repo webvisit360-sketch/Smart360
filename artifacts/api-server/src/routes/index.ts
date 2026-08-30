@@ -11,6 +11,7 @@ import ordersRouter from "./orders";
 import messagesRouter from "./messages";
 import part5MeliPuCutoverRouter from "./part5MeliPuCutover";
 import adminDistanceReviewRouter from "./adminDistanceReview";
+import adminCreatorRouter from "./adminCreator";
 import hostAuthRouter from "./hostAuth";
 import enquiriesRouter from "./enquiries";
 import { adminGate, assertAdminRoutesClassified } from "../lib/actorGate";
@@ -56,6 +57,7 @@ router.use(adminAuthRouter);
 // anonymous host endpoints (login/reset) stay reachable.
 router.use(hostAuthRouter);
 router.use(adminTenantsRouter);
+router.use(adminCreatorRouter);
 router.use(adminContentRouter);
 router.use(adminTranslationsRouter);
 router.use(adminSitePlanRouter);

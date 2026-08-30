@@ -806,6 +806,28 @@ export const ListTenantOverviewResponse = zod.array(ListTenantOverviewResponseIt
 
 
 /**
+ * @summary Parse and reverse-geocode a Google Maps origin without saving it
+ */
+
+
+
+export const PreviewCreatorOriginBody = zod.object({
+  "mapUrl": zod.string().min(1)
+})
+
+export const PreviewCreatorOriginResponse = zod.object({
+  "lat": zod.number(),
+  "lng": zod.number(),
+  "name": zod.string().nullable(),
+  "placeId": zod.string().nullable(),
+  "source": zod.enum(['search', 'place']),
+  "expandedUrl": zod.string(),
+  "address": zod.string(),
+  "addressSource": zod.enum(['nominatim'])
+})
+
+
+/**
  * @summary Per-tenant audit history with privacy-safe attribution
  */
 export const ListTenantChangelogParams = zod.object({

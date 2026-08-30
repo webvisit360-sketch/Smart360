@@ -24,6 +24,23 @@ export class GoogleMapsRedirectError extends Error {
   }
 }
 
+export type GoogleMapsParseErrorKind =
+  | "invalid-url"
+  | "disallowed-url"
+  | "unsupported-shape"
+  | "place-missing-pin"
+  | "viewport-only";
+
+export class GoogleMapsParseError extends Error {
+  constructor(
+    public readonly kind: GoogleMapsParseErrorKind,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GoogleMapsParseError";
+  }
+}
+
 /** True for text that is a destination URL, not an address search query. */
 export function isLikelyUrl(text: string | null | undefined): boolean {
   return typeof text === "string" && /^https?:\/\//i.test(text.trim());
@@ -59,9 +76,7 @@ export function isAllowedGoogleMapsUrl(value: string | URL): boolean {
   if (hostname === "goo.gl") return path === "/maps" || path.startsWith("/maps/");
 
   const isGoogleMapsHost =
-    hostname === "google.com" ||
-    hostname === "www.google.com" ||
-    /^maps\.google\.[a-z.]+$/.test(hostname);
+    hostname === "google.com" || hostname.endsWith(".google.com");
   return isGoogleMapsHost && (path === "/maps" || path.startsWith("/maps/"));
 }
 
@@ -113,6 +128,40 @@ export function parseGoogleMapsLocationUrl(
     placeId: placeIdMatch ? decodeMapsPathPart(placeIdMatch[1]!) : null,
     source: "place",
   };
+}
+
+export function parseGoogleMapsLocationUrlOrThrow(
+  value: string,
+): ParsedGoogleMapsLocation {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new GoogleMapsParseError("invalid-url", "Google Maps povezava ni veljaven URL.");
+  }
+  if (!isAllowedGoogleMapsUrl(url)) {
+    throw new GoogleMapsParseError("disallowed-url", "Dovoljena je samo Google Maps povezava.");
+  }
+  const parsed = parseGoogleMapsLocationUrl(value);
+  if (parsed) return parsed;
+
+  const hasViewport = /@-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,/.test(url.href);
+  if (/^\/maps\/place\/[^/?#]+/.test(url.pathname)) {
+    throw new GoogleMapsParseError(
+      hasViewport ? "place-missing-pin" : "place-missing-pin",
+      "Povezava vsebuje ime kraja, vendar nima koordinat izbrane točke (!3d/!4d). Prilepite drugo povezavo.",
+    );
+  }
+  if (hasViewport) {
+    throw new GoogleMapsParseError(
+      "viewport-only",
+      "Povezava vsebuje samo središče zemljevida (@), ne izbrane točke. Prilepite drugo povezavo.",
+    );
+  }
+  throw new GoogleMapsParseError(
+    "unsupported-shape",
+    "Povezava ne vsebuje uporabne izbrane točke. Prilepite drugo Google Maps povezavo.",
+  );
 }
 
 export async function expandGoogleMapsShortLink(
