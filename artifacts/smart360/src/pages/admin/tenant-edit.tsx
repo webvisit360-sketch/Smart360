@@ -596,7 +596,7 @@ export default function AdminTenantEdit() {
             <TabsContent value="kreator">
               {isOwner ? (
                 <>
-                  <KreatorOriginConfirmation />
+                  <KreatorOriginConfirmation onCreated={(tenantId) => setLocation(`/admin/tenants/${tenantId}`)} />
                   <KreatorProposalQueue tenantId={id} tenantName={tenant.name} />
                 </>
               ) : (

@@ -1,6 +1,5 @@
 import { acquireNominatimTurn, type FetchFn } from "./distanceEngine";
 
-export const CREATOR_EDITORIAL_RADIUS_KM = 15;
 export const CREATOR_DEFAULT_HARD_CEILING_KM = 120;
 
 export type CreatorSieveCandidate = {
@@ -45,7 +44,6 @@ export type CreatorSieveResult =
   | {
     verdict: "resolved";
     candidate: CreatorSieveCandidate;
-    outsideEditorialRadius: boolean;
     originalQuery: string;
     confirmedQuery: string;
     confirmationMethod: CreatorConfirmationMethod;
@@ -148,12 +146,14 @@ function matchesName(query: string, raw: RawResult): Exclude<CreatorConfirmation
 async function runCreatorSieveInternal(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn; omitLayerForHarness?: boolean } = {},
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn; omitLayerForHarness?: boolean; onNominatimWait?: (milliseconds: number) => void } = {},
 ): Promise<CreatorSieveResult> {
   const hardCeilingKm = options.hardCeilingKm ?? CREATOR_DEFAULT_HARD_CEILING_KM;
   const fetchFn = options.fetchFn ?? fetch;
-  const latDelta = CREATOR_EDITORIAL_RADIUS_KM / 111.32;
-  const lonDelta = CREATOR_EDITORIAL_RADIUS_KM /
+  // Nominatim treats an unbounded viewbox as a ranking hint.  This is not an
+  // editorial radius; existence is only rejected at the 120km hard ceiling.
+  const latDelta = hardCeilingKm / 111.32;
+  const lonDelta = hardCeilingKm /
     (111.32 * Math.cos(origin.latitude * Math.PI / 180));
   const fetched: Array<{ query: string; data: unknown }> = [];
   const fetchResults = async (query: string): Promise<unknown> => {
@@ -171,7 +171,7 @@ async function runCreatorSieveInternal(
     ].join(","));
     url.searchParams.set("bounded", "0");
     url.searchParams.set("q", query);
-    await acquireNominatimTurn();
+    options.onNominatimWait?.(await acquireNominatimTurn());
     const response = await fetchFn(url, {
       headers: { "User-Agent": "Smart360 Creator sieve (admin contact via replit deployment)" },
     });
@@ -340,7 +340,6 @@ async function runCreatorSieveInternal(
   return {
     verdict: "resolved",
     candidate: best.candidate,
-    outsideEditorialRadius: best.candidate.distanceKm > CREATOR_EDITORIAL_RADIUS_KM,
     originalQuery: name,
     confirmedQuery: matchedQuery,
     confirmationMethod: matchedQuery !== name ? "shortened_query" : best.confirmationMethod,
@@ -351,7 +350,7 @@ async function runCreatorSieveInternal(
 export function runCreatorSieve(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn } = {},
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn; onNominatimWait?: (milliseconds: number) => void } = {},
 ): Promise<CreatorSieveResult> {
   return runCreatorSieveInternal(name, origin, options);
 }
@@ -360,7 +359,7 @@ export function runCreatorSieve(
 export function runCreatorSieveClassificationHarness(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn } = {},
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn; onNominatimWait?: (milliseconds: number) => void } = {},
 ): Promise<CreatorSieveResult> {
   return runCreatorSieveInternal(name, origin, {
     ...options,

@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CreatorProposalConfirmationMethod } from './creatorProposalConfirmationMethod';
+import type { CreatorProposalRange } from './creatorProposalRange';
 import type { CreatorProposalStatus } from './creatorProposalStatus';
+import type { CreatorProposalTranslation } from './creatorProposalTranslation';
 
 export interface CreatorProposal {
   id: string;
@@ -48,6 +50,17 @@ export interface CreatorProposal {
   roadDistanceM: number | null;
   /** @nullable */
   travelDurationS: number | null;
+  /** @nullable */
+  categoryId: string | null;
+  /** @nullable */
+  categoryLabel: string | null;
+  /** @nullable */
+  range: CreatorProposalRange;
+  /** @nullable */
+  geocodingLookupHint: string | null;
+  /** @nullable */
+  inclusionReason: string | null;
+  translations: CreatorProposalTranslation[];
   /** @nullable */
   reviewedBy: string | null;
   /** @nullable */

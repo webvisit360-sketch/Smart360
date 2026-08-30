@@ -39,10 +39,15 @@ import type {
   CleanupRestoreRequest,
   CleanupRestoreResult,
   CleanupRunsResult,
+  CreatorCategoryOption,
+  CreatorDraftTenant,
+  CreatorDraftTenantInput,
   CreatorOriginPreview,
   CreatorOriginPreviewInput,
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
+  CreatorProposalEditInput,
+  CreatorRunReport,
   DistanceBulkApproveInput,
   DistanceLinkInput,
   DistanceReview,
@@ -2478,6 +2483,225 @@ export const usePreviewCreatorOrigin = <TError = ErrorType<void>,
       return useMutation(getPreviewCreatorOriginMutationOptions(options));
     }
 
+export const getCreateCreatorDraftTenantUrl = () => {
+
+
+
+
+  return `/api/admin/creator/draft-tenants`
+}
+
+/**
+ * @summary Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+ */
+export const createCreatorDraftTenant = async (creatorDraftTenantInput: CreatorDraftTenantInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorDraftTenant> => {
+
+  return customFetch<CreatorDraftTenant>(getCreateCreatorDraftTenantUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorDraftTenantInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCreatorDraftTenantMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCreatorDraftTenant>>, TError,{data: BodyType<CreatorDraftTenantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCreatorDraftTenant>>, TError,{data: BodyType<CreatorDraftTenantInput>}, TContext> => {
+
+const mutationKey = ['createCreatorDraftTenant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCreatorDraftTenant>>, {data: BodyType<CreatorDraftTenantInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCreatorDraftTenant(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCreatorDraftTenantMutationResult = NonNullable<Awaited<ReturnType<typeof createCreatorDraftTenant>>>
+    export type CreateCreatorDraftTenantMutationBody = BodyType<CreatorDraftTenantInput>
+    export type CreateCreatorDraftTenantMutationError = ErrorType<void>
+
+    /**
+ * @summary Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+ */
+export const useCreateCreatorDraftTenant = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCreatorDraftTenant>>, TError,{data: BodyType<CreatorDraftTenantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCreatorDraftTenant>>,
+        TError,
+        {data: BodyType<CreatorDraftTenantInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCreatorDraftTenantMutationOptions(options));
+    }
+
+export const getStartCreatorRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/runs`
+}
+
+/**
+ * @summary Run the server-controlled C1 model, sieve, and OSRM pipeline once
+ */
+export const startCreatorRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorRunReport> => {
+
+  return customFetch<CreatorRunReport>(getStartCreatorRunUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStartCreatorRunMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startCreatorRun>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startCreatorRun>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['startCreatorRun'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startCreatorRun>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  startCreatorRun(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartCreatorRunMutationResult = NonNullable<Awaited<ReturnType<typeof startCreatorRun>>>
+
+    export type StartCreatorRunMutationError = ErrorType<void>
+
+    /**
+ * @summary Run the server-controlled C1 model, sieve, and OSRM pipeline once
+ */
+export const useStartCreatorRun = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startCreatorRun>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startCreatorRun>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getStartCreatorRunMutationOptions(options));
+    }
+
+export const getGetLatestCreatorRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/runs/latest`
+}
+
+/**
+ * @summary Read the latest Creator run report
+ */
+export const getLatestCreatorRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorRunReport | null> => {
+
+  return customFetch<CreatorRunReport | null>(getGetLatestCreatorRunUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLatestCreatorRunQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/creator/runs/latest`
+    ] as const;
+    }
+
+
+export const getGetLatestCreatorRunQueryOptions = <TData = Awaited<ReturnType<typeof getLatestCreatorRun>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLatestCreatorRun>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLatestCreatorRunQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLatestCreatorRun>>> = ({ signal }) => getLatestCreatorRun(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLatestCreatorRun>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLatestCreatorRunQueryResult = NonNullable<Awaited<ReturnType<typeof getLatestCreatorRun>>>
+export type GetLatestCreatorRunQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read the latest Creator run report
+ */
+
+export function useGetLatestCreatorRun<TData = Awaited<ReturnType<typeof getLatestCreatorRun>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLatestCreatorRun>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLatestCreatorRunQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getListCreatorProposalsUrl = (id: string,) => {
 
 
@@ -2554,6 +2778,230 @@ export function useListCreatorProposals<TData = Awaited<ReturnType<typeof listCr
 
 
 
+
+export const getListCreatorCategoryOptionsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/catalogue`
+}
+
+/**
+ * @summary List existing tenant categories available to C1 proposals
+ */
+export const listCreatorCategoryOptions = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorCategoryOption[]> => {
+
+  return customFetch<CreatorCategoryOption[]>(getListCreatorCategoryOptionsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCreatorCategoryOptionsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/creator/catalogue`
+    ] as const;
+    }
+
+
+export const getListCreatorCategoryOptionsQueryOptions = <TData = Awaited<ReturnType<typeof listCreatorCategoryOptions>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorCategoryOptions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCreatorCategoryOptionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCreatorCategoryOptions>>> = ({ signal }) => listCreatorCategoryOptions(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCreatorCategoryOptions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCreatorCategoryOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof listCreatorCategoryOptions>>>
+export type ListCreatorCategoryOptionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List existing tenant categories available to C1 proposals
+ */
+
+export function useListCreatorCategoryOptions<TData = Awaited<ReturnType<typeof listCreatorCategoryOptions>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorCategoryOptions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCreatorCategoryOptionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEditCreatorProposalUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}`
+}
+
+/**
+ * @summary Edit only human/editorial C1 proposal fields
+ */
+export const editCreatorProposal = async (id: string,
+    proposalId: string,
+    creatorProposalEditInput: CreatorProposalEditInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal> => {
+
+  return customFetch<CreatorProposal>(getEditCreatorProposalUrl(id,proposalId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorProposalEditInput)
+  }
+);}
+
+
+
+
+
+export const getEditCreatorProposalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCreatorProposal>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalEditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof editCreatorProposal>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalEditInput>}, TContext> => {
+
+const mutationKey = ['editCreatorProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof editCreatorProposal>>, {id: string;proposalId: string;data: BodyType<CreatorProposalEditInput>}> = (props) => {
+          const {id,proposalId,data} = props ?? {};
+
+          return  editCreatorProposal(id,proposalId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EditCreatorProposalMutationResult = NonNullable<Awaited<ReturnType<typeof editCreatorProposal>>>
+    export type EditCreatorProposalMutationBody = BodyType<CreatorProposalEditInput>
+    export type EditCreatorProposalMutationError = ErrorType<void>
+
+    /**
+ * @summary Edit only human/editorial C1 proposal fields
+ */
+export const useEditCreatorProposal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCreatorProposal>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalEditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof editCreatorProposal>>,
+        TError,
+        {id: string;proposalId: string;data: BodyType<CreatorProposalEditInput>},
+        TContext
+      > => {
+      return useMutation(getEditCreatorProposalMutationOptions(options));
+    }
+
+export const getRejectCreatorProposalUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}/reject`
+}
+
+/**
+ * @summary Reject a proposal and remember the name durably
+ */
+export const rejectCreatorProposal = async (id: string,
+    proposalId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal> => {
+
+  return customFetch<CreatorProposal>(getRejectCreatorProposalUrl(id,proposalId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRejectCreatorProposalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorProposal>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorProposal>>, TError,{id: string;proposalId: string}, TContext> => {
+
+const mutationKey = ['rejectCreatorProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectCreatorProposal>>, {id: string;proposalId: string}> = (props) => {
+          const {id,proposalId} = props ?? {};
+
+          return  rejectCreatorProposal(id,proposalId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectCreatorProposalMutationResult = NonNullable<Awaited<ReturnType<typeof rejectCreatorProposal>>>
+
+    export type RejectCreatorProposalMutationError = ErrorType<void>
+
+    /**
+ * @summary Reject a proposal and remember the name durably
+ */
+export const useRejectCreatorProposal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorProposal>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectCreatorProposal>>,
+        TError,
+        {id: string;proposalId: string},
+        TContext
+      > => {
+      return useMutation(getRejectCreatorProposalMutationOptions(options));
+    }
 
 export const getApproveCreatorProposalUrl = (id: string,
     proposalId: string,) => {

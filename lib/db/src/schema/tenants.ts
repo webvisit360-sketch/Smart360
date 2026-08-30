@@ -181,6 +181,12 @@ export const tenantsTable = pgTable("tenants", {
   // the seeded default sections and categories. NULL for tenants created
   // before types existed or via template copy.
   tenantType: text("tenant_type"),
+  // Creator drafts are created only by the owner-only Step 1 transaction.
+  // This prevents C1 from running against arbitrary unpublished tenants.
+  creatorDraft: boolean("creator_draft").notNull().default(false),
+  // Machine-resolved Nominatim evidence used by the server-owned C1 prompt.
+  // It is intentionally separate from the operator-editable postal address.
+  creatorOriginRegion: text("creator_origin_region"),
   // Yearly maintenance (datum-in-obnova-narocnine.md). createdAt is shown as
   // "Vzpostavljeno" on the tenant card; existing rows get the migration date.
   createdAt: timestamp("created_at", { withTimezone: true })

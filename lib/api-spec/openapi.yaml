@@ -583,6 +583,68 @@ paths:
         "400": { description: Missing or invalid request }
         "422": { description: Google Maps link cannot provide a safe pin }
         "502": { description: Reverse geocoding failed }
+  /admin/creator/draft-tenants:
+    post:
+      operationId: createCreatorDraftTenant
+      tags: [tenants]
+      summary: Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorDraftTenantInput"
+      responses:
+        "201":
+          description: Unpublished draft tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorDraftTenant"
+        "400": { description: Invalid draft tenant details }
+        "409": { description: A draft for this origin already exists }
+        "422": { description: Google Maps link cannot provide a safe pin }
+        "502": { description: Reverse geocoding failed }
+  /admin/tenants/{id}/creator/runs:
+    post:
+      operationId: startCreatorRun
+      tags: [tenants]
+      summary: Run the server-controlled C1 model, sieve, and OSRM pipeline once
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Completed Creator run report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorRunReport"
+        "404": { description: Tenant not found }
+        "409": { description: A run already exists or is in progress }
+        "500": { description: Run failed with a durable report }
+  /admin/tenants/{id}/creator/runs/latest:
+    get:
+      operationId: getLatestCreatorRun
+      tags: [tenants]
+      summary: Read the latest Creator run report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Latest Creator run report, or null before the first run
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/CreatorRunReport"
+                  - type: "null"
+        "404": { description: Tenant not found }
   /admin/tenants/{id}/creator/proposals:
     get:
       operationId: listCreatorProposals
@@ -602,6 +664,77 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CreatorProposal"
+  /admin/tenants/{id}/creator/catalogue:
+    get:
+      operationId: listCreatorCategoryOptions
+      tags: [tenants]
+      summary: List existing tenant categories available to C1 proposals
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Existing category options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreatorCategoryOption"
+        "404": { description: Tenant not found }
+  /admin/tenants/{id}/creator/proposals/{proposalId}:
+    patch:
+      operationId: editCreatorProposal
+      tags: [tenants]
+      summary: Edit only human/editorial C1 proposal fields
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorProposalEditInput"
+      responses:
+        "200":
+          description: Edited proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorProposal"
+        "400": { description: Invalid editorial fields }
+        "404": { description: Proposal or category not found }
+  /admin/tenants/{id}/creator/proposals/{proposalId}/reject:
+    post:
+      operationId: rejectCreatorProposal
+      tags: [tenants]
+      summary: Reject a proposal and remember the name durably
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Rejected proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorProposal"
+        "404": { description: Proposal not found }
   /admin/tenants/{id}/creator/proposals/{proposalId}/approve:
     post:
       operationId: approveCreatorProposal
@@ -2227,6 +2360,130 @@ components:
         nominatimDisplayName: { type: string }
         referenceSource: { type: string, enum: [nominatim] }
       required: [lat, lng, name, placeId, source, expandedUrl, nominatimDisplayName, referenceSource]
+    CreatorDraftTenantInput:
+      type: object
+      additionalProperties: false
+      properties:
+        mapUrl: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        address: { type: string, minLength: 1, maxLength: 300 }
+        tenantType: { type: string, enum: [kamp, hotel, apartmaji] }
+      required: [mapUrl, name, address, tenantType]
+    CreatorDraftTenant:
+      type: object
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        name: { type: string }
+        address: { type: string }
+        mapUrl: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        tenantType: { type: string, enum: [kamp, hotel, apartmaji] }
+        isPublished: { type: boolean }
+      required: [id, slug, name, address, mapUrl, latitude, longitude, tenantType, isPublished]
+    CreatorProposalTranslation:
+      type: object
+      properties:
+        language: { type: string, enum: [sl, en, de, it] }
+        name: { type: string }
+        description: { type: string }
+      required: [language, name, description]
+    CreatorCategoryOption:
+      type: object
+      properties:
+        id: { type: string }
+        label: { type: string }
+      required: [id, label]
+    CreatorProposalEditInput:
+      type: object
+      additionalProperties: false
+      properties:
+        categoryId: { type: ["string", "null"] }
+        translations:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/CreatorProposalTranslation"
+      required: [categoryId, translations]
+    CreatorRunReport:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        status: { type: string, enum: [running, completed, failed] }
+        model: { type: string }
+        proposedCount: { type: number }
+        confirmedCount: { type: number }
+        unresolvedCount: { type: number }
+        outsidePracticalCount: { type: number }
+        outsideNearCount: { type: number }
+        outsideExcursionCount: { type: number }
+        routeFailuresCount: { type: number }
+        duplicatesMergedCount: { type: number }
+        inputTokens: { type: number }
+        outputTokens: { type: number }
+        costUsd: { type: number }
+        wallClockMs: { type: ["number", "null"] }
+        nominatimThrottleMs: { type: number }
+        error: { type: ["string", "null"] }
+        startedAt: { type: string }
+        completedAt: { type: ["string", "null"] }
+        outcomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorRunOutcome"
+        pricing:
+          $ref: "#/components/schemas/CreatorRunPricing"
+      required:
+        - id
+        - tenantId
+        - status
+        - model
+        - proposedCount
+        - confirmedCount
+        - unresolvedCount
+        - outsidePracticalCount
+        - outsideNearCount
+        - outsideExcursionCount
+        - routeFailuresCount
+        - duplicatesMergedCount
+        - inputTokens
+        - outputTokens
+        - costUsd
+        - wallClockMs
+        - nominatimThrottleMs
+        - error
+        - startedAt
+        - completedAt
+        - outcomes
+        - pricing
+    CreatorRunPricing:
+      type: object
+      properties:
+        sourceUrl: { type: string }
+        asOf: { type: string }
+        inputPerMillionUsd: { type: number }
+        cachedInputPerMillionUsd: { type: number }
+        cacheWritePerMillionUsd: { type: number }
+        outputPerMillionUsd: { type: number }
+        longContextThresholdTokens: { type: number }
+      required:
+        - sourceUrl
+        - asOf
+        - inputPerMillionUsd
+        - cachedInputPerMillionUsd
+        - cacheWritePerMillionUsd
+        - outputPerMillionUsd
+        - longContextThresholdTokens
+    CreatorRunOutcome:
+      type: object
+      properties:
+        proposedName: { type: string }
+        outcome: { type: string, enum: [confirmed, unconfirmed, duplicate, route_failed] }
+        refusalRule: { type: ["string", "null"] }
+      required: [proposedName, outcome, refusalRule]
     CreatorProposal:
       type: object
       properties:
@@ -2257,6 +2514,17 @@ components:
         straightLineDistanceM: { type: ["number", "null"] }
         roadDistanceM: { type: ["number", "null"] }
         travelDurationS: { type: ["number", "null"] }
+        categoryId: { type: ["string", "null"] }
+        categoryLabel: { type: ["string", "null"] }
+        range:
+          type: ["string", "null"]
+          enum: [practical, near, excursion, null]
+        geocodingLookupHint: { type: ["string", "null"] }
+        inclusionReason: { type: ["string", "null"] }
+        translations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorProposalTranslation"
         reviewedBy: { type: ["string", "null"] }
         reviewedAt: { type: ["string", "null"] }
         createdAt: { type: string }
@@ -2285,6 +2553,12 @@ components:
         - straightLineDistanceM
         - roadDistanceM
         - travelDurationS
+        - categoryId
+        - categoryLabel
+        - range
+        - geocodingLookupHint
+        - inclusionReason
+        - translations
         - reviewedBy
         - reviewedAt
         - createdAt

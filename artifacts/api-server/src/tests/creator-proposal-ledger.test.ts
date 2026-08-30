@@ -5,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import {
   adminUsersTable,
   creatorPlaceProposalsTable,
+  creatorProposalTranslationsTable,
   creatorVerificationAttemptsTable,
   creatorVerificationCandidatesTable,
   db,
@@ -314,6 +315,20 @@ test("two names resolving to one OSM identity produce one queue row", async () =
     origin: { latitude: 45.32, longitude: 13.84 },
     fetchFn,
   });
+  await db.update(creatorPlaceProposalsTable).set({
+    status: "rejected",
+    reviewedBy: actorId,
+    reviewedAt: new Date(),
+    inclusionReason: "canonical-content-must-survive",
+  }).where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
+  await db.insert(creatorProposalTranslationsTable).values(
+    ["sl", "en", "de", "it"].map((language) => ({
+      proposalId: first.proposal.id,
+      language,
+      name: `canonical-${language}`,
+      description: `canonical-description-${language}`,
+    })),
+  );
   const second = await runAndPersistCreatorSieve({
     tenantId,
     runId: secondRunId,
@@ -322,6 +337,8 @@ test("two names resolving to one OSM identity produce one queue row", async () =
     fetchFn,
   });
   assert.equal(second.proposal.id, first.proposal.id);
+  assert.equal(second.duplicate, true);
+  assert.notEqual(second.sourceProposal?.id, first.proposal.id);
 
   const stored = await db.select().from(creatorPlaceProposalsTable)
     .where(inArray(creatorPlaceProposalsTable.runId, [firstRunId, secondRunId]));
@@ -335,6 +352,16 @@ test("two names resolving to one OSM identity produce one queue row", async () =
   assert.equal(duplicate.supersededBy, canonical.id);
   assert.equal(duplicate.proposedName, secondName);
   assert.equal(duplicate.osmId, null);
+  const [canonicalAfter] = await db.select().from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
+  assert.equal(canonicalAfter?.status, "rejected");
+  assert.equal(canonicalAfter?.inclusionReason, "canonical-content-must-survive");
+  const canonicalTranslations = await db.select().from(creatorProposalTranslationsTable)
+    .where(eq(creatorProposalTranslationsTable.proposalId, first.proposal.id));
+  assert.deepEqual(
+    canonicalTranslations.map((row) => row.description).sort(),
+    ["de", "en", "it", "sl"].map((language) => `canonical-description-${language}`).sort(),
+  );
 
   const rerun = await upsertPendingCreatorProposal({
     tenantId,

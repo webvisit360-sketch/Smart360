@@ -828,6 +828,126 @@ export const PreviewCreatorOriginResponse = zod.object({
 
 
 /**
+ * @summary Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+ */
+
+export const createCreatorDraftTenantBodyNameMax = 160;
+
+export const createCreatorDraftTenantBodyAddressMax = 300;
+
+
+
+export const CreateCreatorDraftTenantBody = zod.object({
+  "mapUrl": zod.string().min(1),
+  "name": zod.string().min(1).max(createCreatorDraftTenantBodyNameMax),
+  "address": zod.string().min(1).max(createCreatorDraftTenantBodyAddressMax),
+  "tenantType": zod.enum(['kamp', 'hotel', 'apartmaji'])
+})
+
+export const CreateCreatorDraftTenantResponse = zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "mapUrl": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "tenantType": zod.enum(['kamp', 'hotel', 'apartmaji']),
+  "isPublished": zod.boolean()
+})
+
+
+/**
+ * @summary Run the server-controlled C1 model, sieve, and OSRM pipeline once
+ */
+export const StartCreatorRunParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const StartCreatorRunResponse = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "status": zod.enum(['running', 'completed', 'failed']),
+  "model": zod.string(),
+  "proposedCount": zod.number(),
+  "confirmedCount": zod.number(),
+  "unresolvedCount": zod.number(),
+  "outsidePracticalCount": zod.number(),
+  "outsideNearCount": zod.number(),
+  "outsideExcursionCount": zod.number(),
+  "routeFailuresCount": zod.number(),
+  "duplicatesMergedCount": zod.number(),
+  "inputTokens": zod.number(),
+  "outputTokens": zod.number(),
+  "costUsd": zod.number(),
+  "wallClockMs": zod.number().nullable(),
+  "nominatimThrottleMs": zod.number(),
+  "error": zod.string().nullable(),
+  "startedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "outcomes": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'duplicate', 'route_failed']),
+  "refusalRule": zod.string().nullable()
+})),
+  "pricing": zod.object({
+  "sourceUrl": zod.string(),
+  "asOf": zod.string(),
+  "inputPerMillionUsd": zod.number(),
+  "cachedInputPerMillionUsd": zod.number(),
+  "cacheWritePerMillionUsd": zod.number(),
+  "outputPerMillionUsd": zod.number(),
+  "longContextThresholdTokens": zod.number()
+})
+})
+
+
+/**
+ * @summary Read the latest Creator run report
+ */
+export const GetLatestCreatorRunParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetLatestCreatorRunResponse = zod.union([zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "status": zod.enum(['running', 'completed', 'failed']),
+  "model": zod.string(),
+  "proposedCount": zod.number(),
+  "confirmedCount": zod.number(),
+  "unresolvedCount": zod.number(),
+  "outsidePracticalCount": zod.number(),
+  "outsideNearCount": zod.number(),
+  "outsideExcursionCount": zod.number(),
+  "routeFailuresCount": zod.number(),
+  "duplicatesMergedCount": zod.number(),
+  "inputTokens": zod.number(),
+  "outputTokens": zod.number(),
+  "costUsd": zod.number(),
+  "wallClockMs": zod.number().nullable(),
+  "nominatimThrottleMs": zod.number(),
+  "error": zod.string().nullable(),
+  "startedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "outcomes": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'duplicate', 'route_failed']),
+  "refusalRule": zod.string().nullable()
+})),
+  "pricing": zod.object({
+  "sourceUrl": zod.string(),
+  "asOf": zod.string(),
+  "inputPerMillionUsd": zod.number(),
+  "cachedInputPerMillionUsd": zod.number(),
+  "cacheWritePerMillionUsd": zod.number(),
+  "outputPerMillionUsd": zod.number(),
+  "longContextThresholdTokens": zod.number()
+})
+}),zod.null()])
+
+
+/**
  * @summary List the owner-only Creator confirmation queue
  */
 export const ListCreatorProposalsParams = zod.object({
@@ -858,12 +978,148 @@ export const ListCreatorProposalsResponseItem = zod.object({
   "straightLineDistanceM": zod.number().nullable(),
   "roadDistanceM": zod.number().nullable(),
   "travelDurationS": zod.number().nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryLabel": zod.string().nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
+  "geocodingLookupHint": zod.string().nullable(),
+  "inclusionReason": zod.string().nullable(),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})),
   "reviewedBy": zod.string().nullable(),
   "reviewedAt": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
 export const ListCreatorProposalsResponse = zod.array(ListCreatorProposalsResponseItem)
+
+
+/**
+ * @summary List existing tenant categories available to C1 proposals
+ */
+export const ListCreatorCategoryOptionsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListCreatorCategoryOptionsResponseItem = zod.object({
+  "id": zod.string(),
+  "label": zod.string()
+})
+export const ListCreatorCategoryOptionsResponse = zod.array(ListCreatorCategoryOptionsResponseItem)
+
+
+/**
+ * @summary Edit only human/editorial C1 proposal fields
+ */
+export const EditCreatorProposalParams = zod.object({
+  "id": zod.coerce.string(),
+  "proposalId": zod.coerce.string()
+})
+
+export const editCreatorProposalBodyTranslationsMin = 4;
+export const editCreatorProposalBodyTranslationsMax = 4;
+
+
+
+export const EditCreatorProposalBody = zod.object({
+  "categoryId": zod.string().nullable(),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})).min(editCreatorProposalBodyTranslationsMin).max(editCreatorProposalBodyTranslationsMax)
+})
+
+export const EditCreatorProposalResponse = zod.object({
+  "id": zod.string(),
+  "runId": zod.string(),
+  "proposedName": zod.string(),
+  "normalizedName": zod.string(),
+  "originalQuery": zod.string(),
+  "confirmedQuery": zod.string().nullable(),
+  "confirmationMethod": zod.union([zod.literal('exact'),zod.literal('generic_type'),zod.literal('address_token'),zod.literal('shortened_query'),zod.literal(null)]).nullable(),
+  "requiresIndividualReview": zod.boolean(),
+  "status": zod.enum(['pending', 'unresolved', 'approved', 'rejected', 'superseded']),
+  "supersededBy": zod.string().nullable(),
+  "refusalReason": zod.string().nullable(),
+  "resolvedName": zod.string().nullable(),
+  "resolvedAddress": zod.string().nullable(),
+  "osmType": zod.string().nullable(),
+  "osmId": zod.number().nullable(),
+  "osmCategory": zod.string().nullable(),
+  "osmFeatureType": zod.string().nullable(),
+  "osmAddressType": zod.string().nullable(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "straightLineDistanceM": zod.number().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryLabel": zod.string().nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
+  "geocodingLookupHint": zod.string().nullable(),
+  "inclusionReason": zod.string().nullable(),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Reject a proposal and remember the name durably
+ */
+export const RejectCreatorProposalParams = zod.object({
+  "id": zod.coerce.string(),
+  "proposalId": zod.coerce.string()
+})
+
+export const RejectCreatorProposalResponse = zod.object({
+  "id": zod.string(),
+  "runId": zod.string(),
+  "proposedName": zod.string(),
+  "normalizedName": zod.string(),
+  "originalQuery": zod.string(),
+  "confirmedQuery": zod.string().nullable(),
+  "confirmationMethod": zod.union([zod.literal('exact'),zod.literal('generic_type'),zod.literal('address_token'),zod.literal('shortened_query'),zod.literal(null)]).nullable(),
+  "requiresIndividualReview": zod.boolean(),
+  "status": zod.enum(['pending', 'unresolved', 'approved', 'rejected', 'superseded']),
+  "supersededBy": zod.string().nullable(),
+  "refusalReason": zod.string().nullable(),
+  "resolvedName": zod.string().nullable(),
+  "resolvedAddress": zod.string().nullable(),
+  "osmType": zod.string().nullable(),
+  "osmId": zod.number().nullable(),
+  "osmCategory": zod.string().nullable(),
+  "osmFeatureType": zod.string().nullable(),
+  "osmAddressType": zod.string().nullable(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "straightLineDistanceM": zod.number().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryLabel": zod.string().nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
+  "geocodingLookupHint": zod.string().nullable(),
+  "inclusionReason": zod.string().nullable(),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
 
 
 /**
@@ -898,6 +1154,16 @@ export const ApproveCreatorProposalResponse = zod.object({
   "straightLineDistanceM": zod.number().nullable(),
   "roadDistanceM": zod.number().nullable(),
   "travelDurationS": zod.number().nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryLabel": zod.string().nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
+  "geocodingLookupHint": zod.string().nullable(),
+  "inclusionReason": zod.string().nullable(),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})),
   "reviewedBy": zod.string().nullable(),
   "reviewedAt": zod.string().nullable(),
   "createdAt": zod.string(),
@@ -943,6 +1209,16 @@ export const ApproveCreatorProposalsBulkResponseItem = zod.object({
   "straightLineDistanceM": zod.number().nullable(),
   "roadDistanceM": zod.number().nullable(),
   "travelDurationS": zod.number().nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryLabel": zod.string().nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
+  "geocodingLookupHint": zod.string().nullable(),
+  "inclusionReason": zod.string().nullable(),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})),
   "reviewedBy": zod.string().nullable(),
   "reviewedAt": zod.string().nullable(),
   "createdAt": zod.string(),

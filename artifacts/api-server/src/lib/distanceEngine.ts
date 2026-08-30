@@ -34,7 +34,9 @@ function normalizedQuery(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-export async function acquireNominatimTurn(): Promise<void> {
+/** Returns milliseconds spent queued/throttled. Existing callers may ignore it. */
+export async function acquireNominatimTurn(): Promise<number> {
+  const startedAt = Date.now();
   const turn = nominatimQueue.then(async () => {
     await db.transaction(async (tx) => {
       await tx.insert(geocodeThrottleTable).values({ id: 1 }).onConflictDoNothing();
@@ -53,6 +55,7 @@ export async function acquireNominatimTurn(): Promise<void> {
   });
   nominatimQueue = turn.catch(() => undefined);
   await turn;
+  return Date.now() - startedAt;
 }
 
 async function geocode(

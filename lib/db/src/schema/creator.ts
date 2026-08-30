@@ -16,6 +16,7 @@ import {
 import { sql } from "drizzle-orm";
 import { adminUsersTable } from "./admin";
 import { tenantsTable } from "./tenants";
+import { categoriesTable } from "./content";
 
 export const creatorPlaceProposalsTable = pgTable(
   "creator_place_proposals",
@@ -23,6 +24,15 @@ export const creatorPlaceProposalsTable = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
     runId: uuid("run_id").notNull(),
+    // C1 adds metadata to the existing ledger without making run_id a foreign
+    // key: Step B rows predate creator_runs and must remain readable.
+    categoryId: uuid("category_id").references(() => categoriesTable.id),
+    range: text("range"),
+    geocodingLookupHint: text("geocoding_lookup_hint"),
+    inclusionReason: text("inclusion_reason"),
+    // Legacy Step B rows are ready by default. C1 inserts false and flips true
+    // only in the same transaction that writes all four language rows.
+    contentReady: boolean("content_ready").notNull().default(true),
     proposedName: text("proposed_name").notNull(),
     normalizedName: text("normalized_name").notNull(),
     originalQuery: text("original_query").notNull(),
@@ -68,10 +78,62 @@ export const creatorPlaceProposalsTable = pgTable(
     check("creator_place_proposals_straight_distance_check", sql`${t.straightLineDistanceM} IS NULL OR ${t.straightLineDistanceM} >= 0`),
     check("creator_place_proposals_road_distance_check", sql`${t.roadDistanceM} IS NULL OR ${t.roadDistanceM} >= 0`),
     check("creator_place_proposals_duration_check", sql`${t.travelDurationS} IS NULL OR ${t.travelDurationS} >= 0`),
+    check("creator_place_proposals_range_check", sql`${t.range} IS NULL OR ${t.range} IN ('practical','near','excursion')`),
     uniqueIndex("creator_place_proposals_osm_identity_uq").on(t.tenantId, t.osmType, t.osmId).where(sql`${t.osmId} IS NOT NULL`),
     uniqueIndex("creator_place_proposals_unresolved_name_uq").on(t.tenantId, t.normalizedName).where(sql`${t.osmId} IS NULL`),
     index("creator_place_proposals_tenant_status_idx").on(t.tenantId, t.status, t.createdAt),
     index("creator_place_proposals_run_status_idx").on(t.runId, t.status),
+  ],
+);
+
+/** Durable C1 execution ledger. run_id on the older proposal table intentionally
+ * stays an unconstrained UUID for backward compatibility with Step B. */
+export const creatorRunsTable = pgTable(
+  "creator_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("running"),
+    originLatitude: doublePrecision("origin_latitude").notNull(),
+    originLongitude: doublePrecision("origin_longitude").notNull(),
+    reportJson: text("report_json"),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    costUsd: doublePrecision("cost_usd"),
+    nominatimThrottleWaitMs: integer("nominatim_throttle_wait_ms").notNull().default(0),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (t) => [
+    check("creator_runs_status_check", sql`${t.status} IN ('running','completed','failed')`),
+    check("creator_runs_latitude_check", sql`${t.originLatitude} BETWEEN -90 AND 90`),
+    check("creator_runs_longitude_check", sql`${t.originLongitude} BETWEEN -180 AND 180`),
+    check("creator_runs_tokens_check", sql`${t.inputTokens} >= 0 AND ${t.outputTokens} >= 0`),
+    check("creator_runs_wait_check", sql`${t.nominatimThrottleWaitMs} >= 0`),
+    index("creator_runs_tenant_status_idx").on(t.tenantId, t.status, t.createdAt),
+    // C1 is a one-shot evidence-producing run. A failed or completed run is
+    // still a run and must not be silently repeated after seeing its output.
+    uniqueIndex("creator_runs_one_per_tenant_uq").on(t.tenantId),
+  ],
+);
+
+/** C1 content is queue-only; no guest item is created from these rows. */
+export const creatorProposalTranslationsTable = pgTable(
+  "creator_proposal_translations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    proposalId: uuid("proposal_id").notNull().references(() => creatorPlaceProposalsTable.id, { onDelete: "cascade" }),
+    language: text("language").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (t) => [
+    check("creator_proposal_translations_language_check", sql`${t.language} IN ('sl','en','de','it')`),
+    uniqueIndex("creator_proposal_translations_proposal_language_uq").on(t.proposalId, t.language),
   ],
 );
 
@@ -122,3 +184,5 @@ export const creatorVerificationCandidatesTable = pgTable(
 export type CreatorPlaceProposal = typeof creatorPlaceProposalsTable.$inferSelect;
 export type CreatorVerificationAttempt = typeof creatorVerificationAttemptsTable.$inferSelect;
 export type CreatorVerificationCandidate = typeof creatorVerificationCandidatesTable.$inferSelect;
+export type CreatorRun = typeof creatorRunsTable.$inferSelect;
+export type CreatorProposalTranslation = typeof creatorProposalTranslationsTable.$inferSelect;

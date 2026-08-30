@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePreviewCreatorOrigin } from "@workspace/api-client-react";
+import { useCreateCreatorDraftTenant, usePreviewCreatorOrigin } from "@workspace/api-client-react";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { AdminButton as Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,50 +68,58 @@ function OsmTileMap({ lat, lng }: { lat: number; lng: number }) {
   );
 }
 
-export function KreatorOriginConfirmation() {
+export function KreatorOriginConfirmation({
+  onCreated,
+}: {
+  onCreated?: (tenantId: string) => void;
+}) {
   const [mapUrl, setMapUrl] = useState("");
   const [name, setName] = useState("");
   const [tenantAddress, setTenantAddress] = useState("");
-  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [tenantType, setTenantType] = useState<"kamp" | "hotel" | "apartmaji">("kamp");
 
   const previewMutation = usePreviewCreatorOrigin({
     mutation: {
       onSuccess: (data) => {
         setName(data.name || "");
         setTenantAddress("");
-        setIsConfirmed(false);
       },
-      onError: () => {
-        setIsConfirmed(false);
-      }
     }
+  });
+  const createMutation = useCreateCreatorDraftTenant({
+    mutation: {
+      onSuccess: (tenant) => onCreated?.(tenant.id),
+    },
   });
 
   const handlePreview = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!mapUrl.trim()) return;
-    setIsConfirmed(false);
     previewMutation.mutate({ data: { mapUrl: mapUrl.trim() } });
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMapUrl(e.target.value);
-    setIsConfirmed(false);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
-    setIsConfirmed(false);
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTenantAddress(e.target.value);
-    setIsConfirmed(false);
   };
 
   const handleConfirm = () => {
     if (!name.trim() || !tenantAddress.trim()) return;
-    setIsConfirmed(true);
+    createMutation.mutate({
+      data: {
+        mapUrl: mapUrl.trim(),
+        name: name.trim(),
+        address: tenantAddress.trim(),
+        tenantType,
+      },
+    });
   };
 
   const hasResult = previewMutation.isSuccess && previewMutation.data;
@@ -175,7 +183,7 @@ export function KreatorOriginConfirmation() {
       {hasResult && (
         <Card className={cn(
           "transition-colors overflow-hidden",
-          isConfirmed ? "ring-2 ring-primary bg-primary/[0.02]" : ""
+          createMutation.isSuccess ? "ring-2 ring-primary bg-primary/[0.02]" : ""
         )}>
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="p-6 flex flex-col gap-6 border-b md:border-b-0 md:border-r border-border">
@@ -191,6 +199,22 @@ export function KreatorOriginConfirmation() {
                   placeholder="Vnesite ime..."
                   className="bg-white font-[600]"
                 />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="tenantType" className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
+                  Tip nastanitve
+                </Label>
+                <select
+                  id="tenantType"
+                  value={tenantType}
+                  onChange={(event) => setTenantType(event.target.value as typeof tenantType)}
+                  className="h-10 rounded-md border border-input bg-white px-3 text-sm font-[600]"
+                >
+                  <option value="kamp">Kamp</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="apartmaji">Apartmaji</option>
+                </select>
               </div>
 
               <div className="flex flex-col gap-3">
@@ -236,21 +260,27 @@ export function KreatorOriginConfirmation() {
               </div>
 
               <div className="mt-auto pt-6 flex items-center justify-between">
-                {isConfirmed ? (
+                {createMutation.isSuccess ? (
                   <div className="flex items-center gap-2 text-[#116B41] font-[800] text-[15px] bg-[#E4F2EA] px-4 py-2.5 rounded-[12px] w-full justify-center">
                     <CheckCircle2 className="w-5 h-5" />
-                    Potrjeno v tem koraku · še ni shranjeno
+                    Osnutek je shranjen
                   </div>
                 ) : (
                   <Button 
                     onClick={handleConfirm}
-                    disabled={!name.trim() || !tenantAddress.trim()}
+                    disabled={!name.trim() || !tenantAddress.trim() || createMutation.isPending}
                     className="w-full text-[15px] h-[46px] rounded-[13px]"
                   >
-                    Potrdi izhodišče
+                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Ustvari neobjavljen osnutek
                   </Button>
                 )}
               </div>
+              {createMutation.isError && (
+                <div className="rounded-[12px] border border-destructive/20 bg-destructive/5 p-3 text-sm font-semibold text-destructive">
+                  {(createMutation.error as any)?.data?.error || "Osnutka ni bilo mogoče ustvariti."}
+                </div>
+              )}
             </div>
 
             <div className="bg-[#ECF0EA] relative min-h-[340px] flex flex-col border-l border-transparent">

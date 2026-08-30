@@ -2,11 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListCreatorProposalsQueryKey,
+  getGetLatestCreatorRunQueryKey,
   useApproveCreatorProposal,
   useApproveCreatorProposalsBulk,
+  useGetLatestCreatorRun,
+  useEditCreatorProposal,
+  useListCreatorCategoryOptions,
   useListCreatorProposals,
+  useRejectCreatorProposal,
+  useStartCreatorRun,
 } from "@workspace/api-client-react";
-import { AlertTriangle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Pencil, Play, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
@@ -27,9 +33,15 @@ export function KreatorProposalQueue({
 }) {
   const queryClient = useQueryClient();
   const queue = useListCreatorProposals(tenantId);
+  const latestRun = useGetLatestCreatorRun(tenantId);
+  const categoryOptions = useListCreatorCategoryOptions(tenantId);
   const [selected, setSelected] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCategoryId, setEditCategoryId] = useState<string>("");
+  const [editTranslations, setEditTranslations] = useState<Array<{ language: "sl" | "en" | "de" | "it"; name: string; description: string }>>([]);
   useEffect(() => {
     setSelected([]);
+    setEditingId(null);
   }, [tenantId]);
   const queryKey = getListCreatorProposalsQueryKey(tenantId);
   const refresh = async () => {
@@ -42,6 +54,32 @@ export function KreatorProposalQueue({
   const approveBulk = useApproveCreatorProposalsBulk({
     mutation: { onSuccess: refresh },
   });
+  const startRun = useStartCreatorRun({
+    mutation: {
+      onSuccess: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey }),
+          queryClient.invalidateQueries({ queryKey: getGetLatestCreatorRunQueryKey(tenantId) }),
+        ]);
+      },
+      onSettled: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: getGetLatestCreatorRunQueryKey(tenantId),
+        });
+      },
+    },
+  });
+  const editOne = useEditCreatorProposal({
+    mutation: {
+      onSuccess: async () => {
+        setEditingId(null);
+        await refresh();
+      },
+    },
+  });
+  const rejectOne = useRejectCreatorProposal({
+    mutation: { onSuccess: refresh },
+  });
   const rows = queue.data ?? [];
   const eligible = useMemo(
     () => rows.filter((row) => row.status === "pending" && !row.requiresIndividualReview),
@@ -52,6 +90,9 @@ export function KreatorProposalQueue({
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
+    ?? (startRun.error as any)?.data?.error
+    ?? (editOne.error as any)?.data?.error
+    ?? (rejectOne.error as any)?.data?.error
     ?? null;
 
   if (queue.isLoading) {
@@ -60,6 +101,69 @@ export function KreatorProposalQueue({
 
   return (
     <section className="mt-8 max-w-[880px] space-y-4" data-testid="creator-proposal-queue">
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-[18px] font-[800]">C1 · Model → sito → OSRM</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Pravila in poziv modelu pripravi strežnik. Nič se ne objavi gostom.
+              </p>
+            </div>
+            <Button
+              type="button"
+              disabled={startRun.isPending || latestRun.data?.status === "running" || latestRun.data?.status === "completed"}
+              onClick={() => startRun.mutate({ id: tenantId })}
+              className="rounded-[12px]"
+            >
+              {startRun.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+              {startRun.isPending ? "Kreator dela …" : "Zaženi C1 enkrat"}
+            </Button>
+          </div>
+          {latestRun.data && (
+            <div className="grid gap-2 rounded-xl bg-muted/60 p-4 text-sm md:grid-cols-3" data-testid="creator-run-report">
+              <strong className="md:col-span-3">Poročilo izvedbe · {latestRun.data.status}</strong>
+              <span>Predlagano: {latestRun.data.proposedCount}</span>
+              <span>Potrjeno s sitom: {latestRun.data.confirmedCount}</span>
+              <span>Ni bilo mogoče potrditi: {latestRun.data.unresolvedCount}</span>
+              <span>Zunaj praktičnega izbora: {latestRun.data.outsidePracticalCount}</span>
+              <span>Nad 20 min: {latestRun.data.outsideNearCount}</span>
+              <span>Nad 90 min: {latestRun.data.outsideExcursionCount}</span>
+              <span>OSRM brez poti: {latestRun.data.routeFailuresCount}</span>
+              <span>Združenih dvojnikov: {latestRun.data.duplicatesMergedCount}</span>
+              <span>Žetoni: {latestRun.data.inputTokens} + {latestRun.data.outputTokens}</span>
+              <span>Strošek: ${latestRun.data.costUsd.toFixed(6)}</span>
+              <span>Čas: {latestRun.data.wallClockMs === null ? "—" : `${(latestRun.data.wallClockMs / 1000).toFixed(1)} s`}</span>
+              <span>Nominatim čakanje: {(latestRun.data.nominatimThrottleMs / 1000).toFixed(1)} s</span>
+              <a
+                className="text-primary underline underline-offset-2 md:col-span-3"
+                href={latestRun.data.pricing.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Cena Terra na {latestRun.data.pricing.asOf}: ${latestRun.data.pricing.inputPerMillionUsd}/M vhodnih · ${latestRun.data.pricing.outputPerMillionUsd}/M izhodnih
+              </a>
+              {latestRun.data.error && <span className="text-destructive md:col-span-3">{latestRun.data.error}</span>}
+              {latestRun.data.outcomes.length > 0 && (
+                <details className="md:col-span-3">
+                  <summary className="cursor-pointer font-bold">
+                    Izidi in pravila zavrnitve ({latestRun.data.outcomes.length})
+                  </summary>
+                  <ol className="mt-2 max-h-64 list-decimal space-y-1 overflow-auto pl-5 font-mono text-xs">
+                    {latestRun.data.outcomes.map((outcome, index) => (
+                      <li key={`${outcome.proposedName}-${index}`}>
+                        {outcome.proposedName} · {outcome.outcome}
+                        {outcome.refusalRule ? ` · ${outcome.refusalRule}` : ""}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-[22px] font-[800] tracking-tight">Potrdite okolico</h2>
@@ -151,26 +255,133 @@ export function KreatorProposalQueue({
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-muted-foreground">
+                  {row.categoryLabel && <span>Kategorija: {row.categoryLabel}</span>}
+                  {row.range && <span>Obseg: {row.range}</span>}
                   {row.straightLineDistanceM !== null && <span>Zračna razdalja {(row.straightLineDistanceM / 1000).toFixed(1)} km</span>}
                   {row.roadDistanceM !== null && <span>Cestna razdalja {(row.roadDistanceM / 1000).toFixed(1)} km</span>}
                   {row.travelDurationS !== null && <span>{Math.round(row.travelDurationS / 60)} min vožnje</span>}
                 </div>
+                {row.translations.find((translation) => translation.language === "sl")?.description && (
+                  <p className="mt-3 text-sm leading-relaxed">
+                    {row.translations.find((translation) => translation.language === "sl")?.description}
+                  </p>
+                )}
+                {row.inclusionReason && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Utemeljitev modela: {row.inclusionReason}
+                  </p>
+                )}
+                {row.geocodingLookupHint && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Iskalni namig: {row.geocodingLookupHint}
+                  </p>
+                )}
+                {editingId === row.id && (
+                  <div className="mt-4 space-y-3 rounded-xl border bg-muted/30 p-4">
+                    <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      Kategorija
+                      <select
+                        value={editCategoryId}
+                        onChange={(event) => setEditCategoryId(event.target.value)}
+                        className="mt-1 h-10 w-full rounded-md border bg-white px-3 text-sm normal-case tracking-normal text-foreground"
+                      >
+                        <option value="">Brez ustrezne kategorije</option>
+                        {(categoryOptions.data ?? []).map((category) => (
+                          <option key={category.id} value={category.id}>{category.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {editTranslations.map((translation, index) => (
+                      <div key={translation.language} className="grid gap-2 md:grid-cols-[90px_1fr_2fr]">
+                        <strong className="pt-2 text-xs uppercase">{translation.language}</strong>
+                        <input
+                          aria-label={`Ime ${translation.language}`}
+                          value={translation.name}
+                          onChange={(event) => setEditTranslations((current) => current.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, name: event.target.value } : item))}
+                          className="h-10 rounded-md border bg-white px-3 text-sm"
+                        />
+                        <textarea
+                          aria-label={`Opis ${translation.language}`}
+                          value={translation.description}
+                          onChange={(event) => setEditTranslations((current) => current.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, description: event.target.value } : item))}
+                          className="min-h-20 rounded-md border bg-white px-3 py-2 text-sm"
+                        />
+                      </div>
+                    ))}
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button type="button" variant="ghost" onClick={() => setEditingId(null)}>Prekliči</Button>
+                      <Button
+                        type="button"
+                        disabled={editOne.isPending || editTranslations.some((translation) => !translation.name.trim())}
+                        onClick={() => editOne.mutate({
+                          id: tenantId,
+                          proposalId: row.id,
+                          data: { categoryId: editCategoryId || null, translations: editTranslations },
+                        })}
+                      >
+                        {editOne.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Shrani ureditev
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {row.status === "pending" && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={approveOne.isPending}
-                  onClick={() => {
-                    if (!confirm(`Potrdi lokacijo "${row.resolvedName ?? row.proposedName}" za ${tenantName}?`)) return;
-                    approveOne.mutate({ id: tenantId, proposalId: row.id });
-                  }}
-                  className="shrink-0 rounded-[12px]"
-                >
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Potrdi za {tenantName}
-                </Button>
+              {(row.status === "pending" || row.status === "unresolved") && (
+                <div className="flex shrink-0 flex-row flex-wrap gap-2 md:flex-col">
+                  {row.status === "pending" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={approveOne.isPending}
+                      onClick={() => {
+                        if (!confirm(`Potrdi lokacijo "${row.resolvedName ?? row.proposedName}" za ${tenantName}?`)) return;
+                        approveOne.mutate({ id: tenantId, proposalId: row.id });
+                      }}
+                      className="rounded-[12px]"
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Potrdi
+                    </Button>
+                  )}
+                  {row.status === "pending" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingId(row.id);
+                        setEditCategoryId(row.categoryId ?? "");
+                        setEditTranslations(["sl", "en", "de", "it"].map((language) => {
+                          const existing = row.translations.find((translation) => translation.language === language);
+                          return {
+                            language: language as "sl" | "en" | "de" | "it",
+                            name: existing?.name ?? row.proposedName,
+                            description: existing?.description ?? "",
+                          };
+                        }));
+                      }}
+                      className="rounded-[12px]"
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Uredi
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={rejectOne.isPending}
+                    onClick={() => {
+                      if (!confirm(`Zavrni lokacijo "${row.resolvedName ?? row.proposedName}"? Ime bo trajno ostalo na seznamu zavrnjenih.`)) return;
+                      rejectOne.mutate({ id: tenantId, proposalId: row.id });
+                    }}
+                    className="rounded-[12px] text-destructive"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Zavrni
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

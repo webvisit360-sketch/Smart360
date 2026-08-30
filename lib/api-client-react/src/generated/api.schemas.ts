@@ -328,6 +328,147 @@ export interface CreatorOriginPreview {
   referenceSource: CreatorOriginPreviewReferenceSource;
 }
 
+export type CreatorDraftTenantInputTenantType = typeof CreatorDraftTenantInputTenantType[keyof typeof CreatorDraftTenantInputTenantType];
+
+
+export const CreatorDraftTenantInputTenantType = {
+  kamp: 'kamp',
+  hotel: 'hotel',
+  apartmaji: 'apartmaji',
+} as const;
+
+export interface CreatorDraftTenantInput {
+  /** @minLength 1 */
+  mapUrl: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  address: string;
+  tenantType: CreatorDraftTenantInputTenantType;
+}
+
+export type CreatorDraftTenantTenantType = typeof CreatorDraftTenantTenantType[keyof typeof CreatorDraftTenantTenantType];
+
+
+export const CreatorDraftTenantTenantType = {
+  kamp: 'kamp',
+  hotel: 'hotel',
+  apartmaji: 'apartmaji',
+} as const;
+
+export interface CreatorDraftTenant {
+  id: string;
+  slug: string;
+  name: string;
+  address: string;
+  mapUrl: string;
+  latitude: number;
+  longitude: number;
+  tenantType: CreatorDraftTenantTenantType;
+  isPublished: boolean;
+}
+
+export type CreatorProposalTranslationLanguage = typeof CreatorProposalTranslationLanguage[keyof typeof CreatorProposalTranslationLanguage];
+
+
+export const CreatorProposalTranslationLanguage = {
+  sl: 'sl',
+  en: 'en',
+  de: 'de',
+  it: 'it',
+} as const;
+
+export interface CreatorProposalTranslation {
+  language: CreatorProposalTranslationLanguage;
+  name: string;
+  description: string;
+}
+
+export interface CreatorCategoryOption {
+  id: string;
+  label: string;
+}
+
+export interface CreatorProposalEditInput {
+  /** @nullable */
+  categoryId: string | null;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  translations: CreatorProposalTranslation[];
+}
+
+export type CreatorRunReportStatus = typeof CreatorRunReportStatus[keyof typeof CreatorRunReportStatus];
+
+
+export const CreatorRunReportStatus = {
+  running: 'running',
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+export type CreatorRunOutcomeOutcome = typeof CreatorRunOutcomeOutcome[keyof typeof CreatorRunOutcomeOutcome];
+
+
+export const CreatorRunOutcomeOutcome = {
+  confirmed: 'confirmed',
+  unconfirmed: 'unconfirmed',
+  duplicate: 'duplicate',
+  route_failed: 'route_failed',
+} as const;
+
+export interface CreatorRunOutcome {
+  proposedName: string;
+  outcome: CreatorRunOutcomeOutcome;
+  /** @nullable */
+  refusalRule: string | null;
+}
+
+export interface CreatorRunPricing {
+  sourceUrl: string;
+  asOf: string;
+  inputPerMillionUsd: number;
+  cachedInputPerMillionUsd: number;
+  cacheWritePerMillionUsd: number;
+  outputPerMillionUsd: number;
+  longContextThresholdTokens: number;
+}
+
+export interface CreatorRunReport {
+  id: string;
+  tenantId: string;
+  status: CreatorRunReportStatus;
+  model: string;
+  proposedCount: number;
+  confirmedCount: number;
+  unresolvedCount: number;
+  outsidePracticalCount: number;
+  outsideNearCount: number;
+  outsideExcursionCount: number;
+  routeFailuresCount: number;
+  duplicatesMergedCount: number;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  /** @nullable */
+  wallClockMs: number | null;
+  nominatimThrottleMs: number;
+  /** @nullable */
+  error: string | null;
+  startedAt: string;
+  /** @nullable */
+  completedAt: string | null;
+  outcomes: CreatorRunOutcome[];
+  pricing: CreatorRunPricing;
+}
+
 /**
  * @nullable
  */
@@ -350,6 +491,18 @@ export const CreatorProposalStatus = {
   approved: 'approved',
   rejected: 'rejected',
   superseded: 'superseded',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CreatorProposalRange = typeof CreatorProposalRange[keyof typeof CreatorProposalRange] | null;
+
+
+export const CreatorProposalRange = {
+  practical: 'practical',
+  near: 'near',
+  excursion: 'excursion',
 } as const;
 
 export interface CreatorProposal {
@@ -392,6 +545,17 @@ export interface CreatorProposal {
   roadDistanceM: number | null;
   /** @nullable */
   travelDurationS: number | null;
+  /** @nullable */
+  categoryId: string | null;
+  /** @nullable */
+  categoryLabel: string | null;
+  /** @nullable */
+  range: CreatorProposalRange;
+  /** @nullable */
+  geocodingLookupHint: string | null;
+  /** @nullable */
+  inclusionReason: string | null;
+  translations: CreatorProposalTranslation[];
   /** @nullable */
   reviewedBy: string | null;
   /** @nullable */
