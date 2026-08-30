@@ -27,3 +27,4 @@
 - [Passkey cancellation](passkey-cancellation.md) — SimpleWebAuthn owns the native ceremony signal; external watchdogs must also cancel its internal ceremony.
 - [Release diff isolation](release-diff-isolation.md) — compare every publish to the deployed revision; include untracked files and re-read schema diff after startup security setup.
 - [Slovenian plural helper](slovenian-plural-helper.md) — with the next code change, fall back to `other` for impossible Intl plural categories; do not amend the current publish.
+- [Creator run report](creator-run-report.md) — every model-assisted run must self-report outcomes, reasons, missing photos, and cost; next spec uses three driving-minute ranges.

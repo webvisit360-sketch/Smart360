@@ -597,7 +597,7 @@ export default function AdminTenantEdit() {
               {isOwner ? (
                 <>
                   <KreatorOriginConfirmation />
-                  <KreatorProposalQueue tenantId={id} />
+                  <KreatorProposalQueue tenantId={id} tenantName={tenant.name} />
                 </>
               ) : (
                 <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">

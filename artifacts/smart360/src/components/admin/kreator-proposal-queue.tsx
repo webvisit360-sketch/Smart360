@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListCreatorProposalsQueryKey,
@@ -10,10 +10,19 @@ import { AlertTriangle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react"
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 
-export function KreatorProposalQueue({ tenantId }: { tenantId: string }) {
+export function KreatorProposalQueue({
+  tenantId,
+  tenantName,
+}: {
+  tenantId: string;
+  tenantName: string;
+}) {
   const queryClient = useQueryClient();
   const queue = useListCreatorProposals(tenantId);
   const [selected, setSelected] = useState<string[]>([]);
+  useEffect(() => {
+    setSelected([]);
+  }, [tenantId]);
   const queryKey = getListCreatorProposalsQueryKey(tenantId);
   const refresh = async () => {
     setSelected([]);
@@ -52,11 +61,14 @@ export function KreatorProposalQueue({ tenantId }: { tenantId: string }) {
         <Button
           type="button"
           disabled={selected.length === 0 || approveBulk.isPending}
-          onClick={() => approveBulk.mutate({ id: tenantId, data: { proposalIds: selected } })}
+          onClick={() => {
+            if (!confirm(`Potrdi ${selected.length} lokacij za ${tenantName}?`)) return;
+            approveBulk.mutate({ id: tenantId, data: { proposalIds: selected } });
+          }}
           className="rounded-[12px]"
         >
           {approveBulk.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Potrdi izbrane ({selected.length})
+          Potrdi {selected.length} lokacij za {tenantName}
         </Button>
       </div>
 
@@ -141,11 +153,14 @@ export function KreatorProposalQueue({ tenantId }: { tenantId: string }) {
                   type="button"
                   variant="outline"
                   disabled={approveOne.isPending}
-                  onClick={() => approveOne.mutate({ id: tenantId, proposalId: row.id })}
+                  onClick={() => {
+                    if (!confirm(`Potrdi lokacijo "${row.resolvedName ?? row.proposedName}" za ${tenantName}?`)) return;
+                    approveOne.mutate({ id: tenantId, proposalId: row.id });
+                  }}
                   className="shrink-0 rounded-[12px]"
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Potrdi posamezno
+                  Potrdi za {tenantName}
                 </Button>
               )}
             </CardContent>

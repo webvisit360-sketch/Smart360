@@ -1,0 +1,49 @@
+My condition was wrong and you were right to stop at it rather than work
+around it.
+
+"Tenant from the session, never from the path" is a rule for a HOST session.
+The Creator is not a host tool. An operator belongs to no tenant — they work
+across all of them and switch between them. There is no tenant in an operator
+session and there cannot be one, so the path is the only place it can come
+from. I wrote a rule for one role and applied it to another.
+
+The corrected condition, and then step B closes.
+
+1 · WHAT THE PATH TENANT MUST SATISFY
+· the route is reachable only by an authenticated operator — proven, 404 on
+  all four routes for a host session, 13/13;
+· the tenant id from the path is validated to exist before any ledger query.
+  An unknown id must return 404, never an empty queue. An empty queue reads as
+  "nothing to review", which is the wrong answer to "this tenant does not
+  exist";
+· every ledger query is scoped by that tenant id. Confirm there is no query in
+  the Creator path that reads proposals without a tenant predicate.
+
+2 · THE REAL RISK IS NOT SECURITY, IT IS THE OPERATOR
+Nothing in the database prevents approving Meli Pu's places while intending
+Braslovče. Both are valid writes. The only guard is that the operator can see
+where they are.
+
+· the tenant name is visible on every Creator screen, in the header, not only
+  in the URL;
+· switching tenant clears any in-progress queue selection rather than carrying
+  it across;
+· the individual and bulk approval confirmations name the tenant in the
+  action itself — "Potrdi 12 lokacij za Camping MENINA", not "Potrdi 12
+  lokacij".
+
+3 · STEP B CLOSES on those two items. The catalog quotation is accepted: five
+status values, four confirmation methods, the conditional checks for
+reviewed_by, refusal_reason and confirmed_query, both partial index predicates
+correct, and the generated column with COALESCE. The three supersession guards
+were your own addition and they are right.
+
+Next is the model. That instruction will carry the revised specification — the
+single 15 km radius replaced by three ranges in driving minutes — and a
+requirement I will state now so you can keep it in mind: every Creator run
+must end by producing its own run report. Proposed, confirmed, could not be
+confirmed and why, rejected by the operator, missing photographs, and cost.
+Without the tool producing that itself, we would be judging the first real
+test by feel, and by feel it will always look good.
+
+Report and STOP.

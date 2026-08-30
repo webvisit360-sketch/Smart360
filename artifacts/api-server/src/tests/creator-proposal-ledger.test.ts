@@ -68,7 +68,7 @@ test("pending-name upsert suppresses duplicates and shortened rows require indiv
   assert.equal(duplicate.inserted, false);
   assert.equal(duplicate.proposal.id, first.proposal.id);
 
-  await recordCreatorVerification(first.proposal.id, {
+  await recordCreatorVerification(tenantId, first.proposal.id, {
     originalQuery,
     confirmedQuery: `Snežna jama ${unique}`,
     confirmationMethod: "shortened_query",
@@ -203,7 +203,7 @@ test("a rejected unresolved name stays rejected on a later run", async () => {
     originalQuery: proposedName,
   });
   proposalIds.push(first.proposal.id);
-  await recordCreatorVerification(first.proposal.id, {
+  await recordCreatorVerification(tenantId, first.proposal.id, {
     originalQuery: proposedName,
     confirmedQuery: null,
     confirmationMethod: null,

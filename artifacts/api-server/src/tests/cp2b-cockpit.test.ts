@@ -71,6 +71,18 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     .returning({ id: adminSessionsTable.id });
   const ownerCookie = `__Host-s360_admin=${ownerToken}`;
 
+  await t.test("unknown Creator tenant returns 404 instead of an empty queue", async () => {
+    const unknownTenantId = crypto.randomUUID();
+    const response = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${unknownTenantId}/creator/proposals`,
+      ownerCookie,
+    );
+    assert.equal(response.status, 404);
+    assert.deepEqual(await response.json(), { error: "Namestitev ni najdena." });
+  });
+
   // Captured lifecycle e-mails instead of Resend.
   const sentMails: Array<Record<string, unknown>> = [];
   _setLifecycleDeliveryOverride(async (body) => {

@@ -1,4 +1,6 @@
 import { Router, type IRouter } from "express";
+import { eq } from "drizzle-orm";
+import { db, tenantsTable } from "@workspace/db";
 import {
   ApproveCreatorProposalResponse,
   ApproveCreatorProposalsBulkBody,
@@ -26,6 +28,15 @@ router.use("/admin", requireAdmin);
 const first = (value: string | string[] | undefined) =>
   (Array.isArray(value) ? value[0] : value) ?? "";
 const serialize = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+
+async function requireCreatorTenant(tenantId: string): Promise<boolean> {
+  const [tenant] = await db
+    .select({ id: tenantsTable.id })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, tenantId))
+    .limit(1);
+  return Boolean(tenant);
+}
 
 router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => {
   const input = PreviewCreatorOriginBody.safeParse(req.body);
@@ -84,7 +95,12 @@ router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => 
 });
 
 router.get("/admin/tenants/:id/creator/proposals", async (req, res): Promise<void> => {
-  const rows = await listCreatorProposalQueue(first(req.params["id"]));
+  const tenantId = first(req.params["id"]);
+  if (!await requireCreatorTenant(tenantId)) {
+    res.status(404).json({ error: "Namestitev ni najdena." });
+    return;
+  }
+  const rows = await listCreatorProposalQueue(tenantId);
   res.json(ListCreatorProposalsResponse.parse(serialize(rows)));
 });
 
@@ -92,13 +108,18 @@ router.post(
   "/admin/tenants/:id/creator/proposals/:proposalId/approve",
   async (req, res): Promise<void> => {
     try {
+      const tenantId = first(req.params["id"]);
+      if (!await requireCreatorTenant(tenantId)) {
+        res.status(404).json({ error: "Namestitev ni najdena." });
+        return;
+      }
       const actor = await getAdminUser();
       if (!actor) {
         res.status(403).json({ error: "Operater ni najden." });
         return;
       }
       const row = await approveCreatorProposalIndividually(
-        first(req.params["id"]),
+        tenantId,
         first(req.params["proposalId"]),
         actor.id,
       );
@@ -120,17 +141,22 @@ router.post(
       return;
     }
     try {
+      const tenantId = first(req.params["id"]);
+      if (!await requireCreatorTenant(tenantId)) {
+        res.status(404).json({ error: "Namestitev ni najdena." });
+        return;
+      }
       const actor = await getAdminUser();
       if (!actor) {
         res.status(403).json({ error: "Operater ni najden." });
         return;
       }
       await approveCreatorProposalsBulk(
-        first(req.params["id"]),
+        tenantId,
         input.data.proposalIds,
         actor.id,
       );
-      const rows = await listCreatorProposalQueue(first(req.params["id"]));
+      const rows = await listCreatorProposalQueue(tenantId);
       res.json(ApproveCreatorProposalsBulkResponse.parse(serialize(rows)));
     } catch (error) {
       res.status(error instanceof CreatorBulkApprovalError ? 400 : 500).json({

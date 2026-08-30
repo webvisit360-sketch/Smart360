@@ -9,6 +9,12 @@ Exactly two roles exist:
 - **Smart360 operator:** the business owner, globally trusted, enters any tenant cockpit using the operator session without impersonating the client or knowing its password.
 - **Client account:** exactly one shared account per tenant, opened on the client's email address. The client alone sets and changes its password; there are no staff accounts or staff invitation flow.
 
+Operator sessions deliberately carry no tenant identity. Operator-only tenant tools select an existing tenant through the path, while HOST tools derive tenant identity from the HOST session.
+
+**Why:** The operator works across all tenants and cannot be bound to one; applying the HOST session rule to operator routes would make the cross-tenant cockpit impossible.
+
+**How to apply:** Validate every operator path tenant before domain queries, scope all downstream reads/writes by it, and keep the active tenant name visible in consequential actions.
+
 **Why:** The client company needs one shared tenant identity, while the Smart360 operator needs global operational access with separate attribution. Per-person staff membership would add complexity without serving the approved workflow.
 
 **How to apply:** Preserve owner/client actor separation. Never mint a client session for operator access. Attribute every mutation and timestamp it. Client password set/change remains a single client-only action.

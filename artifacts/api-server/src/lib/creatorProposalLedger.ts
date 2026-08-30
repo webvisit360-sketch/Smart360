@@ -109,6 +109,7 @@ export type CreatorVerificationRecord = {
 };
 
 export async function recordCreatorVerification(
+  tenantId: string,
   proposalId: string,
   record: CreatorVerificationRecord,
 ) {
@@ -132,7 +133,10 @@ export async function recordCreatorVerification(
   }
   return db.transaction(async (tx) => {
     const [sourceProposal] = await tx.select().from(creatorPlaceProposalsTable)
-      .where(eq(creatorPlaceProposalsTable.id, proposalId)).limit(1);
+      .where(and(
+        eq(creatorPlaceProposalsTable.id, proposalId),
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      )).limit(1);
     if (!sourceProposal) throw new Error("Predlog ni najden.");
 
     let canonicalProposal: typeof creatorPlaceProposalsTable.$inferSelect | undefined;
@@ -192,7 +196,10 @@ export async function recordCreatorVerification(
         longitude: record.longitude,
         straightLineDistanceM: record.straightLineDistanceM,
         updatedAt: new Date(),
-      }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+      }).where(and(
+        eq(creatorPlaceProposalsTable.id, proposalId),
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      )).returning();
       if (!superseded) throw new Error("Predloga ni bilo mogoče označiti kot združenega.");
       return canonicalProposal;
     }
@@ -215,7 +222,10 @@ export async function recordCreatorVerification(
       longitude: record.longitude,
       straightLineDistanceM: record.straightLineDistanceM,
       updatedAt: new Date(),
-    }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+    }).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+    )).returning();
     if (!updated) throw new Error("Predlog ni najden.");
     return updated;
   });
@@ -247,7 +257,7 @@ export async function runAndPersistCreatorSieve(input: {
     candidates: attempt.candidates,
   }));
   const proposal = result.verdict === "resolved"
-    ? await recordCreatorVerification(pending.proposal.id, {
+    ? await recordCreatorVerification(input.tenantId, pending.proposal.id, {
       originalQuery: result.originalQuery,
       confirmedQuery: result.confirmedQuery,
       confirmationMethod: result.confirmationMethod,
@@ -265,7 +275,7 @@ export async function runAndPersistCreatorSieve(input: {
       straightLineDistanceM: result.candidate.distanceKm * 1000,
       attempts,
     })
-    : await recordCreatorVerification(pending.proposal.id, {
+    : await recordCreatorVerification(input.tenantId, pending.proposal.id, {
       originalQuery: result.originalQuery,
       confirmedQuery: null,
       confirmationMethod: null,
