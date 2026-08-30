@@ -2156,9 +2156,9 @@ components:
         placeId: { type: ["string", "null"] }
         source: { type: string, enum: [search, place] }
         expandedUrl: { type: string }
-        address: { type: string }
-        addressSource: { type: string, enum: [nominatim] }
-      required: [lat, lng, name, placeId, source, expandedUrl, address, addressSource]
+        nominatimDisplayName: { type: string }
+        referenceSource: { type: string, enum: [nominatim] }
+      required: [lat, lng, name, placeId, source, expandedUrl, nominatimDisplayName, referenceSource]
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

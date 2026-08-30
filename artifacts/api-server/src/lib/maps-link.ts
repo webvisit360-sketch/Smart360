@@ -140,7 +140,10 @@ export function parseGoogleMapsLocationUrlOrThrow(
     throw new GoogleMapsParseError("invalid-url", "Google Maps povezava ni veljaven URL.");
   }
   if (!isAllowedGoogleMapsUrl(url)) {
-    throw new GoogleMapsParseError("disallowed-url", "Dovoljena je samo Google Maps povezava.");
+    throw new GoogleMapsParseError(
+      "disallowed-url",
+      "Gostitelj povezave ni dovoljen. Uporabite google.com, poddomeno *.google.com, maps.app.goo.gl ali goo.gl/maps.",
+    );
   }
   const parsed = parseGoogleMapsLocationUrl(value);
   if (parsed) return parsed;

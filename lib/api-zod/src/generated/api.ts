@@ -822,8 +822,8 @@ export const PreviewCreatorOriginResponse = zod.object({
   "placeId": zod.string().nullable(),
   "source": zod.enum(['search', 'place']),
   "expandedUrl": zod.string(),
-  "address": zod.string(),
-  "addressSource": zod.enum(['nominatim'])
+  "nominatimDisplayName": zod.string(),
+  "referenceSource": zod.enum(['nominatim'])
 })
 
 

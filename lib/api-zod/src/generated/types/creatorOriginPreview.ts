@@ -5,7 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
-import type { CreatorOriginPreviewAddressSource } from './creatorOriginPreviewAddressSource';
+import type { CreatorOriginPreviewReferenceSource } from './creatorOriginPreviewReferenceSource';
 import type { CreatorOriginPreviewSource } from './creatorOriginPreviewSource';
 
 export interface CreatorOriginPreview {
@@ -17,6 +17,6 @@ export interface CreatorOriginPreview {
   placeId: string | null;
   source: CreatorOriginPreviewSource;
   expandedUrl: string;
-  address: string;
-  addressSource: CreatorOriginPreviewAddressSource;
+  nominatimDisplayName: string;
+  referenceSource: CreatorOriginPreviewReferenceSource;
 }

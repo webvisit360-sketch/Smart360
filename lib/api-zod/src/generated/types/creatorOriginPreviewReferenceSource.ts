@@ -6,9 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CreatorOriginPreviewAddressSource = typeof CreatorOriginPreviewAddressSource[keyof typeof CreatorOriginPreviewAddressSource];
+export type CreatorOriginPreviewReferenceSource = typeof CreatorOriginPreviewReferenceSource[keyof typeof CreatorOriginPreviewReferenceSource];
 
 
-export const CreatorOriginPreviewAddressSource = {
+export const CreatorOriginPreviewReferenceSource = {
   nominatim: 'nominatim',
 } as const;

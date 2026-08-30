@@ -540,3 +540,17 @@ mtime_ms = 1788041158411
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d888108c-069a-4e34-8b62-6cf41c24ed46/28be7cd5-6a7c-4682-bb3e-d58041e6e437"
 storage_version_token = "1788041168063038"
 content_type = "image/png"
+
+[[outputs]]
+id = "5whD9nqlgjDY29buFSI79"
+uri = "file://screenshots/creator-step-a-camping-menina.png"
+type = "image"
+title = "Camping MENINA — Creator Step A confirmation"
+description = "Operator-entered address kept separate from the Nominatim pin sanity check; confirmation remains local and unsaved."
+logical_id = "70899c25-4245-4567-b1b3-2c595a406356"
+content_hash = "sha256:0da50a147eccb991dda41eb264f9584d96b9e9ac33c5ad14c6f8e363db48006a"
+size = 280224
+mtime_ms = 1788049108706
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/70899c25-4245-4567-b1b3-2c595a406356/ed9469f0-c9b9-48d9-b535-bdb2b626c704"
+storage_version_token = "1788049131512679"
+content_type = "image/png"

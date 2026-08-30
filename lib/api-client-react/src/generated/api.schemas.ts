@@ -308,10 +308,10 @@ export const CreatorOriginPreviewSource = {
   place: 'place',
 } as const;
 
-export type CreatorOriginPreviewAddressSource = typeof CreatorOriginPreviewAddressSource[keyof typeof CreatorOriginPreviewAddressSource];
+export type CreatorOriginPreviewReferenceSource = typeof CreatorOriginPreviewReferenceSource[keyof typeof CreatorOriginPreviewReferenceSource];
 
 
-export const CreatorOriginPreviewAddressSource = {
+export const CreatorOriginPreviewReferenceSource = {
   nominatim: 'nominatim',
 } as const;
 
@@ -324,8 +324,8 @@ export interface CreatorOriginPreview {
   placeId: string | null;
   source: CreatorOriginPreviewSource;
   expandedUrl: string;
-  address: string;
-  addressSource: CreatorOriginPreviewAddressSource;
+  nominatimDisplayName: string;
+  referenceSource: CreatorOriginPreviewReferenceSource;
 }
 
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];

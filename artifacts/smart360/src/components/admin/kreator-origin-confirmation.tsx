@@ -71,12 +71,14 @@ function OsmTileMap({ lat, lng }: { lat: number; lng: number }) {
 export function KreatorOriginConfirmation() {
   const [mapUrl, setMapUrl] = useState("");
   const [name, setName] = useState("");
+  const [tenantAddress, setTenantAddress] = useState("");
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   const previewMutation = usePreviewCreatorOrigin({
     mutation: {
       onSuccess: (data) => {
         setName(data.name || "");
+        setTenantAddress("");
         setIsConfirmed(false);
       },
       onError: () => {
@@ -102,8 +104,13 @@ export function KreatorOriginConfirmation() {
     setIsConfirmed(false);
   };
 
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTenantAddress(e.target.value);
+    setIsConfirmed(false);
+  };
+
   const handleConfirm = () => {
-    if (!name.trim()) return;
+    if (!name.trim() || !tenantAddress.trim()) return;
     setIsConfirmed(true);
   };
 
@@ -117,7 +124,7 @@ export function KreatorOriginConfirmation() {
           Korak 1: Potrditev izhodišča
         </h2>
         <p className="text-muted-foreground text-[15px] font-[500] max-w-[600px] leading-relaxed">
-          Sistem bo analiziral URL povezavo in pridobil natančne koordinate ter naslov. Preglejte in potrdite podatke, preden nadaljujemo z avtomatizirano pripravo vodnika.
+          Sistem bo iz povezave pridobil koordinate. Naslov vnesete vi; Nominatimova bližnja znana točka je samo preverjanje položaja pina.
         </p>
       </div>
 
@@ -186,16 +193,31 @@ export function KreatorOriginConfirmation() {
                 />
               </div>
 
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="tenantAddress" className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground flex items-center justify-between">
+                  <span>Naslov namestitve</span>
+                  <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md text-muted-foreground normal-case tracking-normal">Vnesite ročno · zahtevano</span>
+                </Label>
+                <Input
+                  id="tenantAddress"
+                  value={tenantAddress}
+                  onChange={handleAddressChange}
+                  placeholder="Npr. Varpolje 105, 3332 Rečica ob Savinji"
+                  className="bg-white font-[600]"
+                  autoComplete="street-address"
+                />
+              </div>
+
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-2">
-                  <span className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground flex items-center gap-2">
-                    Naslov 
-                    <span className="text-[10px] bg-[#E4F2EA] text-[#116B41] normal-case tracking-normal px-1.5 py-0.5 rounded flex items-center">
-                      Nominatim
-                    </span>
+                  <span className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
+                    Najbližja znana točka (Nominatim)
                   </span>
                   <p className="text-[15px] font-[600] leading-snug">
-                    {previewMutation.data.address}
+                    {previewMutation.data.nominatimDisplayName}
+                  </p>
+                  <p className="text-[12px] leading-relaxed text-muted-foreground">
+                    To je samo preverjanje položaja pina, ne naslov namestitve.
                   </p>
                 </div>
 
@@ -222,7 +244,7 @@ export function KreatorOriginConfirmation() {
                 ) : (
                   <Button 
                     onClick={handleConfirm}
-                    disabled={!name.trim()}
+                    disabled={!name.trim() || !tenantAddress.trim()}
                     className="w-full text-[15px] h-[46px] rounded-[13px]"
                   >
                     Potrdi izhodišče

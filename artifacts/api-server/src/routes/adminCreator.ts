@@ -50,14 +50,15 @@ router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => 
     });
     if (!response.ok) throw new Error(`Nominatim ${response.status}`);
     const data = (await response.json()) as { display_name?: unknown };
-    const address = typeof data.display_name === "string" ? data.display_name : null;
-    if (!address) throw new Error("Nominatim ni vrnil naslova.");
+    const nominatimDisplayName =
+      typeof data.display_name === "string" ? data.display_name : null;
+    if (!nominatimDisplayName) throw new Error("Nominatim ni vrnil bližnje znane točke.");
 
     res.json(PreviewCreatorOriginResponse.parse({
       ...parsed,
       expandedUrl,
-      address,
-      addressSource: "nominatim",
+      nominatimDisplayName,
+      referenceSource: "nominatim",
     }));
   } catch (error) {
     if (error instanceof GoogleMapsParseError || error instanceof GoogleMapsRedirectError) {
@@ -65,7 +66,7 @@ router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => 
       return;
     }
     req.log.warn({ error }, "Creator origin preview failed");
-    res.status(502).json({ error: "Naslova pri Nominatimu ni bilo mogoče preveriti.", code: "nominatim-failed" });
+    res.status(502).json({ error: "Bližnje znane točke pri Nominatimu ni bilo mogoče preveriti.", code: "nominatim-failed" });
   }
 });
 

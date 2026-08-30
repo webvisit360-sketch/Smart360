@@ -80,6 +80,22 @@ test("offline: deceptive Google substring hostname is refused", () => {
   );
 });
 
+test("offline: country domains are deliberately refused with accepted hosts named", () => {
+  for (const url of [
+    "https://google.si/maps/search/46.3,14.9",
+    "https://maps.google.de/maps/search/46.3,14.9",
+  ]) {
+    assert.throws(
+      () => parseGoogleMapsLocationUrlOrThrow(url),
+      (error: unknown) =>
+        error instanceof GoogleMapsParseError &&
+        error.kind === "disallowed-url" &&
+        /google\.com/.test(error.message) &&
+        /maps\.app\.goo\.gl/.test(error.message),
+    );
+  }
+});
+
 test("offline: named place without pin and viewport-only URL fail distinctly", () => {
   assert.throws(
     () =>

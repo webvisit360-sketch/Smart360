@@ -15,6 +15,8 @@ description: Binding rules for POI distance proposals, geocoding, and host locat
 - **Review list is one row per POI**, least-confident first: failed → pending low (farthest first) → pending high → new → manual.
 - Origin is always the tenant's derived coordinates; a run errors when the tenant has no stored link ("Namestitev nima shranjene Google Maps povezave.").
 - Geocoding quality on Meli Pu data: ~20% of free-text addresses fail and some resolve to wrong far-away places (e.g. namesakes abroad) — the human review gate is essential; never bulk-approve low-confidence rows.
+- **Reverse geocoding is never an address source.** Operators type tenant addresses; a Nominatim reverse result is only a private pin sanity check. Camping MENINA's pin plausibly returned “Charman's Bridge” instead of Varpolje 105. Keep this as the canonical Step 3 sieve failure: `layer=poi`, name match, and a distance ceiling are required because the nearest named feature can be confidently wrong for the business.
+  - **Why:** reverse geocoders return a nearby feature rather than “unknown,” so village and postcode context can make a wrong bridge, track, or stream look authoritative.
 - **Legacy provenance exception:** the owner explicitly approved the Trieste city-centre correction on 2026-08-28. When the immutable review ledger is introduced, this one legacy decision must be backfilled as an individual owner review; all other pre-ledger approvals remain “human review not proven.”
   - **Why:** the correction is a documented human decision made before the ledger exists and would otherwise become indistinguishable from bulk approvals.
 
