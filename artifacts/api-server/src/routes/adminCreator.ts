@@ -35,6 +35,7 @@ import { seedTenantContent } from "../lib/tenantSeeds";
 import { RESERVED_SLUGS, slugify } from "../lib/slug";
 import { CREATOR_C1_PRICING, runCreatorC1, type CreatorC1Report } from "../lib/creatorC1";
 import {
+  claimCreatorRunOnce,
   isPreservedMeninaEvidenceTenant,
   MENINA_AUTHORIZED_RUN_COUNT,
 } from "../lib/creatorMeninaProductionRun";
@@ -241,22 +242,26 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
     res.status(400).json({ error: "Osnutek nima popolnega potrjenega izhodišča." });
     return;
   }
-  if (isPreservedMeninaEvidenceTenant({
+  const isMenina = isPreservedMeninaEvidenceTenant({
     name: tenant.name,
     latitude: tenant.latitude,
     longitude: tenant.longitude,
-  })) {
-    const preservedRuns = await db.select({ id: creatorRunsTable.id })
-      .from(creatorRunsTable)
-      .where(eq(creatorRunsTable.tenantId, tenantId));
-    if (preservedRuns.length >= MENINA_AUTHORIZED_RUN_COUNT) {
-      res.status(409).json({ error: "Dve odobreni produkcijski izvedbi C1 za Camping MENINA sta dokazno zaklenjeni; nadaljnja izvedba ni dovoljena." });
+  });
+  try {
+    const claim = isMenina
+      ? await claimCreatorRunOnce(
+        tenantId,
+        { latitude: tenant.latitude, longitude: tenant.longitude },
+        MENINA_AUTHORIZED_RUN_COUNT,
+      )
+      : null;
+    if (claim?.existingRun) {
+      res.status(409).json({ error: "Dve odobreni produkcijski izvedbi C1 za Camping MENINA sta dokazno zaklenjeni ali pa druga izvedba že teče." });
       return;
     }
-  }
-  try {
     const result = await runCreatorC1({
       tenantId,
+      claimedRunId: claim?.claimedRunId ?? undefined,
       origin: { latitude: tenant.latitude, longitude: tenant.longitude },
       region: tenant.creatorOriginRegion,
       tenantType: tenant.tenantType,

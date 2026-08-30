@@ -8,7 +8,10 @@ import {
   sectionsTable,
 } from "@workspace/db";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
-import { runAndPersistCreatorSieve } from "./creatorProposalLedger";
+import {
+  normalizeCreatorProposalName,
+  runAndPersistCreatorSieve,
+} from "./creatorProposalLedger";
 
 export const CREATOR_C1_BATCH_SIZE = 15;
 export const CREATOR_C1_LANGUAGE_CODES = ["sl", "en", "de", "it"] as const;
@@ -141,7 +144,11 @@ export function calculateCreatorC1Cost(input: {
 }
 
 /** Executes one batch and makes exactly one retry for malformed model JSON. */
-export async function generateCreatorC1Batch(model: CreatorC1Model, prompt: string) {
+export async function generateCreatorC1Batch(
+  model: CreatorC1Model,
+  prompt: string,
+  validatePlaces?: (places: CreatorC1Place[]) => void,
+) {
   let inputTokens = 0; let outputTokens = 0; let costUsd = 0;
   for (let attempt = 0; attempt < 2; attempt++) {
     const result = await model({ prompt, schema: CREATOR_C1_MODEL_JSON_SCHEMA });
@@ -152,7 +159,9 @@ export async function generateCreatorC1Batch(model: CreatorC1Model, prompt: stri
     }
     costUsd += result.costUsd;
     try {
-      return { places: validateCreatorC1Batch(result.content), inputTokens, outputTokens, costUsd };
+      const places = validateCreatorC1Batch(result.content);
+      validatePlaces?.(places);
+      return { places, inputTokens, outputTokens, costUsd };
     } catch (error) {
       if (attempt === 1) throw error;
     }
@@ -298,6 +307,7 @@ export async function runCreatorC1(input: {
       ))).map((row) => row.proposedName);
     const model = input.model ?? openAiCreatorC1Model;
     const all: CreatorC1Place[] = [];
+    const proposedNames = new Set<string>();
     for (let batch = 0; batch < (input.batches ?? 4); batch++) {
       const prompt = promptFor({
         origin: input.origin,
@@ -307,12 +317,22 @@ export async function runCreatorC1(input: {
         rejectedNames,
         priorProposedNames: all.map((place) => place.proposedName),
       });
-      const generated = await generateCreatorC1Batch(model, prompt);
+      const generated = await generateCreatorC1Batch(model, prompt, (places) => {
+        const namesInBatch = new Set<string>();
+        for (const place of places) {
+          const normalized = normalizeCreatorProposalName(place.proposedName);
+          if (proposedNames.has(normalized) || namesInBatch.has(normalized)) {
+            throw new Error(`C1 batch repeated a proposed name: ${place.proposedName}`);
+          }
+          namesInBatch.add(normalized);
+        }
+      });
       inputTokens += generated.inputTokens; outputTokens += generated.outputTokens; costUsd += generated.costUsd;
       report.inputTokens = inputTokens; report.outputTokens = outputTokens; report.costUsd = costUsd;
       for (const place of generated.places) {
         if (place.existingCategoryId !== null && !categories.has(place.existingCategoryId)) throw new Error("C1 model selected a category outside this tenant catalogue.");
         all.push(place);
+        proposedNames.add(normalizeCreatorProposalName(place.proposedName));
         proposed++;
       }
     }
@@ -409,10 +429,6 @@ export async function runCreatorC1(input: {
     report.nominatimThrottleWaitMs = nominatimThrottleWaitMs;
     report.status = "failed";
     report.error = sanitizedError(error);
-    await db.delete(creatorPlaceProposalsTable).where(and(
-      eq(creatorPlaceProposalsTable.runId, run.id),
-      eq(creatorPlaceProposalsTable.contentReady, false),
-    ));
     await db.update(creatorRunsTable).set({
       status: "failed", reportJson: serializeCreatorC1Report(report),
       inputTokens, outputTokens, costUsd, nominatimThrottleWaitMs, completedAt: new Date(),

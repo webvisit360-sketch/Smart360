@@ -60,6 +60,29 @@ test("C1 batch requires exactly fifteen rows and retries malformed output once",
   assert.equal(generated.costUsd, 0.04);
 });
 
+test("C1 retries a batch that repeats an earlier normalized name", async () => {
+  let calls = 0;
+  const generated = await generateCreatorC1Batch(async () => {
+    calls++;
+    return {
+      content: {
+        places: Array.from({ length: CREATOR_C1_BATCH_SIZE }, (_, index) => {
+          const candidate = place(index) as Record<string, unknown>;
+          if (calls === 1 && index === 0) candidate.proposedName = "Mozirski gaj";
+          return candidate;
+        }),
+      },
+      inputTokens: 10, outputTokens: 5, costUsd: 0.02,
+    };
+  }, "server prompt", (places) => {
+    if (places.some((candidate) => candidate.proposedName === "Mozirski gaj")) {
+      throw new Error("C1 batch repeated a proposed name");
+    }
+  });
+  assert.equal(calls, 2);
+  assert.equal(generated.places.length, CREATOR_C1_BATCH_SIZE);
+});
+
 test("C1 geocoding uses the plain name first and lookup hint only after no results", async () => {
   const queries: string[] = [];
   const result = await runCreatorSieve("Slap Rinka", { latitude: 46.31, longitude: 14.91 }, {
@@ -102,7 +125,7 @@ test("later C1 batches receive prior names and practical places are forbidden", 
     priorProposedNames: ["Mozirski gaj", "Golte"],
   });
   assert.match(prompt, /Do not repeat any name already proposed by an earlier batch/);
-  assert.match(prompt, /\\["Mozirski gaj","Golte"\\]/);
+  assert.match(prompt, /\["Mozirski gaj","Golte"\]/);
   assert.match(prompt, /Never propose proximity-selected practical services/);
   assert.doesNotMatch(prompt, /practical means/);
 });
@@ -207,7 +230,7 @@ test("failed C1 rows stay hidden while run history allows reruns but blocks conc
     like(creatorPlaceProposalsTable.proposedName, `${prefix}%`),
   ));
   assert.equal(leaked.some((row) => row.contentReady), false);
-  assert.equal(leaked.length, 0);
+  assert.ok(leaked.length > 0);
   const failed = await db.select().from(creatorRunsTable).where(and(
     eq(creatorRunsTable.tenantId, tenant.id), eq(creatorRunsTable.status, "failed"),
   ));

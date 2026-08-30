@@ -285,9 +285,10 @@ async function runCreatorSieveInternal(
       sawBlocked = true;
       continue;
     }
-    // The alternate query affects Nominatim retrieval only. Identity matching
-    // remains anchored to the model's plain proposed name.
-    const confirmationMethod = matchesName(name, raw);
+    // An explicit C1 lookup hint affects retrieval only; identity matching
+    // remains anchored to the plain proposed name. Step B's built-in shortened
+    // retry keeps its established shortened-name matching behavior.
+    const confirmationMethod = matchesName(options.fallbackQuery ? name : matchedQuery, raw);
     if (!confirmationMethod) {
       sawNameMismatch = true;
       continue;

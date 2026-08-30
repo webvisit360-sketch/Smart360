@@ -82,7 +82,7 @@ export const creatorPlaceProposalsTable = pgTable(
     uniqueIndex("creator_place_proposals_osm_identity_uq").on(t.tenantId, t.osmType, t.osmId).where(sql`${t.osmId} IS NOT NULL`),
     // A human rejection is durable across runs. An unresolved sieve result is
     // run evidence and may be checked again after the verification pipe changes.
-    uniqueIndex("creator_place_proposals_unresolved_name_uq")
+    uniqueIndex("creator_place_proposals_rejected_name_uq")
       .on(t.tenantId, t.normalizedName)
       .where(sql`${t.osmId} IS NULL AND ${t.status} = 'rejected'`),
     // Still suppress duplicate names inside one model run.

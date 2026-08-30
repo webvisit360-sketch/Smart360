@@ -38,43 +38,57 @@ export async function upsertPendingCreatorProposal(input: {
   contentReady?: boolean;
 }) {
   const normalizedName = normalizeCreatorProposalName(input.proposedName);
-  const [inserted] = await db
-    .insert(creatorPlaceProposalsTable)
-    .values({ ...input, normalizedName })
-    // Intentionally suppresses both partial unique-index conflicts. A rerun
-    // never errors merely because the same unresolved name is already in flight.
-    .onConflictDoNothing()
-    .returning();
-  if (inserted) return { proposal: inserted, inserted: true };
-  const [existing] = await db
-    .select()
-    .from(creatorPlaceProposalsTable)
-    .where(and(
-      eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
-      eq(creatorPlaceProposalsTable.normalizedName, normalizedName),
-      isNull(creatorPlaceProposalsTable.osmId),
-      sql`(${creatorPlaceProposalsTable.runId} = ${input.runId} OR ${creatorPlaceProposalsTable.status} = 'rejected')`,
-    ))
-    .limit(1);
-  if (!existing) throw new Error("Predloga po konfliktu ni bilo mogoče ponovno prebrati.");
-  if (existing.status === "superseded") {
-    if (!existing.supersededBy) {
-      throw new Error("Združeni predlog nima povezave na kanonični predlog.");
-    }
-    const [canonical] = await db
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(
+      hashtextextended(${`${input.tenantId}:creator-name:${normalizedName}`}, 0)
+    )`);
+    const [rejected] = await tx
       .select()
       .from(creatorPlaceProposalsTable)
       .where(and(
-        eq(creatorPlaceProposalsTable.id, existing.supersededBy),
         eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+        eq(creatorPlaceProposalsTable.normalizedName, normalizedName),
+        eq(creatorPlaceProposalsTable.status, "rejected"),
       ))
       .limit(1);
-    if (!canonical) {
-      throw new Error("Kanoničnega predloga po združitvi ni bilo mogoče najti.");
+    if (rejected) return { proposal: rejected, inserted: false };
+
+    const [inserted] = await tx
+      .insert(creatorPlaceProposalsTable)
+      .values({ ...input, normalizedName })
+      .onConflictDoNothing()
+      .returning();
+    if (inserted) return { proposal: inserted, inserted: true };
+
+    const [existing] = await tx
+      .select()
+      .from(creatorPlaceProposalsTable)
+      .where(and(
+        eq(creatorPlaceProposalsTable.runId, input.runId),
+        eq(creatorPlaceProposalsTable.normalizedName, normalizedName),
+        isNull(creatorPlaceProposalsTable.osmId),
+      ))
+      .limit(1);
+    if (!existing) throw new Error("Predloga po konfliktu ni bilo mogoče ponovno prebrati.");
+    if (existing.status === "superseded") {
+      if (!existing.supersededBy) {
+        throw new Error("Združeni predlog nima povezave na kanonični predlog.");
+      }
+      const [canonical] = await tx
+        .select()
+        .from(creatorPlaceProposalsTable)
+        .where(and(
+          eq(creatorPlaceProposalsTable.id, existing.supersededBy),
+          eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+        ))
+        .limit(1);
+      if (!canonical) {
+        throw new Error("Kanoničnega predloga po združitvi ni bilo mogoče najti.");
+      }
+      return { proposal: canonical, inserted: false };
     }
-    return { proposal: canonical, inserted: false };
-  }
-  return { proposal: existing, inserted: false };
+    return { proposal: existing, inserted: false };
+  });
 }
 
 export type CreatorVerificationRecord = {
@@ -450,18 +464,31 @@ export async function rejectCreatorProposalIndividually(
   actorId: string,
 ) {
   await requireActor(actorId);
-  const [updated] = await db.update(creatorPlaceProposalsTable).set({
-    status: "rejected",
-    refusalReason: "human-rejected",
-    reviewedBy: actorId,
-    reviewedAt: new Date(),
-    updatedAt: new Date(),
-  }).where(and(
-    eq(creatorPlaceProposalsTable.id, proposalId),
-    eq(creatorPlaceProposalsTable.tenantId, tenantId),
-    inArray(creatorPlaceProposalsTable.status, ["pending", "unresolved"]),
-    eq(creatorPlaceProposalsTable.contentReady, true),
-  )).returning({ id: creatorPlaceProposalsTable.id });
+  const updated = await db.transaction(async (tx) => {
+    const [proposal] = await tx.select({
+      normalizedName: creatorPlaceProposalsTable.normalizedName,
+    }).from(creatorPlaceProposalsTable).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+    )).limit(1);
+    if (!proposal) return null;
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(
+      hashtextextended(${`${tenantId}:creator-name:${proposal.normalizedName}`}, 0)
+    )`);
+    const [row] = await tx.update(creatorPlaceProposalsTable).set({
+      status: "rejected",
+      refusalReason: "human-rejected",
+      reviewedBy: actorId,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    }).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      inArray(creatorPlaceProposalsTable.status, ["pending", "unresolved"]),
+      eq(creatorPlaceProposalsTable.contentReady, true),
+    )).returning({ id: creatorPlaceProposalsTable.id });
+    return row ?? null;
+  });
   if (!updated) throw new Error("Predlog ni najden ali ga ni mogoče zavrniti.");
   return (await listCreatorProposalQueue(tenantId)).find((row) => row.id === proposalId);
 }

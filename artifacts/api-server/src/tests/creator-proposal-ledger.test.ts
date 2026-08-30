@@ -62,7 +62,7 @@ test("pending-name upsert suppresses duplicates and shortened rows require indiv
 
   const duplicate = await upsertPendingCreatorProposal({
     tenantId,
-    runId: runIds[1]!,
+    runId: runIds[0]!,
     proposedName: originalQuery,
     originalQuery,
   });
@@ -228,6 +228,11 @@ test("a rejected unresolved name stays rejected on a later run", async () => {
       candidates: [],
     }],
   });
+  await db.update(creatorPlaceProposalsTable).set({
+    status: "rejected",
+    reviewedBy: actorId,
+    reviewedAt: new Date(),
+  }).where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
 
   const rerun = await runAndPersistCreatorSieve({
     tenantId,
@@ -241,7 +246,7 @@ test("a rejected unresolved name stays rejected on a later run", async () => {
   assert.equal(rerun.inserted, false);
   assert.equal(rerun.result, null);
   assert.equal(rerun.proposal.id, first.proposal.id);
-  assert.equal(rerun.proposal.status, "unresolved");
+  assert.equal(rerun.proposal.status, "rejected");
   assert.equal(rerun.proposal.refusalReason, "blocked-class-or-addresstype");
 });
 
@@ -369,8 +374,9 @@ test("two names resolving to one OSM identity produce one queue row", async () =
     proposedName: secondName,
     originalQuery: secondName,
   });
-  assert.equal(rerun.inserted, false);
-  assert.equal(rerun.proposal.id, canonical.id);
+  proposalIds.push(rerun.proposal.id);
+  assert.equal(rerun.inserted, true);
+  assert.notEqual(rerun.proposal.id, canonical.id);
 
   const queue = await listCreatorProposalQueue(tenantId);
   const fixtureQueueRows = queue.filter((row) =>
