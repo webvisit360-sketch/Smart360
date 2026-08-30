@@ -1,0 +1,63 @@
+Ignore the #44 card. Its archive was rejected by the task service, the
+supersession reason is recorded, and nothing about it needs a decision. If it
+redraws, leave it.
+
+Production has been published. Continue C1 in this order and report once at
+the end, not between steps.
+
+1 · QUOTE THE PRODUCTION CATALOG
+Read production directly and quote verbatim:
+· coordinate_confirmed_by and coordinate_confirmed_at, with the admin_users
+  foreign key;
+· the confirmation_method CHECK, listing all six allowed values;
+· creator_place_proposals_operator_provenance_check in full;
+· the generation expression of requires_individual_review, which must now
+  include operator_coordinates.
+Quote the catalog output. Do not summarise it and do not report from the
+migration tool.
+
+2 · NEAR-RING OVERPASS ENUMERATION
+Build it as you specified and I approved: 35 km retrieval envelope as a named
+constant, OSRM at 1,200 seconds as the authoritative near boundary, one cached
+catalogue per tenant origin rebuilt only when the origin changes.
+
+Tolerant matching is permitted ONLY inside that bounded catalogue, and only
+when the OSM classification is compatible with the proposal, exactly one
+candidate passes the threshold, and it has a clear margin over the second.
+Ambiguity stays unresolved — never pick the nearest silently.
+
+Remember why the strictness stays global: outside the bounded set, Menina
+planina matches a building called "Menina" and Luče matches a village near
+Grosuplje. Inside twenty minutes there is one Luče and no such building.
+
+Confirmation method for these is overpass_near. Excursions keep the strict
+global Nominatim sieve unchanged.
+
+If Overpass is unavailable, record a retrieval failure and leave the proposals
+unresolved. Infrastructure failure never becomes editorial rejection.
+
+3 · MANUAL CONFIRMATION WITH A MAP
+Finish the operator path already built: unresolved proposals reach a human
+with the name, description, inclusion reason, refusal rule and a map to place
+the pin. Provenance operator_coordinates, no fabricated OSM identity, routed
+through OSRM, individual review required, never bulk-approvable, first
+coordinate protected by the compare-and-set guard.
+
+4 · RUN FOUR, ONCE
+Raise the ceiling to four runs, keep runs one to three intact.
+
+Report:
+· the stored run-four report verbatim;
+· the queue rows pasted in chat — name, category, range, road distance,
+  duration, confirmation method, inclusion reason, and the Slovene description
+  exactly as written;
+· the count of rows inside the near range, which was 1 of 16 in run three;
+· BY NAME, which of run three's 32 losses the enumeration recovered, and which
+  are still unresolved and therefore waiting for a hand-placed pin.
+
+That last list is the measurement the whole day was for. Report it plainly,
+whatever it says.
+
+No approvals, no fifth run, no other task.
+
+Report and STOP.
