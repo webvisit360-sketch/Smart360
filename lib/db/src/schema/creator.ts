@@ -11,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { adminUsersTable } from "./admin";
@@ -31,6 +32,9 @@ export const creatorPlaceProposalsTable = pgTable(
       sql`COALESCE(${sql.identifier("confirmation_method")} = 'shortened_query', false)`,
     ),
     status: text("status").notNull().default("pending"),
+    supersededBy: uuid("superseded_by").references(
+      (): AnyPgColumn => creatorPlaceProposalsTable.id,
+    ),
     refusalReason: text("refusal_reason"),
     resolvedName: text("resolved_name"),
     resolvedAddress: text("resolved_address"),
@@ -54,6 +58,8 @@ export const creatorPlaceProposalsTable = pgTable(
     check("creator_place_proposals_confirmation_method_check", sql`${t.confirmationMethod} IS NULL OR ${t.confirmationMethod} IN ('exact','generic_type','address_token','shortened_query')`),
     check("creator_place_proposals_review_check", sql`${t.status} NOT IN ('approved','rejected') OR (${t.reviewedBy} IS NOT NULL AND ${t.reviewedAt} IS NOT NULL)`),
     check("creator_place_proposals_unresolved_reason_check", sql`${t.status} <> 'unresolved' OR ${t.refusalReason} IS NOT NULL`),
+    check("creator_place_proposals_superseded_pointer_check", sql`${t.status} <> 'superseded' OR ${t.supersededBy} IS NOT NULL`),
+    check("creator_place_proposals_no_self_supersede_check", sql`${t.supersededBy} IS NULL OR ${t.supersededBy} <> ${t.id}`),
     check("creator_place_proposals_confirmed_query_check", sql`${t.confirmationMethod} IS NULL OR ${t.confirmedQuery} IS NOT NULL`),
     check("creator_place_proposals_shortened_query_check", sql`${t.confirmationMethod} <> 'shortened_query' OR ${t.confirmedQuery} <> ${t.originalQuery}`),
     check("creator_place_proposals_osm_identity_check", sql`(${t.osmType} IS NULL) = (${t.osmId} IS NULL)`),

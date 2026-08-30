@@ -365,6 +365,8 @@ export interface CreatorProposal {
   requiresIndividualReview: boolean;
   status: CreatorProposalStatus;
   /** @nullable */
+  supersededBy: string | null;
+  /** @nullable */
   refusalReason: string | null;
   /** @nullable */
   resolvedName: string | null;

@@ -1,0 +1,49 @@
+Refusing to declare Step B complete until you have read production is exactly
+right. The owner is clicking Publish now.
+
+1 · TWO NAMES, ONE PLACE — THIS WILL THROW
+A row is inserted with osm_id NULL, geocoded afterwards, and the identity is
+written by UPDATE. ON CONFLICT does not apply to UPDATE.
+
+So when two proposed names resolve to the same OSM identity — "Motovun" and
+"Motovun Old Town", "Rinka" and "Slap Rinka" — the second UPDATE violates
+creator_place_proposals_osm_identity_uq and raises a database error instead of
+merging.
+
+That is the exact case the Creator exists to prevent. The Meli Pu import
+duplicated Motovun, Portopiccolo and Grad Miramare, each duplicate carrying
+its own distance. The specification requires that candidates resolving to one
+OSM identity merge into one proposal BEFORE the human queue.
+
+Implement the merge: before writing the identity, look up the existing row for
+that tenant and identity. If one exists, do not create a second — record the
+additional proposed name against the existing row and mark this proposal
+superseded. Report how you represent the second name, since there is no text
+table yet: an additional column, or the superseded row retained with a pointer.
+Either is acceptable; say which.
+
+Add a test: two different queries that resolve to one identity produce ONE
+queue row, and no database error.
+
+2 · ANSWER THE ACCESS-CONTROL QUESTION — asked twice now
+Is row-level security enabled on these three tables, or is absence from
+HOST_ROLE_GRANTS the only control? Both are defensible. I need to know which
+is true, in one sentence.
+
+Also one line on run_id: creator_runs does not exist yet, so state what run_id
+references today and what happens to these rows when the runs table arrives.
+
+3 · PRODUCTION VERIFICATION MUST PRINT CONTENT, NOT COUNTS
+"24 constraints, 10 indexes" says how many exist, not whether the right ones
+do. After Publish, read production directly and report:
+· the full CHECK definition for status, with its allowed values listed;
+· the full CHECK definition for confirmation_method;
+· the predicate of each partial unique index, verbatim;
+· the generation expression of requires_individual_review, verbatim;
+· the conditional CHECKs for reviewed_by, refusal_reason and confirmed_query.
+Quote what the catalog returns. Do not summarise it, and do not report from
+the migration tool's own output.
+
+Step B closes when that verification is quoted and the merge case passes.
+
+Report and STOP.

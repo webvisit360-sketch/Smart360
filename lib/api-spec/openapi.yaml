@@ -2243,6 +2243,7 @@ components:
         status:
           type: string
           enum: [pending, unresolved, approved, rejected, superseded]
+        supersededBy: { type: ["string", "null"] }
         refusalReason: { type: ["string", "null"] }
         resolvedName: { type: ["string", "null"] }
         resolvedAddress: { type: ["string", "null"] }
@@ -2270,6 +2271,7 @@ components:
         - confirmationMethod
         - requiresIndividualReview
         - status
+        - supersededBy
         - refusalReason
         - resolvedName
         - resolvedAddress

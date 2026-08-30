@@ -14,6 +14,7 @@ import {
   approveCreatorProposalIndividually,
   approveCreatorProposalsBulk,
   CreatorBulkApprovalError,
+  listCreatorProposalQueue,
   recordCreatorVerification,
   runAndPersistCreatorSieve,
   upsertPendingCreatorProposal,
@@ -34,6 +35,12 @@ before(async () => {
 });
 
 after(async () => {
+  await db.delete(creatorPlaceProposalsTable).where(and(
+    inArray(creatorPlaceProposalsTable.runId, runIds),
+    eq(creatorPlaceProposalsTable.status, "superseded"),
+  ));
+  await db.delete(creatorPlaceProposalsTable)
+    .where(inArray(creatorPlaceProposalsTable.runId, runIds));
   if (proposalIds.length > 0) {
     await db.delete(creatorPlaceProposalsTable)
       .where(inArray(creatorPlaceProposalsTable.id, proposalIds));
@@ -224,4 +231,62 @@ test("the real sieve path persists shortened-query provenance and both attempts"
   const attempts = await db.select().from(creatorVerificationAttemptsTable)
     .where(eq(creatorVerificationAttemptsTable.proposalId, output.proposal.id));
   assert.equal(attempts.length, 2);
+});
+
+test("two names resolving to one OSM identity produce one queue row", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const identity = 3_500_000_000 + Math.floor(Math.random() * 100_000_000);
+  const firstRunId = crypto.randomUUID();
+  const secondRunId = crypto.randomUUID();
+  runIds.push(firstRunId, secondRunId);
+  const firstName = `Motovun ${suffix}`;
+  const secondName = `Motovun Old Town ${suffix}`;
+  const fetchFn = async () => new Response(JSON.stringify([{
+    osm_type: "relation",
+    osm_id: identity,
+    category: "tourism",
+    type: "attraction",
+    addresstype: "attraction",
+    name: firstName,
+    display_name: "Motovun, Istarska županija, Hrvatska",
+    lat: "45.3366",
+    lon: "13.8284",
+    namedetails: { name: firstName, "name:en": secondName },
+    address: { municipality: "Motovun" },
+    importance: 0.5,
+  }]), { status: 200, headers: { "content-type": "application/json" } });
+
+  const first = await runAndPersistCreatorSieve({
+    tenantId,
+    runId: firstRunId,
+    proposedName: firstName,
+    origin: { latitude: 45.32, longitude: 13.84 },
+    fetchFn,
+  });
+  const second = await runAndPersistCreatorSieve({
+    tenantId,
+    runId: secondRunId,
+    proposedName: secondName,
+    origin: { latitude: 45.32, longitude: 13.84 },
+    fetchFn,
+  });
+  assert.equal(second.proposal.id, first.proposal.id);
+
+  const stored = await db.select().from(creatorPlaceProposalsTable)
+    .where(inArray(creatorPlaceProposalsTable.runId, [firstRunId, secondRunId]));
+  assert.equal(stored.length, 2);
+  const canonical = stored.find((row) => row.runId === firstRunId);
+  const duplicate = stored.find((row) => row.runId === secondRunId);
+  assert.ok(canonical);
+  assert.ok(duplicate);
+  assert.equal(canonical.osmId, identity);
+  assert.equal(duplicate.status, "superseded");
+  assert.equal(duplicate.supersededBy, canonical.id);
+  assert.equal(duplicate.proposedName, secondName);
+  assert.equal(duplicate.osmId, null);
+
+  const queue = await listCreatorProposalQueue(tenantId);
+  const fixtureQueueRows = queue.filter((row) =>
+    row.runId === firstRunId || row.runId === secondRunId);
+  assert.deepEqual(fixtureQueueRows.map((row) => row.id), [canonical.id]);
 });

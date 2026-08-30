@@ -4,6 +4,8 @@ import {
   eq,
   inArray,
   isNull,
+  ne,
+  sql,
 } from "drizzle-orm";
 import {
   adminUsersTable,
@@ -112,6 +114,30 @@ export async function recordCreatorVerification(
     throw new Error("Potrjen rezultat sita nima vseh obveznih strojnih dokazov.");
   }
   return db.transaction(async (tx) => {
+    const [sourceProposal] = await tx.select().from(creatorPlaceProposalsTable)
+      .where(eq(creatorPlaceProposalsTable.id, proposalId)).limit(1);
+    if (!sourceProposal) throw new Error("Predlog ni najden.");
+
+    let canonicalProposal: typeof creatorPlaceProposalsTable.$inferSelect | undefined;
+    if (record.osmType && record.osmId !== null) {
+      await tx.execute(sql`
+        SELECT pg_advisory_xact_lock(
+          hashtextextended(
+            ${`${sourceProposal.tenantId}:${record.osmType}:${record.osmId}`},
+            0
+          )
+        )
+      `);
+      [canonicalProposal] = await tx.select().from(creatorPlaceProposalsTable)
+        .where(and(
+          eq(creatorPlaceProposalsTable.tenantId, sourceProposal.tenantId),
+          eq(creatorPlaceProposalsTable.osmType, record.osmType),
+          eq(creatorPlaceProposalsTable.osmId, record.osmId),
+          ne(creatorPlaceProposalsTable.id, proposalId),
+        ))
+        .limit(1);
+    }
+
     for (const attempt of record.attempts) {
       const [attemptRow] = await tx.insert(creatorVerificationAttemptsTable).values({
         proposalId,
@@ -130,11 +156,36 @@ export async function recordCreatorVerification(
         );
       }
     }
+    if (canonicalProposal) {
+      const [superseded] = await tx.update(creatorPlaceProposalsTable).set({
+        originalQuery: record.originalQuery,
+        confirmedQuery: record.confirmedQuery,
+        confirmationMethod: record.confirmationMethod,
+        status: "superseded",
+        supersededBy: canonicalProposal.id,
+        refusalReason: null,
+        resolvedName: record.resolvedName,
+        resolvedAddress: record.resolvedAddress,
+        osmType: null,
+        osmId: null,
+        osmCategory: record.osmCategory,
+        osmFeatureType: record.osmFeatureType,
+        osmAddressType: record.osmAddressType,
+        latitude: record.latitude,
+        longitude: record.longitude,
+        straightLineDistanceM: record.straightLineDistanceM,
+        updatedAt: new Date(),
+      }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+      if (!superseded) throw new Error("Predloga ni bilo mogoče označiti kot združenega.");
+      return canonicalProposal;
+    }
+
     const [updated] = await tx.update(creatorPlaceProposalsTable).set({
       originalQuery: record.originalQuery,
       confirmedQuery: record.confirmedQuery,
       confirmationMethod: record.confirmationMethod,
       status: record.status,
+      supersededBy: null,
       refusalReason: record.refusalReason,
       resolvedName: record.resolvedName,
       resolvedAddress: record.resolvedAddress,
@@ -220,7 +271,10 @@ export async function runAndPersistCreatorSieve(input: {
 
 export async function listCreatorProposalQueue(tenantId: string) {
   return db.select().from(creatorPlaceProposalsTable)
-    .where(eq(creatorPlaceProposalsTable.tenantId, tenantId))
+    .where(and(
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      ne(creatorPlaceProposalsTable.status, "superseded"),
+    ))
     .orderBy(asc(creatorPlaceProposalsTable.createdAt));
 }
 
