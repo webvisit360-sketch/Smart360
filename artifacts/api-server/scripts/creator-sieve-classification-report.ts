@@ -2,12 +2,9 @@ import { runCreatorSieveClassificationHarness } from "../src/lib/creatorSieve";
 
 const origin = { latitude: 46.311456, longitude: 14.9093051 };
 const names = [
-  "Varpolje",
-  "Mozirje",
-  "Nazarje",
-  "Savinjska cesta",
-  "Občina Rečica ob Savinji",
-  "3332",
+  "Rečica ob Savinji",
+  "Ljubljana",
+  "Slovenija",
 ];
 
 for (const name of names) {

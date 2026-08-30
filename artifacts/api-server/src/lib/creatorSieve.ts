@@ -57,25 +57,32 @@ function namesOf(raw: RawResult): string[] {
   return [direct, ...details].filter(Boolean);
 }
 
-const GENERIC_TYPE_WORDS: Record<string, string> = {
-  waterfall: "slap",
-  cave: "jama",
-  castle: "grad",
-  museum: "muzej",
-  church: "cerkev",
-  lake: "jezero",
-  gorge: "soteska",
-  alpine_pasture: "planina",
-};
+export const CREATOR_GENERIC_TYPE_WORDS: ReadonlyArray<{
+  words: readonly string[];
+  osmTypes: readonly string[];
+}> = [
+  { words: ["slap", "slapovi"], osmTypes: ["waterfall"] },
+  { words: ["jama"], osmTypes: ["cave", "cave_entrance"] },
+  { words: ["grad"], osmTypes: ["castle"] },
+  { words: ["cerkev"], osmTypes: ["church", "place_of_worship"] },
+  { words: ["planina"], osmTypes: ["alpine_pasture"] },
+  { words: ["jezero"], osmTypes: ["lake"] },
+  { words: ["koča", "dom"], osmTypes: ["alpine_hut"] },
+  { words: ["muzej"], osmTypes: ["museum"] },
+  { words: ["soteska"], osmTypes: ["gorge"] },
+  { words: ["izvir"], osmTypes: ["spring"] },
+];
 
 function matchesName(query: string, raw: RawResult): boolean {
   const normalizedQuery = normalizeName(query);
   const candidateNames = namesOf(raw).map(normalizeName);
   if (candidateNames.includes(normalizedQuery)) return true;
   let queryTokens = normalizedQuery.split(" ");
-  const genericWord = GENERIC_TYPE_WORDS[String(raw.type ?? "")];
-  if (genericWord && queryTokens[0] === genericWord) queryTokens = queryTokens.slice(1);
-  else if (genericWord && queryTokens.at(-1) === genericWord) queryTokens = queryTokens.slice(0, -1);
+  const genericWords = CREATOR_GENERIC_TYPE_WORDS.find((entry) =>
+    entry.osmTypes.includes(String(raw.type ?? "")),
+  )?.words;
+  if (genericWords?.includes(queryTokens[0]!)) queryTokens = queryTokens.slice(1);
+  else if (genericWords?.includes(queryTokens.at(-1)!)) queryTokens = queryTokens.slice(0, -1);
   if (candidateNames.includes(queryTokens.join(" "))) return true;
 
   const address = raw.address && typeof raw.address === "object"
