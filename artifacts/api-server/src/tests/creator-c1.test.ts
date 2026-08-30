@@ -121,9 +121,13 @@ test("later C1 batches receive prior names and practical places are forbidden", 
     region: "Savinjska",
     tenantType: "kamp",
     categories: [],
-    rejectedNames: [],
+    rejectedNames: ["Human rejected place"],
+    previouslyUnconfirmedNames: ["Mozirski gaj", "Golte"],
     priorProposedNames: ["Mozirski gaj", "Golte"],
   });
+  assert.match(prompt, /Never propose any durable rejection: \["Human rejected place"\]/);
+  assert.match(prompt, /previously could not be confirmed by machine verification: \["Mozirski gaj","Golte"\]/);
+  assert.match(prompt, /they are discouraged, not forbidden/);
   assert.match(prompt, /Do not repeat any name already proposed by an earlier batch/);
   assert.match(prompt, /\["Mozirski gaj","Golte"\]/);
   assert.match(prompt, /Never propose proximity-selected practical services/);

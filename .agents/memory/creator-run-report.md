@@ -7,8 +7,12 @@ Every Creator run must finish by producing its own report covering proposed plac
 
 **Why:** The first real model-assisted run must be judged from explicit evidence rather than subjective impressions.
 
-The controlled Camping MENINA C1 run is a one-run evidence boundary: its zero-confirmed result must not be tuned, rerun, approved, or materialized unless the owner explicitly opens new work.
+The controlled Camping MENINA C1 evidence boundary permits exactly two durable runs. Run one must remain unchanged; run two is the single explicitly authorized corrected-pipeline rerun. Neither run may be approved or materialized automatically.
 
-**Why:** The owner required the first production output to be preserved exactly even if the sieve produced an empty queue; improving the result after seeing it would invalidate the test.
+**Why:** The owner required run one to remain exact for comparison, then authorized one corrected rerun after confirming that the first sieve queried lookup hints instead of plain names.
 
-**How to apply:** Treat every run report as required model-stage evidence, not optional analytics. Preserve unconfirmed and duplicate outcomes durably, keep them out of the ready queue, and never infer permission for a rerun from the product's general rerun capability.
+Machine-unresolved names are soft discouragement, while human rejections are hard blocks.
+
+**Why:** A machine miss may reflect a faulty verification pipeline rather than an invented place; only a person’s rejection is a durable editorial decision.
+
+**How to apply:** Pass historical unresolved names to later model prompts as “previously could not be confirmed” but keep them eligible for later-run insertion and verification. Pass human-rejected names to the prompt as forbidden and block them tenant-wide in persistence. Treat every run report as required evidence, preserve unconfirmed and duplicate outcomes, keep them out of the ready queue, and never infer permission for a third run.
