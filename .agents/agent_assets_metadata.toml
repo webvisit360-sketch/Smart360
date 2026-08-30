@@ -568,3 +568,45 @@ mtime_ms = 1788086123852
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c6a62c0e-6e5e-4bd0-8462-885cec1fe0a4/284ea547-eecc-4587-85ae-cddb24e7331a"
 storage_version_token = "1788086124627365"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "oTgONJCy_WPZH6kPa4Vux"
+uri = "file://attached_assets/creator-c1-run-4-report.json"
+type = "unspecified"
+title = "Creator C1 run four — verbatim report"
+description = "Exact immutable report_json stored in the production creator_runs row for MENINA run four."
+logical_id = "3c9a0c3a-1f0d-4b93-b527-599b7c709c8b"
+content_hash = "sha256:55f664b5de97b2fdd222164ee4ecdf42ab796bea85445b8d26cd3037cb1b0876"
+size = 100594
+mtime_ms = 1788116250580
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3c9a0c3a-1f0d-4b93-b527-599b7c709c8b/0caf35d3-4be3-4db7-b2e9-63676f6937c6"
+storage_version_token = "1788116260993643"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "WnHWvtke3Ak2A1E6btrLV"
+uri = "file://attached_assets/creator-c1-run-4-queue.csv"
+type = "table"
+title = "Creator C1 run four — complete queue"
+description = "All 60 production queue rows with category, status, range, road distance, duration, confirmation method, refusal reason, inclusion reason, and exact Slovenian description."
+logical_id = "a81e18e4-2cea-46c5-8b19-63d05c2ab273"
+content_hash = "sha256:096cad92d744c0d01e2aea263eb454d48e3eaddfdd6ae7c466a865edec05c7bd"
+size = 12972
+mtime_ms = 1788116250796
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a81e18e4-2cea-46c5-8b19-63d05c2ab273/fab5e6c8-6641-4501-8d4c-4089e64942ba"
+storage_version_token = "1788116261659185"
+content_type = "text/csv"
+
+[[outputs]]
+id = "kRxAnF-Oy1QKeRhGxVPVd"
+uri = "file://attached_assets/creator-c1-run-3-losses.csv"
+type = "table"
+title = "Creator C1 run three — 32 losses"
+description = "The 32 unresolved run-three names and their stored refusal reasons, used for the run-four recovery comparison."
+logical_id = "9dd92380-046e-4218-857b-dbe4155b8739"
+content_hash = "sha256:fd72dc003a421dc5fcf688b6d6a1dadcc59018391a42cbf6a4081a38ea11b41f"
+size = 1260
+mtime_ms = 1788116251104
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9dd92380-046e-4218-857b-dbe4155b8739/d6c3c172-1a74-4fdd-bc4e-09e8ce99202f"
+storage_version_token = "1788116262262865"
+content_type = "text/csv"
