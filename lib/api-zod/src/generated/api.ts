@@ -869,6 +869,7 @@ export const StartCreatorRunResponse = zod.object({
   "tenantId": zod.string(),
   "status": zod.enum(['running', 'completed', 'failed']),
   "model": zod.string(),
+  "durableRunCount": zod.number(),
   "proposedCount": zod.number(),
   "confirmedCount": zod.number(),
   "unresolvedCount": zod.number(),
@@ -887,8 +888,31 @@ export const StartCreatorRunResponse = zod.object({
   "completedAt": zod.string().nullable(),
   "outcomes": zod.array(zod.object({
   "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "inclusionReason": zod.string(),
   "outcome": zod.enum(['confirmed', 'unconfirmed', 'duplicate', 'route_failed']),
-  "refusalRule": zod.string().nullable()
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+}))
+})),
+  "unconfirmedByCategory": zod.array(zod.object({
+  "categoryLabel": zod.string().nullable(),
+  "proposals": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "inclusionReason": zod.string(),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable()
+}))
 })),
   "pricing": zod.object({
   "sourceUrl": zod.string(),
@@ -914,6 +938,7 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "tenantId": zod.string(),
   "status": zod.enum(['running', 'completed', 'failed']),
   "model": zod.string(),
+  "durableRunCount": zod.number(),
   "proposedCount": zod.number(),
   "confirmedCount": zod.number(),
   "unresolvedCount": zod.number(),
@@ -932,8 +957,31 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "completedAt": zod.string().nullable(),
   "outcomes": zod.array(zod.object({
   "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "inclusionReason": zod.string(),
   "outcome": zod.enum(['confirmed', 'unconfirmed', 'duplicate', 'route_failed']),
-  "refusalRule": zod.string().nullable()
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+}))
+})),
+  "unconfirmedByCategory": zod.array(zod.object({
+  "categoryLabel": zod.string().nullable(),
+  "proposals": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "inclusionReason": zod.string(),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable()
+}))
 })),
   "pricing": zod.object({
   "sourceUrl": zod.string(),
@@ -983,6 +1031,15 @@ export const ListCreatorProposalsResponseItem = zod.object({
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
   "geocodingLookupHint": zod.string().nullable(),
   "inclusionReason": zod.string().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+})),
   "translations": zod.array(zod.object({
   "language": zod.enum(['sl', 'en', 'de', 'it']),
   "name": zod.string(),
@@ -1061,6 +1118,15 @@ export const EditCreatorProposalResponse = zod.object({
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
   "geocodingLookupHint": zod.string().nullable(),
   "inclusionReason": zod.string().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+})),
   "translations": zod.array(zod.object({
   "language": zod.enum(['sl', 'en', 'de', 'it']),
   "name": zod.string(),
@@ -1110,6 +1176,15 @@ export const RejectCreatorProposalResponse = zod.object({
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
   "geocodingLookupHint": zod.string().nullable(),
   "inclusionReason": zod.string().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+})),
   "translations": zod.array(zod.object({
   "language": zod.enum(['sl', 'en', 'de', 'it']),
   "name": zod.string(),
@@ -1159,6 +1234,15 @@ export const ApproveCreatorProposalResponse = zod.object({
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
   "geocodingLookupHint": zod.string().nullable(),
   "inclusionReason": zod.string().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+})),
   "translations": zod.array(zod.object({
   "language": zod.enum(['sl', 'en', 'de', 'it']),
   "name": zod.string(),
@@ -1214,6 +1298,15 @@ export const ApproveCreatorProposalsBulkResponseItem = zod.object({
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
   "geocodingLookupHint": zod.string().nullable(),
   "inclusionReason": zod.string().nullable(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+})),
   "translations": zod.array(zod.object({
   "language": zod.enum(['sl', 'en', 'de', 'it']),
   "name": zod.string(),

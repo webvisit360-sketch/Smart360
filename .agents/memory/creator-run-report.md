@@ -16,3 +16,9 @@ Machine-unresolved names must not shape later model proposals. Human rejections 
 **Why:** A machine miss is evidence about the verifier, not the place. Feeding misses from a known-broken sieve back into the prompt suppressed the strongest nearby places. Only a person’s rejection is durable editorial evidence.
 
 **How to apply:** Do not pass machine-unresolved names into model prompts. Pass human-rejected names as forbidden and block them tenant-wide in persistence. Creator prompts should target roughly half nearby and the rest within 90 driving minutes, with nothing expected beyond 90. Treat every run report as required evidence, preserve unresolved outcomes, keep them out of the ready queue, and never infer permission for a fourth run.
+
+Run reports and proposal rows must show the model’s inclusion reason. Beyond-near proposals must expose same-category alternatives, including unresolved alternatives with unknown proximity.
+
+**Why:** Mapping quality is systematically stronger for famous distant landmarks than small local places, so sieve refusals can bias a guide outward. Hiding unrouteable losses repeats that bias in the evidence layer.
+
+**How to apply:** Group unresolved proposals by category. Sort measured proximity first, but never omit unresolved rows without coordinates or infer distance from a locality. Label those exactly “razdalja neznana — sito ni potrdilo kraja”; keep route failures distinct.

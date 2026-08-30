@@ -2414,6 +2414,7 @@ components:
         tenantId: { type: string }
         status: { type: string, enum: [running, completed, failed] }
         model: { type: string }
+        durableRunCount: { type: number }
         proposedCount: { type: number }
         confirmedCount: { type: number }
         unresolvedCount: { type: number }
@@ -2434,6 +2435,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CreatorRunOutcome"
+        unconfirmedByCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorUnconfirmedCategoryGroup"
         pricing:
           $ref: "#/components/schemas/CreatorRunPricing"
       required:
@@ -2441,6 +2446,7 @@ components:
         - tenantId
         - status
         - model
+        - durableRunCount
         - proposedCount
         - confirmedCount
         - unresolvedCount
@@ -2458,6 +2464,7 @@ components:
         - startedAt
         - completedAt
         - outcomes
+        - unconfirmedByCategory
         - pricing
     CreatorRunPricing:
       type: object
@@ -2481,9 +2488,46 @@ components:
       type: object
       properties:
         proposedName: { type: string }
+        categoryLabel: { type: ["string", "null"] }
+        inclusionReason: { type: string }
         outcome: { type: string, enum: [confirmed, unconfirmed, duplicate, route_failed] }
         refusalRule: { type: ["string", "null"] }
-      required: [proposedName, outcome, refusalRule]
+        roadDistanceM: { type: ["number", "null"] }
+        travelDurationS: { type: ["number", "null"] }
+        nearestAlternatives:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorNearestAlternative"
+      required: [proposedName, categoryLabel, inclusionReason, outcome, refusalRule, roadDistanceM, travelDurationS, nearestAlternatives]
+    CreatorNearestAlternative:
+      type: object
+      properties:
+        proposedName: { type: string }
+        categoryLabel: { type: ["string", "null"] }
+        outcome: { type: string, enum: [confirmed, unconfirmed, route_failed] }
+        refusalRule: { type: ["string", "null"] }
+        roadDistanceM: { type: ["number", "null"] }
+        travelDurationS: { type: ["number", "null"] }
+        proximityKnown: { type: boolean }
+      required: [proposedName, categoryLabel, outcome, refusalRule, roadDistanceM, travelDurationS, proximityKnown]
+    CreatorUnconfirmedCategoryGroup:
+      type: object
+      properties:
+        categoryLabel: { type: ["string", "null"] }
+        proposals:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorUnconfirmedProposal"
+      required: [categoryLabel, proposals]
+    CreatorUnconfirmedProposal:
+      type: object
+      properties:
+        proposedName: { type: string }
+        inclusionReason: { type: string }
+        refusalRule: { type: ["string", "null"] }
+        roadDistanceM: { type: ["number", "null"] }
+        travelDurationS: { type: ["number", "null"] }
+      required: [proposedName, inclusionReason, refusalRule, roadDistanceM, travelDurationS]
     CreatorProposal:
       type: object
       properties:
@@ -2521,6 +2565,10 @@ components:
           enum: [practical, near, excursion, null]
         geocodingLookupHint: { type: ["string", "null"] }
         inclusionReason: { type: ["string", "null"] }
+        nearestAlternatives:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorNearestAlternative"
         translations:
           type: array
           items:
@@ -2558,6 +2606,7 @@ components:
         - range
         - geocodingLookupHint
         - inclusionReason
+        - nearestAlternatives
         - translations
         - reviewedBy
         - reviewedAt

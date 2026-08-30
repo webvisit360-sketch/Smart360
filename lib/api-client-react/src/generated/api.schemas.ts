@@ -424,11 +424,59 @@ export const CreatorRunOutcomeOutcome = {
   route_failed: 'route_failed',
 } as const;
 
+export type CreatorNearestAlternativeOutcome = typeof CreatorNearestAlternativeOutcome[keyof typeof CreatorNearestAlternativeOutcome];
+
+
+export const CreatorNearestAlternativeOutcome = {
+  confirmed: 'confirmed',
+  unconfirmed: 'unconfirmed',
+  route_failed: 'route_failed',
+} as const;
+
+export interface CreatorNearestAlternative {
+  proposedName: string;
+  /** @nullable */
+  categoryLabel: string | null;
+  outcome: CreatorNearestAlternativeOutcome;
+  /** @nullable */
+  refusalRule: string | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+  proximityKnown: boolean;
+}
+
 export interface CreatorRunOutcome {
   proposedName: string;
+  /** @nullable */
+  categoryLabel: string | null;
+  inclusionReason: string;
   outcome: CreatorRunOutcomeOutcome;
   /** @nullable */
   refusalRule: string | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+  nearestAlternatives: CreatorNearestAlternative[];
+}
+
+export interface CreatorUnconfirmedProposal {
+  proposedName: string;
+  inclusionReason: string;
+  /** @nullable */
+  refusalRule: string | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+}
+
+export interface CreatorUnconfirmedCategoryGroup {
+  /** @nullable */
+  categoryLabel: string | null;
+  proposals: CreatorUnconfirmedProposal[];
 }
 
 export interface CreatorRunPricing {
@@ -446,6 +494,7 @@ export interface CreatorRunReport {
   tenantId: string;
   status: CreatorRunReportStatus;
   model: string;
+  durableRunCount: number;
   proposedCount: number;
   confirmedCount: number;
   unresolvedCount: number;
@@ -466,6 +515,7 @@ export interface CreatorRunReport {
   /** @nullable */
   completedAt: string | null;
   outcomes: CreatorRunOutcome[];
+  unconfirmedByCategory: CreatorUnconfirmedCategoryGroup[];
   pricing: CreatorRunPricing;
 }
 
@@ -555,6 +605,7 @@ export interface CreatorProposal {
   geocodingLookupHint: string | null;
   /** @nullable */
   inclusionReason: string | null;
+  nearestAlternatives: CreatorNearestAlternative[];
   translations: CreatorProposalTranslation[];
   /** @nullable */
   reviewedBy: string | null;

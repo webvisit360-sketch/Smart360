@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
-import { categoriesTable, creatorRunsTable, db, sectionsTable, tenantAliasesTable, tenantsTable } from "@workspace/db";
+import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
+import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, db, sectionsTable, tenantAliasesTable, tenantsTable } from "@workspace/db";
 import {
   ApproveCreatorProposalResponse,
   ApproveCreatorProposalsBulkBody,
@@ -89,13 +89,98 @@ function parseRunReport(value: string | null): CreatorC1Report | null {
   }
 }
 
-function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
+async function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
   const report = parseRunReport(row.reportJson);
+  const [{ durableRunCount = 0 } = {}] = await db.select({
+    durableRunCount: count(),
+  }).from(creatorRunsTable).where(eq(creatorRunsTable.tenantId, row.tenantId));
+  const evidenceRows = await db.select({
+    proposal: creatorPlaceProposalsTable,
+    categoryLabel: categoriesTable.label,
+  }).from(creatorPlaceProposalsTable)
+    .leftJoin(categoriesTable, eq(creatorPlaceProposalsTable.categoryId, categoriesTable.id))
+    .where(eq(creatorPlaceProposalsTable.runId, row.id));
+  const unmatchedEvidence = [...evidenceRows];
+  const outcomes = (report?.outcomes ?? []).map((storedOutcome) => {
+    const evidenceIndex = unmatchedEvidence.findIndex(({ proposal }) =>
+      proposal.proposedName === storedOutcome.proposedName);
+    const evidence = evidenceIndex >= 0 ? unmatchedEvidence.splice(evidenceIndex, 1)[0] : undefined;
+    const proposal = evidence?.proposal;
+    const travelDurationS = proposal?.travelDurationS ?? storedOutcome.travelDurationS ?? null;
+    const categoryLabel = evidence?.categoryLabel ?? storedOutcome.categoryLabel ?? null;
+    const nearestAlternatives = travelDurationS !== null && travelDurationS > 20 * 60 && proposal
+      ? evidenceRows
+        .filter(({ proposal: alternative }) =>
+          alternative.id !== proposal.id &&
+          alternative.categoryId === proposal.categoryId &&
+          (
+            alternative.status === "unresolved" ||
+            (
+              alternative.travelDurationS !== null &&
+              alternative.travelDurationS < travelDurationS
+            )
+          ))
+        .map(({ proposal: alternative, categoryLabel: alternativeCategoryLabel }) => ({
+          proposedName: alternative.proposedName,
+          categoryLabel: alternativeCategoryLabel,
+          outcome: alternative.status === "unresolved"
+            ? "unconfirmed" as const
+            : alternative.travelDurationS === null
+              ? "route_failed" as const
+              : "confirmed" as const,
+          refusalRule: alternative.refusalReason,
+          roadDistanceM: alternative.roadDistanceM,
+          travelDurationS: alternative.travelDurationS,
+          proximityKnown: alternative.travelDurationS !== null,
+        }))
+        .sort((a, b) => {
+          if (a.proximityKnown !== b.proximityKnown) return a.proximityKnown ? -1 : 1;
+          return (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity);
+        })
+      : storedOutcome.nearestAlternatives ?? [];
+    return {
+      proposedName: storedOutcome.proposedName,
+      categoryLabel,
+      inclusionReason: proposal?.inclusionReason ?? storedOutcome.inclusionReason ?? "",
+      outcome: storedOutcome.outcome,
+      refusalRule: storedOutcome.refusalRule,
+      roadDistanceM: proposal?.roadDistanceM ?? storedOutcome.roadDistanceM ?? null,
+      travelDurationS,
+      nearestAlternatives,
+    };
+  });
+  const unconfirmedGroups = new Map<string | null, Array<{
+    proposedName: string;
+    inclusionReason: string;
+    refusalRule: string | null;
+    roadDistanceM: number | null;
+    travelDurationS: number | null;
+  }>>();
+  for (const outcome of outcomes) {
+    if (outcome.outcome !== "unconfirmed") continue;
+    const proposals = unconfirmedGroups.get(outcome.categoryLabel) ?? [];
+    proposals.push({
+      proposedName: outcome.proposedName,
+      inclusionReason: outcome.inclusionReason,
+      refusalRule: outcome.refusalRule,
+      roadDistanceM: outcome.roadDistanceM,
+      travelDurationS: outcome.travelDurationS,
+    });
+    unconfirmedGroups.set(outcome.categoryLabel, proposals);
+  }
+  const unconfirmedByCategory = [...unconfirmedGroups.entries()]
+    .map(([categoryLabel, proposals]) => ({
+      categoryLabel,
+      proposals: proposals.sort((a, b) =>
+        (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity)),
+    }))
+    .sort((a, b) => (a.categoryLabel ?? "").localeCompare(b.categoryLabel ?? "", "sl"));
   return {
     id: row.id,
     tenantId: row.tenantId,
     status: row.status,
     model: "gpt-5.6-terra",
+    durableRunCount,
     proposedCount: report?.proposed ?? 0,
     confirmedCount: report?.confirmed ?? 0,
     unresolvedCount: report?.unconfirmed ?? 0,
@@ -112,7 +197,8 @@ function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
     error: report?.error ?? null,
     startedAt: row.startedAt,
     completedAt: row.completedAt,
-    outcomes: report?.outcomes ?? [],
+    outcomes,
+    unconfirmedByCategory,
     pricing: report?.pricing ?? CREATOR_C1_PRICING,
   };
 }
@@ -270,7 +356,7 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
       .where(eq(creatorRunsTable.id, result.runId))
       .limit(1);
     if (!completed) throw new Error("Poročila izvedbe ni mogoče ponovno prebrati.");
-    res.json(StartCreatorRunResponse.parse(serialize(creatorRunResponse(completed))));
+    res.json(StartCreatorRunResponse.parse(serialize(await creatorRunResponse(completed))));
   } catch (error) {
     const databaseCode = (error as { code?: string })?.code;
     if (databaseCode === "23505") {
@@ -294,7 +380,7 @@ router.get("/admin/tenants/:id/creator/runs/latest", async (req, res): Promise<v
     .where(eq(creatorRunsTable.tenantId, tenantId))
     .orderBy(desc(creatorRunsTable.createdAt))
     .limit(1);
-  res.json(GetLatestCreatorRunResponse.parse(run ? serialize(creatorRunResponse(run)) : null));
+  res.json(GetLatestCreatorRunResponse.parse(run ? serialize(await creatorRunResponse(run)) : null));
 });
 
 router.get("/admin/tenants/:id/creator/catalogue", async (req, res): Promise<void> => {
@@ -341,7 +427,10 @@ router.patch("/admin/tenants/:id/creator/proposals/:proposalId", async (req, res
       translations: input.data.translations,
     });
     if (!row) throw new Error("Predlog po ureditvi ni najden.");
-    res.json(EditCreatorProposalResponse.parse(serialize(row)));
+    res.json(EditCreatorProposalResponse.parse(serialize({
+      ...row,
+      nearestAlternatives: [],
+    })));
   } catch (error) {
     res.status(error instanceof CreatorBulkApprovalError ? 400 : 404).json({
       error: error instanceof Error ? error.message : "Predloga ni mogoče urediti.",
@@ -367,7 +456,10 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/reject", async (re
       actor.id,
     );
     if (!row) throw new Error("Predlog po zavrnitvi ni najden.");
-    res.json(RejectCreatorProposalResponse.parse(serialize(row)));
+    res.json(RejectCreatorProposalResponse.parse(serialize({
+      ...row,
+      nearestAlternatives: [],
+    })));
   } catch (error) {
     res.status(404).json({
       error: error instanceof Error ? error.message : "Predloga ni mogoče zavrniti.",
@@ -404,7 +496,10 @@ router.post(
         first(req.params["proposalId"]),
         actor.id,
       );
-      res.json(ApproveCreatorProposalResponse.parse(serialize(row)));
+      res.json(ApproveCreatorProposalResponse.parse(serialize({
+        ...row,
+        nearestAlternatives: [],
+      })));
     } catch (error) {
       res.status(404).json({
         error: error instanceof Error ? error.message : "Predloga ni mogoče potrditi.",

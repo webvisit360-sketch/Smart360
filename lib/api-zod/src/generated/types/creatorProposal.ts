@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { CreatorNearestAlternative } from './creatorNearestAlternative';
 import type { CreatorProposalConfirmationMethod } from './creatorProposalConfirmationMethod';
 import type { CreatorProposalRange } from './creatorProposalRange';
 import type { CreatorProposalStatus } from './creatorProposalStatus';
@@ -60,6 +61,7 @@ export interface CreatorProposal {
   geocodingLookupHint: string | null;
   /** @nullable */
   inclusionReason: string | null;
+  nearestAlternatives: CreatorNearestAlternative[];
   translations: CreatorProposalTranslation[];
   /** @nullable */
   reviewedBy: string | null;

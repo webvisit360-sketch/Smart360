@@ -8,12 +8,14 @@
 import type { CreatorRunOutcome } from './creatorRunOutcome';
 import type { CreatorRunPricing } from './creatorRunPricing';
 import type { CreatorRunReportStatus } from './creatorRunReportStatus';
+import type { CreatorUnconfirmedCategoryGroup } from './creatorUnconfirmedCategoryGroup';
 
 export interface CreatorRunReport {
   id: string;
   tenantId: string;
   status: CreatorRunReportStatus;
   model: string;
+  durableRunCount: number;
   proposedCount: number;
   confirmedCount: number;
   unresolvedCount: number;
@@ -34,5 +36,6 @@ export interface CreatorRunReport {
   /** @nullable */
   completedAt: string | null;
   outcomes: CreatorRunOutcome[];
+  unconfirmedByCategory: CreatorUnconfirmedCategoryGroup[];
   pricing: CreatorRunPricing;
 }

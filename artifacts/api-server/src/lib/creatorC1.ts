@@ -259,7 +259,34 @@ export type CreatorC1Report = {
   costUsd: number; wallClockMs: number; nominatimThrottleWaitMs: number;
   status: "completed" | "failed";
   pricing: typeof CREATOR_C1_PRICING;
-  outcomes: Array<{ proposedName: string; outcome: "confirmed" | "unconfirmed" | "duplicate" | "route_failed"; refusalRule: string | null }>;
+  outcomes: Array<{
+    proposedName: string;
+    categoryLabel: string | null;
+    inclusionReason: string;
+    outcome: "confirmed" | "unconfirmed" | "duplicate" | "route_failed";
+    refusalRule: string | null;
+    roadDistanceM: number | null;
+    travelDurationS: number | null;
+    nearestAlternatives: Array<{
+      proposedName: string;
+      categoryLabel: string | null;
+      outcome: "confirmed" | "unconfirmed" | "route_failed";
+      refusalRule: string | null;
+      roadDistanceM: number | null;
+      travelDurationS: number | null;
+      proximityKnown: boolean;
+    }>;
+  }>;
+  unconfirmedByCategory: Array<{
+    categoryLabel: string | null;
+    proposals: Array<{
+      proposedName: string;
+      inclusionReason: string;
+      refusalRule: string | null;
+      roadDistanceM: number | null;
+      travelDurationS: number | null;
+    }>;
+  }>;
   error?: string;
 };
 
@@ -299,6 +326,7 @@ export async function runCreatorC1(input: {
     outsidePractical: 0, outsideNear: 0, outsideExcursion: 0, routeFailures: 0,
     inputTokens: 0, outputTokens: 0, costUsd: 0, wallClockMs: 0,
     nominatimThrottleWaitMs: 0, status: "completed", pricing: CREATOR_C1_PRICING, outcomes,
+    unconfirmedByCategory: [],
   };
   try {
     const catalogue = await db.select({ id: categoriesTable.id, label: categoriesTable.label, key: categoriesTable.key })
@@ -353,15 +381,24 @@ export async function runCreatorC1(input: {
         onNominatimWait: (milliseconds) => { nominatimThrottleWaitMs += milliseconds; report.nominatimThrottleWaitMs = nominatimThrottleWaitMs; },
       });
       const isDuplicate = output.duplicate;
+      const category = place.existingCategoryId === null ? null : categories.get(place.existingCategoryId)!;
       if (isDuplicate) {
         report.duplicatesMerged++;
-        outcomes.push({ proposedName: place.proposedName, outcome: "duplicate", refusalRule: null });
+        outcomes.push({
+          proposedName: place.proposedName,
+          categoryLabel: category?.label ?? null,
+          inclusionReason: place.inclusionReason,
+          outcome: "duplicate",
+          refusalRule: null,
+          roadDistanceM: null,
+          travelDurationS: null,
+          nearestAlternatives: [],
+        });
         // Rejected/unresolved names and canonical OSM identities never silently
         // resurrect. The run report keeps this model output as duplicate
         // evidence without overwriting content on the retained proposal.
       }
       if (!output.sourceProposal) continue;
-      const category = place.existingCategoryId === null ? null : categories.get(place.existingCategoryId)!;
       // Content is saved with its four translations even when the sieve rejects
       // it, so the run report/audit trail never loses model output.
       await db.transaction(async (tx) => {
@@ -378,17 +415,44 @@ export async function runCreatorC1(input: {
       if (isDuplicate) continue;
       if (output.result?.verdict !== "resolved") {
         report.unconfirmed++;
-        outcomes.push({ proposedName: place.proposedName, outcome: "unconfirmed", refusalRule: output.result?.rule ?? null });
+        outcomes.push({
+          proposedName: place.proposedName,
+          categoryLabel: category?.label ?? null,
+          inclusionReason: place.inclusionReason,
+          outcome: "unconfirmed",
+          refusalRule: output.result?.rule ?? null,
+          roadDistanceM: null,
+          travelDurationS: null,
+          nearestAlternatives: [],
+        });
         continue;
       }
       report.confirmed++;
       const route = await (input.osrm ?? computeRoadRoute)(input.origin, { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude }, input.fetchFn);
       if (!route) {
         report.routeFailures++;
-        outcomes.push({ proposedName: place.proposedName, outcome: "route_failed", refusalRule: "osrm-unavailable" });
+        outcomes.push({
+          proposedName: place.proposedName,
+          categoryLabel: category?.label ?? null,
+          inclusionReason: place.inclusionReason,
+          outcome: "route_failed",
+          refusalRule: "osrm-unavailable",
+          roadDistanceM: null,
+          travelDurationS: null,
+          nearestAlternatives: [],
+        });
         continue;
       }
-      outcomes.push({ proposedName: place.proposedName, outcome: "confirmed", refusalRule: null });
+      outcomes.push({
+        proposedName: place.proposedName,
+        categoryLabel: category?.label ?? null,
+        inclusionReason: place.inclusionReason,
+        outcome: "confirmed",
+        refusalRule: null,
+        roadDistanceM: route.distanceMeters,
+        travelDurationS: Math.round(route.durationMinutes * 60),
+        nearestAlternatives: [],
+      });
       await db.transaction(async (tx) => {
         await tx.update(creatorPlaceProposalsTable).set({
           roadDistanceM: route.distanceMeters, travelDurationS: Math.round(route.durationMinutes * 60),
@@ -409,6 +473,55 @@ export async function runCreatorC1(input: {
       if (row.duration !== null && row.duration > 90) report.outsideExcursion++;
       await db.update(creatorPlaceProposalsTable).set({ range }).where(eq(creatorPlaceProposalsTable.id, row.proposalId));
     }
+    for (const outcome of outcomes) {
+      if (outcome.outcome !== "confirmed" || outcome.travelDurationS === null || outcome.travelDurationS <= 20 * 60) continue;
+      outcome.nearestAlternatives = outcomes
+        .filter((alternative) =>
+          alternative !== outcome &&
+          alternative.categoryLabel === outcome.categoryLabel &&
+          alternative.outcome !== "duplicate" &&
+          (
+            alternative.outcome === "unconfirmed" ||
+            (
+              alternative.outcome === "confirmed" &&
+              alternative.travelDurationS !== null &&
+              alternative.travelDurationS < outcome.travelDurationS!
+            )
+          ))
+        .map((alternative) => ({
+          proposedName: alternative.proposedName,
+          categoryLabel: alternative.categoryLabel,
+          outcome: alternative.outcome as "confirmed" | "unconfirmed" | "route_failed",
+          refusalRule: alternative.refusalRule,
+          roadDistanceM: alternative.roadDistanceM,
+          travelDurationS: alternative.travelDurationS,
+          proximityKnown: alternative.travelDurationS !== null,
+        }))
+        .sort((a, b) => {
+          if (a.proximityKnown !== b.proximityKnown) return a.proximityKnown ? -1 : 1;
+          return (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity);
+        });
+    }
+    const unconfirmedGroups = new Map<string | null, CreatorC1Report["unconfirmedByCategory"][number]["proposals"]>();
+    for (const outcome of outcomes) {
+      if (outcome.outcome !== "unconfirmed") continue;
+      const proposals = unconfirmedGroups.get(outcome.categoryLabel) ?? [];
+      proposals.push({
+        proposedName: outcome.proposedName,
+        inclusionReason: outcome.inclusionReason,
+        refusalRule: outcome.refusalRule,
+        roadDistanceM: outcome.roadDistanceM,
+        travelDurationS: outcome.travelDurationS,
+      });
+      unconfirmedGroups.set(outcome.categoryLabel, proposals);
+    }
+    report.unconfirmedByCategory = [...unconfirmedGroups.entries()]
+      .map(([categoryLabel, proposals]) => ({
+        categoryLabel,
+        proposals: proposals.sort((a, b) =>
+          (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity)),
+      }))
+      .sort((a, b) => (a.categoryLabel ?? "").localeCompare(b.categoryLabel ?? "", "sl"));
     report.wallClockMs = Date.now() - started;
     await db.transaction(async (tx) => {
       await tx.update(creatorRunsTable).set({

@@ -373,6 +373,17 @@ export async function listCreatorProposalQueue(tenantId: string) {
     ))
     .orderBy(asc(creatorPlaceProposalsTable.createdAt));
   if (rows.length === 0) return [];
+  const runIds = [...new Set(rows.map(({ proposal }) => proposal.runId))];
+  const evidenceRows = await db.select({
+    proposal: creatorPlaceProposalsTable,
+    categoryLabel: categoriesTable.label,
+  }).from(creatorPlaceProposalsTable)
+    .leftJoin(categoriesTable, eq(creatorPlaceProposalsTable.categoryId, categoriesTable.id))
+    .where(and(
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      inArray(creatorPlaceProposalsTable.runId, runIds),
+      ne(creatorPlaceProposalsTable.status, "superseded"),
+    ));
   const translations = await db.select().from(creatorProposalTranslationsTable)
     .where(inArray(creatorProposalTranslationsTable.proposalId, rows.map(({ proposal }) => proposal.id)))
     .orderBy(asc(creatorProposalTranslationsTable.language));
@@ -390,6 +401,37 @@ export async function listCreatorProposalQueue(tenantId: string) {
     ...proposal,
     categoryLabel,
     translations: byProposal.get(proposal.id) ?? [],
+    nearestAlternatives: proposal.travelDurationS !== null && proposal.travelDurationS > 20 * 60
+      ? evidenceRows
+        .filter(({ proposal: alternative }) =>
+          alternative.id !== proposal.id &&
+          alternative.runId === proposal.runId &&
+          alternative.categoryId === proposal.categoryId &&
+          (
+            alternative.status === "unresolved" ||
+            (
+              alternative.travelDurationS !== null &&
+              alternative.travelDurationS < proposal.travelDurationS!
+            )
+          ))
+        .map(({ proposal: alternative, categoryLabel: alternativeCategoryLabel }) => ({
+          proposedName: alternative.proposedName,
+          categoryLabel: alternativeCategoryLabel,
+          outcome: alternative.status === "unresolved"
+            ? "unconfirmed" as const
+            : alternative.travelDurationS === null
+              ? "route_failed" as const
+              : "confirmed" as const,
+          refusalRule: alternative.refusalReason,
+          roadDistanceM: alternative.roadDistanceM,
+          travelDurationS: alternative.travelDurationS,
+          proximityKnown: alternative.travelDurationS !== null,
+        }))
+        .sort((a, b) => {
+          if (a.proximityKnown !== b.proximityKnown) return a.proximityKnown ? -1 : 1;
+          return (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity);
+        })
+      : [],
   }));
 }
 

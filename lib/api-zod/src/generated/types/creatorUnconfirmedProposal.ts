@@ -5,20 +5,14 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
-import type { CreatorNearestAlternative } from './creatorNearestAlternative';
-import type { CreatorRunOutcomeOutcome } from './creatorRunOutcomeOutcome';
 
-export interface CreatorRunOutcome {
+export interface CreatorUnconfirmedProposal {
   proposedName: string;
-  /** @nullable */
-  categoryLabel: string | null;
   inclusionReason: string;
-  outcome: CreatorRunOutcomeOutcome;
   /** @nullable */
   refusalRule: string | null;
   /** @nullable */
   roadDistanceM: number | null;
   /** @nullable */
   travelDurationS: number | null;
-  nearestAlternatives: CreatorNearestAlternative[];
 }

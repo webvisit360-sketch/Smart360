@@ -167,7 +167,26 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
     inputTokens: 100, outputTokens: 50, costUsd: 0.12, wallClockMs: 321,
     nominatimThrottleWaitMs: 123, error: "safe failure",
     pricing: CREATOR_C1_PRICING,
-    outcomes: [{ proposedName: "Missing place", outcome: "unconfirmed", refusalRule: "no-results" }],
+    outcomes: [{
+      proposedName: "Missing place",
+      categoryLabel: "Izleti",
+      inclusionReason: "A useful local landmark.",
+      outcome: "unconfirmed",
+      refusalRule: "no-results",
+      roadDistanceM: null,
+      travelDurationS: null,
+      nearestAlternatives: [],
+    }],
+    unconfirmedByCategory: [{
+      categoryLabel: "Izleti",
+      proposals: [{
+        proposedName: "Missing place",
+        inclusionReason: "A useful local landmark.",
+        refusalRule: "no-results",
+        roadDistanceM: null,
+        travelDurationS: null,
+      }],
+    }],
   });
   const report = JSON.parse(serialized);
   assert.equal(report.nominatimThrottleWaitMs, 123);

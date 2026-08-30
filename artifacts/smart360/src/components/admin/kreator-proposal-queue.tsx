@@ -88,7 +88,7 @@ export function KreatorProposalQueue({
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
   const preservedMeninaEvidence = tenantName.trim().toLocaleLowerCase("sl") === "camping menina"
-    && latestRun.data?.status === "completed";
+    && (latestRun.data?.durableRunCount ?? 0) >= 3;
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
@@ -160,11 +160,46 @@ export function KreatorProposalQueue({
                   <ol className="mt-2 max-h-64 list-decimal space-y-1 overflow-auto pl-5 font-mono text-xs">
                     {latestRun.data.outcomes.map((outcome, index) => (
                       <li key={`${outcome.proposedName}-${index}`}>
-                        {outcome.proposedName} · {outcome.outcome}
+                        <strong>{outcome.proposedName}</strong> · {outcome.categoryLabel ?? "Brez kategorije"} · {outcome.outcome}
                         {outcome.refusalRule ? ` · ${outcome.refusalRule}` : ""}
+                        <span className="block font-sans text-muted-foreground">Zakaj: {outcome.inclusionReason}</span>
+                        {outcome.nearestAlternatives.map((alternative, alternativeIndex) => (
+                          <span key={`${alternative.proposedName}-${alternativeIndex}`} className="block font-sans text-muted-foreground">
+                            Alternativa: {alternative.proposedName} · {alternative.outcome}
+                            {alternative.refusalRule ? ` · ${alternative.refusalRule}` : ""}
+                            {alternative.proximityKnown && alternative.travelDurationS !== null
+                              ? ` · ${Math.round(alternative.travelDurationS / 60)} min`
+                              : " · razdalja neznana — sito ni potrdilo kraja"}
+                          </span>
+                        ))}
                       </li>
                     ))}
                   </ol>
+                </details>
+              )}
+              {latestRun.data.unconfirmedByCategory.length > 0 && (
+                <details className="md:col-span-3">
+                  <summary className="cursor-pointer font-bold">
+                    Izgubljeni predlogi po kategorijah ({latestRun.data.unresolvedCount})
+                  </summary>
+                  <div className="mt-2 max-h-80 space-y-3 overflow-auto text-xs">
+                    {latestRun.data.unconfirmedByCategory.map((group, groupIndex) => (
+                      <section key={`${group.categoryLabel}-${groupIndex}`}>
+                        <strong>{group.categoryLabel ?? "Brez kategorije"}</strong>
+                        <ul className="mt-1 space-y-1 pl-4">
+                          {group.proposals.map((proposal, proposalIndex) => (
+                            <li key={`${proposal.proposedName}-${proposalIndex}`}>
+                              {proposal.proposedName} · {proposal.refusalRule ?? "brez pravila"}
+                              {proposal.travelDurationS !== null
+                                ? ` · ${Math.round(proposal.travelDurationS / 60)} min`
+                                : " · razdalja neznana — sito ni potrdilo kraja"}
+                              <span className="block text-muted-foreground">Zakaj: {proposal.inclusionReason}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    ))}
+                  </div>
                 </details>
               )}
             </div>
@@ -275,9 +310,25 @@ export function KreatorProposalQueue({
                   </p>
                 )}
                 {row.inclusionReason && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Utemeljitev modela: {row.inclusionReason}
+                  <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-semibold text-blue-950">
+                    Zakaj je tukaj: {row.inclusionReason}
                   </p>
+                )}
+                {row.nearestAlternatives.length > 0 && (
+                  <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                    <strong>Drugi predlogi v isti kategoriji</strong>
+                    <ul className="mt-1 space-y-1">
+                      {row.nearestAlternatives.map((alternative, index) => (
+                        <li key={`${alternative.proposedName}-${index}`}>
+                          {alternative.proposedName} · {alternative.categoryLabel ?? "Brez kategorije"} · {alternative.outcome}
+                          {alternative.refusalRule ? ` · ${alternative.refusalRule}` : ""}
+                          {alternative.proximityKnown && alternative.travelDurationS !== null
+                            ? ` · ${Math.round(alternative.travelDurationS / 60)} min`
+                            : " · razdalja neznana — sito ni potrdilo kraja"}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
                 {row.geocodingLookupHint && (
                   <p className="mt-1 text-xs text-muted-foreground">
