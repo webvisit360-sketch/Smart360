@@ -257,11 +257,18 @@ function sanitizedError(error: unknown): string {
 export async function runCreatorC1(input: {
   tenantId: string; origin: { latitude: number; longitude: number }; region: string; tenantType: string;
   model?: CreatorC1Model; fetchFn?: FetchFn; osrm?: typeof computeRoadRoute; batches?: number;
+  claimedRunId?: string;
 }): Promise<{ runId: string; report: CreatorC1Report }> {
   const started = Date.now();
-  const [run] = await db.insert(creatorRunsTable).values({
-    tenantId: input.tenantId, originLatitude: input.origin.latitude, originLongitude: input.origin.longitude,
-  }).returning();
+  const [run] = input.claimedRunId
+    ? await db.select().from(creatorRunsTable).where(and(
+      eq(creatorRunsTable.id, input.claimedRunId),
+      eq(creatorRunsTable.tenantId, input.tenantId),
+      eq(creatorRunsTable.status, "running"),
+    )).limit(1)
+    : await db.insert(creatorRunsTable).values({
+      tenantId: input.tenantId, originLatitude: input.origin.latitude, originLongitude: input.origin.longitude,
+    }).returning();
   if (!run) throw new Error("C1 run could not be created.");
   let inputTokens = 0;
   let outputTokens = 0;

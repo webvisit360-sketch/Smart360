@@ -15,6 +15,7 @@ import {
   withCreatorC1DescriptionPolicy,
   runCreatorC1,
 } from "../lib/creatorC1";
+import { claimCreatorRunOnce } from "../lib/creatorMeninaProductionRun";
 
 function place(index: number, existingCategoryId: string | null = "category"): unknown {
   return {
@@ -109,8 +110,13 @@ test("failed C1 rows stay hidden while run history allows reruns but blocks conc
     return candidate;
   });
   let geocodes = 0;
+  const [claimed] = await db.insert(creatorRunsTable).values({
+    tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
+  }).returning({ id: creatorRunsTable.id });
+  assert.ok(claimed);
   await assert.rejects(runCreatorC1({
     tenantId: tenant.id,
+    claimedRunId: claimed.id,
     origin: { latitude: 46.31, longitude: 14.91 },
     region: "test", tenantType: "camp", batches: 1,
     model: async () => ({ content: { places: content }, inputTokens: 12, outputTokens: 34, costUsd: 0.01 }),
@@ -137,6 +143,15 @@ test("failed C1 rows stay hidden while run history allows reruns but blocks conc
   ));
   assert.ok(failed.some((row) => row.reportJson?.includes("injected geocoder failure")));
 
+  const [claimA, claimB] = await Promise.all([
+    claimCreatorRunOnce(tenant.id, { latitude: 46.31, longitude: 14.91 }),
+    claimCreatorRunOnce(tenant.id, { latitude: 46.31, longitude: 14.91 }),
+  ]);
+  assert.equal(claimA.claimedRunId, null);
+  assert.equal(claimB.claimedRunId, null);
+  assert.equal(claimA.existingRun?.id, claimed.id);
+  assert.equal(claimB.existingRun?.id, claimed.id);
+
   const [rerun] = await db.insert(creatorRunsTable).values({
     tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
   }).returning({ id: creatorRunsTable.id });
@@ -151,5 +166,29 @@ test("failed C1 rows stay hidden while run history allows reruns but blocks conc
     tenantId: tenant.id, originLatitude: 46.31, originLongitude: 14.91,
   }).returning({ id: creatorRunsTable.id });
   assert.ok(laterRun);
+
+  const [raceTenant] = await db.insert(tenantsTable).values({
+    slug: `c1-claim-race-${suffix}`,
+    name: `C1 claim race ${suffix}`,
+  }).returning({ id: tenantsTable.id });
+  assert.ok(raceTenant);
+  const raceClaims = await Promise.all([
+    claimCreatorRunOnce(raceTenant.id, { latitude: 46.31, longitude: 14.91 }),
+    claimCreatorRunOnce(raceTenant.id, { latitude: 46.31, longitude: 14.91 }),
+  ]);
+  const claimedRace = raceClaims.find((claim) => claim.claimedRunId !== null);
+  const observedRace = raceClaims.find((claim) => claim.existingRun !== null);
+  assert.ok(claimedRace?.claimedRunId);
+  assert.equal(observedRace?.existingRun?.id, claimedRace.claimedRunId);
+  await db.update(creatorRunsTable).set({
+    status: "completed", completedAt: new Date(),
+  }).where(eq(creatorRunsTable.id, claimedRace.claimedRunId));
+  const afterCompletion = await claimCreatorRunOnce(
+    raceTenant.id,
+    { latitude: 46.31, longitude: 14.91 },
+  );
+  assert.equal(afterCompletion.claimedRunId, null);
+  assert.equal(afterCompletion.existingRun?.id, claimedRace.claimedRunId);
+  await db.delete(tenantsTable).where(eq(tenantsTable.id, raceTenant.id));
   await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
 });
