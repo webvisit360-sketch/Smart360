@@ -1,0 +1,51 @@
+STEP B — TEST THE SIEVE ALONE, BEFORE ANY MODEL RUNS
+If the sieve runs together with the model on its first outing, a bad result
+tells us nothing about which of the two failed. So test the component we
+distrust, in isolation, against names whose answer we already know.
+
+Implement the sieve exactly as specified in the approved plan:
+· Nominatim with layer=poi,natural,manmade
+· refuse any result whose class or addresstype is an administrative unit,
+  settlement, road or postcode
+· namedetails=1, and require the returned name to match the queried name,
+  tolerant of diacritics and language variants but not of a different place
+· viewbox around the origin as a boost, plus a hard kilometre ceiling
+· refuse when several results are equally plausible
+· respect the existing database-wide 1 request/second throttle
+
+Origin: Camping MENINA, 46.311456, 14.9093051.
+The sieve receives the name string only — no category, no hint, no coordinates
+beyond the shared origin.
+
+REAL PLACES IN THE UPPER SAVINJA VALLEY — expected to resolve
+  Logarska dolina
+  Slap Rinka
+  Mozirski gaj
+  Golte
+  Robanov kot
+  Center Rinka Solčava
+  Snežna jama na Raduhi
+
+INVENTED BY ME — these do not exist, expected to be refused
+  Muzej lončarstva Varpolje
+  Etnološki muzej Rečica ob Savinji
+  Razgledni stolp Varpolje
+  Galerija Savinja Nazarje
+  Akvarij Menina
+
+Report one table: name, verdict, and for each resolution the osm_type, osm_id,
+class, type, returned name, coordinates and straight-line distance from the
+origin; for each refusal, which rule refused it.
+
+Do not tune the sieve to make the table come out right, and do not adjust it
+between cases. Report what it actually did on the first run.
+
+Both outcomes are information:
+· an invented name that resolves is the serious finding — the sieve is not
+  doing its job and the model must not run until it does;
+· a real place that is refused tells us the sieve is too strict, which we
+  answer with a fallback path for the operator, not by loosening the rule.
+
+No model integration, no tenant, no guest content, nothing published.
+
+Report and STOP.
