@@ -19,6 +19,8 @@ import {
 import { runCreatorSieve } from "../lib/creatorSieve";
 import {
   CREATOR_NEAR_RING_ENVELOPE_KM,
+  clearCreatorNearRingCacheForTests,
+  getCachedCreatorNearRing,
   matchUniqueCreatorNearRingCandidate,
 } from "../lib/creatorNearRing";
 import {
@@ -218,6 +220,20 @@ test("near-ring enumeration requests only relevant named features and filters no
   assert.doesNotMatch(overpass, /nwr\(around:[^\n]*\)\["name"\]/);
   assert.deepEqual(candidates.map((candidate) => candidate.osmId), [3]);
   assert.deepEqual(candidates[0]?.aliases, ["Museum"]);
+});
+
+test("near-ring catalogue is cached by tenant origin and rebuilt only after origin changes", async () => {
+  clearCreatorNearRingCacheForTests();
+  let calls = 0;
+  const fetchFn = async () => {
+    calls++;
+    return new Response(JSON.stringify({ elements: [] }), { status: 200 });
+  };
+  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
+  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
+  assert.equal(calls, 1);
+  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.31, longitude: 14.9 }, fetchFn);
+  assert.equal(calls, 2);
 });
 
 test("settlements require an explicit settlement proposal and never fuzzy-match arbitrary places", () => {

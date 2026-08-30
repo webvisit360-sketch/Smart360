@@ -6,6 +6,13 @@ import {
 
 export const CREATOR_NEAR_RING_ENVELOPE_KM = 35;
 export const CREATOR_NEAR_RING_EDGE_BAND_KM = 5;
+export const CREATOR_NEAR_RING_MATCH_THRESHOLD = 2 / 3;
+export const CREATOR_NEAR_RING_MATCH_MARGIN = 0.15;
+
+const catalogueCache = new Map<string, {
+  originKey: string;
+  candidates: CreatorNearRingCandidate[];
+}>();
 
 type OverpassElement = {
   type?: unknown;
@@ -108,6 +115,23 @@ nwr${around}[place~"^(city|town|village|hamlet)$"][name];
   });
 }
 
+export async function getCachedCreatorNearRing(
+  tenantId: string,
+  origin: { latitude: number; longitude: number },
+  fetchFn: FetchFn = fetch,
+): Promise<CreatorNearRingCandidate[]> {
+  const originKey = `${origin.latitude},${origin.longitude}`;
+  const cached = catalogueCache.get(tenantId);
+  if (cached?.originKey === originKey) return cached.candidates;
+  const candidates = await enumerateCreatorNearRing(origin, fetchFn);
+  catalogueCache.set(tenantId, { originKey, candidates });
+  return candidates;
+}
+
+export function clearCreatorNearRingCacheForTests(): void {
+  catalogueCache.clear();
+}
+
 function isExplicitSettlementProposal(name: string): boolean {
   return /\b(mesto|mestno|vas|vasica|naselje|settlement|city|town|village|hamlet)\b/iu.test(name);
 }
@@ -116,6 +140,13 @@ function strippedNames(name: string, osmType: string): string[] {
   const normalized = normalize(name).split(" ")
     .filter((token) => !["v", "na", "pri", "pod"].includes(token)).join(" ");
   const values = new Set([normalized]);
+  if (["city", "town", "village", "hamlet"].includes(osmType)) {
+    for (const settlementWord of ["mesto", "vas", "vasica", "naselje"]) {
+      if (normalized.startsWith(`${settlementWord} `)) {
+        values.add(normalized.slice(settlementWord.length + 1));
+      }
+    }
+  }
   for (const entry of CREATOR_GENERIC_TYPE_WORDS) {
     if (!entry.osmTypes.includes(osmType)) continue;
     for (const phrase of entry.words) {
@@ -136,20 +167,47 @@ export function matchUniqueCreatorNearRingCandidate(
   proposedName: string,
   candidates: CreatorNearRingCandidate[],
 ): CreatorNearRingCandidate | null {
-  const matches = candidates.filter((candidate) => {
-    if (candidate.isSettlement && !isExplicitSettlementProposal(proposedName)) return false;
+  const scored = candidates.flatMap((candidate) => {
+    if (candidate.isSettlement && !isExplicitSettlementProposal(proposedName)) return [];
+    const normalizedProposal = normalize(proposedName);
+    const proposalGenericTypes = CREATOR_GENERIC_TYPE_WORDS.filter((entry) =>
+      entry.words.some((phrase) => {
+        const generic = normalize(phrase);
+        return normalizedProposal === generic ||
+          normalizedProposal.startsWith(`${generic} `) ||
+          normalizedProposal.endsWith(` ${generic}`);
+      }),
+    );
+    if (
+      proposalGenericTypes.length > 0 &&
+      !proposalGenericTypes.some((entry) => entry.osmTypes.includes(candidate.type))
+    ) return [];
     const proposed = strippedNames(proposedName, candidate.type);
     const candidateNames = [candidate.returnedName, ...candidate.aliases]
       .flatMap((name) => strippedNames(name, candidate.type));
-    return proposed.some((left) => candidateNames.some((right) => {
-      if (left === right) return true;
-      const a = new Set(left.split(" "));
-      const b = new Set(right.split(" "));
-      const shared = [...a].filter((token) => b.has(token)).length;
-      return shared >= (Math.min(a.size, b.size) === 1 ? 1 : 2) &&
-        shared >= Math.min(a.size, b.size) - 1 &&
-        Math.max(a.size, b.size) - shared <= 1;
-    }));
+    let score = 0;
+    for (const left of proposed) {
+      for (const right of candidateNames) {
+        if (left === right) {
+          score = 1;
+          continue;
+        }
+        const a = new Set(left.split(" "));
+        const b = new Set(right.split(" "));
+        const shared = [...a].filter((token) => b.has(token)).length;
+        const tolerant = shared >= (Math.min(a.size, b.size) === 1 ? 1 : 2) &&
+          shared >= Math.min(a.size, b.size) - 1 &&
+          Math.max(a.size, b.size) - shared <= 1;
+        if (tolerant) score = Math.max(score, shared / Math.max(a.size, b.size));
+      }
+    }
+    return score > 0 ? [{ candidate, score }] : [];
   });
-  return matches.length === 1 ? matches[0]! : null;
+  scored.sort((a, b) => b.score - a.score);
+  const passing = scored.filter(({ score }) => score >= CREATOR_NEAR_RING_MATCH_THRESHOLD);
+  if (passing.length !== 1) return null;
+  const top = scored[0]!;
+  const second = scored[1];
+  if (second && top.score - second.score < CREATOR_NEAR_RING_MATCH_MARGIN) return null;
+  return top.candidate;
 }

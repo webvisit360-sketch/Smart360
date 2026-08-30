@@ -7,15 +7,15 @@ Every Creator run must finish by producing its own report covering proposed plac
 
 **Why:** The first real model-assisted run must be judged from explicit evidence rather than subjective impressions.
 
-The controlled Camping MENINA C1 evidence boundary permits exactly three durable runs. Runs one and two must remain unchanged; run three is the single explicitly authorized origin-anchored rerun. No run may be approved or materialized automatically.
+The controlled Camping MENINA C1 evidence boundary permits exactly four durable runs. Earlier runs remain immutable, and no proposal may be approved or materialized automatically.
 
-**Why:** The owner required run one to remain exact for comparison, then authorized one corrected rerun after confirming that the first sieve queried lookup hints instead of plain names.
+**Why:** The owner requires each expensive production run to remain auditable and explicitly bounded.
 
 Creator prompt history has three distinct states: machine failures have no influence; machine-confirmed canonical names are listed as already in the guide; human rejections are hard blocks.
 
 **Why:** A machine miss is evidence about the verifier, not the place, while machine success is trustworthy guide state that prevents wasting later model slots. Only a person’s rejection is durable negative editorial evidence.
 
-**How to apply:** Exclude unresolved names from prompts, include confirmed canonical names as already present, and pass human-rejected names as forbidden. Preserve unresolved evidence and never infer permission for a fourth run.
+**How to apply:** Exclude unresolved names from prompts, include confirmed canonical names as already present, and pass human-rejected names as forbidden. Preserve unresolved evidence and never permit a fifth run without explicit approval.
 
 Run reports and proposal rows must show the model’s inclusion reason. Beyond-near proposals must expose same-category alternatives, including unresolved alternatives with unknown proximity.
 
@@ -31,7 +31,7 @@ Generic-type grammar and place retrieval are separate sieve stages. Phrase-aware
 
 Dropping Nominatim's `layer` filter is not an adequate replacement for bounded Overpass retrieval.
 
-**Why:** A controlled replay of 23 zero-candidate MENINA losses without `layer` restored results for only six names, and the unchanged local gate resolved zero. The restored set was mostly settlements blocked by design; the other 17 still returned nothing.
+**Why:** A controlled replay of 23 zero-candidate MENINA losses without `layer` restored results for only five names, and the unchanged local gate resolved zero. The restored set was mostly settlements blocked by design; the other 18 still returned nothing.
 
 **How to apply:** Keep the layerless result as diagnostic evidence only. Use bounded near-ring enumeration for local discovery rather than broadening global Nominatim behavior without a separately designed settlement policy.
 

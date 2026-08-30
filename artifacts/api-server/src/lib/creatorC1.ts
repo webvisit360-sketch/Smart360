@@ -11,7 +11,7 @@ import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 import {
   CREATOR_NEAR_RING_EDGE_BAND_KM,
   CREATOR_NEAR_RING_ENVELOPE_KM,
-  enumerateCreatorNearRing,
+  getCachedCreatorNearRing,
   matchUniqueCreatorNearRingCandidate,
 } from "./creatorNearRing";
 import {
@@ -390,9 +390,9 @@ export async function runCreatorC1(input: {
       }
     }
     report.proposed = all.length;
-    let nearCandidates: Awaited<ReturnType<typeof enumerateCreatorNearRing>> = [];
+    let nearCandidates: Awaited<ReturnType<typeof getCachedCreatorNearRing>> = [];
     try {
-      nearCandidates = await enumerateCreatorNearRing(input.origin, input.fetchFn);
+      nearCandidates = await getCachedCreatorNearRing(input.tenantId, input.origin, input.fetchFn);
     } catch {
       // The strict global path remains available. Overpass downtime is never an
       // editorial rejection and therefore never enters the rejection prompt.

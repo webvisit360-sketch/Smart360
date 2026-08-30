@@ -14,6 +14,7 @@ import {
 import {
   approveCreatorProposalIndividually,
   approveCreatorProposalsBulk,
+  confirmCreatorProposalCoordinates,
   CreatorBulkApprovalError,
   listCreatorProposalQueue,
   recordCreatorVerification,
@@ -291,6 +292,80 @@ test("the real sieve path persists shortened-query provenance and both attempts"
   const attempts = await db.select().from(creatorVerificationAttemptsTable)
     .where(eq(creatorVerificationAttemptsTable.proposalId, output.proposal.id));
   assert.equal(attempts.length, 2);
+});
+
+test("operator coordinates require individual approval and cannot be overwritten", async () => {
+  const [originalTenant] = await db.select({
+    latitude: tenantsTable.latitude,
+    longitude: tenantsTable.longitude,
+  }).from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
+  await db.update(tenantsTable).set({
+    latitude: 46.31,
+    longitude: 14.91,
+  }).where(eq(tenantsTable.id, tenantId));
+  const proposedName = `Ročno potrjen kraj ${crypto.randomUUID().slice(0, 8)}`;
+  const pending = await upsertPendingCreatorProposal({
+    tenantId,
+    runId: runIds[1]!,
+    proposedName,
+    originalQuery: proposedName,
+    contentReady: true,
+  });
+  proposalIds.push(pending.proposal.id);
+  await db.update(creatorPlaceProposalsTable).set({
+    status: "unresolved",
+    refusalReason: "no-results",
+    contentReady: true,
+  }).where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
+  const positioned = await confirmCreatorProposalCoordinates({
+    tenantId,
+    proposalId: pending.proposal.id,
+    actorId,
+    latitude: 46.32,
+    longitude: 14.92,
+    fetchFn: async () => new Response(JSON.stringify({
+      routes: [{ distance: 120_000, duration: 6_000 }],
+    }), { status: 200 }),
+  });
+  assert.equal(positioned?.confirmationMethod, "operator_coordinates");
+  assert.equal(positioned?.osmId, null);
+  assert.equal(positioned?.requiresIndividualReview, true);
+  assert.equal(positioned?.status, "unresolved");
+  await assert.rejects(confirmCreatorProposalCoordinates({
+    tenantId,
+    proposalId: pending.proposal.id,
+    actorId,
+    latitude: 46.33,
+    longitude: 14.93,
+    fetchFn: async () => new Response(JSON.stringify({
+      routes: [{ distance: 12_000, duration: 1_200 }],
+    }), { status: 200 }),
+  }), /Prvotno ročno določene točke ni mogoče prepisati/);
+  const rerouted = await confirmCreatorProposalCoordinates({
+    tenantId,
+    proposalId: pending.proposal.id,
+    actorId,
+    latitude: 46.32,
+    longitude: 14.92,
+    fetchFn: async () => new Response(JSON.stringify({
+      routes: [{ distance: 12_000, duration: 1_200 }],
+    }), { status: 200 }),
+  });
+  assert.equal(rerouted?.status, "pending");
+  await assert.rejects(
+    approveCreatorProposalsBulk(tenantId, [pending.proposal.id], actorId),
+    CreatorBulkApprovalError,
+  );
+  const approved = await approveCreatorProposalIndividually(
+    tenantId,
+    pending.proposal.id,
+    actorId,
+  );
+  assert.equal(approved.status, "approved");
+  await db.update(tenantsTable).set({
+    latitude: originalTenant?.latitude ?? null,
+    longitude: originalTenant?.longitude ?? null,
+  }).where(eq(tenantsTable.id, tenantId));
 });
 
 test("two names resolving to one OSM identity produce one queue row", async () => {

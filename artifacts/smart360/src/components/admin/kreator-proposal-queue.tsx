@@ -189,7 +189,7 @@ export function KreatorProposalQueue({
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
   const preservedMeninaEvidence = tenantName.trim().toLocaleLowerCase("sl") === "camping menina"
-    && (latestRun.data?.durableRunCount ?? 0) >= 3;
+    && (latestRun.data?.durableRunCount ?? 0) >= 4;
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
