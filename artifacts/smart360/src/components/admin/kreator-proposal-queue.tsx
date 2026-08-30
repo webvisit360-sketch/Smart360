@@ -189,7 +189,7 @@ export function KreatorProposalQueue({
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
   const preservedMeninaEvidence = tenantName.trim().toLocaleLowerCase("sl") === "camping menina"
-    && (latestRun.data?.durableRunCount ?? 0) >= 4;
+    && (latestRun.data?.durableRunCount ?? 0) >= 5;
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
@@ -247,6 +247,21 @@ export function KreatorProposalQueue({
               <span>Nominatim čakanje: {(latestRun.data.nominatimThrottleMs / 1000).toFixed(1)} s</span>
               <span>Overpass ovojnica: {latestRun.data.nearEnvelopeKm === null ? "ni merjeno" : `${latestRun.data.nearEnvelopeKm} km`}</span>
               <span>Robni kandidati (1000–1200 s): {latestRun.data.nearEnvelopeEdgeBandCount ?? "ni merjeno"}</span>
+              <span>
+                Overpass katalog: {latestRun.data.nearCatalogue === null
+                  ? "ni merjeno"
+                  : `${latestRun.data.nearCatalogue.status} · ${latestRun.data.nearCatalogue.filteredElementCount} elementov`}
+              </span>
+              <span>
+                Lokalni cilj: {latestRun.data.localProposalCount === null || latestRun.data.minimumLocalProposalsPerBatch === null
+                  ? "ni merjeno"
+                  : `${latestRun.data.localProposalCount} predlogov · najmanj ${latestRun.data.minimumLocalProposalsPerBatch} na serijo`}
+              </span>
+              {latestRun.data.nearCatalogue?.error && (
+                <span className="text-destructive md:col-span-3">
+                  Overpass: {latestRun.data.nearCatalogue.error}
+                </span>
+              )}
               <a
                 className="text-primary underline underline-offset-2 md:col-span-3"
                 href={latestRun.data.pricing.sourceUrl}

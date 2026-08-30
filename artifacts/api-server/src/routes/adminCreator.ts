@@ -92,92 +92,11 @@ function parseRunReport(value: string | null): CreatorC1Report | null {
   }
 }
 
-async function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
+export async function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
   const report = parseRunReport(row.reportJson);
   const [{ durableRunCount = 0 } = {}] = await db.select({
     durableRunCount: count(),
   }).from(creatorRunsTable).where(eq(creatorRunsTable.tenantId, row.tenantId));
-  const evidenceRows = await db.select({
-    proposal: creatorPlaceProposalsTable,
-    categoryLabel: categoriesTable.label,
-  }).from(creatorPlaceProposalsTable)
-    .leftJoin(categoriesTable, eq(creatorPlaceProposalsTable.categoryId, categoriesTable.id))
-    .where(eq(creatorPlaceProposalsTable.runId, row.id));
-  const unmatchedEvidence = [...evidenceRows];
-  const outcomes = (report?.outcomes ?? []).map((storedOutcome) => {
-    const evidenceIndex = unmatchedEvidence.findIndex(({ proposal }) =>
-      proposal.proposedName === storedOutcome.proposedName);
-    const evidence = evidenceIndex >= 0 ? unmatchedEvidence.splice(evidenceIndex, 1)[0] : undefined;
-    const proposal = evidence?.proposal;
-    const travelDurationS = proposal?.travelDurationS ?? storedOutcome.travelDurationS ?? null;
-    const categoryLabel = evidence?.categoryLabel ?? storedOutcome.categoryLabel ?? null;
-    const nearestAlternatives = travelDurationS !== null && travelDurationS > 20 * 60 && proposal
-      ? evidenceRows
-        .filter(({ proposal: alternative }) =>
-          alternative.id !== proposal.id &&
-          alternative.categoryId === proposal.categoryId &&
-          (
-            alternative.status === "unresolved" ||
-            (
-              alternative.travelDurationS !== null &&
-              alternative.travelDurationS < travelDurationS
-            )
-          ))
-        .map(({ proposal: alternative, categoryLabel: alternativeCategoryLabel }) => ({
-          proposedName: alternative.proposedName,
-          categoryLabel: alternativeCategoryLabel,
-          outcome: alternative.status === "unresolved"
-            ? "unconfirmed" as const
-            : alternative.travelDurationS === null
-              ? "route_failed" as const
-              : "confirmed" as const,
-          refusalRule: alternative.refusalReason,
-          roadDistanceM: alternative.roadDistanceM,
-          travelDurationS: alternative.travelDurationS,
-          proximityKnown: alternative.travelDurationS !== null,
-        }))
-        .sort((a, b) => {
-          if (a.proximityKnown !== b.proximityKnown) return a.proximityKnown ? -1 : 1;
-          return (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity);
-        })
-      : storedOutcome.nearestAlternatives ?? [];
-    return {
-      proposedName: storedOutcome.proposedName,
-      categoryLabel,
-      inclusionReason: proposal?.inclusionReason ?? storedOutcome.inclusionReason ?? "",
-      outcome: storedOutcome.outcome,
-      refusalRule: storedOutcome.refusalRule,
-      roadDistanceM: proposal?.roadDistanceM ?? storedOutcome.roadDistanceM ?? null,
-      travelDurationS,
-      nearestAlternatives,
-    };
-  });
-  const unconfirmedGroups = new Map<string | null, Array<{
-    proposedName: string;
-    inclusionReason: string;
-    refusalRule: string | null;
-    roadDistanceM: number | null;
-    travelDurationS: number | null;
-  }>>();
-  for (const outcome of outcomes) {
-    if (outcome.outcome !== "unconfirmed") continue;
-    const proposals = unconfirmedGroups.get(outcome.categoryLabel) ?? [];
-    proposals.push({
-      proposedName: outcome.proposedName,
-      inclusionReason: outcome.inclusionReason,
-      refusalRule: outcome.refusalRule,
-      roadDistanceM: outcome.roadDistanceM,
-      travelDurationS: outcome.travelDurationS,
-    });
-    unconfirmedGroups.set(outcome.categoryLabel, proposals);
-  }
-  const unconfirmedByCategory = [...unconfirmedGroups.entries()]
-    .map(([categoryLabel, proposals]) => ({
-      categoryLabel,
-      proposals: proposals.sort((a, b) =>
-        (a.travelDurationS ?? Infinity) - (b.travelDurationS ?? Infinity)),
-    }))
-    .sort((a, b) => (a.categoryLabel ?? "").localeCompare(b.categoryLabel ?? "", "sl"));
   return {
     id: row.id,
     tenantId: row.tenantId,
@@ -200,11 +119,18 @@ async function creatorRunResponse(row: typeof creatorRunsTable.$inferSelect) {
     // Pre-near-ring runs did not measure this; do not invent historical data.
     nearEnvelopeKm: report?.nearEnvelopeKm ?? null,
     nearEnvelopeEdgeBandCount: report?.nearEnvelopeEdgeBandCount ?? null,
+    dependencyAttempts: report?.dependencyAttempts ?? [],
+    nearCatalogue: report?.nearCatalogue ?? null,
+    surroundingSettlements: report?.surroundingSettlements ?? [],
+    minimumLocalProposalsPerBatch: report?.minimumLocalProposalsPerBatch ?? null,
+    localProposalCount: report?.localProposalCount ?? null,
     error: report?.error ?? null,
     startedAt: row.startedAt,
     completedAt: row.completedAt,
-    outcomes,
-    unconfirmedByCategory,
+    // Historical evidence is returned exactly as persisted. Queue edits,
+    // coordinate confirmation, and later review must never rewrite a run.
+    outcomes: report?.outcomes ?? [],
+    unconfirmedByCategory: report?.unconfirmedByCategory ?? [],
     pricing: report?.pricing ?? CREATOR_C1_PRICING,
   };
 }
@@ -348,7 +274,7 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
       )
       : null;
     if (claim?.existingRun) {
-      res.status(409).json({ error: "Štiri odobrene produkcijske izvedbe C1 za Camping MENINA so dokazno zaklenjene ali pa četrta izvedba že teče." });
+      res.status(409).json({ error: "Pet odobrenih produkcijskih izvedb C1 za Camping MENINA je dokazno zaklenjenih ali pa peta izvedba že teče." });
       return;
     }
     const result = await runCreatorC1({

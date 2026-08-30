@@ -12,26 +12,37 @@ import {
   promptFor,
   serializeCreatorC1Report,
   validateCreatorC1Batch,
+  validateCreatorC1LocalQuota,
   validateCreatorC1ModelOutput,
   withCreatorC1DescriptionPolicy,
   runCreatorC1,
+  type CreatorC1Report,
 } from "../lib/creatorC1";
 import { runCreatorSieve } from "../lib/creatorSieve";
+import { computeRoadRoute } from "../lib/distanceEngine";
+import type { CreatorDependencyAttempt } from "../lib/creatorDependencyTelemetry";
 import {
   CREATOR_NEAR_RING_ENVELOPE_KM,
   clearCreatorNearRingCacheForTests,
+  deriveNearestSurroundingSettlementNames,
+  enumerateCreatorNearRing,
   getCachedCreatorNearRing,
   matchUniqueCreatorNearRingCandidate,
+  type CreatorNearRingAttempt,
 } from "../lib/creatorNearRing";
 import {
   claimCreatorRunOnce,
   isPreservedMeninaEvidenceTenant,
+  MENINA_AUTHORIZED_RUN_COUNT,
 } from "../lib/creatorMeninaProductionRun";
+import { upsertPendingCreatorProposal } from "../lib/creatorProposalLedger";
+import { creatorRunResponse } from "../routes/adminCreator";
 
 function place(index: number, existingCategoryId: string | null = "category"): unknown {
   return {
     proposedName: `Place ${index}`,
     existingCategoryId,
+    targetSettlement: null,
     languages: ["sl", "en", "de", "it"].map((language) => ({
       language, name: `Name ${index}`, description: "Description",
     })),
@@ -66,6 +77,61 @@ test("C1 batch requires exactly fifteen rows and retries malformed output once",
   assert.equal(generated.costUsd, 0.04);
 });
 
+test("C1 model retries retain one dependency attempt per provider call", async () => {
+  const dependencies: CreatorDependencyAttempt[] = [];
+  let calls = 0;
+  const generated = await generateCreatorC1Batch(async ({ onDependencyAttempt }) => {
+    calls++;
+    onDependencyAttempt?.({
+      dependency: "openai",
+      operation: "completion",
+      attempt: 1,
+      ok: true,
+      httpStatus: 200,
+      durationMs: 12,
+      rawElementCount: 1,
+      filteredElementCount: 1,
+      query: null,
+      error: null,
+    });
+    return {
+      content: {
+        places: calls === 1
+          ? [place(1)]
+          : Array.from({ length: CREATOR_C1_BATCH_SIZE }, (_, index) => place(index)),
+      },
+      inputTokens: 10,
+      outputTokens: 5,
+      costUsd: 0.01,
+    };
+  }, "server prompt", undefined, (attempt) => dependencies.push(attempt));
+  assert.equal(generated.places.length, CREATOR_C1_BATCH_SIZE);
+  assert.deepEqual(dependencies.map((attempt) => attempt.attempt), [1, 2]);
+});
+
+test("C1 local quota rejects unknown settlements and fewer than eight local rows", () => {
+  const eightLocal = Array.from({ length: CREATOR_C1_BATCH_SIZE }, (_, index) => {
+    const candidate = validateCreatorC1ModelOutput([place(index)])[0]!;
+    candidate.targetSettlement = index < 8 ? "Mozirje" : null;
+    return candidate;
+  });
+  assert.doesNotThrow(() => validateCreatorC1LocalQuota(eightLocal, ["Mozirje", "Nazarje"]));
+  assert.throws(
+    () => validateCreatorC1LocalQuota(eightLocal.map((candidate, index) => ({
+      ...candidate,
+      targetSettlement: index < 7 ? "Mozirje" : null,
+    })), ["Mozirje"]),
+    /at least 8/,
+  );
+  assert.throws(
+    () => validateCreatorC1LocalQuota(eightLocal.map((candidate, index) => ({
+      ...candidate,
+      targetSettlement: index === 0 ? "Invented town" : candidate.targetSettlement,
+    })), ["Mozirje"]),
+    /unknown settlement/,
+  );
+});
+
 test("C1 retries a batch that repeats an earlier normalized name", async () => {
   let calls = 0;
   const generated = await generateCreatorC1Batch(async () => {
@@ -91,6 +157,7 @@ test("C1 retries a batch that repeats an earlier normalized name", async () => {
 
 test("C1 geocoding uses the plain name first and lookup hint only after no results", async () => {
   const queries: string[] = [];
+  const dependencies: CreatorDependencyAttempt[] = [];
   const result = await runCreatorSieve("Slap Rinka", { latitude: 46.31, longitude: 14.91 }, {
     fallbackQuery: "Slap Rinka, Logarska dolina, Solčava, Slovenia",
     fetchFn: async (url) => {
@@ -110,6 +177,7 @@ test("C1 geocoding uses the plain name first and lookup hint only after no resul
         importance: 0.5,
       }]), { status: 200, headers: { "content-type": "application/json" } });
     },
+    onDependencyAttempt: (attempt) => dependencies.push(attempt),
   });
   assert.deepEqual(queries, [
     "Slap Rinka",
@@ -119,6 +187,30 @@ test("C1 geocoding uses the plain name first and lookup hint only after no resul
   assert.equal(result.originalQuery, "Slap Rinka");
   assert.equal(result.confirmedQuery, queries[1]);
   assert.equal(result.verdict, "resolved");
+  assert.deepEqual(dependencies.map((attempt) => ({
+    status: attempt.httpStatus,
+    count: attempt.rawElementCount,
+    filtered: attempt.filteredElementCount,
+    query: attempt.query,
+  })), [
+    { status: 200, count: 0, filtered: 0, query: "Slap Rinka" },
+    { status: 200, count: 1, filtered: 1, query: "Slap Rinka, Logarska dolina, Solčava, Slovenia" },
+  ]);
+});
+
+test("OSRM reports invalid-route telemetry without throwing", async () => {
+  const dependencies: CreatorDependencyAttempt[] = [];
+  const route = await computeRoadRoute(
+    { latitude: 46.31, longitude: 14.91 },
+    { latitude: 46.32, longitude: 14.92 },
+    async () => new Response(JSON.stringify({ routes: [] }), { status: 200 }),
+    (attempt) => dependencies.push(attempt),
+  );
+  assert.equal(route, null);
+  assert.equal(dependencies.length, 1);
+  assert.equal(dependencies[0]?.dependency, "osrm");
+  assert.equal(dependencies[0]?.httpStatus, 200);
+  assert.match(dependencies[0]?.error ?? "", /invalid route/);
 });
 
 test("C1 strips a corroborated multi-word generic type phrase", async () => {
@@ -203,37 +295,114 @@ test("near-ring matching is bounded, tolerant, type-corroborated and unique", ()
   );
 });
 
-test("near-ring enumeration requests only relevant named features and filters noise", async () => {
-  const { enumerateCreatorNearRing } = await import("../lib/creatorNearRing");
-  let requested = "";
+test("near-ring enumeration uses split bounding-box whitelists, circle filtering and deduplication", async () => {
+  const requested: string[] = [];
+  const attempts: CreatorNearRingAttempt[] = [];
   const candidates = await enumerateCreatorNearRing({ latitude: 46.3, longitude: 14.9 }, async (_url, init) => {
-    requested = String(init?.body);
+    requested.push(new URLSearchParams(String(init?.body)).get("data") ?? "");
     return new Response(JSON.stringify({ elements: [
       { type: "way", id: 1, center: { lat: 46.31, lon: 14.91 }, tags: { highway: "primary", name: "Road" } },
       { type: "relation", id: 2, center: { lat: 46.32, lon: 14.92 }, tags: { boundary: "administrative", name: "Noise" } },
       { type: "node", id: 3, lat: 46.33, lon: 14.93, tags: { tourism: "museum", name: "Muzej", "name:en": "Museum" } },
+      { type: "node", id: 4, lat: 46.31, lon: 14.91, tags: { amenity: "restaurant", name: "Restaurant noise" } },
+      { type: "node", id: 5, lat: 46.7, lon: 14.9, tags: { natural: "peak", name: "Outside circle" } },
     ] }), { status: 200 });
-  });
-  const overpass = new URLSearchParams(requested).get("data") ?? "";
-  assert.match(overpass, /\[tourism\]\[name\]/);
+  }, (attempt) => attempts.push(attempt));
+  assert.equal(requested.length, 4);
+  const overpass = requested.join("\n");
+  assert.match(overpass, /\[tourism~"\^\(attraction\|artwork\|viewpoint\|museum/);
+  assert.match(overpass, /\[amenity~"\^\(place_of_worship\|monastery\|museum\|theatre\|arts_centre\)\$"\]/);
+  assert.match(overpass, /\[leisure~"\^\(park\|nature_reserve\|garden\)\$"\]/);
+  assert.match(overpass, /\[natural~"\^\(peak\|waterfall\|cave_entrance\|spring\|water\|cliff\)\$"\]/);
+  assert.match(overpass, /\[man_made~"\^\(tower\|lighthouse\)\$"\]/);
+  assert.match(overpass, /\[landuse~"\^\(winter_sports\)\$"\]/);
+  assert.match(overpass, /\[historic\]\[name\]/);
   assert.match(overpass, /boundary=protected_area/);
-  assert.doesNotMatch(overpass, /nwr\(around:[^\n]*\)\["name"\]/);
+  assert.match(overpass, /type=route/);
+  assert.match(overpass, /\[place~/);
+  assert.doesNotMatch(overpass, /around:/);
+  assert.match(overpass, /nwr\(45\.\d+,14\.\d+,46\.\d+,15\.\d+\)/);
   assert.deepEqual(candidates.map((candidate) => candidate.osmId), [3]);
   assert.deepEqual(candidates[0]?.aliases, ["Museum"]);
+  assert.equal(attempts.length, 4);
+  assert.equal(attempts.every((attempt) =>
+    attempt.attempt === 1 && attempt.status === 200 &&
+    attempt.rawCount === 5 && attempt.filteredCount === 1 && attempt.error === null), true);
 });
 
-test("near-ring catalogue is cached by tenant origin and rebuilt only after origin changes", async () => {
+test("near-ring retries one transient failure and caches only the merged catalogue", async () => {
+  clearCreatorNearRingCacheForTests();
+  let calls = 0;
+  const attempts: CreatorNearRingAttempt[] = [];
+  const fetchFn = async () => {
+    calls++;
+    if (calls === 1) return new Response("", { status: 503 });
+    return new Response(JSON.stringify({ elements: [] }), { status: 200 });
+  };
+  await getCachedCreatorNearRing(
+    "tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn,
+    (attempt) => attempts.push(attempt),
+  );
+  await getCachedCreatorNearRing(
+    "tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn,
+    (attempt) => attempts.push(attempt),
+  );
+  assert.equal(calls, 5);
+  assert.deepEqual(attempts.slice(0, 2).map(({ attempt, status }) => ({ attempt, status })), [
+    { attempt: 1, status: 503 },
+    { attempt: 2, status: 200 },
+  ]);
+  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.31, longitude: 14.9 }, fetchFn);
+  assert.equal(calls, 9);
+});
+
+test("near-ring merges successful groups but rejects an all-failed catalogue", async () => {
+  let calls = 0;
+  const partialAttempts: CreatorNearRingAttempt[] = [];
+  const partial = await enumerateCreatorNearRing(
+    { latitude: 46.3, longitude: 14.9 },
+    async () => {
+      calls++;
+      if (calls === 1) return new Response("", { status: 400 });
+      return new Response(JSON.stringify({ elements: [{
+        type: "node",
+        id: 901,
+        lat: 46.31,
+        lon: 14.91,
+        tags: { tourism: "attraction", name: "Partial success" },
+      }] }), { status: 200 });
+    },
+    (attempt) => partialAttempts.push(attempt),
+  );
+  assert.equal(partial.length, 1);
+  assert.equal(partialAttempts.length, 4);
+  assert.equal(partialAttempts[0]?.error, "Overpass 400");
+
+  const failedAttempts: CreatorNearRingAttempt[] = [];
+  await assert.rejects(
+    enumerateCreatorNearRing(
+      { latitude: 46.3, longitude: 14.9 },
+      async () => new Response("", { status: 400 }),
+      (attempt) => failedAttempts.push(attempt),
+    ),
+    /All Overpass catalogue requests failed/,
+  );
+  assert.equal(failedAttempts.length, 4);
+  assert.equal(failedAttempts.every((attempt) => attempt.error === "Overpass 400"), true);
+});
+
+test("a partial near-ring catalogue is never cached", async () => {
   clearCreatorNearRingCacheForTests();
   let calls = 0;
   const fetchFn = async () => {
     calls++;
+    if (calls === 1) return new Response("", { status: 400 });
     return new Response(JSON.stringify({ elements: [] }), { status: 200 });
   };
-  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
-  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
-  assert.equal(calls, 1);
-  await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.31, longitude: 14.9 }, fetchFn);
-  assert.equal(calls, 2);
+  await getCachedCreatorNearRing("partial-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
+  assert.equal(calls, 4);
+  await getCachedCreatorNearRing("partial-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
+  assert.equal(calls, 8);
 });
 
 test("settlements require an explicit settlement proposal and never fuzzy-match arbitrary places", () => {
@@ -244,6 +413,22 @@ test("settlements require an explicit settlement proposal and never fuzzy-match 
   };
   assert.equal(matchUniqueCreatorNearRingCandidate("Solčava", [settlement]), null);
   assert.equal(matchUniqueCreatorNearRingCandidate("Vas Solčava", [settlement])?.osmId, 91);
+});
+
+test("surrounding settlement names are nearest-first, deterministic and normalized-unique", () => {
+  const settlement = {
+    osmType: "node", osmId: 91, className: "settlement", type: "village",
+    addresstype: "settlement", returnedName: "Solčava", displayName: "Solčava",
+    latitude: 46.42, longitude: 14.69, distanceKm: 4, aliases: [], isSettlement: true,
+  };
+  const names = deriveNearestSurroundingSettlementNames([
+    { ...settlement, osmId: 94, returnedName: "Mozirje", displayName: "Mozirje", distanceKm: 8 },
+    { ...settlement, osmId: 93, returnedName: "SOLCAVA", displayName: "SOLCAVA", distanceKm: 6 },
+    { ...settlement, osmId: 92, returnedName: "Luče", displayName: "Luče", distanceKm: 4 },
+    settlement,
+    { ...settlement, osmId: 95, returnedName: "Not a settlement", isSettlement: false, distanceKm: 1 },
+  ]);
+  assert.deepEqual([...names], ["Luče", "Solčava", "Mozirje"]);
 });
 
 test("Nominatim infrastructure failures stay unresolved rather than rejected editorially", async () => {
@@ -263,6 +448,7 @@ test("later C1 batches receive prior names and practical places are forbidden", 
     rejectedNames: ["Human rejected place"],
     priorProposedNames: ["Mozirski gaj", "Golte"],
     alreadyConfirmedNames: ["Logarska dolina"],
+    surroundingSettlements: ["Rečica ob Savinji", "Mozirje"],
   });
   assert.match(prompt, /Never propose any durable rejection: \["Human rejected place"\]/);
   assert.match(prompt, /already in the guide.*\["Logarska dolina"\]/);
@@ -274,6 +460,8 @@ test("later C1 batches receive prior names and practical places are forbidden", 
   assert.match(prompt, /within about 20 minutes' drive/);
   assert.match(prompt, /within 90 minutes' drive/);
   assert.match(prompt, /Do not propose any place expected to require more than 90 minutes/);
+  assert.match(prompt, /at least 8 of the 15 proposals/);
+  assert.match(prompt, /\["Rečica ob Savinji","Mozirje"\]/);
 });
 
 test("C1 ranges use OSRM minute boundaries and practical descriptions are blank", () => {
@@ -308,6 +496,20 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
     inputTokens: 100, outputTokens: 50, costUsd: 0.12, wallClockMs: 321,
     nominatimThrottleWaitMs: 123, error: "safe failure",
     nearEnvelopeKm: 35, nearEnvelopeEdgeBandCount: 1,
+    dependencyAttempts: [],
+    nearCatalogue: {
+      status: "success",
+      requestCount: 4,
+      httpStatuses: [200, 200, 200, 200],
+      durationMs: 500,
+      rawElementCount: 100,
+      filteredElementCount: 80,
+      error: null,
+      queries: ["query"],
+    },
+    surroundingSettlements: ["Rečica ob Savinji"],
+    minimumLocalProposalsPerBatch: 8,
+    localProposalCount: 8,
     pricing: CREATOR_C1_PRICING,
     outcomes: [{
       proposedName: "Missing place",
@@ -336,7 +538,98 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
   assert.equal(report.status, "failed");
 });
 
+test("API run evidence remains identical after its proposal row changes", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `c1-immutable-report-${suffix}`,
+    name: `C1 immutable report ${suffix}`,
+  }).returning({ id: tenantsTable.id });
+  assert.ok(tenant);
+  const immutableReport: CreatorC1Report = {
+    status: "completed",
+    proposed: 1,
+    confirmed: 0,
+    unconfirmed: 1,
+    duplicatesMerged: 0,
+    outsidePractical: 0,
+    outsideNear: 0,
+    outsideExcursion: 0,
+    routeFailures: 0,
+    inputTokens: 10,
+    outputTokens: 5,
+    costUsd: 0.01,
+    wallClockMs: 100,
+    nominatimThrottleWaitMs: 0,
+    nearEnvelopeKm: 35,
+    nearEnvelopeEdgeBandCount: 0,
+    dependencyAttempts: [],
+    nearCatalogue: {
+      status: "success",
+      requestCount: 4,
+      httpStatuses: [200, 200, 200, 200],
+      durationMs: 40,
+      rawElementCount: 5,
+      filteredElementCount: 4,
+      error: null,
+      queries: ["q"],
+    },
+    surroundingSettlements: ["Varpolje"],
+    minimumLocalProposalsPerBatch: 8,
+    localProposalCount: 1,
+    pricing: CREATOR_C1_PRICING,
+    outcomes: [{
+      proposedName: "Immutable place",
+      categoryLabel: null,
+      inclusionReason: "Stored reason",
+      outcome: "unconfirmed",
+      refusalRule: "no-results",
+      roadDistanceM: null,
+      travelDurationS: null,
+      nearestAlternatives: [],
+    }],
+    unconfirmedByCategory: [{
+      categoryLabel: null,
+      proposals: [{
+        proposedName: "Immutable place",
+        inclusionReason: "Stored reason",
+        refusalRule: "no-results",
+        roadDistanceM: null,
+        travelDurationS: null,
+      }],
+    }],
+  };
+  const [run] = await db.insert(creatorRunsTable).values({
+    tenantId: tenant.id,
+    originLatitude: 46.31,
+    originLongitude: 14.91,
+    status: "completed",
+    completedAt: new Date(),
+    reportJson: serializeCreatorC1Report(immutableReport),
+  }).returning();
+  assert.ok(run);
+  const before = await creatorRunResponse(run);
+  const pending = await upsertPendingCreatorProposal({
+    tenantId: tenant.id,
+    runId: run.id,
+    proposedName: "Immutable place",
+    originalQuery: "Immutable place",
+    contentReady: true,
+  });
+  await db.update(creatorPlaceProposalsTable).set({
+    inclusionReason: "Later mutable reason",
+    refusalReason: "operator-changed",
+    roadDistanceM: 1234,
+    travelDurationS: 567,
+  }).where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
+  const after = await creatorRunResponse(run);
+  assert.deepEqual(after.outcomes, before.outcomes);
+  assert.deepEqual(after.unconfirmedByCategory, before.unconfirmedByCategory);
+  assert.equal(after.outcomes[0]?.inclusionReason, "Stored reason");
+  await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+});
+
 test("only the exact Camping MENINA evidence tenant receives the authorized run ceiling", () => {
+  assert.equal(MENINA_AUTHORIZED_RUN_COUNT, 5);
   assert.equal(isPreservedMeninaEvidenceTenant({
     name: "Camping MENINA",
     latitude: 46.311456,
@@ -354,6 +647,36 @@ test("only the exact Camping MENINA evidence tenant receives the authorized run 
   }), false);
 });
 
+test("the authorized ceiling permits a fifth durable claim and blocks a sixth", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `c1-five-run-limit-${suffix}`,
+    name: `C1 five-run limit ${suffix}`,
+  }).returning({ id: tenantsTable.id });
+  assert.ok(tenant);
+  const origin = { latitude: 46.311456, longitude: 14.9093051 };
+  for (let index = 0; index < 4; index++) {
+    const [run] = await db.insert(creatorRunsTable).values({
+      tenantId: tenant.id,
+      originLatitude: origin.latitude,
+      originLongitude: origin.longitude,
+      status: "completed",
+      completedAt: new Date(),
+    }).returning({ id: creatorRunsTable.id });
+    assert.ok(run);
+  }
+  const fifth = await claimCreatorRunOnce(tenant.id, origin, MENINA_AUTHORIZED_RUN_COUNT);
+  assert.ok(fifth.claimedRunId);
+  await db.update(creatorRunsTable).set({
+    status: "completed",
+    completedAt: new Date(),
+  }).where(eq(creatorRunsTable.id, fifth.claimedRunId!));
+  const sixth = await claimCreatorRunOnce(tenant.id, origin, MENINA_AUTHORIZED_RUN_COUNT);
+  assert.equal(sixth.claimedRunId, null);
+  assert.ok(sixth.existingRun);
+  await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+});
+
 test("infrastructure-failed C1 rows remain unresolved and run history blocks concurrent execution", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const [tenant] = await db.insert(tenantsTable).values({
@@ -366,6 +689,7 @@ test("infrastructure-failed C1 rows remain unresolved and run history blocks con
     const candidate = place(index, null) as Record<string, unknown>;
     candidate.proposedName = `${prefix}-${index}`;
     candidate.geocodingLookupHint = `${prefix}-${index}`;
+    candidate.targetSettlement = index < 8 ? "Testville" : null;
     return candidate;
   });
   let geocodes = 0;
@@ -379,15 +703,18 @@ test("infrastructure-failed C1 rows remain unresolved and run history blocks con
     origin: { latitude: 46.31, longitude: 14.91 },
     region: "test", tenantType: "camp", batches: 1,
     model: async () => ({ content: { places: content }, inputTokens: 12, outputTokens: 34, costUsd: 0.01 }),
-    fetchFn: async (_url) => {
+    fetchFn: async (url) => {
+      if (String(url).includes("overpass-api.de")) {
+        return new Response(JSON.stringify({ elements: [{
+          type: "node",
+          id: 7_000_000_001,
+          lat: 46.31,
+          lon: 14.91,
+          tags: { place: "village", name: "Testville" },
+        }] }), { status: 200 });
+      }
       geocodes++;
-      if (geocodes > 1) throw new Error("injected geocoder failure");
-      return new Response(JSON.stringify([{
-        osm_type: "node", osm_id: 8_000_000_000 + Math.floor(Math.random() * 100_000),
-        category: "tourism", type: "attraction", addresstype: "attraction",
-        name: `${prefix}-0`, display_name: `${prefix}-0`, lat: "46.32", lon: "14.92",
-        namedetails: { name: `${prefix}-0` }, importance: 0.5,
-      }]), { status: 200 });
+      throw new Error("injected geocoder failure");
     },
     osrm: async () => ({ distanceMeters: 1000, durationMinutes: 10 }),
   });
@@ -403,7 +730,8 @@ test("infrastructure-failed C1 rows remain unresolved and run history blocks con
   ));
   assert.ok(completed.some((row) =>
     row.reportJson?.includes("nominatim-unavailable")
-    && !row.reportJson.includes("injected geocoder failure")));
+    && row.reportJson.includes("injected geocoder failure")
+    && row.reportJson.includes("\"dependency\":\"nominatim\"")));
 
   const [claimA, claimB] = await Promise.all([
     claimCreatorRunOnce(tenant.id, { latitude: 46.31, longitude: 14.91 }),

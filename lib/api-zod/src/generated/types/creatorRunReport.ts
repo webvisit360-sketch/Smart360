@@ -5,6 +5,8 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { CreatorDependencyAttempt } from './creatorDependencyAttempt';
+import type { CreatorNearCatalogueReport } from './creatorNearCatalogueReport';
 import type { CreatorRunOutcome } from './creatorRunOutcome';
 import type { CreatorRunPricing } from './creatorRunPricing';
 import type { CreatorRunReportStatus } from './creatorRunReportStatus';
@@ -34,6 +36,13 @@ export interface CreatorRunReport {
   nearEnvelopeKm: number | null;
   /** @nullable */
   nearEnvelopeEdgeBandCount: number | null;
+  dependencyAttempts: CreatorDependencyAttempt[];
+  nearCatalogue: CreatorNearCatalogueReport | null;
+  surroundingSettlements: string[];
+  /** @nullable */
+  minimumLocalProposalsPerBatch: number | null;
+  /** @nullable */
+  localProposalCount: number | null;
   /** @nullable */
   error: string | null;
   startedAt: string;

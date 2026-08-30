@@ -11,9 +11,15 @@ import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 import {
   CREATOR_NEAR_RING_EDGE_BAND_KM,
   CREATOR_NEAR_RING_ENVELOPE_KM,
-  getCachedCreatorNearRing,
+  deriveNearestSurroundingSettlementNames,
+  enumerateCreatorNearRing,
   matchUniqueCreatorNearRingCandidate,
 } from "./creatorNearRing";
+import {
+  creatorDependencyError,
+  type CreatorDependencyAttempt,
+  type CreatorDependencyRecorder,
+} from "./creatorDependencyTelemetry";
 import {
   CREATOR_MAX_QUEUE_DURATION_S,
   normalizeCreatorProposalName,
@@ -27,10 +33,33 @@ type Language = (typeof CREATOR_C1_LANGUAGE_CODES)[number];
 export type CreatorC1Place = {
   proposedName: string;
   existingCategoryId: string | null;
+  targetSettlement: string | null;
   languages: Array<{ language: Language; name: string; description: string }>;
   geocodingLookupHint: string;
   inclusionReason: string;
 };
+
+export function validateCreatorC1LocalQuota(
+  places: CreatorC1Place[],
+  surroundingSettlements: string[],
+  minimum = 8,
+): void {
+  const surroundingSettlementNames = new Set(
+    surroundingSettlements.map(normalizeCreatorProposalName),
+  );
+  for (const place of places) {
+    if (
+      place.targetSettlement !== null &&
+      !surroundingSettlementNames.has(normalizeCreatorProposalName(place.targetSettlement))
+    ) {
+      throw new Error(`C1 proposal targeted an unknown settlement: ${place.targetSettlement}`);
+    }
+  }
+  const localCount = places.filter((place) => place.targetSettlement !== null).length;
+  if (localCount < minimum) {
+    throw new Error(`C1 batch needs at least ${minimum} local proposals; received ${localCount}.`);
+  }
+}
 
 /** Deliberately has no machine-fact fields (including nested properties). */
 export const CREATOR_C1_MODEL_JSON_SCHEMA = {
@@ -43,10 +72,11 @@ export const CREATOR_C1_MODEL_JSON_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["proposedName", "existingCategoryId", "languages", "geocodingLookupHint", "inclusionReason"],
+        required: ["proposedName", "existingCategoryId", "targetSettlement", "languages", "geocodingLookupHint", "inclusionReason"],
         properties: {
           proposedName: { type: "string" },
           existingCategoryId: { type: ["string", "null"] },
+          targetSettlement: { type: ["string", "null"] },
           languages: {
             type: "array",
             items: {
@@ -77,9 +107,15 @@ export function validateCreatorC1ModelOutput(value: unknown): CreatorC1Place[] {
   return value.map((entry, i) => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw new Error(`C1 proposal ${i} is not an object.`);
     const row = entry as Record<string, unknown>;
-    const allowed = new Set(["proposedName", "existingCategoryId", "languages", "geocodingLookupHint", "inclusionReason"]);
+    const allowed = new Set(["proposedName", "existingCategoryId", "targetSettlement", "languages", "geocodingLookupHint", "inclusionReason"]);
     if (Object.keys(row).some((key) => !allowed.has(key))) throw new Error(`C1 proposal ${i} has forbidden field.`);
-    if (!string(row.proposedName) || (row.existingCategoryId !== null && !string(row.existingCategoryId)) || !string(row.geocodingLookupHint) || !string(row.inclusionReason)) {
+    if (
+      !string(row.proposedName) ||
+      (row.existingCategoryId !== null && !string(row.existingCategoryId)) ||
+      (row.targetSettlement !== null && !string(row.targetSettlement)) ||
+      !string(row.geocodingLookupHint) ||
+      !string(row.inclusionReason)
+    ) {
       throw new Error(`C1 proposal ${i} has missing text.`);
     }
     if (!Array.isArray(row.languages) || row.languages.length !== 4) throw new Error(`C1 proposal ${i} needs exactly four translations.`);
@@ -96,6 +132,7 @@ export function validateCreatorC1ModelOutput(value: unknown): CreatorC1Place[] {
     return {
       proposedName: row.proposedName.trim(),
       existingCategoryId: row.existingCategoryId === null ? null : row.existingCategoryId.trim(),
+      targetSettlement: row.targetSettlement === null ? null : row.targetSettlement.trim(),
       languages,
       geocodingLookupHint: row.geocodingLookupHint.trim(),
       inclusionReason: row.inclusionReason.trim(),
@@ -120,7 +157,11 @@ export function validateCreatorC1Batch(value: unknown): CreatorC1Place[] {
 }
 
 export type CreatorC1ModelResult = { content: unknown; inputTokens: number; outputTokens: number; costUsd?: number };
-export type CreatorC1Model = (input: { prompt: string; schema: typeof CREATOR_C1_MODEL_JSON_SCHEMA }) => Promise<CreatorC1ModelResult>;
+export type CreatorC1Model = (input: {
+  prompt: string;
+  schema: typeof CREATOR_C1_MODEL_JSON_SCHEMA;
+  onDependencyAttempt?: CreatorDependencyRecorder;
+}) => Promise<CreatorC1ModelResult>;
 
 export const CREATOR_C1_PRICING = {
   sourceUrl: "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
@@ -155,10 +196,20 @@ export async function generateCreatorC1Batch(
   model: CreatorC1Model,
   prompt: string,
   validatePlaces?: (places: CreatorC1Place[]) => void,
+  onDependencyAttempt?: CreatorDependencyRecorder,
 ) {
   let inputTokens = 0; let outputTokens = 0; let costUsd = 0;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const result = await model({ prompt, schema: CREATOR_C1_MODEL_JSON_SCHEMA });
+    const result = await model({
+      prompt,
+      schema: CREATOR_C1_MODEL_JSON_SCHEMA,
+      onDependencyAttempt: onDependencyAttempt
+        ? (dependencyAttempt) => onDependencyAttempt({
+          ...dependencyAttempt,
+          attempt: attempt + 1,
+        })
+        : undefined,
+    });
     inputTokens += result.inputTokens;
     outputTokens += result.outputTokens;
     if (typeof result.costUsd !== "number" || !Number.isFinite(result.costUsd) || result.costUsd < 0) {
@@ -177,40 +228,75 @@ export async function generateCreatorC1Batch(
 }
 
 /** Default production provider; tests inject CreatorC1Model and do not load it. */
-export const openAiCreatorC1Model: CreatorC1Model = async ({ prompt, schema }) => {
+export const openAiCreatorC1Model: CreatorC1Model = async ({
+  prompt,
+  schema,
+  onDependencyAttempt,
+}) => {
   const { openai } = await import("@workspace/integrations-openai-ai-server");
-  const response = await openai.chat.completions.create({
-    model: "gpt-5.6-terra",
-    max_completion_tokens: 8192,
-    messages: [{ role: "system", content: prompt }],
-    response_format: { type: "json_schema", json_schema: { name: "creator_c1_places", strict: true, schema } },
-  });
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("C1 model returned no content.");
-  const provider = response as unknown as {
-    cost?: number;
-    usage?: {
+  const startedAt = Date.now();
+  try {
+    const { data: response, response: rawResponse } = await openai.chat.completions.create({
+      model: "gpt-5.6-terra",
+      max_completion_tokens: 8192,
+      messages: [{ role: "system", content: prompt }],
+      response_format: { type: "json_schema", json_schema: { name: "creator_c1_places", strict: true, schema } },
+    }).withResponse();
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error("C1 model returned no content.");
+    const provider = response as unknown as {
       cost?: number;
-      input_tokens?: number;
-      prompt_tokens?: number;
-      output_tokens?: number;
-      completion_tokens?: number;
-      prompt_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number };
+      usage?: {
+        cost?: number;
+        input_tokens?: number;
+        prompt_tokens?: number;
+        output_tokens?: number;
+        completion_tokens?: number;
+        prompt_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number };
+      };
     };
-  };
-  const inputTokens = provider.usage?.input_tokens ?? provider.usage?.prompt_tokens ?? 0;
-  const outputTokens = provider.usage?.output_tokens ?? provider.usage?.completion_tokens ?? 0;
-  return {
-    content: JSON.parse(content),
-    inputTokens,
-    outputTokens,
-    costUsd: provider.cost ?? provider.usage?.cost ?? calculateCreatorC1Cost({
+    const parsedContent = JSON.parse(content);
+    const inputTokens = provider.usage?.input_tokens ?? provider.usage?.prompt_tokens ?? 0;
+    const outputTokens = provider.usage?.output_tokens ?? provider.usage?.completion_tokens ?? 0;
+    onDependencyAttempt?.({
+      dependency: "openai",
+      operation: "completion",
+      attempt: 1,
+      ok: true,
+      httpStatus: rawResponse.status,
+      durationMs: Date.now() - startedAt,
+      rawElementCount: response.choices.length,
+      filteredElementCount: 1,
+      query: null,
+      error: null,
+    });
+    return {
+      content: parsedContent,
       inputTokens,
       outputTokens,
-      cachedInputTokens: provider.usage?.prompt_tokens_details?.cached_tokens ?? 0,
-      cacheWriteTokens: provider.usage?.prompt_tokens_details?.cache_write_tokens ?? 0,
-    }),
-  };
+      costUsd: provider.cost ?? provider.usage?.cost ?? calculateCreatorC1Cost({
+        inputTokens,
+        outputTokens,
+        cachedInputTokens: provider.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+        cacheWriteTokens: provider.usage?.prompt_tokens_details?.cache_write_tokens ?? 0,
+      }),
+    };
+  } catch (error) {
+    const status = Number((error as { status?: unknown })?.status);
+    onDependencyAttempt?.({
+      dependency: "openai",
+      operation: "completion",
+      attempt: 1,
+      ok: false,
+      httpStatus: Number.isFinite(status) ? status : null,
+      durationMs: Date.now() - startedAt,
+      rawElementCount: null,
+      filteredElementCount: null,
+      query: null,
+      error: creatorDependencyError(error),
+    });
+    throw error;
+  }
 };
 
 export function isCreatorC1PracticalCategory(category: { label: string; key: string | null }): boolean {
@@ -249,6 +335,7 @@ export function promptFor(input: {
   rejectedNames: string[];
   priorProposedNames: string[];
   alreadyConfirmedNames: string[];
+  surroundingSettlements: string[];
 }): string {
   return `You are Creator C1. Produce an object with a "places" array containing exactly ${CREATOR_C1_BATCH_SIZE} real place proposals.
 Origin: ${input.origin.latitude}, ${input.origin.longitude}; machine-resolved region: ${input.region}; accommodation: ${input.tenantType}.
@@ -256,6 +343,8 @@ Use only these existing categories: ${JSON.stringify(input.categories)}.
 Never propose any durable rejection: ${JSON.stringify(input.rejectedNames)}.
 These machine-confirmed canonical places are already in the guide; do not propose them again: ${JSON.stringify(input.alreadyConfirmedNames)}.
 Do not repeat any name already proposed by an earlier batch in this run: ${JSON.stringify(input.priorProposedNames)}. All 15 names in this batch must also be distinct.
+Machine-resolved local settlement set, nearest first: ${JSON.stringify(input.surroundingSettlements)}.
+For at least 8 of the 15 proposals, target a place in that exact named settlement set and copy its canonical name into targetSettlement. Use null targetSettlement only for the remaining excursions. A non-null targetSettlement must exactly match one supplied name; do not invent, alter or substitute settlement names.
 Propose only editorial places for near surroundings and excursions. Never propose proximity-selected practical services such as ATMs, shops, supermarkets, pharmacies, fuel stations, doctors, health centres or post offices; those are machine-query work.
 Anchor every proposal to the stated origin. Target a useful geographic mix: roughly half of the 15 proposals should be places reasonably expected within about 20 minutes' drive of the origin; the rest should be excursions reasonably expected within 90 minutes' drive. Do not propose any place expected to require more than 90 minutes' driving. Never invent or report measurements; the server alone calculates and assigns every range.
 House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful English, German and Italian translations. Descriptions MUST be empty in every language for hospitality categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
@@ -267,6 +356,20 @@ export type CreatorC1Report = {
   outsidePractical: number; outsideNear: number; outsideExcursion: number; routeFailures: number; inputTokens: number; outputTokens: number;
   costUsd: number; wallClockMs: number; nominatimThrottleWaitMs: number;
   nearEnvelopeKm: number | null; nearEnvelopeEdgeBandCount: number | null;
+  dependencyAttempts: CreatorDependencyAttempt[];
+  nearCatalogue: {
+    status: "success" | "partial" | "empty" | "failed";
+    requestCount: number;
+    httpStatuses: Array<number | null>;
+    durationMs: number;
+    rawElementCount: number;
+    filteredElementCount: number;
+    error: string | null;
+    queries: string[];
+  };
+  surroundingSettlements: string[];
+  minimumLocalProposalsPerBatch: number;
+  localProposalCount: number;
   status: "completed" | "failed";
   pricing: typeof CREATOR_C1_PRICING;
   outcomes: Array<{
@@ -304,6 +407,12 @@ export function serializeCreatorC1Report(report: CreatorC1Report): string {
   return JSON.stringify(report);
 }
 
+function lastFailedDependencyAttempt(
+  attempts: CreatorDependencyAttempt[],
+): CreatorDependencyAttempt | undefined {
+  return [...attempts].reverse().find((attempt) => !attempt.ok);
+}
+
 function sanitizedError(error: unknown): string {
   const message = error instanceof Error ? error.message : "C1 run failed.";
   return message.replace(/[\r\n\t]+/g, " ").slice(0, 500);
@@ -331,12 +440,30 @@ export async function runCreatorC1(input: {
   let nominatimThrottleWaitMs = 0;
   let proposed = 0;
   const outcomes: CreatorC1Report["outcomes"] = [];
+  const dependencyAttempts: CreatorDependencyAttempt[] = [];
+  const recordDependencyAttempt: CreatorDependencyRecorder = (attempt) => {
+    dependencyAttempts.push(attempt);
+  };
   const report: CreatorC1Report = {
     proposed: 0, confirmed: 0, unconfirmed: 0, duplicatesMerged: 0,
     outsidePractical: 0, outsideNear: 0, outsideExcursion: 0, routeFailures: 0,
     inputTokens: 0, outputTokens: 0, costUsd: 0, wallClockMs: 0,
     nominatimThrottleWaitMs: 0, status: "completed", pricing: CREATOR_C1_PRICING, outcomes,
     nearEnvelopeKm: CREATOR_NEAR_RING_ENVELOPE_KM, nearEnvelopeEdgeBandCount: 0,
+    dependencyAttempts,
+    nearCatalogue: {
+      status: "failed",
+      requestCount: 0,
+      httpStatuses: [],
+      durationMs: 0,
+      rawElementCount: 0,
+      filteredElementCount: 0,
+      error: null,
+      queries: [],
+    },
+    surroundingSettlements: [],
+    minimumLocalProposalsPerBatch: 8,
+    localProposalCount: 0,
     unconfirmedByCategory: [],
   };
   try {
@@ -357,6 +484,47 @@ export async function runCreatorC1(input: {
       inArray(creatorPlaceProposalsTable.status, ["pending", "approved"]),
       ne(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
     ))).flatMap((row) => row.resolvedName ? [row.resolvedName] : []);
+    // Run evidence must describe requests made by this run, not an in-process
+    // catalogue acquired by an earlier run.
+    const nearCandidates = await enumerateCreatorNearRing(
+      input.origin,
+      input.fetchFn,
+      (attempt) => recordDependencyAttempt({
+        dependency: "overpass",
+        operation: attempt.operation,
+        attempt: attempt.attempt,
+        ok: attempt.error === null,
+        httpStatus: attempt.status,
+        durationMs: attempt.durationMs,
+        rawElementCount: attempt.rawCount,
+        filteredElementCount: attempt.filteredCount,
+        query: attempt.query,
+        error: attempt.error,
+      }),
+    );
+    const overpassAttempts = dependencyAttempts.filter((attempt) => attempt.dependency === "overpass");
+    const finalOverpassAttempts = [...new Map(
+      overpassAttempts.map((attempt) => [attempt.operation, attempt]),
+    ).values()];
+    const finalOverpassFailures = finalOverpassAttempts.filter((attempt) => !attempt.ok);
+    report.nearCatalogue = {
+      status: finalOverpassFailures.length > 0
+        ? "partial"
+        : nearCandidates.length === 0 ? "empty" : "success",
+      requestCount: overpassAttempts.length,
+      httpStatuses: overpassAttempts.map((attempt) => attempt.httpStatus),
+      durationMs: overpassAttempts.reduce((sum, attempt) => sum + attempt.durationMs, 0),
+      rawElementCount: overpassAttempts.reduce((sum, attempt) => sum + (attempt.rawElementCount ?? 0), 0),
+      filteredElementCount: nearCandidates.length,
+      error: finalOverpassFailures.map((attempt) =>
+        `${attempt.operation}: ${attempt.error ?? "failed"}`).join("; ") || null,
+      queries: [...new Set(overpassAttempts.map((attempt) => attempt.query).filter((query): query is string => query !== null))],
+    };
+    const surroundingSettlements = [...deriveNearestSurroundingSettlementNames(nearCandidates)];
+    if (surroundingSettlements.length === 0) {
+      throw new Error("Overpass catalogue did not provide surrounding settlements.");
+    }
+    report.surroundingSettlements = surroundingSettlements;
     const model = input.model ?? openAiCreatorC1Model;
     const all: CreatorC1Place[] = [];
     const proposedNames = new Set<string>();
@@ -369,6 +537,7 @@ export async function runCreatorC1(input: {
         rejectedNames,
         alreadyConfirmedNames,
         priorProposedNames: all.map((place) => place.proposedName),
+        surroundingSettlements,
       });
       const generated = await generateCreatorC1Batch(model, prompt, (places) => {
         const namesInBatch = new Set<string>();
@@ -379,7 +548,13 @@ export async function runCreatorC1(input: {
           }
           namesInBatch.add(normalized);
         }
+        validateCreatorC1LocalQuota(
+          places,
+          surroundingSettlements,
+          report.minimumLocalProposalsPerBatch,
+        );
       });
+      report.localProposalCount += generated.places.filter((place) => place.targetSettlement !== null).length;
       inputTokens += generated.inputTokens; outputTokens += generated.outputTokens; costUsd += generated.costUsd;
       report.inputTokens = inputTokens; report.outputTokens = outputTokens; report.costUsd = costUsd;
       for (const place of generated.places) {
@@ -390,13 +565,6 @@ export async function runCreatorC1(input: {
       }
     }
     report.proposed = all.length;
-    let nearCandidates: Awaited<ReturnType<typeof getCachedCreatorNearRing>> = [];
-    try {
-      nearCandidates = await getCachedCreatorNearRing(input.tenantId, input.origin, input.fetchFn);
-    } catch {
-      // The strict global path remains available. Overpass downtime is never an
-      // editorial rejection and therefore never enters the rejection prompt.
-    }
     const routed: Array<{ proposalId: string; category: { id: string; label: string; key: string | null } | null; duration: number | null; distance: number | null }> = [];
     for (const place of all) {
       const nearCandidate = matchUniqueCreatorNearRingCandidate(place.proposedName, nearCandidates);
@@ -405,6 +573,7 @@ export async function runCreatorC1(input: {
           input.origin,
           { latitude: nearCandidate.latitude, longitude: nearCandidate.longitude },
           input.fetchFn,
+          recordDependencyAttempt,
         )
         : null;
       const useNearCandidate = nearCandidate && nearRoute &&
@@ -421,6 +590,7 @@ export async function runCreatorC1(input: {
         lookupHint: place.geocodingLookupHint, origin: input.origin, fetchFn: input.fetchFn,
         contentReady: false,
         nearCandidate: useNearCandidate,
+        onDependencyAttempt: recordDependencyAttempt,
         onNominatimWait: (milliseconds) => { nominatimThrottleWaitMs += milliseconds; report.nominatimThrottleWaitMs = nominatimThrottleWaitMs; },
       });
       const isDuplicate = output.duplicate;
@@ -472,7 +642,14 @@ export async function runCreatorC1(input: {
       }
       const route = useNearCandidate && nearRoute
         ? nearRoute
-        : await (input.osrm ?? computeRoadRoute)(input.origin, { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude }, input.fetchFn);
+        : input.osrm
+          ? await input.osrm(input.origin, { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude }, input.fetchFn)
+          : await computeRoadRoute(
+            input.origin,
+            { latitude: output.result.candidate.latitude, longitude: output.result.candidate.longitude },
+            input.fetchFn,
+            recordDependencyAttempt,
+          );
       if (!route) {
         report.routeFailures++;
         report.unconfirmed++;
@@ -614,6 +791,19 @@ export async function runCreatorC1(input: {
     report.nominatimThrottleWaitMs = nominatimThrottleWaitMs;
     report.status = "failed";
     report.error = sanitizedError(error);
+    const overpassAttempts = dependencyAttempts.filter((attempt) => attempt.dependency === "overpass");
+    if (overpassAttempts.length > 0 && report.nearCatalogue.requestCount === 0) {
+      report.nearCatalogue = {
+        status: "failed",
+        requestCount: overpassAttempts.length,
+        httpStatuses: overpassAttempts.map((attempt) => attempt.httpStatus),
+        durationMs: overpassAttempts.reduce((sum, attempt) => sum + attempt.durationMs, 0),
+        rawElementCount: overpassAttempts.reduce((sum, attempt) => sum + (attempt.rawElementCount ?? 0), 0),
+        filteredElementCount: overpassAttempts.reduce((sum, attempt) => sum + (attempt.filteredElementCount ?? 0), 0),
+        error: lastFailedDependencyAttempt(overpassAttempts)?.error ?? creatorDependencyError(error),
+        queries: [...new Set(overpassAttempts.map((attempt) => attempt.query).filter((query): query is string => query !== null))],
+      };
+    }
     await db.update(creatorRunsTable).set({
       status: "failed", reportJson: serializeCreatorC1Report(report),
       inputTokens, outputTokens, costUsd, nominatimThrottleWaitMs, completedAt: new Date(),

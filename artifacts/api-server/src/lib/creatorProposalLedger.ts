@@ -19,6 +19,7 @@ import {
   tenantsTable,
 } from "@workspace/db";
 import { runCreatorSieve } from "./creatorSieve";
+import type { CreatorDependencyRecorder } from "./creatorDependencyTelemetry";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 
 export const CREATOR_MAX_QUEUE_DURATION_S = 5400;
@@ -270,6 +271,7 @@ export async function runAndPersistCreatorSieve(input: {
   hardCeilingKm?: number;
   fetchFn?: FetchFn;
   onNominatimWait?: (milliseconds: number) => void;
+  onDependencyAttempt?: CreatorDependencyRecorder;
   contentReady?: boolean;
   nearCandidate?: {
     osmType: string; osmId: number; className: string; type: string;
@@ -323,6 +325,7 @@ export async function runAndPersistCreatorSieve(input: {
     hardCeilingKm: input.hardCeilingKm,
     fetchFn: input.fetchFn,
     onNominatimWait: input.onNominatimWait,
+    onDependencyAttempt: input.onDependencyAttempt,
   });
   const attempts: CreatorVerificationRecord["attempts"] = result.attempts.map((attempt) => ({
     ...attempt,

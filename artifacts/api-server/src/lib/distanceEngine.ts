@@ -11,6 +11,10 @@ import {
   tenantsTable,
 } from "@workspace/db";
 import { extractCoordsFromGoogleMapsUrl, isLikelyUrl } from "./maps-link";
+import {
+  creatorDependencyError,
+  type CreatorDependencyRecorder,
+} from "./creatorDependencyTelemetry";
 
 export type FetchFn = typeof fetch;
 type ResolvedLocation = {
@@ -159,15 +163,19 @@ export async function computeRoadRoute(
   origin: { latitude: number; longitude: number },
   destination: { latitude: number; longitude: number },
   fetchFn: FetchFn = fetch,
+  onDependencyAttempt?: CreatorDependencyRecorder,
 ): Promise<{ distanceMeters: number; durationMinutes: number } | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
+  const startedAt = Date.now();
+  let httpStatus: number | null = null;
   try {
     const response = await fetchFn(
       `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=false`,
       { signal: controller.signal },
     );
-    if (!response.ok) return null;
+    httpStatus = response.status;
+    if (!response.ok) throw new Error(`OSRM ${response.status}`);
     const payload = await response.json() as {
       routes?: Array<{ distance?: unknown; duration?: unknown }>;
     };
@@ -178,12 +186,36 @@ export async function computeRoadRoute(
       typeof route.duration !== "number" ||
       !Number.isFinite(route.distance) ||
       !Number.isFinite(route.duration)
-    ) return null;
+    ) throw new Error("OSRM returned an invalid route.");
+    onDependencyAttempt?.({
+      dependency: "osrm",
+      operation: "route",
+      attempt: 1,
+      ok: true,
+      httpStatus,
+      durationMs: Date.now() - startedAt,
+      rawElementCount: payload.routes?.length ?? 0,
+      filteredElementCount: 1,
+      query: null,
+      error: null,
+    });
     return {
       distanceMeters: route.distance,
       durationMinutes: route.duration / 60,
     };
-  } catch {
+  } catch (error) {
+    onDependencyAttempt?.({
+      dependency: "osrm",
+      operation: "route",
+      attempt: 1,
+      ok: false,
+      httpStatus,
+      durationMs: Date.now() - startedAt,
+      rawElementCount: null,
+      filteredElementCount: null,
+      query: null,
+      error: creatorDependencyError(error),
+    });
     return null;
   } finally {
     clearTimeout(timeout);

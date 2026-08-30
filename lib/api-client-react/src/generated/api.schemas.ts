@@ -427,6 +427,56 @@ export const CreatorRunReportStatus = {
   failed: 'failed',
 } as const;
 
+export type CreatorDependencyAttemptDependency = typeof CreatorDependencyAttemptDependency[keyof typeof CreatorDependencyAttemptDependency];
+
+
+export const CreatorDependencyAttemptDependency = {
+  openai: 'openai',
+  overpass: 'overpass',
+  nominatim: 'nominatim',
+  osrm: 'osrm',
+} as const;
+
+export interface CreatorDependencyAttempt {
+  dependency: CreatorDependencyAttemptDependency;
+  operation: string;
+  attempt: number;
+  ok: boolean;
+  /** @nullable */
+  httpStatus: number | null;
+  durationMs: number;
+  /** @nullable */
+  rawElementCount: number | null;
+  /** @nullable */
+  filteredElementCount: number | null;
+  /** @nullable */
+  query: string | null;
+  /** @nullable */
+  error: string | null;
+}
+
+export type CreatorNearCatalogueReportStatus = typeof CreatorNearCatalogueReportStatus[keyof typeof CreatorNearCatalogueReportStatus];
+
+
+export const CreatorNearCatalogueReportStatus = {
+  success: 'success',
+  partial: 'partial',
+  empty: 'empty',
+  failed: 'failed',
+} as const;
+
+export interface CreatorNearCatalogueReport {
+  status: CreatorNearCatalogueReportStatus;
+  requestCount: number;
+  httpStatuses: (number | null)[];
+  durationMs: number;
+  rawElementCount: number;
+  filteredElementCount: number;
+  /** @nullable */
+  error: string | null;
+  queries: string[];
+}
+
 export type CreatorRunOutcomeOutcome = typeof CreatorRunOutcomeOutcome[keyof typeof CreatorRunOutcomeOutcome];
 
 
@@ -526,6 +576,13 @@ export interface CreatorRunReport {
   nearEnvelopeKm: number | null;
   /** @nullable */
   nearEnvelopeEdgeBandCount: number | null;
+  dependencyAttempts: CreatorDependencyAttempt[];
+  nearCatalogue: CreatorNearCatalogueReport | null;
+  surroundingSettlements: string[];
+  /** @nullable */
+  minimumLocalProposalsPerBatch: number | null;
+  /** @nullable */
+  localProposalCount: number | null;
   /** @nullable */
   error: string | null;
   startedAt: string;

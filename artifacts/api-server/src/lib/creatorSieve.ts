@@ -1,4 +1,9 @@
 import { acquireNominatimTurn, type FetchFn } from "./distanceEngine";
+import {
+  creatorDependencyError,
+  type CreatorDependencyAttempt,
+  type CreatorDependencyRecorder,
+} from "./creatorDependencyTelemetry";
 
 export const CREATOR_DEFAULT_HARD_CEILING_KM = 120;
 
@@ -174,11 +179,19 @@ function matchesName(query: string, raw: RawResult): Exclude<CreatorConfirmation
 async function runCreatorSieveInternal(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn; omitLayerForHarness?: boolean; onNominatimWait?: (milliseconds: number) => void; fallbackQuery?: string } = {},
+  options: {
+    hardCeilingKm?: number;
+    fetchFn?: FetchFn;
+    omitLayerForHarness?: boolean;
+    onNominatimWait?: (milliseconds: number) => void;
+    onDependencyAttempt?: CreatorDependencyRecorder;
+    fallbackQuery?: string;
+  } = {},
 ): Promise<CreatorSieveResult> {
   const hardCeilingKm = options.hardCeilingKm ?? CREATOR_DEFAULT_HARD_CEILING_KM;
   const fetchFn = options.fetchFn ?? fetch;
   const fetched: Array<{ query: string; data: unknown }> = [];
+  const successfulDependencyAttempts: CreatorDependencyAttempt[] = [];
   const fetchResults = async (query: string): Promise<unknown> => {
     const url = new URL("https://nominatim.openstreetmap.org/search");
     url.searchParams.set("format", "jsonv2");
@@ -191,14 +204,47 @@ async function runCreatorSieveInternal(
     // Excursion lookup is deliberately global. The 120 km guard is applied
     // only after strict identity matching and never biases Nominatim ranking.
     url.searchParams.set("q", query);
+    let httpStatus: number | null = null;
+    let startedAt = Date.now();
     try {
       options.onNominatimWait?.(await acquireNominatimTurn());
+      startedAt = Date.now();
       const response = await fetchFn(url, {
         headers: { "User-Agent": "Smart360 Creator sieve (admin contact via replit deployment)" },
       });
+      httpStatus = response.status;
       if (!response.ok) throw new Error(`Nominatim ${response.status}`);
-      return response.json();
-    } catch {
+      const data = await response.json();
+      const dependencyAttempt: CreatorDependencyAttempt = {
+        dependency: "nominatim",
+        operation: "search",
+        attempt: fetched.length + 1,
+        ok: true,
+        httpStatus,
+        durationMs: Date.now() - startedAt,
+        rawElementCount: Array.isArray(data) ? data.length : null,
+        // Filled after the sieve has applied classification, identity and
+        // distance filters. The recorder retains this same in-memory object.
+        filteredElementCount: 0,
+        query,
+        error: null,
+      };
+      successfulDependencyAttempts.push(dependencyAttempt);
+      options.onDependencyAttempt?.(dependencyAttempt);
+      return data;
+    } catch (error) {
+      options.onDependencyAttempt?.({
+        dependency: "nominatim",
+        operation: "search",
+        attempt: fetched.length + 1,
+        ok: false,
+        httpStatus,
+        durationMs: Date.now() - startedAt,
+        rawElementCount: null,
+        filteredElementCount: null,
+        query,
+        error: creatorDependencyError(error),
+      });
       return { infrastructureFailure: true };
     }
   };
@@ -207,6 +253,8 @@ async function runCreatorSieveInternal(
   let data = await fetchResults(name);
   fetched.push({ query: name, data });
   if (Array.isArray(data) && data.length === 0) {
+    const firstAttempt = successfulDependencyAttempts[0];
+    if (firstAttempt) firstAttempt.filteredElementCount = 0;
     const retryQuery = options.fallbackQuery?.trim()
       || name.replace(/\s+(?:na|pod|pri)\s+\S+(?:\s+\S+)*$/iu, "").trim();
     if (retryQuery !== name) {
@@ -339,6 +387,10 @@ async function runCreatorSieveInternal(
       confirmationMethod,
     });
   }
+  const finalSuccessfulAttempt = successfulDependencyAttempts.at(-1);
+  if (finalSuccessfulAttempt) {
+    finalSuccessfulAttempt.filteredElementCount = structurallyAllowed.length;
+  }
 
   if (structurallyAllowed.length === 0) {
     const rule = sawMissingClassification ? "missing-classification"
@@ -389,7 +441,13 @@ async function runCreatorSieveInternal(
 export function runCreatorSieve(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn; onNominatimWait?: (milliseconds: number) => void; fallbackQuery?: string } = {},
+  options: {
+    hardCeilingKm?: number;
+    fetchFn?: FetchFn;
+    onNominatimWait?: (milliseconds: number) => void;
+    onDependencyAttempt?: CreatorDependencyRecorder;
+    fallbackQuery?: string;
+  } = {},
 ): Promise<CreatorSieveResult> {
   return runCreatorSieveInternal(name, origin, options);
 }

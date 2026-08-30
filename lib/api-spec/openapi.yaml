@@ -2466,6 +2466,19 @@ components:
         nominatimThrottleMs: { type: number }
         nearEnvelopeKm: { type: ["number", "null"] }
         nearEnvelopeEdgeBandCount: { type: ["number", "null"] }
+        dependencyAttempts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorDependencyAttempt"
+        nearCatalogue:
+          oneOf:
+            - $ref: "#/components/schemas/CreatorNearCatalogueReport"
+            - type: "null"
+        surroundingSettlements:
+          type: array
+          items: { type: string }
+        minimumLocalProposalsPerBatch: { type: ["number", "null"] }
+        localProposalCount: { type: ["number", "null"] }
         error: { type: ["string", "null"] }
         startedAt: { type: string }
         completedAt: { type: ["string", "null"] }
@@ -2500,12 +2513,67 @@ components:
         - nominatimThrottleMs
         - nearEnvelopeKm
         - nearEnvelopeEdgeBandCount
+        - dependencyAttempts
+        - nearCatalogue
+        - surroundingSettlements
+        - minimumLocalProposalsPerBatch
+        - localProposalCount
         - error
         - startedAt
         - completedAt
         - outcomes
         - unconfirmedByCategory
         - pricing
+    CreatorDependencyAttempt:
+      type: object
+      additionalProperties: false
+      properties:
+        dependency: { type: string, enum: [openai, overpass, nominatim, osrm] }
+        operation: { type: string }
+        attempt: { type: number }
+        ok: { type: boolean }
+        httpStatus: { type: ["number", "null"] }
+        durationMs: { type: number }
+        rawElementCount: { type: ["number", "null"] }
+        filteredElementCount: { type: ["number", "null"] }
+        query: { type: ["string", "null"] }
+        error: { type: ["string", "null"] }
+      required:
+        - dependency
+        - operation
+        - attempt
+        - ok
+        - httpStatus
+        - durationMs
+        - rawElementCount
+        - filteredElementCount
+        - query
+        - error
+    CreatorNearCatalogueReport:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [success, partial, empty, failed] }
+        requestCount: { type: number }
+        httpStatuses:
+          type: array
+          items: { type: ["number", "null"] }
+        durationMs: { type: number }
+        rawElementCount: { type: number }
+        filteredElementCount: { type: number }
+        error: { type: ["string", "null"] }
+        queries:
+          type: array
+          items: { type: string }
+      required:
+        - status
+        - requestCount
+        - httpStatuses
+        - durationMs
+        - rawElementCount
+        - filteredElementCount
+        - error
+        - queries
     CreatorRunPricing:
       type: object
       properties:
