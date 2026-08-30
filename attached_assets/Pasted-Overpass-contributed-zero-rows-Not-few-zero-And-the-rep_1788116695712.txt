@@ -1,0 +1,45 @@
+Overpass contributed zero rows. Not few — zero. And the report does not say
+whether it ran.
+
+That omission is the whole problem: a near-ring mechanism that reports nothing
+about its own catalogue cannot be diagnosed. Two opposite failures produce this
+same result, and they need opposite fixes.
+
+MEASURE THIS BEFORE CHANGING ANYTHING
+
+1 · DID OVERPASS RUN, AND WHAT DID IT RETURN
+Report for run four:
+· whether the Overpass query executed, its HTTP status, and its duration;
+· how many features the catalogue contained after retrieval;
+· how many survived the OSRM 1,200-second filter;
+· whether any retrieval failure was recorded, and if so, where it is stored;
+· the exact Overpass query text that was sent.
+If a retrieval failure occurred and was not surfaced in the run report, that is
+a reporting bug in its own right — infrastructure failure must never be
+invisible.
+
+2 · THE DISCRIMINATING TEST
+We know two places are in OSM near Menina, because the global sieve resolves
+them: Mozirski gaj and Golte, confirmed with OSM identities in Step B.
+
+Ask one question of the catalogue: are Mozirski gaj and Golte present in the
+Overpass near-ring catalogue for this origin?
+
+· If they are ABSENT, the catalogue is wrong — the query, the tag filter, the
+  envelope or the request itself. The matcher never had anything to work with.
+· If they are PRESENT and "Krajinski park Golte" still failed to match, the
+  matcher is wrong, and I want to see exactly which rule rejected it: no
+  candidate over threshold, insufficient margin, or type incompatibility.
+
+Report which of the two it is, with the evidence. Do not adjust the matcher or
+the query before you have said which one is broken.
+
+3 · ALSO REPORT, since it is now two runs in a row
+The prompt anchoring is not landing. Run four again proposed Samostan Olimje,
+Podzemlje Pece and Muzej usnjarstva while the valley went unproposed or
+unmatched. Quote the exact wording the prompt uses to state the three ranges
+and the target mix, so I can see what the model is actually being told.
+
+No fifth run. No approvals. No matcher changes until the measurement is in.
+
+Report and STOP.
