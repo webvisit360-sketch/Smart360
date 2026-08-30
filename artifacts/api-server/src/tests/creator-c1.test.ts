@@ -9,12 +9,14 @@ import {
   CREATOR_C1_BATCH_SIZE,
   CREATOR_C1_PRICING,
   generateCreatorC1Batch,
+  promptFor,
   serializeCreatorC1Report,
   validateCreatorC1Batch,
   validateCreatorC1ModelOutput,
   withCreatorC1DescriptionPolicy,
   runCreatorC1,
 } from "../lib/creatorC1";
+import { runCreatorSieve } from "../lib/creatorSieve";
 import {
   claimCreatorRunOnce,
   isPreservedMeninaEvidenceTenant,
@@ -58,6 +60,53 @@ test("C1 batch requires exactly fifteen rows and retries malformed output once",
   assert.equal(generated.costUsd, 0.04);
 });
 
+test("C1 geocoding uses the plain name first and lookup hint only after no results", async () => {
+  const queries: string[] = [];
+  const result = await runCreatorSieve("Slap Rinka", { latitude: 46.31, longitude: 14.91 }, {
+    fallbackQuery: "Slap Rinka, Logarska dolina, Solčava, Slovenia",
+    fetchFn: async (url) => {
+      queries.push(new URL(String(url)).searchParams.get("q") ?? "");
+      return new Response(JSON.stringify(queries.length === 1 ? [] : [{
+        osm_type: "node",
+        osm_id: 123456789,
+        category: "natural",
+        type: "waterfall",
+        addresstype: "natural",
+        name: "Rinka",
+        display_name: "Slap Rinka, Logarska dolina, Slovenija",
+        lat: "46.3694",
+        lon: "14.5953",
+        namedetails: { name: "Rinka" },
+        address: { municipality: "Solčava" },
+        importance: 0.5,
+      }]), { status: 200, headers: { "content-type": "application/json" } });
+    },
+  });
+  assert.deepEqual(queries, [
+    "Slap Rinka",
+    "Slap Rinka, Logarska dolina, Solčava, Slovenia",
+  ]);
+  assert.equal(result.attempts.length, 2);
+  assert.equal(result.originalQuery, "Slap Rinka");
+  assert.equal(result.confirmedQuery, queries[1]);
+  assert.equal(result.verdict, "resolved");
+});
+
+test("later C1 batches receive prior names and practical places are forbidden", () => {
+  const prompt = promptFor({
+    origin: { latitude: 46.31, longitude: 14.91 },
+    region: "Savinjska",
+    tenantType: "kamp",
+    categories: [],
+    rejectedNames: [],
+    priorProposedNames: ["Mozirski gaj", "Golte"],
+  });
+  assert.match(prompt, /Do not repeat any name already proposed by an earlier batch/);
+  assert.match(prompt, /\\["Mozirski gaj","Golte"\\]/);
+  assert.match(prompt, /Never propose proximity-selected practical services/);
+  assert.doesNotMatch(prompt, /practical means/);
+});
+
 test("C1 ranges use OSRM minute boundaries and practical descriptions are blank", () => {
   assert.equal(assignCreatorC1Range({ isNearestPractical: false, durationMinutes: 20 }), "near");
   assert.equal(assignCreatorC1Range({ isNearestPractical: false, durationMinutes: 20.01 }), "excursion");
@@ -98,7 +147,7 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
   assert.equal(report.status, "failed");
 });
 
-test("only the exact Camping MENINA evidence tenant receives the terminal run lock", () => {
+test("only the exact Camping MENINA evidence tenant receives the authorized run ceiling", () => {
   assert.equal(isPreservedMeninaEvidenceTenant({
     name: "Camping MENINA",
     latitude: 46.311456,

@@ -146,7 +146,7 @@ function matchesName(query: string, raw: RawResult): Exclude<CreatorConfirmation
 async function runCreatorSieveInternal(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn; omitLayerForHarness?: boolean; onNominatimWait?: (milliseconds: number) => void } = {},
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn; omitLayerForHarness?: boolean; onNominatimWait?: (milliseconds: number) => void; fallbackQuery?: string } = {},
 ): Promise<CreatorSieveResult> {
   const hardCeilingKm = options.hardCeilingKm ?? CREATOR_DEFAULT_HARD_CEILING_KM;
   const fetchFn = options.fetchFn ?? fetch;
@@ -183,11 +183,12 @@ async function runCreatorSieveInternal(
   let data = await fetchResults(name);
   fetched.push({ query: name, data });
   if (!Array.isArray(data) || data.length === 0) {
-    const shortened = name.replace(/\s+(?:na|pod|pri)\s+\S+(?:\s+\S+)*$/iu, "").trim();
-    if (shortened !== name) {
-      matchedQuery = shortened;
-      data = await fetchResults(shortened);
-      fetched.push({ query: shortened, data });
+    const retryQuery = options.fallbackQuery?.trim()
+      || name.replace(/\s+(?:na|pod|pri)\s+\S+(?:\s+\S+)*$/iu, "").trim();
+    if (retryQuery !== name) {
+      matchedQuery = retryQuery;
+      data = await fetchResults(retryQuery);
+      fetched.push({ query: retryQuery, data });
     }
   }
   const evidenceCandidates = (rawData: unknown): CreatorSieveAttemptEvidence["candidates"] =>
@@ -284,7 +285,9 @@ async function runCreatorSieveInternal(
       sawBlocked = true;
       continue;
     }
-    const confirmationMethod = matchesName(matchedQuery, raw);
+    // The alternate query affects Nominatim retrieval only. Identity matching
+    // remains anchored to the model's plain proposed name.
+    const confirmationMethod = matchesName(name, raw);
     if (!confirmationMethod) {
       sawNameMismatch = true;
       continue;
@@ -350,7 +353,7 @@ async function runCreatorSieveInternal(
 export function runCreatorSieve(
   name: string,
   origin: { latitude: number; longitude: number },
-  options: { hardCeilingKm?: number; fetchFn?: FetchFn; onNominatimWait?: (milliseconds: number) => void } = {},
+  options: { hardCeilingKm?: number; fetchFn?: FetchFn; onNominatimWait?: (milliseconds: number) => void; fallbackQuery?: string } = {},
 ): Promise<CreatorSieveResult> {
   return runCreatorSieveInternal(name, origin, options);
 }

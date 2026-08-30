@@ -53,6 +53,7 @@ export async function upsertPendingCreatorProposal(input: {
       eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
       eq(creatorPlaceProposalsTable.normalizedName, normalizedName),
       isNull(creatorPlaceProposalsTable.osmId),
+      sql`(${creatorPlaceProposalsTable.runId} = ${input.runId} OR ${creatorPlaceProposalsTable.contentReady} = true)`,
     ))
     .limit(1);
   if (!existing) throw new Error("Predloga po konfliktu ni bilo mogoče ponovno prebrati.");
@@ -271,7 +272,8 @@ export async function runAndPersistCreatorSieve(input: {
       result: null,
     };
   }
-  const result = await runCreatorSieve(input.lookupHint?.trim() || input.proposedName, input.origin, {
+  const result = await runCreatorSieve(input.proposedName, input.origin, {
+    fallbackQuery: input.lookupHint,
     hardCeilingKm: input.hardCeilingKm,
     fetchFn: input.fetchFn,
     onNominatimWait: input.onNominatimWait,

@@ -80,7 +80,15 @@ export const creatorPlaceProposalsTable = pgTable(
     check("creator_place_proposals_duration_check", sql`${t.travelDurationS} IS NULL OR ${t.travelDurationS} >= 0`),
     check("creator_place_proposals_range_check", sql`${t.range} IS NULL OR ${t.range} IN ('practical','near','excursion')`),
     uniqueIndex("creator_place_proposals_osm_identity_uq").on(t.tenantId, t.osmType, t.osmId).where(sql`${t.osmId} IS NOT NULL`),
-    uniqueIndex("creator_place_proposals_unresolved_name_uq").on(t.tenantId, t.normalizedName).where(sql`${t.osmId} IS NULL`),
+    // A completed-but-unresolved Step B row is a durable rejection. Unready C1
+    // evidence may be proposed again by a later run after a pipeline repair.
+    uniqueIndex("creator_place_proposals_unresolved_name_uq")
+      .on(t.tenantId, t.normalizedName)
+      .where(sql`${t.osmId} IS NULL AND ${t.contentReady} = true`),
+    // Still suppress duplicate names inside one model run.
+    uniqueIndex("creator_place_proposals_run_unresolved_name_uq")
+      .on(t.runId, t.normalizedName)
+      .where(sql`${t.osmId} IS NULL`),
     index("creator_place_proposals_tenant_status_idx").on(t.tenantId, t.status, t.createdAt),
     index("creator_place_proposals_run_status_idx").on(t.runId, t.status),
   ],

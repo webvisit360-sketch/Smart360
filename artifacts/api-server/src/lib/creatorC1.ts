@@ -225,13 +225,15 @@ export function assignCreatorC1Range(input: {
   return input.durationMinutes !== null && input.durationMinutes <= 20 ? "near" : "excursion";
 }
 
-function promptFor(input: { origin: { latitude: number; longitude: number }; region: string; tenantType: string; categories: Array<{ id: string; label: string; key: string | null }>; rejectedNames: string[] }): string {
+export function promptFor(input: { origin: { latitude: number; longitude: number }; region: string; tenantType: string; categories: Array<{ id: string; label: string; key: string | null }>; rejectedNames: string[]; priorProposedNames: string[] }): string {
   return `You are Creator C1. Produce an object with a "places" array containing exactly ${CREATOR_C1_BATCH_SIZE} real place proposals.
 Origin: ${input.origin.latitude}, ${input.origin.longitude}; machine-resolved region: ${input.region}; accommodation: ${input.tenantType}.
 Use only these existing categories: ${JSON.stringify(input.categories)}.
 Never propose any durable rejection: ${JSON.stringify(input.rejectedNames)}.
-Range brief (for editorial selection only; never invent measurements): practical means ATM/shop/pharmacy/fuel/doctor/post and the server keeps the nearest 3–5 regardless of distance; near means an unplanned activity suitable within about 20 driving minutes; excursion means a planned outing within about 90 driving minutes, with exceptional farther landmarks still allowed for human review. The server alone calculates and assigns every range.
-House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful English, German and Italian translations. Descriptions MUST be empty in every language for hospitality, ATM, shop, pharmacy, fuel, doctor/health and post categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
+Do not repeat any name already proposed by an earlier batch in this run: ${JSON.stringify(input.priorProposedNames)}. All 15 names in this batch must also be distinct.
+Propose only editorial places for near surroundings and excursions. Never propose proximity-selected practical services such as ATMs, shops, supermarkets, pharmacies, fuel stations, doctors, health centres or post offices; those are machine-query work.
+Range brief (for editorial selection only; never invent measurements): near means an unplanned activity suitable within about 20 driving minutes; excursion means a planned outing within about 90 driving minutes, with exceptional farther landmarks still allowed for human review. The server alone calculates and assigns every range.
+House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful English, German and Italian translations. Descriptions MUST be empty in every language for hospitality categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
 No coordinates, distances, travel times, addresses, opening hours, prices, phone numbers, or other machine facts. A server verifies existence and routing.`;
 }
 
@@ -297,7 +299,14 @@ export async function runCreatorC1(input: {
     const model = input.model ?? openAiCreatorC1Model;
     const all: CreatorC1Place[] = [];
     for (let batch = 0; batch < (input.batches ?? 4); batch++) {
-      const prompt = promptFor({ origin: input.origin, region: input.region, tenantType: input.tenantType, categories: catalogue, rejectedNames });
+      const prompt = promptFor({
+        origin: input.origin,
+        region: input.region,
+        tenantType: input.tenantType,
+        categories: catalogue,
+        rejectedNames,
+        priorProposedNames: all.map((place) => place.proposedName),
+      });
       const generated = await generateCreatorC1Batch(model, prompt);
       inputTokens += generated.inputTokens; outputTokens += generated.outputTokens; costUsd += generated.costUsd;
       report.inputTokens = inputTokens; report.outputTokens = outputTokens; report.costUsd = costUsd;

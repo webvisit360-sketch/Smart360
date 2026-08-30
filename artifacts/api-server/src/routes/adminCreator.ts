@@ -34,7 +34,10 @@ import {
 import { seedTenantContent } from "../lib/tenantSeeds";
 import { RESERVED_SLUGS, slugify } from "../lib/slug";
 import { CREATOR_C1_PRICING, runCreatorC1, type CreatorC1Report } from "../lib/creatorC1";
-import { isPreservedMeninaEvidenceTenant } from "../lib/creatorMeninaProductionRun";
+import {
+  isPreservedMeninaEvidenceTenant,
+  MENINA_AUTHORIZED_RUN_COUNT,
+} from "../lib/creatorMeninaProductionRun";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -243,12 +246,11 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
     latitude: tenant.latitude,
     longitude: tenant.longitude,
   })) {
-    const [preservedRun] = await db.select({ id: creatorRunsTable.id })
+    const preservedRuns = await db.select({ id: creatorRunsTable.id })
       .from(creatorRunsTable)
-      .where(eq(creatorRunsTable.tenantId, tenantId))
-      .limit(1);
-    if (preservedRun) {
-      res.status(409).json({ error: "Prva produkcijska izvedba C1 za Camping MENINA je dokazno zaklenjena in je ni dovoljeno ponoviti." });
+      .where(eq(creatorRunsTable.tenantId, tenantId));
+    if (preservedRuns.length >= MENINA_AUTHORIZED_RUN_COUNT) {
+      res.status(409).json({ error: "Dve odobreni produkcijski izvedbi C1 za Camping MENINA sta dokazno zaklenjeni; nadaljnja izvedba ni dovoljena." });
       return;
     }
   }

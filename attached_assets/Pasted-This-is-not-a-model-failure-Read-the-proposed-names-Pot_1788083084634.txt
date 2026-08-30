@@ -1,0 +1,60 @@
+This is not a model failure. Read the proposed names: Potočka zijalka, Jama
+Pekel, Ekomuzej hmeljarstva in pivovarstva, Grad Vrbovec, Grad Žovnek,
+Žovneško jezero, Muzej premogovništva Slovenije, Velenjski grad, Hiša Raduha.
+The model knows the Savinja valley. That was the open question and it is
+answered.
+
+The pipe between the model and the sieve is broken, and I can prove it.
+
+THE PROOF
+In Step B, this same sieve CONFIRMED both of these, hours ago:
+  Mozirski gaj → way 80207526, leisure/park, 4.68 km
+  Golte        → way 541164455, landuse/winter_sports, 6.88 km
+In this run both are refused as name-mismatch. Same names, same sieve,
+opposite result. The sieve did not break. What we feed it changed.
+
+DO NOT TUNE THE SIEVE. It is proven correct on plain names and any adjustment
+now would be fitting it to a bug. Diagnose first.
+
+1 · REPORT THE EXACT QUERY STRING
+For these five, print verbatim the string actually sent to Nominatim in this
+run, beside the string Step B sent:
+  Mozirski gaj, Golte, Slap Rinka, Snežna jama na Raduhi, Logarska dolina
+My expectation: C1 sends the model's geocoding lookup hint — "Mozirski gaj,
+Mozirje, Slovenija" — where Step B sent the bare name. If so, every rule tuned
+against bare names fails, including the generic-type mapping and the shortened
+retry, which is why Slap Rinka and Snežna jama now return no-results instead
+of resolving.
+Confirm or refute this before changing anything.
+
+2 · THE PRIMARY QUERY IS THE PLAIN PROPOSED NAME
+Exactly as in Step B. The model's lookup hint may be used only as the single
+permitted retry, and only when the plain name yields nothing. Two attempts
+total, as the database already enforces.
+
+3 · BATCHES MUST KNOW WHAT EARLIER BATCHES PROPOSED — my omission
+26 duplicates out of 60. Every batch after the first receives the names already
+proposed in this run and is told not to repeat them. Sixty slots produced only
+thirty-four distinct places.
+
+4 · THE MODEL MUST NOT PROPOSE PRACTICAL PLACES AT ALL — also my omission
+It proposed Mercator, Petrol, Lekarna, Pošta, Tuš, Zdravstveni dom. Which
+supermarket is nearest is not an editorial judgement; it is a proximity query.
+A model guessing it is once again the source of a machine-checkable fact,
+which is the one thing it may never be.
+Remove the practical tier from the prompt entirely. It will be built later by
+a machine query for the nearest few of each kind. The model handles near
+surroundings and excursions only.
+
+I want to be explicit that item 4 is a prompt change made AFTER seeing output,
+which I forbade. It is permitted because it follows from a rule we already
+had — the model is never the source of a checkable fact — and not because the
+output looked disappointing. Item 3 is a mechanical fix to my own instruction.
+Neither touches how the model writes or what it considers worth including.
+
+5 · THEN RUN ONCE MORE and report the run report and the first twenty queue
+rows verbatim. Keep the first run's report; we compare the two.
+
+Task #54 stays unstarted. You were right not to begin it.
+
+Report and STOP.

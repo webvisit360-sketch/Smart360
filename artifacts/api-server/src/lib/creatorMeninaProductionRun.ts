@@ -19,6 +19,7 @@ const MENINA_MAP_URL =
   "https://www.google.com/maps/place/Camping+MENINA/@46.3114597,14.9067248,794m/data=!3m2!1e3!4b1!4m9!3m8!1s0x476544b2dceb3c9d:0xfed2eb6fc9373f3d!5m2!4m1!1i2!8m2!3d46.311456!4d14.9093051!16s%2Fg%2F11b76h070l";
 const MENINA_LATITUDE = 46.311456;
 const MENINA_LONGITUDE = 14.9093051;
+export const MENINA_AUTHORIZED_RUN_COUNT = 2;
 
 export function isPreservedMeninaEvidenceTenant(input: {
   name: string;
@@ -101,6 +102,7 @@ async function findOrCreateMeninaDraft(): Promise<string> {
 export async function claimCreatorRunOnce(
   tenantId: string,
   origin: { latitude: number; longitude: number },
+  maximumRuns = 1,
 ): Promise<{
   claimedRunId: string | null;
   existingRun: { id: string; status: string } | null;
@@ -109,13 +111,17 @@ export async function claimCreatorRunOnce(
     await tx.execute(sql`SELECT pg_advisory_xact_lock(
       hashtextextended(${`creator-c1-once:${tenantId}`}, 0)
     )`);
-    const [existingRun] = await tx.select({
+    const existingRuns = await tx.select({
       id: creatorRunsTable.id,
       status: creatorRunsTable.status,
     }).from(creatorRunsTable)
       .where(eq(creatorRunsTable.tenantId, tenantId))
-      .limit(1);
-    if (existingRun) return { existingRun, claimedRunId: null };
+      .orderBy(asc(creatorRunsTable.createdAt));
+    const runningRun = existingRuns.find((run) => run.status === "running");
+    if (runningRun) return { existingRun: runningRun, claimedRunId: null };
+    if (existingRuns.length >= maximumRuns) {
+      return { existingRun: existingRuns.at(-1) ?? null, claimedRunId: null };
+    }
     const [claimed] = await tx.insert(creatorRunsTable).values({
       tenantId,
       originLatitude: origin.latitude,
@@ -127,9 +133,9 @@ export async function claimCreatorRunOnce(
 }
 
 /**
- * One authorized production C1 run. It never creates a host or invokes any
- * invitation/e-mail code, and permanently self-disables as soon as MENINA has
- * any durable run record, including a failed run.
+ * Exactly the explicitly authorized number of production C1 runs. It never
+ * creates a host or invokes invitation/e-mail code, and self-disables when the
+ * durable run limit is reached, including failed runs.
  */
 export async function runMeninaCreatorC1OnceAtStartup(): Promise<void> {
   if (process.env["NODE_ENV"] !== "production" || !process.env["REPLIT_DEPLOYMENT"]) return;
@@ -161,11 +167,11 @@ export async function runMeninaCreatorC1OnceAtStartup(): Promise<void> {
     const claim = await claimCreatorRunOnce(tenantId, {
       latitude: MENINA_LATITUDE,
       longitude: MENINA_LONGITUDE,
-    });
+    }, MENINA_AUTHORIZED_RUN_COUNT);
     if (claim.existingRun) {
       logger.info(
         { tenantId, runId: claim.existingRun.id, status: claim.existingRun.status },
-        "[creatorC1Menina] skipped; durable run already exists",
+        "[creatorC1Menina] skipped; authorized durable run limit reached or another run is active",
       );
       return;
     }
