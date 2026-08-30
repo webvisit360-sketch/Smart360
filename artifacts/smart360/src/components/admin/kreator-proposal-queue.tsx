@@ -9,6 +9,14 @@ import {
 import { AlertTriangle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
+import { formatSlovenianCount } from "@/lib/slovenian-plural";
+
+const locationForms = {
+  one: "lokacijo",
+  two: "lokaciji",
+  few: "lokacije",
+  other: "lokacij",
+} as const;
 
 export function KreatorProposalQueue({
   tenantId,
@@ -41,6 +49,7 @@ export function KreatorProposalQueue({
   );
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
+  const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
     ?? null;
@@ -62,13 +71,13 @@ export function KreatorProposalQueue({
           type="button"
           disabled={selected.length === 0 || approveBulk.isPending}
           onClick={() => {
-            if (!confirm(`Potrdi ${selected.length} lokacij za ${tenantName}?`)) return;
+            if (!confirm(`Potrdi ${selectedLocationCount} za ${tenantName}?`)) return;
             approveBulk.mutate({ id: tenantId, data: { proposalIds: selected } });
           }}
           className="rounded-[12px]"
         >
           {approveBulk.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Potrdi {selected.length} lokacij za {tenantName}
+          Potrdi {selectedLocationCount} za {tenantName}
         </Button>
       </div>
 

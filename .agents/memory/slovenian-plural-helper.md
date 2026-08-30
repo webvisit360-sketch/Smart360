@@ -1,10 +1,10 @@
 ---
 name: Slovenian plural helper
-description: Deferred type-safety decision for Smart360 Slovenian count formatting.
+description: Shared four-form rule for every Slovenian count displayed by Smart360.
 ---
 
-When the next Smart360 code change is made, update the Slovenian count helper so an `Intl.PluralRules` category missing from `SloveneForms` falls back to `other`. Do not add this fix to the current Videz-only publish.
+All counted Slovenian nouns must use the shared four-form helper: final digit 1 uses `one`, 2 uses `two`, 3–4 use `few`, and everything else uses `other`; final two digits 11–14 always override to `other`.
 
-**Why:** TypeScript exposes the locale-agnostic plural union, including `zero` and `many`, although Slovenian never returns them. The fallback changes no Slovenian behavior, closes the type hole, and makes an impossible category harmless instead of producing `undefined`.
+**Why:** Two-form concatenation produces incorrect copy throughout the product, and tests covering only counts of five or more miss the defect. The owner explicitly requires 21/22 to follow their final digit while 11–14 remain exceptions.
 
-**How to apply:** Carry the one-line fallback with the next approved code change, then run typecheck and the existing Slovenian count tests.
+**How to apply:** Pass all four noun forms to the shared helper and test 0, 1–5, 11–14, 21, and 22 whenever count formatting changes. Do not recreate suffix logic at call sites.
