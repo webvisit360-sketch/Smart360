@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import nodeCrypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import {
   adminUsersTable,
@@ -193,6 +194,7 @@ test("content is unreachable before approval and approved extraction stores robo
   }).where(eq(creatorSourcesTable.id, source.id));
 
   const requestedPaths: string[] = [];
+  const html = "<html><head><title>Area guide</title></head><body><script>ignore()</script><h1>Waterfall walk</h1></body></html>";
   const stored = await readApprovedCreatorSource(source.id, {
     lookupFn: publicLookup,
     fetchFn: async (input) => {
@@ -204,7 +206,7 @@ test("content is unreachable before approval and approved extraction stores robo
           headers: { "content-type": "text/plain" },
         });
       }
-      return new Response("<html><head><title>Area guide</title></head><body><script>ignore()</script><h1>Waterfall walk</h1></body></html>", {
+      return new Response(html, {
         status: 200,
         headers: { "content-type": "text/html" },
       });
@@ -212,6 +214,8 @@ test("content is unreachable before approval and approved extraction stores robo
   });
   assert.deepEqual(requestedPaths, ["/robots.txt", "/guide"]);
   assert.equal(stored.title, "Area guide");
+  assert.match(stored.rawContent!, /<h1>Waterfall walk<\/h1>/);
+  assert.equal(stored.contentSha256, nodeCrypto.createHash("sha256").update(html).digest("hex"));
   assert.equal(stored.extractedText, "Area guideWaterfall walk");
 
   const [evidence] = await db.select().from(creatorRobotsEvidenceTable)

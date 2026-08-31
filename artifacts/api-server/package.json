@@ -14,6 +14,8 @@
     "report:creator-sieve": "tsx ./scripts/creator-sieve-report.ts"
     ,"report:creator-sieve-classification": "tsx ./scripts/creator-sieve-classification-report.ts"
     ,"report:creator-source-proposal": "tsx ./src/scripts/propose-ljubno-sources.ts"
+    ,"run:creator-source-ljubno": "tsx ./src/scripts/run-ljubno-source-first.ts"
+    ,"finalize:creator-source-ljubno": "tsx ./src/scripts/finalize-ljubno-source-first.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^8.0.0",

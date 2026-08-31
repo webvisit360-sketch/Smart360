@@ -638,3 +638,17 @@ mtime_ms = 1788157326260
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0008fd8b-2e8e-4249-ab0c-f37150ce7d65/1e9e5755-b53e-4169-9b6b-9e6777a22ccc"
 storage_version_token = "1788157378009078"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "1uAO-ywkwkYQWFxeJxFuN"
+uri = "file://reports/ljubno-source-first-report.md"
+type = "text"
+title = "Ljubno source-first report"
+description = "Complete development run report with source/category counts, failures, ranges, and resolved candidates with snapshot provenance."
+logical_id = "66e5afad-c873-495a-988b-cf18e92d4bb6"
+content_hash = "sha256:8a748145d541090390c3097276d4540d1586227e8f4178a6a1484b40b584b09b"
+size = 4056
+mtime_ms = 1788206661017
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/66e5afad-c873-495a-988b-cf18e92d4bb6/69d2fef7-32af-49e9-a71a-802174d6bb11"
+storage_version_token = "1788206661883751"
+content_type = "text/markdown"

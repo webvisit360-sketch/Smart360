@@ -544,7 +544,10 @@ export async function readApprovedCreatorSource(
   const title = titleMatch
     ? sanitizeHtml(titleMatch[1] ?? "", { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, " ").trim()
     : null;
-  const contentSha256 = crypto.createHash("sha256").update(extractedText).digest("hex");
+  // Snapshot identity follows the exact bounded UTF-8 response body, not its
+  // normalized text projection: visually equivalent but byte-different pages
+  // are distinct retrieval evidence.
+  const contentSha256 = crypto.createHash("sha256").update(raw).digest("hex");
   const [stored] = await db.insert(creatorSourceContentsTable).values({
     sourceId: source.id,
     robotsEvidenceId: robots.id,
@@ -553,20 +556,19 @@ export async function readApprovedCreatorSource(
     httpStatus: result.response.status,
     contentType,
     title: title || null,
+    rawContent: raw,
     extractedText,
     contentSha256,
-  }).onConflictDoUpdate({
+  }).onConflictDoNothing({
     target: [creatorSourceContentsTable.sourceId, creatorSourceContentsTable.contentSha256],
-    set: {
-      robotsEvidenceId: robots.id,
-      finalUrl: result.finalUrl,
-      httpStatus: result.response.status,
-      contentType,
-      title: title || null,
-      extractedText,
-      retrievedAt: new Date(),
-    },
   }).returning();
-  if (!stored) throw new Error("Extracted source content was not persisted.");
-  return stored;
+  if (stored) return stored;
+  const [existing] = await db.select().from(creatorSourceContentsTable)
+    .where(and(
+      eq(creatorSourceContentsTable.sourceId, source.id),
+      eq(creatorSourceContentsTable.contentSha256, contentSha256),
+    ))
+    .limit(1);
+  if (!existing) throw new Error("Extracted source content was not persisted.");
+  return existing;
 }

@@ -201,6 +201,9 @@ export const creatorSourceContentsTable = pgTable(
     httpStatus: integer("http_status").notNull(),
     contentType: text("content_type").notNull(),
     title: text("title"),
+    // Legacy snapshots predate exact-body retention; every new guarded read
+    // writes this value, while old rows remain valid and untouched.
+    rawContent: text("raw_content"),
     extractedText: text("extracted_text").notNull(),
     contentSha256: text("content_sha256").notNull(),
     retrievedAt: timestamp("retrieved_at", { withTimezone: true }).notNull().defaultNow(),
@@ -208,6 +211,102 @@ export const creatorSourceContentsTable = pgTable(
   (t) => [
     uniqueIndex("creator_source_contents_source_hash_uq").on(t.sourceId, t.contentSha256),
     index("creator_source_contents_source_retrieved_idx").on(t.sourceId, t.retrievedAt),
+  ],
+);
+
+/** One isolated, model-free source extraction execution. Source-first runs
+ * never share the C1 run ledger because their inputs and cost semantics differ. */
+export const creatorSourceRunsTable = pgTable(
+  "creator_source_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("running"),
+    reportJson: text("report_json"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    check("creator_source_runs_status_check", sql`${t.status} IN ('running','completed','failed')`),
+    uniqueIndex("creator_source_runs_one_running_per_tenant_uq")
+      .on(t.tenantId)
+      .where(sql`${t.status} = 'running'`),
+    index("creator_source_runs_tenant_idx").on(t.tenantId, t.startedAt),
+  ],
+);
+
+/** Exact set of guarded snapshots read by one source-first run, including
+ * snapshots that deterministically yield zero place facts. */
+export const creatorSourceRunSnapshotsTable = pgTable(
+  "creator_source_run_snapshots",
+  {
+    runId: uuid("run_id").notNull().references(() => creatorSourceRunsTable.id, { onDelete: "cascade" }),
+    sourceContentId: uuid("source_content_id").notNull().references(() => creatorSourceContentsTable.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("creator_source_run_snapshots_uq").on(t.runId, t.sourceContentId),
+    index("creator_source_run_snapshots_content_idx").on(t.sourceContentId),
+  ],
+);
+
+/** Immutable deterministic fact extracted from one exact source snapshot. */
+export const creatorSourceFactsTable = pgTable(
+  "creator_source_facts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id").notNull().references(() => creatorSourceRunsTable.id, { onDelete: "cascade" }),
+    sourceContentId: uuid("source_content_id").notNull().references(() => creatorSourceContentsTable.id),
+    placeName: text("place_name").notNull(),
+    settlement: text("settlement"),
+    categoryKey: text("category_key").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    retrievedAt: timestamp("retrieved_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("creator_source_facts_snapshot_fact_uq")
+      .on(t.runId, t.sourceContentId, t.placeName, t.settlement, t.categoryKey),
+    index("creator_source_facts_run_idx").on(t.runId),
+  ],
+);
+
+/** One normalized candidate per source-first run. Resolution and routing
+ * outcomes are stored here even when the candidate cannot be confirmed. */
+export const creatorSourceCandidatesTable = pgTable(
+  "creator_source_candidates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id").notNull().references(() => creatorSourceRunsTable.id, { onDelete: "cascade" }),
+    proposalId: uuid("proposal_id").references(() => creatorPlaceProposalsTable.id, { onDelete: "set null" }),
+    normalizedName: text("normalized_name").notNull(),
+    officialName: text("official_name").notNull(),
+    settlement: text("settlement"),
+    categoryKey: text("category_key").notNull(),
+    outcome: text("outcome").notNull().default("pending"),
+    failureReason: text("failure_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("creator_source_candidates_outcome_check", sql`${t.outcome} IN ('pending','resolved','unresolved')`),
+    check("creator_source_candidates_failure_check", sql`${t.outcome} <> 'unresolved' OR ${t.failureReason} IS NOT NULL`),
+    uniqueIndex("creator_source_candidates_run_name_uq").on(t.runId, t.normalizedName),
+    uniqueIndex("creator_source_candidates_proposal_uq").on(t.proposalId).where(sql`${t.proposalId} IS NOT NULL`),
+  ],
+);
+
+/** Many-to-many provenance: duplicate facts merge to one candidate without
+ * losing any supporting source snapshot. */
+export const creatorSourceCandidateFactsTable = pgTable(
+  "creator_source_candidate_facts",
+  {
+    candidateId: uuid("candidate_id").notNull().references(() => creatorSourceCandidatesTable.id, { onDelete: "cascade" }),
+    factId: uuid("fact_id").notNull().references(() => creatorSourceFactsTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("creator_source_candidate_facts_uq").on(t.candidateId, t.factId),
+    index("creator_source_candidate_facts_fact_idx").on(t.factId),
   ],
 );
 
@@ -281,3 +380,7 @@ export type CreatorProposalTranslation = typeof creatorProposalTranslationsTable
 export type CreatorSource = typeof creatorSourcesTable.$inferSelect;
 export type CreatorRobotsEvidence = typeof creatorRobotsEvidenceTable.$inferSelect;
 export type CreatorSourceContent = typeof creatorSourceContentsTable.$inferSelect;
+export type CreatorSourceRun = typeof creatorSourceRunsTable.$inferSelect;
+export type CreatorSourceRunSnapshot = typeof creatorSourceRunSnapshotsTable.$inferSelect;
+export type CreatorSourceFact = typeof creatorSourceFactsTable.$inferSelect;
+export type CreatorSourceCandidate = typeof creatorSourceCandidatesTable.$inferSelect;
