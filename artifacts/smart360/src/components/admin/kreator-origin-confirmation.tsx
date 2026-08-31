@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useCreateCreatorDraftTenant, usePreviewCreatorOrigin } from "@workspace/api-client-react";
+import { useConfirmCreatorTenantOrigin, usePreviewCreatorOrigin } from "@workspace/api-client-react";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { AdminButton as Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,26 +69,32 @@ function OsmTileMap({ lat, lng }: { lat: number; lng: number }) {
 }
 
 export function KreatorOriginConfirmation({
-  onCreated,
+  tenant,
+  onConfirmed,
 }: {
-  onCreated?: (tenantId: string) => void;
+  tenant: {
+    id: string;
+    name: string;
+    address?: string | null;
+    mapUrl?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    creatorOriginRegion?: string | null;
+  };
+  onConfirmed?: () => void;
 }) {
   const [mapUrl, setMapUrl] = useState("");
-  const [name, setName] = useState("");
-  const [tenantAddress, setTenantAddress] = useState("");
-  const [tenantType, setTenantType] = useState<"kamp" | "hotel" | "apartmaji">("kamp");
+  const [tenantAddress, setTenantAddress] = useState(tenant.address ?? "");
+  const [replaceExistingOrigin, setReplaceExistingOrigin] = useState(false);
 
   const previewMutation = usePreviewCreatorOrigin({
     mutation: {
-      onSuccess: (data) => {
-        setName(data.name || "");
-        setTenantAddress("");
-      },
+      onSuccess: () => setReplaceExistingOrigin(false),
     }
   });
-  const createMutation = useCreateCreatorDraftTenant({
+  const confirmMutation = useConfirmCreatorTenantOrigin({
     mutation: {
-      onSuccess: (tenant) => onCreated?.(tenant.id),
+      onSuccess: () => onConfirmed?.(),
     },
   });
 
@@ -102,28 +108,30 @@ export function KreatorOriginConfirmation({
     setMapUrl(e.target.value);
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-  };
-
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTenantAddress(e.target.value);
   };
 
   const handleConfirm = () => {
-    if (!name.trim() || !tenantAddress.trim()) return;
-    createMutation.mutate({
+    if (!tenantAddress.trim()) return;
+    confirmMutation.mutate({
+      id: tenant.id,
       data: {
         mapUrl: mapUrl.trim(),
-        name: name.trim(),
         address: tenantAddress.trim(),
-        tenantType,
+        replaceExistingOrigin,
       },
     });
   };
 
   const hasResult = previewMutation.isSuccess && previewMutation.data;
   const isPending = previewMutation.isPending;
+  const hasStoredOrigin = Boolean(
+    tenant.mapUrl
+    || tenant.latitude != null
+    || tenant.longitude != null
+    || tenant.creatorOriginRegion,
+  );
 
   return (
     <div className="max-w-[880px] w-full flex flex-col gap-6 font-sans py-2">
@@ -183,38 +191,14 @@ export function KreatorOriginConfirmation({
       {hasResult && (
         <Card className={cn(
           "transition-colors overflow-hidden",
-          createMutation.isSuccess ? "ring-2 ring-primary bg-primary/[0.02]" : ""
+          confirmMutation.isSuccess ? "ring-2 ring-primary bg-primary/[0.02]" : ""
         )}>
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="p-6 flex flex-col gap-6 border-b md:border-b-0 md:border-r border-border">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="parsedName" className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground flex items-center justify-between">
-                  <span>Ime namestitve</span>
-                  <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md text-muted-foreground normal-case tracking-normal">Zahtevano</span>
-                </Label>
-                <Input
-                  id="parsedName"
-                  value={name}
-                  onChange={handleNameChange}
-                  placeholder="Vnesite ime..."
-                  className="bg-white font-[600]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="tenantType" className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
-                  Tip nastanitve
-                </Label>
-                <select
-                  id="tenantType"
-                  value={tenantType}
-                  onChange={(event) => setTenantType(event.target.value as typeof tenantType)}
-                  className="h-10 rounded-md border border-input bg-white px-3 text-sm font-[600]"
-                >
-                  <option value="kamp">Kamp</option>
-                  <option value="hotel">Hotel</option>
-                  <option value="apartmaji">Apartmaji</option>
-                </select>
+              <div className="rounded-[14px] border border-border bg-muted/40 p-4">
+                <p className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">Odprta nastanitev</p>
+                <p className="mt-1 text-[16px] font-[800] text-foreground">{tenant.name}</p>
+                <p className="mt-1 font-mono text-[11px] text-muted-foreground">{tenant.id}</p>
               </div>
 
               <div className="flex flex-col gap-3">
@@ -233,6 +217,29 @@ export function KreatorOriginConfirmation({
               </div>
 
               <div className="flex flex-col gap-5">
+                {hasStoredOrigin && (
+                  <div className="rounded-[14px] border border-amber-300 bg-amber-50 p-4 text-amber-950">
+                    <p className="text-[14px] font-[800]">Shranjeno izhodišče že obstaja</p>
+                    <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+                      <dt className="font-[700]">Koordinate</dt>
+                      <dd className="font-mono">{tenant.latitude ?? "—"}, {tenant.longitude ?? "—"}</dd>
+                      <dt className="font-[700]">Regija</dt>
+                      <dd>{tenant.creatorOriginRegion ?? "—"}</dd>
+                      <dt className="font-[700]">Povezava</dt>
+                      <dd className="break-all">{tenant.mapUrl ?? "—"}</dd>
+                    </dl>
+                    <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-[10px] border border-amber-400 bg-white p-3">
+                      <input
+                        type="checkbox"
+                        checked={replaceExistingOrigin}
+                        onChange={(event) => setReplaceExistingOrigin(event.target.checked)}
+                        className="mt-0.5 h-4 w-4"
+                      />
+                      <span className="text-[13px] font-[700]">Izrecno potrjujem zamenjavo shranjenega izhodišča z novo razrešeno točko.</span>
+                    </label>
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-2">
                   <span className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
                     Najbližja znana točka (Nominatim)
@@ -248,7 +255,7 @@ export function KreatorOriginConfirmation({
                         {previewMutation.data.originVerificationReason || "Nominatim trenutno ni dosegljiv."}
                       </p>
                       <p className="mt-1 text-[12px]">
-                        Osnutek lahko vseeno ustvarite; vneseni naslov ostane nespremenjen.
+                        Izhodišče lahko vseeno potrdite; vneseni naslov ostane nespremenjen.
                       </p>
                     </div>
                   )}
@@ -272,25 +279,25 @@ export function KreatorOriginConfirmation({
               </div>
 
               <div className="mt-auto pt-6 flex items-center justify-between">
-                {createMutation.isSuccess ? (
+                {confirmMutation.isSuccess ? (
                   <div className="flex items-center gap-2 text-[#116B41] font-[800] text-[15px] bg-[#E4F2EA] px-4 py-2.5 rounded-[12px] w-full justify-center">
                     <CheckCircle2 className="w-5 h-5" />
-                    Osnutek je shranjen
+                    Izhodišče je potrjeno
                   </div>
                 ) : (
                   <Button 
                     onClick={handleConfirm}
-                    disabled={!name.trim() || !tenantAddress.trim() || createMutation.isPending}
+                    disabled={!tenantAddress.trim() || confirmMutation.isPending || (hasStoredOrigin && !replaceExistingOrigin)}
                     className="w-full text-[15px] h-[46px] rounded-[13px]"
                   >
-                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Ustvari neobjavljen osnutek
+                    {confirmMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Potrdi izhodišče
                   </Button>
                 )}
               </div>
-              {createMutation.isError && (
+              {confirmMutation.isError && (
                 <div className="rounded-[12px] border border-destructive/20 bg-destructive/5 p-3 text-sm font-semibold text-destructive">
-                  {(createMutation.error as any)?.data?.error || "Osnutka ni bilo mogoče ustvariti."}
+                  {(confirmMutation.error as any)?.data?.error || "Izhodišča ni bilo mogoče potrditi."}
                 </div>
               )}
             </div>

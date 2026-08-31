@@ -583,26 +583,32 @@ paths:
         "400": { description: Missing or invalid request }
         "422": { description: Google Maps link cannot provide a safe pin }
         "502": { description: Reverse geocoding failed }
-  /admin/creator/draft-tenants:
+  /admin/tenants/{id}/creator/origin:
     post:
-      operationId: createCreatorDraftTenant
+      operationId: confirmCreatorTenantOrigin
       tags: [tenants]
-      summary: Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+      summary: Re-parse and save a confirmed Maps origin onto the open cockpit tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatorDraftTenantInput"
+              $ref: "#/components/schemas/ConfirmCreatorTenantOriginInput"
       responses:
-        "201":
-          description: Unpublished draft tenant
+        "200":
+          description: Updated cockpit tenant origin
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreatorDraftTenant"
-        "400": { description: Invalid draft tenant details }
-        "409": { description: A draft for this origin already exists }
+                $ref: "#/components/schemas/CreatorTenantOrigin"
+        "400": { description: Invalid origin details }
+        "404": { description: Cockpit tenant not found }
+        "409": { description: Existing origin requires explicit replacement }
         "422": { description: Google Maps link cannot provide a safe pin }
         "502": { description: Reverse geocoding failed }
   /admin/tenants/{id}/creator/runs:
@@ -2391,30 +2397,25 @@ components:
         originVerificationStatus: { type: string, enum: [verified, unverified] }
         originVerificationReason: { type: ["string", "null"] }
       required: [lat, lng, name, placeId, source, expandedUrl, nominatimDisplayName, referenceSource, originVerificationStatus, originVerificationReason]
-    CreatorDraftTenantInput:
+    ConfirmCreatorTenantOriginInput:
       type: object
       additionalProperties: false
       properties:
         mapUrl: { type: string, minLength: 1 }
-        name: { type: string, minLength: 1, maxLength: 160 }
         address: { type: string, minLength: 1, maxLength: 300 }
-        tenantType: { type: string, enum: [kamp, hotel, apartmaji] }
-      required: [mapUrl, name, address, tenantType]
-    CreatorDraftTenant:
+        replaceExistingOrigin: { type: boolean }
+      required: [mapUrl, address]
+    CreatorTenantOrigin:
       type: object
       properties:
         id: { type: string }
-        slug: { type: string }
-        name: { type: string }
         address: { type: string }
-        mapUrl: { type: string }
         latitude: { type: number }
         longitude: { type: number }
-        tenantType: { type: string, enum: [kamp, hotel, apartmaji] }
-        isPublished: { type: boolean }
-        originVerificationStatus: { type: string, enum: [verified, unverified] }
-        originVerificationReason: { type: ["string", "null"] }
-      required: [id, slug, name, address, mapUrl, latitude, longitude, tenantType, isPublished, originVerificationStatus, originVerificationReason]
+        creatorDraft: { type: boolean }
+        creatorOriginRegion: { type: ["string", "null"] }
+        replacedExistingOrigin: { type: boolean }
+      required: [id, address, latitude, longitude, creatorDraft, creatorOriginRegion, replacedExistingOrigin]
     CreatorProposalTranslation:
       type: object
       properties:
@@ -2927,6 +2928,7 @@ components:
         creatorOriginRegion:
           type: ["string", "null"]
           description: Verified origin region/display name used by Creator
+        creatorDraft: { type: boolean }
         copiedFromTenantId:
           type: ["string", "null"]
           description: Source tenant when this one was duplicated; copies must be marked in the admin header

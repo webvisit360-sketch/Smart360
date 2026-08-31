@@ -1,12 +1,12 @@
 import { Router, type IRouter } from "express";
 import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
-import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, db, sectionsTable, tenantAliasesTable, tenantsTable } from "@workspace/db";
+import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, db, sectionsTable, tenantsTable } from "@workspace/db";
 import {
   ApproveCreatorProposalResponse,
   ApproveCreatorProposalsBulkBody,
   ApproveCreatorProposalsBulkResponse,
-  CreateCreatorDraftTenantBody,
-  CreateCreatorDraftTenantResponse,
+  ConfirmCreatorTenantOriginBody,
+  ConfirmCreatorTenantOriginResponse,
   ConfirmCreatorProposalCoordinatesBody,
   ConfirmCreatorProposalCoordinatesResponse,
   EditCreatorProposalBody,
@@ -34,9 +34,8 @@ import {
   GoogleMapsRedirectError,
   resolveCreatorOrigin,
 } from "../lib/creatorOrigin";
-import { seedTenantContent } from "../lib/tenantSeeds";
-import { RESERVED_SLUGS, slugify } from "../lib/slug";
 import { CREATOR_C1_PRICING, runCreatorC1, type CreatorC1Report } from "../lib/creatorC1";
+import { logChange } from "../lib/changelog";
 import {
   claimCreatorRunOnce,
   isPreservedMeninaEvidenceTenant,
@@ -49,28 +48,17 @@ const first = (value: string | string[] | undefined) =>
   (Array.isArray(value) ? value[0] : value) ?? "";
 const serialize = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
-function normalizedName(name: string): string {
-  return name.normalize("NFKC").replace(/\s+/g, " ").trim().toLocaleLowerCase("sl");
-}
-
-function draftSlugBase(name: string): string {
-  let base = slugify(name);
-  if (base.length < 3) base = `tenant-${base || "draft"}`;
-  base = base.slice(0, 40).replace(/-+$/g, "");
-  if (RESERVED_SLUGS.has(base)) base = `tenant-${base}`.slice(0, 40);
-  return base.length >= 3 ? base : "tenant-draft";
-}
-
-function numberedSlug(base: string, number: number): string {
-  if (number === 0) return base;
-  const suffix = `-${number + 1}`;
-  return `${base.slice(0, 40 - suffix.length).replace(/-+$/g, "")}${suffix}`;
-}
-
-class CreatorDraftConflictError extends Error {
+class CreatorOriginReplacementRequiredError extends Error {
   constructor() {
-    super("Creator draft already exists.");
-    this.name = "CreatorDraftConflictError";
+    super("Creator origin replacement requires explicit confirmation.");
+    this.name = "CreatorOriginReplacementRequiredError";
+  }
+}
+
+class CreatorTenantNotFoundError extends Error {
+  constructor() {
+    super("Creator tenant not found.");
+    this.name = "CreatorTenantNotFoundError";
   }
 }
 
@@ -163,91 +151,102 @@ router.post("/admin/creator/origin-preview", async (req, res): Promise<void> => 
   }
 });
 
-router.post("/admin/creator/draft-tenants", async (req, res): Promise<void> => {
-  const input = CreateCreatorDraftTenantBody.safeParse(req.body);
-  if (!input.success) {
-    res.status(400).json({ error: "Vnesite ime, naslov, tip in Google Maps povezavo." });
+router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void> => {
+  const tenantId = first(req.params["id"]);
+  const input = ConfirmCreatorTenantOriginBody.safeParse(req.body);
+  if (!tenantId || !input.success) {
+    res.status(400).json({ error: "Vnesite naslov in Google Maps povezavo." });
     return;
   }
-  const name = input.data.name.replace(/\s+/g, " ").trim();
   const address = input.data.address.replace(/\s+/g, " ").trim();
-  if (!name || !address) {
-    res.status(400).json({ error: "Ime in naslov ne smeta biti prazna." });
+  if (!address) {
+    res.status(400).json({ error: "Naslov ne sme biti prazen." });
     return;
   }
 
   try {
-    // Re-resolve the original URL; no browser-provided coordinates are used.
+    // Re-resolve the original URL; browser-provided coordinates and identity
+    // are never accepted as authority.
     const origin = await resolveCreatorOrigin(input.data.mapUrl);
-    const base = draftSlugBase(name);
-    // PostgreSQL text parameters cannot contain NUL bytes. JSON preserves the
-    // tuple boundary without making the advisory-lock key ambiguous.
-    const signature = JSON.stringify([normalizedName(name), origin.expandedUrl]);
-    const tenant = await db.transaction(async (tx) => {
-      // Serialize identical origin/name requests and same-base slug allocation.
-      // Hash collisions only serialize unrelated creations; they cannot merge them.
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${signature}))`);
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${base}))`);
-      const sameOrigin = await tx
-        .select({ id: tenantsTable.id, name: tenantsTable.name })
+    const result = await db.transaction(async (tx) => {
+      // The cockpit tenant ID is the only tenant identity. This lock makes the
+      // existing-origin guard and the update one atomic replacement decision.
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${tenantId}))`);
+      const [current] = await tx
+        .select()
         .from(tenantsTable)
-        .where(eq(tenantsTable.mapUrl, origin.expandedUrl));
-      if (sameOrigin.some((row) => normalizedName(row.name) === normalizedName(name))) {
-        throw new CreatorDraftConflictError();
+        .where(eq(tenantsTable.id, tenantId))
+        .limit(1);
+      if (!current) throw new CreatorTenantNotFoundError();
+
+      const hasStoredOrigin = Boolean(
+        current.mapUrl
+        || current.latitude !== null
+        || current.longitude !== null
+        || current.creatorOriginRegion,
+      );
+      if (hasStoredOrigin && input.data.replaceExistingOrigin !== true) {
+        throw new CreatorOriginReplacementRequiredError();
       }
 
-      for (let n = 0; n < 1000; n += 1) {
-        const slug = numberedSlug(base, n);
-        const [reserved] = await tx
-          .select({ slug: tenantAliasesTable.slug })
-          .from(tenantAliasesTable)
-          .where(eq(tenantAliasesTable.slug, slug))
-          .limit(1);
-        if (reserved) continue;
-        const inserted = await tx.insert(tenantsTable).values({
-          slug,
-          name,
+      const [updated] = await tx
+        .update(tenantsTable)
+        .set({
           address,
-          mapUrl: origin.expandedUrl,
           latitude: origin.lat,
           longitude: origin.lng,
-          tenantType: input.data.tenantType,
           creatorDraft: true,
           creatorOriginRegion: origin.nominatimDisplayName,
-          isPublished: false,
-          firstPublishedAt: null,
-        }).onConflictDoNothing().returning();
-        if (!inserted[0]) continue;
-        await seedTenantContent(inserted[0].id, input.data.tenantType, tx);
-        return inserted[0];
-      }
-      throw new Error("Za nastanitev ni mogoče ustvariti prostega naslova.");
+        })
+        .where(eq(tenantsTable.id, tenantId))
+        .returning();
+      if (!updated) throw new CreatorTenantNotFoundError();
+      return { tenant: updated, replacedExistingOrigin: hasStoredOrigin };
     });
+
+    await logChange({
+      tenantId: result.tenant.id,
+      action: result.replacedExistingOrigin ? "replace-origin" : "confirm-origin",
+      entity: "creator-origin",
+      summary: result.replacedExistingOrigin
+        ? "Izhodišče Kreatorja je bilo izrecno zamenjano."
+        : "Izhodišče Kreatorja je bilo potrjeno.",
+    });
+
     if (origin.originVerificationStatus === "unverified") {
       req.log.warn({
-        tenantId: tenant.id,
+        tenantId: result.tenant.id,
         latitude: origin.lat,
         longitude: origin.lng,
         originVerificationStatus: origin.originVerificationStatus,
         originVerificationReason: origin.originVerificationReason,
-      }, "Creator draft created with an unverified pin position");
+      }, "Creator origin confirmed with an unverified pin position");
     }
-    res.status(201).json(CreateCreatorDraftTenantResponse.parse(serialize({
-      ...tenant,
-      originVerificationStatus: origin.originVerificationStatus,
-      originVerificationReason: origin.originVerificationReason,
+
+    res.json(ConfirmCreatorTenantOriginResponse.parse(serialize({
+      id: result.tenant.id,
+      address: result.tenant.address,
+      latitude: result.tenant.latitude,
+      longitude: result.tenant.longitude,
+      creatorDraft: result.tenant.creatorDraft,
+      creatorOriginRegion: result.tenant.creatorOriginRegion,
+      replacedExistingOrigin: result.replacedExistingOrigin,
     })));
   } catch (error) {
-    if (error instanceof CreatorDraftConflictError) {
-      res.status(409).json({ error: "Osnutek za to nastanitev in izvor že obstaja." });
+    if (error instanceof CreatorOriginReplacementRequiredError) {
+      res.status(409).json({ error: "Nastanitev že ima shranjeno izhodišče. Pred zamenjavo jo morate izrecno potrditi." });
+      return;
+    }
+    if (error instanceof CreatorTenantNotFoundError) {
+      res.status(404).json({ error: "Nastanitev ni bila najdena." });
       return;
     }
     if (error instanceof GoogleMapsParseError || error instanceof GoogleMapsRedirectError) {
       res.status(422).json({ error: error.message, code: error.kind });
       return;
     }
-    req.log.warn({ error }, "Creator draft tenant creation failed");
-    res.status(500).json({ error: "Osnutka ni bilo mogoče ustvariti.", code: "creator-draft-failed" });
+    req.log.warn({ error, tenantId }, "Creator origin confirmation failed");
+    res.status(500).json({ error: "Izhodišča ni bilo mogoče potrditi.", code: "creator-origin-confirmation-failed" });
   }
 });
 

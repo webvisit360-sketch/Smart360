@@ -193,6 +193,7 @@ export const GetPublicTenantResponse = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
@@ -692,6 +693,7 @@ export const ListTenantsResponseItem = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
@@ -783,6 +785,7 @@ export const CreateTenantResponse = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
@@ -835,34 +838,31 @@ export const PreviewCreatorOriginResponse = zod.object({
 
 
 /**
- * @summary Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+ * @summary Re-parse and save a confirmed Maps origin onto the open cockpit tenant
  */
-
-export const createCreatorDraftTenantBodyNameMax = 160;
-
-export const createCreatorDraftTenantBodyAddressMax = 300;
-
-
-
-export const CreateCreatorDraftTenantBody = zod.object({
-  "mapUrl": zod.string().min(1),
-  "name": zod.string().min(1).max(createCreatorDraftTenantBodyNameMax),
-  "address": zod.string().min(1).max(createCreatorDraftTenantBodyAddressMax),
-  "tenantType": zod.enum(['kamp', 'hotel', 'apartmaji'])
+export const ConfirmCreatorTenantOriginParams = zod.object({
+  "id": zod.coerce.string()
 })
 
-export const CreateCreatorDraftTenantResponse = zod.object({
+
+export const confirmCreatorTenantOriginBodyAddressMax = 300;
+
+
+
+export const ConfirmCreatorTenantOriginBody = zod.object({
+  "mapUrl": zod.string().min(1),
+  "address": zod.string().min(1).max(confirmCreatorTenantOriginBodyAddressMax),
+  "replaceExistingOrigin": zod.boolean().optional()
+})
+
+export const ConfirmCreatorTenantOriginResponse = zod.object({
   "id": zod.string(),
-  "slug": zod.string(),
-  "name": zod.string(),
   "address": zod.string(),
-  "mapUrl": zod.string(),
   "latitude": zod.number(),
   "longitude": zod.number(),
-  "tenantType": zod.enum(['kamp', 'hotel', 'apartmaji']),
-  "isPublished": zod.boolean(),
-  "originVerificationStatus": zod.enum(['verified', 'unverified']),
-  "originVerificationReason": zod.string().nullable()
+  "creatorDraft": zod.boolean(),
+  "creatorOriginRegion": zod.string().nullable(),
+  "replacedExistingOrigin": zod.boolean()
 })
 
 
@@ -1617,6 +1617,7 @@ export const GetTenantResponse = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
@@ -1868,6 +1869,7 @@ export const UpdateTenantResponse = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
@@ -2215,6 +2217,7 @@ export const DuplicateTenantResponse = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),
@@ -2313,6 +2316,7 @@ export const RenewTenantResponse = zod.object({
   "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
+  "creatorDraft": zod.boolean().optional(),
   "copiedFromTenantId": zod.string().nullish().describe('Source tenant when this one was duplicated; copies must be marked in the admin header'),
   "mediaQuotaBytes": zod.number(),
   "createdAt": zod.string(),

@@ -156,6 +156,7 @@ export interface Tenant {
      * @nullable
      */
   creatorOriginRegion?: string | null;
+  creatorDraft?: boolean;
   /**
      * Source tenant when this one was duplicated; copies must be marked in the admin header
      * @nullable

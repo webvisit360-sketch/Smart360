@@ -340,61 +340,26 @@ export interface CreatorOriginPreview {
   originVerificationReason: string | null;
 }
 
-export type CreatorDraftTenantInputTenantType = typeof CreatorDraftTenantInputTenantType[keyof typeof CreatorDraftTenantInputTenantType];
-
-
-export const CreatorDraftTenantInputTenantType = {
-  kamp: 'kamp',
-  hotel: 'hotel',
-  apartmaji: 'apartmaji',
-} as const;
-
-export interface CreatorDraftTenantInput {
+export interface ConfirmCreatorTenantOriginInput {
   /** @minLength 1 */
   mapUrl: string;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  name: string;
   /**
      * @minLength 1
      * @maxLength 300
      */
   address: string;
-  tenantType: CreatorDraftTenantInputTenantType;
+  replaceExistingOrigin?: boolean;
 }
 
-export type CreatorDraftTenantTenantType = typeof CreatorDraftTenantTenantType[keyof typeof CreatorDraftTenantTenantType];
-
-
-export const CreatorDraftTenantTenantType = {
-  kamp: 'kamp',
-  hotel: 'hotel',
-  apartmaji: 'apartmaji',
-} as const;
-
-export type CreatorDraftTenantOriginVerificationStatus = typeof CreatorDraftTenantOriginVerificationStatus[keyof typeof CreatorDraftTenantOriginVerificationStatus];
-
-
-export const CreatorDraftTenantOriginVerificationStatus = {
-  verified: 'verified',
-  unverified: 'unverified',
-} as const;
-
-export interface CreatorDraftTenant {
+export interface CreatorTenantOrigin {
   id: string;
-  slug: string;
-  name: string;
   address: string;
-  mapUrl: string;
   latitude: number;
   longitude: number;
-  tenantType: CreatorDraftTenantTenantType;
-  isPublished: boolean;
-  originVerificationStatus: CreatorDraftTenantOriginVerificationStatus;
+  creatorDraft: boolean;
   /** @nullable */
-  originVerificationReason: string | null;
+  creatorOriginRegion: string | null;
+  replacedExistingOrigin: boolean;
 }
 
 export type CreatorProposalTranslationLanguage = typeof CreatorProposalTranslationLanguage[keyof typeof CreatorProposalTranslationLanguage];
@@ -1008,6 +973,7 @@ export interface Tenant {
      * @nullable
      */
   creatorOriginRegion?: string | null;
+  creatorDraft?: boolean;
   /**
      * Source tenant when this one was duplicated; copies must be marked in the admin header
      * @nullable

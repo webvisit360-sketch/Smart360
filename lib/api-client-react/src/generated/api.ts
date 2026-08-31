@@ -39,16 +39,16 @@ import type {
   CleanupRestoreRequest,
   CleanupRestoreResult,
   CleanupRunsResult,
+  ConfirmCreatorTenantOriginInput,
   CreatorCategoryOption,
   CreatorCoordinateConfirmationInput,
-  CreatorDraftTenant,
-  CreatorDraftTenantInput,
   CreatorOriginPreview,
   CreatorOriginPreviewInput,
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
   CreatorRunReport,
+  CreatorTenantOrigin,
   DistanceBulkApproveInput,
   DistanceLinkInput,
   DistanceReview,
@@ -2484,25 +2484,26 @@ export const usePreviewCreatorOrigin = <TError = ErrorType<void>,
       return useMutation(getPreviewCreatorOriginMutationOptions(options));
     }
 
-export const getCreateCreatorDraftTenantUrl = () => {
+export const getConfirmCreatorTenantOriginUrl = (id: string,) => {
 
 
 
 
-  return `/api/admin/creator/draft-tenants`
+  return `/api/admin/tenants/${id}/creator/origin`
 }
 
 /**
- * @summary Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+ * @summary Re-parse and save a confirmed Maps origin onto the open cockpit tenant
  */
-export const createCreatorDraftTenant = async (creatorDraftTenantInput: CreatorDraftTenantInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorDraftTenant> => {
+export const confirmCreatorTenantOrigin = async (id: string,
+    confirmCreatorTenantOriginInput: ConfirmCreatorTenantOriginInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorTenantOrigin> => {
 
-  return customFetch<CreatorDraftTenant>(getCreateCreatorDraftTenantUrl(),
+  return customFetch<CreatorTenantOrigin>(getConfirmCreatorTenantOriginUrl(id),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(creatorDraftTenantInput)
+    body: JSON.stringify(confirmCreatorTenantOriginInput)
   }
 );}
 
@@ -2510,11 +2511,11 @@ export const createCreatorDraftTenant = async (creatorDraftTenantInput: CreatorD
 
 
 
-export const getCreateCreatorDraftTenantMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCreatorDraftTenant>>, TError,{data: BodyType<CreatorDraftTenantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createCreatorDraftTenant>>, TError,{data: BodyType<CreatorDraftTenantInput>}, TContext> => {
+export const getConfirmCreatorTenantOriginMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmCreatorTenantOrigin>>, TError,{id: string;data: BodyType<ConfirmCreatorTenantOriginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmCreatorTenantOrigin>>, TError,{id: string;data: BodyType<ConfirmCreatorTenantOriginInput>}, TContext> => {
 
-const mutationKey = ['createCreatorDraftTenant'];
+const mutationKey = ['confirmCreatorTenantOrigin'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2524,10 +2525,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCreatorDraftTenant>>, {data: BodyType<CreatorDraftTenantInput>}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmCreatorTenantOrigin>>, {id: string;data: BodyType<ConfirmCreatorTenantOriginInput>}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  createCreatorDraftTenant(data,requestOptions)
+          return  confirmCreatorTenantOrigin(id,data,requestOptions)
         }
 
 
@@ -2537,22 +2538,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateCreatorDraftTenantMutationResult = NonNullable<Awaited<ReturnType<typeof createCreatorDraftTenant>>>
-    export type CreateCreatorDraftTenantMutationBody = BodyType<CreatorDraftTenantInput>
-    export type CreateCreatorDraftTenantMutationError = ErrorType<void>
+    export type ConfirmCreatorTenantOriginMutationResult = NonNullable<Awaited<ReturnType<typeof confirmCreatorTenantOrigin>>>
+    export type ConfirmCreatorTenantOriginMutationBody = BodyType<ConfirmCreatorTenantOriginInput>
+    export type ConfirmCreatorTenantOriginMutationError = ErrorType<void>
 
     /**
- * @summary Re-parse a confirmed Maps origin and create an unpublished Creator draft tenant
+ * @summary Re-parse and save a confirmed Maps origin onto the open cockpit tenant
  */
-export const useCreateCreatorDraftTenant = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCreatorDraftTenant>>, TError,{data: BodyType<CreatorDraftTenantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useConfirmCreatorTenantOrigin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmCreatorTenantOrigin>>, TError,{id: string;data: BodyType<ConfirmCreatorTenantOriginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof createCreatorDraftTenant>>,
+        Awaited<ReturnType<typeof confirmCreatorTenantOrigin>>,
         TError,
-        {data: BodyType<CreatorDraftTenantInput>},
+        {id: string;data: BodyType<ConfirmCreatorTenantOriginInput>},
         TContext
       > => {
-      return useMutation(getCreateCreatorDraftTenantMutationOptions(options));
+      return useMutation(getConfirmCreatorTenantOriginMutationOptions(options));
     }
 
 export const getStartCreatorRunUrl = (id: string,) => {

@@ -5,20 +5,14 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
-import type { CreatorDraftTenantInputTenantType } from './creatorDraftTenantInputTenantType';
 
-export interface CreatorDraftTenantInput {
+export interface ConfirmCreatorTenantOriginInput {
   /** @minLength 1 */
   mapUrl: string;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  name: string;
   /**
      * @minLength 1
      * @maxLength 300
      */
   address: string;
-  tenantType: CreatorDraftTenantInputTenantType;
+  replaceExistingOrigin?: boolean;
 }

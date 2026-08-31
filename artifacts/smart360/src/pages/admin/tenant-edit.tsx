@@ -596,7 +596,14 @@ export default function AdminTenantEdit() {
             <TabsContent value="kreator">
               {isOwner ? (
                 <>
-                  <KreatorOriginConfirmation onCreated={(tenantId) => setLocation(`/admin/tenants/${tenantId}`)} />
+                  <KreatorOriginConfirmation
+                    tenant={tenant}
+                    onConfirmed={() => {
+                      void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
+                      void queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() });
+                      void queryClient.invalidateQueries({ queryKey: getListTenantChangelogQueryKey(id) });
+                    }}
+                  />
                   <KreatorProposalQueue
                     tenantId={id}
                     tenantName={tenant.name}
