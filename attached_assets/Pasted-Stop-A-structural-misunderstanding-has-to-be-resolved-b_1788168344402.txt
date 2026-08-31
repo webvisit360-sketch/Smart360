@@ -1,0 +1,26 @@
+Stop. A structural misunderstanding has to be resolved before any further guest-home work.
+
+There is one application. Apartmaji Meli Pu is it. Every new tenant must render exactly that same skeleton, empty, with only its content missing. Photographs, video, text and categories are added or removed. The skeleton itself never changes.
+
+The tenant "Piknik prostor in kamp Gril" currently renders something else entirely.
+
+Meli Pu has, and Gril does not:
+  - a 360 panorama entry screen with an "Odpri vodnik" button, distance markers such as "KOPER 12 km", and a "Vaš apartma" marker
+  - a guest welcome sheet: parcela/soba/apartma, name, telephone, password, and "Pozneje — najprej si samo ogledam"
+  - a home screen with hero photograph, name and address, "Dobrodošli", the host's logo, a WiFi tile, a row of Obvestila / Sporočila / Zemljevid, and a "Danes" carousel of real places with distances and descriptions
+  - bottom navigation reading Domov · Nastanitev · Ponudba · Okolica · Sporočila
+  - a "360" badge and a search control at the top right
+
+Gril instead shows "Kaj vas zanima?", four category tiles, and bottom navigation reading Domov · Odkrij · Ponudba · Storitve · Kontakt.
+
+The differing navigation labels prove this is not a data difference. It is a second implementation.
+
+INVESTIGATE AND REPORT. CHANGE NOTHING.
+
+1. Name every component and route involved in rendering the guest experience for Meli Pu, from the 360 entry screen through the welcome sheet to the home screen and its bottom navigation. Give file paths.
+2. Name the same for Piknik prostor in kamp Gril.
+3. State plainly where the two paths diverge and why. Is there a flag, a tenant field, a feature switch, a legacy route, or two separately maintained components?
+4. State which of the two is the current one in the repository's own terms — which is newer, which is referenced by the router for a newly created tenant, and whether the other is reachable at all.
+5. State what a newly created tenant would need in order to render the Meli Pu skeleton: is it configuration, missing tenant data, a route change, or deleting a superseded component.
+
+Report those five points and STOP. Do not modify any file. Do not publish.
