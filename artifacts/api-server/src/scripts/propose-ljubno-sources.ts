@@ -1,4 +1,5 @@
 import { creatorSourcesTable, db } from "@workspace/db";
+import { and, eq, notInArray } from "drizzle-orm";
 import {
   canonicalizeCreatorSourceUrl,
   retrieveRobotsEvidence,
@@ -8,20 +9,34 @@ const municipality = "Ljubno ob Savinji";
 
 const proposals = [
   { label: "Občina Ljubno", sourceKind: "municipality", url: "https://www.ljubno.si/" },
-  { label: "Visit Savinjska — Ljubno", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/en/ljubno-ob-savinji-2/" },
-  { label: "Visit Savinjska — Zgornja Savinjska dolina", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/en/upper-savinja-valley/" },
+  { label: "Visit Savinjska — Ljubno", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/ljubno-ob-savinji/" },
+  { label: "Visit Savinjska — Zgornja Savinjska dolina", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/savinjska-in-saleska-dolina/" },
   { label: "Visit Luče", sourceKind: "neighbour-tourism", url: "https://visitluce.si/" },
   { label: "Občina Luče", sourceKind: "neighbour-municipality", url: "https://www.luce.si/" },
   { label: "Logarska dolina Solčavsko", sourceKind: "neighbour-tourism", url: "https://www.logarska-solcavsko.si/" },
+  { label: "Visit Savinjska — Solčava", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/solcava/" },
+  { label: "Visit Savinjska — Logarska dolina in krajinski parki", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/logarska-dolina-in-krajinski-parki/" },
   { label: "Občina Solčava", sourceKind: "neighbour-municipality", url: "https://www.solcava.si/" },
   { label: "Občina Gornji Grad", sourceKind: "neighbour-municipality", url: "https://www.gornji-grad.si/" },
   { label: "Občina Nazarje", sourceKind: "neighbour-municipality", url: "https://nazarje.si/" },
   { label: "Občina Rečica ob Savinji", sourceKind: "neighbour-municipality", url: "https://www.recica.si/" },
-  { label: "Visit Savinjska — Rečica ob Savinji", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/en/recica-ob-savinji-2/" },
-  { label: "Hribi.net — Ljubno–Koča na Travniku", sourceKind: "hiking", url: "https://www.hribi.net/izlet/ljubno_ob_savinji_koca_na_travniku/3/489/3391" },
-  { label: "Hribi.net — Ljubno–Veliki Travnik", sourceKind: "hiking", url: "https://www.hribi.net/izlet/ljubno_ob_savinji_veliki_travnik_turnovka/3/488/3392" },
-  { label: "Hribi.net — Smrekovec–Komen", sourceKind: "hiking", url: "https://www.hribi.net/izlet/dom_na_smrekovcu_komen_cez_smrekovec_in_krnes/3/487/821" },
+  { label: "Visit Savinjska — Rečica ob Savinji", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/recica-ob-savinji/" },
+  { label: "Hribi.net — izhodišče Ljubno ob Savinji", sourceKind: "hiking-index", url: "https://www.hribi.net/izhodisce/ljubno_ob_savinji/46.3477/14.8315" },
+  { label: "Hribi.net — Smrekovec", sourceKind: "hiking-index", url: "https://www.hribi.net/gora/smrekovec/3/485" },
+  { label: "Hribi.net — Kamniško-Savinjske Alpe", sourceKind: "hiking-index", url: "https://www.hribi.net/gorovje/kamnisko_savinjske_alpe/3" },
+  { label: "Občina Mozirje", sourceKind: "neighbour-municipality", url: "https://mozirje.si/" },
+  { label: "Visit Savinjska — Mozirje", sourceKind: "regional-tourism", url: "https://visitsavinjska.com/mozirje/" },
 ] as const;
+
+const amendedCanonicalUrls = proposals.map((proposal) => canonicalizeCreatorSourceUrl(proposal.url));
+await db.update(creatorSourcesTable).set({
+  status: "rejected",
+  updatedAt: new Date(),
+}).where(and(
+  eq(creatorSourcesTable.municipality, municipality),
+  eq(creatorSourcesTable.status, "proposed"),
+  notInArray(creatorSourcesTable.canonicalUrl, amendedCanonicalUrls),
+));
 
 const stored = [];
 for (const proposal of proposals) {
