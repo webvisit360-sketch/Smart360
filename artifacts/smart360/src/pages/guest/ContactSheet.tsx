@@ -24,7 +24,7 @@ export function ContactSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant:
         {tenant?.whatsapp && (
           <a href={`https://wa.me/${tenant.whatsapp.replace(/\+/g, '')}`} className="srow">
             <svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>
-            <div className="t"><b>WhatsApp</b><span>{t("UI.contact.sub")}</span></div>
+            <div className="t"><b>WhatsApp</b><span>{t("UI.contact.message")}</span></div>
             <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
           </a>
         )}

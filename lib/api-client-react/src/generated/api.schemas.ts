@@ -1004,6 +1004,11 @@ export interface Tenant {
      */
   tenantType?: string | null;
   /**
+     * Verified origin region/display name used by Creator
+     * @nullable
+     */
+  creatorOriginRegion?: string | null;
+  /**
      * Source tenant when this one was duplicated; copies must be marked in the admin header
      * @nullable
      */
@@ -2221,6 +2226,13 @@ export type TenantContent = Tenant & ({
   ui?: TenantContentUi;
   /** Plural forms for the active language, key -> CLDR form -> template */
   plurals?: TenantContentPlurals;
+  /** Real guest-to-host response cycles measured for this tenant */
+  hostAnsweredMessageCount?: number;
+  /**
+     * Median response time rounded up to whole minutes; null until five cycles exist
+     * @nullable
+     */
+  hostResponseMedianMinutes?: number | null;
 });
 
 export interface SearchResult {

@@ -28,4 +28,11 @@ export type TenantContent = Tenant & ({
   ui?: TenantContentUi;
   /** Plural forms for the active language, key -> CLDR form -> template */
   plurals?: TenantContentPlurals;
+  /** Real guest-to-host response cycles measured for this tenant */
+  hostAnsweredMessageCount?: number;
+  /**
+     * Median response time rounded up to whole minutes; null until five cycles exist
+     * @nullable
+     */
+  hostResponseMedianMinutes?: number | null;
 });

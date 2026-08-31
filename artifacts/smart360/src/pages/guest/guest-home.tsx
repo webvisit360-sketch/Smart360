@@ -85,7 +85,7 @@ export default function GuestHome() {
       title: sec.title, 
       icon: sec.icon || "home", 
       count: itemCount, 
-      photo: sec.imageUrl || photo || "/img/foto.jpg", 
+      photo: sec.imageUrl || photo || "",
       link: firstCat ? `/${slug}/c/${firstCat}` : null 
     };
   });
@@ -109,12 +109,33 @@ export default function GuestHome() {
           icon: cat.icon,
           // Barvna ploščica: prvi vidni vnos z barvo (barvne-ploscice.md).
           tint: cat.items?.find((i: any) => i.isVisible)?.tint || null,
-          photo: firstPhoto || sec.imageUrl || tenant.heroUrl || "",
+          photo: firstPhoto || "",
           sub: hsub(cat, tenant, lang),
         };
       }),
     };
   }).filter((row: any) => row.cats.length > 0);
+
+  const responseMinutes =
+    Number(tenant.hostAnsweredMessageCount) >= 5 &&
+    Number.isFinite(Number(tenant.hostResponseMedianMinutes))
+      ? Number(tenant.hostResponseMedianMinutes)
+      : null;
+  const responseTimeText = responseMinutes === null
+    ? null
+    : responseMinutes <= 60
+      ? {
+          sl: `Običajno odgovorimo v ${responseMinutes} minutah`,
+          en: `We usually reply within ${responseMinutes} minutes`,
+          de: `Wir antworten normalerweise innerhalb von ${responseMinutes} Minuten`,
+          it: `Di solito rispondiamo entro ${responseMinutes} minuti`,
+        }[lang]
+      : {
+          sl: `Običajno odgovorimo v ${Math.ceil(responseMinutes / 60)} urah`,
+          en: `We usually reply within ${Math.ceil(responseMinutes / 60)} hours`,
+          de: `Wir antworten normalerweise innerhalb von ${Math.ceil(responseMinutes / 60)} Stunden`,
+          it: `Di solito rispondiamo entro ${Math.ceil(responseMinutes / 60)} ore`,
+        }[lang];
 
   return (
     <div className="app" style={{ ...coverVars, ...getTextVars(tenant) }}>
@@ -174,14 +195,25 @@ export default function GuestHome() {
             <h2 className="sec__title">{t("UI.interest")}</h2>
             <div className="big">
               {bigCards.map(bc => (
-                <Link key={bc.id} href={bc.link ? buildGuestPath(bc.link) : '#'} className="bc">
-                  <img loading="lazy" decoding="async" src={imgSrc(bc.photo, 620)} alt="" />
-                  <span className="ov"></span>
-                  <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg></span>
-                  <span className="tx">
-                    <b>{bc.title}</b>
-                    <span>{plural(tenant, lang, "entries", bc.count)}</span>
-                  </span>
+                <Link key={bc.id} href={bc.link ? buildGuestPath(bc.link) : '#'} className={bc.photo ? "bc" : "bc bc--missing"}>
+                  {bc.photo ? (
+                    <>
+                      <img loading="lazy" decoding="async" src={imgSrc(bc.photo, 620)} alt="" />
+                      <span className="ov"></span>
+                      <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg></span>
+                      <span className="tx">
+                        <b>{bc.title}</b>
+                        <span>{plural(tenant, lang, "entries", bc.count)}</span>
+                      </span>
+                    </>
+                  ) : (
+                    <span className="missing-photo">
+                      <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg>
+                      <span>fotografija manjka</span>
+                      <b>{bc.title}</b>
+                      <small>{plural(tenant, lang, "entries", bc.count)}</small>
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>
@@ -203,7 +235,12 @@ export default function GuestHome() {
             <div className="hrow">
               {row.cats.map((cat: any) => (
                 <Link key={cat.id} href={buildGuestPath(`/${slug}/c/${cat.id}`)} className="hcard">
-                  {cat.tint ? (
+                  {!cat.photo ? (
+                    <span className="im im--missing">
+                      <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
+                      <span>fotografija manjka</span>
+                    </span>
+                  ) : cat.tint ? (
                     /* Barvna ploščica: polna barva z ikono namesto fotografije
                        — ista velikost, isti radij (barvne-ploscice.md). */
                     <span
@@ -225,10 +262,9 @@ export default function GuestHome() {
 
         <section className="host">
           <div className="host__top">
-            <img className="host__av" src={imgSrc(tenant.logoSquareUrl || tenant.logoUrl, 620)} alt="" loading="lazy" decoding="async" />
             <div>
               <div className="host__n">{t("UI.host.title")}</div>
-              <div className="host__s">{t("UI.host.sub")}</div>
+              {responseTimeText && <div className="host__s">{responseTimeText}</div>}
             </div>
           </div>
           <button className="btn" onClick={() => setContactOpen(true)}>

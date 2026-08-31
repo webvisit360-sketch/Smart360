@@ -21,8 +21,8 @@ body{
 img{display:block;max-width:100%}
 button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0;text-align:left}
 a{color:inherit;text-decoration:none}
-.app{max-width:390px;margin:0 auto;min-height:100vh;background:var(--paper,#fff)}
-@media(min-width:391px){.app{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.06)}}
+.app{max-width:402px;margin:0 auto;min-height:100vh;background:var(--paper,#fff)}
+@media(min-width:403px){.app{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.06)}}
 
 .ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.45;
     stroke-linecap:round;stroke-linejoin:round;display:block}
@@ -143,7 +143,7 @@ a{color:inherit;text-decoration:none}
 .tail{height:96px}
 
 /* ---------- spodnja navigacija ---------- */
-.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:70;max-width:390px;margin:0 auto;
+.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:70;max-width:402px;margin:0 auto;
         border-top:1px solid var(--line);background:var(--paper,#fff);
         padding:9px 10px calc(6px + var(--safe-b));display:flex}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--ink-2);padding-bottom:4px}
@@ -292,21 +292,21 @@ a{color:inherit;text-decoration:none}
 
 /* ============================================================
    SMART360 · SKIN C — "Sredozemsko"
-   Akcent: Google modra, potemnjena za 10 %  #4285F4 → #3B78DC
+   Akcent: Smart360 zelena
    ============================================================ */
 :root{
   --ink:#14201F; --ink-2:#6B7876; --ink-3:#9BA6A4;
   --line:#E8E4DD; --line-2:#DCD6CC; --wash:#F6F1E9;
-  --sea:#3B78DC; --sea-d:#2E60B0; --sea-soft:#EAF1FC;
+  --sea:#157347; --sea-d:#105C38; --sea-soft:#ECF0EA;
   --terra:#C4552E;
-  --coral:#3B78DC;              /* enotni akcent = modra */
+  --coral:#157347;
   --r-photo:24px; --r-tile:20px;
 }
 body{background:var(--page,#EFECE6)}
 .app{background:var(--paper,#fff)}
 
 /* glava */
-.appbar{height:64px}
+.appbar{height:calc(64px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px)}
 .brandmark{width:40px;height:40px;border-radius:14px}
 .brand{font-size:16.5px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
 .brand small{display:block;font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.02em}
@@ -329,11 +329,15 @@ body{background:var(--page,#EFECE6)}
 .tcard{margin:-26px 16px 0;background:var(--paper,#fff);border-radius:26px;padding:20px;position:relative;z-index:2;
        box-shadow:0 10px 30px rgba(20,32,31,.09)}
 .tcard .title{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1.15}
-.tcard .sub{margin-top:3px;font-size:12.5px;font-weight:600;color:var(--ink-3);letter-spacing:.02em}
+.tcard .sub{margin-top:4px;font-size:13px;font-weight:400;color:#66716A;letter-spacing:0}
 .tcard .meta{margin-top:9px;font-weight:600}
 .tcard .meta b{font-weight:800;display:inline-flex;align-items:center;gap:4px}
 .tcard .meta .ic{fill:var(--terra);stroke:none}
 .tcard .meta u{border-bottom:0}
+.tcard .meta.rating{font-size:13px}
+.tcard .meta.rating .rating__star{width:13px;height:13px;fill:#DD9A2B;color:#DD9A2B}
+.tcard .meta.rating .rating__number{font-weight:600;color:#121A14}
+.rating .rating__remainder{color:#66716A;font-weight:400}
 
 /* iskalnik */
 .search{margin-top:16px;height:auto;padding:14px 16px;border:0;border-radius:16px;
@@ -353,6 +357,11 @@ body{background:var(--page,#EFECE6)}
 .big{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 .bc{position:relative;border-radius:22px;overflow:hidden;height:134px;display:block;width:100%}
 .bc img{width:100%;height:100%;object-fit:cover}
+.bc .missing-photo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:7px;background:#F4F6F2;color:#66716A;font-size:12px;font-weight:500}
+.bc .missing-photo .ic{width:25px;height:25px}
+.bc .missing-photo b{color:#121A14;font-size:14px;font-weight:600;line-height:1.15;text-align:center}
+.bc .missing-photo small{color:#66716A;font-size:11px;font-weight:400}
 .bc .ov{position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(14,32,31,var(--tile-veil,0))}
 .bc .tx{position:absolute;left:14px;right:14px;bottom:12px;color:var(--txt-color,#fff);
         text-shadow:0 1px 3px rgba(0,0,0,.9), 0 0 16px rgba(0,0,0,.65)}
@@ -376,12 +385,15 @@ body{background:var(--page,#EFECE6)}
 .hcard{width:158px;flex:none;text-align:left}
 .hcard .im{display:block;border-radius:20px;overflow:hidden;height:112px;background:var(--wash)}
 .hcard img{width:100%;height:100%;object-fit:cover}
+.hcard .im--missing{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  color:#66716A;font-size:11px;font-weight:500;text-align:center}
+.hcard .im--missing .ic{width:25px;height:25px}
 .hcard b{display:block;font-size:calc(14px * var(--txt-scale,1.4));font-weight:800;margin-top:10px;letter-spacing:-.01em}
 .hcard>span:not(.im){display:block;font-size:calc(12.5px * var(--txt-scale,1.4));color:var(--txt-color,var(--ink-2));font-weight:600;margin-top:1px}
 .hcard:active{opacity:.7}
 /* Barvna ploščica: polna barva z ikono namesto fotografije, kjer bi bila
    fotografija samo okras — ista velikost, isti radij (barvne-ploscice.md). */
-.hcard .im--tint{background:var(--tint,#3B78DC);display:grid;place-items:center}
+.hcard .im--tint{background:var(--tint,#157347);display:grid;place-items:center}
 .hcard .im--tint .ic{width:34px;height:34px;color:#fff;stroke-width:1.6}
 /* fiksen temen tuš — --ink se na temnem ozadju strani prevrne v svetlo,
    ploščica pa je lastna površina (barvne-ploscice.md, točka f) */
@@ -408,17 +420,23 @@ body{background:var(--page,#EFECE6)}
 .svc span{font-weight:600}
 
 /* gostitelj */
-.host{margin-top:28px;border:0;background:var(--wash);border-radius:24px;padding:20px}
-.host__n{font-weight:800}
-.btn{border-radius:16px;background:var(--sea);box-shadow:none;font-weight:800;
-     min-height:48px;height:auto;padding:10px 16px}
+.host{margin-top:28px;border:0;background:#F4F6F2;border-radius:22px;padding:18px}
+.host__av{width:44px;height:44px;border-radius:13px;background:#ECF0EA}
+.host__initial{display:flex;align-items:center;justify-content:center;color:#66716A;font-size:15px;font-weight:600}
+.host__n{font-size:15px;font-weight:600}
+.host__s{font-size:13px;color:#66716A}
+.btn{margin-top:14px;border-radius:13px;background:#157347;color:#fff;box-shadow:none;font-size:15px;font-weight:600;
+     min-height:48px;height:48px;padding:0 16px;gap:8px}
+.btn .ic{width:16px;height:16px}
 .btn:active{transform:none;background:var(--sea-d)}
 
 /* spodnja navigacija */
-.tabbar{border-top:1px solid var(--line)}
-.tab{font-weight:700}
-.tab .ic{stroke-width:1.8}
-.tab.is-on{color:var(--sea)}
+.tabbar{height:calc(74px + var(--safe-b));border-top:1px solid #E8EBE6;background:#fff;padding:10px 6px var(--safe-b)}
+.tab{gap:5px;color:#66716A;font-weight:400;padding-bottom:0}
+.tab .ic{width:21px;height:21px;stroke-width:1.8}
+.tab span{font-size:11px;font-weight:400}
+.tab.is-on{color:#157347;font-weight:600}
+.tab.is-on span{font-weight:600}
 
 /* podstran */
 .lead__t{font-size:24px;font-weight:800;letter-spacing:-.03em}
@@ -442,7 +460,7 @@ body{background:var(--page,#EFECE6)}
 .card__price span{font-size:calc(13px * var(--txt-scale,1.4));color:var(--txt-color,inherit)}
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:calc(11.5px * var(--txt-scale,1.4));font-weight:800;padding:5px 11px;
       border-radius:999px;margin-top:9px}
-.pill.o{background:#E7F0FB;color:#2E60B0}
+.pill.o{background:#ECF0EA;color:#157347}
 .pill.c{background:#F5EDE9;color:#A9432A}
 .pill.easy{background:#E4F1EA;color:#12694A}
 .pill.mod{background:#FBF0DF;color:#9A6A16}
@@ -627,7 +645,7 @@ body{background:var(--page,#EFECE6)}
   .pc__n{font-size:16pt;font-weight:800;letter-spacing:-.02em;margin-top:5mm}
   .pc__s{font-size:9.5pt;font-weight:600;margin-top:2mm;line-height:1.45}
   .pc__s i{color:#6B7876;font-style:italic}
-  .pc__u{font-size:9pt;font-weight:700;color:#3B78DC;margin-top:4mm}
+  .pc__u{font-size:9pt;font-weight:700;color:#157347;margin-top:4mm}
 }
 
 /* ---- Smart360: privzete vrednosti naslovnice (appended, unscoped) ---- */

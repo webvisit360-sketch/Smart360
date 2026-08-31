@@ -64,11 +64,24 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
   const cTitle = tenant.coverTitle || tenant.name;
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
-  const showRating = tenant.coverShowRating !== false;
+  const reviewCount = Number(tenant.reviewsCount) || 0;
+  const ratingValue = Number.parseFloat(String(tenant.rating ?? ""));
+  const showRating =
+    tenant.coverShowRating !== false &&
+    reviewCount >= 1 &&
+    Number.isFinite(ratingValue);
+  const typeLabels: Record<string, Record<string, string>> = {
+    kamp: { sl: "Kamp", en: "Campsite", de: "Campingplatz", it: "Campeggio" },
+    hotel: { sl: "Hotel", en: "Hotel", de: "Hotel", it: "Hotel" },
+    apartmaji: { sl: "Apartmaji", en: "Apartments", de: "Apartments", it: "Appartamenti" },
+  };
+  const accommodationType = typeLabels[tenant.tenantType]?.[lang] ?? null;
+  const locationMeta = [accommodationType, tenant.creatorOriginRegion].filter(Boolean).join(" · ");
   const rating = (
     <>
-      <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
-      {tenant.rating || "5.0"} · {plural(tenant, lang, "reviews", Number(tenant.reviewsCount) || 0)}
+      <svg className="ic rating__star" viewBox="0 0 24 24"><use href="#i-star" /></svg>
+      <b className="rating__number">{tenant.rating}</b>
+      <span className="rating__remainder">· {plural(tenant, lang, "reviews", reviewCount)}</span>
     </>
   );
 
@@ -92,7 +105,11 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
         <div className="cover__txt">
           <h1>{cTitle}</h1>
           {cSub && <p>{cSub}</p>}
-          {showRating && <div className="cover__meta">{rating}</div>}
+          {showRating ? (
+            <div className="cover__meta rating">{rating}</div>
+          ) : locationMeta ? (
+            <div className="cover__meta">{locationMeta}</div>
+          ) : null}
         </div>
       </div>
     );
@@ -116,14 +133,11 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
 
       <div className="tcard">
         <h1 className="title">{cTitle}</h1>
-        {showRating && (
-          <div className="meta">
-            <svg className="ic" viewBox="0 0 24 24"><use href="#i-star" /></svg>
-            <b>{tenant.rating || "5.0"}</b><span className="sep">·</span>
-            <span>{plural(tenant, lang, "reviews", Number(tenant.reviewsCount) || 0)}</span>
-            {tenant.address && <><span className="sep">·</span><span>{tenant.address}</span></>}
-          </div>
-        )}
+        {showRating ? (
+          <div className="meta rating">{rating}</div>
+        ) : locationMeta ? (
+          <div className="sub">{locationMeta}</div>
+        ) : null}
         {tcardExtra}
       </div>
     </>

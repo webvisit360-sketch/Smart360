@@ -10,6 +10,7 @@ import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { wifiQrSvg } from "../lib/wifiQr";
 import { isAuthenticated } from "../lib/adminAuth";
+import { getHostResponseStats } from "../lib/hostResponseStats";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -64,8 +65,18 @@ async function buildPublicPayload(
   const joinQr = tenant.wifiSsid
     ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
     : null;
+  const responseStats = await getHostResponseStats(tenant.id);
   const payload = GetPublicTenantResponse.parse(
-    serialize({ ...tree, publicUrl, qrSvg, wifiQrSvg: joinQr, ui, plurals }),
+    serialize({
+      ...tree,
+      publicUrl,
+      qrSvg,
+      wifiQrSvg: joinQr,
+      ui,
+      plurals,
+      hostAnsweredMessageCount: responseStats.answeredCount,
+      hostResponseMedianMinutes: responseStats.medianMinutes,
+    }),
   );
   return { payload, tree, expiresAt: Date.now() + PAYLOAD_CACHE_TTL_MS };
 }

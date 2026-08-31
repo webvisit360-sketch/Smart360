@@ -152,6 +152,11 @@ export interface Tenant {
      */
   tenantType?: string | null;
   /**
+     * Verified origin region/display name used by Creator
+     * @nullable
+     */
+  creatorOriginRegion?: string | null;
+  /**
      * Source tenant when this one was duplicated; copies must be marked in the admin header
      * @nullable
      */

@@ -2924,6 +2924,9 @@ components:
         tenantType:
           type: ["string", "null"]
           description: "Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants"
+        creatorOriginRegion:
+          type: ["string", "null"]
+          description: Verified origin region/display name used by Creator
         copiedFromTenantId:
           type: ["string", "null"]
           description: Source tenant when this one was duplicated; copies must be marked in the admin header
@@ -3844,6 +3847,12 @@ components:
               additionalProperties:
                 type: object
                 additionalProperties: { type: string }
+            hostAnsweredMessageCount:
+              type: number
+              description: Real guest-to-host response cycles measured for this tenant
+            hostResponseMedianMinutes:
+              type: ["number", "null"]
+              description: Median response time rounded up to whole minutes; null until five cycles exist
           required: [sections, sitePlanImages, publicUrl, qrSvg]
     SearchResult:
       type: object

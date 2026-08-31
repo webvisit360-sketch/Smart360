@@ -1,0 +1,22 @@
+The guest home preview in the admin console renders a design that was replaced. The binding specification is gost-domov-2030.html and it has not been applied. Do not redesign anything — the skeleton is fixed. Apply exactly these corrections and nothing else.
+
+FIRST, REPORT BEFORE CHANGING ANYTHING:
+Does the admin preview render the same component the guest sees, or a separate copy of it? If it is a separate copy, say so plainly and list both file paths. A duplicated skeleton will drift again and must be reported before it is patched.
+
+THE CORRECTIONS:
+
+1. Rating. Never display a rating until at least one real review exists. No "5,0 · 0 ocen", no "Novo", no empty stars. In its place show accommodation type and region, both of which are already in the data: "Kamp · Zgornja Savinjska dolina". When reviews exist: star #DD9A2B, number 600 weight in #121A14, remainder #66716A, 13px.
+
+2. Response time. Never display a response time until it is measured. It appears only after five answered messages and states the median rounded up ("Običajno odgovorimo v 2 urah"). Until then the second line names the person who answers ("Odgovarja Matjaž, gostitelj"). If no name is entered, there is no second line at all.
+
+3. Contact button. Background #157347, full width 334, height 48, radius 13, text 15/600 white, icon 16, gap 8, 14 above it. It is currently blue.
+
+4. Bottom navigation. Height 74, background #FFFFFF, 1px top rule #E8EBE6, five tabs. Icon 21, label 11, gap 5. Active #157347 600, inactive #66716A 400. The active tab is currently blue.
+
+5. Remove every remaining blue in the guest home: the share and language icons top right, and the search icon. There is no blue anywhere in this product.
+
+6. Placeholder photography. A single stock photograph is currently repeated in every category tile and as the host avatar. Where a place has no photograph, the card carries no photograph — category icon plus the label "fotografija manjka". This is deliberately plain so the host sees what to send. The host avatar is the host's own photograph, or their initial on #ECF0EA. Never a stock image.
+
+7. The "Odkrijte okolico" heading is clipped behind the status bar pill when scrolled. Fix the top inset.
+
+Report which of the seven you changed, and confirm on a real device that no blue remains anywhere in the guest home. Report and STOP.

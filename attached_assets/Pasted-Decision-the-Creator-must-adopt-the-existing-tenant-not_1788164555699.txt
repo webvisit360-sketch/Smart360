@@ -1,0 +1,43 @@
+Decision: the Creator must adopt the existing tenant, not create a second one.
+
+Target tenant, verbatim:
+  id: 177e633a-6030-4eca-8ce8-e0a0afdff599
+  name: Piknik prostor in kamp Gril
+  creator_draft: false
+  latitude: NULL
+  longitude: NULL
+  origin region: NULL
+
+WHAT TO CHANGE
+
+Step 1 of the Creator writes the confirmed origin into the tenant whose cockpit the operator currently has open. It never inserts a second tenant row.
+
+The tenant is identified by its ID taken from the cockpit context. Never by name. Two tenants may legitimately share a name, and adopting the wrong row by name matching would be worse than creating a duplicate, because it would be silent.
+
+On confirming the origin, the open tenant receives:
+  - latitude and longitude from the selected place block of the Maps URL
+  - the Google Maps feature ID
+  - the operator-entered address
+  - origin region
+  - creator_draft set true
+  - the origin verification status, verified or unverified with its reason
+
+If the open tenant already carries an origin, do not overwrite it silently. Show what is stored, show what the link resolves to, and require an explicit operator action to replace it. Record who replaced it and when.
+
+This is a permanent rule, not a fix for this one tenant. Every future tenant is created in the admin first and then filled in by the Creator. The Creator must never be a second source of tenant rows.
+
+BUTTON LABEL
+
+"Ustvari neobjavljen osnutek" describes an insertion that no longer happens. Change it to "Potrdi izhodišče", matching the section heading above it.
+
+VERIFY BEFORE REPORTING
+
+  - After confirming the origin for this tenant, exactly one tenant row named "Piknik prostor in kamp Gril" exists in production.
+  - That row is 177e633a-6030-4eca-8ce8-e0a0afdff599.
+  - Its stored coordinates are 46.3536005, 14.8509723 and its feature ID is /g/11s57htx7l.
+  - creator_draft is true.
+  - The stored address is "Ter 35, 3333 Ljubno ob Savinji".
+
+Report those five values verbatim from the database, not from the interface.
+
+Do not publish. Do not start any other task. Report and STOP.
