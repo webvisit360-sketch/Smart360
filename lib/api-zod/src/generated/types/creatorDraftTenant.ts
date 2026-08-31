@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { CreatorDraftTenantOriginVerificationStatus } from './creatorDraftTenantOriginVerificationStatus';
 import type { CreatorDraftTenantTenantType } from './creatorDraftTenantTenantType';
 
 export interface CreatorDraftTenant {
@@ -17,4 +18,7 @@ export interface CreatorDraftTenant {
   longitude: number;
   tenantType: CreatorDraftTenantTenantType;
   isPublished: boolean;
+  originVerificationStatus: CreatorDraftTenantOriginVerificationStatus;
+  /** @nullable */
+  originVerificationReason: string | null;
 }

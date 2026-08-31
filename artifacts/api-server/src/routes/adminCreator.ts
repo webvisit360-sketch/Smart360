@@ -180,7 +180,9 @@ router.post("/admin/creator/draft-tenants", async (req, res): Promise<void> => {
     // Re-resolve the original URL; no browser-provided coordinates are used.
     const origin = await resolveCreatorOrigin(input.data.mapUrl);
     const base = draftSlugBase(name);
-    const signature = `${normalizedName(name)}\u0000${origin.expandedUrl}`;
+    // PostgreSQL text parameters cannot contain NUL bytes. JSON preserves the
+    // tuple boundary without making the advisory-lock key ambiguous.
+    const signature = JSON.stringify([normalizedName(name), origin.expandedUrl]);
     const tenant = await db.transaction(async (tx) => {
       // Serialize identical origin/name requests and same-base slug allocation.
       // Hash collisions only serialize unrelated creations; they cannot merge them.
@@ -221,7 +223,20 @@ router.post("/admin/creator/draft-tenants", async (req, res): Promise<void> => {
       }
       throw new Error("Za nastanitev ni mogoče ustvariti prostega naslova.");
     });
-    res.status(201).json(CreateCreatorDraftTenantResponse.parse(serialize(tenant)));
+    if (origin.originVerificationStatus === "unverified") {
+      req.log.warn({
+        tenantId: tenant.id,
+        latitude: origin.lat,
+        longitude: origin.lng,
+        originVerificationStatus: origin.originVerificationStatus,
+        originVerificationReason: origin.originVerificationReason,
+      }, "Creator draft created with an unverified pin position");
+    }
+    res.status(201).json(CreateCreatorDraftTenantResponse.parse(serialize({
+      ...tenant,
+      originVerificationStatus: origin.originVerificationStatus,
+      originVerificationReason: origin.originVerificationReason,
+    })));
   } catch (error) {
     if (error instanceof CreatorDraftConflictError) {
       res.status(409).json({ error: "Osnutek za to nastanitev in izvor že obstaja." });
@@ -232,7 +247,7 @@ router.post("/admin/creator/draft-tenants", async (req, res): Promise<void> => {
       return;
     }
     req.log.warn({ error }, "Creator draft tenant creation failed");
-    res.status(502).json({ error: "Bližnje znane točke pri Nominatimu ni bilo mogoče preveriti.", code: "nominatim-failed" });
+    res.status(500).json({ error: "Osnutka ni bilo mogoče ustvariti.", code: "creator-draft-failed" });
   }
 });
 

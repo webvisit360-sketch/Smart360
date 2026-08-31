@@ -237,9 +237,21 @@ export function KreatorOriginConfirmation({
                   <span className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
                     Najbližja znana točka (Nominatim)
                   </span>
-                  <p className="text-[15px] font-[600] leading-snug">
-                    {previewMutation.data.nominatimDisplayName}
-                  </p>
+                  {previewMutation.data.originVerificationStatus === "verified" ? (
+                    <p className="text-[15px] font-[600] leading-snug">
+                      {previewMutation.data.nominatimDisplayName}
+                    </p>
+                  ) : (
+                    <div className="rounded-[12px] border border-amber-300 bg-amber-50 p-3 text-amber-950">
+                      <p className="text-[14px] font-[800]">Položaj pina ni preverjen</p>
+                      <p className="mt-1 text-[12px] font-[600]">
+                        {previewMutation.data.originVerificationReason || "Nominatim trenutno ni dosegljiv."}
+                      </p>
+                      <p className="mt-1 text-[12px]">
+                        Osnutek lahko vseeno ustvarite; vneseni naslov ostane nespremenjen.
+                      </p>
+                    </div>
+                  )}
                   <p className="text-[12px] leading-relaxed text-muted-foreground">
                     To je samo preverjanje položaja pina, ne naslov namestitve.
                   </p>
@@ -250,7 +262,7 @@ export function KreatorOriginConfirmation({
                     Izhodiščne koordinate
                   </span>
                   <p className="text-[14px] font-mono font-[600] text-foreground">
-                    {previewMutation.data.lat.toFixed(6)}, {previewMutation.data.lng.toFixed(6)}
+                    {previewMutation.data.lat}, {previewMutation.data.lng}
                   </p>
                   <p className="text-[12px] text-muted-foreground">
                     Vir povezave: {previewMutation.data.source === "place" ? "Google Maps kraj" : "Google Maps iskanje"}

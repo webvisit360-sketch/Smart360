@@ -822,8 +822,10 @@ export const PreviewCreatorOriginResponse = zod.object({
   "placeId": zod.string().nullable(),
   "source": zod.enum(['search', 'place']),
   "expandedUrl": zod.string(),
-  "nominatimDisplayName": zod.string(),
-  "referenceSource": zod.enum(['nominatim'])
+  "nominatimDisplayName": zod.string().nullable(),
+  "referenceSource": zod.enum(['nominatim']),
+  "originVerificationStatus": zod.enum(['verified', 'unverified']),
+  "originVerificationReason": zod.string().nullable()
 })
 
 
@@ -853,7 +855,9 @@ export const CreateCreatorDraftTenantResponse = zod.object({
   "latitude": zod.number(),
   "longitude": zod.number(),
   "tenantType": zod.enum(['kamp', 'hotel', 'apartmaji']),
-  "isPublished": zod.boolean()
+  "isPublished": zod.boolean(),
+  "originVerificationStatus": zod.enum(['verified', 'unverified']),
+  "originVerificationReason": zod.string().nullable()
 })
 
 

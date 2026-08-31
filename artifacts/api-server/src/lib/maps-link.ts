@@ -112,16 +112,24 @@ export function parseGoogleMapsLocationUrl(
 
   const placeMatch = /^\/maps\/place\/([^/?#]+)/.exec(url.pathname);
   if (!placeMatch) return null;
-  const coordinates = /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/.exec(
-    `${url.pathname}${url.search}${url.hash}`,
+  const payload = `${url.pathname}${url.search}${url.hash}`;
+  const coordinateMatches = [
+    ...payload.matchAll(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/g),
+  ];
+  if (coordinateMatches.length === 0) return null;
+
+  // Multi-place URLs carry earlier search-context blocks before the selected
+  // place block. Google serializes the selected place last; keep its pin and
+  // feature ID together instead of combining the path name with the first pin.
+  const selectedCoordinates = coordinateMatches.at(-1)!;
+  const selectedBlock = payload.slice(selectedCoordinates.index);
+  const valid = validCoordinates(
+    Number(selectedCoordinates[1]),
+    Number(selectedCoordinates[2]),
   );
-  if (!coordinates) return null;
-  const valid = validCoordinates(Number(coordinates[1]), Number(coordinates[2]));
   if (!valid) return null;
 
-  const placeIdMatch = /!16s([^!/?&#]+)/.exec(
-    `${url.pathname}${url.search}${url.hash}`,
-  );
+  const placeIdMatch = /!16s([^!/?&#]+)/.exec(selectedBlock);
   return {
     ...valid,
     name: decodeMapsPathPart(placeMatch[1]!),

@@ -7,6 +7,7 @@ import {
   parseGoogleMapsLocationUrl,
   parseGoogleMapsLocationUrlOrThrow,
 } from "../lib/maps-link";
+import { resolveCreatorOrigin } from "../lib/creatorOrigin";
 
 const HOTEL_VIEWPORT = { lat: 46.2680508, lng: 15.1860367 };
 const MENINA_VIEWPORT = { lat: 46.3114597, lng: 14.9067248 };
@@ -58,6 +59,39 @@ test("offline: Camping MENINA uses !3d/!4d and never the @ viewport", () => {
     MENINA_VIEWPORT,
     "parser silently used Camping MENINA @ viewport coordinates",
   );
+});
+
+test("offline: multi-place URL keeps the selected place pin and feature ID together", () => {
+  const result = parseGoogleMapsLocationUrl(
+    "https://www.google.com/maps/place/Piknik+prostor+in+kamp+Gril/@46.3499833,14.8470013,1311m/data=!3m1!1e3!4m14!1m7!3m6!1s0x47655bac1c180a51:0xec9821cb7ac81b4b!2sGlamping+Gril!8m2!3d46.35001!4d14.850273!16s%2Fg%2F11vyqnsc6n!3m5!1s0x47655bc349c591dd:0xd66c5a12dbe4dc27!8m2!3d46.3536005!4d14.8509723!16s%2Fg%2F11s57htx7l",
+  );
+  assert.deepEqual(result, {
+    lat: 46.3536005,
+    lng: 14.8509723,
+    name: "Piknik prostor in kamp Gril",
+    placeId: "/g/11s57htx7l",
+    source: "place",
+  });
+});
+
+test("offline: unavailable Nominatim records an unverified pin without rejecting origin parsing", async () => {
+  let reverseLookupCalls = 0;
+  const result = await resolveCreatorOrigin(
+    "https://www.google.com/maps/place/Piknik+prostor+in+kamp+Gril/@46.3499833,14.8470013,1311m/data=!3m1!1e3!4m14!1m7!3m6!1s0x47655bac1c180a51:0xec9821cb7ac81b4b!2sGlamping+Gril!8m2!3d46.35001!4d14.850273!16s%2Fg%2F11vyqnsc6n!3m5!1s0x47655bc349c591dd:0xd66c5a12dbe4dc27!8m2!3d46.3536005!4d14.8509723!16s%2Fg%2F11s57htx7l",
+    {
+      fetchFn: async () => {
+        reverseLookupCalls += 1;
+        return new Response(null, { status: 429 });
+      },
+    },
+  );
+  assert.equal(result.lat, 46.3536005);
+  assert.equal(result.lng, 14.8509723);
+  assert.equal(result.placeId, "/g/11s57htx7l");
+  assert.equal(result.originVerificationStatus, "unverified");
+  assert.equal(result.originVerificationReason, "Nominatim HTTP 429");
+  assert.equal(result.nominatimDisplayName, null);
+  assert.equal(reverseLookupCalls, 1, "origin verification must not retry in a loop");
 });
 
 test("offline: @ viewport alone is always rejected", () => {

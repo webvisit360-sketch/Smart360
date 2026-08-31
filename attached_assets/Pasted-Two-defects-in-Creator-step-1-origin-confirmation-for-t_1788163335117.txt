@@ -1,0 +1,28 @@
+Two defects in Creator step 1 (origin confirmation) for tenant "Piknik prostor in kamp Gril". Do not fix anything else. Report and STOP when both are verified.
+
+DEFECT 1 — the place parser picks the wrong coordinates when a Maps URL contains more than one place.
+
+A Google Maps place URL can carry several !3d!4d coordinate pairs in its data segment: earlier blocks are search context, and the block belonging to the place named in the URL path is the one the operator actually selected. The parser currently takes the first pair it finds. It must take the pair belonging to the selected place — the block whose feature ID corresponds to the place named in the URL path.
+
+Test with this exact URL:
+
+https://www.google.com/maps/place/Piknik+prostor+in+kamp+Gril/@46.3499833,14.8470013,1311m/data=!3m1!1e3!4m14!1m7!3m6!1s0x47655bac1c180a51:0xec9821cb7ac81b4b!2sGlamping+Gril!8m2!3d46.35001!4d14.850273!16s%2Fg%2F11vyqnsc6n!3m5!1s0x47655bc349c591dd:0xd66c5a12dbe4dc27!8m2!3d46.3536005!4d14.8509723!16s%2Fg%2F11s57htx7l
+
+Required result: 46.3536005, 14.8509723, feature ID /g/11s57htx7l
+Currently produced: 46.350010, 14.850273, feature ID /g/11vyqnsc6n — a different facility 400 m away.
+
+The visible symptom that identifies this bug in the UI: the name field shows the selected place while the feature ID belongs to a different one. Name and coordinates are being read from different blocks. They must come from the same block.
+
+The @ viewport coordinates remain excluded, as before.
+
+DEFECT 2 — a failed Nominatim reverse lookup blocks draft creation.
+
+Creating the unpublished draft failed with "Bližnje znane točke pri Nominatimu ni bilo mogoče preveriti", while the field above it had already displayed a result. This is most likely the one-request-per-second limit being hit on a second call.
+
+Nominatim is not the source of the address here. The address is operator-entered and was already valid. The reverse lookup is only a pin-position check. An unavailable or rate-limited geocoder is an infrastructure failure and must never become an editorial refusal — the same rule that already governs the sieve.
+
+Required behaviour: when the reverse lookup fails, record the position as unverified, show that plainly, and let draft creation proceed. Do not retry in a loop and do not silently swallow the failure — record status and reason.
+
+BEFORE REPORTING: state whether any partial tenant row was written by the failed creation attempt, and if so, what its stored origin coordinates are. Then re-run the test URL above and report the parsed coordinates and feature ID verbatim.
+
+Report and STOP.

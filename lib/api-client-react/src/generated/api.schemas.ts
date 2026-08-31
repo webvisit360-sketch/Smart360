@@ -315,6 +315,14 @@ export const CreatorOriginPreviewReferenceSource = {
   nominatim: 'nominatim',
 } as const;
 
+export type CreatorOriginPreviewOriginVerificationStatus = typeof CreatorOriginPreviewOriginVerificationStatus[keyof typeof CreatorOriginPreviewOriginVerificationStatus];
+
+
+export const CreatorOriginPreviewOriginVerificationStatus = {
+  verified: 'verified',
+  unverified: 'unverified',
+} as const;
+
 export interface CreatorOriginPreview {
   lat: number;
   lng: number;
@@ -324,8 +332,12 @@ export interface CreatorOriginPreview {
   placeId: string | null;
   source: CreatorOriginPreviewSource;
   expandedUrl: string;
-  nominatimDisplayName: string;
+  /** @nullable */
+  nominatimDisplayName: string | null;
   referenceSource: CreatorOriginPreviewReferenceSource;
+  originVerificationStatus: CreatorOriginPreviewOriginVerificationStatus;
+  /** @nullable */
+  originVerificationReason: string | null;
 }
 
 export type CreatorDraftTenantInputTenantType = typeof CreatorDraftTenantInputTenantType[keyof typeof CreatorDraftTenantInputTenantType];
@@ -362,6 +374,14 @@ export const CreatorDraftTenantTenantType = {
   apartmaji: 'apartmaji',
 } as const;
 
+export type CreatorDraftTenantOriginVerificationStatus = typeof CreatorDraftTenantOriginVerificationStatus[keyof typeof CreatorDraftTenantOriginVerificationStatus];
+
+
+export const CreatorDraftTenantOriginVerificationStatus = {
+  verified: 'verified',
+  unverified: 'unverified',
+} as const;
+
 export interface CreatorDraftTenant {
   id: string;
   slug: string;
@@ -372,6 +392,9 @@ export interface CreatorDraftTenant {
   longitude: number;
   tenantType: CreatorDraftTenantTenantType;
   isPublished: boolean;
+  originVerificationStatus: CreatorDraftTenantOriginVerificationStatus;
+  /** @nullable */
+  originVerificationReason: string | null;
 }
 
 export type CreatorProposalTranslationLanguage = typeof CreatorProposalTranslationLanguage[keyof typeof CreatorProposalTranslationLanguage];

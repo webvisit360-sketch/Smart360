@@ -9,20 +9,30 @@ export { GoogleMapsParseError, GoogleMapsRedirectError };
 
 export type ResolvedCreatorOrigin = Awaited<ReturnType<typeof resolveCreatorOrigin>>;
 
+function originVerificationFailureReason(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  return "Nominatim reverse lookup failed.";
+}
+
 /**
  * Resolves the submitted URL on the server. This is deliberately shared by
  * preview and confirmation: preview has no persistence side effects, while a
  * confirmation never trusts coordinates or an address displayed by a browser.
  */
-export async function resolveCreatorOrigin(mapUrl: string): Promise<{
+export async function resolveCreatorOrigin(
+  mapUrl: string,
+  options: { fetchFn?: typeof fetch } = {},
+): Promise<{
   lat: number;
   lng: number;
   name: string | null;
   placeId: string | null;
   source: "search" | "place";
   expandedUrl: string;
-  nominatimDisplayName: string;
+  nominatimDisplayName: string | null;
   referenceSource: "nominatim";
+  originVerificationStatus: "verified" | "unverified";
+  originVerificationReason: string | null;
 }> {
   const originalUrl = mapUrl.trim();
   let isShortLink = false;
@@ -45,22 +55,37 @@ export async function resolveCreatorOrigin(mapUrl: string): Promise<{
   reverseUrl.searchParams.set("lon", String(parsed.lng));
   reverseUrl.searchParams.set("zoom", "18");
   reverseUrl.searchParams.set("addressdetails", "1");
-  const response = await fetch(reverseUrl, {
-    headers: {
-      "User-Agent": "Smart360 Creator origin confirmation (admin contact via replit deployment)",
-    },
-  });
-  if (!response.ok) throw new Error(`Nominatim ${response.status}`);
-  const data = (await response.json()) as { display_name?: unknown };
-  const nominatimDisplayName =
-    typeof data.display_name === "string" ? data.display_name : null;
-  if (!nominatimDisplayName) {
-    throw new Error("Nominatim ni vrnil bližnje znane točke.");
+  try {
+    const response = await (options.fetchFn ?? fetch)(reverseUrl, {
+      headers: {
+        "User-Agent": "Smart360 Creator origin confirmation (admin contact via replit deployment)",
+      },
+    });
+    if (!response.ok) throw new Error(`Nominatim HTTP ${response.status}`);
+    const data = (await response.json()) as { display_name?: unknown };
+    const nominatimDisplayName =
+      typeof data.display_name === "string" && data.display_name.trim()
+        ? data.display_name.trim()
+        : null;
+    if (!nominatimDisplayName) {
+      throw new Error("Nominatim ni vrnil bližnje znane točke.");
+    }
+    return {
+      ...parsed,
+      expandedUrl,
+      nominatimDisplayName,
+      referenceSource: "nominatim",
+      originVerificationStatus: "verified",
+      originVerificationReason: null,
+    };
+  } catch (error) {
+    return {
+      ...parsed,
+      expandedUrl,
+      nominatimDisplayName: null,
+      referenceSource: "nominatim",
+      originVerificationStatus: "unverified",
+      originVerificationReason: originVerificationFailureReason(error),
+    };
   }
-  return {
-    ...parsed,
-    expandedUrl,
-    nominatimDisplayName,
-    referenceSource: "nominatim",
-  };
 }

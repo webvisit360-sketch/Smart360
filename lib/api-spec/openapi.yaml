@@ -2386,9 +2386,11 @@ components:
         placeId: { type: ["string", "null"] }
         source: { type: string, enum: [search, place] }
         expandedUrl: { type: string }
-        nominatimDisplayName: { type: string }
+        nominatimDisplayName: { type: ["string", "null"] }
         referenceSource: { type: string, enum: [nominatim] }
-      required: [lat, lng, name, placeId, source, expandedUrl, nominatimDisplayName, referenceSource]
+        originVerificationStatus: { type: string, enum: [verified, unverified] }
+        originVerificationReason: { type: ["string", "null"] }
+      required: [lat, lng, name, placeId, source, expandedUrl, nominatimDisplayName, referenceSource, originVerificationStatus, originVerificationReason]
     CreatorDraftTenantInput:
       type: object
       additionalProperties: false
@@ -2410,7 +2412,9 @@ components:
         longitude: { type: number }
         tenantType: { type: string, enum: [kamp, hotel, apartmaji] }
         isPublished: { type: boolean }
-      required: [id, slug, name, address, mapUrl, latitude, longitude, tenantType, isPublished]
+        originVerificationStatus: { type: string, enum: [verified, unverified] }
+        originVerificationReason: { type: ["string", "null"] }
+      required: [id, slug, name, address, mapUrl, latitude, longitude, tenantType, isPublished, originVerificationStatus, originVerificationReason]
     CreatorProposalTranslation:
       type: object
       properties:
