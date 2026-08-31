@@ -2403,8 +2403,9 @@ components:
       properties:
         mapUrl: { type: string, minLength: 1 }
         address: { type: string, minLength: 1, maxLength: 300 }
+        municipality: { type: string, minLength: 1, maxLength: 120 }
         replaceExistingOrigin: { type: boolean }
-      required: [mapUrl, address]
+      required: [mapUrl, address, municipality]
     CreatorTenantOrigin:
       type: object
       properties:
@@ -2414,8 +2415,9 @@ components:
         longitude: { type: number }
         creatorDraft: { type: boolean }
         creatorOriginRegion: { type: ["string", "null"] }
+        municipality: { type: string }
         replacedExistingOrigin: { type: boolean }
-      required: [id, address, latitude, longitude, creatorDraft, creatorOriginRegion, replacedExistingOrigin]
+      required: [id, address, latitude, longitude, creatorDraft, creatorOriginRegion, municipality, replacedExistingOrigin]
     CreatorProposalTranslation:
       type: object
       properties:
@@ -2930,6 +2932,9 @@ components:
         creatorOriginRegion:
           type: ["string", "null"]
           description: Verified origin region/display name used by Creator
+        municipality:
+          type: ["string", "null"]
+          description: Operator-entered municipality used to select curated Creator sources
         creatorDraft: { type: boolean }
         copiedFromTenantId:
           type: ["string", "null"]

@@ -186,6 +186,9 @@ export const tenantsTable = pgTable("tenants", {
   // Machine-resolved Nominatim evidence used by the server-owned C1 prompt.
   // It is intentionally separate from the operator-editable postal address.
   creatorOriginRegion: text("creator_origin_region"),
+  // Operator-entered municipality used to select the curated Creator source
+  // list. It is never inferred from Nominatim or the postal address.
+  municipality: text("municipality"),
   // Yearly maintenance (datum-in-obnova-narocnine.md). createdAt is shown as
   // "Vzpostavljeno" on the tenant card; existing rows get the migration date.
   createdAt: timestamp("created_at", { withTimezone: true })

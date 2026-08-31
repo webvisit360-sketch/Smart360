@@ -96,12 +96,25 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
     {
       mapUrl: GRIL_MAP_URL,
       address: "Ter 35, 3333 Ljubno ob Savinji",
+      municipality: "Ljubno ob Savinji",
     },
   );
   assert.equal(confirmed.status, 200);
   const confirmedBody = await confirmed.json() as Record<string, unknown>;
   assert.equal(confirmedBody.id, targetId);
   assert.equal(confirmedBody.replacedExistingOrigin, false);
+
+  const retiredRun = await jreq(
+    base,
+    "POST",
+    `/admin/tenants/${targetId}/creator/runs`,
+    ownerCookie,
+  );
+  assert.equal(retiredRun.status, 410);
+  assert.equal(
+    (await retiredRun.json() as { code: string }).code,
+    "creator-c1-retired",
+  );
 
   const [{ value: afterCount }] = await db.select({ value: count() }).from(tenantsTable);
   assert.equal(afterCount, beforeCount, "Creator confirmation must not insert a tenant");
@@ -115,6 +128,7 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   assert.equal(target!.creatorDraft, true);
   assert.equal(target!.address, "Ter 35, 3333 Ljubno ob Savinji");
   assert.equal(target!.creatorOriginRegion, "Ljubno ob Savinji, Savinjska, Slovenija");
+  assert.equal(target!.municipality, "Ljubno ob Savinji");
   assert.equal(target!.mapUrl, null, "Creator must not persist extra origin fields");
 
   const [sameNamedOther] = await db
@@ -132,6 +146,7 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
     {
       mapUrl: MENINA_MAP_URL,
       address: "Varpolje 105",
+      municipality: "Rečica ob Savinji",
     },
   );
   assert.equal(blocked.status, 409, "stored origin must require explicit replacement");
@@ -151,6 +166,7 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
     {
       mapUrl: MENINA_MAP_URL,
       address: "Varpolje 105",
+      municipality: "Rečica ob Savinji",
       replaceExistingOrigin: true,
     },
   );

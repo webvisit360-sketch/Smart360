@@ -14,5 +14,10 @@ export interface ConfirmCreatorTenantOriginInput {
      * @maxLength 300
      */
   address: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  municipality: string;
   replaceExistingOrigin?: boolean;
 }

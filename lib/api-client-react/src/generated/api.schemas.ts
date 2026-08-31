@@ -348,6 +348,11 @@ export interface ConfirmCreatorTenantOriginInput {
      * @maxLength 300
      */
   address: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  municipality: string;
   replaceExistingOrigin?: boolean;
 }
 
@@ -359,6 +364,7 @@ export interface CreatorTenantOrigin {
   creatorDraft: boolean;
   /** @nullable */
   creatorOriginRegion: string | null;
+  municipality: string;
   replacedExistingOrigin: boolean;
 }
 
@@ -977,6 +983,11 @@ export interface Tenant {
      * @nullable
      */
   creatorOriginRegion?: string | null;
+  /**
+     * Operator-entered municipality used to select curated Creator sources
+     * @nullable
+     */
+  municipality?: string | null;
   creatorDraft?: boolean;
   /**
      * Source tenant when this one was duplicated; copies must be marked in the admin header

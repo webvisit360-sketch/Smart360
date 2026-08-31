@@ -14,5 +14,6 @@ export interface CreatorTenantOrigin {
   creatorDraft: boolean;
   /** @nullable */
   creatorOriginRegion: string | null;
+  municipality: string;
   replacedExistingOrigin: boolean;
 }

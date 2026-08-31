@@ -80,11 +80,13 @@ export function KreatorOriginConfirmation({
     latitude?: number | null;
     longitude?: number | null;
     creatorOriginRegion?: string | null;
+    municipality?: string | null;
   };
   onConfirmed?: () => void;
 }) {
   const [mapUrl, setMapUrl] = useState("");
   const [tenantAddress, setTenantAddress] = useState(tenant.address ?? "");
+  const [municipality, setMunicipality] = useState(tenant.municipality ?? "");
   const [replaceExistingOrigin, setReplaceExistingOrigin] = useState(false);
 
   const previewMutation = usePreviewCreatorOrigin({
@@ -119,6 +121,7 @@ export function KreatorOriginConfirmation({
       data: {
         mapUrl: mapUrl.trim(),
         address: tenantAddress.trim(),
+        municipality: municipality.trim(),
         replaceExistingOrigin,
       },
     });
@@ -146,6 +149,23 @@ export function KreatorOriginConfirmation({
 
       <Card>
         <CardContent className="p-6 flex flex-col gap-5">
+          <div className="flex flex-col gap-3">
+            <Label htmlFor="creatorMunicipality" className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
+              Občina
+            </Label>
+            <Input
+              id="creatorMunicipality"
+              data-testid="creator-municipality-input"
+              value={municipality}
+              onChange={(event) => setMunicipality(event.target.value)}
+              placeholder="Npr. Ljubno ob Savinji"
+              className="bg-white font-[600]"
+              autoComplete="address-level2"
+            />
+            <p className="text-[12px] text-muted-foreground">
+              Vnesite ročno. Kreator občine ne določa iz naslova ali zemljevida.
+            </p>
+          </div>
           <form onSubmit={handlePreview} className="flex flex-col gap-3">
             <Label htmlFor="mapUrl" className="text-[12.5px] uppercase tracking-widest font-[800] text-muted-foreground">
               Povezava z zemljevida (Google Maps)
@@ -287,7 +307,7 @@ export function KreatorOriginConfirmation({
                 ) : (
                   <Button 
                     onClick={handleConfirm}
-                    disabled={!tenantAddress.trim() || confirmMutation.isPending || (hasStoredOrigin && !replaceExistingOrigin)}
+                    disabled={!tenantAddress.trim() || !municipality.trim() || confirmMutation.isPending || (hasStoredOrigin && !replaceExistingOrigin)}
                     className="w-full text-[15px] h-[46px] rounded-[13px]"
                   >
                     {confirmMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

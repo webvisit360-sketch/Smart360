@@ -132,6 +132,85 @@ export const creatorRunsTable = pgTable(
   ],
 );
 
+/** Municipality-scoped source registry for the source-first Creator.
+ * Content retrieval is permitted only after an owner changes status to
+ * approved; proposal-time robots checks do not retrieve content pages. */
+export const creatorSourcesTable = pgTable(
+  "creator_sources",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    municipality: text("municipality").notNull(),
+    label: text("label").notNull(),
+    sourceKind: text("source_kind").notNull(),
+    url: text("url").notNull(),
+    canonicalUrl: text("canonical_url").notNull(),
+    status: text("status").notNull().default("proposed"),
+    approvedBy: uuid("approved_by").references(() => adminUsersTable.id),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (t) => [
+    check("creator_sources_status_check", sql`${t.status} IN ('proposed','approved','rejected','revoked')`),
+    check(
+      "creator_sources_approval_check",
+      sql`${t.status} <> 'approved' OR (${t.approvedBy} IS NOT NULL AND ${t.approvedAt} IS NOT NULL)`,
+    ),
+    uniqueIndex("creator_sources_municipality_url_uq").on(t.municipality, t.canonicalUrl),
+    index("creator_sources_municipality_status_idx").on(t.municipality, t.status),
+  ],
+);
+
+/** Immutable robots.txt retrieval and authorization evidence. The latest
+ * unexpired successful row is the controlled cache entry. */
+export const creatorRobotsEvidenceTable = pgTable(
+  "creator_robots_evidence",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sourceId: uuid("source_id").notNull().references(() => creatorSourcesTable.id, { onDelete: "cascade" }),
+    requestedRobotsUrl: text("requested_robots_url").notNull(),
+    finalRobotsUrl: text("final_robots_url"),
+    userAgent: text("user_agent").notNull(),
+    decision: text("decision").notNull(),
+    allowed: boolean("allowed").notNull(),
+    httpStatus: integer("http_status"),
+    policyText: text("policy_text"),
+    policySha256: text("policy_sha256"),
+    matchedRule: text("matched_rule"),
+    error: text("error"),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    check("creator_robots_evidence_decision_check", sql`${t.decision} IN ('allowed','disallowed','error')`),
+    check("creator_robots_evidence_allow_check", sql`${t.allowed} = (${t.decision} = 'allowed')`),
+    index("creator_robots_evidence_source_expiry_idx").on(t.sourceId, t.expiresAt, t.fetchedAt),
+  ],
+);
+
+/** Immutable extracted page snapshots. No row can exist without the exact
+ * robots evidence that authorized its retrieval. */
+export const creatorSourceContentsTable = pgTable(
+  "creator_source_contents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sourceId: uuid("source_id").notNull().references(() => creatorSourcesTable.id, { onDelete: "cascade" }),
+    robotsEvidenceId: uuid("robots_evidence_id").notNull().references(() => creatorRobotsEvidenceTable.id),
+    sourceUrl: text("source_url").notNull(),
+    finalUrl: text("final_url").notNull(),
+    httpStatus: integer("http_status").notNull(),
+    contentType: text("content_type").notNull(),
+    title: text("title"),
+    extractedText: text("extracted_text").notNull(),
+    contentSha256: text("content_sha256").notNull(),
+    retrievedAt: timestamp("retrieved_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("creator_source_contents_source_hash_uq").on(t.sourceId, t.contentSha256),
+    index("creator_source_contents_source_retrieved_idx").on(t.sourceId, t.retrievedAt),
+  ],
+);
+
 /** C1 content is queue-only; no guest item is created from these rows. */
 export const creatorProposalTranslationsTable = pgTable(
   "creator_proposal_translations",
@@ -199,3 +278,6 @@ export type CreatorVerificationAttempt = typeof creatorVerificationAttemptsTable
 export type CreatorVerificationCandidate = typeof creatorVerificationCandidatesTable.$inferSelect;
 export type CreatorRun = typeof creatorRunsTable.$inferSelect;
 export type CreatorProposalTranslation = typeof creatorProposalTranslationsTable.$inferSelect;
+export type CreatorSource = typeof creatorSourcesTable.$inferSelect;
+export type CreatorRobotsEvidence = typeof creatorRobotsEvidenceTable.$inferSelect;
+export type CreatorSourceContent = typeof creatorSourceContentsTable.$inferSelect;

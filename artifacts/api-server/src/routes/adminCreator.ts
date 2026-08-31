@@ -17,7 +17,6 @@ import {
   PreviewCreatorOriginBody,
   PreviewCreatorOriginResponse,
   RejectCreatorProposalResponse,
-  StartCreatorRunResponse,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import {
@@ -34,13 +33,8 @@ import {
   GoogleMapsRedirectError,
   resolveCreatorOrigin,
 } from "../lib/creatorOrigin";
-import { CREATOR_C1_PRICING, runCreatorC1, type CreatorC1Report } from "../lib/creatorC1";
+import { CREATOR_C1_PRICING, type CreatorC1Report } from "../lib/creatorC1";
 import { logChange } from "../lib/changelog";
-import {
-  claimCreatorRunOnce,
-  isPreservedMeninaEvidenceTenant,
-  MENINA_AUTHORIZED_RUN_COUNT,
-} from "../lib/creatorMeninaProductionRun";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -168,8 +162,9 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
     return;
   }
   const address = input.data.address.replace(/\s+/g, " ").trim();
-  if (!address) {
-    res.status(400).json({ error: "Naslov ne sme biti prazen." });
+  const municipality = input.data.municipality.replace(/\s+/g, " ").trim();
+  if (!address || !municipality) {
+    res.status(400).json({ error: "Naslov in občina ne smeta biti prazna." });
     return;
   }
 
@@ -206,6 +201,7 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
           longitude: origin.lng,
           creatorDraft: true,
           creatorOriginRegion: origin.nominatimDisplayName,
+          municipality,
         })
         .where(eq(tenantsTable.id, tenantId))
         .returning();
@@ -239,6 +235,7 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
       longitude: result.tenant.longitude,
       creatorDraft: result.tenant.creatorDraft,
       creatorOriginRegion: result.tenant.creatorOriginRegion,
+      municipality: result.tenant.municipality,
       replacedExistingOrigin: result.replacedExistingOrigin,
     })));
   } catch (error) {
@@ -260,74 +257,10 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
 });
 
 router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> => {
-  const tenantId = first(req.params["id"]);
-  const [tenant] = await db.select({
-    id: tenantsTable.id,
-    name: tenantsTable.name,
-    latitude: tenantsTable.latitude,
-    longitude: tenantsTable.longitude,
-    address: tenantsTable.address,
-    tenantType: tenantsTable.tenantType,
-    creatorDraft: tenantsTable.creatorDraft,
-    creatorOriginRegion: tenantsTable.creatorOriginRegion,
-    isPublished: tenantsTable.isPublished,
-  }).from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
-  if (!tenant) {
-    res.status(404).json({ error: "Namestitev ni najdena." });
-    return;
-  }
-  if (
-    tenant.latitude === null ||
-    tenant.longitude === null ||
-    !tenant.address ||
-    !tenant.tenantType ||
-    !tenant.creatorDraft ||
-    !tenant.creatorOriginRegion ||
-    tenant.isPublished
-  ) {
-    res.status(400).json({ error: "Osnutek nima popolnega potrjenega izhodišča." });
-    return;
-  }
-  const isMenina = isPreservedMeninaEvidenceTenant({
-    name: tenant.name,
-    latitude: tenant.latitude,
-    longitude: tenant.longitude,
+  res.status(410).json({
+    error: "Stari C1 je umaknjen. Novi Kreator bo uporabljal samo odobrene občinske vire.",
+    code: "creator-c1-retired",
   });
-  try {
-    const claim = isMenina
-      ? await claimCreatorRunOnce(
-        tenantId,
-        { latitude: tenant.latitude, longitude: tenant.longitude },
-        MENINA_AUTHORIZED_RUN_COUNT,
-      )
-      : null;
-    if (claim?.existingRun) {
-      res.status(409).json({ error: "Pet odobrenih produkcijskih izvedb C1 za Camping MENINA je dokazno zaklenjenih ali pa peta izvedba že teče." });
-      return;
-    }
-    const result = await runCreatorC1({
-      tenantId,
-      claimedRunId: claim?.claimedRunId ?? undefined,
-      origin: { latitude: tenant.latitude, longitude: tenant.longitude },
-      region: tenant.creatorOriginRegion,
-      tenantType: tenant.tenantType,
-    });
-    const [completed] = await db.select().from(creatorRunsTable)
-      .where(eq(creatorRunsTable.id, result.runId))
-      .limit(1);
-    if (!completed) throw new Error("Poročila izvedbe ni mogoče ponovno prebrati.");
-    res.json(StartCreatorRunResponse.parse(serialize(await creatorRunResponse(completed))));
-  } catch (error) {
-    const databaseCode = (error as { code?: string })?.code;
-    if (databaseCode === "23505") {
-      res.status(409).json({ error: "C1 za ta osnutek že teče. Počakajte, da se trenutna izvedba zaključi." });
-      return;
-    }
-    req.log.error({ error, tenantId }, "Creator C1 run failed");
-    res.status(500).json({
-      error: error instanceof Error ? error.message : "C1 se ni uspešno zaključil. Poročilo o napaki je shranjeno.",
-    });
-  }
 });
 
 router.get("/admin/tenants/:id/creator/runs/latest", async (req, res): Promise<void> => {

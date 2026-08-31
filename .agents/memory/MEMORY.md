@@ -29,3 +29,4 @@
 - [Slovenian plural helper](slovenian-plural-helper.md) — with the next code change, fall back to `other` for impossible Intl plural categories; do not amend the current publish.
 - [Creator run report](creator-run-report.md) — every model-assisted run must self-report outcomes, reasons, missing photos, and cost; next spec uses three driving-minute ranges.
 - [Guest-home truthfulness](guest-home-truthfulness.md) — never invent ratings, response times, or host imagery; response time starts after five real answered exchanges.
+- [Creator source-first policy](creator-source-first.md) — discover places only from approved municipality sources; robots/SSRF fail closed, model descriptions come last.

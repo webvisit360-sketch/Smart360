@@ -197,6 +197,7 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/creator/origin`, {
       mapUrl: "https://www.google.com/maps/search/46.05,14.51",
       address: "Testni naslov",
+      municipality: "Testna občina",
     });
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/creator/proposals`);
     await expectDenied(

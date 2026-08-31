@@ -14,7 +14,6 @@ import { ensureRowLevelSecurity } from "./lib/rls";
 import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRetention";
 import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill";
 import { runTriesteDistanceCorrectionAtStartup } from "./lib/triesteDistanceCorrection";
-import { runMeninaCreatorC1OnceAtStartup } from "./lib/creatorMeninaProductionRun";
 import { runLegacyTenantLivingGuideCutoversAtStartup } from "./lib/grilLivingGuideCutover";
 
 const rawPort = process.env["PORT"];
@@ -126,7 +125,6 @@ ensureAdminAccount()
       }
 
       logger.info({ port }, "Server listening");
-      void runMeninaCreatorC1OnceAtStartup();
     });
   })
   .catch((err) => {
