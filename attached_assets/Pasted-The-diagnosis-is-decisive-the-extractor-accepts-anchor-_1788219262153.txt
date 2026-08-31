@@ -1,0 +1,24 @@
+The diagnosis is decisive: the extractor accepts anchor text only, so places named in body prose (Mozirski gaj) never become candidates, and anchor names arrive in forms Nominatim cannot resolve ("Krajinski park Golte", a museum under its full institutional title). 83 of 89 resolved candidates come from the one source that is a clean link list. Three changes, all within the existing guarded layer. No schema change. Nothing published.
+
+1. DEPTH-ONE READING. For each approved source, also fetch same-domain subpages linked from the approved page, one level deep only. Same guards: robots check per URL, fail-closed, SSRF, timeouts, size and content-type limits, snapshot with hash and retrieval time, persisted robots evidence. Cap at 60 subpages per source, skip obvious non-content paths (news archives, documents, login, search, tags, pagination). Report how many subpages each source yielded and how many were skipped and why.
+
+2. THE MODEL READS THE PAGE. Replace anchor-only extraction with model-based extraction over the stored visible text of each snapshot. Use the existing structured-JSON model call. For every place the page mentions, the model returns: a short canonical name suitable for geocoding, the settlement, and a category from the existing set.
+
+   Hard grounding guard, enforced deterministically after the model call: every returned canonical name must be present in the snapshot's stored text, verbatim or as a Slovenian inflected form of the same lemma. Names that fail this check are discarded and counted, never queued. The model may shorten ("Krajinski park Golte" → "Golte", "Javni zavod Muzej Vrbovec, Muzej gozdarstva in lesarstva Nazarje" → "Muzej gozdarstva in lesarstva") only when the short form itself also appears in the text. Elevations, durations, difficulty labels, navigation labels, event headlines and administrative links are not places.
+
+   Provenance stays as built: every candidate carries the snapshot URL and retrieval time; a place found on several pages is one candidate with all its sources.
+
+3. SOURCE LIST. Remove the Kamniško-Savinjske Alpe range index from the approved list. Keep the Hribi.net "izhodišče Ljubno ob Savinji" and "Smrekovec" indexes. Mountain huts (koče, domovi) are category hike, not food.
+
+Then run one fresh, complete source-first run for the development Gril draft in the main development database: guarded fetch with depth one, model reading with grounding guard, deduplication, paced Nominatim/OSRM resolution as already built.
+
+Report:
+  - per source: pages read (approved page plus subpages), facts extracted, facts discarded by the grounding guard;
+  - resolved candidates grouped by range: name, settlement, category, road distance, duration, sources;
+  - unresolved grouped by reason;
+  - the status of these eight: Skakalni center Savina, Golte, Mozirski gaj, Logarska dolina, slap Rinka, Snežna jama, Robanov kot, Muzej gozdarstva in lesarstva;
+  - model cost for the extraction step.
+
+Create no descriptions and no translations. Publish nothing.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy: what changed, what was verified, what remains pending, what the owner must do next. It must stand on its own.
