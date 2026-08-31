@@ -1,40 +1,42 @@
-import { and, eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, tenantsTable } from "@workspace/db";
 import { logger } from "./logger";
 
-export type GrilLivingGuideTarget = {
+export type LegacyTenantLivingGuideTarget = {
   id: string;
   name: string;
   slug: string;
 };
 
-const GRIL_TARGET: GrilLivingGuideTarget = {
+const APPROVED_TARGETS: readonly LegacyTenantLivingGuideTarget[] = [{
   id: "177e633a-6030-4eca-8ce8-e0a0afdff599",
   name: "Piknik prostor in kamp Gril",
   slug: "glamping-gril",
-};
+}, {
+  id: "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+  name: "Camping MENINA",
+  slug: "camping-menina",
+}];
 
-export type GrilLivingGuideCutoverResult =
+export type LegacyTenantLivingGuideCutoverResult =
   | { outcome: "updated" | "already-applied"; guestUiMode: "living-guide" }
   | { outcome: "skipped"; guestUiMode: string | null; reason: string };
 
-export async function applyGrilLivingGuideCutover(
-  target: GrilLivingGuideTarget = GRIL_TARGET,
-): Promise<GrilLivingGuideCutoverResult> {
-  const changed = await db
-    .update(tenantsTable)
-    .set({ guestUiMode: "living-guide" })
-    .where(
-      and(
-        eq(tenantsTable.id, target.id),
-        eq(tenantsTable.name, target.name),
-        eq(tenantsTable.slug, target.slug),
-        eq(tenantsTable.guestUiMode, "legacy"),
-      ),
-    )
-    .returning({ guestUiMode: tenantsTable.guestUiMode });
+export async function applyLegacyTenantLivingGuideCutover(
+  target: LegacyTenantLivingGuideTarget,
+): Promise<LegacyTenantLivingGuideCutoverResult> {
+  // Raw SQL is intentional: the Drizzle tenant model has an automatic
+  // updated_at hook, while this approved correction may change only the mode.
+  const changed = await db.execute(sql`
+    UPDATE "tenants"
+    SET "guest_ui_mode" = 'living-guide'
+    WHERE "id" = ${target.id}::uuid
+      AND "name" = ${target.name}
+      AND "slug" = ${target.slug}
+      AND "guest_ui_mode" = 'legacy'
+  `);
 
-  if (changed.length === 1) {
+  if ((changed.rowCount ?? 0) === 1) {
     return { outcome: "updated", guestUiMode: "living-guide" };
   }
 
@@ -65,24 +67,26 @@ export async function applyGrilLivingGuideCutover(
   };
 }
 
-export async function runGrilLivingGuideCutoverAtStartup(
+export async function runLegacyTenantLivingGuideCutoversAtStartup(
   options: {
     nodeEnv?: string;
     isDeployment?: boolean;
-    target?: GrilLivingGuideTarget;
+    targets?: readonly LegacyTenantLivingGuideTarget[];
   } = {},
 ): Promise<void> {
   const nodeEnv = options.nodeEnv ?? process.env["NODE_ENV"];
   const isDeployment = options.isDeployment ?? Boolean(process.env["REPLIT_DEPLOYMENT"]);
   if (nodeEnv !== "production" || !isDeployment) return;
-  try {
-    const result = await applyGrilLivingGuideCutover(options.target);
-    if (result.outcome === "updated") {
-      logger.info("[grilLivingGuideCutover] switched approved tenant to Living Guide");
-    } else if (result.outcome === "skipped") {
-      logger.error({ result }, "[grilLivingGuideCutover] approved target did not match");
+  for (const target of options.targets ?? APPROVED_TARGETS) {
+    try {
+      const result = await applyLegacyTenantLivingGuideCutover(target);
+      if (result.outcome === "updated") {
+        logger.info({ target }, "[legacyTenantLivingGuideCutover] switched approved tenant to Living Guide");
+      } else if (result.outcome === "skipped") {
+        logger.error({ target, result }, "[legacyTenantLivingGuideCutover] approved target did not match");
+      }
+    } catch (err) {
+      logger.error({ target, err }, "[legacyTenantLivingGuideCutover] failed (boot continues)");
     }
-  } catch (err) {
-    logger.error({ err }, "[grilLivingGuideCutover] failed (boot continues)");
   }
 }
