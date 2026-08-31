@@ -610,3 +610,31 @@ mtime_ms = 1788116251104
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9dd92380-046e-4218-857b-dbe4155b8739/d6c3c172-1a74-4fdd-bc4e-09e8ce99202f"
 storage_version_token = "1788116262262865"
 content_type = "text/csv"
+
+[[outputs]]
+id = "nC64Q-ceulMudkIAQ_DCK"
+uri = "file://reports/menina-run-five-stored-report-verbatim.json"
+type = "unspecified"
+title = "MENINA run five — stored report (verbatim)"
+description = "Exact 78,465-byte report_json value read from the immutable production creator_runs row; no reformatting or added fields."
+logical_id = "e2908e2c-a016-479f-abba-4c8f7fd05c13"
+content_hash = "sha256:c1794c2eda0dfa418f3059577b71d97de9e0129ce2cdbd4b45bceb45bcaf1334"
+size = 78465
+mtime_ms = 1788157324080
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e2908e2c-a016-479f-abba-4c8f7fd05c13/423bfd72-0cdf-4d68-8327-36a2be804c8c"
+storage_version_token = "1788157377301294"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "l7s9nEb3wn_Sz9NzkC6Kr"
+uri = "file://reports/menina-run-five-queue-rows.json"
+type = "unspecified"
+title = "MENINA run five — 60 queue rows"
+description = "All 60 non-superseded, content-ready production queue rows linked to run five, including four translations and stored verification attempts for each row."
+logical_id = "0008fd8b-2e8e-4249-ab0c-f37150ce7d65"
+content_hash = "sha256:f53719202992fe8ae2fed7fff5bb21706c1edf713ed2325dcb42aee9044fce14"
+size = 164674
+mtime_ms = 1788157326260
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0008fd8b-2e8e-4249-ab0c-f37150ce7d65/1e9e5755-b53e-4169-9b6b-9e6777a22ccc"
+storage_version_token = "1788157378009078"
+content_type = "application/octet-stream"

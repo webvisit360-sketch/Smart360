@@ -1,0 +1,4183 @@
+[
+    {
+        "id": "584aa3a0-14c5-432a-89cf-06587de36886",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:09:01.686122+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Varpolje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Varpolje",
+                "language": "de",
+                "description": "Ein naher Ort für einen kurzen Spaziergang im Savinja-Tal."
+            },
+            {
+                "name": "Varpolje",
+                "language": "en",
+                "description": "A nearby settlement for a short walk in the Savinja Valley."
+            },
+            {
+                "name": "Varpolje",
+                "language": "it",
+                "description": "Un vicino villaggio per una breve passeggiata nella valle della Savinja."
+            },
+            {
+                "name": "Varpolje",
+                "language": "sl",
+                "description": "Bližnje naselje za kratek sprehod po Savinjski dolini."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Varpolje",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "varpolje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Najbližje lokalno naselje, primerno za nezahteven sprehod iz kampa.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Varpolje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Varpolje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:09:05.524578+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Varpolje, Rečica ob Savinji, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:09:05.524578+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "624eecd0-2abc-4ccd-b81f-4046c5e76d5e",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:09:32.01666+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Spodnje Pobrežje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Spodnje Pobrežje",
+                "language": "de",
+                "description": "Ein ruhiger naher Ort, um die ländliche Umgebung zu Fuß oder mit dem Rad zu erkunden."
+            },
+            {
+                "name": "Spodnje Pobrežje",
+                "language": "en",
+                "description": "A quiet nearby settlement for exploring the local countryside on foot or by bike."
+            },
+            {
+                "name": "Spodnje Pobrežje",
+                "language": "it",
+                "description": "Un tranquillo villaggio vicino da esplorare a piedi o in bicicletta."
+            },
+            {
+                "name": "Spodnje Pobrežje",
+                "language": "sl",
+                "description": "Mirno bližnje naselje za raziskovanje lokalnega podeželja peš ali s kolesom."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Spodnje Pobrežje",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "spodnje pobrezje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Bližnja podeželska okolica dopolnjuje kratke lokalne sprehode.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Spodnje Pobrežje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Spodnje Pobrežje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:09:34.548263+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "4a8e69eb-87ad-459a-aa5d-cef5c1d7fd65",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:09:57.815378+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Nizka",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Nizka",
+                "language": "de",
+                "description": "Ein kleiner naher Ort für einen entspannten Spaziergang zwischen ländlichen Höfen."
+            },
+            {
+                "name": "Nizka",
+                "language": "en",
+                "description": "A small settlement nearby for a relaxed walk among rural homes."
+            },
+            {
+                "name": "Nizka",
+                "language": "it",
+                "description": "Un piccolo villaggio vicino per una passeggiata tranquilla tra le case rurali."
+            },
+            {
+                "name": "Nizka",
+                "language": "sl",
+                "description": "Majhno naselje v bližnji okolici za umirjen sprehod med podeželskimi domačijami."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Nizka",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "nizka",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Lokalna možnost za kratek, nezahteven izlet v neposredni okolici.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Nizka, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Nizka",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:10:00.016707+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "e08fe1a2-8c89-4ec0-8553-96fbabc4d27c",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:10:19.816066+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Zgornje Pobrežje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Zgornje Pobrežje",
+                "language": "de",
+                "description": "Ein ländlicher Ort für einen kurzen Spaziergang und zum Kennenlernen der näheren Umgebung."
+            },
+            {
+                "name": "Zgornje Pobrežje",
+                "language": "en",
+                "description": "A rural settlement suited to a short walk and discovering the nearby area."
+            },
+            {
+                "name": "Zgornje Pobrežje",
+                "language": "it",
+                "description": "Un villaggio rurale adatto a una breve passeggiata e alla scoperta dei dintorni."
+            },
+            {
+                "name": "Zgornje Pobrežje",
+                "language": "sl",
+                "description": "Podeželsko naselje, primerno za krajši sprehod in spoznavanje bližnje okolice."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Zgornje Pobrežje",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "zgornje pobrezje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Naravna izbira za lokalno raziskovanje med bližnjimi naselji.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Zgornje Pobrežje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Zgornje Pobrežje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:10:22.516342+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "69cbaa14-00f0-4a82-ae97-4280645eb822",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:10:31.633163+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Trnovec",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Trnovec",
+                "language": "de",
+                "description": "Ein naher Ort für einen ruhigen Ausflug durch die lokale Kulturlandschaft."
+            },
+            {
+                "name": "Trnovec",
+                "language": "en",
+                "description": "A nearby settlement for a peaceful outing through the local cultural landscape."
+            },
+            {
+                "name": "Trnovec",
+                "language": "it",
+                "description": "Un vicino villaggio per una tranquilla uscita nel paesaggio rurale locale."
+            },
+            {
+                "name": "Trnovec",
+                "language": "sl",
+                "description": "Bližnje naselje za miren izlet po lokalni kulturni krajini."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Trnovec",
+        "refusalReason": "hard-ceiling",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "trnovec",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Dodaja bližnjo, mirno možnost za sprehod zunaj glavnih izletniških točk.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Trnovec, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Trnovec",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:10:32.416363+00:00",
+                "refusalRule": "hard-ceiling",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "df0092e2-b32d-45bb-aab0-98bc8671c758",
+        "osmId": 10111913212,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "node",
+        "latitude": 46.3249806,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:10:41.729532+00:00",
+        "longitude": 15.2571008,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "natural",
+        "contentReady": true,
+        "proposedName": "Šentjanž",
+        "resolvedName": "Šentjanž",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Šentjanž",
+                "language": "de",
+                "description": "Ein Ort bei Rečica ob Savinji für einen kurzen Spaziergang auf dem Land."
+            },
+            {
+                "name": "Šentjanž",
+                "language": "en",
+                "description": "A settlement near Rečica ob Savinji for a short countryside walk."
+            },
+            {
+                "name": "Šentjanž",
+                "language": "it",
+                "description": "Un villaggio nei pressi di Rečica ob Savinji per una breve passeggiata in campagna."
+            },
+            {
+                "name": "Šentjanž",
+                "language": "sl",
+                "description": "Naselje v okolici Rečice ob Savinji za kratek sprehod po podeželju."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Šentjanž",
+        "refusalReason": null,
+        "roadDistanceM": 35506.1,
+        "confirmedQuery": "Šentjanž",
+        "normalizedName": "sentjanz",
+        "osmAddressType": "peak",
+        "osmFeatureType": "peak",
+        "inclusionReason": "Primeren za goste, ki želijo odkriti manjše kraje v neposredni okolici.",
+        "resolvedAddress": "Šentjanž, Vojnik, 3203, Slovenija",
+        "travelDurationS": 2724,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Šentjanž, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Šentjanž",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:10:42.115883+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 26752.00374657266,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "7da953c4-8f0e-4200-b1ac-6a5b2cd31083",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:11:04.604137+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Rečica ob Savinji",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Rečica ob Savinji",
+                "language": "de",
+                "description": "Der Hauptort der Gemeinde mit dem typischen ländlichen Charakter des Savinja-Tals."
+            },
+            {
+                "name": "Rečica ob Savinji",
+                "language": "en",
+                "description": "The municipality’s main settlement, with the characteristic rural character of the Savinja Valley."
+            },
+            {
+                "name": "Rečica ob Savinji",
+                "language": "it",
+                "description": "Il centro principale del comune, con il tipico carattere rurale della valle della Savinja."
+            },
+            {
+                "name": "Rečica ob Savinji",
+                "language": "sl",
+                "description": "Osrednje naselje občine z značilnim savinjskim podeželskim značajem."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Rečica ob Savinji",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "recica ob savinji",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Lokalno občinsko središče je uporabna orientacijska in sprehajalna točka za goste.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Rečica ob Savinji",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:11:04.876857+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "93de2e8d-a130-4021-80ba-f7e3513c8fb9",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:11:09.525543+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Spodnja Rečica",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Spodnja Rečica",
+                "language": "de",
+                "description": "Ein naher Ort für einen leichten Spaziergang durch die ländliche Umgebung des Savinja-Tals."
+            },
+            {
+                "name": "Spodnja Rečica",
+                "language": "en",
+                "description": "A nearby settlement for an easy walk through the rural Savinja Valley setting."
+            },
+            {
+                "name": "Spodnja Rečica",
+                "language": "it",
+                "description": "Un vicino villaggio per una facile passeggiata nel paesaggio rurale della valle della Savinja."
+            },
+            {
+                "name": "Spodnja Rečica",
+                "language": "sl",
+                "description": "Bližnje naselje za nezahteven sprehod skozi savinjsko podeželsko okolico."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Spodnja Rečica",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "spodnja recica",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Bližnja lokalna točka za kratek izlet brez zahtevnega programa.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Spodnja Rečica, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Spodnja Rečica",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:11:10.714861+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "e70e6187-cbc4-4bb2-b303-5f6c77638ef0",
+        "osmId": 13086559802,
+        "range": "near",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "node",
+        "latitude": 46.3203963,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:11:29.914745+00:00",
+        "longitude": 14.9501604,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "tourism",
+        "contentReady": true,
+        "proposedName": "Muzej gozdarstva in lesarstva",
+        "resolvedName": "Muzej gozdarstva in lesarstva",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Museum für Forstwirtschaft und Holzwirtschaft",
+                "language": "de",
+                "description": "Das Museum in Nazarje vermittelt Forstwirtschaft, Holzwirtschaft und das Leben im oberen Savinja-Tal."
+            },
+            {
+                "name": "Forestry and Woodworking Museum",
+                "language": "en",
+                "description": "This museum in Nazarje presents forestry, woodworking and life in the Upper Savinja Valley."
+            },
+            {
+                "name": "Museo della silvicoltura e della lavorazione del legno",
+                "language": "it",
+                "description": "Il museo di Nazarje presenta la silvicoltura, la lavorazione del legno e la vita nell'Alta valle della Savinja."
+            },
+            {
+                "name": "Muzej gozdarstva in lesarstva",
+                "language": "sl",
+                "description": "Muzej v Nazarjah predstavlja gozdarstvo, lesarstvo in življenje v Zgornji Savinjski dolini."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Muzej gozdarstva in lesarstva",
+        "refusalReason": null,
+        "roadDistanceM": 4434.6,
+        "confirmedQuery": "Muzej gozdarstva in lesarstva",
+        "normalizedName": "muzej gozdarstva in lesarstva",
+        "osmAddressType": "tourism",
+        "osmFeatureType": "museum",
+        "inclusionReason": "Vsebinsko močan muzej o dejavnostih, ki so zaznamovale Zgornjo Savinjsko dolino.",
+        "resolvedAddress": "Muzej gozdarstva in lesarstva",
+        "travelDurationS": 445,
+        "confirmationMethod": "overpass_near",
+        "geocodingLookupHint": "Muzej gozdarstva in lesarstva, Nazarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "overpass:Muzej gozdarstva in lesarstva",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:11:30.614815+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 3291.419990659924,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "f12b2b2b-2218-41c2-bba5-f4261dc60b47",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:11:44.716112+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Grad Vrbovec",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Burg Vrbovec",
+                "language": "de",
+                "description": "Eine Burganlage in Nazarje, die mit dem umliegenden Museums- und Klosterareal verbunden ist."
+            },
+            {
+                "name": "Vrbovec Castle",
+                "language": "en",
+                "description": "A castle complex in Nazarje connected with the surrounding museum and monastery area."
+            },
+            {
+                "name": "Castello di Vrbovec",
+                "language": "it",
+                "description": "Un complesso castellano a Nazarje collegato all'area circostante del museo e del monastero."
+            },
+            {
+                "name": "Grad Vrbovec",
+                "language": "sl",
+                "description": "Grajski kompleks v Nazarjah, povezan z muzejsko in samostansko okolico."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Grad Vrbovec",
+        "refusalReason": "hard-ceiling",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "grad vrbovec",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Zgodovinska točka, ki se smiselno poveže z obiskom Nazarij.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Grad Vrbovec, Nazarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Grad Vrbovec",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:11:46.716184+00:00",
+                "refusalRule": "hard-ceiling",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "2adf3073-beda-47ae-90b9-3550e207312d",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:12:07.214466+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Frančiškanski samostan Nazarje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Franziskanerkloster Nazarje",
+                "language": "de",
+                "description": "Der Klosterkomplex in Nazarje ist ein wichtiger Teil des historischen Ortsbildes."
+            },
+            {
+                "name": "Franciscan Monastery, Nazarje",
+                "language": "en",
+                "description": "The monastery complex in Nazarje is an important part of the town’s historic character."
+            },
+            {
+                "name": "Monastero francescano di Nazarje",
+                "language": "it",
+                "description": "Il complesso monastico di Nazarje è una parte importante del carattere storico del luogo."
+            },
+            {
+                "name": "Frančiškanski samostan Nazarje",
+                "language": "sl",
+                "description": "Samostanski kompleks v Nazarjah je pomemben del zgodovinske podobe kraja."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Frančiškanski samostan Nazarje",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "franciskanski samostan nazarje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Kulturnozgodovinski postanek, ki dopolnjuje ogled Nazarij in gradu Vrbovec.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Frančiškanski samostan Nazarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Frančiškanski samostan Nazarje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:12:10.614376+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Frančiškanski samostan Nazarje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:12:10.614376+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "95171cb9-ea9e-40bd-a239-7e2710ea9888",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:12:24.114603+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Flosarski muzej",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Flößermuseum",
+                "language": "de",
+                "description": "Das Museum in Ljubno ob Savinji stellt die Flößerei und das Flusserbe der Savinja vor."
+            },
+            {
+                "name": "Rafting Museum",
+                "language": "en",
+                "description": "This museum in Ljubno ob Savinji presents the history of timber rafting and the river heritage of the Savinja."
+            },
+            {
+                "name": "Museo della fluitazione del legname",
+                "language": "it",
+                "description": "Il museo di Ljubno ob Savinji presenta la fluitazione del legname e il patrimonio fluviale della Savinja."
+            },
+            {
+                "name": "Flosarski muzej",
+                "language": "sl",
+                "description": "Muzej v Ljubnem ob Savinji predstavlja flosarstvo in rečno dediščino Savinje."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Flosarski muzej",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "flosarski muzej",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Dober kulturni postanek za razumevanje tradicionalne povezanosti doline z reko.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Flosarski muzej, Ljubno ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Flosarski muzej",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:12:26.715824+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Flosarski muzej, Ljubno ob Savinji, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:12:26.715824+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "16fd1edb-202f-4def-b413-7af3627c85b8",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:12:51.115636+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Katedrala sv. Mohorja in Fortunata",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kathedrale der Heiligen Hermagoras und Fortunatus",
+                "language": "de",
+                "description": "Die Kathedrale in Gornji Grad ist ein bedeutendes Sakraldenkmal des oberen Savinja-Tals."
+            },
+            {
+                "name": "Cathedral of Saints Hermagoras and Fortunatus",
+                "language": "en",
+                "description": "The cathedral in Gornji Grad is an important sacred monument of the Upper Savinja Valley."
+            },
+            {
+                "name": "Cattedrale dei Santi Ermagora e Fortunato",
+                "language": "it",
+                "description": "La cattedrale di Gornji Grad è un importante monumento sacro dell'Alta valle della Savinja."
+            },
+            {
+                "name": "Katedrala sv. Mohorja in Fortunata",
+                "language": "sl",
+                "description": "Katedrala v Gornjem Gradu je pomemben sakralni spomenik Zgornje Savinjske doline."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Katedrala sv. Mohorja in Fortunata",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "katedrala sv mohorja in fortunata",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Pomembna sakralna in zgodovinska znamenitost za samostojen izlet po dolini.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Katedrala sv. Mohorja in Fortunata, Gornji Grad, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Katedrala sv. Mohorja in Fortunata",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:12:54.861283+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Katedrala sv. Mohorja in Fortunata, Gornji Grad, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:12:54.861283+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "5c0cd44e-0799-4ae4-8a47-39244ab6dc26",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:13:23.016424+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Ekomuzej hmeljarstva in pivovarstva Slovenije",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Ökomuseum des slowenischen Hopfenanbaus und Brauwesens",
+                "language": "de",
+                "description": "Das Museum in Žalec vermittelt das Erbe des Hopfenanbaus und Brauwesens im Savinja-Tal."
+            },
+            {
+                "name": "Slovenian Hop Growing and Brewing Eco-Museum",
+                "language": "en",
+                "description": "This museum in Žalec presents the hop-growing and brewing heritage of the Savinja Valley."
+            },
+            {
+                "name": "Ecomuseo sloveno della coltivazione del luppolo e della birrificazione",
+                "language": "it",
+                "description": "Il museo di Žalec presenta il patrimonio della coltivazione del luppolo e della birrificazione nella valle della Savinja."
+            },
+            {
+                "name": "Ekomuzej hmeljarstva in pivovarstva Slovenije",
+                "language": "sl",
+                "description": "Muzej v Žalcu predstavlja hmeljarstvo in pivovarsko dediščino Savinjske doline."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Ekomuzej hmeljarstva in pivovarstva Slovenije",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "ekomuzej hmeljarstva in pivovarstva slovenije",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Dopolnjuje razumevanje prepoznavne kulturne krajine Savinjske doline.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Ekomuzej hmeljarstva in pivovarstva Slovenije, Žalec, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Ekomuzej hmeljarstva in pivovarstva Slovenije",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:13:26.01628+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Ekomuzej hmeljarstva in pivovarstva Slovenije, Žalec, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:13:26.01628+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "bb431a6c-d77b-4c35-a9fe-bf765a597527",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:13:43.215469+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Rimska nekropola v Šempetru",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Römische Nekropole in Šempeter",
+                "language": "de",
+                "description": "Ein archäologischer Park mit römischen Gräbern und Steinmonumenten an der ehemaligen Römerstraße."
+            },
+            {
+                "name": "Roman Necropolis in Šempeter",
+                "language": "en",
+                "description": "An archaeological park with Roman tombs and stone monuments beside the former Roman road."
+            },
+            {
+                "name": "Necropoli romana di Šempeter",
+                "language": "it",
+                "description": "Un parco archeologico con tombe romane e monumenti in pietra lungo l'antica strada romana."
+            },
+            {
+                "name": "Rimska nekropola v Šempetru",
+                "language": "sl",
+                "description": "Arheološki park z rimskimi grobnicami in kamnitimi spomeniki ob nekdanji rimski cesti."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Rimska nekropola v Šempetru",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "rimska nekropola v sempetru",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Arheološka znamenitost, primerna za kulturni izlet po Savinjski dolini.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Rimska nekropola, Šempeter v Savinjski dolini, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Rimska nekropola v Šempetru",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:13:46.947228+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Rimska nekropola, Šempeter v Savinjski dolini, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:13:46.947228+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "fba9f132-8277-497d-9356-b9b165bb95f4",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:14:05.616557+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Menčon",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Menčon",
+                "language": "de",
+                "description": "Eine kleine Ortschaft in der ruhigen ländlichen Umgebung des oberen Savinja-Tals."
+            },
+            {
+                "name": "Menčon",
+                "language": "en",
+                "description": "A small settlement in the peaceful rural setting of the Upper Savinja Valley."
+            },
+            {
+                "name": "Menčon",
+                "language": "it",
+                "description": "Un piccolo insediamento nel tranquillo ambiente rurale dell'Alta valle della Savinja."
+            },
+            {
+                "name": "Menčon",
+                "language": "sl",
+                "description": "Majhno naselje v mirnem podeželskem okolju Zgornje Savinjske doline."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Menčon",
+        "refusalReason": "hard-ceiling",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "mencon",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Local rural settlement suitable for a short exploratory outing from the campsite.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Menčon, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Menčon",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:14:07.425048+00:00",
+                "refusalRule": "hard-ceiling",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "2fc66e94-7104-4c66-87bb-9f192bc21b94",
+        "osmId": 1554523776,
+        "range": "near",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "node",
+        "latitude": 46.3012468,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:14:37.515029+00:00",
+        "longitude": 14.9293485,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "settlement",
+        "contentReady": true,
+        "proposedName": "Lačja Vas",
+        "resolvedName": "Lačja Vas",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Lačja Vas",
+                "language": "de",
+                "description": "Eine ländliche Ortschaft an der Savinja, die sich für einen Spaziergang auf Nebenstraßen eignet."
+            },
+            {
+                "name": "Lačja Vas",
+                "language": "en",
+                "description": "A rural settlement by the Savinja, suitable for a walk along local lanes."
+            },
+            {
+                "name": "Lačja Vas",
+                "language": "it",
+                "description": "Un insediamento rurale lungo la Savinja, adatto a una passeggiata sulle strade locali."
+            },
+            {
+                "name": "Lačja Vas",
+                "language": "sl",
+                "description": "Podeželsko naselje ob Savinji, primerno za sprehod po lokalnih cestah."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Lačja Vas",
+        "refusalReason": null,
+        "roadDistanceM": 3652.9,
+        "confirmedQuery": "Lačja Vas",
+        "normalizedName": "lacja vas",
+        "osmAddressType": "settlement",
+        "osmFeatureType": "hamlet",
+        "inclusionReason": "Nearby settlement that provides a simple local walk and view of the valley landscape.",
+        "resolvedAddress": "Lačja Vas",
+        "travelDurationS": 542,
+        "confirmationMethod": "overpass_near",
+        "geocodingLookupHint": "Lačja Vas, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "overpass:Lačja Vas",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:14:38.015564+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 1912.8792408653424,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "62b25f42-240e-41ec-9285-04adda503b5c",
+        "osmId": 9762319704,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "node",
+        "latitude": 46.4927778,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:15:01.016078+00:00",
+        "longitude": 15.0965734,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "natural",
+        "contentReady": true,
+        "proposedName": "Homec",
+        "resolvedName": "Homec",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Homec",
+                "language": "de",
+                "description": "Eine kleine Ortschaft zwischen Wiesen und Waldrändern."
+            },
+            {
+                "name": "Homec",
+                "language": "en",
+                "description": "A small settlement set among meadows and woodland edges."
+            },
+            {
+                "name": "Homec",
+                "language": "it",
+                "description": "Un piccolo insediamento tra prati e margini di bosco."
+            },
+            {
+                "name": "Homec",
+                "language": "sl",
+                "description": "Manjše naselje med travniki in gozdnimi robovi."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Homec",
+        "refusalReason": null,
+        "roadDistanceM": 45677.7,
+        "confirmedQuery": "Homec",
+        "normalizedName": "homec",
+        "osmAddressType": "peak",
+        "osmFeatureType": "peak",
+        "inclusionReason": "Close-by countryside destination for guests seeking a quiet local detour.",
+        "resolvedAddress": "Homec, Šmartno pri Slovenj Gradcu, Slovenj Gradec, 2380, Slovenija",
+        "travelDurationS": 3300,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Homec, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Homec",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:15:03.117651+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 24752.92771219867,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "3305f146-2669-4d71-8766-2b589eb0a00f",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:15:17.823649+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Grušovlje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Grušovlje",
+                "language": "de",
+                "description": "Eine Ortschaft im Savinja-Tal mit einer charakteristischen Kulturlandschaft."
+            },
+            {
+                "name": "Grušovlje",
+                "language": "en",
+                "description": "A Savinja Valley settlement with a characteristic cultivated landscape."
+            },
+            {
+                "name": "Grušovlje",
+                "language": "it",
+                "description": "Un insediamento nella valle della Savinja con un caratteristico paesaggio agricolo."
+            },
+            {
+                "name": "Grušovlje",
+                "language": "sl",
+                "description": "Naselje v Savinjski dolini z značilno kulturno krajino."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Grušovlje",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "grusovlje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Nearby settlement offering a representative view of the local valley landscape.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Grušovlje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Grušovlje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:15:19.915644+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Grušovlje, Rečica ob Savinji, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:15:19.915644+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "e55b5654-5e92-40bb-9180-0b9da2e16d8e",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:15:33.792577+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Jermančnik",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Jermančnik",
+                "language": "de",
+                "description": "Eine Streusiedlung an den Hängen oberhalb des Tals."
+            },
+            {
+                "name": "Jermančnik",
+                "language": "en",
+                "description": "A dispersed rural settlement on the slopes above the valley."
+            },
+            {
+                "name": "Jermančnik",
+                "language": "it",
+                "description": "Un insediamento rurale sparso sui pendii sopra la valle."
+            },
+            {
+                "name": "Jermančnik",
+                "language": "sl",
+                "description": "Razloženo podeželsko naselje na pobočjih nad dolino."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Jermančnik",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "jermancnik",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Local hillside settlement that broadens the guide beyond riverside locations.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Jermančnik, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Jermančnik",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:15:35.5155+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Jermančnik, Rečica ob Savinji, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:15:35.5155+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "22f042d9-cda3-470e-953a-cc388bf6fee6",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:15:39.989301+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Brdo",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Brdo",
+                "language": "de",
+                "description": "Eine kleine Ortschaft in der grünen, hügeligen Landschaft des Savinja-Tals."
+            },
+            {
+                "name": "Brdo",
+                "language": "en",
+                "description": "A small settlement in the green, rolling landscape of the Savinja Valley."
+            },
+            {
+                "name": "Brdo",
+                "language": "it",
+                "description": "Un piccolo insediamento nel paesaggio verde e mosso della valle della Savinja."
+            },
+            {
+                "name": "Brdo",
+                "language": "sl",
+                "description": "Majhno naselje v zeleni, razgibani pokrajini Savinjske doline."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Brdo",
+        "refusalReason": "equally-plausible",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "brdo",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A nearby countryside stop appropriate for guests exploring the immediate surroundings.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Brdo, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Brdo",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:15:41.01509+00:00",
+                "refusalRule": "equally-plausible",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "77d596e2-1c05-4804-ab34-40f72d36949d",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:15:58.850563+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Čremešnik",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Čremešnik",
+                "language": "de",
+                "description": "Eine ländliche Ortschaft mit Zugang zu ruhigen Wegen durch Felder und Wälder."
+            },
+            {
+                "name": "Čremešnik",
+                "language": "en",
+                "description": "A rural settlement with access to quiet routes through fields and woods."
+            },
+            {
+                "name": "Čremešnik",
+                "language": "it",
+                "description": "Un insediamento rurale con accesso a percorsi tranquilli tra campi e boschi."
+            },
+            {
+                "name": "Čremešnik",
+                "language": "sl",
+                "description": "Podeželsko naselje z dostopom do mirnih poti med polji in gozdovi."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Čremešnik",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "cremesnik",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Local settlement that supports gentle exploration of the surrounding countryside.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Čremešnik, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Čremešnik",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:16:00.715623+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Čremešnik, Rečica ob Savinji, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:16:00.715623+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "479c0579-b28b-4120-b545-5dc3f2cd9eb3",
+        "osmId": 11742145862,
+        "range": "near",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "node",
+        "latitude": 46.301623,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:16:23.116729+00:00",
+        "longitude": 14.9389788,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "information",
+        "contentReady": true,
+        "proposedName": "Kokarje",
+        "resolvedName": "Kokarje",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kokarje",
+                "language": "de",
+                "description": "Eine Ortschaft am Rand des Savinja-Tals, umgeben von Wäldern und landwirtschaftlich genutzter Landschaft."
+            },
+            {
+                "name": "Kokarje",
+                "language": "en",
+                "description": "A settlement on the edge of the Savinja Valley, surrounded by woods and farmland."
+            },
+            {
+                "name": "Kokarje",
+                "language": "it",
+                "description": "Un insediamento ai margini della valle della Savinja, circondato da boschi e terreni agricoli."
+            },
+            {
+                "name": "Kokarje",
+                "language": "sl",
+                "description": "Naselje na robu Savinjske doline, obdano z gozdovi in kmetijsko krajino."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Kokarje",
+        "refusalReason": null,
+        "roadDistanceM": 4690.2,
+        "confirmedQuery": "Kokarje",
+        "normalizedName": "kokarje",
+        "osmAddressType": "information",
+        "osmFeatureType": "guidepost",
+        "inclusionReason": "Nearby settlement offering a contrasting edge-of-valley landscape.",
+        "resolvedAddress": "Kokarje, Žlabor - Kokarje, Kokarje, Žlabor, Nazarje, 3331, Slovenija",
+        "travelDurationS": 662,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Kokarje, Nazarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Kokarje",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:16:25.115686+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 2528.0196437822456,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "56463bfd-d5e9-4810-a162-8f6dd7951bff",
+        "osmId": 192774121,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "way",
+        "latitude": 46.2196728,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:16:45.015936+00:00",
+        "longitude": 15.2722109,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "historic",
+        "contentReady": true,
+        "proposedName": "Celjski grad",
+        "resolvedName": "Celjski grad",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Burg Celje",
+                "language": "de",
+                "description": "Eine mittelalterliche Burg oberhalb von Celje mit aussichtsreichen Wehrmauern und einer weitläufigen Anlage."
+            },
+            {
+                "name": "Celje Castle",
+                "language": "en",
+                "description": "A medieval castle above Celje with panoramic ramparts and a castle complex."
+            },
+            {
+                "name": "Castello di Celje",
+                "language": "it",
+                "description": "Un castello medievale sopra Celje, con mura panoramiche e un ampio complesso fortificato."
+            },
+            {
+                "name": "Celjski grad",
+                "language": "sl",
+                "description": "Srednjeveški grad nad Celjem z razglednimi obzidji in grajskim kompleksom."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Celjski grad",
+        "refusalReason": null,
+        "roadDistanceM": 43126.1,
+        "confirmedQuery": "Celjski grad",
+        "normalizedName": "celjski grad",
+        "osmAddressType": "historic",
+        "osmFeatureType": "castle",
+        "inclusionReason": "Major regional heritage excursion with clear historical and architectural interest.",
+        "resolvedAddress": "Celjski grad, 78, Cesta na grad, Zagrad, Celje, 3000, Slovenija",
+        "travelDurationS": 2800,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Celjski grad, Celje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Celjski grad",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:16:47.616761+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 29705.158722223863,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "ab745ddd-c965-4229-90e7-5bd0c81c5a02",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:17:03.515232+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Dvorec Novo Celje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Schloss Novo Celje",
+                "language": "de",
+                "description": "Ein barockes Schloss in einer Parkanlage bei Žalec, das mit der Geschichte des Savinja-Tals verbunden ist."
+            },
+            {
+                "name": "Novo Celje Manor",
+                "language": "en",
+                "description": "A Baroque manor in a park near Žalec, connected with the history of the Savinja Valley."
+            },
+            {
+                "name": "Palazzo Novo Celje",
+                "language": "it",
+                "description": "Una dimora barocca in un parco vicino a Žalec, legata alla storia della valle della Savinja."
+            },
+            {
+                "name": "Dvorec Novo Celje",
+                "language": "sl",
+                "description": "Baročni dvorec v parku pri Žalcu, povezan z zgodovino Savinjske doline."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Dvorec Novo Celje",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "dvorec novo celje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Regional architectural and landscape-heritage destination suitable for an outing.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Dvorec Novo Celje, Žalec, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Dvorec Novo Celje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:06.91609+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Dvorec Novo Celje, Žalec, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:06.91609+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "42811e63-20f4-4ac5-acbc-918225390fdc",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:17:22.015597+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Muzej usnjarstva na Slovenskem",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Museum des Lederhandwerks in Slowenien",
+                "language": "de",
+                "description": "Ein Museum in Šoštanj, das das Erbe des Lederhandwerks in Slowenien vermittelt."
+            },
+            {
+                "name": "Slovenian Leatherworking Museum",
+                "language": "en",
+                "description": "A museum in Šoštanj presenting Slovenia's leatherworking heritage."
+            },
+            {
+                "name": "Museo della lavorazione del cuoio in Slovenia",
+                "language": "it",
+                "description": "Un museo a Šoštanj dedicato al patrimonio della lavorazione del cuoio in Slovenia."
+            },
+            {
+                "name": "Muzej usnjarstva na Slovenskem",
+                "language": "sl",
+                "description": "Muzej v Šoštanju predstavlja dediščino usnjarstva na Slovenskem."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Muzej usnjarstva na Slovenskem",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "muzej usnjarstva na slovenskem",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Distinctive industrial-heritage museum for a regional cultural excursion.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Muzej usnjarstva na Slovenskem, Šoštanj, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Muzej usnjarstva na Slovenskem",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:24.515723+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Muzej usnjarstva na Slovenskem, Šoštanj, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:24.515723+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "af2e7505-d91f-4a42-ad3b-ec48c62c36eb",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:17:39.614814+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Soteska Huda luknja",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Schlucht Huda luknja",
+                "language": "de",
+                "description": "Eine bewaldete Schlucht mit natürlichen Felsformationen und markierten Wegen."
+            },
+            {
+                "name": "Huda Luknja Gorge",
+                "language": "en",
+                "description": "A wooded gorge with natural rock formations and marked paths."
+            },
+            {
+                "name": "Gola di Huda luknja",
+                "language": "it",
+                "description": "Una gola boscosa con formazioni rocciose naturali e sentieri segnalati."
+            },
+            {
+                "name": "Soteska Huda luknja",
+                "language": "sl",
+                "description": "Gozdnata soteska z naravnimi skalnimi oblikami in označenimi potmi."
+            }
+        ],
+        "categoryLabel": "Aktivnosti",
+        "originalQuery": "Soteska Huda luknja",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "soteska huda luknja",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Regional nature destination offering a different gorge landscape from the Savinja Valley.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Soteska Huda luknja, Dolič, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Soteska Huda luknja",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:42.14754+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Soteska Huda luknja, Dolič, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:42.14754+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "4bc066fb-811c-4629-9c4a-a0723c3c32a7",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:17:54.214896+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Slap Palenk",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Palenk-Wasserfall",
+                "language": "de",
+                "description": "Ein Wasserfall nahe dem Logar-Tal, der über einen Waldweg erreichbar ist."
+            },
+            {
+                "name": "Palenk Waterfall",
+                "language": "en",
+                "description": "A waterfall near the Logar Valley, reached by a forest path."
+            },
+            {
+                "name": "Cascata Palenk",
+                "language": "it",
+                "description": "Una cascata nei pressi della valle di Logar, raggiungibile tramite un sentiero nel bosco."
+            },
+            {
+                "name": "Slap Palenk",
+                "language": "sl",
+                "description": "Slap v bližini Logarske doline, dostopen po gozdni poti."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Slap Palenk",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "slap palenk",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A focused natural stop for visitors exploring the upper Savinja area.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Slap Palenk, Solčava, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Slap Palenk",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:17:56.046168+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "8bad10d6-b62e-48f5-886e-644bf6ee1b7a",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:18:09.215058+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Samostan Olimje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kloster Olimje",
+                "language": "de",
+                "description": "Eine historische Klosteranlage mit barocker Kirche und gepflegter Umgebung."
+            },
+            {
+                "name": "Olimje Monastery",
+                "language": "en",
+                "description": "A historic monastic complex with a Baroque church and a landscaped setting."
+            },
+            {
+                "name": "Monastero di Olimje",
+                "language": "it",
+                "description": "Un complesso monastico storico con chiesa barocca e un ambiente curato."
+            },
+            {
+                "name": "Samostan Olimje",
+                "language": "sl",
+                "description": "Zgodovinski samostanski kompleks z baročno cerkvijo in urejenim okoljem."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Samostan Olimje",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "samostan olimje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Well-defined cultural excursion that adds monastic and Baroque heritage to the guide.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Samostan Olimje, Podčetrtek, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Samostan Olimje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:18:21.116251+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "c1683acd-28b3-48bc-8d92-3365c03d18ae",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:18:39.115327+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Jezero Črnava",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Črnava-See",
+                "language": "de",
+                "description": "Ein See am Fuß der Kamniker-Savinja-Alpen, der sich für einen Spaziergang am Wasser eignet."
+            },
+            {
+                "name": "Črnava Lake",
+                "language": "en",
+                "description": "A lake at the foot of the Kamnik-Savinja Alps, suitable for a waterside walk."
+            },
+            {
+                "name": "Lago Črnava",
+                "language": "it",
+                "description": "Un lago ai piedi delle Alpi di Kamnik e della Savinja, adatto a una passeggiata lungo l'acqua."
+            },
+            {
+                "name": "Jezero Črnava",
+                "language": "sl",
+                "description": "Jezero ob vznožju Kamniško-Savinjskih Alp, primerno za sprehod ob vodi."
+            }
+        ],
+        "categoryLabel": "Aktivnosti",
+        "originalQuery": "Jezero Črnava",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "jezero crnava",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Scenic lake excursion providing an accessible alpine-foothill landscape option.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Jezero Črnava, Preddvor, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Jezero Črnava",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:18:41.31575+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Jezero Črnava, Preddvor, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:18:41.31575+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "a5417874-f66f-4239-a8b5-4e6cae3cbd72",
+        "osmId": 1452421189,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "way",
+        "latitude": 46.1470523,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:18:56.816342+00:00",
+        "longitude": 14.6717508,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "amenity",
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Kancijana",
+        "resolvedName": "Cerkev sv. Kancijana",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kirche des heiligen Cantianus",
+                "language": "de",
+                "description": "Pfarrkirche im Zentrum von Rečica ob Savinji."
+            },
+            {
+                "name": "Church of St. Cantianus",
+                "language": "en",
+                "description": "Parish church in the centre of Rečica ob Savinji."
+            },
+            {
+                "name": "Chiesa di San Canziano",
+                "language": "it",
+                "description": "Chiesa parrocchiale nel centro di Rečica ob Savinji."
+            },
+            {
+                "name": "Cerkev sv. Kancijana",
+                "language": "sl",
+                "description": "Župnijska cerkev v središču Rečice ob Savinji."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Kancijana",
+        "refusalReason": null,
+        "roadDistanceM": 61656.8,
+        "confirmedQuery": "Cerkev sv. Kancijana",
+        "normalizedName": "cerkev sv kancijana",
+        "osmAddressType": "amenity",
+        "osmFeatureType": "place_of_worship",
+        "inclusionReason": "Local sacred-heritage landmark suitable for a short walk or village visit.",
+        "resolvedAddress": "Cerkev sv. Kancijana, Škocjan, Domžale, Upravna Enota Domžale, 1233, Slovenija",
+        "travelDurationS": 3242,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Cerkev sv. Kancijana, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Kancijana",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:18:58.915667+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 25847.570471343246,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "1d6cbd8a-163d-4e10-bb34-e7a09e798319",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:19:17.814601+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Janeza Krstnika",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kirche Johannes des Täufers",
+                "language": "de",
+                "description": "Dorfkirche in Šentjanž."
+            },
+            {
+                "name": "Church of St. John the Baptist",
+                "language": "en",
+                "description": "Village church in Šentjanž."
+            },
+            {
+                "name": "Chiesa di San Giovanni Battista",
+                "language": "it",
+                "description": "Chiesa del villaggio di Šentjanž."
+            },
+            {
+                "name": "Cerkev sv. Janeza Krstnika",
+                "language": "sl",
+                "description": "Vaška cerkev v naselju Šentjanž."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Janeza Krstnika",
+        "refusalReason": "equally-plausible",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "cerkev sv janeza krstnika",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A nearby cultural stop in a small settlement.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Cerkev sv. Janeza Krstnika, Šentjanž, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Janeza Krstnika",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:19:19.716001+00:00",
+                "refusalRule": "equally-plausible",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "92b45fe5-db09-4980-9c65-e0059d45bcfc",
+        "osmId": 1332699597,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": "way",
+        "latitude": 45.7770436,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:19:36.214818+00:00",
+        "longitude": 15.3228341,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "amenity",
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Miklavža",
+        "resolvedName": "Cerkev sv. Miklavža",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Nikolauskirche",
+                "language": "de",
+                "description": "Sakralerbe im Gebiet von Varpolje."
+            },
+            {
+                "name": "Church of St. Nicholas",
+                "language": "en",
+                "description": "Sacred heritage in the Varpolje area."
+            },
+            {
+                "name": "Chiesa di San Nicola",
+                "language": "it",
+                "description": "Patrimonio religioso nell'area di Varpolje."
+            },
+            {
+                "name": "Cerkev sv. Miklavža",
+                "language": "sl",
+                "description": "Sakralna dediščina v okolici Varpolja."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Miklavža",
+        "refusalReason": "duration-ceiling",
+        "roadDistanceM": 156463.9,
+        "confirmedQuery": "Cerkev sv. Miklavža",
+        "normalizedName": "cerkev sv miklavza",
+        "osmAddressType": "amenity",
+        "osmFeatureType": "place_of_worship",
+        "inclusionReason": "A close-by heritage point of interest for campers.",
+        "resolvedAddress": "Cerkev sv. Miklavža, Krvavi kamen-Trdinov vrh, Šentjernej, 8321, Slovenija",
+        "travelDurationS": 7961,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Cerkev sv. Miklavža, Varpolje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Miklavža",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:19:39.014647+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 67452.5358935983,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "84896c50-702c-4ad8-9c7e-81d9b9c93368",
+        "osmId": 487104259,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": "way",
+        "latitude": 46.3501522,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:19:56.815525+00:00",
+        "longitude": 14.1243694,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "amenity",
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Jakoba",
+        "resolvedName": "Cerkev sv. Jakoba",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Jakobskirche",
+                "language": "de",
+                "description": "Eine kleine Kirche in Spodnje Pobrežje."
+            },
+            {
+                "name": "Church of St. James",
+                "language": "en",
+                "description": "A small church in Spodnje Pobrežje."
+            },
+            {
+                "name": "Chiesa di San Giacomo",
+                "language": "it",
+                "description": "Una piccola chiesa a Spodnje Pobrežje."
+            },
+            {
+                "name": "Cerkev sv. Jakoba",
+                "language": "sl",
+                "description": "Manjša cerkev v naselju Spodnje Pobrežje."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Jakoba",
+        "refusalReason": "duration-ceiling",
+        "roadDistanceM": 92351.5,
+        "confirmedQuery": "Cerkev sv. Jakoba",
+        "normalizedName": "cerkev sv jakoba",
+        "osmAddressType": "amenity",
+        "osmFeatureType": "place_of_worship",
+        "inclusionReason": "Nearby village heritage that complements local walks.",
+        "resolvedAddress": "Cerkev sv. Jakoba, Šolska ulica, Ribno, Bled, 4260, Slovenija",
+        "travelDurationS": 5545,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Cerkev sv. Jakoba, Spodnje Pobrežje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Jakoba",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:19:59.416457+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 60420.12192956112,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "16b20c86-7700-4ad6-9f60-006f95407d47",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:20:17.21431+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Radegunde",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kirche der heiligen Radegund",
+                "language": "de",
+                "description": "Eine Kirche in ländlicher Umgebung von Zgornje Pobrežje."
+            },
+            {
+                "name": "Church of St. Radegund",
+                "language": "en",
+                "description": "A church in the rural surroundings of Zgornje Pobrežje."
+            },
+            {
+                "name": "Chiesa di Santa Radegonda",
+                "language": "it",
+                "description": "Una chiesa nella campagna di Zgornje Pobrežje."
+            },
+            {
+                "name": "Cerkev sv. Radegunde",
+                "language": "sl",
+                "description": "Cerkev v podeželskem okolju Zgornjega Pobrežja."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Radegunde",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "cerkev sv radegunde",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A local cultural point for exploring the surrounding countryside.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Cerkev sv. Radegunde, Zgornje Pobrežje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Radegunde",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:20:19.614581+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "ec20ac68-13e8-45ee-b1e8-fdc49d06c8d3",
+        "osmId": 324194402,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": "way",
+        "latitude": 46.2752344,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:20:26.385277+00:00",
+        "longitude": 14.2141121,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "amenity",
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Primoža in Felicijana",
+        "resolvedName": "Cerkev sv. Primoža in Felicijana",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kirche der Heiligen Primus und Felician",
+                "language": "de",
+                "description": "Ein sakraler Dorfsehenswert in Trnovec."
+            },
+            {
+                "name": "Church of Saints Primus and Felician",
+                "language": "en",
+                "description": "A village sacred landmark in Trnovec."
+            },
+            {
+                "name": "Chiesa dei Santi Primo e Feliciano",
+                "language": "it",
+                "description": "Un luogo di culto del villaggio di Trnovec."
+            },
+            {
+                "name": "Cerkev sv. Primoža in Felicijana",
+                "language": "sl",
+                "description": "Vaška sakralna znamenitost v Trnovcu."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Primoža in Felicijana",
+        "refusalReason": "duration-ceiling",
+        "roadDistanceM": 89540.1,
+        "confirmedQuery": "Cerkev sv. Primoža in Felicijana",
+        "normalizedName": "cerkev sv primoza in felicijana",
+        "osmAddressType": "amenity",
+        "osmFeatureType": "place_of_worship",
+        "inclusionReason": "A nearby religious-heritage stop in the local settlement network.",
+        "resolvedAddress": "Cerkev sv. Primoža in Felicijana, 635, Jamnik, Podblica, Kranj, 4245, Slovenija",
+        "travelDurationS": 6412,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Cerkev sv. Primoža in Felicijana, Trnovec, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Primoža in Felicijana",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:20:27.416065+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 53564.57656566178,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "598dae46-76b7-46cb-8b9d-a630cdc26845",
+        "osmId": 1291971571,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": "way",
+        "latitude": 46.3793273,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:20:36.374456+00:00",
+        "longitude": 14.0890389,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "amenity",
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Andreja",
+        "resolvedName": "Cerkev Sv. Andreja",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Andreaskirche",
+                "language": "de",
+                "description": "Kirche in Lačja Vas."
+            },
+            {
+                "name": "Church of St. Andrew",
+                "language": "en",
+                "description": "Church in Lačja Vas."
+            },
+            {
+                "name": "Chiesa di Sant'Andrea",
+                "language": "it",
+                "description": "Chiesa a Lačja Vas."
+            },
+            {
+                "name": "Cerkev sv. Andreja",
+                "language": "sl",
+                "description": "Cerkev v naselju Lačja Vas."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Andreja",
+        "refusalReason": "duration-ceiling",
+        "roadDistanceM": 93113.6,
+        "confirmedQuery": "Cerkev sv. Andreja",
+        "normalizedName": "cerkev sv andreja",
+        "osmAddressType": "amenity",
+        "osmFeatureType": "place_of_worship",
+        "inclusionReason": "A simple local heritage stop for guests exploring nearby villages.",
+        "resolvedAddress": "Cerkev Sv. Andreja, Koroška cesta, Rečica, Bled, 4260, Slovenija",
+        "travelDurationS": 5451,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Cerkev sv. Andreja, Lačja Vas, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Andreja",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:20:37.942876+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 63413.21856339032,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "a47545e9-0278-4e12-a375-a687590b50b7",
+        "osmId": 36684987,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": "way",
+        "latitude": 45.9025554,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:20:51.445736+00:00",
+        "longitude": 13.5719197,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "amenity",
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Martina",
+        "resolvedName": "Chiesa di San Martino Vescovo",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Martinskirche",
+                "language": "de",
+                "description": "Dorfkirche in Kokarje."
+            },
+            {
+                "name": "Church of St. Martin",
+                "language": "en",
+                "description": "Village church in Kokarje."
+            },
+            {
+                "name": "Chiesa di San Martino",
+                "language": "it",
+                "description": "Chiesa del villaggio di Kokarje."
+            },
+            {
+                "name": "Cerkev sv. Martina",
+                "language": "sl",
+                "description": "Vaška cerkev v Kokarjah."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Martina",
+        "refusalReason": "duration-ceiling",
+        "roadDistanceM": 187018.8,
+        "confirmedQuery": "Cerkev sv. Martina",
+        "normalizedName": "cerkev sv martina",
+        "osmAddressType": "amenity",
+        "osmFeatureType": "place_of_worship",
+        "inclusionReason": "Local cultural heritage suitable for a short countryside outing.",
+        "resolvedAddress": "Chiesa di San Martino Vescovo, Gasa, Savogna di sotto, Rubbia / Rubije, Peci / Peč, Savogna d'Isonzo / Sovodnje ob Soči, Gorizia, Friuli-Venezia Giulia, 34070, Italia",
+        "travelDurationS": 8222,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Cerkev sv. Martina, Kokarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Martina",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:20:51.705237+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 112681.5556383285,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "4d96f3b9-49bd-4c60-b27c-05512000b65a",
+        "osmId": 3575212552,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": "node",
+        "latitude": 46.334916,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:20:53.629111+00:00",
+        "longitude": 13.5139723,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "waterway",
+        "contentReady": true,
+        "proposedName": "Slap Virje",
+        "resolvedName": "Slap Virje",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Virje-Wasserfall",
+                "language": "de",
+                "description": "Ein Wasserfall im Savinja-Tal bei Luče."
+            },
+            {
+                "name": "Virje Waterfall",
+                "language": "en",
+                "description": "A waterfall in the Savinja Valley near Luče."
+            },
+            {
+                "name": "Cascata di Virje",
+                "language": "it",
+                "description": "Una cascata nella valle della Savinja presso Luče."
+            },
+            {
+                "name": "Slap Virje",
+                "language": "sl",
+                "description": "Slap v dolini Savinje pri Lučah."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Slap Virje",
+        "refusalReason": "duration-ceiling",
+        "roadDistanceM": 192475.6,
+        "confirmedQuery": "Slap Virje",
+        "normalizedName": "slap virje",
+        "osmAddressType": "waterfall",
+        "osmFeatureType": "waterfall",
+        "inclusionReason": "A natural excursion destination in the upper Savinja Valley.",
+        "resolvedAddress": "Slap Virje, Plužna, Bovec, 5230, Slovenija",
+        "travelDurationS": 10126,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Slap Virje, Luče, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Slap Virje",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:20:54.215092+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 107178.22933236063,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "4b1802d7-f391-48e4-ae09-f5d076642d87",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:21:03.794446+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Slap Orglice",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Orglice-Wasserfall",
+                "language": "de",
+                "description": "Ein Wasserfall an einem Weg im Kamniška-Bistrica-Tal."
+            },
+            {
+                "name": "Orglice Waterfall",
+                "language": "en",
+                "description": "A waterfall along a route in the Kamniška Bistrica Valley."
+            },
+            {
+                "name": "Cascata Orglice",
+                "language": "it",
+                "description": "Una cascata lungo un sentiero nella valle di Kamniška Bistrica."
+            },
+            {
+                "name": "Slap Orglice",
+                "language": "sl",
+                "description": "Slap ob poti v dolini Kamniške Bistrice."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Slap Orglice",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "slap orglice",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A nature-focused excursion with a short walking component.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Slap Orglice, Kamniška Bistrica, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Slap Orglice",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:21:04.315407+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "b2553a5a-760a-40d2-855a-7fb7ab11d2c9",
+        "osmId": 1546948897,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "way",
+        "latitude": 46.4317467,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:21:29.117054+00:00",
+        "longitude": 15.5204199,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "natural",
+        "contentReady": true,
+        "proposedName": "Bistriški vintgar",
+        "resolvedName": "Bistriški vintgar",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Bistriški-Vintgar-Schlucht",
+                "language": "de",
+                "description": "Eine Schlucht mit Wegen am Bach und durch Wald."
+            },
+            {
+                "name": "Bistriški Vintgar Gorge",
+                "language": "en",
+                "description": "A gorge with paths beside a stream and through woodland."
+            },
+            {
+                "name": "Gola di Bistriški Vintgar",
+                "language": "it",
+                "description": "Una gola con sentieri lungo un torrente e nel bosco."
+            },
+            {
+                "name": "Bistriški vintgar",
+                "language": "sl",
+                "description": "Soteska s potmi ob potoku in gozdnim okoljem."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Bistriški vintgar",
+        "refusalReason": null,
+        "roadDistanceM": 75615.6,
+        "confirmedQuery": "Bistriški vintgar",
+        "normalizedName": "bistriski vintgar",
+        "osmAddressType": "gorge",
+        "osmFeatureType": "gorge",
+        "inclusionReason": "A varied gorge walk for a longer day excursion.",
+        "resolvedAddress": "Bistriški vintgar, Ošelj, Slovenska Bistrica, Slovenija",
+        "travelDurationS": 4548,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Bistriški vintgar, Slovenska Bistrica, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Bistriški vintgar",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:21:32.116858+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 48756.535742159234,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "7d59cdb3-a412-489e-91fd-b5284ad43b3f",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:21:55.315594+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Rimske terme",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Rimske Terme",
+                "language": "de",
+                "description": "Eine Thermenanlage im Savinja-Tal."
+            },
+            {
+                "name": "Rimske Terme",
+                "language": "en",
+                "description": "A thermal complex in the Savinja Valley."
+            },
+            {
+                "name": "Rimske Terme",
+                "language": "it",
+                "description": "Un complesso termale nella valle della Savinja."
+            },
+            {
+                "name": "Rimske terme",
+                "language": "sl",
+                "description": "Termalni kompleks v dolini Savinje."
+            }
+        ],
+        "categoryLabel": "Aktivnosti",
+        "originalQuery": "Rimske terme",
+        "refusalReason": "hard-ceiling",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "rimske terme",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A suitable wellness-oriented excursion option.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Rimske terme, Rimske Toplice, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Rimske terme",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:21:57.316104+00:00",
+                "refusalRule": "hard-ceiling",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "47038859-a4b8-40d7-b911-834c8cd5172c",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:22:11.216119+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Grad Sevnica",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Burg Sevnica",
+                "language": "de",
+                "description": "Eine Burganlage oberhalb der Altstadt von Sevnica."
+            },
+            {
+                "name": "Sevnica Castle",
+                "language": "en",
+                "description": "A castle complex above Sevnica’s old town centre."
+            },
+            {
+                "name": "Castello di Sevnica",
+                "language": "it",
+                "description": "Un complesso castellano sopra il centro storico di Sevnica."
+            },
+            {
+                "name": "Grad Sevnica",
+                "language": "sl",
+                "description": "Grajski kompleks nad starim mestnim jedrom Sevnice."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Grad Sevnica",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "grad sevnica",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A heritage excursion combining a castle setting and town visit.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Grad Sevnica, Sevnica, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Grad Sevnica",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:22:12.916782+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "2a788feb-3acc-4632-a1f6-3e6b4c81217a",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:22:34.41462+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Podzemlje Pece",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Unterwelt der Peca",
+                "language": "de",
+                "description": "Die Unterwelt eines ehemaligen Bergwerks im Meža-Tal."
+            },
+            {
+                "name": "Underground Peca",
+                "language": "en",
+                "description": "The underground world of a former mine in the Meža Valley."
+            },
+            {
+                "name": "Mondo sotterraneo del Peca",
+                "language": "it",
+                "description": "Il mondo sotterraneo di un'ex miniera nella valle della Meža."
+            },
+            {
+                "name": "Podzemlje Pece",
+                "language": "sl",
+                "description": "Podzemni svet nekdanjega rudnika v Mežiški dolini."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Podzemlje Pece",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "podzemlje pece",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "A distinctive regional industrial-heritage excursion.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Podzemlje Pece, Mežica, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Podzemlje Pece",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:22:36.315161+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "9531568d-a743-484d-9f7c-17823ff8229e",
+        "osmId": 15396045,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "relation",
+        "latitude": 46.0632875,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:22:59.616352+00:00",
+        "longitude": 15.590373,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "leisure",
+        "contentReady": true,
+        "proposedName": "Kozjanski park",
+        "resolvedName": "Kozjanski park",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kozjansko-Park",
+                "language": "de",
+                "description": "Ein Schutzgebiet mit abwechslungsreicher Kulturlandschaft und Wegen."
+            },
+            {
+                "name": "Kozjansko Park",
+                "language": "en",
+                "description": "A protected area with varied cultural landscape and trails."
+            },
+            {
+                "name": "Parco di Kozjansko",
+                "language": "it",
+                "description": "Un'area protetta con paesaggio culturale vario e sentieri."
+            },
+            {
+                "name": "Kozjanski park",
+                "language": "sl",
+                "description": "Zavarovano območje z razgibano kulturno krajino in potmi."
+            }
+        ],
+        "categoryLabel": "Izleti",
+        "originalQuery": "Kozjanski park",
+        "refusalReason": null,
+        "roadDistanceM": 84409.4,
+        "confirmedQuery": "Kozjanski park",
+        "normalizedName": "kozjanski park",
+        "osmAddressType": "nature_reserve",
+        "osmFeatureType": "nature_reserve",
+        "inclusionReason": "A broader landscape excursion for walking and regional heritage.",
+        "resolvedAddress": "Kozjanski park, Slovenija",
+        "travelDurationS": 5319,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Kozjanski park, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Kozjanski park",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:23:01.714934+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 59247.4231685002,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "5dcc2f52-3d81-4e70-a76d-861b1c50fd3e",
+        "osmId": 2271983,
+        "range": "near",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "relation",
+        "latitude": 46.3230105,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:23:24.020596+00:00",
+        "longitude": 14.9547972,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "waterway",
+        "contentReady": true,
+        "proposedName": "Savinja",
+        "resolvedName": "Savinja",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Savinja",
+                "language": "de",
+                "description": "Der Fluss beim Campingplatz eignet sich für einen ruhigen Spaziergang am Wasser und zum Beobachten der Savinja-Landschaft."
+            },
+            {
+                "name": "Savinja River",
+                "language": "en",
+                "description": "The river by the campsite is suitable for a quiet waterside walk and observing the Savinja landscape."
+            },
+            {
+                "name": "Fiume Savinja",
+                "language": "it",
+                "description": "Il fiume presso il campeggio è adatto a una tranquilla passeggiata lungo l'acqua e all'osservazione del paesaggio della Savinja."
+            },
+            {
+                "name": "Savinja",
+                "language": "sl",
+                "description": "Reka ob kampu je primerna za miren sprehod ob vodi in opazovanje savinjske pokrajine."
+            }
+        ],
+        "categoryLabel": "Aktivnosti",
+        "originalQuery": "Savinja",
+        "refusalReason": null,
+        "roadDistanceM": 5275.3,
+        "confirmedQuery": "Savinja",
+        "normalizedName": "savinja",
+        "osmAddressType": "river",
+        "osmFeatureType": "river",
+        "inclusionReason": "Naravna posebnost neposredno ob izhodišču, primerna za nezahtevne dejavnosti na prostem.",
+        "resolvedAddress": "Savinja, Slovenija",
+        "travelDurationS": 560,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Savinja, Varpolje, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Savinja",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:23:25.616856+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 3722.4787044884088,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "5a951cee-e91a-4c0c-b1e9-d13448824c82",
+        "osmId": 9777684861,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "node",
+        "latitude": 46.4065029,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:23:44.316196+00:00",
+        "longitude": 14.8403771,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "natural",
+        "contentReady": true,
+        "proposedName": "Bezovec",
+        "resolvedName": "Bezovec",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Bezovec",
+                "language": "de",
+                "description": "Ein bewaldeter Hügel oberhalb von Rečica ob Savinji mit Wandermöglichkeiten auf lokalen Wegen."
+            },
+            {
+                "name": "Bezovec",
+                "language": "en",
+                "description": "A wooded hill above Rečica ob Savinji, with options for hiking on local paths."
+            },
+            {
+                "name": "Bezovec",
+                "language": "it",
+                "description": "Una collina boscosa sopra Rečica ob Savinji, con possibilità di escursioni sui sentieri locali."
+            },
+            {
+                "name": "Bezovec",
+                "language": "sl",
+                "description": "Gozdnat hrib nad Rečico ob Savinji z možnostmi za pohod po lokalnih poteh."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Bezovec",
+        "refusalReason": null,
+        "roadDistanceM": 21408.6,
+        "confirmedQuery": "Bezovec",
+        "normalizedName": "bezovec",
+        "osmAddressType": "peak",
+        "osmFeatureType": "peak",
+        "inclusionReason": "Bližnji pohodniški cilj za goste, ki želijo raziskovati gozdnata pobočja nad dolino.",
+        "resolvedAddress": "Bezovec, Planina, Ljubno, Slovenija",
+        "travelDurationS": 3210,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Bezovec, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Bezovec",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:23:46.31532+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 11818.524686682922,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "0e50ee7c-ed48-4c24-85fc-9c3a74f65b65",
+        "osmId": 961898529,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "way",
+        "latitude": 46.2724467,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:24:12.01551+00:00",
+        "longitude": 14.9549728,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "natural",
+        "contentReady": true,
+        "proposedName": "Čreta",
+        "resolvedName": "Čreta",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Čreta",
+                "language": "de",
+                "description": "Eine Hochfläche im Dobrovlje-Gebirge mit Wanderwegen, Wiesen und Ausblicken zwischen dem Savinja- und dem Dreta-Tal."
+            },
+            {
+                "name": "Čreta",
+                "language": "en",
+                "description": "A plateau area in the Dobrovlje Hills with hiking paths, meadows and views between the Savinja and Dreta valleys."
+            },
+            {
+                "name": "Čreta",
+                "language": "it",
+                "description": "Un altopiano nei rilievi di Dobrovlje con sentieri, prati e panorami tra le valli della Savinja e della Dreta."
+            },
+            {
+                "name": "Čreta",
+                "language": "sl",
+                "description": "Planotast svet Dobrovelj s pohodnimi potmi, travniki in razgledi med Savinjsko dolino in Zadrečko dolino."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Čreta",
+        "refusalReason": null,
+        "roadDistanceM": 13561.7,
+        "confirmedQuery": "Čreta",
+        "normalizedName": "creta",
+        "osmAddressType": "cliff",
+        "osmFeatureType": "cliff",
+        "inclusionReason": "Prepoznaven bližnji pohodniški prostor z razgibano kulturno krajino.",
+        "resolvedAddress": "Čreta, Ropasija, Selo pri Vranskem, Vransko, 3305, Slovenija",
+        "travelDurationS": 1782,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Čreta, Kokarje, Nazarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Čreta",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:24:13.644298+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 5579.161748828951,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "aa22daa8-ae36-4281-85f8-7dc3ba025bb1",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:24:28.015253+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Dom na Čreti",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Dom na Čreti",
+                "language": "de",
+                "description": "Eine Berghütte, die sich als Ziel oder Zwischenstopp bei Wanderungen im Dobrovlje-Gebirge eignet."
+            },
+            {
+                "name": "Dom na Čreti",
+                "language": "en",
+                "description": "A mountain hut useful as a destination or stopping point when walking in the Dobrovlje Hills."
+            },
+            {
+                "name": "Dom na Čreti",
+                "language": "it",
+                "description": "Un rifugio utile come meta o punto di sosta durante le escursioni nei rilievi di Dobrovlje."
+            },
+            {
+                "name": "Dom na Čreti",
+                "language": "sl",
+                "description": "Planinska postojanka, ki je uporabna kot cilj ali vmesna točka pri hoji po Dobrovljah."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Dom na Čreti",
+        "refusalReason": "name-mismatch",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "dom na creti",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Koristna orientacijska točka za načrtovanje lokalnega pohoda.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Dom na Čreti, Kokarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Dom na Čreti",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:24:29.61758+00:00",
+                "refusalRule": "name-mismatch",
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "38bc86ff-8b6e-40ed-9d58-c478c48f905c",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:24:48.916897+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Dobrovlje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Dobrovlje",
+                "language": "de",
+                "description": "Eine bewaldete Karsthochfläche mit einem Wegenetz durch ruhige Weiler, Weiden und Wald."
+            },
+            {
+                "name": "Dobrovlje",
+                "language": "en",
+                "description": "A wooded karst plateau with a network of paths through quiet hamlets, pastures and forest."
+            },
+            {
+                "name": "Dobrovlje",
+                "language": "it",
+                "description": "Un altopiano carsico boscoso con una rete di sentieri tra piccoli borghi, pascoli e boschi."
+            },
+            {
+                "name": "Dobrovlje",
+                "language": "sl",
+                "description": "Gozdnata kraška planota z mrežo poti skozi samotne zaselke, pašnike in gozd."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Dobrovlje",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "dobrovlje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Primerno območje za samostojno hojo in kolesarjenje po manj prometnih lokalnih cestah.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Dobrovlje, Kokarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Dobrovlje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:24:51.331461+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Dobrovlje, Kokarje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:24:51.331461+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "41cac5df-52ad-4724-8190-fb94bda1cfb8",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:25:10.416702+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Cerkev sv. Jošta na Dobrovljah",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Kirche des heiligen Jodokus in Dobrovlje",
+                "language": "de",
+                "description": "Eine ländliche Kirche im Dobrovlje-Gebirge, die an Wanderwege über die Hochfläche angebunden ist."
+            },
+            {
+                "name": "Church of St. Josse in Dobrovlje",
+                "language": "en",
+                "description": "A rural church in the Dobrovlje Hills, connected with hiking routes across the plateau."
+            },
+            {
+                "name": "Chiesa di San Giusto a Dobrovlje",
+                "language": "it",
+                "description": "Una chiesa rurale nei rilievi di Dobrovlje, collegata ai sentieri escursionistici dell'altopiano."
+            },
+            {
+                "name": "Cerkev sv. Jošta na Dobrovljah",
+                "language": "sl",
+                "description": "Podeželska cerkev na Dobrovljah, povezana s pohodniškimi potmi po planoti."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Cerkev sv. Jošta na Dobrovljah",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "cerkev sv josta na dobrovljah",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Kulturna točka, ki se naravno povezuje z izletom po Dobrovljah.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Cerkev svetega Jošta, Dobrovlje, Kokarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Cerkev sv. Jošta na Dobrovljah",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:13.145372+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Cerkev svetega Jošta, Dobrovlje, Kokarje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:13.145372+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "35fb95a1-4e4d-44b4-af6b-8e8196b4b32a",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:25:30.64243+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Rečiška planinska pot",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Bergweg von Rečica",
+                "language": "de",
+                "description": "Ein lokaler Bergweg zur Erkundung der Aussichtspunkte und Waldgebiete oberhalb von Rečica ob Savinji."
+            },
+            {
+                "name": "Rečica Mountain Trail",
+                "language": "en",
+                "description": "A local mountain trail for exploring the viewpoints and wooded areas above Rečica ob Savinji."
+            },
+            {
+                "name": "Sentiero montano di Rečica",
+                "language": "it",
+                "description": "Un sentiero locale per esplorare i punti panoramici e le zone boschive sopra Rečica ob Savinji."
+            },
+            {
+                "name": "Rečiška planinska pot",
+                "language": "sl",
+                "description": "Lokalna planinska pot, namenjena spoznavanju razglednih in gozdnih predelov nad Rečico ob Savinji."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Rečiška planinska pot",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "reciska planinska pot",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Lokalna možnost za aktivne goste, ki želijo hoditi neposredno iz širše okolice kampa.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Rečiška planinska pot, Rečica ob Savinji, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Rečiška planinska pot",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:32.344382+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Rečiška planinska pot, Rečica ob Savinji, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:32.344382+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "60da62d1-9616-488c-b564-966526fb46db",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:25:40.571123+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Savinjska kolesarska pot",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Savinja-Radroute",
+                "language": "de",
+                "description": "Eine Radverbindung durch das Savinja-Tal, geeignet zum Erkunden von Talorten und Flussauen."
+            },
+            {
+                "name": "Savinja Cycling Route",
+                "language": "en",
+                "description": "A cycling connection through the Savinja Valley, suitable for exploring valley settlements and riverside flats."
+            },
+            {
+                "name": "Ciclovia della Savinja",
+                "language": "it",
+                "description": "Un collegamento ciclabile attraverso la valle della Savinja, adatto a esplorare i paesi della valle e le pianure fluviali."
+            },
+            {
+                "name": "Savinjska kolesarska pot",
+                "language": "sl",
+                "description": "Kolesarska povezava po Savinjski dolini, primerna za raziskovanje dolinskih krajev in rečnih ravnic."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Savinjska kolesarska pot",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "savinjska kolesarska pot",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Uporabna uredniška izbira za goste s kolesi in za počasnejše raziskovanje doline.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Savinjska kolesarska pot, Spodnja Rečica, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Savinjska kolesarska pot",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:41.842858+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Savinjska kolesarska pot, Spodnja Rečica, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:41.842858+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "ab55c7c8-1e1f-4cda-b6c9-9923f7e966b7",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:25:51.45968+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Sotočje Savinje in Drete",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Zusammenfluss von Savinja und Dreta",
+                "language": "de",
+                "description": "Ein Naturort bei Nazarje, an dem die Flüsse Savinja und Dreta zusammenfließen."
+            },
+            {
+                "name": "Confluence of the Savinja and Dreta Rivers",
+                "language": "en",
+                "description": "A natural spot near Nazarje where the Savinja and Dreta rivers meet."
+            },
+            {
+                "name": "Confluenza della Savinja e della Dreta",
+                "language": "it",
+                "description": "Un luogo naturale presso Nazarje, dove si incontrano i fiumi Savinja e Dreta."
+            },
+            {
+                "name": "Sotočje Savinje in Drete",
+                "language": "sl",
+                "description": "Naravna točka pri Nazarjah, kjer se združita reki Savinja in Dreta."
+            }
+        ],
+        "categoryLabel": "Aktivnosti",
+        "originalQuery": "Sotočje Savinje in Drete",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "sotocje savinje in drete",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Zanimiva naravna točka za kratek izlet po Savinjski dolini.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Sotočje Savinje in Drete, Nazarje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Sotočje Savinje in Drete",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:53.415913+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Sotočje Savinje in Drete, Nazarje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:25:53.415913+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "894114f7-947c-4999-a9da-69061cac8201",
+        "osmId": 393443094,
+        "range": "excursion",
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "pending",
+        "osmType": "way",
+        "latitude": 46.1571119,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:26:03.779392+00:00",
+        "longitude": 15.2374778,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": "historic",
+        "contentReady": true,
+        "proposedName": "Grad Tabor Laško",
+        "resolvedName": "Grad tabor Laško",
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Burg Tabor bei Laško",
+                "language": "de",
+                "description": "Die Reste einer mittelalterlichen Burg oberhalb von Laško mit Blick über das Savinja-Tal."
+            },
+            {
+                "name": "Tabor Castle, Laško",
+                "language": "en",
+                "description": "Remains of a medieval castle above Laško, overlooking the Savinja Valley."
+            },
+            {
+                "name": "Castello di Tabor, Laško",
+                "language": "it",
+                "description": "Resti di un castello medievale sopra Laško, con vista sulla valle della Savinja."
+            },
+            {
+                "name": "Grad Tabor Laško",
+                "language": "sl",
+                "description": "Ostanki srednjeveškega gradu nad Laškim z razgledom na dolino Savinje."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Grad Tabor Laško",
+        "refusalReason": null,
+        "roadDistanceM": 50487.8,
+        "confirmedQuery": "Grad Tabor Laško",
+        "normalizedName": "grad tabor lasko",
+        "osmAddressType": "historic",
+        "osmFeatureType": "castle",
+        "inclusionReason": "Zgodovinski izletni cilj, ki dopolnjuje obisk Laškega in Savinjske doline.",
+        "resolvedAddress": "Grad tabor Laško, Pot na Hum, Zahum, Laško, 3270, Slovenija",
+        "travelDurationS": 3197,
+        "confirmationMethod": "exact",
+        "geocodingLookupHint": "Grad Tabor, Laško, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Grad Tabor Laško",
+                "verdict": "resolved",
+                "createdAt": "2026-08-30T21:26:03.987514+00:00",
+                "refusalRule": null,
+                "attemptNumber": 1
+            }
+        ],
+        "straightLineDistanceM": 30523.24657042864,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "83c6094b-b6e6-441e-8316-7c38db601b15",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:26:28.515969+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Hum nad Laškim",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Hum oberhalb von Laško",
+                "language": "de",
+                "description": "Ein Aussichtsberg oberhalb von Laško, der über markierte Wanderwege erreichbar ist."
+            },
+            {
+                "name": "Hum above Laško",
+                "language": "en",
+                "description": "A viewpoint hill above Laško, reached by marked hiking trails."
+            },
+            {
+                "name": "Hum sopra Laško",
+                "language": "it",
+                "description": "Una collina panoramica sopra Laško, raggiungibile tramite sentieri segnalati."
+            },
+            {
+                "name": "Hum nad Laškim",
+                "language": "sl",
+                "description": "Razgleden hrib nad Laškim, dosegljiv po označenih pohodnih poteh."
+            }
+        ],
+        "categoryLabel": "Pohodi in kolesarjenje",
+        "originalQuery": "Hum nad Laškim",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "hum nad laskim",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Pohodniška izbira za celodnevni izlet z razgledom nad rečno dolino.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Hum nad Laškim, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Hum nad Laškim",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:26:31.726588+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Hum nad Laškim, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:26:31.726588+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "551d46d8-56fc-421e-8efc-3c570c5c68ec",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:26:55.51683+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Stara grofija",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Alte Grafenresidenz",
+                "language": "de",
+                "description": "Ein Renaissancepalast in der Altstadt von Celje, der mit dem Erbe der Grafen von Cilli verbunden ist."
+            },
+            {
+                "name": "Old Counts' Mansion",
+                "language": "en",
+                "description": "A Renaissance palace in Celje's old town, associated with the heritage of the Counts of Celje."
+            },
+            {
+                "name": "Antica residenza dei conti",
+                "language": "it",
+                "description": "Un palazzo rinascimentale nel centro storico di Celje, legato all'eredità dei conti di Celje."
+            },
+            {
+                "name": "Stara grofija",
+                "language": "sl",
+                "description": "Renesančna palača v starem mestnem jedru Celja, povezana z dediščino celjskih grofov."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Stara grofija",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "stara grofija",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Osrednja kulturnozgodovinska točka za izlet v staro mestno jedro Celja.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Stara grofija, Celje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Stara grofija",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:26:58.744312+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Stara grofija, Celje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:26:58.744312+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "187dad23-f976-48ca-8f71-1c417741ce43",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:27:24.91436+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Knežji dvor",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Fürstenhof",
+                "language": "de",
+                "description": "Ein archäologischer und historischer Ort in Celje mit Überresten des römischen und mittelalterlichen Stadterbes."
+            },
+            {
+                "name": "Princely Court",
+                "language": "en",
+                "description": "An archaeological and historical site in Celje with remains of Roman and medieval urban heritage."
+            },
+            {
+                "name": "Corte principesca",
+                "language": "it",
+                "description": "Un sito archeologico e storico a Celje con resti del patrimonio urbano romano e medievale."
+            },
+            {
+                "name": "Knežji dvor",
+                "language": "sl",
+                "description": "Arheološko in zgodovinsko prizorišče v Celju z ostanki rimske in srednjeveške mestne dediščine."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Knežji dvor",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "knezji dvor",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Dopolnjuje ogled Celja z jasno predstavljeno mestno zgodovino.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Knežji dvor, Celje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Knežji dvor",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:27:27.716154+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Knežji dvor, Celje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:27:27.716154+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "70450bb3-5e97-4bea-a7df-8ad319162d1d",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:27:44.615214+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Muzej novejše zgodovine Celje",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Museum für neuere Geschichte Celje",
+                "language": "de",
+                "description": "Das Museum präsentiert die Geschichte von Celje und Umgebung vom späten 19. Jahrhundert bis in die Gegenwart."
+            },
+            {
+                "name": "Museum of Recent History Celje",
+                "language": "en",
+                "description": "The museum presents the history of Celje and its surroundings from the late 19th century to the present."
+            },
+            {
+                "name": "Museo di storia recente di Celje",
+                "language": "it",
+                "description": "Il museo presenta la storia di Celje e dei suoi dintorni dalla fine del XIX secolo a oggi."
+            },
+            {
+                "name": "Muzej novejše zgodovine Celje",
+                "language": "sl",
+                "description": "Muzej predstavlja zgodovino Celja in okolice od konca 19. stoletja do sodobnosti."
+            }
+        ],
+        "categoryLabel": "Znamenitosti",
+        "originalQuery": "Muzej novejše zgodovine Celje",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "muzej novejse zgodovine celje",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Vsebinsko primeren kulturni postanek ob obisku Celja, tudi ob manj ugodnem vremenu.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Muzej novejše zgodovine Celje, Celje, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Muzej novejše zgodovine Celje",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:27:47.214898+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Muzej novejše zgodovine Celje, Celje, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:27:47.214898+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    },
+    {
+        "id": "735761bc-3ae2-4fc4-a061-7a10fd44879d",
+        "osmId": null,
+        "range": null,
+        "runId": "a7540a4d-588e-421c-8e99-ac011fbcb5a9",
+        "status": "unresolved",
+        "osmType": null,
+        "latitude": null,
+        "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+        "createdAt": "2026-08-30T21:28:10.915768+00:00",
+        "longitude": null,
+        "updatedAt": "2026-08-30T21:28:17.137+00:00",
+        "categoryId": "cc3b2e2b-40e2-4606-ba4c-cd318a8412b3",
+        "reviewedAt": null,
+        "reviewedBy": null,
+        "osmCategory": null,
+        "contentReady": true,
+        "proposedName": "Pivovarna Laško",
+        "resolvedName": null,
+        "supersededBy": null,
+        "translations": [
+            {
+                "name": "Brauerei Laško",
+                "language": "de",
+                "description": ""
+            },
+            {
+                "name": "Laško Brewery",
+                "language": "en",
+                "description": ""
+            },
+            {
+                "name": "Birrificio di Laško",
+                "language": "it",
+                "description": ""
+            },
+            {
+                "name": "Pivovarna Laško",
+                "language": "sl",
+                "description": ""
+            }
+        ],
+        "categoryLabel": "Hrana in pijača",
+        "originalQuery": "Pivovarna Laško",
+        "refusalReason": "no-results",
+        "roadDistanceM": null,
+        "confirmedQuery": null,
+        "normalizedName": "pivovarna lasko",
+        "osmAddressType": null,
+        "osmFeatureType": null,
+        "inclusionReason": "Tematski izlet za goste, ki jih zanimata lokalna kulinarika in industrijska dediščina.",
+        "resolvedAddress": null,
+        "travelDurationS": null,
+        "confirmationMethod": null,
+        "geocodingLookupHint": "Pivovarna Laško, Laško, Slovenia",
+        "verificationAttempts": [
+            {
+                "query": "Pivovarna Laško",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:28:13.442757+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 1
+            },
+            {
+                "query": "Pivovarna Laško, Laško, Slovenia",
+                "verdict": "refused",
+                "createdAt": "2026-08-30T21:28:13.442757+00:00",
+                "refusalRule": "no-results",
+                "attemptNumber": 2
+            }
+        ],
+        "straightLineDistanceM": null,
+        "requiresIndividualReview": false
+    }
+]

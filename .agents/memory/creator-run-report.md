@@ -46,3 +46,9 @@ The strict global sieve is authoritative; bounded near-ring evidence is additive
 **Why:** Local ambiguity must never downgrade a prior exact global confirmation, and a geographic quota must not pressure the model to invent places in empty settlements.
 
 **How to apply:** Skip all near matching and routing when the global sieve resolves. Count local resolutions only after global failure. Report quota-targeted/unconfirmed totals and additive near-ring resolutions in immutable run evidence.
+
+The fifth MENINA run completed before the global-first/counter build reached production. Its immutable report has `localProposalCount` but not the three later counters; two `overpass_near` rows have no preceding global-refusal evidence.
+
+**Why:** The next production startup found five durable runs and correctly blocked another claim, so missing historical evidence cannot be recreated without either rewriting history or authorizing a sixth run.
+
+**How to apply:** Never reinterpret those two rows as post-global-failure resolutions, and never invent the quota-unconfirmed count. Preserve the report verbatim and keep the sixth-run block.
