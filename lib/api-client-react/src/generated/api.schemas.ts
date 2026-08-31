@@ -1015,13 +1015,12 @@ export interface TenantDuplicateInput {
 }
 
 /**
- * Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell
+ * Guest-facing UI mode for all new and updated tenants
  */
 export type TenantUpdateGuestUiMode = typeof TenantUpdateGuestUiMode[keyof typeof TenantUpdateGuestUiMode];
 
 
 export const TenantUpdateGuestUiMode = {
-  legacy: 'legacy',
   'living-guide': 'living-guide',
 } as const;
 
@@ -1109,7 +1108,7 @@ export interface TenantUpdate {
   /** @nullable */
   renewsAt?: string | null;
   theme?: string;
-  /** Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell */
+  /** Guest-facing UI mode for all new and updated tenants */
   guestUiMode?: TenantUpdateGuestUiMode;
   /** @nullable */
   coverTitle?: string | null;

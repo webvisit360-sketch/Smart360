@@ -86,6 +86,7 @@ async function findOrCreateMeninaDraft(): Promise<string> {
         latitude: origin.lat,
         longitude: origin.lng,
         tenantType: "kamp",
+        guestUiMode: "living-guide",
         creatorDraft: true,
         creatorOriginRegion: origin.nominatimDisplayName,
         isPublished: false,

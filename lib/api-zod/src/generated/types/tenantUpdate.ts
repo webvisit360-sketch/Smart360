@@ -80,7 +80,7 @@ export interface TenantUpdate {
   /** @nullable */
   renewsAt?: string | null;
   theme?: string;
-  /** Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell */
+  /** Guest-facing UI mode for all new and updated tenants */
   guestUiMode?: TenantUpdateGuestUiMode;
   /** @nullable */
   coverTitle?: string | null;

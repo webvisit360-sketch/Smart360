@@ -1764,7 +1764,7 @@ export const UpdateTenantBody = zod.object({
   "bgColor": zod.string().nullish(),
   "renewsAt": zod.string().nullish(),
   "theme": zod.string().optional(),
-  "guestUiMode": zod.enum(['legacy', 'living-guide']).optional().describe('Guest-facing UI mode: \'legacy\' = existing themes; \'living-guide\' = Living Guide shell'),
+  "guestUiMode": zod.enum(['living-guide']).optional().describe('Guest-facing UI mode for all new and updated tenants'),
   "coverTitle": zod.string().nullish(),
   "coverSubtitle": zod.string().nullish(),
   "coverTitleSize": zod.number().nullish(),

@@ -116,10 +116,9 @@ export const tenantsTable = pgTable("tenants", {
   // luminance client-side — never stored separately.
   bgColor: text("bg_color"),
   theme: text("theme").notNull().default("mediterran"),
-  // Guest-facing UI mode. "legacy" = the existing mediterran/swipe themes;
-  // "living-guide" = the new Living Guide shell. NOT NULL; default legacy so
-  // existing tenants are unaffected. DB CHECK guards the allowed values.
-  guestUiMode: text("guest_ui_mode").notNull().default("legacy"),
+  // Guest-facing UI mode. New tenants always use the Living Guide shell.
+  // "legacy" remains readable only while the owner inventories old tenants.
+  guestUiMode: text("guest_ui_mode").notNull().default("living-guide"),
   coverTitle: text("cover_title"),
   coverSubtitle: text("cover_subtitle"),
   // Cover editor overrides: NULL = inherit the active theme's default (see ui/urejevalnik-naslovnice.md)

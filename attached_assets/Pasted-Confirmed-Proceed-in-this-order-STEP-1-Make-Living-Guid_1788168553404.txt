@@ -1,0 +1,28 @@
+Confirmed. Proceed in this order.
+
+STEP 1 — Make Living Guide the only outcome for new tenants.
+
+  - Change the tenant creation default so a newly created tenant receives guest_ui_mode = "living-guide".
+  - Remove the explicit guestUiMode: "legacy" assignment from the tenant copy path in adminTenants.ts so copies also receive living-guide.
+  - Set the existing tenant 177e633a-6030-4eca-8ce8-e0a0afdff599 (Piknik prostor in kamp Gril) to guest_ui_mode = "living-guide".
+
+  After this, no path in the product may produce a tenant on the legacy implementation.
+
+STEP 2 — Report which tenants are on legacy.
+
+  List every tenant in production whose guest_ui_mode is "legacy": name, slug, whether published, and whether it has any guest content. Do not change them. This determines whether the legacy implementation can be deleted, and that decision is the owner's.
+
+STEP 3 — Check the Living Guide shell against the rules that were applied to the wrong component.
+
+  Seven corrections were recently applied to guest-home.tsx, which is the legacy component. Examine LivingGuideGuestShell.tsx and report, without changing anything, whether each of the following is already correct there or is violated:
+
+    a. No rating is displayed before at least one real review exists. No "5,0 · 0 ocen", no "Novo", no empty stars.
+    b. No response-time claim is displayed before it is measured from five answered messages.
+    c. No blue anywhere in the interface. Photographs may of course contain blue; this is about controls, icons, buttons and navigation.
+    d. Where a place has no photograph, the card carries the category icon and "fotografija manjka" rather than a stock image.
+    e. The host avatar is the host's own photograph or their initial on #ECF0EA, never a stock image.
+    f. Headings are not clipped behind the status bar when scrolled.
+
+  Report each as correct or violated, with the file and line. Do not fix them in this task.
+
+Implement step 1, report steps 2 and 3, and STOP. Do not publish.

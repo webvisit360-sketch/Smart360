@@ -15,6 +15,7 @@ import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRe
 import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill";
 import { runTriesteDistanceCorrectionAtStartup } from "./lib/triesteDistanceCorrection";
 import { runMeninaCreatorC1OnceAtStartup } from "./lib/creatorMeninaProductionRun";
+import { runGrilLivingGuideCutoverAtStartup } from "./lib/grilLivingGuideCutover";
 
 const rawPort = process.env["PORT"];
 
@@ -108,6 +109,8 @@ ensureAdminAccount()
   .then(() => runMeliPuContentFinalizationAtStartup())
   // Align former untouched 2 GiB defaults with the displayed decimal 2 GB.
   .then(() => runDecimalMediaQuotaBackfillAtStartup())
+  // Owner-approved, row-guarded cutover of the existing Gril tenant.
+  .then(() => runGrilLivingGuideCutoverAtStartup())
   // One-deploy production-only correction for the approved Trieste city-centre distance.
   // Remove this hook and its file immediately after production verification.
   .then(() => runTriesteDistanceCorrectionAtStartup())

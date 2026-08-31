@@ -115,10 +115,25 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       slug, name: `Kamp CP2b ${stamp}`, subtitle: "Testni kamp ob reki", type: "kamp",
     });
     assert.equal(res.status, 201, `create got ${res.status}`);
-    const created = (await res.json()) as { id: string; tenantType?: string | null; firstPublishedAt?: string | null };
+    const created = (await res.json()) as {
+      id: string;
+      tenantType?: string | null;
+      firstPublishedAt?: string | null;
+      guestUiMode?: string;
+    };
     tenantId = created.id;
     assert.equal(created.tenantType, "kamp");
     assert.equal(created.firstPublishedAt ?? null, null);
+    assert.equal(created.guestUiMode, "living-guide");
+
+    const legacy = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { guestUiMode: "legacy" },
+    );
+    assert.equal(legacy.status, 400, "no admin path may switch a tenant back to legacy");
 
     const sections = await db
       .select({ id: sectionsTable.id, key: sectionsTable.key, position: sectionsTable.position })

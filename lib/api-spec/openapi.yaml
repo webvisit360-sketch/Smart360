@@ -3008,8 +3008,8 @@ components:
         theme: { type: string }
         guestUiMode:
           type: string
-          enum: [legacy, living-guide]
-          description: "Guest-facing UI mode: 'legacy' = existing themes; 'living-guide' = Living Guide shell"
+          enum: [living-guide]
+          description: "Guest-facing UI mode for all new and updated tenants"
         coverTitle: { type: ["string", "null"] }
         coverSubtitle: { type: ["string", "null"] }
         coverTitleSize: { type: ["number", "null"] }

@@ -245,6 +245,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         name,
         subtitle: subtitle ?? null,
         tenantType,
+        guestUiMode: "living-guide",
         renewsAt: plusOneYear(new Date()),
       })
       .returning();
@@ -464,8 +465,8 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
     return "bgColor must be a hex color like #FFFFFF";
   if (data["wifiEnc"] !== undefined && data["wifiEnc"] !== null && !["WPA", "WEP", "nopass"].includes(String(data["wifiEnc"])))
     return "wifiEnc must be WPA, WEP or nopass";
-  if (data["guestUiMode"] !== undefined && !["legacy", "living-guide"].includes(String(data["guestUiMode"])))
-    return "guestUiMode must be 'legacy' or 'living-guide'";
+  if (data["guestUiMode"] !== undefined && data["guestUiMode"] !== "living-guide")
+    return "guestUiMode must be 'living-guide'";
   // livingGuideNav: null is allowed (reset to default); when set, must be valid.
   if (data["livingGuideNav"] !== undefined && data["livingGuideNav"] !== null) {
     const navResult = validateLivingGuideNav(data["livingGuideNav"]);
@@ -877,6 +878,7 @@ export async function copyTenant(
     createdAt: _c,
     renewsAt: _r,
     orderPassword: _orderPassword,
+    guestUiMode: _guestUiMode,
     ...rest
   } = source;
   const [created] = await db
@@ -885,14 +887,12 @@ export async function copyTenant(
       ...rest,
       slug: opts.slug,
       name: opts.name,
+      guestUiMode: "living-guide",
       isTemplate: false,
       isPublished: false,
       // Security settings belong to the new establishment and must never be
       // inherited from a template or duplicated tenant.
       orderPassword: null,
-      // Living Guide is an explicit per-establishment launch decision. New
-      // copies always start on the safe legacy UI even when the source is live.
-      guestUiMode: "legacy",
       // livingGuideNav is a per-establishment navigation decision. Reset to null
       // so the frontend applies the approved default rather than silently
       // inheriting a nav layout that may not fit the new establishment's content.

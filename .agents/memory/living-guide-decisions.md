@@ -57,11 +57,11 @@ All shared Living Guide list rows use a 20px/750 title and a 16px subline. There
 
 **How to apply:** Keep the shared row component at 20px/750 and 16px everywhere, and include both values in future production parity tables.
 
-Use the `guestUiMode` cutover flag with legacy as the default and a development-only Living Guide preview. Replace the admin cover preview before removing the legacy cover.
+Living Guide is the only allowed outcome for new tenants and copies. Operational inserts must write it explicitly even if a deployed database still has a stale legacy default; ordinary admin writes must never switch a tenant back to legacy.
 
-**Why:** The new guest shell must be introduced without breaking admin tools or live tenants.
+**Why:** The owner confirmed there is one guest application skeleton. A per-tenant legacy default caused new tenants to render a separately maintained implementation.
 
-**How to apply:** Keep new and legacy guest systems isolated until the final validated cutover.
+**How to apply:** Keep legacy readable only while the owner inventories old rows. Do not bulk-convert or delete legacy code without separate approval; migrate only explicitly approved tenants with exact row guards.
 
 Demo-only examples are allowed on the Living Guide tokens page. Parts 2–5 must never invent values in the real guest UI; if source data is missing, hide the dependent block.
 
