@@ -1,0 +1,23 @@
+The fifth Menina run and this Gril run share one unexplained result: the near ring resolved nothing, twice, with a working catalogue.
+
+This run gives a decisive test case.
+
+"Skakalni center Savina" is a real place. It is the official name of the ski jumping venue at Ljubno ob Savinji, roughly ten minutes from the origin, which hosts a FIS World Cup. The model proposed it with its exact correct name. Nominatim returned no-results, and the near ring did not rescue it, although the Overpass catalogue reported success with 5603 elements inside a 35 km envelope.
+
+INVESTIGATE AND REPORT. CHANGE NOTHING.
+
+1. Is the Ljubno ski jumping venue present anywhere in the 5603-element catalogue this run built? Search it by name and by any OSM object at that location. Report yes or no, and if yes, the object type, id and tags.
+
+2. If it is absent, determine why. Report which of these is the cause, with evidence:
+   - the bounding box did not cover it;
+   - the tag whitelists did not include the tags it carries;
+   - it was fetched but dropped by the local distance or OSRM filter;
+   - something else.
+
+   The whitelists were narrowed deliberately when the earlier unbounded query returned 504. State plainly whether that narrowing is what excludes this object, and what other kinds of place the same narrowing excludes.
+
+3. Take all proposals from this run that were quota-targeted at valley settlements and left unconfirmed. For each, report whether any plausibly matching object exists in the catalogue. This separates two very different explanations that currently look identical: places the machinery lost, and places the model invented because the quota demanded more local names than the valley contains.
+
+4. Report how the near-ring matcher decides that a catalogue object matches a proposed name, and whether it was invoked at all for these 33 unresolved proposals. If it was invoked and rejected every candidate, report the candidates it saw for at least five of them.
+
+Report the four points with evidence and STOP. Do not change the query, the whitelists, or the matcher in this task. Do not publish.
