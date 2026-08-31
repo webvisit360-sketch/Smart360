@@ -17,6 +17,10 @@ export type PacedNominatimFetch = {
   isStopped: () => boolean;
   stopReason: () => string | null;
   stop: (reason: string) => void;
+  attempts: () => Array<{
+    startedAt: string; completedAt: string; attempt: number;
+    httpStatus: number | null; error: string | null; backoffMs: number;
+  }>;
 };
 
 /** One process-wide sequential Nominatim caller for one-off Creator runs.
@@ -28,15 +32,18 @@ export function createPacedNominatimFetch(options: {
   timeoutMs?: number;
   maxAttempts?: number;
   minimumIntervalMs?: number;
+  maximumBackoffMs?: number;
   sleepFn?: (milliseconds: number) => Promise<void>;
 } = {}): PacedNominatimFetch {
   const underlyingFetch = options.fetchFn ?? fetch;
   const timeoutMs = options.timeoutMs ?? 10_000;
   const maxAttempts = options.maxAttempts ?? 3;
   const minimumIntervalMs = options.minimumIntervalMs ?? 1_000;
+  const maximumBackoffMs = options.maximumBackoffMs ?? 60_000;
   const wait = options.sleepFn ?? sleep;
   let lastAttemptAt = 0;
   let stoppedReason: string | null = null;
+  const attemptLog: ReturnType<PacedNominatimFetch["attempts"]> = [];
 
   const stop = (reason: string) => {
     stoppedReason ??= reason;
@@ -57,21 +64,52 @@ export function createPacedNominatimFetch(options: {
       try {
         const response = await underlyingFetch(input, { ...init, signal });
         const retryable = response.status === 429 || response.status >= 500;
-        if (!retryable) return response;
+        if (!retryable) {
+          attemptLog.push({
+            startedAt: new Date(lastAttemptAt).toISOString(),
+            completedAt: new Date().toISOString(),
+            attempt, httpStatus: response.status, error: null, backoffMs: 0,
+          });
+          return response;
+        }
         if (attempt === maxAttempts) {
+          attemptLog.push({
+            startedAt: new Date(lastAttemptAt).toISOString(),
+            completedAt: new Date().toISOString(),
+            attempt, httpStatus: response.status, error: null, backoffMs: 0,
+          });
           stop(`Nominatim remained unavailable after ${maxAttempts} attempts (HTTP ${response.status}).`);
           return response;
         }
         await response.body?.cancel();
-        const backoff = retryAfterMilliseconds(response) ?? 2 ** attempt * 1000;
+        const backoff = Math.min(
+          retryAfterMilliseconds(response) ?? 2 ** attempt * 1000,
+          maximumBackoffMs,
+        );
+        attemptLog.push({
+          startedAt: new Date(lastAttemptAt).toISOString(),
+          completedAt: new Date().toISOString(),
+          attempt, httpStatus: response.status, error: null, backoffMs: backoff,
+        });
         await wait(backoff);
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         if (attempt === maxAttempts) {
+          attemptLog.push({
+            startedAt: new Date(lastAttemptAt).toISOString(),
+            completedAt: new Date().toISOString(),
+            attempt, httpStatus: null, error: reason, backoffMs: 0,
+          });
           stop(`Nominatim remained unavailable after ${maxAttempts} attempts (${reason}).`);
           throw error;
         }
-        await wait(2 ** attempt * 1000);
+        const backoff = Math.min(2 ** attempt * 1000, maximumBackoffMs);
+        attemptLog.push({
+          startedAt: new Date(lastAttemptAt).toISOString(),
+          completedAt: new Date().toISOString(),
+          attempt, httpStatus: null, error: reason, backoffMs: backoff,
+        });
+        await wait(backoff);
       } finally {
         clearTimeout(timeout);
       }
@@ -84,5 +122,6 @@ export function createPacedNominatimFetch(options: {
     isStopped: () => stoppedReason !== null,
     stopReason: () => stoppedReason,
     stop,
+    attempts: () => attemptLog.map((attempt) => ({ ...attempt })),
   };
 }

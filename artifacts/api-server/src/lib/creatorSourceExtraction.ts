@@ -13,7 +13,27 @@ const GENERIC_LABELS = new Set([
   "občina", "turizem", "znamenitosti", "izleti", "aktivnosti", "doživetja",
   "nastanitve", "kulinarika", "slovenščina", "english", "deutsch", "italiano",
   "facebook", "instagram", "youtube", "piškotki", "zasebnost",
-]);
+  "seznam gora", "na vrh", "o projektu", "pohodništvo", "kolesarjenje",
+  "naravne znamenitosti",
+  "adrenalinski park", "klemenča jama in strelovec",
+  "krajinski park golte in alpski vrt",
+  "krajinska parka logarska dolina in robanov kot",
+  "naravni parki logarska dolina robanov kot",
+  "savinjska dolina z okolico",
+].map(normalizeCreatorProposalName));
+
+function isMetadataOrEditorialNoise(value: string): boolean {
+  return (
+    /^\d{2,4}\s*m$/iu.test(value) ||
+    /^(?:\d+\s*h(?:\s*\d+\s*min)?|\d+\s*min)$/iu.test(value) ||
+    /^(?:(?:zelo|delno)\s+)?(?:lahka|zahtevna|nezahtevna)\s+.*(?:pot|steza)$/iu.test(value) ||
+    /^(?:ponedeljek|torek|sreda|četrtek|petek|sobota|nedelja)\b/iu.test(value) ||
+    /^slapom\b/iu.test(value) ||
+    /^upravljanje\b/iu.test(value) ||
+    /\bzdravst\w*\s+dom\b/iu.test(value) ||
+    /\b(?:razstava|koncert|orkester|festival|predstava|prireditev|dogodek|delavnica)\b/iu.test(value)
+  );
+}
 
 function cleanText(value: string): string {
   return sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} })
@@ -62,11 +82,16 @@ export function extractCreatorSourceFacts(input: {
       continue;
     }
     if (href.protocol !== "https:" || href.origin !== source.origin) continue;
-    const placeName = cleanText(match[2] ?? "");
+    const placeName = cleanText(match[2] ?? "")
+      .replace(/\s*\(\s*\d{2,4}\s*m\s*\)\s*$/iu, "")
+      .replace(/[\s,;:]+$/u, "");
     const normalized = normalizeCreatorProposalName(placeName);
     if (
       placeName.length < 3 || placeName.length > 100 ||
       GENERIC_LABELS.has(normalized) ||
+      normalized === normalizeCreatorProposalName(input.sourceLabel.replace(/^Občina\s+/u, "")) ||
+      normalized === normalizeCreatorProposalName(input.sourceLabel) ||
+      isMetadataOrEditorialNoise(placeName) ||
       /^(več|preberi|poglej|klik|www\.|https?:|e-pošta|telefon)/iu.test(placeName) ||
       /^[\d\s.,:+/-]+$/.test(placeName)
     ) continue;

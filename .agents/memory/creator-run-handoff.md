@@ -3,8 +3,8 @@ name: Creator run handoff
 description: Preserving exact source-first inputs across isolated task merges and delayed retries.
 ---
 
-Any source-first run that may be retried or continued outside its current environment must export an immutable manifest containing snapshot hashes, extracted facts, deduplicated candidates, and provenance links. Do not reconstruct that run from live source pages.
+Once a source-first candidate set has received human editorial review, any retry or continuation outside its current environment must use an immutable manifest containing snapshot hashes, extracted facts, deduplicated candidates, and provenance links. Before human review, set identity has no value of its own: a run may be regenerated from approved sources when that improves extraction quality.
 
-**Why:** Isolated task database rows do not merge into the main development database, while approved web pages can change between runs. Re-fetching later can produce a materially different candidate set and is not valid evidence for retrying the original rows.
+**Why:** Isolated task database rows do not merge into the main development database, while approved web pages can change between runs. Human decisions must remain attached to the exact reviewed evidence, but preserving an unreviewed noisy set would optimize for accidental identity instead of source quality.
 
-**How to apply:** Persist the manifest as a reviewable project artifact before handoff. On resume, verify its hashes and import the exact manifest into a development-only run; if no exact manifest exists, stop and report the evidence gap instead of silently rerunning discovery.
+**How to apply:** Record whether owner review has begun. If it has, persist and verify the exact manifest before handoff. If it has not, discard incomplete runs and execute a fresh guarded run; compare snapshot hashes/sizes and report extraction noise plainly.

@@ -652,3 +652,17 @@ mtime_ms = 1788206661017
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/66e5afad-c873-495a-988b-cf18e92d4bb6/69d2fef7-32af-49e9-a71a-802174d6bb11"
 storage_version_token = "1788206661883751"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "sCy-69Oo3DAHU-dKxsVXf"
+uri = "file://reports/ljubno-source-first-fresh-report.md"
+type = "text"
+title = "Ljubno source-first fresh run report"
+description = "Complete evidence: snapshot comparisons, extraction samples, all 89 resolved candidates, all 239 unresolved candidates, and measured Nominatim pacing."
+logical_id = "20e402f5-f6b6-4512-90ed-65a60b915d68"
+content_hash = "sha256:f066936bfa5edf309acd927ef8b077d412af56f0bf788abe94602a0e2f09c41f"
+size = 96330
+mtime_ms = 1788216892152
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/20e402f5-f6b6-4512-90ed-65a60b915d68/d9545a21-900e-4d90-83c2-5969f0e683e2"
+storage_version_token = "1788216968468688"
+content_type = "text/markdown"

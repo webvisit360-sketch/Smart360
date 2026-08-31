@@ -46,3 +46,29 @@ test("paced Nominatim fetch stops after repeated timeouts", async () => {
   assert.equal(client.isStopped(), true);
   assert.match(client.stopReason() ?? "", /remained unavailable/);
 });
+
+test("paced Nominatim fetch enforces spacing and caps exponential backoff", async () => {
+  const started: number[] = [];
+  const waits: number[] = [];
+  const client = createPacedNominatimFetch({
+    minimumIntervalMs: 25,
+    maximumBackoffMs: 7,
+    maxAttempts: 2,
+    sleepFn: async (milliseconds) => {
+      waits.push(milliseconds);
+      await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+    },
+    fetchFn: (async () => {
+      started.push(Date.now());
+      return started.length === 1
+        ? new Response("busy", { status: 503 })
+        : Response.json([]);
+    }) as typeof fetch,
+  });
+
+  await client.fetchFn(new URL("https://nominatim.openstreetmap.org/search"));
+  assert.equal(started.length, 2);
+  assert.ok(started[1]! - started[0]! >= 20);
+  assert.ok(waits.includes(7), `expected capped backoff in ${waits.join(",")}`);
+  assert.equal(client.attempts().length, 2);
+});

@@ -81,6 +81,12 @@ type Report = {
     sources: Array<{ url: string; snapshotSha256: string; retrievedAt: string }>;
   }>;
   nominatimStoppedReason: string | null;
+  sourceDetails: Array<{
+    label: string; sourceUrl: string; finalUrl: string; snapshotSha256: string;
+    rawBytes: number; extractedTextBytes: number; factCount: number;
+    sampleFacts: Array<{ placeName: string; settlement: string | null; category: string }>;
+  }>;
+  nominatimAttempts: ReturnType<ReturnType<typeof createPacedNominatimFetch>["attempts"]>;
 };
 
 async function findOrCreateDraft(): Promise<string> {
@@ -158,7 +164,8 @@ async function main() {
     tenantId, runId: run.id, sourceCounts: {}, categoryCounts: {},
     proposed: 0, duplicateFactsMerged: 0, sourceSnapshots: 0,
     resolved: 0, unresolved: 0, failures: {}, ranges: {}, resolvedList: [],
-    unresolvedList: [], nominatimStoppedReason: null,
+    unresolvedList: [], nominatimStoppedReason: null, sourceDetails: [],
+    nominatimAttempts: [],
   };
   try {
     const candidateFacts = new Map<string, Array<typeof creatorSourceFactsTable.$inferSelect>>();
@@ -182,6 +189,20 @@ async function main() {
         sourceUrl: source.canonicalUrl, rawContent: snapshot.rawContent,
       });
       report.sourceCounts[source.label] = facts.length;
+      report.sourceDetails.push({
+        label: source.label,
+        sourceUrl: source.canonicalUrl,
+        finalUrl: snapshot.finalUrl,
+        snapshotSha256: snapshot.contentSha256,
+        rawBytes: Buffer.byteLength(snapshot.rawContent, "utf8"),
+        extractedTextBytes: Buffer.byteLength(snapshot.extractedText, "utf8"),
+        factCount: facts.length,
+        sampleFacts: facts.slice(0, 5).map((fact) => ({
+          placeName: fact.placeName,
+          settlement: fact.settlement,
+          category: fact.categoryKey,
+        })),
+      });
       for (const fact of facts) {
         const [stored] = await db.insert(creatorSourceFactsTable).values({
           runId: run.id, sourceContentId: snapshot.id, ...fact,
@@ -349,6 +370,8 @@ async function main() {
     if (!published || published.isPublished) throw new Error("Source-first draft publication guard failed.");
     report.resolvedList.sort((a, b) => a.name.localeCompare(b.name, "sl"));
     report.unresolvedList.sort((a, b) => a.name.localeCompare(b.name, "sl"));
+    report.sourceDetails.sort((a, b) => a.label.localeCompare(b.label, "sl"));
+    report.nominatimAttempts = nominatim.attempts();
     await db.update(creatorSourceRunsTable).set({
       status: "completed", completedAt: new Date(), reportJson: JSON.stringify(report),
     }).where(eq(creatorSourceRunsTable.id, run.id));
