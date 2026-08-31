@@ -16,8 +16,13 @@ import {
 } from "@workspace/db";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { extractCreatorSourceFacts } from "../lib/creatorSourceExtraction";
+import { createPacedNominatimFetch } from "../lib/creatorNominatimRetry";
 import { readApprovedCreatorSource } from "../lib/creatorSourceReader";
-import { normalizeCreatorProposalName, runAndPersistCreatorSieve } from "../lib/creatorProposalLedger";
+import {
+  normalizeCreatorProposalName,
+  runAndPersistCreatorSieve,
+  upsertPendingCreatorProposal,
+} from "../lib/creatorProposalLedger";
 import { computeRoadRoute } from "../lib/distanceEngine";
 import { seedTenantContent } from "../lib/tenantSeeds";
 import {
@@ -71,6 +76,11 @@ type Report = {
     range: string; roadDistanceM: number; travelDurationS: number;
     sources: Array<{ url: string; snapshotSha256: string; retrievedAt: string }>;
   }>;
+  unresolvedList: Array<{
+    name: string; settlement: string | null; category: string; reason: string;
+    sources: Array<{ url: string; snapshotSha256: string; retrievedAt: string }>;
+  }>;
+  nominatimStoppedReason: string | null;
 };
 
 async function findOrCreateDraft(): Promise<string> {
@@ -148,6 +158,7 @@ async function main() {
     tenantId, runId: run.id, sourceCounts: {}, categoryCounts: {},
     proposed: 0, duplicateFactsMerged: 0, sourceSnapshots: 0,
     resolved: 0, unresolved: 0, failures: {}, ranges: {}, resolvedList: [],
+    unresolvedList: [], nominatimStoppedReason: null,
   };
   try {
     const candidateFacts = new Map<string, Array<typeof creatorSourceFactsTable.$inferSelect>>();
@@ -192,8 +203,18 @@ async function main() {
     }).from(categoriesTable).innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
       .where(eq(sectionsTable.tenantId, tenantId));
     const categoryByKey = new Map(categoryRows.flatMap((row) => row.key ? [[row.key, row.id]] : []));
+    const nominatim = createPacedNominatimFetch();
     for (const [normalizedName, facts] of candidateFacts) {
       const primary = facts[0]!;
+      const sources = facts.map((fact) => {
+        const evidence = snapshotEvidence.get(fact.sourceContentId);
+        if (!evidence) throw new Error("Candidate provenance snapshot is missing.");
+        return {
+          url: evidence.url,
+          snapshotSha256: evidence.sha256,
+          retrievedAt: evidence.retrievedAt.toISOString(),
+        };
+      });
       const [candidate] = await db.insert(creatorSourceCandidatesTable).values({
         runId: run.id, normalizedName, officialName: primary.placeName,
         settlement: primary.settlement, categoryKey: primary.categoryKey,
@@ -202,10 +223,47 @@ async function main() {
       await db.insert(creatorSourceCandidateFactsTable).values(
         facts.map((fact) => ({ candidateId: candidate.id, factId: fact.id })),
       );
+      if (nominatim.isStopped()) {
+        const pending = await upsertPendingCreatorProposal({
+          tenantId,
+          runId: run.id,
+          proposedName: primary.placeName,
+          originalQuery: primary.placeName,
+          contentReady: true,
+        });
+        await db.update(creatorPlaceProposalsTable).set({
+          categoryId: categoryByKey.get(primary.categoryKey) ?? null,
+          geocodingLookupHint: primary.settlement ? `${primary.placeName}, ${primary.settlement}` : null,
+          status: "unresolved",
+          refusalReason: "nominatim-unavailable-not-attempted",
+          contentReady: true,
+        }).where(and(
+          eq(creatorPlaceProposalsTable.id, pending.proposal.id),
+          eq(creatorPlaceProposalsTable.tenantId, tenantId),
+        ));
+        await db.update(creatorSourceCandidatesTable).set({
+          proposalId: pending.proposal.id,
+          outcome: "unresolved",
+          failureReason: "nominatim-unavailable-not-attempted",
+        }).where(eq(creatorSourceCandidatesTable.id, candidate.id));
+        report.unresolved++;
+        report.failures["nominatim-unavailable-not-attempted"] =
+          (report.failures["nominatim-unavailable-not-attempted"] ?? 0) + 1;
+        report.unresolvedList.push({
+          name: primary.placeName,
+          settlement: primary.settlement,
+          category: primary.categoryKey,
+          reason: "nominatim-unavailable-not-attempted",
+          sources,
+        });
+        continue;
+      }
       const output = await runAndPersistCreatorSieve({
         tenantId, runId: run.id, proposedName: primary.placeName,
         origin: { latitude: LATITUDE, longitude: LONGITUDE },
         hardCeilingKm: 120, contentReady: true,
+        fetchFn: nominatim.fetchFn,
+        lookupHint: primary.settlement ? `${primary.placeName}, ${primary.settlement}` : undefined,
       });
       const proposal = output.sourceProposal;
       if (!proposal) {
@@ -214,6 +272,10 @@ async function main() {
         }).where(eq(creatorSourceCandidatesTable.id, candidate.id));
         report.unresolved++;
         report.failures["duplicate-ledger-conflict"] = (report.failures["duplicate-ledger-conflict"] ?? 0) + 1;
+        report.unresolvedList.push({
+          name: primary.placeName, settlement: primary.settlement,
+          category: primary.categoryKey, reason: "duplicate-ledger-conflict", sources,
+        });
         continue;
       }
       await db.update(creatorPlaceProposalsTable).set({
@@ -223,6 +285,10 @@ async function main() {
       }).where(and(eq(creatorPlaceProposalsTable.id, proposal.id), eq(creatorPlaceProposalsTable.tenantId, tenantId)));
 
       let failure = output.result?.verdict === "resolved" ? null : output.result?.rule ?? "nominatim-unavailable";
+      if (failure === "nominatim-unavailable") {
+        nominatim.stop(nominatim.stopReason() ?? "Nominatim returned an unavailable result.");
+        report.nominatimStoppedReason = nominatim.stopReason();
+      }
       let route: Awaited<ReturnType<typeof computeRoadRoute>> = null;
       if (!failure && output.result?.verdict === "resolved") {
         route = await computeRoadRoute(
@@ -246,6 +312,10 @@ async function main() {
         }).where(eq(creatorSourceCandidatesTable.id, candidate.id));
         report.unresolved++;
         report.failures[failureReason] = (report.failures[failureReason] ?? 0) + 1;
+        report.unresolvedList.push({
+          name: primary.placeName, settlement: primary.settlement,
+          category: primary.categoryKey, reason: failureReason, sources,
+        });
         continue;
       }
       const range = route.durationMinutes <= 20 ? "near" : "excursion";
@@ -263,15 +333,7 @@ async function main() {
         name: primary.placeName, settlement: primary.settlement, category: primary.categoryKey,
         range, roadDistanceM: route.distanceMeters,
         travelDurationS: Math.round(route.durationMinutes * 60),
-        sources: facts.map((fact) => {
-          const evidence = snapshotEvidence.get(fact.sourceContentId);
-          if (!evidence) throw new Error("Candidate provenance snapshot is missing.");
-          return {
-            url: evidence.url,
-            snapshotSha256: evidence.sha256,
-            retrievedAt: evidence.retrievedAt.toISOString(),
-          };
-        }),
+        sources,
       });
     }
     const translationCount = await db.select({ count: sql<number>`count(*)::int` })
@@ -286,6 +348,7 @@ async function main() {
       )).limit(1);
     if (!published || published.isPublished) throw new Error("Source-first draft publication guard failed.");
     report.resolvedList.sort((a, b) => a.name.localeCompare(b.name, "sl"));
+    report.unresolvedList.sort((a, b) => a.name.localeCompare(b.name, "sl"));
     await db.update(creatorSourceRunsTable).set({
       status: "completed", completedAt: new Date(), reportJson: JSON.stringify(report),
     }).where(eq(creatorSourceRunsTable.id, run.id));

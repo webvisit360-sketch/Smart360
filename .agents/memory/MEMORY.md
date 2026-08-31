@@ -30,3 +30,4 @@
 - [Creator run report](creator-run-report.md) — every model-assisted run must self-report outcomes, reasons, missing photos, and cost; next spec uses three driving-minute ranges.
 - [Guest-home truthfulness](guest-home-truthfulness.md) — never invent ratings, response times, or host imagery; response time starts after five real answered exchanges.
 - [Creator source-first policy](creator-source-first.md) — discover places only from approved municipality sources; robots/SSRF fail closed, model descriptions come last.
+- [Creator run handoff](creator-run-handoff.md) — isolated task databases do not merge; export exact source/candidate manifests before a run is continued elsewhere.
