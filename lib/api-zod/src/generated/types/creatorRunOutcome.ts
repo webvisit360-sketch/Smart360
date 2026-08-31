@@ -11,6 +11,8 @@ import type { CreatorRunOutcomeOutcome } from './creatorRunOutcomeOutcome';
 export interface CreatorRunOutcome {
   proposedName: string;
   /** @nullable */
+  targetSettlement: string | null;
+  /** @nullable */
   categoryLabel: string | null;
   inclusionReason: string;
   outcome: CreatorRunOutcomeOutcome;

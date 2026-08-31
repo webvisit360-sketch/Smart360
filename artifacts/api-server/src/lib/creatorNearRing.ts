@@ -9,6 +9,7 @@ export const CREATOR_NEAR_RING_EDGE_BAND_KM = 5;
 export const CREATOR_NEAR_RING_MATCH_THRESHOLD = 2 / 3;
 export const CREATOR_NEAR_RING_MATCH_MARGIN = 0.15;
 export const CREATOR_SETTLEMENT_FEATURE_RADIUS_KM = 5;
+export const CREATOR_NEAR_RING_IDENTICAL_NAME_MERGE_KM = 0.5;
 
 const catalogueCache = new Map<string, {
   originKey: string;
@@ -20,12 +21,23 @@ const OVERPASS_RETRY_DELAY_MS = 3_000;
 const OVERPASS_REQUEST_SPACING_MS = 1_500;
 const TOURISM_VALUES = [
   "attraction", "artwork", "viewpoint", "museum", "gallery", "theme_park", "zoo", "aquarium",
+  "alpine_hut", "wilderness_hut", "picnic_site",
 ] as const;
 const AMENITY_VALUES = ["place_of_worship", "monastery", "museum", "theatre", "arts_centre"] as const;
 const LEISURE_VALUES = ["park", "nature_reserve", "garden"] as const;
-const NATURAL_VALUES = ["peak", "waterfall", "cave_entrance", "spring", "water", "cliff"] as const;
-const MAN_MADE_VALUES = ["tower", "lighthouse"] as const;
+const LEISURE_SPORT_VALUES = ["sports_centre", "pitch", "stadium", "track", "swimming_area"] as const;
+const NATURAL_VALUES = ["peak", "waterfall", "cave_entrance", "spring", "water", "cliff", "valley"] as const;
+const MAN_MADE_VALUES = ["tower", "lighthouse", "observation_tower"] as const;
 const LANDUSE_VALUES = ["winter_sports"] as const;
+const WATERWAY_VALUES = ["river", "stream", "waterfall"] as const;
+const SAINT_TOKENS = ["sv", "sveti", "sveta", "sveto", "svete", "svetega", "svetih"] as const;
+const GENERIC_IDENTITY_TOKENS = [
+  "slap", "slapovi", "jama", "grad", "cerkev", "zupnijska", "podruznicna",
+  "stolnica", "planina", "jezero", "koca", "dom", "muzej", "soteska",
+  "izvir", "park", "vrt", "samostan", "kartuzija", "dvorec", "nekropola",
+  "center", "stolp", "jedro", "domacija", "dolina", "mesto", "mestno",
+  "vas", "vasica", "naselje", "v", "na", "pri", "pod",
+] as const;
 
 type OverpassElement = {
   type?: unknown;
@@ -83,6 +95,12 @@ function featureType(tags: Record<string, unknown>): { className: string; type: 
   if (typeof tags.leisure === "string" && (LEISURE_VALUES as readonly string[]).includes(tags.leisure)) {
     return { className: "leisure", type: tags.leisure, isSettlement: false };
   }
+  if (typeof tags.leisure === "string" && (LEISURE_SPORT_VALUES as readonly string[]).includes(tags.leisure)) {
+    return { className: "leisure", type: tags.leisure, isSettlement: false };
+  }
+  if (typeof tags.sport === "string") {
+    return { className: "sport", type: tags.sport, isSettlement: false };
+  }
   if (typeof tags.natural === "string" && (NATURAL_VALUES as readonly string[]).includes(tags.natural)) {
     return { className: "natural", type: tags.natural, isSettlement: false };
   }
@@ -101,6 +119,12 @@ function featureType(tags: Record<string, unknown>): { className: string; type: 
   }
   if (tags.boundary === "protected_area") {
     return { className: "boundary", type: "protected_area", isSettlement: false };
+  }
+  if (typeof tags.waterway === "string" && (WATERWAY_VALUES as readonly string[]).includes(tags.waterway)) {
+    return { className: "waterway", type: tags.waterway, isSettlement: false };
+  }
+  if (typeof tags.bridge === "string") {
+    return { className: "bridge", type: tags.bridge, isSettlement: false };
   }
   if (typeof tags.place === "string" && ["city", "town", "village", "hamlet"].includes(tags.place)) {
     return { className: "settlement", type: tags.place, isSettlement: true };
@@ -152,6 +176,13 @@ nwr${box}[leisure~"${valuePattern(LEISURE_VALUES)}"][name];
 `),
     },
     {
+      operation: "leisure-sport",
+      query: query(`
+nwr${box}[leisure~"${valuePattern(LEISURE_SPORT_VALUES)}"][name];
+nwr${box}[sport][name];
+`),
+    },
+    {
       operation: "natural-landmarks-routes",
       query: query(`
 nwr${box}[natural~"${valuePattern(NATURAL_VALUES)}"][name];
@@ -159,6 +190,13 @@ nwr${box}[man_made~"${valuePattern(MAN_MADE_VALUES)}"][name];
 nwr${box}[landuse~"${valuePattern(LANDUSE_VALUES)}"][name];
 nwr${box}[boundary=protected_area][name];
 relation${box}[type=route][route~"^(hiking|bicycle|foot|ski)$"][name];
+`),
+    },
+    {
+      operation: "waterways-bridges",
+      query: query(`
+nwr${box}[waterway~"${valuePattern(WATERWAY_VALUES)}"][name];
+nwr${box}[bridge][name];
 `),
     },
   ];
@@ -176,7 +214,11 @@ function candidatesFromElements(
     const id = Number(element.id);
     if (!name || !Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(id)) return [];
     const classification = featureType(tags);
-    if (!classification || tags.highway || tags.boundary === "administrative") return [];
+    if (
+      !classification ||
+      (tags.highway && classification.className !== "bridge") ||
+      tags.boundary === "administrative"
+    ) return [];
     const distanceKm = haversineKm(origin.latitude, origin.longitude, latitude, longitude);
     if (distanceKm > CREATOR_NEAR_RING_ENVELOPE_KM) return [];
     const aliases = Object.entries(tags)
@@ -442,6 +484,26 @@ function strippedNames(name: string, osmType: string): string[] {
   return [...values];
 }
 
+function identityTokens(name: string, osmType: string): Set<string> {
+  const genericTokens = new Set<string>(GENERIC_IDENTITY_TOKENS);
+  if (["cathedral", "church", "place_of_worship"].includes(osmType)) {
+    for (const token of SAINT_TOKENS) genericTokens.add(token);
+  }
+  return new Set(
+    normalize(name).split(" ").filter((token) => token && !genericTokens.has(token)),
+  );
+}
+
+function sameNamedPlace(
+  left: CreatorNearRingCandidate,
+  right: CreatorNearRingCandidate,
+): boolean {
+  return left.isSettlement === right.isSettlement &&
+    normalize(left.returnedName) === normalize(right.returnedName) &&
+    haversineKm(left.latitude, left.longitude, right.latitude, right.longitude) <=
+      CREATOR_NEAR_RING_IDENTICAL_NAME_MERGE_KM;
+}
+
 /**
  * Tolerance is safe only inside the bounded enumeration: compatible generic
  * phrases are stripped with OSM-type corroboration, then one missing/extra
@@ -466,32 +528,52 @@ export function matchUniqueCreatorNearRingCandidate(
       proposalGenericTypes.length > 0 &&
       !proposalGenericTypes.some((entry) => entry.osmTypes.includes(candidate.type))
     ) return [];
-    const proposed = strippedNames(proposedName, candidate.type);
-    const candidateNames = [candidate.returnedName, ...candidate.aliases]
-      .flatMap((name) => strippedNames(name, candidate.type));
+    const candidateNames = [candidate.returnedName, ...candidate.aliases];
     let score = 0;
-    for (const left of proposed) {
-      for (const right of candidateNames) {
-        if (left === right) {
-          score = 1;
-          continue;
+    for (const candidateName of candidateNames) {
+      if (
+        strippedNames(proposedName, candidate.type).some((left) =>
+          strippedNames(candidateName, candidate.type).includes(left))
+      ) {
+        score = 1;
+        continue;
+      }
+      const a = identityTokens(proposedName, candidate.type);
+      const b = identityTokens(candidateName, candidate.type);
+      if (a.size === 0 || b.size === 0) continue;
+      const shared = [...a].filter((token) => b.has(token)).length;
+      const tolerant = shared >= 1 &&
+        shared >= Math.min(a.size, b.size) - 1 &&
+        Math.max(a.size, b.size) - shared <= 1;
+      if (tolerant) {
+        const distinguishingScore = shared / Math.min(a.size, b.size);
+        if (distinguishingScore > score) {
+          score = distinguishingScore;
         }
-        const a = new Set(left.split(" "));
-        const b = new Set(right.split(" "));
-        const shared = [...a].filter((token) => b.has(token)).length;
-        const tolerant = shared >= (Math.min(a.size, b.size) === 1 ? 1 : 2) &&
-          shared >= Math.min(a.size, b.size) - 1 &&
-          Math.max(a.size, b.size) - shared <= 1;
-        if (tolerant) score = Math.max(score, shared / Math.max(a.size, b.size));
       }
     }
     return score > 0 ? [{ candidate, score }] : [];
   });
   scored.sort((a, b) => b.score - a.score);
   const passing = scored.filter(({ score }) => score >= CREATOR_NEAR_RING_MATCH_THRESHOLD);
-  if (passing.length !== 1) return null;
-  const top = scored[0]!;
-  const second = scored[1];
+  const clusters: typeof passing[] = [];
+  for (const entry of passing) {
+    const cluster = clusters.find((entries) =>
+      entries.every((existing) => sameNamedPlace(existing.candidate, entry.candidate)));
+    if (cluster) cluster.push(entry);
+    else clusters.push([entry]);
+  }
+  const rankedClusters = clusters.map((entries) => ({
+    entries: entries.sort((a, b) =>
+      b.score - a.score ||
+      a.candidate.distanceKm - b.candidate.distanceKm ||
+      a.candidate.osmType.localeCompare(b.candidate.osmType) ||
+      a.candidate.osmId - b.candidate.osmId),
+    score: Math.max(...entries.map((entry) => entry.score)),
+  })).sort((a, b) => b.score - a.score);
+  if (rankedClusters.length !== 1) return null;
+  const top = rankedClusters[0]!;
+  const second = rankedClusters[1];
   if (second && top.score - second.score < CREATOR_NEAR_RING_MATCH_MARGIN) return null;
-  return top.candidate;
+  return top.entries[0]!.candidate;
 }

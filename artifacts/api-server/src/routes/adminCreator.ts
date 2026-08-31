@@ -122,8 +122,17 @@ export async function creatorRunResponse(row: typeof creatorRunsTable.$inferSele
     completedAt: row.completedAt,
     // Historical evidence is returned exactly as persisted. Queue edits,
     // coordinate confirmation, and later review must never rewrite a run.
-    outcomes: report?.outcomes ?? [],
-    unconfirmedByCategory: report?.unconfirmedByCategory ?? [],
+    outcomes: (report?.outcomes ?? []).map((outcome) => ({
+      ...outcome,
+      targetSettlement: outcome.targetSettlement ?? null,
+    })),
+    unconfirmedByCategory: (report?.unconfirmedByCategory ?? []).map((group) => ({
+      ...group,
+      proposals: group.proposals.map((proposal) => ({
+        ...proposal,
+        targetSettlement: proposal.targetSettlement ?? null,
+      })),
+    })),
     pricing: report?.pricing ?? CREATOR_C1_PRICING,
   };
 }

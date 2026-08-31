@@ -394,6 +394,7 @@ export type CreatorC1Report = {
   pricing: typeof CREATOR_C1_PRICING;
   outcomes: Array<{
     proposedName: string;
+    targetSettlement: string | null;
     categoryLabel: string | null;
     inclusionReason: string;
     outcome: "confirmed" | "unconfirmed" | "duplicate" | "route_failed";
@@ -414,6 +415,7 @@ export type CreatorC1Report = {
     categoryLabel: string | null;
     proposals: Array<{
       proposedName: string;
+      targetSettlement: string | null;
       inclusionReason: string;
       refusalRule: string | null;
       roadDistanceM: number | null;
@@ -608,7 +610,7 @@ export async function runCreatorC1(input: {
             input.fetchFn,
             recordDependencyAttempt,
           );
-          if (!route || Math.round(route.durationMinutes * 60) > 1200) return null;
+          if (!route) return null;
           return { candidate, route };
         },
         onDependencyAttempt: recordDependencyAttempt,
@@ -620,6 +622,7 @@ export async function runCreatorC1(input: {
         report.duplicatesMerged++;
         outcomes.push({
           proposedName: place.proposedName,
+          targetSettlement: place.targetSettlement,
           categoryLabel: category?.label ?? null,
           inclusionReason: place.inclusionReason,
           outcome: "duplicate",
@@ -652,6 +655,7 @@ export async function runCreatorC1(input: {
         if (place.targetSettlement !== null) report.quotaTargetedUnconfirmedCount++;
         outcomes.push({
           proposedName: place.proposedName,
+          targetSettlement: place.targetSettlement,
           categoryLabel: category?.label ?? null,
           inclusionReason: place.inclusionReason,
           outcome: "unconfirmed",
@@ -686,6 +690,7 @@ export async function runCreatorC1(input: {
         if (place.targetSettlement !== null) report.quotaTargetedUnconfirmedCount++;
         outcomes.push({
           proposedName: place.proposedName,
+          targetSettlement: place.targetSettlement,
           categoryLabel: category?.label ?? null,
           inclusionReason: place.inclusionReason,
           outcome: "route_failed",
@@ -706,6 +711,7 @@ export async function runCreatorC1(input: {
         if (place.targetSettlement !== null) report.quotaTargetedUnconfirmedCount++;
         outcomes.push({
           proposedName: place.proposedName,
+          targetSettlement: place.targetSettlement,
           categoryLabel: category?.label ?? null,
           inclusionReason: place.inclusionReason,
           outcome: "unconfirmed",
@@ -723,6 +729,7 @@ export async function runCreatorC1(input: {
       report.confirmed++;
       outcomes.push({
         proposedName: place.proposedName,
+        targetSettlement: place.targetSettlement,
         categoryLabel: category?.label ?? null,
         inclusionReason: place.inclusionReason,
         outcome: "confirmed",
@@ -786,6 +793,7 @@ export async function runCreatorC1(input: {
       const proposals = unconfirmedGroups.get(outcome.categoryLabel) ?? [];
       proposals.push({
         proposedName: outcome.proposedName,
+        targetSettlement: outcome.targetSettlement,
         inclusionReason: outcome.inclusionReason,
         refusalRule: outcome.refusalRule,
         roadDistanceM: outcome.roadDistanceM,

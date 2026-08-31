@@ -8,6 +8,8 @@
 
 export interface CreatorUnconfirmedProposal {
   proposedName: string;
+  /** @nullable */
+  targetSettlement: string | null;
   inclusionReason: string;
   /** @nullable */
   refusalRule: string | null;

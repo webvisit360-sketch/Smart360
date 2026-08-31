@@ -1,0 +1,35 @@
+Three defects in the near ring, all confirmed by your own investigation. No schema change is required for any of them.
+
+DEFECT 1 — the near ring rejects places for being far away.
+
+The near ring judges existence. It found "Muzej gozdarstva in lesarstva Nazarje" (node 13086559802) and "Dolina Matkov kot" (relation 8449403) as unique correct matches, then discarded both for exceeding 1200 seconds.
+
+That gate must go. Once the near ring identifies a real place, the OSRM duration decides only which range it belongs to — near up to 1200 s, excursion beyond — under the same 5400 s ceiling that governs every other admission. It never decides whether the place exists.
+
+The same museum was confirmed in Menina's fifth run at 7.42 minutes and discarded here at 21.9 minutes. One real place, found twice, kept once, purely because the origin moved.
+
+DEFECT 2 — the tag whitelist excludes most of what a guide is about.
+
+The narrowing introduced to escape the earlier 504 excludes sports facilities, ski jumps, alpine huts, named rivers and streams, bridges, farms, restaurants, shops, hotels, campsites, viewpoints, picnic sites and most named buildings.
+
+Widen it deliberately, and treat the widening as a proposal about what is worth seeing rather than as a repair. At minimum add: leisure sports centres, pitches, stadiums, tracks and swimming areas; sport-tagged objects including ski jumping; tourism alpine huts, wilderness huts, viewpoints, picnic sites, museums and artwork; named waterways including rivers, streams and waterfalls; named bridges; and man_made observation towers.
+
+Do not restore an unbounded query. Keep the bounding box. Measure the cost: report the raw and filtered element counts and the wall-clock duration of each request before and after. If a single request grows too heavy, split it further rather than narrowing the tags again. Report the numbers so the trade is visible.
+
+DEFECT 3 — generic words decide uniqueness.
+
+"Cerkev sv. Elizabete" ties with every other three-token church name, because the two shared tokens are the generic ones and the distinguishing token is exactly the one the scoring permits to differ.
+
+Generic type words must not count toward the shared-token requirement. The distinguishing token must match. Apply the same reasoning to other generic leaders such as muzej, slap, grad, dolina, planina and koča.
+
+Separately: two objects carrying an identical name close together are one place split into two OSM objects, not an ambiguity. "Rimska nekropola" (ways 354702116 and 354702117) is one site. Merge such candidates instead of rejecting them. Mozirski gaj in the Menina catalogue is the same situation.
+
+ALSO, WITHOUT A SCHEMA CHANGE — record targetSettlement per proposal inside the existing report_json. The quota measurement has now been impossible twice for want of one value that already exists transiently.
+
+Implement all four, run the Gril Creator again in development if you can, and report:
+  - the catalogue element counts and request durations, before and after the widening;
+  - whether the Ljubno ski jumping venue is now in the catalogue;
+  - how many proposals the near ring resolves after global sieve failure;
+  - how many rows fall in each range.
+
+Then report and STOP. Do not publish.

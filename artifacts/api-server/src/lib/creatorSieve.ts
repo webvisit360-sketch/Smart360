@@ -120,6 +120,7 @@ export const CREATOR_GENERIC_TYPE_WORDS: ReadonlyArray<{
   { words: ["koča", "dom"], osmTypes: ["alpine_hut"] },
   { words: ["muzej", "muzej na prostem"], osmTypes: ["museum"] },
   { words: ["soteska"], osmTypes: ["gorge"] },
+  { words: ["dolina"], osmTypes: ["valley"] },
   { words: ["izvir"], osmTypes: ["spring"] },
   {
     words: ["krajinski park", "regijski park", "narodni park"],

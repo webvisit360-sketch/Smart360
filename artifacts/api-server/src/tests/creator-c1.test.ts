@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { test } from "node:test";
 import { and, eq, like } from "drizzle-orm";
 import { creatorPlaceProposalsTable, creatorRunsTable, db, tenantsTable } from "@workspace/db";
+import { StartCreatorRunResponse } from "@workspace/api-zod";
 import {
   assignCreatorC1Range,
   calculateCreatorC1Cost,
@@ -285,19 +286,126 @@ test("near-ring matching is bounded, tolerant, type-corroborated and unique", ()
   assert.equal(CREATOR_NEAR_RING_ENVELOPE_KM, 35);
   const candidate = {
     osmType: "relation", osmId: 44, className: "historic", type: "archaeological_site",
-    addresstype: "historic", returnedName: "Rimska nekropola v Šempetru",
-    displayName: "Rimska nekropola v Šempetru", latitude: 46.25, longitude: 15.1,
+    addresstype: "historic", returnedName: "Rimska nekropola",
+    displayName: "Rimska nekropola", latitude: 46.25, longitude: 15.1,
     distanceKm: 22, aliases: [], isSettlement: false,
   };
   assert.equal(
-    matchUniqueCreatorNearRingCandidate("Rimska nekropola Šempeter", [candidate])?.osmId,
+    matchUniqueCreatorNearRingCandidate("Rimska nekropola v Šempetru", [candidate])?.osmId,
     44,
   );
   assert.equal(
-    matchUniqueCreatorNearRingCandidate("Rimska nekropola Šempeter", [
+    matchUniqueCreatorNearRingCandidate("Rimska nekropola v Šempetru", [
       candidate,
-      { ...candidate, osmId: 45 },
+      { ...candidate, osmType: "way", osmId: 45, latitude: 46.2502, longitude: 15.1002 },
+    ])?.osmId,
+    44,
+  );
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Rimska nekropola v Šempetru", [
+      candidate,
+      { ...candidate, osmType: "way", osmId: 45, latitude: 46.27, longitude: 15.12 },
     ]),
+    null,
+  );
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Rimska nekropola v Šempetru", [
+      candidate,
+      { ...candidate, osmType: "way", osmId: 45, latitude: 46.253, longitude: 15.1 },
+      { ...candidate, osmType: "relation", osmId: 46, latitude: 46.256, longitude: 15.1 },
+    ]),
+    null,
+  );
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Vas Solčava", [
+      {
+        ...candidate,
+        osmId: 47,
+        className: "place",
+        type: "village",
+        addresstype: "place",
+        returnedName: "Solčava",
+        displayName: "Solčava",
+        isSettlement: true,
+      },
+      {
+        ...candidate,
+        osmId: 48,
+        className: "tourism",
+        type: "attraction",
+        addresstype: "tourism",
+        returnedName: "Solčava",
+        displayName: "Solčava",
+        isSettlement: false,
+      },
+    ]),
+    null,
+  );
+  const church = {
+    ...candidate,
+    className: "amenity",
+    type: "place_of_worship",
+    returnedName: "Župnijska cerkev svete Elizabete Ogrske",
+    displayName: "Župnijska cerkev svete Elizabete Ogrske",
+  };
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Cerkev sv. Elizabete", [
+      church,
+      {
+        ...church,
+        osmId: 47,
+        returnedName: "Cerkev sv. Jakoba",
+        displayName: "Cerkev sv. Jakoba",
+      },
+    ])?.osmId,
+    44,
+  );
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Cerkev sv. Elizabete", [{
+      ...church,
+      returnedName: "Cerkev sv. Jakoba",
+      displayName: "Cerkev sv. Jakoba",
+    }]),
+    null,
+  );
+  const genericLeaderCases = [
+    { proposal: "Muzej Velenje", good: "Velenje", wrong: "Celje", type: "museum" },
+    { proposal: "Slap Rinka", good: "Rinka", wrong: "Palenk", type: "waterfall" },
+    { proposal: "Grad Žovnek", good: "Žovnek", wrong: "Vrbovec", type: "castle" },
+    { proposal: "Dolina Matkov kot", good: "Matkov kot", wrong: "Logarska", type: "valley" },
+    { proposal: "Planina Grohot", good: "Grohot", wrong: "Raduha", type: "alpine_pasture" },
+    { proposal: "Koča Grohot", good: "Grohot", wrong: "Klemenča jama", type: "alpine_hut" },
+  ];
+  for (const [index, entry] of genericLeaderCases.entries()) {
+    const good = {
+      ...candidate,
+      osmId: 100 + index * 2,
+      type: entry.type,
+      returnedName: entry.good,
+      displayName: entry.good,
+    };
+    const wrong = {
+      ...good,
+      osmId: good.osmId + 1,
+      returnedName: entry.wrong,
+      displayName: entry.wrong,
+    };
+    assert.equal(
+      matchUniqueCreatorNearRingCandidate(entry.proposal, [good, wrong])?.osmId,
+      good.osmId,
+    );
+    assert.equal(matchUniqueCreatorNearRingCandidate(entry.proposal, [wrong]), null);
+  }
+  assert.equal(
+    matchUniqueCreatorNearRingCandidate("Dolina Matkov kot", [{
+      ...candidate,
+      osmId: 150,
+      className: "tourism",
+      type: "attraction",
+      addresstype: "tourism",
+      returnedName: "Matkov kot",
+      displayName: "Matkov kot",
+    }]),
     null,
   );
   assert.equal(
@@ -319,15 +427,25 @@ test("near-ring enumeration uses split bounding-box whitelists, circle filtering
       { type: "node", id: 3, lat: 46.33, lon: 14.93, tags: { tourism: "museum", name: "Muzej", "name:en": "Museum" } },
       { type: "node", id: 4, lat: 46.31, lon: 14.91, tags: { amenity: "restaurant", name: "Restaurant noise" } },
       { type: "node", id: 5, lat: 46.7, lon: 14.9, tags: { natural: "peak", name: "Outside circle" } },
+      { type: "way", id: 6, center: { lat: 46.31, lon: 14.91 }, tags: { leisure: "sports_centre", sport: "ski_jumping", name: "Savina Ski Jumping Center" } },
+      { type: "node", id: 7, lat: 46.31, lon: 14.91, tags: { tourism: "alpine_hut", name: "Mountain hut" } },
+      { type: "way", id: 8, center: { lat: 46.31, lon: 14.91 }, tags: { waterway: "river", name: "Named river" } },
+      { type: "way", id: 9, center: { lat: 46.31, lon: 14.91 }, tags: { highway: "secondary", bridge: "yes", name: "Named bridge" } },
+      { type: "node", id: 10, lat: 46.31, lon: 14.91, tags: { man_made: "observation_tower", name: "Observation tower" } },
     ] }), { status: 200 });
   }, (attempt) => attempts.push(attempt));
-  assert.equal(requested.length, 4);
+  assert.equal(requested.length, 6);
   const overpass = requested.join("\n");
   assert.match(overpass, /\[tourism~"\^\(attraction\|artwork\|viewpoint\|museum/);
   assert.match(overpass, /\[amenity~"\^\(place_of_worship\|monastery\|museum\|theatre\|arts_centre\)\$"\]/);
   assert.match(overpass, /\[leisure~"\^\(park\|nature_reserve\|garden\)\$"\]/);
-  assert.match(overpass, /\[natural~"\^\(peak\|waterfall\|cave_entrance\|spring\|water\|cliff\)\$"\]/);
-  assert.match(overpass, /\[man_made~"\^\(tower\|lighthouse\)\$"\]/);
+  assert.match(overpass, /\[leisure~"\^\(sports_centre\|pitch\|stadium\|track\|swimming_area\)\$"\]/);
+  assert.match(overpass, /\[sport\]\[name\]/);
+  assert.match(overpass, /alpine_hut\|wilderness_hut\|picnic_site/);
+  assert.match(overpass, /\[natural~"\^\(peak\|waterfall\|cave_entrance\|spring\|water\|cliff\|valley\)\$"\]/);
+  assert.match(overpass, /\[man_made~"\^\(tower\|lighthouse\|observation_tower\)\$"\]/);
+  assert.match(overpass, /\[waterway~"\^\(river\|stream\|waterfall\)\$"\]/);
+  assert.match(overpass, /\[bridge\]\[name\]/);
   assert.match(overpass, /\[landuse~"\^\(winter_sports\)\$"\]/);
   assert.match(overpass, /\[historic\]\[name\]/);
   assert.match(overpass, /boundary=protected_area/);
@@ -335,12 +453,12 @@ test("near-ring enumeration uses split bounding-box whitelists, circle filtering
   assert.match(overpass, /\[place~/);
   assert.doesNotMatch(overpass, /around:/);
   assert.match(overpass, /nwr\(45\.\d+,14\.\d+,46\.\d+,15\.\d+\)/);
-  assert.deepEqual(candidates.map((candidate) => candidate.osmId), [3]);
+  assert.deepEqual(candidates.map((candidate) => candidate.osmId), [3, 6, 7, 8, 9, 10]);
   assert.deepEqual(candidates[0]?.aliases, ["Museum"]);
-  assert.equal(attempts.length, 4);
+  assert.equal(attempts.length, 6);
   assert.equal(attempts.every((attempt) =>
     attempt.attempt === 1 && attempt.status === 200 &&
-    attempt.rawCount === 5 && attempt.filteredCount === 1 && attempt.error === null), true);
+    attempt.rawCount === 10 && attempt.filteredCount === 6 && attempt.error === null), true);
 });
 
 test("near-ring retries one transient failure and caches only the merged catalogue", async () => {
@@ -360,13 +478,13 @@ test("near-ring retries one transient failure and caches only the merged catalog
     "tenant-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn,
     (attempt) => attempts.push(attempt),
   );
-  assert.equal(calls, 5);
+  assert.equal(calls, 7);
   assert.deepEqual(attempts.slice(0, 2).map(({ attempt, status }) => ({ attempt, status })), [
     { attempt: 1, status: 503 },
     { attempt: 2, status: 200 },
   ]);
   await getCachedCreatorNearRing("tenant-cache-test", { latitude: 46.31, longitude: 14.9 }, fetchFn);
-  assert.equal(calls, 9);
+  assert.equal(calls, 13);
 });
 
 test("near-ring merges successful groups but rejects an all-failed catalogue", async () => {
@@ -388,7 +506,7 @@ test("near-ring merges successful groups but rejects an all-failed catalogue", a
     (attempt) => partialAttempts.push(attempt),
   );
   assert.equal(partial.length, 1);
-  assert.equal(partialAttempts.length, 4);
+  assert.equal(partialAttempts.length, 6);
   assert.equal(partialAttempts[0]?.error, "Overpass 400");
 
   const failedAttempts: CreatorNearRingAttempt[] = [];
@@ -400,7 +518,7 @@ test("near-ring merges successful groups but rejects an all-failed catalogue", a
     ),
     /All Overpass catalogue requests failed/,
   );
-  assert.equal(failedAttempts.length, 4);
+  assert.equal(failedAttempts.length, 6);
   assert.equal(failedAttempts.every((attempt) => attempt.error === "Overpass 400"), true);
 });
 
@@ -413,9 +531,9 @@ test("a partial near-ring catalogue is never cached", async () => {
     return new Response(JSON.stringify({ elements: [] }), { status: 200 });
   };
   await getCachedCreatorNearRing("partial-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
-  assert.equal(calls, 4);
+  assert.equal(calls, 6);
   await getCachedCreatorNearRing("partial-cache-test", { latitude: 46.3, longitude: 14.9 }, fetchFn);
-  assert.equal(calls, 8);
+  assert.equal(calls, 12);
 });
 
 test("settlements require an explicit settlement proposal and never fuzzy-match arbitrary places", () => {
@@ -556,6 +674,7 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
     pricing: CREATOR_C1_PRICING,
     outcomes: [{
       proposedName: "Missing place",
+      targetSettlement: "Rečica ob Savinji",
       categoryLabel: "Izleti",
       inclusionReason: "A useful local landmark.",
       outcome: "unconfirmed",
@@ -568,6 +687,7 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
       categoryLabel: "Izleti",
       proposals: [{
         proposedName: "Missing place",
+        targetSettlement: "Rečica ob Savinji",
         inclusionReason: "A useful local landmark.",
         refusalRule: "no-results",
         roadDistanceM: null,
@@ -578,6 +698,7 @@ test("C1 report serialization retains durable metrics, outcomes and sanitized fa
   const report = JSON.parse(serialized);
   assert.equal(report.nominatimThrottleWaitMs, 123);
   assert.equal(report.outcomes[0].refusalRule, "no-results");
+  assert.equal(report.outcomes[0].targetSettlement, "Rečica ob Savinji");
   assert.equal(report.quotaTargetedUnconfirmedCount, 3);
   assert.equal(report.nearRingResolvedAfterGlobalSieveFailedCount, 2);
   assert.equal(report.status, "failed");
@@ -628,6 +749,7 @@ test("API run evidence remains identical after its proposal row changes", async 
     pricing: CREATOR_C1_PRICING,
     outcomes: [{
       proposedName: "Immutable place",
+      targetSettlement: "Varpolje",
       categoryLabel: null,
       inclusionReason: "Stored reason",
       outcome: "unconfirmed",
@@ -640,6 +762,7 @@ test("API run evidence remains identical after its proposal row changes", async 
       categoryLabel: null,
       proposals: [{
         proposedName: "Immutable place",
+        targetSettlement: "Varpolje",
         inclusionReason: "Stored reason",
         refusalRule: "no-results",
         roadDistanceM: null,
@@ -657,6 +780,12 @@ test("API run evidence remains identical after its proposal row changes", async 
   }).returning();
   assert.ok(run);
   const before = await creatorRunResponse(run);
+  const parsed = StartCreatorRunResponse.parse(JSON.parse(JSON.stringify(before)));
+  assert.equal(parsed.outcomes[0]?.targetSettlement, "Varpolje");
+  assert.equal(
+    parsed.unconfirmedByCategory[0]?.proposals[0]?.targetSettlement,
+    "Varpolje",
+  );
   const pending = await upsertPendingCreatorProposal({
     tenantId: tenant.id,
     runId: run.id,
@@ -674,6 +803,7 @@ test("API run evidence remains identical after its proposal row changes", async 
   assert.deepEqual(after.outcomes, before.outcomes);
   assert.deepEqual(after.unconfirmedByCategory, before.unconfirmedByCategory);
   assert.equal(after.outcomes[0]?.inclusionReason, "Stored reason");
+  assert.equal(after.outcomes[0]?.targetSettlement, "Varpolje");
   assert.equal(after.quotaTargetedProposalCount, 1);
   assert.equal(after.quotaTargetedUnconfirmedCount, 1);
   assert.deepEqual(after.surroundingSettlementFeatureCounts, [{ name: "Varpolje", featureCount: 4 }]);
@@ -799,14 +929,36 @@ test("C1 routes only the winning global identity or an additive post-refusal nea
     },
     osrm: async (_origin, destination) => {
       routedDestinations.push(destination);
-      return { distanceMeters: 1_000, durationMinutes: 10 };
+      const nearDurationsS = [1201, 1200, 5400, 5401];
+      const nearIndex = Math.round((destination.latitude - 46.3114) / 0.0001);
+      return {
+        distanceMeters: 1_000,
+        durationMinutes: destination.latitude < 46.32
+          ? nearDurationsS[nearIndex]! / 60
+          : 10,
+      };
     },
   });
-  assert.equal(report.confirmed, 8);
-  assert.equal(report.unconfirmed, 7);
+  assert.equal(report.confirmed, 7);
+  assert.equal(report.unconfirmed, 8);
   assert.equal(report.quotaTargetedProposalCount, 8);
-  assert.equal(report.quotaTargetedUnconfirmedCount, 0);
+  assert.equal(report.quotaTargetedUnconfirmedCount, 1);
   assert.equal(report.nearRingResolvedAfterGlobalSieveFailedCount, 4);
+  assert.equal(report.outsideNear, 2);
+  assert.equal(report.outsideExcursion, 1);
+  assert.equal(report.outcomes[4]?.travelDurationS, 1201);
+  assert.equal(report.outcomes[5]?.travelDurationS, 1200);
+  assert.equal(report.outcomes[6]?.travelDurationS, 5400);
+  assert.equal(report.outcomes[7]?.travelDurationS, 5401);
+  assert.equal(report.outcomes[7]?.refusalRule, "duration-ceiling");
+  assert.deepEqual(
+    report.outcomes.slice(0, 8).map((outcome) => outcome.targetSettlement),
+    Array.from({ length: 8 }, () => "Testville"),
+  );
+  assert.deepEqual(
+    report.outcomes.slice(8).map((outcome) => outcome.targetSettlement),
+    Array.from({ length: 7 }, () => null),
+  );
   assert.equal(routedDestinations.length, 8);
   assert.deepEqual(
     routedDestinations.slice(0, 4).map((destination) => Number(destination.latitude.toFixed(4))),
@@ -816,6 +968,18 @@ test("C1 routes only the winning global identity or an additive post-refusal nea
     routedDestinations.slice(4).map((destination) => Number(destination.latitude.toFixed(4))),
     [46.3114, 46.3115, 46.3116, 46.3117],
   );
+  const persistedRanges = await db.select({
+    proposedName: creatorPlaceProposalsTable.proposedName,
+    range: creatorPlaceProposalsTable.range,
+    travelDurationS: creatorPlaceProposalsTable.travelDurationS,
+    status: creatorPlaceProposalsTable.status,
+  }).from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.tenantId, tenant.id));
+  const persistedByName = new Map(persistedRanges.map((row) => [row.proposedName, row]));
+  assert.equal(persistedByName.get(proposalNames[4]!)?.range, "excursion");
+  assert.equal(persistedByName.get(proposalNames[5]!)?.range, "near");
+  assert.equal(persistedByName.get(proposalNames[6]!)?.range, "excursion");
+  assert.equal(persistedByName.get(proposalNames[7]!)?.status, "unresolved");
   await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
 });
 

@@ -931,6 +931,7 @@ export const StartCreatorRunResponse = zod.object({
   "completedAt": zod.string().nullable(),
   "outcomes": zod.array(zod.object({
   "proposedName": zod.string(),
+  "targetSettlement": zod.string().nullable(),
   "categoryLabel": zod.string().nullable(),
   "inclusionReason": zod.string(),
   "outcome": zod.enum(['confirmed', 'unconfirmed', 'duplicate', 'route_failed']),
@@ -951,6 +952,7 @@ export const StartCreatorRunResponse = zod.object({
   "categoryLabel": zod.string().nullable(),
   "proposals": zod.array(zod.object({
   "proposedName": zod.string(),
+  "targetSettlement": zod.string().nullable(),
   "inclusionReason": zod.string(),
   "refusalRule": zod.string().nullable(),
   "roadDistanceM": zod.number().nullable(),
@@ -1034,6 +1036,7 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "completedAt": zod.string().nullable(),
   "outcomes": zod.array(zod.object({
   "proposedName": zod.string(),
+  "targetSettlement": zod.string().nullable(),
   "categoryLabel": zod.string().nullable(),
   "inclusionReason": zod.string(),
   "outcome": zod.enum(['confirmed', 'unconfirmed', 'duplicate', 'route_failed']),
@@ -1054,6 +1057,7 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "categoryLabel": zod.string().nullable(),
   "proposals": zod.array(zod.object({
   "proposedName": zod.string(),
+  "targetSettlement": zod.string().nullable(),
   "inclusionReason": zod.string(),
   "refusalRule": zod.string().nullable(),
   "roadDistanceM": zod.number().nullable(),

@@ -506,6 +506,8 @@ export interface CreatorNearestAlternative {
 export interface CreatorRunOutcome {
   proposedName: string;
   /** @nullable */
+  targetSettlement: string | null;
+  /** @nullable */
   categoryLabel: string | null;
   inclusionReason: string;
   outcome: CreatorRunOutcomeOutcome;
@@ -520,6 +522,8 @@ export interface CreatorRunOutcome {
 
 export interface CreatorUnconfirmedProposal {
   proposedName: string;
+  /** @nullable */
+  targetSettlement: string | null;
   inclusionReason: string;
   /** @nullable */
   refusalRule: string | null;

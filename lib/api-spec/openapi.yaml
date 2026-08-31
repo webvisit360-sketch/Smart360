@@ -2619,6 +2619,7 @@ components:
       type: object
       properties:
         proposedName: { type: string }
+        targetSettlement: { type: ["string", "null"] }
         categoryLabel: { type: ["string", "null"] }
         inclusionReason: { type: string }
         outcome: { type: string, enum: [confirmed, unconfirmed, duplicate, route_failed] }
@@ -2629,7 +2630,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CreatorNearestAlternative"
-      required: [proposedName, categoryLabel, inclusionReason, outcome, refusalRule, roadDistanceM, travelDurationS, nearestAlternatives]
+      required: [proposedName, targetSettlement, categoryLabel, inclusionReason, outcome, refusalRule, roadDistanceM, travelDurationS, nearestAlternatives]
     CreatorNearestAlternative:
       type: object
       properties:
@@ -2654,11 +2655,12 @@ components:
       type: object
       properties:
         proposedName: { type: string }
+        targetSettlement: { type: ["string", "null"] }
         inclusionReason: { type: string }
         refusalRule: { type: ["string", "null"] }
         roadDistanceM: { type: ["number", "null"] }
         travelDurationS: { type: ["number", "null"] }
-      required: [proposedName, inclusionReason, refusalRule, roadDistanceM, travelDurationS]
+      required: [proposedName, targetSettlement, inclusionReason, refusalRule, roadDistanceM, travelDurationS]
     CreatorProposal:
       type: object
       properties:
