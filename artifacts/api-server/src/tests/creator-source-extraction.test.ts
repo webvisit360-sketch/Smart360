@@ -42,7 +42,7 @@ test("hiking indexes only accept mountain and route links", () => {
       <a href="/forum">Planinski forum</a>`,
   });
   assert.deepEqual(facts, [
-    { placeName: "Dom na Smrekovcu", settlement: null, categoryKey: "food" },
+    { placeName: "Dom na Smrekovcu", settlement: null, categoryKey: "hike" },
     { placeName: "Komen", settlement: null, categoryKey: "hike" },
   ]);
 });

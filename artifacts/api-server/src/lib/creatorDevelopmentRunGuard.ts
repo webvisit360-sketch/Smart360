@@ -1,7 +1,9 @@
 export const CREATOR_DEVELOPMENT_RUN_CONFIRMATION = "ljubno-source-first-development-only";
+export const CREATOR_LJUBNO_PRODUCTION_TENANT_ID = "177e633a-6030-4eca-8ce8-e0a0afdff599";
+export const CREATOR_LJUBNO_LEGACY_DEVELOPMENT_TENANT_ID = "34fdde13-6b5c-408c-a1d8-9554a936d31e";
 export const CREATOR_LJUBNO_PROTECTED_TENANT_IDS = [
-  "177e633a-6030-4eca-8ce8-e0a0afdff599",
-  "34fdde13-6b5c-408c-a1d8-9554a936d31e",
+  CREATOR_LJUBNO_PRODUCTION_TENANT_ID,
+  CREATOR_LJUBNO_LEGACY_DEVELOPMENT_TENANT_ID,
 ] as const;
 
 type DevelopmentRunEnvironment = {

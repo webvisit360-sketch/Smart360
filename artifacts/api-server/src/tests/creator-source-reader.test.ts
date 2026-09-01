@@ -12,8 +12,11 @@ import {
 import {
   assertPublicCreatorDestination,
   canonicalizeCreatorSourceUrl,
+  crawlApprovedCreatorSource,
   CreatorSourcePolicyError,
+  discoverDepthOneCreatorLinks,
   evaluateRobotsPolicy,
+  isObviousNonContentCreatorPath,
   parseRobotsPolicy,
   readApprovedCreatorSource,
   retrieveRobotsEvidence,
@@ -273,5 +276,177 @@ test("same-origin content redirects are rechecked against robots before the redi
     requestedPaths,
     ["/robots.txt", "/guide"],
     "the disallowed redirect destination must never be requested",
+  );
+});
+
+test("depth-one link discovery is same-origin, canonical, deduplicated, sorted, and bounded", () => {
+  const manyLinks = Array.from(
+    { length: 65 },
+    (_, index) => `<a href="/page-${String(64 - index).padStart(2, "0")}#section">page</a>`,
+  ).join("");
+  const links = discoverDepthOneCreatorLinks(
+    "https://example.com/guide",
+    [
+      manyLinks,
+      "<a href='/page-00'>duplicate</a>",
+      "<a href='https://other.example/page'>other origin</a>",
+      "<a href='http://example.com/insecure'>insecure</a>",
+      "<a href='javascript:alert(1)'>script</a>",
+    ].join(""),
+  );
+  assert.equal(links.length, 60);
+  assert.equal(links[0], "https://example.com/page-00");
+  assert.equal(links[59], "https://example.com/page-59");
+});
+
+test("obvious utility paths are filtered without excluding attraction details", () => {
+  for (const path of [
+    "/documents/map.pdf",
+    "/assets/site.css",
+    "/login",
+    "/admin/users",
+    "/search?q=lake",
+    "/tags/walks",
+    "/categories/family",
+    "/feed",
+    "/page/2",
+    "/news/2024/06",
+    "/Cookies",
+    "/gdpr",
+    "/CreateNew/391?relatedPostId=42",
+    "/objave/112",
+    "/window.location.pathname",
+  ]) {
+    assert.equal(isObviousNonContentCreatorPath(`https://example.com${path}`), true, path);
+  }
+  assert.equal(
+    isObviousNonContentCreatorPath("https://example.com/attractions/slap-virje"),
+    false,
+  );
+  assert.equal(
+    isObviousNonContentCreatorPath("https://example.com/places/lake-bled"),
+    false,
+  );
+});
+
+test("crawler evaluates robots per selected URL and never follows depth-one links", async (t) => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const municipality = `Crawl ${suffix}`;
+  const origin = `https://crawl-${suffix}.example`;
+  const [owner] = await db.select({ id: adminUsersTable.id }).from(adminUsersTable).limit(1);
+  assert.ok(owner);
+  const [source] = await db.insert(creatorSourcesTable).values({
+    municipality,
+    label: "Crawl source",
+    sourceKind: "test",
+    url: `${origin}/seed`,
+    canonicalUrl: `${origin}/seed`,
+    status: "approved",
+    approvedBy: owner.id,
+    approvedAt: new Date(),
+  }).returning();
+  assert.ok(source);
+  t.after(async () => {
+    await db.delete(creatorSourcesTable).where(eq(creatorSourcesTable.id, source.id));
+  });
+
+  const requestedPaths: string[] = [];
+  const result = await crawlApprovedCreatorSource(source.id, {
+    lookupFn: publicLookup,
+    fetchFn: async (input) => {
+      const path = new URL(String(input)).pathname;
+      requestedPaths.push(path);
+      if (path === "/robots.txt") {
+        return new Response("User-agent: Smart360Creator\nDisallow: /blocked\nAllow: /\n", {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        });
+      }
+      const body = path === "/seed"
+        ? "<html><title>Seed</title><a href='/b'>B</a><a href='/blocked'>blocked</a><a href='/a'>A</a><a href='/a#again'>duplicate</a><a href='/assets/map.pdf'>asset</a><a href='/login'>login</a><a href='/attractions/slap-virje'>detail</a></html>"
+        : "<html><title>Same body</title><p>same content</p><a href=\"/depth-two\">not followed</a></html>";
+      return new Response(body, {
+        status: 200,
+        headers: { "content-type": "text/html" },
+      });
+    },
+  });
+
+  assert.deepEqual(requestedPaths, ["/robots.txt", "/seed", "/a", "/attractions/slap-virje", "/b"]);
+  assert.deepEqual(result.pages.map(({ url, status, skipReason }) => ({
+    path: new URL(url).pathname,
+    status,
+    skipReason,
+  })), [
+    { path: "/seed", status: "stored", skipReason: null },
+    { path: "/a", status: "stored", skipReason: null },
+    { path: "/assets/map.pdf", status: "skipped", skipReason: "non-content-path" },
+    { path: "/attractions/slap-virje", status: "stored", skipReason: null },
+    { path: "/b", status: "stored", skipReason: null },
+    { path: "/blocked", status: "skipped", skipReason: "robots-disallowed" },
+    { path: "/login", status: "skipped", skipReason: "non-content-path" },
+  ]);
+  assert.equal(result.counters.attemptedPages, 4);
+  assert.equal(result.counters.storedPages, 4);
+  assert.equal(result.counters.skippedPages, 3);
+  assert.equal(result.counters.skipReasons["robots-disallowed"], 1);
+  assert.equal(result.counters.skipReasons["non-content-path"], 2);
+  assert.ok(result.pages[0]!.counters.rawBytes > 0);
+  assert.equal(result.pages[1]!.content?.id, result.pages[3]!.content?.id);
+  assert.equal(result.pages[1]!.content?.id, result.pages[4]!.content?.id);
+  assert.equal(result.pages[1]!.finalUrl, `${origin}/a`);
+  assert.equal(result.pages[3]!.finalUrl, `${origin}/attractions/slap-virje`);
+  assert.equal(result.pages[4]!.finalUrl, `${origin}/b`);
+  assert.ok(result.pages[1]!.observedAt instanceof Date);
+  assert.ok(result.pages[4]!.observedAt instanceof Date);
+
+  await assert.rejects(
+    crawlApprovedCreatorSource(source.id, {
+      lookupFn: publicLookup,
+      getRemainingContentBytes: () => 10,
+      fetchFn: async () => new Response("<html><title>Too large for remaining run budget</title></html>", {
+        status: 200,
+        headers: { "content-type": "text/html", "content-length": "61" },
+      }),
+    }),
+    (error) => error instanceof CreatorSourcePolicyError && error.kind === "run-budget-exhausted",
+  );
+
+  let contentReads = 0;
+  let sourceCapHit = false;
+  const capped = await crawlApprovedCreatorSource(source.id, {
+    lookupFn: publicLookup,
+    getRemainingContentBytes: () => contentReads === 0 ? 10_000 : 10,
+    onContentRead: () => {
+      contentReads += 1;
+    },
+    onContentBudgetExceeded: () => {
+      sourceCapHit = true;
+    },
+    shouldSkipRemainingOnContentBudgetExceeded: () => sourceCapHit,
+    fetchFn: async (input) => {
+      const path = new URL(String(input)).pathname;
+      const body = path === "/seed"
+        ? "<html><title>Seed</title><a href='/a'>A</a><a href='/b'>B</a></html>"
+        : "<html><title>Page beyond the remaining source share</title></html>";
+      return new Response(body, { status: 200, headers: { "content-type": "text/html" } });
+    },
+  });
+  assert.equal(capped.counters.storedPages, 1);
+  assert.equal(capped.counters.skipReasons["source-byte-cap"], 2);
+  assert.equal(capped.counters.attemptedPages, 2);
+
+  await assert.rejects(
+    crawlApprovedCreatorSource(source.id, {
+      lookupFn: publicLookup,
+      timeoutMs: 20,
+      fetchFn: async () => new Response(new ReadableStream<Uint8Array>({
+        pull: () => new Promise(() => undefined),
+      }), {
+        status: 200,
+        headers: { "content-type": "text/html" },
+      }),
+    }),
+    (error) => error instanceof CreatorSourcePolicyError && error.kind === "network",
   );
 });

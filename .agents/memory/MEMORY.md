@@ -31,3 +31,4 @@
 - [Guest-home truthfulness](guest-home-truthfulness.md) — never invent ratings, response times, or host imagery; response time starts after five real answered exchanges.
 - [Creator source-first policy](creator-source-first.md) — discover places only from approved municipality sources; robots/SSRF fail closed, model descriptions come last.
 - [Creator run handoff](creator-run-handoff.md) — preserve exact manifests only after human review; unreviewed source runs may be regenerated to improve extraction quality.
+- [Creator crawl budget fairness](creator-crawl-budget-fairness.md) — share global bytes across seeds; model batching is safe only with page-local re-grounding.

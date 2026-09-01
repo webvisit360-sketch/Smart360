@@ -44,8 +44,9 @@ function cleanText(value: string): string {
 
 function categoryFor(name: string, href: string): DeterministicSourceFact["categoryKey"] {
   const haystack = `${name} ${href}`.toLocaleLowerCase("sl");
-  if (/\b(gostil|restavr|okrepčeval|kmetij|kulinar|hrana|pijača|hotel|kamp|koča|dom)\b/u.test(haystack)) return "food";
-  if (/\b(pohod|pot |pot$|gora|vrh|planin|koles|smrekovec|travnik|koča)\b/u.test(haystack)) return "hike";
+  if (/\b(?:planinsk\w+\s+dom(?:ov\w*|u|a|om)?|koč\w*|zavetišč\w*)\b/u.test(haystack)) return "hike";
+  if (/\b(gostil|restavr|okrepčeval|kmetij|kulinar|hrana|pijača|hotel|kamp)\b/u.test(haystack)) return "food";
+  if (/\b(pohod|pot |pot$|gora|vrh|planin|koles|smrekovec|travnik)\b/u.test(haystack)) return "hike";
   if (/\b(smuč|rafting|kajak|šport|aktiv|doživet|kopali|ribolov)\b/u.test(haystack)) return "act";
   if (/\b(cerkev|muzej|grad|dvorec|spomenik|slap|jama|park|vrt|dolina|soteska|izvir|stolp|znamenit)\b/u.test(haystack)) return "sights";
   return "trips";
