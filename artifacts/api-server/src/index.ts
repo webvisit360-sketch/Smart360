@@ -15,6 +15,7 @@ import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRe
 import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill";
 import { runTriesteDistanceCorrectionAtStartup } from "./lib/triesteDistanceCorrection";
 import { runLegacyTenantLivingGuideCutoversAtStartup } from "./lib/grilLivingGuideCutover";
+import { recoverCreatorSourceRunsAtStartup } from "./lib/creatorSourceRunService";
 
 const rawPort = process.env["PORT"];
 
@@ -113,6 +114,7 @@ ensureAdminAccount()
   // One-deploy production-only correction for the approved Trieste city-centre distance.
   // Remove this hook and its file immediately after production verification.
   .then(() => runTriesteDistanceCorrectionAtStartup())
+  .then(() => recoverCreatorSourceRunsAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();

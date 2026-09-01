@@ -17,6 +17,7 @@ import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { KreatorOriginConfirmation } from "@/components/admin/kreator-origin-confirmation";
+import { KreatorSourceList } from "@/components/admin/kreator-source-list";
 import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-settings";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
@@ -613,15 +614,11 @@ export default function AdminTenantEdit() {
                       void queryClient.invalidateQueries({ queryKey: getListTenantChangelogQueryKey(id) });
                     }}
                   />
-                  <div
-                    data-testid="creator-source-method-status"
-                    className="mt-6 max-w-[880px] rounded-[18px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950"
-                  >
-                    <p className="text-sm font-[800]">Novi način: odobreni občinski viri</p>
-                    <p className="mt-1 text-sm font-[500]">
-                      Stari C1 je umaknjen. Branje vsebine se odklene šele po potrditvi seznama virov.
-                    </p>
-                  </div>
+                  <KreatorSourceList
+                    tenantId={tenant.id}
+                    tenantName={tenant.name}
+                    origin={typeof tenant.latitude === 'number' && typeof tenant.longitude === 'number' ? { latitude: tenant.latitude, longitude: tenant.longitude } : undefined}
+                  />
                 </>
               ) : (
                 <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">

@@ -47,7 +47,11 @@ import type {
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
-  CreatorRunReport,
+  CreatorSource,
+  CreatorSourceList,
+  CreatorSourceListApproval,
+  CreatorSourceProposalListInput,
+  CreatorSourceRun,
   CreatorTenantOrigin,
   DistanceBulkApproveInput,
   DistanceLinkInput,
@@ -2565,11 +2569,11 @@ export const getStartCreatorRunUrl = (id: string,) => {
 }
 
 /**
- * @summary Run the server-controlled C1 model, sieve, and OSRM pipeline once
+ * @summary Start the approved municipality source-first pipeline asynchronously
  */
-export const startCreatorRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorRunReport> => {
+export const startCreatorRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSourceRun> => {
 
-  return customFetch<CreatorRunReport>(getStartCreatorRunUrl(id),
+  return customFetch<CreatorSourceRun>(getStartCreatorRunUrl(id),
   {
     ...options,
     method: 'POST'
@@ -2614,7 +2618,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type StartCreatorRunMutationError = ErrorType<void>
 
     /**
- * @summary Run the server-controlled C1 model, sieve, and OSRM pipeline once
+ * @summary Start the approved municipality source-first pipeline asynchronously
  */
 export const useStartCreatorRun = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startCreatorRun>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -2625,6 +2629,301 @@ export const useStartCreatorRun = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getStartCreatorRunMutationOptions(options));
+    }
+
+export const getListCreatorSourcesUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources`
+}
+
+/**
+ * @summary List the tenant municipality source ledger, including blocked rows
+ */
+export const listCreatorSources = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSourceList> => {
+
+  return customFetch<CreatorSourceList>(getListCreatorSourcesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCreatorSourcesQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/creator/sources`
+    ] as const;
+    }
+
+
+export const getListCreatorSourcesQueryOptions = <TData = Awaited<ReturnType<typeof listCreatorSources>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorSources>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCreatorSourcesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCreatorSources>>> = ({ signal }) => listCreatorSources(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCreatorSources>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCreatorSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof listCreatorSources>>>
+export type ListCreatorSourcesQueryError = ErrorType<void>
+
+
+/**
+ * @summary List the tenant municipality source ledger, including blocked rows
+ */
+
+export function useListCreatorSources<TData = Awaited<ReturnType<typeof listCreatorSources>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorSources>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCreatorSourcesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getProposeCreatorSourcesUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources`
+}
+
+/**
+ * @summary Propose source URLs without fetching content pages
+ */
+export const proposeCreatorSources = async (id: string,
+    creatorSourceProposalListInput: CreatorSourceProposalListInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSource[]> => {
+
+  return customFetch<CreatorSource[]>(getProposeCreatorSourcesUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorSourceProposalListInput)
+  }
+);}
+
+
+
+
+
+export const getProposeCreatorSourcesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof proposeCreatorSources>>, TError,{id: string;data: BodyType<CreatorSourceProposalListInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof proposeCreatorSources>>, TError,{id: string;data: BodyType<CreatorSourceProposalListInput>}, TContext> => {
+
+const mutationKey = ['proposeCreatorSources'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof proposeCreatorSources>>, {id: string;data: BodyType<CreatorSourceProposalListInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  proposeCreatorSources(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ProposeCreatorSourcesMutationResult = NonNullable<Awaited<ReturnType<typeof proposeCreatorSources>>>
+    export type ProposeCreatorSourcesMutationBody = BodyType<CreatorSourceProposalListInput>
+    export type ProposeCreatorSourcesMutationError = ErrorType<void>
+
+    /**
+ * @summary Propose source URLs without fetching content pages
+ */
+export const useProposeCreatorSources = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof proposeCreatorSources>>, TError,{id: string;data: BodyType<CreatorSourceProposalListInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof proposeCreatorSources>>,
+        TError,
+        {id: string;data: BodyType<CreatorSourceProposalListInput>},
+        TContext
+      > => {
+      return useMutation(getProposeCreatorSourcesMutationOptions(options));
+    }
+
+export const getApproveCreatorSourceListUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources/approve-list`
+}
+
+/**
+ * @summary Explicitly approve the fully decided current municipality list
+ */
+export const approveCreatorSourceList = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSourceListApproval> => {
+
+  return customFetch<CreatorSourceListApproval>(getApproveCreatorSourceListUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveCreatorSourceListMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorSourceList>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveCreatorSourceList>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['approveCreatorSourceList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveCreatorSourceList>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  approveCreatorSourceList(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveCreatorSourceListMutationResult = NonNullable<Awaited<ReturnType<typeof approveCreatorSourceList>>>
+
+    export type ApproveCreatorSourceListMutationError = ErrorType<void>
+
+    /**
+ * @summary Explicitly approve the fully decided current municipality list
+ */
+export const useApproveCreatorSourceList = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorSourceList>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveCreatorSourceList>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getApproveCreatorSourceListMutationOptions(options));
+    }
+
+export const getDecideCreatorSourceUrl = (id: string,
+    sourceId: string,
+    decision: 'approve' | 'reject' | 'revoke',) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources/${sourceId}/${decision}`
+}
+
+/**
+ * @summary Approve, reject, or revoke one municipality source
+ */
+export const decideCreatorSource = async (id: string,
+    sourceId: string,
+    decision: 'approve' | 'reject' | 'revoke', options?: Parameters<typeof customFetch>[1]): Promise<CreatorSource> => {
+
+  return customFetch<CreatorSource>(getDecideCreatorSourceUrl(id,sourceId,decision),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getDecideCreatorSourceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideCreatorSource>>, TError,{id: string;sourceId: string;decision: 'approve' | 'reject' | 'revoke'}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideCreatorSource>>, TError,{id: string;sourceId: string;decision: 'approve' | 'reject' | 'revoke'}, TContext> => {
+
+const mutationKey = ['decideCreatorSource'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideCreatorSource>>, {id: string;sourceId: string;decision: 'approve' | 'reject' | 'revoke'}> = (props) => {
+          const {id,sourceId,decision} = props ?? {};
+
+          return  decideCreatorSource(id,sourceId,decision,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideCreatorSourceMutationResult = NonNullable<Awaited<ReturnType<typeof decideCreatorSource>>>
+
+    export type DecideCreatorSourceMutationError = ErrorType<void>
+
+    /**
+ * @summary Approve, reject, or revoke one municipality source
+ */
+export const useDecideCreatorSource = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideCreatorSource>>, TError,{id: string;sourceId: string;decision: 'approve' | 'reject' | 'revoke'}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof decideCreatorSource>>,
+        TError,
+        {id: string;sourceId: string;decision: 'approve' | 'reject' | 'revoke'},
+        TContext
+      > => {
+      return useMutation(getDecideCreatorSourceMutationOptions(options));
     }
 
 export const getGetLatestCreatorRunUrl = (id: string,) => {
@@ -2638,9 +2937,9 @@ export const getGetLatestCreatorRunUrl = (id: string,) => {
 /**
  * @summary Read the latest Creator run report
  */
-export const getLatestCreatorRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorRunReport | null> => {
+export const getLatestCreatorRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSourceRun | null> => {
 
-  return customFetch<CreatorRunReport | null>(getGetLatestCreatorRunUrl(id),
+  return customFetch<CreatorSourceRun | null>(getGetLatestCreatorRunUrl(id),
   {
     ...options,
     method: 'GET'
@@ -2790,7 +3089,7 @@ export const getListCreatorCategoryOptionsUrl = (id: string,) => {
 }
 
 /**
- * @summary List existing tenant categories available to C1 proposals
+ * @summary List existing tenant categories available to Creator proposals
  */
 export const listCreatorCategoryOptions = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorCategoryOption[]> => {
 
@@ -2837,7 +3136,7 @@ export type ListCreatorCategoryOptionsQueryError = ErrorType<void>
 
 
 /**
- * @summary List existing tenant categories available to C1 proposals
+ * @summary List existing tenant categories available to Creator proposals
  */
 
 export function useListCreatorCategoryOptions<TData = Awaited<ReturnType<typeof listCreatorCategoryOptions>>, TError = ErrorType<void>>(
@@ -2868,7 +3167,7 @@ export const getEditCreatorProposalUrl = (id: string,
 }
 
 /**
- * @summary Edit only human/editorial C1 proposal fields
+ * @summary Edit only human/editorial Creator proposal fields
  */
 export const editCreatorProposal = async (id: string,
     proposalId: string,
@@ -2919,7 +3218,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type EditCreatorProposalMutationError = ErrorType<void>
 
     /**
- * @summary Edit only human/editorial C1 proposal fields
+ * @summary Edit only human/editorial Creator proposal fields
  */
 export const useEditCreatorProposal = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCreatorProposal>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalEditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

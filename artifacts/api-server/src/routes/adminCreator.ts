@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
-import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, db, sectionsTable, tenantsTable } from "@workspace/db";
+import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, creatorSourceRunsTable, db, sectionsTable, tenantsTable } from "@workspace/db";
 import {
+  ApproveCreatorSourceListResponse,
   ApproveCreatorProposalResponse,
   ApproveCreatorProposalsBulkBody,
   ApproveCreatorProposalsBulkResponse,
@@ -12,11 +13,16 @@ import {
   EditCreatorProposalBody,
   EditCreatorProposalResponse,
   GetLatestCreatorRunResponse,
+  ListCreatorSourcesResponse,
   ListCreatorCategoryOptionsResponse,
   ListCreatorProposalsResponse,
   PreviewCreatorOriginBody,
   PreviewCreatorOriginResponse,
+  ProposeCreatorSourcesBody,
+  ProposeCreatorSourcesResponse,
   RejectCreatorProposalResponse,
+  StartCreatorRunResponse,
+  DecideCreatorSourceResponse,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import {
@@ -35,6 +41,18 @@ import {
 } from "../lib/creatorOrigin";
 import { CREATOR_C1_PRICING, type CreatorC1Report } from "../lib/creatorC1";
 import { logChange } from "../lib/changelog";
+import {
+  approveCreatorSourceList,
+  CreatorSourceRegistryError,
+  decideCreatorSource,
+  getCreatorSourceList,
+  normalizeCreatorMunicipality,
+  proposeCreatorSources,
+} from "../lib/creatorSourceRegistry";
+import {
+  latestCreatorSourceRun,
+  startCreatorSourceRun,
+} from "../lib/creatorSourceRunService";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -162,7 +180,7 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
     return;
   }
   const address = input.data.address.replace(/\s+/g, " ").trim();
-  const municipality = input.data.municipality.replace(/\s+/g, " ").trim();
+  const municipality = normalizeCreatorMunicipality(input.data.municipality);
   if (!address || !municipality) {
     res.status(400).json({ error: "Naslov in občina ne smeta biti prazna." });
     return;
@@ -182,6 +200,33 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
         .where(eq(tenantsTable.id, tenantId))
         .limit(1);
       if (!current) throw new CreatorTenantNotFoundError();
+      const municipalityLocks = [...new Set([
+        current.municipality ? normalizeCreatorMunicipality(current.municipality) : "",
+        normalizeCreatorMunicipality(municipality),
+      ].filter(Boolean))].sort();
+      for (const lockedMunicipality of municipalityLocks) {
+        const lockResult = await tx.execute(sql`SELECT pg_try_advisory_xact_lock(
+          hashtext(${"creator-municipality:" + lockedMunicipality})
+        ) AS acquired`) as { rows?: Array<{ acquired: boolean }> };
+        if (lockResult.rows?.[0]?.acquired !== true) {
+          throw new CreatorSourceRegistryError(
+            "This municipality is currently locked by a source-first run.",
+            "conflict",
+          );
+        }
+      }
+      const [running] = await tx.select({ id: creatorSourceRunsTable.id })
+        .from(creatorSourceRunsTable)
+        .where(and(
+          eq(creatorSourceRunsTable.tenantId, tenantId),
+          eq(creatorSourceRunsTable.status, "running"),
+        )).limit(1);
+      if (running) {
+        throw new CreatorSourceRegistryError(
+          "Origin municipality cannot change while a source-first run is active.",
+          "conflict",
+        );
+      }
 
       const hasStoredOrigin = Boolean(
         current.mapUrl
@@ -247,6 +292,10 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
       res.status(404).json({ error: "Nastanitev ni bila najdena." });
       return;
     }
+    if (error instanceof CreatorSourceRegistryError && error.kind === "conflict") {
+      res.status(409).json({ error: error.message, code: error.kind });
+      return;
+    }
     if (error instanceof GoogleMapsParseError || error instanceof GoogleMapsRedirectError) {
       res.status(422).json({ error: error.message, code: error.kind });
       return;
@@ -257,10 +306,21 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
 });
 
 router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> => {
-  res.status(410).json({
-    error: "Stari C1 je umaknjen. Novi Kreator bo uporabljal samo odobrene občinske vire.",
-    code: "creator-c1-retired",
-  });
+  const tenantId = first(req.params["id"]);
+  try {
+    const run = await startCreatorSourceRun(tenantId);
+    res.status(202).json(StartCreatorRunResponse.parse(serialize(run)));
+  } catch (error) {
+    if (error instanceof CreatorSourceRegistryError) {
+      const status = error.kind === "not-found"
+        ? 404
+        : error.kind === "conflict" ? 409 : 400;
+      res.status(status).json({ error: error.message, code: error.kind });
+      return;
+    }
+    req.log.error({ error, tenantId }, "Creator source run could not be started");
+    res.status(500).json({ error: "Source-first run could not be started." });
+  }
 });
 
 router.get("/admin/tenants/:id/creator/runs/latest", async (req, res): Promise<void> => {
@@ -269,12 +329,88 @@ router.get("/admin/tenants/:id/creator/runs/latest", async (req, res): Promise<v
     res.status(404).json({ error: "Namestitev ni najdena." });
     return;
   }
-  const [run] = await db.select().from(creatorRunsTable)
-    .where(eq(creatorRunsTable.tenantId, tenantId))
-    .orderBy(desc(creatorRunsTable.createdAt))
-    .limit(1);
-  res.json(GetLatestCreatorRunResponse.parse(run ? serialize(await creatorRunResponse(run)) : null));
+  const run = await latestCreatorSourceRun(tenantId);
+  res.json(GetLatestCreatorRunResponse.parse(serialize(run)));
 });
+
+router.get("/admin/tenants/:id/creator/sources", async (req, res): Promise<void> => {
+  try {
+    const result = await getCreatorSourceList(first(req.params["id"]));
+    res.json(ListCreatorSourcesResponse.parse(serialize(result)));
+  } catch (error) {
+    res.status(error instanceof CreatorSourceRegistryError ? 404 : 500).json({
+      error: error instanceof Error ? error.message : "Sources could not be listed.",
+    });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/sources", async (req, res): Promise<void> => {
+  const input = ProposeCreatorSourcesBody.safeParse(req.body);
+  if (!input.success) {
+    res.status(400).json({ error: "A non-empty valid source list is required." });
+    return;
+  }
+  try {
+    const rows = await proposeCreatorSources({
+      tenantId: first(req.params["id"]),
+      sources: input.data.sources,
+    });
+    res.json(ProposeCreatorSourcesResponse.parse(serialize(rows)));
+  } catch (error) {
+    const status = error instanceof CreatorSourceRegistryError
+      ? error.kind === "not-found" ? 404 : 400
+      : 500;
+    res.status(status).json({
+      error: error instanceof Error ? error.message : "Sources could not be proposed.",
+    });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/sources/approve-list", async (req, res): Promise<void> => {
+  try {
+    const result = await approveCreatorSourceList(first(req.params["id"]));
+    res.json(ApproveCreatorSourceListResponse.parse(result));
+  } catch (error) {
+    const status = error instanceof CreatorSourceRegistryError
+      ? error.kind === "not-found" ? 404 : 400
+      : 500;
+    res.status(status).json({
+      error: error instanceof Error ? error.message : "Source list could not be approved.",
+    });
+  }
+});
+
+router.post(
+  "/admin/tenants/:id/creator/sources/:sourceId/:decision",
+  async (req, res): Promise<void> => {
+    const decision = first(req.params["decision"]);
+    if (!["approve", "reject", "revoke"].includes(decision)) {
+      res.status(400).json({ error: "Invalid source decision." });
+      return;
+    }
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operator not found." });
+      return;
+    }
+    try {
+      const row = await decideCreatorSource({
+        tenantId: first(req.params["id"]),
+        sourceId: first(req.params["sourceId"]),
+        decision: decision as "approve" | "reject" | "revoke",
+        actorId: actor.id,
+      });
+      res.json(DecideCreatorSourceResponse.parse(serialize(row)));
+    } catch (error) {
+      const status = error instanceof CreatorSourceRegistryError
+        ? error.kind === "not-found" ? 404 : 409
+        : 500;
+      res.status(status).json({
+        error: error instanceof Error ? error.message : "Source decision failed.",
+      });
+    }
+  },
+);
 
 router.get("/admin/tenants/:id/creator/catalogue", async (req, res): Promise<void> => {
   const tenantId = first(req.params["id"]);

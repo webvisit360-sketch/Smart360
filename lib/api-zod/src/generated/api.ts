@@ -874,7 +874,7 @@ export const ConfirmCreatorTenantOriginResponse = zod.object({
 
 
 /**
- * @summary Run the server-controlled C1 model, sieve, and OSRM pipeline once
+ * @summary Start the approved municipality source-first pipeline asynchronously
  */
 export const StartCreatorRunParams = zod.object({
   "id": zod.coerce.string()
@@ -884,56 +884,7 @@ export const StartCreatorRunResponse = zod.object({
   "id": zod.string(),
   "tenantId": zod.string(),
   "status": zod.enum(['running', 'completed', 'failed']),
-  "model": zod.string(),
-  "durableRunCount": zod.number(),
-  "proposedCount": zod.number(),
-  "confirmedCount": zod.number(),
-  "unresolvedCount": zod.number(),
-  "outsidePracticalCount": zod.number(),
-  "outsideNearCount": zod.number(),
-  "outsideExcursionCount": zod.number(),
-  "routeFailuresCount": zod.number(),
-  "duplicatesMergedCount": zod.number(),
-  "inputTokens": zod.number(),
-  "outputTokens": zod.number(),
-  "costUsd": zod.number(),
-  "wallClockMs": zod.number().nullable(),
-  "nominatimThrottleMs": zod.number(),
-  "nearEnvelopeKm": zod.number().nullable(),
-  "nearEnvelopeEdgeBandCount": zod.number().nullable(),
-  "dependencyAttempts": zod.array(zod.object({
-  "dependency": zod.enum(['openai', 'overpass', 'nominatim', 'osrm']),
-  "operation": zod.string(),
-  "attempt": zod.number(),
-  "ok": zod.boolean(),
-  "httpStatus": zod.number().nullable(),
-  "durationMs": zod.number(),
-  "rawElementCount": zod.number().nullable(),
-  "filteredElementCount": zod.number().nullable(),
-  "query": zod.string().nullable(),
-  "error": zod.string().nullable()
-})),
-  "nearCatalogue": zod.union([zod.object({
-  "status": zod.enum(['success', 'partial', 'empty', 'failed']),
-  "requestCount": zod.number(),
-  "httpStatuses": zod.array(zod.number().nullable()),
-  "durationMs": zod.number(),
-  "rawElementCount": zod.number(),
-  "filteredElementCount": zod.number(),
-  "error": zod.string().nullable(),
-  "queries": zod.array(zod.string())
-}),zod.null()]),
-  "surroundingSettlements": zod.array(zod.string()),
-  "surroundingSettlementFeatureCounts": zod.array(zod.object({
-  "name": zod.string(),
-  "featureCount": zod.number()
-})),
-  "minimumLocalProposalsPerBatch": zod.number().nullable(),
-  "localProposalCount": zod.number().nullable(),
-  "quotaTargetedProposalCount": zod.number().nullable(),
-  "quotaTargetedUnconfirmedCount": zod.number().nullable(),
-  "nearRingResolvedAfterGlobalSieveFailedCount": zod.number().nullable(),
-  "error": zod.string().nullable(),
+  "report": zod.record(zod.string(), zod.unknown()).nullish(),
   "startedAt": zod.string(),
   "completedAt": zod.string().nullable(),
   "outcomes": zod.array(zod.object({
@@ -965,16 +916,113 @@ export const StartCreatorRunResponse = zod.object({
   "roadDistanceM": zod.number().nullable(),
   "travelDurationS": zod.number().nullable()
 }))
-})),
-  "pricing": zod.object({
-  "sourceUrl": zod.string(),
-  "asOf": zod.string(),
-  "inputPerMillionUsd": zod.number(),
-  "cachedInputPerMillionUsd": zod.number(),
-  "cacheWritePerMillionUsd": zod.number(),
-  "outputPerMillionUsd": zod.number(),
-  "longContextThresholdTokens": zod.number()
+}))
 })
+
+
+/**
+ * @summary List the tenant municipality source ledger, including blocked rows
+ */
+export const ListCreatorSourcesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListCreatorSourcesResponse = zod.object({
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "municipality": zod.string(),
+  "label": zod.string(),
+  "sourceKind": zod.string(),
+  "url": zod.string(),
+  "canonicalUrl": zod.string(),
+  "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
+  "approvedBy": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "approval": zod.object({
+  "approved": zod.boolean(),
+  "approvedSourceCount": zod.number()
+})
+})
+
+
+/**
+ * @summary Propose source URLs without fetching content pages
+ */
+export const ProposeCreatorSourcesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const proposeCreatorSourcesBodySourcesItemLabelMax = 200;
+
+export const proposeCreatorSourcesBodySourcesItemSourceKindMax = 80;
+
+export const proposeCreatorSourcesBodySourcesItemUrlMax = 2000;
+
+export const proposeCreatorSourcesBodySourcesMax = 100;
+
+
+
+export const ProposeCreatorSourcesBody = zod.object({
+  "sources": zod.array(zod.object({
+  "label": zod.string().min(1).max(proposeCreatorSourcesBodySourcesItemLabelMax),
+  "sourceKind": zod.string().min(1).max(proposeCreatorSourcesBodySourcesItemSourceKindMax),
+  "url": zod.string().min(1).max(proposeCreatorSourcesBodySourcesItemUrlMax)
+})).min(1).max(proposeCreatorSourcesBodySourcesMax)
+})
+
+export const ProposeCreatorSourcesResponseItem = zod.object({
+  "id": zod.string(),
+  "municipality": zod.string(),
+  "label": zod.string(),
+  "sourceKind": zod.string(),
+  "url": zod.string(),
+  "canonicalUrl": zod.string(),
+  "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
+  "approvedBy": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ProposeCreatorSourcesResponse = zod.array(ProposeCreatorSourcesResponseItem)
+
+
+/**
+ * @summary Explicitly approve the fully decided current municipality list
+ */
+export const ApproveCreatorSourceListParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ApproveCreatorSourceListResponse = zod.object({
+  "approved": zod.boolean(),
+  "approvedSourceCount": zod.number()
+})
+
+
+/**
+ * @summary Approve, reject, or revoke one municipality source
+ */
+export const DecideCreatorSourceParams = zod.object({
+  "id": zod.coerce.string(),
+  "sourceId": zod.coerce.string(),
+  "decision": zod.enum(['approve', 'reject', 'revoke'])
+})
+
+export const DecideCreatorSourceResponse = zod.object({
+  "id": zod.string(),
+  "municipality": zod.string(),
+  "label": zod.string(),
+  "sourceKind": zod.string(),
+  "url": zod.string(),
+  "canonicalUrl": zod.string(),
+  "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
+  "approvedBy": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
 })
 
 
@@ -989,56 +1037,7 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "id": zod.string(),
   "tenantId": zod.string(),
   "status": zod.enum(['running', 'completed', 'failed']),
-  "model": zod.string(),
-  "durableRunCount": zod.number(),
-  "proposedCount": zod.number(),
-  "confirmedCount": zod.number(),
-  "unresolvedCount": zod.number(),
-  "outsidePracticalCount": zod.number(),
-  "outsideNearCount": zod.number(),
-  "outsideExcursionCount": zod.number(),
-  "routeFailuresCount": zod.number(),
-  "duplicatesMergedCount": zod.number(),
-  "inputTokens": zod.number(),
-  "outputTokens": zod.number(),
-  "costUsd": zod.number(),
-  "wallClockMs": zod.number().nullable(),
-  "nominatimThrottleMs": zod.number(),
-  "nearEnvelopeKm": zod.number().nullable(),
-  "nearEnvelopeEdgeBandCount": zod.number().nullable(),
-  "dependencyAttempts": zod.array(zod.object({
-  "dependency": zod.enum(['openai', 'overpass', 'nominatim', 'osrm']),
-  "operation": zod.string(),
-  "attempt": zod.number(),
-  "ok": zod.boolean(),
-  "httpStatus": zod.number().nullable(),
-  "durationMs": zod.number(),
-  "rawElementCount": zod.number().nullable(),
-  "filteredElementCount": zod.number().nullable(),
-  "query": zod.string().nullable(),
-  "error": zod.string().nullable()
-})),
-  "nearCatalogue": zod.union([zod.object({
-  "status": zod.enum(['success', 'partial', 'empty', 'failed']),
-  "requestCount": zod.number(),
-  "httpStatuses": zod.array(zod.number().nullable()),
-  "durationMs": zod.number(),
-  "rawElementCount": zod.number(),
-  "filteredElementCount": zod.number(),
-  "error": zod.string().nullable(),
-  "queries": zod.array(zod.string())
-}),zod.null()]),
-  "surroundingSettlements": zod.array(zod.string()),
-  "surroundingSettlementFeatureCounts": zod.array(zod.object({
-  "name": zod.string(),
-  "featureCount": zod.number()
-})),
-  "minimumLocalProposalsPerBatch": zod.number().nullable(),
-  "localProposalCount": zod.number().nullable(),
-  "quotaTargetedProposalCount": zod.number().nullable(),
-  "quotaTargetedUnconfirmedCount": zod.number().nullable(),
-  "nearRingResolvedAfterGlobalSieveFailedCount": zod.number().nullable(),
-  "error": zod.string().nullable(),
+  "report": zod.record(zod.string(), zod.unknown()).nullish(),
   "startedAt": zod.string(),
   "completedAt": zod.string().nullable(),
   "outcomes": zod.array(zod.object({
@@ -1070,16 +1069,7 @@ export const GetLatestCreatorRunResponse = zod.union([zod.object({
   "roadDistanceM": zod.number().nullable(),
   "travelDurationS": zod.number().nullable()
 }))
-})),
-  "pricing": zod.object({
-  "sourceUrl": zod.string(),
-  "asOf": zod.string(),
-  "inputPerMillionUsd": zod.number(),
-  "cachedInputPerMillionUsd": zod.number(),
-  "cacheWritePerMillionUsd": zod.number(),
-  "outputPerMillionUsd": zod.number(),
-  "longContextThresholdTokens": zod.number()
-})
+}))
 }),zod.null()])
 
 
@@ -1146,7 +1136,7 @@ export const ListCreatorProposalsResponse = zod.array(ListCreatorProposalsRespon
 
 
 /**
- * @summary List existing tenant categories available to C1 proposals
+ * @summary List existing tenant categories available to Creator proposals
  */
 export const ListCreatorCategoryOptionsParams = zod.object({
   "id": zod.coerce.string()
@@ -1160,7 +1150,7 @@ export const ListCreatorCategoryOptionsResponse = zod.array(ListCreatorCategoryO
 
 
 /**
- * @summary Edit only human/editorial C1 proposal fields
+ * @summary Edit only human/editorial Creator proposal fields
  */
 export const EditCreatorProposalParams = zod.object({
   "id": zod.coerce.string(),

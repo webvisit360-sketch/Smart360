@@ -615,7 +615,27 @@ paths:
     post:
       operationId: startCreatorRun
       tags: [tenants]
-      summary: Run the server-controlled C1 model, sieve, and OSRM pipeline once
+      summary: Start the approved municipality source-first pipeline asynchronously
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "202":
+          description: Source-first run accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSourceRun"
+        "400": { description: Source list has proposed entries or no approved sources }
+        "404": { description: Tenant not found }
+        "409": { description: Source list was not explicitly approved or a run is in progress }
+  /admin/tenants/{id}/creator/sources:
+    get:
+      operationId: listCreatorSources
+      tags: [tenants]
+      summary: List the tenant municipality source ledger, including blocked rows
       parameters:
         - name: id
           in: path
@@ -623,14 +643,84 @@ paths:
           schema: { type: string }
       responses:
         "200":
-          description: Completed Creator run report
+          description: Municipality source ledger
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreatorRunReport"
-        "404": { description: Tenant not found }
-        "409": { description: A run already exists or is in progress }
-        "500": { description: Run failed with a durable report }
+                $ref: "#/components/schemas/CreatorSourceList"
+        "404": { description: Tenant or municipality not found }
+    post:
+      operationId: proposeCreatorSources
+      tags: [tenants]
+      summary: Propose source URLs without fetching content pages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorSourceProposalListInput"
+      responses:
+        "200":
+          description: Updated municipality source ledger
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreatorSource"
+        "400": { description: "Invalid label, kind, or URL" }
+        "404": { description: Tenant or municipality not found }
+  /admin/tenants/{id}/creator/sources/approve-list:
+    post:
+      operationId: approveCreatorSourceList
+      tags: [tenants]
+      summary: Explicitly approve the fully decided current municipality list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: List approval recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSourceListApproval"
+        "400": { description: Proposed entries remain or no approved sources exist }
+        "404": { description: Tenant or municipality not found }
+  /admin/tenants/{id}/creator/sources/{sourceId}/{decision}:
+    post:
+      operationId: decideCreatorSource
+      tags: [tenants]
+      summary: Approve, reject, or revoke one municipality source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: sourceId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: decision
+          in: path
+          required: true
+          schema: { type: string, enum: [approve, reject, revoke] }
+      responses:
+        "200":
+          description: Updated source
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSource"
+        "400": { description: Invalid transition }
+        "404": { description: Tenant municipality or source not found }
   /admin/tenants/{id}/creator/runs/latest:
     get:
       operationId: getLatestCreatorRun
@@ -648,7 +738,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                  - $ref: "#/components/schemas/CreatorRunReport"
+                  - $ref: "#/components/schemas/CreatorSourceRun"
                   - type: "null"
         "404": { description: Tenant not found }
   /admin/tenants/{id}/creator/proposals:
@@ -674,7 +764,7 @@ paths:
     get:
       operationId: listCreatorCategoryOptions
       tags: [tenants]
-      summary: List existing tenant categories available to C1 proposals
+      summary: List existing tenant categories available to Creator proposals
       parameters:
         - name: id
           in: path
@@ -694,7 +784,7 @@ paths:
     patch:
       operationId: editCreatorProposal
       tags: [tenants]
-      summary: Edit only human/editorial C1 proposal fields
+      summary: Edit only human/editorial Creator proposal fields
       parameters:
         - name: id
           in: path
@@ -2418,6 +2508,79 @@ components:
         municipality: { type: string }
         replacedExistingOrigin: { type: boolean }
       required: [id, address, latitude, longitude, creatorDraft, creatorOriginRegion, municipality, replacedExistingOrigin]
+    CreatorSourceProposalInput:
+      type: object
+      additionalProperties: false
+      properties:
+        label: { type: string, minLength: 1, maxLength: 200 }
+        sourceKind: { type: string, minLength: 1, maxLength: 80 }
+        url: { type: string, minLength: 1, maxLength: 2000 }
+      required: [label, sourceKind, url]
+    CreatorSourceProposalListInput:
+      type: object
+      additionalProperties: false
+      properties:
+        sources:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/CreatorSourceProposalInput"
+      required: [sources]
+    CreatorSource:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        municipality: { type: string }
+        label: { type: string }
+        sourceKind: { type: string }
+        url: { type: string }
+        canonicalUrl: { type: string }
+        status: { type: string, enum: [proposed, approved, rejected, revoked] }
+        approvedBy: { type: ["string", "null"] }
+        approvedAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, municipality, label, sourceKind, url, canonicalUrl, status, approvedBy, approvedAt, createdAt, updatedAt]
+    CreatorSourceListApproval:
+      type: object
+      additionalProperties: false
+      properties:
+        approved: { type: boolean }
+        approvedSourceCount: { type: number }
+      required: [approved, approvedSourceCount]
+    CreatorSourceList:
+      type: object
+      additionalProperties: false
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorSource"
+        approval:
+          $ref: "#/components/schemas/CreatorSourceListApproval"
+      required: [sources, approval]
+    CreatorSourceRun:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        status: { type: string, enum: [running, completed, failed] }
+        report:
+          type: ["object", "null"]
+          additionalProperties: true
+        startedAt: { type: string }
+        completedAt: { type: ["string", "null"] }
+        outcomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorRunOutcome"
+        unconfirmedByCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorUnconfirmedCategoryGroup"
+      required: [id, tenantId, status, startedAt, completedAt, outcomes, unconfirmedByCategory]
     CreatorProposalTranslation:
       type: object
       properties:

@@ -104,16 +104,16 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   assert.equal(confirmedBody.id, targetId);
   assert.equal(confirmedBody.replacedExistingOrigin, false);
 
-  const retiredRun = await jreq(
+  const unapprovedRun = await jreq(
     base,
     "POST",
     `/admin/tenants/${targetId}/creator/runs`,
     ownerCookie,
   );
-  assert.equal(retiredRun.status, 410);
+  assert.equal(unapprovedRun.status, 400);
   assert.equal(
-    (await retiredRun.json() as { code: string }).code,
-    "creator-c1-retired",
+    (await unapprovedRun.json() as { code: string }).code,
+    "approval-gate",
   );
 
   const [{ value: afterCount }] = await db.select({ value: count() }).from(tenantsTable);

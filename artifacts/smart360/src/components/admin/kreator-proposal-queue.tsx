@@ -2,18 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListCreatorProposalsQueryKey,
-  getGetLatestCreatorRunQueryKey,
   useApproveCreatorProposal,
   useApproveCreatorProposalsBulk,
   useConfirmCreatorProposalCoordinates,
-  useGetLatestCreatorRun,
   useEditCreatorProposal,
   useListCreatorCategoryOptions,
   useListCreatorProposals,
   useRejectCreatorProposal,
-  useStartCreatorRun,
 } from "@workspace/api-client-react";
-import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, Play, ShieldAlert, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
@@ -123,7 +120,6 @@ export function KreatorProposalQueue({
 }) {
   const queryClient = useQueryClient();
   const queue = useListCreatorProposals(tenantId);
-  const latestRun = useGetLatestCreatorRun(tenantId);
   const categoryOptions = useListCreatorCategoryOptions(tenantId);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -146,21 +142,6 @@ export function KreatorProposalQueue({
   });
   const approveBulk = useApproveCreatorProposalsBulk({
     mutation: { onSuccess: refresh },
-  });
-  const startRun = useStartCreatorRun({
-    mutation: {
-      onSuccess: async () => {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey }),
-          queryClient.invalidateQueries({ queryKey: getGetLatestCreatorRunQueryKey(tenantId) }),
-        ]);
-      },
-      onSettled: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: getGetLatestCreatorRunQueryKey(tenantId),
-        });
-      },
-    },
   });
   const editOne = useEditCreatorProposal({
     mutation: {
@@ -188,12 +169,9 @@ export function KreatorProposalQueue({
   );
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
-  const preservedMeninaEvidence = tenantName.trim().toLocaleLowerCase("sl") === "camping menina"
-    && (latestRun.data?.durableRunCount ?? 0) >= 5;
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
   const error = (approveOne.error as any)?.data?.error
     ?? (approveBulk.error as any)?.data?.error
-    ?? (startRun.error as any)?.data?.error
     ?? (editOne.error as any)?.data?.error
     ?? (rejectOne.error as any)?.data?.error
     ?? (confirmCoordinates.error as any)?.data?.error
@@ -205,143 +183,9 @@ export function KreatorProposalQueue({
 
   return (
     <section className="mt-8 max-w-[880px] space-y-4" data-testid="creator-proposal-queue">
-      <Card>
-        <CardContent className="space-y-4 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-[18px] font-[800]">C1 · Model → sito → OSRM</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Pravila in poziv modelu pripravi strežnik. Nič se ne objavi gostom.
-              </p>
-            </div>
-            <Button
-              type="button"
-              disabled={startRun.isPending || latestRun.data?.status === "running" || preservedMeninaEvidence}
-              onClick={() => startRun.mutate({ id: tenantId })}
-              className="rounded-[12px]"
-            >
-              {startRun.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-              {startRun.isPending
-                ? "Kreator dela …"
-                : preservedMeninaEvidence
-                  ? "C1 dokaz je ohranjen"
-                  : latestRun.data
-                    ? "Ponovno zaženi C1"
-                    : "Zaženi C1"}
-            </Button>
-          </div>
-          {latestRun.data && (
-            <div className="grid gap-2 rounded-xl bg-muted/60 p-4 text-sm md:grid-cols-3" data-testid="creator-run-report">
-              <strong className="md:col-span-3">Poročilo izvedbe · {latestRun.data.status}</strong>
-              <span>Predlagano: {latestRun.data.proposedCount}</span>
-              <span>Potrjeno s sitom: {latestRun.data.confirmedCount}</span>
-              <span>Ni bilo mogoče potrditi: {latestRun.data.unresolvedCount}</span>
-              <span>Zunaj praktičnega izbora: {latestRun.data.outsidePracticalCount}</span>
-              <span>Nad 20 min: {latestRun.data.outsideNearCount}</span>
-              <span>Nad 90 min: {latestRun.data.outsideExcursionCount}</span>
-              <span>OSRM brez poti: {latestRun.data.routeFailuresCount}</span>
-              <span>Združenih dvojnikov: {latestRun.data.duplicatesMergedCount}</span>
-              <span>Žetoni: {latestRun.data.inputTokens} + {latestRun.data.outputTokens}</span>
-              <span>Strošek: ${latestRun.data.costUsd.toFixed(6)}</span>
-              <span>Čas: {latestRun.data.wallClockMs === null ? "—" : `${(latestRun.data.wallClockMs / 1000).toFixed(1)} s`}</span>
-              <span>Nominatim čakanje: {(latestRun.data.nominatimThrottleMs / 1000).toFixed(1)} s</span>
-              <span>Overpass ovojnica: {latestRun.data.nearEnvelopeKm === null ? "ni merjeno" : `${latestRun.data.nearEnvelopeKm} km`}</span>
-              <span>Robni kandidati (1000–1200 s): {latestRun.data.nearEnvelopeEdgeBandCount ?? "ni merjeno"}</span>
-              <span>
-                Overpass katalog: {latestRun.data.nearCatalogue === null
-                  ? "ni merjeno"
-                  : `${latestRun.data.nearCatalogue.status} · ${latestRun.data.nearCatalogue.filteredElementCount} elementov`}
-              </span>
-              <span>
-                Lokalni cilj: {latestRun.data.localProposalCount === null || latestRun.data.minimumLocalProposalsPerBatch === null
-                  ? "ni merjeno"
-                  : `${latestRun.data.localProposalCount} predlogov · najmanj ${latestRun.data.minimumLocalProposalsPerBatch} na serijo`}
-              </span>
-              <span>
-                Kvota ni bila potrjena: {latestRun.data.quotaTargetedProposalCount === null ||
-                  latestRun.data.quotaTargetedUnconfirmedCount === null
-                  ? "ni merjeno"
-                  : `${latestRun.data.quotaTargetedUnconfirmedCount} / ${latestRun.data.quotaTargetedProposalCount}`}
-              </span>
-              <span>
-                Dodatno rešeno z bližnjim katalogom: {
-                  latestRun.data.nearRingResolvedAfterGlobalSieveFailedCount ?? "ni merjeno"
-                }
-              </span>
-              {latestRun.data.surroundingSettlementFeatureCounts.length > 0 && (
-                <span className="md:col-span-3">
-                  Naselja z OSM značilnostmi: {latestRun.data.surroundingSettlementFeatureCounts
-                    .map((settlement) => `${settlement.name} (${settlement.featureCount})`)
-                    .join(", ")}
-                </span>
-              )}
-              {latestRun.data.nearCatalogue?.error && (
-                <span className="text-destructive md:col-span-3">
-                  Overpass: {latestRun.data.nearCatalogue.error}
-                </span>
-              )}
-              <a
-                className="text-primary underline underline-offset-2 md:col-span-3"
-                href={latestRun.data.pricing.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Cena Terra na {latestRun.data.pricing.asOf}: ${latestRun.data.pricing.inputPerMillionUsd}/M vhodnih · ${latestRun.data.pricing.outputPerMillionUsd}/M izhodnih
-              </a>
-              {latestRun.data.error && <span className="text-destructive md:col-span-3">{latestRun.data.error}</span>}
-              {latestRun.data.outcomes.length > 0 && (
-                <details className="md:col-span-3">
-                  <summary className="cursor-pointer font-bold">
-                    Izidi in pravila zavrnitve ({latestRun.data.outcomes.length})
-                  </summary>
-                  <ol className="mt-2 max-h-64 list-decimal space-y-1 overflow-auto pl-5 font-mono text-xs">
-                    {latestRun.data.outcomes.map((outcome, index) => (
-                      <li key={`${outcome.proposedName}-${index}`}>
-                        <strong>{outcome.proposedName}</strong> · {outcome.categoryLabel ?? "Brez kategorije"} · {outcome.outcome}
-                        {outcome.refusalRule ? ` · ${outcome.refusalRule}` : ""}
-                        <span className="block font-sans text-muted-foreground">Zakaj: {outcome.inclusionReason}</span>
-                        <span className="block font-sans text-muted-foreground">
-                          Izgubljeni v isti kategoriji: {outcome.nearestAlternatives.filter((alternative) =>
-                            alternative.outcome === "unconfirmed" || alternative.outcome === "route_failed").length}
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                </details>
-              )}
-              {latestRun.data.unconfirmedByCategory.length > 0 && (
-                <details className="md:col-span-3">
-                  <summary className="cursor-pointer font-bold">
-                    Izgubljeni predlogi po kategorijah ({latestRun.data.unresolvedCount})
-                  </summary>
-                  <div className="mt-2 max-h-80 space-y-3 overflow-auto text-xs">
-                    {latestRun.data.unconfirmedByCategory.map((group, groupIndex) => (
-                      <section key={`${group.categoryLabel}-${groupIndex}`}>
-                        <strong>{group.categoryLabel ?? "Brez kategorije"}</strong>
-                        <ul className="mt-1 space-y-1 pl-4">
-                          {group.proposals.map((proposal, proposalIndex) => (
-                            <li key={`${proposal.proposedName}-${proposalIndex}`}>
-                              {proposal.proposedName} · {proposal.refusalRule ?? "brez pravila"}
-                              {proposal.travelDurationS !== null
-                                ? ` · ${Math.round(proposal.travelDurationS / 60)} min`
-                                : " · razdalja neznana — sito ni potrdilo kraja"}
-                              <span className="block text-muted-foreground">Zakaj: {proposal.inclusionReason}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-[22px] font-[800] tracking-tight">Potrdite okolico</h2>
+          <h2 className="text-[22px] font-[800] tracking-tight">Kandidati za okolico</h2>
           <p className="mt-1 text-sm font-medium text-muted-foreground">
             {pendingCount} čaka · Ni bilo mogoče potrditi: {unresolvedCount}
           </p>

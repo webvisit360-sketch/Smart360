@@ -368,6 +368,164 @@ export interface CreatorTenantOrigin {
   replacedExistingOrigin: boolean;
 }
 
+export interface CreatorSourceProposalInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sourceKind: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  url: string;
+}
+
+export interface CreatorSourceProposalListInput {
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  sources: CreatorSourceProposalInput[];
+}
+
+export type CreatorSourceStatus = typeof CreatorSourceStatus[keyof typeof CreatorSourceStatus];
+
+
+export const CreatorSourceStatus = {
+  proposed: 'proposed',
+  approved: 'approved',
+  rejected: 'rejected',
+  revoked: 'revoked',
+} as const;
+
+export interface CreatorSource {
+  id: string;
+  municipality: string;
+  label: string;
+  sourceKind: string;
+  url: string;
+  canonicalUrl: string;
+  status: CreatorSourceStatus;
+  /** @nullable */
+  approvedBy: string | null;
+  /** @nullable */
+  approvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatorSourceListApproval {
+  approved: boolean;
+  approvedSourceCount: number;
+}
+
+export interface CreatorSourceList {
+  sources: CreatorSource[];
+  approval: CreatorSourceListApproval;
+}
+
+export type CreatorSourceRunStatus = typeof CreatorSourceRunStatus[keyof typeof CreatorSourceRunStatus];
+
+
+export const CreatorSourceRunStatus = {
+  running: 'running',
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CreatorSourceRunReport = { [key: string]: unknown } | null;
+
+export type CreatorRunOutcomeOutcome = typeof CreatorRunOutcomeOutcome[keyof typeof CreatorRunOutcomeOutcome];
+
+
+export const CreatorRunOutcomeOutcome = {
+  confirmed: 'confirmed',
+  unconfirmed: 'unconfirmed',
+  duplicate: 'duplicate',
+  route_failed: 'route_failed',
+} as const;
+
+export type CreatorNearestAlternativeOutcome = typeof CreatorNearestAlternativeOutcome[keyof typeof CreatorNearestAlternativeOutcome];
+
+
+export const CreatorNearestAlternativeOutcome = {
+  confirmed: 'confirmed',
+  unconfirmed: 'unconfirmed',
+  route_failed: 'route_failed',
+} as const;
+
+export interface CreatorNearestAlternative {
+  proposedName: string;
+  /** @nullable */
+  categoryLabel: string | null;
+  outcome: CreatorNearestAlternativeOutcome;
+  /** @nullable */
+  refusalRule: string | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+  proximityKnown: boolean;
+}
+
+export interface CreatorRunOutcome {
+  proposedName: string;
+  /** @nullable */
+  targetSettlement: string | null;
+  /** @nullable */
+  categoryLabel: string | null;
+  inclusionReason: string;
+  outcome: CreatorRunOutcomeOutcome;
+  /** @nullable */
+  refusalRule: string | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+  nearestAlternatives: CreatorNearestAlternative[];
+}
+
+export interface CreatorUnconfirmedProposal {
+  proposedName: string;
+  /** @nullable */
+  targetSettlement: string | null;
+  inclusionReason: string;
+  /** @nullable */
+  refusalRule: string | null;
+  /** @nullable */
+  roadDistanceM: number | null;
+  /** @nullable */
+  travelDurationS: number | null;
+}
+
+export interface CreatorUnconfirmedCategoryGroup {
+  /** @nullable */
+  categoryLabel: string | null;
+  proposals: CreatorUnconfirmedProposal[];
+}
+
+export interface CreatorSourceRun {
+  id: string;
+  tenantId: string;
+  status: CreatorSourceRunStatus;
+  /** @nullable */
+  report?: CreatorSourceRunReport;
+  startedAt: string;
+  /** @nullable */
+  completedAt: string | null;
+  outcomes: CreatorRunOutcome[];
+  unconfirmedByCategory: CreatorUnconfirmedCategoryGroup[];
+}
+
 export type CreatorProposalTranslationLanguage = typeof CreatorProposalTranslationLanguage[keyof typeof CreatorProposalTranslationLanguage];
 
 
@@ -474,75 +632,6 @@ export interface CreatorNearCatalogueReport {
 export interface CreatorSettlementFeatureCount {
   name: string;
   featureCount: number;
-}
-
-export type CreatorRunOutcomeOutcome = typeof CreatorRunOutcomeOutcome[keyof typeof CreatorRunOutcomeOutcome];
-
-
-export const CreatorRunOutcomeOutcome = {
-  confirmed: 'confirmed',
-  unconfirmed: 'unconfirmed',
-  duplicate: 'duplicate',
-  route_failed: 'route_failed',
-} as const;
-
-export type CreatorNearestAlternativeOutcome = typeof CreatorNearestAlternativeOutcome[keyof typeof CreatorNearestAlternativeOutcome];
-
-
-export const CreatorNearestAlternativeOutcome = {
-  confirmed: 'confirmed',
-  unconfirmed: 'unconfirmed',
-  route_failed: 'route_failed',
-} as const;
-
-export interface CreatorNearestAlternative {
-  proposedName: string;
-  /** @nullable */
-  categoryLabel: string | null;
-  outcome: CreatorNearestAlternativeOutcome;
-  /** @nullable */
-  refusalRule: string | null;
-  /** @nullable */
-  roadDistanceM: number | null;
-  /** @nullable */
-  travelDurationS: number | null;
-  proximityKnown: boolean;
-}
-
-export interface CreatorRunOutcome {
-  proposedName: string;
-  /** @nullable */
-  targetSettlement: string | null;
-  /** @nullable */
-  categoryLabel: string | null;
-  inclusionReason: string;
-  outcome: CreatorRunOutcomeOutcome;
-  /** @nullable */
-  refusalRule: string | null;
-  /** @nullable */
-  roadDistanceM: number | null;
-  /** @nullable */
-  travelDurationS: number | null;
-  nearestAlternatives: CreatorNearestAlternative[];
-}
-
-export interface CreatorUnconfirmedProposal {
-  proposedName: string;
-  /** @nullable */
-  targetSettlement: string | null;
-  inclusionReason: string;
-  /** @nullable */
-  refusalRule: string | null;
-  /** @nullable */
-  roadDistanceM: number | null;
-  /** @nullable */
-  travelDurationS: number | null;
-}
-
-export interface CreatorUnconfirmedCategoryGroup {
-  /** @nullable */
-  categoryLabel: string | null;
-  proposals: CreatorUnconfirmedProposal[];
 }
 
 export interface CreatorRunPricing {
