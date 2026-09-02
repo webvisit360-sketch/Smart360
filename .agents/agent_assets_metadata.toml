@@ -666,3 +666,17 @@ mtime_ms = 1788248528286
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/20e402f5-f6b6-4512-90ed-65a60b915d68/0241d0c5-bdba-4c46-b273-18fb9b0d6c4a"
 storage_version_token = "1788248575291751"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "cndCeeI2s93YFvPk1vGkH"
+uri = "file://reports/seed-vs-meli-pu-structure.md"
+type = "text"
+title = "Primerjava seed strukture z Apartmaji Meli Pu"
+description = "Read-only table of sections, groups/subcategories, four-language names, icons, Meli Pu match status, and seed-only entries."
+logical_id = "dbb18bef-935b-4d41-8107-2726d41f5982"
+content_hash = "sha256:de0c7cbcae3ef9003e91213381d1beab905b3fe4b29f6532a97dbda701122288"
+size = 10097
+mtime_ms = 1788330623176
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/dbb18bef-935b-4d41-8107-2726d41f5982/9446fe43-7cf0-4869-8ec0-46742dd01c4f"
+storage_version_token = "1788331400842773"
+content_type = "text/markdown"
