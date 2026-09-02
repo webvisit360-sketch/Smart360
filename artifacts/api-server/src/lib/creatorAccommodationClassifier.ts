@@ -29,7 +29,7 @@ export function classifyCreatorAccommodationProvider(input: {
     // The model evidence is independently grounded to the named entity. Do
     // not let another restaurant listed elsewhere on an aggregation page
     // authorize this tourist farm.
-    if (input.categoryKey === "food" && PUBLIC_FOOD.test(combined)) {
+    if ((input.categoryKey === "culinary" || input.categoryKey === "food") && PUBLIC_FOOD.test(combined)) {
       return { excluded: false, reason: null };
     }
     return { excluded: true, reason: "lodging-tourist-farm" };

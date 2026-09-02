@@ -32,3 +32,4 @@
 - [Creator source-first policy](creator-source-first.md) — discover places only from approved municipality sources; robots/SSRF fail closed, model descriptions come last.
 - [Creator run handoff](creator-run-handoff.md) — preserve exact manifests only after human review; unreviewed source runs may be regenerated to improve extraction quality.
 - [Creator crawl budget fairness](creator-crawl-budget-fairness.md) — share global bytes across seeds; model batching is safe only with page-local re-grounding.
+- [Creator category remaps](creator-category-remaps.md) — classify legacy proposals from their names and broad source bucket; ancillary address metadata must not override identity.

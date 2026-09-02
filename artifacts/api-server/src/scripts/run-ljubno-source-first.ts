@@ -499,10 +499,12 @@ async function main() {
           report.nominatimStoppedReason = nominatim.stopReason();
         }
       }
+      const targetCategoryId = categoryByKey.get(primary.categoryKey);
+      if (!targetCategoryId) throw new Error(`Creator category "${primary.categoryKey}" is missing from the tenant skeleton.`);
       if (!proposal) failure = "duplicate-ledger-conflict";
       if (!proposal || failure) {
         if (proposal) await db.update(creatorPlaceProposalsTable).set({
-          categoryId: categoryByKey.get(primary.categoryKey) ?? null, status: "unresolved", refusalReason: failure!, contentReady: false,
+          categoryId: targetCategoryId, status: "unresolved", refusalReason: failure!, contentReady: false,
         }).where(and(eq(creatorPlaceProposalsTable.id, proposal.id), eq(creatorPlaceProposalsTable.tenantId, tenant.id), eq(creatorPlaceProposalsTable.runId, run.id)));
         await db.update(creatorSourceCandidatesTable).set({ proposalId: proposal?.id ?? null, outcome: "unresolved", failureReason: failure! })
           .where(and(eq(creatorSourceCandidatesTable.id, candidate.id), eq(creatorSourceCandidatesTable.runId, run.id)));
@@ -514,7 +516,7 @@ async function main() {
         continue;
       }
       await db.update(creatorPlaceProposalsTable).set({
-        categoryId: categoryByKey.get(primary.categoryKey) ?? null,
+        categoryId: targetCategoryId,
         geocodingLookupHint: primary.settlement ? `${primary.placeName}, ${primary.settlement}` : null, inclusionReason: null,
       }).where(and(eq(creatorPlaceProposalsTable.id, proposal.id), eq(creatorPlaceProposalsTable.tenantId, tenant.id), eq(creatorPlaceProposalsTable.runId, run.id)));
       let route = await computeRoadRoute({ latitude: LATITUDE, longitude: LONGITUDE }, { latitude: proposal.latitude!, longitude: proposal.longitude! });

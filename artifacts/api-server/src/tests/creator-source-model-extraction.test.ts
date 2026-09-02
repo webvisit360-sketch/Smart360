@@ -17,10 +17,10 @@ test("grounding accepts exact and conservative Slovenian inflection, but rejects
 
   const result = groundCreatorSourceCandidates(text, {
     places: [
-      { canonicalName: "Slap Rinka", settlement: "Solčava", categoryKey: "sights", evidence: "Slapa Rinka" },
-      { canonicalName: "Klemenča jama", settlement: null, categoryKey: "sights", evidence: "Klemenči jami" },
-      { canonicalName: "Slap Savica", settlement: null, categoryKey: "sights", evidence: "Slapa Rinka" },
-      { canonicalName: "Muzej", settlement: null, categoryKey: "sights", evidence: "not in source" },
+      { canonicalName: "Slap Rinka", settlement: "Solčava", categoryKey: "nature", evidence: "Slapa Rinka" },
+      { canonicalName: "Klemenča jama", settlement: null, categoryKey: "nature", evidence: "Klemenči jami" },
+      { canonicalName: "Slap Savica", settlement: null, categoryKey: "nature", evidence: "Slapa Rinka" },
+      { canonicalName: "Muzej", settlement: null, categoryKey: "culture", evidence: "not in source" },
     ],
   });
   assert.deepEqual(result.facts.map(fact => fact.canonicalName), ["Slap Rinka", "Klemenča jama"]);
@@ -35,13 +35,13 @@ test("grounding rejects a canonical subset of a longer proper name", () => {
       {
         canonicalName: "Dom na Smrekovcu",
         settlement: null,
-        categoryKey: "food",
+        categoryKey: "culinary",
         evidence: "Planinski Dom na Smrekovcu",
       },
       {
         canonicalName: "Gostilna Pri lipi",
         settlement: null,
-        categoryKey: "sights",
+        categoryKey: "culture",
         evidence: "Gostilna Pri lipi",
       },
       {
@@ -55,7 +55,7 @@ test("grounding rejects a canonical subset of a longer proper name", () => {
   assert.deepEqual(result.facts, [{
     canonicalName: "Gostilna Pri lipi",
     settlement: null,
-    categoryKey: "food",
+    categoryKey: "culinary",
     evidence: "Gostilna Pri lipi",
   }]);
   assert.equal(result.rejectionCounts.unsupported_name, 2);
@@ -63,26 +63,26 @@ test("grounding rejects a canonical subset of a longer proper name", () => {
 
 test("grounding requires independent support for a name shortened from a longer proper name", () => {
   const longOnly = groundCreatorSourceCandidates("Krajinski park Golte ponuja razglede.", {
-    places: [{ canonicalName: "Golte", settlement: null, categoryKey: "sights", evidence: "Krajinski park Golte" }],
+    places: [{ canonicalName: "Golte", settlement: null, categoryKey: "nature", evidence: "Krajinski park Golte" }],
   });
   assert.deepEqual(longOnly.facts, []);
   assert.equal(longOnly.rejectionCounts.unsupported_name, 1);
 
   const standalone = groundCreatorSourceCandidates(
     "Krajinski park Golte ponuja razglede. Golte so odprte vse leto.",
-    { places: [{ canonicalName: "Golte", settlement: null, categoryKey: "sights", evidence: "Krajinski park Golte" }] },
+    { places: [{ canonicalName: "Golte", settlement: null, categoryKey: "nature", evidence: "Krajinski park Golte" }] },
   );
   assert.deepEqual(standalone.facts.map(fact => fact.canonicalName), ["Golte"]);
 });
 
 test("grounding permits inflected canonical phrases with grammatical context only", () => {
   const result = groundCreatorSourceCandidates("V Klemenči jami je zanimiva razstava.", {
-    places: [{ canonicalName: "Klemenča jama", settlement: null, categoryKey: "sights", evidence: "V Klemenči jami" }],
+    places: [{ canonicalName: "Klemenča jama", settlement: null, categoryKey: "nature", evidence: "V Klemenči jami" }],
   });
   assert.deepEqual(result.facts.map(fact => fact.canonicalName), ["Klemenča jama"]);
 
   const unsupported = groundCreatorSourceCandidates("V Klemenči jami je zanimiva razstava.", {
-    places: [{ canonicalName: "Slap Savica", settlement: null, categoryKey: "sights", evidence: "Klemenči jami" }],
+    places: [{ canonicalName: "Slap Savica", settlement: null, categoryKey: "nature", evidence: "Klemenči jami" }],
   });
   assert.equal(unsupported.rejectionCounts.unsupported_name, 1);
 });
@@ -97,20 +97,20 @@ test("category override distinguishes mountain homes from hospitality named Dom"
       {
         canonicalName: "Planinski dom na Smrekovcu",
         settlement: null,
-        categoryKey: "food",
+        categoryKey: "culinary",
         evidence: "Planinski dom na Smrekovcu",
       },
       {
         canonicalName: "Hotel Dom Planica",
         settlement: null,
-        categoryKey: "sights",
+        categoryKey: "culture",
         evidence: "Hotel Dom Planica",
       },
     ],
   });
   assert.deepEqual(result.facts.map(fact => [fact.canonicalName, fact.categoryKey]), [
     ["Planinski dom na Smrekovcu", "hike"],
-    ["Hotel Dom Planica", "food"],
+    ["Hotel Dom Planica", "culture"],
   ]);
 });
 
@@ -126,7 +126,7 @@ test("chunking is deterministic and model extraction aggregates usage and reject
       seenPrompts.push(`${prompt}\n${sourceText}`);
       return {
         content: sourceText.includes("Slap Rinka")
-          ? { places: [{ canonicalName: "Slap Rinka", settlement: "Solčava", categoryKey: "sights", evidence: "Slap Rinka" }] }
+          ? { places: [{ canonicalName: "Slap Rinka", settlement: "Solčava", categoryKey: "nature", evidence: "Slap Rinka" }] }
           : { places: [] },
         inputTokens: 10,
         outputTokens: 2,
@@ -139,7 +139,7 @@ test("chunking is deterministic and model extraction aggregates usage and reject
     {
       canonicalName: "Slap Rinka",
       settlement: "Solčava",
-      categoryKey: "sights",
+      categoryKey: "nature",
       evidence: "Slap Rinka",
     },
   ]);
@@ -212,8 +212,8 @@ test("composite routing preserves only independently grounded page provenance", 
     { pageId: "c", storedVisibleText: "Splošne turistične informacije." },
   ];
   const facts = [
-    { canonicalName: "Slap Rinka", settlement: "Solčava", categoryKey: "sights" as const, evidence: "Slapa Rinka" },
-    { canonicalName: "Mozirski gaj", settlement: null, categoryKey: "sights" as const, evidence: "Mozirski gaj" },
+    { canonicalName: "Slap Rinka", settlement: "Solčava", categoryKey: "nature" as const, evidence: "Slapa Rinka" },
+    { canonicalName: "Mozirski gaj", settlement: null, categoryKey: "nature" as const, evidence: "Mozirski gaj" },
   ];
   const composite = buildCreatorSourceCompositeDocument(pages);
   assert.match(composite, /CREATOR_SOURCE_PAGE_0001_START/);
@@ -233,7 +233,7 @@ test("composite routing retains one supported fact on two independent pages", ()
   ];
   const [fact] = [{
     canonicalName: "Mozirski gaj", settlement: null,
-    categoryKey: "sights" as const, evidence: "Mozirski gaj",
+    categoryKey: "nature" as const, evidence: "Mozirski gaj",
   }];
   const routed = routeGroundedCreatorSourceFactsToPages(pages, [fact]);
   assert.deepEqual(routed.map(page => page.facts.map(item => item.canonicalName)), [
@@ -262,9 +262,9 @@ test("grounding counts malformed, noisy, unsupported settlement, category, and d
       null,
       { canonicalName: "Slap Rinka", settlement: null, categoryKey: "unknown", evidence: "Slap Rinka" },
       { canonicalName: "Domov", settlement: null, categoryKey: "trips", evidence: "Domov" },
-      { canonicalName: "Slap Rinka", settlement: "Ljubljana", categoryKey: "sights", evidence: "Slap Rinka" },
-      { canonicalName: "Slap Rinka", settlement: null, categoryKey: "sights", evidence: "Slap Rinka" },
-      { canonicalName: "Slap Rinka", settlement: null, categoryKey: "sights", evidence: "Slap Rinka" },
+      { canonicalName: "Slap Rinka", settlement: "Ljubljana", categoryKey: "nature", evidence: "Slap Rinka" },
+      { canonicalName: "Slap Rinka", settlement: null, categoryKey: "nature", evidence: "Slap Rinka" },
+      { canonicalName: "Slap Rinka", settlement: null, categoryKey: "nature", evidence: "Slap Rinka" },
     ],
   });
   assert.equal(result.rejectionCounts.invalid_shape, 1);

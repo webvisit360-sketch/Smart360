@@ -22,7 +22,7 @@ test("accommodation providers are excluded without excluding ordinary mountain h
     "Počitniška hiša Sonce",
   ]) {
     assert.equal(classifyCreatorAccommodationProvider({
-      name, categoryKey: "sights", evidence: name,
+      name, categoryKey: "culture", evidence: name,
     }).excluded, true, name);
   }
   assert.equal(classifyCreatorAccommodationProvider({
@@ -35,17 +35,17 @@ test("accommodation providers are excluded without excluding ordinary mountain h
 test("tourist farms require entity-local public food service, not aggregation context", () => {
   assert.equal(classifyCreatorAccommodationProvider({
     name: "Turistična kmetija Visočnik",
-    categoryKey: "food",
+    categoryKey: "culinary",
     evidence: "Nudimo prenočišča in zajtrk.",
   }).excluded, true);
   assert.equal(classifyCreatorAccommodationProvider({
     name: "Turistična kmetija Visočnik",
-    categoryKey: "food",
+    categoryKey: "culinary",
     evidence: "Izletniška kmetija z domačo kuhinjo in kosili za obiskovalce.",
   }).excluded, false);
   assert.equal(classifyCreatorAccommodationProvider({
     name: "Turistična kmetija Visočnik",
-    categoryKey: "food",
+    categoryKey: "culinary",
     evidence: "Turistična kmetija Visočnik nudi prenočišča.",
   }).excluded, true, "another restaurant on an aggregation page cannot authorize this fact");
   assert.equal(classifyCreatorAccommodationProvider({

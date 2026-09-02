@@ -16,6 +16,7 @@ import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill"
 import { runTriesteDistanceCorrectionAtStartup } from "./lib/triesteDistanceCorrection";
 import { runLegacyTenantLivingGuideCutoversAtStartup } from "./lib/grilLivingGuideCutover";
 import { recoverCreatorSourceRunsAtStartup } from "./lib/creatorSourceRunService";
+import { runSharedTenantSkeletonSyncAtStartup } from "./lib/tenantSeeds";
 
 const rawPort = process.env["PORT"];
 
@@ -111,6 +112,9 @@ ensureAdminAccount()
   .then(() => runDecimalMediaQuotaBackfillAtStartup())
   // Owner-approved, row-guarded cutover of the two remaining legacy tenants.
   .then(() => runLegacyTenantLivingGuideCutoversAtStartup())
+  // Owner-approved shared skeleton: append missing rows only to Gril/MENINA
+  // and fill only the absent Meli Pu gate-name translations.
+  .then(() => runSharedTenantSkeletonSyncAtStartup())
   // One-deploy production-only correction for the approved Trieste city-centre distance.
   // Remove this hook and its file immediately after production verification.
   .then(() => runTriesteDistanceCorrectionAtStartup())

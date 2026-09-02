@@ -1,10 +1,14 @@
 import sanitizeHtml from "sanitize-html";
 import { normalizeCreatorProposalName } from "./creatorProposalLedger";
+import {
+  classifyCreatorSharedCategory,
+  type CreatorSharedCategory,
+} from "./creatorCategoryAssignment";
 
 export type DeterministicSourceFact = {
   placeName: string;
   settlement: string | null;
-  categoryKey: "act" | "trips" | "food" | "hike" | "sights";
+  categoryKey: CreatorSharedCategory;
 };
 
 const GENERIC_LABELS = new Set([
@@ -31,7 +35,7 @@ function isMetadataOrEditorialNoise(value: string): boolean {
     /^slapom\b/iu.test(value) ||
     /^upravljanje\b/iu.test(value) ||
     /\bzdravst\w*\s+dom\b/iu.test(value) ||
-    /\b(?:razstava|koncert|orkester|festival|predstava|prireditev|dogodek|delavnica)\b/iu.test(value)
+    false
   );
 }
 
@@ -43,13 +47,7 @@ function cleanText(value: string): string {
 }
 
 function categoryFor(name: string, href: string): DeterministicSourceFact["categoryKey"] {
-  const haystack = `${name} ${href}`.toLocaleLowerCase("sl");
-  if (/\b(?:planinsk\w+\s+dom(?:ov\w*|u|a|om)?|koč\w*|zavetišč\w*)\b/u.test(haystack)) return "hike";
-  if (/\b(gostil|restavr|okrepčeval|kmetij|kulinar|hrana|pijača|hotel|kamp)\b/u.test(haystack)) return "food";
-  if (/\b(pohod|pot |pot$|gora|vrh|planin|koles|smrekovec|travnik)\b/u.test(haystack)) return "hike";
-  if (/\b(smuč|rafting|kajak|šport|aktiv|doživet|kopali|ribolov)\b/u.test(haystack)) return "act";
-  if (/\b(cerkev|muzej|grad|dvorec|spomenik|slap|jama|park|vrt|dolina|soteska|izvir|stolp|znamenit)\b/u.test(haystack)) return "sights";
-  return "trips";
+  return classifyCreatorSharedCategory({ name, context: href });
 }
 
 function sourceSettlement(label: string): string | null {
@@ -100,8 +98,8 @@ export function extractCreatorSourceFacts(input: {
     const path = href.pathname.toLocaleLowerCase("sl");
     const structuredPath = input.sourceKind === "hiking-index"
       ? /\/(?:gora|izlet)\//.test(path)
-      : /\/(?:znamenit|izlet|dozivet|doživet|aktiv|narav|kultur|kulinar|gostil|restavr|pohod|koles|muzej|cerkev|grad|slap|park|dolina|soteska|kamp|nastanit)/u.test(path);
-    const placeWords = /\b(slap|jama|grad|cerkev|muzej|park|dolina|soteska|izvir|vrh|gora|koča|dom|kmetija|kamp|smrekovec|travnik)\b/iu.test(placeName);
+      : /\/(?:znamenit|izlet|dozivet|doživet|aktiv|narav|kultur|kulinar|gostil|restavr|pohod|koles|muzej|cerkev|grad|slap|park|dolina|soteska|dogod|prired|festival|trgov|pekar|lekar|bencin|kamp|nastanit)/u.test(path);
+    const placeWords = /\b(slap|jama|grad|cerkev|muzej|park|dolina|soteska|izvir|vrh|gora|koča|dom|kmetija|kamp|smrekovec|travnik|festival|prireditev|trgovina|pekarna|lekarna)\b/iu.test(placeName);
     if (!structuredPath && !placeWords) continue;
 
     const fact: DeterministicSourceFact = {

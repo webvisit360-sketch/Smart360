@@ -322,7 +322,7 @@ export function isCreatorC1PracticalCategory(category: { label: string; key: str
 
 export function isCreatorC1NoDescriptionCategory(category: { label: string; key: string | null }): boolean {
   return isCreatorC1PracticalCategory(category) ||
-    /\b(hospitality|restaurant|food|hrana|pijača|gostil|restavr)\b/i.test(`${category.key ?? ""} ${category.label}`);
+    /\b(culinary|pizza|breakfast|bakery|hospitality|restaurant|food|hrana|pijača|gostil|restavr)\b/i.test(`${category.key ?? ""} ${category.label}`);
 }
 
 export function withCreatorC1DescriptionPolicy(

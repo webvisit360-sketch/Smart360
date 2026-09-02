@@ -156,8 +156,8 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     const expected = plan.flatMap((p) => p.categories);
     assert.equal(cats.length, expected.length, "every planned category must exist");
     assert.ok(cats.every((c) => c.group && c.group.length > 0), "every category carries a group");
-    const pitch = cats.find((c) => c.key === "pitch");
-    assert.ok(pitch, "kamp-specific category must be seeded");
+    const gate = cats.find((c) => c.key === "gate");
+    assert.ok(gate, "the owner-approved Meli Pu skeleton must be seeded for every tenant type");
 
     const [logRow] = await db
       .select({ detail: changelogTable.detail, summary: changelogTable.summary, actorType: changelogTable.actorType })

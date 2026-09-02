@@ -546,9 +546,13 @@ export async function executeCreatorSourceRun(input: {
         else if (route.distanceMeters > 120_000) failure = "road-distance-ceiling";
         else if (Math.round(route.durationMinutes * 60) > 5_400) failure = "duration-ceiling";
       }
+      const targetCategoryId = categoryByKey.get(primary.categoryKey);
+      if (!targetCategoryId) {
+        throw new Error(`Creator category "${primary.categoryKey}" is missing from the tenant skeleton.`);
+      }
       if (proposal) {
         await db.update(creatorPlaceProposalsTable).set({
-          categoryId: categoryByKey.get(primary.categoryKey) ?? null,
+          categoryId: targetCategoryId,
           roadDistanceM: route?.distanceMeters ?? null,
           travelDurationS: route ? Math.round(route.durationMinutes * 60) : null,
           range: route ? route.durationMinutes <= 20 ? "near" : "excursion" : null,

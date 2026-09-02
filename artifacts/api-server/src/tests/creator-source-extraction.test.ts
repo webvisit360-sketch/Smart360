@@ -22,7 +22,7 @@ test("deterministic source extraction keeps structured places and removes naviga
   });
   assert.deepEqual(first, second);
   assert.deepEqual(first, [
-    { placeName: "Slap Rinka", settlement: "Solčava", categoryKey: "sights" },
+    { placeName: "Slap Rinka", settlement: "Solčava", categoryKey: "nature" },
     { placeName: "Veliki Travnik", settlement: "Solčava", categoryKey: "hike" },
   ]);
 });
@@ -62,7 +62,9 @@ test("municipal extraction rejects editorial and administrative noise", () => {
       <a href="/projekt">O projektu</a>`,
   });
   assert.deepEqual(facts, [
-    { placeName: "Javni zavod Muzej Vrbovec", settlement: "Nazarje", categoryKey: "sights" },
+    { placeName: "Godalni orkester Emars KATEDRALA SV. MOHORJA IN FORTUNATA", settlement: "Nazarje", categoryKey: "events" },
+    { placeName: "Javni zavod Muzej Vrbovec", settlement: "Nazarje", categoryKey: "culture" },
+    { placeName: "Likovna razstava v Galeriji Štekl", settlement: "Nazarje", categoryKey: "events" },
   ]);
 });
 
@@ -82,6 +84,6 @@ test("tourism extraction rejects inflected and combined-place prose", () => {
       <a href="/slap/rinka">Slap Rinka</a>`,
   });
   assert.deepEqual(facts, [
-    { placeName: "Slap Rinka", settlement: null, categoryKey: "sights" },
+    { placeName: "Slap Rinka", settlement: null, categoryKey: "nature" },
   ]);
 });
