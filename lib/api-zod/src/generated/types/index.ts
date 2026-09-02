@@ -58,6 +58,7 @@ export * from './creatorProposalRange';
 export * from './creatorProposalStatus';
 export * from './creatorProposalTranslation';
 export * from './creatorProposalTranslationLanguage';
+export * from './creatorRetryResult';
 export * from './creatorRunOutcome';
 export * from './creatorRunOutcomeOutcome';
 export * from './creatorRunPricing';

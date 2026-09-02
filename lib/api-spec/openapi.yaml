@@ -881,6 +881,70 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreatorProposal"
         "404": { description: Proposal not found }
+  /admin/tenants/{id}/creator/proposals/{proposalId}/undo-rejection:
+    post:
+      operationId: undoCreatorProposalRejection
+      tags: [tenants]
+      summary: Undo an operator rejection while preserving prior sieve state
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Restored proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorProposal"
+        "404": { description: Rejected proposal not found }
+  /admin/tenants/{id}/creator/proposals/reject-bulk:
+    post:
+      operationId: rejectCreatorProposalsBulk
+      tags: [tenants]
+      summary: Reject selected Creator proposals
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorProposalBulkApprovalInput"
+      responses:
+        "200":
+          description: Updated queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreatorProposal"
+  /admin/tenants/{id}/creator/proposals/retry-unresolved:
+    post:
+      operationId: retryCreatorProposals
+      tags: [tenants]
+      summary: Retry only Nominatim infrastructure failures at one request per second
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Retry counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorRetryResult"
   /admin/tenants/{id}/creator/proposals/{proposalId}/confirm-coordinates:
     post:
       operationId: confirmCreatorProposalCoordinates
@@ -2992,6 +3056,14 @@ components:
           minItems: 1
           items: { type: string }
       required: [proposalIds]
+    CreatorRetryResult:
+      type: object
+      properties:
+        eligible: { type: number }
+        retried: { type: number }
+        resolved: { type: number }
+        unresolved: { type: number }
+      required: [eligible, retried, resolved, unresolved]
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

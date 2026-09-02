@@ -20,6 +20,8 @@ test("accommodation providers are excluded without excluding ordinary mountain h
     "Apartmajska hiša Jezero",
     "Sobe pri Ani",
     "Počitniška hiša Sonce",
+    "Herbal glamping Ljubno",
+    "Naturplac Na skali",
   ]) {
     assert.equal(classifyCreatorAccommodationProvider({
       name, categoryKey: "culture", evidence: name,

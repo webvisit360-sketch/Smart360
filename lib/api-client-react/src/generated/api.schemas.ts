@@ -827,6 +827,13 @@ export interface CreatorProposalBulkApprovalInput {
   proposalIds: string[];
 }
 
+export interface CreatorRetryResult {
+  eligible: number;
+  retried: number;
+  resolved: number;
+  unresolved: number;
+}
+
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];
 
 

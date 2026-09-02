@@ -49,6 +49,9 @@ export const creatorPlaceProposalsTable = pgTable(
       (): AnyPgColumn => creatorPlaceProposalsTable.id,
     ),
     refusalReason: text("refusal_reason"),
+    rejectionIdentity: text("rejection_identity"),
+    rejectedFromStatus: text("rejected_from_status"),
+    rejectedFromReason: text("rejected_from_reason"),
     resolvedName: text("resolved_name"),
     resolvedAddress: text("resolved_address"),
     osmType: text("osm_type"),
@@ -86,9 +89,9 @@ export const creatorPlaceProposalsTable = pgTable(
     uniqueIndex("creator_place_proposals_osm_identity_uq").on(t.tenantId, t.osmType, t.osmId).where(sql`${t.osmId} IS NOT NULL`),
     // A human rejection is durable across runs. An unresolved sieve result is
     // run evidence and may be checked again after the verification pipe changes.
-    uniqueIndex("creator_place_proposals_rejected_name_uq")
-      .on(t.tenantId, t.normalizedName)
-      .where(sql`${t.osmId} IS NULL AND ${t.status} = 'rejected'`),
+    uniqueIndex("creator_place_proposals_rejected_identity_uq")
+      .on(t.tenantId, t.rejectionIdentity)
+      .where(sql`${t.status} = 'rejected' AND ${t.rejectionIdentity} IS NOT NULL`),
     // Still suppress duplicate names inside one model run.
     uniqueIndex("creator_place_proposals_run_unresolved_name_uq")
       .on(t.runId, t.normalizedName)
@@ -338,6 +341,7 @@ export const creatorVerificationAttemptsTable = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     proposalId: uuid("proposal_id").notNull().references(() => creatorPlaceProposalsTable.id, { onDelete: "cascade" }),
     attemptNumber: smallint("attempt_number").notNull(),
+    generation: smallint("generation").notNull().default(0),
     query: text("query").notNull(),
     verdict: text("verdict").notNull(),
     refusalRule: text("refusal_rule"),
@@ -347,7 +351,7 @@ export const creatorVerificationAttemptsTable = pgTable(
     check("creator_verification_attempts_number_check", sql`${t.attemptNumber} IN (1, 2)`),
     check("creator_verification_attempts_verdict_check", sql`${t.verdict} IN ('resolved','refused')`),
     check("creator_verification_attempts_refusal_check", sql`${t.verdict} <> 'refused' OR ${t.refusalRule} IS NOT NULL`),
-    uniqueIndex("creator_verification_attempts_proposal_number_uq").on(t.proposalId, t.attemptNumber),
+    uniqueIndex("creator_verification_attempts_proposal_generation_number_uq").on(t.proposalId, t.generation, t.attemptNumber),
   ],
 );
 

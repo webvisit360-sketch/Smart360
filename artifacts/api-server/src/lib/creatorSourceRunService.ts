@@ -56,6 +56,7 @@ type SourceRunReport = {
   outputTokens: number;
   costUsd: number;
   error: string | null;
+  extractionRejections: Record<string, number>;
   sourceOutcomes: Array<{
     sourceId: string;
     label: string;
@@ -339,6 +340,7 @@ export async function executeCreatorSourceRun(input: {
     outputTokens: 0,
     costUsd: 0,
     error: null,
+    extractionRejections: {},
     sourceOutcomes: [],
   };
   const persist = () => db.update(creatorSourceRunsTable)
@@ -510,6 +512,9 @@ export async function executeCreatorSourceRun(input: {
         report.inputTokens += extraction.inputTokens;
         report.outputTokens += extraction.outputTokens;
         report.costUsd += extraction.costUsd;
+        for (const [reason, count] of Object.entries(extraction.rejectionCounts)) {
+          report.extractionRejections[reason] = (report.extractionRejections[reason] ?? 0) + count;
+        }
         const routed = routeGroundedCreatorSourceFactsToPages(
           compositePages,
           extraction.facts,

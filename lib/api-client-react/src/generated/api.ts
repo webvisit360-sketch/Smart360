@@ -47,6 +47,7 @@ import type {
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
+  CreatorRetryResult,
   CreatorSource,
   CreatorSourceDeleteResult,
   CreatorSourceEditInput,
@@ -3524,6 +3525,222 @@ export const useRejectCreatorProposal = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRejectCreatorProposalMutationOptions(options));
+    }
+
+export const getUndoCreatorProposalRejectionUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}/undo-rejection`
+}
+
+/**
+ * @summary Undo an operator rejection while preserving prior sieve state
+ */
+export const undoCreatorProposalRejection = async (id: string,
+    proposalId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal> => {
+
+  return customFetch<CreatorProposal>(getUndoCreatorProposalRejectionUrl(id,proposalId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUndoCreatorProposalRejectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoCreatorProposalRejection>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof undoCreatorProposalRejection>>, TError,{id: string;proposalId: string}, TContext> => {
+
+const mutationKey = ['undoCreatorProposalRejection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undoCreatorProposalRejection>>, {id: string;proposalId: string}> = (props) => {
+          const {id,proposalId} = props ?? {};
+
+          return  undoCreatorProposalRejection(id,proposalId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoCreatorProposalRejectionMutationResult = NonNullable<Awaited<ReturnType<typeof undoCreatorProposalRejection>>>
+
+    export type UndoCreatorProposalRejectionMutationError = ErrorType<void>
+
+    /**
+ * @summary Undo an operator rejection while preserving prior sieve state
+ */
+export const useUndoCreatorProposalRejection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoCreatorProposalRejection>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof undoCreatorProposalRejection>>,
+        TError,
+        {id: string;proposalId: string},
+        TContext
+      > => {
+      return useMutation(getUndoCreatorProposalRejectionMutationOptions(options));
+    }
+
+export const getRejectCreatorProposalsBulkUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/reject-bulk`
+}
+
+/**
+ * @summary Reject selected Creator proposals
+ */
+export const rejectCreatorProposalsBulk = async (id: string,
+    creatorProposalBulkApprovalInput: CreatorProposalBulkApprovalInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal[]> => {
+
+  return customFetch<CreatorProposal[]>(getRejectCreatorProposalsBulkUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorProposalBulkApprovalInput)
+  }
+);}
+
+
+
+
+
+export const getRejectCreatorProposalsBulkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorProposalsBulk>>, TError,{id: string;data: BodyType<CreatorProposalBulkApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorProposalsBulk>>, TError,{id: string;data: BodyType<CreatorProposalBulkApprovalInput>}, TContext> => {
+
+const mutationKey = ['rejectCreatorProposalsBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectCreatorProposalsBulk>>, {id: string;data: BodyType<CreatorProposalBulkApprovalInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rejectCreatorProposalsBulk(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectCreatorProposalsBulkMutationResult = NonNullable<Awaited<ReturnType<typeof rejectCreatorProposalsBulk>>>
+    export type RejectCreatorProposalsBulkMutationBody = BodyType<CreatorProposalBulkApprovalInput>
+    export type RejectCreatorProposalsBulkMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reject selected Creator proposals
+ */
+export const useRejectCreatorProposalsBulk = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorProposalsBulk>>, TError,{id: string;data: BodyType<CreatorProposalBulkApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectCreatorProposalsBulk>>,
+        TError,
+        {id: string;data: BodyType<CreatorProposalBulkApprovalInput>},
+        TContext
+      > => {
+      return useMutation(getRejectCreatorProposalsBulkMutationOptions(options));
+    }
+
+export const getRetryCreatorProposalsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/retry-unresolved`
+}
+
+/**
+ * @summary Retry only Nominatim infrastructure failures at one request per second
+ */
+export const retryCreatorProposals = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorRetryResult> => {
+
+  return customFetch<CreatorRetryResult>(getRetryCreatorProposalsUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRetryCreatorProposalsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryCreatorProposals>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retryCreatorProposals>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['retryCreatorProposals'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryCreatorProposals>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  retryCreatorProposals(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetryCreatorProposalsMutationResult = NonNullable<Awaited<ReturnType<typeof retryCreatorProposals>>>
+
+    export type RetryCreatorProposalsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Retry only Nominatim infrastructure failures at one request per second
+ */
+export const useRetryCreatorProposals = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryCreatorProposals>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof retryCreatorProposals>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRetryCreatorProposalsMutationOptions(options));
     }
 
 export const getConfirmCreatorProposalCoordinatesUrl = (id: string,

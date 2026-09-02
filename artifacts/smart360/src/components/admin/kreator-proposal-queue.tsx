@@ -9,8 +9,11 @@ import {
   useListCreatorCategoryOptions,
   useListCreatorProposals,
   useRejectCreatorProposal,
+  useRejectCreatorProposalsBulk,
+  useRetryCreatorProposals,
+  useUndoCreatorProposalRejection,
 } from "@workspace/api-client-react";
-import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, ShieldAlert, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, RotateCcw, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
@@ -128,6 +131,10 @@ export function KreatorProposalQueue({
   const [positioningId, setPositioningId] = useState<string | null>(null);
   const [manualLatitude, setManualLatitude] = useState("");
   const [manualLongitude, setManualLongitude] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [reasonFilter, setReasonFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [rangeFilter, setRangeFilter] = useState("all");
   useEffect(() => {
     setSelected([]);
     setEditingId(null);
@@ -154,6 +161,15 @@ export function KreatorProposalQueue({
   const rejectOne = useRejectCreatorProposal({
     mutation: { onSuccess: refresh },
   });
+  const rejectBulk = useRejectCreatorProposalsBulk({
+    mutation: { onSuccess: refresh },
+  });
+  const undoRejection = useUndoCreatorProposalRejection({
+    mutation: { onSuccess: refresh },
+  });
+  const retryUnresolved = useRetryCreatorProposals({
+    mutation: { onSuccess: refresh },
+  });
   const confirmCoordinates = useConfirmCreatorProposalCoordinates({
     mutation: {
       onSuccess: async () => {
@@ -163,6 +179,14 @@ export function KreatorProposalQueue({
     },
   });
   const rows = queue.data ?? [];
+  const visibleRows = useMemo(() => rows.filter((row) =>
+    (statusFilter === "all" || row.status === statusFilter) &&
+    (reasonFilter === "all" || row.refusalReason === reasonFilter) &&
+    (categoryFilter === "all" || row.categoryId === categoryFilter) &&
+    (rangeFilter === "all" || row.range === rangeFilter)
+  ), [rows, statusFilter, reasonFilter, categoryFilter, rangeFilter]);
+  const reasons = useMemo(() => [...new Set(rows.flatMap((row) =>
+    row.refusalReason ? [row.refusalReason] : []))].sort(), [rows]);
   const eligible = useMemo(
     () => rows.filter((row) => row.status === "pending" && !row.requiresIndividualReview),
     [rows],
@@ -174,6 +198,9 @@ export function KreatorProposalQueue({
     ?? (approveBulk.error as any)?.data?.error
     ?? (editOne.error as any)?.data?.error
     ?? (rejectOne.error as any)?.data?.error
+    ?? (rejectBulk.error as any)?.data?.error
+    ?? (undoRejection.error as any)?.data?.error
+    ?? (retryUnresolved.error as any)?.data?.error
     ?? (confirmCoordinates.error as any)?.data?.error
     ?? null;
 
@@ -190,18 +217,49 @@ export function KreatorProposalQueue({
             {pendingCount} čaka · Ni bilo mogoče potrditi: {unresolvedCount}
           </p>
         </div>
-        <Button
-          type="button"
-          disabled={selected.length === 0 || approveBulk.isPending}
-          onClick={() => {
-            if (!confirm(`Potrdi ${selectedLocationCount} za ${tenantName}?`)) return;
-            approveBulk.mutate({ id: tenantId, data: { proposalIds: selected } });
-          }}
-          className="rounded-[12px]"
-        >
-          {approveBulk.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Potrdi {selectedLocationCount} za {tenantName}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" disabled={retryUnresolved.isPending || !rows.some((row) => row.status === "unresolved" && row.refusalReason === "nominatim-unavailable")} onClick={() => retryUnresolved.mutate({ id: tenantId })}>
+            {retryUnresolved.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+            Ponovno razreši nerazrešene
+          </Button>
+          <Button type="button" variant="outline" className="text-destructive" disabled={selected.length === 0 || rejectBulk.isPending} onClick={() => {
+            if (!confirm(`Zavrni ${selectedLocationCount}?`)) return;
+            rejectBulk.mutate({ id: tenantId, data: { proposalIds: selected } });
+          }}>
+            <XCircle className="mr-2 h-4 w-4" /> Zavrni izbrane
+          </Button>
+          <Button
+            type="button"
+            disabled={selected.length === 0 || approveBulk.isPending || selected.some((id) => !eligible.some((row) => row.id === id))}
+            onClick={() => {
+              if (!confirm(`Potrdi ${selectedLocationCount} za ${tenantName}?`)) return;
+              approveBulk.mutate({ id: tenantId, data: { proposalIds: selected } });
+            }}
+            className="rounded-[12px]"
+          >
+            {approveBulk.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Potrdi {selectedLocationCount} za {tenantName}
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-2 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2 lg:grid-cols-4">
+        <select aria-label="Filtriraj po statusu" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-md border bg-white px-3 text-sm">
+          <option value="all">Vsi statusi</option>
+          {["pending", "unresolved", "rejected", "approved"].map((value) => <option key={value} value={value}>{value}</option>)}
+        </select>
+        <select aria-label="Filtriraj po razlogu" value={reasonFilter} onChange={(event) => setReasonFilter(event.target.value)} className="h-10 rounded-md border bg-white px-3 text-sm">
+          <option value="all">Vsi razlogi</option>
+          {reasons.map((value) => <option key={value} value={value}>{value}</option>)}
+        </select>
+        <select aria-label="Filtriraj po kategoriji" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-10 rounded-md border bg-white px-3 text-sm">
+          <option value="all">Vse kategorije</option>
+          {(categoryOptions.data ?? []).map((value) => <option key={value.id} value={value.id}>{value.label}</option>)}
+        </select>
+        <select aria-label="Filtriraj po obsegu" value={rangeFilter} onChange={(event) => setRangeFilter(event.target.value)} className="h-10 rounded-md border bg-white px-3 text-sm">
+          <option value="all">Vsi obsegi</option>
+          <option value="practical">practical</option><option value="near">near</option><option value="excursion">excursion</option>
+        </select>
       </div>
 
       {error && (
@@ -217,8 +275,8 @@ export function KreatorProposalQueue({
             V tej izvedbi Kreatorja še ni predlogov.
           </CardContent>
         </Card>
-      ) : rows.map((row) => {
-        const selectable = row.status === "pending" && !row.requiresIndividualReview;
+      ) : visibleRows.map((row) => {
+        const selectable = row.status === "pending" || row.status === "unresolved";
         const checked = selected.includes(row.id);
         return (
           <Card key={row.id} className="overflow-hidden">
@@ -463,6 +521,12 @@ export function KreatorProposalQueue({
                     Zavrni
                   </Button>
                 </div>
+              )}
+              {row.status === "rejected" && (
+                <Button type="button" variant="outline" disabled={undoRejection.isPending} onClick={() =>
+                  undoRejection.mutate({ id: tenantId, proposalId: row.id })}>
+                  <RotateCcw className="mr-2 h-4 w-4" /> Razveljavi zavrnitev
+                </Button>
               )}
             </CardContent>
           </Card>

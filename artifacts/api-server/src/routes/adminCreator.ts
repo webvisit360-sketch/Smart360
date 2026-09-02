@@ -25,6 +25,10 @@ import {
   ProposeCreatorSourcesBody,
   ProposeCreatorSourcesResponse,
   RejectCreatorProposalResponse,
+  RejectCreatorProposalsBulkBody,
+  RejectCreatorProposalsBulkResponse,
+  RetryCreatorProposalsResponse,
+  UndoCreatorProposalRejectionResponse,
   StartCreatorRunResponse,
   DecideCreatorSourceResponse,
 } from "@workspace/api-zod";
@@ -37,6 +41,9 @@ import {
   editCreatorProposalEditorial,
   listCreatorProposalQueue,
   rejectCreatorProposalIndividually,
+  rejectCreatorProposalsBulk,
+  retryInfrastructureFailedCreatorProposals,
+  undoCreatorProposalRejection,
 } from "../lib/creatorProposalLedger";
 import {
   GoogleMapsParseError,
@@ -565,6 +572,65 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/reject", async (re
     res.status(404).json({
       error: error instanceof Error ? error.message : "Predloga ni mogoče zavrniti.",
     });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/proposals/:proposalId/undo-rejection", async (req, res): Promise<void> => {
+  try {
+    const tenantId = first(req.params["id"]);
+    if (!await requireCreatorTenant(tenantId)) {
+      res.status(404).json({ error: "Namestitev ni najdena." });
+      return;
+    }
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operater ni najden." });
+      return;
+    }
+    const row = await undoCreatorProposalRejection(
+      tenantId, first(req.params["proposalId"]), actor.id,
+    );
+    if (!row) throw new Error("Predlog po razveljavitvi ni najden.");
+    res.json(UndoCreatorProposalRejectionResponse.parse(serialize({
+      ...row, nearestAlternatives: [],
+    })));
+  } catch (error) {
+    res.status(404).json({ error: error instanceof Error ? error.message : "Zavrnitve ni mogoče razveljaviti." });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/proposals/reject-bulk", async (req, res): Promise<void> => {
+  const input = RejectCreatorProposalsBulkBody.safeParse(req.body);
+  if (!input.success) {
+    res.status(400).json({ error: "Izberite predloge za zavrnitev." });
+    return;
+  }
+  try {
+    const tenantId = first(req.params["id"]);
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operater ni najden." });
+      return;
+    }
+    const rows = await rejectCreatorProposalsBulk(tenantId, input.data.proposalIds, actor.id);
+    res.json(RejectCreatorProposalsBulkResponse.parse(serialize(rows)));
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : "Predlogov ni mogoče zavrniti." });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/proposals/retry-unresolved", async (req, res): Promise<void> => {
+  try {
+    const tenantId = first(req.params["id"]);
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operater ni najden." });
+      return;
+    }
+    const result = await retryInfrastructureFailedCreatorProposals(tenantId, actor.id);
+    res.json(RetryCreatorProposalsResponse.parse(result));
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : "Ponovna razrešitev ni uspela." });
   }
 });
 

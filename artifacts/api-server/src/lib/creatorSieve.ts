@@ -73,6 +73,9 @@ type RawResult = {
   address?: unknown;
 };
 
+export const CREATOR_WRONG_SETTLEMENT_REASON = (settlement: string) =>
+  `Najdeno samo v drugem kraju (${settlement}) — določite ročno.`;
+
 const BLOCKED_CLASSES = new Set(["boundary", "place", "highway"]);
 const BLOCKED_ADDRESS_TYPES = new Set([
   "administrative", "borough", "city", "city_block", "country", "county",
@@ -83,6 +86,41 @@ const BLOCKED_ADDRESS_TYPES = new Set([
 function normalizeName(value: string): string {
   return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("sl")
     .replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+}
+
+function requestedSettlements(fallbackQuery: string | undefined): string[] {
+  if (!fallbackQuery) return [];
+  return fallbackQuery.split(",").slice(1).map((value) => value.trim()).filter(Boolean);
+}
+
+function resultSettlement(raw: RawResult): string | null {
+  if (!raw.address || typeof raw.address !== "object") return null;
+  const address = raw.address as Record<string, unknown>;
+  for (const key of ["village", "town", "city", "hamlet", "municipality"]) {
+    if (typeof address[key] === "string" && address[key]) return address[key] as string;
+  }
+  return null;
+}
+
+function sameSettlement(expected: string, actual: string): boolean {
+  const left = normalizeName(expected);
+  const right = normalizeName(actual);
+  return left === right || left.startsWith(`${right} `) || right.startsWith(`${left} `);
+}
+
+/** Re-evaluation helper for already persisted queue rows, whose immutable
+ * Nominatim display name is the only available address snapshot. */
+export function storedResolutionWrongSettlementReason(
+  fallbackQuery: string | null,
+  displayName: string | null,
+): string | null {
+  const expected = requestedSettlements(fallbackQuery ?? undefined);
+  const parts = (displayName ?? "").split(",").map((part) => part.trim()).filter(Boolean);
+  if (expected.length === 0 || parts.length < 2) return null;
+  if (parts.slice(1).some((part) => expected.some((place) => sameSettlement(place, part)))) {
+    return null;
+  }
+  return CREATOR_WRONG_SETTLEMENT_REASON(parts[1]!);
 }
 
 function haversineKm(aLat: number, aLon: number, bLat: number, bLon: number): number {
@@ -337,6 +375,8 @@ async function runCreatorSieveInternal(
   let sawMissingClassification = false;
   let sawNameMismatch = false;
   let sawBeyondCeiling = false;
+  const wrongSettlements = new Set<string>();
+  const expectedSettlements = requestedSettlements(options.fallbackQuery);
   const allParsed: CreatorSieveCandidate[] = [];
 
   for (const raw of data as RawResult[]) {
@@ -377,6 +417,12 @@ async function runCreatorSieveInternal(
       sawNameMismatch = true;
       continue;
     }
+    const actualSettlement = resultSettlement(raw);
+    if (expectedSettlements.length > 0 && actualSettlement &&
+      !expectedSettlements.some((expected) => sameSettlement(expected, actualSettlement))) {
+      wrongSettlements.add(actualSettlement);
+      continue;
+    }
     if (candidate.distanceKm > hardCeilingKm) {
       sawBeyondCeiling = true;
       continue;
@@ -394,7 +440,9 @@ async function runCreatorSieveInternal(
   }
 
   if (structurallyAllowed.length === 0) {
-    const rule = sawMissingClassification ? "missing-classification"
+    const rule = wrongSettlements.size > 0
+      ? CREATOR_WRONG_SETTLEMENT_REASON([...wrongSettlements].sort((a, b) => a.localeCompare(b, "sl"))[0]!)
+      : sawMissingClassification ? "missing-classification"
       : sawBeyondCeiling ? "hard-ceiling"
       : sawNameMismatch ? "name-mismatch"
       : sawBlocked ? "blocked-class-or-addresstype"

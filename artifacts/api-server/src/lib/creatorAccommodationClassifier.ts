@@ -8,7 +8,7 @@ const normalize = (value: string) => value
   .replace(/\p{M}/gu, "")
   .toLocaleLowerCase("sl");
 
-const ACCOMMODATION = /\b(kamp(?:ing|i|a|u|ov)?|camp(?:ing|site)?|glamping(?:i|a|u|ov)?|hotel(?:i|a|u|ov)?|hostel(?:i|a|u|ov)?|motel(?:i|a|u|ov)?|penzion(?:i|a|u|ov)?|pension|guest\s*house|villa|vila|chalet|resort|b\s*(?:&|in|and)\s*b|bed\s+and\s+breakfast|apartma(?:ji|ja|ju|jev|n)?|apartmajsk(?:a|e|i|o|ih)?\s+his(?:a|e|i|o|ah)|sobe?|sobah|rooms?|room\s+rental|pocitnisk(?:a|e|i|o|ih)?\s+his(?:a|e|i|o|ah)|holiday\s+homes?|prenocisc(?:e|a|u|ih)|nastanit(?:ev|ve|vah)|lodging)\b/u;
+const ACCOMMODATION = /\b(kamp(?:ing|i|a|u|ov)?|camp(?:ing|site)?|glamping(?:i|a|u|ov)?|hotel(?:i|a|u|ov)?|hostel(?:i|a|u|ov)?|motel(?:i|a|u|ov)?|penzion(?:i|a|u|ov)?|pension|guest\s*house|villa|vila|chalet|resort|naturplac|b\s*(?:&|in|and)\s*b|bed\s+and\s+breakfast|apartma(?:ji|ja|ju|jev|n)?|apartmajsk(?:a|e|i|o|ih)?\s+his(?:a|e|i|o|ah)|sobe?|sobah|rooms?|room\s+rental|pocitnisk(?:a|e|i|o|ih)?\s+his(?:a|e|i|o|ah)|holiday\s+homes?|prenocisc(?:e|a|u|ih)|nastanit(?:ev|ve|vah)|lodging)\b/u;
 const TOURIST_FARM = /\b(turisticn(?:a|e|i|o|ih)?\s+kmetij(?:a|e|i|o|ah)|farm\s+stay|agriturismo)\b/u;
 const LODGING_GOSTISCE = /\b(gostisce)\b/u;
 const LODGING_CONTEXT = /\b(prenocisc(?:e|a|u|ih)|nastanit(?:ev|ve|vah)|sobe?|rooms?|lodging|bed\s+and\s+breakfast|zajtrk)\b/u;
@@ -34,11 +34,11 @@ export function classifyCreatorAccommodationProvider(input: {
     }
     return { excluded: true, reason: "lodging-tourist-farm" };
   }
-  const accommodationMatch = ACCOMMODATION.exec(name) ?? ACCOMMODATION.exec(evidence);
+  const accommodationMatch = ACCOMMODATION.exec(name);
   if (LODGING_GOSTISCE.test(combined) && !LODGING_CONTEXT.test(combined)) {
     return { excluded: false, reason: null };
   }
-  if (accommodationMatch?.index === 0) {
+  if (accommodationMatch) {
     return { excluded: true, reason: "accommodation-provider" };
   }
   return { excluded: false, reason: null };

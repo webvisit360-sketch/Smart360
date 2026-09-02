@@ -1,0 +1,15 @@
+Five queue-quality defects from the first production Gril run, in priority order.
+
+1. SETTLEMENT BINDING IN GLOBAL RESOLUTION — critical. Proposals whose search hint names a local settlement resolved to same-named places across Slovenia and Italy: Smrekovec→Idrija, Mrzli vrh→Tolmin, Planina→Škofja Loka, Ljubnica→Zreče, Cerkev sv. Mohorja in Fortunata (hint Gornji Grad)→Podnanos, Cerkev sv. Jakoba (hint Ter)→Bled, Kal (hint Golačnik)→Trieste, and "Hudi graben" (hint Ter) resolved to Štore at 62 min and REACHED THE PENDING QUEUE. Rule: when the hint names a settlement, a result in a different settlement is never a confident match — it becomes unresolved with reason "Najdeno samo v drugem kraju (<kraj>) — določite ročno." Re-evaluate the existing queue rows against this rule and move wrong-settlement resolutions back to unresolved with that reason.
+
+2. REJECTION MEMORY MUST KEY ON THE RESOLVED ENTITY, NOT THE BARE NAME. The operator rejected rows like "Smrekovec (Idrija)" — that must never suppress the real local Smrekovec in future runs. Store rejections against the resolved place identity (coordinates/OSM identity), and give the operator an "Razveljavi zavrnitev" action. List for the owner which of his existing rejections were wrong-settlement resolutions so he can un-reject them.
+
+3. RETRY FOR nominatim-unavailable. The run's tail failed with nominatim-unavailable for dozens of rows. Add an operator action "Ponovno razreši nerazrešene" that re-runs resolution only for infrastructure-failed rows, paced at one request per second, without touching resolved or rejected rows.
+
+4. ACCOMMODATION EXCLUSION REGRESSION. "Herbal glamping Ljubno" and "Naturplac Na skali" entered the queue under category Apartmaji. The exclusion must catch them at extraction; also drop existing accommodation rows from this queue and report how they got through.
+
+5. DUPLICATES AND BULK REVIEW. Near-identical duplicates exist (Planinska koča Mrzl'k / Mrzlk). Add normalization-based fuzzy merge at dedup. And give the queue review filters (status, reason, category, range) plus multi-select with bulk Zavrni, so reviewing hundreds of rows is feasible.
+
+Verify in development, report, STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

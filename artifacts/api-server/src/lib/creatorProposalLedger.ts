@@ -19,6 +19,7 @@ import {
   tenantsTable,
 } from "@workspace/db";
 import { runCreatorSieve } from "./creatorSieve";
+import { createPacedNominatimFetch } from "./creatorNominatimRetry";
 import type { CreatorDependencyRecorder } from "./creatorDependencyTelemetry";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 
@@ -34,28 +35,34 @@ export function normalizeCreatorProposalName(value: string): string {
     .replace(/\s+/g, " ");
 }
 
+export function fuzzyCreatorProposalKey(value: string): string {
+  return normalizeCreatorProposalName(value).replace(/\s+/g, "");
+}
+
 export async function upsertPendingCreatorProposal(input: {
   tenantId: string;
   runId: string;
   proposedName: string;
   originalQuery: string;
+  geocodingLookupHint?: string;
   contentReady?: boolean;
 }) {
   const normalizedName = normalizeCreatorProposalName(input.proposedName);
+  const fuzzyKey = fuzzyCreatorProposalKey(input.proposedName);
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(
-      hashtextextended(${`${input.tenantId}:creator-name:${normalizedName}`}, 0)
+      hashtextextended(${`${input.tenantId}:creator-name:${fuzzyKey}`}, 0)
     )`);
-    const [rejected] = await tx
+    const sameRun = await tx
       .select()
       .from(creatorPlaceProposalsTable)
       .where(and(
-        eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
-        eq(creatorPlaceProposalsTable.normalizedName, normalizedName),
-        eq(creatorPlaceProposalsTable.status, "rejected"),
-      ))
-      .limit(1);
-    if (rejected) return { proposal: rejected, inserted: false };
+        eq(creatorPlaceProposalsTable.runId, input.runId),
+        isNull(creatorPlaceProposalsTable.osmId),
+      ));
+    const fuzzyDuplicate = sameRun.find((row) =>
+      fuzzyCreatorProposalKey(row.proposedName) === fuzzyKey);
+    if (fuzzyDuplicate) return { proposal: fuzzyDuplicate, inserted: false };
 
     const [inserted] = await tx
       .insert(creatorPlaceProposalsTable)
@@ -182,9 +189,15 @@ export async function recordCreatorVerification(
         .limit(1);
     }
 
+    const [latestAttempt] = await tx.select({
+      generation: sql<number>`COALESCE(MAX(${creatorVerificationAttemptsTable.generation}), -1)::int`,
+    }).from(creatorVerificationAttemptsTable)
+      .where(eq(creatorVerificationAttemptsTable.proposalId, proposalId));
+    const generation = (latestAttempt?.generation ?? -1) + 1;
     for (const attempt of record.attempts) {
       const [attemptRow] = await tx.insert(creatorVerificationAttemptsTable).values({
         proposalId,
+        generation,
         attemptNumber: attempt.attemptNumber,
         query: attempt.query,
         verdict: attempt.verdict,
@@ -287,6 +300,7 @@ export async function runAndPersistCreatorSieve(input: {
     runId: input.runId,
     proposedName: input.proposedName,
     originalQuery: input.proposedName,
+    geocodingLookupHint: input.lookupHint,
     contentReady: input.contentReady,
   });
   if (!pending.inserted) {
@@ -558,19 +572,22 @@ export async function rejectCreatorProposalIndividually(
 ) {
   await requireActor(actorId);
   const updated = await db.transaction(async (tx) => {
-    const [proposal] = await tx.select({
-      normalizedName: creatorPlaceProposalsTable.normalizedName,
-    }).from(creatorPlaceProposalsTable).where(and(
+    const [proposal] = await tx.select().from(creatorPlaceProposalsTable).where(and(
       eq(creatorPlaceProposalsTable.id, proposalId),
       eq(creatorPlaceProposalsTable.tenantId, tenantId),
     )).limit(1);
     if (!proposal) return null;
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(
-      hashtextextended(${`${tenantId}:creator-name:${proposal.normalizedName}`}, 0)
-    )`);
+    const rejectionIdentity = proposal.osmType && proposal.osmId !== null
+      ? `osm:${proposal.osmType}:${proposal.osmId}`
+      : proposal.latitude !== null && proposal.longitude !== null
+        ? `coordinates:${proposal.latitude.toFixed(5)}:${proposal.longitude.toFixed(5)}`
+        : null;
     const [row] = await tx.update(creatorPlaceProposalsTable).set({
       status: "rejected",
       refusalReason: "human-rejected",
+      rejectionIdentity,
+      rejectedFromStatus: proposal.status,
+      rejectedFromReason: proposal.refusalReason,
       reviewedBy: actorId,
       reviewedAt: new Date(),
       updatedAt: new Date(),
@@ -584,6 +601,140 @@ export async function rejectCreatorProposalIndividually(
   });
   if (!updated) throw new Error("Predlog ni najden ali ga ni mogoče zavrniti.");
   return (await listCreatorProposalQueue(tenantId)).find((row) => row.id === proposalId);
+}
+
+export async function undoCreatorProposalRejection(
+  tenantId: string,
+  proposalId: string,
+  actorId: string,
+) {
+  await requireActor(actorId);
+  const [proposal] = await db.select().from(creatorPlaceProposalsTable).where(and(
+    eq(creatorPlaceProposalsTable.id, proposalId),
+    eq(creatorPlaceProposalsTable.tenantId, tenantId),
+    eq(creatorPlaceProposalsTable.status, "rejected"),
+    eq(creatorPlaceProposalsTable.contentReady, true),
+  )).limit(1);
+  if (!proposal) throw new Error("Zavrnjen predlog ni najden.");
+  const restoredStatus = proposal.rejectedFromStatus === "pending" ? "pending" : "unresolved";
+  const [updated] = await db.update(creatorPlaceProposalsTable).set({
+    status: restoredStatus,
+    refusalReason: restoredStatus === "pending"
+      ? null
+      : proposal.rejectedFromReason ?? "operator-review-required",
+    rejectionIdentity: null,
+    rejectedFromStatus: null,
+    rejectedFromReason: null,
+    reviewedBy: null,
+    reviewedAt: null,
+    updatedAt: new Date(),
+  }).where(and(
+    eq(creatorPlaceProposalsTable.id, proposalId),
+    eq(creatorPlaceProposalsTable.tenantId, tenantId),
+    eq(creatorPlaceProposalsTable.status, "rejected"),
+  )).returning();
+  if (!updated) throw new Error("Zavrnitve ni bilo mogoče razveljaviti.");
+  return (await listCreatorProposalQueue(tenantId)).find((row) => row.id === proposalId);
+}
+
+export async function rejectCreatorProposalsBulk(
+  tenantId: string,
+  proposalIds: string[],
+  actorId: string,
+) {
+  await requireActor(actorId);
+  if (proposalIds.length === 0) return [];
+  for (const proposalId of [...new Set(proposalIds)]) {
+    await rejectCreatorProposalIndividually(tenantId, proposalId, actorId);
+  }
+  return listCreatorProposalQueue(tenantId);
+}
+
+export async function retryInfrastructureFailedCreatorProposals(
+  tenantId: string,
+  actorId: string,
+  options: { fetchFn?: FetchFn; sleepFn?: (milliseconds: number) => Promise<void> } = {},
+) {
+  await requireActor(actorId);
+  const [tenant] = await db.select({
+    latitude: tenantsTable.latitude,
+    longitude: tenantsTable.longitude,
+  }).from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
+  if (!tenant || tenant.latitude === null || tenant.longitude === null) {
+    throw new Error("Izhodišče nima koordinat.");
+  }
+  const rows = await db.select().from(creatorPlaceProposalsTable).where(and(
+    eq(creatorPlaceProposalsTable.tenantId, tenantId),
+    eq(creatorPlaceProposalsTable.status, "unresolved"),
+    eq(creatorPlaceProposalsTable.refusalReason, "nominatim-unavailable"),
+    eq(creatorPlaceProposalsTable.contentReady, true),
+  )).orderBy(asc(creatorPlaceProposalsTable.createdAt));
+  const paced = createPacedNominatimFetch({
+    fetchFn: options.fetchFn,
+    sleepFn: options.sleepFn,
+    minimumIntervalMs: 1_000,
+  });
+  let retried = 0;
+  let resolved = 0;
+  for (const row of rows) {
+    const result = await runCreatorSieve(row.proposedName, {
+      latitude: tenant.latitude,
+      longitude: tenant.longitude,
+    }, {
+      fallbackQuery: row.geocodingLookupHint ?? undefined,
+      fetchFn: paced.fetchFn,
+    });
+    const attempts: CreatorVerificationRecord["attempts"] = result.attempts;
+    await recordCreatorVerification(tenantId, row.id, result.verdict === "resolved" ? {
+      originalQuery: result.originalQuery,
+      confirmedQuery: result.confirmedQuery,
+      confirmationMethod: result.confirmationMethod,
+      status: "pending",
+      refusalReason: null,
+      resolvedName: result.candidate.returnedName,
+      resolvedAddress: result.candidate.displayName || null,
+      osmType: result.candidate.osmType,
+      osmId: result.candidate.osmId,
+      osmCategory: result.candidate.className,
+      osmFeatureType: result.candidate.type,
+      osmAddressType: result.candidate.addresstype,
+      latitude: result.candidate.latitude,
+      longitude: result.candidate.longitude,
+      straightLineDistanceM: result.candidate.distanceKm * 1000,
+      attempts,
+    } : {
+      originalQuery: result.originalQuery,
+      confirmedQuery: null, confirmationMethod: null, status: "unresolved",
+      refusalReason: result.rule, resolvedName: null, resolvedAddress: null,
+      osmType: null, osmId: null, osmCategory: null, osmFeatureType: null,
+      osmAddressType: null, latitude: null, longitude: null,
+      straightLineDistanceM: null, attempts,
+    });
+    if (result.verdict === "resolved") {
+      const route = await computeRoadRoute(
+        { latitude: tenant.latitude, longitude: tenant.longitude },
+        { latitude: result.candidate.latitude, longitude: result.candidate.longitude },
+      );
+      const durationS = route ? Math.round(route.durationMinutes * 60) : null;
+      await db.update(creatorPlaceProposalsTable).set({
+        roadDistanceM: route?.distanceMeters ?? null,
+        travelDurationS: durationS,
+        range: route ? route.durationMinutes <= 20 ? "near" : "excursion" : null,
+        status: !route || durationS! > CREATOR_MAX_QUEUE_DURATION_S ? "unresolved" : "pending",
+        refusalReason: !route
+          ? "osrm-unavailable"
+          : durationS! > CREATOR_MAX_QUEUE_DURATION_S ? "duration-ceiling" : null,
+        updatedAt: new Date(),
+      }).where(and(
+        eq(creatorPlaceProposalsTable.id, row.id),
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      ));
+    }
+    retried++;
+    if (result.verdict === "resolved") resolved++;
+    if (paced.isStopped()) break;
+  }
+  return { eligible: rows.length, retried, resolved, unresolved: retried - resolved };
 }
 
 export async function confirmCreatorProposalCoordinates(input: {

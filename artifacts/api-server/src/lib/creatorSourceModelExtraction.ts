@@ -12,6 +12,7 @@ import {
   CREATOR_SHARED_CATEGORY_KEYS,
   type CreatorSharedCategory,
 } from "./creatorCategoryAssignment";
+import { classifyCreatorAccommodationProvider } from "./creatorAccommodationClassifier";
 
 export const CREATOR_SOURCE_CATEGORIES = CREATOR_SHARED_CATEGORY_KEYS;
 export type CreatorSourceCategory = CreatorSharedCategory;
@@ -53,6 +54,7 @@ export type CreatorSourceGroundingRejection =
   | "unsupported_name"
   | "unsupported_settlement"
   | "metadata_noise"
+  | "accommodation_provider"
   | "duplicate";
 
 export type GroundedCreatorSourceFact = CreatorSourceModelCandidate;
@@ -300,6 +302,7 @@ export function groundCreatorSourceCandidates(
     unsupported_name: 0,
     unsupported_settlement: 0,
     metadata_noise: 0,
+    accommodation_provider: 0,
     duplicate: 0,
   };
   const facts: GroundedCreatorSourceFact[] = [];
@@ -339,6 +342,14 @@ export function groundCreatorSourceCandidates(
       increment(rejectionCounts, "missing_evidence");
       continue;
     }
+    if (classifyCreatorAccommodationProvider({
+      name: candidate.canonicalName,
+      categoryKey: candidate.categoryKey,
+      evidence: candidate.evidence,
+    }).excluded) {
+      increment(rejectionCounts, "accommodation_provider");
+      continue;
+    }
     if (isNoise(candidate.canonicalName)) {
       increment(rejectionCounts, "metadata_noise");
       continue;
@@ -351,7 +362,7 @@ export function groundCreatorSourceCandidates(
       increment(rejectionCounts, "unsupported_settlement");
       continue;
     }
-    const key = normalizeCreatorProposalName(candidate.canonicalName);
+    const key = normalizeCreatorProposalName(candidate.canonicalName).replace(/\s+/g, "");
     if (seen.has(key)) {
       increment(rejectionCounts, "duplicate");
       continue;

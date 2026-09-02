@@ -38,7 +38,7 @@ import {
   isPreservedMeninaEvidenceTenant,
   MENINA_AUTHORIZED_RUN_COUNT,
 } from "../lib/creatorMeninaProductionRun";
-import { upsertPendingCreatorProposal } from "../lib/creatorProposalLedger";
+import { fuzzyCreatorProposalKey, upsertPendingCreatorProposal } from "../lib/creatorProposalLedger";
 import { creatorRunResponse } from "../routes/adminCreator";
 
 function place(index: number, existingCategoryId: string | null = "category"): unknown {
@@ -53,6 +53,13 @@ function place(index: number, existingCategoryId: string | null = "category"): u
     inclusionReason: "It belongs in the guide.",
   };
 }
+
+test("fuzzy Creator key merges apostrophe and spacing near-duplicates", () => {
+  assert.equal(
+    fuzzyCreatorProposalKey("Planinska koča Mrzl'k"),
+    fuzzyCreatorProposalKey("Planinska koča Mrzlk"),
+  );
+});
 
 test("C1 rejects forbidden machine facts and permits a null existing category", () => {
   assert.equal(validateCreatorC1ModelOutput([place(1, null)])[0]?.existingCategoryId, null);
@@ -210,6 +217,22 @@ test("C1 geocoding uses the plain name first and lookup hint only after no resul
     { status: 200, count: 0, filtered: 0, query: "Slap Rinka" },
     { status: 200, count: 1, filtered: 1, query: "Slap Rinka, Logarska dolina, Solčava, Slovenia" },
   ]);
+});
+
+test("settlement-bound global resolution refuses a same-named place elsewhere", async () => {
+  const result = await runCreatorSieve("Smrekovec", { latitude: 46.31, longitude: 14.91 }, {
+    fallbackQuery: "Smrekovec, Ljubno",
+    fetchFn: async () => new Response(JSON.stringify([{
+      osm_type: "node", osm_id: 77, category: "natural", type: "peak",
+      addresstype: "natural", name: "Smrekovec",
+      display_name: "Smrekovec, Idrija, Slovenija", lat: "46.1", lon: "14.1",
+      namedetails: { name: "Smrekovec" }, address: { town: "Idrija" }, importance: 0.5,
+    }]), { status: 200, headers: { "content-type": "application/json" } }),
+  });
+  assert.equal(result.verdict, "refused");
+  if (result.verdict === "refused") {
+    assert.equal(result.rule, "Najdeno samo v drugem kraju (Idrija) — določite ročno.");
+  }
 });
 
 test("OSRM reports invalid-route telemetry without throwing", async () => {

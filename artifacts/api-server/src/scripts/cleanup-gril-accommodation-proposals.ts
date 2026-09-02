@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pool } from "@workspace/db";
 import { classifyCreatorAccommodationProvider } from "../lib/creatorAccommodationClassifier";
+import { storedResolutionWrongSettlementReason } from "../lib/creatorSieve";
 
 const GRIL_TENANT_ID = "1bf40460-bca8-418a-b01d-974b436ef3b0";
 const INITIAL_CUMULATIVE_DROPPED = [
@@ -41,6 +42,16 @@ export async function cleanupGrilAccommodationProposals() {
        WHERE p.tenant_id = $1 AND p.content_ready = true`,
       [GRIL_TENANT_ID],
     );
+    const resolvedRows = await client.query<{
+      proposal_id: string; proposed_name: string; status: string;
+      geocoding_lookup_hint: string | null; resolved_address: string | null;
+    }>(
+      `SELECT id AS proposal_id, proposed_name, status, geocoding_lookup_hint, resolved_address
+       FROM creator_place_proposals
+       WHERE tenant_id = $1 AND content_ready = true
+         AND status IN ('pending', 'rejected') AND confirmed_query IS NOT NULL`,
+      [GRIL_TENANT_ID],
+    );
     const dropped = new Map<string, { name: string; reasons: Set<string> }>();
     for (const row of rows.rows) {
       const classification = classifyCreatorAccommodationProvider({
@@ -64,6 +75,26 @@ export async function cleanupGrilAccommodationProposals() {
         [GRIL_TENANT_ID, [...dropped.keys()]],
       );
     }
+    const wrongSettlement = resolvedRows.rows.flatMap((row) => {
+      const reason = storedResolutionWrongSettlementReason(
+        row.geocoding_lookup_hint, row.resolved_address,
+      );
+      return reason ? [{ ...row, reason }] : [];
+    });
+    const pendingWrongSettlement = wrongSettlement.filter((row) => row.status === "pending");
+    if (pendingWrongSettlement.length) {
+      await client.query(
+        `UPDATE creator_place_proposals
+         SET status = 'unresolved', refusal_reason = updates.reason,
+             confirmed_query = NULL, confirmation_method = NULL,
+             osm_type = NULL, osm_id = NULL, updated_at = now()
+         FROM (SELECT unnest($2::uuid[]) AS id, unnest($3::text[]) AS reason) updates
+         WHERE tenant_id = $1 AND creator_place_proposals.id = updates.id
+           AND creator_place_proposals.status = 'pending'`,
+        [GRIL_TENANT_ID, pendingWrongSettlement.map((row) => row.proposal_id),
+          pendingWrongSettlement.map((row) => row.reason)],
+      );
+    }
     const after = await client.query<{ count: number }>(
       `SELECT count(*)::int AS count
        FROM creator_place_proposals
@@ -79,6 +110,11 @@ export async function cleanupGrilAccommodationProposals() {
       dropped: [...dropped.values()]
         .map((entry) => ({ name: entry.name, reasons: [...entry.reasons].sort() }))
         .sort((left, right) => left.name.localeCompare(right.name, "sl")),
+      wrongSettlementMovedToUnresolved: pendingWrongSettlement.map((row) => ({
+        id: row.proposal_id, name: row.proposed_name, reason: row.reason,
+      })),
+      wrongSettlementRejectionsToUndo: wrongSettlement.filter((row) => row.status === "rejected")
+        .map((row) => ({ id: row.proposal_id, name: row.proposed_name, reason: row.reason })),
       preservation: "Only content_ready was cleared; source facts, candidates, translations, items, and publication were untouched.",
     };
   } catch (error) {
