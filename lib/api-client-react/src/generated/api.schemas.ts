@@ -834,6 +834,15 @@ export interface CreatorRetryResult {
   unresolved: number;
 }
 
+export interface CreatorQueueReevaluationResult {
+  evaluated: number;
+  changed: number;
+  unchanged: number;
+  accommodationsExcluded: number;
+  wrongSettlementMovedToUnresolved: number;
+  duplicatesMerged: number;
+}
+
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];
 
 

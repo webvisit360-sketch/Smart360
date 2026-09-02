@@ -28,6 +28,7 @@ import {
   RejectCreatorProposalsBulkBody,
   RejectCreatorProposalsBulkResponse,
   RetryCreatorProposalsResponse,
+  ReevaluateCreatorProposalsResponse,
   UndoCreatorProposalRejectionResponse,
   StartCreatorRunResponse,
   DecideCreatorSourceResponse,
@@ -67,6 +68,7 @@ import {
   latestCreatorSourceRun,
   startCreatorSourceRun,
 } from "../lib/creatorSourceRunService";
+import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -670,6 +672,20 @@ router.get("/admin/tenants/:id/creator/proposals", async (req, res): Promise<voi
   }
   const rows = await listCreatorProposalQueue(tenantId);
   res.json(ListCreatorProposalsResponse.parse(serialize(rows)));
+});
+
+router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res): Promise<void> => {
+  const tenantId = first(req.params["id"]);
+  try {
+    const result = await reevaluateCreatorQueue(tenantId);
+    res.json(ReevaluateCreatorProposalsResponse.parse(result));
+  } catch (error) {
+    const notFound = error instanceof Error && error.message === "Namestitev ni najdena.";
+    req.log.error({ error, tenantId }, "Creator queue reevaluation failed");
+    res.status(notFound ? 404 : 500).json({
+      error: notFound ? error.message : "Predlogov ni bilo mogoče ponovno ovrednotiti.",
+    });
+  }
 });
 
 router.post(

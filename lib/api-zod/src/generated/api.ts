@@ -1219,6 +1219,23 @@ export const ListCreatorProposalsResponse = zod.array(ListCreatorProposalsRespon
 
 
 /**
+ * @summary Re-evaluate the visible pending and unresolved Creator queue in place
+ */
+export const ReevaluateCreatorProposalsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ReevaluateCreatorProposalsResponse = zod.object({
+  "evaluated": zod.number(),
+  "changed": zod.number(),
+  "unchanged": zod.number(),
+  "accommodationsExcluded": zod.number(),
+  "wrongSettlementMovedToUnresolved": zod.number(),
+  "duplicatesMerged": zod.number()
+})
+
+
+/**
  * @summary List existing tenant categories available to Creator proposals
  */
 export const ListCreatorCategoryOptionsParams = zod.object({

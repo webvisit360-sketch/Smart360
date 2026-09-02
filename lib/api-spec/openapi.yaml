@@ -810,6 +810,24 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CreatorProposal"
+  /admin/tenants/{id}/creator/proposals/reevaluate:
+    post:
+      operationId: reevaluateCreatorProposals
+      tags: [tenants]
+      summary: Re-evaluate the visible pending and unresolved Creator queue in place
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Idempotent reevaluation counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorQueueReevaluationResult"
+        "404": { description: Tenant not found }
   /admin/tenants/{id}/creator/catalogue:
     get:
       operationId: listCreatorCategoryOptions
@@ -3064,6 +3082,22 @@ components:
         resolved: { type: number }
         unresolved: { type: number }
       required: [eligible, retried, resolved, unresolved]
+    CreatorQueueReevaluationResult:
+      type: object
+      properties:
+        evaluated: { type: number }
+        changed: { type: number }
+        unchanged: { type: number }
+        accommodationsExcluded: { type: number }
+        wrongSettlementMovedToUnresolved: { type: number }
+        duplicatesMerged: { type: number }
+      required:
+        - evaluated
+        - changed
+        - unchanged
+        - accommodationsExcluded
+        - wrongSettlementMovedToUnresolved
+        - duplicatesMerged
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

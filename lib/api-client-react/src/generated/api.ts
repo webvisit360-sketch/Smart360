@@ -47,6 +47,7 @@ import type {
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
+  CreatorQueueReevaluationResult,
   CreatorRetryResult,
   CreatorSource,
   CreatorSourceDeleteResult,
@@ -3302,6 +3303,77 @@ export function useListCreatorProposals<TData = Awaited<ReturnType<typeof listCr
 
 
 
+
+export const getReevaluateCreatorProposalsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/reevaluate`
+}
+
+/**
+ * @summary Re-evaluate the visible pending and unresolved Creator queue in place
+ */
+export const reevaluateCreatorProposals = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorQueueReevaluationResult> => {
+
+  return customFetch<CreatorQueueReevaluationResult>(getReevaluateCreatorProposalsUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReevaluateCreatorProposalsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reevaluateCreatorProposals>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reevaluateCreatorProposals>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['reevaluateCreatorProposals'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reevaluateCreatorProposals>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  reevaluateCreatorProposals(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReevaluateCreatorProposalsMutationResult = NonNullable<Awaited<ReturnType<typeof reevaluateCreatorProposals>>>
+
+    export type ReevaluateCreatorProposalsMutationError = ErrorType<void>
+
+    /**
+ * @summary Re-evaluate the visible pending and unresolved Creator queue in place
+ */
+export const useReevaluateCreatorProposals = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reevaluateCreatorProposals>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reevaluateCreatorProposals>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getReevaluateCreatorProposalsMutationOptions(options));
+    }
 
 export const getListCreatorCategoryOptionsUrl = (id: string,) => {
 

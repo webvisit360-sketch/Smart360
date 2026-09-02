@@ -10,6 +10,7 @@ import {
   useListCreatorProposals,
   useRejectCreatorProposal,
   useRejectCreatorProposalsBulk,
+  useReevaluateCreatorProposals,
   useRetryCreatorProposals,
   useUndoCreatorProposalRejection,
 } from "@workspace/api-client-react";
@@ -170,6 +171,9 @@ export function KreatorProposalQueue({
   const retryUnresolved = useRetryCreatorProposals({
     mutation: { onSuccess: refresh },
   });
+  const reevaluate = useReevaluateCreatorProposals({
+    mutation: { onSuccess: refresh },
+  });
   const confirmCoordinates = useConfirmCreatorProposalCoordinates({
     mutation: {
       onSuccess: async () => {
@@ -201,6 +205,7 @@ export function KreatorProposalQueue({
     ?? (rejectBulk.error as any)?.data?.error
     ?? (undoRejection.error as any)?.data?.error
     ?? (retryUnresolved.error as any)?.data?.error
+    ?? (reevaluate.error as any)?.data?.error
     ?? (confirmCoordinates.error as any)?.data?.error
     ?? null;
 
@@ -218,6 +223,18 @@ export function KreatorProposalQueue({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={reevaluate.isPending || !rows.some((row) =>
+              row.status === "pending" || row.status === "unresolved")}
+            onClick={() => reevaluate.mutate({ id: tenantId })}
+          >
+            {reevaluate.isPending
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <RotateCcw className="mr-2 h-4 w-4" />}
+            Ponovno ovrednoti predloge
+          </Button>
           <Button type="button" variant="outline" disabled={retryUnresolved.isPending || !rows.some((row) => row.status === "unresolved" && row.refusalReason === "nominatim-unavailable")} onClick={() => retryUnresolved.mutate({ id: tenantId })}>
             {retryUnresolved.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
             Ponovno razreši nerazrešene
@@ -242,6 +259,15 @@ export function KreatorProposalQueue({
           </Button>
         </div>
       </div>
+
+      {reevaluate.data && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
+          Pregledano: {reevaluate.data.evaluated} · Spremenjeno: {reevaluate.data.changed}
+          {" · "}Izločene nastanitve: {reevaluate.data.accommodationsExcluded}
+          {" · "}Napačen kraj: {reevaluate.data.wrongSettlementMovedToUnresolved}
+          {" · "}Združeni dvojniki: {reevaluate.data.duplicatesMerged}
+        </div>
+      )}
 
       <div className="grid gap-2 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2 lg:grid-cols-4">
         <select aria-label="Filtriraj po statusu" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-md border bg-white px-3 text-sm">

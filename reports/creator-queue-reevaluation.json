@@ -1,0 +1,11 @@
+{
+  "tenantId": "1bf40460-bca8-418a-b01d-974b436ef3b0",
+  "mode": "dry-run",
+  "evaluated": 337,
+  "changed": 6,
+  "unchanged": 331,
+  "accommodationsExcluded": 1,
+  "wrongSettlementMovedToUnresolved": 5,
+  "duplicatesMerged": 0,
+  "preservation": "Run reports, source facts, candidates, verification attempts, items, and publication are untouched."
+}
