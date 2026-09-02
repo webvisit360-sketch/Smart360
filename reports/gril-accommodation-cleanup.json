@@ -1,0 +1,126 @@
+{
+  "tenantId": "1bf40460-bca8-418a-b01d-974b436ef3b0",
+  "originalBeforeQueueCount": 356,
+  "visibleBeforeThisPass": 337,
+  "afterQueueCount": 337,
+  "newlyDroppedThisPass": [],
+  "newlyDroppedCount": 0,
+  "cumulativeDroppedCount": 19,
+  "cumulativeDropped": [
+    {
+      "name": "Apartma Skala",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Glamping Savinja",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Gostilna Kamp Menina",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Herbal glamping Ljubno",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Hotel Golte",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Hotel Logarjevih sester",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "hotel Montis Golte",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Hotel Montis****",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Hotel Paka",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Hotel Plesnik",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Kamp Menina",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "restavracija Hotela Montis Golte",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Turistična kmetija Govc Vršnik",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Turistična kmetija Gradišnik",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Turistični kmetiji Govc Vršnik",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Linasi resort Slovenija ***",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Penzion Na razpotju",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "pravljični gozd pri penzionu Na razpotju",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    },
+    {
+      "name": "Turistična kmetija Visočnik",
+      "reasons": [
+        "historical-accommodation-cleanup"
+      ]
+    }
+  ],
+  "preservation": "Only content_ready was cleared; source facts, candidates, translations, items, and publication were untouched."
+}

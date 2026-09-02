@@ -16,3 +16,9 @@ List approval must bind the tenant, normalized municipality, and exact source-st
 **Why:** Timestamp-only approval can be replayed across changed source sets or race a concurrent decision.
 
 **How to apply:** Serialize source mutations, approval, origin changes, and run admission with municipality advisory locks. Hold a dedicated non-pooled municipality lease for each run, cap active runs globally at three, and recover only from captured source IDs.
+
+Creator must exclude lodging competitors before source facts are persisted. Tourist farms are food candidates only with entity-local evidence of public food service.
+
+**Why:** A host guide must not advertise competing accommodation, and page-wide restaurant text can falsely authorize an unrelated lodging farm.
+
+**How to apply:** Deduplicate canonical URLs run-wide, prefer Slovenian/unprefixed locale variants within the same content class, and rank attraction details ahead of news or event-calendar pages.

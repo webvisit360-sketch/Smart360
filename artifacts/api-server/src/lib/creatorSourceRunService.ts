@@ -14,6 +14,7 @@ import {
 } from "@workspace/db";
 import pg from "pg";
 import type { Client as PgClient } from "pg";
+import { classifyCreatorAccommodationProvider } from "./creatorAccommodationClassifier";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { logger } from "./logger";
 import { createPacedNominatimFetch } from "./creatorNominatimRetry";
@@ -27,7 +28,11 @@ import {
   extractGroundedCreatorSourceFacts,
   routeGroundedCreatorSourceFactsToPages,
 } from "./creatorSourceModelExtraction";
-import { crawlApprovedCreatorSource } from "./creatorSourceReader";
+import {
+  crawlApprovedCreatorSource,
+  CreatorRunUrlClaims,
+  rankCreatorDepthOneUrls,
+} from "./creatorSourceReader";
 import { computeRoadRoute } from "./distanceEngine";
 import {
   CreatorSourceRegistryError,
@@ -350,7 +355,16 @@ export async function executeCreatorSourceRun(input: {
       string,
       Array<typeof creatorSourceFactsTable.$inferSelect>
     >();
-    for (const sourceId of input.sourceIds) {
+    const capturedSources = await db.select({
+      id: creatorSourcesTable.id,
+      canonicalUrl: creatorSourcesTable.canonicalUrl,
+    }).from(creatorSourcesTable).where(inArray(creatorSourcesTable.id, input.sourceIds));
+    const sourceIdByUrl = new Map(capturedSources.map((source) => [source.canonicalUrl, source.id]));
+    const orderedSourceIds = rankCreatorDepthOneUrls(
+      capturedSources.map((source) => source.canonicalUrl),
+    ).map((url) => sourceIdByUrl.get(url)!);
+    const urlClaims = new CreatorRunUrlClaims();
+    for (const sourceId of orderedSourceIds) {
       enforceBudget(`before crawl ${sourceId}`);
       const [source] = await db.select().from(creatorSourcesTable).where(and(
         eq(creatorSourcesTable.id, sourceId),
@@ -374,6 +388,7 @@ export async function executeCreatorSourceRun(input: {
           usage.extractedTextBytes += extractedTextBytes;
           enforceBudget(`content read ${source.id}`);
         },
+        urlClaims,
       });
       const pages = crawl.pages.filter((page) =>
         page.status === "stored" && page.content && page.finalUrl && page.observedAt
@@ -447,6 +462,11 @@ export async function executeCreatorSourceRun(input: {
           // Composite-only context can therefore never authorize persistence.
           const pageFacts = routed[pageIndex]!.facts;
           for (const fact of pageFacts) {
+           if (classifyCreatorAccommodationProvider({
+             name: fact.canonicalName,
+             categoryKey: fact.categoryKey,
+             evidence: fact.evidence,
+           }).excluded) continue;
           const [stored] = await db.insert(creatorSourceFactsTable).values({
             runId: input.runId,
             sourceContentId: page.content!.id,

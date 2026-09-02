@@ -380,10 +380,10 @@ test("crawler evaluates robots per selected URL and never follows depth-one link
   })), [
     { path: "/seed", status: "stored", skipReason: null },
     { path: "/a", status: "stored", skipReason: null },
-    { path: "/assets/map.pdf", status: "skipped", skipReason: "non-content-path" },
     { path: "/attractions/slap-virje", status: "stored", skipReason: null },
     { path: "/b", status: "stored", skipReason: null },
     { path: "/blocked", status: "skipped", skipReason: "robots-disallowed" },
+    { path: "/assets/map.pdf", status: "skipped", skipReason: "non-content-path" },
     { path: "/login", status: "skipped", skipReason: "non-content-path" },
   ]);
   assert.equal(result.counters.attemptedPages, 4);
@@ -392,13 +392,13 @@ test("crawler evaluates robots per selected URL and never follows depth-one link
   assert.equal(result.counters.skipReasons["robots-disallowed"], 1);
   assert.equal(result.counters.skipReasons["non-content-path"], 2);
   assert.ok(result.pages[0]!.counters.rawBytes > 0);
+  assert.equal(result.pages[1]!.content?.id, result.pages[2]!.content?.id);
   assert.equal(result.pages[1]!.content?.id, result.pages[3]!.content?.id);
-  assert.equal(result.pages[1]!.content?.id, result.pages[4]!.content?.id);
   assert.equal(result.pages[1]!.finalUrl, `${origin}/a`);
-  assert.equal(result.pages[3]!.finalUrl, `${origin}/attractions/slap-virje`);
-  assert.equal(result.pages[4]!.finalUrl, `${origin}/b`);
+  assert.equal(result.pages[2]!.finalUrl, `${origin}/attractions/slap-virje`);
+  assert.equal(result.pages[3]!.finalUrl, `${origin}/b`);
   assert.ok(result.pages[1]!.observedAt instanceof Date);
-  assert.ok(result.pages[4]!.observedAt instanceof Date);
+  assert.ok(result.pages[3]!.observedAt instanceof Date);
 
   await assert.rejects(
     crawlApprovedCreatorSource(source.id, {

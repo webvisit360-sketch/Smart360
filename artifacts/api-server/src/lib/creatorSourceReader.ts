@@ -33,7 +33,47 @@ export type CreatorCrawlSkipReason =
   | CreatorSourcePolicyError["kind"]
   | "non-content-path"
   | "page-cap"
-  | "source-byte-cap";
+  | "source-byte-cap"
+  | "duplicate-url"
+  | "locale-variant";
+
+function creatorLocaleRank(value: string): number {
+  const path = new URL(value).pathname.toLocaleLowerCase("sl");
+  return /^\/(?:en|de)(?:\/|$)/.test(path) ? 2 : /^\/sl(?:\/|$)/.test(path) ? 0 : 0;
+}
+
+function creatorCanonicalFamily(value: string): string {
+  const url = new URL(canonicalizeCreatorSourceUrl(value));
+  url.pathname = url.pathname.replace(/^\/(?:sl|en|de)(?=\/|$)/i, "") || "/";
+  return url.href;
+}
+
+export class CreatorRunUrlClaims {
+  private readonly exact = new Set<string>();
+  private readonly slFamilies = new Set<string>();
+
+  claim(value: string): "claimed" | "duplicate-url" | "locale-variant" {
+    const canonical = canonicalizeCreatorSourceUrl(value);
+    if (this.exact.has(canonical)) return "duplicate-url";
+    const family = creatorCanonicalFamily(canonical);
+    if (creatorLocaleRank(canonical) > 0 && this.slFamilies.has(family)) return "locale-variant";
+    this.exact.add(canonical);
+    if (creatorLocaleRank(canonical) === 0) this.slFamilies.add(family);
+    return "claimed";
+  }
+}
+
+export function rankCreatorDepthOneUrls(urls: readonly string[]): string[] {
+  const contentRank = (value: string) => {
+    const path = new URL(value).pathname.toLocaleLowerCase("sl");
+    if (/(?:^|\/)(?:novice|news|dogodki|events?|koledar|calendar)(?:\/|$)/.test(path)) return 2;
+    return 0;
+  };
+  return [...urls].sort((left, right) =>
+    contentRank(left) - contentRank(right)
+    || creatorLocaleRank(left) - creatorLocaleRank(right)
+    || left.localeCompare(right));
+}
 
 export type CreatorCrawlPageResult = {
   url: string;
@@ -78,6 +118,8 @@ export class CreatorSourcePolicyError extends Error {
       | "content-type"
       | "robots-disallowed"
       | "robots-uncertain"
+      | "duplicate-url"
+      | "locale-variant"
       | "run-budget-exhausted",
   ) {
     super(message);
@@ -277,13 +319,13 @@ async function guardedFetch(
     lookupFn?: LookupFn;
     allowedRedirectOrigins: ReadonlySet<string>;
     accept: string;
-    beforeRequest?: (url: URL) => void;
+    beforeRequest?: (url: URL, redirectIndex: number) => void;
     timeoutMs?: number;
   },
 ): Promise<{ response: Response; finalUrl: string; signal: AbortSignal; release: () => void }> {
   let current = new URL(canonicalizeCreatorSourceUrl(initialUrl));
   for (let redirects = 0; redirects <= 5; redirects++) {
-    options.beforeRequest?.(current);
+    options.beforeRequest?.(current, redirects);
     const addresses = await assertPublicCreatorDestination(current, options.lookupFn);
     const controller = new AbortController();
     const timeoutMs = Math.min(
@@ -679,6 +721,7 @@ async function persistCreatorSourceUrl(
     getRemainingContentBytes?: () => number;
     onContentBudgetExceeded?: (input: { url: string; remainingBytes: number }) => void;
     shouldSkipRemainingOnContentBudgetExceeded?: () => boolean;
+    urlClaims?: CreatorRunUrlClaims;
     timeoutMs?: number;
   },
 ): Promise<{ content: CreatorSourceContent; finalUrl: string; observedAt: Date }> {
@@ -698,7 +741,16 @@ async function persistCreatorSourceUrl(
     // origin. Redirect destinations are checked against robots before I/O.
     allowedRedirectOrigins: new Set([sourceOrigin]),
     accept: "text/html,text/plain;q=0.9",
-    beforeRequest: (url) => {
+    beforeRequest: (url, redirectIndex) => {
+      if (redirectIndex > 0) {
+        const claim = options.urlClaims?.claim(url.href) ?? "claimed";
+        if (claim !== "claimed") {
+          throw new CreatorSourcePolicyError(
+            "Redirect target was already claimed by this run.",
+            claim,
+          );
+        }
+      }
       const decision = evaluateRobotsPolicy(parsedRobots, url.href);
       if (!decision.allowed) {
         throw new CreatorSourcePolicyError(
@@ -830,6 +882,7 @@ export async function crawlApprovedCreatorSource(
     getRemainingContentBytes?: () => number;
     onContentBudgetExceeded?: (input: { url: string; remainingBytes: number }) => void;
     shouldSkipRemainingOnContentBudgetExceeded?: () => boolean;
+    urlClaims?: CreatorRunUrlClaims;
     timeoutMs?: number;
   } = {},
 ): Promise<CreatorSourceCrawlResult> {
@@ -841,6 +894,23 @@ export async function crawlApprovedCreatorSource(
     .limit(1);
   if (!source) {
     throw new CreatorSourcePolicyError("Source is not on an approved municipality list.", "not-approved");
+  }
+  const seedClaim = options.urlClaims?.claim(source.canonicalUrl) ?? "claimed";
+  if (seedClaim !== "claimed") {
+    return {
+      sourceId,
+      seedUrl: source.canonicalUrl,
+      pages: [{
+        url: source.canonicalUrl, depth: 0, status: "skipped",
+        skipReason: seedClaim, content: null, finalUrl: null, observedAt: null,
+        counters: { rawBytes: 0, extractedTextBytes: 0 },
+      }],
+      counters: {
+        discoveredSubpages: 0, selectedSubpages: 0, attemptedPages: 0,
+        storedPages: 0, skippedPages: 1, rawBytes: 0, extractedTextBytes: 0,
+        skipReasons: { [seedClaim]: 1 },
+      },
+    };
   }
   const allowedRedirectOrigins = await approvedOriginsForMunicipality(source.municipality);
   const robots = await retrieveRobotsEvidence(source, {
@@ -881,18 +951,28 @@ export async function crawlApprovedCreatorSource(
   const discovered = seed.contentType === "text/html" && seed.rawContent
     ? collectDepthOneCreatorLinks(source.canonicalUrl, seed.rawContent)
     : [];
-  const eligible = discovered.filter((url) => !isObviousNonContentCreatorPath(url));
+  const eligible = rankCreatorDepthOneUrls(
+    discovered.filter((url) => !isObviousNonContentCreatorPath(url)),
+  );
   const selected = eligible.slice(0, CREATOR_CRAWL_MAX_SUBPAGES);
   const selectedUrls = new Set(selected);
+  const orderedDiscovered = [
+    ...selected,
+    ...discovered.filter((url) => !selectedUrls.has(url)),
+  ];
   let sourceBudgetStopped = false;
-  for (const url of discovered) {
-    const prefetchSkipReason: CreatorCrawlSkipReason | null = sourceBudgetStopped && selectedUrls.has(url)
+  for (const url of orderedDiscovered) {
+    let prefetchSkipReason: CreatorCrawlSkipReason | null = sourceBudgetStopped && selectedUrls.has(url)
       ? "source-byte-cap"
       : isObviousNonContentCreatorPath(url)
       ? "non-content-path"
       : selectedUrls.has(url)
       ? null
       : "page-cap";
+    if (!prefetchSkipReason) {
+      const claim = options.urlClaims?.claim(url) ?? "claimed";
+      if (claim !== "claimed") prefetchSkipReason = claim;
+    }
     if (prefetchSkipReason) {
       pages.push({
         url,
