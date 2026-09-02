@@ -143,7 +143,7 @@ export async function proposeCreatorSources(input: {
       municipality,
       label,
       sourceKind,
-      url: source.url.trim(),
+      url: canonicalUrl,
       canonicalUrl,
     };
   });

@@ -41,6 +41,20 @@ Infrastructure failure is never editorial rejection.
 
 **How to apply:** Keep affected proposals unresolved and available for manual confirmation. Never add infrastructure-failed names to rejection prompts or durable editorial blocklists.
 
+Source-first runs isolate failures at the approved-source boundary. A source
+fetch, validation, crawl, or extraction failure must be recorded with its exact
+source and page, while the run continues with the remaining sources and
+finishes with explicit per-source outcomes.
+
+**Why:** One oversized or unavailable official site must not discard usable
+evidence from every other approved source or leave the operator with a generic
+dead run.
+
+**How to apply:** Mark the affected source failed or partial, preserve its
+reason and page URL, continue deterministically, and show a completed-with-
+warnings report. External candidate verification failures remain unresolved
+items rather than terminal run failures.
+
 The strict global sieve is authoritative; bounded near-ring evidence is additive only and may run only after a global refusal. The quota settlement list may contain only settlements with distinct nearby whitelisted OSM features, with counts disclosed and enforced as per-settlement proposal caps.
 
 **Why:** Local ambiguity must never downgrade a prior exact global confirmation, and a geographic quota must not pressure the model to invent places in empty settlements.

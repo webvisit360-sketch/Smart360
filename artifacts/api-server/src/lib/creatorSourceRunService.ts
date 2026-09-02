@@ -29,8 +29,10 @@ import {
   routeGroundedCreatorSourceFactsToPages,
 } from "./creatorSourceModelExtraction";
 import {
+  canonicalizeCreatorSourceUrl,
   crawlApprovedCreatorSource,
   CreatorRunUrlClaims,
+  CreatorSourcePolicyError,
   rankCreatorDepthOneUrls,
 } from "./creatorSourceReader";
 import { computeRoadRoute } from "./distanceEngine";
@@ -54,6 +56,18 @@ type SourceRunReport = {
   outputTokens: number;
   costUsd: number;
   error: string | null;
+  sourceOutcomes: Array<{
+    sourceId: string;
+    label: string;
+    url: string;
+    status: "completed" | "partial" | "failed";
+    attemptedPages: number;
+    storedPages: number;
+    skippedPages: number;
+    facts: number;
+    error: string | null;
+    failedPages: Array<{ url: string; reason: string }>;
+  }>;
 };
 
 export type MunicipalityRunLease = {
@@ -325,6 +339,7 @@ export async function executeCreatorSourceRun(input: {
     outputTokens: 0,
     costUsd: 0,
     error: null,
+    sourceOutcomes: [],
   };
   const persist = () => db.update(creatorSourceRunsTable)
     .set({ reportJson: JSON.stringify(report) })
@@ -355,6 +370,10 @@ export async function executeCreatorSourceRun(input: {
       string,
       Array<typeof creatorSourceFactsTable.$inferSelect>
     >();
+    const sourceOutcomeByContentId = new Map<
+      string,
+      SourceRunReport["sourceOutcomes"][number]
+    >();
     const capturedSources = await db.select({
       id: creatorSourcesTable.id,
       canonicalUrl: creatorSourcesTable.canonicalUrl,
@@ -374,7 +393,24 @@ export async function executeCreatorSourceRun(input: {
           : []),
       )).limit(1);
       if (!source) continue;
+      const sourceOutcome: SourceRunReport["sourceOutcomes"][number] = {
+        sourceId: source.id,
+        label: source.label,
+        url: canonicalizeCreatorSourceUrl(source.canonicalUrl),
+        status: "completed",
+        attemptedPages: 0,
+        storedPages: 0,
+        skippedPages: 0,
+        facts: 0,
+        error: null,
+        failedPages: [],
+      };
+      report.sourceOutcomes.push(sourceOutcome);
       let sourceRawBytes = 0;
+      let sourceBudgetHit = false;
+      let activePageUrl = sourceOutcome.url;
+      const factsBeforeSource = report.facts;
+      try {
       const crawl = await crawlApprovedCreatorSource(source.id, {
         getRemainingContentBytes: () => Math.max(0, Math.min(
           RUN_LIMITS.rawBytes - usage.rawBytes,
@@ -388,12 +424,32 @@ export async function executeCreatorSourceRun(input: {
           usage.extractedTextBytes += extractedTextBytes;
           enforceBudget(`content read ${source.id}`);
         },
+        onContentBudgetExceeded: ({ url }) => {
+          sourceBudgetHit = true;
+          activePageUrl = url;
+        },
+        shouldSkipRemainingOnContentBudgetExceeded: () => sourceBudgetHit,
         urlClaims,
       });
+      sourceOutcome.attemptedPages = crawl.counters.attemptedPages;
+      sourceOutcome.storedPages = crawl.counters.storedPages;
+      sourceOutcome.skippedPages = crawl.counters.skippedPages;
+      sourceOutcome.failedPages = crawl.pages.flatMap((page) =>
+        page.status === "skipped"
+        && page.skipReason
+        && !["non-content-path", "page-cap", "duplicate-url", "locale-variant"].includes(page.skipReason)
+          ? [{ url: page.url, reason: page.skipReason }]
+          : []
+      );
+      if (sourceOutcome.failedPages.length > 0) {
+        sourceOutcome.status = sourceOutcome.storedPages > 0 ? "partial" : "failed";
+        sourceOutcome.error = "One or more source pages could not be fetched or validated.";
+      }
       const pages = crawl.pages.filter((page) =>
         page.status === "stored" && page.content && page.finalUrl && page.observedAt
       ).sort((left, right) => left.url.localeCompare(right.url) || left.depth - right.depth);
       for (const page of pages) {
+        sourceOutcomeByContentId.set(page.content!.id, sourceOutcome);
         report.pagesRead++;
         await db.insert(creatorSourceRunSnapshotsTable).values({
           runId: input.runId,
@@ -408,6 +464,7 @@ export async function executeCreatorSourceRun(input: {
           compositeBatch.offset,
           compositeBatch.offset + MODEL_PAGE_BATCH_SIZE,
         );
+        activePageUrl = batch[0]?.url ?? sourceOutcome.url;
         const { compositePages, compositeText } = compositeBatch;
         const reservedChunks = chunkCreatorSourceText(
           compositeText,
@@ -493,6 +550,26 @@ export async function executeCreatorSourceRun(input: {
         }
         await persist();
       }
+      sourceOutcome.facts = report.facts - factsBeforeSource;
+      await persist();
+      } catch (error) {
+        sourceOutcome.facts = report.facts - factsBeforeSource;
+        sourceOutcome.status = sourceOutcome.storedPages > 0 || sourceOutcome.facts > 0
+          ? "partial"
+          : "failed";
+        sourceOutcome.error = error instanceof Error ? error.message : String(error);
+        const failedUrl = error instanceof CreatorSourcePolicyError
+          ? error.sourceUrl ?? activePageUrl
+          : activePageUrl;
+        const reason = error instanceof CreatorSourcePolicyError ? error.kind : "infrastructure-error";
+        if (!sourceOutcome.failedPages.some((page) =>
+          page.url === failedUrl && page.reason === reason
+        )) {
+          sourceOutcome.failedPages.push({ url: failedUrl, reason });
+        }
+        await persist();
+        continue;
+      }
     }
 
     const categoryRows = await db.select({
@@ -520,35 +597,67 @@ export async function executeCreatorSourceRun(input: {
         facts.map((fact) => ({ candidateId: candidate.id, factId: fact.id })),
       ).onConflictDoNothing();
       report.candidates++;
-      const sieve = await runAndPersistCreatorSieve({
-        tenantId: input.tenantId,
-        runId: input.runId,
-        proposedName: primary.placeName,
-        lookupHint: primary.settlement
-          ? `${primary.placeName}, ${primary.settlement}`
-          : undefined,
-        origin: input.origin,
-        hardCeilingKm: 120,
-        contentReady: false,
-        fetchFn: nominatim.fetchFn,
-      });
-      const proposal = sieve.sourceProposal;
-      let failure = sieve.result?.verdict === "resolved"
-        ? null
-        : sieve.result?.rule ?? "blocked-or-duplicate";
-      let route: Awaited<ReturnType<typeof computeRoadRoute>> = null;
-      if (proposal && !failure && proposal.latitude !== null && proposal.longitude !== null) {
-        route = await computeRoadRoute(input.origin, {
-          latitude: proposal.latitude,
-          longitude: proposal.longitude,
-        });
-        if (!route) failure = "osrm-unavailable";
-        else if (route.distanceMeters > 120_000) failure = "road-distance-ceiling";
-        else if (Math.round(route.durationMinutes * 60) > 5_400) failure = "duration-ceiling";
-      }
       const targetCategoryId = categoryByKey.get(primary.categoryKey);
       if (!targetCategoryId) {
         throw new Error(`Creator category "${primary.categoryKey}" is missing from the tenant skeleton.`);
+      }
+      let proposal: Awaited<ReturnType<typeof runAndPersistCreatorSieve>>["sourceProposal"] = null;
+      let failure: string | null = null;
+      let route: Awaited<ReturnType<typeof computeRoadRoute>> = null;
+      try {
+        const sieve = await runAndPersistCreatorSieve({
+          tenantId: input.tenantId,
+          runId: input.runId,
+          proposedName: primary.placeName,
+          lookupHint: primary.settlement
+            ? `${primary.placeName}, ${primary.settlement}`
+            : undefined,
+          origin: input.origin,
+          hardCeilingKm: 120,
+          contentReady: false,
+          fetchFn: nominatim.fetchFn,
+        });
+        proposal = sieve.sourceProposal;
+        failure = sieve.result?.verdict === "resolved"
+          ? null
+          : sieve.result?.rule ?? "blocked-or-duplicate";
+        if (proposal && !failure && proposal.latitude !== null && proposal.longitude !== null) {
+          route = await computeRoadRoute(input.origin, {
+            latitude: proposal.latitude,
+            longitude: proposal.longitude,
+          });
+          if (!route) failure = "osrm-unavailable";
+          else if (route.distanceMeters > 120_000) failure = "road-distance-ceiling";
+          else if (Math.round(route.durationMinutes * 60) > 5_400) failure = "duration-ceiling";
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        failure = `infrastructure-error: ${detail}`;
+        if (proposal) {
+          await db.update(creatorPlaceProposalsTable).set({
+            categoryId: targetCategoryId,
+            status: "unresolved",
+            refusalReason: failure,
+            contentReady: false,
+          }).where(and(
+            eq(creatorPlaceProposalsTable.id, proposal.id),
+            eq(creatorPlaceProposalsTable.runId, input.runId),
+          ));
+        }
+        for (const fact of facts) {
+          const outcome = sourceOutcomeByContentId.get(fact.sourceContentId);
+          if (!outcome) continue;
+          outcome.status = outcome.status === "failed" ? "failed" : "partial";
+          outcome.error = `Candidate validation failed: ${detail}`;
+          if (!outcome.failedPages.some((page) =>
+            page.url === fact.sourceUrl && page.reason === "infrastructure-error"
+          )) {
+            outcome.failedPages.push({
+              url: fact.sourceUrl,
+              reason: "infrastructure-error",
+            });
+          }
+        }
       }
       if (proposal) {
         await db.update(creatorPlaceProposalsTable).set({

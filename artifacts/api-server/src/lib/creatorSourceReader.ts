@@ -121,6 +121,7 @@ export class CreatorSourcePolicyError extends Error {
       | "duplicate-url"
       | "locale-variant"
       | "run-budget-exhausted",
+    readonly sourceUrl?: string,
   ) {
     super(message);
     this.name = "CreatorSourcePolicyError";
@@ -147,6 +148,29 @@ export function canonicalizeCreatorSourceUrl(value: string): string {
       "Creator sources must use credential-free HTTPS on the standard port.",
       "invalid-url",
     );
+  }
+  const trackingParameters = new Set([
+    "fbclid",
+    "gclid",
+    "dclid",
+    "gbraid",
+    "wbraid",
+    "msclkid",
+    "twclid",
+    "ttclid",
+    "li_fat_id",
+    "mc_cid",
+    "mc_eid",
+    "mkt_tok",
+    "igshid",
+    "_ga",
+    "_gl",
+  ]);
+  for (const key of [...url.searchParams.keys()]) {
+    const normalized = key.toLowerCase();
+    if (normalized.startsWith("utm_") || trackingParameters.has(normalized)) {
+      url.searchParams.delete(key);
+    }
   }
   url.hash = "";
   return url.href;
@@ -352,7 +376,11 @@ async function guardedFetch(
         });
     } catch {
       release();
-      throw new CreatorSourcePolicyError("Source request failed or timed out.", "network");
+      throw new CreatorSourcePolicyError(
+        "Source request failed or timed out.",
+        "network",
+        current.href,
+      );
     }
     if (![301, 302, 303, 307, 308].includes(response.status)) {
       return { response, finalUrl: current.href, signal: controller.signal, release };
@@ -360,22 +388,30 @@ async function guardedFetch(
     const location = response.headers.get("location");
     if (!location) {
       release();
-      throw new CreatorSourcePolicyError("Redirect response omitted its destination.", "network");
+      throw new CreatorSourcePolicyError(
+        "Redirect response omitted its destination.",
+        "network",
+        current.href,
+      );
     }
-    const next = new URL(location, current);
-    canonicalizeCreatorSourceUrl(next.href);
+    const next = new URL(canonicalizeCreatorSourceUrl(new URL(location, current).href));
     if (!options.allowedRedirectOrigins.has(next.origin)) {
       release();
       throw new CreatorSourcePolicyError(
         `Redirect origin is not on the approved area list: ${next.origin}`,
         "redirect-not-approved",
+        next.href,
       );
     }
     await response.body?.cancel().catch(() => undefined);
     release();
     current = next;
   }
-  throw new CreatorSourcePolicyError("Source exceeded the redirect limit.", "network");
+  throw new CreatorSourcePolicyError(
+    "Source exceeded the redirect limit.",
+    "network",
+    current.href,
+  );
 }
 
 export function parseRobotsPolicy(policyText: string): RobotsGroup[] {
@@ -725,17 +761,19 @@ async function persistCreatorSourceUrl(
     timeoutMs?: number;
   },
 ): Promise<{ content: CreatorSourceContent; finalUrl: string; observedAt: Date }> {
-  const sourceOrigin = new URL(source.canonicalUrl).origin;
+  const canonicalRequestedUrl = canonicalizeCreatorSourceUrl(requestedUrl);
+  const sourceOrigin = new URL(canonicalizeCreatorSourceUrl(source.canonicalUrl)).origin;
   const parsedRobots = parseRobotsPolicy(robots.policyText ?? "");
-  const requestedDecision = evaluateRobotsPolicy(parsedRobots, requestedUrl);
+  const requestedDecision = evaluateRobotsPolicy(parsedRobots, canonicalRequestedUrl);
   if (!requestedDecision.allowed) {
     throw new CreatorSourcePolicyError(
       `robots.txt disallows source path (${requestedDecision.matchedRule ?? "matching rule"}).`,
       "robots-disallowed",
+      canonicalRequestedUrl,
     );
   }
   options.onContentAttempt?.();
-  const result = await guardedFetch(requestedUrl, {
+  const result = await guardedFetch(canonicalRequestedUrl, {
     ...options,
     // Every crawled page and every redirect remains on the seed's exact
     // origin. Redirect destinations are checked against robots before I/O.
@@ -748,6 +786,7 @@ async function persistCreatorSourceUrl(
           throw new CreatorSourcePolicyError(
             "Redirect target was already claimed by this run.",
             claim,
+            url.href,
           );
         }
       }
@@ -756,6 +795,7 @@ async function persistCreatorSourceUrl(
         throw new CreatorSourcePolicyError(
           `robots.txt disallows redirected source path (${decision.matchedRule ?? "matching rule"}).`,
           "robots-disallowed",
+          url.href,
         );
       }
     },
@@ -764,11 +804,19 @@ async function persistCreatorSourceUrl(
   let contentType: string | undefined;
   try {
     if (!result.response.ok) {
-      throw new CreatorSourcePolicyError(`Source returned HTTP ${result.response.status}.`, "network");
+      throw new CreatorSourcePolicyError(
+        `Source returned HTTP ${result.response.status}.`,
+        "network",
+        result.finalUrl,
+      );
     }
     contentType = result.response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();
     if (contentType !== "text/html" && contentType !== "text/plain") {
-      throw new CreatorSourcePolicyError("Source content type is not supported.", "content-type");
+      throw new CreatorSourcePolicyError(
+        "Source content type is not supported.",
+        "content-type",
+        result.finalUrl,
+      );
     }
     const remainingBytes = Math.max(
       0,
@@ -781,7 +829,11 @@ async function persistCreatorSourceUrl(
       (Number.isFinite(declaredLength) && declaredLength > responseByteLimit)
     ) {
       options.onContentBudgetExceeded?.({ url: result.finalUrl, remainingBytes });
-      throw new CreatorSourcePolicyError("Run content-byte budget is exhausted.", "run-budget-exhausted");
+      throw new CreatorSourcePolicyError(
+        "Run content-byte budget is exhausted.",
+        "run-budget-exhausted",
+        result.finalUrl,
+      );
     }
     try {
       raw = await readLimitedText(result.response, responseByteLimit, result.signal);
@@ -792,7 +844,11 @@ async function persistCreatorSourceUrl(
         responseByteLimit < CREATOR_SOURCE_MAX_BYTES
       ) {
         options.onContentBudgetExceeded?.({ url: result.finalUrl, remainingBytes });
-        throw new CreatorSourcePolicyError("Response crosses the remaining run content-byte budget.", "run-budget-exhausted");
+        throw new CreatorSourcePolicyError(
+          "Response crosses the remaining run content-byte budget.",
+          "run-budget-exhausted",
+          result.finalUrl,
+        );
       }
       throw error;
     }
@@ -818,7 +874,7 @@ async function persistCreatorSourceUrl(
   const [stored] = await db.insert(creatorSourceContentsTable).values({
     sourceId: source.id,
     robotsEvidenceId: robots.id,
-    sourceUrl: requestedUrl,
+    sourceUrl: canonicalRequestedUrl,
     finalUrl: result.finalUrl,
     httpStatus: result.response.status,
     contentType,
@@ -895,13 +951,14 @@ export async function crawlApprovedCreatorSource(
   if (!source) {
     throw new CreatorSourcePolicyError("Source is not on an approved municipality list.", "not-approved");
   }
-  const seedClaim = options.urlClaims?.claim(source.canonicalUrl) ?? "claimed";
+  const seedUrl = canonicalizeCreatorSourceUrl(source.canonicalUrl);
+  const seedClaim = options.urlClaims?.claim(seedUrl) ?? "claimed";
   if (seedClaim !== "claimed") {
     return {
       sourceId,
-      seedUrl: source.canonicalUrl,
+      seedUrl,
       pages: [{
-        url: source.canonicalUrl, depth: 0, status: "skipped",
+        url: seedUrl, depth: 0, status: "skipped",
         skipReason: seedClaim, content: null, finalUrl: null, observedAt: null,
         counters: { rawBytes: 0, extractedTextBytes: 0 },
       }],
@@ -932,10 +989,10 @@ export async function crawlApprovedCreatorSource(
       attemptedPages += 1;
     },
   };
-  const seedRead = await persistCreatorSourceUrl(source, source.canonicalUrl, robots, persistOptions);
+  const seedRead = await persistCreatorSourceUrl(source, seedUrl, robots, persistOptions);
   const seed = seedRead.content;
   pages.push({
-    url: source.canonicalUrl,
+    url: seedUrl,
     depth: 0,
     status: "stored",
     skipReason: null,
@@ -949,7 +1006,7 @@ export async function crawlApprovedCreatorSource(
   });
 
   const discovered = seed.contentType === "text/html" && seed.rawContent
-    ? collectDepthOneCreatorLinks(source.canonicalUrl, seed.rawContent)
+    ? collectDepthOneCreatorLinks(seedUrl, seed.rawContent)
     : [];
   const eligible = rankCreatorDepthOneUrls(
     discovered.filter((url) => !isObviousNonContentCreatorPath(url)),
@@ -1032,7 +1089,7 @@ export async function crawlApprovedCreatorSource(
   }
   return {
     sourceId: source.id,
-    seedUrl: source.canonicalUrl,
+    seedUrl,
     pages,
     counters: {
       discoveredSubpages: discovered.length,

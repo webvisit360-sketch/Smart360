@@ -26,6 +26,75 @@ const SOURCE_KINDS = [
   "other"
 ];
 
+type CreatorSourceOutcome = {
+  sourceId: string;
+  label: string;
+  url: string;
+  status: "completed" | "partial" | "failed";
+  attemptedPages: number;
+  storedPages: number;
+  skippedPages: number;
+  facts: number;
+  error: string | null;
+  failedPages: Array<{ url: string; reason: string }>;
+};
+
+const SOURCE_FAILURE_REASON_SL: Record<string, string> = {
+  "run-budget-exhausted": "Odgovor strani je presegel dovoljeni podatkovni obseg za ta vir.",
+  "source-byte-cap": "Stran je presegla dovoljeni podatkovni obseg za ta vir.",
+  "network": "Strani ni bilo mogoče prenesti ali pa je zahteva potekla.",
+  "response-too-large": "Odgovor strani je bil prevelik.",
+  "content-type": "Stran ni vrnila podprte besedilne ali HTML-vsebine.",
+  "robots-disallowed": "Pravila robots.txt ne dovoljujejo branja te strani.",
+  "robots-uncertain": "Dovoljenja robots.txt ni bilo mogoče zanesljivo potrditi.",
+  "redirect-not-approved": "Stran je preusmerila na neodobreno spletno mesto.",
+  "private-destination": "Cilj povezave ni javno dostopen.",
+  "invalid-url": "Povezava ni veljavna.",
+  "infrastructure-error": "Med tehnično obdelavo vira je prišlo do napake.",
+};
+
+function readCreatorSourceOutcomes(report: unknown): CreatorSourceOutcome[] {
+  if (!report || typeof report !== "object") return [];
+  const sourceOutcomes = (report as { sourceOutcomes?: unknown }).sourceOutcomes;
+  if (!Array.isArray(sourceOutcomes)) return [];
+  return sourceOutcomes.filter((outcome): outcome is CreatorSourceOutcome => {
+    if (!outcome || typeof outcome !== "object") return false;
+    const value = outcome as Partial<CreatorSourceOutcome>;
+    return typeof value.sourceId === "string"
+      && typeof value.label === "string"
+      && typeof value.url === "string"
+      && ["completed", "partial", "failed"].includes(value.status ?? "")
+      && typeof value.attemptedPages === "number"
+      && typeof value.storedPages === "number"
+      && typeof value.skippedPages === "number"
+      && typeof value.facts === "number"
+      && Array.isArray(value.failedPages)
+      && value.failedPages.every((page) =>
+        page
+        && typeof page === "object"
+        && typeof page.url === "string"
+        && typeof page.reason === "string"
+      );
+  });
+}
+
+function readCreatorRunError(report: unknown): string | null {
+  if (!report || typeof report !== "object") return null;
+  const error = (report as { error?: unknown }).error;
+  return typeof error === "string" && error.trim() ? error.trim() : null;
+}
+
+function sourceOutcomeMessage(outcome: CreatorSourceOutcome): string | null {
+  if (outcome.status === "completed") return null;
+  const firstFailure = outcome.failedPages[0];
+  if (firstFailure) {
+    const reason = SOURCE_FAILURE_REASON_SL[firstFailure.reason]
+      ?? "Strani ni bilo mogoče obdelati zaradi zabeležene tehnične napake.";
+    return `Vir »${outcome.label}« ni bil v celoti obdelan. Stran ${firstFailure.url}: ${reason}`;
+  }
+  return `Vir »${outcome.label}« ni bil v celoti obdelan. ${outcome.error ?? "Razlog ni bil zabeležen."}`;
+}
+
 export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: string; tenantName: string; origin?: { latitude: number; longitude: number } }) {
   const queryClient = useQueryClient();
   const sourcesQuery = useListCreatorSources(tenantId, {
@@ -77,6 +146,11 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
   const sourcesList = sourcesQuery.data;
   const sources = sourcesList?.sources ?? [];
   const isListApproved = sourcesList?.approval?.approved === true;
+  const runSourceOutcomes = readCreatorSourceOutcomes(runQuery.data?.report);
+  const sourceOutcomeWarnings = runSourceOutcomes
+    .map(sourceOutcomeMessage)
+    .filter((message): message is string => Boolean(message));
+  const recordedRunError = readCreatorRunError(runQuery.data?.report);
 
   const proposed = sources.filter(s => s.status === 'proposed');
   const approved = sources.filter(s => s.status === 'approved');
@@ -274,19 +348,72 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
               {runQuery.data.completedAt && (
                 <p className="text-muted-foreground">Končano: {new Date(runQuery.data.completedAt).toLocaleString('sl-SI')}</p>
               )}
+              {runSourceOutcomes.length > 0 && (
+                <div className="space-y-2 border-t pt-3">
+                  <p className="font-bold">Izidi po virih</p>
+                  {runSourceOutcomes.map((outcome) => (
+                    <div key={outcome.sourceId} className="rounded-md border p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold">{outcome.label}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider">
+                          {outcome.status === "completed"
+                            ? "uspešno"
+                            : outcome.status === "partial"
+                            ? "delno uspešno"
+                            : "neuspešno"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Prebrane strani: {outcome.storedPages}; preskočene strani: {outcome.skippedPages}; najdena dejstva: {outcome.facts}
+                      </p>
+                      {sourceOutcomeMessage(outcome) && (
+                        <p className="mt-2 text-sm font-semibold text-destructive">
+                          {sourceOutcomeMessage(outcome)}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
       {(runQuery.data?.status === 'completed') && (
-        <KreatorProposalQueue tenantId={tenantId} tenantName={tenantName} origin={origin} />
+        <>
+          {sourceOutcomeWarnings.length > 0 && (
+            <div className="mt-8 rounded-xl border border-amber-300 bg-amber-50 p-6 text-amber-950">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                <h3 className="font-bold text-lg">Branje je končano z opozorili</h3>
+              </div>
+              {sourceOutcomeWarnings.map((message) => (
+                <p key={message} className="mt-2 text-sm">{message}</p>
+              ))}
+              <p className="mt-3 text-sm">
+                Preostali odobreni viri so bili obdelani; neuspeh tega vira ni ustavil celotnega zagona.
+              </p>
+            </div>
+          )}
+          <KreatorProposalQueue tenantId={tenantId} tenantName={tenantName} origin={origin} />
+        </>
       )}
       {(runQuery.data?.status === 'failed') && (
         <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center text-destructive">
           <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
           <h3 className="font-bold text-lg">Branje virov ni uspelo</h3>
-          <p className="mt-1 text-sm">Prišlo je do napake pri obdelavi potrjenega seznama virov. Preverite status in poskusite znova.</p>
+          {sourceOutcomeWarnings.length > 0 ? (
+            sourceOutcomeWarnings.map((message) => (
+              <p key={message} className="mt-2 text-sm">{message}</p>
+            ))
+          ) : (
+            <p className="mt-2 text-sm">
+              Zagon se je ustavil zaradi sistemske napake
+              {recordedRunError ? `: ${recordedRunError}` : "."}
+              {" "}V tem starejšem zapisu vir napake ni bil zabeležen.
+            </p>
+          )}
         </div>
       )}
     </div>

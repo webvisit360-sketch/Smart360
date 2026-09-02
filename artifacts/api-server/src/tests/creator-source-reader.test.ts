@@ -40,6 +40,12 @@ test("Creator source URLs and destinations reject non-HTTPS and private/internal
     ),
     (error) => error instanceof CreatorSourcePolicyError && error.kind === "private-destination",
   );
+  assert.equal(
+    canonicalizeCreatorSourceUrl(
+      "https://example.com/place?utm_source=newsletter&keep=yes&FBCLID=abc&gclid=def#details",
+    ),
+    "https://example.com/place?keep=yes",
+  );
 });
 
 test("robots.txt applies the most specific user-agent group and longest Allow/Disallow rule", () => {
@@ -163,12 +169,13 @@ test("content is unreachable before approval and approved extraction stores robo
   const suffix = crypto.randomUUID().slice(0, 8);
   const municipality = `Content ${suffix}`;
   const origin = `https://content-${suffix}.example`;
+  const enteredUrl = `${origin}/guide?utm_source=operator&keep=yes&fbclid=abc`;
   const [source] = await db.insert(creatorSourcesTable).values({
     municipality,
     label: "Content source",
     sourceKind: "test",
-    url: `${origin}/guide`,
-    canonicalUrl: `${origin}/guide`,
+    url: enteredUrl,
+    canonicalUrl: enteredUrl,
   }).returning();
   assert.ok(source);
   t.after(async () => {
@@ -196,13 +203,14 @@ test("content is unreachable before approval and approved extraction stores robo
     approvedAt: new Date(),
   }).where(eq(creatorSourcesTable.id, source.id));
 
-  const requestedPaths: string[] = [];
+  const requestedUrls: string[] = [];
   const html = "<html><head><title>Area guide</title></head><body><script>ignore()</script><h1>Waterfall walk</h1></body></html>";
   const stored = await readApprovedCreatorSource(source.id, {
     lookupFn: publicLookup,
     fetchFn: async (input) => {
-      const path = new URL(String(input)).pathname;
-      requestedPaths.push(path);
+      const requested = new URL(String(input));
+      const path = requested.pathname;
+      requestedUrls.push(requested.href);
       if (path === "/robots.txt") {
         return new Response("User-agent: Smart360Creator\nAllow: /guide\n", {
           status: 200,
@@ -215,7 +223,10 @@ test("content is unreachable before approval and approved extraction stores robo
       });
     },
   });
-  assert.deepEqual(requestedPaths, ["/robots.txt", "/guide"]);
+  assert.deepEqual(requestedUrls, [
+    `${origin}/robots.txt`,
+    `${origin}/guide?keep=yes`,
+  ]);
   assert.equal(stored.title, "Area guide");
   assert.match(stored.rawContent!, /<h1>Waterfall walk<\/h1>/);
   assert.equal(stored.contentSha256, nodeCrypto.createHash("sha256").update(html).digest("hex"));
@@ -226,7 +237,7 @@ test("content is unreachable before approval and approved extraction stores robo
   const [content] = await db.select().from(creatorSourceContentsTable)
     .where(eq(creatorSourceContentsTable.id, stored.id));
   assert.equal(evidence?.allowed, true);
-  assert.equal(content?.sourceUrl, `${origin}/guide`);
+  assert.equal(content?.sourceUrl, `${origin}/guide?keep=yes`);
   assert.ok(content?.retrievedAt instanceof Date);
 });
 
@@ -266,11 +277,14 @@ test("same-origin content redirects are rechecked against robots before the redi
         }
         return new Response(null, {
           status: 302,
-          headers: { location: `${origin}/blocked` },
+          headers: { location: `${origin}/blocked?utm_source=redirect&fbclid=abc` },
         });
       },
     }),
-    (error) => error instanceof CreatorSourcePolicyError && error.kind === "robots-disallowed",
+    (error) =>
+      error instanceof CreatorSourcePolicyError
+      && error.kind === "robots-disallowed"
+      && error.sourceUrl === `${origin}/blocked`,
   );
   assert.deepEqual(
     requestedPaths,
@@ -409,7 +423,10 @@ test("crawler evaluates robots per selected URL and never follows depth-one link
         headers: { "content-type": "text/html", "content-length": "61" },
       }),
     }),
-    (error) => error instanceof CreatorSourcePolicyError && error.kind === "run-budget-exhausted",
+    (error) =>
+      error instanceof CreatorSourcePolicyError
+      && error.kind === "run-budget-exhausted"
+      && error.sourceUrl === `${origin}/seed`,
   );
 
   let contentReads = 0;
