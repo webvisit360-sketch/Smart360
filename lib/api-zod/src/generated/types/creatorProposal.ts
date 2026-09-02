@@ -37,6 +37,11 @@ export interface CreatorProposal {
   resolvedName: string | null;
   /** @nullable */
   resolvedAddress: string | null;
+  /**
+     * Authoritative operator-entered address for manually positioned proposals
+     * @nullable
+     */
+  operatorAddress: string | null;
   /** @nullable */
   osmType: string | null;
   /** @nullable */

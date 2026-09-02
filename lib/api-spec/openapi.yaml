@@ -2747,20 +2747,27 @@ components:
       additionalProperties: false
       properties:
         categoryId: { type: ["string", "null"] }
+        operatorAddress:
+          type: ["string", "null"]
+          description: Explicit operator-entered address; required when editing an operator-positioned proposal
         translations:
           type: array
           minItems: 4
           maxItems: 4
           items:
             $ref: "#/components/schemas/CreatorProposalTranslation"
-      required: [categoryId, translations]
+      required: [categoryId, operatorAddress, translations]
     CreatorCoordinateConfirmationInput:
       type: object
       additionalProperties: false
       properties:
         latitude: { type: number, minimum: -90, maximum: 90 }
         longitude: { type: number, minimum: -180, maximum: 180 }
-      required: [latitude, longitude]
+        operatorAddress:
+          type: string
+          minLength: 1
+          description: Address explicitly entered by the operator; never populated from Nominatim
+      required: [latitude, longitude, operatorAddress]
     CreatorRunReport:
       type: object
       properties:
@@ -2997,6 +3004,9 @@ components:
         refusalReason: { type: ["string", "null"] }
         resolvedName: { type: ["string", "null"] }
         resolvedAddress: { type: ["string", "null"] }
+        operatorAddress:
+          type: ["string", "null"]
+          description: Authoritative operator-entered address for manually positioned proposals
         osmType: { type: ["string", "null"] }
         osmId: { type: ["number", "null"] }
         osmCategory: { type: ["string", "null"] }
@@ -3044,6 +3054,7 @@ components:
         - refusalReason
         - resolvedName
         - resolvedAddress
+        - operatorAddress
         - osmType
         - osmId
         - osmCategory

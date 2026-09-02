@@ -1180,6 +1180,7 @@ export const ListCreatorProposalsResponseItem = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1264,6 +1265,7 @@ export const editCreatorProposalBodyTranslationsMax = 4;
 
 export const EditCreatorProposalBody = zod.object({
   "categoryId": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Explicit operator-entered address; required when editing an operator-positioned proposal'),
   "translations": zod.array(zod.object({
   "language": zod.enum(['sl', 'en', 'de', 'it']),
   "name": zod.string(),
@@ -1288,6 +1290,7 @@ export const EditCreatorProposalResponse = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1350,6 +1353,7 @@ export const RejectCreatorProposalResponse = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1412,6 +1416,7 @@ export const UndoCreatorProposalRejectionResponse = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1480,6 +1485,7 @@ export const RejectCreatorProposalsBulkResponseItem = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1549,9 +1555,11 @@ export const confirmCreatorProposalCoordinatesBodyLongitudeMax = 180;
 
 
 
+
 export const ConfirmCreatorProposalCoordinatesBody = zod.object({
   "latitude": zod.number().min(confirmCreatorProposalCoordinatesBodyLatitudeMin).max(confirmCreatorProposalCoordinatesBodyLatitudeMax),
-  "longitude": zod.number().min(confirmCreatorProposalCoordinatesBodyLongitudeMin).max(confirmCreatorProposalCoordinatesBodyLongitudeMax)
+  "longitude": zod.number().min(confirmCreatorProposalCoordinatesBodyLongitudeMin).max(confirmCreatorProposalCoordinatesBodyLongitudeMax),
+  "operatorAddress": zod.string().min(1).describe('Address explicitly entered by the operator; never populated from Nominatim')
 })
 
 export const ConfirmCreatorProposalCoordinatesResponse = zod.object({
@@ -1571,6 +1579,7 @@ export const ConfirmCreatorProposalCoordinatesResponse = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1633,6 +1642,7 @@ export const ApproveCreatorProposalResponse = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),
@@ -1701,6 +1711,7 @@ export const ApproveCreatorProposalsBulkResponseItem = zod.object({
   "refusalReason": zod.string().nullable(),
   "resolvedName": zod.string().nullable(),
   "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
   "osmType": zod.string().nullable(),
   "osmId": zod.number().nullable(),
   "osmCategory": zod.string().nullable(),

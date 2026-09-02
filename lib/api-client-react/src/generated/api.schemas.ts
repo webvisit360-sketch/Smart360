@@ -576,6 +576,11 @@ export interface CreatorProposalEditInput {
   /** @nullable */
   categoryId: string | null;
   /**
+     * Explicit operator-entered address; required when editing an operator-positioned proposal
+     * @nullable
+     */
+  operatorAddress: string | null;
+  /**
      * @minItems 4
      * @maxItems 4
      */
@@ -593,6 +598,11 @@ export interface CreatorCoordinateConfirmationInput {
      * @maximum 180
      */
   longitude: number;
+  /**
+     * Address explicitly entered by the operator; never populated from Nominatim
+     * @minLength 1
+     */
+  operatorAddress: string;
 }
 
 export type CreatorRunReportStatus = typeof CreatorRunReportStatus[keyof typeof CreatorRunReportStatus];
@@ -781,6 +791,11 @@ export interface CreatorProposal {
   resolvedName: string | null;
   /** @nullable */
   resolvedAddress: string | null;
+  /**
+     * Authoritative operator-entered address for manually positioned proposals
+     * @nullable
+     */
+  operatorAddress: string | null;
   /** @nullable */
   osmType: string | null;
   /** @nullable */

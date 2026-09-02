@@ -11,6 +11,11 @@ export interface CreatorProposalEditInput {
   /** @nullable */
   categoryId: string | null;
   /**
+     * Explicit operator-entered address; required when editing an operator-positioned proposal
+     * @nullable
+     */
+  operatorAddress: string | null;
+  /**
      * @minItems 4
      * @maxItems 4
      */

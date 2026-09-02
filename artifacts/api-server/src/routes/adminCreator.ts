@@ -534,6 +534,7 @@ router.patch("/admin/tenants/:id/creator/proposals/:proposalId", async (req, res
       proposalId: first(req.params["proposalId"]),
       actorId: actor.id,
       categoryId: input.data.categoryId,
+      operatorAddress: input.data.operatorAddress,
       translations: input.data.translations,
     });
     if (!row) throw new Error("Predlog po ureditvi ni najden.");
@@ -639,7 +640,7 @@ router.post("/admin/tenants/:id/creator/proposals/retry-unresolved", async (req,
 router.post("/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinates", async (req, res): Promise<void> => {
   const input = ConfirmCreatorProposalCoordinatesBody.safeParse(req.body);
   if (!input.success) {
-    res.status(400).json({ error: "Vnesite veljavni koordinati." });
+    res.status(400).json({ error: "Vnesite veljavni koordinati in naslov." });
     return;
   }
   try {
@@ -654,11 +655,12 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinate
       actorId: actor.id,
       latitude: input.data.latitude,
       longitude: input.data.longitude,
+      operatorAddress: input.data.operatorAddress,
     });
     if (!row) throw new Error("Predlog po potrditvi koordinat ni najden.");
     res.json(ConfirmCreatorProposalCoordinatesResponse.parse(serialize(row)));
   } catch (error) {
-    res.status(404).json({
+    res.status(error instanceof CreatorBulkApprovalError ? 400 : 404).json({
       error: error instanceof Error ? error.message : "Koordinat ni mogoče potrditi.",
     });
   }

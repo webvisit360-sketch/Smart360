@@ -5,6 +5,7 @@ import {
   inArray,
   isNull,
   ne,
+  or,
   sql,
 } from "drizzle-orm";
 import {
@@ -510,6 +511,7 @@ export async function editCreatorProposalEditorial(input: {
   proposalId: string;
   actorId: string;
   categoryId: string | null;
+  operatorAddress: string | null;
   translations: Array<{ language: string; name: string; description: string }>;
 }) {
   await requireActor(input.actorId);
@@ -539,18 +541,37 @@ export async function editCreatorProposalEditorial(input: {
     if (!category) throw new Error("Kategorija ni najdena.");
   }
   await db.transaction(async (tx) => {
-    const [proposal] = await tx.select({ id: creatorPlaceProposalsTable.id })
+    const [proposal] = await tx.select({
+      id: creatorPlaceProposalsTable.id,
+      confirmationMethod: creatorPlaceProposalsTable.confirmationMethod,
+    })
       .from(creatorPlaceProposalsTable)
       .where(and(
         eq(creatorPlaceProposalsTable.id, input.proposalId),
         eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
-        eq(creatorPlaceProposalsTable.status, "pending"),
+        or(
+          eq(creatorPlaceProposalsTable.status, "pending"),
+          and(
+            eq(creatorPlaceProposalsTable.status, "unresolved"),
+            eq(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
+          ),
+        ),
         eq(creatorPlaceProposalsTable.contentReady, true),
       ))
       .limit(1);
     if (!proposal) throw new Error("Predlog ni najden ali ga ni mogoče urediti.");
+    const operatorAddress = input.operatorAddress?.trim() || null;
+    if (proposal.confirmationMethod === "operator_coordinates" && !operatorAddress) {
+      throw new CreatorBulkApprovalError("Ročno postavljen predlog potrebuje naslov, ki ga vnese operater.");
+    }
     await tx.update(creatorPlaceProposalsTable)
-      .set({ categoryId: category?.id ?? null, updatedAt: new Date() })
+      .set({
+        categoryId: category?.id ?? null,
+        operatorAddress: proposal.confirmationMethod === "operator_coordinates"
+          ? operatorAddress
+          : null,
+        updatedAt: new Date(),
+      })
       .where(eq(creatorPlaceProposalsTable.id, proposal.id));
     await tx.delete(creatorProposalTranslationsTable)
       .where(eq(creatorProposalTranslationsTable.proposalId, proposal.id));
@@ -743,9 +764,14 @@ export async function confirmCreatorProposalCoordinates(input: {
   actorId: string;
   latitude: number;
   longitude: number;
+  operatorAddress: string;
   fetchFn?: FetchFn;
 }) {
   await requireActor(input.actorId);
+  const operatorAddress = input.operatorAddress.trim();
+  if (!operatorAddress) {
+    throw new CreatorBulkApprovalError("Ročna potrditev potrebuje naslov, ki ga vnese operater.");
+  }
   const [proposal] = await db.select().from(creatorPlaceProposalsTable).where(and(
     eq(creatorPlaceProposalsTable.id, input.proposalId),
     eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
@@ -790,7 +816,11 @@ export async function confirmCreatorProposalCoordinates(input: {
     range: route
       ? route.durationMinutes <= 20 ? "near" : "excursion"
       : null,
-    resolvedName: proposal.resolvedName ?? proposal.proposedName,
+    // Charman's Bridge: a map pin confirms only coordinates. Any stale
+    // Nominatim identity/address must stop being presented as authoritative.
+    resolvedName: null,
+    resolvedAddress: null,
+    operatorAddress,
     status: routable ? "pending" : "unresolved",
     refusalReason: !route ? "osrm-unavailable" : routable ? null : "duration-ceiling",
     updatedAt: now,
@@ -812,6 +842,7 @@ function hasResolutionEvidence(row: typeof creatorPlaceProposalsTable.$inferSele
       row.coordinateConfirmedAt &&
       row.latitude !== null &&
       row.longitude !== null &&
+      Boolean(row.operatorAddress?.trim()) &&
       row.roadDistanceM !== null &&
       row.travelDurationS !== null,
     );

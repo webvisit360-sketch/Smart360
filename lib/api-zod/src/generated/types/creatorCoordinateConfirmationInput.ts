@@ -17,4 +17,9 @@ export interface CreatorCoordinateConfirmationInput {
      * @maximum 180
      */
   longitude: number;
+  /**
+     * Address explicitly entered by the operator; never populated from Nominatim
+     * @minLength 1
+     */
+  operatorAddress: string;
 }

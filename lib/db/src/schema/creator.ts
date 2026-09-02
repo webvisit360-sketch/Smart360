@@ -54,6 +54,9 @@ export const creatorPlaceProposalsTable = pgTable(
     rejectedFromReason: text("rejected_from_reason"),
     resolvedName: text("resolved_name"),
     resolvedAddress: text("resolved_address"),
+    // Manual coordinates do not make a Nominatim address authoritative.
+    // This is deliberately nullable for ordinarily geocoded proposals.
+    operatorAddress: text("operator_address"),
     osmType: text("osm_type"),
     osmId: bigint("osm_id", { mode: "number" }),
     osmCategory: text("osm_category"),

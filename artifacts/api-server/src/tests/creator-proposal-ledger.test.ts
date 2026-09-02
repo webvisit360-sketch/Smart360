@@ -416,13 +416,24 @@ test("operator coordinates require individual approval and cannot be overwritten
     status: "unresolved",
     refusalReason: "no-results",
     contentReady: true,
+    resolvedName: "Napačno ime iz Nominatima",
+    resolvedAddress: "Napačen naslov iz Nominatima",
   }).where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
+  await assert.rejects(confirmCreatorProposalCoordinates({
+    tenantId,
+    proposalId: pending.proposal.id,
+    actorId,
+    latitude: 46.32,
+    longitude: 14.92,
+    operatorAddress: "   ",
+  }), /potrebuje naslov/);
   const positioned = await confirmCreatorProposalCoordinates({
     tenantId,
     proposalId: pending.proposal.id,
     actorId,
     latitude: 46.32,
     longitude: 14.92,
+    operatorAddress: "Logarska dolina 9, Solčava",
     fetchFn: async () => new Response(JSON.stringify({
       routes: [{ distance: 120_000, duration: 6_000 }],
     }), { status: 200 }),
@@ -431,12 +442,16 @@ test("operator coordinates require individual approval and cannot be overwritten
   assert.equal(positioned?.osmId, null);
   assert.equal(positioned?.requiresIndividualReview, true);
   assert.equal(positioned?.status, "unresolved");
+  assert.equal(positioned?.resolvedName, null);
+  assert.equal(positioned?.resolvedAddress, null);
+  assert.equal(positioned?.operatorAddress, "Logarska dolina 9, Solčava");
   await assert.rejects(confirmCreatorProposalCoordinates({
     tenantId,
     proposalId: pending.proposal.id,
     actorId,
     latitude: 46.33,
     longitude: 14.93,
+    operatorAddress: "Logarska dolina 10, Solčava",
     fetchFn: async () => new Response(JSON.stringify({
       routes: [{ distance: 12_000, duration: 1_200 }],
     }), { status: 200 }),
@@ -447,6 +462,7 @@ test("operator coordinates require individual approval and cannot be overwritten
     actorId,
     latitude: 46.32,
     longitude: 14.92,
+    operatorAddress: "Logarska dolina 9, Solčava",
     fetchFn: async () => new Response(JSON.stringify({
       routes: [{ distance: 12_000, duration: 1_200 }],
     }), { status: 200 }),

@@ -128,10 +128,12 @@ export function KreatorProposalQueue({
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCategoryId, setEditCategoryId] = useState<string>("");
+  const [editOperatorAddress, setEditOperatorAddress] = useState("");
   const [editTranslations, setEditTranslations] = useState<Array<{ language: "sl" | "en" | "de" | "it"; name: string; description: string }>>([]);
   const [positioningId, setPositioningId] = useState<string | null>(null);
   const [manualLatitude, setManualLatitude] = useState("");
   const [manualLongitude, setManualLongitude] = useState("");
+  const [manualAddress, setManualAddress] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [reasonFilter, setReasonFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -304,6 +306,9 @@ export function KreatorProposalQueue({
       ) : visibleRows.map((row) => {
         const selectable = row.status === "pending" || row.status === "unresolved";
         const checked = selected.includes(row.id);
+        const displayName = row.confirmationMethod === "operator_coordinates"
+          ? row.translations.find((translation) => translation.language === "sl")?.name ?? row.proposedName
+          : row.resolvedName ?? row.proposedName;
         return (
           <Card key={row.id} className="overflow-hidden">
             <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-start">
@@ -323,14 +328,18 @@ export function KreatorProposalQueue({
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-[17px] font-[800]">{row.resolvedName ?? row.proposedName}</h3>
+                  <h3 className="text-[17px] font-[800]">
+                    {displayName}
+                  </h3>
                   <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-[800] uppercase tracking-wide text-muted-foreground">
                     {row.status}
                   </span>
                 </div>
 
-                {row.resolvedAddress && (
-                  <p className="mt-1 text-sm font-medium text-muted-foreground">{row.resolvedAddress}</p>
+                {(row.confirmationMethod === "operator_coordinates" ? row.operatorAddress : row.resolvedAddress) && (
+                  <p className="mt-1 text-sm font-medium text-muted-foreground">
+                    {row.confirmationMethod === "operator_coordinates" ? row.operatorAddress : row.resolvedAddress}
+                  </p>
                 )}
 
                 {row.requiresIndividualReview && (
@@ -404,15 +413,29 @@ export function KreatorProposalQueue({
                       <input aria-label="Zemljepisna širina" type="number" step="any" min="-90" max="90" value={manualLatitude} onChange={(event) => setManualLatitude(event.target.value)} placeholder="46.123456" className="h-10 rounded-md border bg-white px-3 text-sm" />
                       <input aria-label="Zemljepisna dolžina" type="number" step="any" min="-180" max="180" value={manualLongitude} onChange={(event) => setManualLongitude(event.target.value)} placeholder="14.123456" className="h-10 rounded-md border bg-white px-3 text-sm" />
                     </div>
+                    <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      Naslov, ki ga vnese operater
+                      <input
+                        aria-label="Naslov lokacije"
+                        value={manualAddress}
+                        onChange={(event) => setManualAddress(event.target.value)}
+                        placeholder="Ulica in kraj"
+                        className="mt-1 h-10 w-full rounded-md border bg-white px-3 text-sm normal-case tracking-normal text-foreground"
+                      />
+                    </label>
                     <div className="flex justify-end gap-2">
                       <Button type="button" variant="ghost" onClick={() => setPositioningId(null)}>Prekliči</Button>
                       <Button
                         type="button"
-                        disabled={!manualLatitude || !manualLongitude || confirmCoordinates.isPending}
+                        disabled={!manualLatitude || !manualLongitude || !manualAddress.trim() || confirmCoordinates.isPending}
                         onClick={() => confirmCoordinates.mutate({
                           id: tenantId,
                           proposalId: row.id,
-                          data: { latitude: Number(manualLatitude), longitude: Number(manualLongitude) },
+                          data: {
+                            latitude: Number(manualLatitude),
+                            longitude: Number(manualLongitude),
+                            operatorAddress: manualAddress.trim(),
+                          },
                         })}
                       >
                         {confirmCoordinates.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -441,6 +464,17 @@ export function KreatorProposalQueue({
                         ))}
                       </select>
                     </label>
+                    {row.confirmationMethod === "operator_coordinates" && (
+                      <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        Naslov, ki ga vnese operater
+                        <input
+                          aria-label="Uredi naslov lokacije"
+                          value={editOperatorAddress}
+                          onChange={(event) => setEditOperatorAddress(event.target.value)}
+                          className="mt-1 h-10 w-full rounded-md border bg-white px-3 text-sm normal-case tracking-normal text-foreground"
+                        />
+                      </label>
+                    )}
                     {editTranslations.map((translation, index) => (
                       <div key={translation.language} className="grid gap-2 md:grid-cols-[90px_1fr_2fr]">
                         <strong className="pt-2 text-xs uppercase">{translation.language}</strong>
@@ -464,11 +498,19 @@ export function KreatorProposalQueue({
                       <Button type="button" variant="ghost" onClick={() => setEditingId(null)}>Prekliči</Button>
                       <Button
                         type="button"
-                        disabled={editOne.isPending || editTranslations.some((translation) => !translation.name.trim())}
+                        disabled={editOne.isPending
+                          || editTranslations.some((translation) => !translation.name.trim())
+                          || (row.confirmationMethod === "operator_coordinates" && !editOperatorAddress.trim())}
                         onClick={() => editOne.mutate({
                           id: tenantId,
                           proposalId: row.id,
-                          data: { categoryId: editCategoryId || null, translations: editTranslations },
+                          data: {
+                            categoryId: editCategoryId || null,
+                            operatorAddress: row.confirmationMethod === "operator_coordinates"
+                              ? editOperatorAddress.trim()
+                              : null,
+                            translations: editTranslations,
+                          },
                         })}
                       >
                         {editOne.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -487,7 +529,7 @@ export function KreatorProposalQueue({
                       variant="outline"
                       disabled={approveOne.isPending}
                       onClick={() => {
-                        if (!confirm(`Potrdi lokacijo "${row.resolvedName ?? row.proposedName}" za ${tenantName}?`)) return;
+                        if (!confirm(`Potrdi lokacijo "${displayName}" za ${tenantName}?`)) return;
                         approveOne.mutate({ id: tenantId, proposalId: row.id });
                       }}
                       className="rounded-[12px]"
@@ -504,6 +546,7 @@ export function KreatorProposalQueue({
                         setPositioningId(row.id);
                         setManualLatitude(row.latitude === null ? "" : String(row.latitude));
                         setManualLongitude(row.longitude === null ? "" : String(row.longitude));
+                        setManualAddress(row.operatorAddress ?? "");
                       }}
                       className="rounded-[12px]"
                     >
@@ -511,13 +554,14 @@ export function KreatorProposalQueue({
                       Ročno določi
                     </Button>
                   )}
-                  {row.status === "pending" && (
+                  {(row.status === "pending" || row.confirmationMethod === "operator_coordinates") && (
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => {
                         setEditingId(row.id);
                         setEditCategoryId(row.categoryId ?? "");
+                        setEditOperatorAddress(row.operatorAddress ?? "");
                         setEditTranslations(["sl", "en", "de", "it"].map((language) => {
                           const existing = row.translations.find((translation) => translation.language === language);
                           return {
@@ -538,7 +582,7 @@ export function KreatorProposalQueue({
                     variant="outline"
                     disabled={rejectOne.isPending}
                     onClick={() => {
-                      if (!confirm(`Zavrni lokacijo "${row.resolvedName ?? row.proposedName}"? Ime bo trajno ostalo na seznamu zavrnjenih.`)) return;
+                      if (!confirm(`Zavrni lokacijo "${displayName}"? Ime bo trajno ostalo na seznamu zavrnjenih.`)) return;
                       rejectOne.mutate({ id: tenantId, proposalId: row.id });
                     }}
                     className="rounded-[12px] text-destructive"
