@@ -35,3 +35,4 @@
 - [Creator category remaps](creator-category-remaps.md) — classify legacy proposals from their names and broad source bucket; ancillary address metadata must not override identity.
 - [Creator source lifecycle](creator-source-lifecycle.md) — editable mistakes remain recoverable, but completed-run source provenance is immutable and evidence survives deletion.
 - [Creator queue re-evaluation](creator-queue-reevaluation.md) — permanent operator reruns are tenant-scoped, open-row-only, evidence-preserving, transactional, and idempotent.
+- [Creator guest materialization](creator-guest-materialization.md) — approvals project immutable evidence into one canonical guest place with reversible, multi-category lifecycle.

@@ -87,7 +87,15 @@ function bodyText(value: unknown): string {
   return stripMarkup(value);
 }
 
-export function exploreItemDescription(item: any): string {
+/** Standing guest-copy rule, shared by all Living Guide card/detail surfaces. */
+export function suppressesGuestDescription(category: any): boolean {
+  return category?.exploreGroup === "food_drink" ||
+    /\b(culinary|food|restaurant|gostil|restavr|hrana|pijača|shop|trgov|pharmacy|lekar|health|zdrav)\b/i
+      .test(`${category?.key ?? ""} ${category?.label ?? ""}`);
+}
+
+export function exploreItemDescription(item: any, category?: any): string {
+  if (suppressesGuestDescription(category)) return "";
   const body = bodyText(item?.body);
   if (body) return body;
   if (typeof item?.noteText === "string" && item.noteText.trim()) {

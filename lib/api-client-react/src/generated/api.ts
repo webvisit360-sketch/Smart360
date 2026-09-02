@@ -3962,6 +3962,79 @@ export const useApproveCreatorProposal = <TError = ErrorType<void>,
       return useMutation(getApproveCreatorProposalMutationOptions(options));
     }
 
+export const getUnapproveCreatorProposalUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}/unapprove`
+}
+
+/**
+ * @summary Return an approved proposal to review and immediately hide its guest place
+ */
+export const unapproveCreatorProposal = async (id: string,
+    proposalId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposal> => {
+
+  return customFetch<CreatorProposal>(getUnapproveCreatorProposalUrl(id,proposalId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnapproveCreatorProposalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unapproveCreatorProposal>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unapproveCreatorProposal>>, TError,{id: string;proposalId: string}, TContext> => {
+
+const mutationKey = ['unapproveCreatorProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unapproveCreatorProposal>>, {id: string;proposalId: string}> = (props) => {
+          const {id,proposalId} = props ?? {};
+
+          return  unapproveCreatorProposal(id,proposalId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnapproveCreatorProposalMutationResult = NonNullable<Awaited<ReturnType<typeof unapproveCreatorProposal>>>
+
+    export type UnapproveCreatorProposalMutationError = ErrorType<void>
+
+    /**
+ * @summary Return an approved proposal to review and immediately hide its guest place
+ */
+export const useUnapproveCreatorProposal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unapproveCreatorProposal>>, TError,{id: string;proposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unapproveCreatorProposal>>,
+        TError,
+        {id: string;proposalId: string},
+        TContext
+      > => {
+      return useMutation(getUnapproveCreatorProposalMutationOptions(options));
+    }
+
 export const getApproveCreatorProposalsBulkUrl = (id: string,) => {
 
 

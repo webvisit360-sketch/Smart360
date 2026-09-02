@@ -8,7 +8,44 @@ import {
   TODAY_NUDGE_SOFT_START,
   todayNudgeDuration,
   todayNudgeEase,
+  selectHomeTodayEntries,
 } from "../pages/living-guide/living-guide-home";
+import { exploreItemDescription } from "../pages/living-guide/living-guide-explore";
+
+test("Danes keeps a nearby item without a photograph eligible", () => {
+  const result = selectHomeTodayEntries([{
+    isVisible: true,
+    categories: [{
+      isVisible: true, label: "Izleti", items: [{
+        id: "creator-no-photo", title: "Creator place", isVisible: true,
+        distanceMeters: 1200, media: [],
+      }],
+    }],
+  }]);
+  assert.equal(result.entries.length, 1);
+  assert.equal(result.entries[0]?.media, null);
+});
+
+test("Living Guide suppresses food/service guest descriptions centrally", () => {
+  assert.equal(exploreItemDescription({ body: "Ne sme se prikazati" }, {
+    exploreGroup: "food_drink", label: "Hrana",
+  }), "");
+});
+
+test("Danes detail preserves distance and duration but suppresses culinary prose", () => {
+  const result = selectHomeTodayEntries([{
+    categories: [{
+      id: "food-trip",
+      label: "Izleti",
+      exploreGroup: "food_drink",
+      items: [{
+        id: "restaurant", title: "Gostilna", distanceMeters: 750,
+        duration: "10 min", body: "Skriti uredniški opis",
+      }],
+    }],
+  }]);
+  assert.equal(result.entries[0]?.detail, "750 m · 10 min");
+});
 
 /* Vrednosti so vezane na prototip (prototip-2030) in se ne smejo
    spremeniti brez nove prototipne predloge. */

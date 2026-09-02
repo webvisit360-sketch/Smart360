@@ -5,6 +5,9 @@ import {
   sectionsTable,
   categoriesTable,
   itemsTable,
+  itemCategoryAttachmentsTable,
+  creatorPlaceMaterializationsTable,
+  creatorPlaceProposalsTable,
   mediaTable,
   translationsTable,
   tenantsTable,
@@ -533,11 +536,28 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     .select()
     .from(itemsTable)
     .where(eq(itemsTable.id, id));
-  const [item] = await db
-    .update(itemsTable)
-    .set(cleanContentFields(parsed.data))
-    .where(eq(itemsTable.id, id))
-    .returning();
+  const item = await db.transaction(async (tx) => {
+    const [updated] = await tx.update(itemsTable)
+      .set(cleanContentFields(parsed.data))
+      .where(eq(itemsTable.id, id))
+      .returning();
+    if (!updated || !parsed.data.categoryId || currentActor()?.kind !== "owner") return updated;
+    // Keep the canonical record move and its Creator attachment atomic. The
+    // other proposal attachments remain deliberate additional categories.
+    const [materialized] = await tx.select()
+      .from(creatorPlaceMaterializationsTable)
+      .where(eq(creatorPlaceMaterializationsTable.itemId, updated.id))
+      .limit(1);
+    if (materialized) {
+      await tx.update(creatorPlaceProposalsTable)
+        .set({ categoryId: parsed.data.categoryId, updatedAt: new Date() })
+        .where(eq(creatorPlaceProposalsTable.id, materialized.proposalId));
+      await tx.update(itemCategoryAttachmentsTable)
+        .set({ categoryId: parsed.data.categoryId })
+        .where(eq(itemCategoryAttachmentsTable.sourceProposalId, materialized.proposalId));
+    }
+    return updated;
+  });
   if (!item) {
     res.status(404).json({ error: "Not found" });
     return;
@@ -557,6 +577,7 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     detail: contentUpdateDetail(prevItem ?? {}, item),
     summary: contentMutationSummary("item", parsed.data, item.title),
   });
+  invalidateTenantCache();
   res.json(UpdateItemResponse.parse(await itemWithMedia(item)));
 });
 

@@ -30,6 +30,7 @@ import {
   RetryCreatorProposalsResponse,
   ReevaluateCreatorProposalsResponse,
   UndoCreatorProposalRejectionResponse,
+  UnapproveCreatorProposalResponse,
   StartCreatorRunResponse,
   DecideCreatorSourceResponse,
 } from "@workspace/api-zod";
@@ -45,6 +46,7 @@ import {
   rejectCreatorProposalsBulk,
   retryInfrastructureFailedCreatorProposals,
   undoCreatorProposalRejection,
+  unapproveCreatorProposal,
 } from "../lib/creatorProposalLedger";
 import {
   GoogleMapsParseError,
@@ -69,6 +71,7 @@ import {
   startCreatorSourceRun,
 } from "../lib/creatorSourceRunService";
 import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
+import { invalidateTenantCache } from "./publicTenants";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -537,6 +540,7 @@ router.patch("/admin/tenants/:id/creator/proposals/:proposalId", async (req, res
       operatorAddress: input.data.operatorAddress,
       translations: input.data.translations,
     });
+    invalidateTenantCache();
     if (!row) throw new Error("Predlog po ureditvi ni najden.");
     res.json(EditCreatorProposalResponse.parse(serialize({
       ...row,
@@ -566,6 +570,7 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/reject", async (re
       first(req.params["proposalId"]),
       actor.id,
     );
+    invalidateTenantCache();
     if (!row) throw new Error("Predlog po zavrnitvi ni najden.");
     res.json(RejectCreatorProposalResponse.parse(serialize({
       ...row,
@@ -593,6 +598,7 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/undo-rejection", a
     const row = await undoCreatorProposalRejection(
       tenantId, first(req.params["proposalId"]), actor.id,
     );
+    invalidateTenantCache();
     if (!row) throw new Error("Predlog po razveljavitvi ni najden.");
     res.json(UndoCreatorProposalRejectionResponse.parse(serialize({
       ...row, nearestAlternatives: [],
@@ -616,6 +622,7 @@ router.post("/admin/tenants/:id/creator/proposals/reject-bulk", async (req, res)
       return;
     }
     const rows = await rejectCreatorProposalsBulk(tenantId, input.data.proposalIds, actor.id);
+    invalidateTenantCache();
     res.json(RejectCreatorProposalsBulkResponse.parse(serialize(rows)));
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Predlogov ni mogoče zavrniti." });
@@ -709,6 +716,7 @@ router.post(
         first(req.params["proposalId"]),
         actor.id,
       );
+      invalidateTenantCache();
       res.json(ApproveCreatorProposalResponse.parse(serialize({
         ...row,
         nearestAlternatives: [],
@@ -716,6 +724,36 @@ router.post(
     } catch (error) {
       res.status(404).json({
         error: error instanceof Error ? error.message : "Predloga ni mogoče potrditi.",
+      });
+    }
+  },
+);
+
+router.post(
+  "/admin/tenants/:id/creator/proposals/:proposalId/unapprove",
+  async (req, res): Promise<void> => {
+    try {
+      const tenantId = first(req.params["id"]);
+      if (!await requireCreatorTenant(tenantId)) {
+        res.status(404).json({ error: "Namestitev ni najdena." });
+        return;
+      }
+      const actor = await getAdminUser();
+      if (!actor) {
+        res.status(403).json({ error: "Operater ni najden." });
+        return;
+      }
+      const row = await unapproveCreatorProposal(
+        tenantId, first(req.params["proposalId"]), actor.id,
+      );
+      invalidateTenantCache();
+      if (!row) throw new Error("Predlog po razveljavitvi ni najden.");
+      res.json(UnapproveCreatorProposalResponse.parse(serialize({
+        ...row, nearestAlternatives: [],
+      })));
+    } catch (error) {
+      res.status(404).json({
+        error: error instanceof Error ? error.message : "Potrditve ni mogoče razveljaviti.",
       });
     }
   },
@@ -745,6 +783,7 @@ router.post(
         input.data.proposalIds,
         actor.id,
       );
+      invalidateTenantCache();
       const rows = await listCreatorProposalQueue(tenantId);
       res.json(ApproveCreatorProposalsBulkResponse.parse(serialize(rows)));
     } catch (error) {

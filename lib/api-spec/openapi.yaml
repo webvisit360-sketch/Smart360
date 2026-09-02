@@ -1015,6 +1015,28 @@ paths:
                 $ref: "#/components/schemas/CreatorProposal"
         "400": { description: Proposal cannot be approved }
         "404": { description: Proposal not found }
+  /admin/tenants/{id}/creator/proposals/{proposalId}/unapprove:
+    post:
+      operationId: unapproveCreatorProposal
+      tags: [tenants]
+      summary: Return an approved proposal to review and immediately hide its guest place
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Unapproved proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorProposal"
+        "404": { description: Approved proposal not found }
   /admin/tenants/{id}/creator/proposals/approve-bulk:
     post:
       operationId: approveCreatorProposalsBulk

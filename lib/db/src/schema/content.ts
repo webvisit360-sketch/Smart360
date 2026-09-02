@@ -101,6 +101,30 @@ export const itemsTable = pgTable("items", {
   index("items_category_idx").on(t.categoryId),
 ]);
 
+/**
+ * Normalized category membership. `items.category_id` remains the primary
+ * attachment for all legacy writers; additional memberships live here.
+ */
+export const itemCategoryAttachmentsTable = pgTable(
+  "item_category_attachments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    itemId: uuid("item_id").notNull().references(() => itemsTable.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id").notNull().references(() => categoriesTable.id, { onDelete: "cascade" }),
+    // Nullable for ordinary/manual attachments. Creator uses this stable owner
+    // key so an editorial category change moves only its own attachment.
+    sourceProposalId: uuid("source_proposal_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("item_category_attachments_item_category_uq").on(t.itemId, t.categoryId),
+    uniqueIndex("item_category_attachments_creator_proposal_uq")
+      .on(t.sourceProposalId)
+      .where(sql`${t.sourceProposalId} IS NOT NULL`),
+    index("item_category_attachments_category_idx").on(t.categoryId),
+  ],
+);
+
 // Cached road-distance candidates are deliberately separate from item content:
 // a distance reaches guests only after an administrator approves the proposal.
 export const itemDistanceProposalsTable = pgTable(
@@ -298,6 +322,7 @@ export const insertItemSchema = createInsertSchema(itemsTable).omit({
 export type Section = typeof sectionsTable.$inferSelect;
 export type Category = typeof categoriesTable.$inferSelect;
 export type Item = typeof itemsTable.$inferSelect;
+export type ItemCategoryAttachment = typeof itemCategoryAttachmentsTable.$inferSelect;
 export type ItemDistanceProposal = typeof itemDistanceProposalsTable.$inferSelect;
 export type GeocodeCache = typeof geocodeCacheTable.$inferSelect;
 export type MediaRow = typeof mediaTable.$inferSelect;

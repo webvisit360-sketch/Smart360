@@ -1681,6 +1681,69 @@ export const ApproveCreatorProposalResponse = zod.object({
 
 
 /**
+ * @summary Return an approved proposal to review and immediately hide its guest place
+ */
+export const UnapproveCreatorProposalParams = zod.object({
+  "id": zod.coerce.string(),
+  "proposalId": zod.coerce.string()
+})
+
+export const UnapproveCreatorProposalResponse = zod.object({
+  "id": zod.string(),
+  "runId": zod.string(),
+  "proposedName": zod.string(),
+  "normalizedName": zod.string(),
+  "originalQuery": zod.string(),
+  "confirmedQuery": zod.string().nullable(),
+  "confirmationMethod": zod.union([zod.literal('exact'),zod.literal('generic_type'),zod.literal('address_token'),zod.literal('shortened_query'),zod.literal('overpass_near'),zod.literal('operator_coordinates'),zod.literal(null)]).nullable(),
+  "coordinateConfirmedBy": zod.string().nullable(),
+  "coordinateConfirmedByLabel": zod.string().nullable(),
+  "coordinateConfirmedAt": zod.string().nullable(),
+  "requiresIndividualReview": zod.boolean(),
+  "status": zod.enum(['pending', 'unresolved', 'approved', 'rejected', 'superseded']),
+  "supersededBy": zod.string().nullable(),
+  "refusalReason": zod.string().nullable(),
+  "resolvedName": zod.string().nullable(),
+  "resolvedAddress": zod.string().nullable(),
+  "operatorAddress": zod.string().nullable().describe('Authoritative operator-entered address for manually positioned proposals'),
+  "osmType": zod.string().nullable(),
+  "osmId": zod.number().nullable(),
+  "osmCategory": zod.string().nullable(),
+  "osmFeatureType": zod.string().nullable(),
+  "osmAddressType": zod.string().nullable(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "straightLineDistanceM": zod.number().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryLabel": zod.string().nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable(),
+  "geocodingLookupHint": zod.string().nullable(),
+  "inclusionReason": zod.string().nullable(),
+  "lostSameCategoryCount": zod.number(),
+  "nearestAlternatives": zod.array(zod.object({
+  "proposedName": zod.string(),
+  "categoryLabel": zod.string().nullable(),
+  "outcome": zod.enum(['confirmed', 'unconfirmed', 'route_failed']),
+  "refusalRule": zod.string().nullable(),
+  "roadDistanceM": zod.number().nullable(),
+  "travelDurationS": zod.number().nullable(),
+  "proximityKnown": zod.boolean()
+})),
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary Approve eligible Creator proposals; shortened-query rows are forbidden
  */
 export const ApproveCreatorProposalsBulkParams = zod.object({

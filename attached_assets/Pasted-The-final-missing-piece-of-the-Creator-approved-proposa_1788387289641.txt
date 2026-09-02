@@ -1,0 +1,25 @@
+The final missing piece of the Creator: approved proposals must materialize into guest content. Today, approving a proposal in the queue changes nothing in the guest guide — the owner approved a place on the published Gril tenant and nothing appeared.
+
+FIRST INVESTIGATE, briefly: does any materialization path exist (from the old C1 era or otherwise) from an approved creator proposal to a guest item? Report what exists, then build on the answer.
+
+THE RULE SET, all standing owner decisions:
+
+1. Approving a proposal creates ONE guest place record for the tenant — one place, one record, attachable to multiple categories. The Meli Pu import once duplicated Motovun and Grad Miramare as separate records per category; that must be impossible here.
+
+2. The record carries from the proposal: the four-language names and descriptions, the operator or resolved address per the Charman's Bridge rule, the coordinates, the OSRM road distance and duration (stored on the place, not per category), the range, and full provenance (sources, run, confirmation method).
+
+3. It attaches to the tenant's category by the proposal's shared category key. If the operator later edits the category on the proposal or record, the attachment follows.
+
+4. NO new guest UI. The record renders through the existing Living Guide components exactly as Meli Pu's places do: it appears in its category's sheet, in the Okolica tab, and is eligible for the "Danes" carousel. The category and tab appear automatically once they have content — the existing nav resolver does this already.
+
+5. Food and shops rule: places in culinary/shops/pharmacy/health categories show name, distance, and (when the host provides them) opening hours — their descriptions are not displayed to guests, per the standing rule.
+
+6. No photographs yet: the card uses the already-built missing-photo state (category icon plus "fotografija manjka"). Wikimedia photos are a later step.
+
+7. Lifecycle: materialization is idempotent (re-approving changes nothing); un-approving or rejecting an approved proposal removes the guest record; editing the proposal updates it. Unconfirmed and rejected proposals never reach guests.
+
+8. Works on the published Gril tenant immediately after the owner approves each place — no separate publish step for individual places for now.
+
+Verify in development: approve one resolved proposal on the dev Gril draft and show the place appearing in the guest home's category sheet and Okolica. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

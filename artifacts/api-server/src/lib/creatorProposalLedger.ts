@@ -11,13 +11,22 @@ import {
 import {
   adminUsersTable,
   categoriesTable,
+  creatorCanonicalPlacesTable,
   creatorPlaceProposalsTable,
+  creatorPlaceMaterializationsTable,
   creatorProposalTranslationsTable,
+  creatorSourceCandidatesTable,
+  creatorSourceCandidateFactsTable,
+  creatorSourceFactsTable,
   creatorVerificationAttemptsTable,
   creatorVerificationCandidatesTable,
   db,
+  itemCategoryAttachmentsTable,
+  itemDistanceProposalsTable,
+  itemsTable,
   sectionsTable,
   tenantsTable,
+  translationsTable,
 } from "@workspace/db";
 import { runCreatorSieve } from "./creatorSieve";
 import { createPacedNominatimFetch } from "./creatorNominatimRetry";
@@ -38,6 +47,17 @@ export function normalizeCreatorProposalName(value: string): string {
 
 export function fuzzyCreatorProposalKey(value: string): string {
   return normalizeCreatorProposalName(value).replace(/\s+/g, "");
+}
+
+/** Stable tenant-local canonical place identity. OSM wins; manual pins are
+ * deliberately rounded so the same operator point cannot create two places. */
+export function creatorPlaceEntityKey(row: Pick<typeof creatorPlaceProposalsTable.$inferSelect,
+  "osmType" | "osmId" | "latitude" | "longitude">): string {
+  if (row.osmType && row.osmId !== null) return `osm:${row.osmType}:${row.osmId}`;
+  if (row.latitude === null || row.longitude === null) {
+    throw new CreatorBulkApprovalError("Predlog nima identitete kraja.");
+  }
+  return `coordinates:${row.latitude.toFixed(5)}:${row.longitude.toFixed(5)}`;
 }
 
 export async function upsertPendingCreatorProposal(input: {
@@ -170,7 +190,6 @@ export async function recordCreatorVerification(
       )).limit(1);
     if (!sourceProposal) throw new Error("Predlog ni najden.");
 
-    let canonicalProposal: typeof creatorPlaceProposalsTable.$inferSelect | undefined;
     if (record.osmType && record.osmId !== null) {
       await tx.execute(sql`
         SELECT pg_advisory_xact_lock(
@@ -180,14 +199,6 @@ export async function recordCreatorVerification(
           )
         )
       `);
-      [canonicalProposal] = await tx.select().from(creatorPlaceProposalsTable)
-        .where(and(
-          eq(creatorPlaceProposalsTable.tenantId, sourceProposal.tenantId),
-          eq(creatorPlaceProposalsTable.osmType, record.osmType),
-          eq(creatorPlaceProposalsTable.osmId, record.osmId),
-          ne(creatorPlaceProposalsTable.id, proposalId),
-        ))
-        .limit(1);
     }
 
     const [latestAttempt] = await tx.select({
@@ -214,37 +225,6 @@ export async function recordCreatorVerification(
         );
       }
     }
-    if (canonicalProposal) {
-      const [superseded] = await tx.update(creatorPlaceProposalsTable).set({
-        originalQuery: record.originalQuery,
-        confirmedQuery: record.confirmedQuery,
-        confirmationMethod: record.confirmationMethod,
-        status: "superseded",
-        supersededBy: canonicalProposal.id,
-        refusalReason: null,
-        resolvedName: record.resolvedName,
-        resolvedAddress: record.resolvedAddress,
-        osmType: null,
-        osmId: null,
-        osmCategory: record.osmCategory,
-        osmFeatureType: record.osmFeatureType,
-        osmAddressType: record.osmAddressType,
-        latitude: record.latitude,
-        longitude: record.longitude,
-        straightLineDistanceM: record.straightLineDistanceM,
-        updatedAt: new Date(),
-      }).where(and(
-        eq(creatorPlaceProposalsTable.id, proposalId),
-        eq(creatorPlaceProposalsTable.tenantId, tenantId),
-      )).returning();
-      if (!superseded) throw new Error("Predloga ni bilo mogoče označiti kot združenega.");
-      return {
-        sourceProposal: superseded,
-        canonicalProposal,
-        duplicate: true as const,
-      };
-    }
-
     const [updated] = await tx.update(creatorPlaceProposalsTable).set({
       originalQuery: record.originalQuery,
       confirmedQuery: record.confirmedQuery,
@@ -501,9 +481,241 @@ export async function listCreatorProposalQueue(tenantId: string) {
   }));
 }
 
-function categoryNeedsBlankDescriptions(category: { key: string | null; label: string }): boolean {
-  return /\b(atm|bankomat|shop|trgov|pharmacy|lekar|fuel|bencin|doctor|zdrav|health|post|pošta|hospitality|restaurant|food|hrana|pijača|gostil|restavr)\b/i
-    .test(`${category.key ?? ""} ${category.label}`);
+async function syncApprovedCreatorPlace(
+  tx: any,
+  proposal: typeof creatorPlaceProposalsTable.$inferSelect,
+) {
+  if (!proposal.categoryId) {
+    throw new CreatorBulkApprovalError("Predlog mora biti pred potrditvijo pripet kategoriji.");
+  }
+  const authoritativeAddress = (
+    proposal.confirmationMethod === "operator_coordinates"
+      ? proposal.operatorAddress
+      : proposal.resolvedAddress
+  )?.trim();
+  if (
+    !authoritativeAddress ||
+    !proposal.confirmationMethod ||
+    proposal.latitude === null ||
+    proposal.longitude === null ||
+    proposal.roadDistanceM === null ||
+    proposal.travelDurationS === null ||
+    !proposal.range
+  ) {
+    throw new CreatorBulkApprovalError("Predlog nima popolnih podatkov za vsebino gosta.");
+  }
+  const editorial = await tx.select().from(creatorProposalTranslationsTable)
+    .where(eq(creatorProposalTranslationsTable.proposalId, proposal.id));
+  if (editorial.length !== 4) {
+    throw new CreatorBulkApprovalError("Predlog nima vseh štirih jezikov.");
+  }
+  const sl = editorial.find((row: any) => row.language === "sl")!;
+  const sourceRows = await tx.select({
+    id: creatorSourceFactsTable.id,
+    sourceUrl: creatorSourceFactsTable.sourceUrl,
+  })
+    .from(creatorSourceCandidatesTable)
+    .innerJoin(
+      creatorSourceCandidateFactsTable,
+      eq(creatorSourceCandidateFactsTable.candidateId, creatorSourceCandidatesTable.id),
+    )
+    .innerJoin(
+      creatorSourceFactsTable,
+      eq(creatorSourceFactsTable.id, creatorSourceCandidateFactsTable.factId),
+    )
+    .where(eq(creatorSourceCandidatesTable.proposalId, proposal.id));
+  const provenanceJson = JSON.stringify({
+    proposalId: proposal.id,
+    runId: proposal.runId,
+    confirmationMethod: proposal.confirmationMethod,
+    sourceFacts: sourceRows.map((row: any) => ({ id: row.id, url: row.sourceUrl })),
+    osmIdentity: proposal.osmType && proposal.osmId !== null
+      ? { type: proposal.osmType, id: proposal.osmId }
+      : null,
+    coordinateConfirmation: proposal.confirmationMethod === "operator_coordinates"
+      ? { actorId: proposal.coordinateConfirmedBy, at: proposal.coordinateConfirmedAt }
+      : null,
+  });
+  const entityKey = creatorPlaceEntityKey(proposal);
+  // Serializes competing first approvals of the same canonical place, even
+  // when they originate from different Creator proposals/categories.
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(
+    hashtextextended(${`${proposal.tenantId}:creator-place:${entityKey}`}, 0)
+  )`);
+  const [ownMaterialization] = await tx.select().from(creatorPlaceMaterializationsTable)
+    .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id)).limit(1);
+  const [canonical] = await tx.select().from(creatorCanonicalPlacesTable)
+    .where(ownMaterialization
+      ? eq(creatorCanonicalPlacesTable.id, ownMaterialization.canonicalPlaceId)
+      : and(
+          eq(creatorCanonicalPlacesTable.tenantId, proposal.tenantId),
+          eq(creatorCanonicalPlacesTable.entityKey, entityKey),
+        ))
+    .limit(1);
+  let itemId = canonical?.itemId as string | undefined;
+  let canonicalPlaceId = canonical?.id as string | undefined;
+  const itemValues = {
+    categoryId: proposal.categoryId,
+    title: sl.name,
+    body: sl.description,
+    mapQuery: authoritativeAddress,
+    distanceMeters: proposal.roadDistanceM,
+    duration: `${Math.round(proposal.travelDurationS / 60)} min`,
+    isVisible: true,
+    deletedAt: null,
+  };
+  if (itemId) {
+    await tx.update(itemsTable).set(itemValues).where(eq(itemsTable.id, itemId));
+  } else {
+    const [item] = await tx.insert(itemsTable).values(itemValues).returning({ id: itemsTable.id });
+    const createdItemId = item.id;
+    itemId = createdItemId;
+    const [createdCanonical] = await tx.insert(creatorCanonicalPlacesTable).values({
+      tenantId: proposal.tenantId,
+      entityKey,
+      itemId,
+    }).onConflictDoNothing().returning({ id: creatorCanonicalPlacesTable.id });
+    if (!createdCanonical) {
+      // Defensive conflict handling in addition to the advisory lock. The DB
+      // uniqueness constraint is the final authority across all writers.
+      const [winner] = await tx.select().from(creatorCanonicalPlacesTable).where(and(
+        eq(creatorCanonicalPlacesTable.tenantId, proposal.tenantId),
+        eq(creatorCanonicalPlacesTable.entityKey, entityKey),
+      )).limit(1);
+      if (!winner) throw new Error("Kanoničnega kraja ni bilo mogoče ustvariti.");
+      await tx.delete(itemsTable).where(eq(itemsTable.id, createdItemId));
+      itemId = winner.itemId;
+      canonicalPlaceId = winner.id;
+      await tx.update(itemsTable).set(itemValues).where(eq(itemsTable.id, winner.itemId));
+    } else {
+      canonicalPlaceId = createdCanonical.id;
+    }
+  }
+  const canonicalItemId = itemId!;
+
+  await tx.delete(translationsTable).where(and(
+    eq(translationsTable.model, "item"),
+    eq(translationsTable.recordId, canonicalItemId),
+    inArray(translationsTable.field, ["title", "body"]),
+  ));
+  const overlays = editorial
+    .filter((row: any) => row.language !== "sl")
+    .flatMap((row: any) => [
+      { model: "item", recordId: canonicalItemId, field: "title", lang: row.language, value: row.name },
+      { model: "item", recordId: canonicalItemId, field: "body", lang: row.language, value: row.description },
+    ]);
+  if (overlays.length) await tx.insert(translationsTable).values(overlays);
+
+  await tx.insert(itemDistanceProposalsTable).values({
+    itemId: canonicalItemId,
+    tenantId: proposal.tenantId,
+    status: "approved",
+    source: "creator-approved-proposal",
+    confidence: "operator-approved",
+    latitude: proposal.latitude,
+    longitude: proposal.longitude,
+    distanceMeters: proposal.roadDistanceM,
+    durationMinutes: proposal.travelDurationS / 60,
+    resolvedAddress: authoritativeAddress,
+    geocodeQuery: proposal.confirmedQuery,
+    inputFingerprint: `creator:${proposal.id}`,
+  }).onConflictDoUpdate({
+    target: itemDistanceProposalsTable.itemId,
+    set: {
+      status: "approved",
+      latitude: proposal.latitude,
+      longitude: proposal.longitude,
+      distanceMeters: proposal.roadDistanceM,
+      durationMinutes: proposal.travelDurationS / 60,
+      resolvedAddress: authoritativeAddress,
+      geocodeQuery: proposal.confirmedQuery,
+      inputFingerprint: `creator:${proposal.id}`,
+      updatedAt: new Date(),
+    },
+  });
+  await tx.delete(itemCategoryAttachmentsTable)
+    .where(eq(itemCategoryAttachmentsTable.sourceProposalId, proposal.id));
+  await tx.insert(itemCategoryAttachmentsTable).values({
+    itemId: canonicalItemId,
+    categoryId: proposal.categoryId,
+    sourceProposalId: proposal.id,
+  }).onConflictDoNothing();
+  await tx.insert(creatorPlaceMaterializationsTable).values({
+    tenantId: proposal.tenantId,
+    entityKey,
+    canonicalPlaceId: canonicalPlaceId!,
+    proposalId: proposal.id,
+    itemId: canonicalItemId,
+    runId: proposal.runId,
+    confirmationMethod: proposal.confirmationMethod,
+    authoritativeAddress,
+    latitude: proposal.latitude,
+    longitude: proposal.longitude,
+    roadDistanceM: proposal.roadDistanceM,
+    travelDurationS: proposal.travelDurationS,
+    range: proposal.range,
+    editorialJson: JSON.stringify(editorial.map((row: any) => ({
+      language: row.language, name: row.name, description: row.description,
+    }))),
+    provenanceJson,
+    isActive: true,
+  }).onConflictDoUpdate({
+    target: creatorPlaceMaterializationsTable.proposalId,
+    set: {
+      // Snapshot provenance is immutable. Only lifecycle state changes here;
+      // current guest fields are the canonical item/distance projection above.
+      isActive: true,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+async function deactivateCreatorPlace(tx: any, proposalId: string) {
+  const [materialized] = await tx.select().from(creatorPlaceMaterializationsTable)
+    .where(eq(creatorPlaceMaterializationsTable.proposalId, proposalId)).limit(1);
+  if (!materialized) return;
+  await tx.update(creatorPlaceMaterializationsTable).set({ isActive: false, updatedAt: new Date() })
+    .where(eq(creatorPlaceMaterializationsTable.id, materialized.id));
+  const materializations = await tx.select({
+    proposalId: creatorPlaceMaterializationsTable.proposalId,
+    isActive: creatorPlaceMaterializationsTable.isActive,
+    categoryId: creatorPlaceProposalsTable.categoryId,
+  }).from(creatorPlaceMaterializationsTable)
+    .innerJoin(
+      creatorPlaceProposalsTable,
+      eq(creatorPlaceProposalsTable.id, creatorPlaceMaterializationsTable.proposalId),
+    ).where(
+      eq(creatorPlaceMaterializationsTable.itemId, materialized.itemId),
+    );
+  const inactiveProposalIds = materializations
+    .filter((row: any) => !row.isActive)
+    .map((row: any) => row.proposalId);
+  if (inactiveProposalIds.length) {
+    await tx.delete(itemCategoryAttachmentsTable).where(and(
+      eq(itemCategoryAttachmentsTable.itemId, materialized.itemId),
+      inArray(itemCategoryAttachmentsTable.sourceProposalId, inactiveProposalIds),
+    ));
+  }
+  // Rebuild any surviving managed membership. This also transfers ownership
+  // when two proposals intentionally share the same item/category and the
+  // departing proposal previously owned the deduplicated attachment row.
+  for (const row of materializations.filter((candidate: any) => candidate.isActive && candidate.categoryId)) {
+    await tx.insert(itemCategoryAttachmentsTable).values({
+      itemId: materialized.itemId,
+      categoryId: row.categoryId,
+      sourceProposalId: row.proposalId,
+    }).onConflictDoNothing();
+  }
+  const survivor = materializations.find((row: any) => row.isActive && row.categoryId);
+  if (survivor) {
+    await tx.update(itemsTable).set({
+      categoryId: survivor.categoryId,
+      isVisible: true,
+    }).where(eq(itemsTable.id, materialized.itemId));
+  } else {
+    await tx.update(itemsTable).set({ isVisible: false })
+      .where(eq(itemsTable.id, materialized.itemId));
+  }
 }
 
 export async function editCreatorProposalEditorial(input: {
@@ -544,6 +756,7 @@ export async function editCreatorProposalEditorial(input: {
     const [proposal] = await tx.select({
       id: creatorPlaceProposalsTable.id,
       confirmationMethod: creatorPlaceProposalsTable.confirmationMethod,
+      status: creatorPlaceProposalsTable.status,
     })
       .from(creatorPlaceProposalsTable)
       .where(and(
@@ -551,6 +764,7 @@ export async function editCreatorProposalEditorial(input: {
         eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
         or(
           eq(creatorPlaceProposalsTable.status, "pending"),
+          eq(creatorPlaceProposalsTable.status, "approved"),
           and(
             eq(creatorPlaceProposalsTable.status, "unresolved"),
             eq(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
@@ -579,8 +793,13 @@ export async function editCreatorProposalEditorial(input: {
       proposalId: proposal.id,
       language: row.language,
       name: row.name.trim(),
-      description: category && categoryNeedsBlankDescriptions(category) ? "" : row.description.trim(),
+      description: row.description.trim(),
     })));
+    if (proposal.status === "approved") {
+      const [fresh] = await tx.select().from(creatorPlaceProposalsTable)
+        .where(eq(creatorPlaceProposalsTable.id, proposal.id)).limit(1);
+      await syncApprovedCreatorPlace(tx, fresh);
+    }
   });
   return (await listCreatorProposalQueue(input.tenantId))
     .find((row) => row.id === input.proposalId);
@@ -615,9 +834,10 @@ export async function rejectCreatorProposalIndividually(
     }).where(and(
       eq(creatorPlaceProposalsTable.id, proposalId),
       eq(creatorPlaceProposalsTable.tenantId, tenantId),
-      inArray(creatorPlaceProposalsTable.status, ["pending", "unresolved"]),
+      inArray(creatorPlaceProposalsTable.status, ["pending", "unresolved", "approved"]),
       eq(creatorPlaceProposalsTable.contentReady, true),
     )).returning({ id: creatorPlaceProposalsTable.id });
+    if (row) await deactivateCreatorPlace(tx, proposal.id);
     return row ?? null;
   });
   if (!updated) throw new Error("Predlog ni najden ali ga ni mogoče zavrniti.");
@@ -630,31 +850,32 @@ export async function undoCreatorProposalRejection(
   actorId: string,
 ) {
   await requireActor(actorId);
-  const [proposal] = await db.select().from(creatorPlaceProposalsTable).where(and(
-    eq(creatorPlaceProposalsTable.id, proposalId),
-    eq(creatorPlaceProposalsTable.tenantId, tenantId),
-    eq(creatorPlaceProposalsTable.status, "rejected"),
-    eq(creatorPlaceProposalsTable.contentReady, true),
-  )).limit(1);
-  if (!proposal) throw new Error("Zavrnjen predlog ni najden.");
-  const restoredStatus = proposal.rejectedFromStatus === "pending" ? "pending" : "unresolved";
-  const [updated] = await db.update(creatorPlaceProposalsTable).set({
-    status: restoredStatus,
-    refusalReason: restoredStatus === "pending"
-      ? null
-      : proposal.rejectedFromReason ?? "operator-review-required",
-    rejectionIdentity: null,
-    rejectedFromStatus: null,
-    rejectedFromReason: null,
-    reviewedBy: null,
-    reviewedAt: null,
-    updatedAt: new Date(),
-  }).where(and(
-    eq(creatorPlaceProposalsTable.id, proposalId),
-    eq(creatorPlaceProposalsTable.tenantId, tenantId),
-    eq(creatorPlaceProposalsTable.status, "rejected"),
-  )).returning();
-  if (!updated) throw new Error("Zavrnitve ni bilo mogoče razveljaviti.");
+  await db.transaction(async (tx) => {
+    const [proposal] = await tx.select().from(creatorPlaceProposalsTable).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      eq(creatorPlaceProposalsTable.status, "rejected"),
+      eq(creatorPlaceProposalsTable.contentReady, true),
+    )).limit(1).for("update");
+    if (!proposal) throw new Error("Zavrnjen predlog ni najden.");
+    const restoredStatus = proposal.rejectedFromStatus === "approved"
+      ? "approved"
+      : proposal.rejectedFromStatus === "pending" ? "pending" : "unresolved";
+    const [updated] = await tx.update(creatorPlaceProposalsTable).set({
+      status: restoredStatus,
+      refusalReason: restoredStatus === "pending"
+        ? null
+        : proposal.rejectedFromReason ?? "operator-review-required",
+      rejectionIdentity: null,
+      rejectedFromStatus: null,
+      rejectedFromReason: null,
+      reviewedBy: restoredStatus === "approved" ? proposal.reviewedBy : null,
+      reviewedAt: restoredStatus === "approved" ? proposal.reviewedAt : null,
+      updatedAt: new Date(),
+    }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+    if (!updated) throw new Error("Zavrnitve ni bilo mogoče razveljaviti.");
+    if (restoredStatus === "approved") await syncApprovedCreatorPlace(tx, updated);
+  });
   return (await listCreatorProposalQueue(tenantId)).find((row) => row.id === proposalId);
 }
 
@@ -874,34 +1095,59 @@ export async function approveCreatorProposalIndividually(
   actorId: string,
 ) {
   await requireActor(actorId);
-  const [proposal] = await db.select().from(creatorPlaceProposalsTable).where(and(
-    eq(creatorPlaceProposalsTable.id, proposalId),
-    eq(creatorPlaceProposalsTable.tenantId, tenantId),
-    eq(creatorPlaceProposalsTable.status, "pending"),
-    eq(creatorPlaceProposalsTable.contentReady, true),
-  )).limit(1);
-  if (!proposal) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
-  if (!hasResolutionEvidence(proposal)) {
-    throw new Error("Predloga brez popolnih strojnih dokazov ni mogoče potrditi.");
-  }
-  if (proposal.travelDurationS === null || proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S) {
-    throw new Error("Predloga nad 90 minutami ali brez poti ni mogoče potrditi.");
-  }
-  const [updated] = await db.update(creatorPlaceProposalsTable).set({
-    status: "approved",
-    reviewedBy: actorId,
-    reviewedAt: new Date(),
-    updatedAt: new Date(),
-  }).where(and(
-    eq(creatorPlaceProposalsTable.id, proposalId),
-    eq(creatorPlaceProposalsTable.tenantId, tenantId),
-    eq(creatorPlaceProposalsTable.status, "pending"),
-  )).returning();
+  const updated = await db.transaction(async (tx) => {
+    const [proposal] = await tx.select().from(creatorPlaceProposalsTable).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      inArray(creatorPlaceProposalsTable.status, ["pending", "approved"]),
+      eq(creatorPlaceProposalsTable.contentReady, true),
+    )).limit(1).for("update");
+    if (!proposal) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
+    if (!hasResolutionEvidence(proposal)) {
+      throw new Error("Predloga brez popolnih strojnih dokazov ni mogoče potrditi.");
+    }
+    if (proposal.travelDurationS === null || proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S) {
+      throw new Error("Predloga nad 90 minutami ali brez poti ni mogoče potrditi.");
+    }
+    let approved = proposal;
+    if (proposal.status === "pending") {
+      const [changed] = await tx.update(creatorPlaceProposalsTable).set({
+        status: "approved", reviewedBy: actorId, reviewedAt: new Date(), updatedAt: new Date(),
+      }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+      if (!changed) throw new Error("Predloga ni bilo mogoče potrditi.");
+      approved = changed;
+    }
+    await syncApprovedCreatorPlace(tx, approved);
+    return approved;
+  });
   if (!updated) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
   const hydrated = (await listCreatorProposalQueue(tenantId))
     .find((row) => row.id === updated.id);
   if (!hydrated) throw new Error("Potrjenega predloga ni mogoče ponovno prebrati.");
   return hydrated;
+}
+
+export async function unapproveCreatorProposal(
+  tenantId: string,
+  proposalId: string,
+  actorId: string,
+) {
+  await requireActor(actorId);
+  await db.transaction(async (tx) => {
+    const [proposal] = await tx.update(creatorPlaceProposalsTable).set({
+      status: "pending",
+      reviewedBy: null,
+      reviewedAt: null,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      eq(creatorPlaceProposalsTable.status, "approved"),
+    )).returning();
+    if (!proposal) throw new Error("Potrjen predlog ni najden.");
+    await deactivateCreatorPlace(tx, proposal.id);
+  });
+  return (await listCreatorProposalQueue(tenantId)).find((row) => row.id === proposalId);
 }
 
 export async function approveCreatorProposalsBulk(
@@ -944,16 +1190,15 @@ export async function approveCreatorProposalsBulk(
         "Predloga nad 90 minutami ali brez poti ni mogoče potrditi.",
       );
     }
-    return tx.update(creatorPlaceProposalsTable).set({
-      status: "approved",
-      reviewedBy: actorId,
-      reviewedAt: new Date(),
-      updatedAt: new Date(),
+    const approved = await tx.update(creatorPlaceProposalsTable).set({
+      status: "approved", reviewedBy: actorId, reviewedAt: new Date(), updatedAt: new Date(),
     }).where(and(
       eq(creatorPlaceProposalsTable.tenantId, tenantId),
       eq(creatorPlaceProposalsTable.status, "pending"),
       inArray(creatorPlaceProposalsTable.id, proposalIds),
       eq(creatorPlaceProposalsTable.requiresIndividualReview, false),
     )).returning();
+    for (const proposal of approved) await syncApprovedCreatorPlace(tx, proposal);
+    return approved;
   });
 }

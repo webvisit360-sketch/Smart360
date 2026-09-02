@@ -37,6 +37,9 @@ const POLICIES: Record<string, { using: string; withCheck?: string }> = {
   items: {
     using: `EXISTS (SELECT 1 FROM categories c JOIN sections s ON s.id = c.section_id WHERE c.id = items.category_id AND s.tenant_id = ${TID})`,
   },
+  item_category_attachments: {
+    using: `EXISTS (SELECT 1 FROM categories c JOIN sections s ON s.id = c.section_id WHERE c.id = item_category_attachments.category_id AND s.tenant_id = ${TID}) AND EXISTS (SELECT 1 FROM items i JOIN categories c ON c.id = i.category_id JOIN sections s ON s.id = c.section_id WHERE i.id = item_category_attachments.item_id AND s.tenant_id = ${TID})`,
+  },
   media: {
     using: `((media.tenant_id IS NOT NULL AND media.tenant_id = ${TID}) OR (media.item_id IS NOT NULL AND EXISTS (SELECT 1 FROM items i JOIN categories c ON c.id = i.category_id JOIN sections s ON s.id = c.section_id WHERE i.id = media.item_id AND s.tenant_id = ${TID})))`,
   },
@@ -100,6 +103,7 @@ const HOST_ROLE_GRANTS: Record<string, string> = {
   sections: "SELECT, INSERT, UPDATE, DELETE",
   categories: "SELECT, INSERT, UPDATE",
   items: "SELECT, INSERT, UPDATE",
+  item_category_attachments: "SELECT",
   media: "SELECT, INSERT, UPDATE, DELETE",
   translations: "SELECT, INSERT, UPDATE, DELETE",
   plural_forms: "SELECT, INSERT, UPDATE, DELETE",

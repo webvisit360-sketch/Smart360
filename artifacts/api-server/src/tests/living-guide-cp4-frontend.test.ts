@@ -249,7 +249,7 @@ test("Domov hero prefers its tenant field, then the first gallery image", () => 
   assert.equal(resolveHomeHeroMedia(null, []), null);
 });
 
-test("Domov with a programme requires a title and photo, then orders today's events by time", () => {
+test("Domov with a programme requires a title and orders today's events by time", () => {
   const now = new Date(2026, 7, 23, 12, 0, 0);
   const result = selectHomeTodayEntries(
     [
@@ -392,7 +392,7 @@ test("Domov without a programme uses only approved nearby categories", () => {
   assert.equal(result.hasProgramme, false);
   assert.deepEqual(
     result.entries.map((entry) => entry.item.id),
-    ["near", "far", "no-detail", "title-only"],
+    ["near", "far", "no-detail", "title-only", "missing-photo"],
   );
   assert.equal(
     result.entries.find((entry) => entry.item.id === "near")?.detail,

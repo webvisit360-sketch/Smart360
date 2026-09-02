@@ -13,6 +13,7 @@ import {
   useReevaluateCreatorProposals,
   useRetryCreatorProposals,
   useUndoCreatorProposalRejection,
+  useUnapproveCreatorProposal,
 } from "@workspace/api-client-react";
 import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, RotateCcw, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
@@ -170,6 +171,9 @@ export function KreatorProposalQueue({
   const undoRejection = useUndoCreatorProposalRejection({
     mutation: { onSuccess: refresh },
   });
+  const unapproveOne = useUnapproveCreatorProposal({
+    mutation: { onSuccess: refresh },
+  });
   const retryUnresolved = useRetryCreatorProposals({
     mutation: { onSuccess: refresh },
   });
@@ -206,6 +210,7 @@ export function KreatorProposalQueue({
     ?? (rejectOne.error as any)?.data?.error
     ?? (rejectBulk.error as any)?.data?.error
     ?? (undoRejection.error as any)?.data?.error
+    ?? (unapproveOne.error as any)?.data?.error
     ?? (retryUnresolved.error as any)?.data?.error
     ?? (reevaluate.error as any)?.data?.error
     ?? (confirmCoordinates.error as any)?.data?.error
@@ -521,7 +526,7 @@ export function KreatorProposalQueue({
                 )}
               </div>
 
-              {(row.status === "pending" || row.status === "unresolved") && (
+              {(row.status === "pending" || row.status === "unresolved" || row.status === "approved") && (
                 <div className="flex shrink-0 flex-row flex-wrap gap-2 md:flex-col">
                   {row.status === "pending" && (
                     <Button
@@ -554,7 +559,7 @@ export function KreatorProposalQueue({
                       Ročno določi
                     </Button>
                   )}
-                  {(row.status === "pending" || row.confirmationMethod === "operator_coordinates") && (
+                  {(row.status === "pending" || row.status === "approved" || row.confirmationMethod === "operator_coordinates") && (
                     <Button
                       type="button"
                       variant="outline"
@@ -575,6 +580,20 @@ export function KreatorProposalQueue({
                     >
                       <Pencil className="mr-2 h-4 w-4" />
                       Uredi
+                    </Button>
+                  )}
+                  {row.status === "approved" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={unapproveOne.isPending}
+                      onClick={() => {
+                        if (!confirm(`Razveljavi potrditev lokacije "${displayName}"? Gostom bo takoj skrita.`)) return;
+                        unapproveOne.mutate({ id: tenantId, proposalId: row.id });
+                      }}
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Razveljavi potrditev
                     </Button>
                   )}
                   <Button

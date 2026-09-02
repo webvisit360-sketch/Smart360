@@ -82,6 +82,7 @@ import { MoreGuestView } from "./MoreGuestView";
 import {
   exploreItemDescription,
   populatedExploreGroups,
+  suppressesGuestDescription,
 } from "./living-guide-explore";
 import {
   OFFER_GROUPS,
@@ -335,7 +336,8 @@ function standaloneBodyBullets(body: unknown): string[] {
   return items;
 }
 
-function itemBullets(item: any): string[] {
+function itemBullets(item: any, category?: any): string[] {
+  if (suppressesGuestDescription(category)) return [];
   const explicit = Array.isArray(item?.bullets)
     ? item.bullets.filter(
         (bullet: unknown): bullet is string =>
@@ -347,7 +349,8 @@ function itemBullets(item: any): string[] {
     : standaloneBodyBullets(item?.body);
 }
 
-function itemBodyHtml(item: any): string {
+function itemBodyHtml(item: any, category?: any): string {
+  if (suppressesGuestDescription(category)) return "";
   return standaloneBodyBullets(item?.body).length > 0
     ? ""
     : bodyHtml(item?.body);
@@ -2510,7 +2513,7 @@ function GroupTabs({ groups, selectedKey, onSelect, label }: any) {
   );
 }
 
-function PCard({ ariaLabel, onOpen, media, meta, title, description }: any) {
+function PCard({ ariaLabel, onOpen, media, meta, title, description, categoryIcon: icon = "doc" }: any) {
   return (
     <article
       className="lg2-pcard"
@@ -2534,6 +2537,12 @@ function PCard({ ariaLabel, onOpen, media, meta, title, description }: any) {
             decoding="async"
             style={imageStyle(media)}
           />
+        )}
+        {!media && (
+          <span className="lg2-card-missing-photo" aria-label="fotografija manjka">
+            <svg aria-hidden="true"><use href={`#lg-i-${icon}`} /></svg>
+            <span>fotografija manjka</span>
+          </span>
         )}
       </div>
       <div className="lg2-pcard-body">
@@ -2626,6 +2635,7 @@ function ExploreView({
               ariaLabel={item.title || category.label}
               onOpen={() => openPlace(category.id, item.id)}
               media={item.media?.[0]}
+              categoryIcon={categoryIcon(category)}
               meta={
                 <>
                   {distance && <span className="lg2-pcard-distance">{distance}</span>}
@@ -2640,7 +2650,7 @@ function ExploreView({
                 </>
               }
               title={item.title || category.label}
-              description={exploreItemDescription(item)}
+              description={exploreItemDescription(item, category)}
             />
           );
         })}
@@ -2721,6 +2731,7 @@ function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem }
               ariaLabel={item.title || category.label}
               onOpen={() => openOffer(category.id, item.id)}
               media={item.media?.[0] ?? firstMedia(category)}
+              categoryIcon={categoryIcon(category)}
               meta={
                 <>
                   {price && <span>{price}</span>}
@@ -2729,7 +2740,7 @@ function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem }
                 </>
               }
               title={item.title || category.label}
-              description={exploreItemDescription(item)}
+              description={exploreItemDescription(item, category)}
             />
           );
         })}
@@ -2803,6 +2814,7 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
               ariaLabel={category.label}
               onOpen={() => openStayCategory(category.id)}
               media={firstMedia(category)}
+              categoryIcon={categoryIcon(category)}
               meta={
                 <>
                   {status && (
@@ -2815,7 +2827,7 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
                 </>
               }
               title={item?.title || category.label}
-              description={item ? exploreItemDescription(item) : null}
+              description={item ? exploreItemDescription(item, category) : null}
             />
           );
         })}
@@ -3216,8 +3228,8 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
     titleOverride ? firstItem?.subtitle : category?.subtitle,
   );
   const openStatus = itemOpenStatus(firstItem, t);
-  const introBody = itemBodyHtml(firstItem);
-  const firstItemBullets = itemBullets(firstItem);
+  const introBody = itemBodyHtml(firstItem, category);
+  const firstItemBullets = itemBullets(firstItem, category);
   const price = itemPriceText(firstItem);
   const detailRows = items.slice(1).filter((i: any) => i.title || i.body || i.bullets?.length);
 
@@ -3250,8 +3262,8 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
                   <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${item.tint ? "sos" : "doc"}`} /></svg></span>
                   <div>
                     {item.title && <b>{item.title}</b>}
-                    {itemBodyHtml(item) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
-                    <StructuredBulletRows bullets={itemBullets(item)} />
+                    {itemBodyHtml(item, category) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
+                    <StructuredBulletRows bullets={itemBullets(item, category)} />
                   </div>
                 </div>
               ))}
@@ -3351,8 +3363,8 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                    <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${isWarning ? "sos" : "doc"}`}/></svg></span>
                    <div>
                      {item.title && <b>{item.title}</b>}
-                     {itemBodyHtml(item) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
-                     <StructuredBulletRows bullets={itemBullets(item)} />
+                     {itemBodyHtml(item, category) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
+                     <StructuredBulletRows bullets={itemBullets(item, category)} />
                    </div>
                  </div>
                );
@@ -3495,8 +3507,8 @@ function TabbedDetail({
                  className={`lg2-segment-panel${index === segment ? " is-active" : ""}`}
                  key={item.id}
                >
-                 {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
-                 <StructuredBulletRows bullets={itemBullets(item)} numbered={numbered} />
+                 {itemBodyHtml(item, category) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
+                 <StructuredBulletRows bullets={itemBullets(item, category)} numbered={numbered} />
                  {item?.phone && (
                    <div className="lg2-actions lg2-actions--spaced">
                      <a className="lg2-primary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>
@@ -3528,7 +3540,7 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
     : null;
   const wifiItem = items[0] || {};
   const media = categoryMedia(category);
-  const wifiBullets = itemBullets(wifiItem);
+  const wifiBullets = itemBullets(wifiItem, category);
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -3560,7 +3572,7 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
              </div>
            )}
 
-           {itemBodyHtml(wifiItem) && <div className="lg2-detail-prose lg2-wifi-note" dangerouslySetInnerHTML={{ __html: itemBodyHtml(wifiItem) }} />}
+           {itemBodyHtml(wifiItem, category) && <div className="lg2-detail-prose lg2-wifi-note" dangerouslySetInnerHTML={{ __html: itemBodyHtml(wifiItem, category) }} />}
            <StructuredBulletRows bullets={wifiBullets} />
         </article>
       </div>
@@ -3573,7 +3585,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
   const media = visible(item?.media);
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
-  const bullets = itemBullets(item);
+  const bullets = itemBullets(item, category);
   const openStatus = itemOpenStatus(item, t);
   const price = itemPriceText(item);
 
@@ -3597,7 +3609,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
                 {subtitle && <span className="lg2-chip">{subtitle}</span>}
              </div>
            )}
-           {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+           {itemBodyHtml(item, category) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
            <StructuredBulletRows bullets={bullets} />
 
            {(itemMapsHref(item) || item?.phone || item?.website) && (
@@ -3618,7 +3630,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
   const media = visible(item?.media);
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
-  const bullets = itemBullets(item);
+  const bullets = itemBullets(item, category);
   const routeFacts = [item?.difficulty, item?.duration, item?.distance].filter(Boolean);
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -3633,7 +3645,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
                {routeFacts.map((fact: string) => <span className="lg2-chip" key={fact}>{fact}</span>)}
              </div>
            )}
-           {itemBodyHtml(item) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item) }} />}
+           {itemBodyHtml(item, category) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
            <StructuredBulletRows bullets={bullets} />
         </article>
       </div>
@@ -3949,6 +3961,12 @@ function HomeView({
                       className="pic"
                       style={imageStyle(item.media)}
                     />
+                  )}
+                  {!item.media && (
+                    <span className="lg2-card-missing-photo" aria-label="fotografija manjka">
+                      <svg aria-hidden="true"><use href="#lg-i-pin" /></svg>
+                      <span>fotografija manjka</span>
+                    </span>
                   )}
                   <div className="vg" aria-hidden="true" />
                   <div className="tx">

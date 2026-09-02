@@ -5,6 +5,7 @@ import {
   sectionsTable,
   categoriesTable,
   itemsTable,
+  itemCategoryAttachmentsTable,
   itemDistanceProposalsTable,
   mediaTable,
   translationsTable,
@@ -143,6 +144,10 @@ export async function buildTenantContent(
     : [];
 
   const categoryIds = categories.map((c) => c.id);
+  const attachments = categoryIds.length
+    ? await db.select().from(itemCategoryAttachmentsTable)
+        .where(inArray(itemCategoryAttachmentsTable.categoryId, categoryIds))
+    : [];
   const items = categoryIds.length
     ? await db
         .select()
@@ -270,17 +275,27 @@ export async function buildTenantContent(
     mediaByItem.set(m.itemId, arr);
   }
   const itemsByCategory = new Map<string, ItemWithMedia[]>();
-  for (const i of itemsOut) {
-    const arr = itemsByCategory.get(i.categoryId) ?? [];
+  const addToCategory = (i: typeof itemsOut[number], categoryId: string) => {
+    const arr = itemsByCategory.get(categoryId) ?? [];
+    if (arr.some((row) => row.id === i.id)) return;
     const coords = coordsByItem.get(i.id);
     arr.push({
       ...i,
+      // Existing consumers understand categoryId. An attached projection
+      // therefore reports the category through which it was reached.
+      categoryId,
       media: mediaByItem.get(i.id) ?? [],
       latitude: coords?.latitude ?? null,
       longitude: coords?.longitude ?? null,
       resolvedAddress: coords?.resolvedAddress?.trim() || null,
     });
-    itemsByCategory.set(i.categoryId, arr);
+    itemsByCategory.set(categoryId, arr);
+  };
+  for (const i of itemsOut) {
+    addToCategory(i, i.categoryId);
+    for (const attachment of attachments) {
+      if (attachment.itemId === i.id) addToCategory(i, attachment.categoryId);
+    }
   }
   const categoriesBySection = new Map<string, CategoryContent[]>();
   for (const c of categoriesOut) {

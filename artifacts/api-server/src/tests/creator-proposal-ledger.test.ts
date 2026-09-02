@@ -4,11 +4,16 @@ import { after, before, test } from "node:test";
 import { and, eq, inArray } from "drizzle-orm";
 import {
   adminUsersTable,
+  categoriesTable,
+  creatorPlaceMaterializationsTable,
   creatorPlaceProposalsTable,
   creatorProposalTranslationsTable,
+  itemCategoryAttachmentsTable,
   creatorVerificationAttemptsTable,
   creatorVerificationCandidatesTable,
   db,
+  itemsTable,
+  sectionsTable,
   tenantsTable,
 } from "@workspace/db";
 import {
@@ -17,24 +22,61 @@ import {
   confirmCreatorProposalCoordinates,
   CreatorBulkApprovalError,
   listCreatorProposalQueue,
+  rejectCreatorProposalIndividually,
   recordCreatorVerification,
   runAndPersistCreatorSieve,
   upsertPendingCreatorProposal,
+  unapproveCreatorProposal,
+  undoCreatorProposalRejection,
 } from "../lib/creatorProposalLedger";
 
 const runIds = [crypto.randomUUID(), crypto.randomUUID()];
 let tenantId = "";
 let actorId = "";
+let categoryId = "";
+let secondCategoryId = "";
 const proposalIds: string[] = [];
 
 before(async () => {
-  const [tenant] = await db.select({ id: tenantsTable.id }).from(tenantsTable).limit(1);
+  const [tenant] = await db.select({ id: tenantsTable.id })
+    .from(tenantsTable)
+    .innerJoin(sectionsTable, eq(sectionsTable.tenantId, tenantsTable.id))
+    .innerJoin(categoriesTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .limit(1);
   const [actor] = await db.select({ id: adminUsersTable.id }).from(adminUsersTable).limit(1);
   assert.ok(tenant, "development database needs one tenant");
   assert.ok(actor, "development database needs one admin user");
   tenantId = tenant.id;
   actorId = actor.id;
+  const [category] = await db.select({ id: categoriesTable.id, sectionId: categoriesTable.sectionId })
+    .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(eq(sectionsTable.tenantId, tenantId))
+    .limit(1);
+  assert.ok(category, "development tenant needs one category");
+  categoryId = category.id;
+  const [secondCategory] = await db.insert(categoriesTable).values({
+    sectionId: category.sectionId,
+    key: `creator-test-${crypto.randomUUID()}`,
+    label: "Creator lifecycle test",
+  }).returning({ id: categoriesTable.id });
+  secondCategoryId = secondCategory.id;
 });
+
+async function makeMaterializable(proposalId: string) {
+  await db.update(creatorPlaceProposalsTable).set({
+    categoryId,
+    range: "near",
+  }).where(eq(creatorPlaceProposalsTable.id, proposalId));
+  await db.insert(creatorProposalTranslationsTable).values(
+    ["sl", "en", "de", "it"].map((language) => ({
+      proposalId,
+      language,
+      name: `Materialized ${language}`,
+      description: `Description ${language}`,
+    })),
+  ).onConflictDoNothing();
+}
 
 after(async () => {
   await db.delete(creatorPlaceProposalsTable).where(and(
@@ -46,6 +88,9 @@ after(async () => {
   if (proposalIds.length > 0) {
     await db.delete(creatorPlaceProposalsTable)
       .where(inArray(creatorPlaceProposalsTable.id, proposalIds));
+  }
+  if (secondCategoryId) {
+    await db.delete(categoriesTable).where(eq(categoriesTable.id, secondCategoryId));
   }
 });
 
@@ -158,8 +203,9 @@ test("pending-name upsert suppresses duplicates and shortened rows require indiv
   );
 
   await db.update(creatorPlaceProposalsTable)
-    .set({ contentReady: true, roadDistanceM: 12_000, travelDurationS: 1_200 })
+    .set({ contentReady: true, roadDistanceM: 12_000, travelDurationS: 1_200, range: "near" })
     .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
+  await makeMaterializable(first.proposal.id);
   const approved = await approveCreatorProposalIndividually(
     tenantId,
     first.proposal.id,
@@ -167,6 +213,91 @@ test("pending-name upsert suppresses duplicates and shortened rows require indiv
   );
   assert.equal(approved.status, "approved");
   assert.equal(approved.reviewedBy, actorId);
+  const [materialized] = await db.select().from(creatorPlaceMaterializationsTable)
+    .where(eq(creatorPlaceMaterializationsTable.proposalId, first.proposal.id));
+  assert.ok(materialized);
+  const originalProvenance = materialized.provenanceJson;
+  const originalEditorial = materialized.editorialJson;
+  await db.update(creatorPlaceProposalsTable).set({
+    resolvedAddress: "Spremenjen naslov za projekcijo",
+  }).where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
+  const reapproved = await approveCreatorProposalIndividually(tenantId, first.proposal.id, actorId);
+  assert.equal(reapproved.status, "approved");
+  const materializedAgain = await db.select().from(creatorPlaceMaterializationsTable)
+    .where(eq(creatorPlaceMaterializationsTable.proposalId, first.proposal.id));
+  assert.equal(materializedAgain.length, 1);
+  assert.equal(materializedAgain[0]?.provenanceJson, originalProvenance);
+  assert.equal(materializedAgain[0]?.editorialJson, originalEditorial);
+
+  const secondRunId = crypto.randomUUID();
+  runIds.push(secondRunId);
+  const [secondProposal] = await db.insert(creatorPlaceProposalsTable).values({
+    tenantId,
+    runId: secondRunId,
+    proposedName: `Second category ${crypto.randomUUID()}`,
+    normalizedName: `second-category-${crypto.randomUUID()}`,
+    originalQuery: "Second category",
+    confirmedQuery: reapproved.confirmedQuery,
+    confirmationMethod: reapproved.confirmationMethod,
+    status: "pending",
+    resolvedName: reapproved.resolvedName,
+    resolvedAddress: reapproved.resolvedAddress,
+    osmType: reapproved.osmType,
+    osmId: reapproved.osmId,
+    osmCategory: reapproved.osmCategory,
+    osmFeatureType: reapproved.osmFeatureType,
+    osmAddressType: reapproved.osmAddressType,
+    latitude: reapproved.latitude,
+    longitude: reapproved.longitude,
+    straightLineDistanceM: reapproved.straightLineDistanceM,
+    roadDistanceM: reapproved.roadDistanceM,
+    travelDurationS: reapproved.travelDurationS,
+    categoryId: secondCategoryId,
+    range: "near",
+    contentReady: true,
+  }).returning();
+  proposalIds.push(secondProposal.id);
+  await db.insert(creatorProposalTranslationsTable).values(
+    ["sl", "en", "de", "it"].map((language) => ({
+      proposalId: secondProposal.id,
+      language,
+      name: `Second ${language}`,
+      description: `Second description ${language}`,
+    })),
+  );
+  await approveCreatorProposalIndividually(tenantId, secondProposal.id, actorId);
+  const twoMaterializations = await db.select().from(creatorPlaceMaterializationsTable)
+    .where(inArray(creatorPlaceMaterializationsTable.proposalId, [first.proposal.id, secondProposal.id]));
+  assert.equal(twoMaterializations.length, 2);
+  assert.equal(new Set(twoMaterializations.map((row) => row.itemId)).size, 1);
+  let attachments = await db.select().from(itemCategoryAttachmentsTable)
+    .where(eq(itemCategoryAttachmentsTable.itemId, materialized.itemId));
+  assert.deepEqual(new Set(attachments.map((row) => row.categoryId)), new Set([categoryId, secondCategoryId]));
+
+  await rejectCreatorProposalIndividually(tenantId, first.proposal.id, actorId);
+  attachments = await db.select().from(itemCategoryAttachmentsTable)
+    .where(eq(itemCategoryAttachmentsTable.itemId, materialized.itemId));
+  assert.deepEqual(attachments.map((row) => row.categoryId), [secondCategoryId]);
+  const [survivingItem] = await db.select().from(itemsTable).where(eq(itemsTable.id, materialized.itemId));
+  assert.equal(survivingItem?.isVisible, true);
+  assert.equal(survivingItem?.categoryId, secondCategoryId);
+
+  await undoCreatorProposalRejection(tenantId, first.proposal.id, actorId);
+  attachments = await db.select().from(itemCategoryAttachmentsTable)
+    .where(eq(itemCategoryAttachmentsTable.itemId, materialized.itemId));
+  assert.deepEqual(new Set(attachments.map((row) => row.categoryId)), new Set([categoryId, secondCategoryId]));
+
+  await unapproveCreatorProposal(tenantId, first.proposal.id, actorId);
+  attachments = await db.select().from(itemCategoryAttachmentsTable)
+    .where(eq(itemCategoryAttachmentsTable.itemId, materialized.itemId));
+  assert.deepEqual(attachments.map((row) => row.categoryId), [secondCategoryId]);
+  const [stillVisible] = await db.select({ isVisible: itemsTable.isVisible }).from(itemsTable)
+    .where(eq(itemsTable.id, materialized.itemId));
+  assert.equal(stillVisible?.isVisible, true);
+  await unapproveCreatorProposal(tenantId, secondProposal.id, actorId);
+  const [hidden] = await db.select({ isVisible: itemsTable.isVisible }).from(itemsTable)
+    .where(eq(itemsTable.id, materialized.itemId));
+  assert.equal(hidden?.isVisible, false);
 });
 
 test("database constraints reject invalid workflow values", async () => {
@@ -198,7 +329,7 @@ test("database constraints reject invalid workflow values", async () => {
   }
 });
 
-test("a rejected unresolved name stays rejected on a later run", async () => {
+test("an unresolved rejection without an entity does not suppress a later same-name candidate", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const proposedName = `Zavrnjeni kraj ${suffix}`;
   const first = await upsertPendingCreatorProposal({
@@ -243,15 +374,14 @@ test("a rejected unresolved name stays rejected on a later run", async () => {
     runId: runIds[1]!,
     proposedName,
     origin: { latitude: 46.36, longitude: 14.73 },
-    fetchFn: async () => {
-      throw new Error("the sieve must not rerun a rejected name");
-    },
+    fetchFn: async () => new Response("[]", {
+      status: 200, headers: { "content-type": "application/json" },
+    }),
   });
-  assert.equal(rerun.inserted, false);
-  assert.equal(rerun.result, null);
-  assert.equal(rerun.proposal.id, first.proposal.id);
-  assert.equal(rerun.proposal.status, "rejected");
-  assert.equal(rerun.proposal.refusalReason, "blocked-class-or-addresstype");
+  proposalIds.push(rerun.proposal.id);
+  assert.equal(rerun.inserted, true);
+  assert.notEqual(rerun.proposal.id, first.proposal.id);
+  assert.equal(rerun.proposal.status, "unresolved");
 });
 
 test("the real sieve path persists shortened-query provenance and both attempts", async () => {
@@ -472,6 +602,7 @@ test("operator coordinates require individual approval and cannot be overwritten
     approveCreatorProposalsBulk(tenantId, [pending.proposal.id], actorId),
     CreatorBulkApprovalError,
   );
+  await makeMaterializable(pending.proposal.id);
   const approved = await approveCreatorProposalIndividually(
     tenantId,
     pending.proposal.id,
@@ -484,7 +615,7 @@ test("operator coordinates require individual approval and cannot be overwritten
   }).where(eq(tenantsTable.id, tenantId));
 });
 
-test("two names resolving to one OSM identity produce one queue row", async () => {
+test("two proposals may retain one OSM entity for later canonical materialization", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const identity = 3_500_000_000 + Math.floor(Math.random() * 100_000_000);
   const firstRunId = crypto.randomUUID();
@@ -535,22 +666,18 @@ test("two names resolving to one OSM identity produce one queue row", async () =
     origin: { latitude: 45.32, longitude: 13.84 },
     fetchFn,
   });
-  assert.equal(second.proposal.id, first.proposal.id);
-  assert.equal(second.duplicate, true);
-  assert.notEqual(second.sourceProposal?.id, first.proposal.id);
+  proposalIds.push(second.proposal.id);
+  assert.notEqual(second.proposal.id, first.proposal.id);
+  assert.equal(second.duplicate, false);
 
   const stored = await db.select().from(creatorPlaceProposalsTable)
     .where(inArray(creatorPlaceProposalsTable.runId, [firstRunId, secondRunId]));
   assert.equal(stored.length, 2);
-  const canonical = stored.find((row) => row.runId === firstRunId);
-  const duplicate = stored.find((row) => row.runId === secondRunId);
-  assert.ok(canonical);
-  assert.ok(duplicate);
+  const canonical = stored.find((row) => row.runId === firstRunId)!;
+  const duplicate = stored.find((row) => row.runId === secondRunId)!;
   assert.equal(canonical.osmId, identity);
-  assert.equal(duplicate.status, "superseded");
-  assert.equal(duplicate.supersededBy, canonical.id);
-  assert.equal(duplicate.proposedName, secondName);
-  assert.equal(duplicate.osmId, null);
+  assert.equal(duplicate.osmId, identity);
+  assert.equal(duplicate.status, "pending");
   const [canonicalAfter] = await db.select().from(creatorPlaceProposalsTable)
     .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
   assert.equal(canonicalAfter?.status, "rejected");
@@ -575,5 +702,5 @@ test("two names resolving to one OSM identity produce one queue row", async () =
   const queue = await listCreatorProposalQueue(tenantId);
   const fixtureQueueRows = queue.filter((row) =>
     row.runId === firstRunId || row.runId === secondRunId);
-  assert.deepEqual(fixtureQueueRows.map((row) => row.id), [canonical.id]);
+  assert.deepEqual(fixtureQueueRows.map((row) => row.id).sort(), [canonical.id, duplicate.id].sort());
 });

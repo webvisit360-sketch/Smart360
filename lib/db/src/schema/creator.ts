@@ -16,7 +16,7 @@ import {
 import { sql } from "drizzle-orm";
 import { adminUsersTable } from "./admin";
 import { tenantsTable } from "./tenants";
-import { categoriesTable } from "./content";
+import { categoriesTable, itemsTable } from "./content";
 
 export const creatorPlaceProposalsTable = pgTable(
   "creator_place_proposals",
@@ -89,7 +89,6 @@ export const creatorPlaceProposalsTable = pgTable(
     check("creator_place_proposals_road_distance_check", sql`${t.roadDistanceM} IS NULL OR ${t.roadDistanceM} >= 0`),
     check("creator_place_proposals_duration_check", sql`${t.travelDurationS} IS NULL OR ${t.travelDurationS} >= 0`),
     check("creator_place_proposals_range_check", sql`${t.range} IS NULL OR ${t.range} IN ('practical','near','excursion')`),
-    uniqueIndex("creator_place_proposals_osm_identity_uq").on(t.tenantId, t.osmType, t.osmId).where(sql`${t.osmId} IS NOT NULL`),
     // A human rejection is durable across runs. An unresolved sieve result is
     // run evidence and may be checked again after the verification pipe changes.
     uniqueIndex("creator_place_proposals_rejected_identity_uq")
@@ -338,6 +337,60 @@ export const creatorProposalTranslationsTable = pgTable(
   ],
 );
 
+/**
+ * Durable bridge from Creator evidence to the one canonical guest place.
+ * Evidence tables are never copied or deleted: proposalId/runId lead back to
+ * verification attempts and the source-candidate/fact/snapshot graph.
+ */
+export const creatorCanonicalPlacesTable = pgTable(
+  "creator_canonical_places",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
+    entityKey: text("entity_key").notNull(),
+    itemId: uuid("item_id").notNull().references(() => itemsTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("creator_canonical_places_tenant_entity_uq").on(t.tenantId, t.entityKey),
+    uniqueIndex("creator_canonical_places_item_uq").on(t.itemId),
+  ],
+);
+
+export const creatorPlaceMaterializationsTable = pgTable(
+  "creator_place_materializations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
+    entityKey: text("entity_key").notNull(),
+    canonicalPlaceId: uuid("canonical_place_id").notNull().references(() => creatorCanonicalPlacesTable.id, { onDelete: "cascade" }),
+    proposalId: uuid("proposal_id").notNull().references(() => creatorPlaceProposalsTable.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull().references(() => itemsTable.id, { onDelete: "cascade" }),
+    runId: uuid("run_id").notNull(),
+    confirmationMethod: text("confirmation_method").notNull(),
+    authoritativeAddress: text("authoritative_address").notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    roadDistanceM: doublePrecision("road_distance_m").notNull(),
+    travelDurationS: integer("travel_duration_s").notNull(),
+    range: text("range").notNull(),
+    // Exact four-language editorial payload captured at first approval.
+    editorialJson: text("editorial_json").notNull(),
+    // Self-contained audit index; immutable source snapshots remain canonical.
+    provenanceJson: text("provenance_json").notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("creator_place_materializations_proposal_uq").on(t.proposalId),
+    index("creator_place_materializations_tenant_entity_idx").on(t.tenantId, t.entityKey),
+    index("creator_place_materializations_tenant_active_idx").on(t.tenantId, t.isActive),
+    check("creator_place_materializations_range_check", sql`${t.range} IN ('practical','near','excursion')`),
+  ],
+);
+
 export const creatorVerificationAttemptsTable = pgTable(
   "creator_verification_attempts",
   {
@@ -388,6 +441,7 @@ export type CreatorVerificationAttempt = typeof creatorVerificationAttemptsTable
 export type CreatorVerificationCandidate = typeof creatorVerificationCandidatesTable.$inferSelect;
 export type CreatorRun = typeof creatorRunsTable.$inferSelect;
 export type CreatorProposalTranslation = typeof creatorProposalTranslationsTable.$inferSelect;
+export type CreatorPlaceMaterialization = typeof creatorPlaceMaterializationsTable.$inferSelect;
 export type CreatorSource = typeof creatorSourcesTable.$inferSelect;
 export type CreatorRobotsEvidence = typeof creatorRobotsEvidenceTable.$inferSelect;
 export type CreatorSourceContent = typeof creatorSourceContentsTable.$inferSelect;

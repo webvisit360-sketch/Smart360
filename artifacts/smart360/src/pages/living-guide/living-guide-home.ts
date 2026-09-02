@@ -1,3 +1,4 @@
+import { suppressesGuestDescription } from "./living-guide-explore";
 import {
   findDatedEventDestination,
   itemEventTimestamp,
@@ -116,10 +117,14 @@ export type HomeTodayEntry = {
   sortValue: number;
 };
 
-function cardDetail(item: any): string {
+function cardDetail(item: any, category: any): string {
   // Computed distance (distanceMeters) first — same value and formatting the
   // Okolica cards use — with the legacy free-text field as fallback.
-  return [itemDistanceText(item), item?.duration, shortExcerpt(item)]
+  return [
+    itemDistanceText(item),
+    item?.duration,
+    suppressesGuestDescription(category) ? "" : shortExcerpt(item),
+  ]
     .filter(
       (value): value is string =>
         typeof value === "string" && value.trim().length > 0,
@@ -158,8 +163,10 @@ export function selectHomeTodayEntries(
         const title =
           typeof item?.title === "string" ? item.title.trim() : "";
         const media = firstImage(item.media);
-        if (!title || !media) continue;
-        const detail = cardDetail(item);
+        // A Creator place has no photo yet, but it is still a real nearby
+        // destination and must remain eligible for Danes.
+        if (!title) continue;
+        const detail = cardDetail(item, category);
 
         if (hasProgramme) {
           if (!isProgrammeSurface) continue;

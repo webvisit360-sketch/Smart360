@@ -110,6 +110,9 @@ export default function GuestCategory() {
 }
 
 function CategoryContent({ category, tenant, t, lang, items }: { category: any, tenant: any, t: (key: string) => string, lang: string, items: any[] }) {
+  if (/\b(culinary|food|restaurant|gostil|restavr|hrana|pijača|shop|trgov|pharmacy|lekar|health|zdrav)\b/i.test(`${category.key ?? ""} ${category.label ?? ""}`)) {
+    items = items.map((item) => ({ ...item, body: null }));
+  }
   if (items.length === 0) {
     return <div className="empty">{t("UI.search.empty")}</div>;
   }
