@@ -12,6 +12,10 @@ import {
   ConfirmCreatorProposalCoordinatesResponse,
   EditCreatorProposalBody,
   EditCreatorProposalResponse,
+  EditCreatorSourceBody,
+  EditCreatorSourceResponse,
+  DeleteCreatorSourceResponse,
+  ArchiveCreatorSourceResponse,
   GetLatestCreatorRunResponse,
   ListCreatorSourcesResponse,
   ListCreatorCategoryOptionsResponse,
@@ -43,8 +47,11 @@ import { CREATOR_C1_PRICING, type CreatorC1Report } from "../lib/creatorC1";
 import { logChange } from "../lib/changelog";
 import {
   approveCreatorSourceList,
+  archiveCreatorSource,
   CreatorSourceRegistryError,
+  deleteCreatorSource,
   decideCreatorSource,
+  editCreatorSource,
   getCreatorSourceList,
   normalizeCreatorMunicipality,
   proposeCreatorSources,
@@ -363,6 +370,57 @@ router.post("/admin/tenants/:id/creator/sources", async (req, res): Promise<void
     res.status(status).json({
       error: error instanceof Error ? error.message : "Sources could not be proposed.",
     });
+  }
+});
+
+router.patch("/admin/tenants/:id/creator/sources/:sourceId", async (req, res): Promise<void> => {
+  const input = EditCreatorSourceBody.safeParse(req.body);
+  if (!input.success) {
+    res.status(400).json({ error: "Veljavna oznaka, vrsta in URL so obvezni." });
+    return;
+  }
+  try {
+    const row = await editCreatorSource({
+      tenantId: first(req.params["id"]),
+      sourceId: first(req.params["sourceId"]),
+      ...input.data,
+    });
+    res.json(EditCreatorSourceResponse.parse(serialize(row)));
+  } catch (error) {
+    const status = error instanceof CreatorSourceRegistryError
+      ? error.kind === "not-found" ? 404 : 409
+      : 500;
+    res.status(status).json({ error: error instanceof Error ? error.message : "Vira ni bilo mogoče urediti." });
+  }
+});
+
+router.delete("/admin/tenants/:id/creator/sources/:sourceId", async (req, res): Promise<void> => {
+  try {
+    const result = await deleteCreatorSource({
+      tenantId: first(req.params["id"]),
+      sourceId: first(req.params["sourceId"]),
+    });
+    res.json(DeleteCreatorSourceResponse.parse(result));
+  } catch (error) {
+    const status = error instanceof CreatorSourceRegistryError
+      ? error.kind === "not-found" ? 404 : 409
+      : 500;
+    res.status(status).json({ error: error instanceof Error ? error.message : "Vira ni bilo mogoče izbrisati." });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/sources/:sourceId/archive", async (req, res): Promise<void> => {
+  try {
+    const row = await archiveCreatorSource({
+      tenantId: first(req.params["id"]),
+      sourceId: first(req.params["sourceId"]),
+    });
+    res.json(ArchiveCreatorSourceResponse.parse(serialize(row)));
+  } catch (error) {
+    const status = error instanceof CreatorSourceRegistryError
+      ? error.kind === "not-found" ? 404 : 409
+      : 500;
+    res.status(status).json({ error: error instanceof Error ? error.message : "Vira ni bilo mogoče arhivirati." });
   }
 });
 

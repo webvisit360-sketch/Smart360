@@ -5,12 +5,15 @@ import {
   getListCreatorSourcesQueryKey,
   useProposeCreatorSources,
   useDecideCreatorSource,
+  useEditCreatorSource,
+  useDeleteCreatorSource,
+  useArchiveCreatorSource,
   useApproveCreatorSourceList,
   useStartCreatorRun,
   useGetLatestCreatorRun,
   getGetLatestCreatorRunQueryKey,
 } from "@workspace/api-client-react";
-import { Loader2, Plus, Trash2, CheckCircle2, XCircle, AlertTriangle, Play, Undo2 } from "lucide-react";
+import { Loader2, Plus, Trash2, CheckCircle2, XCircle, AlertTriangle, Play, Undo2, Pencil, Archive } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -108,6 +111,8 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
   });
 
   const [newRows, setNewRows] = useState<Array<{ id: string; label: string; kind: string; url: string }>>([]);
+  const [editing, setEditing] = useState<{ id: string; label: string; kind: string; url: string } | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const proposeMutation = useProposeCreatorSources({
     mutation: {
@@ -125,6 +130,10 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
       }
     }
   });
+  const refreshSources = () => queryClient.invalidateQueries({ queryKey: getListCreatorSourcesQueryKey(tenantId) });
+  const editMutation = useEditCreatorSource({ mutation: { onSuccess: () => { setEditing(null); refreshSources(); } } });
+  const deleteMutation = useDeleteCreatorSource({ mutation: { onSuccess: refreshSources } });
+  const archiveMutation = useArchiveCreatorSource({ mutation: { onSuccess: refreshSources } });
 
   const approveListMutation = useApproveCreatorSourceList({
     mutation: {
@@ -145,6 +154,7 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
 
   const sourcesList = sourcesQuery.data;
   const sources = sourcesList?.sources ?? [];
+  const visibleSources = sources.filter(source => showArchived || !source.archivedAt);
   const isListApproved = sourcesList?.approval?.approved === true;
   const runSourceOutcomes = readCreatorSourceOutcomes(runQuery.data?.report);
   const sourceOutcomeWarnings = runSourceOutcomes
@@ -185,6 +195,14 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
   const handleDecision = (sourceId: string, decision: 'approve' | 'reject' | 'revoke') => {
     decideMutation.mutate({ id: tenantId, sourceId, decision });
   };
+  const saveEdit = () => {
+    if (!editing?.label.trim() || !editing.url.trim()) return;
+    editMutation.mutate({
+      id: tenantId,
+      sourceId: editing.id,
+      data: { label: editing.label.trim(), sourceKind: editing.kind, url: editing.url.trim() },
+    });
+  };
 
   const isListReadyToApprove = sources.length > 0 && proposed.length === 0 && newRows.length === 0 && approved.length > 0;
   
@@ -192,6 +210,9 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
 
   const error = (proposeMutation.error as any)?.data?.error 
     || (decideMutation.error as any)?.data?.error 
+    || (editMutation.error as any)?.data?.error
+    || (deleteMutation.error as any)?.data?.error
+    || (archiveMutation.error as any)?.data?.error
     || (approveListMutation.error as any)?.data?.error 
     || (startRunMutation.error as any)?.data?.error;
 
@@ -218,8 +239,29 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
 
           {!sourcesQuery.isLoading && (
             <div className="space-y-4">
-              {sources.map(source => (
+              {sources.some(source => source.archivedAt) && (
+                <Button variant="ghost" size="sm" onClick={() => setShowArchived(value => !value)}>
+                  {showArchived ? "Skrij arhivirane" : "Prikaži arhivirane"}
+                </Button>
+              )}
+              {visibleSources.map(source => (
                 <div key={source.id} className={`flex flex-col gap-3 rounded-xl border p-4 ${source.status === 'rejected' || source.status === 'revoked' ? 'bg-muted/50 border-dashed opacity-75' : 'bg-card'}`}>
+                  {editing?.id === source.id ? (
+                    <div className="space-y-3">
+                      <div className="grid gap-3 md:grid-cols-[1fr_200px]">
+                        <Input value={editing.label} onChange={e => setEditing({ ...editing, label: e.target.value })} aria-label="Oznaka vira" />
+                        <Select value={editing.kind} onValueChange={kind => setEditing({ ...editing, kind })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>{SOURCE_KINDS.map(kind => <SelectItem key={kind} value={kind}>{kind}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Input className="md:col-span-2" value={editing.url} onChange={e => setEditing({ ...editing, url: e.target.value })} aria-label="URL vira" />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={saveEdit} disabled={editMutation.isPending}>Shrani in vrni med predloge</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditing(null)}>Prekliči</Button>
+                      </div>
+                    </div>
+                  ) : (
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -251,8 +293,24 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
                           <Undo2 className="mr-1.5 h-4 w-4" /> Prekliči odobritev
                         </Button>
                       )}
+                       {(source.status === 'proposed' || (source.status === 'revoked' && !source.hasCompletedProvenance)) && (
+                         <Button variant="outline" size="sm" onClick={() => setEditing({ id: source.id, label: source.label, kind: source.sourceKind, url: source.url })}>
+                           <Pencil className="mr-1.5 h-4 w-4" /> Uredi
+                         </Button>
+                       )}
+                       {(source.status === 'proposed' || source.status === 'revoked') && !source.hasCompletedProvenance && (
+                         <Button variant="outline" size="sm" onClick={() => deleteMutation.mutate({ id: tenantId, sourceId: source.id })} disabled={deleteMutation.isPending}>
+                           <Trash2 className="mr-1.5 h-4 w-4" /> Izbriši
+                         </Button>
+                       )}
+                       {source.status === 'revoked' && source.hasCompletedProvenance && !source.archivedAt && (
+                         <Button variant="outline" size="sm" onClick={() => archiveMutation.mutate({ id: tenantId, sourceId: source.id })} disabled={archiveMutation.isPending}>
+                           <Archive className="mr-1.5 h-4 w-4" /> Arhiviraj
+                         </Button>
+                       )}
                     </div>
                   </div>
+                  )}
                 </div>
               ))}
 

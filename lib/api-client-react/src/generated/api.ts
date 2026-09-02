@@ -48,6 +48,8 @@ import type {
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
   CreatorSource,
+  CreatorSourceDeleteResult,
+  CreatorSourceEditInput,
   CreatorSourceList,
   CreatorSourceListApproval,
   CreatorSourceProposalListInput,
@@ -2778,6 +2780,226 @@ export const useProposeCreatorSources = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getProposeCreatorSourcesMutationOptions(options));
+    }
+
+export const getEditCreatorSourceUrl = (id: string,
+    sourceId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources/${sourceId}`
+}
+
+/**
+ * @summary Edit a proposed or revoked source and return it to proposed
+ */
+export const editCreatorSource = async (id: string,
+    sourceId: string,
+    creatorSourceEditInput: CreatorSourceEditInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSource> => {
+
+  return customFetch<CreatorSource>(getEditCreatorSourceUrl(id,sourceId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorSourceEditInput)
+  }
+);}
+
+
+
+
+
+export const getEditCreatorSourceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCreatorSource>>, TError,{id: string;sourceId: string;data: BodyType<CreatorSourceEditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof editCreatorSource>>, TError,{id: string;sourceId: string;data: BodyType<CreatorSourceEditInput>}, TContext> => {
+
+const mutationKey = ['editCreatorSource'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof editCreatorSource>>, {id: string;sourceId: string;data: BodyType<CreatorSourceEditInput>}> = (props) => {
+          const {id,sourceId,data} = props ?? {};
+
+          return  editCreatorSource(id,sourceId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EditCreatorSourceMutationResult = NonNullable<Awaited<ReturnType<typeof editCreatorSource>>>
+    export type EditCreatorSourceMutationBody = BodyType<CreatorSourceEditInput>
+    export type EditCreatorSourceMutationError = ErrorType<void>
+
+    /**
+ * @summary Edit a proposed or revoked source and return it to proposed
+ */
+export const useEditCreatorSource = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof editCreatorSource>>, TError,{id: string;sourceId: string;data: BodyType<CreatorSourceEditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof editCreatorSource>>,
+        TError,
+        {id: string;sourceId: string;data: BodyType<CreatorSourceEditInput>},
+        TContext
+      > => {
+      return useMutation(getEditCreatorSourceMutationOptions(options));
+    }
+
+export const getDeleteCreatorSourceUrl = (id: string,
+    sourceId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources/${sourceId}`
+}
+
+/**
+ * @summary Delete a proposed or revoked source without deleting fetched evidence
+ */
+export const deleteCreatorSource = async (id: string,
+    sourceId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSourceDeleteResult> => {
+
+  return customFetch<CreatorSourceDeleteResult>(getDeleteCreatorSourceUrl(id,sourceId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCreatorSourceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCreatorSource>>, TError,{id: string;sourceId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCreatorSource>>, TError,{id: string;sourceId: string}, TContext> => {
+
+const mutationKey = ['deleteCreatorSource'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCreatorSource>>, {id: string;sourceId: string}> = (props) => {
+          const {id,sourceId} = props ?? {};
+
+          return  deleteCreatorSource(id,sourceId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCreatorSourceMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCreatorSource>>>
+
+    export type DeleteCreatorSourceMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a proposed or revoked source without deleting fetched evidence
+ */
+export const useDeleteCreatorSource = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCreatorSource>>, TError,{id: string;sourceId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCreatorSource>>,
+        TError,
+        {id: string;sourceId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCreatorSourceMutationOptions(options));
+    }
+
+export const getArchiveCreatorSourceUrl = (id: string,
+    sourceId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/sources/${sourceId}/archive`
+}
+
+/**
+ * @summary Archive a revoked completed-run provenance source
+ */
+export const archiveCreatorSource = async (id: string,
+    sourceId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorSource> => {
+
+  return customFetch<CreatorSource>(getArchiveCreatorSourceUrl(id,sourceId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getArchiveCreatorSourceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveCreatorSource>>, TError,{id: string;sourceId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveCreatorSource>>, TError,{id: string;sourceId: string}, TContext> => {
+
+const mutationKey = ['archiveCreatorSource'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveCreatorSource>>, {id: string;sourceId: string}> = (props) => {
+          const {id,sourceId} = props ?? {};
+
+          return  archiveCreatorSource(id,sourceId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveCreatorSourceMutationResult = NonNullable<Awaited<ReturnType<typeof archiveCreatorSource>>>
+
+    export type ArchiveCreatorSourceMutationError = ErrorType<void>
+
+    /**
+ * @summary Archive a revoked completed-run provenance source
+ */
+export const useArchiveCreatorSource = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveCreatorSource>>, TError,{id: string;sourceId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveCreatorSource>>,
+        TError,
+        {id: string;sourceId: string},
+        TContext
+      > => {
+      return useMutation(getArchiveCreatorSourceMutationOptions(options));
     }
 
 export const getApproveCreatorSourceListUrl = (id: string,) => {

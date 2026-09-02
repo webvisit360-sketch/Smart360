@@ -147,6 +147,8 @@ export const creatorSourcesTable = pgTable(
     status: text("status").notNull().default("proposed"),
     approvedBy: uuid("approved_by").references(() => adminUsersTable.id),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
@@ -156,7 +158,9 @@ export const creatorSourcesTable = pgTable(
       "creator_sources_approval_check",
       sql`${t.status} <> 'approved' OR (${t.approvedBy} IS NOT NULL AND ${t.approvedAt} IS NOT NULL)`,
     ),
-    uniqueIndex("creator_sources_municipality_url_uq").on(t.municipality, t.canonicalUrl),
+    uniqueIndex("creator_sources_municipality_url_uq")
+      .on(t.municipality, t.canonicalUrl)
+      .where(sql`${t.deletedAt} IS NULL`),
     index("creator_sources_municipality_status_idx").on(t.municipality, t.status),
   ],
 );

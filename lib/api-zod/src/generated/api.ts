@@ -938,6 +938,8 @@ export const ListCreatorSourcesResponse = zod.object({
   "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
   "approvedBy": zod.string().nullable(),
   "approvedAt": zod.string().nullable(),
+  "archivedAt": zod.string().nullable(),
+  "hasCompletedProvenance": zod.boolean(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })),
@@ -983,10 +985,89 @@ export const ProposeCreatorSourcesResponseItem = zod.object({
   "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
   "approvedBy": zod.string().nullable(),
   "approvedAt": zod.string().nullable(),
+  "archivedAt": zod.string().nullable(),
+  "hasCompletedProvenance": zod.boolean(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
 export const ProposeCreatorSourcesResponse = zod.array(ProposeCreatorSourcesResponseItem)
+
+
+/**
+ * @summary Edit a proposed or revoked source and return it to proposed
+ */
+export const EditCreatorSourceParams = zod.object({
+  "id": zod.coerce.string(),
+  "sourceId": zod.coerce.string()
+})
+
+export const editCreatorSourceBodyLabelMax = 200;
+
+export const editCreatorSourceBodySourceKindMax = 80;
+
+export const editCreatorSourceBodyUrlMax = 2000;
+
+
+
+export const EditCreatorSourceBody = zod.object({
+  "label": zod.string().min(1).max(editCreatorSourceBodyLabelMax),
+  "sourceKind": zod.string().min(1).max(editCreatorSourceBodySourceKindMax),
+  "url": zod.string().min(1).max(editCreatorSourceBodyUrlMax)
+})
+
+export const EditCreatorSourceResponse = zod.object({
+  "id": zod.string(),
+  "municipality": zod.string(),
+  "label": zod.string(),
+  "sourceKind": zod.string(),
+  "url": zod.string(),
+  "canonicalUrl": zod.string(),
+  "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
+  "approvedBy": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "archivedAt": zod.string().nullable(),
+  "hasCompletedProvenance": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a proposed or revoked source without deleting fetched evidence
+ */
+export const DeleteCreatorSourceParams = zod.object({
+  "id": zod.coerce.string(),
+  "sourceId": zod.coerce.string()
+})
+
+export const DeleteCreatorSourceResponse = zod.object({
+  "deleted": zod.boolean()
+})
+
+
+/**
+ * @summary Archive a revoked completed-run provenance source
+ */
+export const ArchiveCreatorSourceParams = zod.object({
+  "id": zod.coerce.string(),
+  "sourceId": zod.coerce.string()
+})
+
+export const ArchiveCreatorSourceResponse = zod.object({
+  "id": zod.string(),
+  "municipality": zod.string(),
+  "label": zod.string(),
+  "sourceKind": zod.string(),
+  "url": zod.string(),
+  "canonicalUrl": zod.string(),
+  "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
+  "approvedBy": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "archivedAt": zod.string().nullable(),
+  "hasCompletedProvenance": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
 
 
 /**
@@ -1021,6 +1102,8 @@ export const DecideCreatorSourceResponse = zod.object({
   "status": zod.enum(['proposed', 'approved', 'rejected', 'revoked']),
   "approvedBy": zod.string().nullable(),
   "approvedAt": zod.string().nullable(),
+  "archivedAt": zod.string().nullable(),
+  "hasCompletedProvenance": zod.boolean(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })

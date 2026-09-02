@@ -675,6 +675,56 @@ paths:
                   $ref: "#/components/schemas/CreatorSource"
         "400": { description: "Invalid label, kind, or URL" }
         "404": { description: Tenant or municipality not found }
+  /admin/tenants/{id}/creator/sources/{sourceId}:
+    patch:
+      operationId: editCreatorSource
+      tags: [tenants]
+      summary: Edit a proposed or revoked source and return it to proposed
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorSourceEditInput"
+      responses:
+        "200":
+          description: Edited source
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorSource" }
+        "409": { description: Source cannot be edited }
+    delete:
+      operationId: deleteCreatorSource
+      tags: [tenants]
+      summary: Delete a proposed or revoked source without deleting fetched evidence
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Source removed from the ledger
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorSourceDeleteResult" }
+        "409": { description: Completed-run provenance cannot be deleted }
+  /admin/tenants/{id}/creator/sources/{sourceId}/archive:
+    post:
+      operationId: archiveCreatorSource
+      tags: [tenants]
+      summary: Archive a revoked completed-run provenance source
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Archived source
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorSource" }
+        "409": { description: Source cannot be archived }
   /admin/tenants/{id}/creator/sources/approve-list:
     post:
       operationId: approveCreatorSourceList
@@ -2527,6 +2577,20 @@ components:
           items:
             $ref: "#/components/schemas/CreatorSourceProposalInput"
       required: [sources]
+    CreatorSourceEditInput:
+      type: object
+      additionalProperties: false
+      properties:
+        label: { type: string, minLength: 1, maxLength: 200 }
+        sourceKind: { type: string, minLength: 1, maxLength: 80 }
+        url: { type: string, minLength: 1, maxLength: 2000 }
+      required: [label, sourceKind, url]
+    CreatorSourceDeleteResult:
+      type: object
+      additionalProperties: false
+      properties:
+        deleted: { type: boolean }
+      required: [deleted]
     CreatorSource:
       type: object
       additionalProperties: false
@@ -2540,9 +2604,11 @@ components:
         status: { type: string, enum: [proposed, approved, rejected, revoked] }
         approvedBy: { type: ["string", "null"] }
         approvedAt: { type: ["string", "null"] }
+        archivedAt: { type: ["string", "null"] }
+        hasCompletedProvenance: { type: boolean }
         createdAt: { type: string }
         updatedAt: { type: string }
-      required: [id, municipality, label, sourceKind, url, canonicalUrl, status, approvedBy, approvedAt, createdAt, updatedAt]
+      required: [id, municipality, label, sourceKind, url, canonicalUrl, status, approvedBy, approvedAt, archivedAt, hasCompletedProvenance, createdAt, updatedAt]
     CreatorSourceListApproval:
       type: object
       additionalProperties: false

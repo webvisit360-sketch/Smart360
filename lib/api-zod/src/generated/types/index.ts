@@ -65,6 +65,8 @@ export * from './creatorRunReport';
 export * from './creatorRunReportStatus';
 export * from './creatorSettlementFeatureCount';
 export * from './creatorSource';
+export * from './creatorSourceDeleteResult';
+export * from './creatorSourceEditInput';
 export * from './creatorSourceList';
 export * from './creatorSourceListApproval';
 export * from './creatorSourceProposalInput';

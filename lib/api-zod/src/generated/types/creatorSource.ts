@@ -19,6 +19,9 @@ export interface CreatorSource {
   approvedBy: string | null;
   /** @nullable */
   approvedAt: string | null;
+  /** @nullable */
+  archivedAt: string | null;
+  hasCompletedProvenance: boolean;
   createdAt: string;
   updatedAt: string;
 }

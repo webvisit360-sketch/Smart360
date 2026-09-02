@@ -394,6 +394,28 @@ export interface CreatorSourceProposalListInput {
   sources: CreatorSourceProposalInput[];
 }
 
+export interface CreatorSourceEditInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sourceKind: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  url: string;
+}
+
+export interface CreatorSourceDeleteResult {
+  deleted: boolean;
+}
+
 export type CreatorSourceStatus = typeof CreatorSourceStatus[keyof typeof CreatorSourceStatus];
 
 
@@ -416,6 +438,9 @@ export interface CreatorSource {
   approvedBy: string | null;
   /** @nullable */
   approvedAt: string | null;
+  /** @nullable */
+  archivedAt: string | null;
+  hasCompletedProvenance: boolean;
   createdAt: string;
   updatedAt: string;
 }

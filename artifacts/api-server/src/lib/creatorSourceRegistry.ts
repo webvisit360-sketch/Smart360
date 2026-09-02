@@ -1,11 +1,13 @@
 import {
   changelogTable,
+  creatorSourceContentsTable,
+  creatorSourceRunSnapshotsTable,
   creatorSourceRunsTable,
   creatorSourcesTable,
   db,
   tenantsTable,
 } from "@workspace/db";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, isNull, ne, sql } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { currentActor } from "./actorContext";
 import {
@@ -95,9 +97,33 @@ async function assertNoRunningMunicipalityRun(municipality: string): Promise<voi
 
 export async function listCreatorSourcesForTenant(tenantId: string) {
   const municipality = await tenantMunicipality(tenantId);
-  return db.select().from(creatorSourcesTable)
-    .where(eq(creatorSourcesTable.municipality, municipality))
+  return db.select({
+    ...getTableColumns(creatorSourcesTable),
+    hasCompletedProvenance: sql<boolean>`EXISTS (
+      SELECT 1 FROM creator_source_contents content
+      JOIN creator_source_run_snapshots snapshot ON snapshot.source_content_id = content.id
+      JOIN creator_source_runs run ON run.id = snapshot.run_id
+      WHERE content.source_id = creator_sources.id AND run.status = 'completed'
+    )`,
+  }).from(creatorSourcesTable)
+    .where(and(
+      eq(creatorSourcesTable.municipality, municipality),
+      isNull(creatorSourcesTable.deletedAt),
+    ))
     .orderBy(asc(creatorSourcesTable.createdAt), asc(creatorSourcesTable.id));
+}
+
+async function sourceWithProvenance(sourceId: string) {
+  const [source] = await db.select({
+    ...getTableColumns(creatorSourcesTable),
+    hasCompletedProvenance: sql<boolean>`EXISTS (
+      SELECT 1 FROM creator_source_contents content
+      JOIN creator_source_run_snapshots snapshot ON snapshot.source_content_id = content.id
+      JOIN creator_source_runs run ON run.id = snapshot.run_id
+      WHERE content.source_id = creator_sources.id AND run.status = 'completed'
+    )`,
+  }).from(creatorSourcesTable).where(eq(creatorSourcesTable.id, sourceId)).limit(1);
+  return source;
 }
 
 export async function getCreatorSourceList(tenantId: string) {
@@ -178,6 +204,7 @@ export async function proposeCreatorSources(input: {
         creatorSourcesTable.municipality,
         creatorSourcesTable.canonicalUrl,
       ],
+      where: isNull(creatorSourcesTable.deletedAt),
       }).returning();
     });
     // Proposal-time network access is intentionally limited to robots.txt.
@@ -236,6 +263,112 @@ export async function decideCreatorSource(input: {
     );
   }
   return updated;
+}
+
+export async function editCreatorSource(input: {
+  tenantId: string;
+  sourceId: string;
+  label: string;
+  sourceKind: string;
+  url: string;
+}, evidenceOptions: Parameters<typeof retrieveRobotsEvidence>[1] = {}) {
+  const municipality = await tenantMunicipality(input.tenantId);
+  const label = input.label.replace(/\s+/g, " ").trim();
+  const sourceKind = input.sourceKind.replace(/\s+/g, " ").trim();
+  if (!label || !sourceKind) throw new CreatorSourceRegistryError("Source label and kind must not be blank.", "invalid");
+  let canonicalUrl: string;
+  try {
+    canonicalUrl = canonicalizeCreatorSourceUrl(input.url.trim());
+  } catch (error) {
+    if (error instanceof CreatorSourcePolicyError) throw new CreatorSourceRegistryError(error.message, "invalid");
+    throw error;
+  }
+  const [updated] = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${input.tenantId}))`);
+    await lockMunicipality(municipality, tx);
+    const [running] = await tx.select({ id: creatorSourceRunsTable.id }).from(creatorSourceRunsTable)
+      .innerJoin(tenantsTable, eq(creatorSourceRunsTable.tenantId, tenantsTable.id))
+      .where(and(eq(tenantsTable.municipality, municipality), eq(creatorSourceRunsTable.status, "running"))).limit(1);
+    if (running) throw new CreatorSourceRegistryError("Source mutations are blocked while a source-first run is active.", "conflict");
+    const [duplicate] = await tx.select({ id: creatorSourcesTable.id }).from(creatorSourcesTable).where(and(
+      eq(creatorSourcesTable.municipality, municipality),
+      eq(creatorSourcesTable.canonicalUrl, canonicalUrl),
+      isNull(creatorSourcesTable.deletedAt),
+      ne(creatorSourcesTable.id, input.sourceId),
+    )).limit(1);
+    if (duplicate) throw new CreatorSourceRegistryError("A source with this canonical URL already exists.", "conflict");
+    return tx.update(creatorSourcesTable).set({
+      label,
+      sourceKind,
+      url: canonicalUrl,
+      canonicalUrl,
+      status: "proposed",
+      approvedBy: null,
+      approvedAt: null,
+      archivedAt: null,
+    }).where(and(
+      eq(creatorSourcesTable.id, input.sourceId),
+      eq(creatorSourcesTable.municipality, municipality),
+      isNull(creatorSourcesTable.deletedAt),
+      inArray(creatorSourcesTable.status, ["proposed", "revoked"]),
+      sql`NOT EXISTS (
+        SELECT 1 FROM creator_source_contents content
+        JOIN creator_source_run_snapshots snapshot ON snapshot.source_content_id = content.id
+        JOIN creator_source_runs run ON run.id = snapshot.run_id
+        WHERE content.source_id = creator_sources.id AND run.status = 'completed'
+      )`,
+    )).returning();
+  });
+  if (!updated) throw new CreatorSourceRegistryError(
+    "Only proposed sources or revoked sources without completed-run provenance can be edited.",
+    "conflict",
+  );
+  await retrieveRobotsEvidence(updated, { ...evidenceOptions, useCache: false });
+  return sourceWithProvenance(updated.id);
+}
+
+export async function deleteCreatorSource(input: { tenantId: string; sourceId: string }) {
+  const municipality = await tenantMunicipality(input.tenantId);
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${input.tenantId}))`);
+    await lockMunicipality(municipality, tx);
+    const [source] = await tx.select().from(creatorSourcesTable).where(and(
+      eq(creatorSourcesTable.id, input.sourceId),
+      eq(creatorSourcesTable.municipality, municipality),
+      isNull(creatorSourcesTable.deletedAt),
+      inArray(creatorSourcesTable.status, ["proposed", "revoked"]),
+    )).limit(1);
+    if (!source) throw new CreatorSourceRegistryError("Only proposed or revoked sources can be deleted.", "conflict");
+    const [provenance] = await tx.select({ id: creatorSourceRunSnapshotsTable.runId })
+      .from(creatorSourceRunSnapshotsTable)
+      .innerJoin(creatorSourceContentsTable, eq(creatorSourceRunSnapshotsTable.sourceContentId, creatorSourceContentsTable.id))
+      .innerJoin(creatorSourceRunsTable, eq(creatorSourceRunSnapshotsTable.runId, creatorSourceRunsTable.id))
+      .where(and(eq(creatorSourceContentsTable.sourceId, source.id), eq(creatorSourceRunsTable.status, "completed"))).limit(1);
+    if (provenance) throw new CreatorSourceRegistryError("Completed-run provenance cannot be deleted; revoke and archive this source.", "conflict");
+    // Keep all robots/page evidence immutable. A deleted ledger entry is a
+    // tombstone hidden from every source list and run.
+    await tx.update(creatorSourcesTable).set({ deletedAt: new Date() }).where(eq(creatorSourcesTable.id, source.id));
+  });
+  return { deleted: true as const };
+}
+
+export async function archiveCreatorSource(input: { tenantId: string; sourceId: string }) {
+  const municipality = await tenantMunicipality(input.tenantId);
+  const [updated] = await db.update(creatorSourcesTable).set({ archivedAt: new Date() }).where(and(
+    eq(creatorSourcesTable.id, input.sourceId),
+    eq(creatorSourcesTable.municipality, municipality),
+    eq(creatorSourcesTable.status, "revoked"),
+    isNull(creatorSourcesTable.archivedAt),
+    isNull(creatorSourcesTable.deletedAt),
+    sql`EXISTS (
+      SELECT 1 FROM creator_source_contents content
+      JOIN creator_source_run_snapshots snapshot ON snapshot.source_content_id = content.id
+      JOIN creator_source_runs run ON run.id = snapshot.run_id
+      WHERE content.source_id = creator_sources.id AND run.status = 'completed'
+    )`,
+  )).returning({ id: creatorSourcesTable.id });
+  if (!updated) throw new CreatorSourceRegistryError("Only revoked completed-run provenance sources can be archived.", "conflict");
+  return sourceWithProvenance(updated.id);
 }
 
 export function assertRunnableCreatorSourceStatuses(
