@@ -46,6 +46,34 @@ export function normalizeCreatorMunicipality(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim();
 }
 
+const SOURCE_STATUS_LABEL_SL: Record<string, string> = {
+  proposed: "predlagan",
+  approved: "odobren",
+  rejected: "zavrnjen",
+  revoked: "preklican",
+};
+
+const SOURCE_DECISION_LABEL_SL = {
+  approve: "odobren",
+  reject: "zavrnjen",
+  revoke: "preklican",
+} as const;
+
+function transitionNotAllowedMessage(input: {
+  label: string;
+  status: string;
+  decision: "approve" | "reject" | "revoke";
+}): string {
+  const from = SOURCE_STATUS_LABEL_SL[input.status] ?? input.status;
+  const to = SOURCE_DECISION_LABEL_SL[input.decision];
+  const reason = input.decision === "approve"
+    ? "odobriti je mogoče samo predlagan vir"
+    : input.decision === "reject"
+      ? "zavrniti je mogoče samo predlagan vir"
+      : "odobritev je mogoče preklicati samo odobrenemu viru";
+  return `Prehod vira »${input.label}« iz stanja »${from}« v stanje »${to}« ni dovoljen: ${reason}.`;
+}
+
 async function lockMunicipality(
   municipality: string,
   executor: { execute: (query: ReturnType<typeof sql>) => unknown } = db,
@@ -228,41 +256,79 @@ export async function decideCreatorSource(input: {
   }[input.decision];
   const now = new Date();
   const [updated] = await db.transaction(async (tx) => {
-  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${input.tenantId}))`);
-  const [currentTenant] = await tx.select({ municipality: tenantsTable.municipality })
-    .from(tenantsTable).where(eq(tenantsTable.id, input.tenantId)).limit(1);
-  if (
-    !currentTenant?.municipality
-    || normalizeCreatorMunicipality(currentTenant.municipality) !== municipality
-  ) throw new CreatorSourceRegistryError("Tenant municipality changed; retry the decision.", "conflict");
-  await lockMunicipality(municipality, tx);
-  const [running] = await tx.select({ id: creatorSourceRunsTable.id })
-    .from(creatorSourceRunsTable)
-    .innerJoin(tenantsTable, eq(creatorSourceRunsTable.tenantId, tenantsTable.id))
-    .where(and(
-      eq(tenantsTable.municipality, municipality),
-      eq(creatorSourceRunsTable.status, "running"),
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${input.tenantId}))`);
+    const [currentTenant] = await tx.select({ municipality: tenantsTable.municipality })
+      .from(tenantsTable).where(eq(tenantsTable.id, input.tenantId)).limit(1);
+    if (
+      !currentTenant?.municipality
+      || normalizeCreatorMunicipality(currentTenant.municipality) !== municipality
+    ) throw new CreatorSourceRegistryError("Občina nastanitve se je med postopkom spremenila; poskusite znova.", "conflict");
+    await lockMunicipality(municipality, tx);
+    const [running] = await tx.select({ id: creatorSourceRunsTable.id })
+      .from(creatorSourceRunsTable)
+      .innerJoin(tenantsTable, eq(creatorSourceRunsTable.tenantId, tenantsTable.id))
+      .where(and(
+        eq(tenantsTable.municipality, municipality),
+        eq(creatorSourceRunsTable.status, "running"),
+      )).limit(1);
+    if (running) throw new CreatorSourceRegistryError(
+      "Virov ni mogoče spreminjati, dokler poteka branje virov za to občino.", "conflict",
+    );
+
+    const [source] = await tx.select().from(creatorSourcesTable).where(and(
+      eq(creatorSourcesTable.id, input.sourceId),
+      isNull(creatorSourcesTable.deletedAt),
     )).limit(1);
-  if (running) throw new CreatorSourceRegistryError(
-    "Source mutations are blocked while a source-first run is active.", "conflict",
-  );
-  return tx.update(creatorSourcesTable).set(
-    input.decision === "approve"
-      ? { status: transition.to, approvedBy: input.actorId, approvedAt: now }
-      : { status: transition.to, approvedBy: null, approvedAt: null },
-  ).where(and(
-    eq(creatorSourcesTable.id, input.sourceId),
-    eq(creatorSourcesTable.municipality, municipality),
-    inArray(creatorSourcesTable.status, transition.from),
-  )).returning();
+    if (!source) {
+      throw new CreatorSourceRegistryError(
+        "Prehoda vira ni mogoče izvesti: vir ne obstaja ali je bil izbrisan.",
+        "not-found",
+      );
+    }
+    if (normalizeCreatorMunicipality(source.municipality) !== municipality) {
+      throw new CreatorSourceRegistryError(
+        `Prehoda vira »${source.label}« ni mogoče izvesti: vir je shranjen za občino »${source.municipality}«, nastanitev pa uporablja občino »${municipality}«.`,
+        "conflict",
+      );
+    }
+    // A stale or duplicated revoke request must not turn a successful
+    // approved → revoked transition into an operator-facing failure.
+    if (input.decision === "revoke" && source.status === "revoked") return [source];
+    if (!transition.from.includes(source.status)) {
+      throw new CreatorSourceRegistryError(
+        transitionNotAllowedMessage({
+          label: source.label,
+          status: source.status,
+          decision: input.decision,
+        }),
+        "conflict",
+      );
+    }
+
+    return tx.update(creatorSourcesTable).set(
+      input.decision === "approve"
+        ? { status: transition.to, approvedBy: input.actorId, approvedAt: now }
+        : { status: transition.to, approvedBy: null, approvedAt: null },
+    ).where(and(
+      eq(creatorSourcesTable.id, input.sourceId),
+      eq(creatorSourcesTable.municipality, municipality),
+      inArray(creatorSourcesTable.status, transition.from),
+    )).returning();
   });
   if (!updated) {
     throw new CreatorSourceRegistryError(
-      "Source was not found in this municipality or the transition is not allowed.",
+      "Prehoda vira ni bilo mogoče dokončati, ker se je stanje vira med postopkom spremenilo; osvežite seznam in poskusite znova.",
       "conflict",
     );
   }
-  return updated;
+  const result = await sourceWithProvenance(updated.id);
+  if (!result) {
+    throw new CreatorSourceRegistryError(
+      "Prehoda vira ni bilo mogoče dokončati: posodobljenega vira ni bilo mogoče prebrati.",
+      "not-found",
+    );
+  }
+  return result;
 }
 
 export async function editCreatorSource(input: {

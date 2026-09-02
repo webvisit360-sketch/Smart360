@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  adminUsersTable,
   creatorRobotsEvidenceTable,
   creatorSourceContentsTable,
   creatorSourceRunsTable,
@@ -13,6 +14,7 @@ import { eq } from "drizzle-orm";
 import {
   archiveCreatorSource,
   CreatorSourceRegistryError,
+  decideCreatorSource,
   deleteCreatorSource,
   editCreatorSource,
   listCreatorSourcesForTenant,
@@ -154,6 +156,60 @@ test("editing a revoked source cleans tracking parameters and requires re-approv
     assert.equal(edited?.url, "https://example.com/new?lang=sl");
     assert.equal(edited?.canonicalUrl, "https://example.com/new?lang=sl");
     assert.equal(edited?.approvedAt, null);
+  } finally {
+    await db.delete(creatorSourcesTable).where(eq(creatorSourcesTable.id, source.id));
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+  }
+});
+
+test("a duplicated revoke is idempotent and genuine transition errors explain the transition in Slovenian", async () => {
+  const suffix = crypto.randomUUID();
+  const municipality = `Transition ${suffix}`;
+  const [actor] = await db.select({ id: adminUsersTable.id }).from(adminUsersTable).limit(1);
+  assert.ok(actor);
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `source-transition-${suffix}`,
+    name: `Source transition ${suffix}`,
+    municipality,
+  }).returning({ id: tenantsTable.id });
+  const [source] = await db.insert(creatorSourcesTable).values({
+    municipality,
+    label: "Transition source",
+    sourceKind: "other",
+    url: "https://example.com/transition",
+    canonicalUrl: "https://example.com/transition",
+    status: "approved",
+    approvedBy: actor!.id,
+    approvedAt: new Date(),
+  }).returning();
+  assert.ok(tenant && source);
+
+  try {
+    const revoked = await decideCreatorSource({
+      tenantId: tenant.id,
+      sourceId: source.id,
+      decision: "revoke",
+      actorId: actor.id,
+    });
+    assert.equal(revoked.status, "revoked");
+    const duplicate = await decideCreatorSource({
+      tenantId: tenant.id,
+      sourceId: source.id,
+      decision: "revoke",
+      actorId: actor.id,
+    });
+    assert.equal(duplicate.status, "revoked");
+    await assert.rejects(
+      decideCreatorSource({
+        tenantId: tenant.id,
+        sourceId: source.id,
+        decision: "approve",
+        actorId: actor.id,
+      }),
+      (error) => error instanceof CreatorSourceRegistryError
+        && error.message.includes("iz stanja »preklican« v stanje »odobren«")
+        && error.message.includes("odobriti je mogoče samo predlagan vir"),
+    );
   } finally {
     await db.delete(creatorSourcesTable).where(eq(creatorSourcesTable.id, source.id));
     await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));

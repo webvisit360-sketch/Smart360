@@ -4,8 +4,10 @@ import { once } from "node:events";
 import crypto from "node:crypto";
 import { count, eq, inArray } from "drizzle-orm";
 import {
+  adminUsersTable,
   adminSessionsTable,
   changelogTable,
+  creatorSourcesTable,
   db,
   tenantsTable,
 } from "@workspace/db";
@@ -45,12 +47,42 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   const inserted = await db
     .insert(tenantsTable)
     .values([
-      { slug: `creator-target-${stamp}`, name: sharedName },
+      { slug: `creator-target-${stamp}`, name: sharedName, municipality: `Pred potrditvijo ${stamp}` },
       { slug: `creator-other-${stamp}`, name: sharedName },
     ])
     .returning({ id: tenantsTable.id });
   const targetId = inserted[0]!.id;
   const otherId = inserted[1]!.id;
+  const [owner] = await db.select({ id: adminUsersTable.id }).from(adminUsersTable).limit(1);
+  assert.ok(owner);
+  const provisionalMunicipality = `Pred potrditvijo ${stamp}`;
+  const preConfirmationSources = await db.insert(creatorSourcesTable).values([
+    {
+      municipality: provisionalMunicipality,
+      label: "Predhodno odobren",
+      sourceKind: "municipality",
+      url: `https://example.com/${stamp}/approved`,
+      canonicalUrl: `https://example.com/${stamp}/approved`,
+      status: "approved",
+      approvedBy: owner!.id,
+      approvedAt: new Date(),
+    },
+    {
+      municipality: provisionalMunicipality,
+      label: "Predhodno preklican",
+      sourceKind: "other",
+      url: `https://example.com/${stamp}/revoked`,
+      canonicalUrl: `https://example.com/${stamp}/revoked`,
+      status: "revoked",
+    },
+    {
+      municipality: provisionalMunicipality,
+      label: "Predhodni predlog",
+      sourceKind: "other",
+      url: `https://example.com/${stamp}/proposed`,
+      canonicalUrl: `https://example.com/${stamp}/proposed`,
+    },
+  ]).returning();
 
   const ownerToken = crypto.randomBytes(32).toString("base64url");
   const [session] = await db
@@ -81,6 +113,10 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   t.after(async () => {
     globalThis.fetch = nativeFetch;
     await db.delete(changelogTable).where(inArray(changelogTable.tenantId, [targetId, otherId]));
+    await db.delete(creatorSourcesTable).where(inArray(
+      creatorSourcesTable.id,
+      preConfirmationSources.map((source) => source.id),
+    ));
     await db.delete(adminSessionsTable).where(eq(adminSessionsTable.id, session!.id));
     await db.delete(tenantsTable).where(inArray(tenantsTable.id, [targetId, otherId]));
     await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -130,6 +166,50 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   assert.equal(target!.creatorOriginRegion, "Ljubno ob Savinji, Savinjska, Slovenija");
   assert.equal(target!.municipality, "Ljubno ob Savinji");
   assert.equal(target!.mapUrl, null, "Creator must not persist extra origin fields");
+  const rekeyedSources = await db.select().from(creatorSourcesTable)
+    .where(inArray(
+      creatorSourcesTable.id,
+      preConfirmationSources.map((source) => source.id),
+    ));
+  assert.equal(rekeyedSources.length, 3);
+  assert.ok(rekeyedSources.every((source) => source.municipality === "Ljubno ob Savinji"));
+
+  const approvedSource = preConfirmationSources.find((source) => source.status === "approved")!;
+  const revokedSource = preConfirmationSources.find((source) => source.status === "revoked")!;
+  const proposedSource = preConfirmationSources.find((source) => source.status === "proposed")!;
+  const revokeResponse = await jreq(
+    base,
+    "POST",
+    `/admin/tenants/${targetId}/creator/sources/${approvedSource.id}/revoke`,
+    ownerCookie,
+  );
+  assert.equal(revokeResponse.status, 200);
+  assert.equal((await revokeResponse.json() as { status: string }).status, "revoked");
+
+  const editResponse = await jreq(
+    base,
+    "PATCH",
+    `/admin/tenants/${targetId}/creator/sources/${revokedSource.id}`,
+    ownerCookie,
+    {
+      label: "Urejen po potrditvi",
+      sourceKind: "municipality",
+      url: `https://example.com/${stamp}/edited?utm_source=test&lang=sl`,
+    },
+  );
+  assert.equal(editResponse.status, 200);
+  const editedSource = await editResponse.json() as { status: string; canonicalUrl: string };
+  assert.equal(editedSource.status, "proposed");
+  assert.equal(editedSource.canonicalUrl, `https://example.com/${stamp}/edited?lang=sl`);
+
+  const deleteResponse = await jreq(
+    base,
+    "DELETE",
+    `/admin/tenants/${targetId}/creator/sources/${proposedSource.id}`,
+    ownerCookie,
+  );
+  assert.equal(deleteResponse.status, 200);
+  assert.deepEqual(await deleteResponse.json(), { deleted: true });
 
   const [sameNamedOther] = await db
     .select()

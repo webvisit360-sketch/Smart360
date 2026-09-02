@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
-import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, creatorSourceRunsTable, db, sectionsTable, tenantsTable } from "@workspace/db";
+import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, creatorSourceRunsTable, creatorSourcesTable, db, sectionsTable, tenantsTable } from "@workspace/db";
 import {
   ApproveCreatorSourceListResponse,
   ApproveCreatorProposalResponse,
@@ -243,6 +243,20 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
       );
       if (hasStoredOrigin && input.data.replaceExistingOrigin !== true) {
         throw new CreatorOriginReplacementRequiredError();
+      }
+
+      const previousMunicipality = current.municipality
+        ? normalizeCreatorMunicipality(current.municipality)
+        : "";
+      // Before the first confirmed Creator origin, the cockpit may already
+      // contain a provisional municipality used to enter this tenant's source
+      // list. Move that provisional list with the tenant at confirmation.
+      // Later explicit origin replacements keep their municipality catalogues
+      // separate rather than moving a shared, already-confirmed catalogue.
+      if (!hasStoredOrigin && previousMunicipality && previousMunicipality !== municipality) {
+        await tx.update(creatorSourcesTable)
+          .set({ municipality })
+          .where(eq(creatorSourcesTable.municipality, previousMunicipality));
       }
 
       const [updated] = await tx
