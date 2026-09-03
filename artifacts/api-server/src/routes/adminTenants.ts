@@ -493,6 +493,8 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       renewsAt: tenantsTable.renewsAt,
       latitude: tenantsTable.latitude,
       longitude: tenantsTable.longitude,
+      creatorDraft: tenantsTable.creatorDraft,
+      creatorOriginRegion: tenantsTable.creatorOriginRegion,
       firstPublishedAt: tenantsTable.firstPublishedAt,
       isPublished: tenantsTable.isPublished,
       name: tenantsTable.name,
@@ -578,8 +580,18 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       // a destination, but cannot be resolved without expanding it.
       if (!coordinateOverride) {
         const coords = extractCoordsFromGoogleMapsUrl(mapUrl);
-        updateData["latitude"] = coords?.lat ?? null;
-        updateData["longitude"] = coords?.lng ?? null;
+        const hasConfirmedCreatorOrigin =
+          before.creatorDraft &&
+          Boolean(before.creatorOriginRegion?.trim()) &&
+          before.latitude !== null &&
+          before.longitude !== null;
+        if (coords) {
+          updateData["latitude"] = coords.lat;
+          updateData["longitude"] = coords.lng;
+        } else if (!hasConfirmedCreatorOrigin) {
+          updateData["latitude"] = null;
+          updateData["longitude"] = null;
+        }
       }
     } catch (error) {
       if (error instanceof TenantLocationError) {

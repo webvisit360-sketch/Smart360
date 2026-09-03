@@ -166,6 +166,26 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   assert.equal(target!.creatorOriginRegion, "Ljubno ob Savinji, Savinjska, Slovenija");
   assert.equal(target!.municipality, "Ljubno ob Savinji");
   assert.equal(target!.mapUrl, null, "Creator must not persist extra origin fields");
+
+  const staleSettingsSave = await jreq(
+    base,
+    "PATCH",
+    `/admin/tenants/${targetId}`,
+    ownerCookie,
+    { mapUrl: null },
+  );
+  assert.equal(staleSettingsSave.status, 200);
+  const [afterStaleSettingsSave] = await db
+    .select()
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, targetId));
+  assert.equal(
+    afterStaleSettingsSave!.latitude,
+    46.3536005,
+    "an empty broad settings payload must not clear a confirmed Creator origin",
+  );
+  assert.equal(afterStaleSettingsSave!.longitude, 14.8509723);
+
   const rekeyedSources = await db.select().from(creatorSourcesTable)
     .where(inArray(
       creatorSourcesTable.id,

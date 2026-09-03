@@ -14,6 +14,7 @@ import { ensureRowLevelSecurity } from "./lib/rls";
 import { purgeExpiredEnquiries, scheduleEnquiryRetention } from "./lib/enquiryRetention";
 import { runDecimalMediaQuotaBackfillAtStartup } from "./lib/mediaQuotaBackfill";
 import { runTriesteDistanceCorrectionAtStartup } from "./lib/triesteDistanceCorrection";
+import { runGrilOriginCorrectionAtStartup } from "./lib/grilOriginCorrection";
 import { runLegacyTenantLivingGuideCutoversAtStartup } from "./lib/grilLivingGuideCutover";
 import { recoverCreatorSourceRunsAtStartup } from "./lib/creatorSourceRunService";
 import { runSharedTenantSkeletonSyncAtStartup } from "./lib/tenantSeeds";
@@ -118,6 +119,9 @@ ensureAdminAccount()
   // One-deploy production-only correction for the approved Trieste city-centre distance.
   // Remove this hook and its file immediately after production verification.
   .then(() => runTriesteDistanceCorrectionAtStartup())
+  // One-deploy, production-only restoration of Gril's confirmed Creator origin.
+  // Remove this hook and its file immediately after production verification.
+  .then(() => runGrilOriginCorrectionAtStartup())
   .then(() => recoverCreatorSourceRunsAtStartup())
   .then(() => {
     scheduleOrderRetention();
