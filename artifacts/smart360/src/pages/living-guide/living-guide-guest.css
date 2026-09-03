@@ -1270,12 +1270,15 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-detail-sheet {
   position: absolute;
   z-index: 2;
-  top: calc(var(--lg2-detail-hero-height) - 26px);
+  top: min(
+    calc(var(--lg2-detail-hero-height) - 26px),
+    calc(100% - min(360px, 58%))
+  );
   right: 0;
   bottom: 0;
   left: 0;
   margin: 0;
-  padding: 22px 20px calc(94px + env(safe-area-inset-bottom));
+  padding: 30px 20px calc(94px + env(safe-area-inset-bottom));
   border-radius: 28px 28px 0 0;
   -webkit-clip-path: inset(0 round 28px 28px 0 0);
   clip-path: inset(0 round 28px 28px 0 0);
@@ -2206,7 +2209,6 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   pointer-events: none;
 }
 
-.lg2-detail-view.has-order-dock .lg2-detail-scroll,
 .lg2-detail-view.has-order-dock .lg2-segment-panel,
 .lg2-detail-scroll--orderable {
   padding-bottom: 180px;

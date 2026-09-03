@@ -103,3 +103,11 @@ The moving detail sheet has square top corners. The rounded 28 px white panel, g
 **Why:** The owner corrected the diagnosis: overlap is visually required and safe once it is derived from write-once root geometry. The real fault was measurement-derived height. The route’s own rounded corners incorrectly cut the photo; only the white panel should be rounded.
 
 **How to apply:** Use a root-owned grid boundary at `heroHeight - 26px`, let the fixed-height hero overflow beneath the rounded panel, and keep route radius at zero. Test photo pixels and coordinates at 25%, 60%, and rest, plus one root-variable write.
+
+## Detail sheets with fixed order docks
+
+An order dock must not reserve space by adding bottom padding to the detail scroller that owns the 100%-height sheet root. Reserve obstruction clearance inside the sheet instead. Cap the panel boundary so tall portrait media cannot reduce the usable sheet below a viewport-relative minimum.
+
+**Why:** On real Meli Pu order items, the outer 180px reservation shrank the sheet root and produced dead space; tall hero media then left only 124px for the whole panel. Stored titles, prices, and descriptions appeared clipped or entirely absent even though the data was present.
+
+**How to apply:** Keep the dock fixed, let the sheet root fill the detail viewport, use the sheet's own bottom padding for scroll clearance, and verify both a normal and tall-photo item at 390×844 with content longer than one screen.
