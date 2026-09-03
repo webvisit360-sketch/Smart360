@@ -1,0 +1,21 @@
+Build AI-assisted source discovery for the Creator, replacing most of the manual step-1 typing. The approval gate is untouched: discovery only fills the "proposed" list; nothing is fetched without the operator's "Potrdi seznam". Manual entry remains available as a supplement.
+
+PHASE 1 — REPORT FIRST, THEN STOP FOR THE KEY:
+Recommend a web-search API provider for this stack (e.g. Brave Search API or Google Programmable Search), with its free tier and expected cost per municipality (10–20 queries). The owner will add the API key via Replit Secrets — never in chat. Do not wire anything until the key exists.
+
+PHASE 2 — AFTER THE KEY IS ADDED:
+1. Add "Predlagaj vire" next to the municipality field. For the tenant's confirmed municipality and its neighbours it searches for, and proposes, sources by class:
+   - official municipal site AND its attractions/TIC/museum subpages (not just the landing page)
+   - the TIC site when separate
+   - the regional visit portal's pages for the municipality and area
+   - the local alpine club (planinsko društvo)
+   - hribi.net starting-point index for the town (never a whole mountain-range index)
+   - state registers: Register kulturne dediščine (geohub.gov.si), Register nesnovne dediščine, maPZS/PZS, ARSO Atlas okolja, Natura 2000
+   - Wikipedia article for the town; parish sites for sacral heritage; Napovednik for events; notable venues' own sites
+2. NEVER propose: social networks (Facebook, Instagram), Google Maps or TripAdvisor scraping, booking/accommodation platforms, ticketing platforms (Eventim, MojeKarte). User-route platforms (Komoot, Wikiloc, Strava, AllTrails, Outdooractive) are omitted by default — PZS, maPZS and hribi.net cover that ground officially.
+3. Each discovered URL enters the registry as "proposed" with a one-line note of what it covers and its robots.txt result shown at proposal time. Search results are real URLs — no model-remembered addresses; anything not found by search is not proposed.
+4. The operator reviews, approves or rejects each, then confirms the list exactly as today.
+
+Verify in development on a municipality we have NOT hand-curated (e.g. Luče or Gornji Grad as the primary), and report the proposed list it produces so the owner can judge discovery quality against the hand-built Ljubno list. Report and STOP at each phase boundary. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.
