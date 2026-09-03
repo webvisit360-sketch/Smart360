@@ -1233,7 +1233,12 @@ export const ReevaluateCreatorProposalsResponse = zod.object({
   "accommodationsExcluded": zod.number(),
   "wrongSettlementMovedToUnresolved": zod.number(),
   "duplicatesMerged": zod.number(),
-  "approvedBackfilled": zod.number()
+  "approvedBackfilled": zod.number(),
+  "failures": zod.array(zod.object({
+  "proposalId": zod.string(),
+  "proposedName": zod.string(),
+  "reason": zod.string()
+}))
 })
 
 

@@ -2,7 +2,9 @@ import { pool } from "@workspace/db";
 import { classifyCreatorAccommodationProvider } from "./creatorAccommodationClassifier";
 import {
   backfillApprovedCreatorProposalMaterializations,
+  creatorProposalProcessingReason,
   fuzzyCreatorProposalKey,
+  type CreatorProposalProcessingFailure,
 } from "./creatorProposalLedger";
 import { storedResolutionWrongSettlementReason } from "./creatorSieve";
 
@@ -16,6 +18,7 @@ export type ReevaluateCreatorQueueResult = {
   wrongSettlementMovedToUnresolved: number;
   duplicatesMerged: number;
   approvedBackfilled: number;
+  failures: CreatorProposalProcessingFailure[];
 };
 
 export type CreatorQueueReevaluationRow = {
@@ -182,53 +185,73 @@ export async function reevaluateCreatorQueue(
       placeName: row.place_name,
     }));
     const changes = planCreatorQueueReevaluation(rows, facts);
+    const failures: CreatorProposalProcessingFailure[] = [];
+    const appliedChanges: CreatorQueueReevaluationChange[] = [];
+    const proposedNameById = new Map(rows.map((row) => [row.id, row.proposedName]));
     for (const change of changes) {
-      if (change.kind === "accommodation") {
-        await client.query(
-          `UPDATE creator_place_proposals
-           SET content_ready = false, status = 'unresolved', refusal_reason = $3,
-               updated_at = now()
-           WHERE tenant_id = $1 AND id = $2 AND content_ready = true
-             AND status IN ('pending', 'unresolved')`,
-          [tenantId, change.id, change.reason],
-        );
-      } else if (change.kind === "duplicate") {
-        await client.query(
-          `UPDATE creator_place_proposals
-           SET content_ready = false, status = 'superseded', superseded_by = $3,
-               refusal_reason = NULL, osm_type = NULL, osm_id = NULL,
-               updated_at = now()
-           WHERE tenant_id = $1 AND id = $2 AND content_ready = true
-             AND status IN ('pending', 'unresolved')`,
-          [tenantId, change.id, change.supersededBy],
-        );
-      } else {
-        await client.query(
-          `UPDATE creator_place_proposals
-           SET status = 'unresolved', refusal_reason = $3,
-               confirmed_query = NULL, confirmation_method = NULL,
-               osm_type = NULL, osm_id = NULL, updated_at = now()
-           WHERE tenant_id = $1 AND id = $2 AND content_ready = true
-             AND status IN ('pending', 'unresolved')`,
-          [tenantId, change.id, change.reason],
-        );
+      await client.query("SAVEPOINT creator_proposal_change");
+      try {
+        let update;
+        if (change.kind === "accommodation") {
+          update = await client.query(
+            `UPDATE creator_place_proposals
+             SET content_ready = false, status = 'unresolved', refusal_reason = $3,
+                 updated_at = now()
+             WHERE tenant_id = $1 AND id = $2 AND content_ready = true
+               AND status IN ('pending', 'unresolved')`,
+            [tenantId, change.id, change.reason],
+          );
+        } else if (change.kind === "duplicate") {
+          update = await client.query(
+            `UPDATE creator_place_proposals
+             SET content_ready = false, status = 'superseded', superseded_by = $3,
+                 refusal_reason = NULL, osm_type = NULL, osm_id = NULL,
+                 updated_at = now()
+             WHERE tenant_id = $1 AND id = $2 AND content_ready = true
+               AND status IN ('pending', 'unresolved')`,
+            [tenantId, change.id, change.supersededBy],
+          );
+        } else {
+          update = await client.query(
+            `UPDATE creator_place_proposals
+             SET status = 'unresolved', refusal_reason = $3,
+                 confirmed_query = NULL, confirmation_method = NULL,
+                 osm_type = NULL, osm_id = NULL, updated_at = now()
+             WHERE tenant_id = $1 AND id = $2 AND content_ready = true
+               AND status IN ('pending', 'unresolved')`,
+            [tenantId, change.id, change.reason],
+          );
+        }
+        if (update.rowCount) appliedChanges.push(change);
+        await client.query("RELEASE SAVEPOINT creator_proposal_change");
+      } catch (error) {
+        await client.query("ROLLBACK TO SAVEPOINT creator_proposal_change");
+        await client.query("RELEASE SAVEPOINT creator_proposal_change");
+        failures.push({
+          proposalId: change.id,
+          proposedName: proposedNameById.get(change.id) ?? change.id,
+          reason: creatorProposalProcessingReason(error),
+        });
       }
     }
     if (options.dryRun) await client.query("ROLLBACK");
     else await client.query("COMMIT");
-    const approvedBackfilled = await backfillApprovedCreatorProposalMaterializations(
+    const approvedBackfill = await backfillApprovedCreatorProposalMaterializations(
       tenantId,
       { dryRun: options.dryRun },
     );
+    failures.push(...approvedBackfill.failures);
     return {
       evaluated: rows.length,
-      changed: changes.length,
-      unchanged: rows.length - changes.length,
-      accommodationsExcluded: changes.filter((change) => change.kind === "accommodation").length,
+      changed: appliedChanges.length,
+      unchanged: rows.length - appliedChanges.length,
+      accommodationsExcluded:
+        appliedChanges.filter((change) => change.kind === "accommodation").length,
       wrongSettlementMovedToUnresolved:
-        changes.filter((change) => change.kind === "wrong_settlement").length,
-      duplicatesMerged: changes.filter((change) => change.kind === "duplicate").length,
-      approvedBackfilled,
+        appliedChanges.filter((change) => change.kind === "wrong_settlement").length,
+      duplicatesMerged: appliedChanges.filter((change) => change.kind === "duplicate").length,
+      approvedBackfilled: approvedBackfill.backfilled,
+      failures,
     };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);

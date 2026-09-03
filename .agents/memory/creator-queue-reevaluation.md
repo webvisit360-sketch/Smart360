@@ -8,3 +8,9 @@ Queue rule improvements must be applicable retroactively through one permanent o
 **Why:** New settlement, accommodation, and duplicate rules otherwise improve only future runs and leave existing queues inconsistent. Proposals approved before the guest-materialization bridge can also remain approved but absent from the guide. Rebuilding runs would alter or obscure immutable provenance.
 
 **How to apply:** Reuse current classifiers for open rows and the exact approval materializer for approved rows missing a projection. Preserve evidence, report a separate backfill count, and guarantee a second unchanged run reports zero.
+
+Every proposal processed by re-evaluation must have its own rollback boundary. A malformed legacy proposal is returned and logged by name with a specific Slovenian reason, while every other proposal continues.
+
+**Why:** Legacy operator-coordinate approvals can satisfy old database constraints while lacking the authoritative operator address required by guest materialization. One such row previously rolled back every otherwise valid approved backfill and surfaced only a generic retry message.
+
+**How to apply:** Use savepoints for open-row updates and independent transactions for approved materializations. Return structured failures to the operator; never rewrite approved decisions merely to store a processing error.

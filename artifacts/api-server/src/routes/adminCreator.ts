@@ -40,6 +40,7 @@ import {
   approveCreatorProposalsBulk,
   confirmCreatorProposalCoordinates,
   CreatorBulkApprovalError,
+  creatorProposalProcessingReason,
   editCreatorProposalEditorial,
   listCreatorProposalQueue,
   rejectCreatorProposalIndividually,
@@ -688,12 +689,20 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
   try {
     const result = await reevaluateCreatorQueue(tenantId);
     if (result.approvedBackfilled > 0) invalidateTenantCache();
+    if (result.failures.length > 0) {
+      req.log.warn(
+        { tenantId, failures: result.failures },
+        "Creator queue reevaluation completed with isolated proposal failures",
+      );
+    }
     res.json(ReevaluateCreatorProposalsResponse.parse(result));
   } catch (error) {
     const notFound = error instanceof Error && error.message === "Namestitev ni najdena.";
     req.log.error({ error, tenantId }, "Creator queue reevaluation failed");
     res.status(notFound ? 404 : 500).json({
-      error: notFound ? error.message : "Predlogov ni bilo mogoče ponovno ovrednotiti.",
+      error: notFound
+        ? error.message
+        : `Ponovno ovrednotenje se je ustavilo: ${creatorProposalProcessingReason(error)}`,
     });
   }
 });

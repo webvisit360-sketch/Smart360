@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { CreatorQueueReevaluationResultFailuresItem } from './creatorQueueReevaluationResultFailuresItem';
 
 export interface CreatorQueueReevaluationResult {
   evaluated: number;
@@ -14,4 +15,5 @@ export interface CreatorQueueReevaluationResult {
   wrongSettlementMovedToUnresolved: number;
   duplicatesMerged: number;
   approvedBackfilled: number;
+  failures: CreatorQueueReevaluationResultFailuresItem[];
 }

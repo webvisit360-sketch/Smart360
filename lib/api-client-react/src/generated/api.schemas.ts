@@ -849,6 +849,12 @@ export interface CreatorRetryResult {
   unresolved: number;
 }
 
+export type CreatorQueueReevaluationResultFailuresItem = {
+  proposalId: string;
+  proposedName: string;
+  reason: string;
+};
+
 export interface CreatorQueueReevaluationResult {
   evaluated: number;
   changed: number;
@@ -857,6 +863,7 @@ export interface CreatorQueueReevaluationResult {
   wrongSettlementMovedToUnresolved: number;
   duplicatesMerged: number;
   approvedBackfilled: number;
+  failures: CreatorQueueReevaluationResultFailuresItem[];
 }
 
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];

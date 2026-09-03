@@ -3125,6 +3125,15 @@ components:
         wrongSettlementMovedToUnresolved: { type: number }
         duplicatesMerged: { type: number }
         approvedBackfilled: { type: number }
+        failures:
+          type: array
+          items:
+            type: object
+            properties:
+              proposalId: { type: string }
+              proposedName: { type: string }
+              reason: { type: string }
+            required: [proposalId, proposedName, reason]
       required:
         - evaluated
         - changed
@@ -3133,6 +3142,7 @@ components:
         - wrongSettlementMovedToUnresolved
         - duplicatesMerged
         - approvedBackfilled
+        - failures
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

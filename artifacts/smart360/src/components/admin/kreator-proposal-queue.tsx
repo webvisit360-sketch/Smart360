@@ -268,13 +268,29 @@ export function KreatorProposalQueue({
       </div>
 
       {reevaluate.data && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
-          Pregledano: {reevaluate.data.evaluated} · Spremenjeno: {reevaluate.data.changed}
-          {" · "}Izločene nastanitve: {reevaluate.data.accommodationsExcluded}
-          {" · "}Napačen kraj: {reevaluate.data.wrongSettlementMovedToUnresolved}
-          {" · "}Združeni dvojniki: {reevaluate.data.duplicatesMerged}
-          {" · "}Dopolnjeni potrjeni predlogi: {reevaluate.data.approvedBackfilled}
-        </div>
+        <>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
+            Pregledano: {reevaluate.data.evaluated} · Spremenjeno: {reevaluate.data.changed}
+            {" · "}Izločene nastanitve: {reevaluate.data.accommodationsExcluded}
+            {" · "}Napačen kraj: {reevaluate.data.wrongSettlementMovedToUnresolved}
+            {" · "}Združeni dvojniki: {reevaluate.data.duplicatesMerged}
+            {" · "}Dopolnjeni potrjeni predlogi: {reevaluate.data.approvedBackfilled}
+          </div>
+          {reevaluate.data.failures.length > 0 && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+              <p className="font-bold">
+                {reevaluate.data.failures.length} predlogov ni bilo mogoče obdelati:
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {reevaluate.data.failures.map((failure) => (
+                  <li key={failure.proposalId}>
+                    <span className="font-semibold">{failure.proposedName}</span>: {failure.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
       <div className="grid gap-2 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2 lg:grid-cols-4">

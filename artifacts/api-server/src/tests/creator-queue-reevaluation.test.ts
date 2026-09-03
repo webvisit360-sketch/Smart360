@@ -161,6 +161,39 @@ test("reevaluation backfills approved proposals whose approval predates material
         description: `Legacy description ${language}`,
       })),
     );
+    const [malformed] = await db.insert(creatorPlaceProposalsTable).values({
+      tenantId: tenant.id,
+      runId: crypto.randomUUID(),
+      categoryId: category.id,
+      range: "near",
+      proposedName: "Malformed legacy coordinates",
+      normalizedName: `malformed-legacy-${suffix}`,
+      originalQuery: "Malformed legacy coordinates",
+      confirmedQuery: "operator-map-pin",
+      confirmationMethod: "operator_coordinates",
+      status: "approved",
+      contentReady: true,
+      resolvedName: "Malformed legacy coordinates",
+      operatorAddress: null,
+      resolvedAddress: null,
+      latitude: 46.38,
+      longitude: 14.85,
+      straightLineDistanceM: 4_000,
+      roadDistanceM: 5_000,
+      travelDurationS: 600,
+      coordinateConfirmedBy: actor.id,
+      coordinateConfirmedAt: reviewedAt,
+      reviewedBy: actor.id,
+      reviewedAt,
+    }).returning();
+    await db.insert(creatorProposalTranslationsTable).values(
+      ["sl", "en", "de", "it"].map((language) => ({
+        proposalId: malformed.id,
+        language,
+        name: `Malformed ${language}`,
+        description: `Malformed description ${language}`,
+      })),
+    );
 
     const before = await db.select().from(creatorPlaceMaterializationsTable)
       .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id));
@@ -168,6 +201,11 @@ test("reevaluation backfills approved proposals whose approval predates material
 
     const first = await reevaluateCreatorQueue(tenant.id);
     assert.equal(first.approvedBackfilled, 1);
+    assert.deepEqual(first.failures, [{
+      proposalId: malformed.id,
+      proposedName: "Malformed legacy coordinates",
+      reason: "Manjka naslov, ki ga je operater potrdil ob ročni določitvi koordinat.",
+    }]);
     const [materialization] = await db.select().from(creatorPlaceMaterializationsTable)
       .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id));
     assert.ok(materialization);
@@ -184,9 +222,14 @@ test("reevaluation backfills approved proposals whose approval predates material
     assert.equal(unchangedDecision?.status, "approved");
     assert.equal(unchangedDecision?.reviewedBy, actor.id);
     assert.equal(unchangedDecision?.reviewedAt?.toISOString(), reviewedAt.toISOString());
+    const malformedMaterialization = await db.select().from(creatorPlaceMaterializationsTable)
+      .where(eq(creatorPlaceMaterializationsTable.proposalId, malformed.id));
+    assert.equal(malformedMaterialization.length, 0);
 
     const second = await reevaluateCreatorQueue(tenant.id);
     assert.equal(second.approvedBackfilled, 0);
+    assert.equal(second.failures.length, 1);
+    assert.equal(second.failures[0]?.proposalId, malformed.id);
   } finally {
     await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
   }

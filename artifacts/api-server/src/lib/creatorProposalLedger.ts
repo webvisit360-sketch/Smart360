@@ -35,6 +35,35 @@ import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 
 export const CREATOR_MAX_QUEUE_DURATION_S = 5400;
 
+export type CreatorProposalProcessingFailure = {
+  proposalId: string;
+  proposedName: string;
+  reason: string;
+};
+
+export type CreatorApprovedBackfillResult = {
+  backfilled: number;
+  failures: CreatorProposalProcessingFailure[];
+};
+
+export function creatorProposalProcessingReason(error: unknown): string {
+  if (error instanceof CreatorBulkApprovalError) return error.message;
+  const databaseError = error as { code?: string; constraint?: string; message?: string };
+  if (databaseError.code === "23503") {
+    return "Predlog se sklicuje na kategorijo ali drug podatek, ki ne obstaja več.";
+  }
+  if (databaseError.code === "23505") {
+    return "Predlog je v sporu z že obstoječim enoličnim zapisom.";
+  }
+  if (databaseError.code === "23514") {
+    return `Predlog krši podatkovno pravilo${databaseError.constraint ? ` ${databaseError.constraint}` : ""}.`;
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return `Tehnična napaka pri obdelavi predloga: ${error.message}`;
+  }
+  return "Pri obdelavi predloga je nastala neznana napaka.";
+}
+
 export function normalizeCreatorProposalName(value: string): string {
   return value
     .normalize("NFD")
@@ -488,26 +517,54 @@ async function syncApprovedCreatorPlace(
   if (!proposal.categoryId) {
     throw new CreatorBulkApprovalError("Predlog mora biti pred potrditvijo pripet kategoriji.");
   }
+  const [category] = await tx.select({ id: categoriesTable.id })
+    .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(sectionsTable.id, categoriesTable.sectionId))
+    .where(and(
+      eq(categoriesTable.id, proposal.categoryId),
+      eq(sectionsTable.tenantId, proposal.tenantId),
+    ))
+    .limit(1);
+  if (!category) {
+    throw new CreatorBulkApprovalError("Kategorija predloga ne obstaja v tej namestitvi.");
+  }
   const authoritativeAddress = (
     proposal.confirmationMethod === "operator_coordinates"
       ? proposal.operatorAddress
       : proposal.resolvedAddress
   )?.trim();
-  if (
-    !authoritativeAddress ||
-    !proposal.confirmationMethod ||
-    proposal.latitude === null ||
-    proposal.longitude === null ||
-    proposal.roadDistanceM === null ||
-    proposal.travelDurationS === null ||
-    !proposal.range
-  ) {
-    throw new CreatorBulkApprovalError("Predlog nima popolnih podatkov za vsebino gosta.");
+  if (!proposal.confirmationMethod) {
+    throw new CreatorBulkApprovalError("Predlog nima načina potrditve lokacije.");
   }
+  if (!authoritativeAddress) {
+    throw new CreatorBulkApprovalError(
+      proposal.confirmationMethod === "operator_coordinates"
+        ? "Manjka naslov, ki ga je operater potrdil ob ročni določitvi koordinat."
+        : "Predlog nima potrjenega naslova kraja.",
+    );
+  }
+  const missingLocationFields = [
+    proposal.latitude === null ? "zemljepisna širina" : null,
+    proposal.longitude === null ? "zemljepisna dolžina" : null,
+    proposal.roadDistanceM === null ? "cestna razdalja" : null,
+    proposal.travelDurationS === null ? "čas poti" : null,
+    !proposal.range ? "obseg poti" : null,
+  ].filter((value): value is string => value !== null);
+  if (missingLocationFields.length > 0) {
+    throw new CreatorBulkApprovalError(
+      `Predlogu manjkajo podatki za vsebino gosta: ${missingLocationFields.join(", ")}.`,
+    );
+  }
+  const travelDurationS = proposal.travelDurationS!;
   const editorial = await tx.select().from(creatorProposalTranslationsTable)
     .where(eq(creatorProposalTranslationsTable.proposalId, proposal.id));
-  if (editorial.length !== 4) {
-    throw new CreatorBulkApprovalError("Predlog nima vseh štirih jezikov.");
+  const missingLanguages = ["sl", "en", "de", "it"].filter(
+    (language) => !editorial.some((row: any) => row.language === language),
+  );
+  if (missingLanguages.length > 0) {
+    throw new CreatorBulkApprovalError(
+      `Predlog nima vseh štirih jezikov; manjkajo: ${missingLanguages.join(", ")}.`,
+    );
   }
   const sl = editorial.find((row: any) => row.language === "sl")!;
   const sourceRows = await tx.select({
@@ -560,7 +617,7 @@ async function syncApprovedCreatorPlace(
     body: sl.description,
     mapQuery: authoritativeAddress,
     distanceMeters: proposal.roadDistanceM,
-    duration: `${Math.round(proposal.travelDurationS / 60)} min`,
+    duration: `${Math.round(travelDurationS / 60)} min`,
     isVisible: true,
     deletedAt: null,
   };
@@ -615,7 +672,7 @@ async function syncApprovedCreatorPlace(
     latitude: proposal.latitude,
     longitude: proposal.longitude,
     distanceMeters: proposal.roadDistanceM,
-    durationMinutes: proposal.travelDurationS / 60,
+    durationMinutes: travelDurationS / 60,
     resolvedAddress: authoritativeAddress,
     geocodeQuery: proposal.confirmedQuery,
     inputFingerprint: `creator:${proposal.id}`,
@@ -626,7 +683,7 @@ async function syncApprovedCreatorPlace(
       latitude: proposal.latitude,
       longitude: proposal.longitude,
       distanceMeters: proposal.roadDistanceM,
-      durationMinutes: proposal.travelDurationS / 60,
+      durationMinutes: travelDurationS / 60,
       resolvedAddress: authoritativeAddress,
       geocodeQuery: proposal.confirmedQuery,
       inputFingerprint: `creator:${proposal.id}`,
@@ -673,28 +730,56 @@ async function syncApprovedCreatorPlace(
 export async function backfillApprovedCreatorProposalMaterializations(
   tenantId: string,
   options: { dryRun?: boolean } = {},
-): Promise<number> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(
-      hashtextextended(${`${tenantId}:creator-approved-backfill`}, 0)
-    )`);
-    const approved = await tx.select().from(creatorPlaceProposalsTable).where(and(
+): Promise<CreatorApprovedBackfillResult> {
+  const candidates = await db.select({
+    proposalId: creatorPlaceProposalsTable.id,
+    proposedName: creatorPlaceProposalsTable.proposedName,
+  })
+    .from(creatorPlaceProposalsTable)
+    .leftJoin(
+      creatorPlaceMaterializationsTable,
+      eq(creatorPlaceMaterializationsTable.proposalId, creatorPlaceProposalsTable.id),
+    )
+    .where(and(
       eq(creatorPlaceProposalsTable.tenantId, tenantId),
       eq(creatorPlaceProposalsTable.status, "approved"),
-    )).for("update");
-    if (approved.length === 0) return 0;
-    const materialized = await tx.select({
-      proposalId: creatorPlaceMaterializationsTable.proposalId,
-    }).from(creatorPlaceMaterializationsTable).where(inArray(
-      creatorPlaceMaterializationsTable.proposalId,
-      approved.map((proposal) => proposal.id),
-    ));
-    const materializedIds = new Set(materialized.map((row) => row.proposalId));
-    const missing = approved.filter((proposal) => !materializedIds.has(proposal.id));
-    if (options.dryRun) return missing.length;
-    for (const proposal of missing) await syncApprovedCreatorPlace(tx, proposal);
-    return missing.length;
-  });
+      isNull(creatorPlaceMaterializationsTable.id),
+    ))
+    .orderBy(asc(creatorPlaceProposalsTable.createdAt), asc(creatorPlaceProposalsTable.id));
+  if (options.dryRun) return { backfilled: candidates.length, failures: [] };
+
+  let backfilled = 0;
+  const failures: CreatorProposalProcessingFailure[] = [];
+  for (const candidate of candidates) {
+    try {
+      const inserted = await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(
+          hashtextextended(${`${tenantId}:creator-approved-backfill`}, 0)
+        )`);
+        const [proposal] = await tx.select().from(creatorPlaceProposalsTable).where(and(
+          eq(creatorPlaceProposalsTable.id, candidate.proposalId),
+          eq(creatorPlaceProposalsTable.tenantId, tenantId),
+          eq(creatorPlaceProposalsTable.status, "approved"),
+        )).for("update").limit(1);
+        if (!proposal) return false;
+        const [existing] = await tx.select({ id: creatorPlaceMaterializationsTable.id })
+          .from(creatorPlaceMaterializationsTable)
+          .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id))
+          .limit(1);
+        if (existing) return false;
+        await syncApprovedCreatorPlace(tx, proposal);
+        return true;
+      });
+      if (inserted) backfilled += 1;
+    } catch (error) {
+      failures.push({
+        proposalId: candidate.proposalId,
+        proposedName: candidate.proposedName,
+        reason: creatorProposalProcessingReason(error),
+      });
+    }
+  }
+  return { backfilled, failures };
 }
 
 async function deactivateCreatorPlace(tx: any, proposalId: string) {
