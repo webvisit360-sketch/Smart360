@@ -18,8 +18,11 @@ import {
   purgeItem,
   getGetTrashQueryKey,
   useGetAdminSession,
+  useSearchAdminPlaces,
+  useCreateAdminPlace,
+  getSearchAdminPlacesQueryKey,
 } from "@workspace/api-client-react";
-import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
 import { Input } from "@/components/ui/input";
@@ -49,6 +52,7 @@ import {
 } from "@/pages/living-guide/living-guide-explore";
 import { sectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
 import type { CategoryInputExploreGroup } from "@workspace/api-client-react";
+import { PinPlacementMap } from "@/components/admin/kreator-proposal-queue";
 
 // ---------- Types ----------
 
@@ -742,10 +746,13 @@ function toEventStartIso(value: string): string | null {
 }
 
 type ItemDialogProps =
-  | { mode: "create"; tenantId: string; categoryId: string; item?: undefined; onDone: () => void }
-  | { mode: "edit"; tenantId: string; categoryId: string; item: Item; onDone: () => void };
+  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; item?: undefined; onDone: () => void }
+  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; item: Item; onDone: () => void };
 
-function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProps) {
+function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: ItemDialogProps) {
+  if (mode === "create" && (sectionKey === "explore" || sectionKey === "services")) {
+    return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} onDone={onDone} />;
+  }
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
@@ -1177,6 +1184,185 @@ function ItemDialog({ mode, tenantId, categoryId, item, onDone }: ItemDialogProp
   );
 }
 
+function placeError(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return "Kraja ni bilo mogoče dodati.";
+}
+
+function OkolicaPlaceCreate({
+  tenantId,
+  categoryId,
+  onDone,
+}: {
+  tenantId: string;
+  categoryId: string;
+  onDone: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [query, setQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
+  const [selected, setSelected] = useState<{ osmType: "node" | "way" | "relation"; osmId: number } | null>(null);
+  const [manual, setManual] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [locationText, setLocationText] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const search = useSearchAdminPlaces(categoryId, { q: submittedQuery }, {
+    query: {
+      queryKey: getSearchAdminPlacesQueryKey(categoryId, { q: submittedQuery }),
+      enabled: submittedQuery.length >= 2,
+      retry: false,
+    },
+  });
+  const create = useCreateAdminPlace();
+  const busy = create.isPending;
+  const candidates = search.data?.candidates ?? [];
+  const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+
+  const save = async () => {
+    try {
+      if (manual) {
+        const lat = Number(latitude);
+        const lng = Number(longitude);
+        if (!manualName.trim() || !locationText.trim() || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+          alert("Ime, opis lokacije in veljavna točka na zemljevidu so obvezni.");
+          return;
+        }
+        await create.mutateAsync({
+          id: categoryId,
+          data: { mode: "manual", name: manualName.trim(), locationText: locationText.trim(), latitude: lat, longitude: lng },
+        });
+      } else {
+        if (!selected) return;
+        await create.mutateAsync({ id: categoryId, data: { mode: "nominatim", ...selected } });
+      }
+      await refresh();
+      onDone();
+    } catch (error) {
+      alert(placeError(error));
+    }
+  };
+
+  useReportDirty(Boolean(query || selected || manualName || locationText || latitude || longitude));
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <DialogScrollBody>
+        {!manual ? (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="place-search">Poiščite kraj po imenu</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="place-search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      setSelected(null);
+                      setSubmittedQuery(query.trim());
+                    }
+                  }}
+                  placeholder="npr. Logarska dolina"
+                  disabled={busy}
+                />
+                <Button
+                  type="button"
+                  onClick={() => { setSelected(null); setSubmittedQuery(query.trim()); }}
+                  disabled={busy || query.trim().length < 2}
+                >
+                  <Search className="h-4 w-4" /> Išči
+                </Button>
+              </div>
+            </div>
+            {search.isLoading && (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Iskanje…
+              </p>
+            )}
+            {search.isError && (
+              <p role="alert" className="text-sm text-destructive">Iskanje trenutno ni uspelo. Poskusite znova.</p>
+            )}
+            {search.isSuccess && candidates.length === 0 && (
+              <div className="rounded-md border border-dashed p-4 text-sm">
+                <p className="mb-3 text-muted-foreground">Ni zadetkov.</p>
+                <Button type="button" variant="outline" onClick={() => setManual(true)}>
+                  <MapPin className="h-4 w-4" /> Ročno označi na zemljevidu
+                </Button>
+              </div>
+            )}
+            {candidates.length > 0 && (
+              <div className="space-y-2" aria-label="Rezultati iskanja">
+                {candidates.map((candidate) => {
+                  const active = selected?.osmType === candidate.osmType && selected.osmId === candidate.osmId;
+                  return (
+                    <button
+                      key={`${candidate.osmType}:${candidate.osmId}`}
+                      type="button"
+                      disabled={candidate.duplicate || busy}
+                      onClick={() => setSelected({ osmType: candidate.osmType, osmId: candidate.osmId })}
+                      className={`w-full rounded-md border p-3 text-left ${active ? "border-primary ring-1 ring-primary" : ""} ${candidate.duplicate ? "cursor-not-allowed opacity-60" : "hover:bg-muted/50"}`}
+                    >
+                      <span className="flex items-center justify-between gap-2 font-medium">
+                        {candidate.name}
+                        {candidate.duplicate && <Badge variant="secondary">že v vodniku</Badge>}
+                      </span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{candidate.address}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {formatDistanceMeters(candidate.straightLineDistanceM)} zračne razdalje · OSM {candidate.osmType} {candidate.osmId}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="space-y-1">
+              <Label>Ime kraja *</Label>
+              <Input value={manualName} onChange={(event) => setManualName(event.target.value)} disabled={busy} />
+            </div>
+            <div className="space-y-1">
+              <Label>Opis lokacije / naslov *</Label>
+              <Input value={locationText} onChange={(event) => setLocationText(event.target.value)} disabled={busy} />
+              <p className="text-xs text-muted-foreground">Opis lokacije je obvezen in bo prikazan gostu.</p>
+            </div>
+            <PinPlacementMap
+              latitude={latitude}
+              longitude={longitude}
+              origin={search.data ? {
+                latitude: search.data.originLatitude,
+                longitude: search.data.originLongitude,
+              } : undefined}
+              onPlace={(lat, lng) => { setLatitude(String(lat)); setLongitude(String(lng)); }}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Zemljepisna širina *</Label>
+                <Input inputMode="decimal" value={latitude} onChange={(event) => setLatitude(event.target.value)} disabled={busy} />
+              </div>
+              <div className="space-y-1">
+                <Label>Zemljepisna dolžina *</Label>
+                <Input inputMode="decimal" value={longitude} onChange={(event) => setLongitude(event.target.value)} disabled={busy} />
+              </div>
+            </div>
+          </>
+        )}
+      </DialogScrollBody>
+      <DialogFooter className="gap-2 border-t pt-3">
+        {manual && <Button type="button" variant="ghost" onClick={() => setManual(false)} disabled={busy}>Nazaj na iskanje</Button>}
+        <Button type="button" variant="outline" onClick={onDone} disabled={busy}>Prekliči</Button>
+        <Button type="button" onClick={save} disabled={busy || (!manual && !selected)}>
+          {busy && <Loader2 className="h-4 w-4 animate-spin" />} Dodaj kraj
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
 // ==========================================
 // Item row
 // ==========================================
@@ -1314,6 +1500,7 @@ function CategoryBlock({ category, tenantId, sectionKey }: { category: Category;
             mode="create"
             tenantId={tenantId}
             categoryId={category.id}
+            sectionKey={sectionKey}
             onDone={() => setAddOpen(false)}
           />
       </EditDialog>

@@ -89,6 +89,80 @@ export function creatorPlaceEntityKey(row: Pick<typeof creatorPlaceProposalsTabl
   return `coordinates:${row.latitude.toFixed(5)}:${row.longitude.toFixed(5)}`;
 }
 
+/** All writers of a canonical place take these two locks in this order. */
+export async function lockCreatorPlaceIdentity(
+  tx: any,
+  tenantId: string,
+  entityKey: string,
+  normalizedName: string,
+) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(
+    hashtextextended(${`${tenantId}:creator-place-entity:${entityKey}`}, 0)
+  )`);
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(
+    hashtextextended(${`${tenantId}:creator-place-name:${normalizedName}`}, 0)
+  )`);
+}
+
+/** Must run after lockCreatorPlaceIdentity.  The canonical entity may be
+ * replayed idempotently, but a different live place may never claim its name. */
+export async function assertNoLiveCreatorPlaceDuplicate(
+  tx: any,
+  input: {
+    tenantId: string;
+    entityKey: string;
+    normalizedName: string;
+    currentProposalId: string;
+    currentCreatedAt: Date;
+  },
+) {
+  const [sameEntity] = await tx.select({ itemId: creatorCanonicalPlacesTable.itemId })
+    .from(creatorCanonicalPlacesTable)
+    .where(and(
+      eq(creatorCanonicalPlacesTable.tenantId, input.tenantId),
+      eq(creatorCanonicalPlacesTable.entityKey, input.entityKey),
+    ))
+    .limit(1);
+  const reusableItemId = sameEntity?.itemId ?? null;
+  const proposals = await tx.select().from(creatorPlaceProposalsTable)
+    .where(and(
+      eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
+      eq(creatorPlaceProposalsTable.normalizedName, input.normalizedName),
+      ne(creatorPlaceProposalsTable.id, input.currentProposalId),
+      ne(creatorPlaceProposalsTable.status, "rejected"),
+    ));
+  const conflictingProposal = proposals.some((row: typeof creatorPlaceProposalsTable.$inferSelect) => {
+    const key = row.osmType && row.osmId !== null
+      ? `osm:${row.osmType}:${row.osmId}`
+      : row.latitude !== null && row.longitude !== null
+        ? `coordinates:${row.latitude.toFixed(5)}:${row.longitude.toFixed(5)}`
+        : null;
+    // Pending Creator rows can exist before either reviewer approves them.
+    // Give that race one stable winner; once it is approved/materialized the
+    // other row deterministically loses under the same name lock.
+    const earlierOrLive = row.status !== "pending" ||
+      row.createdAt < input.currentCreatedAt ||
+      (row.createdAt.getTime() === input.currentCreatedAt.getTime() && row.id < input.currentProposalId);
+    return key !== input.entityKey && earlierOrLive;
+  });
+  const itemRows = await tx.select({ id: itemsTable.id, title: itemsTable.title })
+    .from(itemsTable)
+    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(and(
+      eq(sectionsTable.tenantId, input.tenantId),
+      isNull(itemsTable.deletedAt),
+    ));
+  const conflictingItem = itemRows.some((item: { id: string; title: string | null }) =>
+    item.id !== reusableItemId &&
+    item.title !== null &&
+    normalizeCreatorProposalName(item.title) === input.normalizedName);
+  if (conflictingProposal || conflictingItem) {
+    throw new CreatorBulkApprovalError("Ta kraj je že v vodniku.");
+  }
+  return { reusableItemId };
+}
+
 export async function upsertPendingCreatorProposal(input: {
   tenantId: string;
   runId: string;
@@ -510,7 +584,7 @@ export async function listCreatorProposalQueue(tenantId: string) {
   }));
 }
 
-async function syncApprovedCreatorPlace(
+export async function syncApprovedCreatorPlace(
   tx: any,
   proposal: typeof creatorPlaceProposalsTable.$inferSelect,
 ) {
@@ -582,6 +656,7 @@ async function syncApprovedCreatorPlace(
     )
     .where(eq(creatorSourceCandidatesTable.proposalId, proposal.id));
   const provenanceJson = JSON.stringify({
+    provenance: proposal.inclusionReason,
     proposalId: proposal.id,
     runId: proposal.runId,
     confirmationMethod: proposal.confirmationMethod,
@@ -596,9 +671,19 @@ async function syncApprovedCreatorPlace(
   const entityKey = creatorPlaceEntityKey(proposal);
   // Serializes competing first approvals of the same canonical place, even
   // when they originate from different Creator proposals/categories.
-  await tx.execute(sql`SELECT pg_advisory_xact_lock(
-    hashtextextended(${`${proposal.tenantId}:creator-place:${entityKey}`}, 0)
-  )`);
+  await lockCreatorPlaceIdentity(
+    tx,
+    proposal.tenantId,
+    entityKey,
+    proposal.normalizedName,
+  );
+  await assertNoLiveCreatorPlaceDuplicate(tx, {
+    tenantId: proposal.tenantId,
+    entityKey,
+    normalizedName: proposal.normalizedName,
+    currentProposalId: proposal.id,
+    currentCreatedAt: proposal.createdAt,
+  });
   const [ownMaterialization] = await tx.select().from(creatorPlaceMaterializationsTable)
     .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id)).limit(1);
   const [canonical] = await tx.select().from(creatorCanonicalPlacesTable)

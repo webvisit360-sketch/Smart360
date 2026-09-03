@@ -6,7 +6,7 @@ export * from "./generated/types";
 export type {
   GetPublicTenantParams,
   SearchPublicTenantParams,
+  SearchAdminPlacesParams,
   ListTenantTranslationsParams,
   ExportTranslationsParams,
 } from "./generated/types";
-export * from './generated/types';

@@ -1631,6 +1631,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Item"
+  /admin/categories/{id}/place-search:
+    get:
+      operationId: searchAdminPlaces
+      tags: [items]
+      summary: Search verified Nominatim candidates for an OKOLICA category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 160 }
+      responses:
+        "200":
+          description: Candidates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminPlaceSearchResponse"
+  /admin/categories/{id}/places:
+    post:
+      operationId: createAdminPlace
+      tags: [items]
+      summary: Verify and immediately materialize an operator-selected place
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminPlaceInput"
+      responses:
+        "201":
+          description: Materialized item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
   /admin/items/{id}:
     patch:
       operationId: updateItem
@@ -4036,6 +4080,45 @@ components:
         soldOut: { type: boolean }
         producerName: { type: string }
         producerNote: { type: string }
+    AdminPlaceCandidate:
+      type: object
+      properties:
+        name: { type: string }
+        address: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        osmType: { type: string, enum: [node, way, relation] }
+        osmId: { type: number }
+        straightLineDistanceM: { type: number, minimum: 0 }
+        duplicate: { type: boolean }
+        duplicateLabel: { type: ["string", "null"], enum: ["že v vodniku", null] }
+      required: [name, address, latitude, longitude, osmType, osmId, straightLineDistanceM, duplicate, duplicateLabel]
+    AdminPlaceSearchResponse:
+      type: object
+      properties:
+        originLatitude: { type: number }
+        originLongitude: { type: number }
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminPlaceCandidate"
+      required: [originLatitude, originLongitude, candidates]
+    CreateAdminPlaceInput:
+      oneOf:
+        - type: object
+          properties:
+            mode: { type: string, enum: [nominatim] }
+            osmType: { type: string, enum: [node, way, relation] }
+            osmId: { type: number }
+          required: [mode, osmType, osmId]
+        - type: object
+          properties:
+            mode: { type: string, enum: [manual] }
+            name: { type: string, minLength: 1, maxLength: 200 }
+            locationText: { type: string, minLength: 1, maxLength: 500 }
+            latitude: { type: number, minimum: -90, maximum: 90 }
+            longitude: { type: number, minimum: -180, maximum: 180 }
+          required: [mode, name, locationText, latitude, longitude]
     ItemUpdate:
       type: object
       properties:

@@ -2080,6 +2080,73 @@ export interface ItemInput {
   producerNote?: string;
 }
 
+export type AdminPlaceCandidateOsmType = typeof AdminPlaceCandidateOsmType[keyof typeof AdminPlaceCandidateOsmType];
+
+
+export const AdminPlaceCandidateOsmType = {
+  node: 'node',
+  way: 'way',
+  relation: 'relation',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminPlaceCandidateDuplicateLabel = typeof AdminPlaceCandidateDuplicateLabel[keyof typeof AdminPlaceCandidateDuplicateLabel] | null;
+
+
+export const AdminPlaceCandidateDuplicateLabel = {
+  že_v_vodniku: 'že v vodniku',
+} as const;
+
+export interface AdminPlaceCandidate {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  osmType: AdminPlaceCandidateOsmType;
+  osmId: number;
+  /** @minimum 0 */
+  straightLineDistanceM: number;
+  duplicate: boolean;
+  /** @nullable */
+  duplicateLabel: AdminPlaceCandidateDuplicateLabel;
+}
+
+export interface AdminPlaceSearchResponse {
+  originLatitude: number;
+  originLongitude: number;
+  candidates: AdminPlaceCandidate[];
+}
+
+export type CreateAdminPlaceInput = {
+  mode: 'nominatim';
+  osmType: 'node' | 'way' | 'relation';
+  osmId: number;
+} | {
+  mode: 'manual';
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  locationText: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+};
+
 /**
  * @nullable
  */
@@ -2574,6 +2641,14 @@ preview?: boolean;
 export type SearchPublicTenantParams = {
 q: string;
 lang?: string;
+};
+
+export type SearchAdminPlacesParams = {
+/**
+ * @minLength 2
+ * @maxLength 160
+ */
+q: string;
 };
 
 export type GetStorageCleanupPreviewParams = {

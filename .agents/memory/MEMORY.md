@@ -38,3 +38,4 @@
 - [Creator guest materialization](creator-guest-materialization.md) — approvals project immutable evidence into one canonical guest place with reversible, multi-category lifecycle.
 - [Manual pin feedback](manual-pin-feedback.md) — save outcomes must be local and immediate; routing requires tenant origin coordinates.
 - [Creator Wikimedia photos](creator-wikimedia-photos.md) — Commons thumbnails and bilingual fallback matching have stricter host/name rules than P18 originals.
+- [Creator place entry boundary](creator-place-entry-boundary.md) — new world places start in Nastanitev’s shared skeleton; house content stays plain and distances stay machine-owned.

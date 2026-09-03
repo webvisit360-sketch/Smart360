@@ -37,13 +37,19 @@ import {
   ListTranslationsResponse,
   UpsertTranslationBody,
   UpsertTranslationResponse,
+  SearchAdminPlacesQueryParams,
+  SearchAdminPlacesResponse,
+  CreateAdminPlaceBody,
+  CreateAdminPlaceResponse,
 } from "@workspace/api-zod";
-import { requireAdmin } from "../lib/adminAuth";
+import { getAdminUser, requireAdmin } from "../lib/adminAuth";
 import { currentActor } from "../lib/actorContext";
 import { logChange } from "../lib/changelog";
 import { sanitizeBody, sanitizePlain, sanitizeUrl } from "../lib/sanitizeBody";
 import { isRichField, normalizeAllContent } from "../lib/normalizeContent";
 import { invalidateTenantCache } from "./publicTenants";
+import { createAdminPlace, searchAdminPlaces } from "../lib/adminPlaceCreation";
+import { CreatorBulkApprovalError } from "../lib/creatorProposalLedger";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -478,6 +484,53 @@ router.post("/admin/categories/reorder", async (req, res): Promise<void> => {
 
 // ---------- Items ----------
 
+router.get("/admin/categories/:id/place-search", async (req, res): Promise<void> => {
+  const parsed = SearchAdminPlacesQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  try {
+    const result = await searchAdminPlaces(firstParam(req.params["id"]), parsed.data.q);
+    res.json(SearchAdminPlacesResponse.parse(result));
+  } catch (error) {
+    res.status(error instanceof CreatorBulkApprovalError ? 400 : 503)
+      .json({ error: error instanceof Error ? error.message : "Iskanje ni uspelo." });
+  }
+});
+
+router.post("/admin/categories/:id/places", async (req, res): Promise<void> => {
+  const parsed = CreateAdminPlaceBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const actor = await getAdminUser();
+  if (!actor) {
+    res.status(403).json({ error: "Dostop je dovoljen samo operaterju." });
+    return;
+  }
+  const categoryId = firstParam(req.params["id"]);
+  try {
+    const proposal = await createAdminPlace({
+      categoryId,
+      actorId: actor.id,
+      selection: parsed.data,
+    });
+    const [item] = await db.select({ item: itemsTable })
+      .from(creatorPlaceMaterializationsTable)
+      .innerJoin(itemsTable, eq(creatorPlaceMaterializationsTable.itemId, itemsTable.id))
+      .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id))
+      .limit(1);
+    if (!item) throw new Error("Ustvarjenega vnosa ni mogoče prebrati.");
+    invalidateTenantCache();
+    res.status(201).json(CreateAdminPlaceResponse.parse(await itemWithMedia(item.item)));
+  } catch (error) {
+    res.status(error instanceof CreatorBulkApprovalError ? 409 : 503)
+      .json({ error: error instanceof Error ? error.message : "Kraja ni bilo mogoče dodati." });
+  }
+});
+
 async function itemWithMedia(
   item: typeof itemsTable.$inferSelect,
 ): Promise<Record<string, unknown>> {
@@ -497,11 +550,16 @@ router.post("/admin/categories/:id/items", async (req, res): Promise<void> => {
     return;
   }
   const [category] = await db
-    .select()
+    .select({ category: categoriesTable, sectionKey: sectionsTable.key })
     .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
     .where(eq(categoriesTable.id, categoryId));
   if (!category) {
     res.status(404).json({ error: "Category not found" });
+    return;
+  }
+  if (category.sectionKey === "explore" || category.sectionKey === "services") {
+    res.status(409).json({ error: "Za kraje v OKOLICI uporabite iskanje krajev." });
     return;
   }
   const existing = await db
@@ -515,13 +573,13 @@ router.post("/admin/categories/:id/items", async (req, res): Promise<void> => {
     .insert(itemsTable)
     .values({ ...cleanContentFields(parsed.data), position, categoryId })
     .returning();
-  const ctx = await tenantNameForSection(category.sectionId);
+  const ctx = await tenantNameForSection(category.category.sectionId);
   await logChange({
     ...ctx,
     action: "create",
     entity: "item",
-    detail: parsed.data.title ?? category.label,
-    summary: auditSummary("Ustvarjen vnos", item!.title ?? category.label),
+    detail: parsed.data.title ?? category.category.label,
+    summary: auditSummary("Ustvarjen vnos", item!.title ?? category.category.label),
   });
   res.status(201).json(CreateItemResponse.parse(await itemWithMedia(item!)));
 });

@@ -166,6 +166,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "delete", path: "/admin/categories/:id", binding: e("category") },
   { method: "post", path: "/admin/categories/reorder", binding: RLS },
   { method: "post", path: "/admin/categories/:id/items", binding: e("category") },
+  { method: "get", path: "/admin/categories/:id/place-search", binding: OWNER },
+  { method: "post", path: "/admin/categories/:id/places", binding: OWNER },
   { method: "patch", path: "/admin/items/:id", binding: e("item") },
   { method: "delete", path: "/admin/items/:id", binding: e("item") },
   { method: "post", path: "/admin/items/:id/duplicate", binding: e("item") },

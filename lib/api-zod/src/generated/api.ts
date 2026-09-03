@@ -3160,6 +3160,135 @@ export const CreateItemResponse = zod.object({
 
 
 /**
+ * @summary Search verified Nominatim candidates for an OKOLICA category
+ */
+export const SearchAdminPlacesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const searchAdminPlacesQueryQMin = 2;
+export const searchAdminPlacesQueryQMax = 160;
+
+
+
+export const SearchAdminPlacesQueryParams = zod.object({
+  "q": zod.coerce.string().min(searchAdminPlacesQueryQMin).max(searchAdminPlacesQueryQMax)
+})
+
+export const searchAdminPlacesResponseCandidatesItemStraightLineDistanceMMin = 0;
+
+
+
+export const SearchAdminPlacesResponse = zod.object({
+  "originLatitude": zod.number(),
+  "originLongitude": zod.number(),
+  "candidates": zod.array(zod.object({
+  "name": zod.string(),
+  "address": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "osmType": zod.enum(['node', 'way', 'relation']),
+  "osmId": zod.number(),
+  "straightLineDistanceM": zod.number().min(searchAdminPlacesResponseCandidatesItemStraightLineDistanceMMin),
+  "duplicate": zod.boolean(),
+  "duplicateLabel": zod.union([zod.literal('že v vodniku'),zod.literal(null)]).nullable()
+}))
+})
+
+
+/**
+ * @summary Verify and immediately materialize an operator-selected place
+ */
+export const CreateAdminPlaceParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const createAdminPlaceBodyTwoNameMax = 200;
+
+export const createAdminPlaceBodyTwoLocationTextMax = 500;
+
+export const createAdminPlaceBodyTwoLatitudeMin = -90;
+export const createAdminPlaceBodyTwoLatitudeMax = 90;
+
+export const createAdminPlaceBodyTwoLongitudeMin = -180;
+export const createAdminPlaceBodyTwoLongitudeMax = 180;
+
+
+
+export const CreateAdminPlaceBody = zod.union([zod.object({
+  "mode": zod.enum(['nominatim']),
+  "osmType": zod.enum(['node', 'way', 'relation']),
+  "osmId": zod.number()
+}),zod.object({
+  "mode": zod.enum(['manual']),
+  "name": zod.string().min(1).max(createAdminPlaceBodyTwoNameMax),
+  "locationText": zod.string().min(1).max(createAdminPlaceBodyTwoLocationTextMax),
+  "latitude": zod.number().min(createAdminPlaceBodyTwoLatitudeMin).max(createAdminPlaceBodyTwoLatitudeMax),
+  "longitude": zod.number().min(createAdminPlaceBodyTwoLongitudeMin).max(createAdminPlaceBodyTwoLongitudeMax)
+})])
+
+export const createAdminPlaceResponseDistanceMetersMin = 0;
+
+
+
+
+
+export const CreateAdminPlaceResponse = zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "title": zod.string().nullish(),
+  "body": zod.string().nullish(),
+  "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "price": zod.string().nullish(),
+  "priceUnit": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "mapQuery": zod.string().nullish(),
+  "difficulty": zod.string().nullish(),
+  "duration": zod.string().nullish(),
+  "distance": zod.string().nullish(),
+  "distanceMeters": zod.number().min(createAdminPlaceResponseDistanceMetersMin).nullish(),
+  "open24": zod.boolean(),
+  "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
+  "noteType": zod.string().nullish(),
+  "noteText": zod.string().nullish(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string().nullish().describe('Hex colour for a flat colour tile instead of a photo tile; null\/empty = photo tile'),
+  "frame": zod.union([zod.literal('wide'),zod.literal('tall'),zod.literal('square'),zod.literal(null)]).nullish().describe('Photo frame shape for the whole item gallery; null\/wide = landscape default, tall = 4:5, square = 1:1'),
+  "position": zod.number(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean().describe('Whether ordering is enabled for this item'),
+  "soldOut": zod.boolean().describe('Whether the item is currently sold out (ordering blocked)'),
+  "producerName": zod.string().nullish().describe('Optional producer \/ supplier name shown on the order form'),
+  "producerNote": zod.string().nullish().describe('Optional producer \/ fulfilment note shown on the order form'),
+  "latitude": zod.number().nullish().describe('Approved POI latitude from the distance review; null until a proposal is approved'),
+  "longitude": zod.number().nullish().describe('Approved POI longitude from the distance review; null until a proposal is approved'),
+  "resolvedAddress": zod.string().nullish().describe('Resolved address from the approved distance review; feeds the named Maps place search, null until a proposal is approved'),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullish(),
+  "tenantId": zod.string().nullish(),
+  "url": zod.string(),
+  "alt": zod.string().nullish(),
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
+}))
+})
+
+
+/**
  * @summary Update an item; pass categoryId to move it to another category
  */
 export const UpdateItemParams = zod.object({

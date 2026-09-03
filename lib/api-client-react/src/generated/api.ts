@@ -26,6 +26,7 @@ import type {
   AdminPasswordLoginInput,
   AdminPasswordStatus,
   AdminPasswordUpdate,
+  AdminPlaceSearchResponse,
   AdminSession,
   AdminSessionRevocationResult,
   AdminSessionsStatus,
@@ -40,6 +41,7 @@ import type {
   CleanupRestoreResult,
   CleanupRunsResult,
   ConfirmCreatorTenantOriginInput,
+  CreateAdminPlaceInput,
   CreatorCategoryOption,
   CreatorCoordinateConfirmationInput,
   CreatorOriginPreview,
@@ -107,6 +109,7 @@ import type {
   RenamePasskeyRequest,
   RenewalEntry,
   ReorderInput,
+  SearchAdminPlacesParams,
   SearchPublicTenantParams,
   SearchResult,
   Section,
@@ -6484,6 +6487,167 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateItemMutationOptions(options));
+    }
+
+export const getSearchAdminPlacesUrl = (id: string,
+    params: SearchAdminPlacesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/categories/${id}/place-search?${stringifiedParams}` : `/api/admin/categories/${id}/place-search`
+}
+
+/**
+ * @summary Search verified Nominatim candidates for an OKOLICA category
+ */
+export const searchAdminPlaces = async (id: string,
+    params: SearchAdminPlacesParams, options?: Parameters<typeof customFetch>[1]): Promise<AdminPlaceSearchResponse> => {
+
+  return customFetch<AdminPlaceSearchResponse>(getSearchAdminPlacesUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchAdminPlacesQueryKey = (id: string,
+    params?: SearchAdminPlacesParams,) => {
+    return [
+    `/api/admin/categories/${id}/place-search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchAdminPlacesQueryOptions = <TData = Awaited<ReturnType<typeof searchAdminPlaces>>, TError = ErrorType<unknown>>(id: string,
+    params: SearchAdminPlacesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchAdminPlaces>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchAdminPlacesQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchAdminPlaces>>> = ({ signal }) => searchAdminPlaces(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchAdminPlaces>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchAdminPlacesQueryResult = NonNullable<Awaited<ReturnType<typeof searchAdminPlaces>>>
+export type SearchAdminPlacesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Search verified Nominatim candidates for an OKOLICA category
+ */
+
+export function useSearchAdminPlaces<TData = Awaited<ReturnType<typeof searchAdminPlaces>>, TError = ErrorType<unknown>>(
+ id: string,
+    params: SearchAdminPlacesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchAdminPlaces>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchAdminPlacesQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAdminPlaceUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/categories/${id}/places`
+}
+
+/**
+ * @summary Verify and immediately materialize an operator-selected place
+ */
+export const createAdminPlace = async (id: string,
+    createAdminPlaceInput: CreateAdminPlaceInput, options?: Parameters<typeof customFetch>[1]): Promise<Item> => {
+
+  return customFetch<Item>(getCreateAdminPlaceUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createAdminPlaceInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAdminPlaceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminPlace>>, TError,{id: string;data: BodyType<CreateAdminPlaceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminPlace>>, TError,{id: string;data: BodyType<CreateAdminPlaceInput>}, TContext> => {
+
+const mutationKey = ['createAdminPlace'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminPlace>>, {id: string;data: BodyType<CreateAdminPlaceInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createAdminPlace(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminPlaceMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminPlace>>>
+    export type CreateAdminPlaceMutationBody = BodyType<CreateAdminPlaceInput>
+    export type CreateAdminPlaceMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Verify and immediately materialize an operator-selected place
+ */
+export const useCreateAdminPlace = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminPlace>>, TError,{id: string;data: BodyType<CreateAdminPlaceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminPlace>>,
+        TError,
+        {id: string;data: BodyType<CreateAdminPlaceInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAdminPlaceMutationOptions(options));
     }
 
 export const getUpdateItemUrl = (id: string,) => {

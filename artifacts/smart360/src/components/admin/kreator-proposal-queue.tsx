@@ -28,7 +28,7 @@ const locationForms = {
   other: "lokacij",
 } as const;
 
-function PinPlacementMap({
+export function PinPlacementMap({
   latitude,
   longitude,
   origin,
