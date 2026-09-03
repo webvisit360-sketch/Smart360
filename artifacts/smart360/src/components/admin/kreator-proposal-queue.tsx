@@ -436,12 +436,12 @@ export function KreatorProposalQueue({
                       <input aria-label="Zemljepisna dolžina" type="number" step="any" min="-180" max="180" value={manualLongitude} onChange={(event) => setManualLongitude(event.target.value)} placeholder="14.123456" className="h-10 rounded-md border bg-white px-3 text-sm" />
                     </div>
                     <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      Naslov, ki ga vnese operater
+                      Lokacija (naslov ali opis lege)
                       <input
-                        aria-label="Naslov lokacije"
+                        aria-label="Lokacija (naslov ali opis lege)"
                         value={manualAddress}
                         onChange={(event) => setManualAddress(event.target.value)}
-                        placeholder="Ulica in kraj"
+                        placeholder="npr. Ulica in kraj — ali Velika planina, Kamniško-Savinjske Alpe"
                         className="mt-1 h-10 w-full rounded-md border bg-white px-3 text-sm normal-case tracking-normal text-foreground"
                       />
                     </label>
