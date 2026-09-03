@@ -55,6 +55,22 @@ function cacheControlFor(pathname) {
   return "public, max-age=3600";
 }
 
+function canonicalRedirect(req) {
+  if (process.env.NODE_ENV !== "production") return null;
+  const host = String(req.headers.host ?? "").split(":")[0].toLowerCase();
+  const forwardedProto = String(req.headers["x-forwarded-proto"] ?? "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (host === "www.smart360.info") {
+    return `https://smart360.info${req.url ?? "/"}`;
+  }
+  if (host === "smart360.info" && forwardedProto && forwardedProto !== "https") {
+    return `https://smart360.info${req.url ?? "/"}`;
+  }
+  return null;
+}
+
 /**
  * Every 4xx/5xx is logged so a broken path never fails silently — but public
  * scanners can probe missing paths at will, so log volume is bounded: at most
@@ -102,6 +118,15 @@ function fail(res, status, req, reason) {
 
 const server = createServer(async (req, res) => {
   try {
+    const redirect = canonicalRedirect(req);
+    if (redirect) {
+      res.writeHead(308, {
+        location: redirect,
+        "cache-control": "no-store",
+      });
+      res.end();
+      return;
+    }
     if (req.method !== "GET" && req.method !== "HEAD") {
       fail(res, 405, req, "method not allowed");
       return;

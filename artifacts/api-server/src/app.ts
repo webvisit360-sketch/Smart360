@@ -12,6 +12,30 @@ const app: Express = express();
 // Behind the Replit proxy: derive client IP from X-Forwarded-For (first hop).
 app.set("trust proxy", 1);
 
+// Replit normally terminates TLS and redirects HTTP before requests reach the
+// app. Keep a defensive canonical redirect in both routed services so a linked
+// www hostname can never become a second origin.
+app.use((req, res, next) => {
+  if (process.env["NODE_ENV"] !== "production") {
+    next();
+    return;
+  }
+  const host = req.hostname.toLowerCase();
+  const forwardedProto = String(req.headers["x-forwarded-proto"] ?? "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (host === "www.smart360.info") {
+    res.redirect(308, `https://smart360.info${req.originalUrl}`);
+    return;
+  }
+  if (host === "smart360.info" && forwardedProto && forwardedProto !== "https") {
+    res.redirect(308, `https://smart360.info${req.originalUrl}`);
+    return;
+  }
+  next();
+});
+
 // Compress JSON/text responses (the guest guide payload is ~160 KB raw and
 // the platform front end does not compress API responses). The default
 // filter skips already-compressed content types, so /api/storage image and
