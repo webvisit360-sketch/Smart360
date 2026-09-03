@@ -35,4 +35,15 @@ export interface MediaEntry {
   height: number | null;
   focusX?: number;
   focusY?: number;
+  provisional: boolean;
+  /** @nullable */
+  attributionAuthor: string | null;
+  /** @nullable */
+  attributionLicense: string | null;
+  /** @nullable */
+  attributionSourceUrl: string | null;
+  /** @nullable */
+  provenanceProvider?: string | null;
+  /** @nullable */
+  provenanceFile?: string | null;
 }

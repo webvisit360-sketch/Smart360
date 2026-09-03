@@ -52,7 +52,9 @@ export type SitePlanImageEntry = {
 // (if any): guests need the reviewed point and address so the Maps action
 // opens the exact NAMED place instead of an ambiguous search or a bare pin.
 export type ItemWithMedia = Item & {
-  media: MediaRow[];
+  // Raw provenance (including the upstream download URL) is operator audit
+  // data, never guest content. Attribution fields remain public.
+  media: Array<Omit<MediaRow, "provenanceJson" | "provenanceProvider" | "provenanceFile">>;
   latitude: number | null;
   longitude: number | null;
   resolvedAddress: string | null;
@@ -267,11 +269,17 @@ export async function buildTenantContent(
     approvedCoords.map((p) => [p.itemId, p] as const),
   );
 
-  const mediaByItem = new Map<string, MediaRow[]>();
+  const mediaByItem = new Map<string, Array<Omit<MediaRow, "provenanceJson" | "provenanceProvider" | "provenanceFile">>>();
   for (const m of media) {
     if (!m.itemId) continue;
     const arr = mediaByItem.get(m.itemId) ?? [];
-    arr.push(m);
+    const {
+      provenanceJson: _provenanceJson,
+      provenanceProvider: _provenanceProvider,
+      provenanceFile: _provenanceFile,
+      ...attributionSafe
+    } = m;
+    arr.push(attributionSafe);
     mediaByItem.set(m.itemId, arr);
   }
   const itemsByCategory = new Map<string, ItemWithMedia[]>();

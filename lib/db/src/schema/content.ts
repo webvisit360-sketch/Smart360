@@ -217,6 +217,15 @@ export const mediaTable = pgTable("media", {
   // ordered, and carry a caption (stored in the alt column).
   // The DB CHECK below enforces tenant scope and image-only site plans.
   purpose: text("purpose").notNull().default("item"),
+  // Commons photos are ordinary media rows. These additive fields preserve
+  // the attribution and review provenance after the proposal is approved.
+  provisional: boolean("provisional").notNull().default(false),
+  attributionAuthor: text("attribution_author"),
+  attributionLicense: text("attribution_license"),
+  attributionSourceUrl: text("attribution_source_url"),
+  provenanceProvider: text("provenance_provider"),
+  provenanceFile: text("provenance_file"),
+  provenanceJson: text("provenance_json"),
 }, (t) => [
   check(
     "media_site_plan_scope_v2",

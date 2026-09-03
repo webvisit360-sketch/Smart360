@@ -49,6 +49,26 @@ function parseObjectPath(path: string): { bucketName: string; objectName: string
   return { bucketName, objectName };
 }
 
+/** Remove only the exact variants belonging to one generated photo name.
+ * Used as compensation when an internal importer cannot complete its DB
+ * transaction after object writes have begun. */
+export async function deletePhotoVariants(
+  slug: string,
+  name: string,
+  deleteExact?: (bucketName: string, objectName: string) => Promise<void>,
+): Promise<void> {
+  const searchPath = storage.getPublicObjectSearchPaths()[0];
+  if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
+  await Promise.all(IMG_WIDTHS.map(async (w) => {
+    const { bucketName, objectName } = parseObjectPath(`${searchPath}/media/${slug}/${w}/${name}`);
+    if (deleteExact) {
+      await deleteExact(bucketName, objectName);
+    } else {
+      await objectStorageClient.bucket(bucketName).file(objectName).delete({ ignoreNotFound: true });
+    }
+  }));
+}
+
 /**
  * Resize one original into the two serving widths and upload both to the
  * public object dir under media/<slug>/<width>/<name>. Honours the EXIF

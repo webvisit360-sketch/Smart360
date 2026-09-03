@@ -1242,6 +1242,26 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   transform: scale(1.25);
 }
 
+.lg2-media-attribution {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 9px;
+  left: 12px;
+  margin: 0;
+  color: rgba(255, 255, 255, .88);
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: right;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .75);
+}
+
+.lg2-media-attribution a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .lg2-detail-back {
   position: absolute;
   z-index: 3;

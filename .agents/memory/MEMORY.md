@@ -37,3 +37,4 @@
 - [Creator queue re-evaluation](creator-queue-reevaluation.md) — permanent operator reruns are tenant-scoped, open-row-only, evidence-preserving, transactional, and idempotent.
 - [Creator guest materialization](creator-guest-materialization.md) — approvals project immutable evidence into one canonical guest place with reversible, multi-category lifecycle.
 - [Manual pin feedback](manual-pin-feedback.md) — save outcomes must be local and immediate; routing requires tenant origin coordinates.
+- [Creator Wikimedia photos](creator-wikimedia-photos.md) — Commons thumbnails and bilingual fallback matching have stricter host/name rules than P18 originals.

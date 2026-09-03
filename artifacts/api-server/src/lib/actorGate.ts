@@ -151,6 +151,10 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/approve", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/unapprove", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/approve-bulk", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/creator/photos/discover", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/creator/photo-proposals", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/creator/photo-proposals/:photoProposalId/approve", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/creator/photo-proposals/:photoProposalId/reject", binding: OWNER },
 
   // ── Content (adminContent.ts) ────────────────────────────────────────────
   { method: "post", path: "/admin/tenants/:id/sections", binding: T_ID },

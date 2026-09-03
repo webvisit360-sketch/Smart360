@@ -44,6 +44,10 @@ import type {
   CreatorCoordinateConfirmationInput,
   CreatorOriginPreview,
   CreatorOriginPreviewInput,
+  CreatorPhotoApproval,
+  CreatorPhotoDiscoveryReport,
+  CreatorPhotoProposal,
+  CreatorPhotoRejectionInput,
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
@@ -3303,6 +3307,301 @@ export function useListCreatorProposals<TData = Awaited<ReturnType<typeof listCr
 
 
 
+
+export const getDiscoverCreatorPhotosUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/photos/discover`
+}
+
+/**
+ * @summary Discover free Wikimedia Commons photos for active materialized places without media
+ */
+export const discoverCreatorPhotos = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorPhotoDiscoveryReport> => {
+
+  return customFetch<CreatorPhotoDiscoveryReport>(getDiscoverCreatorPhotosUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getDiscoverCreatorPhotosMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverCreatorPhotos>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof discoverCreatorPhotos>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['discoverCreatorPhotos'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof discoverCreatorPhotos>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  discoverCreatorPhotos(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DiscoverCreatorPhotosMutationResult = NonNullable<Awaited<ReturnType<typeof discoverCreatorPhotos>>>
+
+    export type DiscoverCreatorPhotosMutationError = ErrorType<void>
+
+    /**
+ * @summary Discover free Wikimedia Commons photos for active materialized places without media
+ */
+export const useDiscoverCreatorPhotos = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverCreatorPhotos>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof discoverCreatorPhotos>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDiscoverCreatorPhotosMutationOptions(options));
+    }
+
+export const getListCreatorPhotoProposalsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/photo-proposals`
+}
+
+/**
+ * @summary List permanent Creator Wikimedia photo review records
+ */
+export const listCreatorPhotoProposals = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorPhotoProposal[]> => {
+
+  return customFetch<CreatorPhotoProposal[]>(getListCreatorPhotoProposalsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCreatorPhotoProposalsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/creator/photo-proposals`
+    ] as const;
+    }
+
+
+export const getListCreatorPhotoProposalsQueryOptions = <TData = Awaited<ReturnType<typeof listCreatorPhotoProposals>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorPhotoProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCreatorPhotoProposalsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCreatorPhotoProposals>>> = ({ signal }) => listCreatorPhotoProposals(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCreatorPhotoProposals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCreatorPhotoProposalsQueryResult = NonNullable<Awaited<ReturnType<typeof listCreatorPhotoProposals>>>
+export type ListCreatorPhotoProposalsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List permanent Creator Wikimedia photo review records
+ */
+
+export function useListCreatorPhotoProposals<TData = Awaited<ReturnType<typeof listCreatorPhotoProposals>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCreatorPhotoProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCreatorPhotoProposalsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApproveCreatorPhotoProposalUrl = (id: string,
+    photoProposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/photo-proposals/${photoProposalId}/approve`
+}
+
+/**
+ * @summary Validate, copy, and approve a Wikimedia photo as ordinary provisional media
+ */
+export const approveCreatorPhotoProposal = async (id: string,
+    photoProposalId: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorPhotoApproval> => {
+
+  return customFetch<CreatorPhotoApproval>(getApproveCreatorPhotoProposalUrl(id,photoProposalId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveCreatorPhotoProposalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorPhotoProposal>>, TError,{id: string;photoProposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveCreatorPhotoProposal>>, TError,{id: string;photoProposalId: string}, TContext> => {
+
+const mutationKey = ['approveCreatorPhotoProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveCreatorPhotoProposal>>, {id: string;photoProposalId: string}> = (props) => {
+          const {id,photoProposalId} = props ?? {};
+
+          return  approveCreatorPhotoProposal(id,photoProposalId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveCreatorPhotoProposalMutationResult = NonNullable<Awaited<ReturnType<typeof approveCreatorPhotoProposal>>>
+
+    export type ApproveCreatorPhotoProposalMutationError = ErrorType<void>
+
+    /**
+ * @summary Validate, copy, and approve a Wikimedia photo as ordinary provisional media
+ */
+export const useApproveCreatorPhotoProposal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveCreatorPhotoProposal>>, TError,{id: string;photoProposalId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveCreatorPhotoProposal>>,
+        TError,
+        {id: string;photoProposalId: string},
+        TContext
+      > => {
+      return useMutation(getApproveCreatorPhotoProposalMutationOptions(options));
+    }
+
+export const getRejectCreatorPhotoProposalUrl = (id: string,
+    photoProposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/photo-proposals/${photoProposalId}/reject`
+}
+
+/**
+ * @summary Permanently reject a Wikimedia photo proposal
+ */
+export const rejectCreatorPhotoProposal = async (id: string,
+    photoProposalId: string,
+    creatorPhotoRejectionInput?: CreatorPhotoRejectionInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorPhotoProposal> => {
+
+  return customFetch<CreatorPhotoProposal>(getRejectCreatorPhotoProposalUrl(id,photoProposalId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorPhotoRejectionInput)
+  }
+);}
+
+
+
+
+
+export const getRejectCreatorPhotoProposalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorPhotoProposal>>, TError,{id: string;photoProposalId: string;data?: BodyType<CreatorPhotoRejectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorPhotoProposal>>, TError,{id: string;photoProposalId: string;data?: BodyType<CreatorPhotoRejectionInput>}, TContext> => {
+
+const mutationKey = ['rejectCreatorPhotoProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectCreatorPhotoProposal>>, {id: string;photoProposalId: string;data?: BodyType<CreatorPhotoRejectionInput>}> = (props) => {
+          const {id,photoProposalId,data} = props ?? {};
+
+          return  rejectCreatorPhotoProposal(id,photoProposalId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectCreatorPhotoProposalMutationResult = NonNullable<Awaited<ReturnType<typeof rejectCreatorPhotoProposal>>>
+    export type RejectCreatorPhotoProposalMutationBody = BodyType<CreatorPhotoRejectionInput> | undefined
+    export type RejectCreatorPhotoProposalMutationError = ErrorType<void>
+
+    /**
+ * @summary Permanently reject a Wikimedia photo proposal
+ */
+export const useRejectCreatorPhotoProposal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCreatorPhotoProposal>>, TError,{id: string;photoProposalId: string;data?: BodyType<CreatorPhotoRejectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectCreatorPhotoProposal>>,
+        TError,
+        {id: string;photoProposalId: string;data?: BodyType<CreatorPhotoRejectionInput>},
+        TContext
+      > => {
+      return useMutation(getRejectCreatorPhotoProposalMutationOptions(options));
+    }
 
 export const getReevaluateCreatorProposalsUrl = (id: string,) => {
 

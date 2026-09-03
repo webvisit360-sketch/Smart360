@@ -3052,6 +3052,15 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
             />
           </div>
         </div>
+        {entry?.provisional &&
+          entry?.attributionAuthor &&
+          entry?.attributionLicense &&
+          entry?.attributionSourceUrl && (
+            <p className="lg2-media-attribution">
+              {entry.attributionAuthor} · {entry.attributionLicense} ·{" "}
+              <a href={entry.attributionSourceUrl} target="_blank" rel="noreferrer">Wikimedia Commons</a>
+            </p>
+          )}
         <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
       </div>
     );
@@ -3101,6 +3110,15 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
           {media.map((_: any, index: number) => <i key={index} className={index === activeIndex ? "is-active" : undefined} />)}
         </div>
       )}
+      {media[activeIndex]?.provisional &&
+        media[activeIndex]?.attributionAuthor &&
+        media[activeIndex]?.attributionLicense &&
+        media[activeIndex]?.attributionSourceUrl && (
+          <p className="lg2-media-attribution">
+            {media[activeIndex].attributionAuthor} · {media[activeIndex].attributionLicense} ·{" "}
+            <a href={media[activeIndex].attributionSourceUrl} target="_blank" rel="noreferrer">Wikimedia Commons</a>
+          </p>
+        )}
       <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
     </div>
   );

@@ -15,7 +15,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, PhoneCall } from "lucide-react";
 
-export function AdminTenantOverview({ tenantId, onTabChange }: { tenantId: string; onTabChange: (tab: string) => void }) {
+export function AdminTenantOverview({ tenantId, onTabChange, isOwner = false }: { tenantId: string; onTabChange: (tab: string) => void; isOwner?: boolean }) {
   const queryClient = useQueryClient();
   const { data: tenant, isLoading: tenantLoading } = useGetTenant(tenantId, {
     query: { queryKey: getGetTenantQueryKey(tenantId) },
@@ -78,6 +78,7 @@ export function AdminTenantOverview({ tenantId, onTabChange }: { tenantId: strin
 
   const distancesCount = overview?.pendingLocations ?? 0;
   const photolessCount = overview?.missingPhotos ?? 0;
+  const provisionalPhotos = overview?.provisionalPhotos ?? 0;
   const latestPublish = changelog?.find(
     (entry) => entry.entity === "tenant" && ["publish", "republish"].includes(entry.action),
   );
@@ -198,6 +199,11 @@ export function AdminTenantOverview({ tenantId, onTabChange }: { tenantId: strin
           </div>
           
           <div className="relative pl-[18px] before:content-[''] before:absolute before:left-[4px] before:top-[6px] before:bottom-[6px] before:w-[1.5px] before:bg-[#E8EBE6] flex flex-col mt-3">
+            {isOwner && (
+              <div className="relative pb-[15px] before:content-[''] before:absolute before:left-[-18px] before:top-[5px] before:w-[9px] before:h-[9px] before:rounded-full before:bg-white before:border-[2.5px] before:border-[#1D9159]">
+                <div className="font-[700] text-[13.5px] text-[#121A14]">Začasnih fotografij: {provisionalPhotos}</div>
+              </div>
+            )}
             
             {distancesCount > 0 && (
               <div className="relative pb-[15px] before:content-[''] before:absolute before:left-[-18px] before:top-[5px] before:w-[9px] before:h-[9px] before:rounded-full before:bg-white before:border-[2.5px] before:border-[#DD9A2B]">

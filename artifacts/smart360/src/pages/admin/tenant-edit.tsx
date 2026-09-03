@@ -18,6 +18,7 @@ import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { KreatorOriginConfirmation } from "@/components/admin/kreator-origin-confirmation";
 import { KreatorSourceList } from "@/components/admin/kreator-source-list";
+import { KreatorPhotoProposals } from "@/components/admin/kreator-photo-proposals";
 import { AdminLivingGuideSettings } from "@/components/admin/admin-living-guide-settings";
 import { CoverEditor, THEME_DEFAULTS, PRESET_COLORS } from "@/components/admin/cover-editor";
 import { SlugField } from "@/components/admin/slug-field";
@@ -602,7 +603,7 @@ export default function AdminTenantEdit() {
             )}
 
             <TabsContent value="pregled">
-              <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} />
+              <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} isOwner={isOwner} />
             </TabsContent>
             <TabsContent value="kreator">
               {isOwner ? (
@@ -620,6 +621,7 @@ export default function AdminTenantEdit() {
                     tenantName={tenant.name}
                     origin={typeof tenant.latitude === 'number' && typeof tenant.longitude === 'number' ? { latitude: tenant.latitude, longitude: tenant.longitude } : undefined}
                   />
+                  <KreatorPhotoProposals tenantId={tenant.id} tenantSlug={tenant.slug} content={previewTenant} />
                 </>
               ) : (
                 <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">

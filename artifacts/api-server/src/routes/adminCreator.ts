@@ -33,6 +33,11 @@ import {
   UnapproveCreatorProposalResponse,
   StartCreatorRunResponse,
   DecideCreatorSourceResponse,
+  DiscoverCreatorPhotosResponse,
+  ListCreatorPhotoProposalsResponse,
+  ApproveCreatorPhotoProposalResponse,
+  RejectCreatorPhotoProposalBody,
+  RejectCreatorPhotoProposalResponse,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import {
@@ -73,6 +78,13 @@ import {
 } from "../lib/creatorSourceRunService";
 import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
 import { invalidateTenantCache } from "./publicTenants";
+import {
+  approveCreatorPhotoProposal,
+  CreatorPhotoError,
+  discoverCreatorPhotos,
+  listCreatorPhotoProposals,
+  rejectCreatorPhotoProposal,
+} from "../lib/creatorWikimediaPhotos";
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
@@ -691,6 +703,86 @@ router.get("/admin/tenants/:id/creator/proposals", async (req, res): Promise<voi
   const rows = await listCreatorProposalQueue(tenantId);
   res.json(ListCreatorProposalsResponse.parse(serialize(rows)));
 });
+
+router.post("/admin/tenants/:id/creator/photos/discover", async (req, res): Promise<void> => {
+  const tenantId = first(req.params["id"]);
+  if (!await requireCreatorTenant(tenantId)) {
+    res.status(404).json({ error: "Namestitev ni najdena." });
+    return;
+  }
+  try {
+    const report = await discoverCreatorPhotos(tenantId);
+    res.json(DiscoverCreatorPhotosResponse.parse(report));
+  } catch (error) {
+    req.log.warn({ error, tenantId }, "Creator Wikimedia discovery failed");
+    res.status(502).json({ error: error instanceof Error ? error.message : "Wikimedia discovery failed." });
+  }
+});
+
+router.get("/admin/tenants/:id/creator/photo-proposals", async (req, res): Promise<void> => {
+  const tenantId = first(req.params["id"]);
+  if (!await requireCreatorTenant(tenantId)) {
+    res.status(404).json({ error: "Namestitev ni najdena." });
+    return;
+  }
+  res.json(ListCreatorPhotoProposalsResponse.parse(serialize(
+    await listCreatorPhotoProposals(tenantId),
+  )));
+});
+
+router.post(
+  "/admin/tenants/:id/creator/photo-proposals/:photoProposalId/approve",
+  async (req, res): Promise<void> => {
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operater ni najden." });
+      return;
+    }
+    try {
+      const result = await approveCreatorPhotoProposal({
+        tenantId: first(req.params["id"]),
+        proposalId: first(req.params["photoProposalId"]),
+        actorId: actor.id,
+      });
+      invalidateTenantCache();
+      res.json(ApproveCreatorPhotoProposalResponse.parse(serialize(result)));
+    } catch (error) {
+      const status = error instanceof CreatorPhotoError
+        ? error.kind === "conflict" ? 409 : error.kind === "not-found" ? 404 : 422
+        : 500;
+      req.log.warn({ error }, "Creator Wikimedia photo approval failed");
+      res.status(status).json({ error: error instanceof Error ? error.message : "Photo approval failed." });
+    }
+  },
+);
+
+router.post(
+  "/admin/tenants/:id/creator/photo-proposals/:photoProposalId/reject",
+  async (req, res): Promise<void> => {
+    const body = RejectCreatorPhotoProposalBody.safeParse(req.body ?? {});
+    if (!body.success) {
+      res.status(400).json({ error: "Razlog zavrnitve je predolg." });
+      return;
+    }
+    const actor = await getAdminUser();
+    if (!actor) {
+      res.status(403).json({ error: "Operater ni najden." });
+      return;
+    }
+    try {
+      const row = await rejectCreatorPhotoProposal({
+        tenantId: first(req.params["id"]),
+        proposalId: first(req.params["photoProposalId"]),
+        actorId: actor.id,
+        reason: body.data.reason,
+      });
+      res.json(RejectCreatorPhotoProposalResponse.parse(serialize(row)));
+    } catch (error) {
+      res.status(error instanceof CreatorPhotoError ? 404 : 500)
+        .json({ error: error instanceof Error ? error.message : "Photo rejection failed." });
+    }
+  },
+);
 
 router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res): Promise<void> => {
   const tenantId = first(req.params["id"]);

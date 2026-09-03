@@ -15,4 +15,5 @@ export interface TenantOverview {
   pendingMessages: number;
   pendingLocations: number;
   missingPhotos: number;
+  provisionalPhotos: number;
 }

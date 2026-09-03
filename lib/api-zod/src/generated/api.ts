@@ -266,7 +266,13 @@ export const GetPublicTenantResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 }))
 }))
 })))
@@ -811,7 +817,8 @@ export const ListTenantOverviewResponseItem = zod.object({
   "pendingOrders": zod.number(),
   "pendingMessages": zod.number(),
   "pendingLocations": zod.number(),
-  "missingPhotos": zod.number()
+  "missingPhotos": zod.number(),
+  "provisionalPhotos": zod.number()
 })
 export const ListTenantOverviewResponse = zod.array(ListTenantOverviewResponseItem)
 
@@ -1217,6 +1224,165 @@ export const ListCreatorProposalsResponseItem = zod.object({
   "updatedAt": zod.string()
 })
 export const ListCreatorProposalsResponse = zod.array(ListCreatorProposalsResponseItem)
+
+
+/**
+ * @summary Discover free Wikimedia Commons photos for active materialized places without media
+ */
+export const DiscoverCreatorPhotosParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const discoverCreatorPhotosResponseOutcomesItemReasonMax = 240;
+
+
+
+export const DiscoverCreatorPhotosResponse = zod.object({
+  "eligiblePlaces": zod.number(),
+  "foundViaWikidata": zod.number(),
+  "foundViaGeosearch": zod.number(),
+  "nothingFreeFound": zod.number(),
+  "outcomes": zod.array(zod.object({
+  "itemId": zod.string(),
+  "name": zod.string(),
+  "outcome": zod.enum(['wikidata', 'geosearch', 'nothing']),
+  "reason": zod.string().max(discoverCreatorPhotosResponseOutcomesItemReasonMax).optional().describe('Safe upstream failure summary; present only when this place could not be checked')
+}))
+})
+
+
+/**
+ * @summary List permanent Creator Wikimedia photo review records
+ */
+export const ListCreatorPhotoProposalsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListCreatorPhotoProposalsResponseItem = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "materializationId": zod.string(),
+  "itemId": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "commonsFile": zod.string(),
+  "thumbnailUrl": zod.string(),
+  "originalUrl": zod.string(),
+  "sourcePageUrl": zod.string(),
+  "author": zod.string(),
+  "license": zod.string(),
+  "licenseUrl": zod.string().nullable(),
+  "confidence": zod.enum(['high', 'low']),
+  "discoveryMethod": zod.enum(['wikidata', 'geosearch']),
+  "wikidataId": zod.string().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "approvedMediaId": zod.string().nullable(),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListCreatorPhotoProposalsResponse = zod.array(ListCreatorPhotoProposalsResponseItem)
+
+
+/**
+ * @summary Validate, copy, and approve a Wikimedia photo as ordinary provisional media
+ */
+export const ApproveCreatorPhotoProposalParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoProposalId": zod.coerce.string()
+})
+
+
+
+
+
+export const ApproveCreatorPhotoProposalResponse = zod.object({
+  "proposal": zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "materializationId": zod.string(),
+  "itemId": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "commonsFile": zod.string(),
+  "thumbnailUrl": zod.string(),
+  "originalUrl": zod.string(),
+  "sourcePageUrl": zod.string(),
+  "author": zod.string(),
+  "license": zod.string(),
+  "licenseUrl": zod.string().nullable(),
+  "confidence": zod.enum(['high', 'low']),
+  "discoveryMethod": zod.enum(['wikidata', 'geosearch']),
+  "wikidataId": zod.string().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "approvedMediaId": zod.string().nullable(),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "media": zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullish(),
+  "tenantId": zod.string().nullish(),
+  "url": zod.string(),
+  "alt": zod.string().nullish(),
+  "position": zod.number(),
+  "kind": zod.string(),
+  "posterUrl": zod.string().nullish(),
+  "durationSec": zod.number().nullish(),
+  "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
+  "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
+  "focusX": zod.number().optional(),
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
+})
+})
+
+
+/**
+ * @summary Permanently reject a Wikimedia photo proposal
+ */
+export const RejectCreatorPhotoProposalParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoProposalId": zod.coerce.string()
+})
+
+export const rejectCreatorPhotoProposalBodyReasonMax = 500;
+
+
+
+export const RejectCreatorPhotoProposalBody = zod.object({
+  "reason": zod.string().max(rejectCreatorPhotoProposalBodyReasonMax).optional()
+})
+
+export const RejectCreatorPhotoProposalResponse = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "materializationId": zod.string(),
+  "itemId": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "commonsFile": zod.string(),
+  "thumbnailUrl": zod.string(),
+  "originalUrl": zod.string(),
+  "sourcePageUrl": zod.string(),
+  "author": zod.string(),
+  "license": zod.string(),
+  "licenseUrl": zod.string().nullable(),
+  "confidence": zod.enum(['high', 'low']),
+  "discoveryMethod": zod.enum(['wikidata', 'geosearch']),
+  "wikidataId": zod.string().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "approvedMediaId": zod.string().nullable(),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
 
 
 /**
@@ -2017,7 +2183,13 @@ export const GetTenantResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 }))
 }))
 })))
@@ -2976,7 +3148,13 @@ export const CreateItemResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 }))
 })
 
@@ -3072,7 +3250,13 @@ export const UpdateItemResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 }))
 })
 
@@ -3138,7 +3322,13 @@ export const DuplicateItemResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 }))
 })
 
@@ -3179,7 +3369,13 @@ export const AddItemMediaResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 })
 
 
@@ -3303,7 +3499,13 @@ export const UpdateMediaResponse = zod.object({
   "width": zod.number().min(1).nullable().describe('Intrinsic display width after EXIF orientation'),
   "height": zod.number().min(1).nullable().describe('Intrinsic display height after EXIF orientation'),
   "focusX": zod.number().optional(),
-  "focusY": zod.number().optional()
+  "focusY": zod.number().optional(),
+  "provisional": zod.boolean(),
+  "attributionAuthor": zod.string().nullable(),
+  "attributionLicense": zod.string().nullable(),
+  "attributionSourceUrl": zod.string().nullable(),
+  "provenanceProvider": zod.string().nullish(),
+  "provenanceFile": zod.string().nullish()
 })
 
 

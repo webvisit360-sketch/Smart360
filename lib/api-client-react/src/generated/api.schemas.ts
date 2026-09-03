@@ -837,6 +837,141 @@ export interface CreatorProposal {
   updatedAt: string;
 }
 
+export type CreatorPhotoProposalStatus = typeof CreatorPhotoProposalStatus[keyof typeof CreatorPhotoProposalStatus];
+
+
+export const CreatorPhotoProposalStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export type CreatorPhotoProposalConfidence = typeof CreatorPhotoProposalConfidence[keyof typeof CreatorPhotoProposalConfidence];
+
+
+export const CreatorPhotoProposalConfidence = {
+  high: 'high',
+  low: 'low',
+} as const;
+
+export type CreatorPhotoProposalDiscoveryMethod = typeof CreatorPhotoProposalDiscoveryMethod[keyof typeof CreatorPhotoProposalDiscoveryMethod];
+
+
+export const CreatorPhotoProposalDiscoveryMethod = {
+  wikidata: 'wikidata',
+  geosearch: 'geosearch',
+} as const;
+
+export interface CreatorPhotoProposal {
+  id: string;
+  tenantId: string;
+  materializationId: string;
+  itemId: string;
+  status: CreatorPhotoProposalStatus;
+  commonsFile: string;
+  thumbnailUrl: string;
+  originalUrl: string;
+  sourcePageUrl: string;
+  author: string;
+  license: string;
+  /** @nullable */
+  licenseUrl: string | null;
+  confidence: CreatorPhotoProposalConfidence;
+  discoveryMethod: CreatorPhotoProposalDiscoveryMethod;
+  /** @nullable */
+  wikidataId: string | null;
+  /** @nullable */
+  reviewedBy: string | null;
+  /** @nullable */
+  reviewedAt: string | null;
+  /** @nullable */
+  approvedMediaId: string | null;
+  /** @nullable */
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreatorPhotoDiscoveryOutcomeOutcome = typeof CreatorPhotoDiscoveryOutcomeOutcome[keyof typeof CreatorPhotoDiscoveryOutcomeOutcome];
+
+
+export const CreatorPhotoDiscoveryOutcomeOutcome = {
+  wikidata: 'wikidata',
+  geosearch: 'geosearch',
+  nothing: 'nothing',
+} as const;
+
+export interface CreatorPhotoDiscoveryOutcome {
+  itemId: string;
+  name: string;
+  outcome: CreatorPhotoDiscoveryOutcomeOutcome;
+  /**
+     * Safe upstream failure summary; present only when this place could not be checked
+     * @maxLength 240
+     */
+  reason?: string;
+}
+
+export interface CreatorPhotoDiscoveryReport {
+  eligiblePlaces: number;
+  foundViaWikidata: number;
+  foundViaGeosearch: number;
+  nothingFreeFound: number;
+  outcomes: CreatorPhotoDiscoveryOutcome[];
+}
+
+export interface CreatorPhotoRejectionInput {
+  /** @maxLength 500 */
+  reason?: string;
+}
+
+export interface MediaEntry {
+  id: string;
+  /** @nullable */
+  itemId?: string | null;
+  /** @nullable */
+  tenantId?: string | null;
+  url: string;
+  /** @nullable */
+  alt?: string | null;
+  position: number;
+  kind: string;
+  /** @nullable */
+  posterUrl?: string | null;
+  /** @nullable */
+  durationSec?: number | null;
+  /**
+     * Intrinsic display width after EXIF orientation
+     * @minimum 1
+     * @nullable
+     */
+  width: number | null;
+  /**
+     * Intrinsic display height after EXIF orientation
+     * @minimum 1
+     * @nullable
+     */
+  height: number | null;
+  focusX?: number;
+  focusY?: number;
+  provisional: boolean;
+  /** @nullable */
+  attributionAuthor: string | null;
+  /** @nullable */
+  attributionLicense: string | null;
+  /** @nullable */
+  attributionSourceUrl: string | null;
+  /** @nullable */
+  provenanceProvider?: string | null;
+  /** @nullable */
+  provenanceFile?: string | null;
+}
+
+export interface CreatorPhotoApproval {
+  proposal: CreatorPhotoProposal;
+  media: MediaEntry;
+}
+
 export interface CreatorProposalBulkApprovalInput {
   /** @minItems 1 */
   proposalIds: string[];
@@ -1818,37 +1953,6 @@ export const ItemFrame = {
   square: 'square',
 } as const;
 
-export interface MediaEntry {
-  id: string;
-  /** @nullable */
-  itemId?: string | null;
-  /** @nullable */
-  tenantId?: string | null;
-  url: string;
-  /** @nullable */
-  alt?: string | null;
-  position: number;
-  kind: string;
-  /** @nullable */
-  posterUrl?: string | null;
-  /** @nullable */
-  durationSec?: number | null;
-  /**
-     * Intrinsic display width after EXIF orientation
-     * @minimum 1
-     * @nullable
-     */
-  width: number | null;
-  /**
-     * Intrinsic display height after EXIF orientation
-     * @minimum 1
-     * @nullable
-     */
-  height: number | null;
-  focusX?: number;
-  focusY?: number;
-}
-
 export interface Item {
   id: string;
   categoryId: string;
@@ -2459,6 +2563,7 @@ export interface TenantOverview {
   pendingMessages: number;
   pendingLocations: number;
   missingPhotos: number;
+  provisionalPhotos: number;
 }
 
 export type GetPublicTenantParams = {

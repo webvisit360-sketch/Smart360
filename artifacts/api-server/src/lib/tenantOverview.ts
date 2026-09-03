@@ -28,6 +28,7 @@ export type TenantOverviewRow = {
   pendingMessages: number;
   pendingLocations: number;
   missingPhotos: number;
+  provisionalPhotos: number;
 };
 
 type CountMap = Map<string, number>;
@@ -41,7 +42,7 @@ function toCountMap(rows: Array<Record<string, unknown>>): CountMap {
 }
 
 export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
-  const [tenants, ordersRes, messagesRes, locationsRes, photosRes, contentRes] =
+  const [tenants, ordersRes, messagesRes, locationsRes, photosRes, provisionalRes, contentRes] =
     await Promise.all([
       db
         .select({
@@ -96,6 +97,14 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
           )
         GROUP BY s.tenant_id`),
       db.execute(sql`
+        SELECT s.tenant_id, count(*)::int AS n
+        FROM media m
+        JOIN items i ON i.id = m.item_id
+        JOIN categories c ON c.id = i.category_id
+        JOIN sections s ON s.id = c.section_id
+        WHERE m.provisional = true
+        GROUP BY s.tenant_id`),
+      db.execute(sql`
         SELECT s.tenant_id,
                count(DISTINCT c.id)::int  AS n,
                count(i.id)::int           AS items
@@ -111,6 +120,7 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
   const messages = toCountMap(messagesRes.rows as Array<Record<string, unknown>>);
   const locations = toCountMap(locationsRes.rows as Array<Record<string, unknown>>);
   const photos = toCountMap(photosRes.rows as Array<Record<string, unknown>>);
+  const provisional = toCountMap(provisionalRes.rows as Array<Record<string, unknown>>);
   const categoriesCount: CountMap = new Map();
   const itemsCount: CountMap = new Map();
   for (const r of contentRes.rows as Array<Record<string, unknown>>) {
@@ -178,6 +188,7 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
       pendingMessages,
       pendingLocations,
       missingPhotos,
+      provisionalPhotos: provisional.get(t.id) ?? 0,
     };
   });
 }

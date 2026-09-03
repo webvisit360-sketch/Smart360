@@ -810,6 +810,72 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CreatorProposal"
+  /admin/tenants/{id}/creator/photos/discover:
+    post:
+      operationId: discoverCreatorPhotos
+      tags: [tenants]
+      summary: Discover free Wikimedia Commons photos for active materialized places without media
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Per-place Wikimedia discovery report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorPhotoDiscoveryReport" }
+        "404": { description: Tenant not found }
+        "502": { description: Wikimedia or OpenStreetMap request failed }
+  /admin/tenants/{id}/creator/photo-proposals:
+    get:
+      operationId: listCreatorPhotoProposals
+      tags: [tenants]
+      summary: List permanent Creator Wikimedia photo review records
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Photo proposal ledger
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CreatorPhotoProposal" }
+  /admin/tenants/{id}/creator/photo-proposals/{photoProposalId}/approve:
+    post:
+      operationId: approveCreatorPhotoProposal
+      tags: [tenants]
+      summary: Validate, copy, and approve a Wikimedia photo as ordinary provisional media
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: photoProposalId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Approved proposal and created media
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorPhotoApproval" }
+        "404": { description: Pending proposal not found }
+        "409": { description: Place already has media }
+  /admin/tenants/{id}/creator/photo-proposals/{photoProposalId}/reject:
+    post:
+      operationId: rejectCreatorPhotoProposal
+      tags: [tenants]
+      summary: Permanently reject a Wikimedia photo proposal
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: photoProposalId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatorPhotoRejectionInput" }
+      responses:
+        "200":
+          description: Rejected proposal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorPhotoProposal" }
+        "404": { description: Pending proposal not found }
   /admin/tenants/{id}/creator/proposals/reevaluate:
     post:
       operationId: reevaluateCreatorProposals
@@ -3099,6 +3165,63 @@ components:
         - reviewedAt
         - createdAt
         - updatedAt
+    CreatorPhotoProposal:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        materializationId: { type: string }
+        itemId: { type: string }
+        status: { type: string, enum: [pending, approved, rejected] }
+        commonsFile: { type: string }
+        thumbnailUrl: { type: string }
+        originalUrl: { type: string }
+        sourcePageUrl: { type: string }
+        author: { type: string }
+        license: { type: string }
+        licenseUrl: { type: ["string", "null"] }
+        confidence: { type: string, enum: [high, low] }
+        discoveryMethod: { type: string, enum: [wikidata, geosearch] }
+        wikidataId: { type: ["string", "null"] }
+        reviewedBy: { type: ["string", "null"] }
+        reviewedAt: { type: ["string", "null"] }
+        approvedMediaId: { type: ["string", "null"] }
+        rejectionReason: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, tenantId, materializationId, itemId, status, commonsFile, thumbnailUrl, originalUrl, sourcePageUrl, author, license, licenseUrl, confidence, discoveryMethod, wikidataId, reviewedBy, reviewedAt, approvedMediaId, rejectionReason, createdAt, updatedAt]
+    CreatorPhotoDiscoveryOutcome:
+      type: object
+      properties:
+        itemId: { type: string }
+        name: { type: string }
+        outcome: { type: string, enum: [wikidata, geosearch, nothing] }
+        reason:
+          type: string
+          maxLength: 240
+          description: Safe upstream failure summary; present only when this place could not be checked
+      required: [itemId, name, outcome]
+    CreatorPhotoDiscoveryReport:
+      type: object
+      properties:
+        eligiblePlaces: { type: number }
+        foundViaWikidata: { type: number }
+        foundViaGeosearch: { type: number }
+        nothingFreeFound: { type: number }
+        outcomes:
+          type: array
+          items: { $ref: "#/components/schemas/CreatorPhotoDiscoveryOutcome" }
+      required: [eligiblePlaces, foundViaWikidata, foundViaGeosearch, nothingFreeFound, outcomes]
+    CreatorPhotoRejectionInput:
+      type: object
+      properties:
+        reason: { type: string, maxLength: 500 }
+    CreatorPhotoApproval:
+      type: object
+      properties:
+        proposal: { $ref: "#/components/schemas/CreatorPhotoProposal" }
+        media: { $ref: "#/components/schemas/MediaEntry" }
+      required: [proposal, media]
     CreatorProposalBulkApprovalInput:
       type: object
       properties:
@@ -4072,7 +4195,13 @@ components:
           description: Intrinsic display height after EXIF orientation
         focusX: { type: number }
         focusY: { type: number }
-      required: [id, url, position, kind, width, height]
+        provisional: { type: boolean }
+        attributionAuthor: { type: ["string", "null"] }
+        attributionLicense: { type: ["string", "null"] }
+        attributionSourceUrl: { type: ["string", "null"] }
+        provenanceProvider: { type: ["string", "null"] }
+        provenanceFile: { type: ["string", "null"] }
+      required: [id, url, position, kind, width, height, provisional, attributionAuthor, attributionLicense, attributionSourceUrl]
     MediaUpdate:
       type: object
       description: Focal point of the crop, percentages of the image (izrez-wifi-eposta.md §1a)
@@ -4332,4 +4461,5 @@ components:
         pendingMessages: { type: number }
         pendingLocations: { type: number }
         missingPhotos: { type: number }
-      required: [tenantId, readinessPct, checks, pendingOrders, pendingMessages, pendingLocations, missingPhotos]
+        provisionalPhotos: { type: number }
+      required: [tenantId, readinessPct, checks, pendingOrders, pendingMessages, pendingLocations, missingPhotos, provisionalPhotos]

@@ -16,7 +16,7 @@ import {
 import { sql } from "drizzle-orm";
 import { adminUsersTable } from "./admin";
 import { tenantsTable } from "./tenants";
-import { categoriesTable, itemsTable } from "./content";
+import { categoriesTable, itemsTable, mediaTable } from "./content";
 
 export const creatorPlaceProposalsTable = pgTable(
   "creator_place_proposals",
@@ -391,6 +391,53 @@ export const creatorPlaceMaterializationsTable = pgTable(
   ],
 );
 
+/** Operator-only discovery queue. A proposal never becomes guest media until
+ * approval; rejection and approval are permanent review evidence. */
+export const creatorPhotoProposalsTable = pgTable(
+  "creator_photo_proposals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
+    materializationId: uuid("materialization_id").notNull().references(() => creatorPlaceMaterializationsTable.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull().references(() => itemsTable.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    commonsFile: text("commons_file").notNull(),
+    thumbnailUrl: text("thumbnail_url").notNull(),
+    originalUrl: text("original_url").notNull(),
+    sourcePageUrl: text("source_page_url").notNull(),
+    author: text("author").notNull(),
+    license: text("license").notNull(),
+    licenseUrl: text("license_url"),
+    confidence: text("confidence").notNull(),
+    discoveryMethod: text("discovery_method").notNull(),
+    wikidataId: text("wikidata_id"),
+    reviewedBy: uuid("reviewed_by").references(() => adminUsersTable.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    approvedMediaId: uuid("approved_media_id").references(() => mediaTable.id, { onDelete: "set null" }),
+    rejectionReason: text("rejection_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  },
+  (t) => [
+    check("creator_photo_proposals_status_check", sql`${t.status} IN ('pending','approved','rejected')`),
+    check("creator_photo_proposals_confidence_check", sql`${t.confidence} IN ('high','low')`),
+    check("creator_photo_proposals_method_check", sql`${t.discoveryMethod} IN ('wikidata','geosearch')`),
+    check("creator_photo_proposals_review_check", sql`${t.status} = 'pending' OR (${t.reviewedBy} IS NOT NULL AND ${t.reviewedAt} IS NOT NULL)`),
+    uniqueIndex("creator_photo_proposals_item_file_uq").on(t.itemId, t.commonsFile),
+    index("creator_photo_proposals_tenant_status_idx").on(t.tenantId, t.status, t.createdAt),
+  ],
+);
+
+/** Shared cross-instance slot for polite Creator photo API requests. */
+export const creatorPhotoThrottleTable = pgTable(
+  "creator_photo_throttle",
+  {
+    id: smallint("id").primaryKey().default(1),
+    lastRequestAt: timestamp("last_request_at", { withTimezone: true }),
+  },
+  (t) => [check("creator_photo_throttle_singleton", sql`${t.id} = 1`)],
+);
+
 export const creatorVerificationAttemptsTable = pgTable(
   "creator_verification_attempts",
   {
@@ -442,6 +489,7 @@ export type CreatorVerificationCandidate = typeof creatorVerificationCandidatesT
 export type CreatorRun = typeof creatorRunsTable.$inferSelect;
 export type CreatorProposalTranslation = typeof creatorProposalTranslationsTable.$inferSelect;
 export type CreatorPlaceMaterialization = typeof creatorPlaceMaterializationsTable.$inferSelect;
+export type CreatorPhotoProposal = typeof creatorPhotoProposalsTable.$inferSelect;
 export type CreatorSource = typeof creatorSourcesTable.$inferSelect;
 export type CreatorRobotsEvidence = typeof creatorRobotsEvidenceTable.$inferSelect;
 export type CreatorSourceContent = typeof creatorSourceContentsTable.$inferSelect;

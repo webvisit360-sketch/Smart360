@@ -1,0 +1,15 @@
+C3 — Wikimedia Commons photographs for Creator places. The standing spec rules apply: free-license only, author attribution stored and displayed, every such photo flagged provisional in data, nothing reaches guests without operator approval, never any image from Google Maps.
+
+BUILD:
+
+1. Photo discovery for materialized places without photos. Primary path: the place's OSM identity → its wikidata tag → Wikidata P18 image → Commons file, with author, license, and source URL from the Commons imageinfo/extmetadata API. Fallback path: Commons geosearch near the place's coordinates with a name match — mark these lower-confidence. Only free licenses (CC BY, CC BY-SA, PD variants); skip anything else. Respect the API: descriptive User-Agent, gentle pacing, no bulk hammering.
+
+2. Operator approval. Discovered photos appear as proposals on the place (thumbnail, author, license, source link, confidence). The operator approves or rejects each; approval downloads the file into our own object storage through the existing uploader pipeline (never hotlink Commons), sets it as the card photo if the place has none, and stores provenance permanently.
+
+3. Provisional flag. Every Commons photo is stored with provisional=true. The admin shows a count per tenant ("Začasnih fotografij: N"); when the host uploads their own photo, the operator can remove or demote the provisional one. Guests see a normal photo with a discreet attribution line (author · license · Wikimedia Commons) on the detail view.
+
+4. Trigger: an operator action on the Creator page, "Poišči fotografije (Wikimedia)", running for the tenant's materialized places without photos, reporting per place: found via wikidata / found via geosearch / nothing free found.
+
+Verify in development on Gril's materialized places (Logarska dolina and Slap Rinka almost certainly have Wikidata images). Report counts per confidence class and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

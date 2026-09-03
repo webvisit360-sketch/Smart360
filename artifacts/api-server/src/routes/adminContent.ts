@@ -706,25 +706,26 @@ router.post("/admin/items/:id/media", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [item] = await db
-    .select()
-    .from(itemsTable)
-    .where(eq(itemsTable.id, itemId));
-  if (!item) {
+  // Every writer of item media takes this same row lock (including multipart
+  // uploads and Commons approval) before allocating a gallery position.
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT 1 FROM ${itemsTable} WHERE ${itemsTable.id} = ${itemId} FOR UPDATE`);
+    const [item] = await tx.select().from(itemsTable)
+      .where(eq(itemsTable.id, itemId));
+    if (!item) return null;
+    const existing = await tx.select({ position: mediaTable.position })
+      .from(mediaTable).where(eq(mediaTable.itemId, itemId));
+    const position = parsed.data.position ??
+      (existing.length ? Math.max(...existing.map((m) => m.position)) + 1 : 0);
+    const [media] = await tx.insert(mediaTable)
+      .values({ ...parsed.data, position, itemId }).returning();
+    return { item, media: media! };
+  });
+  if (!result) {
     res.status(404).json({ error: "Item not found" });
     return;
   }
-  const existing = await db
-    .select({ position: mediaTable.position })
-    .from(mediaTable)
-    .where(eq(mediaTable.itemId, itemId));
-  const position =
-    parsed.data.position ??
-    (existing.length ? Math.max(...existing.map((m) => m.position)) + 1 : 0);
-  const [media] = await db
-    .insert(mediaTable)
-    .values({ ...parsed.data, position, itemId })
-    .returning();
+  const { item, media } = result;
   const ctx = await tenantContextForItem(itemId);
   await logChange({ ...ctx, action: "create", entity: "media", detail: item.title ?? "Media added", summary: auditSummary("Dodana predstavnost", item.title) });
   res.status(201).json(AddItemMediaResponse.parse(media));
