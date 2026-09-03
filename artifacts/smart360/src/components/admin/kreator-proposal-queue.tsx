@@ -18,6 +18,7 @@ import {
 import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, RotateCcw, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
+import { mutationErrorMessage, replaceSavedProposal } from "@/lib/manual-pin-feedback";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
 
 const locationForms = {
@@ -182,9 +183,15 @@ export function KreatorProposalQueue({
   });
   const confirmCoordinates = useConfirmCreatorProposalCoordinates({
     mutation: {
-      onSuccess: async () => {
+      onSuccess: (saved) => {
+        queryClient.setQueryData(queryKey, (current: typeof saved[] | undefined) =>
+          replaceSavedProposal(current, saved));
         setPositioningId(null);
-        await refresh();
+        setManualLatitude("");
+        setManualLongitude("");
+        setManualAddress("");
+        setSelected([]);
+        void queryClient.invalidateQueries({ queryKey });
       },
     },
   });
@@ -215,6 +222,7 @@ export function KreatorProposalQueue({
     ?? (reevaluate.error as any)?.data?.error
     ?? (confirmCoordinates.error as any)?.data?.error
     ?? null;
+  const confirmCoordinatesError = mutationErrorMessage(confirmCoordinates.error);
 
   if (queue.isLoading) {
     return <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Nalagam vrsto za potrditev …</div>;
@@ -445,6 +453,16 @@ export function KreatorProposalQueue({
                         className="mt-1 h-10 w-full rounded-md border bg-white px-3 text-sm normal-case tracking-normal text-foreground"
                       />
                     </label>
+                    {confirmCoordinatesError && confirmCoordinates.variables?.proposalId === row.id && (
+                      <div
+                        role="alert"
+                        data-testid={`manual-pin-error-${row.id}`}
+                        className="flex items-start gap-2 rounded-xl border border-destructive/20 bg-white p-3 text-sm font-semibold text-destructive"
+                      >
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        {confirmCoordinatesError}
+                      </div>
+                    )}
                     <div className="flex justify-end gap-2">
                       <Button type="button" variant="ghost" onClick={() => setPositioningId(null)}>Prekliči</Button>
                       <Button

@@ -549,6 +549,27 @@ test("operator coordinates require individual approval and cannot be overwritten
     resolvedName: "Napačno ime iz Nominatima",
     resolvedAddress: "Napačen naslov iz Nominatima",
   }).where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
+  await db.update(tenantsTable).set({
+    latitude: null,
+    longitude: null,
+  }).where(eq(tenantsTable.id, tenantId));
+  await assert.rejects(confirmCreatorProposalCoordinates({
+    tenantId,
+    proposalId: pending.proposal.id,
+    actorId,
+    latitude: 46.32,
+    longitude: 14.92,
+    operatorAddress: "Ljubenski most, pri reki Savinji",
+  }), /Izhodišče nima koordinat/);
+  const [unchangedAfterFailure] = await db.select().from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.id, pending.proposal.id)).limit(1);
+  assert.equal(unchangedAfterFailure?.confirmationMethod, null);
+  assert.equal(unchangedAfterFailure?.operatorAddress, null);
+  assert.equal(unchangedAfterFailure?.coordinateConfirmedAt, null);
+  await db.update(tenantsTable).set({
+    latitude: 46.31,
+    longitude: 14.91,
+  }).where(eq(tenantsTable.id, tenantId));
   await assert.rejects(confirmCreatorProposalCoordinates({
     tenantId,
     proposalId: pending.proposal.id,

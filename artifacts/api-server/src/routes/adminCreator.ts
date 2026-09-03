@@ -668,6 +668,14 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinate
     if (!row) throw new Error("Predlog po potrditvi koordinat ni najden.");
     res.json(ConfirmCreatorProposalCoordinatesResponse.parse(serialize(row)));
   } catch (error) {
+    req.log.warn(
+      {
+        error,
+        tenantId: first(req.params["id"]),
+        proposalId: first(req.params["proposalId"]),
+      },
+      "Creator coordinate confirmation failed",
+    );
     res.status(error instanceof CreatorBulkApprovalError ? 400 : 404).json({
       error: error instanceof Error ? error.message : "Koordinat ni mogoče potrditi.",
     });

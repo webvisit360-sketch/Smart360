@@ -1125,7 +1125,7 @@ export async function confirmCreatorProposalCoordinates(input: {
   }).from(tenantsTable)
     .where(eq(tenantsTable.id, input.tenantId)).limit(1);
   if (!tenant || tenant.latitude === null || tenant.longitude === null) {
-    throw new Error("Izhodišče nima koordinat.");
+    throw new CreatorBulkApprovalError("Izhodišče nima koordinat.");
   }
   const route = await computeRoadRoute(
     { latitude: tenant.latitude, longitude: tenant.longitude },
