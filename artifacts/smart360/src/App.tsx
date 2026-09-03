@@ -206,6 +206,9 @@ function GuestHost() {
             tenant={tenant}
             slug={slug}
             lang={lang}
+            adminFullTree={
+              sp.get('preview') === '1' && sp.get('fullStructure') === '1'
+            }
             onLanguageChange={changeLivingGuideLanguage}
             onReady={signalGuestAppReady}
           />

@@ -15,11 +15,11 @@ Architecture #29 uses the newest attached virtual-tour prototype as the binding 
 
 **How to apply:** Preserve the full-bleed, bottom-control-only cover contract and do not fold later checkpoint layouts into the initial virtual-tour work without approval.
 
-The Architecture #29 bottom navigation has exactly five tenant-configured slots selected from Domov, Nastanitev, Ponudba, Okolica, Program, and Sporočila; Domov is permanently slot one. Camp defaults omit Ponudba, while Meli Pu defaults omit Program because it has no dated events.
+The Living Guide bottom navigation always has exactly five primary tabs: Domov, Nastanitev, Ponudba, Okolica, and Sporočila. Sparse tenant content never removes a tab.
 
-**Why:** The owner requires predictable tenant-specific navigation without making a valid guide feature disappear when it is not one of the five primary slots.
+**Why:** The owner replaced content-derived and tenant-specific tab hiding with one complete shared skeleton from the first day.
 
-**How to apply:** In the later bottom-navigation checkpoint, offer only features the tenant actually has, keep Domov first, and provide a visible in-guide route to the omitted valid feature. The checkpoint report must name that route for both defaults and include a screenshot of each entry point.
+**How to apply:** Keep the five tabs in the Meli Pu order and layout for every Living Guide tenant. Optional features such as Program belong outside those five primary slots.
 
 Virtual tours reuse the tenant’s canonical `tourUrl` field. Accept only a canonical HTTPS URL from approved providers; extract it server-side from plain URLs, iframe `src`, or script `data-*` values, and never persist or render pasted markup.
 
@@ -159,17 +159,17 @@ Guest-host message retention is a strict privacy boundary: a device thread at or
 
 **How to apply:** Enforce expiry inside each message write transaction, not only in the scheduled sweep or read filters. Preserve the tenant/device uniqueness invariant for the fresh thread, and test both concurrent guest sends and expired host writes.
 
-Domov’s Today cards require a visible item title and an image, not a distance or duration. Their optional detail combines distance, duration, and a short item-text excerpt in that order; the section hides only when no eligible card exists. The fallback sources remain the five approved activity and heritage categories in every supported language.
+Domov’s Today cards require a visible item title, not an image, distance, or duration. Missing photographs use the category-icon “fotografija manjka” state. Optional detail combines distance, duration, and an allowed short item-text excerpt in that order.
 
-**Why:** The owner found that the prior distance/duration gate hid all meaningful Meli Pu recommendations even though the content already had titles and photographs.
+**Why:** The owner requires approved Creator places without photographs to remain eligible while keeping the display truthful.
 
 **How to apply:** Never use generic subtitles as the detail fallback. Match the approved categories across Slovenian, English, German, and Italian labels; exclude commercial and utility categories such as shops, pharmacies, fuel, and ATMs.
 
-Okolica category groups are saved category data, never inferred from translated labels. The five group identities and their localized names are product-defined; empty groups do not render and the first populated group opens by default.
+Okolica category groups are saved category data, never inferred from translated labels. All product-defined groups and active categories render even when empty; the first group opens by default.
 
-**Why:** Hosts must be able to reassign categories later without making guest grouping depend on mutable or translated category names.
+**Why:** The complete shared skeleton must be visible from day one rather than emerging only after content is added.
 
-**How to apply:** Preserve the five stable group keys and product order. Keep custom group creation, naming, and ordering out of this model unless the owner explicitly changes the product boundary.
+**How to apply:** Preserve the stable group keys and Meli Pu product order. Empty categories open their normal empty sheet. A tenant may hide a category only through reversible per-tenant deactivation; never delete it for this purpose.
 
 Tenant-level guest Maps actions resolve an explicit HTTPS Maps link first, then a complete valid latitude/longitude pair, then the legacy map query/address fallback. Configured invalid or partial higher-priority data must block fallback, and Maps always opens outside the guide.
 

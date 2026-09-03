@@ -18,7 +18,7 @@ async function loadExploreModule(): Promise<{
   return import(exploreModuleUrl);
 }
 
-test("Okolica uses persisted category groups in product order and hides empty groups", async () => {
+test("Okolica keeps the complete seeded group skeleton regardless of items", async () => {
   const { populatedExploreGroups } = await loadExploreModule();
   const groups = populatedExploreGroups([
     {
@@ -44,12 +44,15 @@ test("Okolica uses persisted category groups in product order and hides empty gr
   ]);
 
   assert.deepEqual(groups.map((group) => group.key), [
+    "experiences",
+    "food_drink",
     "nature_trails",
+    "sights",
     "services",
   ]);
-  assert.equal(groups[0]?.items[0]?.item.id, "hike-1");
-  assert.equal(groups[1]?.items[0]?.category.id, "shops");
-  assert.equal(groups[0]?.key, "nature_trails");
+  assert.equal(groups[2]?.items[0]?.item.id, "hike-1");
+  assert.equal(groups[4]?.items[0]?.category.id, "shops");
+  assert.equal(groups[1]?.categories[0]?.id, "food");
 });
 
 test("Okolica category group survives create/update contracts and rejects unknown keys", () => {

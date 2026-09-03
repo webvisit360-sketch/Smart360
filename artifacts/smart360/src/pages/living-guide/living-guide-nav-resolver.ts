@@ -52,12 +52,6 @@ export function findDatedEventDestination(
   return null;
 }
 
-function sectionHasRenderableContent(section: any): boolean {
-  return visible<any>(section?.categories).some(
-    (category: any) => visible<any>(category?.items).length > 0,
-  );
-}
-
 export function getLivingGuideAvailableFeatures(
   sections: any[] | null | undefined,
 ): Set<NavItem> {
@@ -67,7 +61,7 @@ export function getLivingGuideAvailableFeatures(
   if (
     visibleSections.some(
       (section: any) =>
-        section.key === "stay" && sectionHasRenderableContent(section),
+        section.key === "stay",
     )
   ) {
     available.add("stay");
@@ -75,7 +69,7 @@ export function getLivingGuideAvailableFeatures(
   if (
     visibleSections.some(
       (section: any) =>
-        section.key === "offer" && sectionHasRenderableContent(section),
+        section.key === "offer",
     )
   ) {
     available.add("offer");
@@ -83,8 +77,7 @@ export function getLivingGuideAvailableFeatures(
   if (
     visibleSections.some(
       (section: any) =>
-        (section.key === "explore" || section.key === "services") &&
-        sectionHasRenderableContent(section),
+        section.key === "explore" || section.key === "services",
     )
   ) {
     available.add("explore");
@@ -107,7 +100,9 @@ export function resolveLivingGuideNav(
   // Actual valid ensures we don't accidentally consider a feature valid if it's not known
   const actualValid = allPossible.filter(f => validFeatures.has(f) || f === "home" || f === "messages");
 
-  let baseNav: NavItem[] = storedNav ? [...storedNav] : PRESET_MELI_PU;
+  // Living Guide always has the same five primary destinations. Optional
+  // features belong in secondary navigation and must never replace a real tab.
+  let baseNav: NavItem[] = [...PRESET_MELI_PU];
 
   // Enforce "home" is always first and present exactly once
   baseNav = baseNav.filter(item => item !== "home");

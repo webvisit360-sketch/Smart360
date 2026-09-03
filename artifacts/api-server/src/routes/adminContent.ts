@@ -406,6 +406,7 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
     detail: contentUpdateDetail(prevCategory ?? {}, category),
     summary: contentMutationSummary("category", parsed.data, category.label),
   });
+  invalidateTenantCache();
   res.json(UpdateCategoryResponse.parse(category));
 });
 

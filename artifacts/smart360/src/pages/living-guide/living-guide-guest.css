@@ -1945,6 +1945,17 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-pcard:active {
   transform: scale(.985);
 }
+.lg2-pcard--inactive {
+  opacity: .52;
+  filter: grayscale(.65);
+  border-style: dashed;
+}
+.lg2-admin-category-note {
+  color: var(--tx2) !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  text-transform: lowercase;
+}
 .lg2-pcard-photo {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -2668,6 +2679,7 @@ body[data-t="swipe"] .lg2-order-dock {
 .lg2-card-missing-photo {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;

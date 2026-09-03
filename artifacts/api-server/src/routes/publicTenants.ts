@@ -54,8 +54,9 @@ const PAYLOAD_CACHE_TTL_MS = 30 * 1000;
 async function buildPublicPayload(
   tenant: TenantRow,
   lang: string | undefined,
+  visibleOnly = true,
 ): Promise<PayloadEntry> {
-  const tree = await buildTenantContent(tenant, { visibleOnly: true, lang });
+  const tree = await buildTenantContent(tenant, { visibleOnly, lang });
   const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
@@ -84,9 +85,11 @@ async function buildPublicPayload(
 async function getPublicPayload(
   tenant: TenantRow,
   lang: string | undefined,
-  opts: { bypassCache: boolean },
+  opts: { bypassCache: boolean; visibleOnly?: boolean },
 ): Promise<PayloadEntry> {
-  if (opts.bypassCache) return buildPublicPayload(tenant, lang);
+  if (opts.bypassCache) {
+    return buildPublicPayload(tenant, lang, opts.visibleOnly ?? true);
+  }
   const key = `${tenant.id}|${lang ?? "sl"}`;
   const hit = payloadCache.get(key);
   if (hit && hit.expiresAt > Date.now()) return hit;
@@ -186,6 +189,7 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   // must always see the database as it is right now.
   const { payload } = await getPublicPayload(tenant, lang, {
     bypassCache: preview || !tenant.isPublished,
+    visibleOnly: !preview,
   });
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
@@ -264,6 +268,7 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   // must always see the database as it is right now.
   const { payload } = await getPublicPayload(tenant, lang, {
     bypassCache: preview || !tenant.isPublished,
+    visibleOnly: !preview,
   });
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.

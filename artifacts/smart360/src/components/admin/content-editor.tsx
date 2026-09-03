@@ -691,7 +691,7 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
             onCheckedChange={setIsVisible}
             disabled={busy}
           />
-          <Label htmlFor="cat-visible">Vidna gostom</Label>
+          <Label htmlFor="cat-visible">Aktivna za to namestitev</Label>
         </div>
       )}
       </DialogScrollBody>
@@ -1267,7 +1267,7 @@ function CategoryBlock({ category, tenantId, sectionKey }: { category: Category;
             {!category.isVisible && (
               <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-[10px]">
                 <EyeOff className="w-2.5 h-2.5" />
-                Skrito
+                Neaktivna
               </Badge>
             )}
             <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-background rounded-full border">

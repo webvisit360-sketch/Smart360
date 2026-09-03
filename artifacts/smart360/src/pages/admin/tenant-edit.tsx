@@ -34,128 +34,6 @@ import {
   AdminSidebarLockup,
 } from "@/components/admin/admin-sidebar-brand";
 
-import { IconSprite } from "@/pages/guest/IconSprite";
-import { spriteId } from "@/pages/guest/sprite-icon";
-import { EXPLORE_GROUPS } from "@/pages/living-guide/living-guide-explore";
-import { OFFER_GROUPS, STAY_GROUPS } from "@/pages/living-guide/living-guide-groups";
-
-function AdminStructureIcon({ icon }: { icon: string }) {
-  return (
-    <svg aria-hidden="true" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <use href={`#${spriteId(icon)}`} />
-    </svg>
-  );
-}
-
-function groupLabel(groupKey: string, sectionKey: string) {
-  if (sectionKey === "offer") return OFFER_GROUPS.find(g => g.key === groupKey)?.adminLabel ?? groupKey;
-  if (sectionKey === "stay") return STAY_GROUPS.find(g => g.key === groupKey)?.adminLabel ?? groupKey;
-  return EXPLORE_GROUPS.find(g => g.key === groupKey)?.adminLabel ?? groupKey;
-}
-
-function StructureView({ tenant }: { tenant: any }) {
-  const sections = tenant?.sections || [];
-
-  return (
-    <div className="flex flex-col h-full bg-[#F5F5F7] text-[#14201F] font-sans">
-      <div className="bg-amber-100 text-amber-900 p-4 text-center text-[15px] font-semibold border-b border-amber-200 shrink-0">
-        To je pregled strukture (samo za operaterja), ne dejanski videz za goste.
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {sections.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <p className="text-sm text-muted-foreground italic opacity-70">Ni vsebine</p>
-          </div>
-        ) : (
-          sections.map((section: any) => (
-            <div key={section.id} className="bg-white rounded-xl p-4 shadow-sm border border-black/5">
-              <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <AdminStructureIcon icon={section.icon} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg leading-tight">{section.title}</h3>
-                {section.subtitle && <p className="text-sm text-muted-foreground mt-0.5">{section.subtitle}</p>}
-              </div>
-            </div>
-
-            {section.categories && section.categories.length > 0 ? (
-              <div className="space-y-4">
-                {(() => {
-                  const groups = new Map<string, any[]>();
-                  section.categories.forEach((cat: any) => {
-                    const g = cat.exploreGroup || (section.key === "offer" ? "najem" : section.key === "stay" ? "vase_bivanje" : "experiences");
-                    if (!groups.has(g)) groups.set(g, []);
-                    groups.get(g)!.push(cat);
-                  });
-                  return Array.from(groups.entries()).map(([gKey, cats]) => (
-                    <div key={gKey} className="space-y-2">
-                      <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider pl-2">
-                        {groupLabel(gKey, section.key)}
-                      </h4>
-                      <div className="space-y-2">
-                        {cats.map((cat: any) => (
-                          <div key={cat.id} className="border border-black/5 rounded-lg p-3 bg-[#F5F5F7]">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="w-6 h-6 rounded-md bg-white border border-black/5 text-primary flex items-center justify-center text-xs shrink-0">
-                                <AdminStructureIcon icon={cat.icon} />
-                              </div>
-                              <span className="font-semibold text-sm leading-tight">{cat.label}</span>
-                            </div>
-                            {cat.items && cat.items.length > 0 ? (
-                              <ul className="pl-8 space-y-1">
-                                {cat.items.map((item: any) => (
-                                  <li key={item.id} className="text-[13px] text-muted-foreground list-disc marker:text-black/20">
-                                    {item.title || "Neimenovan vnos"}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <div className="pl-8 text-xs text-muted-foreground italic opacity-70">čaka vsebino</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground italic mt-2 opacity-70">Ni kategorij</div>
-            )}
-          </div>
-        ))
-        )}
-      </div>
-
-      <div className="shrink-0 bg-white border-t border-black/5 flex items-center justify-around py-3 px-2 pb-6">
-        <div className="flex flex-col items-center gap-1 opacity-100 text-primary">
-          <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><use href="#i-home" /></svg>
-          <span className="text-[10px] font-medium">Domov</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 opacity-40">
-          <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><use href="#i-compass" /></svg>
-          <span className="text-[10px] font-medium">Odkrij</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 opacity-40">
-          <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><use href="#i-bag" /></svg>
-          <span className="text-[10px] font-medium">Ponudba</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 opacity-40">
-          <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><use href="#i-cart" /></svg>
-          <span className="text-[10px] font-medium">Storitve</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 opacity-40">
-          <svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><use href="#i-chat" /></svg>
-          <span className="text-[10px] font-medium">Kontakt</span>
-        </div>
-      </div>
-      <IconSprite />
-    </div>
-  );
-}
-
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
   navColor: "#14201F",
@@ -542,13 +420,13 @@ export default function AdminTenantEdit() {
   const firstPreviewCategoryId =
     ((previewTenant as any)?.sections || [])
       .flatMap((section: any) => section.categories || [])
-      .find((category: any) => typeof category?.id === "string")?.id ?? null;
+      .find((category: any) => category?.isVisible !== false && typeof category?.id === "string")?.id ?? null;
   const previewBase = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
   const previewPath =
     previewScreen === "category" && firstPreviewCategoryId
       ? `/${tenant.slug}/c/${encodeURIComponent(firstPreviewCategoryId)}`
       : `/${tenant.slug}`;
-  const previewUrl = `${previewBase}${previewPath}?preview=1`;
+  const previewUrl = `${previewBase}${previewPath}?preview=1${showStructure ? "&fullStructure=1" : ""}`;
 
   const handlePublish = () => {
     const {
@@ -1468,22 +1346,13 @@ export default function AdminTenantEdit() {
           </div>
         )}
         <div className="w-[289px] h-[629px] rounded-[32px] border-[7px] border-black bg-black overflow-hidden shadow-xl mb-4 relative shrink-0">
-          {isOwner && showStructure ? (
-            <div
-              className="w-[402px] h-[874px] origin-top-left border-0 bg-white overflow-hidden"
-              style={{ transform: 'scale(0.684)' }}
-            >
-              <StructureView tenant={tenant} />
-            </div>
-          ) : (
-            <iframe
-              key={previewKey}
-              src={previewUrl}
-              className="w-[402px] h-[874px] origin-top-left border-0 bg-white"
-              style={{ transform: 'scale(0.684)' }}
-              title="Predogled"
-            />
-          )}
+          <iframe
+            key={`${previewKey}-${showStructure}`}
+            src={previewUrl}
+            className="w-[402px] h-[874px] origin-top-left border-0 bg-white"
+            style={{ transform: 'scale(0.684)' }}
+            title="Predogled"
+          />
         </div>
         <p className="text-[14px] font-[650] text-[#14201F] mb-2">iPhone 17 Pro · 402 × 874</p>
         {!showStructure && (

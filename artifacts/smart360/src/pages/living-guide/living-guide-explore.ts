@@ -54,7 +54,7 @@ export function populatedExploreGroups(categories: unknown) {
         })),
       ),
     };
-  }).filter((group) => group.items.length > 0);
+  });
 }
 
 function stripMarkup(value: string): string {
