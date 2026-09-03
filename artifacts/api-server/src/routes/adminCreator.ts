@@ -687,6 +687,7 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
   const tenantId = first(req.params["id"]);
   try {
     const result = await reevaluateCreatorQueue(tenantId);
+    if (result.approvedBackfilled > 0) invalidateTenantCache();
     res.json(ReevaluateCreatorProposalsResponse.parse(result));
   } catch (error) {
     const notFound = error instanceof Error && error.message === "Namestitev ni najdena.";

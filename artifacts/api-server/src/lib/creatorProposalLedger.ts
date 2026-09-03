@@ -670,6 +670,33 @@ async function syncApprovedCreatorPlace(
   });
 }
 
+export async function backfillApprovedCreatorProposalMaterializations(
+  tenantId: string,
+  options: { dryRun?: boolean } = {},
+): Promise<number> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(
+      hashtextextended(${`${tenantId}:creator-approved-backfill`}, 0)
+    )`);
+    const approved = await tx.select().from(creatorPlaceProposalsTable).where(and(
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      eq(creatorPlaceProposalsTable.status, "approved"),
+    )).for("update");
+    if (approved.length === 0) return 0;
+    const materialized = await tx.select({
+      proposalId: creatorPlaceMaterializationsTable.proposalId,
+    }).from(creatorPlaceMaterializationsTable).where(inArray(
+      creatorPlaceMaterializationsTable.proposalId,
+      approved.map((proposal) => proposal.id),
+    ));
+    const materializedIds = new Set(materialized.map((row) => row.proposalId));
+    const missing = approved.filter((proposal) => !materializedIds.has(proposal.id));
+    if (options.dryRun) return missing.length;
+    for (const proposal of missing) await syncApprovedCreatorPlace(tx, proposal);
+    return missing.length;
+  });
+}
+
 async function deactivateCreatorPlace(tx: any, proposalId: string) {
   const [materialized] = await tx.select().from(creatorPlaceMaterializationsTable)
     .where(eq(creatorPlaceMaterializationsTable.proposalId, proposalId)).limit(1);

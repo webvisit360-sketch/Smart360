@@ -13,4 +13,5 @@ export interface CreatorQueueReevaluationResult {
   accommodationsExcluded: number;
   wrongSettlementMovedToUnresolved: number;
   duplicatesMerged: number;
+  approvedBackfilled: number;
 }

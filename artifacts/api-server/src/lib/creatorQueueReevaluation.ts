@@ -1,6 +1,9 @@
 import { pool } from "@workspace/db";
 import { classifyCreatorAccommodationProvider } from "./creatorAccommodationClassifier";
-import { fuzzyCreatorProposalKey } from "./creatorProposalLedger";
+import {
+  backfillApprovedCreatorProposalMaterializations,
+  fuzzyCreatorProposalKey,
+} from "./creatorProposalLedger";
 import { storedResolutionWrongSettlementReason } from "./creatorSieve";
 
 export const CREATOR_ACCOMMODATION_REFUSAL_REASON = "accommodation_provider";
@@ -12,6 +15,7 @@ export type ReevaluateCreatorQueueResult = {
   accommodationsExcluded: number;
   wrongSettlementMovedToUnresolved: number;
   duplicatesMerged: number;
+  approvedBackfilled: number;
 };
 
 export type CreatorQueueReevaluationRow = {
@@ -212,6 +216,10 @@ export async function reevaluateCreatorQueue(
     }
     if (options.dryRun) await client.query("ROLLBACK");
     else await client.query("COMMIT");
+    const approvedBackfilled = await backfillApprovedCreatorProposalMaterializations(
+      tenantId,
+      { dryRun: options.dryRun },
+    );
     return {
       evaluated: rows.length,
       changed: changes.length,
@@ -220,6 +228,7 @@ export async function reevaluateCreatorQueue(
       wrongSettlementMovedToUnresolved:
         changes.filter((change) => change.kind === "wrong_settlement").length,
       duplicatesMerged: changes.filter((change) => change.kind === "duplicate").length,
+      approvedBackfilled,
     };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);

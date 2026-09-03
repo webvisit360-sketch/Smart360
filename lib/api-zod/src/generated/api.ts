@@ -1220,7 +1220,7 @@ export const ListCreatorProposalsResponse = zod.array(ListCreatorProposalsRespon
 
 
 /**
- * @summary Re-evaluate the visible pending and unresolved Creator queue in place
+ * @summary Re-evaluate the open Creator queue and backfill approved guest items
  */
 export const ReevaluateCreatorProposalsParams = zod.object({
   "id": zod.coerce.string()
@@ -1232,7 +1232,8 @@ export const ReevaluateCreatorProposalsResponse = zod.object({
   "unchanged": zod.number(),
   "accommodationsExcluded": zod.number(),
   "wrongSettlementMovedToUnresolved": zod.number(),
-  "duplicatesMerged": zod.number()
+  "duplicatesMerged": zod.number(),
+  "approvedBackfilled": zod.number()
 })
 
 

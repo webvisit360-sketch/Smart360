@@ -814,7 +814,7 @@ paths:
     post:
       operationId: reevaluateCreatorProposals
       tags: [tenants]
-      summary: Re-evaluate the visible pending and unresolved Creator queue in place
+      summary: Re-evaluate the open Creator queue and backfill approved guest items
       parameters:
         - name: id
           in: path
@@ -3124,6 +3124,7 @@ components:
         accommodationsExcluded: { type: number }
         wrongSettlementMovedToUnresolved: { type: number }
         duplicatesMerged: { type: number }
+        approvedBackfilled: { type: number }
       required:
         - evaluated
         - changed
@@ -3131,6 +3132,7 @@ components:
         - accommodationsExcluded
         - wrongSettlementMovedToUnresolved
         - duplicatesMerged
+        - approvedBackfilled
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

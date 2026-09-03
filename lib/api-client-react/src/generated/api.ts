@@ -3313,7 +3313,7 @@ export const getReevaluateCreatorProposalsUrl = (id: string,) => {
 }
 
 /**
- * @summary Re-evaluate the visible pending and unresolved Creator queue in place
+ * @summary Re-evaluate the open Creator queue and backfill approved guest items
  */
 export const reevaluateCreatorProposals = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorQueueReevaluationResult> => {
 
@@ -3362,7 +3362,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReevaluateCreatorProposalsMutationError = ErrorType<void>
 
     /**
- * @summary Re-evaluate the visible pending and unresolved Creator queue in place
+ * @summary Re-evaluate the open Creator queue and backfill approved guest items
  */
 export const useReevaluateCreatorProposals = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reevaluateCreatorProposals>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}

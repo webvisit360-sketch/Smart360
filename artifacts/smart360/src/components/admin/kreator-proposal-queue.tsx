@@ -273,6 +273,7 @@ export function KreatorProposalQueue({
           {" · "}Izločene nastanitve: {reevaluate.data.accommodationsExcluded}
           {" · "}Napačen kraj: {reevaluate.data.wrongSettlementMovedToUnresolved}
           {" · "}Združeni dvojniki: {reevaluate.data.duplicatesMerged}
+          {" · "}Dopolnjeni potrjeni predlogi: {reevaluate.data.approvedBackfilled}
         </div>
       )}
 
