@@ -14,3 +14,9 @@ Commons filenames can translate generic feature words while preserving the disti
 **Why:** Exact whole-name matching missed a valid nearby Rinka file even though the proper-name token and geofence matched.
 
 **How to apply:** For low-confidence geosearch only, ignore a small multilingual set of generic feature words and require every remaining distinctive token inside the strict radius. Wikidata P18 remains the high-confidence path.
+
+Operators may run Wikimedia discovery for one active materialized place even when it already has gallery media; approved results append as provisional, attributed images.
+
+**Why:** Existing media does not mean the gallery is complete, while tenant-wide discovery should remain focused on places with no media.
+
+**How to apply:** Keep the global action limited to no-media places. The item-level action uses the same P18-first/geosearch-fallback process without the media eligibility filter and retains proposal review.

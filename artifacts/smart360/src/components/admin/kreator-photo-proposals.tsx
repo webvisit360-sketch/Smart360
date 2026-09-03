@@ -2,10 +2,14 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetPublicTenantQueryKey,
+  getGetTenantQueryKey,
+  getListItemCreatorPhotoProposalsQueryKey,
   getListCreatorPhotoProposalsQueryKey,
   getListTenantOverviewQueryKey,
   useApproveCreatorPhotoProposal,
   useDiscoverCreatorPhotos,
+  useDiscoverItemCreatorPhotos,
+  useListItemCreatorPhotoProposals,
   useListCreatorPhotoProposals,
   useRejectCreatorPhotoProposal,
 } from "@workspace/api-client-react";
@@ -15,6 +19,94 @@ import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as 
 
 function errorMessage(error: any) {
   return error?.data?.error || error?.data?.message || error?.message || "Dejanje ni uspelo.";
+}
+
+export function ItemCreatorPhotoProposals({
+  tenantId,
+  itemId,
+}: {
+  tenantId: string;
+  itemId: string;
+}) {
+  const queryClient = useQueryClient();
+  const proposalKey = getListItemCreatorPhotoProposalsQueryKey(itemId);
+  const proposals = useListItemCreatorPhotoProposals(itemId);
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: proposalKey }),
+      queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) }),
+    ]);
+  };
+  const discover = useDiscoverItemCreatorPhotos({
+    mutation: { onSuccess: refresh },
+  });
+  const approve = useApproveCreatorPhotoProposal({ mutation: { onSuccess: refresh } });
+  const reject = useRejectCreatorPhotoProposal({ mutation: { onSuccess: refresh } });
+  const rows = proposals.data ?? [];
+
+  return (
+    <div className="mt-3 space-y-3 rounded-lg border bg-muted/20 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Wikimedia Commons</p>
+          <p className="text-xs text-muted-foreground">Iskanje samo za ta vnos (Wikidata P18, nato geosearch).</p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={discover.isPending}
+          onClick={() => discover.mutate({ id: itemId })}
+        >
+          {discover.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Search className="mr-1 h-4 w-4" />}
+          Poišči
+        </Button>
+      </div>
+      {(discover.isError || proposals.isError || approve.isError || reject.isError) && (
+        <p role="alert" className="text-xs text-destructive">
+          {errorMessage(discover.error || proposals.error || approve.error || reject.error)}
+        </p>
+      )}
+      {proposals.isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Za ta vnos še ni predlogov.</p>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((proposal) => {
+            const pending = proposal.status === "pending";
+            const rowBusy =
+              (approve.isPending && approve.variables?.photoProposalId === proposal.id) ||
+              (reject.isPending && reject.variables?.photoProposalId === proposal.id);
+            return (
+              <div key={proposal.id} className="flex gap-3 rounded-md border bg-background p-2">
+                <img src={proposal.thumbnailUrl} alt="" className="h-16 w-24 rounded object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm">{proposal.author} · {proposal.license}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Zanesljivost: {proposal.confidence === "high" ? "visoka" : "nizka"} · {proposal.discoveryMethod === "wikidata" ? "Wikidata" : "geosearch"}
+                  </p>
+                  <a href={proposal.sourcePageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                    Commons <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                {pending && (
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <Button type="button" size="sm" disabled={rowBusy} onClick={() => approve.mutate({ id: tenantId, photoProposalId: proposal.id })}>
+                      <Check className="mr-1 h-3 w-3" />Odobri
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" disabled={rowBusy} onClick={() => reject.mutate({ id: tenantId, photoProposalId: proposal.id })}>
+                      <X className="mr-1 h-3 w-3" />Zavrni
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function KreatorPhotoProposals({

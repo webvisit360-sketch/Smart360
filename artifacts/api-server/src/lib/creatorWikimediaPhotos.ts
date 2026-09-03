@@ -35,6 +35,16 @@ export type PhotoCandidate = {
   licenseUrl: string | null;
 };
 
+type DiscoverablePlace = {
+  materializationId: string;
+  itemId: string;
+  name: string | null;
+  latitude: number;
+  longitude: number;
+  osmType: string | null;
+  osmId: number | null;
+};
+
 export class CreatorPhotoError extends Error {
   constructor(message: string, readonly kind: "not-found" | "conflict" | "upstream" | "unsafe") {
     super(message);
@@ -107,6 +117,10 @@ function safeExternalUrl(raw: URL | string, binary: boolean): URL {
 export function creatorPhotoReservedAt(last: Date | null, now: Date): Date {
   const earliest = last ? last.getTime() + 300 : now.getTime();
   return new Date(Math.max(now.getTime(), earliest));
+}
+
+export function creatorPhotoNextMediaPosition(positions: number[]): number {
+  return positions.length ? Math.max(...positions) + 1 : 0;
 }
 
 /** DB is the cross-autoscale authority. The UPDATE locks its singleton row,
@@ -253,30 +267,13 @@ async function geosearchCandidate(
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function discoverCreatorPhotos(
+async function discoverPlaces(
   tenantId: string,
+  places: DiscoverablePlace[],
   options: { fetchFn?: WikimediaFetch; paceMs?: number } = {},
 ) {
   const fetchFn = options.fetchFn ?? fetch;
   const paceMs = Math.max(300, options.paceMs ?? 300);
-  const places = await db.select({
-    materializationId: creatorPlaceMaterializationsTable.id,
-    itemId: creatorPlaceMaterializationsTable.itemId,
-    name: itemsTable.title,
-    latitude: creatorPlaceMaterializationsTable.latitude,
-    longitude: creatorPlaceMaterializationsTable.longitude,
-    osmType: creatorPlaceProposalsTable.osmType,
-    osmId: creatorPlaceProposalsTable.osmId,
-  }).from(creatorPlaceMaterializationsTable)
-    .innerJoin(itemsTable, eq(itemsTable.id, creatorPlaceMaterializationsTable.itemId))
-    .innerJoin(creatorPlaceProposalsTable, eq(creatorPlaceProposalsTable.id, creatorPlaceMaterializationsTable.proposalId))
-    .leftJoin(mediaTable, eq(mediaTable.itemId, itemsTable.id))
-    .where(and(
-      eq(creatorPlaceMaterializationsTable.tenantId, tenantId),
-      eq(creatorPlaceMaterializationsTable.isActive, true),
-      isNull(itemsTable.deletedAt),
-      isNull(mediaTable.id),
-    )).orderBy(asc(creatorPlaceMaterializationsTable.createdAt));
   const outcomes: Array<{ itemId: string; name: string; outcome: "wikidata" | "geosearch" | "nothing"; reason?: string }> = [];
   for (const place of places) {
     try {
@@ -322,9 +319,66 @@ export async function discoverCreatorPhotos(
   };
 }
 
-export async function listCreatorPhotoProposals(tenantId: string) {
+export async function discoverCreatorPhotos(
+  tenantId: string,
+  options: { fetchFn?: WikimediaFetch; paceMs?: number } = {},
+) {
+  // Keep the global cockpit behavior unchanged: only places without media.
+  const places = await db.select({
+    materializationId: creatorPlaceMaterializationsTable.id,
+    itemId: creatorPlaceMaterializationsTable.itemId,
+    name: itemsTable.title,
+    latitude: creatorPlaceMaterializationsTable.latitude,
+    longitude: creatorPlaceMaterializationsTable.longitude,
+    osmType: creatorPlaceProposalsTable.osmType,
+    osmId: creatorPlaceProposalsTable.osmId,
+  }).from(creatorPlaceMaterializationsTable)
+    .innerJoin(itemsTable, eq(itemsTable.id, creatorPlaceMaterializationsTable.itemId))
+    .innerJoin(creatorPlaceProposalsTable, eq(creatorPlaceProposalsTable.id, creatorPlaceMaterializationsTable.proposalId))
+    .leftJoin(mediaTable, eq(mediaTable.itemId, itemsTable.id))
+    .where(and(
+      eq(creatorPlaceMaterializationsTable.tenantId, tenantId),
+      eq(creatorPlaceMaterializationsTable.isActive, true),
+      isNull(itemsTable.deletedAt),
+      isNull(mediaTable.id),
+    )).orderBy(asc(creatorPlaceMaterializationsTable.createdAt));
+  return discoverPlaces(tenantId, places, options);
+}
+
+export async function discoverCreatorPhotosForItem(
+  tenantId: string,
+  itemId: string,
+  options: { fetchFn?: WikimediaFetch; paceMs?: number } = {},
+) {
+  // Targeted discovery deliberately ignores existing media and always retries
+  // the authoritative P18-then-geosearch sequence for this one item.
+  const places = await db.select({
+    materializationId: creatorPlaceMaterializationsTable.id,
+    itemId: creatorPlaceMaterializationsTable.itemId,
+    name: itemsTable.title,
+    latitude: creatorPlaceMaterializationsTable.latitude,
+    longitude: creatorPlaceMaterializationsTable.longitude,
+    osmType: creatorPlaceProposalsTable.osmType,
+    osmId: creatorPlaceProposalsTable.osmId,
+  }).from(creatorPlaceMaterializationsTable)
+    .innerJoin(itemsTable, eq(itemsTable.id, creatorPlaceMaterializationsTable.itemId))
+    .innerJoin(creatorPlaceProposalsTable, eq(creatorPlaceProposalsTable.id, creatorPlaceMaterializationsTable.proposalId))
+    .where(and(
+      eq(creatorPlaceMaterializationsTable.tenantId, tenantId),
+      eq(creatorPlaceMaterializationsTable.itemId, itemId),
+      eq(creatorPlaceMaterializationsTable.isActive, true),
+      isNull(itemsTable.deletedAt),
+    )).limit(1);
+  if (!places[0]) throw new CreatorPhotoError("Active materialized place not found.", "not-found");
+  return discoverPlaces(tenantId, places, options);
+}
+
+export async function listCreatorPhotoProposals(tenantId: string, itemId?: string) {
   return db.select().from(creatorPhotoProposalsTable)
-    .where(eq(creatorPhotoProposalsTable.tenantId, tenantId))
+    .where(and(
+      eq(creatorPhotoProposalsTable.tenantId, tenantId),
+      itemId ? eq(creatorPhotoProposalsTable.itemId, itemId) : undefined,
+    ))
     .orderBy(asc(creatorPhotoProposalsTable.createdAt));
 }
 
@@ -389,15 +443,17 @@ export async function approveCreatorPhotoProposal(input: {
       if (media) return { proposal, media };
     }
     if (proposal.status !== "pending") throw new CreatorPhotoError("Pending photo proposal not found.", "not-found");
-    const [existing] = await tx.select({ id: mediaTable.id }).from(mediaTable)
-      .where(eq(mediaTable.itemId, proposal.itemId)).limit(1);
-    if (existing) throw new CreatorPhotoError("The place already has media.", "conflict");
+    const positions = await tx.select({ position: mediaTable.position }).from(mediaTable)
+      .where(eq(mediaTable.itemId, proposal.itemId));
+    const nextPosition = creatorPhotoNextMediaPosition(
+      positions.map((entry) => entry.position),
+    );
     const [tenant] = await tx.select({ slug: tenantsTable.slug }).from(tenantsTable)
       .where(eq(tenantsTable.id, input.tenantId)).limit(1);
     const [item] = await tx.select({ title: itemsTable.title }).from(itemsTable)
       .where(eq(itemsTable.id, proposal.itemId)).limit(1);
     if (!tenant || !item) throw new CreatorPhotoError("Materialized place not found.", "not-found");
-    const name = `${mediaBaseName(tenant.slug, item.title, 1)}-${randomUUID().slice(0, 6)}.jpg`;
+    const name = `${mediaBaseName(tenant.slug, item.title, nextPosition + 1)}-${randomUUID().slice(0, 6)}.jpg`;
     compensation.namedVariant = { slug: tenant.slug, name };
     try {
       await storePhotoVariants(tenant.slug, name, bytes);
@@ -405,7 +461,7 @@ export async function approveCreatorPhotoProposal(input: {
       itemId: proposal.itemId,
       url: `/api/storage/img/${tenant.slug}/${name}`,
       alt: item.title,
-      position: 0,
+      position: nextPosition,
       kind: "image",
       width: dimensions.width,
       height: dimensions.height,

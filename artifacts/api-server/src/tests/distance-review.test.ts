@@ -4,8 +4,9 @@ import { distanceInputFingerprint, resolveItemLocation } from "../lib/distanceEn
 import { extractCoordsFromGoogleMapsUrl } from "../lib/maps-link";
 import { approveDistanceProposal, revertDistanceProposal, runDistanceComputation } from "../lib/distanceEngine";
 import { review } from "../routes/adminDistanceReview";
-import { db, categoriesTable, geocodeCacheTable, itemDistanceProposalsTable, itemsTable, sectionsTable, tenantsTable } from "@workspace/db";
+import { creatorCanonicalPlacesTable, creatorPlaceMaterializationsTable, creatorPlaceProposalsTable, db, categoriesTable, geocodeCacheTable, itemDistanceProposalsTable, itemsTable, sectionsTable, tenantsTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
+import { recomputeItemDistance } from "../lib/adminPlaceCreation";
 
 test("Google Maps extraction accepts pin coordinates and rejects map centre", () => {
   assert.deepEqual(
@@ -82,7 +83,7 @@ test("DB pipeline keeps proposals private, approves explicitly, and preserves ma
     const fakeFetch = (async (url: string) => ({
       ok: true,
       json: async () => url.includes("router.project-osrm.org") ? { routes: [{ distance: 1234, duration: 600 }] } : [],
-    })) as typeof fetch;
+    })) as unknown as typeof fetch;
     const result = await runDistanceComputation(tenantId, { limit: 20, fetchFn: fakeFetch });
     assert.equal(result.processed, 1);
     assert.equal(result.counts.manual, 1);
@@ -111,6 +112,55 @@ test("DB pipeline keeps proposals private, approves explicitly, and preserves ma
     const [stale] = await db.insert(itemDistanceProposalsTable).values({ itemId: manualItem!.id, tenantId, inputFingerprint: "stale", status: "pending", distanceMeters: 123 }).returning();
     await assert.rejects(() => approveDistanceProposal(stale!.id), /Ročno vnesena/);
   } finally {
+    if (tenantId) await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
+  }
+});
+
+test("concurrent item patch and Creator recompute use canonical locks without corrupting machine distance", async () => {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let tenantId = "";
+  const originalFetch = globalThis.fetch;
+  try {
+    const [tenant] = await db.insert(tenantsTable).values({
+      slug: `creator-lock-${suffix}`, name: `Creator lock ${suffix}`, latitude: 45.5, longitude: 13.6,
+    }).returning();
+    tenantId = tenant!.id;
+    const [section] = await db.insert(sectionsTable).values({ tenantId, key: `lock-${suffix}`, title: "Test" }).returning();
+    const [category] = await db.insert(categoriesTable).values({ sectionId: section!.id, label: "POI", layout: "poi" }).returning();
+    const [item] = await db.insert(itemsTable).values({ categoryId: category!.id, title: "Machine" }).returning();
+    const [proposal] = await db.insert(creatorPlaceProposalsTable).values({
+      tenantId, runId: crypto.randomUUID(), categoryId: category!.id, proposedName: "Machine",
+      normalizedName: `machine-${suffix}`, originalQuery: "Machine", status: "pending",
+    }).returning();
+    const [canonical] = await db.insert(creatorCanonicalPlacesTable).values({
+      tenantId, entityKey: `lock:${suffix}`, itemId: item!.id,
+    }).returning();
+    await db.insert(creatorPlaceMaterializationsTable).values({
+      tenantId, entityKey: `lock:${suffix}`, canonicalPlaceId: canonical!.id, proposalId: proposal!.id,
+      itemId: item!.id, runId: crypto.randomUUID(), confirmationMethod: "exact",
+      authoritativeAddress: "Test", latitude: 45.51, longitude: 13.61,
+      roadDistanceM: 1, travelDurationS: 1, range: "near", editorialJson: "{}", provenanceJson: "{}",
+    });
+    globalThis.fetch = (async () => ({
+      ok: true, status: 200, json: async () => ({ routes: [{ distance: 1234, duration: 600 }] }),
+    })) as unknown as typeof fetch;
+    let releasePatch!: () => void;
+    const patchHasItem = new Promise<void>((resolve) => { releasePatch = resolve; });
+    const simulatedPatch = db.transaction(async (tx) => {
+      await tx.select({ id: itemsTable.id }).from(itemsTable).where(eq(itemsTable.id, item!.id)).for("update");
+      releasePatch();
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      await tx.select({ id: creatorPlaceMaterializationsTable.id }).from(creatorPlaceMaterializationsTable)
+        .where(eq(creatorPlaceMaterializationsTable.itemId, item!.id)).for("update");
+      await tx.update(itemsTable).set({ title: "Patched" }).where(eq(itemsTable.id, item!.id));
+    });
+    await patchHasItem;
+    await Promise.all([simulatedPatch, recomputeItemDistance(item!.id)]);
+    const [updated] = await db.select().from(itemsTable).where(eq(itemsTable.id, item!.id));
+    assert.equal(updated!.title, "Patched");
+    assert.equal(updated!.distanceMeters, 1234);
+  } finally {
+    globalThis.fetch = originalFetch;
     if (tenantId) await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
   }
 });

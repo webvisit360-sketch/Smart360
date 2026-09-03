@@ -3289,7 +3289,7 @@ export const CreateAdminPlaceResponse = zod.object({
 
 
 /**
- * @summary Update an item; pass categoryId to move it to another category
+ * @summary Update an item; pass categoryId to move it to another category. distanceMeters is ignored for active Creator materializations.
  */
 export const UpdateItemParams = zod.object({
   "id": zod.coerce.string()
@@ -3395,6 +3395,116 @@ export const DeleteItemParams = zod.object({
 })
 
 export const DeleteItemResponse = zod.void()
+
+
+/**
+ * @summary Read whether an item distance is owned by an active Creator materialization
+ */
+export const GetItemCreatorStatusParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const getItemCreatorStatusResponseDistanceMetersMin = 0;
+
+export const getItemCreatorStatusResponseRoadDistanceMMin = 0;
+
+export const getItemCreatorStatusResponseTravelDurationSMin = 0;
+
+
+
+export const GetItemCreatorStatusResponse = zod.object({
+  "activeMaterialization": zod.boolean(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "distanceMeters": zod.number().min(getItemCreatorStatusResponseDistanceMetersMin).nullable(),
+  "roadDistanceM": zod.number().min(getItemCreatorStatusResponseRoadDistanceMMin).nullable(),
+  "travelDurationS": zod.number().min(getItemCreatorStatusResponseTravelDurationSMin).nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * @summary Recompute a materialized item's road distance from the authoritative tenant origin and coordinates
+ */
+export const RecomputeItemDistanceParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const recomputeItemDistanceResponseDistanceMetersMin = 0;
+
+export const recomputeItemDistanceResponseRoadDistanceMMin = 0;
+
+export const recomputeItemDistanceResponseTravelDurationSMin = 0;
+
+
+
+export const RecomputeItemDistanceResponse = zod.object({
+  "activeMaterialization": zod.boolean(),
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "distanceMeters": zod.number().min(recomputeItemDistanceResponseDistanceMetersMin).nullable(),
+  "roadDistanceM": zod.number().min(recomputeItemDistanceResponseRoadDistanceMMin).nullable(),
+  "travelDurationS": zod.number().min(recomputeItemDistanceResponseTravelDurationSMin).nullable(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * @summary Discover a Wikimedia proposal for one active materialized item, regardless of existing media
+ */
+export const DiscoverItemCreatorPhotosParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const discoverItemCreatorPhotosResponseOutcomesItemReasonMax = 240;
+
+
+
+export const DiscoverItemCreatorPhotosResponse = zod.object({
+  "eligiblePlaces": zod.number(),
+  "foundViaWikidata": zod.number(),
+  "foundViaGeosearch": zod.number(),
+  "nothingFreeFound": zod.number(),
+  "outcomes": zod.array(zod.object({
+  "itemId": zod.string(),
+  "name": zod.string(),
+  "outcome": zod.enum(['wikidata', 'geosearch', 'nothing']),
+  "reason": zod.string().max(discoverItemCreatorPhotosResponseOutcomesItemReasonMax).optional().describe('Safe upstream failure summary; present only when this place could not be checked')
+}))
+})
+
+
+/**
+ * @summary List Wikimedia review records belonging only to this item
+ */
+export const ListItemCreatorPhotoProposalsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListItemCreatorPhotoProposalsResponseItem = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "materializationId": zod.string(),
+  "itemId": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "commonsFile": zod.string(),
+  "thumbnailUrl": zod.string(),
+  "originalUrl": zod.string(),
+  "sourcePageUrl": zod.string(),
+  "author": zod.string(),
+  "license": zod.string(),
+  "licenseUrl": zod.string().nullable(),
+  "confidence": zod.enum(['high', 'low']),
+  "discoveryMethod": zod.enum(['wikidata', 'geosearch']),
+  "wikidataId": zod.string().nullable(),
+  "reviewedBy": zod.string().nullable(),
+  "reviewedAt": zod.string().nullable(),
+  "approvedMediaId": zod.string().nullable(),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListItemCreatorPhotoProposalsResponse = zod.array(ListItemCreatorPhotoProposalsResponseItem)
 
 
 export const DuplicateItemParams = zod.object({

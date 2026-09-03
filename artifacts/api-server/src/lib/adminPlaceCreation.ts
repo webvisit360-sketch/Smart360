@@ -2,11 +2,13 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
+  creatorPlaceMaterializationsTable,
   creatorProposalTranslationsTable,
   creatorRunsTable,
   creatorVerificationAttemptsTable,
   creatorVerificationCandidatesTable,
   db,
+  itemDistanceProposalsTable,
   itemsTable,
   sectionsTable,
   tenantsTable,
@@ -22,6 +24,19 @@ import {
 const USER_AGENT = "Smart360 guest guide (operator place search; admin contact via replit deployment)";
 const HOST = "https://nominatim.openstreetmap.org";
 const MAX_RESPONSE_BYTES = 256_000;
+
+export class ItemDistanceError extends Error {
+  constructor(message: string, readonly kind: "not-found" | "unprocessable" | "conflict") {
+    super(message);
+  }
+}
+
+export function recomputedCreatorRange(
+  priorRange: string | null,
+  durationMinutes: number,
+): "practical" | "near" | "excursion" {
+  return priorRange === "practical" ? "practical" : durationMinutes <= 20 ? "near" : "excursion";
+}
 
 type NominatimPlace = {
   osm_type?: unknown; osm_id?: unknown; lat?: unknown; lon?: unknown;
@@ -294,4 +309,127 @@ export async function createAdminPlace(input: {
     return proposal;
   });
   return result;
+}
+
+export async function getItemCreatorStatus(itemId: string) {
+  const [item] = await db.select({ distanceMeters: itemsTable.distanceMeters })
+    .from(itemsTable)
+    .where(and(eq(itemsTable.id, itemId), isNull(itemsTable.deletedAt)))
+    .limit(1);
+  if (!item) throw new CreatorBulkApprovalError("Vnos ni najden.");
+  const [row] = await db.select({
+    latitude: creatorPlaceMaterializationsTable.latitude,
+    longitude: creatorPlaceMaterializationsTable.longitude,
+    roadDistanceM: creatorPlaceProposalsTable.roadDistanceM,
+    travelDurationS: creatorPlaceProposalsTable.travelDurationS,
+    range: creatorPlaceProposalsTable.range,
+  }).from(creatorPlaceMaterializationsTable)
+    .innerJoin(
+      creatorPlaceProposalsTable,
+      eq(creatorPlaceProposalsTable.id, creatorPlaceMaterializationsTable.proposalId),
+    )
+    .where(and(
+      eq(creatorPlaceMaterializationsTable.itemId, itemId),
+      eq(creatorPlaceMaterializationsTable.isActive, true),
+    ))
+    .limit(1);
+  return {
+    activeMaterialization: Boolean(row),
+    latitude: row?.latitude ?? null,
+    longitude: row?.longitude ?? null,
+    distanceMeters: item.distanceMeters,
+    roadDistanceM: row?.roadDistanceM ?? null,
+    travelDurationS: row?.travelDurationS ?? null,
+    range: row?.range ?? null,
+  };
+}
+
+export async function recomputeItemDistance(itemId: string) {
+  const [row] = await db.select({
+    materializationId: creatorPlaceMaterializationsTable.id,
+    proposalId: creatorPlaceMaterializationsTable.proposalId,
+    latitude: creatorPlaceMaterializationsTable.latitude,
+    longitude: creatorPlaceMaterializationsTable.longitude,
+    originLatitude: tenantsTable.latitude,
+    originLongitude: tenantsTable.longitude,
+    range: creatorPlaceProposalsTable.range,
+  }).from(creatorPlaceMaterializationsTable)
+    .innerJoin(tenantsTable, eq(tenantsTable.id, creatorPlaceMaterializationsTable.tenantId))
+    .innerJoin(creatorPlaceProposalsTable, eq(creatorPlaceProposalsTable.id, creatorPlaceMaterializationsTable.proposalId))
+    .innerJoin(itemsTable, eq(itemsTable.id, creatorPlaceMaterializationsTable.itemId))
+    .where(and(
+      eq(creatorPlaceMaterializationsTable.itemId, itemId),
+      eq(creatorPlaceMaterializationsTable.isActive, true),
+      isNull(itemsTable.deletedAt),
+    ))
+    .limit(1);
+  if (!row) throw new ItemDistanceError("Vnos nima aktivne materializacije s koordinatami.", "not-found");
+  if (row.originLatitude === null || row.originLongitude === null) {
+    throw new ItemDistanceError("Namestitev nima potrjenega izhodišča.", "not-found");
+  }
+  const route = await computeRoadRoute(
+    { latitude: row.originLatitude, longitude: row.originLongitude },
+    { latitude: row.latitude, longitude: row.longitude },
+  );
+  if (!route) throw new ItemDistanceError("Cestne razdalje ni bilo mogoče izračunati.", "unprocessable");
+  const roadDistanceM = Math.round(route.distanceMeters);
+  const travelDurationS = Math.round(route.durationMinutes * 60);
+  // Practical is a Creator classification (nearest candidates per practical
+  // category), not a duration bucket. A distance refresh must retain it.
+  const range = recomputedCreatorRange(row.range, route.durationMinutes);
+  await db.transaction(async (tx) => {
+    // Keep the same lock order as ordinary item PATCH: item first, then its
+    // active Creator projection. This avoids an item/materialization deadlock.
+    const [lockedItem] = await tx.select({ id: itemsTable.id })
+      .from(itemsTable)
+      .where(and(eq(itemsTable.id, itemId), isNull(itemsTable.deletedAt)))
+      .for("update")
+      .limit(1);
+    if (!lockedItem) {
+      throw new ItemDistanceError("Vnos se je med preračunom spremenil. Poskusite znova.", "conflict");
+    }
+    const [current] = await tx.select({
+      latitude: creatorPlaceMaterializationsTable.latitude,
+      longitude: creatorPlaceMaterializationsTable.longitude,
+      originLatitude: tenantsTable.latitude,
+      originLongitude: tenantsTable.longitude,
+    }).from(creatorPlaceMaterializationsTable)
+      .innerJoin(tenantsTable, eq(tenantsTable.id, creatorPlaceMaterializationsTable.tenantId))
+      .where(and(
+        eq(creatorPlaceMaterializationsTable.id, row.materializationId),
+        eq(creatorPlaceMaterializationsTable.itemId, itemId),
+        eq(creatorPlaceMaterializationsTable.isActive, true),
+      ))
+      .for("update")
+      .limit(1);
+    if (!current ||
+      current.latitude !== row.latitude || current.longitude !== row.longitude ||
+      current.originLatitude !== row.originLatitude || current.originLongitude !== row.originLongitude) {
+      throw new ItemDistanceError("Aktivna materializacija ali izhodišče se je med preračunom spremenilo. Poskusite znova.", "conflict");
+    }
+    const duration = `${Math.round(travelDurationS / 60)} min`;
+    await tx.update(itemsTable).set({ distanceMeters: roadDistanceM, duration })
+      .where(eq(itemsTable.id, itemId));
+    await tx.update(itemDistanceProposalsTable).set({
+      distanceMeters: roadDistanceM,
+      durationMinutes: travelDurationS / 60,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(itemDistanceProposalsTable.itemId, itemId),
+      eq(itemDistanceProposalsTable.status, "approved"),
+    ));
+    await tx.update(creatorPlaceProposalsTable).set({
+      roadDistanceM,
+      travelDurationS,
+      range,
+      updatedAt: new Date(),
+    }).where(eq(creatorPlaceProposalsTable.id, row.proposalId));
+    await tx.update(creatorPlaceMaterializationsTable).set({
+      roadDistanceM,
+      travelDurationS,
+      range,
+      updatedAt: new Date(),
+    }).where(eq(creatorPlaceMaterializationsTable.id, row.materializationId));
+  });
+  return getItemCreatorStatus(itemId);
 }

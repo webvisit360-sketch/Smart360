@@ -83,6 +83,7 @@ import type {
   HostAccountResponse,
   HostReplyInput,
   Item,
+  ItemCreatorStatus,
   ItemInput,
   ItemUpdate,
   ListTenantTranslationsParams,
@@ -6659,7 +6660,7 @@ export const getUpdateItemUrl = (id: string,) => {
 }
 
 /**
- * @summary Update an item; pass categoryId to move it to another category
+ * @summary Update an item; pass categoryId to move it to another category. distanceMeters is ignored for active Creator materializations.
  */
 export const updateItem = async (id: string,
     itemUpdate: ItemUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Item> => {
@@ -6709,7 +6710,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateItemMutationError = ErrorType<unknown>
 
     /**
- * @summary Update an item; pass categoryId to move it to another category
+ * @summary Update an item; pass categoryId to move it to another category. distanceMeters is ignored for active Creator materializations.
  */
 export const useUpdateItem = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItem>>, TError,{id: string;data: BodyType<ItemUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -6786,6 +6787,302 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getDeleteItemMutationOptions(options));
     }
+
+export const getGetItemCreatorStatusUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/creator-status`
+}
+
+/**
+ * @summary Read whether an item distance is owned by an active Creator materialization
+ */
+export const getItemCreatorStatus = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ItemCreatorStatus> => {
+
+  return customFetch<ItemCreatorStatus>(getGetItemCreatorStatusUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetItemCreatorStatusQueryKey = (id: string,) => {
+    return [
+    `/api/admin/items/${id}/creator-status`
+    ] as const;
+    }
+
+
+export const getGetItemCreatorStatusQueryOptions = <TData = Awaited<ReturnType<typeof getItemCreatorStatus>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getItemCreatorStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetItemCreatorStatusQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getItemCreatorStatus>>> = ({ signal }) => getItemCreatorStatus(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getItemCreatorStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetItemCreatorStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getItemCreatorStatus>>>
+export type GetItemCreatorStatusQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read whether an item distance is owned by an active Creator materialization
+ */
+
+export function useGetItemCreatorStatus<TData = Awaited<ReturnType<typeof getItemCreatorStatus>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getItemCreatorStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetItemCreatorStatusQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecomputeItemDistanceUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/distance/recompute`
+}
+
+/**
+ * @summary Recompute a materialized item's road distance from the authoritative tenant origin and coordinates
+ */
+export const recomputeItemDistance = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ItemCreatorStatus> => {
+
+  return customFetch<ItemCreatorStatus>(getRecomputeItemDistanceUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRecomputeItemDistanceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recomputeItemDistance>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recomputeItemDistance>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['recomputeItemDistance'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recomputeItemDistance>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  recomputeItemDistance(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecomputeItemDistanceMutationResult = NonNullable<Awaited<ReturnType<typeof recomputeItemDistance>>>
+
+    export type RecomputeItemDistanceMutationError = ErrorType<void>
+
+    /**
+ * @summary Recompute a materialized item's road distance from the authoritative tenant origin and coordinates
+ */
+export const useRecomputeItemDistance = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recomputeItemDistance>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recomputeItemDistance>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRecomputeItemDistanceMutationOptions(options));
+    }
+
+export const getDiscoverItemCreatorPhotosUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/creator/photos/discover`
+}
+
+/**
+ * @summary Discover a Wikimedia proposal for one active materialized item, regardless of existing media
+ */
+export const discoverItemCreatorPhotos = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorPhotoDiscoveryReport> => {
+
+  return customFetch<CreatorPhotoDiscoveryReport>(getDiscoverItemCreatorPhotosUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getDiscoverItemCreatorPhotosMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverItemCreatorPhotos>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof discoverItemCreatorPhotos>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['discoverItemCreatorPhotos'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof discoverItemCreatorPhotos>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  discoverItemCreatorPhotos(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DiscoverItemCreatorPhotosMutationResult = NonNullable<Awaited<ReturnType<typeof discoverItemCreatorPhotos>>>
+
+    export type DiscoverItemCreatorPhotosMutationError = ErrorType<void>
+
+    /**
+ * @summary Discover a Wikimedia proposal for one active materialized item, regardless of existing media
+ */
+export const useDiscoverItemCreatorPhotos = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverItemCreatorPhotos>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof discoverItemCreatorPhotos>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDiscoverItemCreatorPhotosMutationOptions(options));
+    }
+
+export const getListItemCreatorPhotoProposalsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/creator/photo-proposals`
+}
+
+/**
+ * @summary List Wikimedia review records belonging only to this item
+ */
+export const listItemCreatorPhotoProposals = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorPhotoProposal[]> => {
+
+  return customFetch<CreatorPhotoProposal[]>(getListItemCreatorPhotoProposalsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListItemCreatorPhotoProposalsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/items/${id}/creator/photo-proposals`
+    ] as const;
+    }
+
+
+export const getListItemCreatorPhotoProposalsQueryOptions = <TData = Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListItemCreatorPhotoProposalsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>> = ({ signal }) => listItemCreatorPhotoProposals(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListItemCreatorPhotoProposalsQueryResult = NonNullable<Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>>
+export type ListItemCreatorPhotoProposalsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List Wikimedia review records belonging only to this item
+ */
+
+export function useListItemCreatorPhotoProposals<TData = Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listItemCreatorPhotoProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListItemCreatorPhotoProposalsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getDuplicateItemUrl = (id: string,) => {
 

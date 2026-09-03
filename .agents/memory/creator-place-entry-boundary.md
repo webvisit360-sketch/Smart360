@@ -14,3 +14,9 @@ Distances for okolica entries are owned by routing/geocoding systems, never type
 **Why:** Distance and duration must remain reproducible measurements rather than editorial content.
 
 **How to apply:** Verify coordinates server-side and compute road distance, duration, and range before materialization. Do not expose an authored distance field when creating an okolica item.
+
+Machine-owned distance continues through editing: an active materialization makes distance read-only and recomputable from its stored coordinates. Only coordinate-less legacy items retain manual distance editing.
+
+**Why:** Allowing normal edits or stale clients to overwrite a verified route silently breaks the provenance of guest-facing distance and duration.
+
+**How to apply:** Enforce ownership server-side as well as in the UI. A recompute must atomically refresh every distance projection and preserve Creator classifications that are not simple duration buckets.

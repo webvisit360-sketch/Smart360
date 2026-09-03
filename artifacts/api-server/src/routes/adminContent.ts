@@ -41,6 +41,10 @@ import {
   SearchAdminPlacesResponse,
   CreateAdminPlaceBody,
   CreateAdminPlaceResponse,
+  DiscoverItemCreatorPhotosResponse,
+  GetItemCreatorStatusResponse,
+  ListItemCreatorPhotoProposalsResponse,
+  RecomputeItemDistanceResponse,
 } from "@workspace/api-zod";
 import { getAdminUser, requireAdmin } from "../lib/adminAuth";
 import { currentActor } from "../lib/actorContext";
@@ -48,8 +52,19 @@ import { logChange } from "../lib/changelog";
 import { sanitizeBody, sanitizePlain, sanitizeUrl } from "../lib/sanitizeBody";
 import { isRichField, normalizeAllContent } from "../lib/normalizeContent";
 import { invalidateTenantCache } from "./publicTenants";
-import { createAdminPlace, searchAdminPlaces } from "../lib/adminPlaceCreation";
+import {
+  createAdminPlace,
+  getItemCreatorStatus,
+  ItemDistanceError,
+  recomputeItemDistance,
+  searchAdminPlaces,
+} from "../lib/adminPlaceCreation";
 import { CreatorBulkApprovalError } from "../lib/creatorProposalLedger";
+import {
+  CreatorPhotoError,
+  discoverCreatorPhotosForItem,
+  listCreatorPhotoProposals,
+} from "../lib/creatorWikimediaPhotos";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -596,8 +611,23 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     .from(itemsTable)
     .where(eq(itemsTable.id, id));
   const item = await db.transaction(async (tx) => {
+    // A Creator materialization owns its road distance. Lock both the item and
+    // its active projection before accepting an editorial PATCH so a stale
+    // browser can never overwrite the machine value.
+    await tx.select({ id: itemsTable.id }).from(itemsTable)
+      .where(eq(itemsTable.id, id)).for("update");
+    const [activeMaterialization] = await tx.select({ id: creatorPlaceMaterializationsTable.id })
+      .from(creatorPlaceMaterializationsTable)
+      .where(and(
+        eq(creatorPlaceMaterializationsTable.itemId, id),
+        eq(creatorPlaceMaterializationsTable.isActive, true),
+      ))
+      .for("update")
+      .limit(1);
+    const fields = cleanContentFields(parsed.data);
+    if (activeMaterialization) delete fields.distanceMeters;
     const [updated] = await tx.update(itemsTable)
-      .set(cleanContentFields(parsed.data))
+      .set(fields)
       .where(eq(itemsTable.id, id))
       .returning();
     if (!updated || !parsed.data.categoryId || currentActor()?.kind !== "owner") return updated;
@@ -638,6 +668,61 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
   });
   invalidateTenantCache();
   res.json(UpdateItemResponse.parse(await itemWithMedia(item)));
+});
+
+router.get("/admin/items/:id/creator-status", async (req, res): Promise<void> => {
+  try {
+    res.json(GetItemCreatorStatusResponse.parse(
+      await getItemCreatorStatus(firstParam(req.params["id"])),
+    ));
+  } catch (error) {
+    res.status(404).json({ error: error instanceof Error ? error.message : "Vnos ni najden." });
+  }
+});
+
+router.post("/admin/items/:id/distance/recompute", async (req, res): Promise<void> => {
+  try {
+    const result = await recomputeItemDistance(firstParam(req.params["id"]));
+    invalidateTenantCache();
+    res.json(RecomputeItemDistanceResponse.parse(result));
+  } catch (error) {
+    const status = error instanceof ItemDistanceError
+      ? error.kind === "not-found" ? 404 : error.kind === "conflict" ? 409 : 422
+      : 500;
+    res.status(status).json({
+      error: error instanceof Error ? error.message : "Razdalje ni mogoče preračunati.",
+    });
+  }
+});
+
+router.post("/admin/items/:id/creator/photos/discover", async (req, res): Promise<void> => {
+  const itemId = firstParam(req.params["id"]);
+  const ctx = await tenantContextForItem(itemId);
+  if (!ctx) {
+    res.status(404).json({ error: "Vnos ni najden." });
+    return;
+  }
+  try {
+    res.json(DiscoverItemCreatorPhotosResponse.parse(
+      await discoverCreatorPhotosForItem(ctx.tenantId, itemId),
+    ));
+  } catch (error) {
+    const status = error instanceof CreatorPhotoError && error.kind === "not-found" ? 404 : 502;
+    req.log.warn({ error, itemId }, "Targeted Creator Wikimedia discovery failed");
+    res.status(status).json({ error: error instanceof Error ? error.message : "Wikimedia discovery failed." });
+  }
+});
+
+router.get("/admin/items/:id/creator/photo-proposals", async (req, res): Promise<void> => {
+  const itemId = firstParam(req.params["id"]);
+  const ctx = await tenantContextForItem(itemId);
+  if (!ctx) {
+    res.status(404).json({ error: "Vnos ni najden." });
+    return;
+  }
+  res.json(ListItemCreatorPhotoProposalsResponse.parse(
+    JSON.parse(JSON.stringify(await listCreatorPhotoProposals(ctx.tenantId, itemId))),
+  ));
 });
 
 // Soft delete: the item moves to the trash and can be restored for 30 days.

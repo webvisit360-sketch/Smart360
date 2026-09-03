@@ -4,6 +4,7 @@ import {
   commonsNameMatchesPlace,
   commonsFileCandidate,
   creatorPhotoReservedAt,
+  creatorPhotoNextMediaPosition,
   guardedCreatorPhotoDiscovery,
   normalizeFreeLicense,
   normalizePlaceName,
@@ -115,4 +116,10 @@ test("photo API slot reservations are monotonic and at least 300ms apart", () =>
   assert.equal(first.getTime(), now.getTime());
   assert.equal(second.getTime() - first.getTime(), 300);
   assert.equal(third.getTime() - second.getTime(), 300);
+});
+
+test("approved Wikimedia media appends after the highest existing gallery position", () => {
+  assert.equal(creatorPhotoNextMediaPosition([]), 0);
+  assert.equal(creatorPhotoNextMediaPosition([0, 1, 4]), 5);
+  assert.equal(creatorPhotoNextMediaPosition([8, 2]), 9);
 });

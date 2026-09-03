@@ -21,6 +21,9 @@ import {
   useSearchAdminPlaces,
   useCreateAdminPlace,
   getSearchAdminPlacesQueryKey,
+  getGetItemCreatorStatusQueryKey,
+  useGetItemCreatorStatus,
+  useRecomputeItemDistance,
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
@@ -53,6 +56,7 @@ import {
 import { sectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
 import type { CategoryInputExploreGroup } from "@workspace/api-client-react";
 import { PinPlacementMap } from "@/components/admin/kreator-proposal-queue";
+import { ItemCreatorPhotoProposals } from "@/components/admin/kreator-photo-proposals";
 
 // ---------- Types ----------
 
@@ -755,6 +759,16 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
   }
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const itemId = mode === "edit" ? item.id : "";
+  const creatorStatus = useGetItemCreatorStatus(itemId, {
+    query: {
+      enabled: mode === "edit",
+      queryKey: getGetItemCreatorStatusQueryKey(itemId),
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
+    },
+  });
+  const { data: ownerSession } = useGetAdminSession();
 
   // Deferred media (new item): the grid queues files locally; Shrani creates
   // the item, then uploads them to it. If the dialog stays open after a
@@ -784,6 +798,17 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
   const [soldOut, setSoldOut] = useState(item?.soldOut ?? false);
   const [producerName, setProducerName] = useState(item?.producerName ?? "");
   const [producerNote, setProducerNote] = useState(item?.producerNote ?? "");
+  const recomputeDistance = useRecomputeItemDistance({
+    mutation: {
+      onSuccess: async (status) => {
+        setDistanceMeters(status.distanceMeters != null ? String(status.distanceMeters) : "");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: getGetItemCreatorStatusQueryKey(itemId) }),
+          queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) }),
+        ]);
+      },
+    },
+  });
 
   const baseline = {
     title: item?.title ?? "",
@@ -801,7 +826,24 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
     producerName: item?.producerName ?? "",
     producerNote: item?.producerNote ?? "",
   };
-  const current = { title, body, eventStart, price, priceUnit, phone, distanceMeters, isVisible, tint, frame, orderEnabled, soldOut, producerName, producerNote };
+  const current = {
+    title,
+    body,
+    eventStart,
+    price,
+    priceUnit,
+    phone,
+    distanceMeters: creatorStatus.data?.activeMaterialization
+      ? baseline.distanceMeters
+      : distanceMeters,
+    isVisible,
+    tint,
+    frame,
+    orderEnabled,
+    soldOut,
+    producerName,
+    producerNote,
+  };
   const { restored, clear, discardRestored } = useDraft(
     "item",
     mode === "edit" ? item.id : `new-${categoryId}`,
@@ -829,10 +871,25 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
 
+  useEffect(() => {
+    if (creatorStatus.data?.activeMaterialization) {
+      setDistanceMeters(
+        creatorStatus.data.distanceMeters != null ? String(creatorStatus.data.distanceMeters) : "",
+      );
+    }
+  }, [creatorStatus.data]);
+
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+  const creatorStatusReady = mode !== "edit" ||
+    (!creatorStatus.isLoading && !creatorStatus.isError && creatorStatus.data !== undefined);
 
   const handleSave = async () => {
-    const distanceValue = parseDistanceMeters(distanceMeters);
+    if (mode === "edit" && !creatorStatusReady) {
+      alert("Stanja Creator materializacije ni bilo mogoče preveriti. Razdalje ni varno shraniti.");
+      return;
+    }
+    const machineOwnedDistance = creatorStatus.data?.activeMaterialization === true;
+    const distanceValue = machineOwnedDistance ? null : parseDistanceMeters(distanceMeters);
     if (Number.isNaN(distanceValue)) {
       alert("Razdalja mora biti nenegativno število metrov (ali prazno).");
       return;
@@ -899,7 +956,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
           price: price.trim() || null,
           priceUnit: priceUnit.trim() || null,
           phone: phone.trim() || null,
-          distanceMeters: distanceValue,
+          ...(!machineOwnedDistance ? { distanceMeters: distanceValue } : {}),
           isVisible,
           tint: tint || null,
           frame: (frame || null) as any,
@@ -976,6 +1033,9 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
           onPendingChange={setPendingCount}
           frameRatio={frame === "tall" ? "4 / 5" : frame === "square" ? "1 / 1" : "5 / 3"}
         />
+        {mode === "edit" && ownerSession?.authenticated && creatorStatus.data?.activeMaterialization && (
+          <ItemCreatorPhotoProposals tenantId={tenantId} itemId={item.id} />
+        )}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
@@ -1019,7 +1079,13 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
         </p>
       </div>
       <div className="space-y-1">
-        <Label>Razdalja (metri)</Label>
+        <Label>
+          {!creatorStatusReady
+            ? "Razdalja (preverjanje Creator materializacije)"
+            : creatorStatus.data?.activeMaterialization
+            ? "Razdalja (strojno izračunana)"
+            : "Razdalja (metri) — legacy / brez shranjenih koordinat"}
+        </Label>
         <div className="flex items-center gap-2">
           <Input
             type="text"
@@ -1027,9 +1093,21 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
             value={distanceMeters}
             onChange={(e) => setDistanceMeters(e.target.value)}
             placeholder="npr. 850"
-            disabled={busy}
+            readOnly={creatorStatus.data?.activeMaterialization === true}
+            disabled={busy || !creatorStatusReady}
           />
-          {distanceMeters.trim() && (
+          {creatorStatusReady && creatorStatus.data?.activeMaterialization ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => recomputeDistance.mutate({ id: itemId })}
+              disabled={busy || recomputeDistance.isPending}
+            >
+              {recomputeDistance.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+              Preračunaj (OSRM)
+            </Button>
+          ) : creatorStatusReady && distanceMeters.trim() && (
             <Button
               type="button"
               variant="outline"
@@ -1042,12 +1120,19 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Neobvezno. Prazno = brez razdalje.
+          {!creatorStatusReady
+            ? "Pred urejanjem ročne razdalje preverjamo, ali je vnos strojno upravljan."
+            : creatorStatus.data?.activeMaterialization
+            ? "Vrednost upravljajo koordinate aktivne materializacije in izhodišče namestitve; ob običajnem shranjevanju se ne pošilja."
+            : "Ročni legacy vnos, ker ni aktivne materializacije s shranjenimi koordinatami. Prazno = brez razdalje."}
           {(() => {
             const preview = formatDistanceMeters(distanceMeters);
             return preview ? ` Gostom prikazano kot: ${preview}.` : "";
           })()}
         </p>
+        {recomputeDistance.isError && (
+          <p role="alert" className="text-xs text-destructive">Preračun razdalje ni uspel.</p>
+        )}
       </div>
       <div className="space-y-1">
         <Label>Oblika fotografij</Label>
@@ -1175,7 +1260,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
         <Button variant="outline" onClick={handleCancel} disabled={busy}>
           Prekliči
         </Button>
-        <Button onClick={handleSave} disabled={busy}>
+        <Button onClick={handleSave} disabled={busy || !creatorStatusReady}>
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {mode === "create" ? "Dodaj vnos" : "Shrani"}
         </Button>

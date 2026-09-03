@@ -972,6 +972,43 @@ export interface CreatorPhotoApproval {
   media: MediaEntry;
 }
 
+/**
+ * @nullable
+ */
+export type ItemCreatorStatusRange = typeof ItemCreatorStatusRange[keyof typeof ItemCreatorStatusRange] | null;
+
+
+export const ItemCreatorStatusRange = {
+  practical: 'practical',
+  near: 'near',
+  excursion: 'excursion',
+} as const;
+
+export interface ItemCreatorStatus {
+  activeMaterialization: boolean;
+  /** @nullable */
+  latitude: number | null;
+  /** @nullable */
+  longitude: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  distanceMeters: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  roadDistanceM: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  travelDurationS: number | null;
+  /** @nullable */
+  range: ItemCreatorStatusRange;
+}
+
 export interface CreatorProposalBulkApprovalInput {
   /** @minItems 1 */
   proposalIds: string[];

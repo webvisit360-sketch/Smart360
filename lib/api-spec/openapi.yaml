@@ -855,7 +855,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CreatorPhotoApproval" }
         "404": { description: Pending proposal not found }
-        "409": { description: Place already has media }
+        "422": { description: "Commons attribution, source, or image validation failed" }
   /admin/tenants/{id}/creator/photo-proposals/{photoProposalId}/reject:
     post:
       operationId: rejectCreatorPhotoProposal
@@ -1679,7 +1679,7 @@ paths:
     patch:
       operationId: updateItem
       tags: [items]
-      summary: Update an item; pass categoryId to move it to another category
+      summary: Update an item; pass categoryId to move it to another category. distanceMeters is ignored for active Creator materializations.
       parameters:
         - name: id
           in: path
@@ -1709,6 +1709,67 @@ paths:
       responses:
         "204":
           description: Deleted
+  /admin/items/{id}/creator-status:
+    get:
+      operationId: getItemCreatorStatus
+      tags: [items]
+      summary: Read whether an item distance is owned by an active Creator materialization
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Creator materialization and machine-distance status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ItemCreatorStatus" }
+        "404": { description: Item not found }
+  /admin/items/{id}/distance/recompute:
+    post:
+      operationId: recomputeItemDistance
+      tags: [items]
+      summary: Recompute a materialized item's road distance from the authoritative tenant origin and coordinates
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Updated machine-owned distance and Creator proposal route
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ItemCreatorStatus" }
+        "404": { description: Active materialization or tenant origin not found }
+        "409": { description: Active materialization or tenant origin changed during routing; retry }
+        "422": { description: OSRM route could not be computed }
+  /admin/items/{id}/creator/photos/discover:
+    post:
+      operationId: discoverItemCreatorPhotos
+      tags: [items]
+      summary: Discover a Wikimedia proposal for one active materialized item, regardless of existing media
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Targeted Wikimedia discovery report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorPhotoDiscoveryReport" }
+        "404": { description: Active materialization not found }
+        "502": { description: Wikimedia or OpenStreetMap request failed }
+  /admin/items/{id}/creator/photo-proposals:
+    get:
+      operationId: listItemCreatorPhotoProposals
+      tags: [items]
+      summary: List Wikimedia review records belonging only to this item
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Item-filtered photo proposal ledger
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CreatorPhotoProposal" }
+        "404": { description: Item not found }
   /admin/items/{id}/duplicate:
     post:
       operationId: duplicateItem
@@ -3266,6 +3327,17 @@ components:
         proposal: { $ref: "#/components/schemas/CreatorPhotoProposal" }
         media: { $ref: "#/components/schemas/MediaEntry" }
       required: [proposal, media]
+    ItemCreatorStatus:
+      type: object
+      properties:
+        activeMaterialization: { type: boolean }
+        latitude: { type: ["number", "null"] }
+        longitude: { type: ["number", "null"] }
+        distanceMeters: { type: ["number", "null"], minimum: 0 }
+        roadDistanceM: { type: ["number", "null"], minimum: 0 }
+        travelDurationS: { type: ["number", "null"], minimum: 0 }
+        range: { type: ["string", "null"], enum: [practical, near, excursion, null] }
+      required: [activeMaterialization, latitude, longitude, distanceMeters, roadDistanceM, travelDurationS, range]
     CreatorProposalBulkApprovalInput:
       type: object
       properties:
