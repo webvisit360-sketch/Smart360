@@ -53,6 +53,8 @@ import type {
   CreatorProposal,
   CreatorProposalBulkApprovalInput,
   CreatorProposalEditInput,
+  CreatorProposalTranslateInput,
+  CreatorProposalTranslateResult,
   CreatorQueueReevaluationResult,
   CreatorRetryResult,
   CreatorSource,
@@ -3827,6 +3829,80 @@ export const useEditCreatorProposal = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getEditCreatorProposalMutationOptions(options));
+    }
+
+export const getTranslateCreatorProposalEditorialUrl = (id: string,
+    proposalId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/proposals/${proposalId}/translate`
+}
+
+/**
+ * @summary Translate operator-authored Slovenian manual-pin editorial text without saving it
+ */
+export const translateCreatorProposalEditorial = async (id: string,
+    proposalId: string,
+    creatorProposalTranslateInput: CreatorProposalTranslateInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatorProposalTranslateResult> => {
+
+  return customFetch<CreatorProposalTranslateResult>(getTranslateCreatorProposalEditorialUrl(id,proposalId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(creatorProposalTranslateInput)
+  }
+);}
+
+
+
+
+
+export const getTranslateCreatorProposalEditorialMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof translateCreatorProposalEditorial>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalTranslateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof translateCreatorProposalEditorial>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalTranslateInput>}, TContext> => {
+
+const mutationKey = ['translateCreatorProposalEditorial'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof translateCreatorProposalEditorial>>, {id: string;proposalId: string;data: BodyType<CreatorProposalTranslateInput>}> = (props) => {
+          const {id,proposalId,data} = props ?? {};
+
+          return  translateCreatorProposalEditorial(id,proposalId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TranslateCreatorProposalEditorialMutationResult = NonNullable<Awaited<ReturnType<typeof translateCreatorProposalEditorial>>>
+    export type TranslateCreatorProposalEditorialMutationBody = BodyType<CreatorProposalTranslateInput>
+    export type TranslateCreatorProposalEditorialMutationError = ErrorType<void>
+
+    /**
+ * @summary Translate operator-authored Slovenian manual-pin editorial text without saving it
+ */
+export const useTranslateCreatorProposalEditorial = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof translateCreatorProposalEditorial>>, TError,{id: string;proposalId: string;data: BodyType<CreatorProposalTranslateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof translateCreatorProposalEditorial>>,
+        TError,
+        {id: string;proposalId: string;data: BodyType<CreatorProposalTranslateInput>},
+        TContext
+      > => {
+      return useMutation(getTranslateCreatorProposalEditorialMutationOptions(options));
     }
 
 export const getRejectCreatorProposalUrl = (id: string,

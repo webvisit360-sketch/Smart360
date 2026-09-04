@@ -15,6 +15,7 @@ import {
   creatorPlaceProposalsTable,
   creatorPlaceMaterializationsTable,
   creatorProposalTranslationsTable,
+  creatorProposalProcessingFailuresTable,
   creatorSourceCandidatesTable,
   creatorSourceCandidateFactsTable,
   creatorSourceFactsTable,
@@ -32,6 +33,7 @@ import { runCreatorSieve } from "./creatorSieve";
 import { createPacedNominatimFetch } from "./creatorNominatimRetry";
 import type { CreatorDependencyRecorder } from "./creatorDependencyTelemetry";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
+import { logger } from "./logger";
 
 export const CREATOR_MAX_QUEUE_DURATION_S = 5400;
 
@@ -41,8 +43,78 @@ export type CreatorProposalProcessingFailure = {
   reason: string;
 };
 
+export const CREATOR_EDITORIAL_LANGUAGES = ["sl", "en", "de", "it"] as const;
+
+/** A reviewer-facing precondition failure.  Routes deliberately map this to
+ * 409 rather than treating an incomplete draft as a missing proposal. */
+export class CreatorProposalValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly proposalId?: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+  }
+}
+
+export function missingCreatorEditorialLanguages(
+  rows: Array<{ language: string }>,
+): string[] {
+  const present = new Set(rows.map((row) => row.language));
+  return CREATOR_EDITORIAL_LANGUAGES.filter((language) => !present.has(language));
+}
+
+export function missingCreatorEditorialLanguagesReason(
+  rows: Array<{ language: string }>,
+): string | null {
+  const missing = missingCreatorEditorialLanguages(rows);
+  return missing.length
+    ? `Predloga ni mogoče potrditi: manjkajo jeziki ${missing.join(", ")}.`
+    : null;
+}
+
+/** Bounded, idempotent repair for unsafe content_ready drift. It only demotes
+ * rows that claim readiness while one of the four editorial languages is
+ * absent; promotion remains owned by the workflow that verifies all other
+ * queue prerequisites. */
+export async function syncCreatorProposalContentReadyFlags(limit = 500): Promise<number> {
+  const result = await db.execute(sql`
+    WITH drifted AS (
+      SELECT p.id
+      FROM creator_place_proposals p
+      LEFT JOIN creator_proposal_translations t ON t.proposal_id = p.id
+      WHERE p.content_ready = true
+      GROUP BY p.id, p.content_ready
+      HAVING COUNT(t.id) FILTER (
+        WHERE t.language IN ('sl', 'en', 'de', 'it')
+      ) < 4
+      ORDER BY p.id
+      LIMIT ${Math.max(1, Math.min(limit, 5_000))}
+    )
+    UPDATE creator_place_proposals p
+    SET content_ready = false, updated_at = now()
+    FROM drifted
+    WHERE p.id = drifted.id
+  `) as { rowCount?: number };
+  return result.rowCount ?? 0;
+}
+
+export async function runCreatorProposalContentReadySyncAtStartup(): Promise<void> {
+  const batchSize = 500;
+  const maxBatches = 20;
+  let updated = 0;
+  for (let batch = 0; batch < maxBatches; batch += 1) {
+    const batchUpdated = await syncCreatorProposalContentReadyFlags(batchSize);
+    updated += batchUpdated;
+    if (batchUpdated < batchSize) break;
+  }
+  logger.info({ updated }, "Creator proposal content readiness synchronized");
+}
+
 export type CreatorApprovedBackfillResult = {
   backfilled: number;
+  backfilledProposalIds: string[];
+  backfilledProposalNames: Record<string, string>;
   failures: CreatorProposalProcessingFailure[];
 };
 
@@ -190,7 +262,7 @@ export async function upsertPendingCreatorProposal(input: {
 
     const [inserted] = await tx
       .insert(creatorPlaceProposalsTable)
-      .values({ ...input, normalizedName })
+      .values({ ...input, normalizedName, contentReady: false })
       .onConflictDoNothing()
       .returning();
     if (inserted) return { proposal: inserted, inserted: true };
@@ -470,9 +542,14 @@ export async function runAndPersistCreatorSieve(input: {
   // Step B becomes queue-ready when its verification evidence is complete.
   // C1 explicitly passes false and exposes the whole run only after all four
   // translations, routing evidence, and the completed run report are durable.
-  if (input.contentReady !== false && !verification.duplicate) {
+  if (!verification.duplicate) {
+    const editorial = await db.select({ language: creatorProposalTranslationsTable.language })
+      .from(creatorProposalTranslationsTable)
+      .where(eq(creatorProposalTranslationsTable.proposalId, verification.sourceProposal.id));
+    const contentReady = input.contentReady !== false
+      && missingCreatorEditorialLanguages(editorial).length === 0;
     const [ready] = await db.update(creatorPlaceProposalsTable)
-      .set({ contentReady: true, updatedAt: new Date() })
+      .set({ contentReady, updatedAt: new Date() })
       .where(and(
         eq(creatorPlaceProposalsTable.id, verification.sourceProposal.id),
         eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
@@ -503,7 +580,10 @@ export async function listCreatorProposalQueue(tenantId: string) {
     .where(and(
       eq(creatorPlaceProposalsTable.tenantId, tenantId),
       ne(creatorPlaceProposalsTable.status, "superseded"),
-      eq(creatorPlaceProposalsTable.contentReady, true),
+      or(
+        eq(creatorPlaceProposalsTable.contentReady, true),
+        eq(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
+      ),
     ))
     .orderBy(asc(creatorPlaceProposalsTable.createdAt));
   if (rows.length === 0) return [];
@@ -587,6 +667,7 @@ export async function listCreatorProposalQueue(tenantId: string) {
 export async function syncApprovedCreatorPlace(
   tx: any,
   proposal: typeof creatorPlaceProposalsTable.$inferSelect,
+  options: { validateOnly?: boolean } = {},
 ) {
   if (!proposal.categoryId) {
     throw new CreatorBulkApprovalError("Predlog mora biti pred potrditvijo pripet kategoriji.");
@@ -632,14 +713,25 @@ export async function syncApprovedCreatorPlace(
   const travelDurationS = proposal.travelDurationS!;
   const editorial = await tx.select().from(creatorProposalTranslationsTable)
     .where(eq(creatorProposalTranslationsTable.proposalId, proposal.id));
-  const missingLanguages = ["sl", "en", "de", "it"].filter(
-    (language) => !editorial.some((row: any) => row.language === language),
+  const editorialReason = missingCreatorEditorialLanguagesReason(editorial);
+  if (editorialReason) throw new CreatorProposalValidationError(editorialReason);
+  const entityKey = creatorPlaceEntityKey(proposal);
+  // Hold this identity lock through validation, status transition and
+  // materialization so a competing approval cannot invalidate preconditions.
+  await lockCreatorPlaceIdentity(
+    tx,
+    proposal.tenantId,
+    entityKey,
+    proposal.normalizedName,
   );
-  if (missingLanguages.length > 0) {
-    throw new CreatorBulkApprovalError(
-      `Predlog nima vseh štirih jezikov; manjkajo: ${missingLanguages.join(", ")}.`,
-    );
-  }
+  await assertNoLiveCreatorPlaceDuplicate(tx, {
+    tenantId: proposal.tenantId,
+    entityKey,
+    normalizedName: proposal.normalizedName,
+    currentProposalId: proposal.id,
+    currentCreatedAt: proposal.createdAt,
+  });
+  if (options.validateOnly) return;
   const sl = editorial.find((row: any) => row.language === "sl")!;
   const sourceRows = await tx.select({
     id: creatorSourceFactsTable.id,
@@ -667,22 +759,6 @@ export async function syncApprovedCreatorPlace(
     coordinateConfirmation: proposal.confirmationMethod === "operator_coordinates"
       ? { actorId: proposal.coordinateConfirmedBy, at: proposal.coordinateConfirmedAt }
       : null,
-  });
-  const entityKey = creatorPlaceEntityKey(proposal);
-  // Serializes competing first approvals of the same canonical place, even
-  // when they originate from different Creator proposals/categories.
-  await lockCreatorPlaceIdentity(
-    tx,
-    proposal.tenantId,
-    entityKey,
-    proposal.normalizedName,
-  );
-  await assertNoLiveCreatorPlaceDuplicate(tx, {
-    tenantId: proposal.tenantId,
-    entityKey,
-    normalizedName: proposal.normalizedName,
-    currentProposalId: proposal.id,
-    currentCreatedAt: proposal.createdAt,
   });
   const [ownMaterialization] = await tx.select().from(creatorPlaceMaterializationsTable)
     .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id)).limit(1);
@@ -831,9 +907,14 @@ export async function backfillApprovedCreatorProposalMaterializations(
       isNull(creatorPlaceMaterializationsTable.id),
     ))
     .orderBy(asc(creatorPlaceProposalsTable.createdAt), asc(creatorPlaceProposalsTable.id));
-  if (options.dryRun) return { backfilled: candidates.length, failures: [] };
+  if (options.dryRun) return {
+    backfilled: candidates.length, backfilledProposalIds: candidates.map((candidate) => candidate.proposalId),
+    backfilledProposalNames: Object.fromEntries(candidates.map((candidate) => [candidate.proposalId, candidate.proposedName])), failures: [],
+  };
 
   let backfilled = 0;
+  const backfilledProposalIds: string[] = [];
+  const backfilledProposalNames: Record<string, string> = {};
   const failures: CreatorProposalProcessingFailure[] = [];
   for (const candidate of candidates) {
     try {
@@ -855,7 +936,11 @@ export async function backfillApprovedCreatorProposalMaterializations(
         await syncApprovedCreatorPlace(tx, proposal);
         return true;
       });
-      if (inserted) backfilled += 1;
+      if (inserted) {
+        backfilled += 1;
+        backfilledProposalIds.push(candidate.proposalId);
+        backfilledProposalNames[candidate.proposalId] = candidate.proposedName;
+      }
     } catch (error) {
       failures.push({
         proposalId: candidate.proposalId,
@@ -864,7 +949,7 @@ export async function backfillApprovedCreatorProposalMaterializations(
       });
     }
   }
-  return { backfilled, failures };
+  return { backfilled, backfilledProposalIds, backfilledProposalNames, failures };
 }
 
 async function deactivateCreatorPlace(tx: any, proposalId: string) {
@@ -967,7 +1052,6 @@ export async function editCreatorProposalEditorial(input: {
             eq(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
           ),
         ),
-        eq(creatorPlaceProposalsTable.contentReady, true),
       ))
       .limit(1);
     if (!proposal) throw new Error("Predlog ni najden ali ga ni mogoče urediti.");
@@ -992,6 +1076,10 @@ export async function editCreatorProposalEditorial(input: {
       name: row.name.trim(),
       description: row.description.trim(),
     })));
+    await tx.update(creatorPlaceProposalsTable).set({
+      contentReady: missingCreatorEditorialLanguages(input.translations).length === 0,
+      updatedAt: new Date(),
+    }).where(eq(creatorPlaceProposalsTable.id, proposal.id));
     if (proposal.status === "approved") {
       const [fresh] = await tx.select().from(creatorPlaceProposalsTable)
         .where(eq(creatorPlaceProposalsTable.id, proposal.id)).limit(1);
@@ -1194,9 +1282,12 @@ export async function confirmCreatorProposalCoordinates(input: {
     eq(creatorPlaceProposalsTable.id, input.proposalId),
     eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
     eq(creatorPlaceProposalsTable.status, "unresolved"),
-    eq(creatorPlaceProposalsTable.contentReady, true),
   )).limit(1);
   if (!proposal) throw new Error("Nerazrešen predlog ni najden.");
+  const editorial = await db.select({ language: creatorProposalTranslationsTable.language })
+    .from(creatorProposalTranslationsTable)
+    .where(eq(creatorProposalTranslationsTable.proposalId, proposal.id));
+  const contentReady = missingCreatorEditorialLanguages(editorial).length === 0;
   const alreadyPositioned = proposal.confirmationMethod === "operator_coordinates";
   if (
     alreadyPositioned &&
@@ -1239,6 +1330,7 @@ export async function confirmCreatorProposalCoordinates(input: {
     resolvedName: null,
     resolvedAddress: null,
     operatorAddress,
+    contentReady,
     status: routable ? "pending" : "unresolved",
     refusalReason: !route ? "osrm-unavailable" : routable ? null : "duration-ceiling",
     updatedAt: now,
@@ -1251,7 +1343,83 @@ export async function confirmCreatorProposalCoordinates(input: {
   return (await listCreatorProposalQueue(input.tenantId)).find((row) => row.id === input.proposalId);
 }
 
-export class CreatorBulkApprovalError extends Error {}
+export class CreatorBulkApprovalError extends Error {
+  constructor(
+    message: string,
+    public readonly proposalId?: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+  }
+}
+
+class CreatorProposalMaterializationError extends Error {
+  constructor(
+    message: string,
+    public readonly proposalId: string,
+    options: { cause: unknown },
+  ) {
+    super(message, options);
+  }
+}
+
+export class CreatorApprovalResponseHydrationError extends Error {}
+
+function targetCreatorApprovalError(error: unknown, proposalId: string): Error {
+  if (error instanceof CreatorProposalValidationError) {
+    return new CreatorProposalValidationError(error.message, proposalId, { cause: error });
+  }
+  if (error instanceof CreatorBulkApprovalError) {
+    return new CreatorBulkApprovalError(error.message, proposalId, { cause: error });
+  }
+  return new CreatorProposalMaterializationError(
+    error instanceof Error ? error.message : "Predloga ni mogoče materializirati.",
+    proposalId,
+    { cause: error },
+  );
+}
+
+export class CreatorApprovalFailurePersistenceError extends Error {
+  constructor(
+    public readonly approvalReason: string,
+    options: { cause: unknown },
+  ) {
+    super(
+      `Potrditev ni uspela (${approvalReason}), zapisa o napaki pa ni bilo mogoče trajno shraniti.`,
+      options,
+    );
+  }
+}
+
+async function persistCreatorApprovalFailure(
+  tenantId: string,
+  proposalId: string,
+  actorId: string,
+  error: unknown,
+): Promise<void> {
+  const reason = error instanceof Error ? error.message : "Predloga ni mogoče potrditi.";
+  const stage =
+    error instanceof CreatorProposalValidationError || error instanceof CreatorBulkApprovalError
+      ? "validation"
+      : "materialization";
+  try {
+    await db.insert(creatorProposalProcessingFailuresTable).values({
+      tenantId,
+      proposalId,
+      operation: "approval",
+      stage,
+      reason,
+      actorType: "owner",
+      actorId,
+    });
+  } catch (persistenceError) {
+    logger.error(
+      { error: persistenceError, tenantId, proposalId, stage, approvalReason: reason },
+      "Creator approval failure could not be recorded durably",
+    );
+    throw new CreatorApprovalFailurePersistenceError(reason, { cause: persistenceError });
+  }
+}
 
 function hasResolutionEvidence(row: typeof creatorPlaceProposalsTable.$inferSelect): boolean {
   if (row.confirmationMethod === "operator_coordinates") {
@@ -1292,35 +1460,57 @@ export async function approveCreatorProposalIndividually(
   actorId: string,
 ) {
   await requireActor(actorId);
-  const updated = await db.transaction(async (tx) => {
-    const [proposal] = await tx.select().from(creatorPlaceProposalsTable).where(and(
-      eq(creatorPlaceProposalsTable.id, proposalId),
-      eq(creatorPlaceProposalsTable.tenantId, tenantId),
-      inArray(creatorPlaceProposalsTable.status, ["pending", "approved"]),
-      eq(creatorPlaceProposalsTable.contentReady, true),
-    )).limit(1).for("update");
-    if (!proposal) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
-    if (!hasResolutionEvidence(proposal)) {
-      throw new Error("Predloga brez popolnih strojnih dokazov ni mogoče potrditi.");
-    }
-    if (proposal.travelDurationS === null || proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S) {
-      throw new Error("Predloga nad 90 minutami ali brez poti ni mogoče potrditi.");
-    }
-    let approved = proposal;
-    if (proposal.status === "pending") {
-      const [changed] = await tx.update(creatorPlaceProposalsTable).set({
-        status: "approved", reviewedBy: actorId, reviewedAt: new Date(), updatedAt: new Date(),
-      }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
-      if (!changed) throw new Error("Predloga ni bilo mogoče potrditi.");
-      approved = changed;
-    }
-    await syncApprovedCreatorPlace(tx, approved);
-    return approved;
-  });
+  let updated: typeof creatorPlaceProposalsTable.$inferSelect;
+  try {
+    updated = await db.transaction(async (tx) => {
+      const [proposal] = await tx.select().from(creatorPlaceProposalsTable).where(and(
+        eq(creatorPlaceProposalsTable.id, proposalId),
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+        inArray(creatorPlaceProposalsTable.status, ["pending", "approved"]),
+      )).limit(1).for("update");
+      if (!proposal) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
+      // Validate the complete materialization contract before changing status.
+      await syncApprovedCreatorPlace(tx, proposal, { validateOnly: true });
+      if (!hasResolutionEvidence(proposal)) {
+        throw new CreatorProposalValidationError("Predloga brez popolnih strojnih dokazov ni mogoče potrditi.");
+      }
+      if (proposal.travelDurationS === null || proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S) {
+        throw new CreatorProposalValidationError("Predloga nad 90 minutami ali brez poti ni mogoče potrditi.");
+      }
+      let approved = proposal;
+      if (proposal.status === "pending") {
+        const [changed] = await tx.update(creatorPlaceProposalsTable).set({
+          status: "approved",
+          contentReady: true,
+          reviewedBy: actorId,
+          reviewedAt: new Date(),
+          updatedAt: new Date(),
+        }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+        if (!changed) throw new Error("Predloga ni bilo mogoče potrditi.");
+        approved = changed;
+      } else if (!proposal.contentReady) {
+        const [ready] = await tx.update(creatorPlaceProposalsTable).set({
+          contentReady: true,
+          updatedAt: new Date(),
+        }).where(eq(creatorPlaceProposalsTable.id, proposalId)).returning();
+        if (!ready) throw new Error("Pripravljenosti predloga ni bilo mogoče uskladiti.");
+        approved = ready;
+      }
+      await syncApprovedCreatorPlace(tx, approved);
+      return approved;
+    });
+  } catch (error) {
+    await persistCreatorApprovalFailure(tenantId, proposalId, actorId, error);
+    throw error;
+  }
   if (!updated) throw new Error("Predlog ni najden ali ne čaka več na pregled.");
   const hydrated = (await listCreatorProposalQueue(tenantId))
     .find((row) => row.id === updated.id);
-  if (!hydrated) throw new Error("Potrjenega predloga ni mogoče ponovno prebrati.");
+  if (!hydrated) {
+    throw new CreatorApprovalResponseHydrationError(
+      "Potrditev je uspela, vendar odgovora ni bilo mogoče ponovno prebrati.",
+    );
+  }
   return hydrated;
 }
 
@@ -1353,49 +1543,86 @@ export async function approveCreatorProposalsBulk(
   actorId: string,
 ) {
   await requireActor(actorId);
-  if (proposalIds.length === 0) return [];
-  return db.transaction(async (tx) => {
-    const rows = await tx.select({
-      proposal: creatorPlaceProposalsTable,
-    }).from(creatorPlaceProposalsTable).where(and(
-      eq(creatorPlaceProposalsTable.tenantId, tenantId),
-      inArray(creatorPlaceProposalsTable.id, proposalIds),
-    ));
-    if (rows.length !== new Set(proposalIds).size) {
-      throw new CreatorBulkApprovalError("Eden ali več predlogov ni bilo mogoče najti.");
-    }
-    if (rows.some(({ proposal }) => proposal.requiresIndividualReview)) {
-      throw new CreatorBulkApprovalError(
-        "Predloga, potrjenega s skrajšano poizvedbo, ni mogoče množično potrditi.",
-      );
-    }
-    if (rows.some(({ proposal }) =>
-      proposal.status !== "pending" || !proposal.contentReady)) {
-      throw new CreatorBulkApprovalError(
-        "Potrditi je mogoče samo pripravljene predloge, ki čakajo na pregled.",
-      );
-    }
-    if (rows.some(({ proposal }) => !hasResolutionEvidence(proposal))) {
-      throw new CreatorBulkApprovalError(
-        "Predloga brez popolnih strojnih dokazov ni mogoče potrditi.",
-      );
-    }
-    if (rows.some(({ proposal }) =>
-      proposal.travelDurationS === null ||
-      proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S)) {
-      throw new CreatorBulkApprovalError(
-        "Predloga nad 90 minutami ali brez poti ni mogoče potrditi.",
-      );
-    }
-    const approved = await tx.update(creatorPlaceProposalsTable).set({
-      status: "approved", reviewedBy: actorId, reviewedAt: new Date(), updatedAt: new Date(),
-    }).where(and(
-      eq(creatorPlaceProposalsTable.tenantId, tenantId),
-      eq(creatorPlaceProposalsTable.status, "pending"),
-      inArray(creatorPlaceProposalsTable.id, proposalIds),
-      eq(creatorPlaceProposalsTable.requiresIndividualReview, false),
-    )).returning();
-    for (const proposal of approved) await syncApprovedCreatorPlace(tx, proposal);
-    return approved;
-  });
+  const uniqueProposalIds = [...new Set(proposalIds)];
+  if (uniqueProposalIds.length === 0) return [];
+  try {
+    return await db.transaction(async (tx) => {
+      const rows = await tx.select({
+        proposal: creatorPlaceProposalsTable,
+      }).from(creatorPlaceProposalsTable).where(and(
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+        inArray(creatorPlaceProposalsTable.id, uniqueProposalIds),
+      )).for("update");
+      if (rows.length !== uniqueProposalIds.length) {
+        const found = new Set(rows.map(({ proposal }) => proposal.id));
+        const missingProposalId = uniqueProposalIds.find((proposalId) => !found.has(proposalId));
+        throw new CreatorBulkApprovalError(
+          "Eden ali več predlogov ni bilo mogoče najti.",
+          missingProposalId,
+        );
+      }
+      const individualOnly = rows.find(({ proposal }) => proposal.requiresIndividualReview);
+      if (individualOnly) {
+        throw new CreatorBulkApprovalError(
+          "Predloga, potrjenega s skrajšano poizvedbo, ni mogoče množično potrditi.",
+          individualOnly.proposal.id,
+        );
+      }
+      const unavailable = rows.find(({ proposal }) => proposal.status !== "pending");
+      if (unavailable) {
+        throw new CreatorBulkApprovalError(
+          "Potrditi je mogoče samo pripravljene predloge, ki čakajo na pregled.",
+          unavailable.proposal.id,
+        );
+      }
+      for (const { proposal } of rows) {
+        try {
+          await syncApprovedCreatorPlace(tx, proposal, { validateOnly: true });
+          if (!hasResolutionEvidence(proposal)) {
+            throw new CreatorProposalValidationError(
+              "Predloga brez popolnih strojnih dokazov ni mogoče potrditi.",
+            );
+          }
+          if (proposal.travelDurationS === null || proposal.travelDurationS > CREATOR_MAX_QUEUE_DURATION_S) {
+            throw new CreatorProposalValidationError(
+              "Predloga nad 90 minutami ali brez poti ni mogoče potrditi.",
+            );
+          }
+        } catch (error) {
+          throw targetCreatorApprovalError(error, proposal.id);
+        }
+      }
+      const approved = await tx.update(creatorPlaceProposalsTable).set({
+        status: "approved",
+        contentReady: true,
+        reviewedBy: actorId,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      }).where(and(
+        eq(creatorPlaceProposalsTable.tenantId, tenantId),
+        eq(creatorPlaceProposalsTable.status, "pending"),
+        inArray(creatorPlaceProposalsTable.id, uniqueProposalIds),
+        eq(creatorPlaceProposalsTable.requiresIndividualReview, false),
+      )).returning();
+      for (const proposal of approved) {
+        try {
+          await syncApprovedCreatorPlace(tx, proposal);
+        } catch (error) {
+          throw targetCreatorApprovalError(error, proposal.id);
+        }
+      }
+      return approved;
+    });
+  } catch (error) {
+    const targetedProposalId =
+      error instanceof CreatorProposalValidationError ||
+      error instanceof CreatorBulkApprovalError ||
+      error instanceof CreatorProposalMaterializationError
+        ? error.proposalId
+        : undefined;
+    const failedProposalIds = targetedProposalId ? [targetedProposalId] : uniqueProposalIds;
+    await Promise.all(failedProposalIds.map((proposalId) =>
+      persistCreatorApprovalFailure(tenantId, proposalId, actorId, error)));
+    throw error;
+  }
 }

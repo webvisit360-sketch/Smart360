@@ -1404,6 +1404,12 @@ export const ReevaluateCreatorProposalsResponse = zod.object({
   "proposalId": zod.string(),
   "proposedName": zod.string(),
   "reason": zod.string()
+})),
+  "outcomes": zod.array(zod.object({
+  "proposalId": zod.string(),
+  "proposedName": zod.string(),
+  "outcome": zod.enum(['unchanged', 'changed', 'backfilled', 'failed']),
+  "reason": zod.string().optional()
 }))
 })
 
@@ -1497,6 +1503,39 @@ export const EditCreatorProposalResponse = zod.object({
   "reviewedAt": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Translate operator-authored Slovenian manual-pin editorial text without saving it
+ */
+export const TranslateCreatorProposalEditorialParams = zod.object({
+  "id": zod.coerce.string(),
+  "proposalId": zod.coerce.string()
+})
+
+export const translateCreatorProposalEditorialBodyNameMax = 300;
+
+export const translateCreatorProposalEditorialBodyDescriptionMax = 4000;
+
+
+
+export const TranslateCreatorProposalEditorialBody = zod.object({
+  "name": zod.string().min(1).max(translateCreatorProposalEditorialBodyNameMax),
+  "description": zod.string().min(1).max(translateCreatorProposalEditorialBodyDescriptionMax)
+})
+
+export const translateCreatorProposalEditorialResponseTranslationsMin = 3;
+export const translateCreatorProposalEditorialResponseTranslationsMax = 3;
+
+
+
+export const TranslateCreatorProposalEditorialResponse = zod.object({
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['en', 'de', 'it']),
+  "name": zod.string(),
+  "description": zod.string()
+})).min(translateCreatorProposalEditorialResponseTranslationsMin).max(translateCreatorProposalEditorialResponseTranslationsMax)
 })
 
 

@@ -141,6 +141,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/tenants/:id/creator/sources/:sourceId/:decision", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/creator/catalogue", binding: OWNER },
   { method: "patch", path: "/admin/tenants/:id/creator/proposals/:proposalId", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/translate", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/reject", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/undo-rejection", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/reject-bulk", binding: OWNER },

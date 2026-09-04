@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListCreatorProposalsQueryKey,
@@ -14,6 +14,7 @@ import {
   useRetryCreatorProposals,
   useUndoCreatorProposalRejection,
   useUnapproveCreatorProposal,
+  useTranslateCreatorProposalEditorial,
 } from "@workspace/api-client-react";
 import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, RotateCcw, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
@@ -129,6 +130,7 @@ export function KreatorProposalQueue({
   const categoryOptions = useListCreatorCategoryOptions(tenantId);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editingIdRef = useRef<string | null>(null);
   const [editCategoryId, setEditCategoryId] = useState<string>("");
   const [editOperatorAddress, setEditOperatorAddress] = useState("");
   const [editTranslations, setEditTranslations] = useState<Array<{ language: "sl" | "en" | "de" | "it"; name: string; description: string }>>([]);
@@ -140,8 +142,11 @@ export function KreatorProposalQueue({
   const [reasonFilter, setReasonFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [rangeFilter, setRangeFilter] = useState("all");
+  const [approvalErrors, setApprovalErrors] = useState<Record<string, string>>({});
+  const [translationErrors, setTranslationErrors] = useState<Record<string, string>>({});
   useEffect(() => {
     setSelected([]);
+    editingIdRef.current = null;
     setEditingId(null);
   }, [tenantId]);
   const queryKey = getListCreatorProposalsQueryKey(tenantId);
@@ -158,6 +163,7 @@ export function KreatorProposalQueue({
   const editOne = useEditCreatorProposal({
     mutation: {
       onSuccess: async () => {
+        editingIdRef.current = null;
         setEditingId(null);
         await refresh();
       },
@@ -195,6 +201,7 @@ export function KreatorProposalQueue({
       },
     },
   });
+  const translateEditorial = useTranslateCreatorProposalEditorial();
   const rows = queue.data ?? [];
   const visibleRows = useMemo(() => rows.filter((row) =>
     (statusFilter === "all" || row.status === statusFilter) &&
@@ -211,8 +218,7 @@ export function KreatorProposalQueue({
   const pendingCount = rows.filter((row) => row.status === "pending").length;
   const unresolvedCount = rows.filter((row) => row.status === "unresolved").length;
   const selectedLocationCount = formatSlovenianCount(selected.length, locationForms);
-  const error = (approveOne.error as any)?.data?.error
-    ?? (approveBulk.error as any)?.data?.error
+  const error = (approveBulk.error as any)?.data?.error
     ?? (editOne.error as any)?.data?.error
     ?? (rejectOne.error as any)?.data?.error
     ?? (rejectBulk.error as any)?.data?.error
@@ -284,6 +290,16 @@ export function KreatorProposalQueue({
             {" · "}Združeni dvojniki: {reevaluate.data.duplicatesMerged}
             {" · "}Dopolnjeni potrjeni predlogi: {reevaluate.data.approvedBackfilled}
           </div>
+          {reevaluate.data.outcomes.length > 0 && (
+            <ul className="rounded-xl border bg-muted/20 p-3 text-sm" data-testid="creator-reevaluation-outcomes">
+              {reevaluate.data.outcomes.map((outcome) => (
+                <li key={outcome.proposalId}>
+                  <span className="font-semibold">{outcome.proposedName}</span>: {outcome.outcome}
+                  {outcome.reason ? ` · ${outcome.reason}` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
           {reevaluate.data.failures.length > 0 && (
             <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
               <p className="font-bold">
@@ -334,6 +350,11 @@ export function KreatorProposalQueue({
           </CardContent>
         </Card>
       ) : visibleRows.map((row) => {
+        const missingLanguages = ["sl", "en", "de", "it"].filter((language) =>
+          !row.translations.some((translation) => translation.language === language));
+        const editorialMissingReason = missingLanguages.length
+          ? `Predloga ni mogoče potrditi: manjkajo jeziki ${missingLanguages.join(", ")}.`
+          : null;
         const selectable = row.status === "pending" || row.status === "unresolved";
         const checked = selected.includes(row.id);
         const displayName = row.confirmationMethod === "operator_coordinates"
@@ -424,6 +445,19 @@ export function KreatorProposalQueue({
                     Koordinate je ročno potrdil {row.coordinateConfirmedByLabel ?? "operater"}
                     {row.coordinateConfirmedAt ? ` · ${new Date(row.coordinateConfirmedAt).toLocaleString("sl-SI")}` : ""}
                     {" · obvezen posamični pregled"}
+                  </div>
+                )}
+                {(approvalErrors[row.id] || (row.confirmationMethod === "operator_coordinates" && editorialMissingReason)) && (
+                  <div
+                    role="alert"
+                    data-testid={`creator-approval-error-${row.id}`}
+                    className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm font-semibold text-destructive"
+                  >
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>
+                      {approvalErrors[row.id] ?? editorialMissingReason}
+                      {row.confirmationMethod === "operator_coordinates" && editorialMissingReason && " Odprite Uredi in dopolnite prevode."}
+                    </span>
                   </div>
                 )}
                 {positioningId === row.id && (
@@ -534,8 +568,54 @@ export function KreatorProposalQueue({
                         />
                       </div>
                     ))}
+                    {translationErrors[row.id] && (
+                      <div
+                        role="alert"
+                        data-testid={`creator-translation-error-${row.id}`}
+                        className="flex items-start gap-2 rounded-xl border border-destructive/20 bg-white p-3 text-sm font-semibold text-destructive"
+                      >
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        {translationErrors[row.id]}
+                      </div>
+                    )}
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Button type="button" variant="ghost" onClick={() => setEditingId(null)}>Prekliči</Button>
+                      {row.confirmationMethod === "operator_coordinates" &&
+                        editTranslations.find((translation) => translation.language === "sl")?.name.trim() &&
+                        editTranslations.find((translation) => translation.language === "sl")?.description.trim() &&
+                        editTranslations.some((translation) => translation.language !== "sl" &&
+                          (!translation.name.trim() || !translation.description.trim())) && (
+                        <Button type="button" variant="outline" disabled={translateEditorial.isPending} onClick={() => {
+                          const sl = editTranslations.find((translation) => translation.language === "sl")!;
+                          setTranslationErrors((current) => {
+                            const next = { ...current };
+                            delete next[row.id];
+                            return next;
+                          });
+                          translateEditorial.mutate({
+                            id: tenantId, proposalId: row.id,
+                            data: { name: sl.name.trim(), description: sl.description.trim() },
+                          }, {
+                            onSuccess: (result) => {
+                              if (editingIdRef.current !== row.id) return;
+                              setEditTranslations((current) => current.map((translation) => {
+                                const translated = result.translations.find((item) => item.language === translation.language);
+                                return translated ? { ...translation, name: translated.name, description: translated.description } : translation;
+                              }));
+                            },
+                            onError: (mutationError) => setTranslationErrors((current) => ({
+                              ...current,
+                              [row.id]: mutationErrorMessage(mutationError) ?? "Prevodov ni bilo mogoče pripraviti.",
+                            })),
+                          });
+                        }}>
+                          {translateEditorial.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Prevedi v EN/DE/IT
+                        </Button>
+                      )}
+                      <Button type="button" variant="ghost" onClick={() => {
+                        editingIdRef.current = null;
+                        setEditingId(null);
+                      }}>Prekliči</Button>
                       <Button
                         type="button"
                         disabled={editOne.isPending
@@ -570,7 +650,17 @@ export function KreatorProposalQueue({
                       disabled={approveOne.isPending}
                       onClick={() => {
                         if (!confirm(`Potrdi lokacijo "${displayName}" za ${tenantName}?`)) return;
-                        approveOne.mutate({ id: tenantId, proposalId: row.id });
+                        setApprovalErrors((current) => {
+                          const next = { ...current };
+                          delete next[row.id];
+                          return next;
+                        });
+                        approveOne.mutate({ id: tenantId, proposalId: row.id }, {
+                          onError: (mutationError: any) => setApprovalErrors((current) => ({
+                            ...current,
+                            [row.id]: mutationErrorMessage(mutationError) ?? "Predloga ni mogoče potrditi.",
+                          })),
+                        });
                       }}
                       className="rounded-[12px]"
                     >
@@ -599,7 +689,13 @@ export function KreatorProposalQueue({
                       type="button"
                       variant="outline"
                       onClick={() => {
+                        editingIdRef.current = row.id;
                         setEditingId(row.id);
+                        setTranslationErrors((current) => {
+                          const next = { ...current };
+                          delete next[row.id];
+                          return next;
+                        });
                         setEditCategoryId(row.categoryId ?? "");
                         setEditOperatorAddress(row.operatorAddress ?? "");
                         setEditTranslations(["sl", "en", "de", "it"].map((language) => {

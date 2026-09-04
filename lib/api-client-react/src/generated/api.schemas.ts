@@ -587,6 +587,42 @@ export interface CreatorProposalEditInput {
   translations: CreatorProposalTranslation[];
 }
 
+export interface CreatorProposalTranslateInput {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  description: string;
+}
+
+export type CreatorProposalTranslateResultTranslationsItemLanguage = typeof CreatorProposalTranslateResultTranslationsItemLanguage[keyof typeof CreatorProposalTranslateResultTranslationsItemLanguage];
+
+
+export const CreatorProposalTranslateResultTranslationsItemLanguage = {
+  en: 'en',
+  de: 'de',
+  it: 'it',
+} as const;
+
+export type CreatorProposalTranslateResultTranslationsItem = {
+  language: CreatorProposalTranslateResultTranslationsItemLanguage;
+  name: string;
+  description: string;
+};
+
+export interface CreatorProposalTranslateResult {
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  translations: CreatorProposalTranslateResultTranslationsItem[];
+}
+
 export interface CreatorCoordinateConfirmationInput {
   /**
      * @minimum -90
@@ -1027,6 +1063,23 @@ export type CreatorQueueReevaluationResultFailuresItem = {
   reason: string;
 };
 
+export type CreatorQueueReevaluationResultOutcomesItemOutcome = typeof CreatorQueueReevaluationResultOutcomesItemOutcome[keyof typeof CreatorQueueReevaluationResultOutcomesItemOutcome];
+
+
+export const CreatorQueueReevaluationResultOutcomesItemOutcome = {
+  unchanged: 'unchanged',
+  changed: 'changed',
+  backfilled: 'backfilled',
+  failed: 'failed',
+} as const;
+
+export type CreatorQueueReevaluationResultOutcomesItem = {
+  proposalId: string;
+  proposedName: string;
+  outcome: CreatorQueueReevaluationResultOutcomesItemOutcome;
+  reason?: string;
+};
+
 export interface CreatorQueueReevaluationResult {
   evaluated: number;
   changed: number;
@@ -1036,6 +1089,7 @@ export interface CreatorQueueReevaluationResult {
   duplicatesMerged: number;
   approvedBackfilled: number;
   failures: CreatorQueueReevaluationResultFailuresItem[];
+  outcomes: CreatorQueueReevaluationResultOutcomesItem[];
 }
 
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];

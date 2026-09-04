@@ -1,0 +1,15 @@
+The investigation confirmed: approving "Gornjegrajske gavge" failed because the proposal has zero translation rows; the exception rolled back the approval, was returned to the browser as HTTP 404, and was never logged or persisted. "Ponovno ovrednoti" counted it as unchanged with no reason. Implement the fixes:
+
+1. APPROVAL PRECONDITIONS. Before the status transition, validate all materialization prerequisites (four languages sl/en/de/it present; operator address present for operator_coordinates proposals). If any is missing, return a validation error (409/422, never 404) with an exact Slovenian message shown inline on the queue card, e.g. "Predloga ni mogoče potrditi: manjkajo jeziki sl, en, de, it." The proposal stays pending and the operator sees why.
+
+2. CONTENT-READY FLAG. content_ready must be false while the four translation rows are absent. Fix the computation and correct existing rows accordingly.
+
+3. PERSIST EVERY FAILURE. Log and durably record every approval failure (tenant, proposal, stage, exact reason, timestamp) outside the transaction that rolls back, so a failed approval can never look like an ordinary pending proposal again.
+
+4. PER-PROPOSAL RE-EVAL RESULTS. "Ponovno ovrednoti predloge" must return a per-proposal outcome — unchanged / changed / backfilled / failed — always with a reason for failures. A pending proposal that cannot be approved for a missing prerequisite belongs in the failure list with that reason, never in the aggregate unchanged count.
+
+5. MANUAL-PIN LANGUAGE HELP. On a manual-pin proposal missing translations, the queue card should say so and open the existing Uredi form. If the operator has written the Slovenian name and description, offer a "Prevedi v EN/DE/IT" action that translates the operator's own text — translation only, never invented content.
+
+Verify in development with a manual-pin proposal that has no translations: approval returns the Slovenian validation message inline, the failure is persisted, re-eval lists it as failed with the reason, and after filling the four languages approval materializes the item. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

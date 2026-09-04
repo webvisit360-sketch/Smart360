@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CreatorQueueReevaluationResultFailuresItem } from './creatorQueueReevaluationResultFailuresItem';
+import type { CreatorQueueReevaluationResultOutcomesItem } from './creatorQueueReevaluationResultOutcomesItem';
 
 export interface CreatorQueueReevaluationResult {
   evaluated: number;
@@ -16,4 +17,5 @@ export interface CreatorQueueReevaluationResult {
   duplicatesMerged: number;
   approvedBackfilled: number;
   failures: CreatorQueueReevaluationResultFailuresItem[];
+  outcomes: CreatorQueueReevaluationResultOutcomesItem[];
 }

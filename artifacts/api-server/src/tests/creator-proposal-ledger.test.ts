@@ -7,6 +7,7 @@ import {
   categoriesTable,
   creatorPlaceMaterializationsTable,
   creatorPlaceProposalsTable,
+  creatorProposalProcessingFailuresTable,
   creatorProposalTranslationsTable,
   itemCategoryAttachmentsTable,
   creatorVerificationAttemptsTable,
@@ -21,6 +22,7 @@ import {
   approveCreatorProposalsBulk,
   confirmCreatorProposalCoordinates,
   CreatorBulkApprovalError,
+  CreatorProposalValidationError,
   listCreatorProposalQueue,
   rejectCreatorProposalIndividually,
   recordCreatorVerification,
@@ -29,6 +31,7 @@ import {
   unapproveCreatorProposal,
   undoCreatorProposalRejection,
 } from "../lib/creatorProposalLedger";
+import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
 
 const runIds = [crypto.randomUUID(), crypto.randomUUID()];
 let tenantId = "";
@@ -79,6 +82,10 @@ async function makeMaterializable(proposalId: string) {
 }
 
 after(async () => {
+  if (proposalIds.length > 0) {
+    await db.delete(creatorProposalProcessingFailuresTable)
+      .where(inArray(creatorProposalProcessingFailuresTable.proposalId, proposalIds));
+  }
   await db.delete(creatorPlaceProposalsTable).where(and(
     inArray(creatorPlaceProposalsTable.runId, runIds),
     eq(creatorPlaceProposalsTable.status, "superseded"),
@@ -542,6 +549,7 @@ test("operator coordinates require individual approval and cannot be overwritten
     contentReady: true,
   });
   proposalIds.push(pending.proposal.id);
+  assert.equal(pending.proposal.contentReady, false);
   await db.update(creatorPlaceProposalsTable).set({
     status: "unresolved",
     refusalReason: "no-results",
@@ -619,17 +627,70 @@ test("operator coordinates require individual approval and cannot be overwritten
     }), { status: 200 }),
   });
   assert.equal(rerouted?.status, "pending");
+  assert.equal(rerouted?.contentReady, false);
+  await db.update(creatorPlaceProposalsTable).set({ categoryId })
+    .where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
+  const exactMissingLanguagesReason =
+    "Predloga ni mogoče potrditi: manjkajo jeziki sl, en, de, it.";
+  await assert.rejects(
+    approveCreatorProposalIndividually(tenantId, pending.proposal.id, actorId),
+    (error: unknown) => {
+      assert.ok(error instanceof CreatorProposalValidationError);
+      assert.equal(error.message, exactMissingLanguagesReason);
+      return true;
+    },
+  );
+  const [stillPending] = await db.select().from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.id, pending.proposal.id)).limit(1);
+  assert.equal(stillPending?.status, "pending");
+  assert.equal(stillPending?.contentReady, false);
+  const failedMaterializations = await db.select().from(creatorPlaceMaterializationsTable)
+    .where(eq(creatorPlaceMaterializationsTable.proposalId, pending.proposal.id));
+  assert.equal(failedMaterializations.length, 0);
+  const approvalFailures = await db.select().from(creatorProposalProcessingFailuresTable)
+    .where(and(
+      eq(creatorProposalProcessingFailuresTable.proposalId, pending.proposal.id),
+      eq(creatorProposalProcessingFailuresTable.operation, "approval"),
+      eq(creatorProposalProcessingFailuresTable.stage, "validation"),
+    ));
+  assert.ok(approvalFailures.some((failure) => failure.reason === exactMissingLanguagesReason));
+  assert.ok(approvalFailures.every((failure) => failure.actorId === actorId));
+  assert.ok(approvalFailures.every((failure) => failure.actorType === "owner"));
+  assert.ok(approvalFailures.every((failure) => failure.createdAt instanceof Date));
+  const reevaluated = await reevaluateCreatorQueue(tenantId);
+  assert.deepEqual(
+    reevaluated.outcomes.find((outcome) => outcome.proposalId === pending.proposal.id),
+    {
+      proposalId: pending.proposal.id,
+      proposedName,
+      outcome: "failed",
+      reason: exactMissingLanguagesReason,
+    },
+  );
   await assert.rejects(
     approveCreatorProposalsBulk(tenantId, [pending.proposal.id], actorId),
     CreatorBulkApprovalError,
   );
   await makeMaterializable(pending.proposal.id);
+  await db.update(creatorPlaceProposalsTable).set({ operatorAddress: null })
+    .where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
+  await assert.rejects(
+    approveCreatorProposalIndividually(tenantId, pending.proposal.id, actorId),
+    /Manjka naslov, ki ga je operater potrdil ob ročni določitvi koordinat\./,
+  );
+  await db.update(creatorPlaceProposalsTable).set({
+    operatorAddress: "Logarska dolina 9, Solčava",
+  }).where(eq(creatorPlaceProposalsTable.id, pending.proposal.id));
   const approved = await approveCreatorProposalIndividually(
     tenantId,
     pending.proposal.id,
     actorId,
   );
   assert.equal(approved.status, "approved");
+  assert.equal(approved.contentReady, true);
+  const [materialized] = await db.select().from(creatorPlaceMaterializationsTable)
+    .where(eq(creatorPlaceMaterializationsTable.proposalId, pending.proposal.id));
+  assert.ok(materialized);
   await db.update(tenantsTable).set({
     latitude: originalTenant?.latitude ?? null,
     longitude: originalTenant?.longitude ?? null,
@@ -680,6 +741,8 @@ test("two proposals may retain one OSM entity for later canonical materializatio
       description: `canonical-description-${language}`,
     })),
   );
+  await db.update(creatorPlaceProposalsTable).set({ contentReady: true })
+    .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
   const second = await runAndPersistCreatorSieve({
     tenantId,
     runId: secondRunId,
@@ -699,6 +762,16 @@ test("two proposals may retain one OSM entity for later canonical materializatio
   assert.equal(canonical.osmId, identity);
   assert.equal(duplicate.osmId, identity);
   assert.equal(duplicate.status, "pending");
+  await db.insert(creatorProposalTranslationsTable).values(
+    ["sl", "en", "de", "it"].map((language) => ({
+      proposalId: duplicate.id,
+      language,
+      name: `duplicate-${language}`,
+      description: `duplicate-description-${language}`,
+    })),
+  );
+  await db.update(creatorPlaceProposalsTable).set({ contentReady: true })
+    .where(eq(creatorPlaceProposalsTable.id, duplicate.id));
   const [canonicalAfter] = await db.select().from(creatorPlaceProposalsTable)
     .where(eq(creatorPlaceProposalsTable.id, first.proposal.id));
   assert.equal(canonicalAfter?.status, "rejected");

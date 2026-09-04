@@ -206,6 +206,19 @@ test("reevaluation backfills approved proposals whose approval predates material
       proposedName: "Malformed legacy coordinates",
       reason: "Manjka naslov, ki ga je operater potrdil ob ročni določitvi koordinat.",
     }]);
+    assert.deepEqual(first.outcomes, [
+      {
+        proposalId: proposal.id,
+        proposedName: "Legacy approved place",
+        outcome: "backfilled",
+      },
+      {
+        proposalId: malformed.id,
+        proposedName: "Malformed legacy coordinates",
+        outcome: "failed",
+        reason: "Manjka naslov, ki ga je operater potrdil ob ročni določitvi koordinat.",
+      },
+    ]);
     const [materialization] = await db.select().from(creatorPlaceMaterializationsTable)
       .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id));
     assert.ok(materialization);

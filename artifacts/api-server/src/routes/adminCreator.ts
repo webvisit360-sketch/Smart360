@@ -12,6 +12,8 @@ import {
   ConfirmCreatorProposalCoordinatesResponse,
   EditCreatorProposalBody,
   EditCreatorProposalResponse,
+  TranslateCreatorProposalEditorialBody,
+  TranslateCreatorProposalEditorialResponse,
   EditCreatorSourceBody,
   EditCreatorSourceResponse,
   DeleteCreatorSourceResponse,
@@ -45,6 +47,7 @@ import {
   approveCreatorProposalsBulk,
   confirmCreatorProposalCoordinates,
   CreatorBulkApprovalError,
+  CreatorProposalValidationError,
   creatorProposalProcessingReason,
   editCreatorProposalEditorial,
   listCreatorProposalQueue,
@@ -77,6 +80,7 @@ import {
   startCreatorSourceRun,
 } from "../lib/creatorSourceRunService";
 import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
+import { translateCreatorEditorial } from "../lib/creatorEditorialTranslation";
 import { invalidateTenantCache } from "./publicTenants";
 import {
   approveCreatorPhotoProposal,
@@ -566,6 +570,34 @@ router.patch("/admin/tenants/:id/creator/proposals/:proposalId", async (req, res
   }
 });
 
+router.post("/admin/tenants/:id/creator/proposals/:proposalId/translate", async (req, res): Promise<void> => {
+  const input = TranslateCreatorProposalEditorialBody.safeParse(req.body);
+  if (!input.success) {
+    res.status(400).json({ error: "Vnesite slovensko ime in opis." });
+    return;
+  }
+  const tenantId = first(req.params["id"]);
+  const proposalId = first(req.params["proposalId"]);
+  const [proposal] = await db.select({ id: creatorPlaceProposalsTable.id })
+    .from(creatorPlaceProposalsTable).where(and(
+      eq(creatorPlaceProposalsTable.id, proposalId),
+      eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      eq(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
+    )).limit(1);
+  if (!proposal) {
+    res.status(404).json({ error: "Ročno postavljen predlog ni najden." });
+    return;
+  }
+  try {
+    res.json(TranslateCreatorProposalEditorialResponse.parse({
+      translations: await translateCreatorEditorial(input.data),
+    }));
+  } catch (error) {
+    req.log.warn({ error, tenantId, proposalId }, "Creator editorial translation failed");
+    res.status(502).json({ error: "Prevodov ni bilo mogoče pripraviti." });
+  }
+});
+
 router.post("/admin/tenants/:id/creator/proposals/:proposalId/reject", async (req, res): Promise<void> => {
   try {
     const tenantId = first(req.params["id"]);
@@ -790,6 +822,16 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
     const result = await reevaluateCreatorQueue(tenantId);
     if (result.approvedBackfilled > 0) invalidateTenantCache();
     if (result.failures.length > 0) {
+      for (const failure of result.failures) {
+        try {
+          await logChange({
+            tenantId, entity: failure.proposalId, action: "creator-reevaluation-failed", summary: failure.reason,
+          });
+        } catch (loggingError) {
+          req.log.error({ error: loggingError, tenantId, proposalId: failure.proposalId },
+            "Creator reevaluation failure could not be recorded in changelog");
+        }
+      }
       req.log.warn(
         { tenantId, failures: result.failures },
         "Creator queue reevaluation completed with isolated proposal failures",
@@ -810,8 +852,9 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
 router.post(
   "/admin/tenants/:id/creator/proposals/:proposalId/approve",
   async (req, res): Promise<void> => {
+    const tenantId = first(req.params["id"]);
+    const proposalId = first(req.params["proposalId"]);
     try {
-      const tenantId = first(req.params["id"]);
       if (!await requireCreatorTenant(tenantId)) {
         res.status(404).json({ error: "Namestitev ni najdena." });
         return;
@@ -823,7 +866,7 @@ router.post(
       }
       const row = await approveCreatorProposalIndividually(
         tenantId,
-        first(req.params["proposalId"]),
+        proposalId,
         actor.id,
       );
       invalidateTenantCache();
@@ -832,9 +875,15 @@ router.post(
         nearestAlternatives: [],
       })));
     } catch (error) {
-      res.status(404).json({
-        error: error instanceof Error ? error.message : "Predloga ni mogoče potrditi.",
-      });
+      const reason = error instanceof Error ? error.message : "Predloga ni mogoče potrditi.";
+      req.log.warn({ error, tenantId, proposalId }, "Creator proposal approval failed");
+      const status =
+        error instanceof CreatorProposalValidationError || error instanceof CreatorBulkApprovalError
+          ? 409
+          : reason.startsWith("Predlog ni najden")
+            ? 404
+            : 500;
+      res.status(status).json({ error: reason });
     }
   },
 );
@@ -897,9 +946,15 @@ router.post(
       const rows = await listCreatorProposalQueue(tenantId);
       res.json(ApproveCreatorProposalsBulkResponse.parse(serialize(rows)));
     } catch (error) {
-      res.status(error instanceof CreatorBulkApprovalError ? 400 : 500).json({
-        error: error instanceof Error ? error.message : "Predlogov ni mogoče potrditi.",
-      });
+      const reason = error instanceof Error ? error.message : "Predlogov ni mogoče potrditi.";
+      const tenantId = first(req.params["id"]);
+      req.log.warn({ error, tenantId }, "Creator bulk proposal approval failed");
+      res.status(
+        error instanceof CreatorProposalValidationError || error instanceof CreatorBulkApprovalError
+          ? 409
+          : 500,
+      )
+        .json({ error: reason });
     }
   },
 );

@@ -4,6 +4,7 @@ import {
   backfillApprovedCreatorProposalMaterializations,
   creatorProposalProcessingReason,
   fuzzyCreatorProposalKey,
+  missingCreatorEditorialLanguagesReason,
   type CreatorProposalProcessingFailure,
 } from "./creatorProposalLedger";
 import { storedResolutionWrongSettlementReason } from "./creatorSieve";
@@ -19,6 +20,12 @@ export type ReevaluateCreatorQueueResult = {
   duplicatesMerged: number;
   approvedBackfilled: number;
   failures: CreatorProposalProcessingFailure[];
+  outcomes: Array<{
+    proposalId: string;
+    proposedName: string;
+    outcome: "unchanged" | "changed" | "backfilled" | "failed";
+    reason?: string;
+  }>;
 };
 
 export type CreatorQueueReevaluationRow = {
@@ -30,6 +37,7 @@ export type CreatorQueueReevaluationRow = {
   resolvedAddress: string | null;
   confirmedQuery: string | null;
   confirmationMethod: string | null;
+  operatorAddress?: string | null;
   osmType: string | null;
   osmId: number | null;
   refusalReason: string | null;
@@ -138,15 +146,15 @@ export async function reevaluateCreatorQueue(
       id: string; proposed_name: string; status: "pending" | "unresolved";
       content_ready: boolean; geocoding_lookup_hint: string | null;
       resolved_address: string | null; confirmed_query: string | null;
-      confirmation_method: string | null; osm_type: string | null;
+       confirmation_method: string | null; operator_address: string | null; osm_type: string | null;
       osm_id: string | null; refusal_reason: string | null;
       superseded_by: string | null; created_at: Date;
     }>(
       `SELECT id, proposed_name, status, content_ready, geocoding_lookup_hint,
-              resolved_address, confirmed_query, confirmation_method, osm_type,
+               resolved_address, confirmed_query, confirmation_method, operator_address, osm_type,
               osm_id, refusal_reason, superseded_by, created_at
        FROM creator_place_proposals
-       WHERE tenant_id = $1 AND content_ready = true
+       WHERE tenant_id = $1 AND (content_ready = true OR confirmation_method = 'operator_coordinates')
          AND status IN ('pending', 'unresolved')
        ORDER BY created_at, id
        FOR UPDATE`,
@@ -173,6 +181,7 @@ export async function reevaluateCreatorQueue(
       resolvedAddress: row.resolved_address,
       confirmedQuery: row.confirmed_query,
       confirmationMethod: row.confirmation_method,
+      operatorAddress: row.operator_address,
       osmType: row.osm_type,
       osmId: row.osm_id === null ? null : Number(row.osm_id),
       refusalReason: row.refusal_reason,
@@ -184,8 +193,28 @@ export async function reevaluateCreatorQueue(
       categoryKey: row.category_key,
       placeName: row.place_name,
     }));
-    const changes = planCreatorQueueReevaluation(rows, facts);
-    const failures: CreatorProposalProcessingFailure[] = [];
+    const translationRows = result.rows.length === 0 ? [] : (await client.query<{
+      proposal_id: string; language: string;
+    }>(`SELECT proposal_id, language FROM creator_proposal_translations
+        WHERE proposal_id = ANY($1::uuid[])`, [result.rows.map((row) => row.id)])).rows;
+    const translationByProposal = new Map<string, Array<{ language: string }>>();
+    for (const row of translationRows) {
+      const languages = translationByProposal.get(row.proposal_id) ?? [];
+      languages.push({ language: row.language });
+      translationByProposal.set(row.proposal_id, languages);
+    }
+    const prerequisiteFailures = rows.flatMap((row) => {
+      if (row.status !== "pending" || row.confirmationMethod !== "operator_coordinates") return [];
+      const reason = missingCreatorEditorialLanguagesReason(translationByProposal.get(row.id) ?? [])
+        ?? (!row.operatorAddress?.trim()
+          ? "Predloga ni mogoče potrditi: manjka naslov, ki ga je operater potrdil ob ročni določitvi koordinat."
+          : null);
+      return reason ? [{ proposalId: row.id, proposedName: row.proposedName, reason }] : [];
+    });
+    const failedIds = new Set(prerequisiteFailures.map((failure) => failure.proposalId));
+    const eligibleRows = rows.filter((row) => !failedIds.has(row.id));
+    const changes = planCreatorQueueReevaluation(eligibleRows, facts);
+    const failures: CreatorProposalProcessingFailure[] = [...prerequisiteFailures];
     const appliedChanges: CreatorQueueReevaluationChange[] = [];
     const proposedNameById = new Map(rows.map((row) => [row.id, row.proposedName]));
     for (const change of changes) {
@@ -241,10 +270,37 @@ export async function reevaluateCreatorQueue(
       { dryRun: options.dryRun },
     );
     failures.push(...approvedBackfill.failures);
+    const failureById = new Map(failures.map((failure) => [failure.proposalId, failure]));
+    const changedIds = new Set(appliedChanges.map((change) => change.id));
+    const outcomes = [
+      ...rows.map((row) => {
+        const failure = failureById.get(row.id);
+        return {
+          proposalId: row.id,
+          proposedName: row.proposedName,
+          outcome: failure ? "failed" as const
+            : changedIds.has(row.id) ? "changed" as const : "unchanged" as const,
+          ...(failure ? { reason: failure.reason } : {}),
+        };
+      }),
+      ...approvedBackfill.backfilledProposalIds.map((proposalId) => ({
+        proposalId,
+        proposedName: approvedBackfill.backfilledProposalNames[proposalId] ?? proposalId,
+        outcome: "backfilled" as const,
+      })),
+      ...approvedBackfill.failures
+        .filter((failure) => !failureById.has(failure.proposalId) || !rows.some((row) => row.id === failure.proposalId))
+        .map((failure) => ({
+          proposalId: failure.proposalId, proposedName: failure.proposedName,
+          outcome: "failed" as const, reason: failure.reason,
+        })),
+    ];
+    const openProposalIds = new Set(rows.map((row) => row.id));
     return {
       evaluated: rows.length,
       changed: appliedChanges.length,
-      unchanged: rows.length - appliedChanges.length,
+      unchanged: outcomes.filter((outcome) =>
+        openProposalIds.has(outcome.proposalId) && outcome.outcome === "unchanged").length,
       accommodationsExcluded:
         appliedChanges.filter((change) => change.kind === "accommodation").length,
       wrongSettlementMovedToUnresolved:
@@ -252,6 +308,7 @@ export async function reevaluateCreatorQueue(
       duplicatesMerged: appliedChanges.filter((change) => change.kind === "duplicate").length,
       approvedBackfilled: approvedBackfill.backfilled,
       failures,
+      outcomes,
     };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);

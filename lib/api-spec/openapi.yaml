@@ -943,6 +943,28 @@ paths:
                 $ref: "#/components/schemas/CreatorProposal"
         "400": { description: Invalid editorial fields }
         "404": { description: Proposal or category not found }
+  /admin/tenants/{id}/creator/proposals/{proposalId}/translate:
+    post:
+      operationId: translateCreatorProposalEditorial
+      tags: [tenants]
+      summary: Translate operator-authored Slovenian manual-pin editorial text without saving it
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: proposalId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatorProposalTranslateInput" }
+      responses:
+        "200":
+          description: Unsaved EN DE and IT translations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatorProposalTranslateResult" }
+        "400": { description: Slovenian source text is required }
+        "404": { description: Manual-pin proposal not found }
+        "502": { description: Translation service failed or returned an unsafe response }
   /admin/tenants/{id}/creator/proposals/{proposalId}/reject:
     post:
       operationId: rejectCreatorProposal
@@ -1079,7 +1101,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreatorProposal"
-        "400": { description: Proposal cannot be approved }
+        "409": { description: Proposal is incomplete or cannot be approved }
         "404": { description: Proposal not found }
   /admin/tenants/{id}/creator/proposals/{proposalId}/unapprove:
     post:
@@ -1129,6 +1151,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/CreatorProposal"
         "400": { description: Invalid or individually reviewed proposal included }
+        "409": { description: One or more proposals are incomplete }
   /admin/tenants/{id}/changelog:
     get:
       operationId: listTenantChangelog
@@ -2950,6 +2973,28 @@ components:
           items:
             $ref: "#/components/schemas/CreatorProposalTranslation"
       required: [categoryId, operatorAddress, translations]
+    CreatorProposalTranslateInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 300 }
+        description: { type: string, minLength: 1, maxLength: 4000 }
+      required: [name, description]
+    CreatorProposalTranslateResult:
+      type: object
+      properties:
+        translations:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: object
+            properties:
+              language: { type: string, enum: [en, de, it] }
+              name: { type: string }
+              description: { type: string }
+            required: [language, name, description]
+      required: [translations]
     CreatorCoordinateConfirmationInput:
       type: object
       additionalProperties: false
@@ -3373,6 +3418,16 @@ components:
               proposedName: { type: string }
               reason: { type: string }
             required: [proposalId, proposedName, reason]
+        outcomes:
+          type: array
+          items:
+            type: object
+            properties:
+              proposalId: { type: string }
+              proposedName: { type: string }
+              outcome: { type: string, enum: [unchanged, changed, backfilled, failed] }
+              reason: { type: string }
+            required: [proposalId, proposedName, outcome]
       required:
         - evaluated
         - changed
@@ -3382,6 +3437,7 @@ components:
         - duplicatesMerged
         - approvedBackfilled
         - failures
+        - outcomes
     DistanceBulkApproveInput:
       type: object
       properties: { confidence: { type: string, enum: [high] } }

@@ -338,6 +338,36 @@ export const creatorProposalTranslationsTable = pgTable(
 );
 
 /**
+ * Exact, durable evidence for proposal-processing failures. proposal_id is
+ * deliberately not a foreign key: deleting or merging a proposal must not
+ * erase the operational record of why an approval failed.
+ */
+export const creatorProposalProcessingFailuresTable = pgTable(
+  "creator_proposal_processing_failures",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenantsTable.id, { onDelete: "cascade" }),
+    proposalId: uuid("proposal_id").notNull(),
+    operation: text("operation").notNull(),
+    stage: text("stage").notNull(),
+    reason: text("reason").notNull(),
+    actorType: text("actor_type").notNull(),
+    actorId: uuid("actor_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "creator_proposal_processing_failures_actor_type_check",
+      sql`${t.actorType} IN ('owner','host','system')`,
+    ),
+    index("creator_proposal_processing_failures_tenant_created_idx")
+      .on(t.tenantId, t.createdAt),
+    index("creator_proposal_processing_failures_proposal_created_idx")
+      .on(t.proposalId, t.createdAt),
+  ],
+);
+
+/**
  * Durable bridge from Creator evidence to the one canonical guest place.
  * Evidence tables are never copied or deleted: proposalId/runId lead back to
  * verification attempts and the source-candidate/fact/snapshot graph.
@@ -488,6 +518,8 @@ export type CreatorVerificationAttempt = typeof creatorVerificationAttemptsTable
 export type CreatorVerificationCandidate = typeof creatorVerificationCandidatesTable.$inferSelect;
 export type CreatorRun = typeof creatorRunsTable.$inferSelect;
 export type CreatorProposalTranslation = typeof creatorProposalTranslationsTable.$inferSelect;
+export type CreatorProposalProcessingFailure =
+  typeof creatorProposalProcessingFailuresTable.$inferSelect;
 export type CreatorPlaceMaterialization = typeof creatorPlaceMaterializationsTable.$inferSelect;
 export type CreatorPhotoProposal = typeof creatorPhotoProposalsTable.$inferSelect;
 export type CreatorSource = typeof creatorSourcesTable.$inferSelect;

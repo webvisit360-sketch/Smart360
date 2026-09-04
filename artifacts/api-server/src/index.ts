@@ -19,6 +19,7 @@ import { runLegacyTenantLivingGuideCutoversAtStartup } from "./lib/grilLivingGui
 import { recoverCreatorSourceRunsAtStartup } from "./lib/creatorSourceRunService";
 import { runSharedTenantSkeletonSyncAtStartup } from "./lib/tenantSeeds";
 import { ensureCreatorPhotoSchema } from "./lib/creatorPhotoSchema";
+import { runCreatorProposalContentReadySyncAtStartup } from "./lib/creatorProposalLedger";
 
 const rawPort = process.env["PORT"];
 
@@ -125,6 +126,8 @@ ensureAdminAccount()
   // Remove this hook and its file immediately after production verification.
   .then(() => runGrilOriginCorrectionAtStartup())
   .then(() => recoverCreatorSourceRunsAtStartup())
+  // Keep the stored readiness flag equal to actual sl/en/de/it completeness.
+  .then(() => runCreatorProposalContentReadySyncAtStartup())
   .then(() => {
     scheduleOrderRetention();
     scheduleMessageRetention();
