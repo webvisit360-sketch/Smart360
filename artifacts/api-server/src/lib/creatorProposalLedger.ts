@@ -95,8 +95,10 @@ export async function syncCreatorProposalContentReadyFlags(limit = 500): Promise
     SET content_ready = false, updated_at = now()
     FROM drifted
     WHERE p.id = drifted.id
-  `) as { rowCount?: number };
-  return result.rowCount ?? 0;
+    RETURNING p.id
+  `) as unknown as { rows?: unknown[]; rowCount?: number } | unknown[];
+  if (Array.isArray(result)) return result.length;
+  return result.rows?.length ?? result.rowCount ?? 0;
 }
 
 export async function runCreatorProposalContentReadySyncAtStartup(): Promise<void> {
