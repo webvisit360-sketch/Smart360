@@ -39,14 +39,27 @@ export function whatsappConfig(
   accessToken: string;
   phoneNumberId: string;
   orderTemplateName: string;
+  orderTemplateLanguage: string;
   messageTemplateName: string;
+  messageTemplateLanguage: string;
 } | null {
   const accessToken = env["META_WHATSAPP_ACCESS_TOKEN"]?.trim();
   const phoneNumberId = env["META_WHATSAPP_PHONE_NUMBER_ID"]?.trim();
   const orderTemplateName = env["META_WHATSAPP_ORDER_TEMPLATE_NAME"]?.trim();
+  const orderTemplateLanguage =
+    env["META_WHATSAPP_ORDER_TEMPLATE_LANGUAGE"]?.trim() || "sl";
   const messageTemplateName = env["META_WHATSAPP_MESSAGE_TEMPLATE_NAME"]?.trim();
+  const messageTemplateLanguage =
+    env["META_WHATSAPP_MESSAGE_TEMPLATE_LANGUAGE"]?.trim() || "sl";
   return accessToken && phoneNumberId && orderTemplateName && messageTemplateName
-    ? { accessToken, phoneNumberId, orderTemplateName, messageTemplateName }
+    ? {
+        accessToken,
+        phoneNumberId,
+        orderTemplateName,
+        orderTemplateLanguage,
+        messageTemplateName,
+        messageTemplateLanguage,
+      }
     : null;
 }
 
@@ -61,6 +74,7 @@ function textParameter(text: string) {
 export function buildWhatsappTemplateBody(
   payload: WhatsAppTemplatePayload,
   templateName: string,
+  templateLanguage: string,
 ): Record<string, unknown> {
   const parameters =
     payload.kind === "order"
@@ -80,7 +94,7 @@ export function buildWhatsappTemplateBody(
     type: "template",
     template: {
       name: templateName,
-      language: { code: "sl" },
+      language: { code: templateLanguage },
       components: [{ type: "body", parameters }],
     },
   };
@@ -103,8 +117,16 @@ export async function sendWhatsappTemplate(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? TIMEOUT_MS);
   try {
-    const templateName =
-      payload.kind === "order" ? config.orderTemplateName : config.messageTemplateName;
+    const { templateName, templateLanguage } =
+      payload.kind === "order"
+        ? {
+            templateName: config.orderTemplateName,
+            templateLanguage: config.orderTemplateLanguage,
+          }
+        : {
+            templateName: config.messageTemplateName,
+            templateLanguage: config.messageTemplateLanguage,
+          };
     const response = await (options.fetchImpl ?? fetch)(
       `https://graph.facebook.com/${META_GRAPH_VERSION}/${config.phoneNumberId}/messages`,
       {
@@ -113,7 +135,9 @@ export async function sendWhatsappTemplate(
           Authorization: `Bearer ${config.accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(buildWhatsappTemplateBody(payload, templateName)),
+        body: JSON.stringify(
+          buildWhatsappTemplateBody(payload, templateName, templateLanguage),
+        ),
         signal: controller.signal,
       },
     );

@@ -13,7 +13,9 @@ const configuredEnv = {
   META_WHATSAPP_ACCESS_TOKEN: "token",
   META_WHATSAPP_PHONE_NUMBER_ID: "123",
   META_WHATSAPP_ORDER_TEMPLATE_NAME: "novo_narocilo",
-  META_WHATSAPP_MESSAGE_TEMPLATE_NAME: "novo_sporocilo",
+  META_WHATSAPP_ORDER_TEMPLATE_LANGUAGE: "sl",
+  META_WHATSAPP_MESSAGE_TEMPLATE_NAME: "novo_sporocilo_gosta",
+  META_WHATSAPP_MESSAGE_TEMPLATE_LANGUAGE: "en",
 };
 
 describe("notification channel configuration", () => {
@@ -140,6 +142,53 @@ describe("shared notification dispatcher", () => {
     );
     assert.equal(result.ok, false);
     if (!result.ok) assert.equal(result.providerError, exact);
+  });
+
+  test("Meta adapter sends the configured name and language for each notification type", async () => {
+    const sentTemplates: Array<{ name: string; language: string }> = [];
+    const fetchImpl = async (_input: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as {
+        template: { name: string; language: { code: string } };
+      };
+      sentTemplates.push({
+        name: body.template.name,
+        language: body.template.language.code,
+      });
+      return new Response('{"messages":[{"id":"wamid.mock"}]}', { status: 200 });
+    };
+
+    const common = {
+      to: "+38640811395",
+      guestName: "Ana",
+      guestUnit: "A1",
+    };
+    const orderResult = await sendWhatsappTemplate(
+      {
+        ...common,
+        kind: "order",
+        notificationId: "order-template-pair",
+        item: "Zajtrk",
+        quantity: 2,
+        time: "10:00",
+      },
+      { env: configuredEnv, fetchImpl },
+    );
+    const messageResult = await sendWhatsappTemplate(
+      {
+        ...common,
+        kind: "message",
+        notificationId: "message-template-pair",
+        preview: "Kratek predogled",
+      },
+      { env: configuredEnv, fetchImpl },
+    );
+
+    assert.equal(orderResult.ok, true);
+    assert.equal(messageResult.ok, true);
+    assert.deepEqual(sentTemplates, [
+      { name: "novo_narocilo", language: "sl" },
+      { name: "novo_sporocilo_gosta", language: "en" },
+    ]);
   });
 
   test("ledger failure prevents dispatcher from claiming durable success", async () => {
