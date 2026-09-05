@@ -22,6 +22,7 @@ import { GuestSwipe } from '@/pages/guest/GuestSwipe';
 import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages/guest/i18n';
 import { usePageBg } from '@/pages/guest/use-theme-attr';
 import { useBundleFreshness } from '@/lib/bundle-freshness';
+import { GuestLoadRecovery } from '@/pages/guest/guest-load-recovery';
 import { PasswordTokenPage } from '@/pages/portal/password-token-page';
 import TermsPage from '@/pages/admin/terms';
 import EnquiryPage from '@/pages/enquiry';
@@ -269,10 +270,17 @@ function GuestRoute({ slug }: { slug: string }) {
   const seg = decodeURIComponent(slug).toLowerCase();
   // Reserved words and malformed segments are never tenants.
   if (RESERVED_SEGMENTS.has(seg) || !SLUG_SHAPE.test(seg)) return <NotFound />;
+  const search = new URLSearchParams(window.location.search);
+  const lang = resolveLang(seg, search.get('lang'), null);
   return (
-    <GuestLayout>
-      <GuestHost />
-    </GuestLayout>
+    <ErrorBoundary
+      resetKey={`${window.location.pathname}${window.location.search}`}
+      fallback={<GuestLoadRecovery lang={lang} />}
+    >
+      <GuestLayout>
+        <GuestHost />
+      </GuestLayout>
+    </ErrorBoundary>
   );
 }
 

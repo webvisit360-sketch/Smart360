@@ -4,6 +4,10 @@ import { useLocation, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 import { resolveLang } from "./i18n";
 import { installTapFeedback } from "./tap-feedback";
+import {
+  clearGuestLoadRetryGuard,
+  GuestLoadRecovery,
+} from "./guest-load-recovery";
 
 // Both themes ship in the main bundle, scoped to html[data-theme="..."] by
 // the scope-themes vite plugin. Switching is done purely via the attribute,
@@ -28,7 +32,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   const lang = resolveLang(slug || "", searchParams.get("lang"), null);
   const isPreview = searchParams.get("preview") === "1";
 
-  const { data: tenant, isError } = useGetPublicTenant(
+  const { data: tenant, error, isError } = useGetPublicTenant(
     slug || "", 
     { lang, preview: isPreview },
     // retry: false — an unknown slug must show the 404 immediately, not after
@@ -45,6 +49,10 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   );
   const isLivingGuideMode =
     livingGuidePreview || tenant?.guestUiMode === "living-guide";
+
+  useEffect(() => {
+    if (tenant) clearGuestLoadRetryGuard();
+  }, [tenant]);
 
   // Alias canonicalization: an old (renamed) slug resolves to the tenant, but
   // the address bar must always show the current slug — replace, keep the
@@ -94,6 +102,8 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
 
   // Unknown slug → the app's own 404 with a way back. NEVER a default tenant.
   if (isError) {
+    const status = (error as { status?: unknown } | null)?.status;
+    if (status !== 404) return <GuestLoadRecovery lang={lang} />;
     return (
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", fontFamily: "Jost, system-ui, sans-serif", textAlign: "center", padding: "24px" }}>
         <h1 style={{ fontSize: "22px", fontWeight: 700, margin: 0 }}>Namestitev ni najdena</h1>

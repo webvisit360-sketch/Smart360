@@ -19,6 +19,46 @@
     <meta name="twitter:title" content="Smart360" />
     <meta name="twitter:description" content="Smart360 — built on Replit. Update this description to reflect the app." />
     <link rel="icon" type="image/png" sizes="192x192" href="/brand/ikona-smart360-192.png" />
+    <style>
+      #guest-bootstrap-recovery {
+        min-height: 100vh;
+        min-height: 100dvh;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: max(28px, env(safe-area-inset-top)) 28px max(28px, env(safe-area-inset-bottom));
+        background: #fff;
+        color: #14201f;
+        text-align: center;
+        font-family: Arial, system-ui, sans-serif;
+      }
+      #guest-bootstrap-recovery[hidden] { display: none; }
+      #guest-bootstrap-recovery img { width: 88px; height: 88px; }
+      #guest-bootstrap-recovery p {
+        max-width: 330px;
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      #guest-bootstrap-recovery[data-retrying="true"] p {
+        color: #66716a;
+        font-size: 16px;
+      }
+      #guest-bootstrap-recovery button {
+        min-height: 52px;
+        padding: 0 28px;
+        border: 0;
+        border-radius: 999px;
+        background: #157347;
+        color: #fff;
+        box-shadow: 0 4px 0 #0a4d2c;
+        font: 700 16px/1 Arial, system-ui, sans-serif;
+      }
+    </style>
     <script>
       (() => {
         const isLivingGuide =
@@ -51,7 +91,71 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main id="guest-bootstrap-recovery" hidden translate="no">
+        <img src="/brand/smart360-kolobar-temno.svg" alt="" aria-hidden="true" />
+        <p id="guest-bootstrap-recovery-copy"></p>
+        <button id="guest-bootstrap-recovery-button" type="button"></button>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const segment = decodeURIComponent(window.location.pathname.split('/').filter(Boolean)[0] || '').toLowerCase();
+        const reserved = new Set([
+          'admin', 'api', 'portal', 'pogoji', 'povprasevanje', 'zasebnost',
+          '__living-guide', 'g', 'health', 'status'
+        ]);
+        if (!/^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/.test(segment) || reserved.has(segment)) return;
+        document.body.style.margin = '0';
+
+        const supported = new Set(['sl', 'en', 'de', 'it']);
+        const params = new URLSearchParams(window.location.search);
+        let selected = params.get('lang');
+        try {
+          selected = selected || window.localStorage.getItem(`s360-lang:${segment}`);
+        } catch {}
+        selected = supported.has(selected) ? selected : (navigator.language || '').slice(0, 2);
+        const lang = supported.has(selected) ? selected : 'sl';
+        document.documentElement.lang = lang;
+
+        const copy = {
+          sl: ['Vodnika trenutno ni mogoče naložiti. Preverite povezavo.', 'Poskusi znova', 'Vodnik se znova nalaga …'],
+          en: ['The guide cannot be loaded right now. Check your connection.', 'Try again', 'Loading the guide again …'],
+          de: ['Der Guide kann derzeit nicht geladen werden. Prüfen Sie Ihre Verbindung.', 'Erneut versuchen', 'Der Guide wird erneut geladen …'],
+          it: ['Al momento non è possibile caricare la guida. Controlla la connessione.', 'Riprova', 'Nuovo caricamento della guida …']
+        }[lang];
+        const guardKey = `s360:guest-load-retry:${window.location.pathname}${window.location.search}`;
+        let handled = false;
+
+        const showFailure = () => {
+          if (handled || document.documentElement.dataset.smart360Mounted === '1') return;
+          handled = true;
+          const screen = document.getElementById('guest-bootstrap-recovery');
+          const text = document.getElementById('guest-bootstrap-recovery-copy');
+          const button = document.getElementById('guest-bootstrap-recovery-button');
+          let willReload = false;
+          try {
+            willReload = window.sessionStorage.getItem(guardKey) !== '1';
+            if (willReload) window.sessionStorage.setItem(guardKey, '1');
+          } catch {}
+          screen.hidden = false;
+          screen.dataset.retrying = String(willReload);
+          text.textContent = willReload ? copy[2] : copy[0];
+          button.textContent = copy[1];
+          button.hidden = willReload;
+          if (willReload) window.setTimeout(() => window.location.reload(), 1200);
+        };
+
+        document.getElementById('guest-bootstrap-recovery-button').addEventListener('click', () => {
+          try { window.sessionStorage.removeItem(guardKey); } catch {}
+          window.location.reload();
+        });
+        window.addEventListener('error', (event) => {
+          if (event.target === window || event.target instanceof HTMLScriptElement) showFailure();
+        }, true);
+        window.addEventListener('unhandledrejection', showFailure);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

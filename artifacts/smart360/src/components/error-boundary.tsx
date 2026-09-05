@@ -3,6 +3,7 @@ import React from "react";
 interface Props {
   children: React.ReactNode;
   resetKey?: any;
+  fallback?: React.ReactNode;
 }
 
 interface State {
@@ -28,6 +29,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
       return (
         <div className="p-8 text-center text-red-500 font-medium bg-red-50 rounded-xl border border-red-200 m-4">
           <p>Nekaj je šlo narobe.</p>

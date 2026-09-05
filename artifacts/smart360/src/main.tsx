@@ -15,3 +15,5 @@ createRoot(document.getElementById('root')!, {
     <App />
   </ErrorBoundary>,
 );
+
+document.documentElement.dataset.smart360Mounted = '1';
