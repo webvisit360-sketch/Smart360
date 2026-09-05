@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { imgSrc, mediaImgSrc } from "./img";
+import { normalizeGuestMedia } from "../living-guide/living-guide-formatters";
 
 /* =========================================================
    GALERIJA ČEZ CEL ZASLON — slike in video (tema Poteg/Sredozemska)
@@ -57,6 +58,7 @@ export function MediaViewer({
   index: number;
   onClose: () => void;
 }) {
+  media = normalizeGuestMedia(media) as ViewerMedia[];
   const trackRef = useRef<HTMLDivElement>(null);
   const mvRef = useRef<HTMLDivElement>(null);
   const iRef = useRef(index);
@@ -288,8 +290,14 @@ export function GalleryStrip({
   media: ViewerMedia[];
   style?: React.CSSProperties;
 }) {
+  media = normalizeGuestMedia(media) as ViewerMedia[];
   const [idx, setIdx] = useState<number | null>(null);
   const [dot, setDot] = useState(0);
+  const mediaKey = media.map((entry) => entry.id ?? entry.url).join("|");
+  useEffect(() => {
+    setDot(0);
+    setIdx(null);
+  }, [mediaKey]);
   const open = (i: number) => {
     if (!LIGHTBOX_ON) return; /* pregledovalnik zamrznjen — dotik ne odpre ničesar */
     setIdx(i);
@@ -360,6 +368,7 @@ export function MediaThumb({
   media: ViewerMedia[];
   alt?: string;
 }) {
+  media = normalizeGuestMedia(media) as ViewerMedia[];
   const [idx, setIdx] = useState<number | null>(null);
   const m = media[0];
   if (!m) return null;

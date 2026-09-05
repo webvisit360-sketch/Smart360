@@ -14,6 +14,8 @@ import { GalleryStrip, MediaThumb, frameStyle } from "./media-viewer";
 import { makeT, plural, switchLang, LANG_NAMES, DIFFICULTY_KEYS } from "./i18n";
 import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 import { mapsHrefForQuery } from "@/lib/maps-href";
+import { itemPriceText, normalizeGuestMedia } from "../living-guide/living-guide-formatters";
+import { GuestRichBody, GuestRichInline } from "./guest-rich-text";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
@@ -329,7 +331,9 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                       </button>
                     );
                   }
-                  const firstMedia = cat.items?.find((i: any) => i.isVisible && i.media?.[0])?.media[0];
+                  const firstMedia = cat.items
+                    ?.filter((i: any) => i.isVisible)
+                    .flatMap((i: any) => normalizeGuestMedia(i.media))[0];
                   const firstImg = firstMedia ? mediaImgSrc(firstMedia, 620) : imgSrc(tenant.heroUrl, 620);
                   return (
                     <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/${slug}/c/${cat.id}`))}>
@@ -564,9 +568,6 @@ function SwipeDetail({ tenant, category, section, slug, lang }: { tenant: any, c
 
 // Reuse the exact same CategoryContent from guest-category.tsx
 function CategoryContent({ category, tenant, t, lang, items }: { category: any, tenant: any, t: (key: string) => string, lang: string, items: any[] }) {
-  if (/\b(culinary|food|restaurant|gostil|restavr|hrana|pijača|shop|trgov|pharmacy|lekar|health|zdrav)\b/i.test(`${category.key ?? ""} ${category.label ?? ""}`)) {
-    items = items.map((item) => ({ ...item, body: null }));
-  }
   if (items.length === 0) {
     return <div className="empty">{t("UI.search.empty")}</div>;
   }
@@ -581,7 +582,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
         )}
         <div className="card__body">
-          <div className="card__h"><h3 className="card__n">{item.title}</h3></div>
+           <div className="card__h"><h3 className="card__n"><GuestRichInline value={item.title} /></h3></div>
           {item.open24 && <div><span className="pill o">{t("UI.open247")}</span></div>}
           
           <div className="info">
@@ -618,7 +619,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
        Naslov pove, kaj slika prikazuje, preden jo gost pogleda. */
     return items.map((item: any) => (
       <article className="card fade" key={item.id} style={frameStyle(item.frame)}>
-        <div className="card__body card__body--head"><h3 className="card__n">{item.title}</h3></div>
+        <div className="card__body card__body--head"><h3 className="card__n"><GuestRichInline value={item.title} /></h3></div>
         {item.media && item.media.length > 1 ? (
           <GalleryStrip media={item.media} />
         ) : item.media?.[0] ? (
@@ -630,7 +631,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           {Array.isArray(item.bullets) && item.bullets.length > 0 && (
             <div className="card__sub">{item.bullets.join(" · ")}</div>
           )}
-          <div className="prose" style={{marginTop: 8}}>{parseTextBody(item.body)}</div>
+          <div className="prose" style={{marginTop: 8}}><GuestRichBody value={item.body} /></div>
         </div>
       </article>
     ));
@@ -647,8 +648,8 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
             <div className="rule">
               <svg className="ic" viewBox="0 0 24 24"><use href="#i-rules" /></svg>
               <div>
-                {item.title && <b>{item.title} </b>}
-                <span dangerouslySetInnerHTML={{__html: sanitizeHtml(item.body || "")}}></span>
+                {item.title && <b><GuestRichInline value={item.title} /> </b>}
+                <GuestRichBody value={item.body} />
               </div>
             </div>
           </div>
@@ -667,9 +668,9 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
         )}
         <div className="card__body">
-          <div className="card__h"><h3 className="card__n">{item.title}</h3></div>
-          {item.body && <div className="card__sub" style={{marginTop: 6}} dangerouslySetInnerHTML={{__html: sanitizeHtml(item.body)}}></div>}
-          {item.price && <div className="card__price">{item.price} <span>{item.priceUnit ? `/ ${item.priceUnit}` : ''}</span></div>}
+          <div className="card__h"><h3 className="card__n"><GuestRichInline value={item.title} /></h3></div>
+          {item.body && <div className="card__sub" style={{marginTop: 6}}><GuestRichBody value={item.body} /></div>}
+          {itemPriceText(item, t) && <div className="card__price">{itemPriceText(item, t)}</div>}
           <div className="actions">
             {item.phone ? (
               <a className="act act--fill" href={`tel:${item.phone}`}><svg className="ic" viewBox="0 0 24 24"><use href="#i-chat" /></svg>{t("UI.book")}</a>
@@ -692,7 +693,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
         )}
         <div className="card__body">
-          <div className="card__h"><h3 className="card__n">{item.title}</h3></div>
+          <div className="card__h"><h3 className="card__n"><GuestRichInline value={item.title} /></h3></div>
           <div style={{display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap', marginTop: 2}}>
             {item.difficulty && <span className={`pill ${item.difficulty === 'Zahtevna' ? 'hard' : 'mod'}`}>{DIFFICULTY_KEYS[item.difficulty] ? t(DIFFICULTY_KEYS[item.difficulty]!) : item.difficulty}</span>}
             {item.duration && <span className="info" style={{margin: 0}}><div><svg className="ic" viewBox="0 0 24 24"><use href="#i-clock" /></svg>{item.duration}</div></span>}
@@ -740,8 +741,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
           </div>
         )}
         {items.map((item: any) => {
-          const note = parseTextBody(item.body);
-          return note ? <div className="prose" key={item.id} style={{ marginTop: 12 }}>{note}</div> : null;
+          return item.body ? <div className="prose" key={item.id} style={{ marginTop: 12 }}><GuestRichBody value={item.body} /></div> : null;
         })}
       </>
     );
@@ -755,24 +755,10 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
       )}
       <div className="prose">
         {/* Paket 16: kategorija ima naslov v .dh — ne podvajaj ga v vsebini */}
-        {item.title && item.title !== category.label && <h2 className="h2">{item.title}</h2>}
-        {parseTextBody(item.body)}
+        {item.title && item.title !== category.label && <h2 className="h2"><GuestRichInline value={item.title} /></h2>}
+        <GuestRichBody value={item.body} />
       </div>
     </div>
   ));
 }
 
-function parseTextBody(body: string) {
-  if (!body) return null;
-  try {
-    const parsed = JSON.parse(body);
-    if (Array.isArray(parsed)) {
-      // Drop null/junk paragraphs (import residue like [null]) so an
-      // effectively empty body renders nothing — no empty <p>, no gap.
-      const paras = parsed.filter((p) => p != null && String(p).trim() !== "" && !["null", "undefined", "NaN", "[null]"].includes(String(p).trim()));
-      if (paras.length === 0) return null;
-      return paras.map((p, i) => <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeHtml(p) }} />);
-    }
-  } catch (e) {}
-  return <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />;
-}

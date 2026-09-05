@@ -772,6 +772,12 @@ export const LIVING_GUIDE_UI = {
     de: "Preis",
     it: "Prezzo",
   },
+  "UI.lg.price.byAgreement": {
+    sl: "Po dogovoru",
+    en: "By agreement",
+    de: "Nach Vereinbarung",
+    it: "Su accordo",
+  },
   "UI.lg.order.created": {
     sl: "Oddano",
     en: "Placed",

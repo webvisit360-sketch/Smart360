@@ -1,7 +1,16 @@
-export function itemPriceText(item: any): string | null {
+export function itemPriceText(
+  item: any,
+  t?: (key: string) => string,
+): string | null {
   const price =
     typeof item?.price === "string" ? item.price.trim() : "";
   if (!price) return null;
+  if (
+    /^(po dogovoru|by agreement|nach vereinbarung|su accordo)$/i.test(price) &&
+    t
+  ) {
+    return t("UI.lg.price.byAgreement");
+  }
   const unit =
     typeof item?.priceUnit === "string" ? item.priceUnit.trim() : "";
   if (!unit) return price;
@@ -38,4 +47,17 @@ export function itemSupportingText(
   status?: string | null,
 ): string {
   return [itemDistanceText(item), subtitle, status].filter(Boolean).join(" · ");
+}
+
+export function normalizeGuestMedia(rows: any[] | null | undefined): any[] {
+  const seen = new Set<string>();
+  return (rows ?? []).filter((entry) => {
+    if (entry?.isVisible === false) return false;
+    const url = typeof entry?.url === "string" ? entry.url.trim() : "";
+    if (!url || (entry?.kind && entry.kind !== "image")) return false;
+    const key = `${entry.kind ?? "image"}:${url}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

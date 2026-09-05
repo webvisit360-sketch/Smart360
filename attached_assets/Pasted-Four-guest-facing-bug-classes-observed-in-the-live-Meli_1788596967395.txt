@@ -1,0 +1,13 @@
+Four guest-facing bug classes observed in the live Meli Pu Living Guide. Fix each as a SYSTEMIC issue in the shared components, not as a one-off content patch.
+
+1. RAW HTML TAGS SHOWN AS TEXT. The Swimming pool card (Accommodation → Your stay, EN) displays literal "<b>Please use the plastic glasses from the apartment.</b>". The stored rich text is being escaped instead of rendered. Decide one consistent pipeline for ALL guest-facing text fields: allowed formatting (bold/italic/lists/links from the editor) renders properly, everything else is stripped — never shown as raw tags. Audit every place guest text is rendered (cards, detail sheets, all five tabs) and apply the same pipeline everywhere.
+
+2. MISSING-TRANSLATION HANDLING. The "Ice cream 24/7" item has English text but its Slovenian detail shows no text at all. When the guest's language has no text, fall back to displaying an existing language version (never a blank detail); do not machine-generate content. Additionally, report in your reply the list of Meli Pu items that are missing one or more language versions, so the operator can complete them.
+
+3. UNLOCALIZED LABELS INSIDE OTHER LANGUAGES. The olive-oil order detail in English shows the Slovenian label "Po dogovoru". Price/label strings like this must be localized system strings (sl/en/de/it), not hardcoded Slovenian. Audit all such labels in the guest UI (price units, "Po dogovoru", ordering strings, similar) and localize them.
+
+4. PHOTO GALLERY COUNTER AND DOTS. The Outdoor gym detail shows "3/5" incorrectly, and dot indicators appear on some galleries but not others. Unify on ONE shared gallery component: the counter must reflect the real number of photos and the real position, dots shown consistently wherever there is more than one photo, no counter/dots for a single photo. Find the root cause of the wrong count (stale data? hidden/deleted photos still counted? index offset?) and state it in the report.
+
+Verify in development on real Meli Pu data across all four languages: pool card renders bold text without visible tags, ice-cream detail shows fallback text in Slovenian, olive-oil detail shows a localized label in EN, gym gallery counter matches the real photo count, dots consistent across items. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

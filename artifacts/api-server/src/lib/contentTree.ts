@@ -92,6 +92,23 @@ function indexedBodyParts(body: unknown): string[] | null {
   return parts.length > 0 && body.slice(cursor).trim() === "" ? parts : null;
 }
 
+function hasMeaningfulContent(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasMeaningfulContent);
+  if (typeof value !== "string") return value != null;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) return parsed.some(hasMeaningfulContent);
+  } catch {
+    // Plain or rich text continues below.
+  }
+  return trimmed
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .trim().length > 0;
+}
+
 export function applyTranslationFields<T extends { id: string }>(
   row: T,
   translations: Record<string, string>,
@@ -105,13 +122,15 @@ export function applyTranslationFields<T extends { id: string }>(
   let bodyArr: string[] | null = null;
   let bulletsArr: string[] | null = null;
   for (const [field, value] of Object.entries(translations)) {
-    if (value === "") continue;
+    if (!hasMeaningfulContent(value)) continue;
     const sub = field.match(/^(body|bullets)\[(\d+)\]$/);
     if (sub) {
       const idx = Number(sub[2]);
       if (sub[1] === "body") {
         if (!bodyArr) bodyArr = indexedBodyParts(merged["body"]);
-        if (bodyArr && idx < bodyArr.length) bodyArr[idx] = value;
+        if (!bodyArr) bodyArr = [];
+        if (idx >= bodyArr.length) bodyArr.length = idx + 1;
+        bodyArr[idx] = value;
       } else {
         const src = merged["bullets"];
         if (!bulletsArr && Array.isArray(src)) bulletsArr = [...src];
@@ -173,38 +192,49 @@ export async function buildTenantContent(
   let itemsOut = items;
 
   const lang = opts.lang?.toLowerCase();
-  if (lang && lang !== "sl") {
+  if (lang) {
     const recordIds = [
       tenant.id,
       ...sectionIds,
       ...categoryIds,
       ...itemIds,
     ];
-    // Language filter lives in SQL so only the requested language's rows
-    // travel; writers lowercase `lang` on save (see translationKeys.ts), and
-    // the JS re-check below stays as a guard for any legacy mixed-case row.
     const translations = recordIds.length
       ? await db
           .select()
           .from(translationsTable)
-          .where(
-            and(
-              inArray(translationsTable.recordId, recordIds),
-              eq(translationsTable.lang, lang),
-            ),
-          )
+          .where(inArray(translationsTable.recordId, recordIds))
       : [];
-    const byRecord = new Map<string, Record<string, string>>();
-    for (const t of translations) {
-      if (t.lang.toLowerCase() !== lang) continue;
-      const rec = byRecord.get(t.recordId) ?? {};
-      rec[t.field] = t.value;
-      byRecord.set(t.recordId, rec);
+    const fallbackByRecord = new Map<string, Record<string, string>>();
+    const requestedByRecord = new Map<string, Record<string, string>>();
+    const fallbackPriority = ["en", "de", "it"];
+    for (const t of [...translations].sort(
+      (a, b) =>
+        fallbackPriority.indexOf(a.lang.toLowerCase()) -
+        fallbackPriority.indexOf(b.lang.toLowerCase()),
+    )) {
+      if (!hasMeaningfulContent(t.value)) continue;
+      const target =
+        t.lang.toLowerCase() === lang ? requestedByRecord : fallbackByRecord;
+      const rec = target.get(t.recordId) ?? {};
+      if (!(t.field in rec)) rec[t.field] = t.value;
+      target.set(t.recordId, rec);
     }
     const apply = <T extends { id: string }>(row: T): T => {
-      const rec = byRecord.get(row.id);
-      if (!rec) return row;
-      return applyTranslationFields(row, rec);
+      const fallback = fallbackByRecord.get(row.id) ?? {};
+      const source = row as Record<string, unknown>;
+      const neededFallback = Object.fromEntries(
+        Object.entries(fallback).filter(([field]) => {
+          const base = field.replace(/\[\d+\]$/, "");
+          const value = source[base];
+          return !hasMeaningfulContent(value);
+        }),
+      );
+      const withFallback = applyTranslationFields(row, neededFallback);
+      const requested = requestedByRecord.get(row.id);
+      return requested
+        ? applyTranslationFields(withFallback, requested)
+        : withFallback;
     };
     tenantOut = apply(tenant);
     sectionsOut = sections.map(apply);

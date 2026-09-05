@@ -44,6 +44,7 @@ import {
   itemDistanceText,
   itemPriceText,
   itemSupportingText,
+  normalizeGuestMedia,
 } from "./living-guide-formatters";
 import {
   calculateLivingGuideHeroLayout,
@@ -275,6 +276,11 @@ function visible(rows: any[] | null | undefined): any[] {
   return (rows ?? []).filter((row) => row.isVisible !== false);
 }
 
+function RichInline({ value }: { value: unknown }) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  return <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }} />;
+}
+
 function adminTreeTenant(tenant: any): any {
   const expose = (row: any) => ({
     ...row,
@@ -362,7 +368,6 @@ function standaloneBodyBullets(body: unknown): string[] {
 }
 
 function itemBullets(item: any, category?: any): string[] {
-  if (suppressesGuestDescription(category)) return [];
   const explicit = Array.isArray(item?.bullets)
     ? item.bullets.filter(
         (bullet: unknown): bullet is string =>
@@ -375,7 +380,6 @@ function itemBullets(item: any, category?: any): string[] {
 }
 
 function itemBodyHtml(item: any, category?: any): string {
-  if (suppressesGuestDescription(category)) return "";
   return standaloneBodyBullets(item?.body).length > 0
     ? ""
     : bodyHtml(item?.body);
@@ -417,7 +421,7 @@ function StructuredBulletRows({
 
 function firstMedia(category: any): any | null {
   for (const item of visible(category?.items)) {
-    const media = item.media?.[0];
+    const media = normalizeGuestMedia(item.media)[0];
     if (media) return media;
   }
   return null;
@@ -448,7 +452,7 @@ function categoryMedia(category: any): any[] {
   const seen = new Set<string>();
   const result: any[] = [];
   for (const item of visible(category?.items)) {
-    for (const media of item.media ?? []) {
+    for (const media of normalizeGuestMedia(item.media)) {
       const key = `${media.kind ?? "image"}:${media.url ?? media.posterUrl ?? ""}`;
       if (!key || seen.has(key)) continue;
       seen.add(key);
@@ -465,11 +469,11 @@ function detailHeroMedia(category: any, itemId: string | null): any[] {
   const activeItem = itemId
     ? items.find((item: any) => item.id === itemId)
     : null;
-  if (activeItem) return visible(activeItem.media);
+  if (activeItem) return normalizeGuestMedia(activeItem.media);
 
   const layout = category?.layout ?? "";
   if (layout === "tabs" && items.length === 2) {
-    return visible(items[0]?.media);
+    return normalizeGuestMedia(items[0]?.media);
   }
   if (
     layout === "tabs" ||
@@ -664,7 +668,7 @@ export default function LivingGuideGuestShell({
     const urls = new Set<string>();
     sections.forEach((section: any) => {
       visible(section.categories).forEach((category: any) => {
-        [...visible(category.media), ...visible(category.items).flatMap((item: any) => visible(item.media))]
+        [...normalizeGuestMedia(category.media), ...visible(category.items).flatMap((item: any) => normalizeGuestMedia(item.media))]
           .forEach((entry: any) => {
             const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
             if (source) urls.add(source);
@@ -2587,7 +2591,7 @@ function PCard({ ariaLabel, onOpen, media, meta, title, description, categoryIco
       </div>
       <div className="lg2-pcard-body">
         <div className="lg2-pcard-meta">{meta}</div>
-        <h3>{title}</h3>
+        <h3><RichInline value={title} /></h3>
         {adminNote && <p className="lg2-admin-category-note">{adminNote}</p>}
         {description && <p>{description}</p>}
       </div>
@@ -2675,7 +2679,7 @@ function ExploreView({
               key={item.id}
               ariaLabel={item.title || category.label}
               onOpen={() => openPlace(category.id, item.id)}
-              media={item.media?.[0]}
+              media={normalizeGuestMedia(item.media)[0]}
               categoryIcon={categoryIcon(category)}
               meta={
                 <>
@@ -2774,13 +2778,13 @@ function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem, 
           </button>
         )}
         {selectedGroup?.items.map(({ item, category }: any) => {
-          const price = itemPriceText(item);
+          const price = itemPriceText(item, t);
           return (
             <PCard
               key={item.id}
               ariaLabel={item.title || category.label}
               onOpen={() => openOffer(category.id, item.id)}
-              media={item.media?.[0] ?? firstMedia(category)}
+              media={normalizeGuestMedia(item.media)[0] ?? firstMedia(category)}
               categoryIcon={categoryIcon(category)}
               meta={
                 <>
@@ -2962,6 +2966,12 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const mediaKey = (media ?? [])
     .map((entry: any, index: number) => entry.id ?? entry.url ?? index)
     .join("|");
+  const previousMediaKeyRef = useRef(mediaKey);
+  useEffect(() => {
+    if (previousMediaKeyRef.current === mediaKey) return;
+    previousMediaKeyRef.current = mediaKey;
+    onGalleryIndex?.(0);
+  }, [mediaKey, onGalleryIndex]);
 
   const settleGallery = useCallback(
     (track: HTMLDivElement) => {
@@ -3196,7 +3206,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
     } else if (layout === "tabs") {
       content = <TemplateB2 key={activeItem.id} items={items} initialItemId={activeItem.id} onOrderClick={onOrderClick} category={category} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else {
-        content = <TemplateA category={category} items={[activeItem]} onOrderClick={onOrderClick} mediaOverride={visible(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
+        content = <TemplateA category={category} items={[activeItem]} onOrderClick={onOrderClick} mediaOverride={normalizeGuestMedia(activeItem.media)} titleOverride={activeItem.title} tenant={tenant} lang={lang} t={t} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     }
   } else {
     if (layout === "wifi") {
@@ -3308,7 +3318,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
   const openStatus = itemOpenStatus(firstItem, t);
   const introBody = itemBodyHtml(firstItem, category);
   const firstItemBullets = itemBullets(firstItem, category);
-  const price = itemPriceText(firstItem);
+  const price = itemPriceText(firstItem, t);
   const detailRows = items.slice(1).filter((i: any) => i.title || i.body || i.bullets?.length);
 
   return (
@@ -3319,11 +3329,11 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
           <div className="lg2-grabber" aria-hidden="true" />
           {price ? (
             <div className="lg2-detail-title-row">
-              <h1>{heading}</h1>
+              <h1><RichInline value={heading} /></h1>
               <span className="lg2-price">{price}</span>
             </div>
           ) : (
-            <h1>{heading}</h1>
+            <h1><RichInline value={heading} /></h1>
           )}
           {openStatus && (
             <div className="lg2-chips">
@@ -3339,7 +3349,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
                 <div className={`lg2-rule-row${item.tint ? " lg2-rule-row--warning" : ""}`} key={item.id}>
                   <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${item.tint ? "sos" : "doc"}`} /></svg></span>
                   <div>
-                    {item.title && <b>{item.title}</b>}
+                    {item.title && <b><RichInline value={item.title} /></b>}
                     {itemBodyHtml(item, category) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
                     <StructuredBulletRows bullets={itemBullets(item, category)} />
                   </div>
@@ -3381,7 +3391,7 @@ function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick, fullH
               {items.map((item: any) => {
                 const subtitle = distinctSubtitle(item.title, item.subtitle);
                 const status = itemOpenStatus(item, t);
-                 const price = itemPriceText(item);
+                 const price = itemPriceText(item, t);
                  const supporting = itemSupportingText(
                    item,
                    subtitle,
@@ -3390,11 +3400,11 @@ function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick, fullH
                 return (
                   <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
                     <span className="lg2-sub-icon" aria-hidden="true">
-                      {item.media?.[0] ? <img src={mediaImgSrc(item.media[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(item.media[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
+                      {normalizeGuestMedia(item.media)[0] ? <img src={mediaImgSrc(normalizeGuestMedia(item.media)[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(normalizeGuestMedia(item.media)[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
                     </span>
                      <div className="lg2-sub-content">
                        <span className="lg2-row-title">
-                         <b>{item.title}</b>
+                         <b><RichInline value={item.title} /></b>
                          {price && <span className="lg2-price">{price}</span>}
                        </span>
                        {supporting && <small>{supporting}</small>}
@@ -3440,7 +3450,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                  <div className={`lg2-rule-row${isWarning ? " lg2-rule-row--warning" : ""}`} key={item.id}>
                    <span className="lg2-rule-icon" aria-hidden="true"><svg><use href={`#lg-i-${isWarning ? "sos" : "doc"}`}/></svg></span>
                    <div>
-                     {item.title && <b>{item.title}</b>}
+                     {item.title && <b><RichInline value={item.title} /></b>}
                      {itemBodyHtml(item, category) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
                      <StructuredBulletRows bullets={itemBullets(item, category)} />
                    </div>
@@ -3543,7 +3553,7 @@ function TabbedDetail({
   }, [initialSegment]);
 
   if (!activeItem) return null;
-  const media = visible(activeItem.media);
+  const media = normalizeGuestMedia(activeItem.media);
   const panelBaseId = `lg2-segment-${category.id}`;
 
   return (
@@ -3566,7 +3576,7 @@ function TabbedDetail({
                   className={i === segment ? "is-active" : ""}
                   onClick={() => { setSegment(i); onGalleryIndex(0); }}
                 >
-                  {item.title || item.label}
+                  <RichInline value={item.title || item.label} />
                 </button>
              ))}
           </div>
@@ -3660,12 +3670,12 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
 
 // Template F: Place
 function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryIndex, onOrderClick }: any) {
-  const media = visible(item?.media);
+  const media = normalizeGuestMedia(item?.media);
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
   const bullets = itemBullets(item, category);
   const openStatus = itemOpenStatus(item, t);
-  const price = itemPriceText(item);
+  const price = itemPriceText(item, t);
 
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
@@ -3675,11 +3685,11 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
            <div className="lg2-grabber" aria-hidden="true" />
            {price ? (
              <div className="lg2-detail-title-row">
-               <h1>{heading}</h1>
+               <h1><RichInline value={heading} /></h1>
                <span className="lg2-price">{price}</span>
              </div>
            ) : (
-             <h1>{heading}</h1>
+             <h1><RichInline value={heading} /></h1>
            )}
            {(openStatus || subtitle) && (
              <div className="lg2-chips">
@@ -3705,7 +3715,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
 
 // Template G: Trail
 function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, onOrderClick }: any) {
-  const media = visible(item?.media);
+  const media = normalizeGuestMedia(item?.media);
   const heading = item?.title || category?.label;
   const subtitle = distinctSubtitle(heading, item?.subtitle);
   const bullets = itemBullets(item, category);
@@ -3716,7 +3726,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
         <HeroGallery media={media} onBack={onBack} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} t={t} />
         <article className="lg2-detail-sheet">
            <div className="lg2-grabber" aria-hidden="true" />
-           <h1>{heading}</h1>
+           <h1><RichInline value={heading} /></h1>
            {(subtitle || routeFacts.length > 0) && (
              <div className="lg2-chips">
                 {subtitle && <span className="lg2-chip">{subtitle}</span>}
