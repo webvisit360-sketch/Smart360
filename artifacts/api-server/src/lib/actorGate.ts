@@ -116,6 +116,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/tenants/:id/qr.png", binding: T_ID },
   { method: "get", path: "/admin/tenants/:id/label.pdf", binding: T_ID },
   { method: "get", path: "/admin/tenants/:id", binding: T_ID },
+  { method: "get", path: "/admin/tenants/:id/notification-configuration", binding: T_ID },
   {
     method: "patch",
     path: "/admin/tenants/:id",

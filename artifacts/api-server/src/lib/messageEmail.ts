@@ -112,7 +112,9 @@ export function buildMessageEmailHeaders(messageId: string): Record<string, stri
   };
 }
 
-export type EmailResult = { ok: true; resendId?: string } | { ok: false };
+export type EmailResult =
+  | { ok: true; resendId?: string }
+  | { ok: false; providerError: string };
 
 /**
  * Send a PII-safe message notification via the Resend connector.
@@ -139,11 +141,12 @@ export async function sendMessageNotification(
     });
 
     if (!resp.ok) {
+      const providerError = await resp.text();
       logger.error(
         { messageId: p.messageId, threadRef: p.threadRef, httpStatus: resp.status },
         "[messageEmail] Resend rejected the request",
       );
-      return { ok: false };
+      return { ok: false, providerError };
     }
 
     const accepted = await resp.json().catch(() => null);
@@ -168,6 +171,9 @@ export async function sendMessageNotification(
       { messageId: p.messageId, threadRef: p.threadRef, errName },
       "[messageEmail] unexpected error contacting Resend",
     );
-    return { ok: false };
+    return {
+      ok: false,
+      providerError: err instanceof Error ? err.message : String(err),
+    };
   }
 }

@@ -94,6 +94,7 @@ import type {
   MediaEntry,
   MediaInput,
   MediaUpdate,
+  NotificationConfigurationStatus,
   OkStatus,
   OrderAdmin,
   OrderInput,
@@ -4841,6 +4842,83 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getDeleteTenantMutationOptions(options));
     }
+
+export const getGetTenantNotificationConfigurationUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/notification-configuration`
+}
+
+/**
+ * @summary Return WhatsApp configuration availability without exposing secrets
+ */
+export const getTenantNotificationConfiguration = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<NotificationConfigurationStatus> => {
+
+  return customFetch<NotificationConfigurationStatus>(getGetTenantNotificationConfigurationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTenantNotificationConfigurationQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/notification-configuration`
+    ] as const;
+    }
+
+
+export const getGetTenantNotificationConfigurationQueryOptions = <TData = Awaited<ReturnType<typeof getTenantNotificationConfiguration>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantNotificationConfiguration>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantNotificationConfigurationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantNotificationConfiguration>>> = ({ signal }) => getTenantNotificationConfiguration(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantNotificationConfiguration>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantNotificationConfigurationQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantNotificationConfiguration>>>
+export type GetTenantNotificationConfigurationQueryError = ErrorType<void>
+
+
+/**
+ * @summary Return WhatsApp configuration availability without exposing secrets
+ */
+
+export function useGetTenantNotificationConfiguration<TData = Awaited<ReturnType<typeof getTenantNotificationConfiguration>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantNotificationConfiguration>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantNotificationConfigurationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetDistanceReviewUrl = (id: string,) => {
 

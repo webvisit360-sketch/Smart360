@@ -150,6 +150,9 @@ export const GetPublicTenantResponse = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -657,6 +660,9 @@ export const ListTenantsResponseItem = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -750,6 +756,9 @@ export const CreateTenantResponse = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -2106,6 +2115,9 @@ export const GetTenantResponse = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -2290,6 +2302,8 @@ export const UpdateTenantBody = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().optional(),
   "messageNotifyEmail": zod.boolean().optional(),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).optional().describe('Exactly one channel; WhatsApp requires global configuration and a valid saved or supplied E.164 number'),
+  "notificationWhatsappPhone": zod.string().optional().describe('Blank input is ignored and never clears the saved number'),
   "orderPassword": zod.string().max(updateTenantBodyOrderPasswordMax).nullish().describe('Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -2365,6 +2379,9 @@ export const UpdateTenantResponse = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -2423,6 +2440,18 @@ export const DeleteTenantParams = zod.object({
 })
 
 export const DeleteTenantResponse = zod.void()
+
+
+/**
+ * @summary Return WhatsApp configuration availability without exposing secrets
+ */
+export const GetTenantNotificationConfigurationParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetTenantNotificationConfigurationResponse = zod.object({
+  "configured": zod.boolean()
+})
 
 
 export const GetDistanceReviewParams = zod.object({
@@ -2714,6 +2743,9 @@ export const DuplicateTenantResponse = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
@@ -2814,6 +2846,9 @@ export const RenewTenantResponse = zod.object({
   "email": zod.string().nullish(),
   "orderNotifyEmail": zod.boolean().describe('Whether new orders send the tenant a notification email; defaults to true'),
   "messageNotifyEmail": zod.boolean().describe('Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.'),
+  "notificationChannel": zod.enum(['email', 'whatsapp']).describe('Exclusive host-notification delivery channel'),
+  "notificationWhatsappPhone": zod.string().nullish().describe('International E.164 WhatsApp recipient'),
+  "whatsappConfigured": zod.boolean().optional().describe('Whether all required global Meta Cloud API secrets are present'),
   "orderPasswordConfigured": zod.boolean().optional().describe('Whether this tenant currently requires a password for new orders; the password itself is never returned'),
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),

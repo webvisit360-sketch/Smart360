@@ -51,6 +51,11 @@ import {
   validateTenantCoordinatePair,
 } from "../lib/tenant-location";
 import { extractCoordsFromGoogleMapsUrl } from "../lib/maps-link";
+import {
+  isValidE164,
+  isWhatsappConfigured,
+  normalizeWhatsappPhonePatch,
+} from "../lib/whatsapp";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -86,7 +91,7 @@ const tenantSettingCategories: ReadonlyArray<readonly [readonly string[], string
   [["customDomain"], "povezava z domeno"],
   [["logoUrl", "logoSquareUrl", "heroUrl", "livingGuideHeroUrl", "tourUrl"], "predstavitev in podoba"],
   [["phone", "whatsapp", "viber", "instagram", "email"], "kontaktni podatki"],
-  [["orderNotifyEmail", "messageNotifyEmail"], "obvestila"],
+  [["orderNotifyEmail", "messageNotifyEmail", "notificationChannel", "notificationWhatsappPhone"], "obvestila"],
   [["orderPassword"], "dostop do naročil"],
   [["address", "mapQuery", "mapUrl", "latitude", "longitude", "coordinateOverride"], "lokacija"],
   [["wifiSsid", "wifiPass", "wifiEnc"], "Wi-Fi dostop"],
@@ -425,7 +430,25 @@ router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
   const tree = await buildTenantContent(tenant, { visibleOnly: false });
   const publicUrl = guestUrl(tenant.slug);
   const qrSvg = await guestQrSvg(publicUrl);
-  res.json(GetTenantResponse.parse(serialize({ ...tree, publicUrl, qrSvg })));
+  res.json(GetTenantResponse.parse(serialize({
+    ...tree,
+    whatsappConfigured: isWhatsappConfigured(),
+    publicUrl,
+    qrSvg,
+  })));
+});
+
+router.get("/admin/tenants/:id/notification-configuration", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [tenant] = await db
+    .select({ id: tenantsTable.id })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, id));
+  if (!tenant) {
+    res.status(404).json({ error: "Nastanitev ni bila najdena." });
+    return;
+  }
+  res.json({ configured: isWhatsappConfigured() });
 });
 
 /** Enforces documented ranges/enums from ui/urejevalnik-naslovnice.md; returns error message or null. */
@@ -477,6 +500,20 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
 
 router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
+  const rawNotificationChannel =
+    req.body && typeof req.body === "object"
+      ? (req.body as Record<string, unknown>)["notificationChannel"]
+      : undefined;
+  if (
+    rawNotificationChannel !== undefined &&
+    rawNotificationChannel !== "email" &&
+    rawNotificationChannel !== "whatsapp"
+  ) {
+    res.status(400).json({
+      error: "Izbran mora biti natanko en kanal: e-pošta ali WhatsApp.",
+    });
+    return;
+  }
   const parsed = UpdateTenantBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -498,6 +535,9 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       firstPublishedAt: tenantsTable.firstPublishedAt,
       isPublished: tenantsTable.isPublished,
       name: tenantsTable.name,
+      notificationChannel: tenantsTable.notificationChannel,
+      notificationWhatsappPhone: tenantsTable.notificationWhatsappPhone,
+      email: tenantsTable.email,
     })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, id));
@@ -506,6 +546,50 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     return;
   }
   const requestData = parsed.data as Record<string, unknown>;
+  const requestedChannel = requestData["notificationChannel"];
+  if (
+    requestedChannel !== undefined &&
+    requestedChannel !== "email" &&
+    requestedChannel !== "whatsapp"
+  ) {
+    res.status(400).json({ error: "Izbran mora biti natanko en kanal: e-pošta ali WhatsApp." });
+    return;
+  }
+  const requestedWhatsappPhone = requestData["notificationWhatsappPhone"];
+  const trimmedWhatsappPhone = normalizeWhatsappPhonePatch(requestedWhatsappPhone);
+  if (trimmedWhatsappPhone && !isValidE164(trimmedWhatsappPhone)) {
+    res.status(400).json({
+      error: "WhatsApp številka mora biti v mednarodni obliki E.164 (na primer +38640123456).",
+    });
+    return;
+  }
+  const effectiveChannel = requestedChannel ?? before.notificationChannel;
+  const effectiveWhatsappPhone =
+    trimmedWhatsappPhone || before.notificationWhatsappPhone?.trim() || null;
+  const effectiveEmail =
+    requestData["email"] === undefined
+      ? before.email?.trim() || null
+      : typeof requestData["email"] === "string"
+        ? requestData["email"].trim() || null
+        : null;
+  if (effectiveChannel === "whatsapp") {
+    if (!isWhatsappConfigured()) {
+      res.status(400).json({ error: "WhatsApp še ni nastavljen." });
+      return;
+    }
+    if (!effectiveWhatsappPhone || !isValidE164(effectiveWhatsappPhone)) {
+      res.status(400).json({
+        error: "Za WhatsApp je zahtevana veljavna mednarodna številka E.164.",
+      });
+      return;
+    }
+    if (!effectiveEmail) {
+      res.status(400).json({
+        error: "Za varnostno nadomestno dostavo mora biti nastavljen e-poštni naslov.",
+      });
+      return;
+    }
+  }
   const coordinateOverride = requestData["coordinateOverride"] === true;
   const requestedLatitude = requestData["latitude"];
   const requestedLongitude = requestData["longitude"];
@@ -557,6 +641,11 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     ...restData
   } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
+  // Empty input is omission, never a delete command.
+  if (requestedWhatsappPhone !== undefined) {
+    if (trimmedWhatsappPhone) updateData["notificationWhatsappPhone"] = trimmedWhatsappPhone;
+    else delete updateData["notificationWhatsappPhone"];
+  }
   // livingGuideNav: null resets to null; array is already validated above.
   if (livingGuideNavRaw !== undefined) {
     updateData["livingGuideNav"] = livingGuideNavRaw ?? null;
@@ -733,6 +822,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       serialize({
         ...tenant,
         orderPasswordConfigured: Boolean(tenant.orderPassword?.trim()),
+        whatsappConfigured: isWhatsappConfigured(),
       }),
     ),
   );

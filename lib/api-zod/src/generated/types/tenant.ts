@@ -7,6 +7,7 @@
  */
 import type { TenantGuestUiMode } from './tenantGuestUiMode';
 import type { TenantLivingGuideNavItem } from './tenantLivingGuideNavItem';
+import type { TenantNotificationChannel } from './tenantNotificationChannel';
 
 export interface Tenant {
   id: string;
@@ -44,6 +45,15 @@ export interface Tenant {
   orderNotifyEmail: boolean;
   /** Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability. */
   messageNotifyEmail: boolean;
+  /** Exclusive host-notification delivery channel */
+  notificationChannel: TenantNotificationChannel;
+  /**
+     * International E.164 WhatsApp recipient
+     * @nullable
+     */
+  notificationWhatsappPhone?: string | null;
+  /** Whether all required global Meta Cloud API secrets are present */
+  whatsappConfigured?: boolean;
   /** Whether this tenant currently requires a password for new orders; the password itself is never returned */
   orderPasswordConfigured?: boolean;
   /** @nullable */

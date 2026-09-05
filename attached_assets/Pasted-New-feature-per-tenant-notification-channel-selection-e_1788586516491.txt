@@ -1,0 +1,15 @@
+New feature: per-tenant notification channel selection (email OR WhatsApp, exclusive), with WhatsApp delivery via the official Meta WhatsApp Business Cloud API only.
+
+1. CHANNEL SELECTOR. In the tenant's admin settings add a "Obvestila gostitelju" section with a single two-position switch: left "E-pošta", right "WhatsApp". Exactly one channel is active at all times — never both, never neither; the server enforces this too. Plus a WhatsApp phone number field (international format, validated). Default for all existing tenants: E-pošta (the migration must not touch existing email settings; empty value is never a delete command).
+
+2. DISPATCH LAYER. Refactor notification sending (orders and guest messages to the host) behind a single dispatcher that delivers to the tenant's selected channel. Every attempt (channel, recipient, outcome, provider error verbatim) is persisted per notification. SAFETY FALLBACK: if the selected channel is WhatsApp and delivery fails, send the notification by email instead and persist that the fallback fired with the exact provider error — a guest's order must never be lost to a failed WhatsApp call. The fallback costs nothing and does not change the selected channel.
+
+3. WHATSAPP ADAPTER — official Cloud API only. Implement sending through Meta's WhatsApp Business Cloud API with pre-approved message templates (business-initiated notifications require templates). Configuration (access token, phone number ID, template names) comes exclusively from Replit Secrets — never hardcoded, never in the repo. Until the secrets are configured, the WhatsApp position of the switch is locked with the label "WhatsApp še ni nastavljen" and cannot be selected; selecting WhatsApp also requires a valid phone number. No unofficial WhatsApp libraries (whatsapp-web.js, Baileys or similar) under any circumstances — they violate WhatsApp's terms.
+
+4. TEMPLATES. Propose (in your report, do not register anywhere) the Slovenian utility template texts we will submit to Meta for approval: one for a new order (variables: guest name/unit, item, quantity, time) and one for a new guest message (variables: guest name/unit, short preview). Keep them factual, no marketing wording.
+
+5. All admin strings in Slovenian, consistent with existing style. No schema changes beyond additive tables/columns.
+
+Verify in development: the switch enforces exactly-one-channel; with WhatsApp unconfigured the WhatsApp position is locked with the explanatory label; email dispatch works as today; a simulated WhatsApp failure triggers the email fallback and persists the exact provider error and the fallback event. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

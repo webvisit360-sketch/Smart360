@@ -1239,6 +1239,25 @@ paths:
       responses:
         "204":
           description: Deleted
+  /admin/tenants/{id}/notification-configuration:
+    get:
+      operationId: getTenantNotificationConfiguration
+      tags: [tenants]
+      summary: Return WhatsApp configuration availability without exposing secrets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Global WhatsApp configuration status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationConfigurationStatus"
+        "404":
+          description: Tenant not found
   /admin/tenants/{id}/distance-review:
     get:
       operationId: getDistanceReview
@@ -3533,6 +3552,16 @@ components:
         messageNotifyEmail:
           type: boolean
           description: Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability.
+        notificationChannel:
+          type: string
+          enum: [email, whatsapp]
+          description: Exclusive host-notification delivery channel
+        notificationWhatsappPhone:
+          type: ["string", "null"]
+          description: International E.164 WhatsApp recipient
+        whatsappConfigured:
+          type: boolean
+          description: Whether all required global Meta Cloud API secrets are present
         orderPasswordConfigured:
           type: boolean
           description: Whether this tenant currently requires a password for new orders; the password itself is never returned
@@ -3618,7 +3647,12 @@ components:
         createdAt: { type: string }
         renewsAt: { type: ["string", "null"] }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, guestUiMode, languages, isTemplate, isPublished, orderNotifyEmail, messageNotifyEmail, mediaQuotaBytes, createdAt, updatedAt]
+      required: [id, slug, name, theme, guestUiMode, languages, isTemplate, isPublished, orderNotifyEmail, messageNotifyEmail, notificationChannel, mediaQuotaBytes, createdAt, updatedAt]
+    NotificationConfigurationStatus:
+      type: object
+      properties:
+        configured: { type: boolean }
+      required: [configured]
     TenantInput:
       type: object
       properties:
@@ -3661,6 +3695,13 @@ components:
         email: { type: ["string", "null"] }
         orderNotifyEmail: { type: boolean }
         messageNotifyEmail: { type: boolean }
+        notificationChannel:
+          type: string
+          enum: [email, whatsapp]
+          description: Exactly one channel; WhatsApp requires global configuration and a valid saved or supplied E.164 number
+        notificationWhatsappPhone:
+          type: string
+          description: Blank input is ignored and never clears the saved number
         orderPassword:
           type: ["string", "null"]
           maxLength: 200

@@ -96,6 +96,12 @@ export const tenantsTable = pgTable("tenants", {
   // Resend notice that a message awaits. Never includes body, name, unit,
   // raw token, or IP.
   messageNotifyEmail: boolean("message_notify_email").notNull().default(true),
+  // Exactly one host-notification transport is selected. Existing tenants
+  // remain on email through the additive default.
+  notificationChannel: text("notification_channel").notNull().default("email"),
+  // Dedicated WhatsApp notification recipient (international E.164).
+  // Blank PATCH values are ignored by the API and never erase this value.
+  notificationWhatsappPhone: text("notification_whatsapp_phone"),
   // Optional host-managed order gate. It is intentionally independent from
   // wifiPass and is never copied from Wi-Fi settings.
   orderPassword: text("order_password"),
@@ -211,6 +217,10 @@ export const tenantsTable = pgTable("tenants", {
   check(
     "tenants_location_coordinates_v1",
     sql`(${t.latitude} IS NULL AND ${t.longitude} IS NULL) OR (${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`,
+  ),
+  check(
+    "tenants_notification_channel_enum_v1",
+    sql`${t.notificationChannel} IN ('email','whatsapp')`,
   ),
 ]);
 

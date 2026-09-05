@@ -105,6 +105,8 @@ import {
 } from "../lib/orderHelpers";
 import { sendOrderEmail, emailFrom } from "../lib/orderEmail";
 import { extractFulfillmentSentence } from "../lib/orderFulfillment";
+import { dispatchNotification } from "../lib/notificationDispatcher";
+import { isValidE164, isWhatsappConfigured } from "../lib/whatsapp";
 
 const router: IRouter = Router();
 
@@ -314,15 +316,30 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
         emailFrom();
       } catch {
         res.status(422).json({
-          error: "Order email sender is not configured (ORDER_EMAIL_FROM missing)",
+          error: "Pošiljatelj e-pošte za obvestila ni nastavljen.",
         });
         return;
       }
       if (!tenant.email) {
         res.status(422).json({
-          error: "Order notification cannot be delivered: tenant has no email configured",
+          error: "Obvestila ni mogoče dostaviti, ker nastanitev nima e-poštnega naslova.",
         });
         return;
+      }
+      if (tenant.notificationChannel === "whatsapp") {
+        if (!isWhatsappConfigured()) {
+          res.status(422).json({ error: "WhatsApp še ni nastavljen." });
+          return;
+        }
+        if (
+          !tenant.notificationWhatsappPhone ||
+          !isValidE164(tenant.notificationWhatsappPhone)
+        ) {
+          res.status(422).json({
+            error: "Za WhatsApp je zahtevana veljavna mednarodna številka E.164.",
+          });
+          return;
+        }
       }
     }
 
@@ -341,6 +358,8 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     const snapshotProducerName = item.producerName ?? null;
     const snapshotTenantName = tenant.name;
     const snapshotTenantEmail = tenant.orderNotifyEmail ? tenant.email : null;
+    const snapshotNotificationChannel = tenant.notificationChannel;
+    const snapshotTenantWhatsappPhone = tenant.notificationWhatsappPhone;
     const deleteAfter = makeDeleteAfter();
 
     // Atomic INSERT … ON CONFLICT DO NOTHING keeps concurrent creates safe.
@@ -359,6 +378,8 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
         snapshotProducerName,
         snapshotTenantName,
         snapshotTenantEmail,
+        snapshotNotificationChannel,
+        snapshotTenantWhatsappPhone,
         qty,
         guestName,
         guestPhone,
@@ -431,7 +452,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     // tenant toggle/email changes must neither suppress nor relabel that attempt.
     if (!existing.snapshotTenantEmail) {
       res.status(422).json({
-        error: "Stored order notification recipient is missing",
+        error: "Shranjeni prejemnik obvestila o naročilu manjka.",
       });
       return;
     }
@@ -439,7 +460,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
       emailFrom();
     } catch {
       res.status(422).json({
-        error: "Order email sender is not configured (ORDER_EMAIL_FROM missing)",
+        error: "Pošiljatelj e-pošte za obvestila ni nastavljen.",
       });
       return;
     }
@@ -526,20 +547,40 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     );
   }
 
-  // ── Step 5: Send notification email using ONLY stored snapshot fields ────
+  // ── Step 5: Dispatch using ONLY immutable stored snapshot fields ─────────
   // Never use current request values, current item, or current tenant here.
-  const emailResult = await sendOrderEmail({
-    to: canonical.snapshotTenantEmail ?? "",
-    tenantName: canonical.snapshotTenantName ?? "",
-    orderRef: canonical.orderRef,
-    itemTitle: canonical.snapshotTitle,
-    qty: canonical.qty,
-    price: canonical.snapshotPrice,
-    priceUnit: canonical.snapshotPriceUnit,
-    guestName: canonical.guestName,
-    guestPhone: canonical.guestPhone,
-    guestUnit: canonical.guestUnit,
-    guestNote: canonical.guestNote,
+  const dispatchResult = await dispatchNotification({
+    tenantId: canonical.tenantId,
+    kind: "order",
+    notificationId: canonical.orderRef,
+    channel: canonical.snapshotNotificationChannel === "whatsapp" ? "whatsapp" : "email",
+    emailRecipient: canonical.snapshotTenantEmail,
+    whatsappRecipient: canonical.snapshotTenantWhatsappPhone,
+    whatsappPayload: {
+      guestName: canonical.guestName,
+      guestUnit: canonical.guestUnit,
+      item: canonical.snapshotTitle ?? "—",
+      quantity: canonical.qty,
+      time: canonical.createdAt.toISOString(),
+    },
+    sendEmail: async () => {
+      const result = await sendOrderEmail({
+        to: canonical.snapshotTenantEmail ?? "",
+        tenantName: canonical.snapshotTenantName ?? "",
+        orderRef: canonical.orderRef,
+        itemTitle: canonical.snapshotTitle,
+        qty: canonical.qty,
+        price: canonical.snapshotPrice,
+        priceUnit: canonical.snapshotPriceUnit,
+        guestName: canonical.guestName,
+        guestPhone: canonical.guestPhone,
+        guestUnit: canonical.guestUnit,
+        guestNote: canonical.guestNote,
+      });
+      return result.ok
+        ? { ok: true as const, providerMessageId: result.messageId }
+        : { ok: false as const, providerError: result.providerError };
+    },
   });
 
   // ── Step 6: Conditional completion update — gated on EXACT claim identity ──
@@ -550,7 +591,7 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
   // B rotated the token, so A's completion UPDATE matches 0 rows and cannot
   // overwrite B's claim. This closes the stale-A / new-B completion race.
 
-  if (!emailResult.ok) {
+  if (!dispatchResult.ok) {
     // Failure: 'sending' (this token) → 'failed'; clear the token.
     const [failedRow] = await db
       .update(ordersTable)
@@ -580,9 +621,8 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
 
     res.status(422).json({
       error:
-        "Order registered but email notification could not be delivered. " +
-        "A retryable order record exists but is not accepted or visible until the email sends. " +
-        "Retry with the same idempotency key.",
+        "Naročilo je shranjeno, vendar obvestila ni bilo mogoče dostaviti. " +
+        "Poskusite znova z istim ključem idempotentnosti.",
     });
     return;
   }

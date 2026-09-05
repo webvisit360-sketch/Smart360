@@ -66,6 +66,9 @@ export const ordersTable = pgTable(
     snapshotTenantName: text("snapshot_tenant_name"),
     /** Tenant's notification email captured at order time. */
     snapshotTenantEmail: text("snapshot_tenant_email"),
+    /** Immutable selected transport and both possible recipients. */
+    snapshotNotificationChannel: text("snapshot_notification_channel"),
+    snapshotTenantWhatsappPhone: text("snapshot_tenant_whatsapp_phone"),
 
     // ── Order details ─────────────────────────────────────────────────────────
     /** Positive integer 1-999. Enforced by check constraint orders_qty_range. */
@@ -162,6 +165,10 @@ export const ordersTable = pgTable(
     check(
       "orders_notif_status_enum_v2",
       sql`${t.notificationStatus} IN ('pending','sending','sent','failed','skipped')`,
+    ),
+    check(
+      "orders_snapshot_notification_channel_enum_v1",
+      sql`${t.snapshotNotificationChannel} IS NULL OR ${t.snapshotNotificationChannel} IN ('email','whatsapp')`,
     ),
   ],
 );

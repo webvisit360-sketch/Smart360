@@ -80,6 +80,7 @@ import {
 } from "../lib/messageHelpers";
 import { makeMessageDeleteAfter } from "../lib/messageRetention";
 import { sendMessageNotification, messageEmailFrom } from "../lib/messageEmail";
+import { dispatchNotification } from "../lib/notificationDispatcher";
 
 const router: IRouter = Router();
 
@@ -504,35 +505,65 @@ router.post(
       "[messages] guest message stored",
     );
 
-    // Send PII-safe notification email (best-effort; never blocks the response).
-    // Idempotency key = "message-<messageId>" — one bell per guest message row.
-    // Email dispatch is OUTSIDE the transaction.
-    if (tenant.messageNotifyEmail && tenant.email) {
-      try {
-        messageEmailFrom(); // throws if ORDER_EMAIL_FROM not configured
-        const capturedMessageId = insertedMessageId;
-        const capturedThreadRef = thread.threadRef;
-        void sendMessageNotification({
-          to: tenant.email,
-          tenantName: tenant.name,
+    // Best-effort shared dispatch; every actual attempt (including fallback)
+    // persists before the task resolves. Email remains PII-safe, while the
+    // approved WhatsApp template receives only its explicitly requested fields.
+    if (tenant.messageNotifyEmail) {
+      const capturedMessageId = insertedMessageId;
+      const capturedThreadRef = thread.threadRef;
+      void dispatchNotification({
+        tenantId,
+        kind: "message",
+        notificationId: capturedMessageId,
+        channel: tenant.notificationChannel === "whatsapp" ? "whatsapp" : "email",
+        emailRecipient: tenant.email?.trim() || null,
+        whatsappRecipient: tenant.notificationWhatsappPhone?.trim() || null,
+        whatsappPayload: {
+          guestName,
           guestUnit,
-          messageId: capturedMessageId,
-          threadRef: capturedThreadRef,
-        }).then((result) => {
-          if (!result.ok) {
-            logger.warn(
-              { messageId: capturedMessageId, threadRef: capturedThreadRef },
-              "[messages] notification email failed (best-effort)",
-            );
+          preview: body.slice(0, 120),
+        },
+        sendEmail: async () => {
+          try {
+            messageEmailFrom();
+            const result = await sendMessageNotification({
+              to: tenant.email ?? "",
+              tenantName: tenant.name,
+              guestUnit,
+              messageId: capturedMessageId,
+              threadRef: capturedThreadRef,
+            });
+            return result.ok
+              ? { ok: true as const, providerMessageId: result.resendId }
+              : { ok: false as const, providerError: result.providerError };
+          } catch (error) {
+            return {
+              ok: false as const,
+              providerError: error instanceof Error ? error.message : String(error),
+            };
           }
-        });
-      } catch {
-        // messageEmailFrom() threw — ORDER_EMAIL_FROM not configured; skip
-        logger.warn(
-          { messageId: insertedMessageId, threadRef: thread.threadRef },
-          "[messages] notification email skipped (sender not configured)",
+        },
+      }).then((result) => {
+        if (!result.ok) {
+          logger.warn(
+            {
+              messageId: capturedMessageId,
+              threadRef: capturedThreadRef,
+              evidencePersisted: result.evidencePersisted,
+            },
+            "[messages] notification dispatch failed (best-effort)",
+          );
+        }
+      }).catch((error: unknown) => {
+        logger.error(
+          {
+            messageId: capturedMessageId,
+            threadRef: capturedThreadRef,
+            errName: error instanceof Error ? error.name : "Error",
+          },
+          "[messages] notification dispatch crashed (best-effort)",
         );
-      }
+      });
     }
 
     // Re-read the updated thread and all messages for the response.

@@ -140,7 +140,7 @@ export function buildEmailHeaders(orderRef: string): Record<string, string> {
 
 export type EmailResult =
   | { ok: true; messageId?: string }
-  | { ok: false };
+  | { ok: false; providerError: string };
 
 /**
  * Send an order notification email via the Resend connector.
@@ -167,12 +167,13 @@ export async function sendOrderEmail(p: OrderEmailPayload): Promise<EmailResult>
 
     // The connectors SDK returns a standard fetch Response object.
     if (!resp.ok) {
+      const providerError = await resp.text();
       // Log HTTP status only — never include resp body (may echo PII)
       logger.error(
         { orderRef: p.orderRef, httpStatus: resp.status },
         "[orderEmail] Resend rejected the request",
       );
-      return { ok: false };
+      return { ok: false, providerError };
     }
 
     // Resend returns { id } for an accepted send. It is safe to log and retain
@@ -200,6 +201,9 @@ export async function sendOrderEmail(p: OrderEmailPayload): Promise<EmailResult>
       { orderRef: p.orderRef, errName, errMsg },
       "[orderEmail] unexpected error contacting Resend",
     );
-    return { ok: false };
+    return {
+      ok: false,
+      providerError: err instanceof Error ? err.message : String(err),
+    };
   }
 }

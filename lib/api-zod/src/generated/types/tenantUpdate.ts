@@ -7,6 +7,7 @@
  */
 import type { TenantUpdateGuestUiMode } from './tenantUpdateGuestUiMode';
 import type { TenantUpdateLivingGuideNavItem } from './tenantUpdateLivingGuideNavItem';
+import type { TenantUpdateNotificationChannel } from './tenantUpdateNotificationChannel';
 
 export interface TenantUpdate {
   slug?: string;
@@ -41,6 +42,10 @@ export interface TenantUpdate {
   email?: string | null;
   orderNotifyEmail?: boolean;
   messageNotifyEmail?: boolean;
+  /** Exactly one channel; WhatsApp requires global configuration and a valid saved or supplied E.164 number */
+  notificationChannel?: TenantUpdateNotificationChannel;
+  /** Blank input is ignored and never clears the saved number */
+  notificationWhatsappPhone?: string;
   /**
      * Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
      * @maxLength 200

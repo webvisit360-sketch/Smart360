@@ -1,4 +1,4 @@
-import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey } from "@workspace/api-client-react";
+import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, useGetTenantNotificationConfiguration, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey, getGetTenantNotificationConfigurationQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
 import { Loader2, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
 import { actorLabel } from "@/pages/admin/dashboard";
@@ -34,6 +34,11 @@ import {
   AdminSidebarIcon as SidebarNavIcon,
   AdminSidebarLockup,
 } from "@/components/admin/admin-sidebar-brand";
+import {
+  NOTIFICATION_PHONE_ERROR,
+  notificationWhatsappPhoneForSave,
+  selectNotificationChannel,
+} from "@/lib/notification-channel";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -87,6 +92,8 @@ export default function AdminTenantEdit() {
     query: { queryKey: getListTenantOverviewQueryKey() },
   });
   const tenantOverview = tenantOverviews?.find((row) => row.tenantId === id);
+  const { data: notificationStatus } = useGetTenantNotificationConfiguration(id, { query: { enabled: !!id, queryKey: getGetTenantNotificationConfigurationQueryKey(id) } });
+  const whatsappConfigured = notificationStatus?.configured ?? false;
 
   const { data: previewTenant } = useGetPublicTenant(
     tenant?.slug || "",
@@ -112,7 +119,10 @@ export default function AdminTenantEdit() {
         if (err?.status === 409) {
           toast({ title: "Naslov je zaseden", description: "Ta naslov je že zaseden. Izberite drugega.", variant: "destructive" });
         } else if (err?.status === 400 && err?.data?.errors) {
-          const msgs = err.data.errors.map((e: any) => e.message).join(", ");
+          let msgs = err.data.errors.map((e: any) => e.message).join(", ");
+          if (msgs.includes("E.164") || msgs.includes("whatsapp") || msgs.includes("phone")) {
+            msgs = "WhatsApp številka mora biti v veljavnem mednarodnem E.164 formatu (npr. +38641234567).";
+          }
           toast({ title: "Neveljavni podatki", description: msgs, variant: "destructive" });
         } else {
           toast({ title: "Napaka", description: err?.data?.error || err?.data?.message || err?.message || "Shranjevanje ni uspelo.", variant: "destructive" });
@@ -133,6 +143,8 @@ export default function AdminTenantEdit() {
     viber: "",
     instagram: "",
     email: "",
+    notificationChannel: "email" as "email" | "whatsapp",
+    notificationWhatsappPhone: "",
     orderNotifyEmail: true,
     messageNotifyEmail: true,
     mapQuery: "",
@@ -175,6 +187,7 @@ export default function AdminTenantEdit() {
     bgColor: null as string | null, // null = belo (privzeto)
     guestUiMode: "living-guide" as "legacy" | "living-guide",
   });
+  const [notificationPhoneError, setNotificationPhoneError] = useState<string | null>(null);
 
   // Media quota edited in GB, stored in bytes (kept out of formData so the
   // GB↔bytes conversion happens exactly once, on save).
@@ -251,6 +264,9 @@ export default function AdminTenantEdit() {
     if (currentStr !== lastStr) {
       const snapshot = formData;
       const t = setTimeout(() => {
+        const notificationWhatsappPhone = notificationWhatsappPhoneForSave(
+          formData.notificationWhatsappPhone,
+        );
         const {
           latitude: _l,
           longitude: _lo,
@@ -267,6 +283,7 @@ export default function AdminTenantEdit() {
             wifiSsid: formData.wifiSsid.trim() || null,
             wifiPass: formData.wifiPass || null,
             mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
+            notificationWhatsappPhone,
           },
         }, {
           onSuccess: () => {
@@ -328,6 +345,8 @@ export default function AdminTenantEdit() {
         viber: tenant.viber || "",
         instagram: tenant.instagram || "",
         email: tenant.email || "",
+        notificationChannel: (tenant.notificationChannel as "email" | "whatsapp") || "email",
+        notificationWhatsappPhone: tenant.notificationWhatsappPhone || "",
         orderNotifyEmail: tenant.orderNotifyEmail,
         messageNotifyEmail: tenant.messageNotifyEmail ?? true,
         mapQuery: tenant.mapQuery || "",
@@ -448,6 +467,7 @@ export default function AdminTenantEdit() {
         wifiSsid: formData.wifiSsid.trim() || null,
         wifiPass: formData.wifiPass || null,
         mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
+        notificationWhatsappPhone: formData.notificationWhatsappPhone.trim() || undefined,
       },
     }, {
       onSuccess: () => {
@@ -740,9 +760,102 @@ export default function AdminTenantEdit() {
                 <Label>Objavljeno (vidno gostom)</Label>
               </div>
 
-              <div className="flex items-start justify-between gap-4 border-t pt-4">
+              <div className="border-t pt-4">
                 <div className="space-y-1">
-                  <Label htmlFor="order-notify-email">E-poštno obvestilo ob novem naročilu</Label>
+                  <h3 className="text-sm font-semibold">Obvestila gostitelju</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Izberite en kanal za obvestila te nastanitve.
+                  </p>
+                </div>
+                <div
+                  className="mt-3 grid max-w-[420px] grid-cols-2 rounded-xl border bg-muted/50 p-1"
+                  role="radiogroup"
+                  aria-label="Kanal za obvestila gostitelju"
+                >
+                  {(["email", "whatsapp"] as const).map((channel) => {
+                    const selected = formData.notificationChannel === channel;
+                    const locked = channel === "whatsapp" && !whatsappConfigured;
+                    const label =
+                      channel === "email"
+                        ? "E-pošta"
+                        : locked
+                          ? "WhatsApp še ni nastavljen"
+                          : "WhatsApp";
+                    return (
+                      <button
+                        key={channel}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        disabled={locked}
+                        className={`min-h-10 rounded-lg px-3 text-sm font-semibold transition ${
+                          selected
+                            ? "bg-background text-foreground shadow-sm"
+                            : locked
+                              ? "cursor-not-allowed text-muted-foreground/65"
+                              : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
+                        }`}
+                        onClick={() => {
+                          const next = selectNotificationChannel(
+                            formData.notificationChannel,
+                            channel,
+                            whatsappConfigured,
+                            formData.notificationWhatsappPhone,
+                          );
+                          setNotificationPhoneError(next.error);
+                          if (next.channel !== formData.notificationChannel) {
+                            setFormData((current) => ({
+                              ...current,
+                              notificationChannel: next.channel,
+                            }));
+                          }
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 max-w-[420px] space-y-1.5">
+                  <Label htmlFor="notif-whatsapp" className="text-sm">
+                    WhatsApp številka za obvestila
+                  </Label>
+                  <Input
+                    id="notif-whatsapp"
+                    value={formData.notificationWhatsappPhone}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setFormData((current) => ({
+                        ...current,
+                        notificationWhatsappPhone: value,
+                      }));
+                      setNotificationPhoneError(
+                        value.trim() && !notificationWhatsappPhoneForSave(value)
+                          ? NOTIFICATION_PHONE_ERROR
+                          : null,
+                      );
+                    }}
+                    placeholder="+386..."
+                    disabled={!whatsappConfigured}
+                    aria-invalid={Boolean(notificationPhoneError)}
+                    aria-describedby="notif-whatsapp-help"
+                  />
+                  <p
+                    id="notif-whatsapp-help"
+                    className={`text-xs ${
+                      notificationPhoneError ? "text-destructive" : "text-muted-foreground"
+                    }`}
+                  >
+                    {notificationPhoneError ??
+                      (whatsappConfigured
+                        ? "Mednarodni format E.164, na primer +38641234567."
+                        : "Polje bo na voljo, ko bo WhatsApp nastavljen.")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4 border-t pt-4 mt-4">
+                <div className="space-y-1">
+                  <Label htmlFor="order-notify-email">Obvestilo ob novem naročilu</Label>
                   <p className="text-xs text-muted-foreground">
                     Če je izklopljeno, naročilo še vedno takoj prispe v zavihek Naročila.
                   </p>
@@ -753,13 +866,13 @@ export default function AdminTenantEdit() {
                   onCheckedChange={(checked) =>
                     setFormData((current) => ({ ...current, orderNotifyEmail: checked }))
                   }
-                  aria-label="E-poštno obvestilo ob novem naročilu"
+                  aria-label="Obvestilo ob novem naročilu"
                   data-testid="switch-order-notify-email"
                 />
               </div>
               <div className="flex items-start justify-between gap-4 border-t pt-4 mt-4">
                 <div className="space-y-1">
-                  <Label htmlFor="message-notify-email">E-poštno obvestilo ob sporočilu gosta</Label>
+                  <Label htmlFor="message-notify-email">Obvestilo ob sporočilu gosta</Label>
                   <p className="text-xs text-muted-foreground">
                     Če je izklopljeno, sporočilo še vedno takoj prispe v zavihek Sporočila.
                   </p>
@@ -770,7 +883,7 @@ export default function AdminTenantEdit() {
                   onCheckedChange={(checked) =>
                     setFormData((current) => ({ ...current, messageNotifyEmail: checked }))
                   }
-                  aria-label="E-poštno obvestilo ob sporočilu gosta"
+                  aria-label="Obvestilo ob sporočilu gosta"
                   data-testid="switch-message-notify-email"
                 />
               </div>

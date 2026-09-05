@@ -1192,6 +1192,17 @@ export interface DistanceRunResult {
 }
 
 /**
+ * Exclusive host-notification delivery channel
+ */
+export type TenantNotificationChannel = typeof TenantNotificationChannel[keyof typeof TenantNotificationChannel];
+
+
+export const TenantNotificationChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+/**
  * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
  */
 export type TenantGuestUiMode = typeof TenantGuestUiMode[keyof typeof TenantGuestUiMode];
@@ -1250,6 +1261,15 @@ export interface Tenant {
   orderNotifyEmail: boolean;
   /** Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability. */
   messageNotifyEmail: boolean;
+  /** Exclusive host-notification delivery channel */
+  notificationChannel: TenantNotificationChannel;
+  /**
+     * International E.164 WhatsApp recipient
+     * @nullable
+     */
+  notificationWhatsappPhone?: string | null;
+  /** Whether all required global Meta Cloud API secrets are present */
+  whatsappConfigured?: boolean;
   /** Whether this tenant currently requires a password for new orders; the password itself is never returned */
   orderPasswordConfigured?: boolean;
   /** @nullable */
@@ -1380,6 +1400,10 @@ export interface Tenant {
   updatedAt: string;
 }
 
+export interface NotificationConfigurationStatus {
+  configured: boolean;
+}
+
 /**
  * Seeds the default sections, categories and groups for this establishment type
  */
@@ -1407,6 +1431,17 @@ export interface TenantDuplicateInput {
   /** Copy item contents too; false copies only the section/category structure */
   copyContent?: boolean;
 }
+
+/**
+ * Exactly one channel; WhatsApp requires global configuration and a valid saved or supplied E.164 number
+ */
+export type TenantUpdateNotificationChannel = typeof TenantUpdateNotificationChannel[keyof typeof TenantUpdateNotificationChannel];
+
+
+export const TenantUpdateNotificationChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
 
 /**
  * Guest-facing UI mode for all new and updated tenants
@@ -1463,6 +1498,10 @@ export interface TenantUpdate {
   email?: string | null;
   orderNotifyEmail?: boolean;
   messageNotifyEmail?: boolean;
+  /** Exactly one channel; WhatsApp requires global configuration and a valid saved or supplied E.164 number */
+  notificationChannel?: TenantUpdateNotificationChannel;
+  /** Blank input is ignored and never clears the saved number */
+  notificationWhatsappPhone?: string;
   /**
      * Optional host-managed order password; trimmed on save, null or blank disables the password gate, and it is never derived from Wi-Fi data
      * @maxLength 200
