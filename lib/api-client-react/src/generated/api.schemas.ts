@@ -623,6 +623,54 @@ export interface CreatorProposalTranslateResult {
   translations: CreatorProposalTranslateResultTranslationsItem[];
 }
 
+export type ItemTranslationLanguageDraftLanguage = typeof ItemTranslationLanguageDraftLanguage[keyof typeof ItemTranslationLanguageDraftLanguage];
+
+
+export const ItemTranslationLanguageDraftLanguage = {
+  sl: 'sl',
+  en: 'en',
+  de: 'de',
+  it: 'it',
+} as const;
+
+export interface ItemTranslationLanguageDraft {
+  language: ItemTranslationLanguageDraftLanguage;
+  /** @maxLength 300 */
+  title: string;
+  /** @maxLength 4000 */
+  description: string;
+}
+
+export interface ItemTranslationDraftInput {
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  translations: ItemTranslationLanguageDraft[];
+}
+
+export type ItemTranslationDraftSuggestionLanguage = typeof ItemTranslationDraftSuggestionLanguage[keyof typeof ItemTranslationDraftSuggestionLanguage];
+
+
+export const ItemTranslationDraftSuggestionLanguage = {
+  sl: 'sl',
+  en: 'en',
+  de: 'de',
+  it: 'it',
+} as const;
+
+export interface ItemTranslationDraftSuggestion {
+  language: ItemTranslationDraftSuggestionLanguage;
+  /** @nullable */
+  title: string | null;
+  /** @nullable */
+  description: string | null;
+}
+
+export interface ItemTranslationDraftResult {
+  translations: ItemTranslationDraftSuggestion[];
+}
+
 export interface CreatorCoordinateConfirmationInput {
   /**
      * @minimum -90

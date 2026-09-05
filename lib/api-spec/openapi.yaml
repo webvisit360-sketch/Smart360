@@ -1751,6 +1751,27 @@ paths:
       responses:
         "204":
           description: Deleted
+  /admin/items/{id}/translate-missing:
+    post:
+      operationId: translateMissingItemFields
+      tags: [items]
+      summary: Prepare unsaved translations for missing item title and description drafts
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ItemTranslationDraftInput" }
+      responses:
+        "200":
+          description: Unsaved translations for missing fields only
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ItemTranslationDraftResult" }
+        "400": { description: Invalid drafts or no translatable source }
+        "404": { description: Item not found }
+        "502": { description: Translation service failed or returned an unsafe response }
   /admin/items/{id}/creator-status:
     get:
       operationId: getItemCreatorStatus
@@ -3013,6 +3034,39 @@ components:
               name: { type: string }
               description: { type: string }
             required: [language, name, description]
+      required: [translations]
+    ItemTranslationLanguageDraft:
+      type: object
+      additionalProperties: false
+      properties:
+        language: { type: string, enum: [sl, en, de, it] }
+        title: { type: string, maxLength: 300 }
+        description: { type: string, maxLength: 4000 }
+      required: [language, title, description]
+    ItemTranslationDraftInput:
+      type: object
+      additionalProperties: false
+      properties:
+        translations:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { $ref: "#/components/schemas/ItemTranslationLanguageDraft" }
+      required: [translations]
+    ItemTranslationDraftSuggestion:
+      type: object
+      additionalProperties: false
+      properties:
+        language: { type: string, enum: [sl, en, de, it] }
+        title: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+      required: [language, title, description]
+    ItemTranslationDraftResult:
+      type: object
+      properties:
+        translations:
+          type: array
+          items: { $ref: "#/components/schemas/ItemTranslationDraftSuggestion" }
       required: [translations]
     CreatorCoordinateConfirmationInput:
       type: object

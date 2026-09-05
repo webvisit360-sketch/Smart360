@@ -45,6 +45,8 @@ import {
   GetItemCreatorStatusResponse,
   ListItemCreatorPhotoProposalsResponse,
   RecomputeItemDistanceResponse,
+  TranslateMissingItemFieldsBody,
+  TranslateMissingItemFieldsResponse,
 } from "@workspace/api-zod";
 import { getAdminUser, requireAdmin } from "../lib/adminAuth";
 import { currentActor } from "../lib/actorContext";
@@ -65,6 +67,10 @@ import {
   discoverCreatorPhotosForItem,
   listCreatorPhotoProposals,
 } from "../lib/creatorWikimediaPhotos";
+import {
+  hasMeaningfulEditorialText,
+  translateMissingEditorial,
+} from "../lib/creatorEditorialTranslation";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -668,6 +674,40 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
   });
   invalidateTenantCache();
   res.json(UpdateItemResponse.parse(await itemWithMedia(item)));
+});
+
+router.post("/admin/items/:id/translate-missing", async (req, res): Promise<void> => {
+  const parsed = TranslateMissingItemFieldsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Prevajalski osnutki niso veljavni." });
+    return;
+  }
+  const itemId = firstParam(req.params["id"]);
+  const ctx = await tenantContextForItem(itemId);
+  if (!ctx) {
+    res.status(404).json({ error: "Vnos ni najden." });
+    return;
+  }
+  try {
+    const drafts = parsed.data.translations.map((draft) => ({
+      language: draft.language,
+      title: sanitizePlain(draft.title),
+      description: sanitizeBody(draft.description),
+    }));
+    const translations = (await translateMissingEditorial(drafts)).map((translation) => {
+      const title = translation.title == null ? null : sanitizePlain(translation.title);
+      const description = translation.description == null ? null : sanitizeBody(translation.description);
+      if ((title != null && !hasMeaningfulEditorialText(title)) ||
+        (description != null && !hasMeaningfulEditorialText(description))) {
+        throw new Error("Sanitiziran prevod je prazen.");
+      }
+      return { language: translation.language, title, description };
+    });
+    res.json(TranslateMissingItemFieldsResponse.parse({ translations }));
+  } catch (error) {
+    req.log.warn({ error, itemId, tenantId: ctx.tenantId }, "Item draft translation failed");
+    res.status(502).json({ error: "Prevodov ni bilo mogoče pripraviti." });
+  }
 });
 
 router.get("/admin/items/:id/creator-status", async (req, res): Promise<void> => {

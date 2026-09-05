@@ -87,6 +87,8 @@ import type {
   Item,
   ItemCreatorStatus,
   ItemInput,
+  ItemTranslationDraftInput,
+  ItemTranslationDraftResult,
   ItemUpdate,
   ListTenantTranslationsParams,
   ListTranslationsParams,
@@ -6940,6 +6942,78 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteItemMutationOptions(options));
+    }
+
+export const getTranslateMissingItemFieldsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/translate-missing`
+}
+
+/**
+ * @summary Prepare unsaved translations for missing item title and description drafts
+ */
+export const translateMissingItemFields = async (id: string,
+    itemTranslationDraftInput: ItemTranslationDraftInput, options?: Parameters<typeof customFetch>[1]): Promise<ItemTranslationDraftResult> => {
+
+  return customFetch<ItemTranslationDraftResult>(getTranslateMissingItemFieldsUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(itemTranslationDraftInput)
+  }
+);}
+
+
+
+
+
+export const getTranslateMissingItemFieldsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof translateMissingItemFields>>, TError,{id: string;data: BodyType<ItemTranslationDraftInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof translateMissingItemFields>>, TError,{id: string;data: BodyType<ItemTranslationDraftInput>}, TContext> => {
+
+const mutationKey = ['translateMissingItemFields'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof translateMissingItemFields>>, {id: string;data: BodyType<ItemTranslationDraftInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  translateMissingItemFields(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TranslateMissingItemFieldsMutationResult = NonNullable<Awaited<ReturnType<typeof translateMissingItemFields>>>
+    export type TranslateMissingItemFieldsMutationBody = BodyType<ItemTranslationDraftInput>
+    export type TranslateMissingItemFieldsMutationError = ErrorType<void>
+
+    /**
+ * @summary Prepare unsaved translations for missing item title and description drafts
+ */
+export const useTranslateMissingItemFields = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof translateMissingItemFields>>, TError,{id: string;data: BodyType<ItemTranslationDraftInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof translateMissingItemFields>>,
+        TError,
+        {id: string;data: BodyType<ItemTranslationDraftInput>},
+        TContext
+      > => {
+      return useMutation(getTranslateMissingItemFieldsMutationOptions(options));
     }
 
 export const getGetItemCreatorStatusUrl = (id: string,) => {

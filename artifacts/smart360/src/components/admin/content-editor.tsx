@@ -24,6 +24,11 @@ import {
   getGetItemCreatorStatusQueryKey,
   useGetItemCreatorStatus,
   useRecomputeItemDistance,
+  useListTranslations,
+  useTranslateMissingItemFields,
+  upsertTranslation,
+  getListTranslationsQueryKey,
+  type ItemTranslationLanguageDraft,
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
@@ -57,6 +62,13 @@ import { sectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
 import type { CategoryInputExploreGroup } from "@workspace/api-client-react";
 import { PinPlacementMap } from "@/components/admin/kreator-proposal-queue";
 import { ItemCreatorPhotoProposals } from "@/components/admin/kreator-photo-proposals";
+import {
+  buildItemLanguageDrafts,
+  changedItemTranslationWrites,
+  hasTranslatableMissingItemField,
+  mergeMissingItemLanguageDrafts,
+} from "@/lib/item-translation-drafts";
+import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
 
 // ---------- Types ----------
 
@@ -760,6 +772,13 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const itemId = mode === "edit" ? item.id : "";
+  const itemEditorIdRef = useRef(itemId);
+  useEffect(() => {
+    itemEditorIdRef.current = itemId;
+    return () => {
+      itemEditorIdRef.current = "";
+    };
+  }, [itemId]);
   const creatorStatus = useGetItemCreatorStatus(itemId, {
     query: {
       enabled: mode === "edit",
@@ -798,6 +817,38 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
   const [soldOut, setSoldOut] = useState(item?.soldOut ?? false);
   const [producerName, setProducerName] = useState(item?.producerName ?? "");
   const [producerNote, setProducerNote] = useState(item?.producerNote ?? "");
+  const translationsQuery = useListTranslations(
+    { model: "item", recordId: itemId },
+    {
+      query: {
+        enabled: mode === "edit",
+        queryKey: getListTranslationsQueryKey({ model: "item", recordId: itemId }),
+      },
+    },
+  );
+  const [translationDrafts, setTranslationDrafts] = useState<ItemTranslationLanguageDraft[]>([]);
+  const [translationBaseline, setTranslationBaseline] = useState<ItemTranslationLanguageDraft[]>([]);
+  const translationsInitializedRef = useRef(false);
+  const [translationError, setTranslationError] = useState("");
+  useEffect(() => {
+    if (mode !== "edit" || !translationsQuery.data || translationsInitializedRef.current) return;
+    const drafts = buildItemLanguageDrafts(
+      { title: item.title ?? "", description: item.body ?? "" },
+      translationsQuery.data,
+    );
+    translationsInitializedRef.current = true;
+    setTranslationDrafts(drafts.filter((draft) => draft.language !== "sl"));
+    setTranslationBaseline(drafts.filter((draft) => draft.language !== "sl"));
+  }, [item, mode, translationsQuery.data]);
+  const allLanguageDrafts = buildItemLanguageDrafts(
+    { title, description: body },
+    [],
+  ).map((draft) =>
+    draft.language === "sl"
+      ? draft
+      : translationDrafts.find((candidate) => candidate.language === draft.language) ?? draft
+  );
+  const translateMissing = useTranslateMissingItemFields();
   const recomputeDistance = useRecomputeItemDistance({
     mutation: {
       onSuccess: async (status) => {
@@ -965,6 +1016,22 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
           producerName: producerName.trim() || null,
           producerNote: producerNote.trim() || null,
         });
+        const originalDrafts = buildItemLanguageDrafts(
+          { title: item.title ?? "", description: item.body ?? "" },
+          translationsQuery.data ?? [],
+        );
+        const writes = changedItemTranslationWrites(
+          item.id,
+          originalDrafts,
+          allLanguageDrafts,
+          translationsQuery.data ?? [],
+        );
+        await Promise.all(writes.map((data) => upsertTranslation(data)));
+        if (writes.length) {
+          await queryClient.invalidateQueries({
+            predicate: (query) => String(query.queryKey[0] ?? "").includes("translations"),
+          });
+        }
       }
       clear();
       await refresh();
@@ -977,12 +1044,17 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
   };
 
   const handleCancel = () => {
+    itemEditorIdRef.current = "";
     mediaRef.current?.discardPending();
     clear();
     onDone();
   };
 
-  useReportDirty(JSON.stringify(current) !== JSON.stringify(baseline) || pendingCount > 0);
+  useReportDirty(
+    JSON.stringify(current) !== JSON.stringify(baseline) ||
+    JSON.stringify(translationDrafts) !== JSON.stringify(translationBaseline) ||
+    pendingCount > 0,
+  );
 
   const handleDelete = async () => {
     if (!item) return;
@@ -1023,6 +1095,113 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
           disabled={busy}
         />
       </div>
+      {mode === "edit" && (
+        <div className="space-y-3 rounded-md border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 className="font-semibold">Prevodi naslova in opisa</h4>
+              <p className="text-xs text-muted-foreground">
+                Slovenščina je v poljih zgoraj. Predlogi ostanejo osnutek do klika »Shrani«.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={
+                busy ||
+                translationsQuery.isLoading ||
+                translationsQuery.isError ||
+                translateMissing.isPending ||
+                !hasTranslatableMissingItemField(allLanguageDrafts)
+              }
+              onClick={() => {
+                const scopedItemId = item.id;
+                setTranslationError("");
+                translateMissing.mutate({
+                  id: scopedItemId,
+                  data: { translations: allLanguageDrafts },
+                }, {
+                  onSuccess: (result) => {
+                    if (itemEditorIdRef.current !== scopedItemId) return;
+                    const currentAll = buildItemLanguageDrafts(
+                      { title, description: body },
+                      [],
+                    ).map((draft) =>
+                      draft.language === "sl"
+                        ? draft
+                        : translationDrafts.find((candidate) => candidate.language === draft.language) ?? draft
+                    );
+                    const merged = mergeMissingItemLanguageDrafts(currentAll, result.translations);
+                    const sl = merged.find((draft) => draft.language === "sl")!;
+                    setTitle((currentTitle) => currentTitle.trim() ? currentTitle : sl.title);
+                    setBody((currentBody) => currentBody.trim() ? currentBody : sl.description);
+                    setTranslationDrafts((currentTranslations) => {
+                      const liveAll = buildItemLanguageDrafts(
+                        { title: "", description: "" },
+                        [],
+                      ).map((draft) =>
+                        draft.language === "sl"
+                          ? draft
+                          : currentTranslations.find((candidate) => candidate.language === draft.language) ?? draft
+                      );
+                      return mergeMissingItemLanguageDrafts(liveAll, result.translations)
+                        .filter((draft) => draft.language !== "sl");
+                    });
+                  },
+                  onError: (error) => {
+                    if (itemEditorIdRef.current !== scopedItemId) return;
+                    setTranslationError(
+                      mutationErrorMessage(error) ?? "Prevodov ni bilo mogoče pripraviti.",
+                    );
+                  },
+                });
+              }}
+            >
+              {translateMissing.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Prevedi manjkajoče jezike
+            </Button>
+          </div>
+          {translationsQuery.isLoading && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Nalaganje prevodov…
+            </p>
+          )}
+          {translationsQuery.isError && (
+            <p role="alert" className="text-sm text-destructive">Prevodi niso bili naloženi.</p>
+          )}
+          {translationError && (
+            <p role="alert" data-testid={`item-translation-error-${item.id}`} className="text-sm text-destructive">
+              {translationError}
+            </p>
+          )}
+          {translationDrafts.map((draft, index) => (
+            <div key={draft.language} className="space-y-2 border-t pt-3">
+              <strong className="text-xs uppercase">{draft.language}</strong>
+              <div className="space-y-1">
+                <Label>Naslov ({draft.language.toUpperCase()})</Label>
+                <Input
+                  value={draft.title}
+                  onChange={(event) => setTranslationDrafts((currentDrafts) =>
+                    currentDrafts.map((currentDraft, currentIndex) =>
+                      currentIndex === index ? { ...currentDraft, title: event.target.value } : currentDraft))}
+                  disabled={busy || translateMissing.isPending}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Opis ({draft.language.toUpperCase()})</Label>
+                <RichTextEditor
+                  value={draft.description}
+                  onChange={(value) => setTranslationDrafts((currentDrafts) =>
+                    currentDrafts.map((currentDraft, currentIndex) =>
+                      currentIndex === index ? { ...currentDraft, description: value } : currentDraft))}
+                  placeholder="Prevod opisa…"
+                  disabled={busy || translateMissing.isPending}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="space-y-1">
         <Label>Fotografije in video</Label>
         <ItemMediaEditor
@@ -1257,10 +1436,10 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
             Izbriši
           </Button>
         )}
-        <Button variant="outline" onClick={handleCancel} disabled={busy}>
+        <Button variant="outline" onClick={handleCancel} disabled={busy || translateMissing.isPending}>
           Prekliči
         </Button>
-        <Button onClick={handleSave} disabled={busy || !creatorStatusReady}>
+        <Button onClick={handleSave} disabled={busy || translateMissing.isPending || !creatorStatusReady}>
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {mode === "create" ? "Dodaj vnos" : "Shrani"}
         </Button>

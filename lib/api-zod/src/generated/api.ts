@@ -3472,6 +3472,39 @@ export const DeleteItemResponse = zod.void()
 
 
 /**
+ * @summary Prepare unsaved translations for missing item title and description drafts
+ */
+export const TranslateMissingItemFieldsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const translateMissingItemFieldsBodyTranslationsItemTitleMax = 300;
+
+export const translateMissingItemFieldsBodyTranslationsItemDescriptionMax = 4000;
+
+export const translateMissingItemFieldsBodyTranslationsMin = 4;
+export const translateMissingItemFieldsBodyTranslationsMax = 4;
+
+
+
+export const TranslateMissingItemFieldsBody = zod.object({
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "title": zod.string().max(translateMissingItemFieldsBodyTranslationsItemTitleMax),
+  "description": zod.string().max(translateMissingItemFieldsBodyTranslationsItemDescriptionMax)
+})).min(translateMissingItemFieldsBodyTranslationsMin).max(translateMissingItemFieldsBodyTranslationsMax)
+})
+
+export const TranslateMissingItemFieldsResponse = zod.object({
+  "translations": zod.array(zod.object({
+  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "title": zod.string().nullable(),
+  "description": zod.string().nullable()
+}))
+})
+
+
+/**
  * @summary Read whether an item distance is owned by an active Creator materialization
  */
 export const GetItemCreatorStatusParams = zod.object({

@@ -171,6 +171,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/categories/:id/place-search", binding: OWNER },
   { method: "post", path: "/admin/categories/:id/places", binding: OWNER },
   { method: "patch", path: "/admin/items/:id", binding: e("item") },
+  { method: "post", path: "/admin/items/:id/translate-missing", binding: e("item") },
   { method: "get", path: "/admin/items/:id/creator-status", binding: e("item") },
   { method: "post", path: "/admin/items/:id/distance/recompute", binding: e("item") },
   { method: "post", path: "/admin/items/:id/creator/photos/discover", binding: OWNER },
