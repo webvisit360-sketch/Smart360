@@ -1,57 +1,9 @@
-const GUEST_VISIBLE_TENANT_FIELDS = new Set([
-  "slug",
-  "customDomain",
-  "name",
-  "subtitle",
-  "rating",
-  "reviewsCount",
-  "logoUrl",
-  "logoSquareUrl",
-  "heroUrl",
-  "livingGuideHeroUrl",
-  "tourUrl",
-  "phone",
-  "whatsapp",
-  "viber",
-  "instagram",
-  "email",
-  "orderPassword",
-  "address",
-  "mapQuery",
-  "mapUrl",
-  "latitude",
-  "longitude",
-  "wifiSsid",
-  "wifiPass",
-  "wifiEnc",
-  "bgColor",
-  "theme",
-  "guestUiMode",
-  "coverTitle",
-  "coverSubtitle",
-  "coverTitleSize",
-  "coverTitleOpacity",
-  "coverTextColor",
-  "coverSubSize",
-  "coverSubOpacity",
-  "coverMetaSize",
-  "coverMetaOpacity",
-  "coverVeil",
-  "tileVeil",
-  "textScale",
-  "textFont",
-  "textColor",
-  "coverAlign",
-  "coverShowRating",
-  "logoX",
-  "logoY",
-  "logoW",
-  "logoOpacity",
-  "navColorCover",
-  "navColor",
-  "navColorOn",
-  "languages",
-  "livingGuideNav",
+const PUBLICATION_CONTROL_FIELDS = new Set([
+  "isPublished",
+  "publishNow",
+  "hasUnpublishedChanges",
+  "firstPublishedAt",
+  "lastPublishedAt",
 ]);
 
 function sameValue(left: unknown, right: unknown): boolean {
@@ -61,13 +13,13 @@ function sameValue(left: unknown, right: unknown): boolean {
   return (left ?? null) === (right ?? null);
 }
 
-export function hasGuestVisibleTenantChanges(
+export function hasTenantAdminChanges(
   before: Record<string, unknown>,
   patch: Record<string, unknown>,
 ): boolean {
-  for (const field of GUEST_VISIBLE_TENANT_FIELDS) {
-    if (!(field in patch) || patch[field] === undefined) continue;
-    if (!sameValue(before[field], patch[field])) return true;
+  for (const [field, value] of Object.entries(patch)) {
+    if (PUBLICATION_CONTROL_FIELDS.has(field) || value === undefined) continue;
+    if (!sameValue(before[field], value)) return true;
   }
   return false;
 }

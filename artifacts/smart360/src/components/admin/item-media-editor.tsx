@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetStorageUsage, getGetStorageUsageQueryKey } from "@workspace/api-client-react";
 import { fmtMediaUsage, usagePct } from "@/lib/format-bytes";
-import { refreshTenantAfterGuestWrite } from "@/lib/tenant-publication-state";
+import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { Loader2, Plus, Play, RotateCcw, X } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 
@@ -108,7 +108,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   const shown = order ? order.map(id => sorted.find(m => m.id === id)!).filter(Boolean) : sorted;
 
   const refresh = () => Promise.all([
-    refreshTenantAfterGuestWrite(queryClient, tenantId),
+    refreshTenantAfterAdminWrite(queryClient, tenantId),
     queryClient.invalidateQueries({ queryKey: getGetStorageUsageQueryKey() }),
   ]);
 

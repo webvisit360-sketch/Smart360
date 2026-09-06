@@ -258,7 +258,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.equal(row!.slug, newSlug, "the pre-publish rename sticks; the frozen one does not");
   });
 
-  await t.test("two guest-content publish cycles survive reload, including text deletion and photo changes", async () => {
+  await t.test("repeated admin-change publish cycles survive reload", async () => {
     const settingsAutosave = await jreq(
       base,
       "PATCH",
@@ -468,28 +468,133 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       "cycle two publish must remain clean in a fresh response",
     );
 
-    const internalResponse = await jreq(
+    const whatsappResponse = await jreq(
       base,
       "PATCH",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
-      { mediaQuotaBytes: 2_500_000_000 },
+      {
+        notificationChannel: "whatsapp",
+        notificationWhatsappPhone: "+38640123456",
+        orderNotifyEmail: false,
+      },
     );
-    assert.equal(internalResponse.status, 200);
+    assert.equal(whatsappResponse.status, 200);
+    const whatsappSaved = (await whatsappResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      whatsappSaved.hasUnpublishedChanges,
+      true,
+      "a saved WhatsApp notification number must mark the tenant dirty",
+    );
 
-    const afterInternalResponse = await jreq(
+    const afterWhatsappResponse = await jreq(
       base,
       "GET",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
     );
-    const afterInternal = (await afterInternalResponse.json()) as {
+    const afterWhatsapp = (await afterWhatsappResponse.json()) as {
       hasUnpublishedChanges: boolean;
     };
     assert.equal(
-      afterInternal.hasUnpublishedChanges,
+      afterWhatsapp.hasUnpublishedChanges,
+      true,
+      "the WhatsApp settings dirty state must survive a fresh GET",
+    );
+
+    const publishWhatsappResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { isPublished: true, publishNow: true },
+    );
+    assert.equal(publishWhatsappResponse.status, 200);
+    const publishWhatsapp = (await publishWhatsappResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(publishWhatsapp.hasUnpublishedChanges, false);
+
+    const cleanAfterWhatsappResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    const cleanAfterWhatsapp = (await cleanAfterWhatsappResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      cleanAfterWhatsapp.hasUnpublishedChanges,
       false,
-      "internal-only actions must not mark guest content dirty",
+      "publishing WhatsApp settings must remain clean in a fresh GET",
+    );
+
+    const wifiResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      {
+        wifiSsid: "Smart360 test",
+        wifiPass: "test-wifi-password",
+        messageNotifyEmail: false,
+        mediaQuotaBytes: 2_500_000_000,
+      },
+    );
+    assert.equal(wifiResponse.status, 200);
+    const wifiSaved = (await wifiResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      wifiSaved.hasUnpublishedChanges,
+      true,
+      "a saved WiFi password and internal tenant settings must mark dirty",
+    );
+
+    const afterWifiResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    const afterWifi = (await afterWifiResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      afterWifi.hasUnpublishedChanges,
+      true,
+      "the WiFi settings dirty state must survive a fresh GET",
+    );
+
+    const publishWifiResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { isPublished: true, publishNow: true },
+    );
+    assert.equal(publishWifiResponse.status, 200);
+    const publishWifi = (await publishWifiResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(publishWifi.hasUnpublishedChanges, false);
+
+    const cleanAfterWifiResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    const cleanAfterWifi = (await cleanAfterWifiResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      cleanAfterWifi.hasUnpublishedChanges,
+      false,
+      "publishing WiFi settings must remain clean in a fresh GET",
     );
   });
 

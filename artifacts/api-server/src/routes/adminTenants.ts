@@ -56,7 +56,7 @@ import {
   isWhatsappConfigured,
   normalizeWhatsappPhonePatch,
 } from "../lib/whatsapp";
-import { hasGuestVisibleTenantChanges } from "../lib/guestPublishState";
+import { hasTenantAdminChanges } from "../lib/guestPublishState";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -702,7 +702,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       (next?.getTime() ?? null) !== (before.renewsAt?.getTime() ?? null);
   }
   const wantsPublish = updateData["isPublished"] === true;
-  // The tenant row is the serialization point between guest-content dirty
+  // The tenant row is the serialization point between admin-change dirty
   // markers and publish. If publish owns the lock first, a concurrent marker
   // waits and leaves the row dirty afterwards. If the marker owns it first,
   // publish sees that completed change and clears it.
@@ -738,7 +738,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       writeData["lastPublishedAt"] = publishTime;
     } else if (
       unpublishing ||
-      hasGuestVisibleTenantChanges(
+      hasTenantAdminChanges(
         lockedBefore as unknown as Record<string, unknown>,
         writeData,
       )
@@ -875,18 +875,26 @@ router.post("/admin/tenants/:id/renew", async (req, res): Promise<void> => {
   // pays two weeks late must not silently gain two weeks every year.
   const base = before.renewsAt ?? plusOneYear(before.createdAt);
   const next = plusOneYear(base);
-  const [tenant] = await db
-    .update(tenantsTable)
-    .set({ renewsAt: next })
-    .where(eq(tenantsTable.id, id))
-    .returning();
   const admin = await getAdminUser();
-  await db.insert(tenantRenewalsTable).values({
-    tenantId: id,
-    prevDate: before.renewsAt,
-    newDate: next,
-    actor: admin?.email ?? null,
+  const tenant = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(tenantsTable)
+      .set({ renewsAt: next, hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, id))
+      .returning();
+    if (!updated) return null;
+    await tx.insert(tenantRenewalsTable).values({
+      tenantId: id,
+      prevDate: before.renewsAt,
+      newDate: next,
+      actor: admin?.email ?? null,
+    });
+    return updated;
   });
+  if (!tenant) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
   await logChange({
     tenantId: id,
     tenantName: before.name,

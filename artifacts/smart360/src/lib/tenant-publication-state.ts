@@ -16,7 +16,7 @@ export function markTenantDirtyInCache(
   );
 }
 
-export async function refreshTenantAfterGuestWrite(
+export async function refreshTenantAfterAdminWrite(
   queryClient: QueryClient,
   tenantId: string,
 ): Promise<void> {

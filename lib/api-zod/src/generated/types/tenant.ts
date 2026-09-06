@@ -151,7 +151,7 @@ export interface Tenant {
   livingGuideNav?: TenantLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
-  /** Server-owned flag indicating guest-visible changes since the last successful publish */
+  /** Server-owned flag indicating saved tenant admin changes since the last successful publish */
   hasUnpublishedChanges: boolean;
   /**
      * Timestamp of the most recent successful publish

@@ -845,16 +845,25 @@ router.patch("/admin/orders/:orderRef/status", requireAdmin, async (req, res): P
   }
 
   // Race-safe: WHERE orderRef AND current status = expectedFrom
-  const [updated] = await db
-    .update(ordersTable)
-    .set({ status: toStatus, statusNote, updatedAt: new Date() })
-    .where(
-      and(
-        eq(ordersTable.orderRef, orderRef),
-        eq(ordersTable.status, order.status), // optimistic lock
-      ),
-    )
-    .returning();
+  const [updated] = await db.transaction(async (tx) => {
+    const changed = await tx
+      .update(ordersTable)
+      .set({ status: toStatus, statusNote, updatedAt: new Date() })
+      .where(
+        and(
+          eq(ordersTable.orderRef, orderRef),
+          eq(ordersTable.status, order.status), // optimistic lock
+        ),
+      )
+      .returning();
+    if (changed[0]) {
+      await tx
+        .update(tenantsTable)
+        .set({ hasUnpublishedChanges: true })
+        .where(eq(tenantsTable.id, changed[0].tenantId));
+    }
+    return changed;
+  });
 
   if (!updated) {
     // Concurrent update won — re-read current state and report

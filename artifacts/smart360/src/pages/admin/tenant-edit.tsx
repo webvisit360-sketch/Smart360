@@ -647,7 +647,7 @@ export default function AdminTenantEdit() {
             </Button>
             {hasUnpublishedChanges && (
               <p className="max-w-[210px] text-right text-[10px] font-medium leading-tight text-[#9A6818] sm:max-w-[360px] sm:text-[11px]">
-                Neobjavljene spremembe — gostje vidijo staro različico.{" "}
+                Neobjavljene spremembe — kliknite Objavi.{" "}
                 {lastPublishLabel
                   ? `Zadnja objava: ${lastPublishLabel}.`
                   : "Vodnik še ni bil objavljen."}

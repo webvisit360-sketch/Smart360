@@ -81,6 +81,7 @@ import {
 } from "../lib/creatorSourceRunService";
 import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
 import { translateCreatorEditorial } from "../lib/creatorEditorialTranslation";
+import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { invalidateTenantCache } from "./publicTenants";
 import {
   approveCreatorPhotoProposal,
@@ -95,6 +96,10 @@ router.use("/admin", requireAdmin);
 const first = (value: string | string[] | undefined) =>
   (Array.isArray(value) ? value[0] : value) ?? "";
 const serialize = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+async function markCreatorChange(tenantId: string): Promise<void> {
+  await markTenantAdminChangeDirty(tenantId);
+  invalidateTenantCache();
+}
 
 class CreatorOriginReplacementRequiredError extends Error {
   constructor() {
@@ -296,6 +301,7 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
           longitude: origin.lng,
           creatorDraft: true,
           creatorOriginRegion: origin.nominatimDisplayName,
+          hasUnpublishedChanges: true,
           municipality,
         })
         .where(eq(tenantsTable.id, tenantId))
@@ -359,6 +365,7 @@ router.post("/admin/tenants/:id/creator/runs", async (req, res): Promise<void> =
   const tenantId = first(req.params["id"]);
   try {
     const run = await startCreatorSourceRun(tenantId);
+    await markCreatorChange(tenantId);
     res.status(202).json(StartCreatorRunResponse.parse(serialize(run)));
   } catch (error) {
     if (error instanceof CreatorSourceRegistryError) {
@@ -405,6 +412,7 @@ router.post("/admin/tenants/:id/creator/sources", async (req, res): Promise<void
       tenantId: first(req.params["id"]),
       sources: input.data.sources,
     });
+    await markCreatorChange(first(req.params["id"]));
     res.json(ProposeCreatorSourcesResponse.parse(serialize(rows)));
   } catch (error) {
     const status = error instanceof CreatorSourceRegistryError
@@ -428,6 +436,7 @@ router.patch("/admin/tenants/:id/creator/sources/:sourceId", async (req, res): P
       sourceId: first(req.params["sourceId"]),
       ...input.data,
     });
+    await markCreatorChange(first(req.params["id"]));
     res.json(EditCreatorSourceResponse.parse(serialize(row)));
   } catch (error) {
     const status = error instanceof CreatorSourceRegistryError
@@ -443,6 +452,7 @@ router.delete("/admin/tenants/:id/creator/sources/:sourceId", async (req, res): 
       tenantId: first(req.params["id"]),
       sourceId: first(req.params["sourceId"]),
     });
+    await markCreatorChange(first(req.params["id"]));
     res.json(DeleteCreatorSourceResponse.parse(result));
   } catch (error) {
     const status = error instanceof CreatorSourceRegistryError
@@ -458,6 +468,7 @@ router.post("/admin/tenants/:id/creator/sources/:sourceId/archive", async (req, 
       tenantId: first(req.params["id"]),
       sourceId: first(req.params["sourceId"]),
     });
+    await markCreatorChange(first(req.params["id"]));
     res.json(ArchiveCreatorSourceResponse.parse(serialize(row)));
   } catch (error) {
     const status = error instanceof CreatorSourceRegistryError
@@ -470,6 +481,7 @@ router.post("/admin/tenants/:id/creator/sources/:sourceId/archive", async (req, 
 router.post("/admin/tenants/:id/creator/sources/approve-list", async (req, res): Promise<void> => {
   try {
     const result = await approveCreatorSourceList(first(req.params["id"]));
+    await markCreatorChange(first(req.params["id"]));
     res.json(ApproveCreatorSourceListResponse.parse(result));
   } catch (error) {
     const status = error instanceof CreatorSourceRegistryError
@@ -501,6 +513,7 @@ router.post(
         decision: decision as "approve" | "reject" | "revoke",
         actorId: actor.id,
       });
+      await markCreatorChange(first(req.params["id"]));
       res.json(DecideCreatorSourceResponse.parse(serialize(row)));
     } catch (error) {
       const status = error instanceof CreatorSourceRegistryError
@@ -557,8 +570,8 @@ router.patch("/admin/tenants/:id/creator/proposals/:proposalId", async (req, res
       operatorAddress: input.data.operatorAddress,
       translations: input.data.translations,
     });
-    invalidateTenantCache();
     if (!row) throw new Error("Predlog po ureditvi ni najden.");
+    await markCreatorChange(tenantId);
     res.json(EditCreatorProposalResponse.parse(serialize({
       ...row,
       nearestAlternatives: [],
@@ -615,8 +628,8 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/reject", async (re
       first(req.params["proposalId"]),
       actor.id,
     );
-    invalidateTenantCache();
     if (!row) throw new Error("Predlog po zavrnitvi ni najden.");
+    await markCreatorChange(tenantId);
     res.json(RejectCreatorProposalResponse.parse(serialize({
       ...row,
       nearestAlternatives: [],
@@ -643,8 +656,8 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/undo-rejection", a
     const row = await undoCreatorProposalRejection(
       tenantId, first(req.params["proposalId"]), actor.id,
     );
-    invalidateTenantCache();
     if (!row) throw new Error("Predlog po razveljavitvi ni najden.");
+    await markCreatorChange(tenantId);
     res.json(UndoCreatorProposalRejectionResponse.parse(serialize({
       ...row, nearestAlternatives: [],
     })));
@@ -667,7 +680,7 @@ router.post("/admin/tenants/:id/creator/proposals/reject-bulk", async (req, res)
       return;
     }
     const rows = await rejectCreatorProposalsBulk(tenantId, input.data.proposalIds, actor.id);
-    invalidateTenantCache();
+    await markCreatorChange(tenantId);
     res.json(RejectCreatorProposalsBulkResponse.parse(serialize(rows)));
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Predlogov ni mogoče zavrniti." });
@@ -683,6 +696,7 @@ router.post("/admin/tenants/:id/creator/proposals/retry-unresolved", async (req,
       return;
     }
     const result = await retryInfrastructureFailedCreatorProposals(tenantId, actor.id);
+    await markCreatorChange(tenantId);
     res.json(RetryCreatorProposalsResponse.parse(result));
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Ponovna razrešitev ni uspela." });
@@ -710,6 +724,7 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinate
       operatorAddress: input.data.operatorAddress,
     });
     if (!row) throw new Error("Predlog po potrditvi koordinat ni najden.");
+    await markCreatorChange(first(req.params["id"]));
     res.json(ConfirmCreatorProposalCoordinatesResponse.parse(serialize(row)));
   } catch (error) {
     req.log.warn(
@@ -744,6 +759,7 @@ router.post("/admin/tenants/:id/creator/photos/discover", async (req, res): Prom
   }
   try {
     const report = await discoverCreatorPhotos(tenantId);
+    await markCreatorChange(tenantId);
     res.json(DiscoverCreatorPhotosResponse.parse(report));
   } catch (error) {
     req.log.warn({ error, tenantId }, "Creator Wikimedia discovery failed");
@@ -776,7 +792,7 @@ router.post(
         proposalId: first(req.params["photoProposalId"]),
         actorId: actor.id,
       });
-      invalidateTenantCache();
+      await markCreatorChange(first(req.params["id"]));
       res.json(ApproveCreatorPhotoProposalResponse.parse(serialize(result)));
     } catch (error) {
       const status = error instanceof CreatorPhotoError
@@ -808,6 +824,7 @@ router.post(
         actorId: actor.id,
         reason: body.data.reason,
       });
+      await markCreatorChange(first(req.params["id"]));
       res.json(RejectCreatorPhotoProposalResponse.parse(serialize(row)));
     } catch (error) {
       res.status(error instanceof CreatorPhotoError ? 404 : 500)
@@ -820,8 +837,8 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
   const tenantId = first(req.params["id"]);
   try {
     const result = await reevaluateCreatorQueue(tenantId);
-    if (result.approvedBackfilled > 0) {
-      invalidateTenantCache();
+    if (result.changed > 0 || result.approvedBackfilled > 0) {
+      await markCreatorChange(tenantId);
     }
     if (result.failures.length > 0) {
       for (const failure of result.failures) {
@@ -871,7 +888,7 @@ router.post(
         proposalId,
         actor.id,
       );
-      invalidateTenantCache();
+      await markCreatorChange(tenantId);
       res.json(ApproveCreatorProposalResponse.parse(serialize({
         ...row,
         nearestAlternatives: [],
@@ -907,8 +924,8 @@ router.post(
       const row = await unapproveCreatorProposal(
         tenantId, first(req.params["proposalId"]), actor.id,
       );
-      invalidateTenantCache();
       if (!row) throw new Error("Predlog po razveljavitvi ni najden.");
+      await markCreatorChange(tenantId);
       res.json(UnapproveCreatorProposalResponse.parse(serialize({
         ...row, nearestAlternatives: [],
       })));
@@ -944,7 +961,7 @@ router.post(
         input.data.proposalIds,
         actor.id,
       );
-      invalidateTenantCache();
+      await markCreatorChange(tenantId);
       const rows = await listCreatorProposalQueue(tenantId);
       res.json(ApproveCreatorProposalsBulkResponse.parse(serialize(rows)));
     } catch (error) {

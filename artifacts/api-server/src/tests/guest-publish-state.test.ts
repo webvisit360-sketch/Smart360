@@ -10,11 +10,11 @@ import {
   tenantsTable,
 } from "@workspace/db";
 import {
-  hasGuestVisibleTenantChanges,
+  hasTenantAdminChanges,
 } from "../lib/guestPublishState";
 import { ensureGuestDirtyTriggers } from "../lib/guestDirtyTriggers";
 
-test("tenant settings distinguish guest-visible changes from internal settings", () => {
+test("every changed tenant admin setting is unpublished", () => {
   const before = {
     name: "Nastanitev",
     theme: "mediterran",
@@ -23,17 +23,21 @@ test("tenant settings distinguish guest-visible changes from internal settings",
     mediaQuotaBytes: 2_000_000_000,
     renewsAt: null,
   };
-  assert.equal(hasGuestVisibleTenantChanges(before, { name: "Novo ime" }), true);
-  assert.equal(hasGuestVisibleTenantChanges(before, { theme: "poteg" }), true);
-  assert.equal(hasGuestVisibleTenantChanges(before, {
+  assert.equal(hasTenantAdminChanges(before, { name: "Novo ime" }), true);
+  assert.equal(hasTenantAdminChanges(before, { theme: "poteg" }), true);
+  assert.equal(hasTenantAdminChanges(before, {
     orderNotifyEmail: false,
     notificationChannel: "whatsapp",
     mediaQuotaBytes: 3_000_000_000,
     renewsAt: "2027-01-01T00:00:00.000Z",
-  }), false);
-  assert.equal(hasGuestVisibleTenantChanges(before, {
+  }), true);
+  assert.equal(hasTenantAdminChanges(before, {
     name: "Nastanitev",
     theme: "mediterran",
+  }), false);
+  assert.equal(hasTenantAdminChanges(before, {
+    isPublished: true,
+    publishNow: true,
   }), false);
 });
 

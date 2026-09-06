@@ -722,6 +722,11 @@ router.post(
           .set({ deleteAfter: newDeleteAfter })
           .where(eq(messageThreadsTable.id, lockedThread.id));
 
+        await tx
+          .update(tenantsTable)
+          .set({ hasUnpublishedChanges: true })
+          .where(eq(tenantsTable.id, tenantId));
+
         return { thread: lockedThread };
       });
 

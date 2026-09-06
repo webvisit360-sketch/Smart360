@@ -17,6 +17,7 @@ import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
 import { actorStorage } from "../lib/actorContext";
+import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { db, hostInvitesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
@@ -191,6 +192,7 @@ router.put("/admin/tenants/:id/host", requireAdmin, async (req, res): Promise<vo
     res.status(result.status).json({ error: result.error });
     return;
   }
+  await markTenantAdminChangeDirty(tenantId);
   await logChange({
     tenantId,
     action: result.created ? "create" : "update",
@@ -218,6 +220,7 @@ router.post(
       res.status(issued.status).json({ error: issued.error });
       return;
     }
+    await markTenantAdminChangeDirty(tenantId);
 
     const setPasswordUrl =
       `${rpOrigin()}/portal/povabilo?token=${encodeURIComponent(issued.token)}`;
@@ -296,6 +299,7 @@ router.post(
       res.status(429).json({ error: "Omejitev: največ 3 zahteve na uro za ta račun." });
       return;
     }
+    await markTenantAdminChangeDirty(tenantId);
     const sent = await sendHostResetEmail(issued.email, issued.token);
     if (!sent.ok) {
       res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });

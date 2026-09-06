@@ -238,8 +238,8 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   }).from(tenantsTable).where(eq(tenantsTable.id, targetId));
   assert.equal(
     afterSourceOperations!.dirty,
-    false,
-    "Creator source/queue maintenance must not mark the guest guide dirty",
+    true,
+    "saved Creator source operations must mark the tenant dirty",
   );
 
   const [sameNamedOther] = await db

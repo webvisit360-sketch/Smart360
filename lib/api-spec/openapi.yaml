@@ -3683,7 +3683,7 @@ components:
         isPublished: { type: boolean }
         hasUnpublishedChanges:
           type: boolean
-          description: Server-owned flag indicating guest-visible changes since the last successful publish
+          description: Server-owned flag indicating saved tenant admin changes since the last successful publish
         lastPublishedAt:
           type: ["string", "null"]
           description: Timestamp of the most recent successful publish

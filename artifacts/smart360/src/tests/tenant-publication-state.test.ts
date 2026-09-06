@@ -4,7 +4,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { getGetTenantQueryKey } from "@workspace/api-client-react";
 import { markTenantDirtyInCache } from "../lib/tenant-publication-state";
 
-test("guest writes mark the cached tenant dirty after every publish cycle", () => {
+test("admin writes mark the cached tenant dirty after every publish cycle", () => {
   const queryClient = new QueryClient();
   const tenantId = "tenant-repeat-cycle";
   const queryKey = getGetTenantQueryKey(tenantId);

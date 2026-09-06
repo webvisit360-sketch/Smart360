@@ -10,6 +10,7 @@ import {
 import { requireAdmin } from "../lib/adminAuth";
 import { logChange } from "../lib/changelog";
 import { approveDistanceProposal, revertDistanceProposal, runDistanceComputation } from "../lib/distanceEngine";
+import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { invalidateTenantCache } from "./publicTenants";
 
 const router: IRouter = Router();
@@ -57,6 +58,11 @@ function auditLabel(value: string | null | undefined): string {
   return (value ?? "Vnos").replace(/\s+/g, " ").trim().slice(0, 120) || "Vnos";
 }
 
+async function markDistanceReviewChange(tenantId: string): Promise<void> {
+  await markTenantAdminChangeDirty(tenantId);
+  invalidateTenantCache();
+}
+
 async function changed(
   tenantId: string,
   detail: string,
@@ -64,7 +70,7 @@ async function changed(
 ) {
   const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId));
   if (!tenant) return;
-  invalidateTenantCache();
+  await markDistanceReviewChange(tenantId);
   await logChange({ tenantId, tenantName: tenant.name, action: "update", entity: "distance-review", detail, summary });
 }
 
