@@ -5,6 +5,12 @@ import {
   itemPriceText,
   normalizeGuestMedia,
 } from "../pages/living-guide/living-guide-formatters";
+import {
+  groupExploreItemsByDistance,
+  storedRoadDistanceMeters,
+  storedTravelDurationMinutes,
+} from "../pages/living-guide/living-guide-explore";
+import { LIVING_GUIDE_UI } from "../pages/guest/i18n";
 
 test("negotiable price is localized semantically", () => {
   const labels: Record<string, string> = {
@@ -89,4 +95,78 @@ test("draggable detail sheets use grabbers and backdrop close without arrows", a
     source.indexOf("function HeroGallery("),
   );
   assert.match(fullScreenSource, /className="lg2-detail-back"/);
+});
+
+test("explore items use stored range, deterministic fallbacks, and stable distance order", () => {
+  const category = { id: "category" };
+  const entry = (id: string, item: Record<string, unknown>) => ({
+    item: { id, ...item },
+    category,
+  });
+  const sections = groupExploreItemsByDistance([
+    entry("unclassified-a", {}),
+    entry("near-farther", { range: "near", distanceMeters: 8_000 }),
+    entry("excursion-duration", { duration: "21 min", distanceMeters: 21_000 }),
+    entry("near-duration-boundary", { duration: "20 min", distanceMeters: 4_000 }),
+    entry("excursion-distance-only", { distance: "20,5 km" }),
+    entry("near-distance-only", { distance: "2,5 km" }),
+    entry("unclassified-b", {}),
+    entry("excursion-stored-wins", {
+      range: "excursion",
+      travelDurationSeconds: 300,
+      distanceMeters: 1_000,
+    }),
+  ]);
+
+  assert.deepEqual(
+    sections.map((section) => ({
+      key: section.key,
+      ids: section.items.map((row) => row.item.id),
+    })),
+    [
+      {
+        key: "near",
+        ids: ["near-distance-only", "near-duration-boundary", "near-farther"],
+      },
+      {
+        key: "excursion",
+        ids: [
+          "excursion-stored-wins",
+          "excursion-distance-only",
+          "excursion-duration",
+        ],
+      },
+      {
+        key: "unclassified",
+        ids: ["unclassified-a", "unclassified-b"],
+      },
+    ],
+  );
+  assert.equal(storedRoadDistanceMeters({ distance: "2,5 km" }), 2_500);
+  assert.equal(storedTravelDurationMinutes({ duration: "1 h 5 min" }), 65);
+});
+
+test("explore omits empty distance sections", () => {
+  const sections = groupExploreItemsByDistance([
+    {
+      item: { id: "near", distanceMeters: 1_000 },
+      category: { id: "category" },
+    },
+  ]);
+  assert.deepEqual(sections.map((section) => section.key), ["near"]);
+});
+
+test("explore distance section headers have the approved four-language labels", () => {
+  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceGroup.near"], {
+    sl: "V bližini",
+    en: "Nearby",
+    de: "In der Nähe",
+    it: "Nelle vicinanze",
+  });
+  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceGroup.excursion"], {
+    sl: "Izleti",
+    en: "Day trips",
+    de: "Ausflüge",
+    it: "Gite",
+  });
 });

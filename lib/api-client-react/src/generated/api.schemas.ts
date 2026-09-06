@@ -2128,6 +2128,19 @@ export interface CategoryUpdate {
 }
 
 /**
+ * Existing active Creator range classification when present
+ * @nullable
+ */
+export type ItemRange = typeof ItemRange[keyof typeof ItemRange] | null;
+
+
+export const ItemRange = {
+  practical: 'practical',
+  near: 'near',
+  excursion: 'excursion',
+} as const;
+
+/**
  * Photo frame shape for the whole item gallery; null/wide = landscape default, tall = 4:5, square = 1:1
  * @nullable
  */
@@ -2173,6 +2186,17 @@ export interface Item {
      * @nullable
      */
   distanceMeters?: number | null;
+  /**
+     * Existing active Creator range classification when present
+     * @nullable
+     */
+  range?: ItemRange;
+  /**
+     * Existing active Creator OSRM travel duration when present
+     * @minimum 0
+     * @nullable
+     */
+  travelDurationSeconds?: number | null;
   open24: boolean;
   /**
      * JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight

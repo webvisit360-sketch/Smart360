@@ -126,6 +126,8 @@ export const getPublicTenantResponseOneLivingGuideNavMax = 5;
 
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
+
 
 
 
@@ -242,6 +244,8 @@ export const GetPublicTenantResponse = zod.object({
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
   "distanceMeters": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin).nullish(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
+  "travelDurationSeconds": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -2097,6 +2101,8 @@ export const getTenantResponseOneLivingGuideNavMax = 5;
 
 export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
+export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
+
 
 
 
@@ -2213,6 +2219,8 @@ export const GetTenantResponse = zod.object({
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
   "distanceMeters": zod.number().min(getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin).nullish(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
+  "travelDurationSeconds": zod.number().min(getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -3189,6 +3197,8 @@ export const CreateItemBody = zod.object({
 
 export const createItemResponseDistanceMetersMin = 0;
 
+export const createItemResponseTravelDurationSecondsMin = 0;
+
 
 
 
@@ -3208,6 +3218,8 @@ export const CreateItemResponse = zod.object({
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
   "distanceMeters": zod.number().min(createItemResponseDistanceMetersMin).nullish(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
+  "travelDurationSeconds": zod.number().min(createItemResponseTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -3318,6 +3330,8 @@ export const CreateAdminPlaceBody = zod.union([zod.object({
 
 export const createAdminPlaceResponseDistanceMetersMin = 0;
 
+export const createAdminPlaceResponseTravelDurationSecondsMin = 0;
+
 
 
 
@@ -3337,6 +3351,8 @@ export const CreateAdminPlaceResponse = zod.object({
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
   "distanceMeters": zod.number().min(createAdminPlaceResponseDistanceMetersMin).nullish(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
+  "travelDurationSeconds": zod.number().min(createAdminPlaceResponseTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -3420,6 +3436,8 @@ export const UpdateItemBody = zod.object({
 
 export const updateItemResponseDistanceMetersMin = 0;
 
+export const updateItemResponseTravelDurationSecondsMin = 0;
+
 
 
 
@@ -3439,6 +3457,8 @@ export const UpdateItemResponse = zod.object({
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
   "distanceMeters": zod.number().min(updateItemResponseDistanceMetersMin).nullish(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
+  "travelDurationSeconds": zod.number().min(updateItemResponseTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -3635,6 +3655,8 @@ export const DuplicateItemParams = zod.object({
 
 export const duplicateItemResponseDistanceMetersMin = 0;
 
+export const duplicateItemResponseTravelDurationSecondsMin = 0;
+
 
 
 
@@ -3654,6 +3676,8 @@ export const DuplicateItemResponse = zod.object({
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
   "distanceMeters": zod.number().min(duplicateItemResponseDistanceMetersMin).nullish(),
+  "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
+  "travelDurationSeconds": zod.number().min(duplicateItemResponseTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),

@@ -1987,6 +1987,20 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 .lg2-explore-list {
   padding: 0 0 calc(94px + env(safe-area-inset-bottom));
 }
+.lg2-distance-section {
+  display: contents;
+}
+.lg2-distance-section-heading {
+  margin: 5px 20px 10px;
+  color: var(--tx2);
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: .02em;
+  line-height: 1.3;
+}
+.lg2-distance-section + .lg2-distance-section .lg2-distance-section-heading {
+  margin-top: 13px;
+}
 .lg2-pcard {
   width: calc(100% - 32px);
   margin: 0 16px 14px;

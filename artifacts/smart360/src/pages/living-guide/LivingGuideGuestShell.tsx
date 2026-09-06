@@ -82,6 +82,7 @@ import { SiteMapGuestView } from "./SiteMapGuestView";
 import { MoreGuestView } from "./MoreGuestView";
 import {
   exploreItemDescription,
+  groupExploreItemsByDistance,
   populatedExploreGroups,
   suppressesGuestDescription,
 } from "./living-guide-explore";
@@ -2637,6 +2638,10 @@ function ExploreView({
     [categories],
   );
   const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
+  const distanceSections = useMemo(
+    () => groupExploreItemsByDistance(selectedGroup?.items ?? []),
+    [selectedGroup],
+  );
 
   const openPlace = (categoryId: string, itemId: string) => {
     navigator.vibrate?.(6);
@@ -2671,35 +2676,42 @@ function ExploreView({
         data-lg-scroll
         ref={listRef}
       >
-        {selectedGroup?.items.map(({ item, category }: any) => {
-          const distance = itemDistanceText(item);
-          const status = itemOpenStatus(item, t);
-          return (
-            <PCard
-              key={item.id}
-              ariaLabel={item.title || category.label}
-              onOpen={() => openPlace(category.id, item.id)}
-              media={normalizeGuestMedia(item.media)[0]}
-              categoryIcon={categoryIcon(category)}
-              meta={
-                <>
-                  {distance && <span className="lg2-pcard-distance">{distance}</span>}
-                  {distance && <i aria-hidden="true" />}
-                  {status ? (
-                    <span className={`lg2-pcard-status${status.isOpen ? " is-open" : ""}`}>
-                      {status.text}
-                    </span>
-                  ) : (
-                    <span className="lg2-pcard-category">{category.label}</span>
-                  )}
-                </>
-              }
-              title={item.title || category.label}
-              description={exploreItemDescription(item, category)}
-              adminNote={adminCategoryNote(category)}
-            />
-          );
-        })}
+        {distanceSections.map((section) => (
+          <section className="lg2-distance-section" key={section.key}>
+            {section.labelKey && (
+              <h2 className="lg2-distance-section-heading">{t(section.labelKey)}</h2>
+            )}
+            {section.items.map(({ item, category }: any) => {
+              const distance = itemDistanceText(item);
+              const status = itemOpenStatus(item, t);
+              return (
+                <PCard
+                  key={item.id}
+                  ariaLabel={item.title || category.label}
+                  onOpen={() => openPlace(category.id, item.id)}
+                  media={normalizeGuestMedia(item.media)[0]}
+                  categoryIcon={categoryIcon(category)}
+                  meta={
+                    <>
+                      {distance && <span className="lg2-pcard-distance">{distance}</span>}
+                      {distance && <i aria-hidden="true" />}
+                      {status ? (
+                        <span className={`lg2-pcard-status${status.isOpen ? " is-open" : ""}`}>
+                          {status.text}
+                        </span>
+                      ) : (
+                        <span className="lg2-pcard-category">{category.label}</span>
+                      )}
+                    </>
+                  }
+                  title={item.title || category.label}
+                  description={exploreItemDescription(item, category)}
+                  adminNote={adminCategoryNote(category)}
+                />
+              );
+            })}
+          </section>
+        ))}
         {selectedGroup?.categories
           .filter((category: any) => visible(category.items).length === 0)
           .map((category: any) => (

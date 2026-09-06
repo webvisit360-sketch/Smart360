@@ -136,6 +136,7 @@ export * from './itemCreatorStatusRange';
 export * from './itemFrame';
 export * from './itemInput';
 export * from './itemInputFrame';
+export * from './itemRange';
 export * from './itemTranslationDraftInput';
 export * from './itemTranslationDraftResult';
 export * from './itemTranslationDraftSuggestion';

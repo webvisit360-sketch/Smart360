@@ -190,6 +190,18 @@ export const LIVING_GUIDE_UI = {
     de: "In der Nähe",
     it: "Più vicini",
   },
+  "UI.lg.distanceGroup.near": {
+    sl: "V bližini",
+    en: "Nearby",
+    de: "In der Nähe",
+    it: "Nelle vicinanze",
+  },
+  "UI.lg.distanceGroup.excursion": {
+    sl: "Izleti",
+    en: "Day trips",
+    de: "Ausflüge",
+    it: "Gite",
+  },
   "UI.lg.exploreGroup.experiences": {
     sl: "Doživetja",
     en: "Experiences",

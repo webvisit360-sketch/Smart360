@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import {
   db,
   tenantsTable,
@@ -7,6 +7,7 @@ import {
   itemsTable,
   itemCategoryAttachmentsTable,
   itemDistanceProposalsTable,
+  creatorPlaceMaterializationsTable,
   mediaTable,
   translationsTable,
   type Tenant,
@@ -58,6 +59,8 @@ export type ItemWithMedia = Item & {
   latitude: number | null;
   longitude: number | null;
   resolvedAddress: string | null;
+  range: string | null;
+  travelDurationSeconds: number | null;
 };
 export type CategoryContent = Category & { items: ItemWithMedia[] };
 export type SectionContent = Section & { categories: CategoryContent[] };
@@ -295,9 +298,35 @@ export async function buildTenantContent(
           ),
         )
     : [];
+  const activeMaterializations = itemIds.length
+    ? await db
+        .select({
+          itemId: creatorPlaceMaterializationsTable.itemId,
+          range: creatorPlaceMaterializationsTable.range,
+          travelDurationSeconds:
+            creatorPlaceMaterializationsTable.travelDurationS,
+        })
+        .from(creatorPlaceMaterializationsTable)
+        .where(
+          and(
+            inArray(creatorPlaceMaterializationsTable.itemId, itemIds),
+            eq(creatorPlaceMaterializationsTable.isActive, true),
+          ),
+        )
+        .orderBy(desc(creatorPlaceMaterializationsTable.updatedAt))
+    : [];
   const coordsByItem = new Map(
     approvedCoords.map((p) => [p.itemId, p] as const),
   );
+  const materializationByItem = new Map<
+    string,
+    (typeof activeMaterializations)[number]
+  >();
+  for (const materialization of activeMaterializations) {
+    if (!materializationByItem.has(materialization.itemId)) {
+      materializationByItem.set(materialization.itemId, materialization);
+    }
+  }
 
   const mediaByItem = new Map<string, Array<Omit<MediaRow, "provenanceJson" | "provenanceProvider" | "provenanceFile">>>();
   for (const m of media) {
@@ -317,6 +346,7 @@ export async function buildTenantContent(
     const arr = itemsByCategory.get(categoryId) ?? [];
     if (arr.some((row) => row.id === i.id)) return;
     const coords = coordsByItem.get(i.id);
+    const materialization = materializationByItem.get(i.id);
     arr.push({
       ...i,
       // Existing consumers understand categoryId. An attached projection
@@ -326,6 +356,9 @@ export async function buildTenantContent(
       latitude: coords?.latitude ?? null,
       longitude: coords?.longitude ?? null,
       resolvedAddress: coords?.resolvedAddress?.trim() || null,
+      range: materialization?.range ?? null,
+      travelDurationSeconds:
+        materialization?.travelDurationSeconds ?? null,
     });
     itemsByCategory.set(categoryId, arr);
   };
