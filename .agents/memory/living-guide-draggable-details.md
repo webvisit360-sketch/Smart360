@@ -9,6 +9,12 @@ Living Guide detail text stays fixed on one continuous sheet; the entire sheet m
 
 **How to apply:** Keep the motion controller shared across every detail template. Preserve intermediate positions, allow only short momentum, close below the initial position, and keep the Order dock fixed to the viewport.
 
+Draggable detail sheets intentionally have no back/close arrow. They must show one horizontal grabber and remain closable by both downward drag and a stationary tap on the exposed backdrop/hero. Non-draggable full-screen views keep their back button.
+
+**Why:** The owner considers an arrow redundant once the physical sheet model supplies clear drag and backdrop affordances, but no view may be left without a return path.
+
+**How to apply:** Remove arrows only inside the shared draggable `DetailView` boundary. Preserve independent back controls on full-screen Explore, Messages, and any future non-draggable presentation.
+
 Custom horizontal gallery dragging must disable native image drag and suspend mandatory scroll snap from pointer-down until release.
 
 **Why:** Chromium consumed mouse movement as an image drag and snap immediately restored slide one, even though the pointer handler and scroll container were otherwise correct.

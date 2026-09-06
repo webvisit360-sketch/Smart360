@@ -58,3 +58,35 @@ test("Living Guide rich titles are sanitized before HTML rendering", async () =>
   assert.match(gallerySource, /media = normalizeGuestMedia\(media\)/);
   assert.match(gallerySource, /setDot\(0\)/);
 });
+
+test("draggable detail sheets use grabbers and backdrop close without arrows", async () => {
+  const source = await readFile(
+    new URL("../pages/living-guide/LivingGuideGuestShell.tsx", import.meta.url),
+    "utf8",
+  );
+  const draggableDetailSource = source.slice(
+    source.indexOf("function HeroGallery("),
+    source.indexOf("function BottomNav("),
+  );
+  const articleCount = (
+    draggableDetailSource.match(/<article className=/g) ?? []
+  ).length;
+  const grabberCount = (
+    draggableDetailSource.match(/className="lg2-grabber"/g) ?? []
+  ).length;
+
+  assert.doesNotMatch(draggableDetailSource, /className="lg2-detail-back"/);
+  assert.equal(articleCount, grabberCount);
+  assert.ok(articleCount > 0);
+  assert.match(
+    draggableDetailSource,
+    /!target\.closest\("\.lg2-detail-sheet,\.lg2-order-dock,a,button,input,textarea,select"\)/,
+  );
+  assert.match(draggableDetailSource, /suppressGalleryClickRef/);
+
+  const fullScreenSource = source.slice(
+    source.indexOf("function ExploreView("),
+    source.indexOf("function HeroGallery("),
+  );
+  assert.match(fullScreenSource, /className="lg2-detail-back"/);
+});

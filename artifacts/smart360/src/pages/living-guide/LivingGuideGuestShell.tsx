@@ -2911,6 +2911,7 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
 function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
   const galleryTrackRef = useRef<HTMLDivElement>(null);
   const settleTimeoutRef = useRef<number | null>(null);
+  const suppressGalleryClickRef = useRef(false);
   const galleryDragRef = useRef<{
     pointerId: number;
     startX: number;
@@ -3026,6 +3027,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         startScrollLeft: event.currentTarget.scrollLeft,
         axis: null,
       };
+      suppressGalleryClickRef.current = false;
       event.currentTarget.dataset.lgGalleryDragging = "true";
       event.currentTarget.setPointerCapture(event.pointerId);
       event.preventDefault();
@@ -3045,6 +3047,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         event.currentTarget.dataset.lgGalleryAxis = drag.axis;
       }
       if (drag.axis !== "horizontal") return;
+      suppressGalleryClickRef.current = true;
       event.currentTarget.scrollLeft = drag.startScrollLeft - dx;
       event.preventDefault();
     },
@@ -3100,9 +3103,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   }, [activeIndex, frameWidth, isUniformGallery, mediaKey]);
 
   if (!media?.length) return (
-    <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero>
-      <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk"/></svg></button>
-    </div>
+    <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero />
   );
   if (isSingleHero) {
     const entry = media[0];
@@ -3137,7 +3138,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
               <a href={entry.attributionSourceUrl} target="_blank" rel="noreferrer">Wikimedia Commons</a>
             </p>
           )}
-        <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
       </div>
     );
   }
@@ -3167,6 +3167,12 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         onPointerUp={finishGalleryDrag}
         onPointerCancel={finishGalleryDrag}
         onDragStart={(event) => event.preventDefault()}
+        onClick={(event) => {
+          if (!suppressGalleryClickRef.current) return;
+          suppressGalleryClickRef.current = false;
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       >
         {media.map((entry: any, index: number) => {
           const entryKey = String(entry.id ?? entry.url ?? index);
@@ -3200,7 +3206,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
             <a href={media[activeIndex].attributionSourceUrl} target="_blank" rel="noreferrer">Wikimedia Commons</a>
           </p>
         )}
-      <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}><svg aria-hidden="true"><use href="#lg-i-bk" /></svg></button>
     </div>
   );
 }
@@ -3482,6 +3487,15 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
     <section
       ref={detailViewRef}
       className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" ? " has-order-dock" : ""}`}
+      onClick={(event) => {
+        const target = event.target;
+        if (
+          target instanceof Element &&
+          !target.closest(".lg2-detail-sheet,.lg2-order-dock,a,button,input,textarea,select")
+        ) {
+          onBack();
+        }
+      }}
     >
       {content}
       {activeItem?.orderEnabled && layout !== "tabs" && (
@@ -3632,11 +3646,7 @@ function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick, fullH
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
-        {fullHeight ? (
-          <button className="lg2-detail-back" type="button" onClick={onBack} aria-label={t("UI.lg.action.back")}>
-            <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-          </button>
-        ) : (
+        {!fullHeight && (
           <HeroGallery media={media} onBack={onBack} singleOnly={true} t={t} />
         )}
         <article className={`lg2-detail-sheet${fullHeight ? " lg2-detail-sheet--full-height" : ""}`}>

@@ -1139,16 +1139,6 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
     color-mix(in srgb, var(--ambbg) 78%, transparent);
 }
 
-.lg2-detail-sheet-root[data-lg-sheet-starts-at-top] .lg2-detail-hero--ambient {
-  z-index: 3;
-  background: transparent;
-  pointer-events: none;
-}
-
-.lg2-detail-sheet-root[data-lg-sheet-starts-at-top] .lg2-detail-hero--ambient .lg2-detail-back {
-  pointer-events: auto;
-}
-
 .lg2-gallery-track {
   position: absolute;
   inset: 0;
