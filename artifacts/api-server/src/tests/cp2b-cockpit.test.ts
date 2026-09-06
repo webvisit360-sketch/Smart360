@@ -92,6 +92,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
 
   let tenantId = "";
   let hostUserId = "";
+  let contentCategoryId = "";
 
   t.after(async () => {
     _setLifecycleDeliveryOverride(null);
@@ -146,6 +147,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
 
     const cats = await db
       .select({
+        id: categoriesTable.id,
         sectionId: categoriesTable.sectionId,
         key: categoriesTable.key,
         group: categoriesTable.exploreGroup,
@@ -158,6 +160,10 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.ok(cats.every((c) => c.group && c.group.length > 0), "every category carries a group");
     const gate = cats.find((c) => c.key === "gate");
     assert.ok(gate, "the owner-approved Meli Pu skeleton must be seeded for every tenant type");
+    const staySection = sections.find((section) => section.key === "stay");
+    const stayCategory = cats.find((category) => category.sectionId === staySection?.id);
+    assert.ok(stayCategory, "a seeded Nastanitev category is required for dirty-state coverage");
+    contentCategoryId = stayCategory!.id;
 
     const [logRow] = await db
       .select({ detail: changelogTable.detail, summary: changelogTable.summary, actorType: changelogTable.actorType })
@@ -197,10 +203,19 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.ok(!settingsLog!.summary.includes(settingsEmail), "an e-mail value must never enter history");
     assert.ok(!settingsLog!.summary.includes(orderPassword), "a password must never enter history");
 
-    const publish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { isPublished: true });
+    const publish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, {
+      isPublished: true,
+      publishNow: true,
+    });
     assert.equal(publish.status, 200);
-    const published = (await publish.json()) as { firstPublishedAt: string | null };
+    const published = (await publish.json()) as {
+      firstPublishedAt: string | null;
+      lastPublishedAt: string | null;
+      hasUnpublishedChanges: boolean;
+    };
     assert.ok(published.firstPublishedAt, "first publish must stamp firstPublishedAt");
+    assert.ok(published.lastPublishedAt, "publish must stamp lastPublishedAt");
+    assert.equal(published.hasUnpublishedChanges, false, "publish must clear the dirty flag");
     assert.equal(sentMails.length, 1, "exactly one published e-mail after the first publish");
     const to = (sentMails[0] as { to?: string[] }).to;
     assert.deepEqual(to, [`cp2b-lastnik-${stamp}@example.com`]);
@@ -211,7 +226,10 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     // Republish cycle: no new stamp, no new mail.
     const unpublish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { isPublished: false });
     assert.equal(unpublish.status, 200);
-    const republish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { isPublished: true });
+    const republish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, {
+      isPublished: true,
+      publishNow: true,
+    });
     assert.equal(republish.status, 200);
     const again = (await republish.json()) as { firstPublishedAt: string | null };
     assert.equal(again.firstPublishedAt, published.firstPublishedAt, "stamp must never change");
@@ -238,6 +256,114 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       .from(tenantsTable)
       .where(eq(tenantsTable.id, tenantId));
     assert.equal(row!.slug, newSlug, "the pre-publish rename sticks; the frozen one does not");
+  });
+
+  await t.test("guest content stays dirty across reload; publish clears it; internal action stays clean", async () => {
+    const settingsAutosave = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      {
+        subtitle: `Samodejno shranjen opis ${stamp}`,
+        isPublished: true,
+      },
+    );
+    assert.equal(settingsAutosave.status, 200);
+    const autosaved = (await settingsAutosave.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      autosaved.hasUnpublishedChanges,
+      true,
+      "an auto-save that repeats isPublished=true must not masquerade as publish",
+    );
+    const cleanAfterAutosave = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { isPublished: true, publishNow: true },
+    );
+    assert.equal(cleanAfterAutosave.status, 200);
+
+    const createdResponse = await jreq(
+      base,
+      "POST",
+      `/admin/categories/${contentCategoryId}/items`,
+      ownerCookie,
+      { title: "Nastanitev testni vnos", body: "<p>Prvotni opis.</p>" },
+    );
+    assert.equal(createdResponse.status, 201);
+    const created = (await createdResponse.json()) as { id: string };
+
+    const editedResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/items/${created.id}`,
+      ownerCookie,
+      { title: "Nastanitev spremenjeni vnos" },
+    );
+    assert.equal(editedResponse.status, 200);
+
+    const reloadedResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    assert.equal(reloadedResponse.status, 200);
+    const reloaded = (await reloadedResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+      lastPublishedAt: string | null;
+    };
+    assert.equal(
+      reloaded.hasUnpublishedChanges,
+      true,
+      "item edit must remain dirty in a fresh server response",
+    );
+    const priorPublish = reloaded.lastPublishedAt;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    const publishResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { isPublished: true, publishNow: true },
+    );
+    assert.equal(publishResponse.status, 200);
+    const published = (await publishResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+      lastPublishedAt: string | null;
+    };
+    assert.equal(published.hasUnpublishedChanges, false);
+    assert.ok(published.lastPublishedAt);
+    assert.notEqual(published.lastPublishedAt, priorPublish);
+
+    const internalResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { mediaQuotaBytes: 2_500_000_000 },
+    );
+    assert.equal(internalResponse.status, 200);
+
+    const afterInternalResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    const afterInternal = (await afterInternalResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      afterInternal.hasUnpublishedChanges,
+      false,
+      "internal-only actions must not mark guest content dirty",
+    );
   });
 
   // ---------- Overview ----------

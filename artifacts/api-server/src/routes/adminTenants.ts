@@ -56,6 +56,7 @@ import {
   isWhatsappConfigured,
   normalizeWhatsappPhonePatch,
 } from "../lib/whatsapp";
+import { hasGuestVisibleTenantChanges } from "../lib/guestPublishState";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -525,20 +526,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     return;
   }
   const [before] = await db
-    .select({
-      slug: tenantsTable.slug,
-      renewsAt: tenantsTable.renewsAt,
-      latitude: tenantsTable.latitude,
-      longitude: tenantsTable.longitude,
-      creatorDraft: tenantsTable.creatorDraft,
-      creatorOriginRegion: tenantsTable.creatorOriginRegion,
-      firstPublishedAt: tenantsTable.firstPublishedAt,
-      isPublished: tenantsTable.isPublished,
-      name: tenantsTable.name,
-      notificationChannel: tenantsTable.notificationChannel,
-      notificationWhatsappPhone: tenantsTable.notificationWhatsappPhone,
-      email: tenantsTable.email,
-    })
+    .select()
     .from(tenantsTable)
     .where(eq(tenantsTable.id, id));
   if (!before) {
@@ -636,6 +624,8 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     tourUrl: tourUrlRaw,
     livingGuideNav: livingGuideNavRaw,
     mapUrl: mapUrlRaw,
+    publishNow: publishNowRaw,
+    coordinateOverride: _coordinateOverride,
     latitude: _latitude,
     longitude: _longitude,
     ...restData
@@ -711,58 +701,97 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       (next?.getTime() ?? null) !== (before.renewsAt?.getTime() ?? null);
   }
   const wantsPublish = updateData["isPublished"] === true;
-  const slugChanging = typeof newSlug === "string" && newSlug !== before.slug;
-  // When the slug changes, the update itself re-checks the freeze (first
-  // publish may have landed between our read above and this write) — the
-  // WHERE clause makes "rename only while never published" atomic.
-  const [updated] = await db
-    .update(tenantsTable)
-    .set(updateData)
-    .where(
-      slugChanging
-        ? and(eq(tenantsTable.id, id), isNull(tenantsTable.firstPublishedAt))
-        : eq(tenantsTable.id, id),
-    )
-    .returning();
+  // The tenant row is the serialization point between guest-content dirty
+  // markers and publish. If publish owns the lock first, a concurrent marker
+  // waits and leaves the row dirty afterwards. If the marker owns it first,
+  // publish sees that completed change and clears it.
+  const writeResult = await db.transaction(async (tx) => {
+    const [lockedBefore] = await tx
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, id))
+      .for("update");
+    if (!lockedBefore) {
+      return {
+        updated: null,
+        beforeAtWrite: null,
+        firstPublish: false,
+        slugFrozen: false,
+      };
+    }
+    const writeData = { ...updateData };
+    const firstPublish =
+      wantsPublish && lockedBefore.firstPublishedAt === null;
+    const successfulPublish =
+      wantsPublish &&
+      (
+        publishNowRaw === true ||
+        lockedBefore.isPublished === false ||
+        firstPublish
+      );
+    const unpublishing =
+      writeData["isPublished"] === false && lockedBefore.isPublished === true;
+    const publishTime = successfulPublish ? new Date() : null;
+    if (successfulPublish) {
+      writeData["hasUnpublishedChanges"] = false;
+      writeData["lastPublishedAt"] = publishTime;
+    } else if (
+      unpublishing ||
+      hasGuestVisibleTenantChanges(
+        lockedBefore as unknown as Record<string, unknown>,
+        writeData,
+      )
+    ) {
+      writeData["hasUnpublishedChanges"] = true;
+    }
+    if (firstPublish) {
+      writeData["firstPublishedAt"] = publishTime ?? new Date();
+    }
+    const slugChanging =
+      typeof newSlug === "string" && newSlug !== lockedBefore.slug;
+    if (slugChanging && lockedBefore.firstPublishedAt !== null) {
+      return {
+        updated: null,
+        beforeAtWrite: lockedBefore,
+        firstPublish: false,
+        slugFrozen: true,
+      };
+    }
+    const [updated] = await tx
+      .update(tenantsTable)
+      .set(writeData)
+      .where(eq(tenantsTable.id, id))
+      .returning();
+    return {
+      updated: updated ?? null,
+      beforeAtWrite: lockedBefore,
+      firstPublish,
+      slugFrozen: false,
+    };
+  });
+  const {
+    updated,
+    beforeAtWrite,
+    firstPublish,
+    slugFrozen,
+  } = writeResult;
   if (!updated) {
-    if (slugChanging) {
-      const [still] = await db
-        .select({ id: tenantsTable.id })
-        .from(tenantsTable)
-        .where(eq(tenantsTable.id, id));
-      if (still) {
-        res.status(409).json({
-          error:
-            "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne.",
-        });
-        return;
-      }
+    if (slugFrozen) {
+      res.status(409).json({
+        error:
+          "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne.",
+      });
+      return;
     }
     res.status(404).json({ error: "Not found" });
     return;
   }
   let tenant = updated;
-  // FIRST transition to published: compare-and-set stamps first_published_at
-  // exactly once — with two concurrent publishes only one wins, logs
-  // "publish" and sends the e-mail; the stamp is never overwritten and
-  // unpublish/republish toggles never resend.
-  let firstPublish = false;
-  if (wantsPublish && tenant.firstPublishedAt === null) {
-    const [won] = await db
-      .update(tenantsTable)
-      .set({ firstPublishedAt: new Date() })
-      .where(and(eq(tenantsTable.id, id), isNull(tenantsTable.firstPublishedAt)))
-      .returning({ firstPublishedAt: tenantsTable.firstPublishedAt });
-    if (won) {
-      firstPublish = true;
-      tenant = { ...tenant, firstPublishedAt: won.firstPublishedAt };
-    }
-  }
-  if (typeof newSlug === "string" && newSlug !== before.slug) {
+  if (typeof newSlug === "string" && newSlug !== beforeAtWrite!.slug) {
     // Keep the old address working forever: permanent alias -> 301.
     await db
       .insert(tenantAliasesTable)
-      .values({ slug: before.slug, tenantId: id })
+      .values({ slug: beforeAtWrite!.slug, tenantId: id })
       .onConflictDoNothing();
     // If the tenant reclaimed one of its own old slugs, drop that alias.
     await db
@@ -770,23 +799,26 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       .where(eq(tenantAliasesTable.slug, newSlug));
   }
   invalidateTenantCache();
+  renewsAtChanged =
+    (tenant.renewsAt?.getTime() ?? null) !==
+    (beforeAtWrite!.renewsAt?.getTime() ?? null);
   if (renewsAtChanged) {
     // A manually moved renewal date is part of the same proof trail as the
     // renew button — record it (late payer, free months, corrections).
     const admin = await getAdminUser();
     await db.insert(tenantRenewalsTable).values({
       tenantId: tenant.id,
-      prevDate: before.renewsAt,
+      prevDate: beforeAtWrite!.renewsAt,
       newDate: tenant.renewsAt ?? new Date(0),
       actor: admin?.email ?? null,
     });
   }
   const publicationTransition =
     typeof requestData["isPublished"] === "boolean" &&
-    before.isPublished !== tenant.isPublished;
+    beforeAtWrite!.isPublished !== tenant.isPublished;
   const action = firstPublish
     ? "publish"
-    : publicationTransition && tenant.isPublished && before.firstPublishedAt !== null
+    : publicationTransition && tenant.isPublished && beforeAtWrite!.firstPublishedAt !== null
       ? "republish"
       : publicationTransition && !tenant.isPublished
         ? "unpublish"

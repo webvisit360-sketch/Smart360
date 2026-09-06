@@ -544,6 +544,14 @@ router.post("/admin/categories/:id/places", async (req, res): Promise<void> => {
       .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id))
       .limit(1);
     if (!item) throw new Error("Ustvarjenega vnosa ni mogoče prebrati.");
+    const ctx = await tenantContextForItem(item.item.id);
+    await logChange({
+      ...ctx,
+      action: "create",
+      entity: "item",
+      detail: item.item.title ?? undefined,
+      summary: auditSummary("Ustvarjen vnos", item.item.title),
+    });
     invalidateTenantCache();
     res.status(201).json(CreateAdminPlaceResponse.parse(await itemWithMedia(item.item)));
   } catch (error) {
@@ -616,6 +624,20 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     .select()
     .from(itemsTable)
     .where(eq(itemsTable.id, id));
+  if (prevItem && parsed.data.categoryId && parsed.data.categoryId !== prevItem.categoryId) {
+    const [sourceContext, targetContext] = await Promise.all([
+      tenantContextForCategory(prevItem.categoryId),
+      tenantContextForCategory(parsed.data.categoryId),
+    ]);
+    if (!targetContext) {
+      res.status(400).json({ error: "Target category not found" });
+      return;
+    }
+    if (!sourceContext || sourceContext.tenantId !== targetContext.tenantId) {
+      res.status(400).json({ error: "Items cannot be moved between tenants" });
+      return;
+    }
+  }
   const item = await db.transaction(async (tx) => {
     // A Creator materialization owns its road distance. Lock both the item and
     // its active projection before accepting an editorial PATCH so a stale
@@ -721,8 +743,16 @@ router.get("/admin/items/:id/creator-status", async (req, res): Promise<void> =>
 });
 
 router.post("/admin/items/:id/distance/recompute", async (req, res): Promise<void> => {
+  const itemId = firstParam(req.params["id"]);
+  const ctx = await tenantContextForItem(itemId);
   try {
-    const result = await recomputeItemDistance(firstParam(req.params["id"]));
+    const result = await recomputeItemDistance(itemId);
+    await logChange({
+      ...ctx,
+      action: "update",
+      entity: "item",
+      summary: "Ponovno izračunana razdalja vnosa",
+    });
     invalidateTenantCache();
     res.json(RecomputeItemDistanceResponse.parse(result));
   } catch (error) {
@@ -1292,6 +1322,7 @@ router.delete("/admin/categories/:id/purge", async (req, res): Promise<void> => 
 
 router.delete("/admin/items/:id/purge", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
+  const ctx = await tenantContextForItem(id);
   const [item] = await db
     .delete(itemsTable)
     .where(and(eq(itemsTable.id, id), sql`${itemsTable.deletedAt} IS NOT NULL`))
@@ -1300,7 +1331,6 @@ router.delete("/admin/items/:id/purge", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  const ctx = await tenantContextForItem(item.id);
   await logChange({ ...ctx, action: "purge", entity: "item", detail: item.title ?? undefined, summary: auditSummary("Trajno odstranjen vnos", item.title) });
   res.sendStatus(204);
 });

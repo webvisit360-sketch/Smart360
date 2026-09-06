@@ -820,7 +820,9 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
   const tenantId = first(req.params["id"]);
   try {
     const result = await reevaluateCreatorQueue(tenantId);
-    if (result.approvedBackfilled > 0) invalidateTenantCache();
+    if (result.approvedBackfilled > 0) {
+      invalidateTenantCache();
+    }
     if (result.failures.length > 0) {
       for (const failure of result.failures) {
         try {

@@ -197,6 +197,9 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   const approvedSource = preConfirmationSources.find((source) => source.status === "approved")!;
   const revokedSource = preConfirmationSources.find((source) => source.status === "revoked")!;
   const proposedSource = preConfirmationSources.find((source) => source.status === "proposed")!;
+  await db.update(tenantsTable)
+    .set({ hasUnpublishedChanges: false })
+    .where(eq(tenantsTable.id, targetId));
   const revokeResponse = await jreq(
     base,
     "POST",
@@ -230,6 +233,14 @@ test("Creator confirms origin onto the cockpit tenant and never inserts by name"
   );
   assert.equal(deleteResponse.status, 200);
   assert.deepEqual(await deleteResponse.json(), { deleted: true });
+  const [afterSourceOperations] = await db.select({
+    dirty: tenantsTable.hasUnpublishedChanges,
+  }).from(tenantsTable).where(eq(tenantsTable.id, targetId));
+  assert.equal(
+    afterSourceOperations!.dirty,
+    false,
+    "Creator source/queue maintenance must not mark the guest guide dirty",
+  );
 
   const [sameNamedOther] = await db
     .select()

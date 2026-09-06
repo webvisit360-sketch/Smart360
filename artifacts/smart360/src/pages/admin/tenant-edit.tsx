@@ -64,6 +64,16 @@ function contrastRatio(hexA: string, lumB: number): number | null {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+function formatPublishTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("sl-SI", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 type ThemeKey = keyof typeof THEME_DEFAULTS;
 
 export default function AdminTenantEdit() {
@@ -194,6 +204,7 @@ export default function AdminTenantEdit() {
   const [mediaQuotaGb, setMediaQuotaGb] = useState("2");
   const [orderPasswordDraft, setOrderPasswordDraft] = useState("");
   const [orderPasswordConfigured, setOrderPasswordConfigured] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   // Renewal ("Obnova"): a real editable date, edited directly (not via
   // formData — saving it immediately keeps the history trail on the server).
@@ -246,10 +257,11 @@ export default function AdminTenantEdit() {
     let timer: ReturnType<typeof setTimeout> | null = null;
     return queryClient.getMutationCache().subscribe((event: any) => {
       if (event?.type !== "updated" || event?.action?.type !== "success") return;
+      void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => setPreviewKey((key) => key + 1), 40);
     });
-  }, [queryClient]);
+  }, [id, queryClient]);
 
   useEffect(() => {
     setPreviewScreen(["content", "distances", "guide"].includes(activeTab) ? "category" : "home");
@@ -447,6 +459,11 @@ export default function AdminTenantEdit() {
       ? `/${tenant.slug}/c/${encodeURIComponent(firstPreviewCategoryId)}`
       : `/${tenant.slug}`;
   const previewUrl = `${previewBase}${previewPath}?preview=1${showStructure ? "&fullStructure=1" : ""}`;
+  const hasUnpublishedChanges =
+    !tenant.isPublished || tenant.hasUnpublishedChanges;
+  const lastPublishLabel = formatPublishTime(
+    tenant.lastPublishedAt ?? tenant.firstPublishedAt,
+  );
 
   const handlePublish = () => {
     const {
@@ -455,12 +472,14 @@ export default function AdminTenantEdit() {
       guestUiMode: _guestUiMode,
       ...saveFormData
     } = formData;
+    setPublishing(true);
     setFormData(prev => ({ ...prev, isPublished: true }));
     updateMutation.mutate({
       id,
       data: {
         ...saveFormData,
         isPublished: true,
+        publishNow: true,
         customDomain: formData.customDomain.trim() || null,
         email: formData.email.trim() || null,
         mapUrl: formData.mapUrl.trim() || null,
@@ -472,7 +491,8 @@ export default function AdminTenantEdit() {
     }, {
       onSuccess: () => {
         toast({ title: "Objavljeno", description: "Spremembe so vidne gostom." });
-      }
+      },
+      onSettled: () => setPublishing(false),
     });
   };
 
@@ -602,10 +622,35 @@ export default function AdminTenantEdit() {
             )}
           </div>
 
-          <Button onClick={handlePublish} disabled={updateMutation.isPending} className="rounded-[12px] md:rounded-[14px] px-3 md:px-[20px] py-2 md:py-[12px] text-[14px] md:text-[16px] font-[700] h-auto shrink-0">
-            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Objavi
-          </Button>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <Button
+              onClick={handlePublish}
+              disabled={updateMutation.isPending}
+              className={[
+                "rounded-[12px] md:rounded-[14px] px-3 md:px-[20px] py-2 md:py-[12px] text-[14px] md:text-[16px] font-[700] h-auto shrink-0 text-white",
+                publishing
+                  ? "!bg-[#C88720] hover:!bg-[#C88720]"
+                  : hasUnpublishedChanges
+                    ? "!bg-[#DD9A2B] hover:!bg-[#C88720] publish-dirty-pulse"
+                    : "!bg-emerald-700 hover:!bg-emerald-800",
+              ].join(" ")}
+            >
+              {publishing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {publishing
+                ? "Objavljam …"
+                : hasUnpublishedChanges
+                  ? "Objavi spremembe"
+                  : "Objavljeno"}
+            </Button>
+            {hasUnpublishedChanges && (
+              <p className="max-w-[210px] text-right text-[10px] font-medium leading-tight text-[#9A6818] sm:max-w-[360px] sm:text-[11px]">
+                Neobjavljene spremembe — gostje vidijo staro različico.{" "}
+                {lastPublishLabel
+                  ? `Zadnja objava: ${lastPublishLabel}.`
+                  : "Vodnik še ni bil objavljen."}
+              </p>
+            )}
+          </div>
         </header>
 
         {/* SCROLLABLE VIEW */}

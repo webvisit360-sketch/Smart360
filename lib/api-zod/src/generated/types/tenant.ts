@@ -151,6 +151,13 @@ export interface Tenant {
   livingGuideNav?: TenantLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
+  /** Server-owned flag indicating guest-visible changes since the last successful publish */
+  hasUnpublishedChanges: boolean;
+  /**
+     * Timestamp of the most recent successful publish
+     * @nullable
+     */
+  lastPublishedAt: string | null;
   /**
      * Set once on the first publish; freezes the slug forever after
      * @nullable

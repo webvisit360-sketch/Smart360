@@ -1,6 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@100..900&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+
+@keyframes publish-dirty-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgb(221 154 43 / 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(221 154 43 / 0.16);
+  }
+}
+
+.publish-dirty-pulse {
+  animation: publish-dirty-pulse 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .publish-dirty-pulse {
+    animation: none;
+  }
+}
 @plugin "@tailwindcss/typography";
 
 .guest-entry-splash {

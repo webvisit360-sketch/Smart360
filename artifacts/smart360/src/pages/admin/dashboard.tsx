@@ -95,7 +95,13 @@ export default function AdminDashboard() {
       ? "Preklop na osnutek: gostje strani ne bodo več videli. Vsebina ostane nedotaknjena."
       : "Objava: gostje bodo stran spet videli. Vsebina ostane nedotaknjena.";
     if (confirm(msg)) {
-      publishMutation.mutate({ id: tenant.id, data: { isPublished: !tenant.isPublished } });
+      publishMutation.mutate({
+        id: tenant.id,
+        data: {
+          isPublished: !tenant.isPublished,
+          publishNow: !tenant.isPublished,
+        },
+      });
     }
   };
 

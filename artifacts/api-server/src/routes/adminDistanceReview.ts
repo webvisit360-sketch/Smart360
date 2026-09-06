@@ -57,7 +57,11 @@ function auditLabel(value: string | null | undefined): string {
   return (value ?? "Vnos").replace(/\s+/g, " ").trim().slice(0, 120) || "Vnos";
 }
 
-async function changed(tenantId: string, detail: string, summary: string) {
+async function changed(
+  tenantId: string,
+  detail: string,
+  summary: string,
+) {
   const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId));
   if (!tenant) return;
   invalidateTenantCache();
@@ -129,14 +133,16 @@ router.post("/admin/tenants/:id/distance-review/approve-bulk", async (req, res) 
   const parsed = ApproveDistanceReviewBulkBody.safeParse(req.body); if (!parsed.success) return void res.status(400).json({ error: parsed.error.message });
   const tenantId = first(req.params["id"]);
   const rows = await db.select({ proposal: itemDistanceProposalsTable, item: itemsTable }).from(itemDistanceProposalsTable).innerJoin(itemsTable, eq(itemsTable.id, itemDistanceProposalsTable.itemId)).where(and(eq(itemDistanceProposalsTable.tenantId, tenantId), eq(itemDistanceProposalsTable.status, "pending"), eq(itemDistanceProposalsTable.confidence, "high"), isNull(itemsTable.distanceMeters)));
+  let approvedCount = 0;
   for (const { proposal } of rows) {
     if (proposal.distanceMeters === null) continue;
     try {
       await approveDistanceProposal(proposal.id);
+      approvedCount++;
     } catch {
       // A concurrent manual value wins; continue approving independent rows.
     }
   }
-  await changed(tenantId, `Potrjene zanesljive predlagane razdalje: ${rows.length}.`, "Potrjene zanesljive razdalje"); res.json(GetDistanceReviewResponse.parse(serialize(await review(tenantId))));
+  await changed(tenantId, `Potrjene zanesljive predlagane razdalje: ${approvedCount}.`, "Potrjene zanesljive razdalje"); res.json(GetDistanceReviewResponse.parse(serialize(await review(tenantId))));
 });
 export default router;

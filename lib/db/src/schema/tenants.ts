@@ -173,6 +173,10 @@ export const tenantsTable = pgTable("tenants", {
     .default(2_000_000_000),
   isTemplate: boolean("is_template").notNull().default(false),
   isPublished: boolean("is_published").notNull().default(false),
+  // Server-owned draft/publish gap. Guest-visible writes set the flag; only
+  // a successful publish clears it and advances lastPublishedAt.
+  hasUnpublishedChanges: boolean("has_unpublished_changes").notNull().default(false),
+  lastPublishedAt: timestamp("last_published_at", { withTimezone: true }),
   // Set exactly once, on the FIRST transition to published. Drives two rules
   // (Instruction #28 CP2b): the slug freezes after first publish, and the
   // "guide published" e-mail is sent only for this transition — never for

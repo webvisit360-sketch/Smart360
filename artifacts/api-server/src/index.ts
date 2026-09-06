@@ -19,6 +19,7 @@ import { runLegacyTenantLivingGuideCutoversAtStartup } from "./lib/grilLivingGui
 import { recoverCreatorSourceRunsAtStartup } from "./lib/creatorSourceRunService";
 import { runSharedTenantSkeletonSyncAtStartup } from "./lib/tenantSeeds";
 import { ensureCreatorPhotoSchema } from "./lib/creatorPhotoSchema";
+import { ensureGuestDirtyTriggers } from "./lib/guestDirtyTriggers";
 import { runCreatorProposalContentReadySyncAtStartup } from "./lib/creatorProposalLedger";
 
 const rawPort = process.env["PORT"];
@@ -74,6 +75,7 @@ async function logBootstrapEnrollLink(): Promise<void> {
 
 ensureAdminAccount()
   .then(() => ensureCreatorPhotoSchema())
+  .then(() => ensureGuestDirtyTriggers())
   // Row-level security is the fail-closed backstop for host accounts. NOT
   // best-effort: if the policies cannot be applied, the server must not
   // start, because host requests would then rely on the fence alone.
