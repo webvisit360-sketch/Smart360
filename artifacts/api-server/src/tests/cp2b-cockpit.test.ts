@@ -258,7 +258,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.equal(row!.slug, newSlug, "the pre-publish rename sticks; the frozen one does not");
   });
 
-  await t.test("guest content stays dirty across reload; publish clears it; internal action stays clean", async () => {
+  await t.test("two guest-content publish cycles survive reload, including text deletion and photo changes", async () => {
     const settingsAutosave = await jreq(
       base,
       "PATCH",
@@ -340,6 +340,133 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.equal(published.hasUnpublishedChanges, false);
     assert.ok(published.lastPublishedAt);
     assert.notEqual(published.lastPublishedAt, priorPublish);
+
+    const cleanReloadResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    assert.equal(cleanReloadResponse.status, 200);
+    const cleanReload = (await cleanReloadResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      cleanReload.hasUnpublishedChanges,
+      false,
+      "cycle one publish must remain clean in a fresh response",
+    );
+
+    const deleteTextResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/items/${created.id}`,
+      ownerCookie,
+      { body: null },
+    );
+    assert.equal(deleteTextResponse.status, 200);
+
+    const afterTextDeletionResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    assert.equal(afterTextDeletionResponse.status, 200);
+    const afterTextDeletion = (await afterTextDeletionResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      afterTextDeletion.hasUnpublishedChanges,
+      true,
+      "cycle two text deletion must remain dirty in a fresh response",
+    );
+
+    const addPhotoResponse = await jreq(
+      base,
+      "POST",
+      `/admin/items/${created.id}/media`,
+      ownerCookie,
+      {
+        url: `https://example.com/cp2b-photo-${stamp}.jpg`,
+        kind: "image",
+        alt: "Testna fotografija",
+      },
+    );
+    assert.equal(addPhotoResponse.status, 201);
+    const addedPhoto = (await addPhotoResponse.json()) as { id: string };
+
+    const afterPhotoAddResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    assert.equal(afterPhotoAddResponse.status, 200);
+    const afterPhotoAdd = (await afterPhotoAddResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      afterPhotoAdd.hasUnpublishedChanges,
+      true,
+      "cycle two photo addition must remain dirty in a fresh response",
+    );
+
+    const removePhotoResponse = await jreq(
+      base,
+      "DELETE",
+      `/admin/media/${addedPhoto.id}`,
+      ownerCookie,
+    );
+    assert.equal(removePhotoResponse.status, 204);
+
+    const afterPhotoRemoveResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    assert.equal(afterPhotoRemoveResponse.status, 200);
+    const afterPhotoRemove = (await afterPhotoRemoveResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      afterPhotoRemove.hasUnpublishedChanges,
+      true,
+      "cycle two photo removal must remain dirty in a fresh response",
+    );
+
+    const secondPublishResponse = await jreq(
+      base,
+      "PATCH",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+      { isPublished: true, publishNow: true },
+    );
+    assert.equal(secondPublishResponse.status, 200);
+    const secondPublish = (await secondPublishResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+      lastPublishedAt: string | null;
+    };
+    assert.equal(secondPublish.hasUnpublishedChanges, false);
+    assert.ok(secondPublish.lastPublishedAt);
+    assert.notEqual(secondPublish.lastPublishedAt, published.lastPublishedAt);
+
+    const secondCleanReloadResponse = await jreq(
+      base,
+      "GET",
+      `/admin/tenants/${tenantId}`,
+      ownerCookie,
+    );
+    assert.equal(secondCleanReloadResponse.status, 200);
+    const secondCleanReload = (await secondCleanReloadResponse.json()) as {
+      hasUnpublishedChanges: boolean;
+    };
+    assert.equal(
+      secondCleanReload.hasUnpublishedChanges,
+      false,
+      "cycle two publish must remain clean in a fresh response",
+    );
 
     const internalResponse = await jreq(
       base,

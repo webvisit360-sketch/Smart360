@@ -97,7 +97,10 @@ export default function AdminTenantEdit() {
     }
   }, [isOwner, id]);
 
-  const { data: tenant, isLoading } = useGetTenant(id, { query: { enabled: !!id, queryKey: getGetTenantQueryKey(id) } });
+  const { data: tenant, isLoading } = useGetTenant(id, {
+    query: { enabled: !!id, queryKey: getGetTenantQueryKey(id) },
+    request: { cache: "no-store" },
+  });
   const { data: tenantOverviews } = useListTenantOverview({
     query: { queryKey: getListTenantOverviewQueryKey() },
   });

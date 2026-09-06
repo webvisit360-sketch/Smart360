@@ -419,6 +419,7 @@ router.get("/admin/tenants/:id/label.pdf", async (req, res): Promise<void> => {
 });
 
 router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const id = firstParam(req.params["id"]);
   const [tenant] = await db
     .select()

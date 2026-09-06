@@ -10,7 +10,6 @@ import {
   createItem,
   updateItem,
   deleteItem,
-  getGetTenantQueryKey,
   useGetTrash,
   restoreCategory,
   restoreItem,
@@ -68,6 +67,7 @@ import {
   hasTranslatableMissingItemField,
   mergeMissingItemLanguageDrafts,
 } from "@/lib/item-translation-drafts";
+import { refreshTenantAfterGuestWrite } from "@/lib/tenant-publication-state";
 import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
 
 // ---------- Types ----------
@@ -310,7 +310,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+  const refresh = () => refreshTenantAfterGuestWrite(queryClient, tenantId);
 
   const handleSave = async () => {
     const trimmedTitle = title.trim();
@@ -583,7 +583,7 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+  const refresh = () => refreshTenantAfterGuestWrite(queryClient, tenantId);
 
   const handleSave = async () => {
     if (!label.trim() || !icon.trim() || !layout) {
@@ -855,7 +855,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
         setDistanceMeters(status.distanceMeters != null ? String(status.distanceMeters) : "");
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetItemCreatorStatusQueryKey(itemId) }),
-          queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) }),
+          refreshTenantAfterGuestWrite(queryClient, tenantId),
         ]);
       },
     },
@@ -930,7 +930,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: It
     }
   }, [creatorStatus.data]);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+  const refresh = () => refreshTenantAfterGuestWrite(queryClient, tenantId);
   const creatorStatusReady = mode !== "edit" ||
     (!creatorStatus.isLoading && !creatorStatus.isError && creatorStatus.data !== undefined);
 
@@ -1483,7 +1483,7 @@ function OkolicaPlaceCreate({
   const create = useCreateAdminPlace();
   const busy = create.isPending;
   const candidates = search.data?.candidates ?? [];
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+  const refresh = () => refreshTenantAfterGuestWrite(queryClient, tenantId);
 
   const save = async () => {
     try {
@@ -1856,7 +1856,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
 
   const refresh = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) }),
+      refreshTenantAfterGuestWrite(queryClient, tenantId),
       queryClient.invalidateQueries({ queryKey: getGetTrashQueryKey(tenantId) }),
     ]);
   };
