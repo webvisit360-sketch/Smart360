@@ -680,3 +680,17 @@ mtime_ms = 1788330623176
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/dbb18bef-935b-4d41-8107-2726d41f5982/9446fe43-7cf0-4869-8ec0-46742dd01c4f"
 storage_version_token = "1788331400842773"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "HHU2TgWpACFh99s39PkPO"
+uri = "file://screenshots/okolica-vs-nastanitev-tabs.jpg"
+type = "image"
+title = "Okolica chips vs. Nastanitev tabs"
+description = "Side-by-side 390×844 development captures in the same English language and day theme. Both rows use the exact shared GroupTabs component and styling."
+logical_id = "2e635ffb-330a-4ca6-b087-d47e004c8378"
+content_hash = "sha256:d99cd4708e3e21049251e3fc3c1e91873ea8a6b35bdea79183f436259fa55c9b"
+size = 36318
+mtime_ms = 1788722704873
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2e635ffb-330a-4ca6-b087-d47e004c8378/8f425837-a268-46ab-bcc5-21e0ae91e77e"
+storage_version_token = "1788722728975936"
+content_type = "image/jpeg"

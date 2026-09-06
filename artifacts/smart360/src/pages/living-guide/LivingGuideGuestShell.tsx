@@ -81,9 +81,11 @@ import {
 import { SiteMapGuestView } from "./SiteMapGuestView";
 import { MoreGuestView } from "./MoreGuestView";
 import {
+  activeExploreCategories,
+  EXPLORE_ALL_CATEGORY_KEY,
   exploreItemDescription,
+  exploreItemsForCategory,
   groupExploreItemsByDistance,
-  populatedExploreGroups,
   suppressesGuestDescription,
 } from "./living-guide-explore";
 import {
@@ -2633,15 +2635,48 @@ function ExploreView({
   onOpenItem,
   onBack,
 }: any) {
-  const groups = useMemo(
-    () => populatedExploreGroups(categories),
+  const activeCategories = useMemo(
+    () => activeExploreCategories(categories),
     [categories],
   );
-  const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
-  const distanceSections = useMemo(
-    () => groupExploreItemsByDistance(selectedGroup?.items ?? []),
-    [selectedGroup],
+  const categoryChips = useMemo(
+    () => [
+      { key: EXPLORE_ALL_CATEGORY_KEY, label: t("UI.lg.categoryFilter.all") },
+      ...activeCategories.map((category: any) => ({
+        key: category.id,
+        label: category.label,
+      })),
+    ],
+    [activeCategories, t],
   );
+  const {
+    listRef,
+    selectedGroup: selectedCategoryChip,
+    selectGroup: selectCategoryChip,
+  } = useGroupTabsState(categoryChips);
+  const filteredItems = useMemo(
+    () =>
+      exploreItemsForCategory(
+        activeCategories,
+        selectedCategoryChip?.key ?? EXPLORE_ALL_CATEGORY_KEY,
+      ),
+    [activeCategories, selectedCategoryChip?.key],
+  );
+  const distanceSections = useMemo(
+    () => groupExploreItemsByDistance(filteredItems),
+    [filteredItems],
+  );
+  const emptyCategories = useMemo(() => {
+    const selectedCategories =
+      selectedCategoryChip?.key === EXPLORE_ALL_CATEGORY_KEY
+        ? activeCategories
+        : activeCategories.filter(
+            (category: any) => category.id === selectedCategoryChip?.key,
+          );
+    return selectedCategories.filter(
+      (category: any) => visible(category.items).length === 0,
+    );
+  }, [activeCategories, selectedCategoryChip?.key]);
 
   const openPlace = (categoryId: string, itemId: string) => {
     navigator.vibrate?.(6);
@@ -2666,9 +2701,9 @@ function ExploreView({
         <h1>{t("UI.lg.exploreTitle")}</h1>
       </header>
       <GroupTabs
-        groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
-        selectedKey={selectedGroup?.key}
-        onSelect={selectGroup}
+        groups={categoryChips}
+        selectedKey={selectedCategoryChip?.key}
+        onSelect={selectCategoryChip}
         label={t("UI.lg.exploreTitle")}
       />
       <div
@@ -2712,9 +2747,7 @@ function ExploreView({
             })}
           </section>
         ))}
-        {selectedGroup?.categories
-          .filter((category: any) => visible(category.items).length === 0)
-          .map((category: any) => (
+        {emptyCategories.map((category: any) => (
             <PCard
               key={category.id}
               ariaLabel={category.label}

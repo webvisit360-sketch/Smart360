@@ -6,6 +6,9 @@ import {
   normalizeGuestMedia,
 } from "../pages/living-guide/living-guide-formatters";
 import {
+  activeExploreCategories,
+  EXPLORE_ALL_CATEGORY_KEY,
+  exploreItemsForCategory,
   groupExploreItemsByDistance,
   storedRoadDistanceMeters,
   storedTravelDurationMinutes,
@@ -169,4 +172,70 @@ test("explore distance section headers have the approved four-language labels", 
     de: "Ausflüge",
     it: "Gite",
   });
+  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.categoryFilter.all"], {
+    sl: "Vse",
+    en: "All",
+    de: "Alle",
+    it: "Tutte",
+  });
+});
+
+test("explore category chips preserve active skeleton order and filter both distance groups", () => {
+  const categories = [
+    {
+      id: "nature",
+      label: "Narava",
+      items: [
+        { id: "nature-near", range: "near", distanceMeters: 8_000 },
+        { id: "nature-trip", range: "excursion", distanceMeters: 35_000 },
+      ],
+    },
+    {
+      id: "hidden",
+      label: "Skrita",
+      isVisible: false,
+      items: [{ id: "hidden-near", range: "near", distanceMeters: 1_000 }],
+    },
+    {
+      id: "culture",
+      label: "Kultura",
+      items: [
+        { id: "culture-near", range: "near", distanceMeters: 2_000 },
+        { id: "culture-trip", range: "excursion", distanceMeters: 25_000 },
+      ],
+    },
+  ];
+
+  assert.deepEqual(
+    activeExploreCategories(categories).map((category) => category.id),
+    ["nature", "culture"],
+  );
+
+  const allSections = groupExploreItemsByDistance(
+    exploreItemsForCategory(categories, EXPLORE_ALL_CATEGORY_KEY),
+  );
+  assert.deepEqual(
+    allSections.map((section) => ({
+      key: section.key,
+      ids: section.items.map((entry) => entry.item.id),
+    })),
+    [
+      { key: "near", ids: ["culture-near", "nature-near"] },
+      { key: "excursion", ids: ["culture-trip", "nature-trip"] },
+    ],
+  );
+
+  const natureSections = groupExploreItemsByDistance(
+    exploreItemsForCategory(categories, "nature"),
+  );
+  assert.deepEqual(
+    natureSections.map((section) => ({
+      key: section.key,
+      ids: section.items.map((entry) => entry.item.id),
+    })),
+    [
+      { key: "near", ids: ["nature-near"] },
+      { key: "excursion", ids: ["nature-trip"] },
+    ],
+  );
 });

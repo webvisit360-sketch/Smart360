@@ -68,6 +68,27 @@ export type ExploreDistanceSection = {
   items: ExploreItemEntry[];
 };
 
+export const EXPLORE_ALL_CATEGORY_KEY = "all";
+
+export function activeExploreCategories(categories: unknown): any[] {
+  return visibleRows(categories);
+}
+
+export function exploreItemsForCategory(
+  categories: unknown,
+  categoryId: string,
+): ExploreItemEntry[] {
+  const activeCategories = activeExploreCategories(categories);
+  const selectedCategories =
+    categoryId === EXPLORE_ALL_CATEGORY_KEY
+      ? activeCategories
+      : activeCategories.filter((category) => category.id === categoryId);
+
+  return selectedCategories.flatMap((category) =>
+    visibleRows(category.items).map((item) => ({ item, category })),
+  );
+}
+
 const NEAR_DURATION_MINUTES = 20;
 const NEAR_DISTANCE_METERS = 20_000;
 

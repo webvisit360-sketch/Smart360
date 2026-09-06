@@ -202,6 +202,12 @@ export const LIVING_GUIDE_UI = {
     de: "Ausflüge",
     it: "Gite",
   },
+  "UI.lg.categoryFilter.all": {
+    sl: "Vse",
+    en: "All",
+    de: "Alle",
+    it: "Tutte",
+  },
   "UI.lg.exploreGroup.experiences": {
     sl: "Doživetja",
     en: "Experiences",
