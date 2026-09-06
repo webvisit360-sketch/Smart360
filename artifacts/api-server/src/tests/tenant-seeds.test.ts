@@ -24,6 +24,25 @@ const EXPECTED_CATEGORY_KEYS = [
   "shops", "bakery", "gas", "atm", "pharm", "hosp",
 ];
 
+test("nature_trails seed keeps its stable identity and renamed labels", () => {
+  const explore = MELI_PU_SKELETON.find((section) => section.key === "explore");
+  const group = explore?.groups.find((entry) => entry.key === "nature_trails");
+
+  assert.equal(group?.key, "nature_trails");
+  assert.deepEqual(group?.names, {
+    sl: "Aktivnosti",
+    en: "Activities",
+    de: "Aktivitäten",
+    it: "Attività",
+  });
+  assert.deepEqual(
+    explore?.categories
+      .filter((category) => category.group === "nature_trails")
+      .map((category) => category.key),
+    ["hike", "bike", "beach"],
+  );
+});
+
 test("new tenant receives the complete four-language Meli Pu skeleton and is deleted", async () => {
   const slug = `seed-parity-${crypto.randomUUID()}`;
   const [tenant] = await db

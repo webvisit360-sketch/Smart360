@@ -410,10 +410,10 @@ hr:
 
 TYPE: UI
 KEY: UI.lg.exploreGroup.natureTrails
-sl: Narava in poti
-en: Nature and trails
-de: Natur und Wege
-it: Natura e sentieri
+sl: Aktivnosti
+en: Activities
+de: Aktivitäten
+it: Attività
 nl:
 fr:
 cs:

@@ -73,7 +73,7 @@ const OFFER_GROUPS: GroupSeed[] = [
 const EXPLORE_GROUPS: GroupSeed[] = [
   { key: "experiences", names: names("Doživetja", "Experiences", "Erlebnisse", "Esperienze") },
   { key: "food_drink", names: names("Hrana in pijača", "Food and drink", "Essen und Trinken", "Cibo e bevande") },
-  { key: "nature_trails", names: names("Narava in poti", "Nature and trails", "Natur und Wege", "Natura e sentieri") },
+  { key: "nature_trails", names: names("Aktivnosti", "Activities", "Aktivitäten", "Attività") },
   { key: "sights", names: names("Znamenitosti", "Sights", "Sehenswürdigkeiten", "Attrazioni") },
 ];
 

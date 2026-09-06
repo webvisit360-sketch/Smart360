@@ -203,10 +203,10 @@ export const LIVING_GUIDE_UI = {
     it: "Cibo e bevande",
   },
   "UI.lg.exploreGroup.natureTrails": {
-    sl: "Narava in poti",
-    en: "Nature and trails",
-    de: "Natur und Wege",
-    it: "Natura e sentieri",
+    sl: "Aktivnosti",
+    en: "Activities",
+    de: "Aktivitäten",
+    it: "Attività",
   },
   "UI.lg.exploreGroup.sights": {
     sl: "Znamenitosti",

@@ -10,13 +10,36 @@ const exploreModuleUrl = new URL(
   "../../../smart360/src/pages/living-guide/living-guide-explore.ts",
   import.meta.url,
 ).href;
+const guestI18nModuleUrl = new URL(
+  "../../../smart360/src/pages/guest/i18n.ts",
+  import.meta.url,
+).href;
 
 async function loadExploreModule(): Promise<{
+  EXPLORE_GROUPS: ReadonlyArray<{
+    key: string;
+    adminLabel: string;
+  }>;
   exploreItemDescription: (item: unknown) => string;
   populatedExploreGroups: (categories: unknown) => any[];
 }> {
   return import(exploreModuleUrl);
 }
+
+test("nature_trails keeps its stable key with the four renamed labels", async () => {
+  const { EXPLORE_GROUPS } = await loadExploreModule();
+  const { LIVING_GUIDE_UI } = await import(guestI18nModuleUrl);
+  const group = EXPLORE_GROUPS.find((entry) => entry.key === "nature_trails");
+
+  assert.equal(group?.key, "nature_trails");
+  assert.equal(group?.adminLabel, "Aktivnosti");
+  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.exploreGroup.natureTrails"], {
+    sl: "Aktivnosti",
+    en: "Activities",
+    de: "Aktivitäten",
+    it: "Attività",
+  });
+});
 
 test("Okolica keeps the complete seeded group skeleton regardless of items", async () => {
   const { populatedExploreGroups } = await loadExploreModule();

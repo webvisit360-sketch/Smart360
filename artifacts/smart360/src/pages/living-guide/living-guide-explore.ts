@@ -12,7 +12,7 @@ export const EXPLORE_GROUPS = [
   {
     key: "nature_trails",
     labelKey: "UI.lg.exploreGroup.natureTrails",
-    adminLabel: "Narava in poti",
+    adminLabel: "Aktivnosti",
   },
   {
     key: "sights",
