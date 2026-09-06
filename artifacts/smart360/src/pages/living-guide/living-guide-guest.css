@@ -1139,6 +1139,16 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
     color-mix(in srgb, var(--ambbg) 78%, transparent);
 }
 
+.lg2-detail-sheet-root[data-lg-sheet-starts-at-top] .lg2-detail-hero--ambient {
+  z-index: 3;
+  background: transparent;
+  pointer-events: none;
+}
+
+.lg2-detail-sheet-root[data-lg-sheet-starts-at-top] .lg2-detail-hero--ambient .lg2-detail-back {
+  pointer-events: auto;
+}
+
 .lg2-gallery-track {
   position: absolute;
   inset: 0;
@@ -1150,7 +1160,13 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   scroll-padding: 0;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.lg2-gallery-track[data-lg-gallery-dragging="true"] {
+  cursor: grabbing;
+  scroll-snap-type: none;
 }
 
 .lg2-gallery-slide {
@@ -1180,6 +1196,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   height: 100%;
   display: block;
   border: 0;
+  -webkit-user-drag: none;
 }
 
 .lg2-hero-image-main {
@@ -1295,7 +1312,6 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
     calc(100% - min(360px, 58%))
   );
   right: 0;
-  bottom: 0;
   left: 0;
   margin: 0;
   padding: 30px 20px calc(94px + env(safe-area-inset-bottom));
@@ -1304,14 +1320,42 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   clip-path: inset(0 round 28px 28px 0 0);
   background: var(--bg);
   color: var(--tx);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  min-height: calc(100% - min(
+    calc(var(--lg2-detail-hero-height) - 26px),
+    calc(100% - min(360px, 58%))
+  ));
+  overflow: visible;
+  touch-action: pan-x;
+  transform: translate3d(0, var(--lg2-sheet-translate-y, 0px), 0);
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1);
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.lg2-detail-sheet::-webkit-scrollbar {
-  display: none;
+.lg2-detail-sheet[data-lg-sheet-phase="dragging"] {
+  transition: none;
+  cursor: grabbing;
+}
+
+.lg2-detail-sheet[data-lg-sheet-phase="settling"] {
+  transition-duration: 260ms;
+}
+
+.lg2-detail-sheet[data-lg-sheet-phase="closing"] {
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(.4, 0, 1, 1);
+  pointer-events: none;
+}
+
+.lg2-detail-sheet button,
+.lg2-detail-sheet a,
+.lg2-detail-sheet input,
+.lg2-detail-sheet textarea,
+.lg2-detail-sheet select,
+.lg2-detail-sheet [contenteditable="true"] {
+  user-select: auto;
+  -webkit-user-select: auto;
 }
 
 .lg2-detail-sheet--solo {

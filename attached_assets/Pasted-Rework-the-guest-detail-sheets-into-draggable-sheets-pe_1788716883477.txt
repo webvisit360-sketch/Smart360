@@ -1,0 +1,13 @@
+Rework the guest detail sheets into draggable sheets, per the owner's exact model. One shared implementation for ALL detail sheets/cards in the guest app (Living Guide).
+
+The model — the sheet is ONE continuous surface and the text is FIXED on it; there is never any inner text scrolling:
+1. OPEN: tapping a card ALWAYS opens the sheet to the same initial height as today, with the photo visible above the sheet — regardless of how long the text is. The sheet never opens higher on its own. EXCEPTION: if the item has no photo, the sheet may open to the top of the screen.
+2. DRAG UP: dragging moves the WHOLE sheet up. When the sheet's top reaches the top of the screen, continued dragging keeps sliding the sheet further up — its upper part moves off-screen above — until the END of the text reaches the bottom of the screen. That is the upper limit; short texts simply stop earlier.
+3. DRAG DOWN: reverses the same movement; dragging below the initial open position closes the sheet. The close button and backdrop tap keep working.
+4. Native feel: the sheet follows the finger continuously, with momentum and sensible snap only at the initial position and closed; between the initial position and the text-end limit the sheet stays wherever the finger leaves it. Must work on iOS Safari and Android Chrome touch, and with a mouse in the admin preview.
+5. The docked action button (Naročilo/Order) stays fixed at the bottom of the SCREEN and functional at every sheet position.
+6. One shared component for all sheets — no per-card variants. Photo counter, dots, attribution, and all recent sheet fixes preserved. Horizontal gallery swipes must not conflict with vertical sheet drags.
+
+Verify in development at 390×844 with touch emulation on real Meli Pu data: a sheet with a photo opens at the initial height with the photo visible even when the text is long; a no-photo sheet may open to the top; a long-text sheet slides past the screen top until the last line is visible, then back down and close; the Order button is reachable at all positions; gallery swipe still works. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

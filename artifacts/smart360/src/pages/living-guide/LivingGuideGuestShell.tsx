@@ -2911,6 +2911,13 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
 function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, t }: any) {
   const galleryTrackRef = useRef<HTMLDivElement>(null);
   const settleTimeoutRef = useRef<number | null>(null);
+  const galleryDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startScrollLeft: number;
+    axis: "horizontal" | "vertical" | null;
+  } | null>(null);
   const frameWidth =
     typeof window === "undefined"
       ? 390
@@ -2998,6 +3005,65 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         settleTimeoutRef.current = null;
         settleGallery(track);
       }, 120);
+    },
+    [settleGallery],
+  );
+
+  const beginGalleryDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (
+        !isUniformGallery ||
+        !event.isPrimary ||
+        event.button !== 0 ||
+        galleryDragRef.current
+      ) {
+        return;
+      }
+      galleryDragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startScrollLeft: event.currentTarget.scrollLeft,
+        axis: null,
+      };
+      event.currentTarget.dataset.lgGalleryDragging = "true";
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    },
+    [isUniformGallery],
+  );
+
+  const moveGalleryDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = galleryDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+      if (!drag.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 6) {
+        drag.axis =
+          Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
+        event.currentTarget.dataset.lgGalleryAxis = drag.axis;
+      }
+      if (drag.axis !== "horizontal") return;
+      event.currentTarget.scrollLeft = drag.startScrollLeft - dx;
+      event.preventDefault();
+    },
+    [],
+  );
+
+  const finishGalleryDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = galleryDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      galleryDragRef.current = null;
+      delete event.currentTarget.dataset.lgGalleryDragging;
+      delete event.currentTarget.dataset.lgGalleryAxis;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      if (drag.axis === "horizontal") {
+        settleGallery(event.currentTarget);
+      }
     },
     [settleGallery],
   );
@@ -3096,6 +3162,11 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         className="lg2-gallery-track"
         data-lg-gallery
         onScroll={(event) => scheduleGallerySettle(event.currentTarget)}
+        onPointerDown={beginGalleryDrag}
+        onPointerMove={moveGalleryDrag}
+        onPointerUp={finishGalleryDrag}
+        onPointerCancel={finishGalleryDrag}
+        onDragStart={(event) => event.preventDefault()}
       >
         {media.map((entry: any, index: number) => {
           const entryKey = String(entry.id ?? entry.url ?? index);
@@ -3164,6 +3235,7 @@ function AspectAwareHeroImage({
           src={source}
           alt=""
           aria-hidden="true"
+          draggable={false}
           decoding="async"
         />
       )}
@@ -3173,6 +3245,7 @@ function AspectAwareHeroImage({
         data-lg-aspect-source={aspectSource}
         src={source}
         alt=""
+        draggable={false}
         loading={loading}
         decoding="async"
         style={galleryCover ? imageStyle(entry) : undefined}
@@ -3191,7 +3264,186 @@ function AspectAwareHeroImage({
   );
 }
 
+const DETAIL_SHEET_CLOSE_DISTANCE = 72;
+const DETAIL_SHEET_CLOSE_VELOCITY = 0.55;
+const DETAIL_SHEET_MOMENTUM_MS = 180;
+const DETAIL_SHEET_MAX_MOMENTUM = 54;
+
+function useDraggableDetailSheet(
+  rootRef: React.RefObject<HTMLElement | null>,
+  onClose: () => void,
+) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const sheet = root?.querySelector<HTMLElement>(".lg2-detail-sheet");
+    const sheetRoot = root?.querySelector<HTMLElement>(".lg2-detail-sheet-root");
+    if (!root || !sheet || !sheetRoot) return;
+
+    let activePointerId: number | null = null;
+    let startClientY = 0;
+    let startOffset = 0;
+    let currentOffset = 0;
+    let lastClientY = 0;
+    let lastMoveAt = 0;
+    let velocity = 0;
+    let minOffset = 0;
+    let initialTop = 0;
+    let closeTimer: number | null = null;
+    let resizeFrame: number | null = null;
+
+    const writeOffset = (
+      offset: number,
+      phase: "idle" | "dragging" | "settling" | "closing" = "idle",
+    ) => {
+      currentOffset = offset;
+      sheet.style.setProperty("--lg2-sheet-translate-y", `${offset}px`);
+      sheet.dataset.lgSheetPhase = phase;
+      sheet.dataset.lgSheetOffset = String(Math.round(offset));
+    };
+
+    const measure = () => {
+      const ambientHero = Boolean(
+        sheetRoot.querySelector(".lg2-detail-hero--ambient"),
+      );
+      const startsAtTop =
+        ambientHero ||
+        sheet.classList.contains("lg2-detail-sheet--full-height") ||
+        sheet.classList.contains("lg2-detail-sheet--solo");
+      sheet.toggleAttribute("data-lg-sheet-starts-at-top", startsAtTop);
+      sheetRoot.toggleAttribute("data-lg-sheet-starts-at-top", startsAtTop);
+      sheet.style.top = startsAtTop ? "0px" : "";
+      initialTop = sheet.offsetTop;
+      const viewportHeight = sheetRoot.clientHeight;
+      minOffset = Math.min(
+        0,
+        viewportHeight - initialTop - sheet.scrollHeight,
+      );
+      sheet.dataset.lgSheetInitialTop = String(Math.round(initialTop));
+      sheet.dataset.lgSheetMinOffset = String(Math.round(minOffset));
+      writeOffset(Math.max(minOffset, Math.min(0, currentOffset)));
+    };
+
+    const scheduleMeasure = () => {
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = null;
+        measure();
+      });
+    };
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(scheduleMeasure);
+    resizeObserver?.observe(sheet);
+    resizeObserver?.observe(sheetRoot);
+    window.addEventListener("resize", scheduleMeasure);
+    window.addEventListener("orientationchange", scheduleMeasure);
+    void document.fonts?.ready.then(scheduleMeasure);
+    measure();
+
+    const ignoredDragTarget = (target: EventTarget | null) =>
+      target instanceof Element &&
+      Boolean(
+        target.closest(
+          ".lg2-gallery-track,.lg2-detail-back,.lg2-order-dock,button,a,input,textarea,select,[contenteditable='true']",
+        ),
+      );
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (
+        activePointerId !== null ||
+        event.button !== 0 ||
+        !event.isPrimary ||
+        ignoredDragTarget(event.target)
+      ) {
+        return;
+      }
+      activePointerId = event.pointerId;
+      startClientY = event.clientY;
+      startOffset = currentOffset;
+      lastClientY = event.clientY;
+      lastMoveAt = event.timeStamp;
+      velocity = 0;
+      sheet.setPointerCapture(event.pointerId);
+      writeOffset(currentOffset, "dragging");
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) return;
+      const elapsed = Math.max(1, event.timeStamp - lastMoveAt);
+      velocity = (event.clientY - lastClientY) / elapsed;
+      lastClientY = event.clientY;
+      lastMoveAt = event.timeStamp;
+      const rawOffset = startOffset + event.clientY - startClientY;
+      const resistedOffset =
+        rawOffset < minOffset
+          ? minOffset + (rawOffset - minOffset) * 0.16
+          : rawOffset;
+      writeOffset(resistedOffset, "dragging");
+      event.preventDefault();
+    };
+
+    const finishPointer = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) return;
+      activePointerId = null;
+      if (sheet.hasPointerCapture(event.pointerId)) {
+        sheet.releasePointerCapture(event.pointerId);
+      }
+
+      const shouldClose =
+        currentOffset >= DETAIL_SHEET_CLOSE_DISTANCE ||
+        (currentOffset > 0 && velocity >= DETAIL_SHEET_CLOSE_VELOCITY);
+      if (shouldClose) {
+        writeOffset(sheetRoot.clientHeight + 32, "closing");
+        closeTimer = window.setTimeout(
+          () => onCloseRef.current(),
+          DETAIL_SHEET_MOMENTUM_MS,
+        );
+        return;
+      }
+
+      if (currentOffset > 0) {
+        writeOffset(0, "settling");
+        return;
+      }
+
+      const momentum = Math.max(
+        -DETAIL_SHEET_MAX_MOMENTUM,
+        Math.min(
+          DETAIL_SHEET_MAX_MOMENTUM,
+          velocity * DETAIL_SHEET_MOMENTUM_MS,
+        ),
+      );
+      const projected = currentOffset + momentum;
+      writeOffset(Math.max(minOffset, Math.min(0, projected)), "settling");
+    };
+
+    sheet.addEventListener("pointerdown", onPointerDown);
+    sheet.addEventListener("pointermove", onPointerMove, { passive: false });
+    sheet.addEventListener("pointerup", finishPointer);
+    sheet.addEventListener("pointercancel", finishPointer);
+
+    return () => {
+      if (closeTimer !== null) window.clearTimeout(closeTimer);
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("orientationchange", scheduleMeasure);
+      sheet.removeEventListener("pointerdown", onPointerDown);
+      sheet.removeEventListener("pointermove", onPointerMove);
+      sheet.removeEventListener("pointerup", finishPointer);
+      sheet.removeEventListener("pointercancel", finishPointer);
+    };
+  }, [rootRef]);
+}
+
 function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick }: any) {
+  const detailViewRef = useRef<HTMLElement>(null);
+  useDraggableDetailSheet(detailViewRef, onBack);
   const items = visible(category.items);
   const activeItem = itemId ? items.find((i: any) => i.id === itemId) : null;
 
@@ -3227,7 +3479,10 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
   }
 
   return (
-    <section className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" ? " has-order-dock" : ""}`}>
+    <section
+      ref={detailViewRef}
+      className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" ? " has-order-dock" : ""}`}
+    >
       {content}
       {activeItem?.orderEnabled && layout !== "tabs" && (
         <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
