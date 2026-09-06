@@ -258,6 +258,7 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/duplicate`, {});
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/media-check`);
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/operator-entry`, {});
+    await expectDenied("POST", `/admin/tenants/${fx.tenantA}/creator/distance-backfill`, {});
     await expectDenied("DELETE", `/admin/categories/${fx.categoryA}/purge`);
     await expectDenied("DELETE", `/admin/items/${fx.itemA}/purge`);
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/translations/import`, {});

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListCreatorProposalsQueryKey,
+  useBackfillCreatorDistances,
   useApproveCreatorProposal,
   useApproveCreatorProposalsBulk,
   useConfirmCreatorProposalCoordinates,
@@ -16,7 +17,7 @@ import {
   useUnapproveCreatorProposal,
   useTranslateCreatorProposalEditorial,
 } from "@workspace/api-client-react";
-import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, RotateCcw, ShieldAlert, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, MapPin, Pencil, Route, RotateCcw, ShieldAlert, XCircle } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { mutationErrorMessage, replaceSavedProposal } from "@/lib/manual-pin-feedback";
@@ -187,6 +188,9 @@ export function KreatorProposalQueue({
   const reevaluate = useReevaluateCreatorProposals({
     mutation: { onSuccess: refresh },
   });
+  const backfillDistances = useBackfillCreatorDistances({
+    mutation: { onSuccess: refresh },
+  });
   const confirmCoordinates = useConfirmCreatorProposalCoordinates({
     mutation: {
       onSuccess: (saved) => {
@@ -226,6 +230,7 @@ export function KreatorProposalQueue({
     ?? (unapproveOne.error as any)?.data?.error
     ?? (retryUnresolved.error as any)?.data?.error
     ?? (reevaluate.error as any)?.data?.error
+    ?? (backfillDistances.error as any)?.data?.error
     ?? (confirmCoordinates.error as any)?.data?.error
     ?? null;
   const confirmCoordinatesError = mutationErrorMessage(confirmCoordinates.error);
@@ -236,6 +241,63 @@ export function KreatorProposalQueue({
 
   return (
     <section className="mt-8 max-w-[880px] space-y-4" data-testid="creator-proposal-queue">
+      <Card data-testid="creator-distance-backfill-card">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-[18px] font-[800]">
+              <Route className="h-5 w-5 text-primary" />
+              Preračunaj razdalje
+            </h2>
+            <p className="mt-1 max-w-[620px] text-sm font-medium text-muted-foreground">
+              Dopolni samo manjkajočo cestno razdaljo in čas vožnje za vnose s shranjenimi koordinatami. Obstoječe razdalje ostanejo nespremenjene.
+            </p>
+            {backfillDistances.data && (
+              <div className="mt-4 space-y-3" data-testid="creator-distance-backfill-result">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
+                  Izračunano: {backfillDistances.data.computed}
+                  {" · "}Preskočeno (razdalja že shranjena): {backfillDistances.data.skipped}
+                  {" · "}Brez koordinat: {backfillDistances.data.noCoordinates.length}
+                  {" · "}Napake: {backfillDistances.data.failures.length}
+                </div>
+                {backfillDistances.data.noCoordinates.length > 0 && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                    <span className="font-bold">
+                      Brez koordinat: {backfillDistances.data.noCoordinates.length}
+                    </span>
+                    {" — "}
+                    {backfillDistances.data.noCoordinates.map((item) => item.itemName).join(", ")}
+                  </div>
+                )}
+                {backfillDistances.data.failures.length > 0 && (
+                  <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                    <p className="font-bold">Napake: {backfillDistances.data.failures.length}</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      {backfillDistances.data.failures.map((failure) => (
+                        <li key={failure.itemId}>
+                          <span className="font-semibold">{failure.itemName}</span>: {failure.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="shrink-0"
+            disabled={backfillDistances.isPending}
+            onClick={() => backfillDistances.mutate({ id: tenantId })}
+          >
+            {backfillDistances.isPending
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <Route className="mr-2 h-4 w-4" />}
+            {backfillDistances.isPending ? "Preračunavam …" : "Preračunaj razdalje"}
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-[22px] font-[800] tracking-tight">Kandidati za okolico</h2>

@@ -1434,6 +1434,30 @@ export const ReevaluateCreatorProposalsResponse = zod.object({
 
 
 /**
+ * @summary Fill missing road distance and duration from stored coordinates without geocoding or overwriting existing values
+ */
+export const BackfillCreatorDistancesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const BackfillCreatorDistancesResponse = zod.object({
+  "runId": zod.string(),
+  "computed": zod.number(),
+  "skipped": zod.number(),
+  "noCoordinates": zod.array(zod.object({
+  "itemId": zod.string(),
+  "itemName": zod.string()
+})),
+  "failures": zod.array(zod.object({
+  "itemId": zod.string(),
+  "itemName": zod.string()
+}).and(zod.object({
+  "reason": zod.string()
+})))
+})
+
+
+/**
  * @summary List existing tenant categories available to Creator proposals
  */
 export const ListCreatorCategoryOptionsParams = zod.object({

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
-import { categoriesTable, creatorPlaceProposalsTable, creatorRunsTable, creatorSourceRunsTable, creatorSourcesTable, db, sectionsTable, tenantsTable } from "@workspace/db";
+import { categoriesTable, creatorDistanceBackfillRunsTable, creatorPlaceProposalsTable, creatorRunsTable, creatorSourceRunsTable, creatorSourcesTable, db, sectionsTable, tenantsTable } from "@workspace/db";
 import {
   ApproveCreatorSourceListResponse,
   ApproveCreatorProposalResponse,
@@ -31,6 +31,7 @@ import {
   RejectCreatorProposalsBulkResponse,
   RetryCreatorProposalsResponse,
   ReevaluateCreatorProposalsResponse,
+  BackfillCreatorDistancesResponse,
   UndoCreatorProposalRejectionResponse,
   UnapproveCreatorProposalResponse,
   StartCreatorRunResponse,
@@ -80,6 +81,10 @@ import {
   startCreatorSourceRun,
 } from "../lib/creatorSourceRunService";
 import { reevaluateCreatorQueue } from "../lib/creatorQueueReevaluation";
+import {
+  backfillCreatorDistances,
+  CreatorDistanceBackfillError,
+} from "../lib/creatorDistanceBackfill";
 import { translateCreatorEditorial } from "../lib/creatorEditorialTranslation";
 import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { invalidateTenantCache } from "./publicTenants";
@@ -265,6 +270,18 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
       if (running) {
         throw new CreatorSourceRegistryError(
           "Origin municipality cannot change while a source-first run is active.",
+          "conflict",
+        );
+      }
+      const [distanceBackfill] = await tx.select({ id: creatorDistanceBackfillRunsTable.id })
+        .from(creatorDistanceBackfillRunsTable)
+        .where(and(
+          eq(creatorDistanceBackfillRunsTable.tenantId, tenantId),
+          eq(creatorDistanceBackfillRunsTable.status, "running"),
+        )).limit(1);
+      if (distanceBackfill) {
+        throw new CreatorSourceRegistryError(
+          "Izhodišča ni mogoče zamenjati med preračunom razdalj.",
           "conflict",
         );
       }
@@ -864,6 +881,29 @@ router.post("/admin/tenants/:id/creator/proposals/reevaluate", async (req, res):
       error: notFound
         ? error.message
         : `Ponovno ovrednotenje se je ustavilo: ${creatorProposalProcessingReason(error)}`,
+    });
+  }
+});
+
+router.post("/admin/tenants/:id/creator/distance-backfill", async (req, res): Promise<void> => {
+  const tenantId = first(req.params["id"]);
+  try {
+    const result = await backfillCreatorDistances(tenantId);
+    if (result.computed > 0) await markCreatorChange(tenantId);
+    await logChange({
+      tenantId,
+      action: "maintenance",
+      entity: "distance-review",
+      summary: "Preračunane manjkajoče cestne razdalje.",
+    });
+    res.json(BackfillCreatorDistancesResponse.parse(serialize(result)));
+  } catch (error) {
+    const status = error instanceof CreatorDistanceBackfillError
+      ? error.kind === "not-found" ? 404 : error.kind === "conflict" ? 409 : 400
+      : 500;
+    req.log.error({ error, tenantId }, "Creator distance backfill failed");
+    res.status(status).json({
+      error: error instanceof Error ? error.message : "Preračun razdalj ni uspel.",
     });
   }
 });

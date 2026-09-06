@@ -150,6 +150,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/confirm-coordinates", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/creator/proposals", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/reevaluate", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/creator/distance-backfill", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/approve", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/:proposalId/unapprove", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/proposals/approve-bulk", binding: OWNER },

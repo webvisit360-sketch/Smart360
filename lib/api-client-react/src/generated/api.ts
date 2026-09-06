@@ -44,6 +44,7 @@ import type {
   CreateAdminPlaceInput,
   CreatorCategoryOption,
   CreatorCoordinateConfirmationInput,
+  CreatorDistanceBackfillResult,
   CreatorOriginPreview,
   CreatorOriginPreviewInput,
   CreatorPhotoApproval,
@@ -3681,6 +3682,77 @@ export const useReevaluateCreatorProposals = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getReevaluateCreatorProposalsMutationOptions(options));
+    }
+
+export const getBackfillCreatorDistancesUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/creator/distance-backfill`
+}
+
+/**
+ * @summary Fill missing road distance and duration from stored coordinates without geocoding or overwriting existing values
+ */
+export const backfillCreatorDistances = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CreatorDistanceBackfillResult> => {
+
+  return customFetch<CreatorDistanceBackfillResult>(getBackfillCreatorDistancesUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getBackfillCreatorDistancesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof backfillCreatorDistances>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof backfillCreatorDistances>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['backfillCreatorDistances'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof backfillCreatorDistances>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  backfillCreatorDistances(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BackfillCreatorDistancesMutationResult = NonNullable<Awaited<ReturnType<typeof backfillCreatorDistances>>>
+
+    export type BackfillCreatorDistancesMutationError = ErrorType<void>
+
+    /**
+ * @summary Fill missing road distance and duration from stored coordinates without geocoding or overwriting existing values
+ */
+export const useBackfillCreatorDistances = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof backfillCreatorDistances>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof backfillCreatorDistances>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getBackfillCreatorDistancesMutationOptions(options));
     }
 
 export const getListCreatorCategoryOptionsUrl = (id: string,) => {

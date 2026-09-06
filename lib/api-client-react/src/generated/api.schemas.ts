@@ -1140,6 +1140,23 @@ export interface CreatorQueueReevaluationResult {
   outcomes: CreatorQueueReevaluationResultOutcomesItem[];
 }
 
+export interface CreatorDistanceBackfillNamedItem {
+  itemId: string;
+  itemName: string;
+}
+
+export type CreatorDistanceBackfillFailure = CreatorDistanceBackfillNamedItem & {
+  reason: string;
+};
+
+export interface CreatorDistanceBackfillResult {
+  runId: string;
+  computed: number;
+  skipped: number;
+  noCoordinates: CreatorDistanceBackfillNamedItem[];
+  failures: CreatorDistanceBackfillFailure[];
+}
+
 export type DistanceBulkApproveInputConfidence = typeof DistanceBulkApproveInputConfidence[keyof typeof DistanceBulkApproveInputConfidence];
 
 
