@@ -92,6 +92,14 @@ test("draggable detail sheets use grabbers and backdrop close without arrows", a
     /!target\.closest\("\.lg2-detail-sheet,\.lg2-order-dock,a,button,input,textarea,select"\)/,
   );
   assert.match(draggableDetailSource, /suppressGalleryClickRef/);
+  assert.match(
+    draggableDetailSource,
+    /data-lg-ambient-hero[\s\S]*?event\.stopPropagation\(\);[\s\S]*?onBack\(\);/,
+  );
+  assert.doesNotMatch(
+    draggableDetailSource,
+    /const startsAtTop\s*=\s*ambientHero\s*\|\|/,
+  );
 
   const fullScreenSource = source.slice(
     source.indexOf("function ExploreView("),

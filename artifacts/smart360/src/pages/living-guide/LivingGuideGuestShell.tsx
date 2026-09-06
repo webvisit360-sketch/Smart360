@@ -3148,7 +3148,14 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   }, [activeIndex, frameWidth, isUniformGallery, mediaKey]);
 
   if (!media?.length) return (
-    <div className="lg2-detail-hero lg2-detail-hero--ambient" data-lg-ambient-hero />
+    <div
+      className="lg2-detail-hero lg2-detail-hero--ambient"
+      data-lg-ambient-hero
+      onClick={(event) => {
+        event.stopPropagation();
+        onBack();
+      }}
+    />
   );
   if (isSingleHero) {
     const entry = media[0];
@@ -3355,11 +3362,7 @@ function useDraggableDetailSheet(
     };
 
     const measure = () => {
-      const ambientHero = Boolean(
-        sheetRoot.querySelector(".lg2-detail-hero--ambient"),
-      );
       const startsAtTop =
-        ambientHero ||
         sheet.classList.contains("lg2-detail-sheet--full-height") ||
         sheet.classList.contains("lg2-detail-sheet--solo");
       sheet.toggleAttribute("data-lg-sheet-starts-at-top", startsAtTop);
