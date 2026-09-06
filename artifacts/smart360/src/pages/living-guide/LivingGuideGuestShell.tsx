@@ -2602,6 +2602,73 @@ function PCard({ ariaLabel, onOpen, media, meta, title, description, categoryIco
   );
 }
 
+function ExploreCard({
+  ariaLabel,
+  onOpen,
+  media,
+  categoryLabel,
+  infoIcon,
+  infoText,
+  status,
+  title,
+  categoryIcon: icon = "doc",
+  adminNote,
+}: any) {
+  return (
+    <article
+      className={`lg2-explore-card${adminNote?.startsWith("Neaktivna") ? " lg2-explore-card--inactive" : ""}`}
+      data-admin-state={adminNote || undefined}
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+    >
+      <div
+        className={`lg2-explore-card-photo${
+          media ? "" : " lg2-explore-card-photo--placeholder"
+        }`}
+      >
+        {media ? (
+          <img
+            src={mediaImgSrc(media, CARD_IMAGE_WIDTH)}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            style={imageStyle(media)}
+          />
+        ) : (
+          <span className="lg2-explore-card-missing-photo" aria-label="fotografija manjka">
+            <svg aria-hidden="true"><use href={`#lg-i-${icon}`} /></svg>
+          </span>
+        )}
+      </div>
+      <div className="lg2-explore-card-body">
+        {categoryLabel && <span className="lg2-explore-card-category">{categoryLabel}</span>}
+        <h3><RichInline value={title} /></h3>
+        {adminNote && <p className="lg2-admin-category-note">{adminNote}</p>}
+        {(infoText || status) && (
+          <div className="lg2-explore-card-info">
+            {infoIcon && <svg aria-hidden="true" className="lg2-explore-card-info-icon"><use href={`#lg-i-${infoIcon}`} /></svg>}
+            {infoText && <span>{infoText}</span>}
+            {infoText && status && <span className="lg2-explore-card-info-dot">·</span>}
+            {status && (
+              <span className={`lg2-explore-card-status${status.isOpen ? " is-open" : ""}`}>
+                {status.text}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
 function useGroupTabsState(groups: any[]) {
   const [activeGroup, setActiveGroup] = useState<string | null>(
     groups[0]?.key ?? null,
@@ -2714,33 +2781,28 @@ function ExploreView({
         {distanceSections.map((section) => (
           <section className="lg2-distance-section" key={section.key}>
             {section.labelKey && (
-              <h2 className="lg2-distance-section-heading">{t(section.labelKey)}</h2>
+              <header className="lg2-distance-section-header">
+                <h2 className="lg2-distance-section-heading">{t(section.labelKey)}</h2>
+                <span className="lg2-distance-section-hint">
+                  {section.key === "near" ? t("UI.lg.distanceHint.near", { defaultValue: "do 20 min" }) : t("UI.lg.distanceHint.excursion", { defaultValue: "nad 20 min" })}
+                </span>
+              </header>
             )}
             {section.items.map(({ item, category }: any) => {
               const distance = itemDistanceText(item);
               const status = itemOpenStatus(item, t);
               return (
-                <PCard
+                <ExploreCard
                   key={item.id}
                   ariaLabel={item.title || category.label}
                   onOpen={() => openPlace(category.id, item.id)}
                   media={normalizeGuestMedia(item.media)[0]}
                   categoryIcon={categoryIcon(category)}
-                  meta={
-                    <>
-                      {distance && <span className="lg2-pcard-distance">{distance}</span>}
-                      {distance && <i aria-hidden="true" />}
-                      {status ? (
-                        <span className={`lg2-pcard-status${status.isOpen ? " is-open" : ""}`}>
-                          {status.text}
-                        </span>
-                      ) : (
-                        <span className="lg2-pcard-category">{category.label}</span>
-                      )}
-                    </>
-                  }
+                  categoryLabel={category.label}
+                  infoIcon={distance ? "pin" : undefined}
+                  infoText={distance}
+                  status={status}
                   title={item.title || category.label}
-                  description={exploreItemDescription(item, category)}
                   adminNote={adminCategoryNote(category)}
                 />
               );
@@ -2748,12 +2810,12 @@ function ExploreView({
           </section>
         ))}
         {emptyCategories.map((category: any) => (
-            <PCard
+            <ExploreCard
               key={category.id}
               ariaLabel={category.label}
               onOpen={() => onOpenCategory(category.id)}
               categoryIcon={categoryIcon(category)}
-              meta={<span className="lg2-pcard-category">{category.label}</span>}
+              categoryLabel={category.label}
               title={category.label}
               adminNote={adminCategoryNote(category)}
             />

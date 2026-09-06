@@ -694,3 +694,17 @@ mtime_ms = 1788722704873
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2e635ffb-330a-4ca6-b087-d47e004c8378/8f425837-a268-46ab-bcc5-21e0ae91e77e"
 storage_version_token = "1788722728975936"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "luE0Izhbs0Nr1eedD6xss"
+uri = "file://screenshots/okolica-compact-sl.jpg"
+type = "image"
+title = "Okolica compact cards — SL"
+description = "Verified 390×844 Meli Pu list with the compact row cards, loaded real thumbnails, no-photo icon placeholder, localized section header, and opening-hours status."
+logical_id = "63fb2994-d499-4d78-8b1f-3dcf8b734643"
+content_hash = "sha256:8e1016408d5006b8cb856de7b6968a77e745a1278e757fb081311d2527392f7a"
+size = 63996
+mtime_ms = 1788726097159
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/63fb2994-d499-4d78-8b1f-3dcf8b734643/3c616778-8c8b-4568-a2a6-eb4545d24417"
+storage_version_token = "1788726120641822"
+content_type = "image/jpeg"

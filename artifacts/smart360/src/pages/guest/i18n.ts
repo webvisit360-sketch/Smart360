@@ -202,6 +202,18 @@ export const LIVING_GUIDE_UI = {
     de: "Ausflüge",
     it: "Gite",
   },
+  "UI.lg.distanceHint.near": {
+    sl: "do 20 min",
+    en: "up to 20 min",
+    de: "bis 20 Min.",
+    it: "fino a 20 min",
+  },
+  "UI.lg.distanceHint.excursion": {
+    sl: "nad 20 min",
+    en: "over 20 min",
+    de: "über 20 Min.",
+    it: "oltre 20 min",
+  },
   "UI.lg.categoryFilter.all": {
     sl: "Vse",
     en: "All",

@@ -1,0 +1,16 @@
+Restyle the Okolica list cards to the approved compact design. LIST VIEW ONLY — detail sheets, chips, section logic, and other tabs unchanged.
+
+EXACT CARD SPEC (use the app's existing THEME TOKENS for colors — accent, card background, primary/secondary text — so day and night themes both work; geometry and typography are literal):
+1. Card: horizontal flex row, align-items center, gap 12px, padding 10px, border-radius 18px, card-background token. Full width, cards stacked with ~14px vertical gap.
+2. Thumbnail: fixed 92×76 px, border-radius 12px, object-fit cover, on the LEFT. If the item has no photo: neutral placeholder block in a slightly lighter tone with the category icon centered (no text).
+3. Right column, vertical stack, 3px gap:
+   - category label: 11px, uppercase, letter-spacing 0.1em, weight 700, secondary text color;
+   - item name: 17px, weight 700, primary text color, max 2 lines with ellipsis;
+   - info line: 13px, weight 600, ACCENT color: small map-pin icon (13px, stroke, accent) + "3,4 km · 9 min". If the item has opening-hours status (existing feature), append it on the same line in the current style ("· zaprto · odpre se ob 08:00" / "· odprto do 00:00"), colors as today.
+4. No description text in list cards — the description lives in the detail sheet.
+5. SECTION HEADERS (replace current styling): left "V BLIŽINI" / "IZLETI" (localized as already implemented) — 13px, uppercase, letter-spacing 0.12em, weight 700, secondary color; right-aligned hint on the same row — "do 20 min" / "nad 20 min" (localized), 12px, muted color.
+6. Tapping a card opens the existing detail sheet unchanged. Same shared card component for all Okolica categories and all tenants.
+
+Verify in development at 390×844 in SL and EN on real Meli Pu data, and attach a screenshot: cards render as one-row compact cards with left thumbnail; an item without a photo shows the icon placeholder; the hours status appears appended on the info line; section headers match the spec; the detail sheet still opens. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

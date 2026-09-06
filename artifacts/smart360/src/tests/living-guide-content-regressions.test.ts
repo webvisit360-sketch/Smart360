@@ -180,12 +180,65 @@ test("explore distance section headers have the approved four-language labels", 
     de: "Ausflüge",
     it: "Gite",
   });
+  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceHint.near"], {
+    sl: "do 20 min",
+    en: "up to 20 min",
+    de: "bis 20 Min.",
+    it: "fino a 20 min",
+  });
+  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceHint.excursion"], {
+    sl: "nad 20 min",
+    en: "over 20 min",
+    de: "über 20 Min.",
+    it: "oltre 20 min",
+  });
   assert.deepEqual(LIVING_GUIDE_UI["UI.lg.categoryFilter.all"], {
     sl: "Vse",
     en: "All",
     de: "Alle",
     it: "Tutte",
   });
+});
+
+test("compact list cards stay scoped to Okolica", async () => {
+  const source = await readFile(
+    new URL("../pages/living-guide/LivingGuideGuestShell.tsx", import.meta.url),
+    "utf8",
+  );
+  const css = await readFile(
+    new URL(
+      "../pages/living-guide/living-guide-guest.css",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sharedCardSource = source.slice(
+    source.indexOf("function PCard("),
+    source.indexOf("function ExploreCard("),
+  );
+  const exploreCardSource = source.slice(
+    source.indexOf("function ExploreCard("),
+    source.indexOf("function useGroupTabsState("),
+  );
+  const exploreViewSource = source.slice(
+    source.indexOf("function ExploreView("),
+    source.indexOf("function ShopView("),
+  );
+
+  assert.match(sharedCardSource, /meta, title, description/);
+  assert.match(sharedCardSource, /\{description && <p>\{description\}<\/p>\}/);
+  assert.match(exploreCardSource, /className=\{`lg2-explore-card/);
+  assert.doesNotMatch(exploreCardSource, /description/);
+  assert.match(exploreCardSource, /lg2-explore-card-photo--placeholder/);
+  assert.doesNotMatch(exploreCardSource, /fotografija manjka<\/span>/);
+  assert.equal((exploreViewSource.match(/<ExploreCard/g) ?? []).length, 2);
+  assert.doesNotMatch(exploreViewSource, /<PCard/);
+  assert.match(css, /\.lg2-explore-card \{[\s\S]*?gap: 12px;/);
+  assert.match(
+    css,
+    /\.lg2-explore-card-photo \{[\s\S]*?width: 92px;[\s\S]*?height: 76px;/,
+  );
+  assert.match(css, /\.lg2-pcard \{[\s\S]*?padding: 0;/);
 });
 
 test("explore category chips preserve active skeleton order and filter both distance groups", () => {
