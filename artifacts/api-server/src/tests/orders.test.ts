@@ -702,9 +702,9 @@ describe("buildEmailBody", () => {
     );
   });
 
-  test("reply-to is the approved monitored inbox", () => {
+  test("reply-to is the configured host notification address", () => {
     const body = buildEmailBody(BASE_PAYLOAD, ORDER_EMAIL_FROM_ADDRESS);
-    assert.equal(body["reply_to"], "smart360hq@gmail.com");
+    assert.equal(body["reply_to"], "info@webvisit360.com");
   });
 
   test("to is an array containing the payload.to address", () => {

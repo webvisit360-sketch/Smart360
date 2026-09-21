@@ -231,7 +231,7 @@ describe("global rules hold for every template", () => {
       );
       assert.equal(
         (body as Record<string, unknown>)["reply_to"],
-        "smart360hq@gmail.com",
+        "info@webvisit360.com",
       );
     });
 

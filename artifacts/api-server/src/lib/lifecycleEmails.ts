@@ -11,7 +11,7 @@
  * logs carry no recipient address and no token.
  */
 import { ReplitConnectors } from "@replit/connectors-sdk";
-import { BUSINESS_CONTACT_EMAIL } from "./businessContact";
+import { HOST_NOTIFICATION_REPLY_TO } from "./businessContact";
 import { logger } from "./logger";
 import { emailFrom as verifiedFrom } from "./orderEmail";
 import { cta, displayHost, p as par, renderEmail, rows, small } from "./emailTemplate";
@@ -86,7 +86,7 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
     ],
     footerLines: AGENCY_FOOTER,
   });
-  return { from, reply_to: BUSINESS_CONTACT_EMAIL, to: [p.to], subject, html, text };
+  return { from, reply_to: HOST_NOTIFICATION_REPLY_TO, to: [p.to], subject, html, text };
 }
 
 // ── 4 · Guide ready (set-password link) ─────────────────────────────────────
@@ -135,7 +135,7 @@ export function buildGuideReadyEmailBody(p: GuideReadyEmailPayload, from: string
     ],
     footerLines: AGENCY_FOOTER,
   });
-  return { from, reply_to: BUSINESS_CONTACT_EMAIL, to: [p.to], subject, html, text };
+  return { from, reply_to: HOST_NOTIFICATION_REPLY_TO, to: [p.to], subject, html, text };
 }
 
 // ── 6 · Guide published ──────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ export function buildPublishedEmailBody(p: PublishedEmailPayload, from: string) 
     ],
     footerLines: ["Smart360 · digitalni vodnik za goste"],
   });
-  return { from, reply_to: BUSINESS_CONTACT_EMAIL, to: [p.to], subject, html, text };
+  return { from, reply_to: HOST_NOTIFICATION_REPLY_TO, to: [p.to], subject, html, text };
 }
 
 // ── Shared sender ────────────────────────────────────────────────────────────

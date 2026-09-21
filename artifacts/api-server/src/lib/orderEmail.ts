@@ -17,7 +17,7 @@
  * can verify the exact outbound header name and payload without I/O.
  */
 import { ReplitConnectors } from "@replit/connectors-sdk";
-import { BUSINESS_CONTACT_EMAIL } from "./businessContact";
+import { HOST_NOTIFICATION_REPLY_TO } from "./businessContact";
 import { logger } from "./logger";
 import { cta, p as par, portalUrl, renderEmail, rows, small } from "./emailTemplate";
 
@@ -115,7 +115,7 @@ export function buildEmailBody(
 
   return {
     from: `${ORDER_EMAIL_FROM_NAME} <${from}>`,
-    reply_to: BUSINESS_CONTACT_EMAIL,
+    reply_to: HOST_NOTIFICATION_REPLY_TO,
     to: [p.to],
     subject,
     html,
