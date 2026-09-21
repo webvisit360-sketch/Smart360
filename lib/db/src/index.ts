@@ -140,4 +140,9 @@ export function escapeHostDbContext<T>(fn: () => T): T {
   return hostDbStorage.exit(fn);
 }
 
+/** Bind existing content readers to the caller's transaction, retaining its RLS role. */
+export function runWithDatabase<T>(database: Db, fn: () => T): T {
+  return hostDbStorage.run({ db: database, released: false }, fn);
+}
+
 export * from "./schema";

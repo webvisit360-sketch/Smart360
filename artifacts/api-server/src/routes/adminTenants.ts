@@ -10,6 +10,8 @@ import {
   mediaTable,
   changelogTable,
   validateLivingGuideNav,
+  runWithDatabase,
+  type Db,
 } from "@workspace/db";
 import {
   GetAdminOverviewResponse,
@@ -25,6 +27,7 @@ import {
   DuplicateTenantResponse,
   RenewTenantResponse,
   ListTenantRenewalsResponse,
+  PreviewTenantPublicationResponse,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import { logChange, safeSummary } from "../lib/changelog";
@@ -32,6 +35,11 @@ import { buildTenantOverviews } from "../lib/tenantOverview";
 import { seedTenantContent, TENANT_TYPES, type TenantType } from "../lib/tenantSeeds";
 import { sendPublishedEmail } from "../lib/lifecycleEmails";
 import { buildTenantContent } from "../lib/contentTree";
+import {
+  previewPublication, replacePublishedSnapshot, buildDraftPublication,
+  publicationToken, readPublishedContent,
+  ensureTenantPublication,
+} from "../lib/publishedSnapshots";
 import { checkSlugAvailability } from "../lib/slug";
 import { checkTenantMedia, dropBrokenReferences } from "../lib/mediaCheck";
 import { invalidateTenantCache } from "./publicTenants";
@@ -65,6 +73,14 @@ function serialize<T>(value: T): unknown {
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
+
+router.get("/admin/tenants/:id/publish-preview", async (req, res): Promise<void> => {
+  const id = String(req.params["id"]);
+  const [tenant] = await db.select({ id: tenantsTable.id }).from(tenantsTable)
+    .where(eq(tenantsTable.id, id));
+  if (!tenant) { res.status(404).json({ error: "Namestitev ni najdena." }); return; }
+  res.set("Cache-Control", "no-store").json(PreviewTenantPublicationResponse.parse(await previewPublication(id)));
+});
 
 function firstParam(v: string | string[] | undefined): string {
   return (Array.isArray(v) ? v[0] : v) ?? "";
@@ -229,6 +245,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         .where(eq(tenantsTable.id, created.id));
       created.renewsAt = renewsAt;
       if (subtitle !== undefined) created.subtitle = subtitle;
+      await ensureTenantPublication(created.id);
       await logChange({
         tenantId: created.id,
         tenantName: name,
@@ -268,6 +285,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     entity: "tenant",
     summary: `Ustvarjena je nova nastanitev »${auditTenantName(name)}«.`,
   });
+  await ensureTenantPublication(tenant!.id);
   res.status(201).json(CreateTenantResponse.parse(serialize(tenant)));
 });
 
@@ -626,6 +644,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     livingGuideNav: livingGuideNavRaw,
     mapUrl: mapUrlRaw,
     publishNow: publishNowRaw,
+    publishToken: publishTokenRaw,
     coordinateOverride: _coordinateOverride,
     latitude: _latitude,
     longitude: _longitude,
@@ -733,6 +752,16 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     const unpublishing =
       writeData["isPublished"] === false && lockedBefore.isPublished === true;
     const publishTime = successfulPublish ? new Date() : null;
+    if (successfulPublish && publishTokenRaw) {
+      const currentToken = await runWithDatabase(tx as unknown as Db, async () =>
+        publicationToken(await buildDraftPublication({
+          ...lockedBefore, ...writeData,
+        } as typeof lockedBefore), await readPublishedContent(id)));
+      if (currentToken !== publishTokenRaw) {
+        return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
+          slugFrozen: false, stalePublication: true };
+      }
+    }
     if (successfulPublish) {
       writeData["hasUnpublishedChanges"] = false;
       writeData["lastPublishedAt"] = publishTime;
@@ -763,19 +792,26 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       .set(writeData)
       .where(eq(tenantsTable.id, id))
       .returning();
+    if (successfulPublish && updated) {
+      await runWithDatabase(tx as unknown as Db, () => replacePublishedSnapshot(updated));
+    }
     return {
       updated: updated ?? null,
       beforeAtWrite: lockedBefore,
       firstPublish,
       slugFrozen: false,
     };
-  });
+  }, { isolationLevel: "repeatable read" });
   const {
     updated,
     beforeAtWrite,
     firstPublish,
     slugFrozen,
   } = writeResult;
+  if ("stalePublication" in writeResult && writeResult.stalePublication) {
+    res.status(409).json({ error: "Osnutek se je spremenil. Pred objavo ponovno preglejte spremembe." });
+    return;
+  }
   if (!updated) {
     if (slugFrozen) {
       res.status(409).json({
@@ -974,6 +1010,7 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
   // no longer exist or don't fit the field (e.g. opaque JPEG as transparent
   // logo). Re-check everything against the CURRENT bucket and drop misses.
   const dropped = await dropBrokenReferences(created.id);
+  await ensureTenantPublication(created.id);
   const [fresh] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, created.id));
   await logChange({
     tenantId: created.id,

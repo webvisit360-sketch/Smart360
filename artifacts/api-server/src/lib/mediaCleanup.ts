@@ -7,6 +7,7 @@ import {
   itemsTable,
   translationsTable,
   cleanupRunsTable,
+  publishedSnapshotsTable,
   type CleanupRunFile,
 } from "@workspace/db";
 import { desc, eq, isNull, lt, and } from "drizzle-orm";
@@ -97,6 +98,8 @@ async function getReferencedKeys(): Promise<Set<string>> {
     if (!text || !text.includes("/api/storage/")) return;
     for (const m of text.matchAll(embedded)) keys.add(`${m[1]}/${m[2]}`);
   };
+  const snapshots = await db.select({ content: publishedSnapshotsTable.content }).from(publishedSnapshotsTable);
+  for (const snapshot of snapshots) scan(JSON.stringify(snapshot.content));
   for (const i of itemRows) {
     scan(i.body);
     scan(i.noteText);

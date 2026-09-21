@@ -40,5 +40,6 @@
 - [Creator Wikimedia photos](creator-wikimedia-photos.md) — Commons thumbnails and bilingual fallback matching have stricter host/name rules than P18 originals.
 - [Creator place entry boundary](creator-place-entry-boundary.md) — new world places start in Nastanitev’s shared skeleton; house content stays plain and distances stay machine-owned.
 - [Publication-state ordering](publication-state-ordering.md) — every saved tenant-scoped admin change marks dirty; publish clears it, and cross-tenant moves affect both owners.
+- [Single published snapshot](published-snapshot-decision.md) — owner chose one snapshot for guest isolation and accurate confirmation; no separate baseline or history.
 - [Living Guide draggable details](living-guide-draggable-details.md) — one continuous non-scrolling sheet; pointer galleries must disable native image drag and suspend snap during gestures.
 - [Living Guide activity labels](living-guide-activity-labels.md) — `nature_trails` intentionally shares its visible name with the separate `act` category; never merge their identities.

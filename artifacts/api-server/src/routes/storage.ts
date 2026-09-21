@@ -57,6 +57,8 @@ export async function deletePhotoVariants(
   name: string,
   deleteExact?: (bucketName: string, objectName: string) => Promise<void>,
 ): Promise<void> {
+  const { publishedSnapshotReferences } = await import("../lib/publishedSnapshots");
+  if (await publishedSnapshotReferences(`/api/storage/img/${slug}/${name}`)) return;
   const searchPath = storage.getPublicObjectSearchPaths()[0];
   if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
   await Promise.all(IMG_WIDTHS.map(async (w) => {

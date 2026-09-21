@@ -21,6 +21,7 @@ import { runSharedTenantSkeletonSyncAtStartup } from "./lib/tenantSeeds";
 import { ensureCreatorPhotoSchema } from "./lib/creatorPhotoSchema";
 import { ensureCreatorDistanceBackfillSchema } from "./lib/creatorDistanceBackfillSchema";
 import { ensureGuestDirtyTriggers } from "./lib/guestDirtyTriggers";
+import { ensurePublishedSnapshotSchema, initializePublishedSnapshots } from "./lib/publishedSnapshots";
 import { runCreatorProposalContentReadySyncAtStartup } from "./lib/creatorProposalLedger";
 
 const rawPort = process.env["PORT"];
@@ -77,6 +78,9 @@ async function logBootstrapEnrollLink(): Promise<void> {
 ensureAdminAccount()
   .then(() => ensureCreatorPhotoSchema())
   .then(() => ensureCreatorDistanceBackfillSchema())
+  .then(() => ensurePublishedSnapshotSchema())
+  // Capture the currently live state before any startup content repair changes it.
+  .then(() => initializePublishedSnapshots())
   .then(() => ensureGuestDirtyTriggers())
   // Row-level security is the fail-closed backstop for host accounts. NOT
   // best-effort: if the policies cannot be applied, the server must not

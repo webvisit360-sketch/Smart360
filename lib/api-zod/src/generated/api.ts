@@ -8,6 +8,19 @@
 import * as zod from 'zod';
 
 
+export const PreviewTenantPublicationParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PreviewTenantPublicationResponse = zod.object({
+  "token": zod.string(),
+  "total": zod.number(),
+  "added": zod.array(zod.string()),
+  "changed": zod.array(zod.string()),
+  "removed": zod.array(zod.string())
+})
+
+
 /**
  * @summary Capture a public sales enquiry and notify the owner
  */
@@ -2386,6 +2399,7 @@ export const UpdateTenantBody = zod.object({
   "isTemplate": zod.boolean().optional(),
   "isPublished": zod.boolean().optional(),
   "publishNow": zod.boolean().optional().describe('Explicit signal from the existing publish action; never sent by ordinary auto-save'),
+  "publishToken": zod.string().optional().describe('Confirmation token from the publication preview; stale drafts are rejected'),
   "mediaQuotaBytes": zod.number().min(updateTenantBodyMediaQuotaBytesMin).optional()
 })
 

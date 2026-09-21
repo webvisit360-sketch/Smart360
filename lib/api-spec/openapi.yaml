@@ -22,6 +22,19 @@ tags:
   - name: messages
   - name: site-plan
 paths:
+  /admin/tenants/{id}/publish-preview:
+    get:
+      operationId: previewTenantPublication
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Exact draft versus published snapshot comparison
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantPublicationPreview" }
+        "404": { description: Tenant not found }
   /public/enquiries:
     post:
       operationId: sendPublicEnquiry
@@ -3880,6 +3893,10 @@ components:
           type: boolean
           writeOnly: true
           description: Explicit signal from the existing publish action; never sent by ordinary auto-save
+        publishToken:
+          type: string
+          writeOnly: true
+          description: Confirmation token from the publication preview; stale drafts are rejected
         mediaQuotaBytes: { type: number, minimum: 100000000 }
     SitePlanImage:
       type: object
@@ -3892,6 +3909,15 @@ components:
         width: { type: ["number", "null"] }
         height: { type: ["number", "null"] }
       required: [id, tenantId, url, caption, position]
+    TenantPublicationPreview:
+      type: object
+      properties:
+        token: { type: string }
+        total: { type: number }
+        added: { type: array, items: { type: string } }
+        changed: { type: array, items: { type: string } }
+        removed: { type: array, items: { type: string } }
+      required: [token, total, added, changed, removed]
     SitePlanImageUpdate:
       type: object
       properties:

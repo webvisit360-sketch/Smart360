@@ -1,4 +1,4 @@
-import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, useGetTenantNotificationConfiguration, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey, getGetTenantNotificationConfigurationQueryKey } from "@workspace/api-client-react";
+import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, useGetTenantNotificationConfiguration, usePreviewTenantPublication, getPreviewTenantPublicationQueryKey, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey, getGetTenantNotificationConfigurationQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
 import { Loader2, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
 import { actorLabel } from "@/pages/admin/dashboard";
@@ -39,6 +39,10 @@ import {
   notificationWhatsappPhoneForSave,
   selectNotificationChannel,
 } from "@/lib/notification-channel";
+import {
+  PublishConfirmationDialog,
+  type PublicationPreview,
+} from "@/components/admin/publish-confirmation-dialog";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -72,6 +76,17 @@ function formatPublishTime(value: string | null | undefined): string | null {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function publicationErrorMessage(error: unknown): string {
+  const value = error as {
+    data?: { error?: string; message?: string };
+    message?: string;
+  } | null;
+  return value?.data?.error
+    || value?.data?.message
+    || value?.message
+    || "Pregleda sprememb ni bilo mogoče pripraviti.";
 }
 
 type ThemeKey = keyof typeof THEME_DEFAULTS;
@@ -143,6 +158,15 @@ export default function AdminTenantEdit() {
       },
     }
   });
+  const publishMutation = useUpdateTenant();
+  const publicationPreviewQuery = usePreviewTenantPublication(id, {
+    query: {
+      enabled: false,
+      retry: false,
+      queryKey: getPreviewTenantPublicationQueryKey(id),
+    },
+    request: { cache: "no-store" },
+  });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -208,6 +232,10 @@ export default function AdminTenantEdit() {
   const [orderPasswordDraft, setOrderPasswordDraft] = useState("");
   const [orderPasswordConfigured, setOrderPasswordConfigured] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [publicationDialogOpen, setPublicationDialogOpen] = useState(false);
+  const [publicationPreview, setPublicationPreview] = useState<PublicationPreview | null>(null);
+  const [publicationLoading, setPublicationLoading] = useState(false);
+  const [publicationError, setPublicationError] = useState<string | null>(null);
 
   // Renewal ("Obnova"): a real editable date, edited directly (not via
   // formData — saving it immediately keeps the history trail on the server).
@@ -272,6 +300,7 @@ export default function AdminTenantEdit() {
 
   // Auto-save logic
   const lastSaved = useRef(formData);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (initRef.current !== id) return;
     const currentStr = JSON.stringify(formData);
@@ -279,6 +308,7 @@ export default function AdminTenantEdit() {
     if (currentStr !== lastStr) {
       const snapshot = formData;
       const t = setTimeout(() => {
+        autoSaveTimer.current = null;
         const notificationWhatsappPhone = notificationWhatsappPhoneForSave(
           formData.notificationWhatsappPhone,
         );
@@ -306,7 +336,11 @@ export default function AdminTenantEdit() {
           },
         });
       }, 500);
-      return () => clearTimeout(t);
+      autoSaveTimer.current = t;
+      return () => {
+        clearTimeout(t);
+        if (autoSaveTimer.current === t) autoSaveTimer.current = null;
+      };
     }
     return undefined;
   }, [formData, id, mediaQuotaGb]);
@@ -468,28 +502,36 @@ export default function AdminTenantEdit() {
     tenant.lastPublishedAt ?? tenant.firstPublishedAt,
   );
 
-  const handlePublish = () => {
+  const currentTenantSaveData = () => {
     const {
       latitude: _latitude,
       longitude: _longitude,
       guestUiMode: _guestUiMode,
       ...saveFormData
     } = formData;
+    return {
+      ...saveFormData,
+      customDomain: formData.customDomain.trim() || null,
+      email: formData.email.trim() || null,
+      mapUrl: formData.mapUrl.trim() || null,
+      wifiSsid: formData.wifiSsid.trim() || null,
+      wifiPass: formData.wifiPass || null,
+      mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
+      notificationWhatsappPhone: notificationWhatsappPhoneForSave(
+        formData.notificationWhatsappPhone,
+      ),
+    };
+  };
+
+  const publishWithoutConfirmation = () => {
     setPublishing(true);
     setFormData(prev => ({ ...prev, isPublished: true }));
     updateMutation.mutate({
       id,
       data: {
-        ...saveFormData,
+        ...currentTenantSaveData(),
         isPublished: true,
         publishNow: true,
-        customDomain: formData.customDomain.trim() || null,
-        email: formData.email.trim() || null,
-        mapUrl: formData.mapUrl.trim() || null,
-        wifiSsid: formData.wifiSsid.trim() || null,
-        wifiPass: formData.wifiPass || null,
-        mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
-        notificationWhatsappPhone: formData.notificationWhatsappPhone.trim() || undefined,
       },
     }, {
       onSuccess: () => {
@@ -497,6 +539,87 @@ export default function AdminTenantEdit() {
       },
       onSettled: () => setPublishing(false),
     });
+  };
+
+  const loadPublicationPreview = async (saveDraft: boolean) => {
+    setPublicationLoading(true);
+    setPublicationError(null);
+    setPublicationPreview(null);
+    try {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+        autoSaveTimer.current = null;
+      }
+      if (saveDraft) {
+        await updateMutation.mutateAsync({
+          id,
+          data: currentTenantSaveData(),
+        });
+        lastSaved.current = formData;
+      }
+      const previewResult = await publicationPreviewQuery.refetch();
+      if (previewResult.error) throw previewResult.error;
+      if (!previewResult.data) {
+        throw new Error("Strežnik ni vrnil pregleda sprememb.");
+      }
+      setPublicationPreview(previewResult.data);
+    } catch (error) {
+      setPublicationError(publicationErrorMessage(error));
+    } finally {
+      setPublicationLoading(false);
+    }
+  };
+
+  const handlePublish = () => {
+    if (!hasUnpublishedChanges) {
+      publishWithoutConfirmation();
+      return;
+    }
+    setPublicationDialogOpen(true);
+    void loadPublicationPreview(true);
+  };
+
+  const confirmPublication = async () => {
+    if (!publicationPreview) return;
+    setPublishing(true);
+    setPublicationError(null);
+    try {
+      const data = await publishMutation.mutateAsync({
+        id,
+        data: {
+          isPublished: true,
+          publishNow: true,
+          publishToken: publicationPreview.token,
+        },
+      });
+      queryClient.setQueryData(
+        getGetTenantQueryKey(id),
+        (old: any) => old ? { ...old, ...data } : old,
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() }),
+      ]);
+      setFormData((previous) => ({ ...previous, isPublished: true }));
+      setPublicationDialogOpen(false);
+      setPublicationPreview(null);
+      toast({ title: "Objavljeno", description: "Spremembe so vidne gostom." });
+    } catch (error: any) {
+      if (error?.status === 409) {
+        toast({
+          title: "Pregled sprememb je zastarel",
+          description: "Osnutek se je spremenil. Pregled je bil osvežen; pred objavo ga ponovno potrdite.",
+          variant: "destructive",
+        });
+        await loadPublicationPreview(false);
+      } else {
+        const message = publicationErrorMessage(error);
+        setPublicationError(message);
+        toast({ title: "Objava ni uspela", description: message, variant: "destructive" });
+      }
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const handleResetCover = () => {
@@ -628,7 +751,7 @@ export default function AdminTenantEdit() {
           <div className="flex shrink-0 flex-col items-end gap-1">
             <Button
               onClick={handlePublish}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation.isPending || publicationLoading || publishing}
               className={[
                 "rounded-[12px] md:rounded-[14px] px-3 md:px-[20px] py-2 md:py-[12px] text-[14px] md:text-[16px] font-[700] h-auto shrink-0 text-white",
                 publishing
@@ -1544,6 +1667,22 @@ export default function AdminTenantEdit() {
           Gostje vidijo šele objavljeno različico.
         </p>
       </aside>
+      <PublishConfirmationDialog
+        open={publicationDialogOpen}
+        preview={publicationPreview}
+        loading={publicationLoading}
+        publishing={publishing}
+        error={publicationError}
+        onOpenChange={(open) => {
+          setPublicationDialogOpen(open);
+          if (!open) {
+            setPublicationPreview(null);
+            setPublicationError(null);
+          }
+        }}
+        onConfirm={() => void confirmPublication()}
+        onRetry={() => void loadPublicationPreview(true)}
+      />
     </div>
   );
 }

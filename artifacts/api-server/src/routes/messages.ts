@@ -148,7 +148,11 @@ async function resolvePublishedTenant(slug: string) {
     .select()
     .from(tenantsTable)
     .where(and(eq(tenantsTable.slug, slug), eq(tenantsTable.isPublished, true)));
-  return tenant ?? null;
+  if (!tenant) return null;
+  const { readPublishedContent } = await import("../lib/publishedSnapshots");
+  const published = await readPublishedContent(tenant.id);
+  return { ...tenant, name: published.languages.sl!.tree.name,
+    orderPassword: published.guestAccess.orderPassword };
 }
 
 async function getThreadMessages(threadId: string) {

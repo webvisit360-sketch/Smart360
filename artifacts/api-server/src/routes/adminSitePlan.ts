@@ -86,6 +86,9 @@ function parseObjectPath(path: string): {
 }
 
 async function deleteStoredPhotoVariants(url: string): Promise<void> {
+  // Draft deletion must not remove bytes still used by the published guide.
+  const { publishedSnapshotReferences } = await import("../lib/publishedSnapshots");
+  if (await publishedSnapshotReferences(url)) return;
   const match =
     /^\/api\/storage\/img\/([a-z0-9-]+)\/([\w.-]+)$/i.exec(url);
   if (!match) return;
@@ -303,9 +306,8 @@ router.delete("/admin/site-plan-images/:id", async (req, res): Promise<void> => 
     .where(and(eq(mediaTable.url, existing.url), ne(mediaTable.id, id)))
     .limit(1);
   await db.transaction(async (tx) => {
-    if (!sharedReference) {
-      await deleteStoredPhotoVariants(existing.url);
-    }
+    // Removing a draft reference is not permission to remove published bytes.
+    // Global cleanup owns physical deletion and sees all tenants' snapshots.
     await tx.delete(mediaTable).where(eq(mediaTable.id, id));
   });
   invalidateMediaUsage();

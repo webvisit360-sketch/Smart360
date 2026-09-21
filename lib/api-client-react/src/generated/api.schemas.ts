@@ -1673,6 +1673,8 @@ export interface TenantUpdate {
   isPublished?: boolean;
   /** Explicit signal from the existing publish action; never sent by ordinary auto-save */
   publishNow?: boolean;
+  /** Confirmation token from the publication preview; stale drafts are rejected */
+  publishToken?: string;
   /** @minimum 100000000 */
   mediaQuotaBytes?: number;
 }
@@ -1691,6 +1693,14 @@ export interface SitePlanImage {
   width?: number | null;
   /** @nullable */
   height?: number | null;
+}
+
+export interface TenantPublicationPreview {
+  token: string;
+  total: number;
+  added: string[];
+  changed: string[];
+  removed: string[];
 }
 
 export interface SitePlanImageUpdate {

@@ -134,6 +134,7 @@ import type {
   TenantDuplicateInput,
   TenantInput,
   TenantOverview,
+  TenantPublicationPreview,
   TenantUpdate,
   Translation,
   TranslationEntry,
@@ -173,6 +174,77 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getPreviewTenantPublicationUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/publish-preview`
+}
+
+export const previewTenantPublication = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TenantPublicationPreview> => {
+
+  return customFetch<TenantPublicationPreview>(getPreviewTenantPublicationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPreviewTenantPublicationQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/publish-preview`
+    ] as const;
+    }
+
+
+export const getPreviewTenantPublicationQueryOptions = <TData = Awaited<ReturnType<typeof previewTenantPublication>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof previewTenantPublication>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPreviewTenantPublicationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof previewTenantPublication>>> = ({ signal }) => previewTenantPublication(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof previewTenantPublication>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type PreviewTenantPublicationQueryResult = NonNullable<Awaited<ReturnType<typeof previewTenantPublication>>>
+export type PreviewTenantPublicationQueryError = ErrorType<void>
+
+
+
+export function usePreviewTenantPublication<TData = Awaited<ReturnType<typeof previewTenantPublication>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof previewTenantPublication>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getPreviewTenantPublicationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getSendPublicEnquiryUrl = () => {
 

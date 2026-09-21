@@ -225,6 +225,7 @@ export * from './tenantInputType';
 export * from './tenantLivingGuideNavItem';
 export * from './tenantNotificationChannel';
 export * from './tenantOverview';
+export * from './tenantPublicationPreview';
 export * from './tenantStorageUsage';
 export * from './tenantUpdate';
 export * from './tenantUpdateGuestUiMode';

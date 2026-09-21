@@ -179,19 +179,18 @@ async function resolvePublishedTenant(slug: string) {
     .select()
     .from(tenantsTable)
     .where(and(eq(tenantsTable.slug, slug), eq(tenantsTable.isPublished, true)));
-  return tenant ?? null;
+  if (!tenant) return null;
+  const { readPublishedContent } = await import("../lib/publishedSnapshots");
+  const published = await readPublishedContent(tenant.id);
+  return { ...tenant, name: published.languages.sl!.tree.name,
+    orderPassword: published.guestAccess.orderPassword };
 }
 
 async function resolveEligibleItem(tenantId: string, itemId: string) {
-  const [row] = await db
-    .select({ item: itemsTable, tenantId: sectionsTable.tenantId })
-    .from(itemsTable)
-    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
-    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .where(eq(itemsTable.id, itemId));
-  if (!row) return null;
-  if (row.tenantId !== tenantId) return null;
-  return row.item;
+  const { readPublishedContent } = await import("../lib/publishedSnapshots");
+  const publication = await readPublishedContent(tenantId);
+  return publication.languages.sl!.tree.sections.flatMap((section) => section.categories)
+    .flatMap((category) => category.items).find((item) => item.id === itemId) ?? null;
 }
 
 // ─── Public: create order ─────────────────────────────────────────────────────

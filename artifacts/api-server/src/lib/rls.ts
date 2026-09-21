@@ -29,6 +29,7 @@ const TID = "nullif(current_setting('app.tenant_id', true), '')::uuid";
 /** tableName -> { using, withCheck? } (host-side predicate; non-host bypasses). */
 const POLICIES: Record<string, { using: string; withCheck?: string }> = {
   tenants: { using: `id = ${TID}` },
+  published_snapshots: { using: `tenant_id = ${TID}` },
   tenant_aliases: { using: `tenant_id = ${TID}` },
   sections: { using: `tenant_id = ${TID}` },
   categories: {
@@ -112,6 +113,7 @@ const HOST_ROLE_GRANTS: Record<string, string> = {
   messages: "SELECT, INSERT, UPDATE, DELETE",
   // The host edits their tenant but never creates or deletes tenants.
   tenants: "SELECT, UPDATE",
+  published_snapshots: "SELECT, INSERT, UPDATE",
   tenant_aliases: "SELECT",
   // Orders are created by guests; the host reads and processes them.
   orders: "SELECT, UPDATE, DELETE",

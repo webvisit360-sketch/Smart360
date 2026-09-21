@@ -8,3 +8,4 @@ export * from "./enquiries";
 export * from "./creator";
 export * from "./creatorDistanceBackfill";
 export * from "./notificationAttempts";
+export * from "./publishedSnapshots";

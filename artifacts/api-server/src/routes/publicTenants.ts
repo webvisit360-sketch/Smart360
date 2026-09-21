@@ -11,6 +11,7 @@ import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { wifiQrSvg } from "../lib/wifiQr";
 import { isAuthenticated } from "../lib/adminAuth";
 import { getHostResponseStats } from "../lib/hostResponseStats";
+import { readPublishedContent } from "../lib/publishedSnapshots";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -55,16 +56,22 @@ async function buildPublicPayload(
   tenant: TenantRow,
   lang: string | undefined,
   visibleOnly = true,
+  published = false,
 ): Promise<PayloadEntry> {
-  const tree = await buildTenantContent(tenant, { visibleOnly, lang });
-  const { ui, plurals } = await getUiAndPlurals(tenant.id, lang ?? "sl");
-  const publicUrl = guestUrl(tenant.slug);
+  const snapshot = published ? await readPublishedContent(tenant.id) : null;
+  const publishedSource = snapshot?.languages.sl;
+  const selectedLang = lang && (publishedSource?.tree.languages ?? tenant.languages ?? []).includes(lang) ? lang : "sl";
+  const saved = snapshot?.languages[selectedLang] ?? publishedSource;
+  if (published && !saved) throw new Error("Objavljeni posnetek nima vsebine.");
+  const tree = saved?.tree ?? await buildTenantContent(tenant, { visibleOnly, lang: selectedLang === "sl" ? undefined : selectedLang });
+  const { ui, plurals } = saved ?? await getUiAndPlurals(tenant.id, selectedLang);
+  const publicUrl = guestUrl(tree.slug);
   const qrSvg = await guestQrSvg(publicUrl);
   // Join-network QR — derived from the CURRENT tenant row. A Wi-Fi password
   // change is a tenant save, which clears this cache before guests can read
   // a stale code.
-  const joinQr = tenant.wifiSsid
-    ? await wifiQrSvg(tenant.wifiSsid, tenant.wifiPass, tenant.wifiEnc)
+  const joinQr = tree.wifiSsid
+    ? await wifiQrSvg(tree.wifiSsid, tree.wifiPass, tree.wifiEnc)
     : null;
   const responseStats = await getHostResponseStats(tenant.id);
   const payload = GetPublicTenantResponse.parse(
@@ -93,7 +100,7 @@ async function getPublicPayload(
   const key = `${tenant.id}|${lang ?? "sl"}`;
   const hit = payloadCache.get(key);
   if (hit && hit.expiresAt > Date.now()) return hit;
-  const entry = await buildPublicPayload(tenant, lang);
+  const entry = await buildPublicPayload(tenant, lang, true, true);
   payloadCache.set(key, entry);
   return entry;
 }
@@ -160,7 +167,7 @@ function enabledLang(
 ): string | undefined {
   const raw = typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
   if (!raw || raw === "sl") return undefined;
-  return (tenant.languages ?? []).includes(raw) ? raw : undefined;
+  return raw;
 }
 
 router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
@@ -218,6 +225,7 @@ router.get(
       res.status(404).json({ error: "Not found" });
       return;
     }
+    const published = (await readPublishedContent(tenant.id)).languages.sl!.tree;
     const icons = [
       { src: "/brand/ikona-smart360-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
       { src: "/brand/ikona-smart360-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
@@ -232,7 +240,7 @@ router.get(
         short_name: "Smart360",
         // Installed in a language → it opens in that language (only enabled ones).
         start_url: `/${tenant.slug}/${
-          rawLang && rawLang !== "sl" && (tenant.languages ?? []).includes(rawLang)
+          rawLang && rawLang !== "sl" && (published.languages ?? []).includes(rawLang)
             ? `?lang=${encodeURIComponent(rawLang)}`
             : ""
         }`,
