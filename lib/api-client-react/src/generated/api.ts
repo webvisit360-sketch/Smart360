@@ -85,6 +85,7 @@ import type {
   HealthStatus,
   HostAccountResponse,
   HostReplyInput,
+  HostWelcomePreview,
   Item,
   ItemCreatorStatus,
   ItemInput,
@@ -174,6 +175,83 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetHostWelcomePreviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/welcome-preview`
+}
+
+/**
+ * @summary Operator-only read-only welcome preview with a nonfunctional sample token
+ */
+export const getHostWelcomePreview = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<HostWelcomePreview> => {
+
+  return customFetch<HostWelcomePreview>(getGetHostWelcomePreviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHostWelcomePreviewQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/host/welcome-preview`
+    ] as const;
+    }
+
+
+export const getGetHostWelcomePreviewQueryOptions = <TData = Awaited<ReturnType<typeof getHostWelcomePreview>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostWelcomePreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHostWelcomePreviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHostWelcomePreview>>> = ({ signal }) => getHostWelcomePreview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHostWelcomePreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHostWelcomePreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getHostWelcomePreview>>>
+export type GetHostWelcomePreviewQueryError = ErrorType<void>
+
+
+/**
+ * @summary Operator-only read-only welcome preview with a nonfunctional sample token
+ */
+
+export function useGetHostWelcomePreview<TData = Awaited<ReturnType<typeof getHostWelcomePreview>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostWelcomePreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHostWelcomePreviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getPreviewTenantPublicationUrl = (id: string,) => {
 

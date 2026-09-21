@@ -722,3 +722,31 @@ mtime_ms = 1790015366035
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fa9d0292-714d-4d2c-b948-59c32440f382/5f1d831f-b3a3-40e8-a06b-d75d6ab1d46d"
 storage_version_token = "1790015574936430"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "UiHcz-y7bYO-4bB33Yz4b"
+uri = "file://reports/gril-welcome-before.png"
+type = "image"
+title = "Obstoječa dobrodošlica za Gril"
+description = "Nespremenjena HTML-predloga z dejanskim trenutnim imenom iz razvojne baze in neveljavno vzorčno aktivacijsko povezavo. Nič ni bilo poslano."
+logical_id = "30d791d5-f1a6-47db-b964-25dcafe50cd9"
+content_hash = "sha256:8fa5769a075c0cb514308f7ef491aa6dd1eaef2770ebc4ed0361eeca98d7d4e0"
+size = 120190
+mtime_ms = 1790018764479
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/30d791d5-f1a6-47db-b964-25dcafe50cd9/0e66001f-7e2d-40b4-a096-4912ef173816"
+storage_version_token = "1790018790726625"
+content_type = "image/png"
+
+[[outputs]]
+id = "zMz2QUaZu2jeLY-lFfiwB"
+uri = "file://reports/welcome-preview-desktop.png"
+type = "image"
+title = "Predogled dobrodošlice — pogovorno okno"
+description = "Preverjen prikaz dejanske komponente v razvojnem okolju z nadzorovanim odgovorom API; brez prijave v operaterski račun in brez pošiljanja."
+logical_id = "1134d9be-d53d-46a4-b98a-e65bc131859e"
+content_hash = "sha256:27fbbb0cbc0c536fd27cc5a1e4c54870d55d9b496839120f09d6b4402320b682"
+size = 117801
+mtime_ms = 1790019195807
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1134d9be-d53d-46a4-b98a-e65bc131859e/a8ebb968-3c39-4378-9d41-73daa9a8c5b1"
+storage_version_token = "1790019210899780"
+content_type = "image/png"

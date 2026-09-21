@@ -133,6 +133,7 @@ export * from './hostAccountResponse';
 export * from './hostInviteDelivery';
 export * from './hostInviteDeliveryDeliveryStatus';
 export * from './hostReplyInput';
+export * from './hostWelcomePreview';
 export * from './item';
 export * from './itemCreatorStatus';
 export * from './itemCreatorStatusRange';

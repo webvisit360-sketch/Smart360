@@ -5,6 +5,7 @@ import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, Ad
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { WelcomePreview } from "./welcome-preview";
 
 type HostAccount = {
   email: string;
@@ -200,6 +201,7 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
                     {busy === "welcome" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
                     Pošlji dobrodošlico
                   </Button>
+                  <WelcomePreview key={tenantId} tenantId={tenantId} />
                   <Button
                     variant="outline"
                     onClick={() => void sendInvite("guide-ready")}
@@ -211,6 +213,8 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
                 </div>
               </div>
             )}
+
+            {(!account || account.hasPassword) && <WelcomePreview key={tenantId} tenantId={tenantId} />}
 
             {account && account.inviteHistory.length > 0 && (
               <div className="space-y-2">

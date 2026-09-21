@@ -12,6 +12,7 @@ import {
   upsertHostAccountForTenant,
 } from "../lib/hostAuth";
 import { sendHostResetEmail } from "../lib/hostResetEmail";
+import { getWelcomePreview } from "../lib/welcomePreview";
 import { requireAdmin, rpOrigin } from "../lib/adminAuth";
 import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
@@ -202,6 +203,18 @@ router.put("/admin/tenants/:id/host", requireAdmin, async (req, res): Promise<vo
       : "Spremenjen je bil e-naslov dostopa stranke.",
   });
   res.json({ ok: true, created: result.created, email: result.email });
+});
+
+router.get("/admin/tenants/:id/host/welcome-preview", requireAdmin, async (req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "no-store");
+  const tenantId = tenantParam(req, res);
+  if (!tenantId) return;
+  const preview = await getWelcomePreview(tenantId);
+  if (!preview) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.json(preview);
 });
 
 router.post(

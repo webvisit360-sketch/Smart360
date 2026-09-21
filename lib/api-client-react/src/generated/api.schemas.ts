@@ -5,6 +5,15 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export interface HostWelcomePreview {
+  propertyName: string;
+  /** @nullable */
+  recipient: string | null;
+  subject: string;
+  html: string;
+  text: string;
+}
+
 export type PublicEnquiryPropertyType = typeof PublicEnquiryPropertyType[keyof typeof PublicEnquiryPropertyType];
 
 

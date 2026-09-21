@@ -8,6 +8,25 @@
 import * as zod from 'zod';
 
 
+/**
+ * @summary Operator-only read-only welcome preview with a nonfunctional sample token
+ */
+export const getHostWelcomePreviewPathIdRegExp = new RegExp('^[0-9a-fA-F-]{36}$');
+
+
+export const GetHostWelcomePreviewParams = zod.object({
+  "id": zod.coerce.string().regex(getHostWelcomePreviewPathIdRegExp)
+})
+
+export const GetHostWelcomePreviewResponse = zod.object({
+  "propertyName": zod.string(),
+  "recipient": zod.string().nullable(),
+  "subject": zod.string(),
+  "html": zod.string(),
+  "text": zod.string()
+})
+
+
 export const PreviewTenantPublicationParams = zod.object({
   "id": zod.coerce.string()
 })

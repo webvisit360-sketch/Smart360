@@ -101,6 +101,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/host/invite/confirm", binding: ANON },
   { method: "get", path: "/admin/tenants/:id/host", binding: OWNER },
   { method: "put", path: "/admin/tenants/:id/host", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/host/welcome-preview", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/host/send-invite", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/host/send-reset", binding: OWNER },
 
