@@ -1,0 +1,15 @@
+Pre-publish confirmation dialog, per the owner's decision — publishing stays one deliberate step, no version history.
+
+1. WHEN: clicking the orange "Objavi spremembe" button opens a confirmation window BEFORE anything is published. Editing itself (typing, uploading photos, saving forms) never triggers any warning — the dialog exists only at publish time. If there are no pending changes (green button), behavior is unchanged.
+2. CONTENT: the window lists what THIS publish will change for guests, computed reliably by comparing the current draft state with the last published state (or an equivalent accurate change record — never a guessed list). Grouped, in Slovenian:
+   - "Novo:" added items/photos,
+   - "Spremenjeno:" edited texts, photos, settings (name the item and the field, e.g. "WiFi geslo", "Opis: Zunanja telovadnica"),
+   - "Izbrisano ali odstranjeno:" removed items, removed photos, and fields that will become EMPTY — this group is visually emphasized in the warning color (#DD9A2B tone per CGP) because deletions are where mistakes hurt.
+   If a change cannot be described precisely, show an honest generic line ("Spremembe v razdelku X") rather than a wrong specific one.
+3. ACTIONS: "Objavi" (confirm, executes exactly the publish as today) and "Prekliči" (nothing happens, changes stay unpublished, button stays orange). Confirming is the only path to publishing.
+4. The dialog must be readable on mobile widths, scroll when the list is long, and show a count summary at top ("Ta objava vsebuje 7 sprememb").
+5. No changes to what publishing itself does, to the dirty-state tracking, or to guest views.
+
+Verify in development: edit a text, add a photo, delete a photo, and clear a settings field → the dialog lists all four in the right groups with the deletion group emphasized; Prekliči leaves everything unpublished; Objavi publishes and the button turns green; publishing with no changes is unchanged. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.
