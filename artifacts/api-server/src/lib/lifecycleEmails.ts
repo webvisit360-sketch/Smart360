@@ -48,16 +48,16 @@ export interface WelcomeEmailPayload {
 
 /** Pure builder — exported for unit tests. */
 export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
-  const subject = "Dobrodošli v Smart360 · vaš paket je aktiviran";
-  const greeting = p.hostName ? `Pozdravljeni, ${p.hostName}.` : "Pozdravljeni.";
+  const subject = "Dobrodošli v Smart360 · vaš vodnik je v pripravi";
   const { html, text } = renderEmail({
+    theme: "welcome-cgp",
     subject,
     preheader: "Pošljite nam gradivo — vodnik pripravimo mi",
     brand: "Smart360",
     title: "Dobrodošli",
     blocks: [
       par(
-        `${greeting} Hvala za zaupanje — za `,
+        "Pozdravljeni. Hvala za zaupanje — za ",
         { b: p.propertyName },
         " pripravljamo digitalni vodnik za vaše goste.",
       ),
@@ -67,13 +67,16 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
         "Povezava velja 72 ur in jo je mogoče uporabiti enkrat. Gesla ne pošiljamo po e-pošti in ga tudi mi ne vidimo.",
       ),
       par(
-        "Vodnik v celoti sestavimo mi — ničesar vam ni treba graditi ali urejati. Od vas potrebujemo samo gradivo:",
+        "Prvo različico vodnika v celoti pripravimo mi — ničesar vam ni treba graditi. Od vas potrebujemo samo gradivo:",
       ),
       rows([
         { label: "Fotografije", value: "10–20 fotografij nastanitve in okolice" },
         { label: "Osnovni podatki", value: "naslov, kontakt, čas prijave in odjave" },
         { label: "Napotki za goste", value: "hišni red, wi-fi, parkiranje, posebnosti" },
       ]),
+      par(
+        "Ko bo vodnik pripravljen, ga boste s svojim računom lahko kadar koli sami urejali in dopolnjevali — besedila, fotografije, ponudbo in obvestila.",
+      ),
       cta("Pošljite gradivo", "mailto:info@webvisit360.com"),
       par(
         "Gradivo lahko pošljete kar kot odgovor na to sporočilo. Ko bo vodnik pripravljen, prejmete še povabilo za pregled.",

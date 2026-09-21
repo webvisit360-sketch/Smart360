@@ -1,0 +1,19 @@
+Rework the host welcome email to the Smart360 CGP and corrected copy. The admin "Predogled dobrodošlice" stays as is (it renders the same template).
+
+1. DESIGN — CGP EXACTLY, no inventions: white background #FFFFFF; content card #F4F6F2; text #121A14; secondary text #66716A; hairlines #E8EBE6; ALL buttons green #157347 with white text; the warm amber #DD9A2B may appear only as a thin top accent line on the card — REMOVE the current multicolor rainbow bar and ALL orange buttons; no blue anywhere. Keep the SMART360 logo lockup at top. Font: Archivo with system-sans fallback stack (email clients may not load webfonts — the fallback must look correct).
+
+2. COPY — use this exact Slovenian text (structure as today: heading, intro, password button, fine print, gradivo table, closing):
+   - Zadeva: "Dobrodošli v Smart360 · vaš vodnik je v pripravi"
+   - Naslov: "Dobrodošli"
+   - Uvod: "Pozdravljeni. Hvala za zaupanje — za <ime nastanitve> pripravljamo digitalni vodnik za vaše goste."
+   - "Najprej si varno nastavite geslo za svoj Smart360 račun:" + button "Nastavite geslo"
+   - Fine print (unchanged): "Povezava velja 72 ur in jo je mogoče uporabiti enkrat. Gesla ne pošiljamo po e-pošti in ga tudi mi ne vidimo."
+   - "Prvo različico vodnika v celoti pripravimo mi — ničesar vam ni treba graditi. Od vas potrebujemo samo gradivo:" + existing three-row table (Fotografije / Osnovni podatki / Napotki za goste, same contents)
+   - NEW paragraph after the table: "Ko bo vodnik pripravljen, ga boste s svojim računom lahko kadar koli sami urejali in dopolnjevali — besedila, fotografije, ponudbo in obvestila."
+   - Button "Pošljite gradivo" (green), footer as today.
+
+3. DELIVERABLE FOR THE OPERATOR: besides the in-admin preview, save the final rendered email (Gril data, dummy token) as a standalone HTML file and attach it to your report so the operator can open it in a browser.
+
+Verify in development: preview dialog shows the new design; no orange, no rainbow, no blue; the new paragraph present; renders correctly in a plain browser and at mobile width. No sending, no invitations touched. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.

@@ -144,9 +144,15 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
   test("welcome: approved subject, 72-hour account claim and materials", () => {
     const b = allSix()[0][1] as Record<string, unknown>;
     const html = b["html"] as string;
-    assert.equal(b["subject"], "Dobrodošli v Smart360 · vaš paket je aktiviran");
+    assert.equal(b["subject"], "Dobrodošli v Smart360 · vaš vodnik je v pripravi");
     assert.ok(html.includes("Fotografije"), "asks for photos");
-    assert.ok(html.includes("sestavimo mi"), "states the guide is built by us");
+    assert.ok(html.includes("Prvo različico vodnika v celoti pripravimo mi — ničesar vam ni treba graditi. Od vas potrebujemo samo gradivo:"));
+    const editingCopy = "Ko bo vodnik pripravljen, ga boste s svojim računom lahko kadar koli sami urejali in dopolnjevali — besedila, fotografije, ponudbo in obvestila.";
+    assert.ok(html.includes(editingCopy));
+    assert.ok((b["text"] as string).includes(editingCopy));
+    assert.ok(html.indexOf("Napotki za goste") < html.indexOf(editingCopy));
+    assert.ok(html.indexOf(editingCopy) < html.indexOf('href="mailto:'));
+    assert.ok(!html.includes("graditi ali urejati"));
     assert.ok(!html.includes("Kreator"), "must not teach the creator");
     assert.ok(html.includes("Povezava velja 72 ur"), "invite lifetime is explicit");
     assert.ok(html.includes("/portal/povabilo?token=welcome-abc"), "uses invite page");
@@ -169,11 +175,24 @@ describe("global rules hold for every template", () => {
     const text = (body as Record<string, unknown>)["text"] as string;
 
     test(`${name}: design system present`, () => {
-      assert.equal((html.match(/height:5px;line-height:5px;font-size:0;background:/g) ?? []).length, 7);
-      assert.ok(html.includes("#E8801B"), "orange band color");
-      if (html.includes("<a href=")) {
-        assert.ok(html.includes("background:#E8801B"), "orange CTA");
-        assert.ok(html.includes("color:#150C03"), "CTA ink");
+      if (name === "welcome") {
+        assert.equal((html.match(/background:#DD9A2B/g) ?? []).length, 1, "one amber accent");
+        assert.ok(html.includes("height:3px;line-height:3px;font-size:0;background:#DD9A2B"));
+        assert.ok(html.includes("background:#F4F6F2"));
+        assert.ok(html.includes('<body style="margin:0;padding:0;background:#FFFFFF">'));
+        assert.equal((html.match(/background:#157347;color:#FFFFFF/g) ?? []).length, 2);
+        assert.ok(html.includes("font-family:Archivo,"));
+        assert.deepEqual(new Set(html.match(/#[0-9a-f]{6}/gi)), new Set([
+          "#FFFFFF", "#F4F6F2", "#121A14", "#66716A", "#E8EBE6", "#157347", "#DD9A2B",
+        ]), "only the exact approved CGP palette");
+      } else {
+        assert.equal((html.match(/height:5px;line-height:5px;font-size:0;background:/g) ?? []).length, 7);
+        assert.ok(html.includes("#E8801B"), "other emails retain their approved design");
+        if (html.includes("<a href=")) {
+          assert.ok(html.includes("background:#E8801B"), "orange CTA");
+          assert.ok(html.includes("color:#150C03"), "CTA ink");
+        }
+        assert.ok(!html.includes("#157347"), "other templates unchanged");
       }
       assert.ok(html.includes("color:#121A14"), "dark brand kicker");
       assert.ok(
@@ -181,7 +200,6 @@ describe("global rules hold for every template", () => {
         "stable hosted brand mark",
       );
       assert.ok(html.includes('width="20" height="20" alt=""'), "20px decorative mark");
-      assert.ok(!html.includes("#157347"), "old green removed");
       assert.match(html, /letter-spacing:\.14em/, "brand kicker style");
       assert.match(html, /font-size:24px;font-weight:800/, "24px title");
     });
