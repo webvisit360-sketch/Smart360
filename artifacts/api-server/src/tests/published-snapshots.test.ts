@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { mock } from "node:test";
 import { randomUUID } from "node:crypto";
 import express from "express";
 import type { AddressInfo } from "node:net";
 import { eq } from "drizzle-orm";
 import {
-  db, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
+  db, pool, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
   publishedSnapshotsTable, translationsTable, runWithDatabase, type Db,
 } from "@workspace/db";
 import {
@@ -13,6 +13,7 @@ import {
   previewPublication, replacePublishedSnapshot, publishedSnapshotReferences,
 } from "../lib/publishedSnapshots";
 import publicTenantsRouter, { invalidateTenantCache } from "../routes/publicTenants";
+import ordersRouter from "../routes/orders";
 
 test("one snapshot isolates draft edits, retains deleted photos, diffs accurately, replaces atomically", async () => {
   await ensurePublishedSnapshotSchema();
@@ -21,6 +22,7 @@ test("one snapshot isolates draft edits, retains deleted photos, diffs accuratel
     isPublished: true, wifiPass: "never-show-this-secret", languages: ["sl", "en"],
   }).returning();
   const id = tenant!.id;
+  let fixtureItemId: string | undefined;
   const app = express();
   app.use("/api", publicTenantsRouter);
   const server = app.listen(0, "127.0.0.1");
@@ -42,6 +44,7 @@ test("one snapshot isolates draft edits, retains deleted photos, diffs accuratel
     const [item] = await db.insert(itemsTable).values({
       categoryId: category!.id, title: "Zunanja telovadnica", body: "Prvotni opis",
     }).returning();
+    fixtureItemId = item!.id;
     const [photo] = await db.insert(mediaTable).values({
       itemId: item!.id, kind: "image", url: "/api/storage/img/snapshot-fixture/old.jpg",
     }).returning();
@@ -110,6 +113,72 @@ test("one snapshot isolates draft edits, retains deleted photos, diffs accuratel
     assert.equal(publishedGuest.sections[0].categories[0].items[0].body, "Novi opis");
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    if (fixtureItemId) await db.delete(translationsTable).where(eq(translationsTable.recordId, fixtureItemId));
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, id));
+  }
+});
+
+test("order HTTP request uses one publication when a replacement commits between auth and item resolution", async () => {
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `snapshot-order-${randomUUID()}`, name: "Snapshot order fixture",
+    isPublished: true, orderPassword: "original-password", orderNotifyEmail: false,
+  }).returning();
+  const id = tenant!.id;
+  const app = express();
+  app.use(express.json());
+  app.use("/api", ordersRouter);
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  let restoreQuery: (() => void) | undefined;
+  try {
+    const [section] = await db.insert(sectionsTable).values({
+      tenantId: id, key: "order", title: "Naročila",
+    }).returning();
+    const [category] = await db.insert(categoriesTable).values({
+      sectionId: section!.id, key: "food", label: "Hrana", layout: "poi",
+    }).returning();
+    const [item] = await db.insert(itemsTable).values({
+      categoryId: category!.id, title: "Izdelek", price: "10", orderEnabled: true,
+    }).returning();
+    await ensureTenantPublication(id);
+    const next = structuredClone(await readPublishedContent(id));
+    next.guestAccess.orderPassword = "replacement-password";
+    for (const language of Object.values(next.languages)) {
+      language.tree.sections[0]!.categories[0]!.items[0]!.price = "20";
+    }
+    let snapshotReads = 0, replaced = false;
+    const originalQuery = pool.query.bind(pool);
+    const queryMock = mock.method(pool, "query", async (...args: any[]) => {
+      const text = typeof args[0] === "string" ? args[0] : args[0]?.text ?? "";
+      if (text.startsWith("select") && text.includes('from "published_snapshots"')) snapshotReads++;
+      if (!replaced && text.includes('from "orders"') && text.includes("idempotency_key")) {
+        replaced = true;
+        // Deliberate concurrent-publication interleaving during the actual route.
+        await db.update(publishedSnapshotsTable)
+          .set({ content: next as unknown as Record<string, unknown> })
+          .where(eq(publishedSnapshotsTable.tenantId, id));
+      }
+      return (originalQuery as any)(...args);
+    });
+    restoreQuery = () => queryMock.mock.restore();
+    const response = await fetch(
+      `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/public/tenants/${tenant!.slug}/orders`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-device-token": randomUUID(), "x-idempotency-key": randomUUID() },
+        body: JSON.stringify({
+          itemId: item!.id, qty: 1, guestName: "Testni gost", guestPhone: "041000000",
+          guestUnit: "Test", orderPassword: "original-password",
+        }),
+      },
+    );
+    assert.equal(response.status, 201, await response.clone().text());
+    assert.equal((await response.json() as { snapshotPrice: string }).snapshotPrice, "10");
+    assert.equal(replaced, true);
+    assert.equal(snapshotReads, 1, "auth and catalogue must not independently reread the snapshot");
+  } finally {
+    restoreQuery?.();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     await db.delete(tenantsTable).where(eq(tenantsTable.id, id));
   }
 });

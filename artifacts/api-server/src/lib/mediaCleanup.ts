@@ -57,6 +57,20 @@ function refKeyFromUrl(url: string | null | undefined): string | null {
   return m ? `${m[1]}/${m[2]}` : null;
 }
 
+/** Traverse decoded JSON values; JSON.stringify would introduce backslashes
+ * before rich-text quotes and corrupt a filename immediately before one. */
+export function collectStorageReferenceKeys(value: unknown, keys = new Set<string>()): Set<string> {
+  if (typeof value === "string") {
+    const embedded = /\/api\/storage\/(?:img|video)\/([^/\\\s"'<>]+)\/([^/\\\s"'<>?#)]+)/g;
+    for (const match of value.matchAll(embedded)) keys.add(`${match[1]}/${match[2]}`);
+  } else if (Array.isArray(value)) {
+    for (const child of value) collectStorageReferenceKeys(child, keys);
+  } else if (value && typeof value === "object") {
+    for (const child of Object.values(value)) collectStorageReferenceKeys(child, keys);
+  }
+  return keys;
+}
+
 /**
  * Every "slug/file" pair referenced by any DB row, across ALL tenants.
  * MUST cover every column that can hold a storage URL — media.url,
@@ -93,13 +107,11 @@ async function getReferencedKeys(): Promise<Set<string>> {
   }
   for (const s of sectionRows) add(s.imageUrl);
   // Rich text / translations may EMBED storage URLs anywhere in the string.
-  const embedded = /\/api\/storage\/(?:img|video)\/([^/\s"'<>]+)\/([^/\s"'<>?#)]+)/g;
   const scan = (text: string | null | undefined) => {
-    if (!text || !text.includes("/api/storage/")) return;
-    for (const m of text.matchAll(embedded)) keys.add(`${m[1]}/${m[2]}`);
+    collectStorageReferenceKeys(text, keys);
   };
   const snapshots = await db.select({ content: publishedSnapshotsTable.content }).from(publishedSnapshotsTable);
-  for (const snapshot of snapshots) scan(JSON.stringify(snapshot.content));
+  for (const snapshot of snapshots) collectStorageReferenceKeys(snapshot.content, keys);
   for (const i of itemRows) {
     scan(i.body);
     scan(i.noteText);

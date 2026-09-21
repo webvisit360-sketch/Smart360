@@ -62,9 +62,6 @@ import { and, desc, eq, gt, inArray, lte } from "drizzle-orm";
 import {
   db,
   ordersTable,
-  itemsTable,
-  categoriesTable,
-  sectionsTable,
   tenantsTable,
 } from "@workspace/db";
 import {
@@ -182,13 +179,13 @@ async function resolvePublishedTenant(slug: string) {
   if (!tenant) return null;
   const { readPublishedContent } = await import("../lib/publishedSnapshots");
   const published = await readPublishedContent(tenant.id);
-  return { ...tenant, name: published.languages.sl!.tree.name,
+  return { ...tenant, publication: published, name: published.languages.sl!.tree.name,
     orderPassword: published.guestAccess.orderPassword };
 }
 
-async function resolveEligibleItem(tenantId: string, itemId: string) {
-  const { readPublishedContent } = await import("../lib/publishedSnapshots");
-  const publication = await readPublishedContent(tenantId);
+export function resolvePublishedOrderItem(
+  publication: import("../lib/publishedSnapshots").PublishedContent, itemId: string,
+) {
   return publication.languages.sl!.tree.sections.flatMap((section) => section.categories)
     .flatMap((category) => category.items).find((item) => item.id === itemId) ?? null;
 }
@@ -343,7 +340,9 @@ router.post("/public/tenants/:slug/orders", async (req, res): Promise<void> => {
     }
 
     // ── Resolve item for a new order ────────────────────────────────────────
-    const item = await resolveEligibleItem(tenant.id, itemId);
+    // Credential and catalogue must come from the SAME captured publication,
+    // even if a publish commits while this request checks idempotency.
+    const item = resolvePublishedOrderItem(tenant.publication, itemId);
     if (!item) { res.status(400).json({ error: "Item not found" }); return; }
     if (!item.isVisible) { res.status(400).json({ error: "Item is not visible" }); return; }
     if (!item.orderEnabled) { res.status(400).json({ error: "Ordering is not enabled for this item" }); return; }

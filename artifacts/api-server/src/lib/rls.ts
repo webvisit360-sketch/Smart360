@@ -30,6 +30,7 @@ const TID = "nullif(current_setting('app.tenant_id', true), '')::uuid";
 const POLICIES: Record<string, { using: string; withCheck?: string }> = {
   tenants: { using: `id = ${TID}` },
   published_snapshots: { using: `tenant_id = ${TID}` },
+  creator_place_materializations: { using: `tenant_id = ${TID}` },
   tenant_aliases: { using: `tenant_id = ${TID}` },
   sections: { using: `tenant_id = ${TID}` },
   categories: {
@@ -114,6 +115,9 @@ const HOST_ROLE_GRANTS: Record<string, string> = {
   // The host edits their tenant but never creates or deletes tenants.
   tenants: "SELECT, UPDATE",
   published_snapshots: "SELECT, INSERT, UPDATE",
+  // Guest-content projection needed when hosts preview/publish their own draft.
+  // Materialization writes remain owner-only.
+  creator_place_materializations: "SELECT",
   tenant_aliases: "SELECT",
   // Orders are created by guests; the host reads and processes them.
   orders: "SELECT, UPDATE, DELETE",

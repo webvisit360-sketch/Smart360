@@ -50,6 +50,13 @@ async function jreq(
   });
 }
 
+async function confirmedPublication(base: string, tenantId: string, cookie: string) {
+  const response = await jreq(base, "GET", `/admin/tenants/${tenantId}/publish-preview`, cookie);
+  assert.equal(response.status, 200);
+  const preview = await response.json() as { token: string };
+  return { isPublished: true, publishNow: true, publishToken: preview.token };
+}
+
 test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, attribution", async (t) => {
   _clearHostRateLimiters();
   const server = app.listen(0);
@@ -206,6 +213,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     const publish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, {
       isPublished: true,
       publishNow: true,
+      publishToken: (await confirmedPublication(base, tenantId, ownerCookie)).publishToken,
     });
     assert.equal(publish.status, 200);
     const published = (await publish.json()) as {
@@ -229,6 +237,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     const republish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, {
       isPublished: true,
       publishNow: true,
+      publishToken: (await confirmedPublication(base, tenantId, ownerCookie)).publishToken,
     });
     assert.equal(republish.status, 200);
     const again = (await republish.json()) as { firstPublishedAt: string | null };
@@ -283,7 +292,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       "PATCH",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
-      { isPublished: true, publishNow: true },
+      await confirmedPublication(base, tenantId, ownerCookie),
     );
     assert.equal(cleanAfterAutosave.status, 200);
 
@@ -330,7 +339,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       "PATCH",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
-      { isPublished: true, publishNow: true },
+      await confirmedPublication(base, tenantId, ownerCookie),
     );
     assert.equal(publishResponse.status, 200);
     const published = (await publishResponse.json()) as {
@@ -441,7 +450,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       "PATCH",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
-      { isPublished: true, publishNow: true },
+      await confirmedPublication(base, tenantId, ownerCookie),
     );
     assert.equal(secondPublishResponse.status, 200);
     const secondPublish = (await secondPublishResponse.json()) as {
@@ -509,7 +518,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       "PATCH",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
-      { isPublished: true, publishNow: true },
+      await confirmedPublication(base, tenantId, ownerCookie),
     );
     assert.equal(publishWhatsappResponse.status, 200);
     const publishWhatsapp = (await publishWhatsappResponse.json()) as {
@@ -574,7 +583,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       "PATCH",
       `/admin/tenants/${tenantId}`,
       ownerCookie,
-      { isPublished: true, publishNow: true },
+      await confirmedPublication(base, tenantId, ownerCookie),
     );
     assert.equal(publishWifiResponse.status, 200);
     const publishWifi = (await publishWifiResponse.json()) as {
@@ -712,6 +721,9 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     });
 
     const mailsBefore = sentMails.length;
+    // Directly inserted fixture needs its baseline; it has no draft changes,
+    // so the concurrent green/no-change calls intentionally remain tokenless.
+    await confirmedPublication(base, raceId, ownerCookie);
     const [r1, r2] = await Promise.all([
       jreq(base, "PATCH", `/admin/tenants/${raceId}`, ownerCookie, { isPublished: true }),
       jreq(base, "PATCH", `/admin/tenants/${raceId}`, ownerCookie, { isPublished: true }),

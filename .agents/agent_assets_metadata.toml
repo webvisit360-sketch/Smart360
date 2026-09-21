@@ -222,7 +222,7 @@ content_type = "image/jpeg"
 [[outputs]]
 id = "NDBX9huTJxqhWPsin4rtv"
 uri = "file://exports/emaili-rendered.html"
-type = "text"
+type = "html"
 title = "Šest predlog — dejansko poslani izrisi"
 description = "Vseh šest e-poštnih predlog, kot so bile res poslane prek Resend na testni naslov: pošiljatelj, zadeva, predogledna vrstica, HTML-izris in besedilna različica."
 logical_id = "4287ef46-a944-45d1-97a9-742beb14da1d"
@@ -348,7 +348,7 @@ content_type = "text/plain"
 [[outputs]]
 id = "pUTDt3CvPrfptfBkPqtlr"
 uri = "file://reports/smart360-production-detail-route-audit-2026-08-27.html"
-type = "text"
+type = "html"
 title = "Smart360 production detail-route audit"
 description = "Complete 173-row production measurement table at 390×844, with last-child bottom, navigation top, difference, and pass/fail for every deployed detail route."
 logical_id = "f9f47d5d-e5d7-4cef-a4bf-50531c5e8ae4"
@@ -707,4 +707,18 @@ size = 63996
 mtime_ms = 1788726097159
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/63fb2994-d499-4d78-8b1f-3dcf8b734643/3c616778-8c8b-4568-a2a6-eb4545d24417"
 storage_version_token = "1788726120641822"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "sNH40VXi5uElMEbVSGLfR"
+uri = "file://workspace/screenshots/publish-dialog-mobile.jpg"
+type = "image"
+title = "Potrditev objave — mobilni prikaz"
+description = "Dejanska komponenta s štirimi testnimi spremembami; izoliran razvojni prikaz."
+logical_id = "fa9d0292-714d-4d2c-b948-59c32440f382"
+content_hash = "sha256:1972b09dcd08e97ab83ddee386418a6713a334c95198cbd0d8a0d79a69538d48"
+size = 26292
+mtime_ms = 1790015366035
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fa9d0292-714d-4d2c-b948-59c32440f382/5f1d831f-b3a3-40e8-a06b-d75d6ab1d46d"
+storage_version_token = "1790015574936430"
 content_type = "image/jpeg"

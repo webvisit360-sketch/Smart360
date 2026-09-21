@@ -122,9 +122,19 @@ export function publicationToken(draft: PublishedContent, published: PublishedCo
 
 /** IDs, not array indices, identify content. Values (including passwords) never enter labels. */
 export function comparePublications(draft: PublishedContent, published: PublishedContent): PublicationChanges {
-  const added = new Set<string>(), changed = new Set<string>(), removed = new Set<string>();
-  const walk = (before: unknown, after: unknown, context: string, field = ""): void => {
+  type Change = { kind: "added" | "changed" | "removed"; line: string; transition: string; entity: boolean };
+  // Labels are presentation, never identity: distinct same-name entities and
+  // fields must survive. Paths include stable row IDs, not array positions.
+  const changes = new Map<string, Change>();
+  const sourceChanges = new Map<string, Change>();
+  const walk = (
+    before: unknown, after: unknown, context: string, path: string[],
+    target: Map<string, Change>, field = "",
+  ): void => {
     if (digest(before ?? null) === digest(after ?? null)) return;
+    const record = (kind: Change["kind"], line: string, at = path, old = before, next = after, entity = false) => {
+      target.set(JSON.stringify(at), { kind, line, transition: digest([old ?? null, next ?? null]), entity });
+    };
     if (Array.isArray(before) && Array.isArray(after) &&
       [...before, ...after].every((entry) => entry && typeof entry === "object" && "id" in entry)) {
       const oldRows = new Map(before.map((entry) => [entry.id, entry]));
@@ -136,10 +146,13 @@ export function comparePublications(draft: PublishedContent, published: Publishe
           : title || context;
       };
       for (const [id, entry] of oldRows) {
-        if (!newRows.has(id)) removed.add(entityLabel(entry));
-        else walk(entry, newRows.get(id), entityLabel(newRows.get(id)));
+        const rowPath = [...path, `id:${id}`];
+        if (!newRows.has(id)) record("removed", entityLabel(entry), rowPath, entry, null, true);
+        else walk(entry, newRows.get(id), entityLabel(newRows.get(id)), rowPath, target);
       }
-      for (const [id, entry] of newRows) if (!oldRows.has(id)) added.add(entityLabel(entry));
+      for (const [id, entry] of newRows) if (!oldRows.has(id)) {
+        record("added", entityLabel(entry), [...path, `id:${id}`], null, entry, true);
+      }
       return;
     }
     if (before && after && !Array.isArray(before) && !Array.isArray(after) &&
@@ -147,25 +160,37 @@ export function comparePublications(draft: PublishedContent, published: Publishe
       const old = before as Record<string, unknown>, next = after as Record<string, unknown>;
       for (const key of new Set([...Object.keys(old), ...Object.keys(next)])) {
         if (ignored.has(key) || key === "id" || key.endsWith("Id")) continue;
-        walk(old[key], next[key], context, key);
+        walk(old[key], next[key], context, [...path, key], target, key);
       }
       return;
     }
     const label = fieldLabels[field];
     const line = label ? `${label}${context ? `: ${context}` : ""}` : `Spremembe v razdelku ${context || "Nastavitve"}`;
-    if (empty(after) && !empty(before)) removed.add(line);
-    else changed.add(line);
+    record(empty(after) && !empty(before) ? "removed" : "changed", line);
   };
+  walk(published.languages.sl?.tree, draft.languages.sl?.tree, "", ["tree"], sourceChanges);
+  for (const [path, change] of sourceChanges) changes.set(`sl:${path}`, change);
   for (const lang of new Set([...Object.keys(draft.languages), ...Object.keys(published.languages)])) {
     const before = published.languages[lang], after = draft.languages[lang];
-    // Shared source fields repeat in fallback language trees; count them once.
-    walk(before?.tree, after?.tree, "");
-    walk(before?.ui, after?.ui, `Besedila vmesnika (${lang})`);
-    walk(before?.plurals, after?.plurals, `Množinske oblike (${lang})`);
+    if (lang !== "sl") {
+      const localized = new Map<string, Change>();
+      walk(before?.tree, after?.tree, "", ["tree"], localized);
+      for (const [path, change] of localized) {
+        const source = sourceChanges.get(path);
+        // Entity presence is language-independent. For field edits, suppress
+        // ONLY the same path with the same before→after values (source fallback).
+        if (source?.kind === change.kind &&
+          ((source.entity && change.entity) || source.transition === change.transition)) continue;
+        changes.set(`${lang}:${path}`, { ...change, line: `${change.line} — prevod (${lang})` });
+      }
+    }
+    walk(before?.ui, after?.ui, `Besedila vmesnika (${lang})`, [lang, "ui"], changes);
+    walk(before?.plurals, after?.plurals, `Množinske oblike (${lang})`, [lang, "plurals"], changes);
   }
-  walk(published.guestAccess, draft.guestAccess, "");
-  return { token: publicationToken(draft, published), total: added.size + changed.size + removed.size,
-    added: [...added], changed: [...changed], removed: [...removed] };
+  walk(published.guestAccess, draft.guestAccess, "", ["guestAccess"], changes);
+  const result = { added: [] as string[], changed: [] as string[], removed: [] as string[] };
+  for (const change of changes.values()) result[change.kind].push(change.line);
+  return { token: publicationToken(draft, published), total: changes.size, ...result };
 }
 
 export async function previewPublication(tenantId: string): Promise<PublicationChanges> {

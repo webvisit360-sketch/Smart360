@@ -37,7 +37,7 @@ import { sendPublishedEmail } from "../lib/lifecycleEmails";
 import { buildTenantContent } from "../lib/contentTree";
 import {
   previewPublication, replacePublishedSnapshot, buildDraftPublication,
-  publicationToken, readPublishedContent,
+  comparePublications, readPublishedContent,
   ensureTenantPublication,
 } from "../lib/publishedSnapshots";
 import { checkSlugAvailability } from "../lib/slug";
@@ -752,12 +752,12 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     const unpublishing =
       writeData["isPublished"] === false && lockedBefore.isPublished === true;
     const publishTime = successfulPublish ? new Date() : null;
-    if (successfulPublish && publishTokenRaw) {
-      const currentToken = await runWithDatabase(tx as unknown as Db, async () =>
-        publicationToken(await buildDraftPublication({
+    if (successfulPublish) {
+      const changes = await runWithDatabase(tx as unknown as Db, async () =>
+        comparePublications(await buildDraftPublication({
           ...lockedBefore, ...writeData,
         } as typeof lockedBefore), await readPublishedContent(id)));
-      if (currentToken !== publishTokenRaw) {
+      if ((publishTokenRaw && changes.token !== publishTokenRaw) || (!publishTokenRaw && changes.total > 0)) {
         return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
           slugFrozen: false, stalePublication: true };
       }

@@ -67,7 +67,7 @@ export function PublishConfirmationDialog({
   const busy = loading || publishing;
   return (
     <Dialog open={open} onOpenChange={(next) => {
-      if (!publishing) onOpenChange(next);
+      if (!busy) onOpenChange(next);
     }}>
       <DialogContent
         className="w-[calc(100%-1.5rem)] max-w-[640px] overflow-hidden p-0 sm:max-h-[min(86dvh,760px)]"
@@ -124,7 +124,7 @@ export function PublishConfirmationDialog({
           <Button
             type="button"
             variant="outline"
-            disabled={publishing}
+            disabled={busy}
             onClick={() => onOpenChange(false)}
           >
             Prekliči

@@ -43,6 +43,10 @@ import {
   PublishConfirmationDialog,
   type PublicationPreview,
 } from "@/components/admin/publish-confirmation-dialog";
+import {
+  publicationDraftChanged,
+  publicationNeedsConfirmation,
+} from "@/lib/tenant-publication-flow";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -300,41 +304,54 @@ export default function AdminTenantEdit() {
 
   // Auto-save logic
   const lastSaved = useRef(formData);
+  const lastSavedMediaQuotaGb = useRef(mediaQuotaGb);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSavePromise = useRef<Promise<unknown> | null>(null);
+  const formDataRef = useRef(formData);
+  const mediaQuotaGbRef = useRef(mediaQuotaGb);
+  formDataRef.current = formData;
+  mediaQuotaGbRef.current = mediaQuotaGb;
   useEffect(() => {
     if (initRef.current !== id) return;
     const currentStr = JSON.stringify(formData);
     const lastStr = JSON.stringify(lastSaved.current);
-    if (currentStr !== lastStr) {
+    if (currentStr !== lastStr || mediaQuotaGb !== lastSavedMediaQuotaGb.current) {
       const snapshot = formData;
+      const quotaSnapshot = mediaQuotaGb;
       const t = setTimeout(() => {
         autoSaveTimer.current = null;
         const notificationWhatsappPhone = notificationWhatsappPhoneForSave(
-          formData.notificationWhatsappPhone,
+          snapshot.notificationWhatsappPhone,
         );
         const {
           latitude: _l,
           longitude: _lo,
           guestUiMode: _guestUiMode,
           ...saveData
-        } = formData;
-        updateMutation.mutate({
+        } = snapshot;
+        const request = updateMutation.mutateAsync({
           id,
           data: {
             ...saveData,
-            customDomain: formData.customDomain.trim() || null,
-            email: formData.email.trim() || null,
-            mapUrl: formData.mapUrl.trim() || null,
-            wifiSsid: formData.wifiSsid.trim() || null,
-            wifiPass: formData.wifiPass || null,
-            mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
+            customDomain: snapshot.customDomain.trim() || null,
+            email: snapshot.email.trim() || null,
+            mapUrl: snapshot.mapUrl.trim() || null,
+            wifiSsid: snapshot.wifiSsid.trim() || null,
+            wifiPass: snapshot.wifiPass || null,
+            mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(quotaSnapshot.replace(",", ".")) || 2) * 1_000_000_000),
             notificationWhatsappPhone,
           },
-        }, {
-          onSuccess: () => {
-            lastSaved.current = snapshot;
-          },
         });
+        autoSavePromise.current = request;
+        void request
+          .then(() => {
+            lastSaved.current = snapshot;
+            lastSavedMediaQuotaGb.current = quotaSnapshot;
+          })
+          .catch(() => undefined)
+          .finally(() => {
+            if (autoSavePromise.current === request) autoSavePromise.current = null;
+          });
       }, 500);
       autoSaveTimer.current = t;
       return () => {
@@ -441,6 +458,7 @@ export default function AdminTenantEdit() {
         guestUiMode: (tenant.guestUiMode === "living-guide" ? "living-guide" : "legacy") as "legacy" | "living-guide",
       };
       lastSaved.current = initialForm;
+      lastSavedMediaQuotaGb.current = ((tenant.mediaQuotaBytes ?? 2_000_000_000) / 1_000_000_000).toFixed(1).replace(/\.0$/, "");
       setFormData(initialForm);
     }
   }, [tenant]);
@@ -502,85 +520,50 @@ export default function AdminTenantEdit() {
     tenant.lastPublishedAt ?? tenant.firstPublishedAt,
   );
 
-  const currentTenantSaveData = () => {
+  const tenantSaveDataFor = (
+    formSnapshot: typeof formData,
+    quotaSnapshot: string,
+  ) => {
     const {
       latitude: _latitude,
       longitude: _longitude,
       guestUiMode: _guestUiMode,
       ...saveFormData
-    } = formData;
+    } = formSnapshot;
     return {
       ...saveFormData,
-      customDomain: formData.customDomain.trim() || null,
-      email: formData.email.trim() || null,
-      mapUrl: formData.mapUrl.trim() || null,
-      wifiSsid: formData.wifiSsid.trim() || null,
-      wifiPass: formData.wifiPass || null,
-      mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(mediaQuotaGb.replace(",", ".")) || 2) * 1_000_000_000),
+      customDomain: formSnapshot.customDomain.trim() || null,
+      email: formSnapshot.email.trim() || null,
+      mapUrl: formSnapshot.mapUrl.trim() || null,
+      wifiSsid: formSnapshot.wifiSsid.trim() || null,
+      wifiPass: formSnapshot.wifiPass || null,
+      mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(quotaSnapshot.replace(",", ".")) || 2) * 1_000_000_000),
       notificationWhatsappPhone: notificationWhatsappPhoneForSave(
-        formData.notificationWhatsappPhone,
+        formSnapshot.notificationWhatsappPhone,
       ),
     };
   };
 
-  const publishWithoutConfirmation = () => {
-    setPublishing(true);
-    setFormData(prev => ({ ...prev, isPublished: true }));
-    updateMutation.mutate({
-      id,
-      data: {
-        ...currentTenantSaveData(),
-        isPublished: true,
-        publishNow: true,
-      },
-    }, {
-      onSuccess: () => {
-        toast({ title: "Objavljeno", description: "Spremembe so vidne gostom." });
-      },
-      onSettled: () => setPublishing(false),
-    });
-  };
+  const isLocalDraftDirty = (
+    formSnapshot: typeof formData,
+    quotaSnapshot: string,
+  ) => publicationDraftChanged(
+    formSnapshot,
+    lastSaved.current,
+    quotaSnapshot,
+    lastSavedMediaQuotaGb.current,
+  );
 
-  const loadPublicationPreview = async (saveDraft: boolean) => {
-    setPublicationLoading(true);
-    setPublicationError(null);
-    setPublicationPreview(null);
-    try {
-      if (autoSaveTimer.current) {
-        clearTimeout(autoSaveTimer.current);
-        autoSaveTimer.current = null;
-      }
-      if (saveDraft) {
-        await updateMutation.mutateAsync({
-          id,
-          data: currentTenantSaveData(),
-        });
-        lastSaved.current = formData;
-      }
-      const previewResult = await publicationPreviewQuery.refetch();
-      if (previewResult.error) throw previewResult.error;
-      if (!previewResult.data) {
-        throw new Error("Strežnik ni vrnil pregleda sprememb.");
-      }
-      setPublicationPreview(previewResult.data);
-    } catch (error) {
-      setPublicationError(publicationErrorMessage(error));
-    } finally {
-      setPublicationLoading(false);
+  const fetchPublicationPreview = async () => {
+    const previewResult = await publicationPreviewQuery.refetch();
+    if (previewResult.error) throw previewResult.error;
+    if (!previewResult.data) {
+      throw new Error("Strežnik ni vrnil pregleda sprememb.");
     }
+    return previewResult.data;
   };
 
-  const handlePublish = () => {
-    if (!hasUnpublishedChanges) {
-      publishWithoutConfirmation();
-      return;
-    }
-    setPublicationDialogOpen(true);
-    void loadPublicationPreview(true);
-  };
-
-  const confirmPublication = async () => {
-    if (!publicationPreview) return;
+  const finishPublication = async (preview: PublicationPreview) => {
     setPublishing(true);
     setPublicationError(null);
     try {
@@ -589,7 +572,7 @@ export default function AdminTenantEdit() {
         data: {
           isPublished: true,
           publishNow: true,
-          publishToken: publicationPreview.token,
+          publishToken: preview.token,
         },
       });
       queryClient.setQueryData(
@@ -600,26 +583,96 @@ export default function AdminTenantEdit() {
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() }),
       ]);
+      lastSaved.current = { ...lastSaved.current, isPublished: true };
       setFormData((previous) => ({ ...previous, isPublished: true }));
       setPublicationDialogOpen(false);
       setPublicationPreview(null);
       toast({ title: "Objavljeno", description: "Spremembe so vidne gostom." });
     } catch (error: any) {
       if (error?.status === 409) {
+        setPublicationDialogOpen(true);
         toast({
           title: "Pregled sprememb je zastarel",
           description: "Osnutek se je spremenil. Pregled je bil osvežen; pred objavo ga ponovno potrdite.",
           variant: "destructive",
         });
-        await loadPublicationPreview(false);
+        await preparePublication(false);
       } else {
         const message = publicationErrorMessage(error);
+        setPublicationDialogOpen(true);
         setPublicationError(message);
         toast({ title: "Objava ni uspela", description: message, variant: "destructive" });
       }
     } finally {
       setPublishing(false);
     }
+  };
+
+  const preparePublication = async (autoPublishCleanPreview: boolean) => {
+    const formSnapshot = formDataRef.current;
+    const quotaSnapshot = mediaQuotaGbRef.current;
+    const localDirtyAtClick = isLocalDraftDirty(formSnapshot, quotaSnapshot);
+    const shouldShowLoadingDialog =
+      hasUnpublishedChanges || localDirtyAtClick || !autoPublishCleanPreview;
+
+    if (shouldShowLoadingDialog) setPublicationDialogOpen(true);
+    setPublicationLoading(true);
+    setPublicationError(null);
+    setPublicationPreview(null);
+    try {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+        autoSaveTimer.current = null;
+      }
+      if (autoSavePromise.current) {
+        await autoSavePromise.current.catch(() => undefined);
+      }
+
+      const mustSaveClickSnapshot = isLocalDraftDirty(formSnapshot, quotaSnapshot);
+      if (mustSaveClickSnapshot) {
+        await updateMutation.mutateAsync({
+          id,
+          data: tenantSaveDataFor(formSnapshot, quotaSnapshot),
+        });
+        lastSaved.current = formSnapshot;
+        lastSavedMediaQuotaGb.current = quotaSnapshot;
+      }
+
+      const preview = await fetchPublicationPreview();
+      setPublicationPreview(preview);
+      const needsConfirmation = publicationNeedsConfirmation({
+        cachedDirty: hasUnpublishedChanges,
+        localDirty: localDirtyAtClick,
+        previewTotal: preview.total,
+        allowCleanAutoPublish: autoPublishCleanPreview,
+      });
+      if (mustSaveClickSnapshot || preview.total > 0) {
+        queryClient.setQueryData(
+          getGetTenantQueryKey(id),
+          (old: any) => old ? { ...old, hasUnpublishedChanges: true } : old,
+        );
+      }
+
+      if (needsConfirmation) {
+        setPublicationDialogOpen(true);
+      } else {
+        await finishPublication(preview);
+      }
+    } catch (error) {
+      setPublicationDialogOpen(true);
+      setPublicationError(publicationErrorMessage(error));
+    } finally {
+      setPublicationLoading(false);
+    }
+  };
+
+  const handlePublish = () => {
+    void preparePublication(true);
+  };
+
+  const confirmPublication = async () => {
+    if (!publicationPreview) return;
+    await finishPublication(publicationPreview);
   };
 
   const handleResetCover = () => {
@@ -1681,7 +1734,7 @@ export default function AdminTenantEdit() {
           }
         }}
         onConfirm={() => void confirmPublication()}
-        onRetry={() => void loadPublicationPreview(true)}
+        onRetry={() => void preparePublication(false)}
       />
     </div>
   );
