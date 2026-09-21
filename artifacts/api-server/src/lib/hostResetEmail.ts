@@ -1,11 +1,11 @@
-import { ReplitConnectors } from "@replit/connectors-sdk";
 import { rpOrigin } from "./adminAuth";
 import { HOST_NOTIFICATION_REPLY_TO } from "./businessContact";
 import { logger } from "./logger";
 import { cta, p as par, renderEmail, small } from "./emailTemplate";
+import { deliverResend } from "./resendDelivery";
 
 /**
- * Password-reset e-mail for HOST accounts, via the Resend connector.
+ * Password-reset e-mail for HOST accounts, via the shared Resend transport.
  *
  * Hard rules (Instruction #28):
  * - The recipient is ALWAYS the host account's own e-mail. There is no code
@@ -14,8 +14,6 @@ import { cta, p as par, renderEmail, small } from "./emailTemplate";
  * - The mail carries the raw token link; only the SHA-256 hash exists in the
  *   database. The token is NEVER logged.
  */
-
-const connectors = new ReplitConnectors();
 
 export const HOST_RESET_FROM_NAME = "Smart360";
 
@@ -71,24 +69,21 @@ export function _setHostResetDeliveryOverride(fn: Delivery | null): void {
 }
 
 export async function sendHostResetEmail(to: string, token: string): Promise<ResetEmailResult> {
-  const body = buildResetEmailBody(to, resetLink(token), emailFrom());
-  if (deliveryOverride) return deliveryOverride(body);
+  let body: ReturnType<typeof buildResetEmailBody>;
   try {
-    const resp = await connectors.proxy("resend", "/emails", {
-      method: "POST",
-      body,
-    });
-    if (!resp.ok) {
-      // Status only — never the body, never the token, never the address.
-      logger.error({ httpStatus: resp.status }, "[hostResetEmail] Resend rejected the request");
-      return { ok: false };
-    }
-    return { ok: true };
-  } catch (err) {
+    body = buildResetEmailBody(to, resetLink(token), emailFrom());
+  } catch {
+    logger.error({ code: "sender_configuration" }, "[hostResetEmail] sender configuration failed");
+    return { ok: false };
+  }
+  if (deliveryOverride) return deliveryOverride(body);
+  const result = await deliverResend(body);
+  if (!result.ok) {
     logger.error(
-      { errName: err instanceof Error ? err.name : "Error" },
+      { code: result.error.code, httpStatus: result.error.httpStatus, stage: result.error.stage },
       "[hostResetEmail] send failed",
     );
     return { ok: false };
   }
+  return { ok: true };
 }

@@ -12,7 +12,11 @@ import {
   tenantsTable,
   type HostUser,
 } from "@workspace/db";
-import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull, like, or, sql } from "drizzle-orm";
+import {
+  parseHostInviteDeliveryFailure,
+  type HostInviteDeliveryFailure,
+} from "./hostInviteDelivery";
 
 /**
  * Host account authentication (Instruction #28, CHECKPOINT 2).
@@ -667,6 +671,7 @@ export type HostAccountView = {
     providerEventName: string | null;
     providerEventAt: string | null;
     deliveryAttemptedAt: string | null;
+    deliveryFailure: HostInviteDeliveryFailure | null;
   }>;
 };
 
@@ -680,6 +685,7 @@ export async function getHostAccountForTenant(tenantId: string): Promise<HostAcc
   if (!row) return null;
   const invites = await db
     .select({
+      id: hostInvitesTable.id,
       createdAt: hostInvitesTable.createdAt,
       invalidatedAt: hostInvitesTable.invalidatedAt,
       usedAt: hostInvitesTable.usedAt,
@@ -693,16 +699,46 @@ export async function getHostAccountForTenant(tenantId: string): Promise<HostAcc
     .where(eq(hostInvitesTable.hostUserId, row.user.id))
     .orderBy(desc(hostInvitesTable.createdAt))
     .limit(10);
+  const inviteIds = invites.map((invite) => invite.id);
+  const failureEvents = inviteIds.length === 0
+    ? []
+    : await db
+        .select({ detail: hostAuthEventsTable.detail })
+        .from(hostAuthEventsTable)
+        .where(
+          and(
+            eq(hostAuthEventsTable.hostUserId, row.user.id),
+            eq(hostAuthEventsTable.type, "invite_delivery_failed"),
+            or(
+              ...inviteIds.map((inviteId) =>
+                like(hostAuthEventsTable.detail, `%"inviteId":"${inviteId}"%`),
+              ),
+            ),
+          ),
+        )
+        .orderBy(desc(hostAuthEventsTable.createdAt))
+        .limit(inviteIds.length);
+  const failuresByInviteId = new Map<string, HostInviteDeliveryFailure>();
+  for (const event of failureEvents) {
+    for (const inviteId of inviteIds) {
+      if (failuresByInviteId.has(inviteId)) continue;
+      const failure = parseHostInviteDeliveryFailure(event.detail, inviteId);
+      if (failure) failuresByInviteId.set(inviteId, failure);
+    }
+  }
   return {
     email: row.user.email,
     hasPassword: !!row.user.passwordHash,
     lastLoginAt: row.user.lastLoginAt?.toISOString() ?? null,
     createdAt: row.user.createdAt.toISOString(),
     inviteHistory: invites.map((invite) => ({
-      ...invite,
       createdAt: invite.createdAt.toISOString(),
       invalidatedAt: invite.invalidatedAt?.toISOString() ?? null,
       usedAt: invite.usedAt?.toISOString() ?? null,
+      deliveryStatus: invite.deliveryStatus,
+      providerMessageId: invite.providerMessageId,
+      providerEventName: invite.providerEventName,
+      deliveryFailure: failuresByInviteId.get(invite.id) ?? null,
       providerEventAt: invite.providerEventAt?.toISOString() ?? null,
       deliveryAttemptedAt: invite.deliveryAttemptedAt?.toISOString() ?? null,
     })),

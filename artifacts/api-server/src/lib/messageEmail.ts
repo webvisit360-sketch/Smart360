@@ -12,13 +12,12 @@
  * - Logs only messageId + threadRef + HTTP status or exception class — never PII.
  *   Exception message text is never logged (may contain request context).
  */
-import { ReplitConnectors } from "@replit/connectors-sdk";
 import { HOST_NOTIFICATION_REPLY_TO } from "./businessContact";
 import { logger } from "./logger";
 import { emailFrom as orderEmailFrom } from "./orderEmail";
 import { cta, p as par, portalUrl, renderEmail } from "./emailTemplate";
+import { deliverResend } from "./resendDelivery";
 
-const connectors = new ReplitConnectors();
 
 export const MESSAGE_EMAIL_FROM_NAME = "Smart360";
 
@@ -98,7 +97,7 @@ export function buildMessageEmailBody(
 }
 
 /**
- * Build HTTP headers for the Resend proxy call.
+ * Build HTTP headers for the Resend HTTP call.
  *
  * Idempotency key is "message-<messageId>" — scoped to the newly inserted
  * message row so every guest message may produce a notification bell, not just
@@ -117,7 +116,7 @@ export type EmailResult =
   | { ok: false; providerError: string };
 
 /**
- * Send a PII-safe message notification via the Resend connector.
+ * Send a PII-safe message notification via Resend.
  *
  * - Only sends tenant name and a portal open prompt. Never body, name, unit,
  *   raw token, or IP.
@@ -129,51 +128,26 @@ export type EmailResult =
 export async function sendMessageNotification(
   p: MessageNotifyPayload,
 ): Promise<EmailResult> {
-  const from = messageEmailFrom();
-  const body = buildMessageEmailBody(p, from);
-  const headers = buildMessageEmailHeaders(p.messageId);
-
   try {
-    const resp = await connectors.proxy("resend", "/emails", {
-      method: "POST",
-      body,
-      headers,
-    });
-
-    if (!resp.ok) {
-      const providerError = await resp.text();
+    const body = buildMessageEmailBody(p, messageEmailFrom());
+    const result = await deliverResend(body, { idempotencyKey: `message-${p.messageId}` });
+    if (!result.ok) {
       logger.error(
-        { messageId: p.messageId, threadRef: p.threadRef, httpStatus: resp.status },
-        "[messageEmail] Resend rejected the request",
+        { messageId: p.messageId, threadRef: p.threadRef, code: result.error.code, httpStatus: result.error.httpStatus, stage: result.error.stage },
+        "[messageEmail] notification failed",
       );
-      return { ok: false, providerError };
+      return { ok: false, providerError: result.error.message };
     }
-
-    const accepted = await resp.json().catch(() => null);
-    const resendId =
-      accepted &&
-      typeof accepted === "object" &&
-      "id" in accepted &&
-      typeof accepted.id === "string"
-        ? accepted.id
-        : undefined;
-
     logger.info(
-      { messageId: p.messageId, threadRef: p.threadRef, resendId: resendId ?? null },
+      { messageId: p.messageId, threadRef: p.threadRef, resendId: result.providerMessageId },
       "[messageEmail] notification accepted by Resend",
     );
-    return { ok: true, resendId };
-  } catch (err) {
-    // Log only the exception class name — never the message text, which may
-    // contain request context such as URLs or headers.
-    const errName = err instanceof Error ? err.constructor.name : "UnknownError";
+    return { ok: true, resendId: result.providerMessageId ?? undefined };
+  } catch {
     logger.error(
-      { messageId: p.messageId, threadRef: p.threadRef, errName },
-      "[messageEmail] unexpected error contacting Resend",
+      { messageId: p.messageId, threadRef: p.threadRef, code: "sender_configuration" },
+      "[messageEmail] sender configuration failed",
     );
-    return {
-      ok: false,
-      providerError: err instanceof Error ? err.message : String(err),
-    };
+    return { ok: false, providerError: "Pošiljatelj ni pravilno nastavljen" };
   }
 }

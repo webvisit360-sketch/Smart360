@@ -1,8 +1,7 @@
-import { ReplitConnectors } from "@replit/connectors-sdk";
 import { logger } from "./logger";
 import { BUSINESS_CONTACT_EMAIL } from "./businessContact";
+import { deliverResend } from "./resendDelivery";
 
-const connectors = new ReplitConnectors();
 const FROM_EMAIL = "info@webvisit360.com";
 
 export type Enquiry = {
@@ -17,6 +16,7 @@ export type Enquiry = {
 export type EnquiryDeliveryResult = {
   status: "accepted" | "failed";
   providerMessageId: string | null;
+  providerError?: string;
 };
 type Delivery = (body: ReturnType<typeof buildEnquiryEmail>) => Promise<EnquiryDeliveryResult>;
 let deliveryOverride: Delivery | null = null;
@@ -61,26 +61,13 @@ export function buildEnquiryEmail(enquiry: Enquiry) {
 export async function sendEnquiry(enquiry: Enquiry): Promise<EnquiryDeliveryResult> {
   const body = buildEnquiryEmail(enquiry);
   if (deliveryOverride) return deliveryOverride(body);
-  try {
-    const response = await connectors.proxy("resend", "/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    if (!response.ok) {
-      logger.error({ httpStatus: response.status }, "[enquiryEmail] Resend rejected");
-      return { status: "failed", providerMessageId: null };
-    }
-    const payload = await response.json().catch(() => null) as { id?: unknown } | null;
-    return {
-      status: "accepted",
-      providerMessageId: typeof payload?.id === "string" ? payload.id : null,
-    };
-  } catch (error) {
+  const result = await deliverResend(body);
+  if (!result.ok) {
     logger.error(
-      { errName: error instanceof Error ? error.name : "Error" },
+      { code: result.error.code, httpStatus: result.error.httpStatus, stage: result.error.stage },
       "[enquiryEmail] send failed",
     );
-    return { status: "failed", providerMessageId: null };
+    return { status: "failed", providerMessageId: null, providerError: result.error.message };
   }
+  return { status: "accepted", providerMessageId: result.providerMessageId };
 }

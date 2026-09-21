@@ -32,3 +32,6 @@ ORDER_EMAIL_FROM = "info@webvisit360.com"
 APP_DOMAIN = "smart360.info"
 RP_ID = "smart360.info"
 RP_ORIGIN = "https://smart360.info"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-346a0fc2-671d-48a8-9174-dd1c64e251c2"

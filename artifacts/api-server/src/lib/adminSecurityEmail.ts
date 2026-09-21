@@ -1,12 +1,10 @@
-import { ReplitConnectors } from "@replit/connectors-sdk";
 import { emailFrom } from "./orderEmail";
 import { p, renderEmail, small } from "./emailTemplate";
 import { logger } from "./logger";
 import { db, adminSecurityEmailsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { providerMessageIdFromResendResponse } from "./lifecycleEmails";
+import { deliverResend } from "./resendDelivery";
 
-const connectors = new ReplitConnectors();
 export const ADMIN_SECURITY_MAILBOX = "smart360hq@gmail.com";
 
 export type AdminSecurityEvent =
@@ -71,7 +69,6 @@ export function _setAdminSecurityDeliveryOverride(fn: Delivery | null): void {
 }
 
 export async function sendAdminSecurityEmail(event: AdminSecurityEvent): Promise<boolean> {
-  const body = buildAdminSecurityEmail(event);
   const [evidence] = await db
     .insert(adminSecurityEmailsTable)
     .values({ event })
@@ -90,32 +87,25 @@ export async function sendAdminSecurityEmail(event: AdminSecurityEvent): Promise
     return accepted;
   };
   if (deliveryOverride) {
+    const body = buildAdminSecurityEmail(event);
     const result = await deliveryOverride(body);
     return finish(result.ok, result.providerMessageId ?? (result.ok ? `test-${evidence.id}` : null));
   }
   try {
-    const response = await connectors.proxy("resend", "/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    if (!response.ok) {
-      logger.error({ event, httpStatus: response.status }, "[adminSecurityEmail] Resend rejected");
+    const result = await deliverResend(buildAdminSecurityEmail(event));
+    if (!result.ok) {
+      logger.error(
+        { event, code: result.error.code, httpStatus: result.error.httpStatus, stage: result.error.stage },
+        "[adminSecurityEmail] send failed",
+      );
       return finish(false, null);
     }
-    const providerMessageId = providerMessageIdFromResendResponse(
-      await response.json().catch(() => null),
-    );
-    if (!providerMessageId) {
-      logger.error({ event }, "[adminSecurityEmail] Resend response missing message id");
-      return finish(false, null);
-    }
-    logger.info({ event, providerMessageId }, "[adminSecurityEmail] accepted by Resend");
-    return finish(true, providerMessageId);
-  } catch (error) {
+    logger.info({ event, providerMessageId: result.providerMessageId }, "[adminSecurityEmail] accepted by Resend");
+    return finish(true, result.providerMessageId);
+  } catch {
     logger.error(
-      { event, errName: error instanceof Error ? error.name : "Error" },
-      "[adminSecurityEmail] send failed",
+      { event, code: "sender_configuration" },
+      "[adminSecurityEmail] sender configuration failed",
     );
     return finish(false, null);
   }

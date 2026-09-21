@@ -17,6 +17,7 @@ import { requireAdmin, rpOrigin } from "../lib/adminAuth";
 import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
+import { recordHostInviteDeliveryFailure } from "../lib/hostInviteDelivery";
 import { actorStorage } from "../lib/actorContext";
 import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { db, hostInvitesTable } from "@workspace/db";
@@ -257,11 +258,8 @@ router.post(
             `invite-${issued.inviteId}`,
           );
     if (!sent.ok) {
-      await db
-        .update(hostInvitesTable)
-        .set({ deliveryStatus: "failed", providerMessageId: null, deliveryAttemptedAt: new Date() })
-        .where(eq(hostInvitesTable.id, issued.inviteId));
-      res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });
+      const failure = await recordHostInviteDeliveryFailure(issued.inviteId, sent);
+      res.status(502).json({ error: failure.message });
       return;
     }
     await db

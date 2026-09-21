@@ -10,13 +10,15 @@
  * message notifications: 2xx → { ok: true }, anything else → { ok: false },
  * logs carry no recipient address and no token.
  */
-import { ReplitConnectors } from "@replit/connectors-sdk";
 import { HOST_NOTIFICATION_REPLY_TO } from "./businessContact";
 import { logger } from "./logger";
 import { emailFrom as verifiedFrom } from "./orderEmail";
 import { cta, displayHost, p as par, renderEmail, rows, small } from "./emailTemplate";
-
-const connectors = new ReplitConnectors();
+import {
+  deliverResend,
+  resendConfigurationFailure,
+  type ResendFailure,
+} from "./resendDelivery";
 
 export const LIFECYCLE_FROM_NAME = "Smart360";
 
@@ -176,7 +178,7 @@ export function buildPublishedEmailBody(p: PublishedEmailPayload, from: string) 
 
 // ── Shared sender ────────────────────────────────────────────────────────────
 
-export type LifecycleEmailResult = { ok: true; providerMessageId: string | null } | { ok: false };
+export type LifecycleEmailResult = { ok: true; providerMessageId: string | null } | ResendFailure;
 
 type BuiltBody = Record<string, unknown>;
 type Delivery = (body: BuiltBody) => Promise<LifecycleEmailResult | { ok: true }>;
@@ -204,50 +206,59 @@ async function deliver(
       ? { ok: true, providerMessageId: "providerMessageId" in overridden ? overridden.providerMessageId : null }
       : overridden;
   }
-  try {
-    const resp = await connectors.proxy("resend", "/emails", {
-      method: "POST",
-      body,
-      headers: idempotencyKey
-        ? { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey }
-        : { "Content-Type": "application/json" },
-    });
-    if (!resp.ok) {
-      // Status only — never the body (contains the recipient and, for the
-      // guide-ready mail, the set-password link).
-      logger.error({ kind, httpStatus: resp.status }, "[lifecycleEmail] Resend rejected");
-      return { ok: false };
-    }
-    const accepted = await resp.json().catch(() => null);
-    const providerMessageId = providerMessageIdFromResendResponse(accepted);
-    logger.info({ kind, providerMessageId }, "[lifecycleEmail] accepted by Resend");
-    return { ok: true, providerMessageId };
-  } catch (err) {
+  const result = await deliverResend(body, { idempotencyKey });
+  if (!result.ok) {
     logger.error(
-      { kind, errName: err instanceof Error ? err.name : "Error" },
+      { kind, code: result.error.code, httpStatus: result.error.httpStatus, stage: result.error.stage },
       "[lifecycleEmail] send failed",
     );
-    return { ok: false };
+    return result;
   }
+  logger.info({ kind, providerMessageId: result.providerMessageId }, "[lifecycleEmail] accepted by Resend");
+  return result;
 }
 
 export async function sendWelcomeEmail(
   p: WelcomeEmailPayload,
   idempotencyKey?: string,
 ): Promise<LifecycleEmailResult> {
-  return deliver("welcome", buildWelcomeEmailBody(p, fromHeader()), idempotencyKey);
+  if (!deliveryOverride) {
+    const configurationFailure = resendConfigurationFailure();
+    if (configurationFailure) return configurationFailure;
+  }
+  try {
+    return deliver("welcome", buildWelcomeEmailBody(p, fromHeader()), idempotencyKey);
+  } catch {
+    return { ok: false, error: { code: "sender_configuration", message: "Pošiljatelj ni pravilno nastavljen", httpStatus: null, stage: "configuration" } };
+  }
 }
 
 export async function sendGuideReadyEmail(
   p: GuideReadyEmailPayload,
   idempotencyKey?: string,
 ): Promise<LifecycleEmailResult> {
-  return deliver("guide-ready", buildGuideReadyEmailBody(p, fromHeader()), idempotencyKey);
+  if (!deliveryOverride) {
+    const configurationFailure = resendConfigurationFailure();
+    if (configurationFailure) return configurationFailure;
+  }
+  try {
+    return deliver("guide-ready", buildGuideReadyEmailBody(p, fromHeader()), idempotencyKey);
+  } catch {
+    return { ok: false, error: { code: "sender_configuration", message: "Pošiljatelj ni pravilno nastavljen", httpStatus: null, stage: "configuration" } };
+  }
 }
 
 export async function sendPublishedEmail(
   p: PublishedEmailPayload,
   idempotencyKey?: string,
 ): Promise<LifecycleEmailResult> {
-  return deliver("published", buildPublishedEmailBody(p, fromHeader()), idempotencyKey);
+  if (!deliveryOverride) {
+    const configurationFailure = resendConfigurationFailure();
+    if (configurationFailure) return configurationFailure;
+  }
+  try {
+    return deliver("published", buildPublishedEmailBody(p, fromHeader()), idempotencyKey);
+  } catch {
+    return { ok: false, error: { code: "sender_configuration", message: "Pošiljatelj ni pravilno nastavljen", httpStatus: null, stage: "configuration" } };
+  }
 }

@@ -1,8 +1,8 @@
 /**
  * Email notification adapter for Living Guide orders.
  *
- * Uses @replit/connectors-sdk ReplitConnectors to proxy through the Resend
- * connector.  The sender address MUST come from ORDER_EMAIL_FROM environment
+ * Uses the shared direct Resend HTTP transport. The sender address MUST come
+ * from ORDER_EMAIL_FROM environment
  * variable — no default is provided; a missing var is a configuration error.
  *
  * Contract:
@@ -16,12 +16,11 @@
  * buildEmailHeaders / buildEmailBody are exported as pure functions so tests
  * can verify the exact outbound header name and payload without I/O.
  */
-import { ReplitConnectors } from "@replit/connectors-sdk";
 import { HOST_NOTIFICATION_REPLY_TO } from "./businessContact";
 import { logger } from "./logger";
 import { cta, p as par, portalUrl, renderEmail, rows, small } from "./emailTemplate";
+import { deliverResend } from "./resendDelivery";
 
-const connectors = new ReplitConnectors();
 export const ORDER_EMAIL_FROM_ADDRESS = "info@webvisit360.com";
 export const ORDER_EMAIL_FROM_NAME = "Smart360";
 
@@ -124,7 +123,7 @@ export function buildEmailBody(
 }
 
 /**
- * Build the HTTP headers for the Resend proxy call.
+ * Build the HTTP headers for the Resend HTTP call.
  * Pure function — no I/O; exported for unit tests.
  *
  * Uses 'Idempotency-Key' (Resend documented standard header name).
@@ -143,7 +142,7 @@ export type EmailResult =
   | { ok: false; providerError: string };
 
 /**
- * Send an order notification email via the Resend connector.
+ * Send an order notification email via Resend.
  *
  * - All email content MUST come from the stored order snapshot fields —
  *   never from the current request or current item/tenant values.
@@ -152,58 +151,23 @@ export type EmailResult =
  * - Logs only orderRef + status/error name — never guest PII.
  */
 export async function sendOrderEmail(p: OrderEmailPayload): Promise<EmailResult> {
-  // emailFrom() throws if ORDER_EMAIL_FROM is not set — let it propagate so
-  // the caller can return 422 with a configuration-error message.
-  const from = emailFrom();
-  const body = buildEmailBody(p, from);
-  const headers = buildEmailHeaders(p.orderRef);
-
   try {
-    const resp = await connectors.proxy("resend", "/emails", {
-      method: "POST",
-      body,
-      headers,
-    });
-
-    // The connectors SDK returns a standard fetch Response object.
-    if (!resp.ok) {
-      const providerError = await resp.text();
-      // Log HTTP status only — never include resp body (may echo PII)
+    const body = buildEmailBody(p, emailFrom());
+    const result = await deliverResend(body, { idempotencyKey: p.orderRef });
+    if (!result.ok) {
       logger.error(
-        { orderRef: p.orderRef, httpStatus: resp.status },
-        "[orderEmail] Resend rejected the request",
+        { orderRef: p.orderRef, code: result.error.code, httpStatus: result.error.httpStatus, stage: result.error.stage },
+        "[orderEmail] notification failed",
       );
-      return { ok: false, providerError };
+      return { ok: false, providerError: result.error.message };
     }
-
-    // Resend returns { id } for an accepted send. It is safe to log and retain
-    // for delivery evidence; unlike the response body it contains no guest PII.
-    const accepted = await resp.json().catch(() => null);
-    const messageId =
-      accepted &&
-      typeof accepted === "object" &&
-      "id" in accepted &&
-      typeof accepted.id === "string"
-        ? accepted.id
-        : undefined;
-
     logger.info(
-      { orderRef: p.orderRef, resendMessageId: messageId ?? null },
+      { orderRef: p.orderRef, resendMessageId: result.providerMessageId },
       "[orderEmail] notification accepted by Resend",
     );
-    return { ok: true, messageId };
-  } catch (err) {
-    // Log only the error name/message — never the full err object which may
-    // serialise the outgoing body containing guest PII.
-    const errName = err instanceof Error ? err.constructor.name : "UnknownError";
-    const errMsg = err instanceof Error ? err.message.slice(0, 120) : String(err).slice(0, 120);
-    logger.error(
-      { orderRef: p.orderRef, errName, errMsg },
-      "[orderEmail] unexpected error contacting Resend",
-    );
-    return {
-      ok: false,
-      providerError: err instanceof Error ? err.message : String(err),
-    };
+    return { ok: true, messageId: result.providerMessageId ?? undefined };
+  } catch {
+    logger.error({ orderRef: p.orderRef, code: "sender_configuration" }, "[orderEmail] sender configuration failed");
+    return { ok: false, providerError: "Pošiljatelj ni pravilno nastavljen" };
   }
 }

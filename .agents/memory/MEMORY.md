@@ -43,3 +43,4 @@
 - [Single published snapshot](published-snapshot-decision.md) — owner chose one snapshot for guest isolation and accurate confirmation; no separate baseline or history.
 - [Living Guide draggable details](living-guide-draggable-details.md) — one continuous non-scrolling sheet; pointer galleries must disable native image drag and suspend snap during gestures.
 - [Living Guide activity labels](living-guide-activity-labels.md) — `nature_trails` intentionally shares its visible name with the separate `act` category; never merge their identities.
+- [Direct mail delivery](direct-mail-delivery.md) — direct Resend is intentional; do not restore connector fallback or infer old failure reasons.

@@ -22,6 +22,12 @@ type HostAccount = {
     providerEventName: string | null;
     providerEventAt: string | null;
     deliveryAttemptedAt: string | null;
+    deliveryFailure: {
+      stage: "configuration" | "provider" | "transport";
+      code: string;
+      message: string;
+      httpStatus: number | null;
+    } | null;
   }>;
 };
 
@@ -116,11 +122,13 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
       });
       await load();
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Poskusite znova.";
       toast({
         title: "Vabila ni bilo mogoče poslati",
-        description: error instanceof Error ? error.message : "Poskusite znova.",
+        description: message,
         variant: "destructive",
       });
+      await load();
     } finally {
       setBusy(null);
     }
@@ -237,6 +245,20 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
                       <p className="text-xs text-muted-foreground">
                         ID ponudnika: <span className="font-mono">{invite.providerMessageId || "—"}</span>
                       </p>
+                      {invite.deliveryAttemptedAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Poskus dostave: {new Date(invite.deliveryAttemptedAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}
+                        </p>
+                      )}
+                      {invite.deliveryFailure && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                          <p className="font-medium">{invite.deliveryFailure.message}</p>
+                          <p className="mt-1 font-mono">
+                            {invite.deliveryFailure.stage} · {invite.deliveryFailure.code}
+                            {invite.deliveryFailure.httpStatus ? ` · HTTP ${invite.deliveryFailure.httpStatus}` : ""}
+                          </p>
+                        </div>
+                      )}
                       {invite.providerEventName && invite.providerEventAt && (
                         <p className="text-xs text-muted-foreground">
                           Zadnji dogodek ponudnika: <span className="font-medium">{invite.providerEventName}</span> · {new Date(invite.providerEventAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}
