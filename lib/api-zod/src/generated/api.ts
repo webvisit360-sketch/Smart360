@@ -102,7 +102,8 @@ export const GetHostOnboardingResponse = zod.object({
   "offers": zod.array(zod.object({
   "id": zod.string().min(1).max(getHostOnboardingResponseDataOffersItemIdMax),
   "name": zod.string().max(getHostOnboardingResponseDataOffersItemNameMax),
-  "price": zod.string().max(getHostOnboardingResponseDataOffersItemPriceMax)
+  "price": zod.string().max(getHostOnboardingResponseDataOffersItemPriceMax),
+  "categoryId": zod.string().optional().describe('Canonical offer category ID. Present on reads; optional only for legacy write compatibility.')
 })).max(getHostOnboardingResponseDataOffersMax),
   "recommendations": zod.array(zod.object({
   "id": zod.string().min(1).max(getHostOnboardingResponseDataRecommendationsItemIdMax),
@@ -180,6 +181,18 @@ export const GetHostOnboardingResponse = zod.object({
   "label": zod.string(),
   "order": zod.number()
 })),
+  "contentSections": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.enum(['stay', 'offer']),
+  "title": zod.string(),
+  "order": zod.number(),
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "order": zod.number()
+}))
+})).describe('Live canonical stay and offer structure in admin order.'),
   "photos": zod.array(zod.object({
   "id": zod.string(),
   "fileName": zod.string(),
@@ -279,7 +292,8 @@ export const AutosaveHostOnboardingBody = zod.object({
   "offers": zod.array(zod.object({
   "id": zod.string().min(1).max(autosaveHostOnboardingBodyDataOffersItemIdMax),
   "name": zod.string().max(autosaveHostOnboardingBodyDataOffersItemNameMax),
-  "price": zod.string().max(autosaveHostOnboardingBodyDataOffersItemPriceMax)
+  "price": zod.string().max(autosaveHostOnboardingBodyDataOffersItemPriceMax),
+  "categoryId": zod.string().optional().describe('Canonical offer category ID. Present on reads; optional only for legacy write compatibility.')
 })).optional(),
   "recommendations": zod.array(zod.object({
   "id": zod.string().min(1).max(autosaveHostOnboardingBodyDataRecommendationsItemIdMax),
@@ -436,7 +450,8 @@ export const SaveHostOnboardingBody = zod.object({
   "offers": zod.array(zod.object({
   "id": zod.string().min(1).max(saveHostOnboardingBodyDataOffersItemIdMax),
   "name": zod.string().max(saveHostOnboardingBodyDataOffersItemNameMax),
-  "price": zod.string().max(saveHostOnboardingBodyDataOffersItemPriceMax)
+  "price": zod.string().max(saveHostOnboardingBodyDataOffersItemPriceMax),
+  "categoryId": zod.string().optional().describe('Canonical offer category ID. Present on reads; optional only for legacy write compatibility.')
 })).optional(),
   "recommendations": zod.array(zod.object({
   "id": zod.string().min(1).max(saveHostOnboardingBodyDataRecommendationsItemIdMax),
@@ -603,7 +618,8 @@ export const ConfirmHostOnboardingSubmissionBody = zod.object({
   "offers": zod.array(zod.object({
   "id": zod.string().min(1).max(confirmHostOnboardingSubmissionBodyDataOneOffersItemIdMax),
   "name": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneOffersItemNameMax),
-  "price": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneOffersItemPriceMax)
+  "price": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneOffersItemPriceMax),
+  "categoryId": zod.string().optional().describe('Canonical offer category ID. Present on reads; optional only for legacy write compatibility.')
 })).max(confirmHostOnboardingSubmissionBodyDataOneOffersMax),
   "recommendations": zod.array(zod.object({
   "id": zod.string().min(1).max(confirmHostOnboardingSubmissionBodyDataOneRecommendationsItemIdMax),
@@ -818,7 +834,8 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "offers": zod.array(zod.object({
   "id": zod.string().min(1).max(getOwnerHostOnboardingResponseRoundsItemDataOffersItemIdMax),
   "name": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataOffersItemNameMax),
-  "price": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataOffersItemPriceMax)
+  "price": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataOffersItemPriceMax),
+  "categoryId": zod.string().optional().describe('Canonical offer category ID. Present on reads; optional only for legacy write compatibility.')
 })).max(getOwnerHostOnboardingResponseRoundsItemDataOffersMax),
   "recommendations": zod.array(zod.object({
   "id": zod.string().min(1).max(getOwnerHostOnboardingResponseRoundsItemDataRecommendationsItemIdMax),

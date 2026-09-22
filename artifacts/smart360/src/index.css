@@ -481,6 +481,11 @@
 [data-surface="admin"] h1,
 [data-surface="admin"] h2,
 [data-surface="admin"] h3 { letter-spacing: -.02em; }
+
+/* The host form owns its approved input tokens rather than admin defaults. */
+[data-surface="admin"] .host-onboarding-form input.border-dashed {
+  border-color: #9AA39D;
+}
 [data-surface="admin"] .text-blue-500,
 [data-surface="admin"] .text-blue-600,
 [data-surface="admin"] .text-blue-700,

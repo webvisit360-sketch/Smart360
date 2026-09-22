@@ -14,7 +14,13 @@ import { hostUsersTable } from "./hosts";
 import { tenantsTable } from "./tenants";
 
 export type HostOnboardingContact = { id: string; name: string; phone: string };
-export type HostOnboardingOffer = { id: string; name: string; price: string };
+export type HostOnboardingOffer = {
+  id: string;
+  name: string;
+  price: string;
+  /** Canonical offer-category attachment. Legacy saved rounds may omit it. */
+  categoryId?: string;
+};
 export type HostOnboardingRecommendation = {
   id: string;
   categoryId: string;

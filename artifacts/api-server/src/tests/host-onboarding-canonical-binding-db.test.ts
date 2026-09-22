@@ -70,11 +70,23 @@ test("development copy: admin and host onboarding are two views over one unpubli
     assert.equal(first.wifiName, "Fixture Wi-Fi");
     assert.equal(first.wifiPassword, "fixture-password");
     assert.equal(first.houseRulesParking, "<p>Po 22. uri prosimo za mir.</p>");
-    assert.deepEqual(first.offers, [{
-      id: fixture.itemIds.offer,
-      name: "Košarica zajtrka",
-      price: "14 EUR",
-    }]);
+    assert.deepEqual(
+      new Map(first.offers.map((offer) => [offer.id, offer])),
+      new Map([
+        [fixture.itemIds.offer, {
+          id: fixture.itemIds.offer,
+          name: "Košarica zajtrka",
+          price: "14 EUR",
+          categoryId: fixture.categoryIds.sup,
+        }],
+        [fixture.itemIds.customOffer, {
+          id: fixture.itemIds.customOffer,
+          name: "Zasebni ogled",
+          price: "35 EUR",
+          categoryId: fixture.categoryIds.customOffer,
+        }],
+      ]),
+    );
     assert.deepEqual(first.events, [{
       id: fixture.itemIds.event,
       name: "Poletni koncert",
@@ -377,7 +389,7 @@ test("development copy: admin and host onboarding are two views over one unpubli
     assert.ok(reopened);
     assert.equal(reopened.round.round, 2);
     assert.equal(reopened.round.draftData.accommodationName, "Gostiteljev neposredni osnutek");
-    assert.equal(reopened.round.draftData.offers[0]?.id, fixture.itemIds.offer);
+    assert.ok(reopened.round.draftData.offers.some((offer) => offer.id === fixture!.itemIds.offer));
     assert.equal(reopened.round.draftData.events[0]?.id, fixture.itemIds.event);
     assert.deepEqual(reopened.round.draftData.media?.map((row) => row.id), [fixture.mediaIds.photo]);
 

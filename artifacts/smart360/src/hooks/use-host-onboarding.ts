@@ -16,7 +16,7 @@ export interface HostOnboardingData {
   wifiName?: string;
   wifiPassword?: string;
   houseRulesParking?: string;
-  offers?: Array<{ id: string; name: string; price: string }>;
+  offers?: Array<{ id: string; categoryId?: string; name: string; price: string }>;
   recommendations?: Array<{ id: string; categoryId: string; name: string }>;
   customCategories?: Array<{
     id: string;
@@ -72,6 +72,19 @@ export interface HostOnboardingPhoto {
   mediaId?: string;
 }
 
+export interface HostOnboardingContentSection {
+  id: string;
+  key: "stay" | "offer";
+  title: string;
+  order: number;
+  categories: Array<{
+    id: string;
+    key: string;
+    label: string;
+    order: number;
+  }>;
+}
+
 export interface HostOnboardingResponse {
   id: string;
   tenantId: string;
@@ -79,6 +92,7 @@ export interface HostOnboardingResponse {
   status: "draft" | "submitted";
   data: HostOnboardingData;
   categories: HostOnboardingCategory[];
+  contentSections?: HostOnboardingContentSection[];
   photos: HostOnboardingPhoto[];
   updatedAt: string;
   submittedAt: string | null;
@@ -228,6 +242,7 @@ type HostOnboardingWriteResult = {
   data?: HostOnboardingData;
   photos?: HostOnboardingPhoto[];
   categories?: HostOnboardingCategory[];
+  contentSections?: HostOnboardingContentSection[];
 };
 
 function applyWriteResult(
@@ -241,6 +256,7 @@ function applyWriteResult(
     data: result.data ?? { ...current.data, ...submitted },
     photos: result.photos ?? current.photos,
     categories: result.categories ?? current.categories,
+    contentSections: result.contentSections ?? current.contentSections,
     revision: result.revision,
     canonicalRevision: result.canonicalRevision,
     updatedAt: result.updatedAt,

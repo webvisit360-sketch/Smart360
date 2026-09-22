@@ -96,7 +96,12 @@ export async function readCanonicalHostOnboarding(
   const website = contactRows.find((row) => row.website)?.website ?? "";
   const offers = items
     .filter((row) => categorySection.get(row.categoryId) === "offer")
-    .map((row) => ({ id: row.id, name: text(row.title), price: text(row.price) }));
+    .map((row) => ({
+      id: row.id,
+      name: text(row.title),
+      price: text(row.price),
+      categoryId: row.categoryId,
+    }));
   const eventRows = byKey("events");
   const events = eventRows.map((row) => ({
     id: row.id,
@@ -181,6 +186,39 @@ export async function readCanonicalHostOnboarding(
         }
       : null,
   };
+}
+
+export async function readCanonicalHostOnboardingStructure(
+  tx: Transaction,
+  tenantId: string,
+) {
+  const sections = await tx.select().from(sectionsTable)
+    .where(and(
+      eq(sectionsTable.tenantId, tenantId),
+      inArray(sectionsTable.key, ["stay", "offer"]),
+    ))
+    .orderBy(asc(sectionsTable.position));
+  const sectionIds = sections.map((section) => section.id);
+  const categories = sectionIds.length
+    ? await tx.select().from(categoriesTable).where(and(
+        inArray(categoriesTable.sectionId, sectionIds),
+        isNull(categoriesTable.deletedAt),
+      )).orderBy(asc(categoriesTable.position))
+    : [];
+  return sections.map((section, order) => ({
+    id: section.id,
+    key: section.key as "stay" | "offer",
+    title: section.title,
+    order,
+    categories: categories
+      .filter((category) => category.sectionId === section.id)
+      .map((category, categoryOrder) => ({
+        id: category.id,
+        key: category.key ?? category.id,
+        label: category.label,
+        order: categoryOrder,
+      })),
+  }));
 }
 
 export async function canonicalHostOnboardingRevision(
@@ -310,7 +348,14 @@ async function replaceItems(
   tx: Transaction,
   tenantId: string,
   sectionKey: string,
-  incoming: Array<{ id: string; name: string; price?: string; date?: string; time?: string }>,
+  incoming: Array<{
+    id: string;
+    name: string;
+    price?: string;
+    date?: string;
+    time?: string;
+    categoryId?: string;
+  }>,
 ) {
   const sectionCategories = await tx.select({ id: categoriesTable.id }).from(categoriesTable)
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
@@ -330,7 +375,12 @@ async function replaceItems(
   const retained: string[] = [];
   for (const [position, row] of incoming.entries()) {
     const existing = byId.get(row.id);
+    const categoryId = row.categoryId ?? existing?.categoryId ?? ids[0]!;
+    if (!ids.includes(categoryId)) {
+      throw new Error("Kategorija ponudbe ne pripada razdelku ponudbe.");
+    }
     const values = {
+      categoryId,
       title: row.name,
       price: row.price ?? null,
       eventStart: row.date && row.time ? `${row.date}T${row.time}:00` : null,
@@ -342,7 +392,6 @@ async function replaceItems(
       retained.push(existing.id);
     } else {
       const [created] = await tx.insert(itemsTable).values({
-        categoryId: ids[0]!,
         ...values,
       }).returning({ id: itemsTable.id });
       retained.push(created!.id);
@@ -356,19 +405,54 @@ async function applyCanonicalItems(
   rows: NonNullable<Patch["canonicalItems"]>,
 ) {
   const incomingIds = rows.map((row) => row.id);
-  const owned = incomingIds.length
+  if (incomingIds.length !== new Set(incomingIds).size) {
+    throw new Error("Kanonični elementi vsebujejo podvojen ID.");
+  }
+  const persistedIds = incomingIds.filter((id) => uuidPattern.test(id));
+  const owned = persistedIds.length
     ? await tx.select({ id: itemsTable.id }).from(itemsTable)
         .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
         .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
         .where(and(
           eq(sectionsTable.tenantId, tenantId),
-          inArray(itemsTable.id, incomingIds),
+          inArray(itemsTable.id, persistedIds),
         )).for("update")
     : [];
-  if (owned.length !== new Set(incomingIds).size) {
+  if (owned.length !== persistedIds.length) {
     throw new Error("Kanonični element ne pripada tej namestitvi.");
   }
   for (const row of rows) {
+    if (!uuidPattern.test(row.id)) {
+      const [target] = await tx.select({
+        categoryId: categoriesTable.id,
+        categoryKey: categoriesTable.key,
+        categoryLabel: categoriesTable.label,
+        sectionKey: sectionsTable.key,
+      }).from(categoriesTable)
+        .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+        .where(and(
+          eq(categoriesTable.id, row.categoryId),
+          eq(sectionsTable.tenantId, tenantId),
+          eq(sectionsTable.key, "stay"),
+          isNull(categoriesTable.deletedAt),
+        )).limit(1);
+      if (
+        !target ||
+        row.sectionKey !== "stay" ||
+        (row.categoryKey ?? null) !== (target.categoryKey ?? target.categoryId)
+      ) {
+        throw new Error("Nova vsebina ne pripada kategoriji nastanitve.");
+      }
+      await tx.insert(itemsTable).values({
+        categoryId: target.categoryId,
+        title: row.title || target.categoryLabel,
+        body: row.body || null,
+        price: row.price || null,
+        position: sql<number>`(select coalesce(max(${itemsTable.position}), -1) + 1 from ${itemsTable} where ${itemsTable.categoryId} = ${target.categoryId})`,
+        isVisible: row.isVisible,
+      });
+      continue;
+    }
     await tx.update(itemsTable).set({
       title: row.title || null,
       body: row.body || null,

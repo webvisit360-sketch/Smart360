@@ -9,11 +9,14 @@ import { chmod, readFile, rename, rm, writeFile } from "node:fs/promises";
 import express from "express";
 import {
   adminUsersTable,
+  categoriesTable,
+  creatorPlaceProposalsTable,
   db,
   itemsTable,
   mediaTable,
   pool,
   publishedSnapshotsTable,
+  sectionsTable,
   tenantsTable,
 } from "@workspace/db";
 import { GetTenantResponse } from "@workspace/api-zod";
@@ -112,11 +115,18 @@ async function inspect(): Promise<void> {
   }
   const current = await currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId);
   if (!current) throw new Error("Fixture onboarding round is missing");
+  const creatorQueue = await db.select({
+    proposedName: creatorPlaceProposalsTable.proposedName,
+    status: creatorPlaceProposalsTable.status,
+    categoryId: creatorPlaceProposalsTable.categoryId,
+  }).from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.tenantId, value.fixture.tenantId));
   console.log(JSON.stringify({
     command: "inspect",
     publishedSnapshotUnchanged: true,
     currentRevision: current.round.revision,
     mediaCount: current.round.draftData.media?.length ?? 0,
+    creatorQueue,
   }));
 }
 
@@ -169,6 +179,15 @@ async function serve(): Promise<void> {
     next();
   });
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
+  app.get("/host/session", (_request, response) => response.json({
+    authenticated: true,
+    onboardingRequired: true,
+    host: {
+      id: value.fixture.hostUserId,
+      tenantId: value.fixture.tenantId,
+      tenantName: "Operaterjev trenutni osnutek",
+    },
+  }));
   app.get("/admin/tenant", async (_request, response, next) => {
     try {
       response.set("Cache-Control", "no-store");
@@ -217,6 +236,7 @@ async function serve(): Promise<void> {
         data: dto.data,
         photos: dto.photos,
         categories: dto.categories,
+        contentSections: dto.contentSections,
       });
     } catch (error) {
       next(error);
@@ -286,6 +306,7 @@ async function serve(): Promise<void> {
         value.fixture.itemIds.house,
         value.fixture.itemIds.park,
         value.fixture.itemIds.offer,
+        value.fixture.itemIds.customOffer,
         value.fixture.itemIds.event,
       ];
       if (!fixtureItemIds.includes(id)) {
@@ -323,6 +344,48 @@ async function serve(): Promise<void> {
       const [updated] = await db.update(mediaTable).set({ alt: request.body.alt || null })
         .where(eq(mediaTable.id, id)).returning();
       if (!updated) throw new Error("Fixture media is missing");
+      await db.update(tenantsTable).set({ hasUnpublishedChanges: true })
+        .where(eq(tenantsTable.id, value.fixture.tenantId));
+      response.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.patch("/admin/categories/:id", async (request, response, next) => {
+    try {
+      const id = String(request.params.id ?? "");
+      if (!Object.values(value.fixture.categoryIds).includes(id)) {
+        response.status(403).json({ error: "Category is outside the disposable fixture" });
+        return;
+      }
+      if (typeof request.body?.label !== "string" || !request.body.label.trim()) {
+        throw new Error("label must be a non-empty string");
+      }
+      const [updated] = await db.update(categoriesTable).set({ label: request.body.label.trim() })
+        .where(eq(categoriesTable.id, id)).returning();
+      if (!updated) throw new Error("Fixture category is missing");
+      await db.update(tenantsTable).set({ hasUnpublishedChanges: true })
+        .where(eq(tenantsTable.id, value.fixture.tenantId));
+      response.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.patch("/admin/sections/:id", async (request, response, next) => {
+    try {
+      const id = String(request.params.id ?? "");
+      const tenantSections = await db.select({ id: sectionsTable.id }).from(sectionsTable)
+        .where(eq(sectionsTable.tenantId, value.fixture.tenantId));
+      if (!tenantSections.some((section) => section.id === id)) {
+        response.status(403).json({ error: "Section is outside the disposable fixture" });
+        return;
+      }
+      if (typeof request.body?.title !== "string" || !request.body.title.trim()) {
+        throw new Error("title must be a non-empty string");
+      }
+      const [updated] = await db.update(sectionsTable).set({ title: request.body.title.trim() })
+        .where(eq(sectionsTable.id, id)).returning();
+      if (!updated) throw new Error("Fixture section is missing");
       await db.update(tenantsTable).set({ hasUnpublishedChanges: true })
         .where(eq(tenantsTable.id, value.fixture.tenantId));
       response.json(updated);

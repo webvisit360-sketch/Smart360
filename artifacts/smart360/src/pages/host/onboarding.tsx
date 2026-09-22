@@ -24,6 +24,95 @@ import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
 
 const generateId = () => crypto.randomUUID();
 type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
+type TransientRecommendation = { id: string; name: string };
+type TransientOffer = { id: string; name: string; price: string };
+type NormalizedHostOnboardingData = HostOnboardingData & Required<Pick<
+  HostOnboardingData,
+  "contacts" | "offers" | "recommendations" | "customCategories" | "events"
+>>;
+
+export function normalizeCanonicalSaveBaseline(
+  data: HostOnboardingData,
+): NormalizedHostOnboardingData {
+  return {
+    ...data,
+    contacts: data.contacts?.filter((row) => row.name.trim() || row.phone.trim()) || [],
+    offers: data.offers?.filter((row) => row.name.trim() || row.price.trim()) || [],
+    recommendations: data.recommendations?.filter((row) => row.name.trim()) || [],
+    customCategories: (data.customCategories || []).map((category) => ({
+      ...category,
+      entries: (category.entries || []).filter((entry) => entry.name.trim()),
+    })),
+    events: data.events?.filter((row) =>
+      row.name.trim() || row.date.trim() || row.time.trim()
+    ) || [],
+    canonicalItems: data.canonicalItems?.filter((row) =>
+      !row.id.startsWith("new-") ||
+      row.title.trim().length > 0 ||
+      hasMeaningfulRichText(row.body)
+    ),
+  };
+}
+
+export function hasMeaningfulRichText(value: string): boolean {
+  return value
+    .replace(/<br\s*\/?>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .trim().length > 0;
+}
+
+export function reconcileCreatedCanonicalRows(input: {
+  local: HostOnboardingData;
+  canonical: HostOnboardingData;
+  baseline: HostOnboardingData;
+  submitted: Partial<HostOnboardingData>;
+}): HostOnboardingData {
+  const canonicalItems = [...(input.local.canonicalItems || [])];
+  const offers = [...(input.local.offers || [])];
+  const baselineCanonicalIds = new Set((input.baseline.canonicalItems || []).map((row) => row.id));
+  const baselineOfferIds = new Set((input.baseline.offers || []).map((row) => row.id));
+
+  for (const submitted of input.submitted.canonicalItems || []) {
+    if (!submitted.id.startsWith("new-")) continue;
+    const created = input.canonical.canonicalItems?.find((row) =>
+      !baselineCanonicalIds.has(row.id) &&
+      row.categoryId === submitted.categoryId &&
+      (!submitted.title || row.title === submitted.title) &&
+      row.body === submitted.body
+    );
+    if (!created) continue;
+    const localIndex = canonicalItems.findIndex((row) => row.id === submitted.id);
+    if (localIndex >= 0) {
+      canonicalItems[localIndex] = {
+        ...created,
+        ...canonicalItems[localIndex]!,
+        id: created.id,
+        categoryId: created.categoryId,
+        categoryKey: created.categoryKey,
+        sectionKey: created.sectionKey,
+        title: canonicalItems[localIndex]!.title || created.title,
+      };
+    }
+  }
+
+  for (const submitted of input.submitted.offers || []) {
+    if (baselineOfferIds.has(submitted.id)) continue;
+    const created = input.canonical.offers?.find((row) =>
+      !baselineOfferIds.has(row.id) &&
+      row.categoryId === submitted.categoryId &&
+      row.name === submitted.name &&
+      row.price === submitted.price
+    );
+    if (!created) continue;
+    const localIndex = offers.findIndex((row) => row.id === submitted.id);
+    if (localIndex >= 0) {
+      offers[localIndex] = { ...created, ...offers[localIndex]!, id: created.id };
+    }
+  }
+
+  return { ...input.local, canonicalItems, offers };
+}
 
 export default function HostOnboarding() {
   const [, setLocation] = useLocation();
@@ -68,10 +157,10 @@ export default function HostOnboarding() {
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(160);
 
-  const [transientRecs, setTransientRecs] = useState<Record<string, { id: string; name: string }>>({});
+  const [transientRecs, setTransientRecs] = useState<Record<string, TransientRecommendation>>({});
   const [transientEvents, setTransientEvents] = useState({id: generateId(), name: "", date: "", time: ""});
   const [transientContact, setTransientContact] = useState({id: generateId(), name: "", phone: ""});
-  const [transientOffer, setTransientOffer] = useState({id: generateId(), name: "", price: ""});
+  const [transientOffers, setTransientOffers] = useState<Record<string, TransientOffer>>({});
   const [transientCustomCategory, setTransientCustomCategory] = useState({
     id: generateId(),
     name: "",
@@ -81,49 +170,8 @@ export default function HostOnboarding() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
-    const finalData = {
-      ...data,
-      contacts: data.contacts?.filter(c => c.name.trim() || c.phone.trim()) || [],
-      offers: data.offers?.filter(o => o.name.trim() || o.price.trim()) || [],
-      recommendations: data.recommendations?.filter(r => r.name.trim()) || [],
-      customCategories: (data.customCategories || [])
-        .map(category => ({
-          ...category,
-          entries: (category.entries || []).filter(entry => entry.name.trim()),
-        })),
-      events: data.events?.filter(e => e.name.trim() || e.date.trim() || e.time.trim()) || [],
-    };
+    const finalData = normalizeCanonicalSaveBaseline(data);
     
-    if (transientContact.name.trim() || transientContact.phone.trim()) {
-      finalData.contacts.push({ id: transientContact.id, name: transientContact.name, phone: transientContact.phone });
-    }
-    if (transientOffer.name.trim() || transientOffer.price.trim()) {
-      finalData.offers.push({ id: transientOffer.id, name: transientOffer.name, price: transientOffer.price });
-    }
-    if (transientEvents.name.trim() || transientEvents.date.trim() || transientEvents.time.trim()) {
-      finalData.events.push({ id: transientEvents.id, name: transientEvents.name, date: transientEvents.date, time: transientEvents.time });
-    }
-    Object.entries(transientRecs).forEach(([catId, row]) => {
-      if (row.name.trim()) {
-        finalData.recommendations!.push({ id: row.id, categoryId: catId, name: row.name });
-      }
-    });
-    finalData.customCategories = finalData.customCategories.map((category) => {
-      const transientEntry = transientCustomEntries[category.id];
-      if (!transientEntry?.name.trim()) return category;
-      return {
-        ...category,
-        entries: [...category.entries, { id: transientEntry.id, name: transientEntry.name }],
-      };
-    });
-    if (transientCustomCategory.name.trim()) {
-      finalData.customCategories.push({
-        id: transientCustomCategory.id,
-        name: transientCustomCategory.name,
-        entries: [],
-      });
-    }
-
     // Upload completion owns image persistence. Ordinary form autosaves omit
     // media so a concurrent upload can never be removed by a stale payload.
     return preserveCanonicalMediaForWrite(
@@ -133,12 +181,6 @@ export default function HostOnboarding() {
       removedMediaIds.current,
     );
   }, [
-    transientContact,
-    transientCustomCategory,
-    transientCustomEntries,
-    transientEvents,
-    transientOffer,
-    transientRecs,
     onboardingData?.data.media,
   ]);
 
@@ -209,11 +251,26 @@ export default function HostOnboarding() {
       revision.current = result.revision;
       canonicalRevision.current = result.canonicalRevision;
       const canonical = result.data ?? { ...lastSavedData.current, ...data };
+      if (result.data) {
+        const reconciled = reconcileCreatedCanonicalRows({
+          local: latestData.current,
+          canonical,
+          baseline: lastSavedData.current,
+          submitted: data,
+        });
+        latestData.current = reconciled;
+        setFormData(reconciled);
+      }
       for (const row of data.contacts || []) canonicalRowIds.current.contacts.add(row.id);
       for (const row of data.offers || []) canonicalRowIds.current.offers.add(row.id);
       for (const row of data.events || []) canonicalRowIds.current.events.add(row.id);
       lastSavedData.current = canonical;
-      const savedPayload = cleanData(canonical);
+      const savedPayload = preserveCanonicalMediaForWrite(
+        omitLegacyRichAliasForCanonicalItems(normalizeCanonicalSaveBaseline(canonical)),
+        onboardingData?.data.media || [],
+        mediaDirty.current,
+        removedMediaIds.current,
+      );
       lastSaved.current = JSON.stringify(savedPayload);
       if (mounted.current) {
         setSaveState(JSON.stringify(latestPayload.current) === lastSaved.current ? "saved" : "dirty");
@@ -231,7 +288,7 @@ export default function HostOnboarding() {
     queue.current = operation.catch(() => undefined);
     activeOperation.current = operation;
     return operation;
-  }, [cleanData, patchOnboarding, saveOnboarding]);
+  }, [cleanData, onboardingData?.data.media, patchOnboarding, saveOnboarding]);
   const enqueueSaveRef = useRef(enqueueSave);
   enqueueSaveRef.current = enqueueSave;
 
@@ -390,15 +447,20 @@ export default function HostOnboarding() {
   }
 
   const isSaving = saveState === "saving";
-  const editableRichItems = (formData.canonicalItems || []).filter((item) =>
-    item.sectionKey === "stay"
-    && !["welcome", "check", "offer"].includes(item.categoryKey || "")
-  );
+  const staySection = onboardingData?.contentSections?.find((s) => s.key === "stay");
+  const offerSection = onboardingData?.contentSections?.find((s) => s.key === "offer");
+  const stayCategories = staySection?.categories || [];
+  const offerCategories = offerSection?.categories || [];
+
+  const houseCategory = stayCategories.find(c => c.key === "house");
+  const editableRichItems = houseCategory 
+    ? (formData.canonicalItems || []).filter((item) => item.categoryId === houseCategory.id)
+    : [];
 
   return (
-    <div className="min-h-[100dvh] bg-white text-[#121A14]" style={{ fontFamily: 'Archivo, sans-serif' }}>
+    <div data-admin-preserve className="host-onboarding-form min-h-[100dvh] bg-white text-[#121A14]" style={{ fontFamily: 'Archivo, sans-serif' }}>
       <header className="px-6 md:px-10 pt-6 pb-6">
-        <div className="flex justify-end max-w-3xl mx-auto mb-4">
+        <div className="flex justify-end max-w-[720px] mx-auto mb-4">
           <button 
             onClick={handleLogout}
             disabled={loggingOut || isSaving}
@@ -408,22 +470,22 @@ export default function HostOnboarding() {
             Odjava
           </button>
         </div>
-        <div className="flex flex-col items-start max-w-3xl mx-auto">
-          <div data-testid="host-onboarding-brand" className="h-10 mb-12 flex items-center gap-3">
-            <img src="/brand/smart360-znak-40.png" alt="" className="h-10 w-10 object-contain" />
-            <img src="/brand/logo-smart360-moder.png" alt="Smart360" className="h-10 w-auto object-contain" />
+        <div className="flex flex-col items-start max-w-[720px] mx-auto">
+          <div data-testid="host-onboarding-brand" className="mb-[48px] flex items-center gap-[12px]">
+            <img src="/brand/smart360-znak-40.png" alt="" className="h-[46px] w-[46px] object-contain" />
+            <span className="font-[800] text-[24px] text-[#121A14] tracking-[0.02em]">SMART360</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[#121A14] tracking-tight leading-tight">
+          <h1 className="text-[30px] font-[800] text-[#121A14] leading-tight">
             Dobrodošli, {onboardingData?.data.accommodationName || "gostitelj"}
           </h1>
-          <p className="mt-4 text-[#66716A] text-lg max-w-xl leading-relaxed">
-            Izpolnite spodnje podatke, da pripravimo vaš vodnik. Kar ne veste takoj, lahko pustite prazno.
+          <p className="mt-4 text-[#66716A] text-[16px] max-w-xl leading-relaxed">
+            Vpišite podatke o svoji nastanitvi — vse ostalo uredimo mi. Vnos lahko kadar koli prekinete, osnutek se shrani sam.
           </p>
         </div>
       </header>
 
       <main
-        className="px-4 md:px-8 max-w-3xl mx-auto space-y-8"
+        className="px-4 md:px-8 max-w-[720px] mx-auto space-y-8"
         style={{ paddingBottom: `calc(${footerHeight}px + 1.5rem)` }}
       >
         
@@ -431,86 +493,86 @@ export default function HostOnboarding() {
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">1</div>
-            <h2 className="text-xl font-bold">Vaša destinacija</h2>
+            <h2 className="text-xl font-bold">Osnovni podatki</h2>
           </div>
           
           <div className="space-y-5">
             <div>
-              <label htmlFor="accommodationName" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Naziv nastanitve (kot naj ga vidijo gostje)</label>
+              <label htmlFor="accommodationName" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Naziv nastanitve (kot naj ga vidijo gostje)</label>
               <input 
                 id="accommodationName"
                 type="text" 
                 value={formData.accommodationName || ""}
                 onChange={(e) => updateData(d => ({ ...d, accommodationName: e.target.value }))}
-                className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] focus:ring-1 focus:ring-[#157347] transition-all"
+                className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] focus:ring-1 focus:ring-[#157347] transition-all"
               />
             </div>
             
             <div>
-              <label htmlFor="address" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Naslov nastanitve</label>
+              <label htmlFor="address" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Naslov nastanitve</label>
               <input 
                 id="address"
                 type="text" 
                 value={formData.address || ""}
                 onChange={(e) => updateData(d => ({ ...d, address: e.target.value }))}
-                className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label htmlFor="guestPhone" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Telefon za goste</label>
+                <label htmlFor="guestPhone" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Telefon za goste</label>
                 <input 
                   id="guestPhone"
                   type="text" 
                   value={formData.guestPhone || ""}
                   onChange={(e) => updateData(d => ({ ...d, guestPhone: e.target.value }))}
-                  className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                  className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                 />
               </div>
               <div>
-                <label htmlFor="guestEmail" className="block text-sm font-semibold text-[#3A443C] mb-1.5">E-pošta za goste</label>
+                <label htmlFor="guestEmail" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">E-pošta za goste</label>
                 <input 
                   id="guestEmail"
                   type="email" 
                   value={formData.guestEmail || ""}
                   onChange={(e) => updateData(d => ({ ...d, guestEmail: e.target.value }))}
-                  className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                  className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="website" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Spletna stran (neobvezno)</label>
+              <label htmlFor="website" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Spletna stran (neobvezno)</label>
               <input 
                 id="website"
                 type="url" 
                 value={formData.website || ""}
                 onChange={(e) => updateData(d => ({ ...d, website: e.target.value }))}
-                className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                 placeholder="https://"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label htmlFor="checkInFrom" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Prijava od</label>
+                <label htmlFor="checkInFrom" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Prijava od</label>
                 <input 
                   id="checkInFrom"
                   type="time" 
                   value={formData.checkInFrom || ""}
                   onChange={(e) => updateData(d => ({ ...d, checkInFrom: e.target.value }))}
-                  className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                  className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                 />
               </div>
               <div>
-                <label htmlFor="checkOutUntil" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Odjava do</label>
+                <label htmlFor="checkOutUntil" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Odjava do</label>
                 <input 
                   id="checkOutUntil"
                   type="time" 
                   value={formData.checkOutUntil || ""}
                   onChange={(e) => updateData(d => ({ ...d, checkOutUntil: e.target.value }))}
-                  className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                  className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                 />
               </div>
             </div>
@@ -530,7 +592,7 @@ export default function HostOnboarding() {
                         newContacts[i] = { ...contact, name: e.target.value };
                         return { ...d, contacts: newContacts };
                       })}
-                      className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                      className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                     />
                     <div className="flex min-w-0 gap-2">
                       <input 
@@ -543,7 +605,7 @@ export default function HostOnboarding() {
                           newContacts[i] = { ...contact, phone: e.target.value };
                           return { ...d, contacts: newContacts };
                         })}
-                        className="min-w-0 flex-1 md:w-48 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                        className="min-w-0 flex-1 md:w-48 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                       />
                       <button 
                         onClick={() => updateData(d => ({
@@ -553,10 +615,10 @@ export default function HostOnboarding() {
                             ? [...new Set([...(d.deleteContactIds || []), contact.id])]
                             : d.deleteContactIds,
                         }))}
-                        className="w-12 flex items-center justify-center bg-white border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
+                        className="w-12 flex items-center justify-center text-[#9AA39D] hover:text-[#DD9A2B] active:text-[#DD9A2B] transition-colors"
                         aria-label="Odstrani"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                       </button>
                     </div>
                   </div>
@@ -568,7 +630,7 @@ export default function HostOnboarding() {
                     placeholder="Ime in priimek"
                     value={transientContact.name}
                     onChange={(e) => setTransientContact(prev => ({ ...prev, name: e.target.value }))}
-                    className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                    className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                   />
                   <div className="flex min-w-0 gap-2">
                     <input 
@@ -577,7 +639,7 @@ export default function HostOnboarding() {
                       placeholder="Telefon"
                       value={transientContact.phone}
                       onChange={(e) => setTransientContact(prev => ({ ...prev, phone: e.target.value }))}
-                      className="min-w-0 flex-1 md:w-48 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                      className="min-w-0 flex-1 md:w-48 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                     />
                     <div className="w-12"></div>
                   </div>
@@ -599,6 +661,7 @@ export default function HostOnboarding() {
           </div>
         </section>
 
+
         {/* SECTION 2 */}
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">
           <div className="flex items-center gap-4 mb-6">
@@ -607,27 +670,28 @@ export default function HostOnboarding() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="wifiName" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Ime omrežja</label>
+              <label htmlFor="wifiName" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Ime omrežja</label>
               <input 
                 id="wifiName"
                 type="text" 
                 value={formData.wifiName || ""}
                 onChange={(e) => updateData(d => ({ ...d, wifiName: e.target.value }))}
-                className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
               />
             </div>
             <div>
-              <label htmlFor="wifiPassword" className="block text-sm font-semibold text-[#3A443C] mb-1.5">Geslo</label>
+              <label htmlFor="wifiPassword" className="block text-[13px] font-[700] text-[#66716A] uppercase mb-1.5">Geslo</label>
               <input 
                 id="wifiPassword"
                 type="text" 
                 value={formData.wifiPassword || ""}
                 onChange={(e) => updateData(d => ({ ...d, wifiPassword: e.target.value }))}
-                className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                className="w-full bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
               />
             </div>
           </div>
         </section>
+
 
         {/* SECTION 3 */}
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">
@@ -640,10 +704,10 @@ export default function HostOnboarding() {
             {editableRichItems.length ? (
               <div className="space-y-5">
                 {editableRichItems.map((item, index) => (
-                  <div key={item.id} className="rounded-xl border border-[#E8EBE6] bg-white p-4">
+                  <div key={"house-" + index} className="rounded-[10px] border border-[#E8EBE6] bg-white p-4">
                     <label
                       htmlFor={`rich-item-title-${item.id}`}
-                      className="mb-1.5 block text-sm font-semibold text-[#3A443C]"
+                      className="mb-1.5 block text-[13px] font-[700] text-[#66716A] uppercase"
                     >
                       {item.title || `Besedilo ${index + 1}`}
                     </label>
@@ -655,7 +719,7 @@ export default function HostOnboarding() {
                       onChange={(event) => updateData((data) =>
                         updateCanonicalItemText(data, item.id, { title: event.target.value })
                       )}
-                      className="mb-3 w-full rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                      className="mb-3 w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                     />
                     <div aria-label={index === 0
                       ? "Hišni red, parkiranje in posebnosti"
@@ -684,95 +748,209 @@ export default function HostOnboarding() {
           </div>
         </section>
 
-        {/* SECTION 4 */}
+
+
+        {/* SECTION 4 - Vaša destinacija (Dynamic) */}
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">4</div>
-            <h2 className="text-xl font-bold">Vaša ponudba</h2>
+            <h2 className="text-xl font-bold">{staySection?.title || "Vaša destinacija"}</h2>
           </div>
-          <div className="space-y-3">
-            {(formData.offers || []).map((offer, i) => (
-              <div key={offer.id} className="flex flex-col md:flex-row gap-3">
-                <input 
-                  aria-label={`Naziv ponudbe ${i + 1}`}
-                  type="text" 
-                  placeholder="Naziv ponudbe (npr. Zajtrk)"
-                  value={offer.name}
-                  onChange={(e) => updateData(d => {
-                    const newOffers = [...(d.offers || [])];
-                    newOffers[i] = { ...offer, name: e.target.value };
-                    return { ...d, offers: newOffers };
-                  })}
-                  className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
-                />
-                <div className="flex min-w-0 gap-2">
-                  <input 
-                    aria-label={`Cena ponudbe ${i + 1}`}
-                    type="text" 
-                    placeholder="Cena (npr. 10 €)"
-                    value={offer.price}
-                    onChange={(e) => updateData(d => {
-                      const newOffers = [...(d.offers || [])];
-                      newOffers[i] = { ...offer, price: e.target.value };
-                      return { ...d, offers: newOffers };
-                    })}
-                    className="min-w-0 flex-1 md:w-32 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
-                  />
-                  <button 
-                    onClick={() => updateData(d => ({
-                      ...d,
-                      offers: d.offers?.filter(o => o.id !== offer.id),
-                      deleteOfferIds: canonicalRowIds.current.offers.has(offer.id)
-                        ? [...new Set([...(d.deleteOfferIds || []), offer.id])]
-                        : d.deleteOfferIds,
-                    }))}
-                    className="w-12 flex items-center justify-center bg-white border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+          
+          <div className="space-y-8">
+            {stayCategories.filter(c => c.key !== "wifi" && c.key !== "house").map((cat) => {
+              const items = (formData.canonicalItems || []).filter(item => item.categoryId === cat.id);
+              // if empty, we pretend there is one item so the editor is shown
+              const displayItems = items.length > 0 ? items : [{ id: "new-" + cat.id, isNew: true, title: "", body: "" }];
+              
+              return (
+                <div key={cat.id} className="space-y-4">
+                  <h3 style={{ letterSpacing: "0.08em" }} className="text-[14px] font-[800] tracking-[0.08em] text-[#157347] uppercase">
+                    {cat.label}
+                  </h3>
+                  
+                  {displayItems.map((item, index) => (
+                    <div key={cat.id + "-" + index} className="rounded-[10px] border border-[#E8EBE6] bg-white p-4">
+                      {items.length > 1 && (
+                        <input
+                          aria-label={`Naziv podbloka ${index + 1}`}
+                          type="text"
+                          value={item.title || ""}
+                          placeholder="Naslov (neobvezno)"
+                          onChange={(event) => {
+                            if (!("isNew" in item)) {
+                              updateData((data) => updateCanonicalItemText(data, item.id, { title: event.target.value }));
+                            }
+                          }}
+                          className="mb-3 w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                        />
+                      )}
+                      <div>
+                        <RichTextEditor
+                          value={item.body || ""}
+                          onChange={(value) => {
+                            if ("isNew" in item) {
+                              if (!hasMeaningfulRichText(value)) return;
+                              const newItem = {
+                                id: "new-" + crypto.randomUUID(),
+                                categoryId: cat.id,
+                                categoryKey: cat.key,
+                                sectionKey: "stay",
+                                title: "",
+                                body: value,
+                                price: "",
+                                priceUnit: "",
+                                phone: "",
+                                website: "",
+                                mapQuery: "",
+                                difficulty: "",
+                                duration: "",
+                                distance: "",
+                                noteType: "",
+                                noteText: "",
+                                bullets: [],
+                                tint: "",
+                                frame: "",
+                                isVisible: true,
+                                orderEnabled: false,
+                                soldOut: false,
+                                producerName: "",
+                                producerNote: ""
+                              };
+                              updateData(d => ({ ...d, canonicalItems: [...(d.canonicalItems || []), newItem] }));
+                            } else {
+                              updateData((data) => updateCanonicalItemText(data, item.id, { body: value }));
+                            }
+                          }}
+                          placeholder={`Vnesite ${cat.label.toLowerCase()}...`}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-            <div className="flex flex-col md:flex-row gap-3">
-              <input 
-                aria-label="Naziv nove ponudbe"
-                type="text" 
-                placeholder="Naziv ponudbe (npr. Zajtrk)"
-                value={transientOffer.name}
-                onChange={(e) => setTransientOffer(prev => ({ ...prev, name: e.target.value }))}
-                className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
-              />
-              <div className="flex min-w-0 gap-2">
-                <input 
-                  aria-label="Cena nove ponudbe"
-                  type="text" 
-                  placeholder="Cena (npr. 10 €)"
-                  value={transientOffer.price}
-                  onChange={(e) => setTransientOffer(prev => ({ ...prev, price: e.target.value }))}
-                  className="min-w-0 flex-1 md:w-32 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
-                />
-                <div className="w-12"></div>
-              </div>
-            </div>
+              );
+            })}
           </div>
-          <button 
-            aria-label="Dodaj ponudbo"
-            onClick={() => {
-              if (transientOffer.name.trim() || transientOffer.price.trim()) {
-                 updateData(d => ({ ...d, offers: [...(d.offers || []), { id: transientOffer.id, name: transientOffer.name, price: transientOffer.price }] }));
-                 setTransientOffer({ id: generateId(), name: "", price: "" });
-              }
-            }}
-            className="mt-4 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
-          >
-            <span aria-hidden="true">+ Dodaj …</span>
-          </button>
         </section>
 
-        {/* SECTION 5 - Okolica (Emphasized) */}
-        <section data-testid="host-onboarding-explore" className="bg-[#F4F6F2] border-[2px] rounded-[16px] p-5 md:p-8 shadow-sm" style={{ borderColor: "#157347" }}>
+
+        {/* SECTION 5 - Vaša ponudba */}
+        <section style={{ borderColor: "#157347" }} className="bg-[#F4F6F2] border-[2px] border-[#157347] rounded-[16px] p-5 md:p-8 shadow-sm">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">5</div>
+            <h2 className="text-xl font-bold">{offerSection?.title || "Vaša ponudba"}</h2>
+          </div>
+          
+          <div className="space-y-8">
+            {offerCategories.map((cat) => {
+              const catOffers = (formData.offers || []).filter(o => o.categoryId === cat.id);
+              const tOffer = transientOffers[cat.id] || { id: crypto.randomUUID(), name: "", price: "" };
+              
+              return (
+                <div key={cat.id} className="space-y-3">
+                  <h3 style={{ letterSpacing: "0.08em" }} className="text-[14px] font-[800] tracking-[0.08em] text-[#157347] uppercase mb-2">
+                    {cat.label}
+                  </h3>
+                  
+                  {catOffers.map((offer, i) => (
+                    <div key={offer.id} className="flex flex-col md:flex-row gap-3">
+                      <input 
+                        aria-label={`Naziv ponudbe ${i + 1}`}
+                        type="text" 
+                        placeholder="Naziv ponudbe (npr. Zajtrk)"
+                        value={offer.name}
+                        onChange={(e) => updateData(d => {
+                          const newOffers = [...(d.offers || [])];
+                          const idx = newOffers.findIndex(o => o.id === offer.id);
+                          if (idx >= 0) newOffers[idx] = { ...offer, name: e.target.value };
+                          return { ...d, offers: newOffers };
+                        })}
+                        className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                      />
+                      <div className="flex min-w-0 gap-2">
+                        <input 
+                          aria-label={`Cena ponudbe ${i + 1}`}
+                          type="text" 
+                          placeholder="Cena (npr. 10 €)"
+                          value={offer.price}
+                          onChange={(e) => updateData(d => {
+                            const newOffers = [...(d.offers || [])];
+                            const idx = newOffers.findIndex(o => o.id === offer.id);
+                            if (idx >= 0) newOffers[idx] = { ...offer, price: e.target.value };
+                            return { ...d, offers: newOffers };
+                          })}
+                          className="min-w-0 flex-1 md:w-32 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                        />
+                        <button 
+                          onClick={() => updateData(d => ({
+                            ...d,
+                            offers: d.offers?.filter(o => o.id !== offer.id),
+                            deleteOfferIds: canonicalRowIds.current.offers.has(offer.id)
+                              ? [...new Set([...(d.deleteOfferIds || []), offer.id])]
+                              : d.deleteOfferIds,
+                          }))}
+                          className="flex w-10 items-center justify-center text-[#9AA39D] hover:text-[#DD9A2B] active:text-[#DD9A2B] transition-colors"
+                        >
+                          <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <input 
+                      aria-label="Naziv nove ponudbe"
+                      type="text" 
+                      placeholder="Naziv ponudbe"
+                      value={tOffer.name}
+                      onChange={(e) => setTransientOffers(prev => ({
+                        ...prev,
+                        [cat.id]: { ...tOffer, name: e.target.value }
+                      }))}
+                      className="min-w-0 flex-1 bg-white border border-dashed border-[#9AA39D] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                    />
+                    <div className="flex min-w-0 gap-2">
+                      <input 
+                        aria-label="Cena nove ponudbe"
+                        type="text" 
+                        placeholder="Cena"
+                        value={tOffer.price}
+                        onChange={(e) => setTransientOffers(prev => ({
+                          ...prev,
+                          [cat.id]: { ...tOffer, price: e.target.value }
+                        }))}
+                        className="min-w-0 flex-1 md:w-32 bg-white border border-dashed border-[#9AA39D] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
+                      />
+                      <div className="w-10"></div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    aria-label="Dodaj ponudbo"
+                    onClick={() => {
+                      if (tOffer.name.trim() || tOffer.price.trim()) {
+                         updateData(d => ({ ...d, offers: [...(d.offers || []), { id: tOffer.id, categoryId: cat.id, name: tOffer.name, price: tOffer.price }] }));
+                         setTransientOffers(prev => {
+                           const next = { ...prev };
+                           delete next[cat.id];
+                           return next;
+                         });
+                      }
+                    }}
+                    className="mt-1 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
+                  >
+                    <span aria-hidden="true">+ Dodaj ponudbo</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* SECTION 6 - Okolica (Emphasized) */}
+        <section data-testid="host-onboarding-explore" className="bg-[#F4F6F2] border rounded-[16px] p-5 md:p-8 shadow-sm" >
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">6</div>
             <div>
               <h2 className="text-xl font-bold">Kaj priporočate v okolici</h2>
               <p className="text-sm text-[#66716A] mt-1">Vpišite samo ime kraja ali doživetja. Zemljevid, razdaljo, opis in fotografije dodamo mi. Kjer nimate priporočila, pustite prazno.</p>
@@ -819,20 +997,19 @@ export default function HostOnboarding() {
 
               return (
                 <div key={cat.id} data-testid={`category-onboarding-${cat.id}`} className="pt-1">
-                  <h3 className="mb-3 flex items-center gap-2 px-1 text-[14px] font-bold text-[#66716A]">
-                    <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F4F6F2] text-[#157347]">
-                      <MapPin className="h-3.5 w-3.5" />
-                    </span>
+                  <h3 style={{ letterSpacing: "0.08em" }} className="mb-3 flex items-center gap-2 px-1 text-[14px] font-[800] tracking-[0.08em] text-[#157347] uppercase">
+                    
                     {cat.name}
                     <span className="font-normal text-[#9AA39D]">· {catRecs.length} krajev</span>
                   </h3>
                   <div className="space-y-1.5">
                     {catRecs.map((rec) => (
-                      <div key={rec.id} className="flex min-h-[46px] min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
+                      <div key={rec.id} className="flex min-h-[46px] items-start min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 ml-3 mt-3"><path d="M13.3333 4L6 11.3333L2.66667 8" stroke="#157347" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         <input 
                           aria-label={`${cat.name}, priporočilo`}
                           type="text"
-                          placeholder="Ime lokacije..."
+                          placeholder="npr. Gostilna, planinska koča..."
                           value={rec.name}
                           onChange={(e) => updateData(d => {
                             const newRecs = [...(d.recommendations || [])];
@@ -848,17 +1025,17 @@ export default function HostOnboarding() {
                             recommendations: d.recommendations?.filter(r => r.id !== rec.id)
                           }))}
                           aria-label={`Odstrani priporočilo ${rec.name}`}
-                          className="flex w-10 items-center justify-center rounded-lg text-red-500 hover:bg-red-50"
+                          className="flex w-10 items-center justify-center text-[#9AA39D] hover:text-[#DD9A2B] active:text-[#DD9A2B] transition-colors"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                         </button>
                       </div>
                     ))}
-                    {transientRec && <div className="flex min-h-[46px] min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
+                    {transientRec && <div style={{ borderColor: "#9AA39D" }} className="flex min-h-[46px] items-start min-w-0 gap-2 rounded-[10px] border border-dashed bg-white p-1">
                       <input 
                         aria-label={`${cat.name}, novo priporočilo`}
                         type="text"
-                        placeholder="Ime lokacije..."
+                        placeholder="npr. Gostilna, planinska koča..."
                          value={transientRec.name}
                          onChange={(e) => setTransientRecs(prev => ({
                            ...prev,
@@ -889,7 +1066,7 @@ export default function HostOnboarding() {
                
                <div className="space-y-4">
                   {(formData.events || []).map((event, i) => (
-                     <div key={event.id} className="min-w-0 bg-white border border-[#E8EBE6] rounded-xl p-4 md:p-3 flex flex-col md:flex-row gap-3">
+                     <div key={event.id} className="min-w-0 bg-white border border-[#E8EBE6] rounded-[10px] p-4 md:p-3 flex flex-col md:flex-row gap-3">
                       <input 
                         aria-label={`Naziv dogodka ${i + 1}`}
                         type="text" 
@@ -900,7 +1077,7 @@ export default function HostOnboarding() {
                           newEvents[i] = { ...event, name: e.target.value };
                           return { ...d, events: newEvents };
                         })}
-                         className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-2.5 text-[16px] outline-none focus:border-[#157347]"
+                         className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-2.5 text-[16px] outline-none focus:border-[#157347]"
                       />
                        <div className="grid grid-cols-2 sm:grid-cols-[minmax(0,9rem)_minmax(0,7rem)_3rem] gap-2 w-full min-w-0 md:w-auto">
                         <input 
@@ -912,7 +1089,7 @@ export default function HostOnboarding() {
                             newEvents[i] = { ...event, date: e.target.value };
                             return { ...d, events: newEvents };
                           })}
-                           className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-xl px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
+                           className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-[10px] px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
                         />
                         <input 
                           aria-label={`Ura dogodka ${i + 1}`}
@@ -923,7 +1100,7 @@ export default function HostOnboarding() {
                             newEvents[i] = { ...event, time: e.target.value };
                             return { ...d, events: newEvents };
                           })}
-                           className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-xl px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
+                           className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-[10px] px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
                         />
                         <button 
                           onClick={() => updateData(d => ({
@@ -934,21 +1111,21 @@ export default function HostOnboarding() {
                               : d.deleteEventIds,
                           }))}
                            aria-label={`Odstrani dogodek ${i + 1}`}
-                           className="col-span-2 sm:col-span-1 w-full sm:w-12 min-h-11 flex items-center justify-center bg-[#F4F6F2] border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
+                           className="col-span-2 sm:col-span-1 w-full sm:w-12 min-h-11 flex items-center justify-center text-[#9AA39D] hover:text-[#DD9A2B] active:text-[#DD9A2B] transition-colors"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                         </button>
                       </div>
                     </div>
                   ))}
-                   <div className="min-w-0 bg-white border border-[#E8EBE6] rounded-xl p-4 md:p-3 flex flex-col md:flex-row gap-3">
+                   <div className="min-w-0 bg-white border border-[#E8EBE6] rounded-[10px] p-4 md:p-3 flex flex-col md:flex-row gap-3">
                     <input 
                       aria-label="Naziv novega dogodka"
                       type="text" 
                       placeholder="Naziv dogodka"
                       value={transientEvents.name}
                       onChange={(e) => setTransientEvents(prev => ({ ...prev, name: e.target.value }))}
-                       className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-2.5 text-[16px] outline-none focus:border-[#157347]"
+                       className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-2.5 text-[16px] outline-none focus:border-[#157347]"
                     />
                      <div className="grid grid-cols-2 gap-2 w-full min-w-0 sm:grid-cols-[minmax(0,9rem)_minmax(0,7rem)] md:w-auto">
                       <input 
@@ -956,14 +1133,14 @@ export default function HostOnboarding() {
                         type="date"
                         value={transientEvents.date}
                         onChange={(e) => setTransientEvents(prev => ({ ...prev, date: e.target.value }))}
-                         className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-xl px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
+                         className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-[10px] px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
                       />
                       <input 
                         aria-label="Ura novega dogodka"
                         type="time"
                         value={transientEvents.time}
                         onChange={(e) => setTransientEvents(prev => ({ ...prev, time: e.target.value }))}
-                         className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-xl px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
+                         className="min-w-0 w-full bg-white border border-[#E8EBE6] rounded-[10px] px-2 sm:px-3 py-2.5 text-[15px] outline-none focus:border-[#157347]"
                       />
                     </div>
                   </div>
@@ -1046,7 +1223,7 @@ export default function HostOnboarding() {
                               item.id === category.id ? { ...item, name: event.target.value } : item,
                             ),
                           }))}
-                          className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                          className="min-w-0 flex-1 rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                         />
                         <button
                           type="button"
@@ -1062,19 +1239,20 @@ export default function HostOnboarding() {
                               return next;
                             });
                           }}
-                          className="w-12 shrink-0 rounded-xl border border-[#E8EBE6] text-red-500 hover:bg-red-50 flex items-center justify-center"
+                          className="w-12 shrink-0 text-[#9AA39D] hover:text-[#DD9A2B] active:text-[#DD9A2B] transition-colors"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                         </button>
                       </div>
 
                       <div className="mt-4 space-y-1.5">
                         {(category.entries || []).map((entry, entryIndex) => (
                           <div key={entry.id} className="flex min-w-0 gap-2">
-                            <input
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 ml-3 mt-3"><path d="M13.3333 4L6 11.3333L2.66667 8" stroke="#157347" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              <input
                               type="text"
                               aria-label={`${category.name || "Gostiteljeva kategorija"}, priporočilo ${entryIndex + 1}`}
-                              placeholder="Ime lokacije..."
+                              placeholder="npr. Gostilna, planinska koča..."
                               value={entry.name}
                               onChange={(event) => updateData((data) => ({
                                 ...data,
@@ -1091,7 +1269,7 @@ export default function HostOnboarding() {
                                     : item,
                                 ),
                               }))}
-                              className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                              className="min-w-0 flex-1 rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                             />
                             <button
                               type="button"
@@ -1104,9 +1282,9 @@ export default function HostOnboarding() {
                                     : item,
                                 ),
                               }))}
-                              className="w-12 shrink-0 rounded-xl border border-[#E8EBE6] text-red-500 hover:bg-red-50 flex items-center justify-center"
+                              className="w-12 shrink-0 text-[#9AA39D] hover:text-[#DD9A2B] active:text-[#DD9A2B] transition-colors"
                             >
-                              <Trash2 className="h-5 w-5" />
+                              <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                             </button>
                           </div>
                         ))}
@@ -1115,7 +1293,7 @@ export default function HostOnboarding() {
                           <input
                             type="text"
                             aria-label={`Novo priporočilo za kategorijo ${category.name}`}
-                            placeholder="Ime lokacije..."
+                            placeholder="npr. Gostilna, planinska koča..."
                             value={transientEntry.name}
                             onChange={(event) => setTransientCustomEntries((current) => ({
                               ...current,
@@ -1124,7 +1302,7 @@ export default function HostOnboarding() {
                                 name: event.target.value,
                               },
                             }))}
-                            className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                            className="min-w-0 flex-1 rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                           />
                           <div className="w-12 shrink-0" />
                         </div>}
@@ -1153,7 +1331,7 @@ export default function HostOnboarding() {
                         ...current,
                         name: event.target.value,
                       }))}
-                      className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                      className="min-w-0 flex-1 rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                     />
                     <div className="w-12 shrink-0" />
                   </div>
@@ -1183,10 +1361,11 @@ export default function HostOnboarding() {
           </div>
         </section>
 
-        {/* SECTION 6 */}
+
+        {/* SECTION 7 */}
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">6</div>
+            <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">7</div>
             <div>
               <h2 className="text-xl font-bold">Fotografije</h2>
               <p className="text-sm text-[#66716A] mt-1">Lahko jih dodate tudi pozneje. (Maksimalno 20)</p>
@@ -1194,7 +1373,7 @@ export default function HostOnboarding() {
           </div>
 
           {formData.hero?.url ? (
-            <figure className="mb-7 overflow-hidden rounded-xl border border-[#E8EBE6] bg-white">
+            <figure className="mb-7 overflow-hidden rounded-[10px] border border-[#E8EBE6] bg-white">
               <img
                 src={formData.hero.url}
                 alt={formData.hero.alt || "Naslovna fotografija nastanitve"}
@@ -1214,9 +1393,9 @@ export default function HostOnboarding() {
               </p>
               <div className="space-y-3">
                 {(formData.media || []).filter((media) => media.kind === "video").map((video, index) => (
-                  <div key={video.id} className="grid gap-3 rounded-xl border border-[#E8EBE6] bg-white p-4 md:grid-cols-2">
+                  <div key={video.id} className="grid gap-3 rounded-[10px] border border-[#E8EBE6] bg-white p-4 md:grid-cols-2">
                     <div>
-                      <label htmlFor={`video-alt-${video.id}`} className="mb-1.5 block text-sm font-semibold text-[#3A443C]">
+                      <label htmlFor={`video-alt-${video.id}`} className="mb-1.5 block text-[13px] font-[700] text-[#66716A] uppercase">
                         Naziv videa {index + 1}
                       </label>
                       <input
@@ -1232,11 +1411,11 @@ export default function HostOnboarding() {
                             ),
                           }));
                         }}
-                        className="w-full rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                        className="w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                       />
                     </div>
                     <div>
-                      <label htmlFor={`video-url-${video.id}`} className="mb-1.5 block text-sm font-semibold text-[#3A443C]">
+                      <label htmlFor={`video-url-${video.id}`} className="mb-1.5 block text-[13px] font-[700] text-[#66716A] uppercase">
                         Povezava do videa
                       </label>
                       <input
@@ -1252,7 +1431,7 @@ export default function HostOnboarding() {
                             ),
                           }));
                         }}
-                        className="w-full rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                        className="w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                       />
                     </div>
                   </div>
@@ -1300,7 +1479,7 @@ export default function HostOnboarding() {
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-sm font-semibold flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
             {submitOnboarding.error ? (
-              <span className="text-red-700">{submitOnboarding.error.message}</span>
+              <span className="text-amber-600">{submitOnboarding.error.message}</span>
             ) : isSaving ? (
               <span className="text-[#66716A] flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" /> Shranjevanje...
@@ -1308,7 +1487,7 @@ export default function HostOnboarding() {
             ) : saveState === "dirty" ? (
               <span className="text-amber-700">Neshranjene spremembe</span>
             ) : saveState === "error" || saveState === "conflict" ? (
-              <span className="text-red-700 flex flex-col items-start">
+              <span className="text-amber-600 flex flex-col items-start">
                 <span>{saveState === "conflict" ? "Spor sprememb — podatkov nismo prepisali." : saveError}</span>
                 <button type="button" className="underline py-1" onClick={() => saveState === "conflict" ? window.location.reload() : void handleSave()}>
                   {saveState === "conflict" ? "Osveži stran in preveri spremembe" : "Poskusi znova"}
@@ -1443,7 +1622,7 @@ function PhotoUploader({
       {(photos.length > 0 || uploadingFiles.length > 0) && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
           {photos.map(p => (
-            <div key={p.id} className="relative aspect-square rounded-xl bg-gray-200 overflow-hidden group">
+            <div key={p.id} className="relative aspect-square rounded-[10px] bg-gray-200 overflow-hidden group">
               {p.status === "ready" || p.status === "submitted" ? (
                 <img 
                    src={p.previewUrl || `/api/admin/host/onboarding/photos/${p.id}`}
@@ -1460,7 +1639,7 @@ function PhotoUploader({
                 <button 
                   onClick={() => p.mediaId ? onRemoveCanonical(p.mediaId) : deletePhoto.mutate(p.id)}
                    aria-label={`Odstrani fotografijo ${p.fileName}`}
-                   className="absolute top-2 right-2 w-10 h-10 bg-white/90 text-red-600 rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-sm"
+                   className="absolute top-2 right-2 w-10 h-10 bg-white/90 text-[#66716A] hover:text-[#121A14] rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-sm"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1468,10 +1647,10 @@ function PhotoUploader({
             </div>
           ))}
            {uploadingFiles.map((entry) => (
-             <div key={entry.id} className="min-h-36 rounded-xl border border-[#E8EBE6] bg-white flex flex-col items-center justify-center p-3 text-center">
-                {entry.status === "uploading" ? <Loader2 className="w-6 h-6 animate-spin text-[#157347] mb-2" /> : <X className="w-6 h-6 text-red-600 mb-2" />}
+             <div key={entry.id} className="min-h-36 rounded-[10px] border border-[#E8EBE6] bg-white flex flex-col items-center justify-center p-3 text-center">
+                {entry.status === "uploading" ? <Loader2 className="w-6 h-6 animate-spin text-[#157347] mb-2" /> : <X className="w-6 h-6 text-amber-600 mb-2" />}
                 <span className="text-xs text-[#66716A] break-all px-2">{entry.file.name}</span>
-                {entry.error && <span className="text-xs text-red-700 mt-1">{entry.error}</span>}
+                {entry.error && <span className="text-xs text-amber-600 mt-1">{entry.error}</span>}
                 {entry.status === "failed" && (
                   <div className="flex gap-2 mt-2">
                     <button type="button" onClick={() => void upload(entry)} className="min-h-10 px-3 rounded-lg bg-[#157347] text-white text-xs font-bold">Poskusi znova</button>

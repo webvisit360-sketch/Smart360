@@ -8,6 +8,7 @@
 import type { HostOnboardingData } from './hostOnboardingData';
 import type { HostOnboardingPhoto } from './hostOnboardingPhoto';
 import type { HostOnboardingRoundCategoriesItem } from './hostOnboardingRoundCategoriesItem';
+import type { HostOnboardingRoundContentSectionsItem } from './hostOnboardingRoundContentSectionsItem';
 import type { HostOnboardingRoundStatus } from './hostOnboardingRoundStatus';
 
 export interface HostOnboardingRound {
@@ -19,6 +20,8 @@ export interface HostOnboardingRound {
   status: HostOnboardingRoundStatus;
   data: HostOnboardingData;
   categories: HostOnboardingRoundCategoriesItem[];
+  /** Live canonical stay and offer structure in admin order. */
+  contentSections: HostOnboardingRoundContentSectionsItem[];
   photos: HostOnboardingPhoto[];
   updatedAt: string;
   /** @nullable */

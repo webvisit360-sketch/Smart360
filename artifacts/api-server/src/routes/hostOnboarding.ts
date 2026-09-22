@@ -122,6 +122,7 @@ export function hostDto(result: NonNullable<Awaited<ReturnType<typeof currentHos
       label: category.label,
       order,
     })),
+    contentSections: result.contentSections,
     photos: result.photos.map((photo) => {
       const mediaId = round.draftData.media?.find((media) =>
         media.url.includes(`onboarding-${photo.id}.jpg`)
@@ -258,6 +259,7 @@ async function save(req: Request, res: Response): Promise<void> {
     data: dto.data,
     photos: dto.photos,
     categories: dto.categories,
+    contentSections: dto.contentSections,
   });
 }
 

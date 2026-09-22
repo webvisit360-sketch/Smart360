@@ -14,3 +14,9 @@ Canonical content and its convenience aliases must not both be writable. Normali
 **Why:** A stale house-rules alias made a successful rich-text save look dirty again. The next autosave restored the old first-row body and repeated, while another house row saved correctly.
 
 **How to apply:** Prefer stable item identities when available; retain legacy scalar fields only as a fallback for older payloads. Check that a completed save becomes idle as well as surviving a reopen.
+
+Empty rich-text initialization is not user content, and a server-assigned ID must replace its temporary client identity before another save can create the same entry.
+
+**Why:** Mount-time empty HTML and unreconciled temporary IDs produced repeated empty draft entries. Separately, serializing uncommitted list inputs split an offer's name and price into different records.
+
+**How to apply:** Ignore semantically empty initialization, keep editor render identity stable across creation, reconcile returned IDs while preserving edits made in flight, and keep uncommitted list inputs out of canonical save baselines. Test first-entry creation and idle stability, not only existing-entry edits.

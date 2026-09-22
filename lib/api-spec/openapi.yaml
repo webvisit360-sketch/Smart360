@@ -2849,6 +2849,9 @@ components:
         id: { type: string, minLength: 1, maxLength: 100 }
         name: { type: string, maxLength: 500 }
         price: { type: string, maxLength: 500 }
+        categoryId:
+          type: string
+          description: Canonical offer category ID. Present on reads; optional only for legacy write compatibility.
     HostOnboardingRecommendation:
       type: object
       additionalProperties: false
@@ -3079,7 +3082,7 @@ components:
         previewUrl: { type: string }
     HostOnboardingRound:
       type: object
-      required: [id, tenantId, round, revision, canonicalRevision, status, data, categories, photos, updatedAt]
+      required: [id, tenantId, round, revision, canonicalRevision, status, data, categories, contentSections, photos, updatedAt]
       properties:
         id: { type: string }
         tenantId: { type: string }
@@ -3100,6 +3103,29 @@ components:
               name: { type: string }
               label: { type: string }
               order: { type: number }
+        contentSections:
+          type: array
+          description: Live canonical stay and offer structure in admin order.
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, key, title, order, categories]
+            properties:
+              id: { type: string }
+              key: { type: string, enum: [stay, offer] }
+              title: { type: string }
+              order: { type: number }
+              categories:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [id, key, label, order]
+                  properties:
+                    id: { type: string }
+                    key: { type: string }
+                    label: { type: string }
+                    order: { type: number }
         photos:
           type: array
           items: { $ref: "#/components/schemas/HostOnboardingPhoto" }

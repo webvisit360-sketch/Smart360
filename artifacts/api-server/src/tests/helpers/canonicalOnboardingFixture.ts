@@ -35,6 +35,7 @@ export type CanonicalOnboardingFixture = {
     house: string;
     park: string;
     offer: string;
+    customOffer: string;
     event: string;
   };
   mediaIds: {
@@ -108,6 +109,30 @@ export async function createCanonicalOnboardingFixture(): Promise<CanonicalOnboa
     for (const key of ["welcome", "check", "house", "park", "sup", "events", "shops"]) {
       if (!categoryIds[key]) throw new Error(`Fixture skeleton category ${key} is missing`);
     }
+    const staySection = sections.find((section) => section.key === "stay");
+    const offerSection = sections.find((section) => section.key === "offer");
+    if (!staySection || !offerSection) throw new Error("Fixture content sections are missing");
+    await db.update(sectionsTable).set({ title: "Vaše bivanje po meri" })
+      .where(eq(sectionsTable.id, staySection.id));
+    await db.update(categoriesTable).set({ label: "Parkiranje pri oljkah" })
+      .where(eq(categoriesTable.id, categoryIds["park"]!));
+    const [emptyCustomStay, customOfferCategory] = await db.insert(categoriesTable).values([
+      {
+        sectionId: staySection.id,
+        key: `fixture-empty-${randomUUID()}`,
+        label: "Navodila po meri",
+        position: 999,
+      },
+      {
+        sectionId: offerSection.id,
+        key: `fixture-offer-${randomUUID()}`,
+        label: "Posebna doživetja",
+        position: 999,
+      },
+    ]).returning();
+    if (!emptyCustomStay || !customOfferCategory) throw new Error("Fixture custom categories are missing");
+    categoryIds.emptyCustomStay = emptyCustomStay.id;
+    categoryIds.customOffer = customOfferCategory.id;
 
     const insertedItems = await db.insert(itemsTable).values([
       {
@@ -157,6 +182,12 @@ export async function createCanonicalOnboardingFixture(): Promise<CanonicalOnboa
         position: 0,
       },
       {
+        categoryId: categoryIds["customOffer"]!,
+        title: "Zasebni ogled",
+        price: "35 EUR",
+        position: 0,
+      },
+      {
         categoryId: categoryIds["events"]!,
         title: "Poletni koncert",
         body: "Dogodek v operaterjevem osnutku.",
@@ -164,8 +195,8 @@ export async function createCanonicalOnboardingFixture(): Promise<CanonicalOnboa
         position: 0,
       },
     ]).returning();
-    const [welcome, contactAna, contactBine, check, house, park, offer, event] = insertedItems;
-    if (!welcome || !contactAna || !contactBine || !check || !house || !park || !offer || !event) {
+    const [welcome, contactAna, contactBine, check, house, park, offer, customOffer, event] = insertedItems;
+    if (!welcome || !contactAna || !contactBine || !check || !house || !park || !offer || !customOffer || !event) {
       throw new Error("Fixture canonical items were not created");
     }
     const [photo, video] = await db.insert(mediaTable).values([
@@ -271,6 +302,7 @@ export async function createCanonicalOnboardingFixture(): Promise<CanonicalOnboa
         house: house.id,
         park: park.id,
         offer: offer.id,
+        customOffer: customOffer.id,
         event: event.id,
       },
       mediaIds: { photo: photo.id, video: video.id },
@@ -313,6 +345,7 @@ export async function canonicalOnboardingFixtureRows(fixture: CanonicalOnboardin
         fixture.itemIds.house,
         fixture.itemIds.park,
         fixture.itemIds.offer,
+        fixture.itemIds.customOffer,
         fixture.itemIds.event,
       ],
     ));

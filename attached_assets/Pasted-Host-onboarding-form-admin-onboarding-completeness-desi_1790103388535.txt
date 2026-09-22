@@ -1,0 +1,70 @@
+Host onboarding form (/admin/onboarding) — completeness + design corrections.
+This supersedes any earlier pending form-design prompt. Form and admin share
+the same draft; do not change that plumbing, autosave, or the submit pipeline.
+Do NOT publish.
+
+PART A — THE FORM MUST MIRROR THE FULL ADMIN STRUCTURE.
+Today the form shows only: Osnovni podatki, Wi-Fi, Hišni red, a single generic
+"Vaša ponudba" adder, Okolica, Fotografije. The destination categories
+(Dobrodošli, Vaše mesto, Sanitarije, Prijava in odjava, Parkiranje, Apartmaji,
+Lokacija, Navodila za ograjo, Navodila za opremo, Bazen, …) and the offer
+categories (Najem opreme, Žar in piknik, Domači izdelki, SUP deska, Skuter,
+Zunanji fitnes, Čoln s skiperjem, Ladijski prevoz, Družabne igre, Oljčno olje,
+Sladoled 24/7, …) are missing entirely. Fix:
+
+1. Add a form section "Vaša destinacija" (title read LIVE from the tenant's
+   draft first-section title, so it updates automatically after the operator
+   runs the skeleton alignment). It lists EVERY category of that section from
+   the shared draft, in admin order — never a hard-coded list, so custom and
+   renamed categories appear automatically. Per category:
+   - uppercase green label (14px/800, letter-spacing 0.08em, #157347) with the
+     category name;
+   - the same rich-text editor as Hišni red, prefilled with the category's
+     current draft text; host edits save into the same draft (existing
+     two-way binding);
+   - if a category has multiple entries, show each entry as its own sub-block
+     with its entry title; if empty, an empty editor that creates the draft
+     entry on first save.
+   Wi-Fi and Hišni red keep their existing dedicated sections (they already
+   bind to their categories) — do not duplicate them inside this section.
+
+2. Rebuild form section "Vaša ponudba" to list EVERY offer category from the
+   shared draft (same dynamic rule), each with its saved offers prefilled as
+   rows (naziv + cena), removable, plus a per-category "+ Dodaj ponudbo" row.
+   Replace the current single generic adder.
+
+3. Section numbering updates automatically (Osnovni podatki, Wi-Fi, Hišni
+   red, Vaša destinacija, Vaša ponudba, Kaj priporočate v okolici — with
+   Dogodki and Svoja kategorija unchanged — Fotografije).
+
+4. The guest-visibility rule is untouched: empty categories stay hidden from
+   guests; the form always shows all.
+
+PART B — DESIGN CORRECTIONS (restore the approved design).
+1. LOGO — standing rule violated: the header shows an INVENTED logo (colorful
+   ring + blue "Smart360"). NEVER draw or restyle the logo. Use the official
+   green Smart360 znak asset (same as the CGP welcome email and guest app) at
+   46×46 px + wordmark "SMART360" in Archivo 800, 24 px, #121A14,
+   letter-spacing 0.02em, 12 px gap, left-aligned with the 720 px content
+   column. 48 px gap below, then "Dobrodošli, {naziv}" 30 px/800, and the
+   intro line 16 px #66716A: "Vpišite podatke o svoji nastanitvi — vse ostalo
+   uredimo mi. Vnos lahko kadar koli prekinete, osnutek se shrani sam."
+2. Field labels everywhere: 13 px / 700 / #66716A / UPPERCASE.
+3. Okolica category labels: same style as Part A.1 labels (uppercase green).
+4. Saved location rows: white row (radius 10, 1 px #E8EBE6) with a green check
+   icon (16 px, stroke #157347, stroke-width 2.6) before the name.
+5. Delete controls: remove the red circular trash buttons everywhere. Use a
+   small inline "×" at the row's right end, #9AA39D, #DD9A2B on hover/press.
+   No red anywhere in the form.
+6. Empty input rows in list sections: dashed 1 px #9AA39D border, radius 10,
+   muted example placeholder (e.g. Kulinarika → "npr. Gostilna, planinska
+   koča …").
+Card tokens stay: page white, cards #F4F6F2 with 1 px #E8EBE6 radius 16,
+inner rows white radius 10, section 5 keeps its 2 px #157347 border, footer
+buttons and "Osnutek shranjen" unchanged.
+
+Verify in dev with a tenant that has content: operator-entered category text
+and offers appear prefilled in the form; a form edit shows up in admin; the
+category lists follow the draft (rename a category in admin → form label
+updates). Check 1440 px and phone width. Report with "POVZETEK ZA LASTNIKA"
+in Slovenian, then STOP. No publication.

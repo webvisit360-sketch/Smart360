@@ -16,4 +16,6 @@ export interface HostOnboardingOffer {
   name: string;
   /** @maxLength 500 */
   price: string;
+  /** Canonical offer category ID. Present on reads; optional only for legacy write compatibility. */
+  categoryId?: string;
 }

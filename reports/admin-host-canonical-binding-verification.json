@@ -1,6 +1,6 @@
 {
   "status": "PASSED_DEVELOPMENT_COPY_NOT_PUBLISHED",
-  "fixtureTenantId": "9555b83a-09d3-40c0-a8e3-23f03e400118",
+  "fixtureTenantId": "45441d1b-d5c9-4b2c-9ff2-3d2abf5693b2",
   "verified": {
     "adminDraftPrefillsFreshForm": true,
     "adminDraftPrefillsReopenedForm": true,
@@ -22,7 +22,7 @@
   },
   "counts": {
     "contacts": 2,
-    "offers": 1,
+    "offers": 2,
     "events": 1,
     "mediaAfterExplicitRemoval": 1,
     "queuedPlaceHints": 1

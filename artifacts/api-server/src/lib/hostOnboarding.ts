@@ -27,6 +27,7 @@ import { createCategoryWithTooling } from "./categoryTooling";
 import {
   applyCanonicalHostOnboardingPatch,
   readCanonicalHostOnboarding,
+  readCanonicalHostOnboardingStructure,
   recommendationNeedsCreatorQueue,
   canonicalHostOnboardingRevision,
 } from "./hostOnboardingCanonical";
@@ -197,11 +198,13 @@ export async function currentHostOnboarding(tenantId: string, hostUserId: string
       .where(eq(hostOnboardingPhotosTable.onboardingId, round.id))
       .orderBy(asc(hostOnboardingPhotosTable.createdAt));
     const canonical = await readCanonicalHostOnboarding(tx, tenantId, workflow);
+    const contentSections = await readCanonicalHostOnboardingStructure(tx, tenantId);
     const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId);
     return {
       round: { ...round, draftData: canonical },
       photos,
       categories: getHostOnboardingCategories(),
+      contentSections,
       canonicalRevision,
     };
   });

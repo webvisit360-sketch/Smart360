@@ -72,6 +72,8 @@ export interface HostOnboardingOffer {
   name: string;
   /** @maxLength 500 */
   price: string;
+  /** Canonical offer category ID. Present on reads; optional only for legacy write compatibility. */
+  categoryId?: string;
 }
 
 export interface HostOnboardingRecommendation {
@@ -371,6 +373,29 @@ export type HostOnboardingRoundCategoriesItem = {
   order: number;
 };
 
+export type HostOnboardingRoundContentSectionsItemKey = typeof HostOnboardingRoundContentSectionsItemKey[keyof typeof HostOnboardingRoundContentSectionsItemKey];
+
+
+export const HostOnboardingRoundContentSectionsItemKey = {
+  stay: 'stay',
+  offer: 'offer',
+} as const;
+
+export type HostOnboardingRoundContentSectionsItemCategoriesItem = {
+  id: string;
+  key: string;
+  label: string;
+  order: number;
+};
+
+export type HostOnboardingRoundContentSectionsItem = {
+  id: string;
+  key: HostOnboardingRoundContentSectionsItemKey;
+  title: string;
+  order: number;
+  categories: HostOnboardingRoundContentSectionsItemCategoriesItem[];
+};
+
 export interface HostOnboardingRound {
   id: string;
   tenantId: string;
@@ -380,6 +405,8 @@ export interface HostOnboardingRound {
   status: HostOnboardingRoundStatus;
   data: HostOnboardingData;
   categories: HostOnboardingRoundCategoriesItem[];
+  /** Live canonical stay and offer structure in admin order. */
+  contentSections: HostOnboardingRoundContentSectionsItem[];
   photos: HostOnboardingPhoto[];
   updatedAt: string;
   /** @nullable */
