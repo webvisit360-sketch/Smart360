@@ -5,7 +5,9 @@ description: How to fix wrong production DATA (not schema) when prod SQL is read
 
 # Production data repairs
 
-**Rule:** production `executeSql` is read-only (SELECT only). Wrong production *data* can only be fixed by shipping code — the pattern is a self-disabling startup backfill in the API server (runs after retention purges, before listen; best-effort, never blocks boot).
+**Rule:** production `executeSql` is read-only (SELECT only, replica). This limits the agent tool, not all production editing: the owner can edit production data in Replit's Database → My Data edit mode without republishing, and an authorized existing application writer can also update data. Without an available authenticated writer, a shipped, owner-approved guarded data repair is an option; do not claim publishing is inherently required for every data edit.
+
+**Why this distinction matters:** Official documentation checked on 2026-09-22 confirms production visual edits take effect without republishing. Agent approval alone does not turn the read-only replica tool into a writer. A development-only fixture applier is not an executable production repair.
 
 **Why:** publish syncs *schema* (new columns arrive with their defaults) but never *data* — so a column populated by hand in dev (e.g. `categories.explore_group`) reaches prod all-defaulted. This silently broke Okolica grouping in Aug 2026.
 
