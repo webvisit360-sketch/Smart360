@@ -27,7 +27,7 @@ const HOST = "current_setting('app.role', true) = 'host'";
 const TID = "nullif(current_setting('app.tenant_id', true), '')::uuid";
 
 /** tableName -> { using, withCheck? } (host-side predicate; non-host bypasses). */
-const POLICIES: Record<string, { using: string; withCheck?: string }> = {
+export const POLICIES: Record<string, { using: string; withCheck?: string }> = {
   tenants: { using: `id = ${TID}` },
   published_snapshots: { using: `tenant_id = ${TID}` },
   creator_place_materializations: { using: `tenant_id = ${TID}` },
@@ -80,6 +80,12 @@ const POLICIES: Record<string, { using: string; withCheck?: string }> = {
   host_auth_events: {
     using: `(host_auth_events.host_user_id IS NOT NULL AND EXISTS (SELECT 1 FROM host_memberships m WHERE m.host_user_id = host_auth_events.host_user_id AND m.tenant_id = ${TID}))`,
   },
+  // Host onboarding is tenant-owned from its first draft through immutable
+  // review. Keep these additive tables in the same central fail-closed policy
+  // registry as every other host-visible table.
+  host_onboarding_rounds: { using: `tenant_id = ${TID}` },
+  host_onboarding_photos: { using: `tenant_id = ${TID}` },
+  host_onboarding_event_suggestions: { using: `tenant_id = ${TID}` },
 };
 
 /**
@@ -98,7 +104,7 @@ export const HOST_DB_ROLE = "smart360_host";
  * tenant_renewals) have NO grants at all, and FUTURE tables are fail-closed:
  * a new table is invisible to hosts until it is deliberately added here.
  */
-const HOST_ROLE_GRANTS: Record<string, string> = {
+export const HOST_ROLE_GRANTS: Record<string, string> = {
   // Content the host manages. Categories/items are soft-deleted with UPDATE;
   // DELETE is intentionally absent so permanent purge stays owner-only even
   // when a handler-level fence regresses.
@@ -132,6 +138,11 @@ const HOST_ROLE_GRANTS: Record<string, string> = {
   host_memberships: "SELECT",
   host_sessions: "SELECT, DELETE",
   host_auth_events: "SELECT, INSERT",
+  // Additive onboarding tables only. Startup's revoke-all sweep requires
+  // every intended host table to be explicitly restored here.
+  host_onboarding_rounds: "SELECT, INSERT, UPDATE, DELETE",
+  host_onboarding_photos: "SELECT, INSERT, UPDATE, DELETE",
+  host_onboarding_event_suggestions: "SELECT, INSERT, UPDATE, DELETE",
 };
 
 async function ensureHostRole(): Promise<void> {

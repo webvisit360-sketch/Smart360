@@ -27,6 +27,8 @@ Three concentric rings; each must hold alone:
 ## Critical gotchas (learned the hard way)
 - **The pool user is a BYPASSRLS superuser** (`postgres`, rolsuper=t) — FORCE RLS does NOTHING for it. Host connections must `SET ROLE smart360_host` (NOLOGIN, NOBYPASSRLS, ensured+granted at boot in `rls.ts`). Any RLS test must SET ROLE too, or it silently tests nothing.
 - **Least privilege is deliberate and fail-closed for future tables**: `HOST_ROLE_GRANTS` in `rls.ts` is the single source of truth (boot revokes ALL then grants the list). A NEW table is invisible to host requests until added there (+ a POLICIES entry). If a host-allowed handler starts failing with "permission denied", that's the intended signal — onboard the table, don't broaden grants.
+  **Why:** A reviewed additive migration can grant access successfully, yet the next server restart removes those grants if the bootstrap allowlist omits the table.
+  **How to apply:** Verify a real host request after workflow startup, not only immediately after applying the migration. Preserve owner-only Creator grants when host submission intentionally delegates to privileged, tenant-scoped work.
 - **Creator-table temporary exception:** Creator proposal/evidence tables may remain without RLS while the Creator is operator-only, provided hosts have no grants and real HOST-session tests knock every Creator route and receive the uniform owner-only rejection. Add Creator RLS to the pre-public hardening list alongside the final operator/host split.
 
   **Why:** With application connections currently using the PostgreSQL superuser, meaningful RLS would require a wider role-architecture change; absence of host grants plus the central owner-only gate is the accepted interim boundary.

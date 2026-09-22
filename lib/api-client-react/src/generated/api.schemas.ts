@@ -5,6 +5,273 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export interface HostOnboardingContact {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /** @maxLength 500 */
+  name: string;
+  /** @maxLength 500 */
+  phone: string;
+}
+
+export interface HostOnboardingOffer {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /** @maxLength 500 */
+  name: string;
+  /** @maxLength 500 */
+  price: string;
+}
+
+export interface HostOnboardingRecommendation {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  categoryId: string;
+  /** @maxLength 500 */
+  name: string;
+}
+
+export interface HostOnboardingEvent {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /** @maxLength 500 */
+  name: string;
+  date: string;
+  time: string;
+}
+
+export interface HostOnboardingData {
+  /** @maxLength 500 */
+  accommodationName: string;
+  /** @maxLength 2000 */
+  address: string;
+  /** @maxLength 500 */
+  guestPhone: string;
+  /** @maxLength 254 */
+  guestEmail: string;
+  /** @maxLength 2000 */
+  website: string;
+  checkInFrom: string;
+  checkOutUntil: string;
+  /** @maxItems 30 */
+  contacts: HostOnboardingContact[];
+  /** @maxLength 500 */
+  wifiName: string;
+  /** @maxLength 500 */
+  wifiPassword: string;
+  /** @maxLength 20000 */
+  houseRulesParking: string;
+  /** @maxItems 100 */
+  offers: HostOnboardingOffer[];
+  /** @maxItems 300 */
+  recommendations: HostOnboardingRecommendation[];
+  /** @maxItems 100 */
+  events: HostOnboardingEvent[];
+}
+
+/**
+ * Partial HostOnboardingData patch; supplied arrays replace that array.
+ */
+export type HostOnboardingSaveRequestData = {
+  /** @maxLength 500 */
+  accommodationName?: string;
+  /** @maxLength 2000 */
+  address?: string;
+  /** @maxLength 500 */
+  guestPhone?: string;
+  /** @maxLength 254 */
+  guestEmail?: string;
+  /** @maxLength 2000 */
+  website?: string;
+  checkInFrom?: string;
+  checkOutUntil?: string;
+  contacts?: HostOnboardingContact[];
+  /** @maxLength 500 */
+  wifiName?: string;
+  /** @maxLength 500 */
+  wifiPassword?: string;
+  /** @maxLength 20000 */
+  houseRulesParking?: string;
+  offers?: HostOnboardingOffer[];
+  recommendations?: HostOnboardingRecommendation[];
+  events?: HostOnboardingEvent[];
+};
+
+export interface HostOnboardingSaveRequest {
+  /** @minimum 1 */
+  revision: number;
+  /** Partial HostOnboardingData patch; supplied arrays replace that array. */
+  data: HostOnboardingSaveRequestData;
+}
+
+/**
+ * For a first submission, revision is required and data may be omitted to submit the persisted draft. For an immutable already-submitted round replay, only round is required; revision and data are ignored.
+ */
+export interface HostOnboardingSubmitRequest {
+  /** @minimum 1 */
+  round: number;
+  /**
+     * Required for a first submission; optional for submitted-round replay.
+     * @minimum 1
+     */
+  revision?: number;
+  /** Optional for a first submission; when omitted, the server submits the persisted draft at revision. Ignored for submitted-round replay. */
+  data?: HostOnboardingData;
+}
+
+export type HostOnboardingPhotoUploadRequestContentType = typeof HostOnboardingPhotoUploadRequestContentType[keyof typeof HostOnboardingPhotoUploadRequestContentType];
+
+
+export const HostOnboardingPhotoUploadRequestContentType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+  'image/heic': 'image/heic',
+  'image/heif': 'image/heif',
+} as const;
+
+export interface HostOnboardingPhotoUploadRequest {
+  /** @maxLength 255 */
+  fileName: string;
+  contentType: HostOnboardingPhotoUploadRequestContentType;
+  /**
+     * @minimum 1
+     * @maximum 20971520
+     */
+  size: number;
+}
+
+export interface HostOnboardingPhotoUploadResponse {
+  uploadUrl: string;
+  objectPath: string;
+  photoId: string;
+}
+
+export type HostOnboardingPhotoStatus = typeof HostOnboardingPhotoStatus[keyof typeof HostOnboardingPhotoStatus];
+
+
+export const HostOnboardingPhotoStatus = {
+  uploading: 'uploading',
+  ready: 'ready',
+  submitted: 'submitted',
+} as const;
+
+export interface HostOnboardingPhoto {
+  id: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  status: HostOnboardingPhotoStatus;
+  previewUrl: string;
+}
+
+export type HostOnboardingRoundStatus = typeof HostOnboardingRoundStatus[keyof typeof HostOnboardingRoundStatus];
+
+
+export const HostOnboardingRoundStatus = {
+  draft: 'draft',
+  submitted: 'submitted',
+} as const;
+
+export type HostOnboardingRoundCategoriesItem = {
+  id: string;
+  key: string;
+  name: string;
+  label: string;
+  order: number;
+};
+
+export interface HostOnboardingRound {
+  id: string;
+  tenantId: string;
+  round: number;
+  revision: number;
+  status: HostOnboardingRoundStatus;
+  data: HostOnboardingData;
+  categories: HostOnboardingRoundCategoriesItem[];
+  photos: HostOnboardingPhoto[];
+  updatedAt: string;
+  /** @nullable */
+  submittedAt?: string | null;
+}
+
+export type OwnerHostOnboardingResponseRoundsItemTargetReviewItem = {
+  target?: string;
+  hostValue?: unknown;
+  operatorValue?: unknown;
+  resolution?: string;
+  suggestionVisible?: boolean;
+};
+
+export type OwnerHostOnboardingResponseRoundsItemRecommendationsItem = {
+  categoryKey?: string;
+  name?: string;
+  /** @nullable */
+  proposalId?: string | null;
+};
+
+export type OwnerHostOnboardingResponseRoundsItemEventsItem = {
+  id?: string;
+  name?: string;
+  date?: string;
+  time?: string;
+  status?: string;
+};
+
+export type OwnerHostOnboardingResponseRoundsItemNotification = {
+  status?: string;
+  /** @nullable */
+  recipient?: string | null;
+  /** @nullable */
+  providerMessageId?: string | null;
+  /** @nullable */
+  error?: string | null;
+  /** @nullable */
+  attemptedAt?: string | null;
+};
+
+/**
+ * Immutable submitted review or current draft, including targetReview, recommendations, exact event date/time, photos and notification evidence.
+ */
+export type OwnerHostOnboardingResponseRoundsItem = {
+  id?: string;
+  round?: number;
+  revision?: number;
+  status?: string;
+  data?: HostOnboardingData;
+  targetReview?: OwnerHostOnboardingResponseRoundsItemTargetReviewItem[];
+  recommendations?: OwnerHostOnboardingResponseRoundsItemRecommendationsItem[];
+  events?: OwnerHostOnboardingResponseRoundsItemEventsItem[];
+  photos?: HostOnboardingPhoto[];
+  notification?: OwnerHostOnboardingResponseRoundsItemNotification;
+  createdAt?: string;
+  updatedAt?: string;
+  /** @nullable */
+  submittedAt?: string | null;
+};
+
+export interface OwnerHostOnboardingResponse {
+  tenantId: string;
+  tenantName: string;
+  rounds: OwnerHostOnboardingResponseRoundsItem[];
+}
+
 export interface HostWelcomePreview {
   propertyName: string;
   /** @nullable */

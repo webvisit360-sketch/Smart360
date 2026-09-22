@@ -104,6 +104,18 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/tenants/:id/host/welcome-preview", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/host/send-invite", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/host/send-reset", binding: OWNER },
+  { method: "get", path: "/admin/host/onboarding", binding: SELF },
+  { method: "patch", path: "/admin/host/onboarding", binding: SELF },
+  { method: "post", path: "/admin/host/onboarding/save", binding: SELF },
+  { method: "post", path: "/admin/host/onboarding/submit", binding: SELF },
+  { method: "post", path: "/admin/host/onboarding/photos/upload-url", binding: SELF },
+  { method: "post", path: "/admin/host/onboarding/photos/:photoId/complete", binding: SELF },
+  { method: "delete", path: "/admin/host/onboarding/photos/:photoId", binding: SELF },
+  { method: "get", path: "/admin/host/onboarding/photos/:photoId", binding: SELF },
+  { method: "get", path: "/admin/tenants/:id/host/onboarding", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/host/onboarding/open", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/host/onboarding/reopen", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/host/onboarding/photos/:photoId", binding: OWNER },
 
   // ── Tenants (adminTenants.ts) ────────────────────────────────────────────
   { method: "get", path: "/admin/overview", binding: OWNER },

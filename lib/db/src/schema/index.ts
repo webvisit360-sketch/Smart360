@@ -9,3 +9,4 @@ export * from "./creator";
 export * from "./creatorDistanceBackfill";
 export * from "./notificationAttempts";
 export * from "./publishedSnapshots";
+export * from "./hostOnboarding";

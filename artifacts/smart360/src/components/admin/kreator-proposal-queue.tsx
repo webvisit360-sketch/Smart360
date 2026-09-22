@@ -318,7 +318,14 @@ export function KreatorProposalQueue({
               : <RotateCcw className="mr-2 h-4 w-4" />}
             Ponovno ovrednoti predloge
           </Button>
-          <Button type="button" variant="outline" disabled={retryUnresolved.isPending || !rows.some((row) => row.status === "unresolved" && row.refusalReason === "nominatim-unavailable")} onClick={() => retryUnresolved.mutate({ id: tenantId })}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={retryUnresolved.isPending || !rows.some((row) =>
+              row.status === "unresolved" &&
+              (row.refusalReason === "nominatim-unavailable" || row.inclusionReason === "vnesel gostitelj prek obrazca"))}
+            onClick={() => retryUnresolved.mutate({ id: tenantId })}
+          >
             {retryUnresolved.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
             Ponovno razreši nerazrešene
           </Button>
@@ -492,8 +499,11 @@ export function KreatorProposalQueue({
                   </p>
                 )}
                 {row.inclusionReason && (
-                  <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-semibold text-blue-950">
-                    Zakaj je tukaj: {row.inclusionReason}
+                  <p
+                    className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-semibold text-blue-950"
+                    data-testid={row.inclusionReason === "vnesel gostitelj prek obrazca" ? `host-provenance-${row.id}` : undefined}
+                  >
+                    {row.inclusionReason === "vnesel gostitelj prek obrazca" ? "Izvor" : "Zakaj je tukaj"}: {row.inclusionReason}
                   </p>
                 )}
                 {row.lostSameCategoryCount > 0 && (

@@ -76,7 +76,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
     <div
       className={`guest-entry-splash${phase === 'out' ? ' is-out' : ''}`}
       role="status"
-      aria-label="Smart360 Smart travel guide"
+      aria-label="Smart360 pametni turistični vodnik"
       onClick={hide}
     >
       <span className="guest-entry-splash__mark" aria-hidden="true">
@@ -90,7 +90,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
         style={wordmarkStyle}
         aria-hidden="true"
       />
-      <span className="guest-entry-splash__subtitle">Smart travel guide</span>
+      <span className="guest-entry-splash__subtitle">Pametni turistični vodnik</span>
     </div>
   );
 }

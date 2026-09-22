@@ -133,6 +133,46 @@ export class ObjectStorageService {
     });
   }
 
+  /**
+   * Sign one server-allocated private entity path. Callers must persist and
+   * authorize the path before exposing the URL; arbitrary client paths are
+   * never accepted.
+   */
+  async getObjectEntityUploadURLForPath(objectPath: string): Promise<string> {
+    if (
+      !/^\/objects\/host-onboarding\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.raw$/i
+        .test(objectPath)
+    ) {
+      throw new Error('Invalid staged object path');
+    }
+    const privateObjectDir = this.getPrivateObjectDir().replace(/\/+$/, '');
+    const entityId = objectPath.slice('/objects/'.length);
+    const { bucketName, objectName } = parseObjectPath(`${privateObjectDir}/${entityId}`);
+    return signObjectURL({
+      bucketName,
+      objectName,
+      method: 'PUT',
+      ttlSec: 900,
+    });
+  }
+
+  /**
+   * Return an unsigned private handle for a server-produced onboarding image.
+   * The final key is never accepted by the signed-upload method above.
+   */
+  getHostOnboardingSanitizedFileForWrite(objectPath: string): File {
+    if (
+      !/^\/objects\/host-onboarding\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.sanitized\.jpg$/i
+        .test(objectPath)
+    ) {
+      throw new Error('Invalid sanitized staged object path');
+    }
+    const privateObjectDir = this.getPrivateObjectDir().replace(/\/+$/, '');
+    const entityId = objectPath.slice('/objects/'.length);
+    const { bucketName, objectName } = parseObjectPath(`${privateObjectDir}/${entityId}`);
+    return objectStorageClient.bucket(bucketName).file(objectName);
+  }
+
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith('/objects/')) {
       throw new ObjectNotFoundError();

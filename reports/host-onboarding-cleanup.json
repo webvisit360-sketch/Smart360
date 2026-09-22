@@ -1,0 +1,12 @@
+{
+  "command": "cleanup",
+  "counts": {
+    "tenantsDeleted": 1,
+    "hostAccountsDeleted": 1,
+    "ownerSessionsDeleted": 1,
+    "stagedObjectsDeleted": 1,
+    "remainingRows": 0
+  },
+  "revokedHostSessionStatus": 401,
+  "revokedOwnerSessionStatus": 401
+}

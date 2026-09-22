@@ -27,15 +27,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const isHostAccount = hostAuthenticated && location === "/admin/account";
   useEffect(() => {
     if (unauthenticated) setLocation("/admin/login");
-    if (
-      !authLoading &&
-      hostAuthenticated &&
-      location !== hostTenantPath &&
-      location !== "/admin/account"
-    ) {
-      setLocation(hostTenantPath);
+    if (!authLoading && hostAuthenticated) {
+      if (hostSession?.onboardingRequired && location !== "/admin/onboarding") {
+        setLocation("/admin/onboarding");
+      } else if (
+        !hostSession?.onboardingRequired &&
+        location !== hostTenantPath &&
+        location !== "/admin/account" &&
+        location !== "/admin/onboarding"
+      ) {
+        setLocation(hostTenantPath);
+      }
     }
-  }, [authLoading, hostAuthenticated, hostTenantPath, location, unauthenticated, setLocation]);
+  }, [authLoading, hostAuthenticated, hostSession?.onboardingRequired, hostTenantPath, location, unauthenticated, setLocation]);
 
   if (authLoading) {
     return (

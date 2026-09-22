@@ -22,6 +22,136 @@ tags:
   - name: messages
   - name: site-plan
 paths:
+  /admin/host/onboarding:
+    get:
+      operationId: getHostOnboarding
+      tags: [tenants]
+      responses:
+        "200":
+          description: Current host onboarding round
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HostOnboardingRound" }
+        "401": { description: Host authentication required }
+        "404": { description: Onboarding has not been opened }
+    patch:
+      operationId: autosaveHostOnboarding
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostOnboardingSaveRequest" }
+      responses:
+        "200": { description: Draft saved }
+        "409": { description: Stale revision or immutable submission }
+  /admin/host/onboarding/save:
+    post:
+      operationId: saveHostOnboarding
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostOnboardingSaveRequest" }
+      responses:
+        "200": { description: Draft saved }
+        "409": { description: Stale revision or immutable submission }
+  /admin/host/onboarding/submit:
+    post:
+      operationId: confirmHostOnboardingSubmission
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostOnboardingSubmitRequest" }
+      responses:
+        "200": { description: Idempotently submitted }
+        "409": { description: Stale revision or an upload is unfinished }
+  /admin/host/onboarding/photos/upload-url:
+    post:
+      operationId: allocateHostOnboardingPhotoUpload
+      tags: [media]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostOnboardingPhotoUploadRequest" }
+      responses:
+        "201":
+          description: Private staged upload allocated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HostOnboardingPhotoUploadResponse" }
+        "409": { description: Twenty-photo limit reached }
+  /admin/host/onboarding/photos/{photoId}/complete:
+    post:
+      operationId: completeHostOnboardingPhoto
+      tags: [media]
+      parameters:
+        - { name: photoId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Image decoded, metadata stripped and staged" }
+        "400": { description: Invalid image or actual byte size mismatch }
+  /admin/host/onboarding/photos/{photoId}:
+    get:
+      operationId: getHostOnboardingPhoto
+      tags: [media]
+      parameters:
+        - { name: photoId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Authenticated private staged-photo stream }
+        "404": { description: Photo not found }
+    delete:
+      operationId: deleteHostOnboardingPhoto
+      tags: [media]
+      parameters:
+        - { name: photoId, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Draft photo removed }
+        "409": { description: Submitted photo is immutable }
+  /admin/tenants/{id}/host/onboarding:
+    get:
+      operationId: getOwnerHostOnboarding
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Owner read-only onboarding review
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerHostOnboardingResponse" }
+        "404": { description: Tenant not found }
+  /admin/tenants/{id}/host/onboarding/open:
+    post:
+      operationId: openHostOnboarding
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "201": { description: "First round opened, or existing round returned" }
+        "409": { description: Host account missing }
+  /admin/tenants/{id}/host/onboarding/reopen:
+    post:
+      operationId: reopenHostOnboarding
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "201": { description: "New immutable round opened, or active draft returned" }
+        "409": { description: Host account missing }
+  /admin/tenants/{id}/host/onboarding/photos/{photoId}:
+    get:
+      operationId: getOwnerHostOnboardingPhoto
+      tags: [media]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: photoId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Owner-authenticated staged-photo stream }
+        "404": { description: Photo not found }
   /admin/tenants/{id}/host/welcome-preview:
     get:
       operationId: getHostWelcomePreview
@@ -2633,6 +2763,237 @@ paths:
           description: Thread or tenant not found
 components:
   schemas:
+    HostOnboardingContact:
+      type: object
+      additionalProperties: false
+      required: [id, name, phone]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        name: { type: string, maxLength: 500 }
+        phone: { type: string, maxLength: 500 }
+    HostOnboardingOffer:
+      type: object
+      additionalProperties: false
+      required: [id, name, price]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        name: { type: string, maxLength: 500 }
+        price: { type: string, maxLength: 500 }
+    HostOnboardingRecommendation:
+      type: object
+      additionalProperties: false
+      required: [id, categoryId, name]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        categoryId: { type: string, minLength: 1, maxLength: 100 }
+        name: { type: string, maxLength: 500 }
+    HostOnboardingEvent:
+      type: object
+      additionalProperties: false
+      required: [id, name, date, time]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        name: { type: string, maxLength: 500 }
+        date: { type: string }
+        time: { type: string }
+    HostOnboardingData:
+      type: object
+      additionalProperties: false
+      required: [accommodationName, address, guestPhone, guestEmail, website, checkInFrom, checkOutUntil, contacts, wifiName, wifiPassword, houseRulesParking, offers, recommendations, events]
+      properties:
+        accommodationName: { type: string, maxLength: 500 }
+        address: { type: string, maxLength: 2000 }
+        guestPhone: { type: string, maxLength: 500 }
+        guestEmail: { type: string, maxLength: 254 }
+        website: { type: string, maxLength: 2000 }
+        checkInFrom: { type: string }
+        checkOutUntil: { type: string }
+        contacts:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/HostOnboardingContact" }
+        wifiName: { type: string, maxLength: 500 }
+        wifiPassword: { type: string, maxLength: 500 }
+        houseRulesParking: { type: string, maxLength: 20000 }
+        offers:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/HostOnboardingOffer" }
+        recommendations:
+          type: array
+          maxItems: 300
+          items: { $ref: "#/components/schemas/HostOnboardingRecommendation" }
+        events:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/HostOnboardingEvent" }
+    HostOnboardingSaveRequest:
+      type: object
+      additionalProperties: false
+      required: [revision, data]
+      properties:
+        revision: { type: number, minimum: 1 }
+        data:
+          type: object
+          additionalProperties: false
+          description: Partial HostOnboardingData patch; supplied arrays replace that array.
+          properties:
+            accommodationName: { type: string, maxLength: 500 }
+            address: { type: string, maxLength: 2000 }
+            guestPhone: { type: string, maxLength: 500 }
+            guestEmail: { type: string, maxLength: 254 }
+            website: { type: string, maxLength: 2000 }
+            checkInFrom: { type: string }
+            checkOutUntil: { type: string }
+            contacts:
+              type: array
+              items: { $ref: "#/components/schemas/HostOnboardingContact" }
+            wifiName: { type: string, maxLength: 500 }
+            wifiPassword: { type: string, maxLength: 500 }
+            houseRulesParking: { type: string, maxLength: 20000 }
+            offers:
+              type: array
+              items: { $ref: "#/components/schemas/HostOnboardingOffer" }
+            recommendations:
+              type: array
+              items: { $ref: "#/components/schemas/HostOnboardingRecommendation" }
+            events:
+              type: array
+              items: { $ref: "#/components/schemas/HostOnboardingEvent" }
+    HostOnboardingSubmitRequest:
+      type: object
+      additionalProperties: false
+      description: For a first submission, revision is required and data may be omitted to submit the persisted draft. For an immutable already-submitted round replay, only round is required; revision and data are ignored.
+      required: [round]
+      properties:
+        round: { type: number, minimum: 1 }
+        revision:
+          type: number
+          minimum: 1
+          description: Required for a first submission; optional for submitted-round replay.
+        data:
+          allOf:
+            - { $ref: "#/components/schemas/HostOnboardingData" }
+          description: Optional for a first submission; when omitted, the server submits the persisted draft at revision. Ignored for submitted-round replay.
+    HostOnboardingPhotoUploadRequest:
+      type: object
+      additionalProperties: false
+      required: [fileName, contentType, size]
+      properties:
+        fileName: { type: string, maxLength: 255 }
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/heic, image/heif]
+        size: { type: number, minimum: 1, maximum: 20971520 }
+    HostOnboardingPhotoUploadResponse:
+      type: object
+      additionalProperties: false
+      required: [uploadUrl, objectPath, photoId]
+      properties:
+        uploadUrl: { type: string }
+        objectPath: { type: string }
+        photoId: { type: string }
+    HostOnboardingPhoto:
+      type: object
+      required: [id, fileName, contentType, size, status, previewUrl]
+      properties:
+        id: { type: string }
+        fileName: { type: string }
+        contentType: { type: string }
+        size: { type: number }
+        status: { type: string, enum: [uploading, ready, submitted] }
+        previewUrl: { type: string }
+    HostOnboardingRound:
+      type: object
+      required: [id, tenantId, round, revision, status, data, categories, photos, updatedAt]
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        round: { type: number }
+        revision: { type: number }
+        status: { type: string, enum: [draft, submitted] }
+        data: { $ref: "#/components/schemas/HostOnboardingData" }
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, key, name, label, order]
+            properties:
+              id: { type: string }
+              key: { type: string }
+              name: { type: string }
+              label: { type: string }
+              order: { type: number }
+        photos:
+          type: array
+          items: { $ref: "#/components/schemas/HostOnboardingPhoto" }
+        updatedAt: { type: string }
+        submittedAt: { type: [string, "null"] }
+    OwnerHostOnboardingResponse:
+      type: object
+      required: [tenantId, tenantName, rounds]
+      properties:
+        tenantId: { type: string }
+        tenantName: { type: string }
+        rounds:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            description: Immutable submitted review or current draft, including targetReview, recommendations, exact event date/time, photos and notification evidence.
+            properties:
+              id: { type: string }
+              round: { type: number }
+              revision: { type: number }
+              status: { type: string }
+              data: { $ref: "#/components/schemas/HostOnboardingData" }
+              targetReview:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    target: { type: string }
+                    hostValue: {}
+                    operatorValue: {}
+                    resolution: { type: string }
+                    suggestionVisible: { type: boolean }
+              recommendations:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    categoryKey: { type: string }
+                    name: { type: string }
+                    proposalId: { type: [string, "null"] }
+              events:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    id: { type: string }
+                    name: { type: string }
+                    date: { type: string }
+                    time: { type: string }
+                    status: { type: string }
+              photos:
+                type: array
+                items: { $ref: "#/components/schemas/HostOnboardingPhoto" }
+              notification:
+                type: object
+                additionalProperties: false
+                properties:
+                  status: { type: string }
+                  recipient: { type: [string, "null"] }
+                  providerMessageId: { type: [string, "null"] }
+                  error: { type: [string, "null"] }
+                  attemptedAt: { type: [string, "null"] }
+              createdAt: { type: string }
+              updatedAt: { type: string }
+              submittedAt: { type: [string, "null"] }
     HostWelcomePreview:
       type: object
       required: [propertyName, recipient, subject, html, text]

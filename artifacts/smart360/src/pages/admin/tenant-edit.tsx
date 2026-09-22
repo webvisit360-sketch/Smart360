@@ -47,6 +47,7 @@ import {
   publicationDraftChanged,
   publicationNeedsConfirmation,
 } from "@/lib/tenant-publication-flow";
+import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -763,10 +764,16 @@ export default function AdminTenantEdit() {
               </button>
               <button
                 onClick={async () => {
-                  await fetch("/api/admin/host/logout", {
+                  const response = await fetch("/api/admin/host/logout", {
                     method: "POST",
                     credentials: "include",
-                  }).catch(() => undefined);
+                  }).catch(() => null);
+                  if (!response?.ok) {
+                    toast({ title: "Odjava ni uspela", variant: "destructive" });
+                    return;
+                  }
+                  queryClient.removeQueries({ queryKey: ["host-onboarding"] });
+                  queryClient.removeQueries({ queryKey: getGetTenantQueryKey(id) });
                   setLocation("/admin/login");
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground text-left"
@@ -838,6 +845,7 @@ export default function AdminTenantEdit() {
             {isSettings && (
               <TabsList className="mb-6 bg-white border border-black/5 rounded-[14px] p-1">
                 <TabsTrigger value="general" className="rounded-[10px]">Splošno</TabsTrigger>
+                <TabsTrigger value="onboarding" className="rounded-[10px] text-[#157347]">Obrazec za gostitelja</TabsTrigger>
                 <TabsTrigger value="appearance" className="rounded-[10px]">Videz</TabsTrigger>
                 <TabsTrigger value="contacts" className="rounded-[10px]">Stiki & Lokacija</TabsTrigger>
                 <TabsTrigger value="translations" className="rounded-[10px]">Prevodi</TabsTrigger>
@@ -1185,6 +1193,10 @@ export default function AdminTenantEdit() {
             </CardContent>
           </Card>
           {isOwner && <HostInvitePanel tenantId={id} />}
+        </TabsContent>
+
+        <TabsContent value="onboarding" className="space-y-6">
+          <HostOnboardingReview tenantId={id} />
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">

@@ -1,0 +1,10 @@
+{
+  "gap": 48,
+  "border": "rgb(21, 115, 71)",
+  "borderWidth": "2px",
+  "inputFontSize": "16px",
+  "fontFamily": "Archivo, sans-serif",
+  "documentWidth": 390,
+  "clientWidth": 390,
+  "savedOnLoad": true
+}

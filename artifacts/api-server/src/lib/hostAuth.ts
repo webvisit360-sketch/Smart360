@@ -17,6 +17,7 @@ import {
   parseHostInviteDeliveryFailure,
   type HostInviteDeliveryFailure,
 } from "./hostInviteDelivery";
+import { initializeWelcomeOnboardingDraft } from "./hostOnboarding";
 
 /**
  * Host account authentication (Instruction #28, CHECKPOINT 2).
@@ -491,6 +492,15 @@ export async function consumeHostInvite(
       .limit(1)
       .for("update");
     if (!membership) return null;
+    const [issuedEvent] = await tx
+      .select({ detail: hostAuthEventsTable.detail })
+      .from(hostAuthEventsTable)
+      .where(and(
+        eq(hostAuthEventsTable.hostUserId, invite.hostUserId),
+        eq(hostAuthEventsTable.type, "invite_issued"),
+      ))
+      .orderBy(desc(hostAuthEventsTable.createdAt))
+      .limit(1);
 
     // This conditional is the hard type boundary: an invite can CLAIM an
     // account once, but can never RESET an account that already has a password.
@@ -518,6 +528,15 @@ export async function consumeHostInvite(
       ip: req?.ip ?? null,
       userAgent: req?.get("user-agent") ?? null,
     });
+    if (issuedEvent?.detail?.includes("template=welcome")) {
+      // New welcome activations are gated by a draft created atomically with
+      // account claim. Legacy accounts receive no implicit draft.
+      await initializeWelcomeOnboardingDraft(
+        tx,
+        membership.tenantId,
+        invite.hostUserId,
+      );
+    }
     return { hostUserId: user.id, tenantId: membership.tenantId };
   });
   if (!claimed) return { ok: false, error: "Povezava ni veljavna ali je potekla." };

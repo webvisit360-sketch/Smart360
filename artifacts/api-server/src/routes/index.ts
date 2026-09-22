@@ -13,6 +13,7 @@ import part5MeliPuCutoverRouter from "./part5MeliPuCutover";
 import adminDistanceReviewRouter from "./adminDistanceReview";
 import adminCreatorRouter from "./adminCreator";
 import hostAuthRouter from "./hostAuth";
+import hostOnboardingRouter from "./hostOnboarding";
 import enquiriesRouter from "./enquiries";
 import { adminGate, assertAdminRoutesClassified } from "../lib/actorGate";
 
@@ -56,6 +57,7 @@ router.use(adminAuthRouter);
 // Before the routers with blanket `router.use("/admin", requireAdmin)` so the
 // anonymous host endpoints (login/reset) stay reachable.
 router.use(hostAuthRouter);
+router.use(hostOnboardingRouter);
 router.use(adminTenantsRouter);
 router.use(adminCreatorRouter);
 router.use(adminContentRouter);

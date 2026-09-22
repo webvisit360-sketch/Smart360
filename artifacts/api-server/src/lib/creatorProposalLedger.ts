@@ -34,6 +34,7 @@ import { createPacedNominatimFetch } from "./creatorNominatimRetry";
 import type { CreatorDependencyRecorder } from "./creatorDependencyTelemetry";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 import { logger } from "./logger";
+import { HOST_ONBOARDING_PROVENANCE } from "./hostOnboardingCreator";
 
 export const CREATOR_MAX_QUEUE_DURATION_S = 5400;
 
@@ -585,6 +586,7 @@ export async function listCreatorProposalQueue(tenantId: string) {
       or(
         eq(creatorPlaceProposalsTable.contentReady, true),
         eq(creatorPlaceProposalsTable.confirmationMethod, "operator_coordinates"),
+        eq(creatorPlaceProposalsTable.inclusionReason, HOST_ONBOARDING_PROVENANCE),
       ),
     ))
     .orderBy(asc(creatorPlaceProposalsTable.createdAt));
@@ -1195,8 +1197,13 @@ export async function retryInfrastructureFailedCreatorProposals(
   const rows = await db.select().from(creatorPlaceProposalsTable).where(and(
     eq(creatorPlaceProposalsTable.tenantId, tenantId),
     eq(creatorPlaceProposalsTable.status, "unresolved"),
-    eq(creatorPlaceProposalsTable.refusalReason, "nominatim-unavailable"),
-    eq(creatorPlaceProposalsTable.contentReady, true),
+    or(
+      and(
+        eq(creatorPlaceProposalsTable.refusalReason, "nominatim-unavailable"),
+        eq(creatorPlaceProposalsTable.contentReady, true),
+      ),
+      eq(creatorPlaceProposalsTable.inclusionReason, HOST_ONBOARDING_PROVENANCE),
+    ),
   )).orderBy(asc(creatorPlaceProposalsTable.createdAt));
   const paced = createPacedNominatimFetch({
     fetchFn: options.fetchFn,

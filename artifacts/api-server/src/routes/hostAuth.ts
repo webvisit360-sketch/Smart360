@@ -18,6 +18,7 @@ import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
 import { recordHostInviteDeliveryFailure } from "../lib/hostInviteDelivery";
+import { onboardingRequired } from "../lib/hostOnboarding";
 import { actorStorage } from "../lib/actorContext";
 import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { db, hostInvitesTable } from "@workspace/db";
@@ -85,7 +86,12 @@ router.get("/admin/host/session", async (req, res): Promise<void> => {
     res.json({ authenticated: false });
     return;
   }
-  res.json({ authenticated: true, email: actor.email, tenantId: actor.tenantId });
+  res.json({
+    authenticated: true,
+    email: actor.email,
+    tenantId: actor.tenantId,
+    onboardingRequired: await onboardingRequired(actor.tenantId, actor.hostUserId),
+  });
 });
 
 router.post("/admin/host/logout", async (req, res): Promise<void> => {

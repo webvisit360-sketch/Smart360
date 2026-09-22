@@ -792,3 +792,17 @@ mtime_ms = 1790019757251
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/368c7762-6fb6-4639-b4db-c9f3dfea07d7/d50f6266-19d9-4f3e-abf6-37b08394c51a"
 storage_version_token = "1790020023250466"
 content_type = "image/png"
+
+[[outputs]]
+id = "4PdOoeT00aNFGUN0IJpaT"
+uri = "file://reports/host-onboarding-verification.md"
+type = "text"
+title = "Obrazec za gostitelja — poročilo"
+description = "Razvojno preverjanje, meritve, omejitve dokazov in potrjena odstranitev začasnega računa ter testnih podatkov."
+logical_id = "c01422ca-7112-4a72-a93e-c04bdc47fb72"
+content_hash = "sha256:0bc503fdab37c369f3ca0ed84ed2bbd2bbb883b3f1c60dc80d1cb8a460d66d57"
+size = 7278
+mtime_ms = 1790062793480
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c01422ca-7112-4a72-a93e-c04bdc47fb72/ac3ea484-de33-47f6-b0a9-e6c5954d126f"
+storage_version_token = "1790062803955928"
+content_type = "text/markdown"

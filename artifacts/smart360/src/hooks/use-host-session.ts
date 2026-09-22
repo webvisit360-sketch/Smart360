@@ -4,6 +4,7 @@ export type HostSession = {
   authenticated: boolean;
   email?: string;
   tenantId?: string;
+  onboardingRequired?: boolean;
 };
 
 export function useHostSession() {

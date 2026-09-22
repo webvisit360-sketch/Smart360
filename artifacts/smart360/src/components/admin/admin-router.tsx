@@ -6,6 +6,7 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import AdminLayout from "@/components/admin/admin-layout";
 import AdminTenantEdit from "@/pages/admin/tenant-edit";
 import AdminEnquiriesPage from "@/pages/admin/enquiries";
+import HostOnboarding from "@/pages/host/onboarding";
 
 export function AdminRouter() {
   const [location] = useLocation();
@@ -16,6 +17,10 @@ export function AdminRouter() {
 
   if (location === "/admin/enroll") {
     return <div data-surface="admin" className="admin-scope"><AdminEnroll /></div>;
+  }
+
+  if (location === "/admin/onboarding") {
+    return <div data-surface="admin" className="admin-scope"><HostOnboarding /></div>;
   }
 
   return (

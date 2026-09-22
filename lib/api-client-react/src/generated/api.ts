@@ -84,6 +84,11 @@ import type {
   GuestThreadView,
   HealthStatus,
   HostAccountResponse,
+  HostOnboardingPhotoUploadRequest,
+  HostOnboardingPhotoUploadResponse,
+  HostOnboardingRound,
+  HostOnboardingSaveRequest,
+  HostOnboardingSubmitRequest,
   HostReplyInput,
   HostWelcomePreview,
   Item,
@@ -104,6 +109,7 @@ import type {
   OrderInput,
   OrderPublic,
   OrderStatusUpdate,
+  OwnerHostOnboardingResponse,
   Part5MeliPuCutoverApplyInput,
   Part5MeliPuCutoverPreflight,
   Part5MeliPuCutoverResult,
@@ -175,6 +181,815 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetHostOnboardingUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding`
+}
+
+export const getHostOnboarding = async ( options?: Parameters<typeof customFetch>[1]): Promise<HostOnboardingRound> => {
+
+  return customFetch<HostOnboardingRound>(getGetHostOnboardingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHostOnboardingQueryKey = () => {
+    return [
+    `/api/admin/host/onboarding`
+    ] as const;
+    }
+
+
+export const getGetHostOnboardingQueryOptions = <TData = Awaited<ReturnType<typeof getHostOnboarding>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostOnboarding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHostOnboardingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHostOnboarding>>> = ({ signal }) => getHostOnboarding({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHostOnboarding>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHostOnboardingQueryResult = NonNullable<Awaited<ReturnType<typeof getHostOnboarding>>>
+export type GetHostOnboardingQueryError = ErrorType<void>
+
+
+
+export function useGetHostOnboarding<TData = Awaited<ReturnType<typeof getHostOnboarding>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostOnboarding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHostOnboardingQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAutosaveHostOnboardingUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding`
+}
+
+export const autosaveHostOnboarding = async (hostOnboardingSaveRequest: HostOnboardingSaveRequest, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getAutosaveHostOnboardingUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostOnboardingSaveRequest)
+  }
+);}
+
+
+
+
+
+export const getAutosaveHostOnboardingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof autosaveHostOnboarding>>, TError,{data: BodyType<HostOnboardingSaveRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof autosaveHostOnboarding>>, TError,{data: BodyType<HostOnboardingSaveRequest>}, TContext> => {
+
+const mutationKey = ['autosaveHostOnboarding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof autosaveHostOnboarding>>, {data: BodyType<HostOnboardingSaveRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  autosaveHostOnboarding(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutosaveHostOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof autosaveHostOnboarding>>>
+    export type AutosaveHostOnboardingMutationBody = BodyType<HostOnboardingSaveRequest>
+    export type AutosaveHostOnboardingMutationError = ErrorType<void>
+
+    export const useAutosaveHostOnboarding = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof autosaveHostOnboarding>>, TError,{data: BodyType<HostOnboardingSaveRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof autosaveHostOnboarding>>,
+        TError,
+        {data: BodyType<HostOnboardingSaveRequest>},
+        TContext
+      > => {
+      return useMutation(getAutosaveHostOnboardingMutationOptions(options));
+    }
+
+export const getSaveHostOnboardingUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding/save`
+}
+
+export const saveHostOnboarding = async (hostOnboardingSaveRequest: HostOnboardingSaveRequest, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getSaveHostOnboardingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostOnboardingSaveRequest)
+  }
+);}
+
+
+
+
+
+export const getSaveHostOnboardingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveHostOnboarding>>, TError,{data: BodyType<HostOnboardingSaveRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveHostOnboarding>>, TError,{data: BodyType<HostOnboardingSaveRequest>}, TContext> => {
+
+const mutationKey = ['saveHostOnboarding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveHostOnboarding>>, {data: BodyType<HostOnboardingSaveRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveHostOnboarding(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveHostOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof saveHostOnboarding>>>
+    export type SaveHostOnboardingMutationBody = BodyType<HostOnboardingSaveRequest>
+    export type SaveHostOnboardingMutationError = ErrorType<void>
+
+    export const useSaveHostOnboarding = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveHostOnboarding>>, TError,{data: BodyType<HostOnboardingSaveRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveHostOnboarding>>,
+        TError,
+        {data: BodyType<HostOnboardingSaveRequest>},
+        TContext
+      > => {
+      return useMutation(getSaveHostOnboardingMutationOptions(options));
+    }
+
+export const getConfirmHostOnboardingSubmissionUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding/submit`
+}
+
+export const confirmHostOnboardingSubmission = async (hostOnboardingSubmitRequest: HostOnboardingSubmitRequest, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getConfirmHostOnboardingSubmissionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostOnboardingSubmitRequest)
+  }
+);}
+
+
+
+
+
+export const getConfirmHostOnboardingSubmissionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmHostOnboardingSubmission>>, TError,{data: BodyType<HostOnboardingSubmitRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmHostOnboardingSubmission>>, TError,{data: BodyType<HostOnboardingSubmitRequest>}, TContext> => {
+
+const mutationKey = ['confirmHostOnboardingSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmHostOnboardingSubmission>>, {data: BodyType<HostOnboardingSubmitRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  confirmHostOnboardingSubmission(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmHostOnboardingSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof confirmHostOnboardingSubmission>>>
+    export type ConfirmHostOnboardingSubmissionMutationBody = BodyType<HostOnboardingSubmitRequest>
+    export type ConfirmHostOnboardingSubmissionMutationError = ErrorType<void>
+
+    export const useConfirmHostOnboardingSubmission = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmHostOnboardingSubmission>>, TError,{data: BodyType<HostOnboardingSubmitRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmHostOnboardingSubmission>>,
+        TError,
+        {data: BodyType<HostOnboardingSubmitRequest>},
+        TContext
+      > => {
+      return useMutation(getConfirmHostOnboardingSubmissionMutationOptions(options));
+    }
+
+export const getAllocateHostOnboardingPhotoUploadUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding/photos/upload-url`
+}
+
+export const allocateHostOnboardingPhotoUpload = async (hostOnboardingPhotoUploadRequest: HostOnboardingPhotoUploadRequest, options?: Parameters<typeof customFetch>[1]): Promise<HostOnboardingPhotoUploadResponse> => {
+
+  return customFetch<HostOnboardingPhotoUploadResponse>(getAllocateHostOnboardingPhotoUploadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostOnboardingPhotoUploadRequest)
+  }
+);}
+
+
+
+
+
+export const getAllocateHostOnboardingPhotoUploadMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof allocateHostOnboardingPhotoUpload>>, TError,{data: BodyType<HostOnboardingPhotoUploadRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof allocateHostOnboardingPhotoUpload>>, TError,{data: BodyType<HostOnboardingPhotoUploadRequest>}, TContext> => {
+
+const mutationKey = ['allocateHostOnboardingPhotoUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof allocateHostOnboardingPhotoUpload>>, {data: BodyType<HostOnboardingPhotoUploadRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  allocateHostOnboardingPhotoUpload(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AllocateHostOnboardingPhotoUploadMutationResult = NonNullable<Awaited<ReturnType<typeof allocateHostOnboardingPhotoUpload>>>
+    export type AllocateHostOnboardingPhotoUploadMutationBody = BodyType<HostOnboardingPhotoUploadRequest>
+    export type AllocateHostOnboardingPhotoUploadMutationError = ErrorType<void>
+
+    export const useAllocateHostOnboardingPhotoUpload = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof allocateHostOnboardingPhotoUpload>>, TError,{data: BodyType<HostOnboardingPhotoUploadRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof allocateHostOnboardingPhotoUpload>>,
+        TError,
+        {data: BodyType<HostOnboardingPhotoUploadRequest>},
+        TContext
+      > => {
+      return useMutation(getAllocateHostOnboardingPhotoUploadMutationOptions(options));
+    }
+
+export const getCompleteHostOnboardingPhotoUrl = (photoId: string,) => {
+
+
+
+
+  return `/api/admin/host/onboarding/photos/${photoId}/complete`
+}
+
+export const completeHostOnboardingPhoto = async (photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getCompleteHostOnboardingPhotoUrl(photoId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCompleteHostOnboardingPhotoMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeHostOnboardingPhoto>>, TError,{photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeHostOnboardingPhoto>>, TError,{photoId: string}, TContext> => {
+
+const mutationKey = ['completeHostOnboardingPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeHostOnboardingPhoto>>, {photoId: string}> = (props) => {
+          const {photoId} = props ?? {};
+
+          return  completeHostOnboardingPhoto(photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteHostOnboardingPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof completeHostOnboardingPhoto>>>
+
+    export type CompleteHostOnboardingPhotoMutationError = ErrorType<void>
+
+    export const useCompleteHostOnboardingPhoto = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeHostOnboardingPhoto>>, TError,{photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeHostOnboardingPhoto>>,
+        TError,
+        {photoId: string},
+        TContext
+      > => {
+      return useMutation(getCompleteHostOnboardingPhotoMutationOptions(options));
+    }
+
+export const getGetHostOnboardingPhotoUrl = (photoId: string,) => {
+
+
+
+
+  return `/api/admin/host/onboarding/photos/${photoId}`
+}
+
+export const getHostOnboardingPhoto = async (photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getGetHostOnboardingPhotoUrl(photoId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHostOnboardingPhotoQueryKey = (photoId: string,) => {
+    return [
+    `/api/admin/host/onboarding/photos/${photoId}`
+    ] as const;
+    }
+
+
+export const getGetHostOnboardingPhotoQueryOptions = <TData = Awaited<ReturnType<typeof getHostOnboardingPhoto>>, TError = ErrorType<void>>(photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostOnboardingPhoto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHostOnboardingPhotoQueryKey(photoId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHostOnboardingPhoto>>> = ({ signal }) => getHostOnboardingPhoto(photoId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: photoId !== null && photoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHostOnboardingPhoto>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHostOnboardingPhotoQueryResult = NonNullable<Awaited<ReturnType<typeof getHostOnboardingPhoto>>>
+export type GetHostOnboardingPhotoQueryError = ErrorType<void>
+
+
+
+export function useGetHostOnboardingPhoto<TData = Awaited<ReturnType<typeof getHostOnboardingPhoto>>, TError = ErrorType<void>>(
+ photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostOnboardingPhoto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHostOnboardingPhotoQueryOptions(photoId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteHostOnboardingPhotoUrl = (photoId: string,) => {
+
+
+
+
+  return `/api/admin/host/onboarding/photos/${photoId}`
+}
+
+export const deleteHostOnboardingPhoto = async (photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteHostOnboardingPhotoUrl(photoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteHostOnboardingPhotoMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHostOnboardingPhoto>>, TError,{photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteHostOnboardingPhoto>>, TError,{photoId: string}, TContext> => {
+
+const mutationKey = ['deleteHostOnboardingPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteHostOnboardingPhoto>>, {photoId: string}> = (props) => {
+          const {photoId} = props ?? {};
+
+          return  deleteHostOnboardingPhoto(photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteHostOnboardingPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteHostOnboardingPhoto>>>
+
+    export type DeleteHostOnboardingPhotoMutationError = ErrorType<void>
+
+    export const useDeleteHostOnboardingPhoto = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHostOnboardingPhoto>>, TError,{photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteHostOnboardingPhoto>>,
+        TError,
+        {photoId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteHostOnboardingPhotoMutationOptions(options));
+    }
+
+export const getGetOwnerHostOnboardingUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/onboarding`
+}
+
+export const getOwnerHostOnboarding = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<OwnerHostOnboardingResponse> => {
+
+  return customFetch<OwnerHostOnboardingResponse>(getGetOwnerHostOnboardingUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOwnerHostOnboardingQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/host/onboarding`
+    ] as const;
+    }
+
+
+export const getGetOwnerHostOnboardingQueryOptions = <TData = Awaited<ReturnType<typeof getOwnerHostOnboarding>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOwnerHostOnboarding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOwnerHostOnboardingQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOwnerHostOnboarding>>> = ({ signal }) => getOwnerHostOnboarding(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOwnerHostOnboarding>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOwnerHostOnboardingQueryResult = NonNullable<Awaited<ReturnType<typeof getOwnerHostOnboarding>>>
+export type GetOwnerHostOnboardingQueryError = ErrorType<void>
+
+
+
+export function useGetOwnerHostOnboarding<TData = Awaited<ReturnType<typeof getOwnerHostOnboarding>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOwnerHostOnboarding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOwnerHostOnboardingQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getOpenHostOnboardingUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/onboarding/open`
+}
+
+export const openHostOnboarding = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getOpenHostOnboardingUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getOpenHostOnboardingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openHostOnboarding>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof openHostOnboarding>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['openHostOnboarding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof openHostOnboarding>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  openHostOnboarding(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OpenHostOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof openHostOnboarding>>>
+
+    export type OpenHostOnboardingMutationError = ErrorType<void>
+
+    export const useOpenHostOnboarding = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openHostOnboarding>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof openHostOnboarding>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getOpenHostOnboardingMutationOptions(options));
+    }
+
+export const getReopenHostOnboardingUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/onboarding/reopen`
+}
+
+export const reopenHostOnboarding = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getReopenHostOnboardingUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReopenHostOnboardingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenHostOnboarding>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reopenHostOnboarding>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['reopenHostOnboarding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reopenHostOnboarding>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  reopenHostOnboarding(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReopenHostOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof reopenHostOnboarding>>>
+
+    export type ReopenHostOnboardingMutationError = ErrorType<void>
+
+    export const useReopenHostOnboarding = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenHostOnboarding>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reopenHostOnboarding>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getReopenHostOnboardingMutationOptions(options));
+    }
+
+export const getGetOwnerHostOnboardingPhotoUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/onboarding/photos/${photoId}`
+}
+
+export const getOwnerHostOnboardingPhoto = async (id: string,
+    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getGetOwnerHostOnboardingPhotoUrl(id,photoId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOwnerHostOnboardingPhotoQueryKey = (id: string,
+    photoId: string,) => {
+    return [
+    `/api/admin/tenants/${id}/host/onboarding/photos/${photoId}`
+    ] as const;
+    }
+
+
+export const getGetOwnerHostOnboardingPhotoQueryOptions = <TData = Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>, TError = ErrorType<void>>(id: string,
+    photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOwnerHostOnboardingPhotoQueryKey(id,photoId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>> = ({ signal }) => getOwnerHostOnboardingPhoto(id,photoId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && photoId !== null && photoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOwnerHostOnboardingPhotoQueryResult = NonNullable<Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>>
+export type GetOwnerHostOnboardingPhotoQueryError = ErrorType<void>
+
+
+
+export function useGetOwnerHostOnboardingPhoto<TData = Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>, TError = ErrorType<void>>(
+ id: string,
+    photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOwnerHostOnboardingPhoto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOwnerHostOnboardingPhotoQueryOptions(id,photoId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetHostWelcomePreviewUrl = (id: string,) => {
 
