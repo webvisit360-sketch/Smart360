@@ -1,5 +1,6 @@
 import {
   categoriesTable,
+  changelogTable,
   creatorPlaceMaterializationsTable,
   creatorPlaceProposalsTable,
   db,
@@ -29,6 +30,13 @@ export type TenantSkeletonAlignmentResult = {
     itemMoves: number;
   };
   titleChanges: Array<{ key: string; oldTitle: string; newTitle: string }>;
+  categoryMerges: Array<{
+    sectionKey: string;
+    key: string;
+    keptCategoryId: string;
+    removedCategoryId: string;
+    summary: string;
+  }>;
   stayTitleNormalization: {
     status: "changed" | "no_changes" | "skipped";
     summary: string;
@@ -67,6 +75,8 @@ export type TenantSkeletonAlignmentOptions = {
 };
 
 const countChanged = (result: { rowCount?: number | null }): number => result.rowCount ?? 0;
+const normalizedCategoryName = (value: string): string =>
+  value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("sl");
 
 /**
  * Idempotent operator action. It is deliberately not called from startup.
@@ -95,11 +105,31 @@ export async function alignTenantSkeleton(
       itemMoves: 0,
     };
     const titleChanges: Array<{ key: string; oldTitle: string; newTitle: string }> = [];
+    const categoryMerges: TenantSkeletonAlignmentResult["categoryMerges"] = [];
     const skipped: Array<{ key: string; reason: string }> = [];
     const type = (["kamp", "hotel", "apartmaji"] as const).includes(tenant.tenantType as TenantType)
       ? tenant.tenantType as TenantType
       : "apartmaji";
     const fullPlan = tenantSeedPlan(type);
+    const categoryCreateAudit = await tx.select({
+      detail: changelogTable.detail,
+      createdAt: changelogTable.createdAt,
+    }).from(changelogTable).where(and(
+      eq(changelogTable.tenantId, tenantId),
+      eq(changelogTable.entity, "category"),
+      eq(changelogTable.action, "create"),
+    ));
+    const creationEvidence = <T extends { id: string; label: string }>(rows: T[]) => {
+      const labelCounts = new Map<string, number>();
+      for (const row of rows) labelCounts.set(row.label, (labelCounts.get(row.label) ?? 0) + 1);
+      return new Map(rows.flatMap((row) => {
+        if (labelCounts.get(row.label) !== 1) return [];
+        const matching = categoryCreateAudit
+          .filter((audit) => audit.detail === row.label)
+          .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
+        return matching[0] ? [[row.id, matching[0].createdAt] as const] : [];
+      }));
+    };
     const staySeed = fullPlan.find((section) => section.key === "stay")!;
     const [staySection] = await tx.select().from(sectionsTable)
       .where(and(
@@ -185,9 +215,19 @@ export async function alignTenantSkeleton(
             };
     }
 
-    const plan = fullPlan.filter((section) => section.key === "explore" || section.key === "services");
+    const plan = fullPlan;
+    const originalCategoryNames = new Map((await tx.select({
+      id: categoriesTable.id,
+      label: categoriesTable.label,
+    }).from(categoriesTable).innerJoin(
+      sectionsTable,
+      and(
+        eq(categoriesTable.sectionId, sectionsTable.id),
+        eq(sectionsTable.tenantId, tenantId),
+      ),
+    ).where(isNull(categoriesTable.deletedAt))).map((row) => [row.id, row.label]));
     const sectionRows = await tx.select().from(sectionsTable)
-      .where(and(eq(sectionsTable.tenantId, tenantId), inArray(sectionsTable.key, ["explore", "services"])))
+      .where(and(eq(sectionsTable.tenantId, tenantId), inArray(sectionsTable.key, plan.map((section) => section.key))))
       .orderBy(asc(sectionsTable.position));
 
     for (const sectionSeed of plan) {
@@ -196,18 +236,50 @@ export async function alignTenantSkeleton(
         skipped.push({ key: sectionSeed.key, reason: "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno." });
         continue;
       }
-      const existing = await tx.select().from(categoriesTable)
+      const existing = await tx.select({
+        id: categoriesTable.id,
+        sectionId: categoriesTable.sectionId,
+        key: categoriesTable.key,
+        label: categoriesTable.label,
+        icon: categoriesTable.icon,
+        layout: categoriesTable.layout,
+        exploreGroup: categoriesTable.exploreGroup,
+        position: categoriesTable.position,
+        isVisible: categoriesTable.isVisible,
+        deletedAt: categoriesTable.deletedAt,
+      }).from(categoriesTable)
         .where(and(eq(categoriesTable.sectionId, section.id), isNull(categoriesTable.deletedAt)))
         .orderBy(asc(categoriesTable.position));
       for (const [position, seed] of sectionSeed.categories.entries()) {
-        const matches = existing.filter((row) => row.key === seed.key);
-        if (matches.length > 1) {
-          skipped.push({ key: `${sectionSeed.key}/${seed.key}`, reason: "Obstaja več aktivnih kategorij z istim standardnim ključem; potrebna je ročna odločitev." });
-          continue;
-        }
-        let category = matches[0];
+        const seedName = normalizedCategoryName(seed.names.sl);
+        const keyedMatches = existing.filter((row) => row.key === seed.key);
+        const namedMatches = existing.filter((row) => normalizedCategoryName(row.label) === seedName);
+        const selectionAudit = creationEvidence(namedMatches);
+        const hasCompleteSelectionAudit = namedMatches.length > 0 &&
+          namedMatches.every((candidate) => selectionAudit.has(candidate.id));
+        const deterministicOrder = (left: typeof existing[number], right: typeof existing[number]) =>
+          ((keyedMatches.length === 0 && hasCompleteSelectionAudit)
+            ? selectionAudit.get(left.id)!.getTime() - selectionAudit.get(right.id)!.getTime()
+            : left.position - right.position) || left.id.localeCompare(right.id);
+        // Identity is key-first. A normalized Slovene label is only a fallback,
+        // so an unkeyed legacy row can be adopted without creating a duplicate.
+        let category = (keyedMatches.length > 0
+          ? [...keyedMatches].sort(deterministicOrder)[0]
+          : [...namedMatches].sort(deterministicOrder)[0]);
+        const candidates = category
+          ? existing.filter((row) =>
+              normalizedCategoryName(row.label) === normalizedCategoryName(category!.label))
+          : [];
+        const auditedCreation = creationEvidence(candidates);
+        const hasCompleteAudit = candidates.length > 0 &&
+          candidates.every((candidate) => auditedCreation.has(candidate.id));
         if (!category) {
-          [category] = await tx.insert(categoriesTable).values({
+          // The established action creates missing Okolica/Services skeleton
+          // rows. Stay/Offer are included here only to adopt and deduplicate
+          // existing legacy names; broadening this fix must not manufacture a
+          // new catalogue for older tenants.
+          if (sectionSeed.key !== "explore" && sectionSeed.key !== "services") continue;
+          const [inserted] = await tx.insert(categoriesTable).values({
             sectionId: section.id,
             key: seed.key,
             label: seed.names.sl,
@@ -216,15 +288,139 @@ export async function alignTenantSkeleton(
             exploreGroup: seed.group,
             position,
           }).returning();
+          category = inserted!;
+          existing.push(category);
           counts.categoriesUpdated += 1;
         } else {
+          // Merge every same-name/key duplicate into the skeleton-keyed row (or
+          // the oldest row when none is keyed). Translation key collisions are
+          // archived under a deterministic field on the keeper: no value, stale
+          // flag, timestamp, or translation row is discarded.
+          for (const duplicate of candidates.filter((row) => row.id !== category!.id)) {
+            const conflictingAttachments = await tx.execute(sql`
+              SELECT 1
+              FROM item_category_attachments source
+              JOIN item_category_attachments target
+                ON target.item_id = source.item_id
+               AND target.category_id = ${category.id}
+              WHERE source.category_id = ${duplicate.id}
+                AND source.source_proposal_id IS NOT NULL
+                AND target.source_proposal_id IS NOT NULL
+              LIMIT 1
+            `);
+            if (countChanged(conflictingAttachments) > 0) {
+              skipped.push({
+                key: `${sectionSeed.key}/${seed.key}/${duplicate.id}`,
+                reason: "Podvojena kategorija ima dve različni izvorni povezavi istega vnosa; zaradi ohranitve vseh referenc ni bila spremenjena.",
+              });
+              continue;
+            }
+            const movedItems = await tx.update(itemsTable).set({ categoryId: category.id })
+              .where(eq(itemsTable.categoryId, duplicate.id))
+              .returning({ id: itemsTable.id });
+            counts.itemMoves += movedItems.length;
+            await tx.update(creatorPlaceProposalsTable).set({
+              categoryId: category.id,
+              // This structural move must not rewrite queue/audit chronology.
+              updatedAt: creatorPlaceProposalsTable.updatedAt,
+            })
+              .where(eq(creatorPlaceProposalsTable.categoryId, duplicate.id));
+
+            const duplicateAttachments = await tx.select().from(itemCategoryAttachmentsTable)
+              .where(eq(itemCategoryAttachmentsTable.categoryId, duplicate.id));
+            for (const attachment of duplicateAttachments) {
+              const [atTarget] = await tx.select().from(itemCategoryAttachmentsTable).where(and(
+                eq(itemCategoryAttachmentsTable.itemId, attachment.itemId),
+                eq(itemCategoryAttachmentsTable.categoryId, category.id),
+              )).limit(1);
+              if (!atTarget) {
+                await tx.update(itemCategoryAttachmentsTable).set({ categoryId: category.id })
+                  .where(eq(itemCategoryAttachmentsTable.id, attachment.id));
+              } else if (attachment.sourceProposalId && !atTarget.sourceProposalId) {
+                // The target row has no provenance. Keeping the source row
+                // preserves the Creator reference while retaining membership.
+                await tx.delete(itemCategoryAttachmentsTable)
+                  .where(eq(itemCategoryAttachmentsTable.id, atTarget.id));
+                await tx.update(itemCategoryAttachmentsTable).set({ categoryId: category.id })
+                  .where(eq(itemCategoryAttachmentsTable.id, attachment.id));
+              } else {
+                // Equal category membership is redundant; there is no source
+                // provenance to lose on this duplicate attachment.
+                await tx.delete(itemCategoryAttachmentsTable)
+                  .where(eq(itemCategoryAttachmentsTable.id, attachment.id));
+              }
+            }
+
+            const duplicateTranslations = await tx.select().from(translationsTable).where(and(
+              eq(translationsTable.model, "category"),
+              eq(translationsTable.recordId, duplicate.id),
+            ));
+            for (const translation of duplicateTranslations) {
+              const [collision] = await tx.select({ id: translationsTable.id }).from(translationsTable).where(and(
+                eq(translationsTable.model, "category"),
+                eq(translationsTable.recordId, category.id),
+                eq(translationsTable.field, translation.field),
+                eq(translationsTable.lang, translation.lang),
+              )).limit(1);
+              const field = collision
+                ? `${translation.field}.__merged__.${duplicate.id}`
+                : translation.field;
+              await tx.update(translationsTable).set({ recordId: category.id, field })
+                .where(eq(translationsTable.id, translation.id));
+              counts.translationsUpdated += 1;
+            }
+
+            const remainingReferences = await tx.execute(sql`
+              SELECT
+                EXISTS (SELECT 1 FROM items WHERE category_id = ${duplicate.id}) OR
+                EXISTS (SELECT 1 FROM creator_place_proposals WHERE category_id = ${duplicate.id}) OR
+                EXISTS (SELECT 1 FROM item_category_attachments WHERE category_id = ${duplicate.id})
+                AS occupied
+            `);
+            const occupied = Boolean((remainingReferences.rows[0] as { occupied?: boolean } | undefined)?.occupied);
+            if (occupied) {
+              skipped.push({
+                key: `${sectionSeed.key}/${seed.key}/${duplicate.id}`,
+                reason: "Podvojena kategorija ima nasprotujočo povezavo vnosa; ni bila umaknjena.",
+              });
+              continue;
+            }
+            await tx.update(categoriesTable).set({ deletedAt: sql`transaction_timestamp()` })
+              .where(and(eq(categoriesTable.id, duplicate.id), isNull(categoriesTable.deletedAt)));
+            existing.splice(existing.findIndex((row) => row.id === duplicate.id), 1);
+            counts.categoriesRetired += 1;
+            categoryMerges.push({
+              sectionKey: sectionSeed.key,
+              key: seed.key,
+              keptCategoryId: category.id,
+              removedCategoryId: duplicate.id,
+              summary: `Združena kategorija »${duplicate.label}« v »${seed.names.sl}«; vsi vnosi in prevodi so ohranjeni.${
+                keyedMatches.length === 0 && !hasCompleteAudit
+                  ? " Zanesljivega podatka o starosti ni; ohranjena je bila prva po vrstnem redu."
+                  : ""
+              }`,
+            });
+          }
+          if (sectionSeed.key === "stay" || sectionSeed.key === "offer") {
+            if (category.key !== seed.key) {
+              await tx.update(categoriesTable).set({ key: seed.key })
+                .where(and(eq(categoriesTable.id, category.id), eq(categoriesTable.sectionId, section.id)));
+              category.key = seed.key;
+              counts.categoriesUpdated += 1;
+            }
+            // Stay/Offer host labels, icons, layouts, ordering, and translations
+            // are outside this alignment's historical metadata scope.
+            continue;
+          }
           const changed = category.label !== seed.names.sl ||
+            category.key !== seed.key ||
             category.icon !== seed.icon ||
             category.layout !== seed.layout ||
             category.exploreGroup !== seed.group ||
             category.position !== position;
           if (changed) {
             await tx.update(categoriesTable).set({
+              key: seed.key,
               label: seed.names.sl,
               icon: seed.icon,
               layout: seed.layout,
@@ -235,7 +431,7 @@ export async function alignTenantSkeleton(
           }
         }
         for (const language of ["sl", "en", "de", "it"] as const) {
-          const [current] = await tx.select({
+          let [current] = await tx.select({
             id: translationsTable.id,
             value: translationsTable.value,
             stale: translationsTable.stale,
@@ -249,6 +445,11 @@ export async function alignTenantSkeleton(
           // a redundant row, but normalize an existing override.
           if (language === "sl" && !current) continue;
           if (!current || current.value !== seed.names[language] || current.stale) {
+            if (current && current.value !== seed.names[language]) {
+              await tx.update(translationsTable).set({
+                field: `label.__original__.${category!.id}.${language}`,
+              }).where(eq(translationsTable.id, current.id));
+            }
             await tx.insert(translationsTable).values({
               model: "category",
               recordId: category!.id,
@@ -262,6 +463,135 @@ export async function alignTenantSkeleton(
             });
             counts.translationsUpdated += 1;
           }
+        }
+      }
+    }
+
+    // A second, generic pass covers every section and every category name, not
+    // only names present in the shared skeleton. This also catches a renamed
+    // skeleton-keyed row that now collides with a custom/legacy row.
+    const allTenantSections = await tx.select().from(sectionsTable)
+      .where(eq(sectionsTable.tenantId, tenantId));
+    const allSectionIds = allTenantSections.map((section) => section.id);
+    const allActiveCategories = allSectionIds.length === 0 ? [] : await tx.select().from(categoriesTable)
+      .where(and(inArray(categoriesTable.sectionId, allSectionIds), isNull(categoriesTable.deletedAt)))
+      .orderBy(asc(categoriesTable.position), asc(categoriesTable.id));
+    const seedKeysBySectionKey = new Map(fullPlan.map((section) => [
+      section.key,
+      new Set(section.categories.map((category) => category.key)),
+    ]));
+    for (const section of allTenantSections) {
+      const rows = allActiveCategories.filter((category) => category.sectionId === section.id);
+      const groups = new Map<string, typeof rows>();
+      for (const row of rows) {
+        // Compare the names that existed at action start. Canonical metadata
+        // normalization in Explore/Services must not manufacture a merge that
+        // was not authorized by a pre-existing same-name duplicate.
+        const name = normalizedCategoryName(originalCategoryNames.get(row.id) ?? row.label);
+        groups.set(name, [...(groups.get(name) ?? []), row]);
+      }
+      for (const [name, duplicates] of groups) {
+        if (duplicates.length < 2) continue;
+        const skeletonKeys = seedKeysBySectionKey.get(section.key) ?? new Set<string>();
+        const keyed = duplicates.filter((category) => category.key && skeletonKeys.has(category.key));
+        const auditedCreation = creationEvidence(duplicates);
+        const hasCompleteAudit = duplicates.every((category) => auditedCreation.has(category.id));
+        const ordered = [...(keyed.length > 0 ? keyed : duplicates)]
+          .sort((left, right) =>
+            ((keyed.length === 0 && hasCompleteAudit)
+              ? auditedCreation.get(left.id)!.getTime() - auditedCreation.get(right.id)!.getTime()
+              : left.position - right.position) || left.id.localeCompare(right.id));
+        const keeper = ordered[0]!;
+        const ageUnknown = keyed.length === 0 && !hasCompleteAudit;
+        for (const duplicate of duplicates.filter((category) => category.id !== keeper.id)) {
+          const conflictingAttachments = await tx.execute(sql`
+            SELECT 1
+            FROM item_category_attachments source
+            JOIN item_category_attachments target
+              ON target.item_id = source.item_id
+             AND target.category_id = ${keeper.id}
+            WHERE source.category_id = ${duplicate.id}
+              AND source.source_proposal_id IS NOT NULL
+              AND target.source_proposal_id IS NOT NULL
+            LIMIT 1
+          `);
+          if (countChanged(conflictingAttachments) > 0) {
+            skipped.push({
+              key: `${section.key}/${name}/${duplicate.id}`,
+              reason: "Podvojena kategorija ima dve različni izvorni povezavi istega vnosa; zaradi ohranitve vseh referenc ni bila spremenjena.",
+            });
+            continue;
+          }
+          const movedItems = await tx.update(itemsTable).set({ categoryId: keeper.id })
+            .where(eq(itemsTable.categoryId, duplicate.id))
+            .returning({ id: itemsTable.id });
+          counts.itemMoves += movedItems.length;
+          await tx.update(creatorPlaceProposalsTable).set({
+            categoryId: keeper.id,
+            updatedAt: creatorPlaceProposalsTable.updatedAt,
+          }).where(eq(creatorPlaceProposalsTable.categoryId, duplicate.id));
+
+          const attachments = await tx.select().from(itemCategoryAttachmentsTable)
+            .where(eq(itemCategoryAttachmentsTable.categoryId, duplicate.id));
+          for (const attachment of attachments) {
+            const [atTarget] = await tx.select().from(itemCategoryAttachmentsTable).where(and(
+              eq(itemCategoryAttachmentsTable.itemId, attachment.itemId),
+              eq(itemCategoryAttachmentsTable.categoryId, keeper.id),
+            )).limit(1);
+            if (!atTarget) {
+              await tx.update(itemCategoryAttachmentsTable).set({ categoryId: keeper.id })
+                .where(eq(itemCategoryAttachmentsTable.id, attachment.id));
+            } else if (attachment.sourceProposalId && !atTarget.sourceProposalId) {
+              await tx.delete(itemCategoryAttachmentsTable).where(eq(itemCategoryAttachmentsTable.id, atTarget.id));
+              await tx.update(itemCategoryAttachmentsTable).set({ categoryId: keeper.id })
+                .where(eq(itemCategoryAttachmentsTable.id, attachment.id));
+            } else {
+              await tx.delete(itemCategoryAttachmentsTable).where(eq(itemCategoryAttachmentsTable.id, attachment.id));
+            }
+          }
+
+          const translations = await tx.select().from(translationsTable).where(and(
+            eq(translationsTable.model, "category"),
+            eq(translationsTable.recordId, duplicate.id),
+          ));
+          for (const translation of translations) {
+            const [collision] = await tx.select({ id: translationsTable.id }).from(translationsTable).where(and(
+              eq(translationsTable.model, "category"),
+              eq(translationsTable.recordId, keeper.id),
+              eq(translationsTable.field, translation.field),
+              eq(translationsTable.lang, translation.lang),
+            )).limit(1);
+            await tx.update(translationsTable).set({
+              recordId: keeper.id,
+              field: collision ? `${translation.field}.__merged__.${duplicate.id}` : translation.field,
+            }).where(eq(translationsTable.id, translation.id));
+            counts.translationsUpdated += 1;
+          }
+
+          const remainingReferences = await tx.execute(sql`
+            SELECT
+              EXISTS (SELECT 1 FROM items WHERE category_id = ${duplicate.id}) OR
+              EXISTS (SELECT 1 FROM creator_place_proposals WHERE category_id = ${duplicate.id}) OR
+              EXISTS (SELECT 1 FROM item_category_attachments WHERE category_id = ${duplicate.id})
+              AS occupied
+          `);
+          if (Boolean((remainingReferences.rows[0] as { occupied?: boolean } | undefined)?.occupied)) {
+            throw new Error(`Category merge left references on ${duplicate.id}`);
+          }
+          await tx.update(categoriesTable).set({ deletedAt: sql`transaction_timestamp()` })
+            .where(and(eq(categoriesTable.id, duplicate.id), isNull(categoriesTable.deletedAt)));
+          counts.categoriesRetired += 1;
+          categoryMerges.push({
+            sectionKey: section.key,
+            key: keeper.key ?? name,
+            keptCategoryId: keeper.id,
+            removedCategoryId: duplicate.id,
+            summary: `Združena kategorija »${duplicate.label}« v »${keeper.label}«; vsi vnosi in prevodi so ohranjeni.${
+              ageUnknown
+                ? " Zanesljivega podatka o starosti ni; ohranjena je bila prva po vrstnem redu."
+                : ""
+            }`,
+          });
         }
       }
     }
@@ -501,6 +831,6 @@ export async function alignTenantSkeleton(
       : skipped.length > 0
         ? `Ni novih odobrenih sprememb. ${skipped.length} odprtih postavk ostaja za ročno odločitev.`
         : "Brez sprememb.";
-    return { summary, counts, titleChanges, stayTitleNormalization, skipped, changed };
+    return { summary, counts, titleChanges, categoryMerges, stayTitleNormalization, skipped, changed };
   }, { isolationLevel: "serializable" });
 }

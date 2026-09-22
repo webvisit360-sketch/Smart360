@@ -36,6 +36,14 @@ export interface TenantSkeletonAlignmentStayTitleNormalization {
   translationsUpdated: number;
 }
 
+export interface TenantSkeletonAlignmentCategoryMerge {
+  sectionKey: string;
+  key: string;
+  keptCategoryId: string;
+  removedCategoryId: string;
+  summary: string;
+}
+
 export interface TenantSkeletonAlignmentSkip {
   key: string;
   reason: string;
@@ -46,6 +54,7 @@ export interface TenantSkeletonAlignmentResult {
   counts: TenantSkeletonAlignmentCounts;
   titleChanges: TenantSkeletonAlignmentTitleChange[];
   stayTitleNormalization: TenantSkeletonAlignmentStayTitleNormalization;
+  categoryMerges: TenantSkeletonAlignmentCategoryMerge[];
   skipped: TenantSkeletonAlignmentSkip[];
   changed: boolean;
 }

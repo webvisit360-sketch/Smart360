@@ -2809,6 +2809,15 @@ components:
         titleChanged: { type: boolean }
         translationsUpdated: { type: number }
       required: [status, summary, titleChanged, translationsUpdated]
+    TenantSkeletonAlignmentCategoryMerge:
+      type: object
+      properties:
+        sectionKey: { type: string }
+        key: { type: string }
+        keptCategoryId: { type: string }
+        removedCategoryId: { type: string }
+        summary: { type: string }
+      required: [sectionKey, key, keptCategoryId, removedCategoryId, summary]
     TenantSkeletonAlignmentSkip:
       type: object
       properties:
@@ -2827,12 +2836,16 @@ components:
             $ref: "#/components/schemas/TenantSkeletonAlignmentTitleChange"
         stayTitleNormalization:
           $ref: "#/components/schemas/TenantSkeletonAlignmentStayTitleNormalization"
+        categoryMerges:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantSkeletonAlignmentCategoryMerge"
         skipped:
           type: array
           items:
             $ref: "#/components/schemas/TenantSkeletonAlignmentSkip"
         changed: { type: boolean }
-      required: [summary, counts, titleChanges, stayTitleNormalization, skipped, changed]
+      required: [summary, counts, titleChanges, stayTitleNormalization, categoryMerges, skipped, changed]
     HostOnboardingContact:
       type: object
       additionalProperties: false

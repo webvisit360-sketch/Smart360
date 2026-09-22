@@ -40,6 +40,13 @@ type AlignmentResult = {
     itemMoves: number;
   };
   titleChanges: Array<{ key: string; oldTitle: string; newTitle: string }>;
+  categoryMerges: Array<{
+    sectionKey: string;
+    key: string;
+    keptCategoryId: string;
+    removedCategoryId: string;
+    summary: string;
+  }>;
   stayTitleNormalization: {
     status: "changed" | "no_changes" | "skipped";
     summary: string;
@@ -198,6 +205,13 @@ export function SkeletonAlignmentAction({ tenantId }: { tenantId: string }) {
               >
                 {stayTitleNormalizationText(result)}
               </p>
+              {result.categoryMerges.length ? (
+                <ul className="space-y-1" data-testid="list-skeleton-category-merges">
+                  {result.categoryMerges.map((merge) => (
+                    <li key={merge.removedCategoryId}>{merge.summary}</li>
+                  ))}
+                </ul>
+              ) : null}
               <dl className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-6">
                 <div><dt className="text-xs text-muted-foreground">Razdelki</dt><dd className="font-semibold" data-testid="count-skeleton-sections-updated">{result.counts.sectionsUpdated}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Kategorije</dt><dd className="font-semibold" data-testid="count-skeleton-categories-updated">{result.counts.categoriesUpdated}</dd></div>

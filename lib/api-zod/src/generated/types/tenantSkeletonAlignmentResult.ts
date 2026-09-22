@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { TenantSkeletonAlignmentCategoryMerge } from './tenantSkeletonAlignmentCategoryMerge';
 import type { TenantSkeletonAlignmentCounts } from './tenantSkeletonAlignmentCounts';
 import type { TenantSkeletonAlignmentSkip } from './tenantSkeletonAlignmentSkip';
 import type { TenantSkeletonAlignmentStayTitleNormalization } from './tenantSkeletonAlignmentStayTitleNormalization';
@@ -15,6 +16,7 @@ export interface TenantSkeletonAlignmentResult {
   counts: TenantSkeletonAlignmentCounts;
   titleChanges: TenantSkeletonAlignmentTitleChange[];
   stayTitleNormalization: TenantSkeletonAlignmentStayTitleNormalization;
+  categoryMerges: TenantSkeletonAlignmentCategoryMerge[];
   skipped: TenantSkeletonAlignmentSkip[];
   changed: boolean;
 }

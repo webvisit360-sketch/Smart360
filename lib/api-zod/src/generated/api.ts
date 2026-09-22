@@ -1044,6 +1044,13 @@ export const AlignTenantSkeletonResponse = zod.object({
   "titleChanged": zod.boolean(),
   "translationsUpdated": zod.number()
 }),
+  "categoryMerges": zod.array(zod.object({
+  "sectionKey": zod.string(),
+  "key": zod.string(),
+  "keptCategoryId": zod.string(),
+  "removedCategoryId": zod.string(),
+  "summary": zod.string()
+})),
   "skipped": zod.array(zod.object({
   "key": zod.string(),
   "reason": zod.string()

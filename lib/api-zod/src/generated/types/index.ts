@@ -261,6 +261,7 @@ export * from './tenantLivingGuideNavItem';
 export * from './tenantNotificationChannel';
 export * from './tenantOverview';
 export * from './tenantPublicationPreview';
+export * from './tenantSkeletonAlignmentCategoryMerge';
 export * from './tenantSkeletonAlignmentCounts';
 export * from './tenantSkeletonAlignmentResult';
 export * from './tenantSkeletonAlignmentSkip';
