@@ -78,7 +78,7 @@ export function GuestLoadRecovery({ lang }: { lang: string }) {
     <main className="guest-load-failure notranslate" translate="no">
       <img
         className="guest-load-failure__mark"
-        src={`${import.meta.env.BASE_URL}brand/smart360-kolobar-temno.svg`}
+        src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`}
         alt=""
         aria-hidden="true"
       />

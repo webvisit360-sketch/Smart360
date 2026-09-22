@@ -459,7 +459,7 @@ export default function HostOnboarding() {
 
   return (
     <div data-admin-preserve className="host-onboarding-form min-h-[100dvh] bg-white text-[#121A14]" style={{ fontFamily: 'Archivo, sans-serif' }}>
-      <header className="px-6 md:px-10 pt-6 pb-6">
+      <header className="px-4 md:px-10 pt-6 pb-6">
         <div className="flex justify-end max-w-[720px] mx-auto mb-4">
           <button 
             onClick={handleLogout}
@@ -472,7 +472,7 @@ export default function HostOnboarding() {
         </div>
         <div className="flex flex-col items-start max-w-[720px] mx-auto">
           <div data-testid="host-onboarding-brand" className="mb-[48px] flex items-center gap-[12px]">
-            <img src="/brand/smart360-znak-40.png" alt="" className="h-[46px] w-[46px] object-contain" />
+            <img src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`} alt="" className="h-[46px] w-[46px] object-contain" />
             <span className="font-[800] text-[24px] text-[#121A14] tracking-[0.02em]">SMART360</span>
           </div>
           <h1 className="text-[30px] font-[800] text-[#121A14] leading-tight">
@@ -485,7 +485,7 @@ export default function HostOnboarding() {
       </header>
 
       <main
-        className="px-4 md:px-8 max-w-[720px] mx-auto space-y-8"
+        className="px-4 md:px-8 max-w-[784px] mx-auto space-y-8"
         style={{ paddingBottom: `calc(${footerHeight}px + 1.5rem)` }}
       >
         

@@ -21,6 +21,7 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 - Tema "mediterran" je zavezujoča: tokens (accent #3B78DC), radij kartic 26px/fotk 24px, 3D gumbi, brez gradientov.
 - Demo najemnik: slug `meli-pu` (Apartmaji Meli Pu, Izola).
 - Administracija uporablja Archivo in Smart360 paleto: primarni gumb #157347 (nikoli moder), ozadje #F4F6F2, kartice #FFFFFF, robovi #E8EBE6, besedilo #121A14, umirjeno #66716A; vedno pravi znak in SMART360 napis.
+- Uradni Smart360 znak je nespremenjena datoteka `artifacts/smart360/public/brand/smart360-znak-40.png`, ki jo je lastnik izrecno potrdil s priloženim izvirnikom in z znakom v `reports/gril-dobrodoslica-cgp.html`. Ne prebarvaj, prerisuj ali stiliziraj ga. Tudi izraz »zeleni znak« ni navodilo za pretvorbo večbarvnega izvirnika v enobarvno različico. Obrazec in e-pošta uporabljata isto izvirno grafiko.
 
 ## User preferences
 

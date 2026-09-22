@@ -876,3 +876,31 @@ mtime_ms = 1790102063922
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/241160e8-41a3-4f80-b3f1-d4126cd71a8e/fe6d3cca-8129-40ae-add8-4ea2913753b0"
 storage_version_token = "1790102159284011"
 content_type = "image/png"
+
+[[outputs]]
+id = "dxDfM5tJtwhTTA1Z0q_Fs"
+uri = "file://reports/host-brand-final.png"
+type = "image"
+title = "Glava obrazca — namizni prikaz"
+description = "Preverjen izvirni znak in poravnava s 720 px vsebinskim stolpcem."
+logical_id = "5fc65716-7e83-48b3-8e0a-d382d85b4cfa"
+content_hash = "sha256:5868683d186970eef8f45ae34ee1f561b585ec875aac1526a0d14afef54f0420"
+size = 80589
+mtime_ms = 1790107155050
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5fc65716-7e83-48b3-8e0a-d382d85b4cfa/df0a57bf-4ee5-48a2-aed0-1fd050e1fed1"
+storage_version_token = "1790107199167463"
+content_type = "image/png"
+
+[[outputs]]
+id = "rYgIKxsvzZVo0WGBUOS6F"
+uri = "file://reports/host-brand-final-mobile.png"
+type = "image"
+title = "Glava obrazca — telefonski prikaz"
+description = "Preverjena velikost znaka in poravnava pri širini 390 px."
+logical_id = "77529098-c07f-424a-abd3-173a820a4a69"
+content_hash = "sha256:3c790bad69539ae8cae3848cb5bf78b7570fa8fa6d773a885b1d27a6b660523d"
+size = 61430
+mtime_ms = 1790107157294
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/77529098-c07f-424a-abd3-173a820a4a69/e87c0cdd-4bc0-4680-adc8-fe44df1367f5"
+storage_version_token = "1790107199941432"
+content_type = "image/png"

@@ -1,0 +1,113 @@
+{
+  "expectedLogoSha256": "4d2b85601eedaed1148291592c3e3de45e4d8dd79ec94fc853acb28b646b9d39",
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "brand": {
+      "x": 360,
+      "y": 105,
+      "width": 197.265625,
+      "height": 46
+    },
+    "image": {
+      "x": 360,
+      "y": 105,
+      "width": 46,
+      "height": 46,
+      "naturalWidth": 80,
+      "naturalHeight": 80,
+      "src": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/brand/smart360-znak-40.png",
+      "sha256": "4d2b85601eedaed1148291592c3e3de45e4d8dd79ec94fc853acb28b646b9d39"
+    },
+    "wordmark": {
+      "x": 418,
+      "y": 110,
+      "width": 139.265625,
+      "height": 36,
+      "text": "SMART360",
+      "fontFamily": "Archivo, sans-serif",
+      "fontSize": "24px",
+      "fontWeight": "800",
+      "color": "rgb(18, 26, 20)",
+      "letterSpacing": "0.48px"
+    },
+    "gap": "12px",
+    "gapBelow": 48,
+    "heading": {
+      "x": 360,
+      "y": 199,
+      "width": 430.125,
+      "height": 37.5
+    },
+    "main": {
+      "x": 328,
+      "y": 328.5,
+      "width": 784,
+      "height": 2840.5
+    },
+    "card": {
+      "x": 360,
+      "y": 328.5,
+      "width": 720,
+      "height": 769
+    },
+    "cardContentLeft": 392
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "brand": {
+      "x": 16,
+      "y": 131,
+      "width": 197.265625,
+      "height": 46
+    },
+    "image": {
+      "x": 16,
+      "y": 131,
+      "width": 46,
+      "height": 46,
+      "naturalWidth": 80,
+      "naturalHeight": 80,
+      "src": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/brand/smart360-znak-40.png",
+      "sha256": "4d2b85601eedaed1148291592c3e3de45e4d8dd79ec94fc853acb28b646b9d39"
+    },
+    "wordmark": {
+      "x": 74,
+      "y": 136,
+      "width": 139.265625,
+      "height": 36,
+      "text": "SMART360",
+      "fontFamily": "Archivo, sans-serif",
+      "fontSize": "24px",
+      "fontWeight": "800",
+      "color": "rgb(18, 26, 20)",
+      "letterSpacing": "0.48px"
+    },
+    "gap": "12px",
+    "gapBelow": 48,
+    "heading": {
+      "x": 16,
+      "y": 225,
+      "width": 358,
+      "height": 75
+    },
+    "main": {
+      "x": 0,
+      "y": 418,
+      "width": 390,
+      "height": 3347
+    },
+    "card": {
+      "x": 16,
+      "y": 418,
+      "width": 358,
+      "height": 1017.5
+    },
+    "cardContentLeft": 36
+  }
+}

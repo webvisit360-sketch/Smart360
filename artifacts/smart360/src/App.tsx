@@ -81,7 +81,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
     >
       <span className="guest-entry-splash__mark" aria-hidden="true">
         <img
-          src={`${import.meta.env.BASE_URL}brand/smart360-kolobar-temno.svg`}
+          src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`}
           alt=""
         />
       </span>
