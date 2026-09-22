@@ -158,7 +158,9 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
     assert.ok(html.includes(editingCopy));
     assert.ok((b["text"] as string).includes(editingCopy));
     assert.ok(html.indexOf(onboardingCopy) < html.indexOf(editingCopy));
-    assert.ok(html.indexOf(editingCopy) < html.indexOf('href="mailto:'));
+    assert.ok(!html.includes("Pošljite gradivo"));
+    assert.ok(!(b["text"] as string).includes("Pošljite gradivo"));
+    assert.ok(html.indexOf(editingCopy) < html.indexOf("Ko bo vodnik pripravljen, prejmete še povabilo za pregled."));
     assert.ok(!html.includes("graditi ali urejati"));
     assert.ok(!html.includes("Kreator"), "must not teach the creator");
     assert.ok(html.includes("Povezava velja 72 ur"), "invite lifetime is explicit");
@@ -187,7 +189,7 @@ describe("global rules hold for every template", () => {
         assert.ok(html.includes("height:3px;line-height:3px;font-size:0;background:#DD9A2B"));
         assert.ok(html.includes("background:#F4F6F2"));
         assert.ok(html.includes('<body style="margin:0;padding:0;background:#FFFFFF">'));
-        assert.equal((html.match(/background:#157347;color:#FFFFFF/g) ?? []).length, 2);
+        assert.equal((html.match(/background:#157347;color:#FFFFFF/g) ?? []).length, 1);
         assert.ok(html.includes("font-family:Archivo,"));
         assert.deepEqual(new Set(html.match(/#[0-9a-f]{6}/gi)), new Set([
           "#FFFFFF", "#F4F6F2", "#121A14", "#66716A", "#E8EBE6", "#157347", "#DD9A2B",

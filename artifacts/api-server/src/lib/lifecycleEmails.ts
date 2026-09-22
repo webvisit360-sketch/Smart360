@@ -74,7 +74,6 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
       par(
         "Ko bo vodnik pripravljen, ga boste s svojim računom lahko kadar koli sami urejali in dopolnjevali — besedila, fotografije, ponudbo in obvestila.",
       ),
-      cta("Pošljite gradivo", "mailto:info@webvisit360.com"),
       par(
         "Ko bo vodnik pripravljen, prejmete še povabilo za pregled.",
       ),
