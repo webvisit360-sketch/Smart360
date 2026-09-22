@@ -537,6 +537,14 @@
 }
 [data-surface="admin"] .admin-shell__main { min-width: 0; flex: 1; background: var(--bg); }
 
+/* Keep absolute descendants (including sr-only button labels) inside the
+   scrollport's containing block. Otherwise their static position can resolve
+   against BODY and create document overflow beyond the viewport-height shell. */
+[data-surface="admin"] .admin-shell__scroll,
+[data-surface="admin"] .admin-tenant-scroll {
+  position: relative;
+}
+
 [data-surface="admin"] .admin-page {
   width: 100%;
   max-width: 1120px;

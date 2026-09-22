@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <LogOut className="h-5 w-5 text-muted-foreground" />
           </Button>
         </header>
-        <div className="flex-1 overflow-auto">
+        <div className="admin-shell__scroll flex-1 overflow-auto">
           {children}
         </div>
       </main>
