@@ -141,16 +141,23 @@ describe("approved subjects and preview lines (emaili-gostitelju)", () => {
     assert.ok((b["html"] as string).includes("QR kode za apartmaje so pripravljene za tisk"));
   });
 
-  test("welcome: approved subject, 72-hour account claim and materials", () => {
+  test("welcome: approved subject, 72-hour account claim and onboarding", () => {
     const b = allSix()[0][1] as Record<string, unknown>;
     const html = b["html"] as string;
     assert.equal(b["subject"], "Dobrodošli v Smart360 · vaš vodnik je v pripravi");
-    assert.ok(html.includes("Fotografije"), "asks for photos");
-    assert.ok(html.includes("Prvo različico vodnika v celoti pripravimo mi — ničesar vam ni treba graditi. Od vas potrebujemo samo gradivo:"));
+    const onboardingCopy = "Po nastavitvi gesla vas počaka kratek obrazec — vpišete podatke o svoji nastanitvi in priporočila za okolico, vse ostalo uredimo mi.";
+    for (const content of [html, b["text"] as string]) {
+      assert.ok(content.includes(onboardingCopy));
+      assert.ok(!content.includes("Od vas potrebujemo samo gradivo"));
+      assert.ok(!content.includes("10–20 fotografij nastanitve in okolice"));
+      assert.ok(!content.includes("Gradivo lahko pošljete kar kot odgovor"));
+      assert.ok(content.includes("Ko bo vodnik pripravljen, prejmete še povabilo za pregled."));
+      assert.ok(content.indexOf("Povezava velja 72 ur") < content.indexOf(onboardingCopy));
+    }
     const editingCopy = "Ko bo vodnik pripravljen, ga boste s svojim računom lahko kadar koli sami urejali in dopolnjevali — besedila, fotografije, ponudbo in obvestila.";
     assert.ok(html.includes(editingCopy));
     assert.ok((b["text"] as string).includes(editingCopy));
-    assert.ok(html.indexOf("Napotki za goste") < html.indexOf(editingCopy));
+    assert.ok(html.indexOf(onboardingCopy) < html.indexOf(editingCopy));
     assert.ok(html.indexOf(editingCopy) < html.indexOf('href="mailto:'));
     assert.ok(!html.includes("graditi ali urejati"));
     assert.ok(!html.includes("Kreator"), "must not teach the creator");

@@ -1,6 +1,6 @@
 /**
  * Tenant-lifecycle e-mails (approved templates #1, #4 and #6):
- *   1. purchase welcome — collects materials; the guide is built by US, so it
+ *   1. purchase welcome — introduces onboarding; the guide is built by US, so it
  *      deliberately does NOT teach the creator flow,
  *   4. guide ready — the set-password link + review invitation,
  *   6. guide published — the live address and the QR-print pointer.
@@ -69,19 +69,14 @@ export function buildWelcomeEmailBody(p: WelcomeEmailPayload, from: string) {
         "Povezava velja 72 ur in jo je mogoče uporabiti enkrat. Gesla ne pošiljamo po e-pošti in ga tudi mi ne vidimo.",
       ),
       par(
-        "Prvo različico vodnika v celoti pripravimo mi — ničesar vam ni treba graditi. Od vas potrebujemo samo gradivo:",
+        "Po nastavitvi gesla vas počaka kratek obrazec — vpišete podatke o svoji nastanitvi in priporočila za okolico, vse ostalo uredimo mi.",
       ),
-      rows([
-        { label: "Fotografije", value: "10–20 fotografij nastanitve in okolice" },
-        { label: "Osnovni podatki", value: "naslov, kontakt, čas prijave in odjave" },
-        { label: "Napotki za goste", value: "hišni red, wi-fi, parkiranje, posebnosti" },
-      ]),
       par(
         "Ko bo vodnik pripravljen, ga boste s svojim računom lahko kadar koli sami urejali in dopolnjevali — besedila, fotografije, ponudbo in obvestila.",
       ),
       cta("Pošljite gradivo", "mailto:info@webvisit360.com"),
       par(
-        "Gradivo lahko pošljete kar kot odgovor na to sporočilo. Ko bo vodnik pripravljen, prejmete še povabilo za pregled.",
+        "Ko bo vodnik pripravljen, prejmete še povabilo za pregled.",
       ),
       small(INVITATION_SENDER_NOTE_SL),
       small(INVITATION_SENDER_NOTE_EN),

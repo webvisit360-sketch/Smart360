@@ -32,6 +32,12 @@ test("welcome preview: same template, tenant-specific, read-only and operator-on
       assert.equal(preview.html, expected.html);
       assert.equal(preview.text, expected.text);
       assert.equal(preview.subject, expected.subject);
+      for (const content of [preview.html, preview.text]) {
+        assert.ok(content.includes("Po nastavitvi gesla vas počaka kratek obrazec — vpišete podatke o svoji nastanitvi in priporočila za okolico, vse ostalo uredimo mi."));
+        assert.ok(!content.includes("Od vas potrebujemo samo gradivo"));
+        assert.ok(!content.includes("Gradivo lahko pošljete kar kot odgovor"));
+        assert.ok(content.includes("Ko bo vodnik pripravljen, prejmete še povabilo za pregled."));
+      }
       assert.ok(!preview.html.includes("/admin/login"));
       assert.deepEqual(await getWelcomePreview(tenant.id), preview);
     }
