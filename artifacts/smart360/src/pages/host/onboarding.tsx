@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut, MapPin, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,6 +30,43 @@ type NormalizedHostOnboardingData = HostOnboardingData & Required<Pick<
   HostOnboardingData,
   "contacts" | "offers" | "recommendations" | "customCategories" | "events"
 >>;
+
+function usePendingInputFocus() {
+  const pendingKey = useRef<string | null>(null);
+  const inputs = useRef(new Map<string, HTMLInputElement>());
+
+  const registerInput = useCallback((key: string, input: HTMLInputElement | null) => {
+    if (!input) {
+      inputs.current.delete(key);
+      return;
+    }
+    inputs.current.set(key, input);
+    if (pendingKey.current === key) {
+      input.focus();
+      pendingKey.current = null;
+    }
+  }, []);
+
+  const focusInput = useCallback((key: string) => {
+    pendingKey.current = key;
+    const input = inputs.current.get(key);
+    if (input) {
+      input.focus();
+      pendingKey.current = null;
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!pendingKey.current) return;
+    const input = inputs.current.get(pendingKey.current);
+    if (input) {
+      input.focus();
+      pendingKey.current = null;
+    }
+  });
+
+  return { registerInput, focusInput };
+}
 
 export function normalizeCanonicalSaveBaseline(
   data: HostOnboardingData,
@@ -161,6 +198,7 @@ export default function HostOnboarding() {
   const [transientEvents, setTransientEvents] = useState({id: generateId(), name: "", date: "", time: ""});
   const [transientContact, setTransientContact] = useState({id: generateId(), name: "", phone: ""});
   const [transientOffers, setTransientOffers] = useState<Record<string, TransientOffer>>({});
+  const transientOfferIds = useRef<Record<string, string>>({});
   const [transientCustomCategory, setTransientCustomCategory] = useState({
     id: generateId(),
     name: "",
@@ -168,6 +206,7 @@ export default function HostOnboarding() {
   const [transientCustomEntries, setTransientCustomEntries] = useState<Record<string, { id: string; name: string }>>({});
   const [expandedCustomCategoryIds, setExpandedCustomCategoryIds] = useState<Set<string>>(new Set());
   const [loggingOut, setLoggingOut] = useState(false);
+  const { registerInput, focusInput } = usePendingInputFocus();
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
     const finalData = normalizeCanonicalSaveBaseline(data);
@@ -625,6 +664,7 @@ export default function HostOnboarding() {
                 ))}
                 <div className="flex flex-col md:flex-row gap-3">
                   <input 
+                    ref={(input) => registerInput("contact", input)}
                     aria-label="Ime nove kontaktne osebe"
                     type="text" 
                     placeholder="Ime in priimek"
@@ -646,12 +686,14 @@ export default function HostOnboarding() {
                 </div>
               </div>
               <button 
+                type="button"
                 aria-label="Dodaj kontaktno osebo"
                 onClick={() => {
                   if (transientContact.name.trim() || transientContact.phone.trim()) {
                      updateData(d => ({ ...d, contacts: [...(d.contacts || []), { id: transientContact.id, name: transientContact.name, phone: transientContact.phone }] }));
                      setTransientContact({ id: generateId(), name: "", phone: "" });
                   }
+                  focusInput("contact");
                 }}
                 className="mt-4 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
               >
@@ -844,7 +886,13 @@ export default function HostOnboarding() {
           <div className="space-y-8">
             {offerCategories.map((cat) => {
               const catOffers = (formData.offers || []).filter(o => o.categoryId === cat.id);
-              const tOffer = transientOffers[cat.id] || { id: crypto.randomUUID(), name: "", price: "" };
+              const offerKey = cat.key || cat.id;
+              transientOfferIds.current[offerKey] ||= generateId();
+              const tOffer = transientOffers[offerKey] || {
+                id: transientOfferIds.current[offerKey],
+                name: "",
+                price: "",
+              };
               
               return (
                 <div key={cat.id} className="space-y-3">
@@ -899,13 +947,14 @@ export default function HostOnboarding() {
                   
                   <div className="flex flex-col md:flex-row gap-3">
                     <input 
+                      ref={(input) => registerInput(`offer:${offerKey}`, input)}
                       aria-label="Naziv nove ponudbe"
                       type="text" 
                       placeholder="Naziv ponudbe"
                       value={tOffer.name}
                       onChange={(e) => setTransientOffers(prev => ({
                         ...prev,
-                        [cat.id]: { ...tOffer, name: e.target.value }
+                        [offerKey]: { ...tOffer, name: e.target.value }
                       }))}
                       className="min-w-0 flex-1 bg-white border border-dashed border-[#9AA39D] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                     />
@@ -917,7 +966,7 @@ export default function HostOnboarding() {
                         value={tOffer.price}
                         onChange={(e) => setTransientOffers(prev => ({
                           ...prev,
-                          [cat.id]: { ...tOffer, price: e.target.value }
+                          [offerKey]: { ...tOffer, price: e.target.value }
                         }))}
                         className="min-w-0 flex-1 md:w-32 bg-white border border-dashed border-[#9AA39D] rounded-[10px] px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all"
                       />
@@ -926,16 +975,19 @@ export default function HostOnboarding() {
                   </div>
                   
                   <button 
+                    type="button"
                     aria-label="Dodaj ponudbo"
                     onClick={() => {
                       if (tOffer.name.trim() || tOffer.price.trim()) {
                          updateData(d => ({ ...d, offers: [...(d.offers || []), { id: tOffer.id, categoryId: cat.id, name: tOffer.name, price: tOffer.price }] }));
+                         transientOfferIds.current[offerKey] = generateId();
                          setTransientOffers(prev => {
                            const next = { ...prev };
-                           delete next[cat.id];
+                           delete next[offerKey];
                            return next;
                          });
                       }
+                       focusInput(`offer:${offerKey}`);
                     }}
                     className="mt-1 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
                   >
@@ -961,25 +1013,29 @@ export default function HostOnboarding() {
             {onboardingData?.categories.map((cat) => {
               const catRecs = (formData.recommendations || []).filter(r => r.categoryId === cat.id);
               const transientRec = transientRecs[cat.id];
-              const openNewRecommendation = () => setTransientRecs(prev => ({
-                ...prev,
-                [cat.id]: prev[cat.id] || { id: generateId(), name: "" },
-              }));
+               const openNewRecommendation = () => {
+                 focusInput(`recommendation:${cat.id}`);
+                 setTransientRecs(prev => ({
+                   ...prev,
+                   [cat.id]: prev[cat.id] || { id: generateId(), name: "" },
+                 }));
+               };
               const commitNewRecommendation = () => {
-                if (!transientRec?.name.trim()) return;
-                updateData(d => ({
-                  ...d,
-                  recommendations: [...(d.recommendations || []), {
-                    id: transientRec.id,
-                    categoryId: cat.id,
-                    name: transientRec.name,
-                  }],
-                }));
-                setTransientRecs(prev => {
-                  const next = { ...prev };
-                  delete next[cat.id];
-                  return next;
-                });
+                 if (transientRec?.name.trim()) {
+                   updateData(d => ({
+                     ...d,
+                     recommendations: [...(d.recommendations || []), {
+                       id: transientRec.id,
+                       categoryId: cat.id,
+                       name: transientRec.name,
+                     }],
+                   }));
+                   setTransientRecs(prev => ({
+                     ...prev,
+                     [cat.id]: { id: generateId(), name: "" },
+                   }));
+                 }
+                 focusInput(`recommendation:${cat.id}`);
               };
               
               if (catRecs.length === 0 && !transientRec) {
@@ -1033,6 +1089,7 @@ export default function HostOnboarding() {
                     ))}
                     {transientRec && <div style={{ borderColor: "#9AA39D" }} className="flex min-h-[46px] items-start min-w-0 gap-2 rounded-[10px] border border-dashed bg-white p-1">
                       <input 
+                         ref={(input) => registerInput(`recommendation:${cat.id}`, input)}
                         aria-label={`${cat.name}, novo priporočilo`}
                         type="text"
                         placeholder="npr. Gostilna, planinska koča..."
@@ -1120,6 +1177,7 @@ export default function HostOnboarding() {
                   ))}
                    <div className="min-w-0 bg-white border border-[#E8EBE6] rounded-[10px] p-4 md:p-3 flex flex-col md:flex-row gap-3">
                     <input 
+                      ref={(input) => registerInput("event", input)}
                       aria-label="Naziv novega dogodka"
                       type="text" 
                       placeholder="Naziv dogodka"
@@ -1146,12 +1204,14 @@ export default function HostOnboarding() {
                   </div>
                </div>
                <button
+                 type="button"
                  aria-label="Dodaj dogodek"
                 onClick={() => {
                   if (transientEvents.name.trim() || transientEvents.date.trim() || transientEvents.time.trim()) {
                      updateData(d => ({ ...d, events: [...(d.events || []), { id: transientEvents.id, name: transientEvents.name, date: transientEvents.date, time: transientEvents.time }] }));
                      setTransientEvents({ id: generateId(), name: "", date: "", time: "" });
                   }
+                   focusInput("event");
                 }}
                 className="mt-4 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
               >
@@ -1171,6 +1231,7 @@ export default function HostOnboarding() {
                 {(formData.customCategories || []).map((category, categoryIndex) => {
                   const transientEntry = transientCustomEntries[category.id];
                   const openCustomEntry = () => {
+                     focusInput(`custom-entry:${category.id}`);
                     setExpandedCustomCategoryIds(current => new Set(current).add(category.id));
                     setTransientCustomEntries(current => ({
                       ...current,
@@ -1178,20 +1239,21 @@ export default function HostOnboarding() {
                     }));
                   };
                   const commitCustomEntry = () => {
-                    if (!transientEntry?.name.trim()) return;
-                    updateData((data) => ({
-                      ...data,
-                      customCategories: (data.customCategories || []).map((item) =>
-                        item.id === category.id
-                          ? { ...item, entries: [...item.entries, { id: transientEntry.id, name: transientEntry.name }] }
-                          : item,
-                      ),
-                    }));
-                    setTransientCustomEntries((current) => {
-                      const next = { ...current };
-                      delete next[category.id];
-                      return next;
-                    });
+                     if (transientEntry?.name.trim()) {
+                       updateData((data) => ({
+                         ...data,
+                         customCategories: (data.customCategories || []).map((item) =>
+                           item.id === category.id
+                             ? { ...item, entries: [...item.entries, { id: transientEntry.id, name: transientEntry.name }] }
+                             : item,
+                         ),
+                       }));
+                       setTransientCustomEntries((current) => ({
+                         ...current,
+                         [category.id]: { id: generateId(), name: "" },
+                       }));
+                     }
+                     focusInput(`custom-entry:${category.id}`);
                   };
 
                   if (category.entries.length === 0 && !expandedCustomCategoryIds.has(category.id) && !transientEntry) {
@@ -1203,7 +1265,10 @@ export default function HostOnboarding() {
                         name={category.name}
                         extraLabel={<span className="shrink-0 text-[10px] font-medium text-[#9AA39D]">gostiteljeva</span>}
                         addLabel="Dodaj kraj"
-                        onEdit={() => setExpandedCustomCategoryIds(current => new Set(current).add(category.id))}
+                         onEdit={() => {
+                           focusInput(`custom-category:${category.id}`);
+                           setExpandedCustomCategoryIds(current => new Set(current).add(category.id));
+                         }}
                         onAdd={openCustomEntry}
                       />
                     );
@@ -1213,6 +1278,7 @@ export default function HostOnboarding() {
                     <div key={category.id} className="rounded-[10px] border border-[#D8DED9] bg-white p-4">
                       <div className="flex min-w-0 gap-2">
                         <input
+                           ref={(input) => registerInput(`custom-category:${category.id}`, input)}
                           type="text"
                           aria-label={`Ime gostiteljeve kategorije ${categoryIndex + 1}`}
                           placeholder="Ime kategorije"
@@ -1291,6 +1357,7 @@ export default function HostOnboarding() {
 
                         {transientEntry && <div className="flex min-w-0 gap-2">
                           <input
+                             ref={(input) => registerInput(`custom-entry:${category.id}`, input)}
                             type="text"
                             aria-label={`Novo priporočilo za kategorijo ${category.name}`}
                             placeholder="npr. Gostilna, planinska koča..."
@@ -1323,6 +1390,7 @@ export default function HostOnboarding() {
                 <div>
                   <div className="flex min-w-0 gap-2">
                     <input
+                       ref={(input) => registerInput("custom-category:new", input)}
                       type="text"
                       aria-label="Ime nove gostiteljeve kategorije"
                       placeholder="Ime kategorije"
@@ -1338,19 +1406,20 @@ export default function HostOnboarding() {
                   <button
                     type="button"
                     aria-label="Dodaj gostiteljevo kategorijo"
-                    disabled={!transientCustomCategory.name.trim()}
                     onClick={() => {
-                      if (!transientCustomCategory.name.trim()) return;
-                      updateData((data) => ({
-                        ...data,
-                        customCategories: [
-                          ...(data.customCategories || []),
-                          { id: transientCustomCategory.id, name: transientCustomCategory.name, entries: [] },
-                        ],
-                      }));
-                      setTransientCustomCategory({ id: generateId(), name: "" });
+                       if (transientCustomCategory.name.trim()) {
+                         updateData((data) => ({
+                           ...data,
+                           customCategories: [
+                             ...(data.customCategories || []),
+                             { id: transientCustomCategory.id, name: transientCustomCategory.name, entries: [] },
+                           ],
+                         }));
+                         setTransientCustomCategory({ id: generateId(), name: "" });
+                       }
+                       focusInput("custom-category:new");
                     }}
-                    className="mt-3 py-2 px-1 font-bold text-[#157347] hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+                     className="mt-3 py-2 px-1 font-bold text-[#157347] hover:opacity-80"
                   >
                     <span aria-hidden="true">+ Dodaj …</span>
                   </button>
