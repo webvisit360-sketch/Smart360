@@ -1,0 +1,36 @@
+Host onboarding form — per-entry photos and multiple entries per category.
+Form and admin share the same draft; reuse the existing entry/media plumbing,
+do not invent a parallel one. Do NOT publish.
+
+1. MULTIPLE ENTRIES PER CATEGORY in the "Vaša destinacija" section: every
+   category block gets a "+ Dodaj …" adder (exactly this label, consistent
+   with the rest of the form) that appends a new entry sub-block. Each entry
+   sub-block has: NAZIV field (e.g. "Apartma 1", "Vila", "Bungalov"), the
+   rich-text editor, and its own photo/video upload. Existing draft entries
+   already render as sub-blocks — this makes creating additional ones
+   possible (Apartmaji with several units is the canonical case).
+
+2. PER-ENTRY PHOTOS: the upload inside an entry sub-block writes into THAT
+   entry's media in the shared draft — the same "Fotografije in video" the
+   admin entry editor uses, same limits, same first-file-is-tile rule. A
+   photo added in the form must be immediately visible on the entry in
+   admin, and vice versa. Uploads are drafts like everything else; guests
+   see nothing until publish.
+
+3. The global "Fotografije" section at the bottom stays as a fallback but is
+   renamed "Splošne fotografije" with the hint: "Fotografije posameznega
+   apartmaja ali prostora dodajte kar pri njem zgoraj. Sem odložite splošne
+   posnetke (okolica, zunanjost)." Same staging behavior as today.
+
+4. Okolica stays name-only — no photo uploads there (operator adds photos
+   via Creator/Wikimedia).
+
+5. The "+ Dodaj …" adders follow the focus rule just implemented: blank
+   trailing entry → focus its NAZIV; filled → append new sub-block.
+
+Verify in dev in a real browser: create two units under Apartmaji in the
+form, upload a photo to each, check both appear on the correct entries in
+admin; upload a photo to an entry in admin and see it in the form; check
+1440 px and phone width, autosave, and that the published snapshot is
+untouched. Report with "POVZETEK ZA LASTNIKA" in Slovenian, then STOP.
+No publication.
