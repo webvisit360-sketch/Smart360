@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
+import React, { useState, useEffect, useRef, useCallback, createContext, useContext, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   createSection,
@@ -29,7 +29,9 @@ import {
   getListTranslationsQueryKey,
   type ItemTranslationLanguageDraft,
 } from "@workspace/api-client-react";
-import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search, CheckCircle2 } from "lucide-react";
+import { IconSprite } from "@/pages/guest/IconSprite";
+import { spriteId } from "@/pages/guest/sprite-icon";
 import { AdminButton as Button } from "@/components/ui/button";
 import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
 import { Input } from "@/components/ui/input";
@@ -130,6 +132,102 @@ const LAYOUT_OPTIONS = [
 ];
 
 // ---------- Helper ----------
+
+type SearchCandidateWithRouting = {
+  osmType: "node" | "way" | "relation";
+  osmId: number;
+  name: string;
+  address: string;
+  osmCategory?: string;
+  osmFeatureType?: string;
+  osmAddressType?: string;
+  duplicate?: boolean;
+  straightLineDistanceM: number;
+  roadDistanceM?: number | null;
+  travelDurationS?: number | null;
+  routeStatus?: "available" | "unavailable";
+};
+
+export const OKOLICA_SKELETON_KEYS = [
+  "breakfast",
+  "culinary",
+  "night",
+  "pizza",
+  "act",
+  "hike",
+  "bike",
+  "beach",
+  "culture",
+  "nature",
+  "trips",
+  "events",
+  "shops",
+  "bakery",
+  "gas",
+  "atm",
+  "pharm",
+  "hosp"
+];
+
+export function getSkeletonIndex(category: Category) {
+  const key = (category as any).key as string | undefined;
+  if (!key) return 999;
+  const index = OKOLICA_SKELETON_KEYS.indexOf(key);
+  return index === -1 ? 999 : index;
+}
+
+export function layoutToLabel(layout: string) {
+  switch (layout) {
+    case "text": return "Besedilo";
+    case "poi": return "Kartice";
+    case "cards": return "Kartice";
+    case "routes": return "Poti";
+    case "products": return "Izdelek";
+    case "svcs": return "Storitve";
+    case "tabs": return "Zavihki";
+    case "rules": return "Pravila";
+    case "wifi": return "WiFi";
+    case "apartments": return "Apartmaji";
+    case "events": return "Dogodki";
+    case "contacts": return "Kontakti";
+    case "help": return "Pomoč";
+    default: return "";
+  }
+}
+
+function getLayoutIcon(layout: string) {
+  switch (layout) {
+    case "text": return "i-book";
+    case "poi": return "i-pin";
+    case "routes": return "i-map";
+    case "products": return "i-bag";
+    case "svcs": return "i-sparkle";
+    case "tabs": return "i-copy";
+    case "rules": return "i-rules";
+    case "wifi": return "i-wifi";
+    default: return "i-chev";
+  }
+}
+
+function IconRenderer({ icon, className }: { icon?: string | null; className?: string }) {
+  const id = spriteId(icon);
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <use href={`#${id}`} />
+    </svg>
+  );
+}
+
+function formatTravelTime(s: number | null) {
+  if (s == null) return "";
+  const min = Math.round(s / 60);
+  return `${min} min`;
+}
+
+function formatKm(m: number | null) {
+  if (m == null) return "";
+  return `${(m / 1000).toFixed(1)} km`;
+}
 
 function slugify(str: string): string {
   return str
@@ -762,12 +860,12 @@ function toEventStartIso(value: string): string | null {
 }
 
 type ItemDialogProps =
-  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; item?: undefined; onDone: () => void }
-  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; item: Item; onDone: () => void };
+  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; item?: undefined; onDone: () => void }
+  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; item: Item; onDone: () => void };
 
-function ItemDialog({ mode, tenantId, categoryId, sectionKey, item, onDone }: ItemDialogProps) {
+function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories, allCategories, item, onDone }: ItemDialogProps) {
   if (mode === "create" && (sectionKey === "explore" || sectionKey === "services")) {
-    return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} onDone={onDone} />;
+    return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />;
   }
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -1455,34 +1553,82 @@ function placeError(error: unknown): string {
   return "Kraja ni bilo mogoče dodati.";
 }
 
+export function guessCategory(candidate: SearchCandidateWithRouting, categories: Category[]): string | null {
+  const categoryKeys = {
+    "restaurant": "culinary",
+    "cafe": "culinary",
+    "fast_food": "pizza",
+    "pub": "night",
+    "bar": "night",
+    "supermarket": "shops",
+    "convenience": "shops",
+    "bakery": "bakery",
+    "kiosk": "shops",
+    "pharmacy": "pharm",
+    "hospital": "hosp",
+    "atm": "atm",
+    "bank": "atm",
+    "fuel": "gas",
+    "peak": "hike",
+    "beach": "beach",
+    "viewpoint": "nature",
+    "museum": "culture",
+    "castle": "culture",
+    "ruins": "culture",
+    "attraction": "act",
+    "artwork": "culture",
+    "theme_park": "act",
+    "city": "trips",
+    "town": "trips",
+    "village": "trips",
+  };
+  const feature = candidate.osmFeatureType?.toLowerCase() || "";
+  const cat = candidate.osmCategory?.toLowerCase() || "";
+  const targetKey = categoryKeys[feature as keyof typeof categoryKeys] || categoryKeys[cat as keyof typeof categoryKeys];
+  
+  if (targetKey) {
+    const match = categories.find(c => (c as any).key === targetKey);
+    if (match) return match.id;
+  }
+  return null;
+}
+
 function OkolicaPlaceCreate({
   tenantId,
   categoryId,
+  sectionCategories = [],
+  allCategories = [],
   onDone,
 }: {
   tenantId: string;
   categoryId: string;
+  sectionCategories?: Category[];
+  allCategories?: Category[];
   onDone: () => void;
 }) {
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [selected, setSelected] = useState<{ osmType: "node" | "way" | "relation"; osmId: number } | null>(null);
+  const [selectedCatId, setSelectedCatId] = useState(categoryId);
   const [manual, setManual] = useState(false);
   const [manualName, setManualName] = useState("");
   const [locationText, setLocationText] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const search = useSearchAdminPlaces(categoryId, { q: submittedQuery }, {
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  const search = useSearchAdminPlaces(selectedCatId, { q: submittedQuery }, {
     query: {
-      queryKey: getSearchAdminPlacesQueryKey(categoryId, { q: submittedQuery }),
+      queryKey: getSearchAdminPlacesQueryKey(selectedCatId, { q: submittedQuery }),
       enabled: submittedQuery.length >= 2,
       retry: false,
     },
   });
+
   const create = useCreateAdminPlace();
   const busy = create.isPending;
-  const candidates = search.data?.candidates ?? [];
+  const candidates = (search.data?.candidates ?? []) as SearchCandidateWithRouting[];
   const refresh = () => refreshTenantAfterAdminWrite(queryClient, tenantId);
 
   const save = async () => {
@@ -1495,31 +1641,38 @@ function OkolicaPlaceCreate({
           return;
         }
         await create.mutateAsync({
-          id: categoryId,
+          id: selectedCatId,
           data: { mode: "manual", name: manualName.trim(), locationText: locationText.trim(), latitude: lat, longitude: lng },
         });
       } else {
         if (!selected) return;
-        await create.mutateAsync({ id: categoryId, data: { mode: "nominatim", ...selected } });
+        await create.mutateAsync({ id: selectedCatId, data: { mode: "nominatim", ...selected } });
       }
       await refresh();
       onDone();
     } catch (error) {
-      alert(placeError(error));
+      alert(mutationErrorMessage(error));
     }
   };
 
   useReportDirty(Boolean(query || selected || manualName || locationText || latitude || longitude));
+
+  const PRESET_LIMIT = 5;
+  const validAll = allCategories.filter(c => (c as any).sectionKey === "explore" || (c as any).sectionKey === "services");
+  const visibleCategories = showAllCategories ? validAll : sectionCategories.slice(0, PRESET_LIMIT);
+  const isSelectedVisible = visibleCategories.some(c => c.id === selectedCatId);
+  const fallbackCat = validAll.find(c => c.id === selectedCatId) || sectionCategories.find(c => c.id === selectedCatId);
+  const chipsToRender = isSelectedVisible ? visibleCategories : [...visibleCategories, fallbackCat!].filter(Boolean);
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 font-['Archivo']">
       <DialogScrollBody>
         {!manual ? (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="place-search">Poiščite kraj po imenu</Label>
+          <div className="space-y-6">
+            <div>
+              <Label className="text-[12px] font-bold text-[#9AA39D] mb-2 block uppercase tracking-wider">Ime kraja ali doživetja</Label>
               <div className="flex gap-2">
                 <Input
-                  id="place-search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) => {
@@ -1529,70 +1682,139 @@ function OkolicaPlaceCreate({
                       setSubmittedQuery(query.trim());
                     }
                   }}
-                  placeholder="npr. Logarska dolina"
+                  placeholder="npr. Blejsko jezero"
                   disabled={busy}
+                  className="h-11 rounded-[10px] border-[#E8EBE6] focus-visible:ring-[#157347] bg-white text-[15px]"
                 />
                 <Button
                   type="button"
                   onClick={() => { setSelected(null); setSubmittedQuery(query.trim()); }}
                   disabled={busy || query.trim().length < 2}
+                  className="bg-[#157347] text-white font-bold h-11 px-6 rounded-[10px] hover:bg-[#0f5935]"
                 >
-                  <Search className="h-4 w-4" /> Išči
+                  <Search className="h-4 w-4 mr-2" /> Poišči
                 </Button>
               </div>
+              <p className="text-xs text-[#9AA39D] mt-2">Vpišite ime — kraj poiščemo na zemljevidu, razdaljo izračunamo sami.</p>
             </div>
+            
             {search.isLoading && (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2 text-sm text-[#66716A]">
                 <Loader2 className="h-4 w-4 animate-spin" /> Iskanje…
               </p>
             )}
+            
             {search.isError && (
-              <p role="alert" className="text-sm text-destructive">Iskanje trenutno ni uspelo. Poskusite znova.</p>
+              <p role="alert" className="text-sm text-destructive font-medium">Iskanje trenutno ni uspelo. Poskusite znova.</p>
             )}
+
             {search.isSuccess && candidates.length === 0 && (
-              <div className="rounded-md border border-dashed p-4 text-sm">
-                <p className="mb-3 text-muted-foreground">Ni zadetkov.</p>
-                <Button type="button" variant="outline" onClick={() => setManual(true)}>
-                  <MapPin className="h-4 w-4" /> Ročno označi na zemljevidu
+              <div className="rounded-[10px] border border-dashed border-[#C9D2CB] p-4 text-sm bg-[#F4F6F2]/50 text-center">
+                <p className="mb-3 text-[#66716A]">Ni zadetkov.</p>
+                <Button type="button" variant="outline" onClick={() => setManual(true)} className="border-[#157347] text-[#157347] hover:bg-[#157347] hover:text-white rounded-full">
+                  <MapPin className="h-4 w-4 mr-2" /> Ročno označi na zemljevidu
                 </Button>
               </div>
             )}
-            {candidates.length > 0 && (
-              <div className="space-y-2" aria-label="Rezultati iskanja">
-                {candidates.map((candidate) => {
-                  const active = selected?.osmType === candidate.osmType && selected.osmId === candidate.osmId;
-                  return (
-                    <button
-                      key={`${candidate.osmType}:${candidate.osmId}`}
-                      type="button"
-                      disabled={candidate.duplicate || busy}
-                      onClick={() => setSelected({ osmType: candidate.osmType, osmId: candidate.osmId })}
-                      className={`w-full rounded-md border p-3 text-left ${active ? "border-primary ring-1 ring-primary" : ""} ${candidate.duplicate ? "cursor-not-allowed opacity-60" : "hover:bg-muted/50"}`}
-                    >
-                      <span className="flex items-center justify-between gap-2 font-medium">
-                        {candidate.name}
-                        {candidate.duplicate && <Badge variant="secondary">že v vodniku</Badge>}
-                      </span>
-                      <span className="mt-1 block text-xs text-muted-foreground">{candidate.address}</span>
-                      <span className="mt-1 block text-xs text-muted-foreground">
-                        {formatDistanceMeters(candidate.straightLineDistanceM)} zračne razdalje · OSM {candidate.osmType} {candidate.osmId}
-                      </span>
-                    </button>
-                  );
-                })}
+            
+            {search.isSuccess && candidates.length > 0 && (
+              <div>
+                <Label className="text-[12px] font-bold text-[#9AA39D] mb-2 block uppercase tracking-wider">Zadetki — izberite pravega</Label>
+                <div className="space-y-2">
+                  {candidates.map((candidate) => {
+                    const isSelected = selected?.osmType === candidate.osmType && selected?.osmId === candidate.osmId;
+                    const hasRouting = candidate.routeStatus === "available" && candidate.roadDistanceM != null && candidate.travelDurationS != null;
+                    return (
+                      <button
+                        key={`${candidate.osmType}:${candidate.osmId}`}
+                        type="button"
+                        disabled={candidate.duplicate || busy}
+                        aria-pressed={isSelected}
+                        style={{ borderColor: isSelected ? "#157347" : "#E8EBE6", borderWidth: isSelected ? 2 : 1 }}
+                        onClick={() => {
+                          setSelected({ osmType: candidate.osmType, osmId: candidate.osmId });
+                          const suggested = guessCategory(candidate, allCategories);
+                          if (suggested) setSelectedCatId(suggested);
+                        }}
+                        className={`w-full flex items-center justify-between text-left p-3 rounded-[10px] border transition-colors ${isSelected ? 'border-[#157347] border-2 bg-[#F4F6F2]' : 'border-[#E8EBE6] bg-white hover:border-[#C9D2CB]'} ${candidate.duplicate ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                         <div className="flex-1 min-w-0 pr-4">
+                           <div className="flex items-center gap-2">
+                             <span className={`font-bold text-[15px] truncate ${isSelected ? 'text-[#157347]' : 'text-[#1a1a1a]'}`}>{candidate.name}</span>
+                             {candidate.duplicate && <Badge className="bg-[#F4F6F2] text-[#66716A] hover:bg-[#F4F6F2] border-none font-medium">že v vodniku</Badge>}
+                           </div>
+                           <span className="block text-[13px] text-[#9AA39D] mt-0.5 whitespace-normal break-words">{candidate.address}</span>
+                         </div>
+                         <div className="flex items-center gap-3 shrink-0">
+                           {hasRouting ? (
+                             <span className={`px-2.5 py-1 rounded-full text-[12px] font-bold whitespace-nowrap ${isSelected ? 'bg-[#157347] text-white' : 'bg-[#F4F6F2] text-[#66716A]'}`}>
+                               {formatKm(candidate.roadDistanceM ?? null)} · {formatTravelTime(candidate.travelDurationS ?? null)}
+                             </span>
+                           ) : (
+                             <span className="text-[12px] text-[#9AA39D] italic whitespace-nowrap">Ni poti</span>
+                           )}
+                           {isSelected && <CheckCircle2 className="w-5 h-5 text-[#157347] shrink-0" />}
+                         </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button type="button" onClick={() => setManual(true)} className="text-[#157347] font-semibold text-sm flex items-center gap-1 mt-4 hover:underline">
+                  Ni pravega zadetka? Postavite točko ročno na zemljevidu →
+                </button>
               </div>
             )}
-          </>
-        ) : (
-          <>
-            <div className="space-y-1">
-              <Label>Ime kraja *</Label>
-              <Input value={manualName} onChange={(event) => setManualName(event.target.value)} disabled={busy} />
+
+            <div>
+              <Label className="text-[12px] font-bold text-[#9AA39D] mb-2 block uppercase tracking-wider">Kategorija</Label>
+              <div className="flex flex-wrap gap-2">
+                {chipsToRender.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCatId(c.id)}
+                    className={`px-4 py-2 rounded-full text-[14px] font-bold border transition-colors ${selectedCatId === c.id ? 'bg-[#157347] text-white border-[#157347]' : 'bg-white text-[#66716A] border-[#E8EBE6] hover:bg-[#F4F6F2]'}`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+                {!showAllCategories && sectionCategories.length > PRESET_LIMIT && (
+                  <button 
+                    type="button"
+                    onClick={() => setShowAllCategories(true)} 
+                    className="px-3 py-2 text-[14px] text-[#66716A] font-bold border border-transparent hover:underline"
+                  >
+                    Vse kategorije ⌄
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Opis lokacije / naslov *</Label>
-              <Input value={locationText} onChange={(event) => setLocationText(event.target.value)} disabled={busy} />
-              <p className="text-xs text-muted-foreground">Opis lokacije je obvezen in bo prikazan gostu.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-[10px] border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 font-medium">
+              Ročni vnos uporabite le, če kraja res ni na zemljevidu (npr. skrita plaža, neoznačena pot).
+            </div>
+            <div className="space-y-1.5">
+              <Label>Ime kraja *</Label>
+              <Input
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="npr. Skrita plaža"
+                disabled={busy}
+                className="h-11 rounded-[10px]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Opis lokacije *</Label>
+              <Input
+                value={locationText}
+                onChange={(e) => setLocationText(e.target.value)}
+                placeholder="npr. 5 min hoda od kampa"
+                disabled={busy}
+                className="h-11 rounded-[10px]"
+              />
+              <p className="text-xs text-[#9AA39D]">Kratek opis kje se nahaja, da gostje lažje najdejo.</p>
             </div>
             <PinPlacementMap
               latitude={latitude}
@@ -1604,95 +1826,93 @@ function OkolicaPlaceCreate({
               onPlace={(lat, lng) => { setLatitude(String(lat)); setLongitude(String(lng)); }}
             />
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Zemljepisna širina *</Label>
-                <Input inputMode="decimal" value={latitude} onChange={(event) => setLatitude(event.target.value)} disabled={busy} />
+              <div className="space-y-1.5">
+                <Label>Geografska širina (Lat) *</Label>
+                <Input
+                  inputMode="decimal"
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
+                  placeholder="npr. 46.362"
+                  disabled={busy}
+                  className="h-11 rounded-[10px]"
+                />
               </div>
-              <div className="space-y-1">
-                <Label>Zemljepisna dolžina *</Label>
-                <Input inputMode="decimal" value={longitude} onChange={(event) => setLongitude(event.target.value)} disabled={busy} />
+              <div className="space-y-1.5">
+                <Label>Geografska dolžina (Lng) *</Label>
+                <Input
+                  inputMode="decimal"
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
+                  placeholder="npr. 13.821"
+                  disabled={busy}
+                  className="h-11 rounded-[10px]"
+                />
               </div>
             </div>
-          </>
+            <Button type="button" variant="ghost" onClick={() => setManual(false)} disabled={busy} className="mt-2 text-[#157347]">
+              ← Nazaj na iskanje
+            </Button>
+          </div>
         )}
       </DialogScrollBody>
-      <DialogFooter className="gap-2 border-t pt-3">
-        {manual && <Button type="button" variant="ghost" onClick={() => setManual(false)} disabled={busy}>Nazaj na iskanje</Button>}
-        <Button type="button" variant="outline" onClick={onDone} disabled={busy}>Prekliči</Button>
-        <Button type="button" onClick={save} disabled={busy || (!manual && !selected)}>
-          {busy && <Loader2 className="h-4 w-4 animate-spin" />} Dodaj kraj
+      
+      <DialogFooter className="gap-2 flex-wrap shrink-0 border-t border-[#E8EBE6] pt-4 mt-2 bg-white">
+        <p className="w-full text-xs text-[#66716A] mb-2 text-center sm:text-left">
+          Opis in fotografije dodate po vnosu — kot osnutek, gostje vidijo šele po objavi.
+        </p>
+        <Button variant="outline" onClick={onDone} disabled={busy} className="rounded-full border-[#C9D2CB] text-[#66716A] hover:bg-[#F4F6F2] h-10 px-6 font-bold">
+          Prekliči
+        </Button>
+        <Button onClick={save} disabled={busy || (!selected && !manual)} className="rounded-full bg-[#157347] text-white hover:bg-[#0f5935] h-10 px-6 font-bold">
+          {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Dodaj v vodnik
         </Button>
       </DialogFooter>
     </div>
   );
 }
-
 // ==========================================
 // Item row
 // ==========================================
 
-function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string; categoryId: string }) {
-  const [open, setOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+function ItemRow({ item, tenantId, categoryId, sectionKey, sectionCategories, allCategories, layout }: { item: Item; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; layout?: string }) {
+  const [editOpen, setEditOpen] = useState(false);
 
   return (
     <>
-      <div className={`bg-background border rounded p-2 text-sm ${!item.isVisible ? "opacity-60" : ""}`}>
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 flex-1 text-left hover:text-primary transition-colors"
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {expanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
-            <span className="font-medium">{item.title || "(Brez naslova)"}</span>
-            {!item.isVisible && (
-              <Badge variant="secondary" className="ml-1 gap-1 px-1.5 py-0 text-[10px] shrink-0">
-                <EyeOff className="w-2.5 h-2.5" />
-                Skrito
-              </Badge>
-            )}
-            {item.price && (
-              <span className="text-muted-foreground text-xs ml-auto">
-                {item.price}{item.priceUnit ? ` ${item.priceUnit}` : ""}
-              </span>
-            )}
-          </button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 shrink-0"
-            onClick={() => setOpen(true)}
-          >
-            <Pencil className="w-3.5 h-3.5" />
-            <span className="sr-only">Uredi</span>
-          </Button>
+      <div className={`flex items-center gap-3 bg-white border border-[#E8EBE6] rounded-[10px] p-2 pr-3 min-h-[46px] transition-colors hover:border-[#C9D2CB] ${!item.isVisible ? "opacity-60" : ""}`}>
+        <div className="w-6 h-6 flex items-center justify-center bg-[#F4F6F2] rounded text-[#157347] shrink-0">
+          <IconRenderer icon={getLayoutIcon(layout || "")} className="w-3.5 h-3.5" />
         </div>
-
-        {expanded && (
-          <div className="mt-2 pl-5">
-            {item.body && (
-              <p className="text-xs text-muted-foreground mb-2 whitespace-pre-line">{item.body}</p>
-            )}
-            {item.phone && (
-              <p className="text-xs text-muted-foreground mb-2">📞 {item.phone}</p>
-            )}
-            {(item.media?.length ?? 0) > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {item.media!.length} {item.media!.length === 1 ? "datoteka" : item.media!.length === 2 ? "datoteki" : "datotek(e)"} v galeriji — urejanje prek »Uredi«.
-              </p>
-            )}
-          </div>
+        <span className="text-[15.5px] font-semibold flex-1 truncate text-[#1a1a1a]">{item.title || "Neimenovan vnos"}</span>
+        
+        {!item.isVisible && (
+          <span className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F4F6F2] rounded text-[10px] text-[#66716A] font-medium shrink-0">
+            <EyeOff className="w-3 h-3" /> Skrito
+          </span>
         )}
+        
+        {layout && (
+          <span className="text-[11px] font-medium text-[#9AA39D] shrink-0 hidden sm:inline-block">
+            {layoutToLabel(layout)}
+          </span>
+        )}
+
+        <button type="button" onClick={() => setEditOpen(true)} className="text-[#9AA39D] hover:text-[#157347] p-1 shrink-0 ml-1">
+          <Pencil className="w-4 h-4" />
+        </button>
       </div>
 
-      <EditDialog open={open} onOpenChange={setOpen} title="Uredi vnos">
+      <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi vnos">
           <ItemDialog
             mode="edit"
             tenantId={tenantId}
             categoryId={categoryId}
+            sectionKey={sectionKey}
+            sectionCategories={sectionCategories}
+            allCategories={allCategories}
             item={item}
-            onDone={() => setOpen(false)}
+            onDone={() => setEditOpen(false)}
           />
       </EditDialog>
     </>
@@ -1703,70 +1923,95 @@ function ItemRow({ item, tenantId, categoryId }: { item: Item; tenantId: string;
 // Category block
 // ==========================================
 
-function CategoryBlock({ category, tenantId, sectionKey }: { category: Category; tenantId: string; sectionKey?: string }) {
+function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isExplore, allCategories }: { category: Category; tenantId: string; sectionKey?: string; sectionCategories?: Category[]; isExplore?: boolean; allCategories?: Category[] }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
-  return (
-    <>
-      <div className={`bg-muted/50 rounded-lg p-3 ${!category.isVisible ? "opacity-70" : ""}`}>
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="font-semibold flex items-center gap-2 text-sm">
-            {category.icon}
-            <span>{category.label}</span>
-            {!category.isVisible && (
-              <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-[10px]">
-                <EyeOff className="w-2.5 h-2.5" />
-                Neaktivna
-              </Badge>
-            )}
-            <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-background rounded-full border">
-              {category.layout}
+  const isCustom = isExplore && String((category as any).key).startsWith("host-custom");
+  const items = category.items || [];
+  const isEmpty = items.length === 0;
+
+  if (isExplore && isEmpty) {
+    return (
+      <>
+        <div className={`flex items-center justify-between bg-white border border-[#E8EBE6] rounded-[10px] p-2 pr-3 min-h-[46px] ${!category.isVisible ? "opacity-70" : ""}`}>
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="w-6 h-6 flex items-center justify-center bg-[#F4F6F2] rounded text-[#157347] shrink-0">
+              <IconRenderer icon={category.icon} className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-[15.5px] font-semibold truncate text-[#1a1a1a]">
+              {category.label}
+              {!category.isVisible && (
+                <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#F4F6F2] rounded text-[10px] text-[#66716A] font-medium align-middle">
+                  <EyeOff className="w-3 h-3" /> Skrito
+                </span>
+              )}
             </span>
-          </h4>
-          <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => setEditOpen(true)}>
-            <Pencil className="w-3.5 h-3.5 mr-1" />
-            Uredi
-          </Button>
+            {isCustom && <span className="text-[10px] text-[#9AA39D] font-medium shrink-0">gostiteljeva</span>}
+            <span className="text-xs text-[#9AA39D] shrink-0">· prazno</span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0 ml-2">
+            <button type="button" onClick={() => setEditOpen(true)} className="text-[#9AA39D] hover:text-[#157347] hidden sm:block">
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={() => setAddOpen(true)} className="text-[#157347] font-bold text-sm flex items-center gap-1 hover:underline whitespace-nowrap">
+              <Plus className="w-4 h-4" /> Dodaj
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-1.5 pl-2">
-          {(category.items || []).map((item) => (
-            <ItemRow key={item.id} item={item} tenantId={tenantId} categoryId={category.id} />
+        <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+            <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
+        </EditDialog>
+        <EditDialog open={addOpen} onOpenChange={setAddOpen} title={isExplore ? "Dodaj kraj v Okolico" : "Nov vnos"}>
+            <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
+        </EditDialog>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className={`mt-4 ${!category.isVisible ? "opacity-70" : ""}`}>
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h4 className="flex items-center gap-2 text-[14px] font-bold text-[#66716A]">
+            <div className="w-6 h-6 flex items-center justify-center bg-[#F4F6F2] rounded text-[#157347]">
+              <IconRenderer icon={category.icon} className="w-3.5 h-3.5" />
+            </div>
+            {category.label}
+            {isCustom && <span className="text-[11px] font-normal text-[#9AA39D] hidden sm:inline-block">gostiteljeva</span>}
+            {!category.isVisible && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#F4F6F2] border border-[#E8EBE6] rounded text-[10px] text-[#66716A] font-medium">
+                <EyeOff className="w-3 h-3" /> Skrito
+              </span>
+            )}
+            <span className="font-normal text-[#9AA39D]">· {items.length} {isExplore ? 'krajev' : 'elementov'}</span>
+          </h4>
+          <button type="button" onClick={() => setEditOpen(true)} className="text-[#157347] hover:underline flex items-center gap-1 text-[13px] font-bold">
+            <Pencil className="w-3.5 h-3.5" /> Uredi
+          </button>
+        </div>
+
+        <div className="space-y-1.5">
+          {items.map((item) => (
+            <ItemRow key={item.id} item={item} tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} layout={category.layout} />
           ))}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full border border-dashed mt-1 h-8 text-xs text-muted-foreground hover:text-foreground hover:border-foreground/30"
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 border border-dashed border-[#C9D2CB] rounded-[10px] py-2 text-[#157347] font-bold text-[14px] hover:bg-[#F4F6F2] transition-colors h-[46px]"
             onClick={() => setAddOpen(true)}
           >
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            Dodaj element
-          </Button>
+            <Plus className="w-4 h-4" />
+            Dodaj {isExplore ? "kraj" : sectionKey === "offer" ? "ponudbo" : "vnos"}
+          </button>
         </div>
       </div>
 
-      {/* Edit category dialog */}
       <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
-          <CategoryDialog
-            mode="edit"
-            tenantId={tenantId}
-            sectionId={category.id /* unused in edit */}
-            sectionKey={sectionKey}
-            category={category}
-            onDone={() => setEditOpen(false)}
-          />
+          <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
       </EditDialog>
-
-      {/* Add item dialog */}
-      <EditDialog open={addOpen} onOpenChange={setAddOpen} title="Nov element">
-          <ItemDialog
-            mode="create"
-            tenantId={tenantId}
-            categoryId={category.id}
-            sectionKey={sectionKey}
-            onDone={() => setAddOpen(false)}
-          />
+      <EditDialog open={addOpen} onOpenChange={setAddOpen} title={isExplore ? "Dodaj kraj v Okolico" : "Nov vnos"}>
+          <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
       </EditDialog>
     </>
   );
@@ -1776,45 +2021,78 @@ function CategoryBlock({ category, tenantId, sectionKey }: { category: Category;
 // Section block
 // ==========================================
 
-function SectionBlock({ section, tenantId }: { section: Section; tenantId: string }) {
+function SectionBlock({ section, tenantId, allCategories }: { section: Section; tenantId: string; allCategories?: Category[] }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addCatOpen, setAddCatOpen] = useState(false);
 
+  const isExplore = section.key === "explore" || section.key === "services";
+  
+  let sortedCategories = [...(section.categories || [])];
+  if (isExplore) {
+    sortedCategories.sort((a, b) => {
+      const idxA = getSkeletonIndex(a);
+      const idxB = getSkeletonIndex(b);
+      if (idxA !== idxB) return idxA - idxB;
+      return a.position - b.position;
+    });
+  } else {
+    sortedCategories.sort((a, b) => a.position - b.position);
+  }
+
+  const totalItems = sortedCategories.reduce((sum, c) => sum + (c.items?.length || 0), 0);
+  const subtitle = isExplore 
+    ? `${sortedCategories.length} kategorij · ${totalItems} krajev`
+    : `${totalItems} elementov`;
+
   return (
     <>
-      <div className={`border-2 border-border rounded-xl p-4 ${!section.isVisible ? "opacity-70" : ""}`}>
-        <div className="flex items-center justify-between mb-4 pb-2 border-b">
-          <h3 className="font-bold text-lg flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              {section.icon}
-            </span>
-            {section.title}
-            {!section.isVisible && (
-              <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-[10px]">
-                <EyeOff className="w-2.5 h-2.5" />
-                Skrito
-              </Badge>
-            )}
-          </h3>
-          <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil className="w-3.5 h-3.5 mr-1" />
-            Uredi sekcijo
-          </Button>
+      <div className={`bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-4 sm:p-5 font-['Archivo'] ${!section.isVisible ? "opacity-70" : ""}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-[34px] h-[34px] rounded-[10px] bg-[#157347] flex items-center justify-center shrink-0">
+              <IconRenderer icon={section.icon} className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-[800] leading-none mb-1 text-[#1a1a1a] flex items-center gap-2">
+                {section.title}
+                {!section.isVisible && (
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#E8EBE6] rounded text-[10px] text-[#66716A] font-medium align-middle">
+                    <EyeOff className="w-3 h-3" /> Skrito
+                  </span>
+                )}
+              </h3>
+              <p className="text-[13px] text-[#66716A]">{subtitle}</p>
+            </div>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setEditOpen(true)}
+            className="flex items-center gap-1 text-[#157347] font-bold text-[14px] hover:underline whitespace-nowrap"
+          >
+            <Pencil className="w-4 h-4" /> <span className="hidden sm:inline">Uredi sekcijo</span>
+          </button>
         </div>
 
-        <div className="pl-4 border-l-2 border-border/50 ml-4 space-y-3">
-          {(section.categories || []).map((cat) => (
-            <CategoryBlock key={cat.id} category={cat} tenantId={tenantId} sectionKey={section.key} />
+        <div className="space-y-3">
+          {sortedCategories.map((cat) => (
+            <CategoryBlock 
+              key={cat.id} 
+              category={cat} 
+              tenantId={tenantId} 
+              sectionKey={section.key} 
+              sectionCategories={sortedCategories}
+              isExplore={isExplore}
+              allCategories={allCategories}
+            />
           ))}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full border-dashed hover:border-foreground/30"
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 border border-dashed border-[#C9D2CB] rounded-[10px] py-2 text-[#157347] font-bold text-[14px] hover:bg-white transition-colors h-[46px]"
             onClick={() => setAddCatOpen(true)}
           >
-            <Plus className="w-3.5 h-3.5 mr-1" />
+            <Plus className="w-4 h-4" />
             Dodaj kategorijo
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -1841,7 +2119,6 @@ function SectionBlock({ section, tenantId }: { section: Section; tenantId: strin
     </>
   );
 }
-
 // ==========================================
 // Trash panel ("Nedavno izbrisano")
 // ==========================================
@@ -2020,9 +2297,13 @@ export function ContentEditor({
   tenantId: string;
 }) {
   const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const allCategories = React.useMemo(() => {
+    return sections.flatMap(s => (s.categories || []).map(c => ({ ...c, sectionKey: s.key })));
+  }, [sections]);
 
   return (
-    <>
+    <div className="font-['Archivo']">
+      <div style={{ display: "none" }} aria-hidden="true"><IconSprite /></div>
       {sections.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek.
@@ -2030,18 +2311,18 @@ export function ContentEditor({
       ) : (
         <div className="space-y-6">
           {sections.map((section) => (
-            <SectionBlock key={section.id} section={section} tenantId={tenantId} />
+            <SectionBlock key={section.id} section={section} tenantId={tenantId} allCategories={allCategories} />
           ))}
         </div>
       )}
 
       <Button
-        className="w-full mt-6"
-        variant="secondary"
+        className="w-full mt-4 h-[46px] border border-dashed border-[#C9D2CB] rounded-[10px] bg-white text-[#157347] font-bold hover:bg-[#F4F6F2]"
+        variant="outline"
         onClick={() => setAddSectionOpen(true)}
       >
         <Plus className="w-4 h-4 mr-2" />
-        Nova sekcija
+        Dodaj sekcijo
       </Button>
 
       <TrashPanel tenantId={tenantId} />
@@ -2053,6 +2334,6 @@ export function ContentEditor({
             onDone={() => setAddSectionOpen(false)}
           />
       </EditDialog>
-    </>
+    </div>
   );
 }

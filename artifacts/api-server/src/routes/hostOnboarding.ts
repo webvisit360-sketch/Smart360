@@ -10,6 +10,9 @@ import {
   db,
   hostOnboardingPhotosTable,
   hostOnboardingRoundsTable,
+  itemsTable,
+  mediaTable,
+  tenantsTable,
   type HostOnboardingData,
 } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
@@ -31,6 +34,8 @@ import {
   hostOnboardingRawObjectPath,
   hostOnboardingSanitizedObjectPath,
 } from "../lib/hostOnboardingPhotoPaths";
+import { ensureHostOnboardingGalleryItem } from "../lib/hostOnboardingCanonical";
+import { storePhotoVariants } from "./storage";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -87,6 +92,7 @@ function tenantIdParam(req: Request, res: Response): string | null {
 function photoDto(
   row: typeof hostOnboardingPhotosTable.$inferSelect,
   previewUrl: string,
+  mediaId?: string,
 ) {
   return {
     id: row.id,
@@ -95,16 +101,18 @@ function photoDto(
     size: row.actualSize ?? row.expectedSize,
     status: row.status,
     previewUrl,
+    ...(mediaId ? { mediaId } : {}),
   };
 }
 
-function hostDto(result: NonNullable<Awaited<ReturnType<typeof currentHostOnboarding>>>) {
+export function hostDto(result: NonNullable<Awaited<ReturnType<typeof currentHostOnboarding>>>) {
   const { round } = result;
   return {
     id: round.id,
     tenantId: round.tenantId,
     round: round.round,
     revision: round.revision,
+    canonicalRevision: result.canonicalRevision,
     status: round.status,
     data: round.draftData,
     categories: result.categories.map((category, order) => ({
@@ -114,12 +122,63 @@ function hostDto(result: NonNullable<Awaited<ReturnType<typeof currentHostOnboar
       label: category.label,
       order,
     })),
-    photos: result.photos.map((photo) =>
-      photoDto(photo, `/api/admin/host/onboarding/photos/${photo.id}`),
-    ),
+    photos: result.photos.map((photo) => {
+      const mediaId = round.draftData.media?.find((media) =>
+        media.url.includes(`onboarding-${photo.id}.jpg`)
+      )?.id;
+      return photoDto(photo, `/api/admin/host/onboarding/photos/${photo.id}`, mediaId);
+    }),
     updatedAt: round.updatedAt.toISOString(),
     submittedAt: round.submittedAt?.toISOString() ?? null,
   };
+}
+
+const onboardingPhotoProvenance = (photoId: string) =>
+  JSON.stringify({ source: "host-onboarding", photoId });
+
+async function materializeReadyPhoto(
+  tenantId: string,
+  photo: typeof hostOnboardingPhotosTable.$inferSelect,
+): Promise<void> {
+  const provenanceJson = onboardingPhotoProvenance(photo.id);
+  const [existing] = await db.select({ id: mediaTable.id }).from(mediaTable)
+    .where(and(
+      eq(mediaTable.tenantId, tenantId),
+      eq(mediaTable.provenanceJson, provenanceJson),
+    )).limit(1);
+  if (existing) return;
+  const [tenant] = await db.select({ slug: tenantsTable.slug }).from(tenantsTable)
+    .where(eq(tenantsTable.id, tenantId)).limit(1);
+  if (!tenant) throw new Error("missing_tenant");
+  const source = await storage.getObjectEntityFile(photo.objectPath);
+  const [bytes] = await source.download();
+  const name = `onboarding-${photo.id}.jpg`;
+  await storePhotoVariants(tenant.slug, name, bytes);
+  await db.transaction(async (tx) => {
+    const itemId = await ensureHostOnboardingGalleryItem(tx, tenantId);
+    await tx.execute(sql`SELECT 1 FROM ${itemsTable} WHERE ${itemsTable.id} = ${itemId} FOR UPDATE`);
+    const [duplicate] = await tx.select({ id: mediaTable.id }).from(mediaTable)
+      .where(and(
+        eq(mediaTable.tenantId, tenantId),
+        eq(mediaTable.provenanceJson, provenanceJson),
+      )).limit(1);
+    if (duplicate) return;
+    await tx.insert(mediaTable).values({
+      itemId,
+      tenantId,
+      url: `/api/storage/img/${tenant.slug}/${name}`,
+      alt: photo.fileName,
+      kind: "image",
+      width: photo.width,
+      height: photo.height,
+      provenanceProvider: "host-onboarding",
+      provenanceFile: photo.objectPath,
+      provenanceJson,
+      position: sql<number>`(select coalesce(max(${mediaTable.position}), -1) + 1 from ${mediaTable} where ${mediaTable.itemId} = ${itemId})`,
+    });
+    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, tenantId));
+  });
 }
 
 router.get("/admin/host/onboarding", async (req, res): Promise<void> => {
@@ -163,7 +222,8 @@ async function save(req: Request, res: Response): Promise<void> {
     actor.tenantId,
     actor.hostUserId,
     parsed.data.revision,
-    merged.data.data,
+    parsed.data.data,
+    (req.body as { canonicalRevision?: string }).canonicalRevision,
   );
   if (!result.ok) {
     if (result.kind === "stale") {
@@ -184,7 +244,21 @@ async function save(req: Request, res: Response): Promise<void> {
     }
     return;
   }
-  res.json({ ok: true, revision: result.round.revision, updatedAt: result.round.updatedAt.toISOString() });
+  const canonical = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  if (!canonical) {
+    fail(res, 404, "Obrazec za to namestitev še ni odprt.");
+    return;
+  }
+  const dto = hostDto(canonical);
+  res.json({
+    ok: true,
+    revision: dto.revision,
+    canonicalRevision: dto.canonicalRevision,
+    updatedAt: dto.updatedAt,
+    data: dto.data,
+    photos: dto.photos,
+    categories: dto.categories,
+  });
 }
 
 router.patch("/admin/host/onboarding", save);
@@ -295,6 +369,7 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     requestedRound,
     parsed.data.revision,
     data,
+    parsed.data.canonicalRevision,
   );
   if (!result.ok) {
     const messages = {
@@ -475,6 +550,7 @@ router.post("/admin/host/onboarding/photos/:photoId/complete", async (req, res):
       fail(res, 404, "Fotografija ne obstaja.");
       return;
     }
+    await materializeReadyPhoto(actor.tenantId, updated);
     res.json(photoDto(updated, `/api/admin/host/onboarding/photos/${updated.id}`));
   } catch (error) {
     for (const path of [rawPath, finalPath]) {
@@ -512,6 +588,12 @@ router.delete("/admin/host/onboarding/photos/:photoId", async (req, res): Promis
     fail(res, 409, "Oddane fotografije ni mogoče odstraniti.");
     return;
   }
+  await db.delete(mediaTable).where(and(
+    eq(mediaTable.tenantId, actor.tenantId),
+    eq(mediaTable.provenanceJson, onboardingPhotoProvenance(photo.id)),
+  ));
+  await db.update(tenantsTable).set({ hasUnpublishedChanges: true })
+    .where(eq(tenantsTable.id, actor.tenantId));
   const file = await storage.getObjectEntityFile(photo.objectPath).catch(() => null);
   if (file) await file.delete({ ignoreNotFound: true });
   const counterpart = hostOnboardingObjectCounterpart(photo.objectPath);

@@ -48,6 +48,7 @@ test("onboarding contracts accept partial autosave and exact event date/time", (
   assert.equal(
     AutosaveHostOnboardingBody.safeParse({
       revision: 4,
+      canonicalRevision: "a".repeat(64),
       data: { guestPhone: "+386 40 111 111" },
     }).success,
     true,
@@ -88,6 +89,7 @@ test("incomplete custom category autosave shape remains valid but submission is 
   assert.equal(
     AutosaveHostOnboardingBody.safeParse({
       revision: 2,
+      canonicalRevision: "b".repeat(64),
       data: { customCategories: incomplete.customCategories },
     }).success,
     true,

@@ -98,6 +98,83 @@ export interface HostOnboardingEvent {
   time: string;
 }
 
+export type HostOnboardingMediaKind = typeof HostOnboardingMediaKind[keyof typeof HostOnboardingMediaKind];
+
+
+export const HostOnboardingMediaKind = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export interface HostOnboardingMedia {
+  id: string;
+  /** @nullable */
+  itemId: string | null;
+  kind: HostOnboardingMediaKind;
+  url: string;
+  alt: string;
+  position: number;
+  /** @nullable */
+  posterUrl: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  durationSec: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  width?: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  height?: number | null;
+  /** @nullable */
+  focusX?: number | null;
+  /** @nullable */
+  focusY?: number | null;
+}
+
+export interface HostOnboardingCanonicalItem {
+  id: string;
+  categoryId: string;
+  /** @nullable */
+  categoryKey: string | null;
+  sectionKey: string;
+  title: string;
+  body: string;
+  price: string;
+  priceUnit: string;
+  phone: string;
+  website: string;
+  mapQuery: string;
+  difficulty: string;
+  duration: string;
+  distance: string;
+  noteType: string;
+  noteText: string;
+  bullets: string[];
+  tint: string;
+  frame: string;
+  isVisible: boolean;
+  orderEnabled: boolean;
+  soldOut: boolean;
+  producerName: string;
+  producerNote: string;
+}
+
+/**
+ * @nullable
+ */
+export type HostOnboardingDataHero = {
+  url: string;
+  alt: string;
+  /** @nullable */
+  mediaId: string | null;
+} | null;
+
 export interface HostOnboardingData {
   /** @maxLength 500 */
   accommodationName: string;
@@ -127,10 +204,19 @@ export interface HostOnboardingData {
   customCategories: HostOnboardingCustomCategory[];
   /** @maxItems 100 */
   events: HostOnboardingEvent[];
+  /** @maxItems 500 */
+  media?: HostOnboardingMedia[];
+  deleteContactIds?: string[];
+  deleteOfferIds?: string[];
+  deleteEventIds?: string[];
+  deleteMediaIds?: string[];
+  canonicalItems?: HostOnboardingCanonicalItem[];
+  /** @nullable */
+  hero?: HostOnboardingDataHero;
 }
 
 /**
- * Partial HostOnboardingData patch; supplied arrays replace that array.
+ * Partial canonical patch. Omission never deletes; deletion IDs are explicit.
  */
 export type HostOnboardingSaveRequestData = {
   /** @maxLength 500 */
@@ -157,12 +243,24 @@ export type HostOnboardingSaveRequestData = {
   /** @maxItems 30 */
   customCategories?: HostOnboardingCustomCategory[];
   events?: HostOnboardingEvent[];
+  /** @maxItems 500 */
+  media?: HostOnboardingMedia[];
+  deleteContactIds?: string[];
+  deleteOfferIds?: string[];
+  deleteEventIds?: string[];
+  deleteMediaIds?: string[];
+  canonicalItems?: HostOnboardingCanonicalItem[];
 };
 
 export interface HostOnboardingSaveRequest {
   /** @minimum 1 */
   revision: number;
-  /** Partial HostOnboardingData patch; supplied arrays replace that array. */
+  /**
+     * @minLength 64
+     * @maxLength 64
+     */
+  canonicalRevision: string;
+  /** Partial canonical patch. Omission never deletes; deletion IDs are explicit. */
   data: HostOnboardingSaveRequestData;
 }
 
@@ -172,6 +270,11 @@ export interface HostOnboardingSaveRequest {
 export interface HostOnboardingSubmitRequest {
   /** @minimum 1 */
   round: number;
+  /**
+     * @minLength 64
+     * @maxLength 64
+     */
+  canonicalRevision?: string;
   /**
      * Required for a first submission; optional for submitted-round replay.
      * @minimum 1
@@ -248,6 +351,7 @@ export interface HostOnboardingRound {
   tenantId: string;
   round: number;
   revision: number;
+  canonicalRevision: string;
   status: HostOnboardingRoundStatus;
   data: HostOnboardingData;
   categories: HostOnboardingRoundCategoriesItem[];
@@ -2434,6 +2538,8 @@ export const CategoryExploreGroup = {
 export interface Category {
   id: string;
   sectionId: string;
+  /** @nullable */
+  key: string | null;
   label: string;
   icon: string;
   layout: string;
@@ -2668,6 +2774,14 @@ export const AdminPlaceCandidateOsmType = {
   relation: 'relation',
 } as const;
 
+export type AdminPlaceCandidateRouteStatus = typeof AdminPlaceCandidateRouteStatus[keyof typeof AdminPlaceCandidateRouteStatus];
+
+
+export const AdminPlaceCandidateRouteStatus = {
+  available: 'available',
+  unavailable: 'unavailable',
+} as const;
+
 /**
  * @nullable
  */
@@ -2685,8 +2799,21 @@ export interface AdminPlaceCandidate {
   longitude: number;
   osmType: AdminPlaceCandidateOsmType;
   osmId: number;
+  osmCategory: string;
+  osmFeatureType: string;
   /** @minimum 0 */
   straightLineDistanceM: number;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  roadDistanceM: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  travelDurationS: number | null;
+  routeStatus: AdminPlaceCandidateRouteStatus;
   duplicate: boolean;
   /** @nullable */
   duplicateLabel: AdminPlaceCandidateDuplicateLabel;

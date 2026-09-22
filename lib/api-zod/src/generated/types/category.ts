@@ -10,6 +10,8 @@ import type { CategoryExploreGroup } from './categoryExploreGroup';
 export interface Category {
   id: string;
   sectionId: string;
+  /** @nullable */
+  key: string | null;
   label: string;
   icon: string;
   layout: string;

@@ -4,7 +4,6 @@ import {
   db,
   escapeHostDbContext,
   hostMembershipsTable,
-  hostOnboardingEventSuggestionsTable,
   hostOnboardingPhotosTable,
   hostOnboardingRoundsTable,
   itemsTable,
@@ -14,7 +13,7 @@ import {
   type HostOnboardingRecommendationReview,
   type HostOnboardingTargetReview,
 } from "@workspace/db";
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   enqueueHostRecommendations,
   getHostOnboardingCategories,
@@ -25,8 +24,37 @@ import {
   sendHostOnboardingEmail,
 } from "./hostOnboardingEmail";
 import { createCategoryWithTooling } from "./categoryTooling";
+import {
+  applyCanonicalHostOnboardingPatch,
+  readCanonicalHostOnboarding,
+  recommendationNeedsCreatorQueue,
+  canonicalHostOnboardingRevision,
+} from "./hostOnboardingCanonical";
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+const CANONICAL_BINDING_MARKER = "workflow.canonical_binding_v1";
+const canonicalBindingReview = (): HostOnboardingTargetReview => ({
+  target: CANONICAL_BINDING_MARKER,
+  hostValue: true,
+  operatorValue: true,
+  resolution: "unchanged",
+  suggestionVisible: false,
+});
+
+function legacyMeaningfulPatch(data: HostOnboardingData): Partial<HostOnboardingData> {
+  const patch: Partial<HostOnboardingData> = {};
+  for (const key of [
+    "accommodationName", "address", "guestPhone", "guestEmail", "website",
+    "checkInFrom", "checkOutUntil", "wifiName", "wifiPassword",
+    "houseRulesParking",
+  ] as const) {
+    if (data[key]?.trim()) patch[key] = data[key];
+  }
+  for (const key of ["contacts", "offers", "events"] as const) {
+    if (data[key]?.length) patch[key] = data[key] as never;
+  }
+  return patch;
+}
 
 export const EMPTY_HOST_ONBOARDING_DATA: HostOnboardingData = {
   accommodationName: "",
@@ -109,6 +137,7 @@ export async function createHostOnboardingDraft(
       hostUserId,
       round: Number(nextRound),
       draftData: { ...EMPTY_HOST_ONBOARDING_DATA, accommodationName: tenant.name },
+      targetReview: [canonicalBindingReview()],
     })
     .returning();
   return created!;
@@ -136,33 +165,54 @@ export async function onboardingRequired(tenantId: string, hostUserId: string): 
 }
 
 export async function currentHostOnboarding(tenantId: string, hostUserId: string) {
-  const [round] = await db
-    .select()
-    .from(hostOnboardingRoundsTable)
-    .where(and(
-      eq(hostOnboardingRoundsTable.tenantId, tenantId),
-      eq(hostOnboardingRoundsTable.hostUserId, hostUserId),
-    ))
-    .orderBy(desc(hostOnboardingRoundsTable.round))
-    .limit(1);
-  if (!round) return null;
-  const photos = await db
-    .select()
-    .from(hostOnboardingPhotosTable)
-    .where(eq(hostOnboardingPhotosTable.onboardingId, round.id))
-    .orderBy(asc(hostOnboardingPhotosTable.createdAt));
-  return {
-    round: { ...round, draftData: normalizeHostOnboardingData(round.draftData) },
-    photos,
-    categories: getHostOnboardingCategories(),
-  };
+  return db.transaction(async (tx) => {
+    const [round] = await tx
+      .select()
+      .from(hostOnboardingRoundsTable)
+      .where(and(
+        eq(hostOnboardingRoundsTable.tenantId, tenantId),
+        eq(hostOnboardingRoundsTable.hostUserId, hostUserId),
+      ))
+      .orderBy(desc(hostOnboardingRoundsTable.round))
+      .limit(1)
+      .for("update");
+    if (!round) return null;
+    let workflow = normalizeHostOnboardingData(round.draftData);
+    const canonicalBound = round.targetReview.some((entry) =>
+      entry.target === CANONICAL_BINDING_MARKER
+    );
+    if (!canonicalBound && round.status === "draft") {
+      // Lazy compatibility bridge for a pre-binding draft. Its host-entered
+      // values are applied once when that same authorized host next opens it;
+      // no startup-wide migration or unrelated tenant write is performed.
+      await applyCanonicalHostOnboardingPatch(tx, tenantId, legacyMeaningfulPatch(workflow));
+      await tx.update(hostOnboardingRoundsTable).set({
+        targetReview: [canonicalBindingReview()],
+        updatedAt: new Date(),
+      }).where(eq(hostOnboardingRoundsTable.id, round.id));
+    }
+    const photos = await tx
+      .select()
+      .from(hostOnboardingPhotosTable)
+      .where(eq(hostOnboardingPhotosTable.onboardingId, round.id))
+      .orderBy(asc(hostOnboardingPhotosTable.createdAt));
+    const canonical = await readCanonicalHostOnboarding(tx, tenantId, workflow);
+    const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId);
+    return {
+      round: { ...round, draftData: canonical },
+      photos,
+      categories: getHostOnboardingCategories(),
+      canonicalRevision,
+    };
+  });
 }
 
 export async function saveHostOnboarding(
   tenantId: string,
   hostUserId: string,
   revision: number,
-  data: HostOnboardingData,
+  patch: Partial<HostOnboardingData>,
+  expectedCanonicalRevision?: string,
 ): Promise<SaveOnboardingResult> {
   return db.transaction(async (tx) => {
     const [round] = await tx
@@ -180,10 +230,34 @@ export async function saveHostOnboarding(
     if (round.revision !== revision) {
       return { ok: false, kind: "stale", currentRevision: round.revision };
     }
+    const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId, true);
+    if (expectedCanonicalRevision && expectedCanonicalRevision !== canonicalRevision) {
+      return { ok: false, kind: "stale", currentRevision: round.revision };
+    }
+    await applyCanonicalHostOnboardingPatch(tx, tenantId, patch);
+    const workflow = normalizeHostOnboardingData(round.draftData);
+    const nextWorkflow = {
+      ...workflow,
+      ...(patch.recommendations !== undefined
+        ? { recommendations: patch.recommendations }
+        : {}),
+      ...(patch.customCategories !== undefined
+        ? { customCategories: patch.customCategories }
+        : {}),
+    };
+    const queued = (
+      patch.recommendations !== undefined || patch.customCategories !== undefined
+    )
+      ? await mapSubmission(tx, tenantId, round.id, nextWorkflow, false)
+      : null;
     const [updated] = await tx
       .update(hostOnboardingRoundsTable)
       .set({
-        draftData: data,
+        // Workflow-only hints remain here. Canonical tenant content is read
+        // fresh on every GET and is never authoritative in this JSON column.
+        draftData: nextWorkflow,
+        targetReview: [canonicalBindingReview()],
+        ...(queued ? { recommendationReview: queued.recommendationReview } : {}),
         revision: round.revision + 1,
         updatedAt: new Date(),
       })
@@ -262,7 +336,7 @@ async function ensureHostCustomCategory(
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
-      eq(sectionsTable.key, "explore"),
+      inArray(sectionsTable.key, ["explore", "services"]),
       eq(categoriesTable.key, key),
       isNull(categoriesTable.deletedAt),
     ))
@@ -471,117 +545,49 @@ async function mapSubmission(
   tenantId: string,
   onboardingId: string,
   data: HostOnboardingData,
+  applyCanonical = true,
 ): Promise<{
   targetReview: HostOnboardingTargetReview[];
   recommendationReview: HostOnboardingRecommendationReview[];
 }> {
-  const [tenant] = await tx
-    .select()
-    .from(tenantsTable)
-    .where(eq(tenantsTable.id, tenantId))
-    .limit(1)
-    .for("update");
-  if (!tenant) throw new Error("Namestitev ne obstaja.");
   const review: HostOnboardingTargetReview[] = [];
-  await mapSimpleTenantField(tx, tenantId, "tenant.name", data.accommodationName, tenant.name, "name", review);
-  await mapSimpleTenantField(tx, tenantId, "tenant.address", data.address, tenant.address, "address", review);
-  await mapSimpleTenantField(tx, tenantId, "tenant.phone", data.guestPhone, tenant.phone, "phone", review);
-  await mapSimpleTenantField(tx, tenantId, "tenant.email", data.guestEmail, tenant.email, "email", review);
-  await mapSimpleTenantField(tx, tenantId, "tenant.wifiSsid", data.wifiName, tenant.wifiSsid, "wifiSsid", review);
-  await mapSimpleTenantField(tx, tenantId, "tenant.wifiPass", data.wifiPassword, tenant.wifiPass, "wifiPass", review);
+  if (applyCanonical) await applyCanonicalHostOnboardingPatch(tx, tenantId, data);
 
-  await mapContactItem(tx, tenantId, data.website, data.contacts, review);
-  const checkBody = [
-    clean(data.checkInFrom) ? `Prijava od: ${clean(data.checkInFrom)}` : "",
-    clean(data.checkOutUntil) ? `Odjava do: ${clean(data.checkOutUntil)}` : "",
-  ].filter(Boolean).join("\n");
-  await mapCanonicalItem(tx, tenantId, "check", "Prijava in odjava", checkBody, "item.check", review);
-  await mapCanonicalItem(
-    tx,
-    tenantId,
-    "house",
-    "Hišni red",
-    data.houseRulesParking,
-    "item.house",
-    review,
-  );
-  // The host supplied one combined, verbatim field. It is intentionally
-  // applied unchanged to both blank targets; no parking fact is parsed or
-  // invented. Occupied targets keep their own independent suggestion.
-  await mapCanonicalItem(
-    tx,
-    tenantId,
-    "park",
-    "Parkiranje",
-    data.houseRulesParking,
-    "item.park",
-    review,
-  );
-
-  const offerCategory = await firstSectionCategory(tx, tenantId, "offer");
-  for (const offer of data.offers) {
-    const name = clean(offer.name);
-    const price = clean(offer.price);
-    if (!name) continue;
-    if (!offerCategory) {
-      review.push({
-        target: "offer",
-        hostValue: { name, price },
-        operatorValue: null,
-        resolution: "suggestion",
-        suggestionVisible: true,
-      });
-      continue;
-    }
-    const [existing] = await tx
-      .select({ item: itemsTable })
-      .from(itemsTable)
-      .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
-      .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-      .where(and(
-        eq(sectionsTable.tenantId, tenantId),
-        eq(sectionsTable.key, "offer"),
-        sql`lower(trim(coalesce(${itemsTable.title}, ''))) = lower(trim(${name}))`,
-        isNull(itemsTable.deletedAt),
-        isNull(categoriesTable.deletedAt),
-      ))
-      .limit(1)
-      .for("update");
-    if (!existing) {
-      await tx.insert(itemsTable).values({
-        categoryId: offerCategory.id,
-        title: name,
-        price: price || null,
-        position: sql<number>`(select coalesce(max(${itemsTable.position}), -1) + 1 from ${itemsTable} where ${itemsTable.categoryId} = ${offerCategory.id})`,
-      });
-      review.push({
-        target: "offer",
-        hostValue: { name, price },
-        operatorValue: null,
-        resolution: "filled_blank",
-        suggestionVisible: true,
-      });
-    } else if (!hasText(existing.item.price) && price) {
-      await tx.update(itemsTable).set({ price }).where(eq(itemsTable.id, existing.item.id));
-      review.push({
-        target: "offer",
-        hostValue: { name, price },
-        operatorValue: { name: existing.item.title, price: existing.item.price },
-        resolution: "filled_blank",
-        suggestionVisible: true,
-      });
-    } else {
-      review.push({
-        target: "offer",
-        hostValue: { name, price },
-        operatorValue: { name: existing.item.title, price: existing.item.price },
-        resolution: existing.item.price === price ? "unchanged" : "suggestion",
-        suggestionVisible: existing.item.price !== price,
-      });
+  const canonicalRows = await tx.select({
+    id: itemsTable.id,
+    title: itemsTable.title,
+    categoryKey: categoriesTable.key,
+  }).from(itemsTable)
+    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(and(
+      eq(sectionsTable.tenantId, tenantId),
+      eq(sectionsTable.key, "explore"),
+      isNull(itemsTable.deletedAt),
+      isNull(categoriesTable.deletedAt),
+    ));
+  const canonicalById = new Map(canonicalRows.map((row) => [row.id, row]));
+  const canonicalByIdentity = new Set(canonicalRows.map((row) =>
+    `${row.categoryKey ?? ""}\0${clean(row.title ?? "").toLocaleLowerCase("sl")}`
+  ));
+  const incomingIds = data.recommendations.map((row) => row.id)
+    .filter((id) => /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id));
+  if (incomingIds.length) {
+    const knownIds = new Set((await tx.select({ id: itemsTable.id }).from(itemsTable)
+      .where(inArray(itemsTable.id, incomingIds))).map((row) => row.id));
+    for (const row of data.recommendations) {
+      if (knownIds.has(row.id) && !canonicalById.has(row.id)) {
+        throw new Error("Izbrani kraj ne pripada kanonični Okolici te namestitve.");
+      }
     }
   }
-
   const recommendations = data.recommendations
+    .filter((row) =>
+      recommendationNeedsCreatorQueue(row, canonicalById.get(row.id)) &&
+      !canonicalByIdentity.has(
+        `${clean(row.categoryId)}\0${clean(row.name).toLocaleLowerCase("sl")}`,
+      )
+    )
     .map((row) => ({ categoryKey: clean(row.categoryId), name: clean(row.name) }))
     .filter((row) => row.name);
   const creator = await enqueueHostRecommendations(tx, {
@@ -637,17 +643,6 @@ async function mapSubmission(
       });
     }
   }
-  for (const event of data.events) {
-    if (!clean(event.name)) continue;
-    await tx.insert(hostOnboardingEventSuggestionsTable).values({
-      onboardingId,
-      tenantId,
-      sourceRowId: event.id,
-      name: clean(event.name),
-      eventDate: event.date,
-      eventTime: event.time,
-    }).onConflictDoNothing();
-  }
   await tx.update(tenantsTable).set({ hasUnpublishedChanges: true }).where(eq(tenantsTable.id, tenantId));
   return { targetReview: review, recommendationReview };
 }
@@ -692,6 +687,7 @@ export async function submitHostOnboarding(
   roundNumber: number,
   revision: number,
   data: HostOnboardingData,
+  expectedCanonicalRevision?: string,
 ): Promise<SubmitResult> {
   const result = await escapeHostDbContext(() => db.transaction(async (tx) => {
     const [round] = await tx
@@ -710,6 +706,14 @@ export async function submitHostOnboarding(
     }
     if (round.round !== roundNumber) return { ok: false, kind: "wrong_round" } as const;
     if (round.revision !== revision) {
+      return {
+        ok: false,
+        kind: "stale",
+        currentRevision: round.revision,
+      } as const;
+    }
+    const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId, true);
+    if (expectedCanonicalRevision && expectedCanonicalRevision !== canonicalRevision) {
       return {
         ok: false,
         kind: "stale",
@@ -740,8 +744,12 @@ export async function submitHostOnboarding(
     await tx
       .update(hostOnboardingRoundsTable)
       .set({
-        draftData: data,
-        targetReview: mapped.targetReview,
+        draftData: {
+          ...normalizeHostOnboardingData(round.draftData),
+          recommendations: data.recommendations,
+          customCategories: data.customCategories,
+        },
+        targetReview: [canonicalBindingReview(), ...mapped.targetReview],
         recommendationReview: mapped.recommendationReview,
         status: "submitted",
         revision: round.revision + 1,
@@ -832,31 +840,43 @@ export async function openHostOnboarding(tenantId: string, reopen: boolean) {
 }
 
 export async function ownerHostOnboarding(tenantId: string) {
-  const [tenant] = await db
-    .select({ id: tenantsTable.id, name: tenantsTable.name })
-    .from(tenantsTable)
-    .where(eq(tenantsTable.id, tenantId));
-  if (!tenant) return null;
-  const rounds = await db
-    .select()
-    .from(hostOnboardingRoundsTable)
-    .where(eq(hostOnboardingRoundsTable.tenantId, tenantId))
-    .orderBy(desc(hostOnboardingRoundsTable.round));
-  const output = [];
-  for (const round of rounds) {
-    const [photos, events] = await Promise.all([
-      db.select().from(hostOnboardingPhotosTable)
+  return db.transaction(async (tx) => {
+    const [tenant] = await tx
+      .select({ id: tenantsTable.id, name: tenantsTable.name })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId));
+    if (!tenant) return null;
+    const rounds = await tx
+      .select()
+      .from(hostOnboardingRoundsTable)
+      .where(eq(hostOnboardingRoundsTable.tenantId, tenantId))
+      .orderBy(desc(hostOnboardingRoundsTable.round));
+    const output = [];
+    for (const round of rounds) {
+      const photos = await tx.select().from(hostOnboardingPhotosTable)
         .where(eq(hostOnboardingPhotosTable.onboardingId, round.id))
-        .orderBy(asc(hostOnboardingPhotosTable.createdAt)),
-      db.select().from(hostOnboardingEventSuggestionsTable)
-        .where(eq(hostOnboardingEventSuggestionsTable.onboardingId, round.id))
-        .orderBy(asc(hostOnboardingEventSuggestionsTable.createdAt)),
-    ]);
-    output.push({
-      round: { ...round, draftData: normalizeHostOnboardingData(round.draftData) },
-      photos,
-      events,
-    });
-  }
-  return { tenant, rounds: output };
+        .orderBy(asc(hostOnboardingPhotosTable.createdAt));
+      const canonical = await readCanonicalHostOnboarding(
+        tx,
+        tenantId,
+        normalizeHostOnboardingData(round.draftData),
+      );
+      output.push({
+        round: { ...round, draftData: canonical },
+        photos,
+        events: canonical.events.map((event) => ({
+          id: event.id,
+          onboardingId: round.id,
+          tenantId,
+          sourceRowId: event.id,
+          name: event.name,
+          eventDate: event.date,
+          eventTime: event.time,
+          status: "reviewed",
+          createdAt: round.updatedAt,
+        })),
+      });
+    }
+    return { tenant, rounds: output };
+  });
 }

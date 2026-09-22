@@ -5,9 +5,12 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { HostOnboardingCanonicalItem } from './hostOnboardingCanonicalItem';
 import type { HostOnboardingContact } from './hostOnboardingContact';
 import type { HostOnboardingCustomCategory } from './hostOnboardingCustomCategory';
+import type { HostOnboardingDataHero } from './hostOnboardingDataHero';
 import type { HostOnboardingEvent } from './hostOnboardingEvent';
+import type { HostOnboardingMedia } from './hostOnboardingMedia';
 import type { HostOnboardingOffer } from './hostOnboardingOffer';
 import type { HostOnboardingRecommendation } from './hostOnboardingRecommendation';
 
@@ -40,4 +43,13 @@ export interface HostOnboardingData {
   customCategories: HostOnboardingCustomCategory[];
   /** @maxItems 100 */
   events: HostOnboardingEvent[];
+  /** @maxItems 500 */
+  media?: HostOnboardingMedia[];
+  deleteContactIds?: string[];
+  deleteOfferIds?: string[];
+  deleteEventIds?: string[];
+  deleteMediaIds?: string[];
+  canonicalItems?: HostOnboardingCanonicalItem[];
+  /** @nullable */
+  hero?: HostOnboardingDataHero;
 }

@@ -24,6 +24,21 @@ import {
 const USER_AGENT = "Smart360 guest guide (operator place search; admin contact via replit deployment)";
 const HOST = "https://nominatim.openstreetmap.org";
 const MAX_RESPONSE_BYTES = 256_000;
+const ADMIN_PLACE_ROUTE_CONCURRENCY = 2;
+
+type AdminPlaceSearchCandidateBase = ReturnType<typeof parsedPlace> extends infer T
+  ? Exclude<T, null> & {
+      straightLineDistanceM: number;
+      duplicate: boolean;
+      duplicateLabel: "že v vodniku" | null;
+    }
+  : never;
+
+export type AdminPlaceSearchCandidate = AdminPlaceSearchCandidateBase & {
+  roadDistanceM: number | null;
+  travelDurationS: number | null;
+  routeStatus: "available" | "unavailable";
+};
 
 export class ItemDistanceError extends Error {
   constructor(message: string, readonly kind: "not-found" | "unprocessable" | "conflict") {
@@ -63,6 +78,54 @@ function parsedPlace(value: NominatimPlace) {
     osmFeatureType: typeof value.type === "string" ? value.type : "place",
     osmAddressType: typeof value.addresstype === "string" ? value.addresstype : "place",
   };
+}
+
+/**
+ * Adds true OSRM route measurements to search candidates without turning a
+ * routing outage into an empty search result. Calls are deliberately bounded;
+ * identical coordinates in one response share the same routing request.
+ */
+export async function enrichAdminPlaceRoutes(
+  origin: { latitude: number; longitude: number },
+  candidates: AdminPlaceSearchCandidateBase[],
+  options: {
+    computeRoute?: typeof computeRoadRoute;
+    concurrency?: number;
+  } = {},
+): Promise<AdminPlaceSearchCandidate[]> {
+  const computeRoute = options.computeRoute ?? computeRoadRoute;
+  const concurrency = Math.max(
+    1,
+    Math.min(
+      candidates.length || 1,
+      Math.trunc(options.concurrency ?? ADMIN_PLACE_ROUTE_CONCURRENCY),
+    ),
+  );
+  const routes = new Map<string, Promise<Awaited<ReturnType<typeof computeRoadRoute>>>>();
+  const results = new Array<AdminPlaceSearchCandidate>(candidates.length);
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (nextIndex < candidates.length) {
+      const index = nextIndex++;
+      const candidate = candidates[index]!;
+      const key = `${candidate.latitude},${candidate.longitude}`;
+      let pendingRoute = routes.get(key);
+      if (!pendingRoute) {
+        pendingRoute = computeRoute(origin, candidate).catch(() => null);
+        routes.set(key, pendingRoute);
+      }
+      const route = await pendingRoute;
+      results[index] = {
+        ...candidate,
+        roadDistanceM: route ? Math.round(route.distanceMeters) : null,
+        travelDurationS: route ? Math.round(route.durationMinutes * 60) : null,
+        routeStatus: route ? "available" : "unavailable",
+      };
+    }
+  };
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return results;
 }
 
 export async function fetchAdminPlaceNominatim(
@@ -184,7 +247,7 @@ export async function searchAdminPlaces(categoryId: string, query: string) {
     fetchAdminPlaceNominatim("/search", { q, limit: "8", namedetails: "1" }),
     adminPlaceDuplicateKeys(ctx.tenantId),
   ]);
-  const candidates = rows.flatMap((row) => {
+  const candidates: AdminPlaceSearchCandidateBase[] = rows.flatMap((row) => {
     const place = parsedPlace(row);
     if (!place) return [];
     const duplicate = duplicates.osm.has(`${place.osmType}:${place.osmId}`) ||
@@ -196,7 +259,12 @@ export async function searchAdminPlaces(categoryId: string, query: string) {
       duplicateLabel: duplicate ? "že v vodniku" as const : null,
     }];
   });
-  return { originLatitude: ctx.latitude, originLongitude: ctx.longitude, candidates };
+  const routedCandidates = await enrichAdminPlaceRoutes(ctx, candidates);
+  return {
+    originLatitude: ctx.latitude,
+    originLongitude: ctx.longitude,
+    candidates: routedCandidates,
+  };
 }
 
 async function verifiedOsm(osmType: string, osmId: number) {

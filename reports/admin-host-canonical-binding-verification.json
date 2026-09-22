@@ -1,0 +1,49 @@
+{
+  "status": "PASSED_DEVELOPMENT_COPY_NOT_PUBLISHED",
+  "fixtureTenantId": "9555b83a-09d3-40c0-a8e3-23f03e400118",
+  "verified": {
+    "adminDraftPrefillsFreshForm": true,
+    "adminDraftPrefillsReopenedForm": true,
+    "hostSaveImmediatelyUpdatesCanonicalAdminDraft": true,
+    "richTextPreserved": true,
+    "richTextPrefilledAndHostEditCanonical": true,
+    "photoAndVideoPrefilled": true,
+    "videoMetadataRoundTrips": true,
+    "omittedMediaPreserved": true,
+    "explicitMediaRemovalApplied": true,
+    "sparseArraysDoNotDeleteCanonicalRows": true,
+    "staleCanonicalFingerprintRejected": true,
+    "offersContactsWifiRulesAndEventsCanonical": true,
+    "canonicalEventsConsistentInOwnerRead": true,
+    "okolicaNamesRemainCreatorQueueHints": true,
+    "okolicaHintsQueuedOnSave": true,
+    "stableIdsAcrossIdempotentSave": true,
+    "publishedSnapshotUnchanged": true
+  },
+  "counts": {
+    "contacts": 2,
+    "offers": 1,
+    "events": 1,
+    "mediaAfterExplicitRemoval": 1,
+    "queuedPlaceHints": 1
+  },
+  "authentication": {
+    "host": "disposable tenant-scoped development membership and expiring session",
+    "owner": "none created",
+    "emailsSent": false
+  },
+  "browserHarness": {
+    "transport": "workspace-loopback relay; actor binding is simulated and restricted to the disposable tenant",
+    "setup": "cd artifacts/api-server && NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts setup",
+    "serve": "cd artifacts/api-server && NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts serve",
+    "inspect": "cd artifacts/api-server && NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts inspect",
+    "cleanup": "cd artifacts/api-server && NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts cleanup",
+    "searchAndCreate": "real Nominatim, OSRM, duplicate guard, and createAdminPlace services; no search mocks",
+    "adminTenant": "real buildTenantContent + production GetTenantResponse DTO serialization",
+    "operatorEdit": "fixture-ID allowlisted direct canonical DB write; simulated owner transport, no permission claim"
+  },
+  "cleanup": {
+    "fixtureTenantsRemaining": 0,
+    "fixtureHostUsersRemaining": 0
+  }
+}

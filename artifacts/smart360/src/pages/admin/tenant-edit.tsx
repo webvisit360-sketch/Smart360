@@ -1571,14 +1571,10 @@ export default function AdminTenantEdit() {
         <TabsContent value="distances"><Card><CardHeader><CardTitle>Razdalje</CardTitle></CardHeader><CardContent><DistanceReview tenantId={id} /></CardContent></Card></TabsContent>
 
         <TabsContent value="content">
-          <Card>
-            <CardHeader>
-              <CardTitle>Struktura vsebine</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} />
-            </CardContent>
-          </Card>
+          <section className="bg-white">
+            <h2 className="mb-4 text-lg font-extrabold">Struktura vsebine</h2>
+            <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} />
+          </section>
         </TabsContent>
 
         <TabsContent value="translations">

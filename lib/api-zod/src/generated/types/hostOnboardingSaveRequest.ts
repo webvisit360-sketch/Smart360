@@ -10,6 +10,11 @@ import type { HostOnboardingSaveRequestData } from './hostOnboardingSaveRequestD
 export interface HostOnboardingSaveRequest {
   /** @minimum 1 */
   revision: number;
-  /** Partial HostOnboardingData patch; supplied arrays replace that array. */
+  /**
+     * @minLength 64
+     * @maxLength 64
+     */
+  canonicalRevision: string;
+  /** Partial canonical patch. Omission never deletes; deletion IDs are explicit. */
   data: HostOnboardingSaveRequestData;
 }

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="sl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Preverjanje skupnega osnutka admina in obrazca</title>
+<style>body{font:16px/1.55 Archivo,system-ui,sans-serif;max-width:1050px;margin:auto;padding:32px;color:#183126;background:#f4f6f2}main{background:white;border:1px solid #e8ebe6;border-radius:16px;padding:28px}h1{line-height:1.2}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f6f2;padding:18px;border-radius:10px}</style>
+</head><body><main><h1>Skupni osnutek admina in obrazca</h1>
+<p><strong>Uspešno na odstranljivi razvojni kopiji.</strong> Brez objave in brez operaterskega računa.</p>
+<ul><li>Svež in ponovno odprt obrazec bereta trenutni admin osnutek.</li>
+<li>Shranjevanje obrazca neposredno posodobi isti osnutek.</li>
+<li>Fotografije se brez izrecne spremembe ne odstranijo.</li>
+<li>Objavljeni posnetek ostane nespremenjen.</li></ul>
+<h2>Natančen rezultat</h2><pre>{
+  "status": "PASSED_DEVELOPMENT_COPY_NOT_PUBLISHED",
+  "fixtureTenantId": "9555b83a-09d3-40c0-a8e3-23f03e400118",
+  "verified": {
+    "adminDraftPrefillsFreshForm": true,
+    "adminDraftPrefillsReopenedForm": true,
+    "hostSaveImmediatelyUpdatesCanonicalAdminDraft": true,
+    "richTextPreserved": true,
+    "richTextPrefilledAndHostEditCanonical": true,
+    "photoAndVideoPrefilled": true,
+    "videoMetadataRoundTrips": true,
+    "omittedMediaPreserved": true,
+    "explicitMediaRemovalApplied": true,
+    "sparseArraysDoNotDeleteCanonicalRows": true,
+    "staleCanonicalFingerprintRejected": true,
+    "offersContactsWifiRulesAndEventsCanonical": true,
+    "canonicalEventsConsistentInOwnerRead": true,
+    "okolicaNamesRemainCreatorQueueHints": true,
+    "okolicaHintsQueuedOnSave": true,
+    "stableIdsAcrossIdempotentSave": true,
+    "publishedSnapshotUnchanged": true
+  },
+  "counts": {
+    "contacts": 2,
+    "offers": 1,
+    "events": 1,
+    "mediaAfterExplicitRemoval": 1,
+    "queuedPlaceHints": 1
+  },
+  "authentication": {
+    "host": "disposable tenant-scoped development membership and expiring session",
+    "owner": "none created",
+    "emailsSent": false
+  },
+  "browserHarness": {
+    "transport": "workspace-loopback relay; actor binding is simulated and restricted to the disposable tenant",
+    "setup": "cd artifacts/api-server &amp;&amp; NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts setup",
+    "serve": "cd artifacts/api-server &amp;&amp; NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts serve",
+    "inspect": "cd artifacts/api-server &amp;&amp; NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts inspect",
+    "cleanup": "cd artifacts/api-server &amp;&amp; NODE_ENV=development node --import tsx/esm src/tests/fixtures/canonical-onboarding-browser-harness.ts cleanup",
+    "searchAndCreate": "real Nominatim, OSRM, duplicate guard, and createAdminPlace services; no search mocks",
+    "adminTenant": "real buildTenantContent + production GetTenantResponse DTO serialization",
+    "operatorEdit": "fixture-ID allowlisted direct canonical DB write; simulated owner transport, no permission claim"
+  },
+  "cleanup": {
+    "fixtureTenantsRemaining": 0,
+    "fixtureHostUsersRemaining": 0
+  }
+}</pre></main></body></html>

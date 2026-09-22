@@ -7,6 +7,7 @@
  */
 import type { AdminPlaceCandidateDuplicateLabel } from './adminPlaceCandidateDuplicateLabel';
 import type { AdminPlaceCandidateOsmType } from './adminPlaceCandidateOsmType';
+import type { AdminPlaceCandidateRouteStatus } from './adminPlaceCandidateRouteStatus';
 
 export interface AdminPlaceCandidate {
   name: string;
@@ -15,8 +16,21 @@ export interface AdminPlaceCandidate {
   longitude: number;
   osmType: AdminPlaceCandidateOsmType;
   osmId: number;
+  osmCategory: string;
+  osmFeatureType: string;
   /** @minimum 0 */
   straightLineDistanceM: number;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  roadDistanceM: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  travelDurationS: number | null;
+  routeStatus: AdminPlaceCandidateRouteStatus;
   duplicate: boolean;
   /** @nullable */
   duplicateLabel: AdminPlaceCandidateDuplicateLabel;

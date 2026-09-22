@@ -15,6 +15,7 @@ export interface HostOnboardingRound {
   tenantId: string;
   round: number;
   revision: number;
+  canonicalRevision: string;
   status: HostOnboardingRoundStatus;
   data: HostOnboardingData;
   categories: HostOnboardingRoundCategoriesItem[];

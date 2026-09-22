@@ -10,9 +10,16 @@ import {
   HostOnboardingData,
   useUploadPhotoUrl,
   useCompletePhoto,
-  useDeletePhoto
+  useDeletePhoto,
+  canHydrateCanonicalDraft,
+  changedHostOnboardingFields,
+  preserveCanonicalMediaForWrite,
+  omitLegacyRichAliasForCanonicalItems,
+  persistedHostOnboardingSubmitPayload,
+  updateCanonicalItemText,
 } from "@/hooks/use-host-onboarding";
 import { useHostSession } from "@/hooks/use-host-session";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 const generateId = () => crypto.randomUUID();
 type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -32,13 +39,24 @@ export default function HostOnboarding() {
   
   const [formData, setFormData] = useState<HostOnboardingData>({});
   const initialized = useRef(false);
+  const hydratedSource = useRef("");
+  const skipAutosaveOnce = useRef(false);
   const lastSaved = useRef<string>("");
+  const lastSavedData = useRef<HostOnboardingData>({});
   const latestData = useRef<HostOnboardingData>({});
   const latestPayload = useRef<HostOnboardingData>({});
   const revision = useRef(0);
+  const canonicalRevision = useRef("");
   const queue = useRef<Promise<void>>(Promise.resolve());
   const activeOperation = useRef<Promise<void>>(Promise.resolve());
   const conflictBlocked = useRef(false);
+  const mediaDirty = useRef(false);
+  const removedMediaIds = useRef(new Set<string>());
+  const canonicalRowIds = useRef({
+    contacts: new Set<string>(),
+    offers: new Set<string>(),
+    events: new Set<string>(),
+  });
   const queuedSnapshot = useRef("");
   const patchTimeout = useRef<number | null>(null);
   const mounted = useRef(true);
@@ -48,17 +66,6 @@ export default function HostOnboarding() {
   const [submittedMessage, setSubmittedMessage] = useState("");
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(160);
-
-  // Initialize form state
-  useEffect(() => {
-    if (onboardingData && !initialized.current && onboardingData.status === "draft") {
-      setFormData(onboardingData.data || {});
-      lastSaved.current = JSON.stringify(onboardingData.data || {});
-      latestData.current = onboardingData.data || {};
-      revision.current = onboardingData.revision;
-      initialized.current = true;
-    }
-  }, [onboardingData]);
 
   const [transientRecs, setTransientRecs] = useState<Record<string, { id: string; name: string }>>({});
   const [transientEvents, setTransientEvents] = useState({id: generateId(), name: "", date: "", time: ""});
@@ -115,7 +122,14 @@ export default function HostOnboarding() {
       });
     }
 
-    return finalData;
+    // Upload completion owns image persistence. Ordinary form autosaves omit
+    // media so a concurrent upload can never be removed by a stale payload.
+    return preserveCanonicalMediaForWrite(
+      omitLegacyRichAliasForCanonicalItems(finalData),
+      onboardingData?.data.media || [],
+      mediaDirty.current,
+      removedMediaIds.current,
+    );
   }, [
     transientContact,
     transientCustomCategory,
@@ -123,23 +137,85 @@ export default function HostOnboarding() {
     transientEvents,
     transientOffer,
     transientRecs,
+    onboardingData?.data.media,
   ]);
 
-  const enqueueSave = useCallback((data: HostOnboardingData, explicit = false) => {
+  // A fresh open always starts with the current canonical admin draft. Later
+  // refetches may refresh a pristine form, but never clobber local or queued
+  // edits. The revision remains the compare-and-swap guard for stale writes.
+  useEffect(() => {
+    if (!onboardingData || onboardingData.status !== "draft") return;
+    const source = `${onboardingData.id}:${onboardingData.revision}:${onboardingData.canonicalRevision}`;
+    if (source === hydratedSource.current) return;
+    const localSnapshot = JSON.stringify(latestPayload.current);
+    if (!canHydrateCanonicalDraft({
+      initialized: initialized.current,
+      localSnapshot,
+      lastSavedSnapshot: lastSaved.current,
+      queuedSnapshot: queuedSnapshot.current,
+      saveState,
+    })) return;
+
+    const canonical = onboardingData.data || {};
+    mediaDirty.current = false;
+    removedMediaIds.current.clear();
+    canonicalRowIds.current = {
+      contacts: new Set(canonical.contacts?.map((row) => row.id) || []),
+      offers: new Set(canonical.offers?.map((row) => row.id) || []),
+      events: new Set(canonical.events?.map((row) => row.id) || []),
+    };
+    const canonicalPayload = preserveCanonicalMediaForWrite(
+      omitLegacyRichAliasForCanonicalItems(canonical),
+      canonical.media || [],
+      false,
+    );
+    setFormData(canonical);
+    latestData.current = canonical;
+    latestPayload.current = canonicalPayload;
+    lastSavedData.current = canonical;
+    lastSaved.current = JSON.stringify(canonicalPayload);
+    revision.current = onboardingData.revision;
+    canonicalRevision.current = onboardingData.canonicalRevision;
+    conflictBlocked.current = false;
+    hydratedSource.current = source;
+    initialized.current = true;
+    skipAutosaveOnce.current = true;
+    setSaveError("");
+    setSaveState("saved");
+  }, [onboardingData, saveState]);
+
+  const enqueueSave = useCallback((data: Partial<HostOnboardingData>, explicit = false) => {
     const snapshot = JSON.stringify(data);
     if (conflictBlocked.current) return Promise.reject(new Error("Osnutek je spremenjen v drugem zavihku."));
-    if (snapshot === lastSaved.current) return queue.current;
+    if (Object.keys(data).length === 0) return queue.current;
     if (snapshot === queuedSnapshot.current) return activeOperation.current;
     queuedSnapshot.current = snapshot;
     setSaveState("saving");
     setSaveError("");
     const operation = queue.current.then(async () => {
       const result = explicit
-        ? await saveOnboarding.mutateAsync({ data, revision: revision.current })
-        : await patchOnboarding.mutateAsync({ data, revision: revision.current });
+        ? await saveOnboarding.mutateAsync({
+            data,
+            revision: revision.current,
+            canonicalRevision: canonicalRevision.current,
+          })
+        : await patchOnboarding.mutateAsync({
+            data,
+            revision: revision.current,
+            canonicalRevision: canonicalRevision.current,
+          });
       revision.current = result.revision;
-      lastSaved.current = snapshot;
-      if (mounted.current) setSaveState(JSON.stringify(latestPayload.current) === snapshot ? "saved" : "dirty");
+      canonicalRevision.current = result.canonicalRevision;
+      const canonical = result.data ?? { ...lastSavedData.current, ...data };
+      for (const row of data.contacts || []) canonicalRowIds.current.contacts.add(row.id);
+      for (const row of data.offers || []) canonicalRowIds.current.offers.add(row.id);
+      for (const row of data.events || []) canonicalRowIds.current.events.add(row.id);
+      lastSavedData.current = canonical;
+      const savedPayload = cleanData(canonical);
+      lastSaved.current = JSON.stringify(savedPayload);
+      if (mounted.current) {
+        setSaveState(JSON.stringify(latestPayload.current) === lastSaved.current ? "saved" : "dirty");
+      }
     }).catch((reason: Error & { status?: number }) => {
       if (mounted.current) {
         setSaveError(reason.message);
@@ -161,7 +237,7 @@ export default function HostOnboarding() {
     if (patchTimeout.current !== null) window.clearTimeout(patchTimeout.current);
     patchTimeout.current = null;
     const data = cleanData(latestData.current);
-    await enqueueSave(data, explicit);
+    await enqueueSave(changedHostOnboardingFields(data, lastSavedData.current), explicit);
     await queue.current;
   }, [cleanData, enqueueSave]);
 
@@ -176,6 +252,10 @@ export default function HostOnboarding() {
 
   useEffect(() => {
     if (!initialized.current) return;
+    if (skipAutosaveOnce.current) {
+      skipAutosaveOnce.current = false;
+      return;
+    }
     latestData.current = formData;
     latestPayload.current = cleanData(formData);
     const snapshot = JSON.stringify(latestPayload.current);
@@ -186,7 +266,8 @@ export default function HostOnboarding() {
     setSaveState((state) => state === "conflict" ? state : "dirty");
     if (patchTimeout.current !== null) window.clearTimeout(patchTimeout.current);
     patchTimeout.current = window.setTimeout(() => {
-      void enqueueSave(cleanData(latestData.current)).catch(() => undefined);
+      const current = cleanData(latestData.current);
+      void enqueueSave(changedHostOnboardingFields(current, lastSavedData.current)).catch(() => undefined);
     }, 900);
     return () => {
       if (patchTimeout.current !== null) window.clearTimeout(patchTimeout.current);
@@ -199,7 +280,8 @@ export default function HostOnboarding() {
       mounted.current = false;
       if (patchTimeout.current !== null) window.clearTimeout(patchTimeout.current);
       if (initialized.current && JSON.stringify(latestPayload.current) !== lastSaved.current) {
-        void enqueueSaveRef.current(latestPayload.current).catch(() => undefined);
+        const patch = changedHostOnboardingFields(latestPayload.current, lastSavedData.current);
+        void enqueueSaveRef.current(patch).catch(() => undefined);
       }
     };
   }, []);
@@ -224,11 +306,13 @@ export default function HostOnboarding() {
     if (uploadsBlocking) return;
     try {
       await flush();
-      const result = await submitOnboarding.mutateAsync({
-        round: onboardingData?.round || 1,
-        data: cleanData(latestData.current),
-        revision: revision.current,
-      });
+      const result = await submitOnboarding.mutateAsync(
+        persistedHostOnboardingSubmitPayload(
+          onboardingData?.round || 1,
+          revision.current,
+          canonicalRevision.current,
+        ),
+      );
       setSubmittedMessage(result.message);
     } catch {}
   };
@@ -304,6 +388,10 @@ export default function HostOnboarding() {
   }
 
   const isSaving = saveState === "saving";
+  const editableRichItems = (formData.canonicalItems || []).filter((item) =>
+    item.sectionKey === "stay"
+    && !["welcome", "check", "offer"].includes(item.categoryKey || "")
+  );
 
   return (
     <div className="min-h-[100dvh] bg-white text-[#121A14]" style={{ fontFamily: 'Archivo, sans-serif' }}>
@@ -457,8 +545,11 @@ export default function HostOnboarding() {
                       />
                       <button 
                         onClick={() => updateData(d => ({
-                          ...d, 
-                          contacts: d.contacts?.filter(c => c.id !== contact.id)
+                          ...d,
+                          contacts: d.contacts?.filter(c => c.id !== contact.id),
+                          deleteContactIds: canonicalRowIds.current.contacts.has(contact.id)
+                            ? [...new Set([...(d.deleteContactIds || []), contact.id])]
+                            : d.deleteContactIds,
                         }))}
                         className="w-12 flex items-center justify-center bg-white border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
                         aria-label="Odstrani"
@@ -544,13 +635,50 @@ export default function HostOnboarding() {
           </div>
           <div>
             <p className="text-sm text-[#66716A] mb-3">Napišite po domače — mi uredimo obliko.</p>
-            <textarea 
-              aria-label="Hišni red, parkiranje in posebnosti"
-              value={formData.houseRulesParking || ""}
-              onChange={(e) => updateData(d => ({ ...d, houseRulesParking: e.target.value }))}
-              rows={6}
-              className="w-full bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347] transition-all resize-y"
-            ></textarea>
+            {editableRichItems.length ? (
+              <div className="space-y-5">
+                {editableRichItems.map((item, index) => (
+                  <div key={item.id} className="rounded-xl border border-[#E8EBE6] bg-white p-4">
+                    <label
+                      htmlFor={`rich-item-title-${item.id}`}
+                      className="mb-1.5 block text-sm font-semibold text-[#3A443C]"
+                    >
+                      {item.title || `Besedilo ${index + 1}`}
+                    </label>
+                    <input
+                      id={`rich-item-title-${item.id}`}
+                      aria-label={`Naziv besedila ${index + 1}`}
+                      type="text"
+                      value={item.title}
+                      onChange={(event) => updateData((data) =>
+                        updateCanonicalItemText(data, item.id, { title: event.target.value })
+                      )}
+                      className="mb-3 w-full rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                    />
+                    <div aria-label={index === 0
+                      ? "Hišni red, parkiranje in posebnosti"
+                      : `Vsebina besedila ${index + 1}`}
+                    >
+                      <RichTextEditor
+                        value={item.body}
+                        onChange={(value) => updateData((data) =>
+                          updateCanonicalItemText(data, item.id, { body: value })
+                        )}
+                        placeholder="Besedilo"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div aria-label="Hišni red, parkiranje in posebnosti">
+                <RichTextEditor
+                  value={formData.houseRulesParking || ""}
+                  onChange={(value) => updateData(d => ({ ...d, houseRulesParking: value }))}
+                  placeholder="Hišni red, parkiranje in posebnosti"
+                />
+              </div>
+            )}
           </div>
         </section>
 
@@ -590,8 +718,11 @@ export default function HostOnboarding() {
                   />
                   <button 
                     onClick={() => updateData(d => ({
-                      ...d, 
-                      offers: d.offers?.filter(o => o.id !== offer.id)
+                      ...d,
+                      offers: d.offers?.filter(o => o.id !== offer.id),
+                      deleteOfferIds: canonicalRowIds.current.offers.has(offer.id)
+                        ? [...new Set([...(d.deleteOfferIds || []), offer.id])]
+                        : d.deleteOfferIds,
                     }))}
                     className="w-12 flex items-center justify-center bg-white border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
                   >
@@ -757,8 +888,11 @@ export default function HostOnboarding() {
                         />
                         <button 
                           onClick={() => updateData(d => ({
-                            ...d, 
-                            events: d.events?.filter(ev => ev.id !== event.id)
+                            ...d,
+                            events: d.events?.filter(ev => ev.id !== event.id),
+                            deleteEventIds: canonicalRowIds.current.events.has(event.id)
+                              ? [...new Set([...(d.deleteEventIds || []), event.id])]
+                              : d.deleteEventIds,
                           }))}
                            aria-label={`Odstrani dogodek ${i + 1}`}
                            className="col-span-2 sm:col-span-1 w-full sm:w-12 min-h-11 flex items-center justify-center bg-[#F4F6F2] border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
@@ -997,8 +1131,101 @@ export default function HostOnboarding() {
               <p className="text-sm text-[#66716A] mt-1">Lahko jih dodate tudi pozneje. (Maksimalno 20)</p>
             </div>
           </div>
-          
-          <PhotoUploader photos={onboardingData?.photos || []} onBlockingChange={setUploadsBlocking} />
+
+          {formData.hero?.url ? (
+            <figure className="mb-7 overflow-hidden rounded-xl border border-[#E8EBE6] bg-white">
+              <img
+                src={formData.hero.url}
+                alt={formData.hero.alt || "Naslovna fotografija nastanitve"}
+                className="aspect-[16/7] w-full object-cover"
+              />
+              <figcaption className="px-4 py-3 text-sm text-[#66716A]">
+                Trenutna naslovna fotografija v osnutku
+              </figcaption>
+            </figure>
+          ) : null}
+
+          {(formData.media || []).some((media) => media.kind === "video") ? (
+            <div className="mb-7 border-b border-[#E8EBE6] pb-7">
+              <h3 className="mb-1 text-[16px] font-bold">Videi</h3>
+              <p className="mb-4 text-sm text-[#66716A]">
+                Obstoječe videe urejate v istem osnutku kot operater.
+              </p>
+              <div className="space-y-3">
+                {(formData.media || []).filter((media) => media.kind === "video").map((video, index) => (
+                  <div key={video.id} className="grid gap-3 rounded-xl border border-[#E8EBE6] bg-white p-4 md:grid-cols-2">
+                    <div>
+                      <label htmlFor={`video-alt-${video.id}`} className="mb-1.5 block text-sm font-semibold text-[#3A443C]">
+                        Naziv videa {index + 1}
+                      </label>
+                      <input
+                        id={`video-alt-${video.id}`}
+                        type="text"
+                        value={video.alt}
+                        onChange={(event) => {
+                          mediaDirty.current = true;
+                          updateData((data) => ({
+                            ...data,
+                            media: (data.media || []).map((current) =>
+                              current.id === video.id ? { ...current, alt: event.target.value } : current,
+                            ),
+                          }));
+                        }}
+                        className="w-full rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={`video-url-${video.id}`} className="mb-1.5 block text-sm font-semibold text-[#3A443C]">
+                        Povezava do videa
+                      </label>
+                      <input
+                        id={`video-url-${video.id}`}
+                        type="url"
+                        value={video.url}
+                        onChange={(event) => {
+                          mediaDirty.current = true;
+                          updateData((data) => ({
+                            ...data,
+                            media: (data.media || []).map((current) =>
+                              current.id === video.id ? { ...current, url: event.target.value } : current,
+                            ),
+                          }));
+                        }}
+                        className="w-full rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <PhotoUploader
+            photos={[
+              ...(formData.media || [])
+                .filter((media) => media.kind === "image")
+                .map((media) => ({
+                  id: `media-${media.id}`,
+                  mediaId: media.id,
+                  fileName: media.alt || "Fotografija",
+                  contentType: "image/*",
+                  size: 0,
+                  status: "ready" as const,
+                  previewUrl: media.url,
+                })),
+              ...(onboardingData?.photos || []).filter((photo) => photo.status === "uploading"),
+            ]}
+            onRemoveCanonical={(mediaId) => {
+              mediaDirty.current = true;
+              removedMediaIds.current.add(mediaId);
+              updateData((data) => ({
+                ...data,
+                media: (data.media || []).filter((media) => media.id !== mediaId),
+                deleteMediaIds: [...new Set([...(data.deleteMediaIds || []), mediaId])],
+              }));
+            }}
+            onBlockingChange={setUploadsBlocking}
+          />
 
         </section>
 
@@ -1058,9 +1285,11 @@ export default function HostOnboarding() {
 
 function PhotoUploader({
   photos,
+  onRemoveCanonical,
   onBlockingChange,
 }: {
   photos: import("@/hooks/use-host-onboarding").HostOnboardingPhoto[];
+  onRemoveCanonical: (mediaId: string) => void;
   onBlockingChange: (blocking: boolean) => void;
 }) {
   const uploadPhotoUrl = useUploadPhotoUrl();
@@ -1168,7 +1397,7 @@ function PhotoUploader({
               )}
               {p.status !== "submitted" && (
                 <button 
-                  onClick={() => deletePhoto.mutate(p.id)}
+                  onClick={() => p.mediaId ? onRemoveCanonical(p.mediaId) : deletePhoto.mutate(p.id)}
                    aria-label={`Odstrani fotografijo ${p.fileName}`}
                    className="absolute top-2 right-2 w-10 h-10 bg-white/90 text-red-600 rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-sm"
                 >

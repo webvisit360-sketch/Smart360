@@ -2860,6 +2860,52 @@ components:
         name: { type: string, maxLength: 500 }
         date: { type: string }
         time: { type: string }
+    HostOnboardingMedia:
+      type: object
+      additionalProperties: false
+      required: [id, itemId, kind, url, alt, position, posterUrl, durationSec]
+      properties:
+        id: { type: string }
+        itemId: { type: ["string", "null"] }
+        kind: { type: string, enum: [image, video] }
+        url: { type: string }
+        alt: { type: string }
+        position: { type: number }
+        posterUrl: { type: ["string", "null"] }
+        durationSec: { type: ["number", "null"], minimum: 0 }
+        width: { type: ["number", "null"], minimum: 0 }
+        height: { type: ["number", "null"], minimum: 0 }
+        focusX: { type: ["number", "null"] }
+        focusY: { type: ["number", "null"] }
+    HostOnboardingCanonicalItem:
+      type: object
+      additionalProperties: false
+      required: [id, categoryId, categoryKey, sectionKey, title, body, price, priceUnit, phone, website, mapQuery, difficulty, duration, distance, noteType, noteText, bullets, tint, frame, isVisible, orderEnabled, soldOut, producerName, producerNote]
+      properties:
+        id: { type: string }
+        categoryId: { type: string }
+        categoryKey: { type: ["string", "null"] }
+        sectionKey: { type: string }
+        title: { type: string }
+        body: { type: string }
+        price: { type: string }
+        priceUnit: { type: string }
+        phone: { type: string }
+        website: { type: string }
+        mapQuery: { type: string }
+        difficulty: { type: string }
+        duration: { type: string }
+        distance: { type: string }
+        noteType: { type: string }
+        noteText: { type: string }
+        bullets: { type: array, items: { type: string } }
+        tint: { type: string }
+        frame: { type: string }
+        isVisible: { type: boolean }
+        orderEnabled: { type: boolean }
+        soldOut: { type: boolean }
+        producerName: { type: string }
+        producerNote: { type: string }
     HostOnboardingData:
       type: object
       additionalProperties: false
@@ -2895,16 +2941,36 @@ components:
           type: array
           maxItems: 100
           items: { $ref: "#/components/schemas/HostOnboardingEvent" }
+        media:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/HostOnboardingMedia" }
+        deleteContactIds: { type: array, items: { type: string } }
+        deleteOfferIds: { type: array, items: { type: string } }
+        deleteEventIds: { type: array, items: { type: string } }
+        deleteMediaIds: { type: array, items: { type: string } }
+        canonicalItems:
+          type: array
+          items: { $ref: "#/components/schemas/HostOnboardingCanonicalItem" }
+        hero:
+          type: ["object", "null"]
+          additionalProperties: false
+          required: [url, alt, mediaId]
+          properties:
+            url: { type: string }
+            alt: { type: string }
+            mediaId: { type: ["string", "null"] }
     HostOnboardingSaveRequest:
       type: object
       additionalProperties: false
-      required: [revision, data]
+      required: [revision, canonicalRevision, data]
       properties:
         revision: { type: number, minimum: 1 }
+        canonicalRevision: { type: string, minLength: 64, maxLength: 64 }
         data:
           type: object
           additionalProperties: false
-          description: Partial HostOnboardingData patch; supplied arrays replace that array.
+          description: Partial canonical patch. Omission never deletes; deletion IDs are explicit.
           properties:
             accommodationName: { type: string, maxLength: 500 }
             address: { type: string, maxLength: 2000 }
@@ -2932,6 +2998,17 @@ components:
             events:
               type: array
               items: { $ref: "#/components/schemas/HostOnboardingEvent" }
+            media:
+              type: array
+              maxItems: 500
+              items: { $ref: "#/components/schemas/HostOnboardingMedia" }
+            deleteContactIds: { type: array, items: { type: string } }
+            deleteOfferIds: { type: array, items: { type: string } }
+            deleteEventIds: { type: array, items: { type: string } }
+            deleteMediaIds: { type: array, items: { type: string } }
+            canonicalItems:
+              type: array
+              items: { $ref: "#/components/schemas/HostOnboardingCanonicalItem" }
     HostOnboardingSubmitRequest:
       type: object
       additionalProperties: false
@@ -2939,6 +3016,7 @@ components:
       required: [round]
       properties:
         round: { type: number, minimum: 1 }
+        canonicalRevision: { type: string, minLength: 64, maxLength: 64 }
         revision:
           type: number
           minimum: 1
@@ -2977,12 +3055,13 @@ components:
         previewUrl: { type: string }
     HostOnboardingRound:
       type: object
-      required: [id, tenantId, round, revision, status, data, categories, photos, updatedAt]
+      required: [id, tenantId, round, revision, canonicalRevision, status, data, categories, photos, updatedAt]
       properties:
         id: { type: string }
         tenantId: { type: string }
         round: { type: number }
         revision: { type: number }
+        canonicalRevision: { type: string }
         status: { type: string, enum: [draft, submitted] }
         data: { $ref: "#/components/schemas/HostOnboardingData" }
         categories:
@@ -4756,6 +4835,7 @@ components:
       properties:
         id: { type: string }
         sectionId: { type: string }
+        key: { type: ["string", "null"] }
         label: { type: string }
         icon: { type: string }
         layout: { type: string }
@@ -4764,7 +4844,7 @@ components:
           enum: [experiences, food_drink, nature_trails, sights, services, najem, izleti_prevozi, domaci_izdelki, pri_hisi, vase_bivanje, prihod_dostop, prakticno]
         position: { type: number }
         isVisible: { type: boolean }
-      required: [id, sectionId, label, icon, layout, exploreGroup, position, isVisible]
+      required: [id, sectionId, key, label, icon, layout, exploreGroup, position, isVisible]
     CategoryInput:
       type: object
       properties:
@@ -4896,10 +4976,15 @@ components:
         longitude: { type: number }
         osmType: { type: string, enum: [node, way, relation] }
         osmId: { type: number }
+        osmCategory: { type: string }
+        osmFeatureType: { type: string }
         straightLineDistanceM: { type: number, minimum: 0 }
+        roadDistanceM: { type: ["number", "null"], minimum: 0 }
+        travelDurationS: { type: ["number", "null"], minimum: 0 }
+        routeStatus: { type: string, enum: [available, unavailable] }
         duplicate: { type: boolean }
         duplicateLabel: { type: ["string", "null"], enum: ["že v vodniku", null] }
-      required: [name, address, latitude, longitude, osmType, osmId, straightLineDistanceM, duplicate, duplicateLabel]
+      required: [name, address, latitude, longitude, osmType, osmId, osmCategory, osmFeatureType, straightLineDistanceM, roadDistanceM, travelDurationS, routeStatus, duplicate, duplicateLabel]
     AdminPlaceSearchResponse:
       type: object
       properties:

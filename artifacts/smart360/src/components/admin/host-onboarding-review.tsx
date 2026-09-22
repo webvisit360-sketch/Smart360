@@ -38,6 +38,9 @@ function RoundReview({ round }: { round: OwnerOnboardingRound }) {
     sent: "Poslano",
     failed: "Pošiljanje ni uspelo",
   };
+  const historicalReview = round.targetReview.filter(
+    (item) => item.target !== "workflow.canonical_binding_v1",
+  );
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2">
@@ -65,26 +68,30 @@ function RoundReview({ round }: { round: OwnerOnboardingRound }) {
       </section>
 
       <section>
-        <h3 className="font-semibold border-b pb-2 mb-3">Primerjava z obstoječimi podatki</h3>
-        {round.targetReview.length ? (
+        <h3 className="font-semibold border-b pb-2 mb-3">Skupni osnutek vodnika</h3>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Podatki obrazca so neposredno povezani z osnutkom v administraciji. Shranjevanje
+          obrazca vsebine ne objavi gostom.
+        </p>
+        {historicalReview.length ? (
           <div className="space-y-3">
-            {round.targetReview.map((item, index) => (
+            {historicalReview.map((item, index) => (
               <div key={`${item.target}-${index}`} className="rounded-xl border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                   <h4 className="font-semibold">{targetNames[item.target] || item.target}</h4>
                   <span className={`text-xs font-semibold rounded-full px-2 py-1 ${item.resolution === "suggestion" ? "bg-amber-100 text-amber-800" : item.resolution === "filled_blank" ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-700"}`}>
-                    {item.resolution === "suggestion" ? "Predlog gostitelja" : item.resolution === "filled_blank" ? "Dodano v osnutek" : "Brez spremembe"}
+                    {item.resolution === "suggestion" ? "Zgodovinski predlog" : item.resolution === "filled_blank" ? "Dodano v osnutek" : "Brez spremembe"}
                   </span>
                 </div>
                 <div className="grid md:grid-cols-2 gap-3 text-sm">
                   <div><p className="text-muted-foreground mb-1">Obstoječa vrednost</p><pre className="font-sans whitespace-pre-wrap bg-muted/50 rounded-lg p-3">{showValue(item.operatorValue)}</pre></div>
                   <div><p className="text-muted-foreground mb-1">Vrednost gostitelja</p><pre className="font-sans whitespace-pre-wrap bg-muted/50 rounded-lg p-3">{showValue(item.hostValue)}</pre></div>
                 </div>
-                {item.suggestionVisible && <p className="mt-2 text-xs text-amber-800">Predlog ostaja viden operaterju in ni samodejno prepisal obstoječe vrednosti.</p>}
+                {item.suggestionVisible && <p className="mt-2 text-xs text-amber-800">To je zapis starejšega kroga pred neposredno povezavo osnutka.</p>}
               </div>
             ))}
           </div>
-        ) : <p className="text-sm text-muted-foreground">V tem krogu ni primerjav s podatki vodnika.</p>}
+        ) : <p className="text-sm text-muted-foreground">Obrazec in administracija prikazujeta isti trenutni osnutek.</p>}
       </section>
 
       <section>
@@ -139,7 +146,7 @@ function RoundReview({ round }: { round: OwnerOnboardingRound }) {
         <h3 className="font-semibold border-b pb-2 mb-3">Dogodki</h3>
         {round.events.length ? <ul className="space-y-2">{round.events.map((event) => (
           <li key={event.id} className="rounded-lg bg-muted/50 p-3 text-sm flex flex-wrap justify-between gap-2">
-            <b>{event.name || "Dogodek brez naziva"}</b><span>{event.date || "Brez datuma"} · {event.time || "Brez ure"} · Čaka na obravnavo</span>
+            <b>{event.name || "Dogodek brez naziva"}</b><span>{event.date || "Brez datuma"} · {event.time || "Brez ure"} · V skupnem osnutku</span>
           </li>
         ))}</ul> : <p className="text-sm text-muted-foreground">Ni predlaganih dogodkov.</p>}
       </section>
@@ -182,7 +189,7 @@ export function HostOnboardingReview({ tenantId }: { tenantId: string }) {
   return <Card>
     <CardHeader className="gap-4">
       <div className="flex flex-wrap justify-between gap-3">
-        <CardTitle>Podatki iz obrazca za gostitelja</CardTitle>
+        <CardTitle>Skupni osnutek gostitelja in operaterja</CardTitle>
         {rounds[0]?.status === "submitted" && <Button variant="outline" onClick={() => reopenMutation.mutate(crypto.randomUUID())} disabled={reopenMutation.isPending}>{reopenMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Ponovno odpri obrazec</Button>}
       </div>
       <div className="flex flex-wrap gap-2" aria-label="Zgodovina krogov">

@@ -20,6 +20,46 @@ export type HostOnboardingRecommendation = {
   categoryId: string;
   name: string;
 };
+export type HostOnboardingMedia = {
+  id: string;
+  itemId: string | null;
+  kind: "image" | "video";
+  url: string;
+  alt: string;
+  position: number;
+  posterUrl: string | null;
+  durationSec: number | null;
+  width?: number | null;
+  height?: number | null;
+  focusX?: number | null;
+  focusY?: number | null;
+};
+export type HostOnboardingCanonicalItem = {
+  id: string;
+  categoryId: string;
+  categoryKey: string | null;
+  sectionKey: string;
+  title: string;
+  body: string;
+  price: string;
+  priceUnit: string;
+  phone: string;
+  website: string;
+  mapQuery: string;
+  difficulty: string;
+  duration: string;
+  distance: string;
+  noteType: string;
+  noteText: string;
+  bullets: string[];
+  tint: string;
+  frame: string;
+  isVisible: boolean;
+  orderEnabled: boolean;
+  soldOut: boolean;
+  producerName: string;
+  producerNote: string;
+};
 export type HostOnboardingCustomCategory = {
   id: string;
   name: string;
@@ -47,6 +87,16 @@ export type HostOnboardingData = {
   recommendations: HostOnboardingRecommendation[];
   customCategories: HostOnboardingCustomCategory[];
   events: HostOnboardingEvent[];
+  /** Canonical tenant draft media. Legacy rounds may omit this workflow view. */
+  media?: HostOnboardingMedia[];
+  /** Deletions are always explicit; omission from a collection never deletes. */
+  deleteContactIds?: string[];
+  deleteOfferIds?: string[];
+  deleteEventIds?: string[];
+  deleteMediaIds?: string[];
+  /** Lossless canonical item projection for rich/opaque editor fields. */
+  canonicalItems?: HostOnboardingCanonicalItem[];
+  hero?: { url: string; alt: string; mediaId: string | null } | null;
 };
 export type HostOnboardingTargetReview = {
   target: string;

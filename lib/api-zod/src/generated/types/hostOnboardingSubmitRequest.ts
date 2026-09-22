@@ -14,6 +14,11 @@ export interface HostOnboardingSubmitRequest {
   /** @minimum 1 */
   round: number;
   /**
+     * @minLength 64
+     * @maxLength 64
+     */
+  canonicalRevision?: string;
+  /**
      * Required for a first submission; optional for submitted-round replay.
      * @minimum 1
      */

@@ -66,6 +66,14 @@ export const getHostOnboardingResponseDataEventsItemNameMax = 500;
 
 export const getHostOnboardingResponseDataEventsMax = 100;
 
+export const getHostOnboardingResponseDataMediaItemDurationSecMin = 0;
+
+export const getHostOnboardingResponseDataMediaItemWidthMin = 0;
+
+export const getHostOnboardingResponseDataMediaItemHeightMin = 0;
+
+export const getHostOnboardingResponseDataMediaMax = 500;
+
 
 
 export const GetHostOnboardingResponse = zod.object({
@@ -73,6 +81,7 @@ export const GetHostOnboardingResponse = zod.object({
   "tenantId": zod.string(),
   "round": zod.number(),
   "revision": zod.number(),
+  "canonicalRevision": zod.string(),
   "status": zod.enum(['draft', 'submitted']),
   "data": zod.object({
   "accommodationName": zod.string().max(getHostOnboardingResponseDataAccommodationNameMax),
@@ -113,7 +122,56 @@ export const GetHostOnboardingResponse = zod.object({
   "name": zod.string().max(getHostOnboardingResponseDataEventsItemNameMax),
   "date": zod.string(),
   "time": zod.string()
-})).max(getHostOnboardingResponseDataEventsMax)
+})).max(getHostOnboardingResponseDataEventsMax),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullable(),
+  "kind": zod.enum(['image', 'video']),
+  "url": zod.string(),
+  "alt": zod.string(),
+  "position": zod.number(),
+  "posterUrl": zod.string().nullable(),
+  "durationSec": zod.number().min(getHostOnboardingResponseDataMediaItemDurationSecMin).nullable(),
+  "width": zod.number().min(getHostOnboardingResponseDataMediaItemWidthMin).nullish(),
+  "height": zod.number().min(getHostOnboardingResponseDataMediaItemHeightMin).nullish(),
+  "focusX": zod.number().nullish(),
+  "focusY": zod.number().nullish()
+})).max(getHostOnboardingResponseDataMediaMax).optional(),
+  "deleteContactIds": zod.array(zod.string()).optional(),
+  "deleteOfferIds": zod.array(zod.string()).optional(),
+  "deleteEventIds": zod.array(zod.string()).optional(),
+  "deleteMediaIds": zod.array(zod.string()).optional(),
+  "canonicalItems": zod.array(zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "categoryKey": zod.string().nullable(),
+  "sectionKey": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "price": zod.string(),
+  "priceUnit": zod.string(),
+  "phone": zod.string(),
+  "website": zod.string(),
+  "mapQuery": zod.string(),
+  "difficulty": zod.string(),
+  "duration": zod.string(),
+  "distance": zod.string(),
+  "noteType": zod.string(),
+  "noteText": zod.string(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string(),
+  "frame": zod.string(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean(),
+  "soldOut": zod.boolean(),
+  "producerName": zod.string(),
+  "producerNote": zod.string()
+})).optional(),
+  "hero": zod.object({
+  "url": zod.string(),
+  "alt": zod.string(),
+  "mediaId": zod.string().nullable()
+}).nullish()
 }),
   "categories": zod.array(zod.object({
   "id": zod.string(),
@@ -135,6 +193,9 @@ export const GetHostOnboardingResponse = zod.object({
 })
 
 
+
+export const autosaveHostOnboardingBodyCanonicalRevisionMin = 64;
+export const autosaveHostOnboardingBodyCanonicalRevisionMax = 64;
 
 export const autosaveHostOnboardingBodyDataAccommodationNameMax = 500;
 
@@ -186,10 +247,19 @@ export const autosaveHostOnboardingBodyDataEventsItemIdMax = 100;
 
 export const autosaveHostOnboardingBodyDataEventsItemNameMax = 500;
 
+export const autosaveHostOnboardingBodyDataMediaItemDurationSecMin = 0;
+
+export const autosaveHostOnboardingBodyDataMediaItemWidthMin = 0;
+
+export const autosaveHostOnboardingBodyDataMediaItemHeightMin = 0;
+
+export const autosaveHostOnboardingBodyDataMediaMax = 500;
+
 
 
 export const AutosaveHostOnboardingBody = zod.object({
   "revision": zod.number().min(1),
+  "canonicalRevision": zod.string().min(autosaveHostOnboardingBodyCanonicalRevisionMin).max(autosaveHostOnboardingBodyCanonicalRevisionMax),
   "data": zod.object({
   "accommodationName": zod.string().max(autosaveHostOnboardingBodyDataAccommodationNameMax).optional(),
   "address": zod.string().max(autosaveHostOnboardingBodyDataAddressMax).optional(),
@@ -229,13 +299,60 @@ export const AutosaveHostOnboardingBody = zod.object({
   "name": zod.string().max(autosaveHostOnboardingBodyDataEventsItemNameMax),
   "date": zod.string(),
   "time": zod.string()
+})).optional(),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullable(),
+  "kind": zod.enum(['image', 'video']),
+  "url": zod.string(),
+  "alt": zod.string(),
+  "position": zod.number(),
+  "posterUrl": zod.string().nullable(),
+  "durationSec": zod.number().min(autosaveHostOnboardingBodyDataMediaItemDurationSecMin).nullable(),
+  "width": zod.number().min(autosaveHostOnboardingBodyDataMediaItemWidthMin).nullish(),
+  "height": zod.number().min(autosaveHostOnboardingBodyDataMediaItemHeightMin).nullish(),
+  "focusX": zod.number().nullish(),
+  "focusY": zod.number().nullish()
+})).max(autosaveHostOnboardingBodyDataMediaMax).optional(),
+  "deleteContactIds": zod.array(zod.string()).optional(),
+  "deleteOfferIds": zod.array(zod.string()).optional(),
+  "deleteEventIds": zod.array(zod.string()).optional(),
+  "deleteMediaIds": zod.array(zod.string()).optional(),
+  "canonicalItems": zod.array(zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "categoryKey": zod.string().nullable(),
+  "sectionKey": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "price": zod.string(),
+  "priceUnit": zod.string(),
+  "phone": zod.string(),
+  "website": zod.string(),
+  "mapQuery": zod.string(),
+  "difficulty": zod.string(),
+  "duration": zod.string(),
+  "distance": zod.string(),
+  "noteType": zod.string(),
+  "noteText": zod.string(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string(),
+  "frame": zod.string(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean(),
+  "soldOut": zod.boolean(),
+  "producerName": zod.string(),
+  "producerNote": zod.string()
 })).optional()
-}).describe('Partial HostOnboardingData patch; supplied arrays replace that array.')
+}).describe('Partial canonical patch. Omission never deletes; deletion IDs are explicit.')
 })
 
 export const AutosaveHostOnboardingResponse = zod.unknown()
 
 
+
+export const saveHostOnboardingBodyCanonicalRevisionMin = 64;
+export const saveHostOnboardingBodyCanonicalRevisionMax = 64;
 
 export const saveHostOnboardingBodyDataAccommodationNameMax = 500;
 
@@ -287,10 +404,19 @@ export const saveHostOnboardingBodyDataEventsItemIdMax = 100;
 
 export const saveHostOnboardingBodyDataEventsItemNameMax = 500;
 
+export const saveHostOnboardingBodyDataMediaItemDurationSecMin = 0;
+
+export const saveHostOnboardingBodyDataMediaItemWidthMin = 0;
+
+export const saveHostOnboardingBodyDataMediaItemHeightMin = 0;
+
+export const saveHostOnboardingBodyDataMediaMax = 500;
+
 
 
 export const SaveHostOnboardingBody = zod.object({
   "revision": zod.number().min(1),
+  "canonicalRevision": zod.string().min(saveHostOnboardingBodyCanonicalRevisionMin).max(saveHostOnboardingBodyCanonicalRevisionMax),
   "data": zod.object({
   "accommodationName": zod.string().max(saveHostOnboardingBodyDataAccommodationNameMax).optional(),
   "address": zod.string().max(saveHostOnboardingBodyDataAddressMax).optional(),
@@ -330,13 +456,60 @@ export const SaveHostOnboardingBody = zod.object({
   "name": zod.string().max(saveHostOnboardingBodyDataEventsItemNameMax),
   "date": zod.string(),
   "time": zod.string()
+})).optional(),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullable(),
+  "kind": zod.enum(['image', 'video']),
+  "url": zod.string(),
+  "alt": zod.string(),
+  "position": zod.number(),
+  "posterUrl": zod.string().nullable(),
+  "durationSec": zod.number().min(saveHostOnboardingBodyDataMediaItemDurationSecMin).nullable(),
+  "width": zod.number().min(saveHostOnboardingBodyDataMediaItemWidthMin).nullish(),
+  "height": zod.number().min(saveHostOnboardingBodyDataMediaItemHeightMin).nullish(),
+  "focusX": zod.number().nullish(),
+  "focusY": zod.number().nullish()
+})).max(saveHostOnboardingBodyDataMediaMax).optional(),
+  "deleteContactIds": zod.array(zod.string()).optional(),
+  "deleteOfferIds": zod.array(zod.string()).optional(),
+  "deleteEventIds": zod.array(zod.string()).optional(),
+  "deleteMediaIds": zod.array(zod.string()).optional(),
+  "canonicalItems": zod.array(zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "categoryKey": zod.string().nullable(),
+  "sectionKey": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "price": zod.string(),
+  "priceUnit": zod.string(),
+  "phone": zod.string(),
+  "website": zod.string(),
+  "mapQuery": zod.string(),
+  "difficulty": zod.string(),
+  "duration": zod.string(),
+  "distance": zod.string(),
+  "noteType": zod.string(),
+  "noteText": zod.string(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string(),
+  "frame": zod.string(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean(),
+  "soldOut": zod.boolean(),
+  "producerName": zod.string(),
+  "producerNote": zod.string()
 })).optional()
-}).describe('Partial HostOnboardingData patch; supplied arrays replace that array.')
+}).describe('Partial canonical patch. Omission never deletes; deletion IDs are explicit.')
 })
 
 export const SaveHostOnboardingResponse = zod.unknown()
 
 
+
+export const confirmHostOnboardingSubmissionBodyCanonicalRevisionMin = 64;
+export const confirmHostOnboardingSubmissionBodyCanonicalRevisionMax = 64;
 
 
 export const confirmHostOnboardingSubmissionBodyDataOneAccommodationNameMax = 500;
@@ -397,10 +570,19 @@ export const confirmHostOnboardingSubmissionBodyDataOneEventsItemNameMax = 500;
 
 export const confirmHostOnboardingSubmissionBodyDataOneEventsMax = 100;
 
+export const confirmHostOnboardingSubmissionBodyDataOneMediaItemDurationSecMin = 0;
+
+export const confirmHostOnboardingSubmissionBodyDataOneMediaItemWidthMin = 0;
+
+export const confirmHostOnboardingSubmissionBodyDataOneMediaItemHeightMin = 0;
+
+export const confirmHostOnboardingSubmissionBodyDataOneMediaMax = 500;
+
 
 
 export const ConfirmHostOnboardingSubmissionBody = zod.object({
   "round": zod.number().min(1),
+  "canonicalRevision": zod.string().min(confirmHostOnboardingSubmissionBodyCanonicalRevisionMin).max(confirmHostOnboardingSubmissionBodyCanonicalRevisionMax).optional(),
   "revision": zod.number().min(1).optional().describe('Required for a first submission; optional for submitted-round replay.'),
   "data": zod.object({
   "accommodationName": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneAccommodationNameMax),
@@ -441,7 +623,56 @@ export const ConfirmHostOnboardingSubmissionBody = zod.object({
   "name": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneEventsItemNameMax),
   "date": zod.string(),
   "time": zod.string()
-})).max(confirmHostOnboardingSubmissionBodyDataOneEventsMax)
+})).max(confirmHostOnboardingSubmissionBodyDataOneEventsMax),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullable(),
+  "kind": zod.enum(['image', 'video']),
+  "url": zod.string(),
+  "alt": zod.string(),
+  "position": zod.number(),
+  "posterUrl": zod.string().nullable(),
+  "durationSec": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneMediaItemDurationSecMin).nullable(),
+  "width": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneMediaItemWidthMin).nullish(),
+  "height": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneMediaItemHeightMin).nullish(),
+  "focusX": zod.number().nullish(),
+  "focusY": zod.number().nullish()
+})).max(confirmHostOnboardingSubmissionBodyDataOneMediaMax).optional(),
+  "deleteContactIds": zod.array(zod.string()).optional(),
+  "deleteOfferIds": zod.array(zod.string()).optional(),
+  "deleteEventIds": zod.array(zod.string()).optional(),
+  "deleteMediaIds": zod.array(zod.string()).optional(),
+  "canonicalItems": zod.array(zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "categoryKey": zod.string().nullable(),
+  "sectionKey": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "price": zod.string(),
+  "priceUnit": zod.string(),
+  "phone": zod.string(),
+  "website": zod.string(),
+  "mapQuery": zod.string(),
+  "difficulty": zod.string(),
+  "duration": zod.string(),
+  "distance": zod.string(),
+  "noteType": zod.string(),
+  "noteText": zod.string(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string(),
+  "frame": zod.string(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean(),
+  "soldOut": zod.boolean(),
+  "producerName": zod.string(),
+  "producerNote": zod.string()
+})).optional(),
+  "hero": zod.object({
+  "url": zod.string(),
+  "alt": zod.string(),
+  "mediaId": zod.string().nullable()
+}).nullish()
 }).optional().describe('Optional for a first submission; when omitted, the server submits the persisted draft at revision. Ignored for submitted-round replay.')
 }).describe('For a first submission, revision is required and data may be omitted to submit the persisted draft. For an immutable already-submitted round replay, only round is required; revision and data are ignored.')
 
@@ -550,6 +781,14 @@ export const getOwnerHostOnboardingResponseRoundsItemDataEventsItemNameMax = 500
 
 export const getOwnerHostOnboardingResponseRoundsItemDataEventsMax = 100;
 
+export const getOwnerHostOnboardingResponseRoundsItemDataMediaItemDurationSecMin = 0;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataMediaItemWidthMin = 0;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataMediaItemHeightMin = 0;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataMediaMax = 500;
+
 
 
 export const GetOwnerHostOnboardingResponse = zod.object({
@@ -599,7 +838,56 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "name": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataEventsItemNameMax),
   "date": zod.string(),
   "time": zod.string()
-})).max(getOwnerHostOnboardingResponseRoundsItemDataEventsMax)
+})).max(getOwnerHostOnboardingResponseRoundsItemDataEventsMax),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullable(),
+  "kind": zod.enum(['image', 'video']),
+  "url": zod.string(),
+  "alt": zod.string(),
+  "position": zod.number(),
+  "posterUrl": zod.string().nullable(),
+  "durationSec": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataMediaItemDurationSecMin).nullable(),
+  "width": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataMediaItemWidthMin).nullish(),
+  "height": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataMediaItemHeightMin).nullish(),
+  "focusX": zod.number().nullish(),
+  "focusY": zod.number().nullish()
+})).max(getOwnerHostOnboardingResponseRoundsItemDataMediaMax).optional(),
+  "deleteContactIds": zod.array(zod.string()).optional(),
+  "deleteOfferIds": zod.array(zod.string()).optional(),
+  "deleteEventIds": zod.array(zod.string()).optional(),
+  "deleteMediaIds": zod.array(zod.string()).optional(),
+  "canonicalItems": zod.array(zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "categoryKey": zod.string().nullable(),
+  "sectionKey": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "price": zod.string(),
+  "priceUnit": zod.string(),
+  "phone": zod.string(),
+  "website": zod.string(),
+  "mapQuery": zod.string(),
+  "difficulty": zod.string(),
+  "duration": zod.string(),
+  "distance": zod.string(),
+  "noteType": zod.string(),
+  "noteText": zod.string(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string(),
+  "frame": zod.string(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean(),
+  "soldOut": zod.boolean(),
+  "producerName": zod.string(),
+  "producerNote": zod.string()
+})).optional(),
+  "hero": zod.object({
+  "url": zod.string(),
+  "alt": zod.string(),
+  "mediaId": zod.string().nullable()
+}).nullish()
 }).optional(),
   "targetReview": zod.array(zod.object({
   "target": zod.string().optional(),
@@ -949,6 +1237,7 @@ export const GetPublicTenantResponse = zod.object({
   "categories": zod.array(zod.object({
   "id": zod.string(),
   "sectionId": zod.string(),
+  "key": zod.string().nullable(),
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
@@ -2948,6 +3237,7 @@ export const GetTenantResponse = zod.object({
   "categories": zod.array(zod.object({
   "id": zod.string(),
   "sectionId": zod.string(),
+  "key": zod.string().nullable(),
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
@@ -3861,6 +4151,7 @@ export const CreateCategoryBody = zod.object({
 export const CreateCategoryResponse = zod.object({
   "id": zod.string(),
   "sectionId": zod.string(),
+  "key": zod.string().nullable(),
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
@@ -3886,6 +4177,7 @@ export const UpdateCategoryBody = zod.object({
 export const UpdateCategoryResponse = zod.object({
   "id": zod.string(),
   "sectionId": zod.string(),
+  "key": zod.string().nullable(),
   "label": zod.string(),
   "icon": zod.string(),
   "layout": zod.string(),
@@ -4030,6 +4322,10 @@ export const SearchAdminPlacesQueryParams = zod.object({
 
 export const searchAdminPlacesResponseCandidatesItemStraightLineDistanceMMin = 0;
 
+export const searchAdminPlacesResponseCandidatesItemRoadDistanceMMin = 0;
+
+export const searchAdminPlacesResponseCandidatesItemTravelDurationSMin = 0;
+
 
 
 export const SearchAdminPlacesResponse = zod.object({
@@ -4042,7 +4338,12 @@ export const SearchAdminPlacesResponse = zod.object({
   "longitude": zod.number(),
   "osmType": zod.enum(['node', 'way', 'relation']),
   "osmId": zod.number(),
+  "osmCategory": zod.string(),
+  "osmFeatureType": zod.string(),
   "straightLineDistanceM": zod.number().min(searchAdminPlacesResponseCandidatesItemStraightLineDistanceMMin),
+  "roadDistanceM": zod.number().min(searchAdminPlacesResponseCandidatesItemRoadDistanceMMin).nullable(),
+  "travelDurationS": zod.number().min(searchAdminPlacesResponseCandidatesItemTravelDurationSMin).nullable(),
+  "routeStatus": zod.enum(['available', 'unavailable']),
   "duplicate": zod.boolean(),
   "duplicateLabel": zod.union([zod.literal('že v vodniku'),zod.literal(null)]).nullable()
 }))

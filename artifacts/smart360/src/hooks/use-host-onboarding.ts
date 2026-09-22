@@ -1,4 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type {
+  HostOnboardingCanonicalItem,
+  HostOnboardingDataHero,
+} from "@workspace/api-client-react";
 
 export interface HostOnboardingData {
   accommodationName?: string;
@@ -20,6 +24,35 @@ export interface HostOnboardingData {
     entries: Array<{ id: string; name: string }>;
   }>;
   events?: Array<{ id: string; name: string; date: string; time: string }>;
+  /**
+   * Canonical tenant media. Omit this property to preserve all media; when it
+   * is supplied, every existing row and stable ID must be retained.
+   */
+  media?: HostOnboardingMedia[];
+  /** Canonical row deletion is explicit; collection omission never deletes. */
+  deleteContactIds?: string[];
+  deleteOfferIds?: string[];
+  deleteEventIds?: string[];
+  deleteMediaIds?: string[];
+  /** Lossless canonical item projection; only changed stable-ID rows are sent. */
+  canonicalItems?: HostOnboardingCanonicalItem[];
+  /** Current tenant hero is previewed, but never dropped by an omitted patch. */
+  hero?: HostOnboardingDataHero | null;
+}
+
+export interface HostOnboardingMedia {
+  id: string;
+  itemId: string | null;
+  kind: "image" | "video";
+  url: string;
+  alt: string;
+  position: number;
+  posterUrl: string | null;
+  durationSec: number | null;
+  width?: number | null;
+  height?: number | null;
+  focusX?: number | null;
+  focusY?: number | null;
 }
 
 export interface HostOnboardingCategory {
@@ -35,6 +68,8 @@ export interface HostOnboardingPhoto {
   size: number;
   status: "uploading" | "ready" | "submitted";
   previewUrl?: string;
+  /** Stable canonical media ID once the upload is attached to the draft. */
+  mediaId?: string;
 }
 
 export interface HostOnboardingResponse {
@@ -48,6 +83,99 @@ export interface HostOnboardingResponse {
   updatedAt: string;
   submittedAt: string | null;
   revision: number;
+  canonicalRevision: string;
+}
+
+export function canHydrateCanonicalDraft(input: {
+  initialized: boolean;
+  localSnapshot: string;
+  lastSavedSnapshot: string;
+  queuedSnapshot: string;
+  saveState: "saved" | "dirty" | "saving" | "error" | "conflict";
+}): boolean {
+  if (!input.initialized) return true;
+  return input.localSnapshot === input.lastSavedSnapshot
+    && input.queuedSnapshot === ""
+    && input.saveState !== "dirty"
+    && input.saveState !== "saving"
+    && input.saveState !== "conflict";
+}
+
+export function preserveCanonicalMediaForWrite(
+  data: HostOnboardingData,
+  currentServerMedia: HostOnboardingMedia[],
+  mediaChanged: boolean,
+  removedMediaIds: ReadonlySet<string> = new Set(),
+): HostOnboardingData {
+  const next = { ...data };
+  if (!mediaChanged) {
+    delete next.media;
+    return next;
+  }
+  const localMedia = data.media || [];
+  const localIds = new Set(localMedia.map((media) => media.id));
+  next.media = [
+    ...localMedia,
+    ...currentServerMedia.filter((media) =>
+      !localIds.has(media.id) && !removedMediaIds.has(media.id)
+    ),
+  ];
+  return next;
+}
+
+export function updateCanonicalItemText(
+  data: HostOnboardingData,
+  itemId: string,
+  change: { title?: string; body?: string },
+): HostOnboardingData {
+  return {
+    ...data,
+    canonicalItems: (data.canonicalItems || []).map((item) =>
+      item.id === itemId ? { ...item, ...change } : item
+    ),
+  };
+}
+
+export function omitLegacyRichAliasForCanonicalItems(
+  data: HostOnboardingData,
+): HostOnboardingData {
+  const next = { ...data };
+  const hasCanonicalHouseItems = next.canonicalItems?.some(
+    (item) => item.sectionKey === "stay" && item.categoryKey === "house",
+  );
+  if (hasCanonicalHouseItems) delete next.houseRulesParking;
+  return next;
+}
+
+export function persistedHostOnboardingSubmitPayload(
+  round: number,
+  revision: number,
+  canonicalRevision: string,
+) {
+  return { round, revision, canonicalRevision };
+}
+
+export function changedHostOnboardingFields(
+  current: HostOnboardingData,
+  baseline: HostOnboardingData,
+): Partial<HostOnboardingData> {
+  const patch: Partial<HostOnboardingData> = {};
+  for (const key of Object.keys(current) as Array<keyof HostOnboardingData>) {
+    if (key === "canonicalItems") {
+      const baselineRows = new Map(
+        (baseline.canonicalItems || []).map((row) => [row.id, row]),
+      );
+      const changedRows = (current.canonicalItems || []).filter(
+        (row) => JSON.stringify(row) !== JSON.stringify(baselineRows.get(row.id)),
+      );
+      if (changedRows.length) patch.canonicalItems = changedRows;
+      continue;
+    }
+    if (JSON.stringify(current[key]) !== JSON.stringify(baseline[key])) {
+      (patch as Record<string, unknown>)[key] = current[key];
+    }
+  }
+  return patch;
 }
 
 const customFetch = async (url: string, options?: RequestInit) => {
@@ -85,20 +213,55 @@ export function useGetHostOnboarding(options?: { enabled?: boolean }) {
     queryKey: getHostOnboardingQueryKey(),
     queryFn: () => customFetch("/api/admin/host/onboarding"),
     enabled: options?.enabled,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+}
+
+type HostOnboardingWriteResult = {
+  ok: true;
+  revision: number;
+  updatedAt: string;
+  canonicalRevision: string;
+  /** Canonical server projection, when returned by the direct-draft endpoint. */
+  data?: HostOnboardingData;
+  photos?: HostOnboardingPhoto[];
+  categories?: HostOnboardingCategory[];
+};
+
+function applyWriteResult(
+  current: HostOnboardingResponse | undefined,
+  result: HostOnboardingWriteResult,
+  submitted: Partial<HostOnboardingData>,
+): HostOnboardingResponse | undefined {
+  if (!current) return current;
+  return {
+    ...current,
+    data: result.data ?? { ...current.data, ...submitted },
+    photos: result.photos ?? current.photos,
+    categories: result.categories ?? current.categories,
+    revision: result.revision,
+    canonicalRevision: result.canonicalRevision,
+    updatedAt: result.updatedAt,
+  };
 }
 
 export function usePatchHostOnboarding() {
   const queryClient = useQueryClient();
-  return useMutation<{ ok: true; revision: number; updatedAt: string }, Error, { data: Partial<HostOnboardingData>; revision: number }>({
-    mutationFn: (payload: { data: Partial<HostOnboardingData>; revision?: number }) =>
+  return useMutation<HostOnboardingWriteResult, Error, {
+    data: Partial<HostOnboardingData>;
+    revision: number;
+    canonicalRevision: string;
+  }>({
+    mutationFn: (payload) =>
       customFetch("/api/admin/host/onboarding", {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
     onSuccess: (result, variables) => {
       queryClient.setQueryData<HostOnboardingResponse>(getHostOnboardingQueryKey(), (current) =>
-        current ? { ...current, data: { ...current.data, ...variables.data }, revision: result.revision, updatedAt: result.updatedAt } : current,
+        applyWriteResult(current, result, variables.data),
       );
     },
   });
@@ -106,15 +269,19 @@ export function usePatchHostOnboarding() {
 
 export function useSaveHostOnboarding() {
   const queryClient = useQueryClient();
-  return useMutation<{ ok: true; revision: number; updatedAt: string }, Error, { data: Partial<HostOnboardingData>; revision: number }>({
-    mutationFn: (payload: { data: Partial<HostOnboardingData>; revision?: number }) =>
+  return useMutation<HostOnboardingWriteResult, Error, {
+    data: Partial<HostOnboardingData>;
+    revision: number;
+    canonicalRevision: string;
+  }>({
+    mutationFn: (payload) =>
       customFetch("/api/admin/host/onboarding/save", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
     onSuccess: (result, variables) => {
       queryClient.setQueryData<HostOnboardingResponse>(getHostOnboardingQueryKey(), (current) =>
-        current ? { ...current, data: { ...current.data, ...variables.data }, revision: result.revision, updatedAt: result.updatedAt } : current,
+        applyWriteResult(current, result, variables.data),
       );
     },
   });
@@ -122,7 +289,12 @@ export function useSaveHostOnboarding() {
 
 export function useSubmitHostOnboarding() {
   const queryClient = useQueryClient();
-  return useMutation<{ ok: true; alreadySubmitted: boolean; message: string }, Error, { round: number; data: HostOnboardingData; revision: number }>({
+  return useMutation<{ ok: true; alreadySubmitted: boolean; message: string }, Error, {
+    round: number;
+    data?: HostOnboardingData;
+    revision: number;
+    canonicalRevision: string;
+  }>({
     mutationFn: (payload) =>
       customFetch("/api/admin/host/onboarding/submit", {
         method: "POST",
@@ -130,7 +302,12 @@ export function useSubmitHostOnboarding() {
       }),
     onSuccess: (_result, variables) => {
       queryClient.setQueryData<HostOnboardingResponse>(getHostOnboardingQueryKey(), (current) =>
-        current ? { ...current, data: variables.data, status: "submitted", submittedAt: new Date().toISOString() } : current,
+        current ? {
+          ...current,
+          data: variables.data ?? current.data,
+          status: "submitted",
+          submittedAt: new Date().toISOString(),
+        } : current,
       );
     },
   });

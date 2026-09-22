@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin UX in skupni osnutek — razvojno preverjanje</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;color:#193126;background:#fff;max-width:940px;margin:40px auto;padding:0 24px}h1{line-height:1.2}h2{margin-top:32px}section{background:#f4f6f2;border:1px solid #e8ebe6;border-radius:16px;padding:20px;margin:20px 0}li{margin:8px 0}.notice{border-left:4px solid #157347;padding-left:16px}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #e8ebe6;padding:10px;vertical-align:top}
+</style>
+</head>
+<body>
+<h1>Admin UX in skupni osnutek</h1>
+<p>Razvojno preverjanje, 22. september 2026. Brez objave.</p>
+<section>
+<h2>Izvedeno</h2>
+<ul>
+<li>Kompaktna struktura vsebine z resničnimi ikonami SVG, slovenskimi oznakami, praznimi vrsticami kategorij in črtkanimi vrsticami za dodajanje.</li>
+<li>Dialog »Dodaj kraj v Okolico«: iskanje, izbor zadetka, kategorija, cestna razdalja in čas ter povezava na obstoječi ročni vnos.</li>
+<li>Gostiteljski obrazec bere in spreminja isti osnutek nastanitve kot admin. Navadne spremembe niso več predlogi, ki bi tiho ohranili stare operaterjeve vrednosti.</li>
+<li>Imena novih krajev ostajajo predlogi za Creator. Sočasne spremembe povzročijo opozorilo, ne tihega prepisovanja.</li>
+<li>Stabilne identitete vnosov in medijev; izpustitev zbirke ne pomeni brisanja. Fotografije in videi se predizpolnijo tudi iz ponudbe, ne samo iz nastanitvenega razdelka.</li>
+<li>Okolica vključuje tudi storitvene kategorije; dogodki ostajajo v svojih kanoničnih vnosih.</li>
+</ul>
+</section>
+<h2>Potrjeni rezultati</h2>
+<table>
+<thead><tr><th>Preverjanje</th><th>Rezultat</th></tr></thead>
+<tbody>
+<tr><td>Videz strukture</td><td>Kartice #F4F6F2, obrobe #E8EBE6, polmer 16 px; notranje bele vrstice s polmerom 10 px; Archivo; ikone sekcij 34 px; naslovi 18 px/800; prazna vrstica 46 px. Brez vodoravnega prelivanja pri širini 390 px.</td></tr>
+<tr><td>Resnično iskanje in dodajanje</td><td>Iskanje Piran je vrnilo naslove in dejanske cestne razdalje/čase, med njimi 120,6 km in 88 min. Dodajanje v začasno nastanitev je uspelo.</td></tr>
+<tr><td>Podvojitev</td><td>Ponovljeno iskanje je prikazalo »že v vodniku« in onemogočilo podvojeno dodajanje.</td></tr>
+<tr><td>Predizpolnitev</td><td>Operaterjevo besedilo, fotografija in video so bili prikazani v gostiteljskem obrazcu.</td></tr>
+<tr><td>Povratno urejanje</td><td>Navadno polje in obe preverjeni bogati besedili so se ohranili. Končni popravek prve vrstice je poslal samo canonicalItems; po shranitvi sta revizija in vsebina ostali stabilni ter se pravilno naložili po ponovnem odprtju.</td></tr>
+<tr><td>Hiša in ponudba</td><td>Obstoječa navadna urejevalnika za dodajanje sta bila odprta in preklicana brez sprememb.</td></tr>
+<tr><td>Varnost podatkov</td><td>Ciljni testi so potrdili ohranitev neurejenih podatkov, izrecno brisanje, zavrnitev zastarelega zapisa, dogodke, medije ponudbe in storitvene kategorije.</td></tr>
+<tr><td>Objavljeni posnetek</td><td>Kontrolni odtis je pred čiščenjem ostal nespremenjen. Obrazec in dodajanje kraja nista objavila osnutka.</td></tr>
+<tr><td>Čiščenje</td><td>Začasna nastanitev in gostiteljski račun sta odstranjena. Testni posrednik je ustavljen.</td></tr>
+</tbody>
+</table>
+<h2>Meje preverjanja</h2>
+<div class="notice">
+<p>Prijava in prenos zahtev za brskalniški preizkus sta bila simulirana ter omejena na začasno razvojno nastanitev. Podatki, shranjevanje, iskanje in dodajanje so uporabljali resnične storitve in razvojno zbirko. To ni preizkus resnične prijave ali produkcije.</p>
+<p>Zadnja popravka zelenega 2-pikselnega obroba in samodejne kategorije sta implementirana, vendar po popravku nista ponovno izmerjena v brskalniku. Odpravljeno je bilo tudi izpuščanje stabilnega ključa kategorije iz odgovora API; nova serializacija je preverjena.</p>
+<p>Ročni vnos se je odprl, zunanji zemljevid pa je v testnem okolju vrnil 403. Predogled za gosta v testnem adminu je prikazoval 404; zaradi simulirane prijave ni bil potrjen kot dejanska napaka aplikacije. Shranjevanje operaterjevega urejevalnika ni bilo preizkušeno skozi pravo prijavo, ker nepovezane zahteve za prevode v simulirani seji vračajo 401.</p>
+<p>Posnetki preverjenih pogledov so v spremljajočem pogovoru. Objave ni bilo.</p>
+</div>
+</body>
+</html>

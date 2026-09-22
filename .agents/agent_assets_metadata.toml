@@ -848,3 +848,17 @@ mtime_ms = 1790092754840
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/86a1bad7-affd-44cb-a381-d3ecfa661c49/ddc51c80-574b-4527-91c4-c07d9de06df2"
 storage_version_token = "1790092875475777"
 content_type = "text/html"
+
+[[outputs]]
+id = "wjVMFxIpvefd7_zsWX-R6"
+uri = "file://reports/admin-ux-final-verification.html"
+type = "html"
+title = "Admin UX — poročilo preverjanja"
+description = "Izvedene spremembe, potrjeni preizkusi in izrecno navedene omejitve. Brez objave."
+logical_id = "fc5ad1b9-800b-408d-b72c-1fd3d5df52a2"
+content_hash = "sha256:4a3bcac590b1d227ae8a48a0b8e6dbc866c8cb3b1def7df4332a809c4ae20c9a"
+size = 4459
+mtime_ms = 1790097671195
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fc5ad1b9-800b-408d-b72c-1fd3d5df52a2/4e7208c9-5960-46f1-a594-a1c33f2ae100"
+storage_version_token = "1790097678211948"
+content_type = "text/html"
