@@ -3,7 +3,7 @@ import test, { mock } from "node:test";
 import { randomUUID } from "node:crypto";
 import express from "express";
 import type { AddressInfo } from "node:net";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   db, pool, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
   publishedSnapshotsTable, translationsTable, runWithDatabase, type Db,
@@ -114,6 +114,74 @@ test("one snapshot isolates draft edits, retains deleted photos, diffs accuratel
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     if (fixtureItemId) await db.delete(translationsTable).where(eq(translationsTable.recordId, fixtureItemId));
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, id));
+  }
+});
+
+test("a disposable destination-title draft is dirty and diffable without changing its snapshot", async () => {
+  await ensurePublishedSnapshotSchema();
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `snapshot-destination-title-${randomUUID()}`,
+    name: "Destination title snapshot fixture",
+    isPublished: true,
+    hasUnpublishedChanges: false,
+    languages: ["sl", "en", "de", "it"],
+  }).returning();
+  const id = tenant!.id;
+  let sectionId: string | undefined;
+
+  try {
+    const [section] = await db.insert(sectionsTable).values({
+      tenantId: id,
+      key: "stay",
+      title: "Vaša nastanitev",
+      position: 0,
+    }).returning();
+    sectionId = section!.id;
+    await db.insert(translationsTable).values([
+      { model: "section", recordId: section!.id, field: "title", lang: "en", value: "Your stay" },
+      { model: "section", recordId: section!.id, field: "title", lang: "de", value: "Ihr Aufenthalt" },
+      { model: "section", recordId: section!.id, field: "title", lang: "it", value: "Il vostro soggiorno" },
+    ]);
+    await ensureTenantPublication(id);
+    const publishedBefore = structuredClone(await readPublishedContent(id));
+
+    await db.transaction(async (tx) => {
+      await tx.update(sectionsTable)
+        .set({ title: "Vaša destinacija" })
+        .where(eq(sectionsTable.id, section!.id));
+      for (const [lang, value] of [
+        ["en", "Your destination"],
+        ["de", "Ihre Destination"],
+        ["it", "La vostra destinazione"],
+      ] as const) {
+        await tx.update(translationsTable)
+          .set({ value, stale: false, updatedAt: new Date() })
+          .where(and(
+            eq(translationsTable.recordId, section!.id),
+            eq(translationsTable.lang, lang),
+          ));
+      }
+      await tx.update(tenantsTable)
+        .set({ hasUnpublishedChanges: true })
+        .where(eq(tenantsTable.id, id));
+    });
+
+    const [dirtyTenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, id));
+    assert.equal(dirtyTenant!.hasUnpublishedChanges, true);
+    const preview = await previewPublication(id);
+    assert.equal(preview.total, 4);
+    assert.ok(preview.changed.includes("Naslov: Vaša destinacija"));
+    for (const lang of ["en", "de", "it"]) {
+      assert.ok(preview.changed.includes(`Naslov: ${
+        lang === "en" ? "Your destination" : lang === "de" ? "Ihre Destination" : "La vostra destinazione"
+      } — prevod (${lang})`));
+    }
+    assert.deepEqual(await readPublishedContent(id), publishedBefore);
+  } finally {
+    if (sectionId) {
+      await db.delete(translationsTable).where(eq(translationsTable.recordId, sectionId));
+    }
     await db.delete(tenantsTable).where(eq(tenantsTable.id, id));
   }
 });

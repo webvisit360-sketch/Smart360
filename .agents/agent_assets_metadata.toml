@@ -862,3 +862,17 @@ mtime_ms = 1790097671195
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fc5ad1b9-800b-408d-b72c-1fd3d5df52a2/4e7208c9-5960-46f1-a594-a1c33f2ae100"
 storage_version_token = "1790097678211948"
 content_type = "text/html"
+
+[[outputs]]
+id = "L0d59qAR-ZVxOW9mQeCxN"
+uri = "file://artifacts/smart360/reports/empty-category-fixture-transition.png"
+type = "image"
+title = "Enotne prazne kategorije — razvojni preizkus"
+description = "Izoliran preizkus dejanskega skupnega elementa; ni posnetek prijavljenega admina."
+logical_id = "241160e8-41a3-4f80-b3f1-d4126cd71a8e"
+content_hash = "sha256:4ef5bf2a5a1c34b3d992b8a14bb81ae1612810ba6e6254ab0a4d48d283d40484"
+size = 50622
+mtime_ms = 1790102063922
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/241160e8-41a3-4f80-b3f1-d4126cd71a8e/fe6d3cca-8129-40ae-add8-4ea2913753b0"
+storage_version_token = "1790102159284011"
+content_type = "image/png"

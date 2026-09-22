@@ -84,7 +84,7 @@ const SERVICE_GROUPS: GroupSeed[] = [
 export const MELI_PU_SKELETON: SectionSeed[] = [
   {
     key: "stay",
-    names: names("Vaša nastanitev", "Your stay", "Ihr Aufenthalt", "Il vostro soggiorno"),
+    names: names("Vaša destinacija", "Your destination", "Ihre Destination", "La vostra destinazione"),
     icon: "home",
     groups: STAY_GROUPS,
     categories: [

@@ -14,6 +14,7 @@ import {
   MELI_PU_SKELETON,
   seedTenantContent,
   TENANT_TYPES,
+  tenantSeedPlan,
 } from "../lib/tenantSeeds";
 
 const EXPECTED_SECTION_KEYS = ["stay", "offer", "explore", "services"];
@@ -24,6 +25,18 @@ const EXPECTED_CATEGORY_KEYS = [
   "nature", "trips", "events",
   "shops", "bakery", "gas", "atm", "pharm", "hosp",
 ];
+
+test("the first section has one neutral four-language title for every tenant type", () => {
+  for (const type of TENANT_TYPES) {
+    assert.deepEqual(tenantSeedPlan(type)[0], MELI_PU_SKELETON[0]);
+    assert.deepEqual(tenantSeedPlan(type)[0]!.names, {
+      sl: "Vaša destinacija",
+      en: "Your destination",
+      de: "Ihre Destination",
+      it: "La vostra destinazione",
+    });
+  }
+});
 
 test("nature_trails seed keeps its stable identity and renamed labels", () => {
   const explore = MELI_PU_SKELETON.find((section) => section.key === "explore");

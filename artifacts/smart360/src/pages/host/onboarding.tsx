@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut } from "lucide-react";
+import { Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut, MapPin, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetHostOnboarding,
@@ -20,6 +20,7 @@ import {
 } from "@/hooks/use-host-onboarding";
 import { useHostSession } from "@/hooks/use-host-session";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
 
 const generateId = () => crypto.randomUUID();
 type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -76,6 +77,7 @@ export default function HostOnboarding() {
     name: "",
   });
   const [transientCustomEntries, setTransientCustomEntries] = useState<Record<string, { id: string; name: string }>>({});
+  const [expandedCustomCategoryIds, setExpandedCustomCategoryIds] = useState<Set<string>>(new Set());
   const [loggingOut, setLoggingOut] = useState(false);
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
@@ -429,7 +431,7 @@ export default function HostOnboarding() {
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">1</div>
-            <h2 className="text-xl font-bold">Osnovni podatki</h2>
+            <h2 className="text-xl font-bold">Vaša destinacija</h2>
           </div>
           
           <div className="space-y-5">
@@ -777,16 +779,56 @@ export default function HostOnboarding() {
             </div>
           </div>
           
-          <div className="space-y-8">
+          <div className="space-y-3">
             {onboardingData?.categories.map((cat) => {
               const catRecs = (formData.recommendations || []).filter(r => r.categoryId === cat.id);
+              const transientRec = transientRecs[cat.id];
+              const openNewRecommendation = () => setTransientRecs(prev => ({
+                ...prev,
+                [cat.id]: prev[cat.id] || { id: generateId(), name: "" },
+              }));
+              const commitNewRecommendation = () => {
+                if (!transientRec?.name.trim()) return;
+                updateData(d => ({
+                  ...d,
+                  recommendations: [...(d.recommendations || []), {
+                    id: transientRec.id,
+                    categoryId: cat.id,
+                    name: transientRec.name,
+                  }],
+                }));
+                setTransientRecs(prev => {
+                  const next = { ...prev };
+                  delete next[cat.id];
+                  return next;
+                });
+              };
               
+              if (catRecs.length === 0 && !transientRec) {
+                return (
+                  <EmptyCategoryRow
+                    key={cat.id}
+                    id={`onboarding-${cat.id}`}
+                    icon={<MapPin className="h-3.5 w-3.5" />}
+                    name={cat.name}
+                    addLabel="Dodaj kraj"
+                    onAdd={openNewRecommendation}
+                  />
+                );
+              }
+
               return (
-                <div key={cat.id} className="border-t border-[#E8EBE6]/60 pt-6 first:border-0 first:pt-0">
-                  <h3 className="font-bold text-[17px] mb-3 text-[#121A14]">{cat.name}</h3>
-                  <div className="space-y-3">
+                <div key={cat.id} data-testid={`category-onboarding-${cat.id}`} className="pt-1">
+                  <h3 className="mb-3 flex items-center gap-2 px-1 text-[14px] font-bold text-[#66716A]">
+                    <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F4F6F2] text-[#157347]">
+                      <MapPin className="h-3.5 w-3.5" />
+                    </span>
+                    {cat.name}
+                    <span className="font-normal text-[#9AA39D]">· {catRecs.length} krajev</span>
+                  </h3>
+                  <div className="space-y-1.5">
                     {catRecs.map((rec) => (
-                      <div key={rec.id} className="flex min-w-0 gap-2">
+                      <div key={rec.id} className="flex min-h-[46px] min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
                         <input 
                           aria-label={`${cat.name}, priporočilo`}
                           type="text"
@@ -798,47 +840,44 @@ export default function HostOnboarding() {
                             if (idx >= 0) newRecs[idx] = { ...rec, name: e.target.value };
                             return { ...d, recommendations: newRecs };
                           })}
-                          className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                          className="min-w-0 flex-1 rounded-lg bg-white px-3 text-[16px] outline-none focus:ring-1 focus:ring-[#157347]"
                         />
                         <button 
                           onClick={() => updateData(d => ({
                             ...d, 
                             recommendations: d.recommendations?.filter(r => r.id !== rec.id)
                           }))}
-                          className="w-12 flex items-center justify-center bg-white border border-[#E8EBE6] rounded-xl text-red-500 hover:bg-red-50"
+                          aria-label={`Odstrani priporočilo ${rec.name}`}
+                          className="flex w-10 items-center justify-center rounded-lg text-red-500 hover:bg-red-50"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     ))}
-                    <div className="flex min-w-0 gap-2">
+                    {transientRec && <div className="flex min-h-[46px] min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
                       <input 
                         aria-label={`${cat.name}, novo priporočilo`}
                         type="text"
                         placeholder="Ime lokacije..."
-                         value={transientRecs[cat.id]?.name || ""}
+                         value={transientRec.name}
                          onChange={(e) => setTransientRecs(prev => ({
                            ...prev,
                            [cat.id]: { id: prev[cat.id]?.id || generateId(), name: e.target.value },
                          }))}
-                        className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-xl px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                         className="min-w-0 flex-1 rounded-lg bg-white px-3 text-[16px] outline-none focus:ring-1 focus:ring-[#157347]"
                       />
-                      <div className="w-12"></div>
-                    </div>
+                      <div className="w-10"></div>
+                    </div>}
+                    <button
+                      type="button"
+                      aria-label={`Dodaj kraj v kategorijo ${cat.name}`}
+                      onClick={transientRec ? commitNewRecommendation : openNewRecommendation}
+                      className="flex h-[46px] w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#C9D2CB] py-2 text-[14px] font-bold text-[#157347] transition-colors hover:bg-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Dodaj kraj
+                    </button>
                   </div>
-                  <button 
-                    aria-label={`Dodaj priporočilo v kategorijo ${cat.name}`}
-                    onClick={() => {
-                       if (transientRecs[cat.id]?.name.trim()) {
-                         const row = transientRecs[cat.id];
-                         updateData(d => ({ ...d, recommendations: [...(d.recommendations || []), { id: row.id, categoryId: cat.id, name: row.name }] }));
-                         setTransientRecs(prev => ({ ...prev, [cat.id]: { id: generateId(), name: "" } }));
-                      }
-                    }}
-                    className="mt-3 flex items-center gap-2 text-[#157347] font-bold py-1.5 px-1 hover:opacity-80"
-                  >
-                    <span aria-hidden="true">+ Dodaj …</span>
-                  </button>
                 </div>
               );
             })}
@@ -951,14 +990,50 @@ export default function HostOnboarding() {
                 </p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {(formData.customCategories || []).map((category, categoryIndex) => {
-                  const transientEntry = transientCustomEntries[category.id] || {
-                    id: "",
-                    name: "",
+                  const transientEntry = transientCustomEntries[category.id];
+                  const openCustomEntry = () => {
+                    setExpandedCustomCategoryIds(current => new Set(current).add(category.id));
+                    setTransientCustomEntries(current => ({
+                      ...current,
+                      [category.id]: current[category.id] || { id: generateId(), name: "" },
+                    }));
                   };
+                  const commitCustomEntry = () => {
+                    if (!transientEntry?.name.trim()) return;
+                    updateData((data) => ({
+                      ...data,
+                      customCategories: (data.customCategories || []).map((item) =>
+                        item.id === category.id
+                          ? { ...item, entries: [...item.entries, { id: transientEntry.id, name: transientEntry.name }] }
+                          : item,
+                      ),
+                    }));
+                    setTransientCustomEntries((current) => {
+                      const next = { ...current };
+                      delete next[category.id];
+                      return next;
+                    });
+                  };
+
+                  if (category.entries.length === 0 && !expandedCustomCategoryIds.has(category.id) && !transientEntry) {
+                    return (
+                      <EmptyCategoryRow
+                        key={category.id}
+                        id={`onboarding-custom-${category.id}`}
+                        icon={<MapPin className="h-3.5 w-3.5" />}
+                        name={category.name}
+                        extraLabel={<span className="shrink-0 text-[10px] font-medium text-[#9AA39D]">gostiteljeva</span>}
+                        addLabel="Dodaj kraj"
+                        onEdit={() => setExpandedCustomCategoryIds(current => new Set(current).add(category.id))}
+                        onAdd={openCustomEntry}
+                      />
+                    );
+                  }
+
                   return (
-                    <div key={category.id} className="rounded-xl border border-[#D8DED9] bg-white p-4">
+                    <div key={category.id} className="rounded-[10px] border border-[#D8DED9] bg-white p-4">
                       <div className="flex min-w-0 gap-2">
                         <input
                           type="text"
@@ -993,7 +1068,7 @@ export default function HostOnboarding() {
                         </button>
                       </div>
 
-                      <div className="mt-4 space-y-3">
+                      <div className="mt-4 space-y-1.5">
                         {(category.entries || []).map((entry, entryIndex) => (
                           <div key={entry.id} className="flex min-w-0 gap-2">
                             <input
@@ -1036,7 +1111,7 @@ export default function HostOnboarding() {
                           </div>
                         ))}
 
-                        <div className="flex min-w-0 gap-2">
+                        {transientEntry && <div className="flex min-w-0 gap-2">
                           <input
                             type="text"
                             aria-label={`Novo priporočilo za kategorijo ${category.name}`}
@@ -1052,31 +1127,17 @@ export default function HostOnboarding() {
                             className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                           />
                           <div className="w-12 shrink-0" />
-                        </div>
+                        </div>}
+                        <button
+                          type="button"
+                          aria-label={`Dodaj kraj v gostiteljevo kategorijo ${category.name}`}
+                          onClick={transientEntry ? commitCustomEntry : openCustomEntry}
+                          className="flex h-[46px] w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#C9D2CB] py-2 text-[14px] font-bold text-[#157347] transition-colors hover:bg-[#F4F6F2]"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Dodaj kraj
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        aria-label={`Dodaj priporočilo v gostiteljevo kategorijo ${category.name}`}
-                        onClick={() => {
-                          if (!transientEntry.name.trim()) return;
-                          const entry = transientCustomEntries[category.id];
-                          updateData((data) => ({
-                            ...data,
-                            customCategories: (data.customCategories || []).map((item) =>
-                              item.id === category.id
-                                ? { ...item, entries: [...item.entries, { id: entry.id, name: entry.name }] }
-                                : item,
-                            ),
-                          }));
-                          setTransientCustomEntries((current) => ({
-                            ...current,
-                            [category.id]: { id: generateId(), name: "" },
-                          }));
-                        }}
-                        className="mt-3 py-2 px-1 font-bold text-[#157347] hover:opacity-80"
-                      >
-                        <span aria-hidden="true">+ Dodaj …</span>
-                      </button>
                     </div>
                   );
                 })}

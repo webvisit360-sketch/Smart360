@@ -71,6 +71,7 @@ import {
 } from "@/lib/item-translation-drafts";
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
+import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
 
 // ---------- Types ----------
 
@@ -1923,6 +1924,12 @@ function ItemRow({ item, tenantId, categoryId, sectionKey, sectionCategories, al
 // Category block
 // ==========================================
 
+export function categoryAddLabel(sectionKey?: string): "Dodaj vnos" | "Dodaj ponudbo" | "Dodaj kraj" {
+  if (sectionKey === "explore" || sectionKey === "services") return "Dodaj kraj";
+  if (sectionKey === "offer") return "Dodaj ponudbo";
+  return "Dodaj vnos";
+}
+
 function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isExplore, allCategories }: { category: Category; tenantId: string; sectionKey?: string; sectionCategories?: Category[]; isExplore?: boolean; allCategories?: Category[] }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -1930,40 +1937,26 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
   const isCustom = isExplore && String((category as any).key).startsWith("host-custom");
   const items = category.items || [];
   const isEmpty = items.length === 0;
+  const addLabel = categoryAddLabel(sectionKey);
 
-  if (isExplore && isEmpty) {
+  if (isEmpty) {
     return (
       <>
-        <div className={`flex items-center justify-between bg-white border border-[#E8EBE6] rounded-[10px] p-2 pr-3 min-h-[46px] ${!category.isVisible ? "opacity-70" : ""}`}>
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-6 h-6 flex items-center justify-center bg-[#F4F6F2] rounded text-[#157347] shrink-0">
-              <IconRenderer icon={category.icon} className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-[15.5px] font-semibold truncate text-[#1a1a1a]">
-              {category.label}
-              {!category.isVisible && (
-                <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#F4F6F2] rounded text-[10px] text-[#66716A] font-medium align-middle">
-                  <EyeOff className="w-3 h-3" /> Skrito
-                </span>
-              )}
-            </span>
-            {isCustom && <span className="text-[10px] text-[#9AA39D] font-medium shrink-0">gostiteljeva</span>}
-            <span className="text-xs text-[#9AA39D] shrink-0">· prazno</span>
-          </div>
-          <div className="flex items-center gap-3 shrink-0 ml-2">
-            <button type="button" onClick={() => setEditOpen(true)} className="text-[#9AA39D] hover:text-[#157347] hidden sm:block">
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button type="button" onClick={() => setAddOpen(true)} className="text-[#157347] font-bold text-sm flex items-center gap-1 hover:underline whitespace-nowrap">
-              <Plus className="w-4 h-4" /> Dodaj
-            </button>
-          </div>
-        </div>
+        <EmptyCategoryRow
+          id={category.id}
+          icon={<IconRenderer icon={category.icon} className="h-3.5 w-3.5" />}
+          name={category.label}
+          isVisible={category.isVisible}
+          extraLabel={isCustom ? <span className="shrink-0 text-[10px] font-medium text-[#9AA39D]">gostiteljeva</span> : undefined}
+          addLabel={addLabel}
+          onEdit={() => setEditOpen(true)}
+          onAdd={() => setAddOpen(true)}
+        />
 
         <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
             <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
         </EditDialog>
-        <EditDialog open={addOpen} onOpenChange={setAddOpen} title={isExplore ? "Dodaj kraj v Okolico" : "Nov vnos"}>
+        <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
             <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
         </EditDialog>
       </>
@@ -2002,7 +1995,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
             onClick={() => setAddOpen(true)}
           >
             <Plus className="w-4 h-4" />
-            Dodaj {isExplore ? "kraj" : sectionKey === "offer" ? "ponudbo" : "vnos"}
+            {addLabel}
           </button>
         </div>
       </div>
@@ -2010,7 +2003,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
       <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
           <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
       </EditDialog>
-      <EditDialog open={addOpen} onOpenChange={setAddOpen} title={isExplore ? "Dodaj kraj v Okolico" : "Nov vnos"}>
+      <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
           <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
       </EditDialog>
     </>

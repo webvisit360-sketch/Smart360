@@ -1,0 +1,45 @@
+Two fixes in the admin "Struktura vsebine" view. Do NOT publish.
+
+FIX 1 — Unify the empty-category design across ALL three sections.
+Current state: in "Odkrijte okolico" an empty category renders as ONE compact white
+row (icon, name, muted "· prazno", pencil and "+ Dodaj" on the right). But in the
+first two sections ("Vaš kamp" / "Naša ponudba") an empty category still renders
+the OLD way: a full category header line plus a tall dashed "+ Dodaj vnos" /
+"+ Dodaj ponudbo" row. This is inconsistent.
+
+Rule for EVERY section (house, offers, surroundings), one rule, no exceptions:
+- Category with 0 items → render EXACTLY the same compact empty-row component that
+  "Odkrijte okolico" already uses: single white row, radius 10, 1px #E8EBE6 border,
+  category icon, category name, muted "· prazno", and on the right the pencil (edit
+  category) plus inline "+ Dodaj". REUSE the existing component — do not rebuild or
+  restyle it.
+- Category with ≥1 item → category header row, then item rows, then one dashed
+  "+ Dodaj …" row at the end (as Okolica does today).
+- Keep the section-specific verb on all add affordances: "+ Dodaj vnos" (house),
+  "+ Dodaj ponudbo" (offers), "+ Dodaj kraj" (surroundings).
+- Section-header counts ("X elementov", "X kategorij · Y krajev") must stay correct.
+- Apply the same unification in the host onboarding form wherever it renders these
+  category lists, since form and admin now share the same draft and should look alike.
+
+FIX 2 — Rename the first section to "Vaša destinacija" for ALL tenants.
+The first section title is currently tenant-specific (e.g. "Vaš kamp" at Glamping
+Gril). The owner wants ONE neutral title that is identical for every host.
+- Update the skeleton so every NEW tenant gets "Vaša destinacija".
+- Update every EXISTING tenant's DRAFT section title to "Vaša destinacija"
+  (Glamping Gril, Camping MENINA, Meli Pu — whatever their current first-section
+  title is). Draft only: published snapshots must NOT be touched; guests keep
+  seeing the current title until the operator publishes via the confirmation
+  dialog, and this change must correctly show up there and turn the publish
+  button orange.
+- Use EXACTLY these translations, do not invent others:
+  SL "Vaša destinacija", EN "Your destination", DE "Ihre Destination",
+  IT "La vostra destinazione".
+- Apply wherever this section title is displayed: admin structure view, host
+  onboarding form, and the guest guide (after publish).
+
+Verify in dev: all three sections show identical empty-category rows; a category
+that gains its first item switches to header+items+dashed-add; first section shows
+"Vaša destinacija" in admin and form; draft-vs-snapshot diff lists the rename.
+
+Report what was changed and verified, include a section "POVZETEK ZA LASTNIKA"
+in Slovenian, and STOP. No publication.
