@@ -7,12 +7,14 @@ import {
 } from "@workspace/db";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { logger } from "./logger";
+import { normalizedCategoryName } from "./categoryIdentity";
 
 /**
  * The owner's shared skeleton is the current Apartmaji Meli Pu structure.
  *
  * New tenants receive this structure exactly. Existing approved tenants are
- * synchronized additively: missing keys are appended, while existing sections,
+ * synchronized additively: missing identities (key first, then normalized name)
+ * are appended, while existing sections,
  * categories, translations, positions, visibility and content are never
  * updated, moved or deleted.
  *
@@ -258,6 +260,7 @@ export async function ensureTenantSkeleton(
         .select({
           id: categoriesTable.id,
           key: categoriesTable.key,
+          label: categoriesTable.label,
           position: categoriesTable.position,
         })
         .from(categoriesTable)
@@ -268,6 +271,11 @@ export async function ensureTenantSkeleton(
 
       for (const categorySeed of sectionSeed.categories) {
         if (existingCategories.some((row) => row.key === categorySeed.key)) continue;
+        // Startup is additive only: recognize a legacy/custom identity without
+        // renaming, rekeying or restoring it. Operator alignment owns merges.
+        if (existingCategories.some((row) =>
+          normalizedCategoryName(row.label) === normalizedCategoryName(categorySeed.names.sl)
+        )) continue;
         const [inserted] = await tx
           .insert(categoriesTable)
           .values({
@@ -279,7 +287,7 @@ export async function ensureTenantSkeleton(
             exploreGroup: categorySeed.group,
             position: nextCategoryPosition,
           })
-          .returning({ id: categoriesTable.id, key: categoriesTable.key, position: categoriesTable.position });
+          .returning({ id: categoriesTable.id, key: categoriesTable.key, label: categoriesTable.label, position: categoriesTable.position });
         existingCategories.push(inserted!);
         nextCategoryPosition += 1;
         result.addedCategories += 1;

@@ -16,7 +16,7 @@ import {
   previewPublication,
   readPublishedContent,
 } from "../lib/publishedSnapshots";
-import { seedTenantContent } from "../lib/tenantSeeds";
+import { ensureTenantSkeleton, seedTenantContent } from "../lib/tenantSeeds";
 
 test("real development DB: duplicate Hišni red merges losslessly, stays isolated, and is idempotent", async (context) => {
   if (process.env["NODE_ENV"] === "production") throw new Error("Alignment fixture is forbidden in production");
@@ -59,10 +59,30 @@ test("real development DB: duplicate Hišni red merges losslessly, stays isolate
       eq(categoriesTable.sectionId, stay!.id),
       eq(categoriesTable.key, "loc"),
     ));
+    await db.update(categoriesTable).set({ key: "rules", label: "  HIŠNI\u00a0 RED " })
+      .where(eq(categoriesTable.id, keeper!.id));
+    const legacyHouseBefore = await db.select().from(categoriesTable)
+      .where(eq(categoriesTable.id, keeper!.id));
+    const legacyTranslationsBefore = await db.select().from(translationsTable)
+      .where(eq(translationsTable.recordId, keeper!.id));
+    assert.equal((await ensureTenantSkeleton(tenantId, "apartmaji")).addedCategories, 0,
+      "legacy rules name must prevent startup from adding house");
+    assert.deepEqual(await db.select().from(categoriesTable)
+      .where(eq(categoriesTable.id, keeper!.id)), legacyHouseBefore);
+    assert.deepEqual(await db.select().from(translationsTable)
+      .where(eq(translationsTable.recordId, keeper!.id)), legacyTranslationsBefore);
+    await db.update(categoriesTable).set({ key: "house", label: keeper!.label })
+      .where(eq(categoriesTable.id, keeper!.id));
     await db.update(categoriesTable).set({
       key: "legacy-location",
       label: "  LOKACIJA ",
     }).where(eq(categoriesTable.id, fallbackCategory!.id));
+    const topUp = await ensureTenantSkeleton(tenantId, "apartmaji");
+    assert.equal(topUp.addedCategories, 0, "startup recognizes normalized legacy name without inserting");
+    const [legacyAfterTopUp] = await db.select().from(categoriesTable)
+      .where(eq(categoriesTable.id, fallbackCategory!.id));
+    assert.equal(legacyAfterTopUp!.key, "legacy-location", "startup must not rekey existing content");
+    assert.equal(legacyAfterTopUp!.label, "  LOKACIJA ");
     const [renamedPool] = await db.select().from(categoriesTable).where(and(
       eq(categoriesTable.sectionId, stay!.id),
       eq(categoriesTable.key, "pool"),
@@ -265,6 +285,14 @@ test("real development DB: duplicate Hišni red merges losslessly, stays isolate
     assert.ok(replay);
     assert.equal(replay.changed, false);
     assert.deepEqual(replay.categoryMerges, []);
+    const categoriesBeforeRestart = await db.select().from(categoriesTable)
+      .where(eq(categoriesTable.sectionId, stay!.id));
+    const afterMergeTopUp = await ensureTenantSkeleton(tenantId, "apartmaji");
+    assert.equal(afterMergeTopUp.addedCategories, 0, "startup after merge must not recreate duplicates");
+    assert.equal((await ensureTenantSkeleton(tenantId, "apartmaji")).addedCategories, 0);
+    assert.deepEqual(await db.select().from(categoriesTable)
+      .where(eq(categoriesTable.sectionId, stay!.id)), categoriesBeforeRestart);
+    assert.deepEqual(await readPublishedContent(tenantId), snapshotBefore);
   } finally {
     await db.delete(tenantsTable).where(inArray(tenantsTable.id, [tenantId, otherTenantId]));
   }

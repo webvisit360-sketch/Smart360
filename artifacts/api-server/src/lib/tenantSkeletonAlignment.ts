@@ -74,9 +74,9 @@ export type TenantSkeletonAlignmentOptions = {
   fixtureSightsSplitRules?: SightsSplitRules;
 };
 
+import { normalizedCategoryName } from "./categoryIdentity";
+
 const countChanged = (result: { rowCount?: number | null }): number => result.rowCount ?? 0;
-const normalizedCategoryName = (value: string): string =>
-  value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("sl");
 
 /**
  * Idempotent operator action. It is deliberately not called from startup.
