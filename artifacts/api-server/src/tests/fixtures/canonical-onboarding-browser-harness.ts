@@ -20,7 +20,8 @@ import {
   tenantsTable,
 } from "@workspace/db";
 import { GetTenantResponse } from "@workspace/api-zod";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+import { actorStorage, type Actor } from "../../lib/actorContext";
 import { createAdminPlace, searchAdminPlaces } from "../../lib/adminPlaceCreation";
 import { buildTenantContent } from "../../lib/contentTree";
 import { guestQrSvg, guestUrl } from "../../lib/guestUrl";
@@ -30,8 +31,14 @@ import {
   submitHostOnboarding,
 } from "../../lib/hostOnboarding";
 import { _setHostOnboardingDeliveryOverride } from "../../lib/hostOnboardingEmail";
+import { logger } from "../../lib/logger";
+import {
+  ObjectStorageService,
+  objectStorageClient,
+} from "../../lib/objectStorage";
 import { isWhatsappConfigured } from "../../lib/whatsapp";
 import { hostDto } from "../../routes/hostOnboarding";
+import storageRouter, { VIDEO_MAX_BYTES } from "../../routes/storage";
 import {
   canonicalFixtureDigest,
   cleanupCanonicalOnboardingFixture,
@@ -43,7 +50,7 @@ const STATE_PATH = "/tmp/canonical-onboarding-browser-fixture.json";
 const allowedModes = new Set(["setup", "serve", "inspect", "cleanup"]);
 
 type HarnessState = {
-  version: 1;
+  version: 2;
   fixture: CanonicalOnboardingFixture;
   reviewerId: string;
   publishedDigest: string;
@@ -62,7 +69,7 @@ function guardEnvironment(): void {
 async function state(): Promise<HarnessState> {
   const parsed = JSON.parse(await readFile(STATE_PATH, "utf8")) as HarnessState;
   if (
-    parsed.version !== 1 ||
+    parsed.version !== 2 ||
     !parsed.fixture?.marker?.startsWith("canonical-onboarding-fixture-") ||
     !parsed.fixture.tenantSlug?.startsWith("cofx-") ||
     !parsed.reviewerId
@@ -84,8 +91,19 @@ async function setup(): Promise<void> {
     throw new Error("An existing development reviewer row is required read-only");
   }
   const fixture = await createCanonicalOnboardingFixture();
+  const apartCategoryId = fixture.categoryIds["apart"];
+  if (!apartCategoryId) {
+    await cleanupCanonicalOnboardingFixture(fixture);
+    throw new Error("Fixture Apartmaji category is missing");
+  }
+  const existingApartItems = await db.select({ id: itemsTable.id }).from(itemsTable)
+    .where(eq(itemsTable.categoryId, apartCategoryId));
+  if (existingApartItems.length) {
+    await cleanupCanonicalOnboardingFixture(fixture);
+    throw new Error("Fixture Apartmaji category must initially be empty");
+  }
   const value: HarnessState = {
-    version: 1,
+    version: 2,
     fixture,
     reviewerId: reviewer.id,
     publishedDigest: canonicalFixtureDigest(fixture.publishedContent),
@@ -121,23 +139,86 @@ async function inspect(): Promise<void> {
     categoryId: creatorPlaceProposalsTable.categoryId,
   }).from(creatorPlaceProposalsTable)
     .where(eq(creatorPlaceProposalsTable.tenantId, value.fixture.tenantId));
+  const apartCategoryId = value.fixture.categoryIds["apart"];
+  if (!apartCategoryId) throw new Error("Fixture Apartmaji category is missing");
+  const apartItems = await db.select({
+    id: itemsTable.id,
+    title: itemsTable.title,
+  }).from(itemsTable).where(eq(itemsTable.categoryId, apartCategoryId));
+  const apartMedia = apartItems.length
+    ? await db.select({
+        id: mediaTable.id,
+        itemId: mediaTable.itemId,
+        kind: mediaTable.kind,
+        url: mediaTable.url,
+        position: mediaTable.position,
+      }).from(mediaTable).where(inArray(
+        mediaTable.itemId,
+        apartItems.map((item) => item.id),
+      ))
+    : [];
   console.log(JSON.stringify({
     command: "inspect",
     publishedSnapshotUnchanged: true,
     currentRevision: current.round.revision,
     mediaCount: current.round.draftData.media?.length ?? 0,
+    apartItems,
+    apartMedia,
     creatorQueue,
   }));
 }
 
+function parseObjectPath(path: string): { bucketName: string; objectName: string } {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const parts = normalized.split("/");
+  return {
+    bucketName: parts[1] ?? "",
+    objectName: parts.slice(2).join("/"),
+  };
+}
+
+async function cleanupFixtureStorage(value: HarnessState): Promise<number> {
+  const uploaded = await db.select({ url: mediaTable.url })
+    .from(mediaTable)
+    .innerJoin(itemsTable, eq(mediaTable.itemId, itemsTable.id))
+    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(eq(sectionsTable.tenantId, value.fixture.tenantId));
+  if (!uploaded.some((row) => row.url.startsWith("/api/storage/"))) return 0;
+
+  const storage = new ObjectStorageService();
+  let deleted = 0;
+  for (const searchPath of storage.getPublicObjectSearchPaths()) {
+    const { bucketName, objectName } = parseObjectPath(
+      `${searchPath}/media/${value.fixture.tenantSlug}/`,
+    );
+    const [files] = await objectStorageClient.bucket(bucketName).getFiles({
+      prefix: objectName,
+    });
+    await Promise.all(files.map(async (file) => {
+      await file.delete({ ignoreNotFound: true });
+      deleted += 1;
+    }));
+  }
+  return deleted;
+}
+
 async function cleanup(): Promise<void> {
   const value = await state();
+  const [snapshot] = await db.select({ content: publishedSnapshotsTable.content })
+    .from(publishedSnapshotsTable)
+    .where(eq(publishedSnapshotsTable.tenantId, value.fixture.tenantId));
+  if (!snapshot || canonicalFixtureDigest(snapshot.content) !== value.publishedDigest) {
+    throw new Error("Refusing cleanup because the published snapshot changed");
+  }
+  const storageObjectsDeleted = await cleanupFixtureStorage(value);
   await cleanupCanonicalOnboardingFixture(value.fixture);
   await rm(STATE_PATH);
   console.log(JSON.stringify({
     command: "cleanup",
     fixtureTenantsRemaining: 0,
     fixtureHostUsersRemaining: 0,
+    storageObjectsDeleted,
   }));
 }
 
@@ -146,6 +227,7 @@ function publicFixture(value: HarnessState) {
     tenantId: value.fixture.tenantId,
     tenantSlug: value.fixture.tenantSlug,
     categoryIds: value.fixture.categoryIds,
+    apartCategoryId: value.fixture.categoryIds["apart"],
     itemIds: value.fixture.itemIds,
     mediaIds: value.fixture.mediaIds,
   };
@@ -170,7 +252,6 @@ async function serve(): Promise<void> {
   const value = await state();
   const app = express();
   app.disable("x-powered-by");
-  app.use(express.json({ limit: "256kb" }));
   app.use((request, response, next) => {
     if (request.ip !== "127.0.0.1" && request.ip !== "::ffff:127.0.0.1" && request.ip !== "::1") {
       response.status(403).json({ error: "Loopback only" });
@@ -178,6 +259,63 @@ async function serve(): Promise<void> {
     }
     next();
   });
+  const port = Number(process.env.CANONICAL_FIXTURE_PORT ?? 9137);
+
+  /**
+   * Remote browser interception cannot forward multipart bytes directly to a
+   * workspace-loopback service. The interceptor base64-encodes the selected
+   * file and calls this adapter; it reconstructs multipart and sends it
+   * through the real storage router mounted below.
+   */
+  app.post(
+    "/bridge/admin/items/:id/media/upload",
+    express.json({ limit: "135mb" }),
+    async (request, response, next) => {
+      try {
+        const filename = request.body?.filename;
+        const mimeType = request.body?.mimeType;
+        const encoded = request.body?.base64;
+        if (
+          typeof filename !== "string" ||
+          !filename.trim() ||
+          typeof mimeType !== "string" ||
+          !mimeType.trim() ||
+          typeof encoded !== "string" ||
+          !encoded.length ||
+          !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)
+        ) {
+          response.status(400).json({
+            error: "filename, mimeType and valid base64 are required",
+          });
+          return;
+        }
+        const bytes = Buffer.from(encoded, "base64");
+        if (!bytes.length || bytes.length > VIDEO_MAX_BYTES) {
+          response.status(400).json({
+            error: "file exceeds the upload limit or is empty",
+          });
+          return;
+        }
+        const form = new FormData();
+        form.append("file", new Blob([bytes], { type: mimeType }), filename);
+        const itemId = encodeURIComponent(String(request.params["id"] ?? ""));
+        const upstream = await fetch(
+          `http://127.0.0.1:${port}/_real/admin/items/${itemId}/media/upload`,
+          { method: "POST", body: form },
+        );
+        response.status(upstream.status);
+        response.set(
+          "Content-Type",
+          upstream.headers.get("content-type") ?? "application/json",
+        );
+        response.send(Buffer.from(await upstream.arrayBuffer()));
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
+  app.use(express.json({ limit: "256kb" }));
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
   app.get("/host/session", (_request, response) => response.json({
     authenticated: true,
@@ -393,12 +531,47 @@ async function serve(): Promise<void> {
       next(error);
     }
   });
+  app.use(
+    "/_real",
+    async (request, response, next) => {
+      try {
+        const match = request.method === "POST"
+          ? /^\/admin\/items\/([^/]+)\/media\/upload$/.exec(request.path)
+          : null;
+        if (!match) {
+          response.status(404).json({ error: "Fixture route not found" });
+          return;
+        }
+        const itemId = decodeURIComponent(match[1] ?? "");
+        const [owned] = await db.select({ tenantId: sectionsTable.tenantId })
+          .from(itemsTable)
+          .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+          .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+          .where(eq(itemsTable.id, itemId));
+        if (!owned || owned.tenantId !== value.fixture.tenantId) {
+          response.status(404).json({ error: "Item not found in disposable fixture" });
+          return;
+        }
+        const actor: Actor = {
+          kind: "host",
+          hostUserId: value.fixture.hostUserId,
+          tenantId: value.fixture.tenantId,
+          requestIp: request.ip,
+        };
+        request.actor = actor;
+        request.log = logger.child({ fixture: value.fixture.marker });
+        actorStorage.run(actor, next);
+      } catch (error) {
+        next(error);
+      }
+    },
+    storageRouter,
+  );
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     response.status(400).json({
       error: error instanceof Error ? error.message : "Fixture service failed",
     });
   });
-  const port = Number(process.env.CANONICAL_FIXTURE_PORT ?? 9137);
   app.listen(port, "127.0.0.1", () => {
     console.log(JSON.stringify({
       command: "serve",

@@ -20,3 +20,9 @@ Empty rich-text initialization is not user content, and a server-assigned ID mus
 **Why:** Mount-time empty HTML and unreconciled temporary IDs produced repeated empty draft entries. Separately, serializing uncommitted list inputs split an offer's name and price into different records.
 
 **How to apply:** Ignore semantically empty initialization, keep editor render identity stable across creation, reconcile returned IDs while preserving edits made in flight, and keep uncommitted list inputs out of canonical save baselines. Test first-entry creation and idle stability, not only existing-entry edits.
+
+Shared-draft media writes belong to the same serialization boundary as text autosave, including the post-upload revision refresh.
+
+**Why:** Flushing text only before an upload does not prevent autosave from racing the upload itself. Deferred uploads also leave time for further typing; restoring the pre-upload local snapshot would lose those edits.
+
+**How to apply:** Serialize the entire media operation and revision refresh, reconcile against the latest local edits afterward, and avoid re-entering that queue for uploads already inside an entry-creation save. Keep submission blocked throughout upload processing and failed-file recovery.

@@ -21,11 +21,16 @@ import {
 import { useHostSession } from "@/hooks/use-host-session";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
+import {
+  ItemMediaEditor,
+  type ItemMediaEditorHandle,
+} from "@/components/admin/item-media-editor";
 
 const generateId = () => crypto.randomUUID();
 type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
 type TransientRecommendation = { id: string; name: string };
 type TransientOffer = { id: string; name: string; price: string };
+type CanonicalItem = NonNullable<HostOnboardingData["canonicalItems"]>[number];
 type NormalizedHostOnboardingData = HostOnboardingData & Required<Pick<
   HostOnboardingData,
   "contacts" | "offers" | "recommendations" | "customCategories" | "events"
@@ -99,6 +104,42 @@ export function hasMeaningfulRichText(value: string): boolean {
     .trim().length > 0;
 }
 
+export function shouldAppendStayEntry(item: Pick<CanonicalItem, "title" | "body">): boolean {
+  return item.title.trim().length > 0 || hasMeaningfulRichText(item.body);
+}
+
+function newStayItem(
+  category: { id: string; key: string },
+  id = `new-${crypto.randomUUID()}`,
+): CanonicalItem {
+  return {
+    id,
+    categoryId: category.id,
+    categoryKey: category.key,
+    sectionKey: "stay",
+    title: "",
+    body: "",
+    price: "",
+    priceUnit: "",
+    phone: "",
+    website: "",
+    mapQuery: "",
+    difficulty: "",
+    duration: "",
+    distance: "",
+    noteType: "",
+    noteText: "",
+    bullets: [],
+    tint: "",
+    frame: "",
+    isVisible: true,
+    orderEnabled: false,
+    soldOut: false,
+    producerName: "",
+    producerNote: "",
+  };
+}
+
 export function reconcileCreatedCanonicalRows(input: {
   local: HostOnboardingData;
   canonical: HostOnboardingData;
@@ -109,16 +150,19 @@ export function reconcileCreatedCanonicalRows(input: {
   const offers = [...(input.local.offers || [])];
   const baselineCanonicalIds = new Set((input.baseline.canonicalItems || []).map((row) => row.id));
   const baselineOfferIds = new Set((input.baseline.offers || []).map((row) => row.id));
+  const claimedCanonicalIds = new Set<string>();
 
   for (const submitted of input.submitted.canonicalItems || []) {
     if (!submitted.id.startsWith("new-")) continue;
     const created = input.canonical.canonicalItems?.find((row) =>
       !baselineCanonicalIds.has(row.id) &&
+      !claimedCanonicalIds.has(row.id) &&
       row.categoryId === submitted.categoryId &&
       (!submitted.title || row.title === submitted.title) &&
       row.body === submitted.body
     );
     if (!created) continue;
+    claimedCanonicalIds.add(created.id);
     const localIndex = canonicalItems.findIndex((row) => row.id === submitted.id);
     if (localIndex >= 0) {
       canonicalItems[localIndex] = {
@@ -190,6 +234,7 @@ export default function HostOnboarding() {
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [saveError, setSaveError] = useState("");
   const [uploadsBlocking, setUploadsBlocking] = useState(false);
+  const [entryUploadsBlocking, setEntryUploadsBlocking] = useState(false);
   const [submittedMessage, setSubmittedMessage] = useState("");
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(160);
@@ -207,6 +252,9 @@ export default function HostOnboarding() {
   const [expandedCustomCategoryIds, setExpandedCustomCategoryIds] = useState<Set<string>>(new Set());
   const [loggingOut, setLoggingOut] = useState(false);
   const { registerInput, focusInput } = usePendingInputFocus();
+  const entryMediaRefs = useRef(new Map<string, ItemMediaEditorHandle>());
+  const entryRenderKeys = useRef(new Map<string, string>());
+  const entryPendingCounts = useRef(new Map<string, number>());
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
     const finalData = normalizeCanonicalSaveBaseline(data);
@@ -291,7 +339,28 @@ export default function HostOnboarding() {
       canonicalRevision.current = result.canonicalRevision;
       const canonical = result.data ?? { ...lastSavedData.current, ...data };
       if (result.data) {
-        const reconciled = reconcileCreatedCanonicalRows({
+        let reconciled = reconcileCreatedCanonicalRows({
+          local: latestData.current,
+          canonical,
+          baseline: lastSavedData.current,
+          submitted: data,
+        });
+        for (const submitted of data.canonicalItems || []) {
+          if (!submitted.id.startsWith("new-")) continue;
+          const localIndex = latestData.current.canonicalItems?.findIndex((row) => row.id === submitted.id) ?? -1;
+          const created = localIndex >= 0 ? reconciled.canonicalItems?.[localIndex] : undefined;
+          const editor = entryMediaRefs.current.get(submitted.id);
+          if (created && !created.id.startsWith("new-")) {
+            entryRenderKeys.current.set(created.id, submitted.id);
+          }
+          if (created && !created.id.startsWith("new-") && editor?.hasPending()) {
+            await editor.uploadAllTo(created.id);
+          }
+        }
+        // Upload processing can take seconds. Re-run ID reconciliation against
+        // the newest local projection so typing done in flight is never
+        // replaced by the snapshot captured before the upload began.
+        reconciled = reconcileCreatedCanonicalRows({
           local: latestData.current,
           canonical,
           baseline: lastSavedData.current,
@@ -339,13 +408,50 @@ export default function HostOnboarding() {
     await queue.current;
   }, [cleanData, enqueueSave]);
 
+  const serializeEntryMediaWrite = useCallback(async <T,>(write: () => Promise<T>): Promise<T> => {
+    // Persist text first, then append the complete media request + canonical
+    // revision refresh to the same queue used by autosave. Any edit arriving
+    // during media processing is queued behind the refreshed revision.
+    await flush(true);
+    const operation = queue.current.then(write);
+    queue.current = operation.then(() => undefined, () => undefined);
+    return operation;
+  }, [flush]);
+
+  const refreshAfterEntryMediaWrite = useCallback(async () => {
+    const response = await fetch("/api/admin/host/onboarding", { credentials: "include" });
+    if (!response.ok) {
+      conflictBlocked.current = true;
+      setSaveError("Mediji so shranjeni, osnutka pa ni bilo mogoče osvežiti.");
+      setSaveState("conflict");
+      return;
+    }
+    const current = await response.json() as import("@/hooks/use-host-onboarding").HostOnboardingResponse;
+    revision.current = current.revision;
+    canonicalRevision.current = current.canonicalRevision;
+    hydratedSource.current = `${current.id}:${current.revision}:${current.canonicalRevision}`;
+    queryClient.setQueryData(["host-onboarding"], current);
+    const media = current.data.media || [];
+    const next = { ...latestData.current, media };
+    latestData.current = next;
+    setFormData(next);
+    lastSavedData.current = { ...lastSavedData.current, media };
+  }, [queryClient]);
+
+  const setEntryPending = useCallback((itemId: string, count: number) => {
+    if (count > 0) entryPendingCounts.current.set(itemId, count);
+    else entryPendingCounts.current.delete(itemId);
+    setEntryUploadsBlocking(entryPendingCounts.current.size > 0);
+  }, []);
+
   // Update form data and trigger autosave
   const updateData = (updater: (prev: HostOnboardingData) => HostOnboardingData) => {
-    setFormData(prev => {
-      const next = updater(prev);
-      latestData.current = next;
-      return next;
-    });
+    // The ref is the save authority. Update it synchronously so an explicit
+    // save clicked in the same React batch as the final keystroke cannot see
+    // the previous render and incorrectly conclude that there is no patch.
+    const next = updater(latestData.current);
+    latestData.current = next;
+    setFormData(next);
   };
 
   useEffect(() => {
@@ -401,7 +507,7 @@ export default function HostOnboarding() {
   };
 
   const handleSubmit = async () => {
-    if (uploadsBlocking) return;
+    if (uploadsBlocking || entryUploadsBlocking) return;
     try {
       await flush();
       const result = await submitOnboarding.mutateAsync(
@@ -802,8 +908,7 @@ export default function HostOnboarding() {
           <div className="space-y-8">
             {stayCategories.filter(c => c.key !== "wifi" && c.key !== "house").map((cat) => {
               const items = (formData.canonicalItems || []).filter(item => item.categoryId === cat.id);
-              // if empty, we pretend there is one item so the editor is shown
-              const displayItems = items.length > 0 ? items : [{ id: "new-" + cat.id, isNew: true, title: "", body: "" }];
+              const displayItems = items.length > 0 ? items : [newStayItem(cat, `new-${cat.id}`)];
               
               return (
                 <div key={cat.id} className="space-y-4">
@@ -811,64 +916,91 @@ export default function HostOnboarding() {
                     {cat.label}
                   </h3>
                   
-                  {displayItems.map((item, index) => (
-                    <div key={cat.id + "-" + index} className="rounded-[10px] border border-[#E8EBE6] bg-white p-4">
-                      {items.length > 1 && (
+                  {displayItems.map((item, index) => {
+                    const itemMedia = (formData.media || []).filter((media) => media.itemId === item.id);
+                    const renderKey = entryRenderKeys.current.get(item.id) || item.id;
+                    const materialize = (change: { title?: string; body?: string }) => {
+                      updateData((data) => {
+                        const exists = data.canonicalItems?.some((row) => row.id === item.id);
+                        return exists
+                          ? updateCanonicalItemText(data, item.id, change)
+                          : {
+                              ...data,
+                              canonicalItems: [...(data.canonicalItems || []), { ...item, ...change }],
+                            };
+                      });
+                    };
+                    return (
+                    <div key={renderKey} className="rounded-[10px] border border-[#E8EBE6] bg-white p-4">
+                      <div>
+                        <label
+                          htmlFor={`stay-item-title-${item.id}`}
+                          className="mb-1.5 block text-[13px] font-[700] uppercase text-[#66716A]"
+                        >
+                          Naziv
+                        </label>
                         <input
-                          aria-label={`Naziv podbloka ${index + 1}`}
+                          id={`stay-item-title-${item.id}`}
+                          ref={(input) => registerInput(`stay:${item.id}`, input)}
+                          data-testid={`input-stay-entry-name-${item.id}`}
+                          aria-label={`Naziv vnosa ${cat.label} ${index + 1}`}
                           type="text"
                           value={item.title || ""}
-                          placeholder="Naslov (neobvezno)"
-                          onChange={(event) => {
-                            if (!("isNew" in item)) {
-                              updateData((data) => updateCanonicalItemText(data, item.id, { title: event.target.value }));
-                            }
-                          }}
+                          placeholder="Npr. Apartma 1, Vila, Bungalov"
+                          onChange={(event) => materialize({ title: event.target.value })}
                           className="mb-3 w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                         />
-                      )}
+                      </div>
                       <div>
                         <RichTextEditor
                           value={item.body || ""}
                           onChange={(value) => {
-                            if ("isNew" in item) {
-                              if (!hasMeaningfulRichText(value)) return;
-                              const newItem = {
-                                id: "new-" + crypto.randomUUID(),
-                                categoryId: cat.id,
-                                categoryKey: cat.key,
-                                sectionKey: "stay",
-                                title: "",
-                                body: value,
-                                price: "",
-                                priceUnit: "",
-                                phone: "",
-                                website: "",
-                                mapQuery: "",
-                                difficulty: "",
-                                duration: "",
-                                distance: "",
-                                noteType: "",
-                                noteText: "",
-                                bullets: [],
-                                tint: "",
-                                frame: "",
-                                isVisible: true,
-                                orderEnabled: false,
-                                soldOut: false,
-                                producerName: "",
-                                producerNote: ""
-                              };
-                              updateData(d => ({ ...d, canonicalItems: [...(d.canonicalItems || []), newItem] }));
-                            } else {
-                              updateData((data) => updateCanonicalItemText(data, item.id, { body: value }));
-                            }
+                            if (!hasMeaningfulRichText(value) && !(formData.canonicalItems || []).some((row) => row.id === item.id)) return;
+                            materialize({ body: value });
                           }}
                           placeholder={`Vnesite ${cat.label.toLowerCase()}...`}
                         />
                       </div>
+                      <div className="mt-4 border-t border-[#E8EBE6] pt-3">
+                        <p className="text-[13px] font-[700] uppercase text-[#66716A]">Fotografije in video</p>
+                        <ItemMediaEditor
+                          ref={(handle) => {
+                            if (handle) entryMediaRefs.current.set(item.id, handle);
+                            else entryMediaRefs.current.delete(item.id);
+                          }}
+                          itemId={item.id.startsWith("new-") ? null : item.id}
+                          tenantId={session?.tenantId || ""}
+                          media={itemMedia}
+                          hostMode
+                          onBeforeWrite={() => flush(true)}
+                          serializeWrite={serializeEntryMediaWrite}
+                          onAfterWrite={refreshAfterEntryMediaWrite}
+                          onPendingChange={(count) => setEntryPending(renderKey, count)}
+                        />
+                      </div>
                     </div>
-                  ))}
+                  )})}
+                  <button
+                    type="button"
+                    data-testid={`button-add-stay-entry-${cat.id}`}
+                    aria-label={`Dodaj vnos v kategorijo ${cat.label}`}
+                    onClick={() => {
+                      const trailing = displayItems[displayItems.length - 1]!;
+                      if (!shouldAppendStayEntry(trailing)) {
+                        focusInput(`stay:${trailing.id}`);
+                        return;
+                      }
+                      const next = newStayItem(cat);
+                      updateData((data) => ({
+                        ...data,
+                        canonicalItems: [...(data.canonicalItems || []), next],
+                      }));
+                      focusInput(`stay:${next.id}`);
+                    }}
+                    className="flex items-center gap-2 px-1 py-2 font-bold text-[#157347] hover:opacity-80"
+                  >
+                    <span aria-hidden="true">+ Dodaj …</span>
+                  </button>
                 </div>
               );
             })}
@@ -1436,8 +1568,10 @@ export default function HostOnboarding() {
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#157347] text-white flex items-center justify-center font-bold text-lg shrink-0">7</div>
             <div>
-              <h2 className="text-xl font-bold">Fotografije</h2>
-              <p className="text-sm text-[#66716A] mt-1">Lahko jih dodate tudi pozneje. (Maksimalno 20)</p>
+              <h2 className="text-xl font-bold">Splošne fotografije</h2>
+              <p className="text-sm text-[#66716A] mt-1">
+                Fotografije posameznega apartmaja ali prostora dodajte kar pri njem zgoraj. Sem odložite splošne posnetke (okolica, zunanjost).
+              </p>
             </div>
           </div>
 
@@ -1454,14 +1588,14 @@ export default function HostOnboarding() {
             </figure>
           ) : null}
 
-          {(formData.media || []).some((media) => media.kind === "video") ? (
+          {(formData.media || []).some((media) => media.itemId === null && media.kind === "video") ? (
             <div className="mb-7 border-b border-[#E8EBE6] pb-7">
               <h3 className="mb-1 text-[16px] font-bold">Videi</h3>
               <p className="mb-4 text-sm text-[#66716A]">
                 Obstoječe videe urejate v istem osnutku kot operater.
               </p>
               <div className="space-y-3">
-                {(formData.media || []).filter((media) => media.kind === "video").map((video, index) => (
+                {(formData.media || []).filter((media) => media.itemId === null && media.kind === "video").map((video, index) => (
                   <div key={video.id} className="grid gap-3 rounded-[10px] border border-[#E8EBE6] bg-white p-4 md:grid-cols-2">
                     <div>
                       <label htmlFor={`video-alt-${video.id}`} className="mb-1.5 block text-[13px] font-[700] text-[#66716A] uppercase">
@@ -1512,7 +1646,7 @@ export default function HostOnboarding() {
           <PhotoUploader
             photos={[
               ...(formData.media || [])
-                .filter((media) => media.kind === "image")
+                .filter((media) => media.itemId === null && media.kind === "image")
                 .map((media) => ({
                   id: `media-${media.id}`,
                   mediaId: media.id,
@@ -1579,11 +1713,11 @@ export default function HostOnboarding() {
             </button>
             <button 
               onClick={handleSubmit}
-              disabled={submitOnboarding.isPending || isSaving || uploadsBlocking || saveState === "conflict"}
+              disabled={submitOnboarding.isPending || isSaving || uploadsBlocking || entryUploadsBlocking || saveState === "conflict"}
               className="flex-1 sm:flex-none bg-[#157347] text-white px-7 py-3 rounded-full font-bold text-[15px] hover:bg-[#0f5835] transition-colors whitespace-nowrap shadow-md flex items-center justify-center gap-2"
             >
               {submitOnboarding.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {uploadsBlocking ? "Počakajte na fotografije" : "Potrdi in oddaj"}
+              {uploadsBlocking || entryUploadsBlocking ? "Počakajte na fotografije" : "Potrdi in oddaj"}
             </button>
           </div>
         </div>

@@ -269,6 +269,8 @@ async function openHostForm(page: Page, tenantId: string, tenantName: string) {
   await page.getByRole("button", { name: "Nastavitve", exact: true }).click();
   await page.getByRole("tab", { name: "Obrazec za gostitelja", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Vsebina gostitelja" })).toBeVisible();
+  await expect(page.getByRole("tablist")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Obrazec za gostitelja", exact: true })).toHaveAttribute("aria-selected", "true");
 }
 
 async function measure(page: Page) {

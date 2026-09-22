@@ -34,6 +34,26 @@ type QueueEntry = {
   previewUrl?: string;
 };
 
+type SerializeMediaWrite = <T>(write: () => Promise<T>) => Promise<T>;
+
+export function blockingMediaQueueCount(
+  queue: ReadonlyArray<Pick<QueueEntry, "status">>,
+): number {
+  return queue.filter((entry) =>
+    entry.status === "pending" || entry.status === "uploading" || entry.status === "error"
+  ).length;
+}
+
+export function continueMediaUploadChain(
+  previous: Promise<void>,
+  upload: () => Promise<boolean>,
+): Promise<void> {
+  return previous
+    .catch(() => undefined)
+    .then(upload)
+    .then(() => undefined, () => undefined);
+}
+
 /** Imperative API for the deferred (new item) mode. */
 export type ItemMediaEditorHandle = {
   /** Files chosen but not uploaded yet (pending or failed). */
@@ -69,7 +89,26 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   onPendingChange?: (count: number) => void;
   /** CSS aspect-ratio okvirja vnosa — predogled izreza v pravem razmerju. */
   frameRatio?: string;
-}>(function ItemMediaEditor({ itemId, tenantId, media, onPendingChange, frameRatio }, handleRef) {
+  /** Host onboarding uses the same scoped admin media routes, but cannot read
+   * owner-only storage totals or tenant admin queries. */
+  hostMode?: boolean;
+  /** Serialize media writes behind the form's CAS autosave. */
+  onBeforeWrite?: () => Promise<void>;
+  /** Refresh the host draft revision/media after a successful write. */
+  onAfterWrite?: () => Promise<void>;
+  /** Put the complete request and revision refresh in the host draft queue. */
+  serializeWrite?: SerializeMediaWrite;
+}>(function ItemMediaEditor({
+  itemId,
+  tenantId,
+  media,
+  onPendingChange,
+  frameRatio,
+  hostMode = false,
+  onBeforeWrite,
+  onAfterWrite,
+  serializeWrite,
+}, handleRef) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -100,22 +139,33 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   }, []);
 
   const reportPending = (q: QueueEntry[]) =>
-    onPendingChange?.(q.filter(e => e.status === "pending" || e.status === "error").length);
-  const setQueueReported = (updater: (q: QueueEntry[]) => QueueEntry[]) =>
-    setQueue(q => { const next = updater(q); reportPending(next); return next; });
+    onPendingChange?.(blockingMediaQueueCount(q));
+  const setQueueReported = (updater: (q: QueueEntry[]) => QueueEntry[]) => {
+    // Keep the imperative mirror authoritative between React renders. Reporting
+    // to the parent from inside a setState updater triggers React's
+    // cross-component-render warning and can replay the side effect.
+    const next = updater(queueRef.current);
+    queueRef.current = next;
+    setQueue(next);
+    reportPending(next);
+  };
 
   const sorted = [...media].sort((a, b) => a.position - b.position);
   const shown = order ? order.map(id => sorted.find(m => m.id === id)!).filter(Boolean) : sorted;
 
-  const refresh = () => Promise.all([
-    refreshTenantAfterAdminWrite(queryClient, tenantId),
-    queryClient.invalidateQueries({ queryKey: getGetStorageUsageQueryKey() }),
-  ]);
+  const refresh = () => hostMode
+    ? (onAfterWrite?.() ?? Promise.resolve())
+    : Promise.all([
+        refreshTenantAfterAdminWrite(queryClient, tenantId),
+        queryClient.invalidateQueries({ queryKey: getGetStorageUsageQueryKey() }),
+      ]).then(() => undefined);
 
   // Soft quota (see /admin/storage/usage): warn from 80 %, block the add
   // controls at 100 % — the server refuses the upload anyway, this just
   // saves the host a pointless 100 MB transfer.
-  const { data: storageUsage } = useGetStorageUsage();
+  const { data: storageUsage } = useGetStorageUsage({
+    query: { enabled: !hostMode, queryKey: getGetStorageUsageQueryKey() },
+  });
   const tenantUsage = storageUsage?.tenants.find(t => t.tenantId === tenantId);
   const quotaPct = tenantUsage ? usagePct(tenantUsage.usedBytes, tenantUsage.quotaBytes) : 0;
   const quotaFull = quotaPct >= 100;
@@ -128,42 +178,74 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   // small photo overtake a large video and scramble the order.
   const chainRef = useRef<Promise<void>>(Promise.resolve());
 
-  const uploadOneNow = (entry: QueueEntry) =>
+  const uploadOneRequest = (entry: QueueEntry) =>
     new Promise<boolean>((resolve) => {
-      const target = targetIdRef.current;
-      if (!target) {
-        // Deferred mode without a created item yet — keep the file queued.
-        resolve(false);
-        return;
-      }
-      const fd = new FormData();
-      fd.append("file", entry.file);
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `/api/admin/items/${target}/media/upload`);
-      xhr.withCredentials = true;
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) patchQueue(entry.key, { pct: Math.round((e.loaded / e.total) * 100) });
-      };
-      xhr.onload = async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          if (entry.previewUrl) URL.revokeObjectURL(entry.previewUrl);
-          setQueueReported(q => q.filter(e => e.key !== entry.key));
-          await refresh();
-          resolve(true);
-        } else {
-          let msg = "Nalaganje ni uspelo.";
-          try { msg = JSON.parse(xhr.responseText).error || msg; } catch { /* keep default */ }
-          patchQueue(entry.key, { status: "error", error: msg });
+      const begin = async () => {
+        const target = targetIdRef.current;
+        if (!target) {
+          // Deferred mode without a created item yet — keep the file queued.
           resolve(false);
+          return;
         }
+        const fd = new FormData();
+        fd.append("file", entry.file);
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `/api/admin/items/${target}/media/upload`);
+        xhr.withCredentials = true;
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) patchQueue(entry.key, { pct: Math.round((e.loaded / e.total) * 100) });
+        };
+        xhr.onload = async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (entry.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+            setQueueReported(q => q.filter(e => e.key !== entry.key));
+            try {
+              await refresh();
+            } catch {
+              alert("Medij je shranjen, prikaza osnutka pa ni bilo mogoče osvežiti. Pred nadaljevanjem osvežite stran.");
+            }
+            resolve(true);
+          } else {
+            let msg = "Nalaganje ni uspelo.";
+            try { msg = JSON.parse(xhr.responseText).error || msg; } catch { /* keep default */ }
+            patchQueue(entry.key, { status: "error", error: msg });
+            resolve(false);
+          }
+        };
+        xhr.onerror = () => { patchQueue(entry.key, { status: "error", error: "Povezava je bila prekinjena." }); resolve(false); };
+        xhr.send(fd);
       };
-      xhr.onerror = () => { patchQueue(entry.key, { status: "error", error: "Povezava je bila prekinjena." }); resolve(false); };
-      xhr.send(fd);
+      void begin().catch((reason) => {
+        patchQueue(entry.key, {
+          status: "error",
+          error: reason instanceof Error ? reason.message : "Shranjevanje pred nalaganjem ni uspelo.",
+        });
+        resolve(false);
+      });
     });
+
+  const uploadOneNow = (entry: QueueEntry, prepare = true) => {
+    const write = () => uploadOneRequest(entry);
+    const operation = prepare && serializeWrite
+      ? serializeWrite(write)
+      : Promise.resolve()
+          .then(() => prepare ? onBeforeWrite?.() : undefined)
+          .then(write);
+    return operation.catch((reason) => {
+      patchQueue(entry.key, {
+        status: "error",
+        error: reason instanceof Error ? reason.message : "Shranjevanje pred nalaganjem ni uspelo.",
+      });
+      return false;
+    });
+  };
 
   const uploadOne = (entry: QueueEntry) => {
     if (!targetIdRef.current) return; // deferred: wait for uploadAllTo()
-    chainRef.current = chainRef.current.then(() => uploadOneNow(entry).then(() => undefined));
+    chainRef.current = continueMediaUploadChain(
+      chainRef.current,
+      () => uploadOneNow(entry),
+    );
   };
 
   useImperativeHandle(handleRef, () => ({
@@ -175,7 +257,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
       let allOk = true;
       for (const entry of entries) {
         patchQueue(entry.key, { status: "uploading", pct: 0, error: undefined });
-        const ok = await uploadOneNow(entry);
+        const ok = await uploadOneNow(entry, false);
         if (!ok) allOk = false;
       }
       return allOk;
@@ -227,9 +309,16 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
     if (!confirm("Odstranim to fotografijo/video iz galerije? Datoteka bo trajno izbrisana in je ne bo mogoče povrniti.")) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE", credentials: "include" });
-      if (!res.ok && res.status !== 204) throw new Error();
-      await refresh();
+      const write = async () => {
+        const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE", credentials: "include" });
+        if (!res.ok && res.status !== 204) throw new Error();
+        await refresh();
+      };
+      if (serializeWrite) await serializeWrite(write);
+      else {
+        await onBeforeWrite?.();
+        await write();
+      }
     } catch {
       alert("Brisanje ni uspelo.");
     } finally {
@@ -240,14 +329,21 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   const commitOrder = async (ids: string[]) => {
     setBusy(true);
     try {
-      const res = await fetch(`/api/admin/media/reorder`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ ids }),
-      });
-      if (!res.ok) throw new Error();
-      await refresh();
+      const write = async () => {
+        const res = await fetch(`/api/admin/media/reorder`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ids }),
+        });
+        if (!res.ok) throw new Error();
+        await refresh();
+      };
+      if (serializeWrite) await serializeWrite(write);
+      else {
+        await onBeforeWrite?.();
+        await write();
+      }
     } catch {
       alert("Razvrščanje ni uspelo.");
     } finally {
@@ -462,6 +558,8 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
           media={focusEdit}
           frameRatio={frameRatio || "5 / 3"}
           onClose={() => setFocusEdit(null)}
+          onBeforeWrite={onBeforeWrite}
+          serializeWrite={serializeWrite}
           onSaved={async () => { setFocusEdit(null); await refresh(); }}
         />
       )}
@@ -476,11 +574,13 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
    ne glede na obliko okvirja. Desno predogled v razmerju
    okvirja vnosa — točno to vidi gost.
    ========================================================= */
-function FocusEditor({ media, frameRatio, onClose, onSaved }: {
+function FocusEditor({ media, frameRatio, onClose, onSaved, onBeforeWrite, serializeWrite }: {
   media: Media;
   frameRatio: string;
   onClose: () => void;
   onSaved: () => void;
+  onBeforeWrite?: () => Promise<void>;
+  serializeWrite?: SerializeMediaWrite;
 }) {
   const [fx, setFx] = useState(media.focusX ?? 50);
   const [fy, setFy] = useState(media.focusY ?? 50);
@@ -496,14 +596,21 @@ function FocusEditor({ media, frameRatio, onClose, onSaved }: {
   const save = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/media/${media.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ focusX: fx, focusY: fy }),
-      });
-      if (!res.ok) throw new Error();
-      onSaved();
+      const write = async () => {
+        const res = await fetch(`/api/admin/media/${media.id}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ focusX: fx, focusY: fy }),
+        });
+        if (!res.ok) throw new Error();
+        await onSaved();
+      };
+      if (serializeWrite) await serializeWrite(write);
+      else {
+        await onBeforeWrite?.();
+        await write();
+      }
     } catch {
       alert("Shranjevanje ni uspelo.");
       setSaving(false);

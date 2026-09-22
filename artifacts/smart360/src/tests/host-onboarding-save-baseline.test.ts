@@ -4,9 +4,14 @@ import {
   hasMeaningfulRichText,
   normalizeCanonicalSaveBaseline,
   reconcileCreatedCanonicalRows,
+  shouldAppendStayEntry,
 } from "../pages/host/onboarding";
 import type { HostOnboardingData } from "../hooks/use-host-onboarding";
 import type { HostOnboardingCanonicalItem } from "@workspace/api-client-react";
+import {
+  blockingMediaQueueCount,
+  continueMediaUploadChain,
+} from "../components/admin/item-media-editor";
 
 const data = (patch: Partial<HostOnboardingData> = {}): HostOnboardingData => ({
   contacts: [],
@@ -62,6 +67,45 @@ test("empty rich-text initialization cannot enter a canonical save", () => {
   );
 });
 
+test("stay-category adder focuses a blank trailing row and appends after content", () => {
+  assert.equal(shouldAppendStayEntry({ title: "  ", body: "<p><br></p>" }), false);
+  assert.equal(shouldAppendStayEntry({ title: "Apartma 2", body: "" }), true);
+  assert.equal(shouldAppendStayEntry({ title: "", body: "<p>Pogled na morje</p>" }), true);
+});
+
+test("an in-flight item upload keeps onboarding submission blocked", () => {
+  assert.equal(blockingMediaQueueCount([{ status: "uploading" }]), 1);
+  assert.equal(blockingMediaQueueCount([
+    { status: "pending" },
+    { status: "uploading" },
+    { status: "error" },
+  ]), 3);
+  assert.equal(blockingMediaQueueCount([]), 0);
+});
+
+test("a rejected media serialization cannot poison the next upload retry", async () => {
+  let attempts = 0;
+  const failed = continueMediaUploadChain(Promise.resolve(), async () => {
+    attempts += 1;
+    throw new Error("CAS flush failed");
+  });
+  const retried = continueMediaUploadChain(failed, async () => {
+    attempts += 1;
+    return true;
+  });
+  await retried;
+  assert.equal(attempts, 2);
+});
+
+test("a title-only stay entry enters the canonical save", () => {
+  assert.deepEqual(
+    normalizeCanonicalSaveBaseline(data({
+      canonicalItems: [{ ...destination("new-title-only", ""), title: "Apartma 2" }],
+    })).canonicalItems?.map((item) => item.title),
+    ["Apartma 2"],
+  );
+});
+
 test("new destination ID is reconciled once and sequential saves update that DB row", () => {
   const submitted = destination("new-client", "<p>Prvi vnos</p>");
   const created = {
@@ -85,6 +129,23 @@ test("new destination ID is reconciled once and sequential saves update that DB 
     submitted: { canonicalItems: [edited] },
   });
   assert.deepEqual(second.canonicalItems, [edited]);
+});
+
+test("two equal stay entries reconcile to two distinct durable IDs", () => {
+  const first = { ...destination("new-first", "<p>Enak opis</p>"), title: "Apartma" };
+  const second = { ...destination("new-second", "<p>Enak opis</p>"), title: "Apartma" };
+  const canonicalFirst = { ...first, id: "00000000-0000-4000-8000-000000000011" };
+  const canonicalSecond = { ...second, id: "00000000-0000-4000-8000-000000000012" };
+  const reconciled = reconcileCreatedCanonicalRows({
+    local: data({ canonicalItems: [first, second] }),
+    canonical: data({ canonicalItems: [canonicalFirst, canonicalSecond] }),
+    baseline: data(),
+    submitted: { canonicalItems: [first, second] },
+  });
+  assert.deepEqual(
+    reconciled.canonicalItems?.map((item) => item.id),
+    [canonicalFirst.id, canonicalSecond.id],
+  );
 });
 
 test("rapid destination and offer edits during an in-flight create keep text and adopt server IDs", () => {

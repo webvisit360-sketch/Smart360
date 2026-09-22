@@ -270,7 +270,7 @@ export default function AdminTenantEdit() {
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
   const [activeTab, setActiveTab] = useState("pregled");
-  const isSettings = ["general", "appearance", "contacts", "translations", "guide", "changelog"].includes(activeTab);
+  const isSettings = ["general", "onboarding", "appearance", "contacts", "translations", "guide", "changelog"].includes(activeTab);
   const isWideLayout = [
     "kreator",
     "orders",
