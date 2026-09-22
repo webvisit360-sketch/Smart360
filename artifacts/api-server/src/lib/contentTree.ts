@@ -39,6 +39,38 @@ export function trashScope(row: { deletedAt?: Date | null }): boolean {
   return !!row.deletedAt;
 }
 
+type CategoryWithScopedItems<TItem extends Scoped = Scoped> = Scoped & {
+  items: TItem[];
+};
+
+/**
+ * Resolve category visibility only when a tree is materialized.
+ *
+ * Guest publication requires both independent operator activation and at
+ * least one guest-eligible item. Admin trees intentionally retain every
+ * non-deleted category and item, including inactive and empty rows.
+ */
+export function resolveCategoriesForScope<
+  TCategory extends CategoryWithScopedItems,
+>(categories: TCategory[], visibleOnly: boolean): TCategory[] {
+  if (!visibleOnly) {
+    return categories
+      .filter(adminScope)
+      .map((category) => ({
+        ...category,
+        items: category.items.filter(adminScope),
+      }));
+  }
+
+  return categories
+    .filter(guestScope)
+    .map((category) => ({
+      ...category,
+      items: category.items.filter(guestScope),
+    }))
+    .filter((category) => category.items.length > 0);
+}
+
 export type SitePlanImageEntry = {
   id: string;
   tenantId: string | null;
@@ -69,6 +101,27 @@ export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
   sections: SectionContent[];
   sitePlanImages: SitePlanImageEntry[];
 };
+
+/**
+ * Guest read projection for already-published snapshots.
+ *
+ * This derives solely from immutable snapshot content: it does not consult
+ * draft rows and does not rewrite snapshot storage. It lets a deployed guest
+ * resolver enforce the empty-category rule for legacy snapshots immediately.
+ */
+export function resolveGuestContentTree(
+  tree: TenantContentTree,
+): TenantContentTree {
+  return {
+    ...tree,
+    sections: tree.sections
+      .filter(guestScope)
+      .map((section) => ({
+        ...section,
+        categories: resolveCategoriesForScope(section.categories, true),
+      })),
+  };
+}
 
 function indexedBodyParts(body: unknown): string[] | null {
   if (typeof body !== "string" || body.trim() === "") return null;
@@ -248,12 +301,10 @@ export async function buildTenantContent(
   if (opts.visibleOnly) {
     // Guest queries: published AND not deleted, at every level.
     sectionsOut = sectionsOut.filter((s) => guestScope(s));
-    categoriesOut = categoriesOut.filter((c) => guestScope(c));
     itemsOut = itemsOut.filter((i) => guestScope(i));
   } else {
     // Admin tree: hidden entries stay visible (greyed, "Skrito"); only
     // soft-deleted rows are excluded — they live in the trash list.
-    categoriesOut = categoriesOut.filter(adminScope);
     itemsOut = itemsOut.filter(adminScope);
   }
 
@@ -369,9 +420,16 @@ export async function buildTenantContent(
     }
   }
   const categoriesBySection = new Map<string, CategoryContent[]>();
-  for (const c of categoriesOut) {
+  const resolvedCategories = resolveCategoriesForScope(
+    categoriesOut.map((c) => ({
+      ...c,
+      items: itemsByCategory.get(c.id) ?? [],
+    })),
+    opts.visibleOnly,
+  );
+  for (const c of resolvedCategories) {
     const arr = categoriesBySection.get(c.sectionId) ?? [];
-    arr.push({ ...c, items: itemsByCategory.get(c.id) ?? [] });
+    arr.push(c);
     categoriesBySection.set(c.sectionId, arr);
   }
   const orderPasswordConfigured = Boolean(tenantOut.orderPassword?.trim());

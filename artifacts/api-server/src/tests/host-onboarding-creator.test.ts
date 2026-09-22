@@ -20,6 +20,11 @@ test("host onboarding categories follow all shared surrounding skeleton categori
     getHostOnboardingCategories().slice(-6).map(({ key }) => key),
     ["shops", "bakery", "gas", "atm", "pharm", "hosp"],
   );
+  const hike = getHostOnboardingCategories().findIndex(({ key }) => key === "hike");
+  const bike = getHostOnboardingCategories().findIndex(({ key }) => key === "bike");
+  assert.equal(getHostOnboardingCategories()[hike]?.label, "Pohodništvo");
+  assert.equal(getHostOnboardingCategories()[bike]?.label, "Kolesarjenje");
+  assert.equal(bike, hike + 1);
 });
 
 test("host onboarding place categories exclude house, offer, and event blocks", () => {

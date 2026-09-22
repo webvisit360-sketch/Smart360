@@ -44,6 +44,28 @@ export interface HostOnboardingRecommendation {
   name: string;
 }
 
+export interface HostOnboardingCustomCategoryEntry {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /** @maxLength 500 */
+  name: string;
+}
+
+export interface HostOnboardingCustomCategory {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /** @maxLength 500 */
+  name: string;
+  /** @maxItems 100 */
+  entries: HostOnboardingCustomCategoryEntry[];
+}
+
 export interface HostOnboardingEvent {
   /**
      * @minLength 1
@@ -81,6 +103,8 @@ export interface HostOnboardingData {
   offers: HostOnboardingOffer[];
   /** @maxItems 300 */
   recommendations: HostOnboardingRecommendation[];
+  /** @maxItems 30 */
+  customCategories: HostOnboardingCustomCategory[];
   /** @maxItems 100 */
   events: HostOnboardingEvent[];
 }
@@ -110,6 +134,8 @@ export type HostOnboardingSaveRequestData = {
   houseRulesParking?: string;
   offers?: HostOnboardingOffer[];
   recommendations?: HostOnboardingRecommendation[];
+  /** @maxItems 30 */
+  customCategories?: HostOnboardingCustomCategory[];
   events?: HostOnboardingEvent[];
 };
 
@@ -226,6 +252,23 @@ export type OwnerHostOnboardingResponseRoundsItemRecommendationsItem = {
   proposalId?: string | null;
 };
 
+export type OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItem = {
+  id: string;
+  name: string;
+  /** @nullable */
+  proposalId: string | null;
+};
+
+export type OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem = {
+  id: string;
+  name: string;
+  hostCreated: true;
+  provenance: string;
+  /** @nullable */
+  categoryId: string | null;
+  entries: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItem[];
+};
+
 export type OwnerHostOnboardingResponseRoundsItemEventsItem = {
   id?: string;
   name?: string;
@@ -257,6 +300,8 @@ export type OwnerHostOnboardingResponseRoundsItem = {
   data?: HostOnboardingData;
   targetReview?: OwnerHostOnboardingResponseRoundsItemTargetReviewItem[];
   recommendations?: OwnerHostOnboardingResponseRoundsItemRecommendationsItem[];
+  /** Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage. */
+  customCategories: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem[];
   events?: OwnerHostOnboardingResponseRoundsItemEventsItem[];
   photos?: HostOnboardingPhoto[];
   notification?: OwnerHostOnboardingResponseRoundsItemNotification;

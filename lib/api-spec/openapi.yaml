@@ -2787,6 +2787,24 @@ components:
         id: { type: string, minLength: 1, maxLength: 100 }
         categoryId: { type: string, minLength: 1, maxLength: 100 }
         name: { type: string, maxLength: 500 }
+    HostOnboardingCustomCategoryEntry:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        name: { type: string, maxLength: 500 }
+    HostOnboardingCustomCategory:
+      type: object
+      additionalProperties: false
+      required: [id, name, entries]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        name: { type: string, maxLength: 500 }
+        entries:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/HostOnboardingCustomCategoryEntry" }
     HostOnboardingEvent:
       type: object
       additionalProperties: false
@@ -2799,7 +2817,7 @@ components:
     HostOnboardingData:
       type: object
       additionalProperties: false
-      required: [accommodationName, address, guestPhone, guestEmail, website, checkInFrom, checkOutUntil, contacts, wifiName, wifiPassword, houseRulesParking, offers, recommendations, events]
+      required: [accommodationName, address, guestPhone, guestEmail, website, checkInFrom, checkOutUntil, contacts, wifiName, wifiPassword, houseRulesParking, offers, recommendations, customCategories, events]
       properties:
         accommodationName: { type: string, maxLength: 500 }
         address: { type: string, maxLength: 2000 }
@@ -2823,6 +2841,10 @@ components:
           type: array
           maxItems: 300
           items: { $ref: "#/components/schemas/HostOnboardingRecommendation" }
+        customCategories:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/HostOnboardingCustomCategory" }
         events:
           type: array
           maxItems: 100
@@ -2857,6 +2879,10 @@ components:
             recommendations:
               type: array
               items: { $ref: "#/components/schemas/HostOnboardingRecommendation" }
+            customCategories:
+              type: array
+              maxItems: 30
+              items: { $ref: "#/components/schemas/HostOnboardingCustomCategory" }
             events:
               type: array
               items: { $ref: "#/components/schemas/HostOnboardingEvent" }
@@ -2942,6 +2968,7 @@ components:
             type: object
             additionalProperties: false
             description: Immutable submitted review or current draft, including targetReview, recommendations, exact event date/time, photos and notification evidence.
+            required: [customCategories]
             properties:
               id: { type: string }
               round: { type: number }
@@ -2968,6 +2995,29 @@ components:
                     categoryKey: { type: string }
                     name: { type: string }
                     proposalId: { type: [string, "null"] }
+              customCategories:
+                type: array
+                description: Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage.
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [id, name, hostCreated, provenance, categoryId, entries]
+                  properties:
+                    id: { type: string }
+                    name: { type: string }
+                    hostCreated: { type: boolean, const: true }
+                    provenance: { type: string }
+                    categoryId: { type: [string, "null"] }
+                    entries:
+                      type: array
+                      items:
+                        type: object
+                        additionalProperties: false
+                        required: [id, name, proposalId]
+                        properties:
+                          id: { type: string }
+                          name: { type: string }
+                          proposalId: { type: [string, "null"] }
               events:
                 type: array
                 items:

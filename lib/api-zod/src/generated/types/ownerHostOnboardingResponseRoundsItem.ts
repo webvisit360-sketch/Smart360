@@ -7,6 +7,7 @@
  */
 import type { HostOnboardingData } from './hostOnboardingData';
 import type { HostOnboardingPhoto } from './hostOnboardingPhoto';
+import type { OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem } from './ownerHostOnboardingResponseRoundsItemCustomCategoriesItem';
 import type { OwnerHostOnboardingResponseRoundsItemEventsItem } from './ownerHostOnboardingResponseRoundsItemEventsItem';
 import type { OwnerHostOnboardingResponseRoundsItemNotification } from './ownerHostOnboardingResponseRoundsItemNotification';
 import type { OwnerHostOnboardingResponseRoundsItemRecommendationsItem } from './ownerHostOnboardingResponseRoundsItemRecommendationsItem';
@@ -23,6 +24,8 @@ export type OwnerHostOnboardingResponseRoundsItem = {
   data?: HostOnboardingData;
   targetReview?: OwnerHostOnboardingResponseRoundsItemTargetReviewItem[];
   recommendations?: OwnerHostOnboardingResponseRoundsItemRecommendationsItem[];
+  /** Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage. */
+  customCategories: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem[];
   events?: OwnerHostOnboardingResponseRoundsItemEventsItem[];
   photos?: HostOnboardingPhoto[];
   notification?: OwnerHostOnboardingResponseRoundsItemNotification;

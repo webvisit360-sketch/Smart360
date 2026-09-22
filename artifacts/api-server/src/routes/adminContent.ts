@@ -71,6 +71,7 @@ import {
   hasMeaningfulEditorialText,
   translateMissingEditorial,
 } from "../lib/creatorEditorialTranslation";
+import { createCategoryWithTooling } from "../lib/categoryTooling";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -379,17 +380,11 @@ router.post(
       res.status(404).json({ error: "Section not found" });
       return;
     }
-    const existing = await db
-      .select({ position: categoriesTable.position })
-      .from(categoriesTable)
-      .where(eq(categoriesTable.sectionId, sectionId));
-    const position =
-      parsed.data.position ??
-      (existing.length ? Math.max(...existing.map((c) => c.position)) + 1 : 0);
-    const [category] = await db
-      .insert(categoriesTable)
-      .values({ ...cleanContentFields(parsed.data), position, sectionId })
-      .returning();
+    const category = await createCategoryWithTooling(
+      db,
+      sectionId,
+      cleanContentFields(parsed.data),
+    );
     const ctx = await tenantNameForSection(sectionId);
     await logChange({
       ...ctx,

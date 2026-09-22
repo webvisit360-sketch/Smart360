@@ -16,6 +16,7 @@ import {
   hostOnboardingRawObjectPath,
   hostOnboardingSanitizedObjectPath,
 } from "../lib/hostOnboardingPhotoPaths";
+import { hostCustomCategoriesAreSubmittable } from "../lib/hostOnboarding";
 import { HOST_ROLE_GRANTS, POLICIES } from "../lib/rls";
 
 const completeData = {
@@ -32,6 +33,14 @@ const completeData = {
   houseRulesParking: "Parkiranje je ob hiši. Po 22. uri prosimo za mir.",
   offers: [{ id: "offer-1", name: "Zajtrk", price: "12 EUR" }],
   recommendations: [{ id: "rec-1", categoryId: "shops", name: "Lokalna trgovina" }],
+  customCategories: [{
+    id: "custom-1",
+    name: "Za deževne dni",
+    entries: [
+      { id: "custom-entry-1", name: "Muzej igrač" },
+      { id: "custom-entry-2", name: "Notranje plezanje" },
+    ],
+  }],
   events: [{ id: "event-1", name: "Koncert", date: "2026-08-11", time: "19:30" }],
 };
 
@@ -56,11 +65,34 @@ test("onboarding contracts accept partial autosave and exact event date/time", (
     time: "19:30",
   });
   assert.equal(submission.data.recommendations[0]?.categoryId, "shops");
+  assert.deepEqual(submission.data.customCategories[0]?.entries.map(({ name }) => name), [
+    "Muzej igrač",
+    "Notranje plezanje",
+  ]);
 });
 
 test("submit contract accepts round-only immutable replay payload", () => {
   const replay = ConfirmHostOnboardingSubmissionBody.parse({ round: 1 });
   assert.deepEqual(replay, { round: 1 });
+});
+
+test("incomplete custom category autosave shape remains valid but submission is blocked clearly", () => {
+  const incomplete = {
+    ...completeData,
+    customCategories: [{
+      id: "custom-incomplete",
+      name: "",
+      entries: [{ id: "entry-kept", name: "Vnos ne sme izginiti" }],
+    }],
+  };
+  assert.equal(
+    AutosaveHostOnboardingBody.safeParse({
+      revision: 2,
+      data: { customCategories: incomplete.customCategories },
+    }).success,
+    true,
+  );
+  assert.equal(hostCustomCategoriesAreSubmittable(incomplete), false);
 });
 
 test("operator notification uses only direct Smart360 recipient and idempotency key", async () => {

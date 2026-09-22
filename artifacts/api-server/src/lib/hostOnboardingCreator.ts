@@ -18,6 +18,7 @@ export type HostOnboardingCategory = {
 
 export type HostRecommendation = {
   categoryKey: string;
+  categoryId?: string;
   name: string;
 };
 
@@ -89,6 +90,7 @@ export async function enqueueHostRecommendations(
   const allowedKeys = new Set(getHostOnboardingCategories().map(({ key }) => key));
   const recommendations = input.recommendations.map((recommendation) => ({
     categoryKey: recommendation.categoryKey.trim(),
+    categoryId: recommendation.categoryId,
     name: recommendation.name.trim(),
     normalizedName: normalizeHostRecommendationName(recommendation.name),
   }));
@@ -97,7 +99,7 @@ export async function enqueueHostRecommendations(
     if (!recommendation.name || !recommendation.normalizedName) {
       throw new Error("Priporočilo gostitelja potrebuje ime.");
     }
-    if (!allowedKeys.has(recommendation.categoryKey)) {
+    if (!recommendation.categoryId && !allowedKeys.has(recommendation.categoryKey)) {
       throw new Error(`Kategorija priporočila ni dovoljena: ${recommendation.categoryKey || "(prazna)"}.`);
     }
   }
@@ -107,20 +109,43 @@ export async function enqueueHostRecommendations(
     hashtextextended(${`${input.tenantId}:host-onboarding:${input.submissionId}`}, 0)
   )`);
 
-  const categoryKeys = [...new Set(recommendations.map(({ categoryKey }) => categoryKey))];
-  const categories = await tx
-    .select({ id: categoriesTable.id, key: categoriesTable.key })
-    .from(categoriesTable)
-    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .where(and(
-      eq(sectionsTable.tenantId, input.tenantId),
-      inArray(categoriesTable.key, categoryKeys),
-      isNull(categoriesTable.deletedAt),
-    ));
+  const categoryKeys = [...new Set(
+    recommendations.filter(({ categoryId }) => !categoryId).map(({ categoryKey }) => categoryKey),
+  )];
+  const directCategoryIds = [...new Set(
+    recommendations.flatMap(({ categoryId }) => categoryId ? [categoryId] : []),
+  )];
+  const categories = categoryKeys.length === 0
+    ? []
+    : await tx
+      .select({ id: categoriesTable.id, key: categoriesTable.key })
+      .from(categoriesTable)
+      .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+      .where(and(
+        eq(sectionsTable.tenantId, input.tenantId),
+        inArray(categoriesTable.key, categoryKeys),
+        isNull(categoriesTable.deletedAt),
+      ));
+  const directCategories = directCategoryIds.length === 0
+    ? []
+    : await tx
+      .select({ id: categoriesTable.id })
+      .from(categoriesTable)
+      .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+      .where(and(
+        eq(sectionsTable.tenantId, input.tenantId),
+        inArray(categoriesTable.id, directCategoryIds),
+        isNull(categoriesTable.deletedAt),
+      ));
   const categoryIdByKey = new Map(categories.map((category) => [category.key, category.id]));
   const missingKeys = categoryKeys.filter((key) => !categoryIdByKey.has(key));
   if (missingKeys.length > 0) {
     throw new Error(`Kategorije priporočil v vodniku ne obstajajo: ${missingKeys.join(", ")}.`);
+  }
+  const validDirectCategoryIds = new Set(directCategories.map(({ id }) => id));
+  const missingIds = directCategoryIds.filter((id) => !validDirectCategoryIds.has(id));
+  if (missingIds.length > 0) {
+    throw new Error("Kategorija gostitelja ne pripada tej namestitvi.");
   }
 
   const proposalIds: string[] = [];
@@ -129,13 +154,15 @@ export async function enqueueHostRecommendations(
     // Same-category duplicates collapse, while the same name in two category
     // blocks remains two intentional attachments. Repeat the existing ID in
     // the result to preserve positional alignment with the caller's rows.
-    const categoryName = `${recommendation.categoryKey}\0${recommendation.normalizedName}`;
+    const assignedCategoryId =
+      recommendation.categoryId ?? categoryIdByKey.get(recommendation.categoryKey)!;
+    const categoryName = `${assignedCategoryId}\0${recommendation.normalizedName}`;
     const alreadyEnqueuedId = proposalIdByCategoryName.get(categoryName);
     if (alreadyEnqueuedId) {
       proposalIds.push(alreadyEnqueuedId);
       continue;
     }
-    const runId = hostCategoryRunId(input.submissionId, recommendation.categoryKey);
+    const runId = hostCategoryRunId(input.submissionId, assignedCategoryId);
 
     // Read before insert so replay remains stable after Nominatim has populated
     // OSM identity and the partial unresolved-name unique index no longer
@@ -160,7 +187,7 @@ export async function enqueueHostRecommendations(
       .values({
         tenantId: input.tenantId,
         runId,
-        categoryId: categoryIdByKey.get(recommendation.categoryKey)!,
+        categoryId: assignedCategoryId,
         proposedName: recommendation.name,
         normalizedName: recommendation.normalizedName,
         originalQuery: recommendation.name,

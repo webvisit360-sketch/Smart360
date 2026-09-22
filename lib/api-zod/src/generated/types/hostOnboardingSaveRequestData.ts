@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { HostOnboardingContact } from './hostOnboardingContact';
+import type { HostOnboardingCustomCategory } from './hostOnboardingCustomCategory';
 import type { HostOnboardingEvent } from './hostOnboardingEvent';
 import type { HostOnboardingOffer } from './hostOnboardingOffer';
 import type { HostOnboardingRecommendation } from './hostOnboardingRecommendation';
@@ -35,5 +36,7 @@ export type HostOnboardingSaveRequestData = {
   houseRulesParking?: string;
   offers?: HostOnboardingOffer[];
   recommendations?: HostOnboardingRecommendation[];
+  /** @maxItems 30 */
+  customCategories?: HostOnboardingCustomCategory[];
   events?: HostOnboardingEvent[];
 };

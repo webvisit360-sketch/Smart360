@@ -16,6 +16,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { requireAdmin } from "../lib/adminAuth";
 import {
   currentHostOnboarding,
+  hostCustomCategoriesAreSubmittable,
   openHostOnboarding,
   ownerHostOnboarding,
   saveHostOnboarding,
@@ -24,6 +25,7 @@ import {
 } from "../lib/hostOnboarding";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { HOST_ONBOARDING_OPERATOR_EMAIL } from "../lib/hostOnboardingEmail";
+import { HOST_ONBOARDING_PROVENANCE } from "../lib/hostOnboardingCreator";
 import {
   hostOnboardingObjectCounterpart,
   hostOnboardingRawObjectPath,
@@ -50,6 +52,12 @@ function dataFormatsAreValid(data: HostOnboardingData): boolean {
   }
   if (data.checkInFrom && !TIME_RE.test(data.checkInFrom)) return false;
   if (data.checkOutUntil && !TIME_RE.test(data.checkOutUntil)) return false;
+  const customCategoryIds = new Set(data.customCategories.map(({ id }) => id));
+  if (customCategoryIds.size !== data.customCategories.length) return false;
+  for (const category of data.customCategories) {
+    const entryIds = new Set(category.entries.map(({ id }) => id));
+    if (entryIds.size !== category.entries.length) return false;
+  }
   return data.events.every((event) =>
     (!event.date || DATE_RE.test(event.date)) && (!event.time || TIME_RE.test(event.time)),
   );
@@ -273,6 +281,14 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
       return;
     }
   }
+  if (!hostCustomCategoriesAreSubmittable(data)) {
+    fail(
+      res,
+      400,
+      "Vnesite ime svoje kategorije ali odstranite njene vnose.",
+    );
+    return;
+  }
   const result = await submitHostOnboarding(
     actor.tenantId,
     actor.hostUserId,
@@ -286,6 +302,7 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
       wrong_round: "Krog obrazca ni veljaven.",
       stale: "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova.",
       photo_uploading: "Počakajte, da se nalaganje fotografij konča.",
+      invalid_custom_category: "Vnesite ime svoje kategorije ali odstranite njene vnose.",
     } as const;
     fail(res, result.kind === "missing" ? 404 : 409, messages[result.kind], {
       ...(result.currentRevision ? { currentRevision: result.currentRevision } : {}),
@@ -563,7 +580,32 @@ router.get(
         status: round.status,
         data: round.draftData,
         targetReview: round.targetReview,
-        recommendations: round.recommendationReview,
+        recommendations: round.recommendationReview.filter((entry) => !entry.hostCreated),
+        customCategories: round.draftData.customCategories
+          .filter((category) => category.name.trim())
+          .map((category) => {
+            const categoryReview = round.recommendationReview.find((entry) =>
+              entry.hostCreated && entry.customCategoryId === category.id
+            );
+            return {
+              id: category.id,
+              name: category.name.trim(),
+              hostCreated: true as const,
+              provenance: HOST_ONBOARDING_PROVENANCE,
+              categoryId: categoryReview?.categoryId ?? null,
+              entries: category.entries
+                .filter((entry) => entry.name.trim())
+                .map((entry) => ({
+                  id: entry.id,
+                  name: entry.name.trim(),
+                  proposalId: round.recommendationReview.find((review) =>
+                    review.hostCreated &&
+                    review.customCategoryId === category.id &&
+                    review.customEntryId === entry.id
+                  )?.proposalId ?? null,
+                })),
+            };
+          }),
         events: events.map((event) => ({
           id: event.id,
           name: event.name,

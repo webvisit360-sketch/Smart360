@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   categoriesTable,
   db,
@@ -10,14 +11,20 @@ import {
   sectionsTable,
   tenantsTable,
   type HostOnboardingData,
+  type HostOnboardingRecommendationReview,
   type HostOnboardingTargetReview,
 } from "@workspace/db";
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
-import { enqueueHostRecommendations, getHostOnboardingCategories } from "./hostOnboardingCreator";
+import {
+  enqueueHostRecommendations,
+  getHostOnboardingCategories,
+  HOST_ONBOARDING_PROVENANCE,
+} from "./hostOnboardingCreator";
 import {
   HOST_ONBOARDING_OPERATOR_EMAIL,
   sendHostOnboardingEmail,
 } from "./hostOnboardingEmail";
+import { createCategoryWithTooling } from "./categoryTooling";
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -35,6 +42,7 @@ export const EMPTY_HOST_ONBOARDING_DATA: HostOnboardingData = {
   houseRulesParking: "",
   offers: [],
   recommendations: [],
+  customCategories: [],
   events: [],
 };
 
@@ -46,8 +54,26 @@ function clean(value: string): string {
   return value.trim();
 }
 
+
 function hasText(value: string | null | undefined): value is string {
   return !!value?.trim();
+}
+
+export function normalizeHostOnboardingData(
+  data: HostOnboardingData | (Omit<HostOnboardingData, "customCategories"> & {
+    customCategories?: HostOnboardingData["customCategories"];
+  }),
+): HostOnboardingData {
+  return {
+    ...data,
+    customCategories: Array.isArray(data.customCategories) ? data.customCategories : [],
+  };
+}
+
+export function hostCustomCategoriesAreSubmittable(data: HostOnboardingData): boolean {
+  return data.customCategories.every((category) =>
+    category.name.trim() || !category.entries.some((entry) => entry.name.trim())
+  );
 }
 
 export async function createHostOnboardingDraft(
@@ -125,7 +151,11 @@ export async function currentHostOnboarding(tenantId: string, hostUserId: string
     .from(hostOnboardingPhotosTable)
     .where(eq(hostOnboardingPhotosTable.onboardingId, round.id))
     .orderBy(asc(hostOnboardingPhotosTable.createdAt));
-  return { round, photos, categories: getHostOnboardingCategories() };
+  return {
+    round: { ...round, draftData: normalizeHostOnboardingData(round.draftData) },
+    photos,
+    categories: getHostOnboardingCategories(),
+  };
 }
 
 export async function saveHostOnboarding(
@@ -206,6 +236,54 @@ async function firstSectionCategory(tx: Transaction, tenantId: string, sectionKe
     .orderBy(asc(categoriesTable.position))
     .limit(1);
   return category ?? null;
+}
+
+function customCategoryKey(onboardingId: string, sourceId: string): string {
+  return `host-custom-${createHash("sha256")
+    .update("smart360-host-custom-category\0")
+    .update(onboardingId)
+    .update("\0")
+    .update(sourceId)
+    .digest("hex")
+    .slice(0, 24)}`;
+}
+
+async function ensureHostCustomCategory(
+  tx: Transaction,
+  tenantId: string,
+  onboardingId: string,
+  sourceId: string,
+  label: string,
+) {
+  const key = customCategoryKey(onboardingId, sourceId);
+  const [existing] = await tx
+    .select({ category: categoriesTable })
+    .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(and(
+      eq(sectionsTable.tenantId, tenantId),
+      eq(sectionsTable.key, "explore"),
+      eq(categoriesTable.key, key),
+      isNull(categoriesTable.deletedAt),
+    ))
+    .limit(1);
+  if (existing) return existing.category;
+  const [section] = await tx
+    .select({ id: sectionsTable.id })
+    .from(sectionsTable)
+    .where(and(
+      eq(sectionsTable.tenantId, tenantId),
+      eq(sectionsTable.key, "explore"),
+    ))
+    .limit(1);
+  if (!section) throw new Error("Razdelek Odkrij okolico za namestitev ne obstaja.");
+  return createCategoryWithTooling(tx, section.id, {
+    key,
+    label,
+    icon: "star",
+    layout: "poi",
+    exploreGroup: "experiences",
+  });
 }
 
 async function mapSimpleTenantField(
@@ -395,7 +473,7 @@ async function mapSubmission(
   data: HostOnboardingData,
 ): Promise<{
   targetReview: HostOnboardingTargetReview[];
-  recommendationReview: Array<{ categoryKey: string; name: string; proposalId: string | null }>;
+  recommendationReview: HostOnboardingRecommendationReview[];
 }> {
   const [tenant] = await tx
     .select()
@@ -511,10 +589,54 @@ async function mapSubmission(
     submissionId: onboardingId,
     recommendations,
   });
-  const recommendationReview = recommendations.map((row, index) => ({
+  const recommendationReview: HostOnboardingRecommendationReview[] = recommendations.map((row, index) => ({
     ...row,
     proposalId: creator.proposalIds[index] ?? null,
   }));
+  for (const customCategory of data.customCategories) {
+    const categoryName = clean(customCategory.name);
+    if (!categoryName) continue;
+    const category = await ensureHostCustomCategory(
+      tx,
+      tenantId,
+      onboardingId,
+      customCategory.id,
+      categoryName,
+    );
+    const entries = customCategory.entries
+      .map((entry) => ({ ...entry, name: clean(entry.name) }))
+      .filter((entry) => entry.name);
+    const queued = await enqueueHostRecommendations(tx, {
+      tenantId,
+      submissionId: onboardingId,
+      recommendations: entries.map((entry) => ({
+        categoryKey: category.key ?? category.id,
+        categoryId: category.id,
+        name: entry.name,
+      })),
+    });
+    recommendationReview.push(...entries.map((entry, index) => ({
+      categoryKey: category.key ?? category.id,
+      categoryId: category.id,
+      name: entry.name,
+      proposalId: queued.proposalIds[index] ?? null,
+      hostCreated: true,
+      provenance: HOST_ONBOARDING_PROVENANCE,
+      customCategoryId: customCategory.id,
+      customEntryId: entry.id,
+    })));
+    if (entries.length === 0) {
+      recommendationReview.push({
+        categoryKey: category.key ?? category.id,
+        categoryId: category.id,
+        name: "",
+        proposalId: null,
+        hostCreated: true,
+        provenance: HOST_ONBOARDING_PROVENANCE,
+        customCategoryId: customCategory.id,
+      });
+    }
+  }
   for (const event of data.events) {
     if (!clean(event.name)) continue;
     await tx.insert(hostOnboardingEventSuggestionsTable).values({
@@ -532,7 +654,11 @@ async function mapSubmission(
 
 export type SubmitResult =
   | { ok: true; id: string; round: number; alreadySubmitted: boolean }
-  | { ok: false; kind: "missing" | "wrong_round" | "stale" | "photo_uploading"; currentRevision?: number };
+  | {
+      ok: false;
+      kind: "missing" | "wrong_round" | "stale" | "photo_uploading" | "invalid_custom_category";
+      currentRevision?: number;
+    };
 
 /**
  * Resolve immutable replay before parsing fields that matter only to a mutable
@@ -589,6 +715,9 @@ export async function submitHostOnboarding(
         kind: "stale",
         currentRevision: round.revision,
       } as const;
+    }
+    if (!hostCustomCategoriesAreSubmittable(data)) {
+      return { ok: false, kind: "invalid_custom_category" } as const;
     }
     const [uploading] = await tx
       .select({ id: hostOnboardingPhotosTable.id })
@@ -723,7 +852,11 @@ export async function ownerHostOnboarding(tenantId: string) {
         .where(eq(hostOnboardingEventSuggestionsTable.onboardingId, round.id))
         .orderBy(asc(hostOnboardingEventSuggestionsTable.createdAt)),
     ]);
-    output.push({ round, photos, events });
+    output.push({
+      round: { ...round, draftData: normalizeHostOnboardingData(round.draftData) },
+      photos,
+      events,
+    });
   }
   return { tenant, rounds: output };
 }

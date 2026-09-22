@@ -48,6 +48,18 @@ export const getHostOnboardingResponseDataRecommendationsItemNameMax = 500;
 
 export const getHostOnboardingResponseDataRecommendationsMax = 300;
 
+export const getHostOnboardingResponseDataCustomCategoriesItemIdMax = 100;
+
+export const getHostOnboardingResponseDataCustomCategoriesItemNameMax = 500;
+
+export const getHostOnboardingResponseDataCustomCategoriesItemEntriesItemIdMax = 100;
+
+export const getHostOnboardingResponseDataCustomCategoriesItemEntriesItemNameMax = 500;
+
+export const getHostOnboardingResponseDataCustomCategoriesItemEntriesMax = 100;
+
+export const getHostOnboardingResponseDataCustomCategoriesMax = 30;
+
 export const getHostOnboardingResponseDataEventsItemIdMax = 100;
 
 export const getHostOnboardingResponseDataEventsItemNameMax = 500;
@@ -88,6 +100,14 @@ export const GetHostOnboardingResponse = zod.object({
   "categoryId": zod.string().min(1).max(getHostOnboardingResponseDataRecommendationsItemCategoryIdMax),
   "name": zod.string().max(getHostOnboardingResponseDataRecommendationsItemNameMax)
 })).max(getHostOnboardingResponseDataRecommendationsMax),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string().min(1).max(getHostOnboardingResponseDataCustomCategoriesItemIdMax),
+  "name": zod.string().max(getHostOnboardingResponseDataCustomCategoriesItemNameMax),
+  "entries": zod.array(zod.object({
+  "id": zod.string().min(1).max(getHostOnboardingResponseDataCustomCategoriesItemEntriesItemIdMax),
+  "name": zod.string().max(getHostOnboardingResponseDataCustomCategoriesItemEntriesItemNameMax)
+})).max(getHostOnboardingResponseDataCustomCategoriesItemEntriesMax)
+})).max(getHostOnboardingResponseDataCustomCategoriesMax),
   "events": zod.array(zod.object({
   "id": zod.string().min(1).max(getHostOnboardingResponseDataEventsItemIdMax),
   "name": zod.string().max(getHostOnboardingResponseDataEventsItemNameMax),
@@ -150,6 +170,18 @@ export const autosaveHostOnboardingBodyDataRecommendationsItemCategoryIdMax = 10
 
 export const autosaveHostOnboardingBodyDataRecommendationsItemNameMax = 500;
 
+export const autosaveHostOnboardingBodyDataCustomCategoriesItemIdMax = 100;
+
+export const autosaveHostOnboardingBodyDataCustomCategoriesItemNameMax = 500;
+
+export const autosaveHostOnboardingBodyDataCustomCategoriesItemEntriesItemIdMax = 100;
+
+export const autosaveHostOnboardingBodyDataCustomCategoriesItemEntriesItemNameMax = 500;
+
+export const autosaveHostOnboardingBodyDataCustomCategoriesItemEntriesMax = 100;
+
+export const autosaveHostOnboardingBodyDataCustomCategoriesMax = 30;
+
 export const autosaveHostOnboardingBodyDataEventsItemIdMax = 100;
 
 export const autosaveHostOnboardingBodyDataEventsItemNameMax = 500;
@@ -184,6 +216,14 @@ export const AutosaveHostOnboardingBody = zod.object({
   "categoryId": zod.string().min(1).max(autosaveHostOnboardingBodyDataRecommendationsItemCategoryIdMax),
   "name": zod.string().max(autosaveHostOnboardingBodyDataRecommendationsItemNameMax)
 })).optional(),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string().min(1).max(autosaveHostOnboardingBodyDataCustomCategoriesItemIdMax),
+  "name": zod.string().max(autosaveHostOnboardingBodyDataCustomCategoriesItemNameMax),
+  "entries": zod.array(zod.object({
+  "id": zod.string().min(1).max(autosaveHostOnboardingBodyDataCustomCategoriesItemEntriesItemIdMax),
+  "name": zod.string().max(autosaveHostOnboardingBodyDataCustomCategoriesItemEntriesItemNameMax)
+})).max(autosaveHostOnboardingBodyDataCustomCategoriesItemEntriesMax)
+})).max(autosaveHostOnboardingBodyDataCustomCategoriesMax).optional(),
   "events": zod.array(zod.object({
   "id": zod.string().min(1).max(autosaveHostOnboardingBodyDataEventsItemIdMax),
   "name": zod.string().max(autosaveHostOnboardingBodyDataEventsItemNameMax),
@@ -231,6 +271,18 @@ export const saveHostOnboardingBodyDataRecommendationsItemCategoryIdMax = 100;
 
 export const saveHostOnboardingBodyDataRecommendationsItemNameMax = 500;
 
+export const saveHostOnboardingBodyDataCustomCategoriesItemIdMax = 100;
+
+export const saveHostOnboardingBodyDataCustomCategoriesItemNameMax = 500;
+
+export const saveHostOnboardingBodyDataCustomCategoriesItemEntriesItemIdMax = 100;
+
+export const saveHostOnboardingBodyDataCustomCategoriesItemEntriesItemNameMax = 500;
+
+export const saveHostOnboardingBodyDataCustomCategoriesItemEntriesMax = 100;
+
+export const saveHostOnboardingBodyDataCustomCategoriesMax = 30;
+
 export const saveHostOnboardingBodyDataEventsItemIdMax = 100;
 
 export const saveHostOnboardingBodyDataEventsItemNameMax = 500;
@@ -265,6 +317,14 @@ export const SaveHostOnboardingBody = zod.object({
   "categoryId": zod.string().min(1).max(saveHostOnboardingBodyDataRecommendationsItemCategoryIdMax),
   "name": zod.string().max(saveHostOnboardingBodyDataRecommendationsItemNameMax)
 })).optional(),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string().min(1).max(saveHostOnboardingBodyDataCustomCategoriesItemIdMax),
+  "name": zod.string().max(saveHostOnboardingBodyDataCustomCategoriesItemNameMax),
+  "entries": zod.array(zod.object({
+  "id": zod.string().min(1).max(saveHostOnboardingBodyDataCustomCategoriesItemEntriesItemIdMax),
+  "name": zod.string().max(saveHostOnboardingBodyDataCustomCategoriesItemEntriesItemNameMax)
+})).max(saveHostOnboardingBodyDataCustomCategoriesItemEntriesMax)
+})).max(saveHostOnboardingBodyDataCustomCategoriesMax).optional(),
   "events": zod.array(zod.object({
   "id": zod.string().min(1).max(saveHostOnboardingBodyDataEventsItemIdMax),
   "name": zod.string().max(saveHostOnboardingBodyDataEventsItemNameMax),
@@ -319,6 +379,18 @@ export const confirmHostOnboardingSubmissionBodyDataOneRecommendationsItemNameMa
 
 export const confirmHostOnboardingSubmissionBodyDataOneRecommendationsMax = 300;
 
+export const confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemIdMax = 100;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemNameMax = 500;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemEntriesItemIdMax = 100;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemEntriesItemNameMax = 500;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemEntriesMax = 100;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesMax = 30;
+
 export const confirmHostOnboardingSubmissionBodyDataOneEventsItemIdMax = 100;
 
 export const confirmHostOnboardingSubmissionBodyDataOneEventsItemNameMax = 500;
@@ -356,6 +428,14 @@ export const ConfirmHostOnboardingSubmissionBody = zod.object({
   "categoryId": zod.string().min(1).max(confirmHostOnboardingSubmissionBodyDataOneRecommendationsItemCategoryIdMax),
   "name": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneRecommendationsItemNameMax)
 })).max(confirmHostOnboardingSubmissionBodyDataOneRecommendationsMax),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string().min(1).max(confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemIdMax),
+  "name": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemNameMax),
+  "entries": zod.array(zod.object({
+  "id": zod.string().min(1).max(confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemEntriesItemIdMax),
+  "name": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemEntriesItemNameMax)
+})).max(confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesItemEntriesMax)
+})).max(confirmHostOnboardingSubmissionBodyDataOneCustomCategoriesMax),
   "events": zod.array(zod.object({
   "id": zod.string().min(1).max(confirmHostOnboardingSubmissionBodyDataOneEventsItemIdMax),
   "name": zod.string().max(confirmHostOnboardingSubmissionBodyDataOneEventsItemNameMax),
@@ -452,6 +532,18 @@ export const getOwnerHostOnboardingResponseRoundsItemDataRecommendationsItemName
 
 export const getOwnerHostOnboardingResponseRoundsItemDataRecommendationsMax = 300;
 
+export const getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemIdMax = 100;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemNameMax = 500;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemEntriesItemIdMax = 100;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemEntriesItemNameMax = 500;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemEntriesMax = 100;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesMax = 30;
+
 export const getOwnerHostOnboardingResponseRoundsItemDataEventsItemIdMax = 100;
 
 export const getOwnerHostOnboardingResponseRoundsItemDataEventsItemNameMax = 500;
@@ -494,6 +586,14 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "categoryId": zod.string().min(1).max(getOwnerHostOnboardingResponseRoundsItemDataRecommendationsItemCategoryIdMax),
   "name": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataRecommendationsItemNameMax)
 })).max(getOwnerHostOnboardingResponseRoundsItemDataRecommendationsMax),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string().min(1).max(getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemIdMax),
+  "name": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemNameMax),
+  "entries": zod.array(zod.object({
+  "id": zod.string().min(1).max(getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemEntriesItemIdMax),
+  "name": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemEntriesItemNameMax)
+})).max(getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesItemEntriesMax)
+})).max(getOwnerHostOnboardingResponseRoundsItemDataCustomCategoriesMax),
   "events": zod.array(zod.object({
   "id": zod.string().min(1).max(getOwnerHostOnboardingResponseRoundsItemDataEventsItemIdMax),
   "name": zod.string().max(getOwnerHostOnboardingResponseRoundsItemDataEventsItemNameMax),
@@ -513,6 +613,18 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "name": zod.string().optional(),
   "proposalId": zod.string().nullish()
 })).optional(),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "hostCreated": zod.literal(true),
+  "provenance": zod.string(),
+  "categoryId": zod.string().nullable(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "proposalId": zod.string().nullable()
+}))
+})).describe('Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage.'),
   "events": zod.array(zod.object({
   "id": zod.string().optional(),
   "name": zod.string().optional(),

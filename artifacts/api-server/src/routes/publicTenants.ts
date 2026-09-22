@@ -5,7 +5,11 @@ import {
   GetPublicTenantResponse,
   SearchPublicTenantResponse,
 } from "@workspace/api-zod";
-import { buildTenantContent, type TenantContentTree } from "../lib/contentTree";
+import {
+  buildTenantContent,
+  resolveGuestContentTree,
+  type TenantContentTree,
+} from "../lib/contentTree";
 import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { wifiQrSvg } from "../lib/wifiQr";
@@ -63,7 +67,12 @@ async function buildPublicPayload(
   const selectedLang = lang && (publishedSource?.tree.languages ?? tenant.languages ?? []).includes(lang) ? lang : "sl";
   const saved = snapshot?.languages[selectedLang] ?? publishedSource;
   if (published && !saved) throw new Error("Objavljeni posnetek nima vsebine.");
-  const tree = saved?.tree ?? await buildTenantContent(tenant, { visibleOnly, lang: selectedLang === "sl" ? undefined : selectedLang });
+  const tree = saved
+    ? resolveGuestContentTree(saved.tree)
+    : await buildTenantContent(tenant, {
+        visibleOnly,
+        lang: selectedLang === "sl" ? undefined : selectedLang,
+      });
   const { ui, plurals } = saved ?? await getUiAndPlurals(tenant.id, selectedLang);
   const publicUrl = guestUrl(tree.slug);
   const qrSvg = await guestQrSvg(publicUrl);

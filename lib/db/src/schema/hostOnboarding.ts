@@ -20,6 +20,11 @@ export type HostOnboardingRecommendation = {
   categoryId: string;
   name: string;
 };
+export type HostOnboardingCustomCategory = {
+  id: string;
+  name: string;
+  entries: Array<{ id: string; name: string }>;
+};
 export type HostOnboardingEvent = {
   id: string;
   name: string;
@@ -40,6 +45,7 @@ export type HostOnboardingData = {
   houseRulesParking: string;
   offers: HostOnboardingOffer[];
   recommendations: HostOnboardingRecommendation[];
+  customCategories: HostOnboardingCustomCategory[];
   events: HostOnboardingEvent[];
 };
 export type HostOnboardingTargetReview = {
@@ -53,6 +59,11 @@ export type HostOnboardingRecommendationReview = {
   categoryKey: string;
   name: string;
   proposalId: string | null;
+  hostCreated?: boolean;
+  provenance?: string;
+  customCategoryId?: string;
+  customEntryId?: string;
+  categoryId?: string;
 };
 
 export const hostOnboardingRoundsTable = pgTable(

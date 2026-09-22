@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Loader2, Plus, Trash2, CheckCircle2, UploadCloud, X, LogOut } from "lucide-react";
+import { Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetHostOnboarding,
@@ -64,6 +64,11 @@ export default function HostOnboarding() {
   const [transientEvents, setTransientEvents] = useState({id: generateId(), name: "", date: "", time: ""});
   const [transientContact, setTransientContact] = useState({id: generateId(), name: "", phone: ""});
   const [transientOffer, setTransientOffer] = useState({id: generateId(), name: "", price: ""});
+  const [transientCustomCategory, setTransientCustomCategory] = useState({
+    id: generateId(),
+    name: "",
+  });
+  const [transientCustomEntries, setTransientCustomEntries] = useState<Record<string, { id: string; name: string }>>({});
   const [loggingOut, setLoggingOut] = useState(false);
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
@@ -72,6 +77,11 @@ export default function HostOnboarding() {
       contacts: data.contacts?.filter(c => c.name.trim() || c.phone.trim()) || [],
       offers: data.offers?.filter(o => o.name.trim() || o.price.trim()) || [],
       recommendations: data.recommendations?.filter(r => r.name.trim()) || [],
+      customCategories: (data.customCategories || [])
+        .map(category => ({
+          ...category,
+          entries: (category.entries || []).filter(entry => entry.name.trim()),
+        })),
       events: data.events?.filter(e => e.name.trim() || e.date.trim() || e.time.trim()) || [],
     };
     
@@ -89,9 +99,31 @@ export default function HostOnboarding() {
         finalData.recommendations!.push({ id: row.id, categoryId: catId, name: row.name });
       }
     });
+    finalData.customCategories = finalData.customCategories.map((category) => {
+      const transientEntry = transientCustomEntries[category.id];
+      if (!transientEntry?.name.trim()) return category;
+      return {
+        ...category,
+        entries: [...category.entries, { id: transientEntry.id, name: transientEntry.name }],
+      };
+    });
+    if (transientCustomCategory.name.trim()) {
+      finalData.customCategories.push({
+        id: transientCustomCategory.id,
+        name: transientCustomCategory.name,
+        entries: [],
+      });
+    }
 
     return finalData;
-  }, [transientContact, transientEvents, transientOffer, transientRecs]);
+  }, [
+    transientContact,
+    transientCustomCategory,
+    transientCustomEntries,
+    transientEvents,
+    transientOffer,
+    transientRecs,
+  ]);
 
   const enqueueSave = useCallback((data: HostOnboardingData, explicit = false) => {
     const snapshot = JSON.stringify(data);
@@ -459,6 +491,7 @@ export default function HostOnboarding() {
                 </div>
               </div>
               <button 
+                aria-label="Dodaj kontaktno osebo"
                 onClick={() => {
                   if (transientContact.name.trim() || transientContact.phone.trim()) {
                      updateData(d => ({ ...d, contacts: [...(d.contacts || []), { id: transientContact.id, name: transientContact.name, phone: transientContact.phone }] }));
@@ -467,7 +500,7 @@ export default function HostOnboarding() {
                 }}
                 className="mt-4 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
               >
-                <Plus className="w-5 h-5" /> Dodaj osebo
+                <span aria-hidden="true">+ Dodaj …</span>
               </button>
             </div>
           </div>
@@ -590,6 +623,7 @@ export default function HostOnboarding() {
             </div>
           </div>
           <button 
+            aria-label="Dodaj ponudbo"
             onClick={() => {
               if (transientOffer.name.trim() || transientOffer.price.trim()) {
                  updateData(d => ({ ...d, offers: [...(d.offers || []), { id: transientOffer.id, name: transientOffer.name, price: transientOffer.price }] }));
@@ -598,7 +632,7 @@ export default function HostOnboarding() {
             }}
             className="mt-4 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
           >
-            <Plus className="w-5 h-5" /> Dodaj še eno
+            <span aria-hidden="true">+ Dodaj …</span>
           </button>
         </section>
 
@@ -662,6 +696,7 @@ export default function HostOnboarding() {
                     </div>
                   </div>
                   <button 
+                    aria-label={`Dodaj priporočilo v kategorijo ${cat.name}`}
                     onClick={() => {
                        if (transientRecs[cat.id]?.name.trim()) {
                          const row = transientRecs[cat.id];
@@ -671,7 +706,7 @@ export default function HostOnboarding() {
                     }}
                     className="mt-3 flex items-center gap-2 text-[#157347] font-bold py-1.5 px-1 hover:opacity-80"
                   >
-                    <Plus className="w-4 h-4" /> Dodaj
+                    <span aria-hidden="true">+ Dodaj …</span>
                   </button>
                 </div>
               );
@@ -760,7 +795,8 @@ export default function HostOnboarding() {
                     </div>
                   </div>
                </div>
-               <button 
+               <button
+                 aria-label="Dodaj dogodek"
                 onClick={() => {
                   if (transientEvents.name.trim() || transientEvents.date.trim() || transientEvents.time.trim()) {
                      updateData(d => ({ ...d, events: [...(d.events || []), { id: transientEvents.id, name: transientEvents.name, date: transientEvents.date, time: transientEvents.time }] }));
@@ -769,9 +805,186 @@ export default function HostOnboarding() {
                 }}
                 className="mt-4 flex items-center gap-2 text-[#157347] font-bold py-2 px-1 hover:opacity-80 transition-opacity"
               >
-                <Plus className="w-5 h-5" /> Dodaj dogodek
+                <span aria-hidden="true">+ Dodaj …</span>
               </button>
             </div>
+
+            <div className="border-t border-[#E8EBE6]/60 pt-8">
+              <div className="mb-4">
+                <h3 className="font-bold text-[18px] text-[#121A14]">Svoja kategorija</h3>
+                <p className="text-sm text-[#66716A] mt-1">
+                  Če med ponujenimi kategorijami ne najdete ustrezne, dodajte svojo in vanjo vpišite priporočila.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {(formData.customCategories || []).map((category, categoryIndex) => {
+                  const transientEntry = transientCustomEntries[category.id] || {
+                    id: "",
+                    name: "",
+                  };
+                  return (
+                    <div key={category.id} className="rounded-xl border border-[#D8DED9] bg-white p-4">
+                      <div className="flex min-w-0 gap-2">
+                        <input
+                          type="text"
+                          aria-label={`Ime gostiteljeve kategorije ${categoryIndex + 1}`}
+                          placeholder="Ime kategorije"
+                          value={category.name}
+                          onChange={(event) => updateData((data) => ({
+                            ...data,
+                            customCategories: (data.customCategories || []).map((item) =>
+                              item.id === category.id ? { ...item, name: event.target.value } : item,
+                            ),
+                          }))}
+                          className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                        />
+                        <button
+                          type="button"
+                          aria-label={`Odstrani gostiteljevo kategorijo ${categoryIndex + 1}`}
+                          onClick={() => {
+                            updateData((data) => ({
+                              ...data,
+                              customCategories: (data.customCategories || []).filter((item) => item.id !== category.id),
+                            }));
+                            setTransientCustomEntries((current) => {
+                              const next = { ...current };
+                              delete next[category.id];
+                              return next;
+                            });
+                          }}
+                          className="w-12 shrink-0 rounded-xl border border-[#E8EBE6] text-red-500 hover:bg-red-50 flex items-center justify-center"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {(category.entries || []).map((entry, entryIndex) => (
+                          <div key={entry.id} className="flex min-w-0 gap-2">
+                            <input
+                              type="text"
+                              aria-label={`${category.name || "Gostiteljeva kategorija"}, priporočilo ${entryIndex + 1}`}
+                              placeholder="Ime lokacije..."
+                              value={entry.name}
+                              onChange={(event) => updateData((data) => ({
+                                ...data,
+                                customCategories: (data.customCategories || []).map((item) =>
+                                  item.id === category.id
+                                    ? {
+                                        ...item,
+                                        entries: item.entries.map((currentEntry) =>
+                                          currentEntry.id === entry.id
+                                            ? { ...currentEntry, name: event.target.value }
+                                            : currentEntry,
+                                        ),
+                                      }
+                                    : item,
+                                ),
+                              }))}
+                              className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                            />
+                            <button
+                              type="button"
+                              aria-label={`Odstrani priporočilo ${entryIndex + 1} iz kategorije ${category.name}`}
+                              onClick={() => updateData((data) => ({
+                                ...data,
+                                customCategories: (data.customCategories || []).map((item) =>
+                                  item.id === category.id
+                                    ? { ...item, entries: item.entries.filter((currentEntry) => currentEntry.id !== entry.id) }
+                                    : item,
+                                ),
+                              }))}
+                              className="w-12 shrink-0 rounded-xl border border-[#E8EBE6] text-red-500 hover:bg-red-50 flex items-center justify-center"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        ))}
+
+                        <div className="flex min-w-0 gap-2">
+                          <input
+                            type="text"
+                            aria-label={`Novo priporočilo za kategorijo ${category.name}`}
+                            placeholder="Ime lokacije..."
+                            value={transientEntry.name}
+                            onChange={(event) => setTransientCustomEntries((current) => ({
+                              ...current,
+                              [category.id]: {
+                                id: current[category.id]?.id || generateId(),
+                                name: event.target.value,
+                              },
+                            }))}
+                            className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                          />
+                          <div className="w-12 shrink-0" />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={`Dodaj priporočilo v gostiteljevo kategorijo ${category.name}`}
+                        onClick={() => {
+                          if (!transientEntry.name.trim()) return;
+                          const entry = transientCustomEntries[category.id];
+                          updateData((data) => ({
+                            ...data,
+                            customCategories: (data.customCategories || []).map((item) =>
+                              item.id === category.id
+                                ? { ...item, entries: [...item.entries, { id: entry.id, name: entry.name }] }
+                                : item,
+                            ),
+                          }));
+                          setTransientCustomEntries((current) => ({
+                            ...current,
+                            [category.id]: { id: generateId(), name: "" },
+                          }));
+                        }}
+                        className="mt-3 py-2 px-1 font-bold text-[#157347] hover:opacity-80"
+                      >
+                        <span aria-hidden="true">+ Dodaj …</span>
+                      </button>
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <div className="flex min-w-0 gap-2">
+                    <input
+                      type="text"
+                      aria-label="Ime nove gostiteljeve kategorije"
+                      placeholder="Ime kategorije"
+                      value={transientCustomCategory.name}
+                      onChange={(event) => setTransientCustomCategory((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))}
+                      className="min-w-0 flex-1 rounded-xl border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+                    />
+                    <div className="w-12 shrink-0" />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Dodaj gostiteljevo kategorijo"
+                    disabled={!transientCustomCategory.name.trim()}
+                    onClick={() => {
+                      if (!transientCustomCategory.name.trim()) return;
+                      updateData((data) => ({
+                        ...data,
+                        customCategories: [
+                          ...(data.customCategories || []),
+                          { id: transientCustomCategory.id, name: transientCustomCategory.name, entries: [] },
+                        ],
+                      }));
+                      setTransientCustomCategory({ id: generateId(), name: "" });
+                    }}
+                    className="mt-3 py-2 px-1 font-bold text-[#157347] hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span aria-hidden="true">+ Dodaj …</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 

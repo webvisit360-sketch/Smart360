@@ -14,6 +14,11 @@ export interface HostOnboardingData {
   houseRulesParking?: string;
   offers?: Array<{ id: string; name: string; price: string }>;
   recommendations?: Array<{ id: string; categoryId: string; name: string }>;
+  customCategories?: Array<{
+    id: string;
+    name: string;
+    entries: Array<{ id: string; name: string }>;
+  }>;
   events?: Array<{ id: string; name: string; date: string; time: string }>;
 }
 
@@ -177,6 +182,14 @@ export interface OwnerTargetReview {
 export interface OwnerOnboardingRound extends Omit<HostOnboardingResponse, "tenantId" | "categories"> {
   targetReview: OwnerTargetReview[];
   recommendations: Array<{ categoryKey: string; name: string; proposalId: string | null }>;
+  customCategories: Array<{
+    id: string;
+    name: string;
+    hostCreated: true;
+    provenance: string;
+    categoryId: string | null;
+    entries: Array<{ id: string; name: string; proposalId: string | null }>;
+  }>;
   events: Array<{ id: string; name: string; date: string; time: string; status: "pending" }>;
   notification: {
     status: "pending" | "sending" | "sent" | "failed";

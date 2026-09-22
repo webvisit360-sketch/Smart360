@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { HostOnboardingContact } from './hostOnboardingContact';
+import type { HostOnboardingCustomCategory } from './hostOnboardingCustomCategory';
 import type { HostOnboardingEvent } from './hostOnboardingEvent';
 import type { HostOnboardingOffer } from './hostOnboardingOffer';
 import type { HostOnboardingRecommendation } from './hostOnboardingRecommendation';
@@ -35,6 +36,8 @@ export interface HostOnboardingData {
   offers: HostOnboardingOffer[];
   /** @maxItems 300 */
   recommendations: HostOnboardingRecommendation[];
+  /** @maxItems 30 */
+  customCategories: HostOnboardingCustomCategory[];
   /** @maxItems 100 */
   events: HostOnboardingEvent[];
 }

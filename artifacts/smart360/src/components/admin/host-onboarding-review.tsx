@@ -98,6 +98,44 @@ function RoundReview({ round }: { round: OwnerOnboardingRound }) {
       </section>
 
       <section>
+        <h3 className="font-semibold border-b pb-2 mb-3">Gostiteljeve kategorije</h3>
+        {round.customCategories.length ? (
+          <div className="space-y-3">
+            {round.customCategories.map((category) => (
+              <div key={category.id} className="rounded-xl border border-amber-200 bg-amber-50/40 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="font-semibold">{category.name}</h4>
+                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                    Gostiteljeva kategorija
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Izvor: {category.provenance === "host_onboarding" ? "Obrazec gostitelja" : category.provenance}
+                  {category.categoryId ? ` · Kategorija ustvarjena: ${category.categoryId}` : " · Čaka na obravnavo operaterja"}
+                </p>
+                {category.entries.length ? (
+                  <ul className="mt-3 space-y-2">
+                    {category.entries.map((entry) => (
+                      <li key={entry.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm">
+                        <b>{entry.name}</b>
+                        <span className="text-muted-foreground">
+                          {entry.proposalId ? "Predlog ustvarjen" : "Brez predloga"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-3 text-sm text-muted-foreground">Gostitelj še ni dodal priporočil.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Gostitelj ni predlagal svojih kategorij.</p>
+        )}
+      </section>
+
+      <section>
         <h3 className="font-semibold border-b pb-2 mb-3">Dogodki</h3>
         {round.events.length ? <ul className="space-y-2">{round.events.map((event) => (
           <li key={event.id} className="rounded-lg bg-muted/50 p-3 text-sm flex flex-wrap justify-between gap-2">
