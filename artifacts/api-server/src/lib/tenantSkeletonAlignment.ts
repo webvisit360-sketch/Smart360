@@ -21,11 +21,19 @@ import {
 export type TenantSkeletonAlignmentResult = {
   summary: string;
   counts: {
+    sectionsUpdated: number;
     categoriesUpdated: number;
     translationsUpdated: number;
     categoriesRetired: number;
     proposalsRekeyed: number;
     itemMoves: number;
+  };
+  titleChanges: Array<{ key: string; oldTitle: string; newTitle: string }>;
+  stayTitleNormalization: {
+    status: "changed" | "no_changes" | "skipped";
+    summary: string;
+    titleChanged: boolean;
+    translationsUpdated: number;
   };
   skipped: Array<{ key: string; reason: string }>;
   changed: boolean;
@@ -79,17 +87,105 @@ export async function alignTenantSkeleton(
     if (!tenant) return null;
 
     const counts = {
+      sectionsUpdated: 0,
       categoriesUpdated: 0,
       translationsUpdated: 0,
       categoriesRetired: 0,
       proposalsRekeyed: 0,
       itemMoves: 0,
     };
+    const titleChanges: Array<{ key: string; oldTitle: string; newTitle: string }> = [];
     const skipped: Array<{ key: string; reason: string }> = [];
     const type = (["kamp", "hotel", "apartmaji"] as const).includes(tenant.tenantType as TenantType)
       ? tenant.tenantType as TenantType
       : "apartmaji";
-    const plan = tenantSeedPlan(type).filter((section) => section.key === "explore" || section.key === "services");
+    const fullPlan = tenantSeedPlan(type);
+    const staySeed = fullPlan.find((section) => section.key === "stay")!;
+    const [staySection] = await tx.select().from(sectionsTable)
+      .where(and(
+        eq(sectionsTable.tenantId, tenantId),
+        eq(sectionsTable.key, "stay"),
+        eq(sectionsTable.position, 0),
+      ))
+      .limit(1);
+    let stayTitleNormalization: TenantSkeletonAlignmentResult["stayTitleNormalization"];
+    if (!staySection) {
+      const reason = "Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen.";
+      skipped.push({ key: "stay", reason });
+      stayTitleNormalization = {
+        status: "skipped",
+        summary: `Naslov razdelka: preskočeno. ${reason}`,
+        titleChanged: false,
+        translationsUpdated: 0,
+      };
+    } else {
+      const oldTitle = staySection.title;
+      if (staySection.title !== staySeed.names.sl) {
+        await tx.update(sectionsTable).set({
+          title: staySeed.names.sl,
+        }).where(and(eq(sectionsTable.id, staySection.id), eq(sectionsTable.tenantId, tenantId)));
+        counts.sectionsUpdated += 1;
+        titleChanges.push({
+          key: "stay",
+          oldTitle: staySection.title,
+          newTitle: staySeed.names.sl,
+        });
+      }
+      let stayTranslationsUpdated = 0;
+      for (const language of ["sl", "en", "de", "it"] as const) {
+        const [current] = await tx.select({
+          id: translationsTable.id,
+          value: translationsTable.value,
+          stale: translationsTable.stale,
+        }).from(translationsTable).where(and(
+          eq(translationsTable.model, "section"),
+          eq(translationsTable.recordId, staySection.id),
+          eq(translationsTable.field, "title"),
+          eq(translationsTable.lang, language),
+        )).limit(1);
+        // Slovenian is stored on sections.title. Normalize an existing override,
+        // but retain the established representation when no override exists.
+        if (language === "sl" && !current) continue;
+        if (!current || current.value !== staySeed.names[language] || current.stale) {
+          await tx.insert(translationsTable).values({
+            model: "section",
+            recordId: staySection.id,
+            field: "title",
+            lang: language,
+            value: staySeed.names[language],
+            stale: false,
+          }).onConflictDoUpdate({
+            target: [translationsTable.model, translationsTable.recordId, translationsTable.field, translationsTable.lang],
+            set: { value: staySeed.names[language], stale: false },
+          });
+          counts.translationsUpdated += 1;
+          stayTranslationsUpdated += 1;
+        }
+      }
+      const titleChanged = oldTitle !== staySeed.names.sl;
+      stayTitleNormalization = titleChanged
+        ? {
+            status: "changed",
+            summary: `Naslov razdelka: »${oldTitle}« → »${staySeed.names.sl}«.${stayTranslationsUpdated > 0 ? ` Usklajeni prevodi: ${stayTranslationsUpdated}.` : ""}`,
+            titleChanged,
+            translationsUpdated: stayTranslationsUpdated,
+          }
+        : stayTranslationsUpdated > 0
+          ? {
+              status: "changed",
+              summary: `Naslov razdelka: brez preimenovanja; usklajeni prevodi: ${stayTranslationsUpdated}.`,
+              titleChanged,
+              translationsUpdated: stayTranslationsUpdated,
+            }
+          : {
+              status: "no_changes",
+              summary: "Naslov razdelka: Brez sprememb.",
+              titleChanged,
+              translationsUpdated: 0,
+            };
+    }
+
+    const plan = fullPlan.filter((section) => section.key === "explore" || section.key === "services");
     const sectionRows = await tx.select().from(sectionsTable)
       .where(and(eq(sectionsTable.tenantId, tenantId), inArray(sectionsTable.key, ["explore", "services"])))
       .orderBy(asc(sectionsTable.position));
@@ -401,10 +497,10 @@ export async function alignTenantSkeleton(
       await tx.update(tenantsTable).set({ hasUnpublishedChanges: true }).where(eq(tenantsTable.id, tenantId));
     }
     const summary = changed
-      ? `Uskladitev je končana: ${counts.categoriesUpdated} kategorij, ${counts.translationsUpdated} prevodov, ${counts.categoriesRetired} umaknjenih starih kategorij in ${counts.proposalsRekeyed} prerazvrščenih predlogov.`
+      ? `Uskladitev je končana: ${counts.sectionsUpdated} razdelkov, ${counts.categoriesUpdated} kategorij, ${counts.translationsUpdated} prevodov, ${counts.categoriesRetired} umaknjenih starih kategorij in ${counts.proposalsRekeyed} prerazvrščenih predlogov.`
       : skipped.length > 0
         ? `Ni novih odobrenih sprememb. ${skipped.length} odprtih postavk ostaja za ročno odločitev.`
-        : "Ni novih odobrenih sprememb.";
-    return { summary, counts, skipped, changed };
+        : "Brez sprememb.";
+    return { summary, counts, titleChanges, stayTitleNormalization, skipped, changed };
   }, { isolationLevel: "serializable" });
 }

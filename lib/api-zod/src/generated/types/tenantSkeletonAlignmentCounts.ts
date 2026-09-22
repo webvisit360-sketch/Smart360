@@ -7,6 +7,7 @@
  */
 
 export interface TenantSkeletonAlignmentCounts {
+  sectionsUpdated: number;
   categoriesUpdated: number;
   translationsUpdated: number;
   categoriesRetired: number;

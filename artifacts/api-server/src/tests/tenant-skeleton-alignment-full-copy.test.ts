@@ -25,6 +25,7 @@ import {
 } from "./helpers/tenantAlignmentFixture";
 
 const zeroCounts = {
+  sectionsUpdated: 0,
   categoriesUpdated: 0,
   translationsUpdated: 0,
   categoriesRetired: 0,
@@ -153,6 +154,7 @@ test("development full copies apply the approved Gril split, preserve rows, and 
     });
     assert.ok(grilResult);
     assert.deepEqual(grilResult.counts, {
+      sectionsUpdated: 0,
       categoriesUpdated: 0,
       translationsUpdated: 0,
       categoriesRetired: 1,

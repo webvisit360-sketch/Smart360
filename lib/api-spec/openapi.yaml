@@ -2785,12 +2785,30 @@ components:
     TenantSkeletonAlignmentCounts:
       type: object
       properties:
+        sectionsUpdated: { type: number }
         categoriesUpdated: { type: number }
         translationsUpdated: { type: number }
         categoriesRetired: { type: number }
         proposalsRekeyed: { type: number }
         itemMoves: { type: number }
-      required: [categoriesUpdated, translationsUpdated, categoriesRetired, proposalsRekeyed, itemMoves]
+      required: [sectionsUpdated, categoriesUpdated, translationsUpdated, categoriesRetired, proposalsRekeyed, itemMoves]
+    TenantSkeletonAlignmentTitleChange:
+      type: object
+      properties:
+        key: { type: string }
+        oldTitle: { type: string }
+        newTitle: { type: string }
+      required: [key, oldTitle, newTitle]
+    TenantSkeletonAlignmentStayTitleNormalization:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [changed, no_changes, skipped]
+        summary: { type: string }
+        titleChanged: { type: boolean }
+        translationsUpdated: { type: number }
+      required: [status, summary, titleChanged, translationsUpdated]
     TenantSkeletonAlignmentSkip:
       type: object
       properties:
@@ -2803,12 +2821,18 @@ components:
         summary: { type: string }
         counts:
           $ref: "#/components/schemas/TenantSkeletonAlignmentCounts"
+        titleChanges:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantSkeletonAlignmentTitleChange"
+        stayTitleNormalization:
+          $ref: "#/components/schemas/TenantSkeletonAlignmentStayTitleNormalization"
         skipped:
           type: array
           items:
             $ref: "#/components/schemas/TenantSkeletonAlignmentSkip"
         changed: { type: boolean }
-      required: [summary, counts, skipped, changed]
+      required: [summary, counts, titleChanges, stayTitleNormalization, skipped, changed]
     HostOnboardingContact:
       type: object
       additionalProperties: false

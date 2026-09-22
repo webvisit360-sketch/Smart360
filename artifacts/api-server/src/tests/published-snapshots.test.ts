@@ -3,7 +3,7 @@ import test, { mock } from "node:test";
 import { randomUUID } from "node:crypto";
 import express from "express";
 import type { AddressInfo } from "node:net";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   db, pool, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
   publishedSnapshotsTable, translationsTable, runWithDatabase, type Db,
@@ -12,6 +12,8 @@ import {
   ensurePublishedSnapshotSchema, ensureTenantPublication, readPublishedContent,
   previewPublication, replacePublishedSnapshot, publishedSnapshotReferences,
 } from "../lib/publishedSnapshots";
+import { alignTenantSkeleton } from "../lib/tenantSkeletonAlignment";
+import { seedTenantContent } from "../lib/tenantSeeds";
 import publicTenantsRouter, { invalidateTenantCache } from "../routes/publicTenants";
 import ordersRouter from "../routes/orders";
 
@@ -118,54 +120,93 @@ test("one snapshot isolates draft edits, retains deleted photos, diffs accuratel
   }
 });
 
-test("a disposable destination-title draft is dirty and diffable without changing its snapshot", async () => {
+test("alignment normalizes one disposable tenant destination title idempotently without touching snapshots or another tenant", async () => {
   await ensurePublishedSnapshotSchema();
-  const [tenant] = await db.insert(tenantsTable).values({
-    slug: `snapshot-destination-title-${randomUUID()}`,
-    name: "Destination title snapshot fixture",
-    isPublished: true,
-    hasUnpublishedChanges: false,
-    languages: ["sl", "en", "de", "it"],
-  }).returning();
+  const suffix = randomUUID();
+  const [tenant, otherTenant] = await db.insert(tenantsTable).values([
+    {
+      slug: `snapshot-destination-title-${suffix}`,
+      name: "Destination title snapshot fixture",
+      tenantType: "apartmaji",
+      isPublished: true,
+      hasUnpublishedChanges: false,
+      languages: ["sl", "en", "de", "it"],
+    },
+    {
+      slug: `snapshot-destination-other-${suffix}`,
+      name: "Untouched destination fixture",
+      tenantType: "hotel",
+      isPublished: true,
+      hasUnpublishedChanges: false,
+      languages: ["sl", "en", "de", "it"],
+    },
+  ]).returning();
   const id = tenant!.id;
-  let sectionId: string | undefined;
+  const otherId = otherTenant!.id;
 
   try {
-    const [section] = await db.insert(sectionsTable).values({
-      tenantId: id,
-      key: "stay",
-      title: "Vaša nastanitev",
-      position: 0,
-    }).returning();
-    sectionId = section!.id;
-    await db.insert(translationsTable).values([
-      { model: "section", recordId: section!.id, field: "title", lang: "en", value: "Your stay" },
-      { model: "section", recordId: section!.id, field: "title", lang: "de", value: "Ihr Aufenthalt" },
-      { model: "section", recordId: section!.id, field: "title", lang: "it", value: "Il vostro soggiorno" },
-    ]);
+    await seedTenantContent(id, "apartmaji");
+    await seedTenantContent(otherId, "hotel");
+    const [section] = await db.select().from(sectionsTable)
+      .where(and(eq(sectionsTable.tenantId, id), eq(sectionsTable.key, "stay")));
+    const [otherSection] = await db.select().from(sectionsTable)
+      .where(and(eq(sectionsTable.tenantId, otherId), eq(sectionsTable.key, "stay")));
+    await db.update(sectionsTable).set({ title: "Vaša nastanitev", position: 0 })
+      .where(eq(sectionsTable.id, section!.id));
+    await db.update(sectionsTable).set({ title: "Nedotaknjena nastanitev", position: 3 })
+      .where(eq(sectionsTable.id, otherSection!.id));
+    await db.update(translationsTable).set({ stale: true }).where(eq(translationsTable.recordId, section!.id));
+    await db.update(translationsTable).set({
+      value: "Your stay",
+      stale: true,
+    }).where(and(eq(translationsTable.recordId, section!.id), eq(translationsTable.lang, "en")));
+    await db.update(translationsTable).set({
+      value: "Ihr Aufenthalt",
+      stale: true,
+    }).where(and(eq(translationsTable.recordId, section!.id), eq(translationsTable.lang, "de")));
+    await db.update(translationsTable).set({
+      value: "Il vostro soggiorno",
+      stale: true,
+    }).where(and(eq(translationsTable.recordId, section!.id), eq(translationsTable.lang, "it")));
+    await db.update(tenantsTable).set({ hasUnpublishedChanges: false })
+      .where(inArray(tenantsTable.id, [id, otherId]));
     await ensureTenantPublication(id);
+    await ensureTenantPublication(otherId);
     const publishedBefore = structuredClone(await readPublishedContent(id));
+    const otherPublishedBefore = structuredClone(await readPublishedContent(otherId));
+    const otherDraftBefore = await db.select().from(sectionsTable)
+      .where(eq(sectionsTable.tenantId, otherId));
 
-    await db.transaction(async (tx) => {
-      await tx.update(sectionsTable)
-        .set({ title: "Vaša destinacija" })
-        .where(eq(sectionsTable.id, section!.id));
-      for (const [lang, value] of [
-        ["en", "Your destination"],
-        ["de", "Ihre Destination"],
-        ["it", "La vostra destinazione"],
-      ] as const) {
-        await tx.update(translationsTable)
-          .set({ value, stale: false, updatedAt: new Date() })
-          .where(and(
-            eq(translationsTable.recordId, section!.id),
-            eq(translationsTable.lang, lang),
-          ));
-      }
-      await tx.update(tenantsTable)
-        .set({ hasUnpublishedChanges: true })
-        .where(eq(tenantsTable.id, id));
+    const result = await alignTenantSkeleton(id);
+    assert.ok(result);
+    assert.equal(result.changed, true);
+    assert.equal(result.counts.sectionsUpdated, 1);
+    assert.equal(result.counts.translationsUpdated, 3);
+    assert.deepEqual(result.titleChanges, [{
+      key: "stay",
+      oldTitle: "Vaša nastanitev",
+      newTitle: "Vaša destinacija",
+    }]);
+    assert.deepEqual(result.stayTitleNormalization, {
+      status: "changed",
+      summary: "Naslov razdelka: »Vaša nastanitev« → »Vaša destinacija«. Usklajeni prevodi: 3.",
+      titleChanged: true,
+      translationsUpdated: 3,
     });
+    const [normalized] = await db.select().from(sectionsTable).where(eq(sectionsTable.id, section!.id));
+    assert.equal(normalized!.title, "Vaša destinacija");
+    assert.equal(normalized!.position, 0);
+    const normalizedTranslations = await db.select().from(translationsTable)
+      .where(eq(translationsTable.recordId, section!.id));
+    assert.deepEqual(
+      normalizedTranslations.map(({ lang, value, stale }) => ({ lang, value, stale }))
+        .sort((a, b) => a.lang.localeCompare(b.lang)),
+      [
+        { lang: "de", value: "Ihre Destination", stale: false },
+        { lang: "en", value: "Your destination", stale: false },
+        { lang: "it", value: "La vostra destinazione", stale: false },
+      ],
+    );
 
     const [dirtyTenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, id));
     assert.equal(dirtyTenant!.hasUnpublishedChanges, true);
@@ -178,11 +219,56 @@ test("a disposable destination-title draft is dirty and diffable without changin
       } — prevod (${lang})`));
     }
     assert.deepEqual(await readPublishedContent(id), publishedBefore);
+    assert.deepEqual(await readPublishedContent(otherId), otherPublishedBefore);
+    assert.deepEqual(
+      await db.select().from(sectionsTable).where(eq(sectionsTable.tenantId, otherId)),
+      otherDraftBefore,
+    );
+    assert.equal(otherSection!.title, "Vaša destinacija");
+    const [otherAfter] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, otherId));
+    assert.equal(otherAfter!.hasUnpublishedChanges, false);
+
+    const replay = await alignTenantSkeleton(id);
+    assert.ok(replay);
+    assert.equal(replay.changed, false);
+    assert.equal(replay.summary, "Brez sprememb.");
+    assert.deepEqual(replay.titleChanges, []);
+    assert.deepEqual(replay.stayTitleNormalization, {
+      status: "no_changes",
+      summary: "Naslov razdelka: Brez sprememb.",
+      titleChanged: false,
+      translationsUpdated: 0,
+    });
+
+    const offPositionResult = await alignTenantSkeleton(otherId);
+    assert.ok(offPositionResult);
+    assert.equal(offPositionResult.changed, false);
+    assert.equal(offPositionResult.stayTitleNormalization.status, "skipped");
+    assert.match(offPositionResult.stayTitleNormalization.summary, /preskočeno/);
+    assert.deepEqual(
+      await db.select().from(sectionsTable).where(eq(sectionsTable.tenantId, otherId)),
+      otherDraftBefore,
+    );
+    assert.deepEqual(await readPublishedContent(otherId), otherPublishedBefore);
+    const [otherAfterSkipped] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, otherId));
+    assert.equal(otherAfterSkipped!.hasUnpublishedChanges, false);
+
+    await db.update(translationsTable).set({ stale: true })
+      .where(and(eq(translationsTable.recordId, section!.id), eq(translationsTable.lang, "en")));
+    await db.update(tenantsTable).set({ hasUnpublishedChanges: false }).where(eq(tenantsTable.id, id));
+    const translationOnly = await alignTenantSkeleton(id);
+    assert.ok(translationOnly);
+    assert.equal(translationOnly.changed, true);
+    assert.deepEqual(translationOnly.titleChanges, []);
+    assert.deepEqual(translationOnly.stayTitleNormalization, {
+      status: "changed",
+      summary: "Naslov razdelka: brez preimenovanja; usklajeni prevodi: 1.",
+      titleChanged: false,
+      translationsUpdated: 1,
+    });
+    assert.deepEqual(await readPublishedContent(id), publishedBefore);
   } finally {
-    if (sectionId) {
-      await db.delete(translationsTable).where(eq(translationsTable.recordId, sectionId));
-    }
-    await db.delete(tenantsTable).where(eq(tenantsTable.id, id));
+    await db.delete(tenantsTable).where(inArray(tenantsTable.id, [id, otherId]));
   }
 });
 

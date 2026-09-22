@@ -193,7 +193,7 @@ test("real development DB: Gril and MENINA copies align without losing content o
     const meninaReplay = await alignTenantSkeleton(meninaId, { fixtureProposalRules: [...rules, isolatedStaleRule] });
     assert.equal(grilReplay!.changed, false);
     assert.deepEqual(grilReplay!.counts, {
-      categoriesUpdated: 0, translationsUpdated: 0, categoriesRetired: 0, proposalsRekeyed: 0, itemMoves: 0,
+      sectionsUpdated: 0, categoriesUpdated: 0, translationsUpdated: 0, categoriesRetired: 0, proposalsRekeyed: 0, itemMoves: 0,
     });
     assert.equal(meninaReplay!.changed, false);
     assert.equal(meninaReplay!.counts.proposalsRekeyed, 0);

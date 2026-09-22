@@ -32,15 +32,29 @@ import {
 type AlignmentResult = {
   summary: string;
   counts: {
+    sectionsUpdated: number;
     categoriesUpdated: number;
     translationsUpdated: number;
     categoriesRetired: number;
     proposalsRekeyed: number;
     itemMoves: number;
   };
+  titleChanges: Array<{ key: string; oldTitle: string; newTitle: string }>;
+  stayTitleNormalization: {
+    status: "changed" | "no_changes" | "skipped";
+    summary: string;
+    titleChanged: boolean;
+    translationsUpdated: number;
+  };
   skipped: Array<{ key: string; reason: string }>;
   changed: boolean;
 };
+
+export function stayTitleNormalizationText(
+  result: Pick<AlignmentResult, "stayTitleNormalization">,
+): string {
+  return result.stayTitleNormalization.summary;
+}
 
 function errorMessage(error: unknown): string {
   const value = error as {
@@ -178,7 +192,14 @@ export function SkeletonAlignmentAction({ tenantId }: { tenantId: string }) {
             </AlertTitle>
             <AlertDescription className="space-y-3">
               <p data-testid="text-skeleton-alignment-summary">{result.summary}</p>
-              <dl className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-5">
+              <p
+                className="font-medium text-foreground"
+                data-testid="text-skeleton-title-normalization"
+              >
+                {stayTitleNormalizationText(result)}
+              </p>
+              <dl className="grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-6">
+                <div><dt className="text-xs text-muted-foreground">Razdelki</dt><dd className="font-semibold" data-testid="count-skeleton-sections-updated">{result.counts.sectionsUpdated}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Kategorije</dt><dd className="font-semibold" data-testid="count-skeleton-categories-updated">{result.counts.categoriesUpdated}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Prevodi</dt><dd className="font-semibold" data-testid="count-skeleton-translations-updated">{result.counts.translationsUpdated}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Umaknjene</dt><dd className="font-semibold" data-testid="count-skeleton-categories-retired">{result.counts.categoriesRetired}</dd></div>

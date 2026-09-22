@@ -6,11 +6,34 @@
  * OpenAPI spec version: 0.1.0
  */
 export interface TenantSkeletonAlignmentCounts {
+  sectionsUpdated: number;
   categoriesUpdated: number;
   translationsUpdated: number;
   categoriesRetired: number;
   proposalsRekeyed: number;
   itemMoves: number;
+}
+
+export interface TenantSkeletonAlignmentTitleChange {
+  key: string;
+  oldTitle: string;
+  newTitle: string;
+}
+
+export type TenantSkeletonAlignmentStayTitleNormalizationStatus = typeof TenantSkeletonAlignmentStayTitleNormalizationStatus[keyof typeof TenantSkeletonAlignmentStayTitleNormalizationStatus];
+
+
+export const TenantSkeletonAlignmentStayTitleNormalizationStatus = {
+  changed: 'changed',
+  no_changes: 'no_changes',
+  skipped: 'skipped',
+} as const;
+
+export interface TenantSkeletonAlignmentStayTitleNormalization {
+  status: TenantSkeletonAlignmentStayTitleNormalizationStatus;
+  summary: string;
+  titleChanged: boolean;
+  translationsUpdated: number;
 }
 
 export interface TenantSkeletonAlignmentSkip {
@@ -21,6 +44,8 @@ export interface TenantSkeletonAlignmentSkip {
 export interface TenantSkeletonAlignmentResult {
   summary: string;
   counts: TenantSkeletonAlignmentCounts;
+  titleChanges: TenantSkeletonAlignmentTitleChange[];
+  stayTitleNormalization: TenantSkeletonAlignmentStayTitleNormalization;
   skipped: TenantSkeletonAlignmentSkip[];
   changed: boolean;
 }

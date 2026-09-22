@@ -1009,11 +1009,23 @@ export const AlignTenantSkeletonParams = zod.object({
 export const AlignTenantSkeletonResponse = zod.object({
   "summary": zod.string(),
   "counts": zod.object({
+  "sectionsUpdated": zod.number(),
   "categoriesUpdated": zod.number(),
   "translationsUpdated": zod.number(),
   "categoriesRetired": zod.number(),
   "proposalsRekeyed": zod.number(),
   "itemMoves": zod.number()
+}),
+  "titleChanges": zod.array(zod.object({
+  "key": zod.string(),
+  "oldTitle": zod.string(),
+  "newTitle": zod.string()
+})),
+  "stayTitleNormalization": zod.object({
+  "status": zod.enum(['changed', 'no_changes', 'skipped']),
+  "summary": zod.string(),
+  "titleChanged": zod.boolean(),
+  "translationsUpdated": zod.number()
 }),
   "skipped": zod.array(zod.object({
   "key": zod.string(),

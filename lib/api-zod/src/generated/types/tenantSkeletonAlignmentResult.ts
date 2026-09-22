@@ -7,10 +7,14 @@
  */
 import type { TenantSkeletonAlignmentCounts } from './tenantSkeletonAlignmentCounts';
 import type { TenantSkeletonAlignmentSkip } from './tenantSkeletonAlignmentSkip';
+import type { TenantSkeletonAlignmentStayTitleNormalization } from './tenantSkeletonAlignmentStayTitleNormalization';
+import type { TenantSkeletonAlignmentTitleChange } from './tenantSkeletonAlignmentTitleChange';
 
 export interface TenantSkeletonAlignmentResult {
   summary: string;
   counts: TenantSkeletonAlignmentCounts;
+  titleChanges: TenantSkeletonAlignmentTitleChange[];
+  stayTitleNormalization: TenantSkeletonAlignmentStayTitleNormalization;
   skipped: TenantSkeletonAlignmentSkip[];
   changed: boolean;
 }

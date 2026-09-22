@@ -117,7 +117,10 @@ router.post("/admin/tenants/:id/align-skeleton", requireOperator, async (req, re
       tenantId: parsed.data.id,
       action: "maintenance",
       entity: "category",
-      summary: "Smart360 je uskladil strukturo Okolice s skupnim skeletom.",
+      summary: [
+        "Smart360 je uskladil strukturo Okolice s skupnim skeletom.",
+        result.stayTitleNormalization.summary,
+      ].filter(Boolean).join("\n"),
     });
   } else {
     // The centralized admin mutation invalidator must not evict guest caches
