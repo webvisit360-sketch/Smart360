@@ -1,0 +1,28 @@
+New feature: host onboarding form ("Obrazec za gostitelja"), per the approved design (v6). Follow the design values below EXACTLY, do not invent.
+
+FLOW
+1. After a host activates their account (sets password via the welcome link), their FIRST login lands on this form instead of the regular host admin. It reappears on later logins only until first submission; after that, normal host admin. The operator can also open any tenant's form state read-only.
+2. The form autosaves continuously (per field/row, server-side); the host can leave and return. A quiet "Osnutek shranjen" indicator, no per-field Save buttons.
+3. Actions at bottom: "Shrani osnutek" (explicit save + stays) and "Potrdi in oddaj" (submits).
+
+SECTIONS (in this order, numbered circles)
+1. Osnovni podatki: naziv nastanitve (kot naj ga vidijo gostje; full width, prefilled with the current tenant name), naslov nastanitve (full width), telefon za goste, e-pošta za goste, spletna stran (optional), prijava od, odjava do, plus KONTAKTNE OSEBE ZA GOSTE as repeatable rows (ime in priimek + telefon) with "Dodaj osebo" — one or more.
+2. Wi-Fi: ime omrežja, geslo.
+3. Hišni red, parkiranje, posebnosti: one large free-text area, helper "Napišite po domače — mi uredimo obliko."
+4. Vaša ponudba: repeatable rows (naziv + cena), "Dodaj še eno".
+5. Kaj priporočate v okolici: one block PER CATEGORY, categories taken AUTOMATICALLY from the shared guide skeleton's okolica/explore categories (same source and order as the guest chips — ALL of them, including trgovine, pekarne, bencinski servisi, bankomati, lekarne, zdravstvo). Each block: category name, existing rows, one input row, "Dodaj". NAME ONLY per row — helper "Vpišite samo ime kraja ali doživetja. Zemljevid, razdaljo, opis in fotografije dodamo mi. Kjer nimate priporočila, pustite prazno."
+   SPECIAL BLOCK "Dogodki": repeatable rows with THREE fields — naziv dogodka, datum (date picker), ura (time) — with "Dodaj dogodek". Helper: "Ponavljajoči se in enkratni dogodki v okolici, ki bi jih gost ne smel zamuditi."
+6. Fotografije: drag-and-drop / tap upload, 10–20 photos, "Lahko jih dodate tudi pozneje." Uploads go to a staging area for the operator, NOT directly into the guide.
+
+ON SUBMIT ("Potrdi in oddaj")
+- Sections 1–4 write into the tenant's guide as DRAFT content in the matching existing items/fields (name, address, contacts, website, Wi-Fi, Prijava in odjava, Hišni red, Parkiranje, offer items) — nothing is published; the operator's orange Objavi flow governs guest visibility as it already does. Never overwrite operator-entered content silently: if a target field already has content, keep both (host text stored as a suggestion visible to the operator).
+- Section 5 place rows become proposals in the tenant's existing Creator queue: name as the hint, provenance "vnesel gostitelj prek obrazca", category preassigned from the block, unresolved until the existing resolution tooling (search/Nominatim identity, OSRM, settlement rules) runs — reuse the queue exactly as it works today, no new pipeline. Dogodki rows go to the operator as event suggestions with their date and time (draft/queue entry in the events category; dates and times are host-provided facts, never invented or altered).
+- Section 6 photos land in an operator review area per tenant.
+- After submit: friendly confirmation screen ("Hvala! Vaš vodnik pripravljamo — obvestili vas bomo, ko bo pripravljen za pregled.") and the operator is notified via the tenant's notification channel.
+- Submission is idempotent; the operator can re-open the form for a host if a second round is ever needed.
+
+DESIGN — per the approved mockup, CGP exactly: white page; section cards #F4F6F2, 1px #E8EBE6 border, radius 16px; numbered green circles #157347; ALL primary buttons #157347 with white text; the okolica card emphasized with a 2px #157347 border; inputs white with #E8EBE6 border, 16px text; Archivo. Header: the OFFICIAL znak asset + SMART360 wordmark — use the original logo files already used by the welcome email template, never a recreated or styled-text substitute; 48px gap between the logo and the "Dobrodošli, <ime nastanitve>" title. Mobile-first: single column, large touch targets; fully usable on a phone.
+
+All strings Slovenian. Verify in development with the temporary development account: first login lands on the form; autosave survives logout/login; submit creates draft fields (including name, address, website, contacts), queue proposals with host provenance and correct categories, event suggestions with date and time, and staged photos; nothing appears in the guest guide before the operator publishes; a login after submit lands in normal host admin. Report and STOP. No publication.
+
+End your reply with a section titled "POVZETEK ZA LASTNIKA", written in Slovenian, as plain text I can copy.
