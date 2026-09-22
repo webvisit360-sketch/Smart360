@@ -1218,45 +1218,6 @@ export default function AdminTenantEdit() {
             onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "logo"); e.target.value = ""; }}
           />
 
-          {formData.guestUiMode === "living-guide" && (
-            <div className="rounded-[18px] border border-border/70 bg-muted/35 px-4 py-3 text-sm text-muted-foreground">
-              Videz starega prikaza je shranjen, vendar ni aktiven, dokler je vključen Living Guide.
-            </div>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Ozadje strani</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Ena barva za celotno aplikacijo za goste. Pri temnem ozadju se barve besedila prilagodijo samodejno.
-              </p>
-              <div className="flex items-center gap-2 flex-wrap">
-                {["#FFFFFF", "#F7F5F1", "#EEF2F6", "#14201F", "#101820", "#0B1B2B"].map(c => {
-                  const active = (formData.bgColor ?? "#FFFFFF").toUpperCase() === c;
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      title={c}
-                      onClick={() => setFormData({ ...formData, bgColor: c === "#FFFFFF" ? null : c })}
-                      className={`w-9 h-9 rounded-full border ${active ? "ring-2 ring-primary ring-offset-2" : ""}`}
-                      style={{ background: c }}
-                    />
-                  );
-                })}
-                <input
-                  type="color"
-                  aria-label="Poljubna barva"
-                  value={formData.bgColor ?? "#FFFFFF"}
-                  onChange={e => setFormData({ ...formData, bgColor: e.target.value.toUpperCase() === "#FFFFFF" ? null : e.target.value.toUpperCase() })}
-                  className="w-9 h-9 rounded-full border cursor-pointer bg-transparent"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Fotografije gostitelja</CardTitle>

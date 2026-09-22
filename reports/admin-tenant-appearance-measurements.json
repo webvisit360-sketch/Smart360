@@ -1,0 +1,120 @@
+{
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "documentOverflowX": false,
+    "panelOverflowX": false,
+    "visibleCardCount": 2,
+    "visibleCards": [
+      {
+        "title": "Fotografije gostitelja",
+        "top": 198,
+        "bottom": 774.25,
+        "left": 280,
+        "right": 1068,
+        "width": 788,
+        "height": 576.25
+      },
+      {
+        "title": "Besedilo naslovnice",
+        "top": 798.25,
+        "bottom": 958.25,
+        "left": 280,
+        "right": 1068,
+        "width": 788,
+        "height": 160
+      }
+    ],
+    "gaps": [
+      24
+    ],
+    "panelTopGap": 0,
+    "capturedSaves": [
+      {
+        "name": "Hiša ob jezeru",
+        "slug": "appearance-fixture",
+        "customDomain": null,
+        "subtitle": "Oddih v naravi",
+        "theme": "swipe",
+        "isPublished": true,
+        "phone": "",
+        "whatsapp": "",
+        "viber": "",
+        "instagram": "",
+        "email": "host@example.test",
+        "notificationChannel": "email",
+        "orderNotifyEmail": true,
+        "messageNotifyEmail": true,
+        "mapQuery": "",
+        "mapUrl": null,
+        "tourUrl": "",
+        "heroUrl": "",
+        "logoUrl": "https://fixture.invalid/logo.png",
+        "coverTitle": "Posodobljen naslov",
+        "coverSubtitle": "Vaš oddih se začne tukaj",
+        "coverTitleSize": 48,
+        "coverTitleOpacity": 1,
+        "coverTextColor": "#FFFFFF",
+        "coverSubSize": 18,
+        "coverSubOpacity": 0.9,
+        "coverMetaSize": null,
+        "coverMetaOpacity": null,
+        "coverVeil": 0.25,
+        "tileVeil": 0.1,
+        "textScale": null,
+        "textFont": null,
+        "textColor": null,
+        "coverAlign": "left",
+        "coverShowRating": false,
+        "logoX": 50,
+        "logoY": 20,
+        "logoW": 25,
+        "logoOpacity": 1,
+        "navColorCover": "#FFFFFF",
+        "navColor": "#14201F",
+        "navColorOn": "#3B78DC",
+        "wifiSsid": null,
+        "wifiPass": null,
+        "wifiEnc": null,
+        "bgColor": "#E8DED1",
+        "mediaQuotaBytes": 2000000000
+      }
+    ]
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentOverflowX": false,
+    "panelOverflowX": false,
+    "visibleCardCount": 2,
+    "visibleCards": [
+      {
+        "title": "Fotografije gostitelja",
+        "top": 239,
+        "bottom": 573.375,
+        "left": 16,
+        "right": 374,
+        "width": 358,
+        "height": 334.375
+      },
+      {
+        "title": "Besedilo naslovnice",
+        "top": 597.375,
+        "bottom": 847.875,
+        "left": 16,
+        "right": 374,
+        "width": 358,
+        "height": 250.5
+      }
+    ],
+    "gaps": [
+      24
+    ],
+    "panelTopGap": 0,
+    "capturedSaves": []
+  }
+}
