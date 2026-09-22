@@ -1,0 +1,157 @@
+{
+  "status": "PASSED_DEVELOPMENT_COPIES_NOT_PUBLISHED",
+  "fixtureTenantIds": {
+    "gril": "190b3348-61ea-4808-9492-1e3a8779f98f",
+    "menina": "6afb6ef9-2270-44e4-9209-f9c0da05abc8"
+  },
+  "approvedLedger": {
+    "items": 14,
+    "proposals": 63,
+    "decisions": {
+      "Center Rinka": "culture",
+      "Mozirski gaj": "nature",
+      "Kmetija Bukovnik": "culinary",
+      "Razgledni stolp na Golteh": "act"
+    }
+  },
+  "before": {
+    "gril": {
+      "categories": 22,
+      "items": 27,
+      "proposals": 367,
+      "attachments": 26,
+      "materializations": 27,
+      "media": 2,
+      "snapshots": 1
+    },
+    "menina": {
+      "categories": 22,
+      "items": 0,
+      "proposals": 272,
+      "attachments": 0,
+      "materializations": 0,
+      "media": 1,
+      "snapshots": 1
+    }
+  },
+  "after": {
+    "gril": {
+      "categories": 22,
+      "items": 27,
+      "proposals": 367,
+      "attachments": 26,
+      "materializations": 27,
+      "media": 2,
+      "snapshots": 1
+    },
+    "menina": {
+      "categories": 22,
+      "items": 0,
+      "proposals": 272,
+      "attachments": 0,
+      "materializations": 0,
+      "media": 1,
+      "snapshots": 1
+    }
+  },
+  "priorMetadataAlignment": {
+    "gril": {
+      "summary": "Uskladitev je končana: 22 kategorij, 15 prevodov, 3 umaknjenih starih kategorij in 0 prerazvrščenih predlogov.",
+      "counts": {
+        "categoriesUpdated": 22,
+        "translationsUpdated": 15,
+        "categoriesRetired": 3,
+        "proposalsRekeyed": 0,
+        "itemMoves": 0
+      },
+      "skipped": [],
+      "changed": true
+    },
+    "menina": {
+      "summary": "Uskladitev je končana: 22 kategorij, 15 prevodov, 2 umaknjenih starih kategorij in 5 prerazvrščenih predlogov.",
+      "counts": {
+        "categoriesUpdated": 22,
+        "translationsUpdated": 15,
+        "categoriesRetired": 2,
+        "proposalsRekeyed": 5,
+        "itemMoves": 0
+      },
+      "skipped": [
+        {
+          "key": "food",
+          "reason": "Stara kategorija ostaja, ker še vsebuje vnose, predloge ali povezave."
+        }
+      ],
+      "changed": true
+    }
+  },
+  "approvedSplitRun": {
+    "gril": {
+      "summary": "Uskladitev je končana: 0 kategorij, 0 prevodov, 1 umaknjenih starih kategorij in 63 prerazvrščenih predlogov.",
+      "counts": {
+        "categoriesUpdated": 0,
+        "translationsUpdated": 0,
+        "categoriesRetired": 1,
+        "proposalsRekeyed": 63,
+        "itemMoves": 14
+      },
+      "skipped": [],
+      "changed": true
+    }
+  },
+  "secondRun": {
+    "gril": {
+      "summary": "Ni novih odobrenih sprememb.",
+      "counts": {
+        "categoriesUpdated": 0,
+        "translationsUpdated": 0,
+        "categoriesRetired": 0,
+        "proposalsRekeyed": 0,
+        "itemMoves": 0
+      },
+      "skipped": [],
+      "changed": false
+    },
+    "menina": {
+      "summary": "Ni novih odobrenih sprememb. 1 odprtih postavk ostaja za ročno odločitev.",
+      "counts": {
+        "categoriesUpdated": 0,
+        "translationsUpdated": 0,
+        "categoriesRetired": 0,
+        "proposalsRekeyed": 0,
+        "itemMoves": 0
+      },
+      "skipped": [
+        {
+          "key": "food",
+          "reason": "Stara kategorija ostaja, ker še vsebuje vnose, predloge ali povezave."
+        }
+      ],
+      "changed": false
+    }
+  },
+  "proof": {
+    "zeroItemLoss": true,
+    "zeroProposalLoss": true,
+    "exactFourteenItemsMoved": true,
+    "exactSixtyThreeGrilProposalsRekeyed": true,
+    "exactFiveMeninaProposalsRekeyed": true,
+    "exactFourteenAttachmentProjectionsRekeyed": true,
+    "immutableCanonicalMaterializationMediaSnapshotHashes": true,
+    "payloadOtherThanApprovedCategoryFieldsUnchanged": true,
+    "allCanonicalCategoryLanguagesVerified": [
+      "sl",
+      "en",
+      "de",
+      "it"
+    ],
+    "idempotentReplayAllZero": true,
+    "publicationPerformed": false,
+    "realTenantWrites": false
+  },
+  "cleanup": {
+    "fixtureTenantsRemaining": 0,
+    "syntheticReviewerRowsRemaining": 0,
+    "accountsCreated": false
+  }
+}

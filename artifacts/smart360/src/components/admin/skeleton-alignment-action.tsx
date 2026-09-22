@@ -99,7 +99,8 @@ export function SkeletonAlignmentAction({ tenantId }: { tenantId: string }) {
         <p className="text-sm leading-6 text-muted-foreground">
           Enkratno operatersko orodje uskladi oznake, vrstni red in prevode s skupnim
           skeletom, umakne samo varno prazne stare kategorije ter prenese odobrene
-          predloge Kreatorja. Sprememb ne objavi samodejno.
+          predloge Kreatorja. Za Gril vključuje odobreno razdelitev Znamenitosti.
+          Sprememb ne objavi samodejno.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <AlertDialog>
@@ -123,8 +124,9 @@ export function SkeletonAlignmentAction({ tenantId }: { tenantId: string }) {
                     prevodov, praznih starih kategorij in povezav predlogov.
                   </span>
                   <span className="block font-medium text-foreground">
-                    Razdelitev kategorije Znamenitosti še ni odobrena in se ne bo izvedla.
-                    Vnosi se ne bodo premikali. Spremembe ne bodo objavljene.
+                    Za Gril bo izvedena odobrena razvrstitev 14 vnosov in 63 predlogov
+                    iz Znamenitosti. Pri drugih nastanitvah se ta razdelitev ne izvaja.
+                    Spremembe ne bodo objavljene.
                   </span>
                 </AlertDialogDescription>
               </AlertDialogHeader>

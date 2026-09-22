@@ -19,6 +19,10 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { buildTenantContent } from "../../lib/contentTree";
 import {
+  GRIL_SIGHTS_SPLIT,
+  type SightsSplitRules,
+} from "../../lib/grilSightsSplitManifest";
+import {
   alignTenantSkeleton,
   type ProposalRekeyRule,
   type TenantSkeletonAlignmentResult,
@@ -43,6 +47,9 @@ export type FullCopyFixture = {
   itemIds: string[];
   proposalIds: string[];
   approvedRules: ProposalRekeyRule[];
+  approvedSightsRules: SightsSplitRules | null;
+  /** Captured production UUID -> disposable fixture UUID. */
+  capturedIdMap: Record<string, string>;
   capturedCategoryShape: Array<{
     section: string;
     key: string | null;
@@ -345,6 +352,23 @@ async function insertFullCopy(
       id: map.get(id)!, expectedName, sourceKey, targetKey,
     } as ProposalRekeyRule))
     : [];
+  const approvedSightsRules: SightsSplitRules | null = source === "Gril"
+    ? {
+      itemRules: GRIL_SIGHTS_SPLIT.itemRules.map((rule) => ({
+        ...rule,
+        id: map.get(rule.id)!,
+      })),
+      proposalRules: GRIL_SIGHTS_SPLIT.proposalRules.map((rule) => ({
+        ...rule,
+        id: map.get(rule.id)!,
+      })),
+    }
+    : null;
+  if (approvedSightsRules &&
+      (approvedSightsRules.itemRules.some((rule) => !rule.id) ||
+       approvedSightsRules.proposalRules.some((rule) => !rule.id))) {
+    throw new Error("Approved Gril sights ledger contains an ID absent from the captured fixture");
+  }
   const capturedSectionKey = new Map(slice.sections.map((row) => [String(row.id), String(row.key)]));
   return {
     source,
@@ -354,6 +378,8 @@ async function insertFullCopy(
     itemIds,
     proposalIds,
     approvedRules,
+    approvedSightsRules,
+    capturedIdMap: Object.fromEntries(map),
     capturedCategoryShape: slice.categories.map((row) => ({
       section: capturedSectionKey.get(String(value(row, "sectionId", "section_id")))!,
       key: row.key == null ? null : String(row.key),
@@ -436,17 +462,31 @@ export async function protectedFixtureState(fixture: FullCopyFixture) {
     .sort((a, b) => a.id.localeCompare(b.id));
   return {
     counts: await fixtureCounts(fixture.tenantId),
-    items: await db.select().from(itemsTable).where(inArray(itemsTable.id, fixture.itemIds)),
-    attachments: fixture.categoryIds.length
+    items: (await db.select().from(itemsTable).where(inArray(itemsTable.id, fixture.itemIds)))
+      .sort((a, b) => a.id.localeCompare(b.id)),
+    attachments: (fixture.categoryIds.length
       ? await db.select().from(itemCategoryAttachmentsTable)
         .where(inArray(itemCategoryAttachmentsTable.categoryId, fixture.categoryIds))
-      : [],
+      : []).sort((a, b) => a.id.localeCompare(b.id)),
+    canonicalPlaces: (await db.select().from(creatorCanonicalPlacesTable)
+      .where(eq(creatorCanonicalPlacesTable.tenantId, fixture.tenantId)))
+      .sort((a, b) => a.id.localeCompare(b.id)),
     materializations: await db.select().from(creatorPlaceMaterializationsTable)
       .where(eq(creatorPlaceMaterializationsTable.tenantId, fixture.tenantId)),
     media: await db.select().from(mediaTable).where(eq(mediaTable.tenantId, fixture.tenantId)),
     snapshots: await db.select().from(publishedSnapshotsTable)
       .where(eq(publishedSnapshotsTable.tenantId, fixture.tenantId)),
     proposals,
+    itemPayloadWithoutCategory: (await db.select().from(itemsTable)
+      .where(inArray(itemsTable.id, fixture.itemIds)))
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ categoryId: _categoryId, ...row }) => row),
+    attachmentPayloadWithoutCategory: (fixture.categoryIds.length
+      ? await db.select().from(itemCategoryAttachmentsTable)
+        .where(inArray(itemCategoryAttachmentsTable.categoryId, fixture.categoryIds))
+      : [])
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ categoryId: _categoryId, ...row }) => row),
     proposalPayloadWithoutCategory: proposals.map(({ categoryId: _categoryId, ...row }) => row),
   };
 }
@@ -510,7 +550,7 @@ export async function startTenantAlignmentFixtureHarness(port = 43127): Promise<
         const key = fixture.source === "Gril" ? "gril" : "menina";
         results[key] = await alignTenantSkeleton(fixture.tenantId, fixture.source === "MENINA"
           ? { fixtureProposalRules: fixture.approvedRules }
-          : undefined);
+          : { fixtureSightsSplitRules: fixture.approvedSightsRules! });
         await writeSummary();
         response.end(JSON.stringify(results[key]));
         return;

@@ -834,3 +834,17 @@ mtime_ms = 1790091887480
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/989becd3-91d1-48d5-8826-d6a255500408/6056bacd-5f07-48e0-9189-dac2cb2a3b31"
 storage_version_token = "1790091888270457"
 content_type = "text/html"
+
+[[outputs]]
+id = "OSosJ55FM2xByMxI6rws3"
+uri = "file://reports/approved-sights-split-verification.html"
+type = "html"
+title = "Approved Znamenitosti split — verification report"
+description = "Development-copy counts, exact approved decisions, zero-change replay, protected-data checks, and cleanup results. No publication."
+logical_id = "86a1bad7-affd-44cb-a381-d3ecfa661c49"
+content_hash = "sha256:c53fd832915137fe477295838f43aa057dda176b15b255ad0e31c3199eab353c"
+size = 5063
+mtime_ms = 1790092754840
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/86a1bad7-affd-44cb-a381-d3ecfa661c49/ddc51c80-574b-4527-91c4-c07d9de06df2"
+storage_version_token = "1790092875475777"
+content_type = "text/html"
