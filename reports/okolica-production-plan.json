@@ -1,0 +1,1578 @@
+{
+  "status": "APPROVAL_REQUIRED_NOT_APPLIED",
+  "generatedFrom": "reports/okolica-production-baseline.json",
+  "baselineSha256": "96783212b06e92f519b8d5d6e2d3a546bfb968c698b92790d5014a57fb184120",
+  "approvalTargetSha256": "e9b83f00e2889543516f3fd1e9445096d5c5c48c49cf318fd1508f6ec9dc06fa",
+  "safety": {
+    "productionWrites": false,
+    "publication": false,
+    "itemMoves": false,
+    "publishedSnapshotsChanged": false,
+    "adapter": "test-only injected disposable transaction",
+    "transactionIsolation": "serializable",
+    "note": "This frozen approval ledger does not dynamically follow future seed changes and does not create or merge missing canonical categories."
+  },
+  "plans": [
+    {
+      "tenantId": "1071ca18-0281-4a23-b36b-0b0ce601f771",
+      "tenantName": "Apartmaji Meli Pu",
+      "sourceHash": "904e078c19001ea0c61da0684e17684c45912e8ff396098d89c917c3460c17c6",
+      "canonicalCategoryCount": 18,
+      "canonicalCategoriesPresent": 18,
+      "actions": [],
+      "itemMoves": [],
+      "findings": [],
+      "residualBlockedLegacy": []
+    },
+    {
+      "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+      "tenantName": "Camping MENINA",
+      "sourceHash": "97f8b27666d42c0428834d42f5ac53dd06ae2a7c9a939777a78547268503cd83",
+      "canonicalCategoryCount": 18,
+      "canonicalCategoriesPresent": 18,
+      "actions": [
+        {
+          "type": "mark-unpublished-changes",
+          "tenantId": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+          "before": {
+            "hasUnpublishedChanges": false,
+            "isPublished": false,
+            "lastPublishedAt": null
+          },
+          "after": {
+            "hasUnpublishedChanges": true,
+            "isPublished": false,
+            "lastPublishedAt": null
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "096654fc-ae40-47e3-8b41-2a27778ee5d7",
+          "key": "gas",
+          "before": {
+            "label": "Bencinske črpalke",
+            "exploreGroup": "services",
+            "position": 4,
+            "icon": "gas",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Bencinske črpalke",
+            "exploreGroup": "services",
+            "position": 2,
+            "icon": "gas",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "134e7c83-daf1-4afc-ae4d-337e99c28438",
+          "key": "shops",
+          "before": {
+            "label": "Trgovine",
+            "exploreGroup": "services",
+            "position": 0,
+            "icon": "cart",
+            "layout": "list"
+          },
+          "after": {
+            "label": "Trgovine",
+            "exploreGroup": "services",
+            "position": 0,
+            "icon": "cart",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "134e7c83-daf1-4afc-ae4d-337e99c28438",
+          "key": "shops",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Geschäfte",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "134e7c83-daf1-4afc-ae4d-337e99c28438",
+          "key": "shops",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Shops",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "134e7c83-daf1-4afc-ae4d-337e99c28438",
+          "key": "shops",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Negozi",
+            "stale": false
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "1bebe4a4-0e16-4108-8388-d015ddf477d7",
+          "key": "culture",
+          "before": {
+            "label": "Kulturna dediščina",
+            "exploreGroup": "sights",
+            "position": 11,
+            "icon": "culture",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Kulturna dediščina",
+            "exploreGroup": "sights",
+            "position": 8,
+            "icon": "culture",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+          "key": "sights",
+          "before": {
+            "label": "Znamenitosti",
+            "exploreGroup": "sights",
+            "position": 4,
+            "icon": "star",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Znamenitosti",
+            "exploreGroup": "sights",
+            "position": 13,
+            "icon": "star",
+            "layout": "cards"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "4370bf3b-0cd2-407c-8033-afcf46541cba",
+          "key": "night",
+          "before": {
+            "label": "Nočno življenje",
+            "exploreGroup": "food_drink",
+            "position": 7,
+            "icon": "cocktail",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Nočno življenje",
+            "exploreGroup": "food_drink",
+            "position": 2,
+            "icon": "cocktail",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "4dc0dccb-3cc0-4d4f-a195-059f807a9cef",
+          "key": "breakfast",
+          "before": {
+            "label": "Zajtrk",
+            "exploreGroup": "food_drink",
+            "position": 5,
+            "icon": "coffee",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Zajtrk",
+            "exploreGroup": "food_drink",
+            "position": 0,
+            "icon": "coffee",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "56a7ce74-5a1c-4ccb-ac29-36e1cb191219",
+          "key": "pharm",
+          "before": {
+            "label": "Lekarne",
+            "exploreGroup": "services",
+            "position": 6,
+            "icon": "pharm",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Lekarne",
+            "exploreGroup": "services",
+            "position": 4,
+            "icon": "pharm",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "6a34eb23-3ef1-413c-a645-e84139e07e75",
+          "key": "health",
+          "before": {
+            "label": "Zdravje",
+            "exploreGroup": "services",
+            "position": 1,
+            "icon": "cross",
+            "layout": "list"
+          },
+          "after": {
+            "label": "Zdravje",
+            "exploreGroup": "services",
+            "position": 6,
+            "icon": "cross",
+            "layout": "list"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "7045ed14-a1e0-43bd-b120-d1a49406ae62",
+          "key": "beach",
+          "before": {
+            "label": "Plaže",
+            "exploreGroup": "nature_trails",
+            "position": 10,
+            "icon": "beach",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Plaže",
+            "exploreGroup": "nature_trails",
+            "position": 7,
+            "icon": "beach",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "archive-empty-legacy-category",
+          "categoryId": "7d01d2b9-345a-4482-b536-3683ddf13606",
+          "key": "transport",
+          "before": {
+            "deletedAt": null,
+            "position": 2,
+            "isVisible": true
+          },
+          "after": {
+            "deletedAt": "TRANSACTION_TIMESTAMP",
+            "position": 2,
+            "isVisible": true
+          },
+          "guards": {
+            "itemCountIncludingHiddenDeleted": 0,
+            "attachmentCount": 0,
+            "proposalCount": 0,
+            "materializationCount": 0,
+            "orphanReferenceCount": 0
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "8f9cefb5-68d7-4648-820e-3fd413553414",
+          "key": "events",
+          "before": {
+            "label": "Dogodki",
+            "exploreGroup": "experiences",
+            "position": 13,
+            "icon": "party",
+            "layout": "events"
+          },
+          "after": {
+            "label": "Dogodki",
+            "exploreGroup": "experiences",
+            "position": 11,
+            "icon": "party",
+            "layout": "events"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "9591242d-9247-4ae7-81ef-ac3bdd5cc942",
+          "key": "bike",
+          "before": {
+            "label": "Kolesarjenje",
+            "exploreGroup": "nature_trails",
+            "position": 9,
+            "icon": "bike",
+            "layout": "routes"
+          },
+          "after": {
+            "label": "Kolesarjenje",
+            "exploreGroup": "nature_trails",
+            "position": 6,
+            "icon": "bike",
+            "layout": "routes"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+          "key": "trips",
+          "before": {
+            "label": "Izleti",
+            "exploreGroup": "experiences",
+            "position": 1,
+            "icon": "map",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Izleti",
+            "exploreGroup": "experiences",
+            "position": 10,
+            "icon": "map",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+          "key": "trips",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Ausflüge",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+          "key": "trips",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Day trips",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "9b14f425-d94b-403b-b477-243fb3b00f8e",
+          "key": "trips",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Gite",
+            "stale": false
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "9c5c317e-7671-42c3-9fa0-e6ba4fcd2740",
+          "key": "culinary",
+          "before": {
+            "label": "Kulinarika",
+            "exploreGroup": "food_drink",
+            "position": 6,
+            "icon": "fork",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Kulinarika",
+            "exploreGroup": "food_drink",
+            "position": 1,
+            "icon": "fork",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "a5b6c0f8-af9a-420d-84dc-7f14aa16c0e4",
+          "key": "atm",
+          "before": {
+            "label": "Bankomati",
+            "exploreGroup": "services",
+            "position": 5,
+            "icon": "atm",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Bankomati",
+            "exploreGroup": "services",
+            "position": 3,
+            "icon": "atm",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+          "key": "hike",
+          "before": {
+            "label": "Pohodi in kolesarjenje",
+            "exploreGroup": "nature_trails",
+            "position": 3,
+            "icon": "pin",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Pohodništvo",
+            "exploreGroup": "nature_trails",
+            "position": 5,
+            "icon": "hike",
+            "layout": "routes"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+          "key": "hike",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Wandern",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+          "key": "hike",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Hiking",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "b1753a2f-9c93-4a50-9fb7-1b6c488e2441",
+          "key": "hike",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Escursioni a piedi",
+            "stale": false
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "c04934d0-ada1-4575-8d05-3ab2ececce24",
+          "key": "pizza",
+          "before": {
+            "label": "Picerije",
+            "exploreGroup": "food_drink",
+            "position": 8,
+            "icon": "pizza",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Picerije",
+            "exploreGroup": "food_drink",
+            "position": 3,
+            "icon": "pizza",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "cc3b2e2b-40e2-4606-ba4c-cd318a8412b3",
+          "key": "food",
+          "before": {
+            "label": "Hrana in pijača",
+            "exploreGroup": "food_drink",
+            "position": 2,
+            "icon": "bread",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Hrana in pijača",
+            "exploreGroup": "food_drink",
+            "position": 12,
+            "icon": "bread",
+            "layout": "cards"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "d1066326-35fd-43fa-9c7a-3ee623283411",
+          "key": "hosp",
+          "before": {
+            "label": "Bolnišnica",
+            "exploreGroup": "services",
+            "position": 7,
+            "icon": "hosp",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Bolnišnica",
+            "exploreGroup": "services",
+            "position": 5,
+            "icon": "hosp",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "de53f1a7-801b-437f-9ca5-b8de9b7f8aed",
+          "key": "nature",
+          "before": {
+            "label": "Naravna dediščina",
+            "exploreGroup": "sights",
+            "position": 12,
+            "icon": "nature",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Naravna dediščina",
+            "exploreGroup": "sights",
+            "position": 9,
+            "icon": "nature",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "ed8a3ff7-a5ff-4550-a3dc-72a4fd244adb",
+          "key": "bakery",
+          "before": {
+            "label": "Pekarne",
+            "exploreGroup": "services",
+            "position": 3,
+            "icon": "bread",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Pekarne",
+            "exploreGroup": "services",
+            "position": 1,
+            "icon": "bread",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+          "key": "act",
+          "before": {
+            "label": "Aktivnosti",
+            "exploreGroup": "experiences",
+            "position": 0,
+            "icon": "waves",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Aktivnosti",
+            "exploreGroup": "experiences",
+            "position": 4,
+            "icon": "star",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+          "key": "act",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Aktivitäten",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+          "key": "act",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Things to do",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "f89b5d9c-afaa-4bd4-ab02-31921bb9b982",
+          "key": "act",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Attività",
+            "stale": false
+          }
+        }
+      ],
+      "itemMoves": [],
+      "findings": [
+        {
+          "status": "BLOCKED",
+          "categoryId": "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+          "key": "sights",
+          "reason": "Legacy category retained: 0 items (including hidden/deleted), 0 attachments, 152 Creator proposals, 0 materializations, 0 orphan references.",
+          "itemIds": [],
+          "proposalIds": [
+            "0065c214-7ee4-4f33-a84a-4b243a7eef60",
+            "040cb69f-7747-4091-a90c-39981b2e6e77",
+            "04786bc7-f3da-4fc3-8aaa-d3ad24ff865d",
+            "053b77de-e8bc-44a3-9ec1-8ed0de601ffc",
+            "063a5609-6bb1-4b04-88f2-0371b55f769c",
+            "06826acd-6158-4d3e-af3a-029897ba8c92",
+            "074f3646-de97-454d-b2f7-b9ff062b4a77",
+            "0a9edf67-ff09-4cc2-b2a6-73b8a3631d08",
+            "0f174ce6-31c7-4529-9a31-d5b8a7b01ef7",
+            "0f3ab997-079b-46ba-b6ba-cbee56c8a44c",
+            "1269855f-2807-4ca7-b491-967c405c3a1a",
+            "12d95640-8dcd-4ed5-8729-6e85124e6387",
+            "133f8bf9-bf0f-4bff-972f-c92b009bb823",
+            "14a022e5-0832-4753-994b-157bc3fce1ac",
+            "16b20c86-7700-4ad6-9f60-006f95407d47",
+            "16fd1edb-202f-4def-b413-7af3627c85b8",
+            "187dad23-f976-48ca-8f71-1c417741ce43",
+            "1a9f0a60-a58d-45a5-9441-91912770c128",
+            "1d6cbd8a-163d-4e10-bb34-e7a09e798319",
+            "1e774137-d35a-4f53-9851-3263d2ac9efb",
+            "1fd6ec0e-df24-4d56-ac9a-25d60e65feb9",
+            "21d4985f-fa69-48c6-99b2-80de17bea1d8",
+            "22fb3e0b-46ec-47d5-b96d-3117c1210ab0",
+            "23e53677-f609-4223-9a6a-206d4477ee91",
+            "2426b15f-ec24-499f-8b7d-619d2cb63668",
+            "270d6aae-6b0c-45ac-8ec6-09ad2860201a",
+            "297f4c94-abf4-40d5-a730-728f23652445",
+            "2adf3073-beda-47ae-90b9-3550e207312d",
+            "2b9ea488-ff52-41fa-b5d4-21499ac53846",
+            "2dd85f31-2e6d-41d5-a4b6-f9dda1bc9131",
+            "2f815d82-74d4-49dd-88a4-05258ac1e612",
+            "349a034c-c4ed-4237-af9f-2679edaad7a1",
+            "3571d965-f8f7-4b23-bf84-cc57b1399917",
+            "364a3e0d-8a84-449f-8206-28148de1d113",
+            "396ee877-fa52-421c-8451-56d5f0e85ae1",
+            "3d08f166-e250-4c80-acc3-b81e4f58a759",
+            "3e791101-81d7-46f8-86eb-2f1919e2b4d1",
+            "3f0ee866-ac4f-4bb1-9954-3ee575273f0a",
+            "41c3b468-ae93-4ce9-a56d-be640b7c77a6",
+            "41cac5df-52ad-4724-8190-fb94bda1cfb8",
+            "41d69871-d9ad-4579-be27-165c22bb9f7d",
+            "42811e63-20f4-4ac5-acbc-918225390fdc",
+            "42f2c9c3-ffd2-4290-95b7-41bd4b4e0289",
+            "449342fc-4175-4e1b-8c56-37de9eb30a4f",
+            "47038859-a4b8-40d7-b911-834c8cd5172c",
+            "4797a4f0-ad15-4263-b7ab-b9d75c26cb06",
+            "48558599-03b0-457e-8f56-c74d2218a603",
+            "4a0f0e08-da61-40d2-a2b0-b8d472566a4b",
+            "4bc066fb-811c-4629-9c4a-a0723c3c32a7",
+            "4dace138-4ba8-458e-8403-9a82ba8799e7",
+            "5249e478-eed3-45a4-a5d4-01cef4c8e707",
+            "551d46d8-56fc-421e-8efc-3c570c5c68ec",
+            "55e9fc77-a1ec-42c5-8a1f-9d3fe816c212",
+            "56463bfd-d5e9-4810-a162-8f6dd7951bff",
+            "5667a07a-ea33-4d94-bbdc-2f036011d319",
+            "569b5492-1891-42eb-8f71-a43651edc852",
+            "598dae46-76b7-46cb-8b9d-a630cdc26845",
+            "5c0cd44e-0799-4ae4-8a47-39244ab6dc26",
+            "5f1142b9-6002-422d-8bf9-999cf3637db8",
+            "5f6b4a3b-b672-47df-80ca-54b911e52840",
+            "62d25429-7690-415e-9691-749554474dbc",
+            "64bcf2bf-146d-4aa3-8d6b-b41a4e16c1fe",
+            "672c870f-b154-4861-afb2-cb54eedca255",
+            "67418ca4-1923-4fd3-b731-33cd9551ff97",
+            "68700fdd-004e-467f-8f03-293a6ddb6f47",
+            "6bfed4f2-1cc7-4eb3-80a9-f7d1e817a016",
+            "6ccb631d-3cc6-49d7-861f-3506f107b6a2",
+            "6ef29660-b29b-447b-91d6-5ab0786ad058",
+            "6ef9e07d-c1f3-4039-885b-71699921d8a8",
+            "6f5bdf54-6b76-4ec1-855c-820d7e9d772a",
+            "6fe6787a-c51a-4101-9c73-8cc15973a6d5",
+            "70450bb3-5e97-4bea-a7df-8ad319162d1d",
+            "704d1a4b-7eab-4a5b-9110-04abe935d886",
+            "70da1276-d56c-45d2-88e7-7b9d4f636a1f",
+            "71dcd319-4aea-4a79-be3d-cf1977645f35",
+            "740ee016-916a-4243-a6cf-9877677a2fdd",
+            "7851fe00-85ce-473c-b85b-1f697056348b",
+            "7cd56abf-80b1-4b69-8777-0cc119819e17",
+            "7d0b516d-ba2f-4fa6-9541-59511432eaae",
+            "7d917257-706d-4a5a-9e74-efa9b1b85265",
+            "7da953c4-8f0e-4200-b1ac-6a5b2cd31083",
+            "84896c50-702c-4ad8-9c7e-81d9b9c93368",
+            "894114f7-947c-4999-a9da-69061cac8201",
+            "8afbc66e-9fee-4ad2-bb0d-e55872fcd738",
+            "8b9ab132-d932-4a20-8a83-cbf94d613b1c",
+            "8bad10d6-b62e-48f5-886e-644bf6ee1b7a",
+            "8c121024-cdae-452f-8259-513419142d06",
+            "8c2f078c-6511-4d18-8158-5020a90e6ee5",
+            "92b45fe5-db09-4980-9c65-e0059d45bcfc",
+            "94957262-3d13-403b-88b1-656a11abd9ff",
+            "94de10c6-3842-4626-8788-542204df3c16",
+            "95171cb9-ea9e-40bd-a239-7e2710ea9888",
+            "961119c8-6d94-4f56-b9c0-f666c97734ec",
+            "9c8542b7-400e-4d72-81d6-b656e3cb213f",
+            "9cd31323-3cbd-4a97-b30b-839cadfde41a",
+            "9fa55930-c6d3-4666-8ff7-b619fcf5afeb",
+            "a0dfdd3e-152b-49fd-8ded-34cde3b189ab",
+            "a447635c-e41a-49ed-a387-055e11d53159",
+            "a46e4e8b-3b44-42d6-995f-f7a2897a1321",
+            "a47545e9-0278-4e12-a375-a687590b50b7",
+            "a5417874-f66f-4239-a8b5-4e6cae3cbd72",
+            "a5b266c7-a71f-4b07-b138-77905474e907",
+            "a611d6e1-2506-4754-9ebf-3ad444f6d649",
+            "a79b7060-20f7-4fb4-a5c1-b08228c3f434",
+            "a91ae486-4f5b-4b6c-84b2-22b0c4db27fc",
+            "ab745ddd-c965-4229-90e7-5bd0c81c5a02",
+            "ad777842-63ba-4ef5-b9d8-f9844e912543",
+            "b11d2f60-e431-431c-a3e8-0c12a4d62523",
+            "b1c0d51a-b6f4-49b6-994b-264426363640",
+            "b2181bb1-cc09-4749-8516-76ca2c5e531b",
+            "b3f8b2b0-8a4f-4b2e-a3a9-b5880a5d12b5",
+            "b41aaf33-295d-42c8-88bc-edb3c9a1a2e3",
+            "b6603689-59e1-4cda-a344-516edb324ad0",
+            "b7c902e5-b583-409e-95b9-ab9931b833f3",
+            "b9fc744b-275c-4625-80be-3f847006470d",
+            "ba17d520-088a-477e-a6d7-0f1e852f5ec9",
+            "bb431a6c-d77b-4c35-a9fe-bf765a597527",
+            "be478757-89a7-4b4f-a9ff-99859c1b792d",
+            "c0f465a7-7fc7-41f8-ac30-ffb532f02a16",
+            "c4908d19-bcdd-41f8-ab98-3030e35bfe7e",
+            "cc903461-040c-454d-b9a3-0cf5dfa066e5",
+            "cd722b87-3c80-41f8-9cbf-6dd68cf2fdbf",
+            "cdd17045-849a-4ed0-b0e8-e12ead0d445b",
+            "cf393b53-55ab-430b-bd9c-357a147408e1",
+            "cfa38136-0310-43a1-8786-e951ce69d8aa",
+            "d1de719e-fc15-444b-8556-d410b4ee1cdd",
+            "d2b79922-7552-4a7f-9fd3-c85218cbcac4",
+            "d596e159-870d-4b32-9974-06aba14236d4",
+            "d6c106f3-25fd-4269-a834-8c2bad7c874b",
+            "db0c0d91-0d0a-4425-bf73-73e5db438edc",
+            "dd5d57a4-170e-431b-9a79-a4204b744569",
+            "e0a40278-1d07-4490-ad9f-82fc6dc87e10",
+            "e0e73b18-1f96-4b61-99bd-e1528868f976",
+            "e10a5467-2d04-410a-bb67-18ab755ccfab",
+            "e1b0d974-409f-4ba6-b280-6635fe91eaeb",
+            "e3b471d2-d626-41d7-b439-df33ed0d86bf",
+            "e4b7fa4b-0e74-426f-9134-899c957568ae",
+            "e70e6187-cbc4-4bb2-b303-5f6c77638ef0",
+            "e7a12421-6df6-4efe-ac41-c0bcb3108c3d",
+            "e7b711b5-67cd-4365-9889-5696d48ecc6c",
+            "e7ff8829-033a-46b1-8e56-9c532e285031",
+            "ec20ac68-13e8-45ee-b1e8-fdc49d06c8d3",
+            "f052dc02-aa6c-4c86-a3ab-8651a40f63c9",
+            "f1280b8e-774c-4235-82ca-d66dbd877ea2",
+            "f12b2b2b-2218-41c2-bba5-f4261dc60b47",
+            "f25810e5-41d5-4d29-b041-81f2092195e1",
+            "f3492042-726c-400c-8cc3-0bca94708d84",
+            "f79be343-55ee-40d4-b985-d19b60d9696a",
+            "f9ed4c51-8d62-48f5-b555-fdc07acacd00",
+            "fd67ce8b-f75a-4d25-ab41-b7a8c34985ab",
+            "fe840682-352b-481a-8f4b-f7dc1482b2cb",
+            "fe9fb181-254b-4020-8c83-49bdf9f30fa2"
+          ]
+        },
+        {
+          "status": "BLOCKED",
+          "categoryId": "6a34eb23-3ef1-413c-a645-e84139e07e75",
+          "key": "health",
+          "reason": "Legacy category retained: 0 items (including hidden/deleted), 0 attachments, 2 Creator proposals, 0 materializations, 0 orphan references.",
+          "itemIds": [],
+          "proposalIds": [
+            "8966a4b2-7f70-4032-abc6-a3707e7476db",
+            "ec4b801e-bc2a-4aa0-8445-f4e029fa650a"
+          ]
+        },
+        {
+          "status": "BLOCKED",
+          "categoryId": "cc3b2e2b-40e2-4606-ba4c-cd318a8412b3",
+          "key": "food",
+          "reason": "Legacy category retained: 0 items (including hidden/deleted), 0 attachments, 5 Creator proposals, 0 materializations, 0 orphan references.",
+          "itemIds": [],
+          "proposalIds": [
+            "0de9aa96-eb7b-4a77-86a5-679d8d813ea9",
+            "5892165a-12d9-4630-a813-746a72840038",
+            "735761bc-3ae2-4fc4-a061-7a10fd44879d",
+            "c6264904-a96f-4be6-89d9-004a5b0dadef",
+            "c77b0f15-fb0a-4ccc-9733-3d0e4577d220"
+          ]
+        }
+      ],
+      "residualBlockedLegacy": [
+        "36f99b4b-4068-48ba-b4e2-2d511b59e990",
+        "6a34eb23-3ef1-413c-a645-e84139e07e75",
+        "cc3b2e2b-40e2-4606-ba4c-cd318a8412b3"
+      ]
+    },
+    {
+      "tenantId": "177e633a-6030-4eca-8ce8-e0a0afdff599",
+      "tenantName": "Glamping Gril",
+      "sourceHash": "20dd367bb6495abca28d42a5ac24a957adb2f2a09395fd25471320add1b42aa1",
+      "canonicalCategoryCount": 18,
+      "canonicalCategoriesPresent": 18,
+      "actions": [
+        {
+          "type": "mark-unpublished-changes",
+          "tenantId": "177e633a-6030-4eca-8ce8-e0a0afdff599",
+          "before": {
+            "hasUnpublishedChanges": false,
+            "isPublished": true,
+            "lastPublishedAt": "2026-09-21 20:59:13.254+00"
+          },
+          "after": {
+            "hasUnpublishedChanges": true,
+            "isPublished": true,
+            "lastPublishedAt": "2026-09-21 20:59:13.254+00"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "04e5a19d-07f8-4489-a9ab-38fea133b449",
+          "key": "culinary",
+          "before": {
+            "label": "Kulinarika",
+            "exploreGroup": "food_drink",
+            "position": 6,
+            "icon": "fork",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Kulinarika",
+            "exploreGroup": "food_drink",
+            "position": 1,
+            "icon": "fork",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "archive-empty-legacy-category",
+          "categoryId": "200eb364-2e74-4930-b434-fbe928c6c837",
+          "key": "food",
+          "before": {
+            "deletedAt": null,
+            "position": 2,
+            "isVisible": true
+          },
+          "after": {
+            "deletedAt": "TRANSACTION_TIMESTAMP",
+            "position": 2,
+            "isVisible": true
+          },
+          "guards": {
+            "itemCountIncludingHiddenDeleted": 0,
+            "attachmentCount": 0,
+            "proposalCount": 0,
+            "materializationCount": 0,
+            "orphanReferenceCount": 0
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "212fa3d5-580f-41d0-b6b7-d0d8a5a8820e",
+          "key": "bakery",
+          "before": {
+            "label": "Pekarne",
+            "exploreGroup": "services",
+            "position": 3,
+            "icon": "bread",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Pekarne",
+            "exploreGroup": "services",
+            "position": 1,
+            "icon": "bread",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "3074b599-b6a0-4913-b72f-2393c754f765",
+          "key": "hosp",
+          "before": {
+            "label": "Bolnišnica",
+            "exploreGroup": "services",
+            "position": 7,
+            "icon": "hosp",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Bolnišnica",
+            "exploreGroup": "services",
+            "position": 5,
+            "icon": "hosp",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e",
+          "key": "culture",
+          "before": {
+            "label": "Kulturna dediščina",
+            "exploreGroup": "sights",
+            "position": 11,
+            "icon": "culture",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Kulturna dediščina",
+            "exploreGroup": "sights",
+            "position": 8,
+            "icon": "culture",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827",
+          "key": "nature",
+          "before": {
+            "label": "Naravna dediščina",
+            "exploreGroup": "sights",
+            "position": 12,
+            "icon": "nature",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Naravna dediščina",
+            "exploreGroup": "sights",
+            "position": 9,
+            "icon": "nature",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "3e7b542d-8685-41bf-8adb-bf79df2b6488",
+          "key": "trips",
+          "before": {
+            "label": "Izleti",
+            "exploreGroup": "experiences",
+            "position": 1,
+            "icon": "map",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Izleti",
+            "exploreGroup": "experiences",
+            "position": 10,
+            "icon": "map",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "3e7b542d-8685-41bf-8adb-bf79df2b6488",
+          "key": "trips",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Ausflüge",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "3e7b542d-8685-41bf-8adb-bf79df2b6488",
+          "key": "trips",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Day trips",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "3e7b542d-8685-41bf-8adb-bf79df2b6488",
+          "key": "trips",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Gite",
+            "stale": false
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "4f54b76e-d29c-4a51-9bc6-c0bde0971873",
+          "key": "hike",
+          "before": {
+            "label": "Pohodi in kolesarjenje",
+            "exploreGroup": "nature_trails",
+            "position": 3,
+            "icon": "pin",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Pohodništvo",
+            "exploreGroup": "nature_trails",
+            "position": 5,
+            "icon": "hike",
+            "layout": "routes"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "4f54b76e-d29c-4a51-9bc6-c0bde0971873",
+          "key": "hike",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Wandern",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "4f54b76e-d29c-4a51-9bc6-c0bde0971873",
+          "key": "hike",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Hiking",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "4f54b76e-d29c-4a51-9bc6-c0bde0971873",
+          "key": "hike",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Escursioni a piedi",
+            "stale": false
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "5750513a-977a-483c-8c38-56261430152f",
+          "key": "act",
+          "before": {
+            "label": "Aktivnosti",
+            "exploreGroup": "experiences",
+            "position": 0,
+            "icon": "waves",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Aktivnosti",
+            "exploreGroup": "experiences",
+            "position": 4,
+            "icon": "star",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "5750513a-977a-483c-8c38-56261430152f",
+          "key": "act",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Aktivitäten",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "5750513a-977a-483c-8c38-56261430152f",
+          "key": "act",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Things to do",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "5750513a-977a-483c-8c38-56261430152f",
+          "key": "act",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Attività",
+            "stale": false
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "5eb62ef1-70e8-4671-9f51-c35a1c936d79",
+          "key": "pharm",
+          "before": {
+            "label": "Lekarne",
+            "exploreGroup": "services",
+            "position": 6,
+            "icon": "pharm",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Lekarne",
+            "exploreGroup": "services",
+            "position": 4,
+            "icon": "pharm",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+          "key": "sights",
+          "before": {
+            "label": "Znamenitosti",
+            "exploreGroup": "sights",
+            "position": 4,
+            "icon": "star",
+            "layout": "cards"
+          },
+          "after": {
+            "label": "Znamenitosti",
+            "exploreGroup": "sights",
+            "position": 13,
+            "icon": "star",
+            "layout": "cards"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "79784125-2f5f-4927-955a-c41f31b77db3",
+          "key": "beach",
+          "before": {
+            "label": "Plaže",
+            "exploreGroup": "nature_trails",
+            "position": 10,
+            "icon": "beach",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Plaže",
+            "exploreGroup": "nature_trails",
+            "position": 7,
+            "icon": "beach",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "829b6b6f-1343-4b50-aee1-b7bbf2d162d6",
+          "key": "bike",
+          "before": {
+            "label": "Kolesarjenje",
+            "exploreGroup": "nature_trails",
+            "position": 9,
+            "icon": "bike",
+            "layout": "routes"
+          },
+          "after": {
+            "label": "Kolesarjenje",
+            "exploreGroup": "nature_trails",
+            "position": 6,
+            "icon": "bike",
+            "layout": "routes"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "845d9646-9907-4060-9b52-a49ee3e3d8e7",
+          "key": "breakfast",
+          "before": {
+            "label": "Zajtrk",
+            "exploreGroup": "food_drink",
+            "position": 5,
+            "icon": "coffee",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Zajtrk",
+            "exploreGroup": "food_drink",
+            "position": 0,
+            "icon": "coffee",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "archive-empty-legacy-category",
+          "categoryId": "93b49469-985d-43b0-a264-5f5f760e29e2",
+          "key": "transport",
+          "before": {
+            "deletedAt": null,
+            "position": 2,
+            "isVisible": true
+          },
+          "after": {
+            "deletedAt": "TRANSACTION_TIMESTAMP",
+            "position": 2,
+            "isVisible": true
+          },
+          "guards": {
+            "itemCountIncludingHiddenDeleted": 0,
+            "attachmentCount": 0,
+            "proposalCount": 0,
+            "materializationCount": 0,
+            "orphanReferenceCount": 0
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "a725db3a-8eb9-4104-a21a-acf288167754",
+          "key": "gas",
+          "before": {
+            "label": "Bencinske črpalke",
+            "exploreGroup": "services",
+            "position": 4,
+            "icon": "gas",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Bencinske črpalke",
+            "exploreGroup": "services",
+            "position": 2,
+            "icon": "gas",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "abef8c44-7568-4a84-ac8e-8b218afbaae1",
+          "key": "shops",
+          "before": {
+            "label": "Trgovine",
+            "exploreGroup": "services",
+            "position": 0,
+            "icon": "cart",
+            "layout": "list"
+          },
+          "after": {
+            "label": "Trgovine",
+            "exploreGroup": "services",
+            "position": 0,
+            "icon": "cart",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "abef8c44-7568-4a84-ac8e-8b218afbaae1",
+          "key": "shops",
+          "language": "de",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Geschäfte",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "abef8c44-7568-4a84-ac8e-8b218afbaae1",
+          "key": "shops",
+          "language": "en",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Shops",
+            "stale": false
+          }
+        },
+        {
+          "type": "upsert-category-translation",
+          "categoryId": "abef8c44-7568-4a84-ac8e-8b218afbaae1",
+          "key": "shops",
+          "language": "it",
+          "before": {
+            "translationId": null,
+            "value": null,
+            "stale": null
+          },
+          "after": {
+            "value": "Negozi",
+            "stale": false
+          }
+        },
+        {
+          "type": "archive-empty-legacy-category",
+          "categoryId": "b590ac64-e90f-445d-b8f9-816d23b9faf5",
+          "key": "health",
+          "before": {
+            "deletedAt": null,
+            "position": 1,
+            "isVisible": true
+          },
+          "after": {
+            "deletedAt": "TRANSACTION_TIMESTAMP",
+            "position": 1,
+            "isVisible": true
+          },
+          "guards": {
+            "itemCountIncludingHiddenDeleted": 0,
+            "attachmentCount": 0,
+            "proposalCount": 0,
+            "materializationCount": 0,
+            "orphanReferenceCount": 0
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "ba2f46bf-6336-4267-adbc-654ed95114dc",
+          "key": "events",
+          "before": {
+            "label": "Dogodki",
+            "exploreGroup": "experiences",
+            "position": 13,
+            "icon": "party",
+            "layout": "events"
+          },
+          "after": {
+            "label": "Dogodki",
+            "exploreGroup": "experiences",
+            "position": 11,
+            "icon": "party",
+            "layout": "events"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "e06b3988-177a-441f-b7ad-6a2738b9259f",
+          "key": "atm",
+          "before": {
+            "label": "Bankomati",
+            "exploreGroup": "services",
+            "position": 5,
+            "icon": "atm",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Bankomati",
+            "exploreGroup": "services",
+            "position": 3,
+            "icon": "atm",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "eee7d49b-524c-4487-b867-ed43a0de0629",
+          "key": "night",
+          "before": {
+            "label": "Nočno življenje",
+            "exploreGroup": "food_drink",
+            "position": 7,
+            "icon": "cocktail",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Nočno življenje",
+            "exploreGroup": "food_drink",
+            "position": 2,
+            "icon": "cocktail",
+            "layout": "poi"
+          }
+        },
+        {
+          "type": "update-category",
+          "categoryId": "f4e07cf9-a8e6-4fb7-b98b-efd252c28843",
+          "key": "pizza",
+          "before": {
+            "label": "Picerije",
+            "exploreGroup": "food_drink",
+            "position": 8,
+            "icon": "pizza",
+            "layout": "poi"
+          },
+          "after": {
+            "label": "Picerije",
+            "exploreGroup": "food_drink",
+            "position": 3,
+            "icon": "pizza",
+            "layout": "poi"
+          }
+        }
+      ],
+      "itemMoves": [],
+      "findings": [
+        {
+          "status": "MANUAL_REVIEW",
+          "categoryId": "4f54b76e-d29c-4a51-9bc6-c0bde0971873",
+          "key": "hike",
+          "reason": "Golte is a generic plateau description; retained in hiking and no cycling move is guessed.",
+          "itemIds": [
+            "aec271cd-41fd-4f13-a222-f69bf8cd8ec5"
+          ]
+        },
+        {
+          "status": "BLOCKED",
+          "categoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+          "key": "sights",
+          "reason": "Legacy category retained: 14 items (including hidden/deleted), 14 attachments, 63 Creator proposals, 14 materializations, 0 orphan references.",
+          "itemIds": [
+            "097f6a52-0170-4e35-bede-c1724c92dd0e",
+            "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+            "42399814-ec16-4994-9048-0cf7908f2016",
+            "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+            "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+            "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+            "98b050d9-ef6c-4613-b053-707725017055",
+            "b86fc640-92e4-4014-aada-8baa487b1311",
+            "c45a1ac0-c214-4e6f-9c5d-78f56e50ae90",
+            "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+            "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+            "e9fae122-8743-4de6-aec9-0fa346d61938",
+            "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+            "fd9d941b-f143-4804-a865-38aed37df836"
+          ],
+          "proposalIds": [
+            "050d3d19-b9ee-47c3-9640-d89640a80512",
+            "0f6c6323-863d-47db-99d6-52a7c8964d6c",
+            "0f9312e9-32e3-4f01-b59c-381afbba1e5b",
+            "10e87218-bf17-43ee-b194-2b57ddc509ab",
+            "11adb6a3-5c8b-44a3-9013-d918d83bbd3a",
+            "120f0a0b-f95d-4309-9124-2abb4956c8ac",
+            "17ba6d94-53b0-4ebc-8cff-cd302404c757",
+            "1c22eb54-5031-42fa-888b-b2c3a3745dc3",
+            "1ccee439-5b27-4174-9b7a-ce270a95e43a",
+            "204ea70c-1051-44c8-a125-267e79bf0c85",
+            "21df0de9-9bbe-48f5-bbac-d03ccb22406a",
+            "2279c4a5-92b9-4c2b-9834-b950634a327f",
+            "22edd549-8691-4652-b2ba-5246cb9ca631",
+            "230db712-8553-4d80-ad8f-57ec42251aad",
+            "2456105f-341c-4650-92f7-35a3a2643eaf",
+            "2fe45650-3910-47e2-9ba5-5f6edfa0cb6d",
+            "352e5532-d337-48f3-87c0-e8e53386c12f",
+            "358914a7-cfab-4da9-9546-1610f10d620e",
+            "4008e2a1-8cec-44b6-9b18-ab156a40a8ac",
+            "40fedef4-88c4-4c4f-a684-7c399d242b24",
+            "422eec61-33b5-4830-b38c-1e885fd32564",
+            "4a36c74b-2e5e-4eac-a3d6-9e2a81cff224",
+            "595eb3a3-be4f-4f6e-b75f-4bba8a409c49",
+            "5f003916-5b83-4641-8896-cbcb728e1be1",
+            "66fa9d60-aa7f-4f1f-a72c-b52362b8aa52",
+            "680a40f5-a31f-46cb-8435-940faf87775b",
+            "6be6ae15-a2a0-4cfb-b04e-f1f6ddd670ab",
+            "71c74962-2202-460b-a3c1-a53cb54c48b1",
+            "7417bf67-8127-4c23-aa73-2a0c83083773",
+            "74206ae9-44e8-4d2c-99af-0548455a0bb5",
+            "78c6c2d3-c6ad-4180-8009-053a72e2437f",
+            "7e731b67-d3b4-4c3c-9459-f65f962bcbc0",
+            "838ac0bc-f483-4359-ab48-f42dd82245f6",
+            "856d086d-3525-4b7f-a9f1-abf329a04bb6",
+            "929d3884-4fb8-4df1-8d6f-e6a40bd2a7c6",
+            "92be2f51-0c56-4f7b-849c-9de50f90f951",
+            "940b251d-bec2-4411-811c-a4c8426f2c02",
+            "97bb7d91-7a8a-44c5-9cbc-4a9b587d1be0",
+            "998ea7ee-3cc6-4f7f-a345-49378d64ddb0",
+            "99caf2e1-8518-4ea3-b064-39e784d40217",
+            "a1bb6854-c144-428b-a666-0c8444a9c5c5",
+            "aac4b44f-93bf-4e66-9aa1-d8af8e14367f",
+            "b139a2ef-36ba-443f-949c-ccbdfd5d2a15",
+            "b1867281-f7c7-4ac0-900d-610875218dac",
+            "b53cbdce-c596-41bc-b743-cf6401a460e6",
+            "b90285f6-f5ee-48aa-8233-5da617fa192d",
+            "ba217862-fc8b-4b7e-b1ee-6fe6733f848c",
+            "c30e8559-7005-4240-9750-948211e78ef7",
+            "c7c12149-ae50-44c6-b867-e396bd62fad4",
+            "c80fe42a-a68e-421a-8eec-660e68e8181c",
+            "d6a51991-178c-4e17-a00f-2a2bafb01fbe",
+            "dd49cfbf-ab8d-4fb6-870a-c17e19dfc8be",
+            "df543171-7c0f-4e82-9df9-d4a51f6778d7",
+            "e192e0d6-ed5c-41f8-a77f-fe3c45b8fac1",
+            "e3ae9924-b7fb-4692-b45b-80b87ff3657d",
+            "e7849b26-2b1c-442e-b40a-ff1f9b760add",
+            "e7eecab5-f6c0-4957-9ba8-e9ace325cb80",
+            "ec04f100-8bb8-48b0-93e3-2b21b0be192b",
+            "f61ddae2-31c2-4798-8375-cdd5223c2bbc",
+            "f7dbcb0a-46f5-4cf3-aedd-193343417b78",
+            "f810755e-eb9a-4110-a279-7e0fc120cfa5",
+            "fbaf71ed-c6bb-48d2-8a56-f1d4551f7b76",
+            "fbf3c042-c81b-4832-b1fa-f6cea211debb"
+          ]
+        }
+      ],
+      "residualBlockedLegacy": [
+        "6ce78358-dba7-4149-98a1-cec89a1caca4"
+      ]
+    }
+  ]
+}

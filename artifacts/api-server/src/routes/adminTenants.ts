@@ -7,6 +7,7 @@ import {
   sectionsTable,
   categoriesTable,
   itemsTable,
+  itemCategoryAttachmentsTable,
   mediaTable,
   changelogTable,
   validateLivingGuideNav,
@@ -32,7 +33,12 @@ import {
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import { logChange, safeSummary } from "../lib/changelog";
 import { buildTenantOverviews } from "../lib/tenantOverview";
-import { seedTenantContent, TENANT_TYPES, type TenantType } from "../lib/tenantSeeds";
+import {
+  seedTenantContent,
+  tenantSeedPlan,
+  TENANT_TYPES,
+  type TenantType,
+} from "../lib/tenantSeeds";
 import { sendPublishedEmail } from "../lib/lifecycleEmails";
 import { buildTenantContent } from "../lib/contentTree";
 import {
@@ -231,11 +237,20 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
       .from(tenantsTable)
       .where(eq(tenantsTable.isTemplate, true));
     if (template) {
-      const created = await copyTenant(template.id, {
-        slug,
-        name,
-        copyContent: false,
-      });
+      let created: typeof tenantsTable.$inferSelect;
+      try {
+        created = await copyTenant(template.id, {
+          slug,
+          name,
+          copyContent: false,
+        });
+      } catch (error) {
+        if (error instanceof TenantCopyContentError) {
+          res.status(400).json({ code: "TENANT_COPY_CONTENT_BLOCKED", error: error.message });
+          return;
+        }
+        throw error;
+      }
       invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
       // Every new tenant starts with a renewal date one year out.
       const renewsAt = plusOneYear(new Date());
@@ -267,14 +282,14 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         slug,
         name,
         subtitle: subtitle ?? null,
-        tenantType,
+        tenantType: tenantType ?? "apartmaji",
         guestUiMode: "living-guide",
         renewsAt: plusOneYear(new Date()),
       })
       .returning();
     // The chosen type seeds the default sections, categories and groups
     // (CP2b). The bottom bar derives from sections / the Living Guide default.
-    if (tenantType) await seedTenantContent(rows[0]!.id, tenantType, tx);
+    await seedTenantContent(rows[0]!.id, tenantType ?? "apartmaji", tx);
     return rows;
   });
   invalidateTenantCache();
@@ -1000,11 +1015,20 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  const created = await copyTenant(id, {
-    slug,
-    name,
-    copyContent: copyContent ?? true,
-  });
+  let created: typeof tenantsTable.$inferSelect;
+  try {
+    created = await copyTenant(id, {
+      slug,
+      name,
+      copyContent: copyContent ?? true,
+    });
+  } catch (error) {
+    if (error instanceof TenantCopyContentError) {
+      res.status(400).json({ code: "TENANT_COPY_CONTENT_BLOCKED", error: error.message });
+      return;
+    }
+    throw error;
+  }
   invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
   // Duplication hygiene: the copy must not inherit references to files that
   // no longer exist or don't fit the field (e.g. opaque JPEG as transparent
@@ -1040,6 +1064,18 @@ router.get("/admin/tenants/:id/media-check", async (req, res): Promise<void> => 
   });
 });
 
+export class TenantCopyContentError extends Error {
+  constructor(sectionKey: string, categoryKey: string | null) {
+    const printableKey = categoryKey ?? "(brez ključa)";
+    super(
+      `Kopije ni mogoče ustvariti: nestandardna kategorija »${printableKey}« ` +
+      `v razdelku »${sectionKey}« vsebuje vsebino. Vsebino najprej ročno ` +
+      "razvrstite v trenutno strukturo okolice.",
+    );
+    this.name = "TenantCopyContentError";
+  }
+}
+
 export async function copyTenant(
   sourceId: string,
   opts: { slug: string; name: string; copyContent: boolean },
@@ -1061,86 +1097,171 @@ export async function copyTenant(
     guestUiMode: _guestUiMode,
     ...rest
   } = source;
-  const [created] = await db
-    .insert(tenantsTable)
-    .values({
-      ...rest,
-      slug: opts.slug,
-      name: opts.name,
-      guestUiMode: "living-guide",
-      isTemplate: false,
-      isPublished: false,
-      // Security settings belong to the new establishment and must never be
-      // inherited from a template or duplicated tenant.
-      orderPassword: null,
-      // livingGuideNav is a per-establishment navigation decision. Reset to null
-      // so the frontend applies the approved default rather than silently
-      // inheriting a nav layout that may not fit the new establishment's content.
-      livingGuideNav: null,
-      // Provenance marker (CP2b): copies must be unmistakably flagged in the
-      // admin header — the owner once edited the wrong tenant.
-      copiedFromTenantId: sourceId,
-      // The copy has never been published; its slug stays editable.
-      firstPublishedAt: null,
-      renewsAt: plusOneYear(new Date()),
-    })
-    .returning();
-
   const sections = await db
     .select()
     .from(sectionsTable)
     .where(eq(sectionsTable.tenantId, sourceId))
     .orderBy(asc(sectionsTable.position));
 
-  for (const section of sections) {
-    const { id: oldSectionId, tenantId: _t, ...sectionRest } = section;
-    const [newSection] = await db
-      .insert(sectionsTable)
-      .values({ ...sectionRest, tenantId: created!.id })
+  const sourceType = (TENANT_TYPES as readonly string[]).includes(source.tenantType ?? "")
+    ? source.tenantType as TenantType
+    : "apartmaji";
+
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(tenantsTable)
+      .values({
+        ...rest,
+        slug: opts.slug,
+        name: opts.name,
+        tenantType: sourceType,
+        guestUiMode: "living-guide",
+        isTemplate: false,
+        isPublished: false,
+        // Security settings belong to the new establishment and must never be
+        // inherited from a template or duplicated tenant.
+        orderPassword: null,
+        // livingGuideNav is a per-establishment navigation decision. Reset to null
+        // so the frontend applies the approved default rather than silently
+        // inheriting a nav layout that may not fit the new establishment's content.
+        livingGuideNav: null,
+        // Provenance marker (CP2b): copies must be unmistakably flagged in the
+        // admin header — the owner once edited the wrong tenant.
+        copiedFromTenantId: sourceId,
+        // The copy has never been published; its slug stays editable.
+        firstPublishedAt: null,
+        renewsAt: plusOneYear(new Date()),
+      })
       .returning();
-    const categories = await db
+
+    // Build every new copy from the current master first. A legacy/template
+    // source may be incomplete or have old labels and ordering, so it must
+    // never act as the constructor for the new tenant.
+    await seedTenantContent(created!.id, sourceType, tx);
+    const targetSections = await tx
       .select()
-      .from(categoriesTable)
-      .where(eq(categoriesTable.sectionId, oldSectionId))
-      .orderBy(asc(categoriesTable.position));
-    for (const category of categories) {
-      const { id: oldCategoryId, sectionId: _s, ...categoryRest } = category;
-      const [newCategory] = await db
-        .insert(categoriesTable)
-        .values({ ...categoryRest, sectionId: newSection!.id })
-        .returning();
-      if (!opts.copyContent) continue;
-      const items = await db
-        .select()
-        .from(itemsTable)
-        .where(eq(itemsTable.categoryId, oldCategoryId))
-        .orderBy(asc(itemsTable.position));
-      const oldItemIds = items.map((i) => i.id);
-      const media = oldItemIds.length
-        ? await db
-            .select()
-            .from(mediaTable)
-            .where(inArray(mediaTable.itemId, oldItemIds))
-        : [];
-      for (const item of items) {
-        const { id: oldItemId, categoryId: _c, ...itemRest } = item;
-        const [newItem] = await db
-          .insert(itemsTable)
-          .values({ ...itemRest, categoryId: newCategory!.id })
+      .from(sectionsTable)
+      .where(eq(sectionsTable.tenantId, created!.id))
+      .orderBy(asc(sectionsTable.position));
+    const standardCategoryKeys = new Set(
+      tenantSeedPlan(sourceType).flatMap((section) => section.categories.map((category) => category.key)),
+    );
+    const standardSectionByCategory = new Map(
+      tenantSeedPlan(sourceType)
+        .flatMap((section) => section.categories.map((category) => [category.key, section.key] as const)),
+    );
+
+    for (const section of sections) {
+      const { id: oldSectionId, tenantId: _t, ...sectionRest } = section;
+      let newSection = targetSections.find((candidate) => candidate.key === section.key);
+      if (!newSection) {
+        const [inserted] = await tx
+          .insert(sectionsTable)
+          .values({
+            ...sectionRest,
+            tenantId: created!.id,
+            position: targetSections.length,
+          })
           .returning();
-        const itemMedia = media.filter((m) => m.itemId === oldItemId);
-        if (itemMedia.length) {
-          await db.insert(mediaTable).values(
-            itemMedia.map(({ id: _m, itemId: _i, ...mediaRest }) => ({
-              ...mediaRest,
-              itemId: newItem!.id,
-            })),
-          );
+        newSection = inserted!;
+        targetSections.push(newSection);
+      }
+      const categories = await tx
+        .select()
+        .from(categoriesTable)
+        .where(eq(categoriesTable.sectionId, oldSectionId))
+        .orderBy(asc(categoriesTable.position));
+      const targetCategories = await tx
+        .select()
+        .from(categoriesTable)
+        .where(eq(categoriesTable.sectionId, newSection.id))
+        .orderBy(asc(categoriesTable.position));
+      for (const category of categories) {
+        const { id: oldCategoryId, sectionId: _s, ...categoryRest } = category;
+        const isOkolicaSection = section.key === "explore" || section.key === "services";
+        const canonicalSection = category.key === null
+          ? undefined
+          : standardSectionByCategory.get(category.key);
+        const isCanonicalHere = canonicalSection === section.key;
+        const isCanonicalInWrongSection =
+          canonicalSection !== undefined && !isCanonicalHere;
+        const isVerifiedHostCustom =
+          category.key !== null && category.key.startsWith("host-custom-");
+        const omitDriftCategory =
+          isCanonicalInWrongSection
+          || (isOkolicaSection && !isCanonicalHere && !isVerifiedHostCustom);
+
+        if (omitDriftCategory) {
+          if (opts.copyContent) {
+            const [directItem, attachment] = await Promise.all([
+              tx
+                .select({ id: itemsTable.id })
+                .from(itemsTable)
+                .where(eq(itemsTable.categoryId, oldCategoryId))
+                .limit(1)
+                .then((rows) => rows[0]),
+              tx
+                .select({ id: itemCategoryAttachmentsTable.id })
+                .from(itemCategoryAttachmentsTable)
+                .where(eq(itemCategoryAttachmentsTable.categoryId, oldCategoryId))
+                .limit(1)
+                .then((rows) => rows[0]),
+            ]);
+            if (directItem || attachment) {
+              throw new TenantCopyContentError(section.key, category.key);
+            }
+          }
+          continue;
+        }
+
+        let newCategory = category.key === null
+          ? undefined
+          : targetCategories.find((candidate) => candidate.key === category.key);
+        if (!newCategory && (category.key === null || !standardCategoryKeys.has(category.key))) {
+          const [inserted] = await tx
+            .insert(categoriesTable)
+            .values({
+              ...categoryRest,
+              sectionId: newSection.id,
+              position: targetCategories.length,
+            })
+            .returning();
+          newCategory = inserted!;
+          targetCategories.push(newCategory);
+        }
+        if (!newCategory || !opts.copyContent) continue;
+        const items = await tx
+          .select()
+          .from(itemsTable)
+          .where(eq(itemsTable.categoryId, oldCategoryId))
+          .orderBy(asc(itemsTable.position));
+        const oldItemIds = items.map((i) => i.id);
+        const media = oldItemIds.length
+          ? await tx
+              .select()
+              .from(mediaTable)
+              .where(inArray(mediaTable.itemId, oldItemIds))
+          : [];
+        for (const item of items) {
+          const { id: oldItemId, categoryId: _c, ...itemRest } = item;
+          const [newItem] = await tx
+            .insert(itemsTable)
+            .values({ ...itemRest, categoryId: newCategory.id })
+            .returning();
+          const itemMedia = media.filter((m) => m.itemId === oldItemId);
+          if (itemMedia.length) {
+            await tx.insert(mediaTable).values(
+              itemMedia.map(({ id: _m, itemId: _i, ...mediaRest }) => ({
+                ...mediaRest,
+                itemId: newItem!.id,
+              })),
+            );
+          }
         }
       }
     }
-  }
-  return created!;
+    return created!;
+  });
 }
 
 export default router;

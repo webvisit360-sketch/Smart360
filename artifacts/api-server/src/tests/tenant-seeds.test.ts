@@ -13,6 +13,7 @@ import {
   ensureTenantSkeleton,
   MELI_PU_SKELETON,
   seedTenantContent,
+  TENANT_TYPES,
 } from "../lib/tenantSeeds";
 
 const EXPECTED_SECTION_KEYS = ["stay", "offer", "explore", "services"];
@@ -41,6 +42,96 @@ test("nature_trails seed keeps its stable identity and renamed labels", () => {
       .map((category) => category.key),
     ["hike", "bike", "beach"],
   );
+});
+
+test("all three tenant types are constructed from the same complete current master", async () => {
+  const tenantIds: string[] = [];
+  try {
+    for (const type of TENANT_TYPES) {
+      const [tenant] = await db
+        .insert(tenantsTable)
+        .values({
+          slug: `seed-all-types-${type}-${crypto.randomUUID()}`,
+          name: `Throwaway ${type}`,
+          tenantType: type,
+          guestUiMode: "living-guide",
+        })
+        .returning({ id: tenantsTable.id });
+      tenantIds.push(tenant!.id);
+      await seedTenantContent(tenant!.id, type);
+
+      const sections = await db
+        .select()
+        .from(sectionsTable)
+        .where(eq(sectionsTable.tenantId, tenant!.id))
+        .orderBy(asc(sectionsTable.position));
+      assert.deepEqual(
+        sections.map(({ key, title, icon, position }) => ({ key, title, icon, position })),
+        MELI_PU_SKELETON.map((section, position) => ({
+          key: section.key,
+          title: section.names.sl,
+          icon: section.icon,
+          position,
+        })),
+      );
+
+      for (const [sectionPosition, sectionSeed] of MELI_PU_SKELETON.entries()) {
+        const section = sections[sectionPosition]!;
+        const categories = await db
+          .select()
+          .from(categoriesTable)
+          .where(eq(categoriesTable.sectionId, section.id))
+          .orderBy(asc(categoriesTable.position));
+        assert.deepEqual(
+          categories.map(({ key, label, icon, layout, exploreGroup, position }) => ({
+            key, label, icon, layout, group: exploreGroup, position,
+          })),
+          sectionSeed.categories.map((category, position) => ({
+            key: category.key,
+            label: category.names.sl,
+            icon: category.icon,
+            layout: category.layout,
+            group: category.group,
+            position,
+          })),
+        );
+        if (sectionSeed.key === "explore") {
+          const hike = categories.find((category) => category.key === "hike");
+          const bike = categories.find((category) => category.key === "bike");
+          assert.ok(hike && bike, "hike and bike must both exist");
+          assert.notEqual(hike.id, bike.id, "hike and bike must remain separate categories");
+        }
+
+        const records = [section, ...categories];
+        const translations = await db
+          .select()
+          .from(translationsTable)
+          .where(inArray(translationsTable.recordId, records.map((record) => record.id)));
+        assert.equal(translations.length, records.length * 3);
+        for (const lang of ["en", "de", "it"] as const) {
+          assert.ok(translations.some((row) =>
+            row.recordId === section.id
+            && row.model === "section"
+            && row.field === "title"
+            && row.lang === lang
+            && row.value === sectionSeed.names[lang]));
+          for (const categorySeed of sectionSeed.categories) {
+            const category = categories.find((row) => row.key === categorySeed.key)!;
+            assert.ok(translations.some((row) =>
+              row.recordId === category.id
+              && row.model === "category"
+              && row.field === "label"
+              && row.lang === lang
+              && row.value === categorySeed.names[lang]));
+          }
+        }
+      }
+    }
+  } finally {
+    for (const tenantId of tenantIds.reverse()) {
+      await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
+    }
+  }
 });
 
 test("new tenant receives the complete four-language Meli Pu skeleton and is deleted", async () => {

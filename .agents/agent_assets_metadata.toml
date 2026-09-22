@@ -806,3 +806,17 @@ mtime_ms = 1790062793480
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c01422ca-7112-4a72-a93e-c04bdc47fb72/ac3ea484-de33-47f6-b0a9-e6c5954d126f"
 storage_version_token = "1790062803955928"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "7zKQJfkpzJM4fYjwxqYqm"
+uri = "file://reports/okolica-predlog-za-odobritev.html"
+type = "html"
+title = "Okolica — produkcijski pregled in predlog za odobritev"
+description = "Natančne spremembe po nastanitvah in kategorijah, štirje jeziki, zaščitene kategorije ter pregled vnosov. Ni izvedeno v produkciji."
+logical_id = "4c7f0993-e5e3-49d6-af8c-da13b19d2e83"
+content_hash = "sha256:0f91600e58ca6dbb6051eb80e11389031905169c9793acff4c60d461d87aaf7d"
+size = 20790
+mtime_ms = 1790089563594
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4c7f0993-e5e3-49d6-af8c-da13b19d2e83/4efc9e81-a86d-4854-a6e2-5db0b4c65aa1"
+storage_version_token = "1790089671257168"
+content_type = "text/html"

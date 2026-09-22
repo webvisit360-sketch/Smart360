@@ -14,3 +14,9 @@ The host onboarding form must mirror shared skeleton category names and order ex
 **Why:** The owner explicitly rejected merged or renamed form categories during review on 2026-09-22; a legacy tenant label is not authority to change the shared skeleton.
 
 **How to apply:** Preserve each category identity. Do not backfill tenant categories or invent frontend aliases to make an inconsistent tenant look synchronized without separate approval.
+
+The shared Okolica structure is an owner rule for every tenant, not just the onboarding form; host-created custom categories are the explicit exception.
+
+**Why:** On 2026-09-22 the owner required production auditing and development verification before approving an exact per-tenant alignment. Content safety takes precedence over silently removing a legacy category to claim parity.
+
+**How to apply:** Treat an empty legacy category with pending Creator references as protected work, not disposable clutter. Report unresolved structural exceptions explicitly; do not reclassify them as host-created customs. New tenant copies must not reproduce legacy drift or silently drop copied content.

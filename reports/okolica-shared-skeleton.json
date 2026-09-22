@@ -1,0 +1,291 @@
+[
+  {
+    "key": "explore",
+    "names": {
+      "sl": "Odkrij okolico",
+      "en": "Explore the area",
+      "de": "Die Umgebung entdecken",
+      "it": "Scopri i dintorni"
+    },
+    "icon": "compass",
+    "groups": [
+      {
+        "key": "experiences",
+        "names": {
+          "sl": "Doživetja",
+          "en": "Experiences",
+          "de": "Erlebnisse",
+          "it": "Esperienze"
+        }
+      },
+      {
+        "key": "food_drink",
+        "names": {
+          "sl": "Hrana in pijača",
+          "en": "Food and drink",
+          "de": "Essen und Trinken",
+          "it": "Cibo e bevande"
+        }
+      },
+      {
+        "key": "nature_trails",
+        "names": {
+          "sl": "Aktivnosti",
+          "en": "Activities",
+          "de": "Aktivitäten",
+          "it": "Attività"
+        }
+      },
+      {
+        "key": "sights",
+        "names": {
+          "sl": "Znamenitosti",
+          "en": "Sights",
+          "de": "Sehenswürdigkeiten",
+          "it": "Attrazioni"
+        }
+      }
+    ],
+    "categories": [
+      {
+        "key": "breakfast",
+        "names": {
+          "sl": "Zajtrk",
+          "en": "Breakfast",
+          "de": "Frühstück",
+          "it": "Colazione"
+        },
+        "icon": "coffee",
+        "layout": "poi",
+        "group": "food_drink"
+      },
+      {
+        "key": "culinary",
+        "names": {
+          "sl": "Kulinarika",
+          "en": "Where to eat",
+          "de": "Essen gehen",
+          "it": "Dove mangiare"
+        },
+        "icon": "fork",
+        "layout": "poi",
+        "group": "food_drink"
+      },
+      {
+        "key": "night",
+        "names": {
+          "sl": "Nočno življenje",
+          "en": "Nightlife",
+          "de": "Nachtleben",
+          "it": "Vita notturna"
+        },
+        "icon": "cocktail",
+        "layout": "poi",
+        "group": "food_drink"
+      },
+      {
+        "key": "pizza",
+        "names": {
+          "sl": "Picerije",
+          "en": "Pizzerias",
+          "de": "Pizzerien",
+          "it": "Pizzerie"
+        },
+        "icon": "pizza",
+        "layout": "poi",
+        "group": "food_drink"
+      },
+      {
+        "key": "act",
+        "names": {
+          "sl": "Aktivnosti",
+          "en": "Things to do",
+          "de": "Aktivitäten",
+          "it": "Attività"
+        },
+        "icon": "star",
+        "layout": "poi",
+        "group": "experiences"
+      },
+      {
+        "key": "hike",
+        "names": {
+          "sl": "Pohodništvo",
+          "en": "Hiking",
+          "de": "Wandern",
+          "it": "Escursioni a piedi"
+        },
+        "icon": "hike",
+        "layout": "routes",
+        "group": "nature_trails"
+      },
+      {
+        "key": "bike",
+        "names": {
+          "sl": "Kolesarjenje",
+          "en": "Cycling",
+          "de": "Radfahren",
+          "it": "In bicicletta"
+        },
+        "icon": "bike",
+        "layout": "routes",
+        "group": "nature_trails"
+      },
+      {
+        "key": "beach",
+        "names": {
+          "sl": "Plaže",
+          "en": "Beaches",
+          "de": "Strände",
+          "it": "Spiagge"
+        },
+        "icon": "beach",
+        "layout": "poi",
+        "group": "nature_trails"
+      },
+      {
+        "key": "culture",
+        "names": {
+          "sl": "Kulturna dediščina",
+          "en": "Heritage",
+          "de": "Kulturerbe",
+          "it": "Patrimonio culturale"
+        },
+        "icon": "culture",
+        "layout": "poi",
+        "group": "sights"
+      },
+      {
+        "key": "nature",
+        "names": {
+          "sl": "Naravna dediščina",
+          "en": "Nature",
+          "de": "Naturerbe",
+          "it": "Patrimonio naturale"
+        },
+        "icon": "nature",
+        "layout": "poi",
+        "group": "sights"
+      },
+      {
+        "key": "trips",
+        "names": {
+          "sl": "Izleti",
+          "en": "Day trips",
+          "de": "Ausflüge",
+          "it": "Gite"
+        },
+        "icon": "map",
+        "layout": "poi",
+        "group": "experiences"
+      },
+      {
+        "key": "events",
+        "names": {
+          "sl": "Dogodki",
+          "en": "What's on",
+          "de": "Veranstaltungen",
+          "it": "Eventi"
+        },
+        "icon": "party",
+        "layout": "events",
+        "group": "experiences"
+      }
+    ]
+  },
+  {
+    "key": "services",
+    "names": {
+      "sl": "Storitve v bližini",
+      "en": "Nearby services",
+      "de": "Dienste in der Nähe",
+      "it": "Servizi nelle vicinanze"
+    },
+    "icon": "cart",
+    "groups": [
+      {
+        "key": "services",
+        "names": {
+          "sl": "Storitve",
+          "en": "Services",
+          "de": "Dienstleistungen",
+          "it": "Servizi"
+        }
+      }
+    ],
+    "categories": [
+      {
+        "key": "shops",
+        "names": {
+          "sl": "Trgovine",
+          "en": "Shops",
+          "de": "Geschäfte",
+          "it": "Negozi"
+        },
+        "icon": "cart",
+        "layout": "poi",
+        "group": "services"
+      },
+      {
+        "key": "bakery",
+        "names": {
+          "sl": "Pekarne",
+          "en": "Bakeries",
+          "de": "Bäckereien",
+          "it": "Panetterie"
+        },
+        "icon": "bread",
+        "layout": "poi",
+        "group": "services"
+      },
+      {
+        "key": "gas",
+        "names": {
+          "sl": "Bencinske črpalke",
+          "en": "Petrol stations",
+          "de": "Tankstellen",
+          "it": "Distributori di carburante"
+        },
+        "icon": "gas",
+        "layout": "poi",
+        "group": "services"
+      },
+      {
+        "key": "atm",
+        "names": {
+          "sl": "Bankomati",
+          "en": "Cash machines",
+          "de": "Geldautomaten",
+          "it": "Bancomat"
+        },
+        "icon": "atm",
+        "layout": "poi",
+        "group": "services"
+      },
+      {
+        "key": "pharm",
+        "names": {
+          "sl": "Lekarne",
+          "en": "Pharmacies",
+          "de": "Apotheken",
+          "it": "Farmacie"
+        },
+        "icon": "pharm",
+        "layout": "poi",
+        "group": "services"
+      },
+      {
+        "key": "hosp",
+        "names": {
+          "sl": "Bolnišnica",
+          "en": "Hospital",
+          "de": "Krankenhaus",
+          "it": "Ospedale"
+        },
+        "icon": "hosp",
+        "layout": "poi",
+        "group": "services"
+      }
+    ]
+  }
+]
