@@ -709,6 +709,33 @@ export const PreviewTenantPublicationResponse = zod.object({
 
 
 /**
+ * @summary Uskladi strukturo okolice s trenutnim skupnim skeletom
+ */
+export const alignTenantSkeletonPathIdRegExp = new RegExp('^[0-9a-fA-F-]{36}$');
+
+
+export const AlignTenantSkeletonParams = zod.object({
+  "id": zod.coerce.string().regex(alignTenantSkeletonPathIdRegExp)
+})
+
+export const AlignTenantSkeletonResponse = zod.object({
+  "summary": zod.string(),
+  "counts": zod.object({
+  "categoriesUpdated": zod.number(),
+  "translationsUpdated": zod.number(),
+  "categoriesRetired": zod.number(),
+  "proposalsRekeyed": zod.number(),
+  "itemMoves": zod.number()
+}),
+  "skipped": zod.array(zod.object({
+  "key": zod.string(),
+  "reason": zod.string()
+})),
+  "changed": zod.boolean()
+})
+
+
+/**
  * @summary Capture a public sales enquiry and notify the owner
  */
 export const sendPublicEnquiryBodyNameMin = 2;

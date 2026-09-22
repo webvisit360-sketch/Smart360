@@ -1,0 +1,168 @@
+{
+  "fixtureTenantIds": {
+    "gril": "12ce327c-c4fd-45e6-8105-af77d33d9158",
+    "menina": "ee1aa27a-3ed2-4a9c-8df7-e1f80567ac1a"
+  },
+  "before": {
+    "gril": {
+      "categories": 22,
+      "items": 27,
+      "proposals": 367,
+      "attachments": 26,
+      "materializations": 27,
+      "media": 2,
+      "snapshots": 1
+    },
+    "menina": {
+      "categories": 22,
+      "items": 0,
+      "proposals": 272,
+      "attachments": 0,
+      "materializations": 0,
+      "media": 1,
+      "snapshots": 1
+    }
+  },
+  "after": {
+    "gril": {
+      "categories": 22,
+      "items": 27,
+      "proposals": 367,
+      "attachments": 26,
+      "materializations": 27,
+      "media": 2,
+      "snapshots": 1
+    },
+    "menina": {
+      "categories": 22,
+      "items": 0,
+      "proposals": 272,
+      "attachments": 0,
+      "materializations": 0,
+      "media": 1,
+      "snapshots": 1
+    }
+  },
+  "firstRun": {
+    "gril": {
+      "summary": "Uskladitev je končana: 22 kategorij, 15 prevodov, 3 umaknjenih starih kategorij in 0 prerazvrščenih predlogov.",
+      "counts": {
+        "categoriesUpdated": 22,
+        "translationsUpdated": 15,
+        "categoriesRetired": 3,
+        "proposalsRekeyed": 0,
+        "itemMoves": 0
+      },
+      "skipped": [
+        {
+          "key": "sights",
+          "reason": "Razdelitev Znamenitosti še ni odobrena; vsi vnosi in predlogi ostajajo nespremenjeni."
+        }
+      ],
+      "changed": true
+    },
+    "menina": {
+      "summary": "Uskladitev je končana: 22 kategorij, 15 prevodov, 2 umaknjenih starih kategorij in 5 prerazvrščenih predlogov.",
+      "counts": {
+        "categoriesUpdated": 22,
+        "translationsUpdated": 15,
+        "categoriesRetired": 2,
+        "proposalsRekeyed": 5,
+        "itemMoves": 0
+      },
+      "skipped": [
+        {
+          "key": "food",
+          "reason": "Stara kategorija ostaja, ker še vsebuje vnose, predloge ali povezave."
+        },
+        {
+          "key": "sights",
+          "reason": "Razdelitev Znamenitosti še ni odobrena; vsi vnosi in predlogi ostajajo nespremenjeni."
+        }
+      ],
+      "changed": true
+    }
+  },
+  "secondRun": {
+    "gril": {
+      "summary": "Ni novih odobrenih sprememb. 1 odprtih postavk ostaja za ročno odločitev.",
+      "counts": {
+        "categoriesUpdated": 0,
+        "translationsUpdated": 0,
+        "categoriesRetired": 0,
+        "proposalsRekeyed": 0,
+        "itemMoves": 0
+      },
+      "skipped": [
+        {
+          "key": "sights",
+          "reason": "Razdelitev Znamenitosti še ni odobrena; vsi vnosi in predlogi ostajajo nespremenjeni."
+        }
+      ],
+      "changed": false
+    },
+    "menina": {
+      "summary": "Ni novih odobrenih sprememb. 2 odprtih postavk ostaja za ročno odločitev.",
+      "counts": {
+        "categoriesUpdated": 0,
+        "translationsUpdated": 0,
+        "categoriesRetired": 0,
+        "proposalsRekeyed": 0,
+        "itemMoves": 0
+      },
+      "skipped": [
+        {
+          "key": "food",
+          "reason": "Stara kategorija ostaja, ker še vsebuje vnose, predloge ali povezave."
+        },
+        {
+          "key": "sights",
+          "reason": "Razdelitev Znamenitosti še ni odobrena; vsi vnosi in predlogi ostajajo nespremenjeni."
+        }
+      ],
+      "changed": false
+    }
+  },
+  "proof": {
+    "zeroItemLoss": true,
+    "proposalsOnlyFiveApprovedCategoryIdsChanged": true,
+    "protectedRowHashesUnchanged": true,
+    "allCanonicalCategoryLanguagesVerified": [
+      "sl",
+      "en",
+      "de",
+      "it"
+    ]
+  },
+  "productionWrites": false,
+  "published": false,
+  "activeCategories": {
+    "before": {
+      "gril": 22,
+      "menina": 22
+    },
+    "after": {
+      "gril": 19,
+      "menina": 20
+    }
+  },
+  "browser": {
+    "realServiceAndDatabase": true,
+    "authentication": "simulated operator context",
+    "transport": "forwarded pending browser request to disposable loopback harness; exact HTTP response returned",
+    "realSignInTested": false,
+    "hostBrowserVisibilityTested": false,
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "horizontalOverflow": false
+  },
+  "cleanup": {
+    "remainingFixtureTenants": 0,
+    "remainingSyntheticReviewers": 0,
+    "initialSyntheticReviewerRowsRemoved": 6,
+    "finalFixtureCreatesAccounts": false
+  },
+  "knownTestFailure": "Existing payload-cache draft-name/public-snapshot expectation mismatch; original development tenant name restored."
+}

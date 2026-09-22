@@ -159,7 +159,7 @@ export const MELI_PU_SKELETON: SectionSeed[] = [
       { key: "gas", names: names("Bencinske črpalke", "Petrol stations", "Tankstellen", "Distributori di carburante"), icon: "gas", layout: "poi", group: "services" },
       { key: "atm", names: names("Bankomati", "Cash machines", "Geldautomaten", "Bancomat"), icon: "atm", layout: "poi", group: "services" },
       { key: "pharm", names: names("Lekarne", "Pharmacies", "Apotheken", "Farmacie"), icon: "pharm", layout: "poi", group: "services" },
-      { key: "hosp", names: names("Bolnišnica", "Hospital", "Krankenhaus", "Ospedale"), icon: "hosp", layout: "poi", group: "services" },
+      { key: "hosp", names: names("Zdravstvo", "Healthcare", "Gesundheit", "Sanità"), icon: "hosp", layout: "poi", group: "services" },
     ],
   },
 ];

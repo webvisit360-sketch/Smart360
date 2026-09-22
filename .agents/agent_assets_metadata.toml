@@ -820,3 +820,17 @@ mtime_ms = 1790089563594
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4c7f0993-e5e3-49d6-af8c-da13b19d2e83/4efc9e81-a86d-4854-a6e2-5db0b4c65aa1"
 storage_version_token = "1790089671257168"
 content_type = "text/html"
+
+[[outputs]]
+id = "L-D-keWanaKHXvhaSNmGK"
+uri = "file://reports/okolica-operator-alignment-report.html"
+type = "html"
+title = "Uskladitev strukture: rezultati in predlog razdelitve"
+description = "Preverjanje razvojnih kopij, natančni števci ter preslikave vseh 14 Grilovih vnosov in 63 predlogov. Razdelitev še ni izvedena."
+logical_id = "989becd3-91d1-48d5-8826-d6a255500408"
+content_hash = "sha256:9940eb2c5c8a93c54f95c17d1d610b9e386e28a69b123aeb7ba60d2f2525b809"
+size = 27355
+mtime_ms = 1790091887480
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/989becd3-91d1-48d5-8826-d6a255500408/6056bacd-5f07-48e0-9189-dac2cb2a3b31"
+storage_version_token = "1790091888270457"
+content_type = "text/html"

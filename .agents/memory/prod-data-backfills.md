@@ -9,6 +9,12 @@ description: How to fix wrong production DATA (not schema) when prod SQL is read
 
 **Why this distinction matters:** Official documentation checked on 2026-09-22 confirms production visual edits take effect without republishing. Agent approval alone does not turn the read-only replica tool into a writer. A development-only fixture applier is not an executable production repair.
 
+**Project authorization boundary:** The owner requires production data writes to go through application code, not direct database editing. Platform edit capability is not permission to use it in this project.
+
+**Why:** The owner explicitly chose operator-controlled execution after publishing the code. Approval to ship a repair is not permission to run it automatically during startup.
+
+**How to apply:** When execution is reserved for the owner, keep the repair opt-in and tenant-scoped. Do not replace the requested manual action with a startup backfill. Previously approved startup repairs are a separate historical authorization.
+
 **Why:** publish syncs *schema* (new columns arrive with their defaults) but never *data* — so a column populated by hand in dev (e.g. `categories.explore_group`) reaches prod all-defaulted. This silently broke Okolica grouping in Aug 2026.
 
 **How to apply:**

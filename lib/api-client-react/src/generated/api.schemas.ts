@@ -5,6 +5,26 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export interface TenantSkeletonAlignmentCounts {
+  categoriesUpdated: number;
+  translationsUpdated: number;
+  categoriesRetired: number;
+  proposalsRekeyed: number;
+  itemMoves: number;
+}
+
+export interface TenantSkeletonAlignmentSkip {
+  key: string;
+  reason: string;
+}
+
+export interface TenantSkeletonAlignmentResult {
+  summary: string;
+  counts: TenantSkeletonAlignmentCounts;
+  skipped: TenantSkeletonAlignmentSkip[];
+  changed: boolean;
+}
+
 export interface HostOnboardingContact {
   /**
      * @minLength 1

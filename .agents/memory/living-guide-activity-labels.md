@@ -20,3 +20,9 @@ The shared Okolica structure is an owner rule for every tenant, not just the onb
 **Why:** On 2026-09-22 the owner required production auditing and development verification before approving an exact per-tenant alignment. Content safety takes precedence over silently removing a legacy category to claim parity.
 
 **How to apply:** Treat an empty legacy category with pending Creator references as protected work, not disposable clutter. Report unresolved structural exceptions explicitly; do not reclassify them as host-created customs. New tenant copies must not reproduce legacy drift or silently drop copied content.
+
+Healthcare is a label-only broadening of the existing hospital category, not a new category identity.
+
+**Why:** The owner explicitly chose Zdravstvo / Healthcare / Gesundheit / Sanità so health centres can share the category without being described as hospitals.
+
+**How to apply:** Preserve the existing identity and item records. Do not rename actual hospital POIs or their editorial descriptions just because their containing category has a broader name.

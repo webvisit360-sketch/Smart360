@@ -59,6 +59,7 @@ type Binding =
 type RouteSpec = { method: string; path: string; binding: Binding };
 
 const OWNER: Binding = { kind: "owner-only" };
+const OPERATOR_ONLY: Binding = OWNER;
 const ANON: Binding = { kind: "anon" };
 const SELF: Binding = { kind: "host-self" };
 const RLS: Binding = { kind: "rls" };
@@ -142,6 +143,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/tenants/:id/renewals", binding: OWNER },
   { method: "delete", path: "/admin/tenants/:id", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/duplicate", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/align-skeleton", binding: OPERATOR_ONLY },
   { method: "get", path: "/admin/tenants/:id/media-check", binding: OWNER },
   { method: "post", path: "/admin/creator/origin-preview", binding: OWNER },
   { method: "post", path: "/admin/tenants/:id/creator/origin", binding: OWNER },
@@ -255,6 +257,15 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/cutovers/part-5-meli-pu", binding: OWNER },
   { method: "post", path: "/admin/cutovers/part-5-meli-pu", binding: OWNER },
 ];
+
+/** Explicit defence in depth for irreversible/operator maintenance handlers. */
+export function requireOperator(req: Request, res: Response, next: NextFunction): void {
+  if (req.actor?.kind === "owner") {
+    next();
+    return;
+  }
+  res.status(req.actor ? 403 : 401).json({ error: req.actor ? "Samo za operaterja Smart360." : "Not authenticated" });
+}
 
 // ---------- Runtime matching ----------
 

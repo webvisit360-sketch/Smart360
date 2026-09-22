@@ -34,7 +34,7 @@ export function makeAdminMutationInvalidator(
   return (req, res, next) => {
     if (MUTATING_METHODS.has(req.method) && req.path.startsWith("/admin/")) {
       res.on("finish", () => {
-        if (res.statusCode < 400) invalidate();
+        if (res.statusCode < 400 && res.locals["skipAdminMutationInvalidation"] !== true) invalidate();
       });
     }
     next();

@@ -29,6 +29,8 @@ import {
   RenewTenantResponse,
   ListTenantRenewalsResponse,
   PreviewTenantPublicationResponse,
+  AlignTenantSkeletonParams,
+  AlignTenantSkeletonResponse,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import { logChange, safeSummary } from "../lib/changelog";
@@ -71,6 +73,8 @@ import {
   normalizeWhatsappPhonePatch,
 } from "../lib/whatsapp";
 import { hasTenantAdminChanges } from "../lib/guestPublishState";
+import { alignTenantSkeleton } from "../lib/tenantSkeletonAlignment";
+import { requireOperator } from "../lib/actorGate";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -86,6 +90,41 @@ router.get("/admin/tenants/:id/publish-preview", async (req, res): Promise<void>
     .where(eq(tenantsTable.id, id));
   if (!tenant) { res.status(404).json({ error: "Namestitev ni najdena." }); return; }
   res.set("Cache-Control", "no-store").json(PreviewTenantPublicationResponse.parse(await previewPublication(id)));
+});
+
+router.post("/admin/tenants/:id/align-skeleton", requireOperator, async (req, res): Promise<void> => {
+  const parsed = AlignTenantSkeletonParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Neveljaven ID nastanitve." });
+    return;
+  }
+  let result;
+  try {
+    result = await alignTenantSkeleton(parsed.data.id);
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "40001") {
+      res.status(409).json({ error: "Struktura se je med usklajevanjem spremenila. Osvežite stran in poskusite znova." });
+      return;
+    }
+    throw error;
+  }
+  if (!result) {
+    res.status(404).json({ error: "Namestitev ni najdena." });
+    return;
+  }
+  if (result.changed) {
+    await logChange({
+      tenantId: parsed.data.id,
+      action: "maintenance",
+      entity: "category",
+      summary: "Smart360 je uskladil strukturo Okolice s skupnim skeletom.",
+    });
+  } else {
+    // The centralized admin mutation invalidator must not evict guest caches
+    // for an idempotent replay that did not write any guide data.
+    res.locals["skipAdminMutationInvalidation"] = true;
+  }
+  res.set("Cache-Control", "no-store").json(AlignTenantSkeletonResponse.parse(result));
 });
 
 function firstParam(v: string | string[] | undefined): string {

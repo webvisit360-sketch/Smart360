@@ -188,6 +188,25 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TenantPublicationPreview" }
         "404": { description: Tenant not found }
+  /admin/tenants/{id}/align-skeleton:
+    post:
+      operationId: alignTenantSkeleton
+      tags: [tenants]
+      summary: Uskladi strukturo okolice s trenutnim skupnim skeletom
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' } }
+      responses:
+        "200":
+          description: Slovenski povzetek idempotentne uskladitve
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSkeletonAlignmentResult"
+        "400": { description: Invalid tenant ID }
+        "401": { description: Authentication required }
+        "403": { description: Operator access required }
+        "409": { description: Concurrent structure change; retry required }
+        "404": { description: Tenant missing or access denied }
   /public/enquiries:
     post:
       operationId: sendPublicEnquiry
@@ -2763,6 +2782,33 @@ paths:
           description: Thread or tenant not found
 components:
   schemas:
+    TenantSkeletonAlignmentCounts:
+      type: object
+      properties:
+        categoriesUpdated: { type: number }
+        translationsUpdated: { type: number }
+        categoriesRetired: { type: number }
+        proposalsRekeyed: { type: number }
+        itemMoves: { type: number }
+      required: [categoriesUpdated, translationsUpdated, categoriesRetired, proposalsRekeyed, itemMoves]
+    TenantSkeletonAlignmentSkip:
+      type: object
+      properties:
+        key: { type: string }
+        reason: { type: string }
+      required: [key, reason]
+    TenantSkeletonAlignmentResult:
+      type: object
+      properties:
+        summary: { type: string }
+        counts:
+          $ref: "#/components/schemas/TenantSkeletonAlignmentCounts"
+        skipped:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantSkeletonAlignmentSkip"
+        changed: { type: boolean }
+      required: [summary, counts, skipped, changed]
     HostOnboardingContact:
       type: object
       additionalProperties: false

@@ -1,0 +1,1568 @@
+{
+  "status": "REVIEW_ONLY_NOT_APPROVED_NOT_EXECUTABLE",
+  "tenant": {
+    "id": "177e633a-6030-4eca-8ce8-e0a0afdff599",
+    "slug": "glamping-gril",
+    "name": "Glamping Gril"
+  },
+  "source": {
+    "path": "reports/okolica-production-baseline.json",
+    "sha256": "96783212b06e92f519b8d5d6e2d3a546bfb968c698b92790d5014a57fb184120",
+    "legacyCategory": {
+      "id": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "key": "sights",
+      "label": "Znamenitosti"
+    }
+  },
+  "targets": {
+    "culture": {
+      "key": "culture",
+      "label": "Kulturna dediščina",
+      "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+    },
+    "nature": {
+      "key": "nature",
+      "label": "Naravna dediščina",
+      "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+    }
+  },
+  "safety": {
+    "databaseWrites": false,
+    "applicationCodeChanges": false,
+    "publication": false,
+    "instruction": "Operator-decides rows remain in the legacy category and prevent its retirement.",
+    "relationshipRule": "Every linked proposal uses the same decision as its materialized/attached item."
+  },
+  "counts": {
+    "items": {
+      "total": 14,
+      "culture": 5,
+      "nature": 7,
+      "operator_decides": 2
+    },
+    "proposals": {
+      "total": 63,
+      "culture": 35,
+      "nature": 24,
+      "operator_decides": 4
+    },
+    "proposalStatuses": {
+      "approved": 15,
+      "pending": 2,
+      "rejected": 23,
+      "superseded": 11,
+      "unresolved": 12
+    },
+    "activeMaterializations": 14,
+    "attachments": 14,
+    "classificationConflicts": 0
+  },
+  "items": [
+    {
+      "itemId": "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+      "title": "Center Rinka",
+      "body": "Informacijsko in razstavno središče, posvečeno naravi in kulturni dediščini Solčavskega.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": null,
+      "decision": "operator_decides",
+      "reason": "Razstavno središče je hkrati posvečeno naravi in kulturni dediščini; odloči operater.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+      "title": "Cerkev sv. Frančiška Ksaverija",
+      "body": "Romarska cerkev v Radmirju z bogato sakralno dediščino.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Cerkev je po izrecnem pravilu kulturna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+      "title": "Flosarski muzej Ljubno ob Savinji",
+      "body": "Muzej predstavlja flosarsko izročilo in povezanost kraja z reko Savinjo.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Muzej je po izrecnem pravilu kulturna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "42399814-ec16-4994-9048-0cf7908f2016",
+      "title": "Grad Žovnek",
+      "body": "Ruševine srednjeveškega gradu na vzpetini nad Braslovčami.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Srednjeveški grad je kulturna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "b86fc640-92e4-4014-aada-8baa487b1311",
+      "title": "Izvir Savinje",
+      "body": "Kraški izvir reke v zgornjem delu Logarske doline.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Kraški izvir reke je naravna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "097f6a52-0170-4e35-bede-c1724c92dd0e",
+      "title": "Jama Pekel",
+      "body": "Kraška jama z jamskimi rovi, podzemnimi vodami in slapovi.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Jama je po izrecnem pravilu naravna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "98b050d9-ef6c-4613-b053-707725017055",
+      "title": "Matkov škaf",
+      "body": "Posebna naravna ledena tvorba v Matkovem kotu.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Opis ga izrecno opredeli kot naravno ledeno tvorbo.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "fd9d941b-f143-4804-a865-38aed37df836",
+      "title": "Mozirski gaj",
+      "body": "Park z zbirkami cvetja, etnološkimi objekti in sprehajalnimi potmi.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": null,
+      "decision": "operator_decides",
+      "reason": "Park združuje cvetje, etnološke objekte in sprehajalne poti; odloči operater.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "c45a1ac0-c214-4e6f-9c5d-78f56e50ae90",
+      "title": "Muzej premogovništva Slovenije",
+      "body": "Muzej, posvečen rudarski dediščini Šaleške doline.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Muzej je po izrecnem pravilu kulturna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+      "title": "Potočka zijalka",
+      "body": "Arheološko pomembna jama pod Olševo, povezana s prazgodovinskimi najdbami.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Jama je po izrecnem pravilu naravna dediščina, tudi če je arheološko pomembna.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+      "title": "Slap Rinka",
+      "body": "Visok slap v zatrepu Logarske doline, dosegljiv po kratki pešpoti.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Slap je po izrecnem pravilu naravna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+      "title": "Snežna jama",
+      "body": "Visokogorska kraška jama na pobočjih Raduhe, znana po jamskih ledenih pojavih.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Jama je po izrecnem pravilu naravna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "e9fae122-8743-4de6-aec9-0fa346d61938",
+      "title": "Velenjski grad",
+      "body": "Dobro ohranjen grad nad Velenjem, v katerem domuje muzejska zbirka.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Grad z muzejsko zbirko je kulturna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "itemId": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+      "title": "Žovneško jezero",
+      "body": "Jezero ob vznožju gradu Žovnek z urejeno okolico za sprehod.",
+      "isVisible": true,
+      "deletedAt": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Jezero je po izrecnem pravilu naravna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    }
+  ],
+  "proposals": [
+    {
+      "proposalId": "0f6c6323-863d-47db-99d6-52a7c8964d6c",
+      "status": "unresolved",
+      "proposedName": "Alpski vrt Golte",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Alpski vrt je po jasnem imenu zbirka alpskega rastlinstva.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "2fe45650-3910-47e2-9ba5-5f6edfa0cb6d",
+      "status": "rejected",
+      "proposedName": "Celjski grad",
+      "resolvedName": "Celjski grad",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "b90285f6-f5ee-48aa-8233-5da617fa192d",
+      "status": "approved",
+      "proposedName": "Center Rinka",
+      "resolvedName": "Center Rinka",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "7dd0ae05-3176-411b-ba95-ee27399109f4",
+          "itemId": "45090937-2e12-48d3-87a9-f1179f2f5e2c"
+        }
+      ],
+      "linkedItemIds": [
+        "45090937-2e12-48d3-87a9-f1179f2f5e2c"
+      ],
+      "target": null,
+      "decision": "operator_decides",
+      "reason": "Povezan vnos je mešano naravno in kulturno razstavno središče.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "97bb7d91-7a8a-44c5-9cbc-4a9b587d1be0",
+      "status": "rejected",
+      "proposedName": "Cerkev Marije Snežne",
+      "resolvedName": "Cerkev Marije Snežne",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "10e87218-bf17-43ee-b194-2b57ddc509ab",
+      "status": "rejected",
+      "proposedName": "Cerkev Marijinega rojstva",
+      "resolvedName": "Cerkev Marijinega Rojstva",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "c30e8559-7005-4240-9750-948211e78ef7",
+      "status": "rejected",
+      "proposedName": "Cerkev sv. Elizabete",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "c7c12149-ae50-44c6-b867-e396bd62fad4",
+      "status": "superseded",
+      "proposedName": "Cerkev sv. Elizabete",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "f7dbcb0a-46f5-4cf3-aedd-193343417b78",
+      "status": "approved",
+      "proposedName": "Cerkev sv. Frančiška Ksaverija",
+      "resolvedName": "Sveti Frančišek Ksaverij",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "9cabc901-58ac-4201-84cc-f4da1c23f0de",
+          "itemId": "d6ba8374-c11d-43b1-ace8-ba647dd2651b"
+        }
+      ],
+      "linkedItemIds": [
+        "d6ba8374-c11d-43b1-ace8-ba647dd2651b"
+      ],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "1c22eb54-5031-42fa-888b-b2c3a3745dc3",
+      "status": "superseded",
+      "proposedName": "Cerkev sv. Frančiška Ksaverija",
+      "resolvedName": "Sveti Frančišek Ksaverij",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "92be2f51-0c56-4f7b-849c-9de50f90f951",
+      "status": "rejected",
+      "proposedName": "Cerkev sv. Jakoba",
+      "resolvedName": "Cerkev sv. Jakoba",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "204ea70c-1051-44c8-a125-267e79bf0c85",
+      "status": "rejected",
+      "proposedName": "Cerkev sv. Križa",
+      "resolvedName": "Cerkev sv. Križa",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "856d086d-3525-4b7f-a9f1-abf329a04bb6",
+      "status": "rejected",
+      "proposedName": "Cerkev sv. Primoža in Felicijana",
+      "resolvedName": "Cerkev sv. Primoža in Felicijana",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "7417bf67-8127-4c23-aa73-2a0c83083773",
+      "status": "superseded",
+      "proposedName": "Cerkev sv. Primoža in Felicijana",
+      "resolvedName": "Cerkev sv. Primoža in Felicijana",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "2456105f-341c-4650-92f7-35a3a2643eaf",
+      "status": "rejected",
+      "proposedName": "Cerkev sv. Roka",
+      "resolvedName": "Cerkev sv. Roka",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "2279c4a5-92b9-4c2b-9834-b950634a327f",
+      "status": "rejected",
+      "proposedName": "Dvorec Novo Celje",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "e3ae9924-b7fb-4692-b45b-80b87ff3657d",
+      "status": "approved",
+      "proposedName": "Flosarski muzej Ljubno ob Savinji",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "d2567afa-33a6-4528-81c8-9b53adedfc7e",
+          "itemId": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9"
+        }
+      ],
+      "linkedItemIds": [
+        "603fda63-f4fc-4e53-8f0f-7eb977aeccf9"
+      ],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "fbaf71ed-c6bb-48d2-8a56-f1d4551f7b76",
+      "status": "unresolved",
+      "proposedName": "Fužinarski most",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "dd49cfbf-ab8d-4fb6-870a-c17e19dfc8be",
+      "status": "rejected",
+      "proposedName": "Grad Forhtenek",
+      "resolvedName": "Grad Forhtenek",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "21df0de9-9bbe-48f5-bbac-d03ccb22406a",
+      "status": "superseded",
+      "proposedName": "Grad Vrbovec",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "66fa9d60-aa7f-4f1f-a72c-b52362b8aa52",
+      "status": "unresolved",
+      "proposedName": "Grad Vrbovec",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "120f0a0b-f95d-4309-9124-2abb4956c8ac",
+      "status": "approved",
+      "proposedName": "Grad Žovnek",
+      "resolvedName": "Grad Žovnek",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "42399814-ec16-4994-9048-0cf7908f2016",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "0b92a3cb-dc90-40ae-b286-dabe2b60805c",
+          "itemId": "42399814-ec16-4994-9048-0cf7908f2016"
+        }
+      ],
+      "linkedItemIds": [
+        "42399814-ec16-4994-9048-0cf7908f2016"
+      ],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "929d3884-4fb8-4df1-8d6f-e6a40bd2a7c6",
+      "status": "approved",
+      "proposedName": "Izvir Savinje",
+      "resolvedName": "Izvir Savinje",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "b86fc640-92e4-4014-aada-8baa487b1311",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "10298a94-717e-4c5d-bc1a-84b600c79506",
+          "itemId": "b86fc640-92e4-4014-aada-8baa487b1311"
+        }
+      ],
+      "linkedItemIds": [
+        "b86fc640-92e4-4014-aada-8baa487b1311"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "e7849b26-2b1c-442e-b40a-ff1f9b760add",
+      "status": "rejected",
+      "proposedName": "Jama Huda luknja",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "422eec61-33b5-4830-b38c-1e885fd32564",
+      "status": "approved",
+      "proposedName": "Jama Pekel",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "097f6a52-0170-4e35-bede-c1724c92dd0e",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "25563a38-9691-47f1-b70d-2c4b0edf3695",
+          "itemId": "097f6a52-0170-4e35-bede-c1724c92dd0e"
+        }
+      ],
+      "linkedItemIds": [
+        "097f6a52-0170-4e35-bede-c1724c92dd0e"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "78c6c2d3-c6ad-4180-8009-053a72e2437f",
+      "status": "approved",
+      "proposedName": "Jezero na Golteh",
+      "resolvedName": "Jezero na Golteh",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "e7eecab5-f6c0-4957-9ba8-e9ace325cb80",
+      "status": "rejected",
+      "proposedName": "Kapela sv. Ane",
+      "resolvedName": "Kapela sv. Ane",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "4008e2a1-8cec-44b6-9b18-ab156a40a8ac",
+      "status": "unresolved",
+      "proposedName": "Kmetija Bukovnik",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": null,
+      "decision": "operator_decides",
+      "reason": "Samo ime kmetije ne določi naravne ali kulturne dediščine.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "11adb6a3-5c8b-44a3-9013-d918d83bbd3a",
+      "status": "unresolved",
+      "proposedName": "Ledenica na Golteh",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "6be6ae15-a2a0-4cfb-b04e-f1f6ddd670ab",
+      "status": "pending",
+      "proposedName": "Ljubenski most",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "22edd549-8691-4652-b2ba-5246cb9ca631",
+      "status": "approved",
+      "proposedName": "Matkov škaf",
+      "resolvedName": "Matkov škaf",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "98b050d9-ef6c-4613-b053-707725017055",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "19fc2b81-05c8-4956-baeb-b3c5cd256bf4",
+          "itemId": "98b050d9-ef6c-4613-b053-707725017055"
+        }
+      ],
+      "linkedItemIds": [
+        "98b050d9-ef6c-4613-b053-707725017055"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Povezan vnos ga opredeli kot naravno ledeno tvorbo.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "595eb3a3-be4f-4f6e-b75f-4bba8a409c49",
+      "status": "approved",
+      "proposedName": "Mozirski gaj",
+      "resolvedName": "Mozirski gaj",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "fd9d941b-f143-4804-a865-38aed37df836",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "1684c7c8-fb0c-48b3-ad4d-c8e5d053b2b7",
+          "itemId": "fd9d941b-f143-4804-a865-38aed37df836"
+        }
+      ],
+      "linkedItemIds": [
+        "fd9d941b-f143-4804-a865-38aed37df836"
+      ],
+      "target": null,
+      "decision": "operator_decides",
+      "reason": "Povezan vnos je mešan park cvetja in etnoloških objektov.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "4a36c74b-2e5e-4eac-a3d6-9e2a81cff224",
+      "status": "superseded",
+      "proposedName": "Muzej gozdarstva in lesarstva Nazarje",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "1ccee439-5b27-4174-9b7a-ce270a95e43a",
+      "status": "unresolved",
+      "proposedName": "Muzej gozdarstva in lesarstva Nazarje",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "fbf3c042-c81b-4832-b1fa-f6cea211debb",
+      "status": "approved",
+      "proposedName": "Muzej premogovništva Slovenije",
+      "resolvedName": "Muzej premogovništva Slovenije",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "c45a1ac0-c214-4e6f-9c5d-78f56e50ae90",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "f59618cc-910f-4e29-9750-8f50f9b53029",
+          "itemId": "c45a1ac0-c214-4e6f-9c5d-78f56e50ae90"
+        }
+      ],
+      "linkedItemIds": [
+        "c45a1ac0-c214-4e6f-9c5d-78f56e50ae90"
+      ],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "e192e0d6-ed5c-41f8-a77f-fe3c45b8fac1",
+      "status": "rejected",
+      "proposedName": "Podzemlje Pece",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "5f003916-5b83-4641-8896-cbcb728e1be1",
+      "status": "rejected",
+      "proposedName": "Pokrajinski muzej Celje",
+      "resolvedName": "Pokrajinski muzej Celje",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "a1bb6854-c144-428b-a666-0c8444a9c5c5",
+      "status": "approved",
+      "proposedName": "Potočka zijalka",
+      "resolvedName": "Potočka zijalka",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "26f81964-c75f-40c7-86e5-d7d8a01338e9",
+          "itemId": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc"
+        }
+      ],
+      "linkedItemIds": [
+        "ecdf8726-e0a8-4f27-bb0e-d327444f07cc"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Jama je po izrecnem pravilu naravna dediščina.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "df543171-7c0f-4e82-9df9-d4a51f6778d7",
+      "status": "unresolved",
+      "proposedName": "Razgledni stolp na Golteh",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": null,
+      "decision": "operator_decides",
+      "reason": "Samo ime razglednega stolpa ne zadošča za zanesljivo razvrstitev.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "99caf2e1-8518-4ea3-b064-39e784d40217",
+      "status": "pending",
+      "proposedName": "Rimska nekropola v Šempetru",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "230db712-8553-4d80-ad8f-57ec42251aad",
+      "status": "superseded",
+      "proposedName": "Rimska nekropola v Šempetru",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "c80fe42a-a68e-421a-8eec-660e68e8181c",
+      "status": "rejected",
+      "proposedName": "Romarska cerkev Marije Snežne",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "940b251d-bec2-4411-811c-a4c8426f2c02",
+      "status": "superseded",
+      "proposedName": "Samostan Nazarje",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "b53cbdce-c596-41bc-b743-cf6401a460e6",
+      "status": "unresolved",
+      "proposedName": "Samostan Nazarje",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "050d3d19-b9ee-47c3-9640-d89640a80512",
+      "status": "superseded",
+      "proposedName": "Slap Brložnica",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "998ea7ee-3cc6-4f7f-a345-49378d64ddb0",
+      "status": "unresolved",
+      "proposedName": "Slap Brložnica",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "7e731b67-d3b4-4c3c-9459-f65f962bcbc0",
+      "status": "rejected",
+      "proposedName": "Slap Kovač",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "b1867281-f7c7-4ac0-900d-610875218dac",
+      "status": "rejected",
+      "proposedName": "Slap Orglice",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "680a40f5-a31f-46cb-8435-940faf87775b",
+      "status": "superseded",
+      "proposedName": "Slap Palenk",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "d6a51991-178c-4e17-a00f-2a2bafb01fbe",
+      "status": "unresolved",
+      "proposedName": "Slap Palenk",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "352e5532-d337-48f3-87c0-e8e53386c12f",
+      "status": "approved",
+      "proposedName": "Slap Rinka",
+      "resolvedName": "Rinka",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "3f2ce8b7-b491-4734-8415-9aad218dfe6a",
+          "itemId": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88"
+        }
+      ],
+      "linkedItemIds": [
+        "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "74206ae9-44e8-4d2c-99af-0548455a0bb5",
+      "status": "rejected",
+      "proposedName": "Slap Trbiž",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "0f9312e9-32e3-4f01-b59c-381afbba1e5b",
+      "status": "superseded",
+      "proposedName": "Slap Virje",
+      "resolvedName": "Slap Virje",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "71c74962-2202-460b-a3c1-a53cb54c48b1",
+      "status": "unresolved",
+      "proposedName": "Slap Virje",
+      "resolvedName": "Slap Virje",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "358914a7-cfab-4da9-9546-1610f10d620e",
+      "status": "superseded",
+      "proposedName": "Slap Žep",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "ba217862-fc8b-4b7e-b1ee-6fe6733f848c",
+      "status": "unresolved",
+      "proposedName": "Slap Žep",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "17ba6d94-53b0-4ebc-8cff-cd302404c757",
+      "status": "approved",
+      "proposedName": "Snežna jama",
+      "resolvedName": "Snežna jama",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "308a43e2-ce5f-4c35-ba57-1d5d81a96f21",
+          "itemId": "e0671a2b-1db4-4dfc-8584-176e951e1a0d"
+        }
+      ],
+      "linkedItemIds": [
+        "e0671a2b-1db4-4dfc-8584-176e951e1a0d"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "f61ddae2-31c2-4798-8375-cdd5223c2bbc",
+      "status": "rejected",
+      "proposedName": "Solčavski macesen",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "ec04f100-8bb8-48b0-93e3-2b21b0be192b",
+      "status": "rejected",
+      "proposedName": "Stari grad Celje",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "aac4b44f-93bf-4e66-9aa1-d8af8e14367f",
+      "status": "approved",
+      "proposedName": "Velenjski grad",
+      "resolvedName": "Velenjski grad",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "e9fae122-8743-4de6-aec9-0fa346d61938",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "8fad532e-aa8d-4ac7-91c2-9bbdd1746040",
+          "itemId": "e9fae122-8743-4de6-aec9-0fa346d61938"
+        }
+      ],
+      "linkedItemIds": [
+        "e9fae122-8743-4de6-aec9-0fa346d61938"
+      ],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "b139a2ef-36ba-443f-949c-ccbdfd5d2a15",
+      "status": "rejected",
+      "proposedName": "Čebelarski muzej Ljubno",
+      "resolvedName": null,
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "838ac0bc-f483-4359-ab48-f42dd82245f6",
+      "status": "rejected",
+      "proposedName": "Žička kartuzija",
+      "resolvedName": "Žička kartuzija",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "f810755e-eb9a-4110-a279-7e0fc120cfa5",
+      "status": "approved",
+      "proposedName": "Žovneško jezero",
+      "resolvedName": "Žovneško jezero",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [
+        {
+          "itemId": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+          "isActive": true
+        }
+      ],
+      "attachments": [
+        {
+          "attachmentId": "fc76d443-d864-4ac1-b7c6-652aca9f9f24",
+          "itemId": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270"
+        }
+      ],
+      "linkedItemIds": [
+        "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270"
+      ],
+      "target": {
+        "key": "nature",
+        "label": "Naravna dediščina",
+        "categoryId": "3bc04303-576c-45f4-9b94-b4a491a94827"
+      },
+      "decision": "nature",
+      "reason": "Ime jasno označuje naravni pojav oziroma naravno znamenitost.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    },
+    {
+      "proposalId": "40fedef4-88c4-4c4f-a684-7c399d242b24",
+      "status": "rejected",
+      "proposedName": "Župnijska cerkev sv. Mohorja in Fortunata",
+      "resolvedName": "Župnijska cerkev sv. Mohorja in Fortunata",
+      "currentCategoryId": "6ce78358-dba7-4149-98a1-cec89a1caca4",
+      "materializations": [],
+      "attachments": [],
+      "linkedItemIds": [],
+      "target": {
+        "key": "culture",
+        "label": "Kulturna dediščina",
+        "categoryId": "3b505769-d918-4d0f-a184-81b5426dcd7e"
+      },
+      "decision": "culture",
+      "reason": "Ime jasno označuje cerkev, muzej, grad ali drugo kulturno zgrajeno dediščino.",
+      "approvalState": "REVIEW_ONLY_NOT_APPROVED"
+    }
+  ],
+  "conflicts": [],
+  "mappingSha256": "b88ea47b6f0fa72c85ee2cfa22fe9a50a9ab9fa2284f81231c45cebdc4965148"
+}

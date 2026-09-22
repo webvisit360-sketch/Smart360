@@ -48,6 +48,7 @@ import {
   publicationNeedsConfirmation,
 } from "@/lib/tenant-publication-flow";
 import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
+import { SkeletonAlignmentAction } from "@/components/admin/skeleton-alignment-action";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -860,6 +861,7 @@ export default function AdminTenantEdit() {
             <TabsContent value="kreator">
               {isOwner ? (
                 <>
+                  <SkeletonAlignmentAction tenantId={tenant.id} />
                   <KreatorOriginConfirmation
                     tenant={tenant}
                     onConfirmed={() => {

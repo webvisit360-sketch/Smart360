@@ -96,13 +96,18 @@ test("makeAdminMutationInvalidator clears caches exactly on successful admin mut
     method: string,
     path: string,
     statusCode: number,
+    skipInvalidation = false,
   ): number => {
     let calls = 0;
     const middleware = makeAdminMutationInvalidator(() => {
       calls += 1;
     });
-    const res = new EventEmitter() as EventEmitter & { statusCode: number };
+    const res = new EventEmitter() as EventEmitter & {
+      statusCode: number;
+      locals: Record<string, unknown>;
+    };
     res.statusCode = statusCode;
+    res.locals = skipInvalidation ? { skipAdminMutationInvalidation: true } : {};
     let nextCalled = false;
     middleware(
       { method, path } as never,
@@ -122,9 +127,15 @@ test("makeAdminMutationInvalidator clears caches exactly on successful admin mut
   assert.equal(run("DELETE", "/admin/media/abc", 204), 1);
   assert.equal(run("POST", "/admin/tenants/abc/hero/upload", 201), 1);
 
+  // Alignment invalidates only after a real change. Its explicit no-op marker
+  // preserves the hot cache without changing any other mutation semantics.
+  assert.equal(run("POST", "/admin/tenants/abc/align-skeleton", 200, false), 1);
+  assert.equal(run("POST", "/admin/tenants/abc/align-skeleton", 200, true), 0);
+
   // Failed admin mutations must NOT invalidate (nothing changed).
   assert.equal(run("POST", "/admin/items/abc/media", 401), 0);
   assert.equal(run("PATCH", "/admin/tenants/abc", 400), 0);
+  assert.equal(run("POST", "/admin/tenants/abc/align-skeleton", 409), 0);
 
   // Reads and guest endpoints must never evict the hot guest cache.
   assert.equal(run("GET", "/admin/tenants", 200), 0);

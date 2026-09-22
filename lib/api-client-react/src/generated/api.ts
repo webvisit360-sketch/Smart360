@@ -142,6 +142,7 @@ import type {
   TenantInput,
   TenantOverview,
   TenantPublicationPreview,
+  TenantSkeletonAlignmentResult,
   TenantUpdate,
   Translation,
   TranslationEntry,
@@ -1138,6 +1139,77 @@ export function usePreviewTenantPublication<TData = Awaited<ReturnType<typeof pr
 
 
 
+
+export const getAlignTenantSkeletonUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/align-skeleton`
+}
+
+/**
+ * @summary Uskladi strukturo okolice s trenutnim skupnim skeletom
+ */
+export const alignTenantSkeleton = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TenantSkeletonAlignmentResult> => {
+
+  return customFetch<TenantSkeletonAlignmentResult>(getAlignTenantSkeletonUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAlignTenantSkeletonMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof alignTenantSkeleton>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof alignTenantSkeleton>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['alignTenantSkeleton'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof alignTenantSkeleton>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  alignTenantSkeleton(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AlignTenantSkeletonMutationResult = NonNullable<Awaited<ReturnType<typeof alignTenantSkeleton>>>
+
+    export type AlignTenantSkeletonMutationError = ErrorType<void>
+
+    /**
+ * @summary Uskladi strukturo okolice s trenutnim skupnim skeletom
+ */
+export const useAlignTenantSkeleton = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof alignTenantSkeleton>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof alignTenantSkeleton>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getAlignTenantSkeletonMutationOptions(options));
+    }
 
 export const getSendPublicEnquiryUrl = () => {
 
