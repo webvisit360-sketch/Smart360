@@ -23,6 +23,7 @@ import { AdminCard as Card, AdminCardContent as CardContent } from "@/components
 import { mutationErrorMessage, replaceSavedProposal } from "@/lib/manual-pin-feedback";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
 import { OpenFreeMap } from "@/components/admin/openfreemap";
+import { pinPlacementMapCenter } from "@/lib/map-provider";
 
 const locationForms = {
   one: "lokacijo",
@@ -42,13 +43,12 @@ export function PinPlacementMap({
   origin?: { latitude: number; longitude: number };
   onPlace: (latitude: number, longitude: number) => void;
 }) {
-  const initialLat = Number(latitude) || origin?.latitude || 46.25;
-  const initialLng = Number(longitude) || origin?.longitude || 14.9;
+  const center = pinPlacementMapCenter(latitude, longitude, origin);
   return (
     <div className="overflow-hidden rounded-lg border border-amber-300 bg-slate-100">
       <OpenFreeMap
-        latitude={initialLat}
-        longitude={initialLng}
+        latitude={center.latitude}
+        longitude={center.longitude}
         zoom={15}
         onPlace={onPlace}
         ariaLabel="Zemljevid za ročno postavitev pina; kliknite zemljevid ali povlecite oznako"

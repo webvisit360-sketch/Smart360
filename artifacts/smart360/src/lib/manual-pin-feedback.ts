@@ -31,3 +31,26 @@ export function mutationErrorMessage(error: unknown): string | null {
   }
   return null;
 }
+
+export type ManualPlaceField = "manualName" | "locationText" | "latitude" | "longitude";
+export type ManualPlaceValues = Record<ManualPlaceField, string>;
+export type ManualPlaceErrors = Partial<Record<ManualPlaceField, string>>;
+
+export function validateManualPlace(values: ManualPlaceValues): ManualPlaceErrors {
+  const errors: ManualPlaceErrors = {};
+  if (!values.manualName.trim()) errors.manualName = "Vnesite ime kraja.";
+  if (!values.locationText.trim()) errors.locationText = "Vnesite opis lokacije.";
+
+  for (const [field, limit, label] of [
+    ["latitude", 90, "širino"],
+    ["longitude", 180, "dolžino"],
+  ] as const) {
+    const value = values[field].trim();
+    if (!value) {
+      errors[field] = `Vnesite geografsko ${label}.`;
+    } else if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value) || !Number.isFinite(Number(value)) || Math.abs(Number(value)) > limit) {
+      errors[field] = `Vnesite veljavno ${label} (−${limit} do ${limit}).`;
+    }
+  }
+  return errors;
+}

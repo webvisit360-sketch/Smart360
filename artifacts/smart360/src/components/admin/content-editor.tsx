@@ -74,7 +74,7 @@ import {
   type ItemTranslationRefreshField,
 } from "@/lib/item-translation-drafts";
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
-import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
+import { mutationErrorMessage, validateManualPlace, type ManualPlaceErrors, type ManualPlaceField } from "@/lib/manual-pin-feedback";
 import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
 import { getHostOnboardingQueryKey } from "@/hooks/use-host-onboarding";
 import { suggestCategoryIcon } from "@workspace/category-icons";
@@ -1706,6 +1706,12 @@ function OkolicaPlaceCreate({
   const [locationText, setLocationText] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<ManualPlaceErrors>({});
+  const [serviceError, setServiceError] = useState<string | null>(null);
+  const manualNameRef = useRef<HTMLInputElement>(null);
+  const locationTextRef = useRef<HTMLInputElement>(null);
+  const latitudeRef = useRef<HTMLInputElement>(null);
+  const longitudeRef = useRef<HTMLInputElement>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   const search = useSearchAdminPlaces(selectedCatId, { q: submittedQuery }, {
@@ -1721,18 +1727,32 @@ function OkolicaPlaceCreate({
   const candidates = (search.data?.candidates ?? []) as SearchCandidateWithRouting[];
   const refresh = () => refreshTenantAfterAdminWrite(queryClient, tenantId);
 
+  const updateManualField = (field: ManualPlaceField, value: string) => {
+    const nextValues = { manualName, locationText, latitude, longitude, [field]: value };
+    setFieldErrors((current) => current[field]
+      ? { ...current, [field]: validateManualPlace(nextValues)[field] }
+      : current);
+    setServiceError(null);
+    if (field === "manualName") setManualName(value);
+    if (field === "locationText") setLocationText(value);
+    if (field === "latitude") setLatitude(value);
+    if (field === "longitude") setLongitude(value);
+  };
+
   const save = async () => {
+    setServiceError(null);
     try {
       if (manual) {
-        const lat = Number(latitude);
-        const lng = Number(longitude);
-        if (!manualName.trim() || !locationText.trim() || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-          alert("Ime, opis lokacije in veljavna točka na zemljevidu so obvezni.");
+        const errors = validateManualPlace({ manualName, locationText, latitude, longitude });
+        setFieldErrors(errors);
+        const firstInvalid = (["manualName", "locationText", "latitude", "longitude"] as const).find((field) => errors[field]);
+        if (firstInvalid) {
+          ({ manualName: manualNameRef, locationText: locationTextRef, latitude: latitudeRef, longitude: longitudeRef })[firstInvalid].current?.focus();
           return;
         }
         await create.mutateAsync({
           id: selectedCatId,
-          data: { mode: "manual", name: manualName.trim(), locationText: locationText.trim(), latitude: lat, longitude: lng },
+          data: { mode: "manual", name: manualName.trim(), locationText: locationText.trim(), latitude: Number(latitude), longitude: Number(longitude) },
         });
       } else {
         if (!selected) return;
@@ -1741,7 +1761,7 @@ function OkolicaPlaceCreate({
       await refresh();
       onDone();
     } catch (error) {
-      alert(mutationErrorMessage(error));
+      setServiceError(mutationErrorMessage(error) || "Kraja ni bilo mogoče dodati. Poskusite znova.");
     }
   };
 
@@ -1891,25 +1911,39 @@ function OkolicaPlaceCreate({
               Ročni vnos uporabite le, če kraja res ni na zemljevidu (npr. skrita plaža, neoznačena pot).
             </div>
             <div className="space-y-1.5">
-              <Label>Ime kraja *</Label>
+              <Label htmlFor="manual-place-name">Ime kraja *</Label>
               <Input
+                id="manual-place-name"
+                ref={manualNameRef}
+                data-testid="input-manual-place-name"
                 value={manualName}
-                onChange={(e) => setManualName(e.target.value)}
+                onChange={(e) => updateManualField("manualName", e.target.value)}
                 placeholder={namePlaceholder}
                 disabled={busy}
+                aria-invalid={Boolean(fieldErrors.manualName)}
+                aria-describedby={fieldErrors.manualName ? "manual-place-name-error" : undefined}
+                style={fieldErrors.manualName ? { border: "1px solid #DD9A2B" } : undefined}
                 className="h-11 rounded-[10px]"
               />
+              {fieldErrors.manualName && <p id="manual-place-name-error" role="alert" className="text-xs text-[#9A660F]">{fieldErrors.manualName}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Opis lokacije *</Label>
+              <Label htmlFor="manual-place-location">Opis lokacije *</Label>
               <Input
+                id="manual-place-location"
+                ref={locationTextRef}
+                data-testid="input-manual-place-location"
                 value={locationText}
-                onChange={(e) => setLocationText(e.target.value)}
+                onChange={(e) => updateManualField("locationText", e.target.value)}
                 placeholder="npr. 5 min hoda od kampa"
                 disabled={busy}
+                aria-invalid={Boolean(fieldErrors.locationText)}
+                aria-describedby={fieldErrors.locationText ? "manual-place-location-hint manual-place-location-error" : "manual-place-location-hint"}
+                style={fieldErrors.locationText ? { border: "1px solid #DD9A2B" } : undefined}
                 className="h-11 rounded-[10px]"
               />
-              <p className="text-xs text-[#9AA39D]">Kratek opis kje se nahaja, da gostje lažje najdejo.</p>
+              {fieldErrors.locationText && <p id="manual-place-location-error" role="alert" className="text-xs text-[#9A660F]">{fieldErrors.locationText}</p>}
+              <p id="manual-place-location-hint" className="text-xs text-[#9AA39D]">Kratek opis kje se nahaja, da gostje lažje najdejo.</p>
             </div>
             <PinPlacementMap
               latitude={latitude}
@@ -1918,30 +1952,49 @@ function OkolicaPlaceCreate({
                 latitude: search.data.originLatitude,
                 longitude: search.data.originLongitude,
               } : undefined}
-              onPlace={(lat, lng) => { setLatitude(String(lat)); setLongitude(String(lng)); }}
+              onPlace={(lat, lng) => {
+                setLatitude(String(lat));
+                setLongitude(String(lng));
+                setFieldErrors((current) => ({ ...current, latitude: undefined, longitude: undefined }));
+                setServiceError(null);
+              }}
             />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Geografska širina (Lat) *</Label>
+                <Label htmlFor="manual-place-latitude">Geografska širina (Lat) *</Label>
                 <Input
+                  id="manual-place-latitude"
+                  ref={latitudeRef}
+                  data-testid="input-manual-place-latitude"
                   inputMode="decimal"
                   value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
+                  onChange={(e) => updateManualField("latitude", e.target.value)}
                   placeholder="npr. 46.362"
                   disabled={busy}
+                  aria-invalid={Boolean(fieldErrors.latitude)}
+                  aria-describedby={fieldErrors.latitude ? "manual-place-latitude-error" : undefined}
+                  style={fieldErrors.latitude ? { border: "1px solid #DD9A2B" } : undefined}
                   className="h-11 rounded-[10px]"
                 />
+                {fieldErrors.latitude && <p id="manual-place-latitude-error" role="alert" className="text-xs text-[#9A660F]">{fieldErrors.latitude}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Geografska dolžina (Lng) *</Label>
+                <Label htmlFor="manual-place-longitude">Geografska dolžina (Lng) *</Label>
                 <Input
+                  id="manual-place-longitude"
+                  ref={longitudeRef}
+                  data-testid="input-manual-place-longitude"
                   inputMode="decimal"
                   value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
+                  onChange={(e) => updateManualField("longitude", e.target.value)}
                   placeholder="npr. 13.821"
                   disabled={busy}
+                  aria-invalid={Boolean(fieldErrors.longitude)}
+                  aria-describedby={fieldErrors.longitude ? "manual-place-longitude-error" : undefined}
+                  style={fieldErrors.longitude ? { border: "1px solid #DD9A2B" } : undefined}
                   className="h-11 rounded-[10px]"
                 />
+                {fieldErrors.longitude && <p id="manual-place-longitude-error" role="alert" className="text-xs text-[#9A660F]">{fieldErrors.longitude}</p>}
               </div>
             </div>
             <Button type="button" variant="ghost" onClick={() => setManual(false)} disabled={busy} className="mt-2 text-[#157347]">
@@ -1952,13 +2005,14 @@ function OkolicaPlaceCreate({
       </DialogScrollBody>
       
       <DialogFooter className="gap-2 flex-wrap shrink-0 border-t border-[#E8EBE6] pt-4 mt-2 bg-white">
+        {serviceError && <p role="alert" data-testid="status-manual-place-service-error" className="w-full text-sm text-destructive">{serviceError}</p>}
         <p className="w-full text-xs text-[#66716A] mb-2 text-center sm:text-left">
           Opis in fotografije dodate po vnosu — kot osnutek, gostje vidijo šele po objavi.
         </p>
         <Button variant="outline" onClick={onDone} disabled={busy} className="rounded-full border-[#C9D2CB] text-[#66716A] hover:bg-[#F4F6F2] h-10 px-6 font-bold">
           Prekliči
         </Button>
-        <Button onClick={save} disabled={busy || (!selected && !manual)} className="rounded-full bg-[#157347] text-white hover:bg-[#0f5935] h-10 px-6 font-bold">
+        <Button type="button" onClick={save} disabled={busy || (!selected && !manual)} className="rounded-full bg-[#157347] text-white hover:bg-[#0f5935] h-10 px-6 font-bold">
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           Dodaj v vodnik
         </Button>

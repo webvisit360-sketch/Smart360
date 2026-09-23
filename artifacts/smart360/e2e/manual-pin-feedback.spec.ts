@@ -1,3 +1,4 @@
+import { mkdir, writeFile } from "node:fs/promises";
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const proposalId = "11111111-1111-4111-8111-111111111111";
@@ -143,6 +144,134 @@ test("manual pin failure stays open and shows the exact reason inline", async ({
   await expect(page.getByText("Ročno postavite točko")).toBeVisible();
   await expect(page.getByTestId(`manual-pin-error-${proposalId}`))
     .toHaveText(/Izhodišče nima koordinat\./);
+});
+
+const placeFields = [
+  { id: "input-manual-place-name", error: "Vnesite ime kraja.", value: "Neoznačena razgledna točka" },
+  { id: "input-manual-place-location", error: "Vnesite opis lokacije.", value: "Nad kampom" },
+  { id: "input-manual-place-latitude", error: "Vnesite geografsko širino.", value: "46.362" },
+  { id: "input-manual-place-longitude", error: "Vnesite geografsko dolžino.", value: "13.821" },
+] as const;
+
+async function openManualPlace(page: Page) {
+  await installCommonRoutes(page, (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
+  await page.goto("/e2e/manual-pin-harness.html");
+  await page.getByRole("button", { name: "Dodaj kraj", exact: true }).click();
+  const dialog = page.locator('[role="dialog"]:visible').filter({ hasText: "Dodaj kraj" });
+  await dialog.getByPlaceholder(/npr\./).first().fill("Neoznačena razgledna točka");
+  await dialog.getByRole("button", { name: "Poišči" }).click();
+  await dialog.getByRole("button", { name: /Ročno označi na zemljevidu/ }).click();
+  return dialog;
+}
+
+test("Dodaj kraj reports only missing manual fields inline and focuses the first invalid input", async ({ page }) => {
+  let writes = 0;
+  const dialogs: string[] = [];
+  page.on("dialog", (dialog) => { dialogs.push(dialog.message()); void dialog.dismiss(); });
+  await page.route("**/api/admin/categories/manual-pin-explore/places", (route) => {
+    writes++;
+    return route.fulfill({ status: 400, contentType: "application/json", body: '{"error":"Fixture: unexpected write"}' });
+  });
+  const dialog = await openManualPlace(page);
+  const save = dialog.getByRole("button", { name: "Dodaj v vodnik" });
+
+  await save.click();
+  for (const field of placeFields) {
+    const input = dialog.getByTestId(field.id);
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    await expect(input).toHaveCSS("border-width", "1px");
+    await expect(input).toHaveCSS("border-color", "rgb(221, 154, 43)");
+    await expect(dialog.getByText(field.error, { exact: true })).toBeVisible();
+    await expect(input).toHaveAttribute("aria-describedby", new RegExp(`${field.id.replace("input-", "")}-error`));
+  }
+  await expect(dialog.getByTestId(placeFields[0].id)).toBeFocused();
+
+  for (const missing of placeFields) {
+    for (const field of placeFields) {
+      await dialog.getByTestId(field.id).fill(field.id === missing.id ? "  " : field.value);
+    }
+    await save.click();
+    if (missing.id === "input-manual-place-location") {
+      const evidenceDir = "/tmp/manual-place-validation-evidence";
+      await mkdir(evidenceDir, { recursive: true });
+      await dialog.screenshot({ path: `${evidenceDir}/location-missing.png` });
+      const locationInput = dialog.getByTestId(missing.id);
+      const styles = await locationInput.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          borderWidth: style.borderWidth,
+          borderColor: style.borderColor,
+          focused: document.activeElement === element,
+          ariaInvalid: element.getAttribute("aria-invalid"),
+          describedBy: element.getAttribute("aria-describedby"),
+        };
+      });
+      await writeFile(`${evidenceDir}/location-missing.json`, JSON.stringify({
+        styles,
+        visibleMessages: await dialog.locator('[role="alert"]:visible').allTextContents(),
+      }, null, 2));
+    }
+    for (const field of placeFields) {
+      const input = dialog.getByTestId(field.id);
+      await expect(input).toHaveAttribute("aria-invalid", field.id === missing.id ? "true" : "false");
+      if (field.id === missing.id) {
+        await expect(dialog.getByText(field.error, { exact: true })).toBeVisible();
+        await expect(input).toHaveCSS("border-color", "rgb(221, 154, 43)");
+        await expect(input).toHaveCSS("border-width", "1px");
+        await expect(input).toBeFocused();
+      } else {
+        await expect(dialog.getByText(field.error, { exact: true })).toHaveCount(0);
+      }
+    }
+    await expect(dialog).toBeVisible();
+  }
+  expect(writes).toBe(0);
+  expect(dialogs).toEqual([]);
+});
+
+test("Dodaj kraj rejects malformed/out-of-range coordinates, then shows service failures separately", async ({ page }) => {
+  let writes = 0;
+  const dialogs: string[] = [];
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("dialog", (dialog) => { dialogs.push(dialog.message()); void dialog.dismiss(); });
+  await page.route("**/api/admin/categories/manual-pin-explore/places", (route) => {
+    writes++;
+    return route.fulfill({ status: 400, contentType: "application/json", body: '{"error":"Izhodišče nima koordinat."}' });
+  });
+  const dialog = await openManualPlace(page);
+  for (const field of placeFields) await dialog.getByTestId(field.id).fill(field.value);
+  const save = dialog.getByRole("button", { name: "Dodaj v vodnik" });
+  for (const [lat, lng, invalid] of [
+    ["abc", "13.821", "input-manual-place-latitude"],
+    ["91", "13.821", "input-manual-place-latitude"],
+    ["46.362", "Infinity", "input-manual-place-longitude"],
+    ["46.362", "-181", "input-manual-place-longitude"],
+  ] as const) {
+    await dialog.getByTestId("input-manual-place-latitude").fill(lat);
+    await dialog.getByTestId("input-manual-place-longitude").fill(lng);
+    await save.click();
+    await expect(dialog.getByTestId(invalid)).toHaveAttribute("aria-invalid", "true");
+    await expect(dialog.getByTestId(invalid)).toBeFocused();
+    await expect(dialog.locator('input[aria-invalid="true"]')).toHaveCount(1);
+    await expect(dialog.getByTestId("openfreemap-map")).toBeVisible();
+    if (lat === "91") {
+      const evidenceDir = "/tmp/manual-place-validation-evidence";
+      await mkdir(evidenceDir, { recursive: true });
+      await dialog.screenshot({ path: `${evidenceDir}/invalid-latitude-91.png` });
+    }
+    expect(pageErrors).toEqual([]);
+    expect(writes).toBe(0);
+  }
+  await dialog.getByTestId("input-manual-place-longitude").fill("13.821");
+  await save.click();
+  await expect(dialog.getByTestId("status-manual-place-service-error")).toHaveText("Izhodišče nima koordinat.");
+  await expect(dialog.locator('input[aria-invalid="true"]')).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  expect(writes).toBe(1);
+  expect(dialogs).toEqual([]);
+  expect(pageErrors).toEqual([]);
 });
 
 test("OpenFreeMap loads in the actual Dodaj kraj manual flow without raster fallback", async ({ page }) => {
