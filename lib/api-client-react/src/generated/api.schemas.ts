@@ -395,6 +395,30 @@ export interface HostOnboardingPhoto {
   previewUrl: string;
 }
 
+export type HostOnboardingRecommendationProcessingStatus = typeof HostOnboardingRecommendationProcessingStatus[keyof typeof HostOnboardingRecommendationProcessingStatus];
+
+
+export const HostOnboardingRecommendationProcessingStatus = {
+  pending: 'pending',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+export type HostOnboardingRecommendationProcessingStatusPersistence = typeof HostOnboardingRecommendationProcessingStatusPersistence[keyof typeof HostOnboardingRecommendationProcessingStatusPersistence];
+
+
+export const HostOnboardingRecommendationProcessingStatusPersistence = {
+  failed: 'failed',
+} as const;
+
+export interface HostOnboardingRecommendationProcessing {
+  status: HostOnboardingRecommendationProcessingStatus;
+  revision: number;
+  errorCode?: string;
+  statusPersistence?: HostOnboardingRecommendationProcessingStatusPersistence;
+  persistenceErrorCode?: string;
+}
+
 export type HostOnboardingRoundStatus = typeof HostOnboardingRoundStatus[keyof typeof HostOnboardingRoundStatus];
 
 
@@ -449,6 +473,7 @@ export interface HostOnboardingRound {
   updatedAt: string;
   /** @nullable */
   submittedAt?: string | null;
+  recommendationProcessing?: HostOnboardingRecommendationProcessing | null;
 }
 
 export type OwnerHostOnboardingResponseRoundsItemTargetReviewItem = {
@@ -3428,6 +3453,11 @@ export interface TenantOverview {
   missingPhotos: number;
   provisionalPhotos: number;
 }
+
+export type RetryHostOnboardingRecommendations200 = {
+  ok: boolean;
+  recommendationProcessing: HostOnboardingRecommendationProcessing;
+};
 
 export type GetPublicTenantParams = {
 lang?: string;

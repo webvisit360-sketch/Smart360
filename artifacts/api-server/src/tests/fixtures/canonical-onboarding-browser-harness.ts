@@ -14,8 +14,10 @@ import {
   db,
   itemsTable,
   mediaTable,
+  openHostDbContext,
   pool,
   publishedSnapshotsTable,
+  runWithHostDbContext,
   sectionsTable,
   tenantsTable,
 } from "@workspace/db";
@@ -458,15 +460,25 @@ async function serve(): Promise<void> {
   );
 
   app.use(express.json({ limit: "256kb" }));
+  const fixtureHostActor = (request: express.Request): Actor => ({
+    kind: "host",
+    hostUserId: value.fixture.hostUserId,
+    tenantId: value.fixture.tenantId,
+    requestIp: request.ip,
+  });
+  const runAsFixtureHost = <T>(
+    request: express.Request,
+    operation: () => Promise<T>,
+  ): Promise<T> => runWithHostDbContext(
+    value.fixture.tenantId,
+    () => actorStorage.run(fixtureHostActor(request), operation),
+  );
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
   app.get("/host/session", (_request, response) => response.json({
     authenticated: true,
+    email: `${value.fixture.marker}@example.invalid`,
+    tenantId: value.fixture.tenantId,
     onboardingRequired: true,
-    host: {
-      id: value.fixture.hostUserId,
-      tenantId: value.fixture.tenantId,
-      tenantName: "Operaterjev trenutni osnutek",
-    },
   }));
   app.get("/admin/tenant", async (_request, response, next) => {
     try {
@@ -543,11 +555,14 @@ async function serve(): Promise<void> {
       next(error);
     }
   });
-  app.get("/host/onboarding", async (_request, response, next) => {
+  app.get("/host/onboarding", async (request, response, next) => {
     try {
-      const current = await currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId);
+      const current = await runAsFixtureHost(
+        request,
+        () => currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId),
+      );
       if (!current) {
-        response.status(404).json({ error: "Fixture round missing" });
+        response.status(404).json({ message: "Obrazec za to namestitev še ni odprt." });
         return;
       }
       response.json(hostDto(current));
@@ -555,23 +570,36 @@ async function serve(): Promise<void> {
       next(error);
     }
   });
-  app.patch("/host/onboarding", async (request, response, next) => {
+  const saveFixtureOnboarding: express.RequestHandler = async (request, response, next) => {
     try {
       const revision = Number(request.body?.revision);
-      const result = await saveHostOnboarding(
-        value.fixture.tenantId,
-        value.fixture.hostUserId,
-        revision,
-        request.body?.data ?? {},
-        String(request.body?.canonicalRevision ?? ""),
+      const result = await runAsFixtureHost(
+        request,
+        () => saveHostOnboarding(
+          value.fixture.tenantId,
+          value.fixture.hostUserId,
+          revision,
+          request.body?.data ?? {},
+          String(request.body?.canonicalRevision ?? ""),
+        ),
       );
       if (!result.ok) {
-        response.status(result.kind === "stale" ? 409 : 400).json(result);
+        response.status(result.kind === "missing" ? 404 : 409).json({
+          message: result.kind === "stale"
+            ? "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova."
+            : result.kind === "missing"
+              ? "Obrazec za to namestitev še ni odprt."
+              : "Oddanega obrazca ni več mogoče spreminjati.",
+          ...(result.currentRevision ? { currentRevision: result.currentRevision } : {}),
+        });
         return;
       }
-      const current = await currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId);
+      const current = await runAsFixtureHost(
+        request,
+        () => currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId),
+      );
       if (!current) {
-        response.status(404).json({ error: "Fixture round missing" });
+        response.status(404).json({ message: "Obrazec za to namestitev še ni odprt." });
         return;
       }
       const dto = hostDto(current);
@@ -584,31 +612,66 @@ async function serve(): Promise<void> {
         photos: dto.photos,
         categories: dto.categories,
         contentSections: dto.contentSections,
+        recommendationProcessing: result.recommendationProcessing,
       });
     } catch (error) {
       next(error);
     }
-  });
+  };
+  app.patch("/host/onboarding", saveFixtureOnboarding);
+  app.post("/host/onboarding/save", saveFixtureOnboarding);
   app.post("/host/onboarding/submit", async (request, response, next) => {
     try {
-      const current = await currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId);
+      const current = await runAsFixtureHost(
+        request,
+        () => currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId),
+      );
       if (!current) {
-        response.status(404).json({ error: "Fixture round missing" });
+        response.status(404).json({ message: "Obrazec za to namestitev še ni odprt." });
         return;
       }
+      const requestedRound = Number(request.body?.round);
+      if (!Number.isInteger(requestedRound) || requestedRound < 1) {
+        response.status(400).json({ message: "Krog obrazca ni veljaven." });
+        return;
+      }
+      const submittedData = request.body?.data ?? current.round.draftData;
       _setHostOnboardingDeliveryOverride(async () => ({
         ok: true,
         providerMessageId: "browser-fixture-no-email",
       }));
-      const result = await submitHostOnboarding(
-        value.fixture.tenantId,
-        value.fixture.hostUserId,
-        current.round.round,
-        Number(request.body?.revision),
-        request.body?.data,
-        String(request.body?.canonicalRevision ?? ""),
+      const result = await runAsFixtureHost(
+        request,
+        () => submitHostOnboarding(
+          value.fixture.tenantId,
+          value.fixture.hostUserId,
+          requestedRound,
+          Number(request.body?.revision),
+          submittedData,
+          String(request.body?.canonicalRevision ?? ""),
+        ),
       );
-      response.status(result.ok ? 200 : result.kind === "stale" ? 409 : 400).json(result);
+      if (!result.ok) {
+        response.status(result.kind === "missing" ? 404 : 409).json({
+          message: result.kind === "stale"
+            ? "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova."
+            : result.kind === "wrong_round"
+              ? "Krog obrazca ni veljaven."
+              : result.kind === "photo_uploading"
+                ? "Počakajte, da se nalaganje fotografij konča."
+                : result.kind === "invalid_custom_category"
+                  ? "Vnesite ime svoje kategorije ali odstranite njene vnose."
+                  : "Obrazec za to namestitev še ni odprt.",
+          ...(result.currentRevision ? { currentRevision: result.currentRevision } : {}),
+        });
+        return;
+      }
+      response.json({
+        ok: true,
+        alreadySubmitted: result.alreadySubmitted,
+        recommendationProcessing: result.recommendationProcessing,
+        message: "Hvala! Vaš vodnik pripravljamo — obvestili vas bomo, ko bo pripravljen za pregled.",
+      });
     } catch (error) {
       next(error);
     } finally {
@@ -742,11 +805,12 @@ async function serve(): Promise<void> {
   });
   app.use(
     "/_real-host",
-    (request, response, next) => {
-      if (
-        request.method !== "POST" ||
-        request.path !== "/admin/host/onboarding/categories"
-      ) {
+    async (request, response, next) => {
+      const allowedPostPaths = new Set([
+        "/admin/host/onboarding/categories",
+        "/admin/host/onboarding/recommendations/retry",
+      ]);
+      if (request.method !== "POST" || !allowedPostPaths.has(request.path)) {
         response.status(404).json({ error: "Fixture route not found" });
         return;
       }
@@ -758,7 +822,25 @@ async function serve(): Promise<void> {
       };
       request.actor = actor;
       request.log = logger.child({ fixture: value.fixture.marker });
-      actorStorage.run(actor, next);
+      try {
+        const handle = await openHostDbContext(value.fixture.tenantId);
+        let released = false;
+        const release = () => {
+          if (released) return;
+          released = true;
+          handle.release().catch((error: unknown) => {
+            request.log.error(
+              { errName: error instanceof Error ? error.name : "Error" },
+              "Fixture host DB context release failed",
+            );
+          });
+        };
+        response.once("finish", release);
+        response.once("close", release);
+        handle.enter(() => actorStorage.run(actor, next));
+      } catch (error) {
+        next(error);
+      }
     },
     hostOnboardingRouter,
   );

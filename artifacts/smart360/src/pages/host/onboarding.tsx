@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut, MapPin, Plus } from "lucide-react";
+import { AlertTriangle, Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut, MapPin, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetHostOnboarding,
@@ -18,7 +18,11 @@ import {
   omitLegacyRichAliasForCanonicalItems,
   persistedHostOnboardingSubmitPayload,
   updateCanonicalItemText,
+  canonicalHostRowIds,
   fetchHostOnboardingSnapshot,
+  useRetryHostOnboardingRecommendations,
+  recommendationProcessingPresentation,
+  automaticRecommendationRetryDelay,
 } from "@/hooks/use-host-onboarding";
 import { useHostSession } from "@/hooks/use-host-session";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
@@ -37,6 +41,8 @@ import {
   hostDraftRetryDelay,
   type DraftConflict,
   type HostDraftRecovery,
+  autosaveRenderFrame,
+  acknowledgeHostDraftWrite,
 } from "@/lib/host-onboarding-draft-rebase";
 
 const generateId = () => crypto.randomUUID();
@@ -208,6 +214,62 @@ export function reconcileCreatedCanonicalRows(input: {
   return { ...input.local, canonicalItems, offers };
 }
 
+function RecommendationProcessingNotice({
+  processing,
+  retrying,
+  retryError,
+  onRetry,
+}: {
+  processing: import("@workspace/api-client-react").HostOnboardingRecommendationProcessing | null | undefined;
+  retrying: boolean;
+  retryError: boolean;
+  onRetry: () => void;
+}) {
+  const presentation = recommendationProcessingPresentation(processing);
+  if (!presentation) return null;
+  const isWarning = presentation.tone !== "succeeded";
+
+  return (
+    <div
+      role={isWarning ? "status" : undefined}
+      aria-live="polite"
+      data-testid="recommendation-processing-status"
+      data-recommendation-status={presentation.tone}
+      className={`w-full rounded-[12px] border p-4 text-left ${
+        isWarning
+          ? "border-[#E8C477] bg-[#FFF8E8] text-[#6B4A0B]"
+          : "border-[#BBD8C7] bg-[#F0F8F3] text-[#157347]"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        {isWarning
+          ? <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+          : <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />}
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">{presentation.message}</p>
+          {retryError ? (
+            <p data-testid="recommendation-retry-network-error" className="mt-1 text-sm">
+              Ponovni poskus trenutno ni uspel. Vneseni podatki niso bili spremenjeni.
+            </p>
+          ) : null}
+          {presentation.canRetry ? (
+            <button
+              type="button"
+              data-testid="recommendation-retry-button"
+              className="mt-2 inline-flex min-h-10 items-center gap-2 rounded-full border border-current px-4 py-2 text-sm font-bold disabled:opacity-60"
+              disabled={retrying}
+              onClick={onRetry}
+            >
+              {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {retrying ? "Poskušamo znova..." : "Ponovno obdelaj priporočila"}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HostOnboarding() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -221,6 +283,7 @@ export default function HostOnboarding() {
   const saveOnboarding = useSaveHostOnboarding();
   const createCategory = useCreateHostOnboardingCategory();
   const submitOnboarding = useSubmitHostOnboarding();
+  const retryRecommendations = useRetryHostOnboardingRecommendations();
   
   const [formData, setFormData] = useState<HostOnboardingData>({});
   const initialized = useRef(false);
@@ -256,6 +319,10 @@ export default function HostOnboarding() {
   const [uploadsBlocking, setUploadsBlocking] = useState(false);
   const [entryUploadsBlocking, setEntryUploadsBlocking] = useState(false);
   const [submittedMessage, setSubmittedMessage] = useState("");
+  const [recommendationRetryError, setRecommendationRetryError] = useState(false);
+  const recommendationRetryTimer = useRef<number | null>(null);
+  const recommendationRetryRevision = useRef<number | null>(null);
+  const recommendationRetryAttempt = useRef(0);
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(160);
 
@@ -288,6 +355,50 @@ export default function HostOnboarding() {
     setFirstFailureAt((current) => current || new Date().toISOString());
     setSaveError("Lokalna obnovitev ni na voljo. Ne osvežite strani.");
   }, []);
+
+  const retryRecommendationsNow = useCallback(async () => {
+    setRecommendationRetryError(false);
+    try {
+      await retryRecommendations.mutateAsync();
+    } catch {
+      // Recommendation processing is deliberately independent of the ordinary
+      // draft save state. A transport failure must never mark saved input dirty.
+      if (mounted.current) setRecommendationRetryError(true);
+    }
+  }, [retryRecommendations.mutateAsync]);
+
+  useEffect(() => {
+    const processing = onboardingData?.recommendationProcessing;
+    if (!processing || processing.status === "succeeded") {
+      recommendationRetryRevision.current = null;
+      recommendationRetryAttempt.current = 0;
+      setRecommendationRetryError(false);
+      return;
+    }
+    if (recommendationRetryRevision.current !== processing.revision) {
+      recommendationRetryRevision.current = processing.revision;
+      recommendationRetryAttempt.current = 0;
+    }
+    if (retryRecommendations.isPending) return;
+    const delay = automaticRecommendationRetryDelay(recommendationRetryAttempt.current);
+    if (delay === null) return;
+    recommendationRetryTimer.current = window.setTimeout(() => {
+      recommendationRetryTimer.current = null;
+      recommendationRetryAttempt.current += 1;
+      void retryRecommendationsNow();
+    }, delay);
+    return () => {
+      if (recommendationRetryTimer.current !== null) {
+        window.clearTimeout(recommendationRetryTimer.current);
+        recommendationRetryTimer.current = null;
+      }
+    };
+  }, [
+    onboardingData?.recommendationProcessing?.revision,
+    onboardingData?.recommendationProcessing?.status,
+    retryRecommendations.isPending,
+    retryRecommendationsNow,
+  ]);
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
     const finalData = normalizeCanonicalSaveBaseline(data);
@@ -361,11 +472,7 @@ export default function HostOnboarding() {
     }
     mediaDirty.current = false;
     removedMediaIds.current.clear();
-    canonicalRowIds.current = {
-      contacts: new Set(canonical.contacts?.map((row) => row.id) || []),
-      offers: new Set(canonical.offers?.map((row) => row.id) || []),
-      events: new Set(canonical.events?.map((row) => row.id) || []),
-    };
+    canonicalRowIds.current = canonicalHostRowIds(canonical);
     const canonicalPayload = preserveCanonicalMediaForWrite(
       omitLegacyRichAliasForCanonicalItems(canonical),
       canonical.media || [],
@@ -381,7 +488,11 @@ export default function HostOnboarding() {
     if (!recoveredConflicts.length) conflictBlocked.current = false;
     hydratedSource.current = source;
     initialized.current = true;
-    skipAutosaveOnce.current = !recoveredBase;
+    // All effects from this commit still see the pre-hydration formData
+    // render. Consume that stale autosave frame for both fresh and recovered
+    // hydration; the setFormData render immediately following this one owns
+    // the first real dirty comparison.
+    skipAutosaveOnce.current = true;
     setSaveError("");
     setSaveState(recoveredBase ? (recoveredConflicts.length ? "conflict" : "dirty") : "saved");
   }, [onboardingData, saveState, recoveryKey, reportRecoveryFailure]);
@@ -399,8 +510,9 @@ export default function HostOnboarding() {
       // at execution time, after all preceding writes/rebases have updated the
       // canonical baseline. This prevents a stale full row captured before a
       // 409 rebase from restoring an unrelated remote field.
+      let sentLocal = cleanData(latestData.current);
       let submitted = changedHostOnboardingFields(
-        cleanData(latestData.current),
+        sentLocal,
         lastSavedData.current,
       );
       if (Object.keys(submitted).length === 0) {
@@ -448,6 +560,7 @@ export default function HostOnboarding() {
         queryClient.setQueryData(["host-onboarding"], current);
         latestData.current = rebased.data;
         latestPayload.current = cleanData(rebased.data);
+        sentLocal = latestPayload.current;
         setFormData(rebased.data);
         conflictRemote.current = current.data;
         if (rebased.conflicts.length) {
@@ -483,8 +596,14 @@ export default function HostOnboarding() {
       }
       revision.current = result.revision;
       canonicalRevision.current = result.canonicalRevision;
-      const canonical = result.data ?? { ...lastSavedData.current, ...data };
+      const canonical = result.data ?? { ...lastSavedData.current, ...submitted };
       if (result.data) {
+        const reconciledSent = reconcileCreatedCanonicalRows({
+          local: sentLocal,
+          canonical,
+          baseline: lastSavedData.current,
+          submitted,
+        });
         let reconciled = reconcileCreatedCanonicalRows({
           local: latestData.current,
           canonical,
@@ -512,12 +631,18 @@ export default function HostOnboarding() {
           baseline: lastSavedData.current,
           submitted,
         });
-        latestData.current = reconciled;
-        setFormData(reconciled);
+        const acknowledged = acknowledgeHostDraftWrite(
+          reconciledSent,
+          reconciled,
+          canonical,
+        );
+        latestData.current = acknowledged;
+        latestPayload.current = cleanData(acknowledged);
+        setFormData(acknowledged);
       }
-      for (const row of submitted.contacts || []) canonicalRowIds.current.contacts.add(row.id);
-      for (const row of submitted.offers || []) canonicalRowIds.current.offers.add(row.id);
-      for (const row of submitted.events || []) canonicalRowIds.current.events.add(row.id);
+      // The accepted canonical response, not the sparse submitted patch, is
+      // authoritative for which stable rows require explicit delete markers.
+      canonicalRowIds.current = canonicalHostRowIds(canonical);
       lastSavedData.current = canonical;
       const savedPayload = preserveCanonicalMediaForWrite(
         omitLegacyRichAliasForCanonicalItems(normalizeCanonicalSaveBaseline(canonical)),
@@ -616,11 +741,14 @@ export default function HostOnboarding() {
 
   useEffect(() => {
     if (!initialized.current) return;
-    if (skipAutosaveOnce.current) {
-      skipAutosaveOnce.current = false;
-      return;
-    }
-    latestData.current = formData;
+    const frame = autosaveRenderFrame(
+      latestData.current,
+      formData,
+      skipAutosaveOnce.current,
+    );
+    skipAutosaveOnce.current = frame.skipNext;
+    if (!frame.shouldProcess) return;
+    latestData.current = frame.latest;
     latestPayload.current = cleanData(formData);
     const snapshot = JSON.stringify(latestPayload.current);
     if (snapshot === lastSaved.current) {
@@ -843,11 +971,11 @@ export default function HostOnboarding() {
     try {
       await flush();
       const result = await submitOnboarding.mutateAsync(
-        persistedHostOnboardingSubmitPayload(
-          onboardingData?.round || 1,
-          revision.current,
-          canonicalRevision.current,
-        ),
+          persistedHostOnboardingSubmitPayload(
+            onboardingData?.round || 1,
+            revision.current,
+            canonicalRevision.current,
+          ),
       );
       setSubmittedMessage(result.message);
     } catch (reason) {
@@ -954,6 +1082,14 @@ export default function HostOnboarding() {
         <p className="text-[#3A443C] max-w-md text-lg leading-relaxed">
           {submittedMessage || "Vaš vodnik pripravljamo — obvestili vas bomo, ko bo pripravljen za pregled."}
         </p>
+        <div className="mt-6 w-full max-w-md">
+          <RecommendationProcessingNotice
+            processing={onboardingData?.recommendationProcessing}
+            retrying={retryRecommendations.isPending}
+            retryError={recommendationRetryError}
+            onRetry={() => void retryRecommendationsNow()}
+          />
+        </div>
         <div className="mt-10">
           <button 
             onClick={() => window.location.href = "/admin"}
@@ -1008,6 +1144,12 @@ export default function HostOnboarding() {
         className="px-4 md:px-8 max-w-[784px] mx-auto space-y-8"
         style={{ paddingBottom: `calc(${footerHeight}px + 1.5rem)` }}
       >
+        <RecommendationProcessingNotice
+          processing={onboardingData?.recommendationProcessing}
+          retrying={retryRecommendations.isPending}
+          retryError={recommendationRetryError}
+          onRetry={() => void retryRecommendationsNow()}
+        />
         
         {/* SECTION 1 */}
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">

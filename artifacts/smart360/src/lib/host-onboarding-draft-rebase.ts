@@ -221,6 +221,54 @@ export function recoveryStorageKey(tenantId: string, round: number): string {
   return `smart360:host-onboarding:${tenantId}:round:${round}`;
 }
 
+/**
+ * React runs all effects from the pre-hydration render once. That stale frame
+ * must be consumed without replacing the synchronously restored draft ref.
+ */
+export function autosaveRenderFrame(
+  latest: HostOnboardingData,
+  rendered: HostOnboardingData,
+  skipNext: boolean,
+): {
+  latest: HostOnboardingData;
+  skipNext: boolean;
+  shouldProcess: boolean;
+} {
+  if (skipNext) {
+    return { latest, skipNext: false, shouldProcess: false };
+  }
+  return { latest: rendered, skipNext: false, shouldProcess: true };
+}
+
+/**
+ * Reconcile a successful write response with edits made while it was in
+ * flight. The exact full local projection sent is the three-way base, so rows
+ * the server intentionally retained are adopted when local omission was not
+ * accompanied by an explicit delete marker.
+ */
+export function acknowledgeHostDraftWrite(
+  sentLocal: HostOnboardingData,
+  latestLocal: HostOnboardingData,
+  canonical: HostOnboardingData,
+): HostOnboardingData {
+  const acknowledged = rebaseHostOnboardingDraft(
+    sentLocal,
+    latestLocal,
+    canonical,
+  ).data;
+  const contactDeletes = new Set(latestLocal.deleteContactIds || []);
+  const offerDeletes = new Set(latestLocal.deleteOfferIds || []);
+  const eventDeletes = new Set(latestLocal.deleteEventIds || []);
+  const mediaDeletes = new Set(latestLocal.deleteMediaIds || []);
+  return {
+    ...acknowledged,
+    contacts: acknowledged.contacts?.filter((row) => !contactDeletes.has(row.id)),
+    offers: acknowledged.offers?.filter((row) => !offerDeletes.has(row.id)),
+    events: acknowledged.events?.filter((row) => !eventDeletes.has(row.id)),
+    media: acknowledged.media?.filter((row) => !mediaDeletes.has(row.id)),
+  };
+}
+
 export function restoreHostDraftRecovery(
   recovery: HostDraftRecovery,
   current: HostOnboardingData,
@@ -263,3 +311,9 @@ export function acknowledgeUnsavedFailure(
 export function hostDraftRetryDelay(attempt: number): number {
   return Math.min(30_000, 2_000 * (2 ** Math.max(0, attempt)));
 }
+
+/**
+ * Submit is a small CAS loop: every stale submit gets one current-draft
+ * rebase, then a fresh flush and another submit POST. `rebase` throws when it
+ * discovers a genuine named field conflict.
+ */

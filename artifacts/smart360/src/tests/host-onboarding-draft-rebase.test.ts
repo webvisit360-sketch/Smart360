@@ -11,6 +11,8 @@ import {
   recordUnsavedFailure,
   restoreHostDraftRecovery,
   type HostDraftRecovery,
+  autosaveRenderFrame,
+  acknowledgeHostDraftWrite,
 } from "../lib/host-onboarding-draft-rebase";
 
 const base = (patch: Partial<HostOnboardingData> = {}): HostOnboardingData => ({
@@ -176,6 +178,17 @@ test("full-snapshot refresh recovery keeps every canonical row when only one was
   );
 });
 
+test("the stale render frame from the hydration commit cannot erase recovered local input", () => {
+  const recovered = base({ accommodationName: "Najbolj sveže lokalno ime" });
+  const frame = autosaveRenderFrame(recovered, {}, true);
+  assert.equal(frame.shouldProcess, false);
+  assert.equal(frame.latest.accommodationName, "Najbolj sveže lokalno ime");
+
+  const hydratedRender = autosaveRenderFrame(frame.latest, recovered, frame.skipNext);
+  assert.equal(hydratedRender.shouldProcess, true);
+  assert.equal(hydratedRender.latest.accommodationName, "Najbolj sveže lokalno ime");
+});
+
 test("a queued row write is rederived after rebase and retains a remote different-field edit", () => {
   const original = base();
   const staleQueuedRow = {
@@ -197,6 +210,50 @@ test("a queued row write is rederived after rebase and retains a remote differen
     ...staleQueuedRow,
     name: "Adminov domači zajtrk",
   }]);
+});
+
+test("server-retained rows omitted without explicit deletion are adopted on acknowledgement", () => {
+  const canonicalRow = {
+    id: "canonical-kept",
+    categoryId: "stay",
+    categoryKey: "house",
+    sectionKey: "stay",
+    title: "Ohranjeno",
+    body: "<p>Strežnik je vrstico pravilno ohranil.</p>",
+    price: "", priceUnit: "", phone: "", website: "", mapQuery: "",
+    difficulty: "", duration: "", distance: "", noteType: "", noteText: "",
+    bullets: [] as string[], tint: "", frame: "", isVisible: true,
+    orderEnabled: false, soldOut: false, producerName: "", producerNote: "",
+  };
+  const sent = base({ contacts: [], offers: [], events: [], canonicalItems: [] });
+  const server = base({
+    contacts: [{ id: "contact-kept", name: "Ana", phone: "123" }],
+    offers: [{ id: "offer-kept", name: "Zajtrk", price: "10 €" }],
+    events: [{ id: "event-kept", name: "Sejem", date: "2026-10-01", time: "10:00" }],
+    canonicalItems: [canonicalRow],
+  });
+  const acknowledged = acknowledgeHostDraftWrite(sent, sent, server);
+  assert.deepEqual(acknowledged.contacts, server.contacts);
+  assert.deepEqual(acknowledged.offers, server.offers);
+  assert.deepEqual(acknowledged.events, server.events);
+  assert.deepEqual(acknowledged.canonicalItems, server.canonicalItems);
+  assert.deepEqual(changedHostOnboardingFields(acknowledged, server), {});
+});
+
+test("acknowledgement preserves typing that happened while the request was in flight", () => {
+  const sent = base({
+    contacts: [{ id: "contact-1", name: "Ana", phone: "123" }],
+  });
+  const latest = base({
+    contacts: [{ id: "contact-1", name: "Ana", phone: "123 456" }],
+  });
+  const canonical = base({
+    contacts: [{ id: "contact-1", name: "Ana", phone: "123" }],
+    address: "Strežniško normaliziran naslov",
+  });
+  const acknowledged = acknowledgeHostDraftWrite(sent, latest, canonical);
+  assert.equal(acknowledged.contacts?.[0]?.phone, "123 456");
+  assert.equal(acknowledged.address, "Strežniško normaliziran naslov");
 });
 
 test("repeated concurrent different-field revisions remain mergeable instead of dead-ending", () => {

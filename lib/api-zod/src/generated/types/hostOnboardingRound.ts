@@ -7,6 +7,7 @@
  */
 import type { HostOnboardingData } from './hostOnboardingData';
 import type { HostOnboardingPhoto } from './hostOnboardingPhoto';
+import type { HostOnboardingRecommendationProcessing } from './hostOnboardingRecommendationProcessing';
 import type { HostOnboardingRoundCategoriesItem } from './hostOnboardingRoundCategoriesItem';
 import type { HostOnboardingRoundContentSectionsItem } from './hostOnboardingRoundContentSectionsItem';
 import type { HostOnboardingRoundStatus } from './hostOnboardingRoundStatus';
@@ -26,4 +27,5 @@ export interface HostOnboardingRound {
   updatedAt: string;
   /** @nullable */
   submittedAt?: string | null;
+  recommendationProcessing?: HostOnboardingRecommendationProcessing | null;
 }

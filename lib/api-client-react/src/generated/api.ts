@@ -124,6 +124,7 @@ import type {
   RenamePasskeyRequest,
   RenewalEntry,
   ReorderInput,
+  RetryHostOnboardingRecommendations200,
   SearchAdminPlacesParams,
   SearchPublicTenantParams,
   SearchResult,
@@ -383,6 +384,71 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSaveHostOnboardingMutationOptions(options));
+    }
+
+export const getRetryHostOnboardingRecommendationsUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding/recommendations/retry`
+}
+
+export const retryHostOnboardingRecommendations = async ( options?: Parameters<typeof customFetch>[1]): Promise<RetryHostOnboardingRecommendations200> => {
+
+  return customFetch<RetryHostOnboardingRecommendations200>(getRetryHostOnboardingRecommendationsUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRetryHostOnboardingRecommendationsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryHostOnboardingRecommendations>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retryHostOnboardingRecommendations>>, TError,void, TContext> => {
+
+const mutationKey = ['retryHostOnboardingRecommendations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryHostOnboardingRecommendations>>, void> = () => {
+
+
+          return  retryHostOnboardingRecommendations(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetryHostOnboardingRecommendationsMutationResult = NonNullable<Awaited<ReturnType<typeof retryHostOnboardingRecommendations>>>
+
+    export type RetryHostOnboardingRecommendationsMutationError = ErrorType<unknown>
+
+    export const useRetryHostOnboardingRecommendations = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryHostOnboardingRecommendations>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof retryHostOnboardingRecommendations>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRetryHostOnboardingRecommendationsMutationOptions(options));
     }
 
 export const getCreateHostOnboardingCategoryUrl = () => {

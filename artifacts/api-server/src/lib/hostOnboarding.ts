@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   categoriesTable,
+  creatorPlaceProposalsTable,
   db,
   escapeHostDbContext,
   hostMembershipsTable,
@@ -18,12 +19,14 @@ import {
   enqueueHostRecommendations,
   getHostOnboardingCategories,
   HOST_ONBOARDING_PROVENANCE,
+  HOST_ONBOARDING_UNRESOLVED_REASON,
 } from "./hostOnboardingCreator";
 import {
   HOST_ONBOARDING_OPERATOR_EMAIL,
   sendHostOnboardingEmail,
 } from "./hostOnboardingEmail";
 import { createCategoryWithTooling } from "./categoryTooling";
+import { safeDatabaseErrorDiagnostic } from "./infrastructureDiagnostics";
 import {
   applyCanonicalHostOnboardingPatch,
   readCanonicalHostOnboarding,
@@ -34,6 +37,31 @@ import {
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const CANONICAL_BINDING_MARKER = "workflow.canonical_binding_v1";
+const RECOMMENDATION_PROCESSING_MARKER = "workflow.recommendation_processing_v1";
+export type RecommendationProcessing = {
+  status: "pending" | "succeeded" | "failed";
+  revision: number;
+  errorCode?: string;
+  statusPersistence?: "failed";
+  persistenceErrorCode?: string;
+};
+
+export async function settleRecommendationProcessingFailure(
+  processing: RecommendationProcessing,
+  persist: () => Promise<void>,
+): Promise<RecommendationProcessing> {
+  try {
+    await persist();
+    return processing;
+  } catch (error) {
+    const diagnostic = safeDatabaseErrorDiagnostic(error);
+    return {
+      ...processing,
+      statusPersistence: "failed",
+      persistenceErrorCode: diagnostic.databaseCode ?? "STATUS_PERSISTENCE_FAILED",
+    };
+  }
+}
 const canonicalBindingReview = (): HostOnboardingTargetReview => ({
   target: CANONICAL_BINDING_MARKER,
   hostValue: true,
@@ -41,6 +69,51 @@ const canonicalBindingReview = (): HostOnboardingTargetReview => ({
   resolution: "unchanged",
   suggestionVisible: false,
 });
+
+function recommendationProcessingReview(
+  processing: RecommendationProcessing,
+): HostOnboardingTargetReview {
+  return {
+    target: RECOMMENDATION_PROCESSING_MARKER,
+    hostValue: processing,
+    operatorValue: null,
+    resolution: "unchanged",
+    suggestionVisible: false,
+  };
+}
+
+export function recommendationProcessingStatus(
+  targetReview: HostOnboardingTargetReview[],
+): RecommendationProcessing | null {
+  const value = targetReview.find(({ target }) =>
+    target === RECOMMENDATION_PROCESSING_MARKER
+  )?.hostValue;
+  if (!value || typeof value !== "object") return null;
+  const candidate = value as Partial<RecommendationProcessing>;
+  if (
+    (candidate.status !== "pending" &&
+      candidate.status !== "succeeded" &&
+      candidate.status !== "failed") ||
+    !Number.isInteger(candidate.revision)
+  ) return null;
+  return {
+    status: candidate.status,
+    revision: candidate.revision!,
+    ...(typeof candidate.errorCode === "string"
+      ? { errorCode: candidate.errorCode }
+      : {}),
+  };
+}
+
+function withRecommendationProcessing(
+  targetReview: HostOnboardingTargetReview[],
+  processing: RecommendationProcessing,
+): HostOnboardingTargetReview[] {
+  return [
+    ...targetReview.filter(({ target }) => target !== RECOMMENDATION_PROCESSING_MARKER),
+    recommendationProcessingReview(processing),
+  ];
+}
 
 function legacyMeaningfulPatch(data: HostOnboardingData): Partial<HostOnboardingData> {
   const patch: Partial<HostOnboardingData> = {};
@@ -76,7 +149,11 @@ export const EMPTY_HOST_ONBOARDING_DATA: HostOnboardingData = {
 };
 
 export type SaveOnboardingResult =
-  | { ok: true; round: typeof hostOnboardingRoundsTable.$inferSelect }
+  | {
+      ok: true;
+      round: typeof hostOnboardingRoundsTable.$inferSelect;
+      recommendationProcessing: RecommendationProcessing | null;
+    }
   | {
       ok: false;
       kind: "missing" | "submitted" | "stale";
@@ -222,7 +299,7 @@ export async function saveHostOnboarding(
   patch: Partial<HostOnboardingData>,
   expectedCanonicalRevision?: string,
 ): Promise<SaveOnboardingResult> {
-  return db.transaction(async (tx) => {
+  const saved = await db.transaction(async (tx) => {
     const [round] = await tx
       .select()
       .from(hostOnboardingRoundsTable)
@@ -233,15 +310,15 @@ export async function saveHostOnboarding(
       .orderBy(desc(hostOnboardingRoundsTable.round))
       .limit(1)
       .for("update");
-    if (!round) return { ok: false, kind: "missing" };
-    if (round.status !== "draft") return { ok: false, kind: "submitted" };
+    if (!round) return { ok: false, kind: "missing" } as const;
+    if (round.status !== "draft") return { ok: false, kind: "submitted" } as const;
     if (round.revision !== revision) {
       return {
         ok: false,
         kind: "stale",
         currentRevision: round.revision,
         staleReason: "round_revision",
-      };
+      } as const;
     }
     const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId, true);
     if (expectedCanonicalRevision && expectedCanonicalRevision !== canonicalRevision) {
@@ -250,7 +327,7 @@ export async function saveHostOnboarding(
         kind: "stale",
         currentRevision: round.revision,
         staleReason: "canonical_revision",
-      };
+      } as const;
     }
     await applyCanonicalHostOnboardingPatch(tx, tenantId, patch);
     const workflow = normalizeHostOnboardingData(round.draftData);
@@ -263,20 +340,22 @@ export async function saveHostOnboarding(
         ? { customCategories: patch.customCategories }
         : {}),
     };
-    const queued = (
-      patch.recommendations !== undefined || patch.customCategories !== undefined
-    )
-      ? await mapSubmission(tx, tenantId, round.id, nextWorkflow, false)
-      : null;
+    const recommendationsChanged =
+      patch.recommendations !== undefined || patch.customCategories !== undefined;
+    const nextRevision = round.revision + 1;
+    const processing = recommendationsChanged
+      ? { status: "pending" as const, revision: nextRevision }
+      : recommendationProcessingStatus(round.targetReview);
     const [updated] = await tx
       .update(hostOnboardingRoundsTable)
       .set({
         // Workflow-only hints remain here. Canonical tenant content is read
         // fresh on every GET and is never authoritative in this JSON column.
         draftData: nextWorkflow,
-        targetReview: [canonicalBindingReview()],
-        ...(queued ? { recommendationReview: queued.recommendationReview } : {}),
-        revision: round.revision + 1,
+        targetReview: processing
+          ? withRecommendationProcessing([canonicalBindingReview()], processing)
+          : [canonicalBindingReview()],
+        revision: nextRevision,
         updatedAt: new Date(),
       })
       .where(and(
@@ -295,10 +374,19 @@ export async function saveHostOnboarding(
         kind: "stale",
         currentRevision: fresh?.revision,
         staleReason: "cas_update",
-      };
+      } as const;
     }
-    return { ok: true, round: updated };
+    return { ok: true, round: updated, recommendationsChanged } as const;
   });
+  if (!saved.ok) return saved;
+  // This call is intentionally after the awaited transaction above. actorGate
+  // scopes a dedicated SET ROLE connection to the request but does not open an
+  // outer SQL transaction; escapeHostDbContext therefore selects the base pool
+  // and processHostRecommendationIntents opens a distinct, post-commit tx.
+  const recommendationProcessing = saved.recommendationsChanged
+    ? await processHostRecommendationIntents(saved.round.id, saved.round.revision)
+    : recommendationProcessingStatus(saved.round.targetReview);
+  return { ok: true, round: saved.round, recommendationProcessing };
 }
 
 export type CreateHostOnboardingCategoryResult =
@@ -738,8 +826,101 @@ async function mapSubmission(
   return { targetReview: review, recommendationReview };
 }
 
+/**
+ * Processes already-committed recommendation intents outside the canonical
+ * save transaction. The privileged context is deliberate: the tenant-scoped
+ * host role may edit its onboarding draft but has no access to Creator tables.
+ * Revision checks make retries idempotent and prevent an older attempt from
+ * marking a newer draft successful.
+ */
+export async function processHostRecommendationIntents(
+  onboardingId: string,
+  intendedRevision: number,
+): Promise<RecommendationProcessing> {
+  // Never call this while a caller-owned transaction still holds the round
+  // lock. All production call sites invoke it only after their awaited commit.
+  // escapeHostDbContext exits AsyncLocalStorage routing to the host connection;
+  // db.transaction below consequently checks out a separate base-pool client.
+  try {
+    return await escapeHostDbContext(() => db.transaction(async (tx) => {
+      const [round] = await tx.select().from(hostOnboardingRoundsTable)
+        .where(eq(hostOnboardingRoundsTable.id, onboardingId))
+        .limit(1)
+        .for("update");
+      if (!round) {
+        return { status: "failed", revision: intendedRevision, errorCode: "ROUND_MISSING" };
+      }
+      if (round.revision !== intendedRevision) {
+        return recommendationProcessingStatus(round.targetReview) ?? {
+          status: "pending",
+          revision: round.revision,
+        };
+      }
+
+      const mapped = await mapSubmission(
+        tx,
+        round.tenantId,
+        round.id,
+        normalizeHostOnboardingData(round.draftData),
+        false,
+      );
+      const currentProposalIds = mapped.recommendationReview
+        .flatMap(({ proposalId }) => proposalId ? [proposalId] : []);
+      const staleProposalIds = round.recommendationReview
+        .flatMap(({ proposalId }) => proposalId ? [proposalId] : [])
+        .filter((id) => !currentProposalIds.includes(id));
+      if (staleProposalIds.length > 0) {
+        await tx.delete(creatorPlaceProposalsTable).where(and(
+          eq(creatorPlaceProposalsTable.tenantId, round.tenantId),
+          inArray(creatorPlaceProposalsTable.id, staleProposalIds),
+          eq(creatorPlaceProposalsTable.status, "unresolved"),
+          eq(creatorPlaceProposalsTable.refusalReason, HOST_ONBOARDING_UNRESOLVED_REASON),
+          eq(creatorPlaceProposalsTable.inclusionReason, HOST_ONBOARDING_PROVENANCE),
+        ));
+      }
+      const processing = { status: "succeeded" as const, revision: intendedRevision };
+      await tx.update(hostOnboardingRoundsTable).set({
+        recommendationReview: mapped.recommendationReview,
+        targetReview: withRecommendationProcessing(round.targetReview, processing),
+      }).where(and(
+        eq(hostOnboardingRoundsTable.id, round.id),
+        eq(hostOnboardingRoundsTable.revision, intendedRevision),
+      ));
+      return processing;
+    }));
+  } catch (error) {
+    const diagnostic = safeDatabaseErrorDiagnostic(error);
+    const processing: RecommendationProcessing = {
+      status: "failed",
+      revision: intendedRevision,
+      errorCode: diagnostic.databaseCode ?? "RECOMMENDATION_PROCESSING_FAILED",
+    };
+    return settleRecommendationProcessingFailure(processing, () =>
+      escapeHostDbContext(() => db.transaction(async (tx) => {
+        const [round] = await tx.select().from(hostOnboardingRoundsTable)
+          .where(eq(hostOnboardingRoundsTable.id, onboardingId))
+          .limit(1)
+          .for("update");
+        if (!round || round.revision !== intendedRevision) return;
+        await tx.update(hostOnboardingRoundsTable).set({
+          targetReview: withRecommendationProcessing(round.targetReview, processing),
+        }).where(and(
+          eq(hostOnboardingRoundsTable.id, onboardingId),
+          eq(hostOnboardingRoundsTable.revision, intendedRevision),
+        ));
+      }))
+    );
+  }
+}
+
 export type SubmitResult =
-  | { ok: true; id: string; round: number; alreadySubmitted: boolean }
+  | {
+      ok: true;
+      id: string;
+      round: number;
+      alreadySubmitted: boolean;
+      recommendationProcessing: RecommendationProcessing | null;
+    }
   | {
       ok: false;
       kind: "missing" | "wrong_round" | "stale" | "photo_uploading" | "invalid_custom_category";
@@ -794,7 +975,13 @@ export async function submitHostOnboarding(
       .for("update");
     if (!round) return { ok: false, kind: "missing" } as const;
     if (round.status === "submitted") {
-      return { ok: true, id: round.id, round: round.round, alreadySubmitted: true } as const;
+      return {
+        ok: true,
+        id: round.id,
+        round: round.round,
+        alreadySubmitted: true,
+        recommendationProcessing: recommendationProcessingStatus(round.targetReview),
+      } as const;
     }
     if (round.round !== roundNumber) return { ok: false, kind: "wrong_round" } as const;
     if (round.revision !== revision) {
@@ -826,8 +1013,10 @@ export async function submitHostOnboarding(
       ))
       .limit(1);
     if (uploading) return { ok: false, kind: "photo_uploading" } as const;
-    const mapped = await mapSubmission(tx, tenantId, round.id, data);
+    await applyCanonicalHostOnboardingPatch(tx, tenantId, data);
     const now = new Date();
+    const nextRevision = round.revision + 1;
+    const processing = { status: "pending" as const, revision: nextRevision };
     await tx
       .update(hostOnboardingPhotosTable)
       .set({ status: "submitted", submittedAt: now })
@@ -843,18 +1032,31 @@ export async function submitHostOnboarding(
           recommendations: data.recommendations,
           customCategories: data.customCategories,
         },
-        targetReview: [canonicalBindingReview(), ...mapped.targetReview],
-        recommendationReview: mapped.recommendationReview,
+        targetReview: withRecommendationProcessing([canonicalBindingReview()], processing),
         status: "submitted",
-        revision: round.revision + 1,
+        revision: nextRevision,
         submittedAt: now,
         updatedAt: now,
         notificationStatus: "pending",
         notificationRecipient: HOST_ONBOARDING_OPERATOR_EMAIL,
       })
       .where(eq(hostOnboardingRoundsTable.id, round.id));
-    return { ok: true, id: round.id, round: round.round, alreadySubmitted: false } as const;
+    return {
+      ok: true,
+      id: round.id,
+      round: round.round,
+      alreadySubmitted: false,
+      recommendationProcessing: processing,
+    } as const;
   }));
+  if (result.ok && !result.alreadySubmitted) {
+    const recommendationProcessing = await processHostRecommendationIntents(
+      result.id,
+      revision + 1,
+    );
+    await dispatchHostOnboardingNotification(result.id);
+    return { ...result, recommendationProcessing };
+  }
   if (result.ok) await dispatchHostOnboardingNotification(result.id);
   return result;
 }

@@ -202,7 +202,14 @@ export const GetHostOnboardingResponse = zod.object({
   "previewUrl": zod.string()
 })),
   "updatedAt": zod.string(),
-  "submittedAt": zod.string().nullish()
+  "submittedAt": zod.string().nullish(),
+  "recommendationProcessing": zod.union([zod.object({
+  "status": zod.enum(['pending', 'succeeded', 'failed']),
+  "revision": zod.number(),
+  "errorCode": zod.string().optional(),
+  "statusPersistence": zod.enum(['failed']).optional(),
+  "persistenceErrorCode": zod.string().optional()
+}),zod.null()]).optional()
 })
 
 
@@ -522,6 +529,18 @@ export const SaveHostOnboardingBody = zod.object({
 export const SaveHostOnboardingResponse = zod.unknown()
 
 
+export const RetryHostOnboardingRecommendationsResponse = zod.object({
+  "ok": zod.boolean(),
+  "recommendationProcessing": zod.object({
+  "status": zod.enum(['pending', 'succeeded', 'failed']),
+  "revision": zod.number(),
+  "errorCode": zod.string().optional(),
+  "statusPersistence": zod.enum(['failed']).optional(),
+  "persistenceErrorCode": zod.string().optional()
+})
+})
+
+
 export const createHostOnboardingCategoryBodySourceIdMax = 100;
 
 export const createHostOnboardingCategoryBodyNameMax = 120;
@@ -734,7 +753,14 @@ export const CreateHostOnboardingCategoryResponse = zod.object({
   "previewUrl": zod.string()
 })),
   "updatedAt": zod.string(),
-  "submittedAt": zod.string().nullish()
+  "submittedAt": zod.string().nullish(),
+  "recommendationProcessing": zod.union([zod.object({
+  "status": zod.enum(['pending', 'succeeded', 'failed']),
+  "revision": zod.number(),
+  "errorCode": zod.string().optional(),
+  "statusPersistence": zod.enum(['failed']).optional(),
+  "persistenceErrorCode": zod.string().optional()
+}),zod.null()]).optional()
 })
 
 

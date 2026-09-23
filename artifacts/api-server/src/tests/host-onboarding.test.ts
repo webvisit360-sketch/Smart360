@@ -16,7 +16,10 @@ import {
   hostOnboardingRawObjectPath,
   hostOnboardingSanitizedObjectPath,
 } from "../lib/hostOnboardingPhotoPaths";
-import { hostCustomCategoriesAreSubmittable } from "../lib/hostOnboarding";
+import {
+  hostCustomCategoriesAreSubmittable,
+  settleRecommendationProcessingFailure,
+} from "../lib/hostOnboarding";
 import { HOST_ROLE_GRANTS, POLICIES } from "../lib/rls";
 
 const completeData = {
@@ -151,7 +154,7 @@ test("actor gate classifies all onboarding routes without tenant identity from b
   const ownerRoutes = onboarding.filter((route) =>
     route.path.startsWith("/admin/tenants/"),
   );
-  assert.equal(hostRoutes.length, 9);
+  assert.equal(hostRoutes.length, 10);
   assert.ok(hostRoutes.every((route) => route.binding.kind === "host-self"));
   const categoryCreate = hostRoutes.find((route) =>
     route.method === "post" && route.path === "/admin/host/onboarding/categories"
@@ -184,4 +187,23 @@ test("startup restores grants and tenant RLS for every onboarding table", () => 
     assert.match(POLICIES[table]?.using ?? "", /tenant_id/);
     assert.match(POLICIES[table]?.using ?? "", /app\.tenant_id/);
   }
+});
+
+test("a failed recommendation-status write cannot poison an already committed save response", async () => {
+  const processing = {
+    status: "failed" as const,
+    revision: 9,
+    errorCode: "42501",
+  };
+  const settled = await settleRecommendationProcessingFailure(
+    processing,
+    async () => {
+      throw Object.assign(new Error("status persistence unavailable"), { code: "08006" });
+    },
+  );
+  assert.deepEqual(settled, {
+    ...processing,
+    statusPersistence: "failed",
+    persistenceErrorCode: "08006",
+  });
 });

@@ -1,14 +1,52 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  automaticRecommendationRetryDelay,
   canHydrateCanonicalDraft,
+  canonicalHostRowIds,
   changedHostOnboardingFields,
   omitLegacyRichAliasForCanonicalItems,
   persistedHostOnboardingSubmitPayload,
   preserveCanonicalMediaForWrite,
+  recommendationProcessingPresentation,
   updateCanonicalItemText,
   type HostOnboardingMedia,
 } from "../hooks/use-host-onboarding";
+
+test("recommendation processing is presented independently from the saved draft", () => {
+  assert.deepEqual(
+    recommendationProcessingPresentation({ status: "pending", revision: 8 }),
+    {
+      tone: "pending",
+      message: "Priporočila so shranjena in čakajo na obdelavo.",
+      canRetry: true,
+    },
+  );
+  assert.deepEqual(
+    recommendationProcessingPresentation({
+      status: "failed",
+      revision: 8,
+      errorCode: "SENSITIVE_INTERNAL_CODE",
+    }),
+    {
+      tone: "failed",
+      message: "Priporočila so shranjena; obdelava ni uspela.",
+      canRetry: true,
+    },
+    "the UI presentation must not disclose the backend error code",
+  );
+  assert.equal(
+    recommendationProcessingPresentation({ status: "succeeded", revision: 8 })?.canRetry,
+    false,
+  );
+});
+
+test("automatic recommendation retries are bounded", () => {
+  assert.equal(automaticRecommendationRetryDelay(0), 1_500);
+  assert.equal(automaticRecommendationRetryDelay(1), 5_000);
+  assert.equal(automaticRecommendationRetryDelay(2), null);
+  assert.equal(automaticRecommendationRetryDelay(20), null);
+});
 
 const pristine = {
   initialized: true,
@@ -190,6 +228,27 @@ test("editing one of multiple house rich-text rows persists through canonicalIte
   assert.equal("houseRulesParking" in patch, false);
 });
 
+test("rich-text normalization feedback is a no-op when the canonical leaf is unchanged", () => {
+  const row = {
+    id: "rich-stable",
+    categoryId: "house-category",
+    sectionKey: "stay",
+    categoryKey: "house",
+    title: "Hišni red",
+    body: "<p>Mir po 22. uri.</p>",
+    price: "", priceUnit: "", phone: "", website: "", mapQuery: "",
+    difficulty: "", duration: "", distance: "", noteType: "", noteText: "",
+    bullets: [] as string[], tint: "", frame: "", isVisible: true,
+    orderEnabled: false, soldOut: false, producerName: "", producerNote: "",
+  };
+  const draft = { canonicalItems: [row] };
+  assert.equal(
+    updateCanonicalItemText(draft, row.id, { body: row.body }),
+    draft,
+    "an editor echo must not create a new form state and another autosave",
+  );
+});
+
 test("first canonical house row cannot churn against its stale legacy alias", () => {
   const house = {
     id: "house-rules",
@@ -248,4 +307,16 @@ test("canonical deletions are explicit rather than inferred from array omission"
     contacts: [],
     deleteContactIds: ["contact-1"],
   });
+});
+
+test("acknowledged canonical rows become explicit-deletion authorities even after a sparse recovery", () => {
+  const accepted = {
+    contacts: [{ id: "contact-restored", name: "Ana", phone: "123" }],
+    offers: [{ id: "offer-restored", name: "Zajtrk", price: "10 €" }],
+    events: [{ id: "event-restored", name: "Sejem", date: "2026-10-01", time: "10:00" }],
+  };
+  const ids = canonicalHostRowIds(accepted);
+  assert.equal(ids.contacts.has("contact-restored"), true);
+  assert.equal(ids.offers.has("offer-restored"), true);
+  assert.equal(ids.events.has("event-restored"), true);
 });

@@ -7,6 +7,8 @@ import {
   getGetTenantQueryKey,
   getGetTranslationOverviewQueryKey,
   getListTenantTranslationsQueryKey,
+  retryHostOnboardingRecommendations,
+  type HostOnboardingRecommendationProcessing,
 } from "@workspace/api-client-react";
 
 export interface HostOnboardingData {
@@ -103,6 +105,42 @@ export interface HostOnboardingResponse {
   submittedAt: string | null;
   revision: number;
   canonicalRevision: string;
+  recommendationProcessing?: HostOnboardingRecommendationProcessing | null;
+}
+
+export type RecommendationProcessingPresentation = {
+  tone: "pending" | "failed" | "succeeded";
+  message: string;
+  canRetry: boolean;
+};
+
+export function recommendationProcessingPresentation(
+  processing: HostOnboardingRecommendationProcessing | null | undefined,
+): RecommendationProcessingPresentation | null {
+  if (!processing) return null;
+  if (processing.status === "pending") {
+    return {
+      tone: "pending",
+      message: "Priporočila so shranjena in čakajo na obdelavo.",
+      canRetry: true,
+    };
+  }
+  if (processing.status === "failed") {
+    return {
+      tone: "failed",
+      message: "Priporočila so shranjena; obdelava ni uspela.",
+      canRetry: true,
+    };
+  }
+  return {
+    tone: "succeeded",
+    message: "Priporočila so obdelana.",
+    canRetry: false,
+  };
+}
+
+export function automaticRecommendationRetryDelay(attempt: number): number | null {
+  return [1_500, 5_000][attempt] ?? null;
 }
 
 export function canHydrateCanonicalDraft(input: {
@@ -147,11 +185,27 @@ export function updateCanonicalItemText(
   itemId: string,
   change: { title?: string; body?: string },
 ): HostOnboardingData {
+  const current = (data.canonicalItems || []).find((item) => item.id === itemId);
+  if (
+    !current ||
+    (change.title === undefined || change.title === current.title) &&
+    (change.body === undefined || change.body === current.body)
+  ) {
+    return data;
+  }
   return {
     ...data,
     canonicalItems: (data.canonicalItems || []).map((item) =>
       item.id === itemId ? { ...item, ...change } : item
     ),
+  };
+}
+
+export function canonicalHostRowIds(data: HostOnboardingData) {
+  return {
+    contacts: new Set(data.contacts?.map((row) => row.id) || []),
+    offers: new Set(data.offers?.map((row) => row.id) || []),
+    events: new Set(data.events?.map((row) => row.id) || []),
   };
 }
 
@@ -252,6 +306,7 @@ type HostOnboardingWriteResult = {
   photos?: HostOnboardingPhoto[];
   categories?: HostOnboardingCategory[];
   contentSections?: HostOnboardingContentSection[];
+  recommendationProcessing?: HostOnboardingRecommendationProcessing | null;
 };
 
 function applyWriteResult(
@@ -269,6 +324,9 @@ function applyWriteResult(
     revision: result.revision,
     canonicalRevision: result.canonicalRevision,
     updatedAt: result.updatedAt,
+    recommendationProcessing: "recommendationProcessing" in result
+      ? result.recommendationProcessing
+      : current.recommendationProcessing,
   };
 }
 
@@ -349,7 +407,12 @@ export function useCreateHostOnboardingCategory() {
 
 export function useSubmitHostOnboarding() {
   const queryClient = useQueryClient();
-  return useMutation<{ ok: true; alreadySubmitted: boolean; message: string }, Error, {
+  return useMutation<{
+    ok: true;
+    alreadySubmitted: boolean;
+    message: string;
+    recommendationProcessing?: HostOnboardingRecommendationProcessing | null;
+  }, Error, {
     round: number;
     data?: HostOnboardingData;
     revision: number;
@@ -360,15 +423,40 @@ export function useSubmitHostOnboarding() {
         method: "POST",
         body: JSON.stringify(payload),
       }),
-    onSuccess: (_result, variables) => {
+    onSuccess: (result, variables) => {
       queryClient.setQueryData<HostOnboardingResponse>(getHostOnboardingQueryKey(), (current) =>
         current ? {
           ...current,
           data: variables.data ?? current.data,
           status: "submitted",
           submittedAt: new Date().toISOString(),
+          recommendationProcessing: "recommendationProcessing" in result
+            ? result.recommendationProcessing
+            : current.recommendationProcessing,
         } : current,
       );
+    },
+  });
+}
+
+export function useRetryHostOnboardingRecommendations() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => retryHostOnboardingRecommendations(),
+    onSuccess: (result) => {
+      queryClient.setQueryData<HostOnboardingResponse>(
+        getHostOnboardingQueryKey(),
+        (current) => current ? {
+          ...current,
+          recommendationProcessing: result.recommendationProcessing,
+        } : current,
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: getHostOnboardingQueryKey(),
+        exact: true,
+      });
     },
   });
 }

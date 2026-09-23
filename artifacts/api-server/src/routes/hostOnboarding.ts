@@ -24,6 +24,8 @@ import {
   hostCustomCategoriesAreSubmittable,
   openHostOnboarding,
   ownerHostOnboarding,
+  processHostRecommendationIntents,
+  recommendationProcessingStatus,
   saveHostOnboarding,
   submittedHostOnboardingReplay,
   submitHostOnboarding,
@@ -135,6 +137,7 @@ export function hostDto(result: NonNullable<Awaited<ReturnType<typeof currentHos
     }),
     updatedAt: round.updatedAt.toISOString(),
     submittedAt: round.submittedAt?.toISOString() ?? null,
+    recommendationProcessing: recommendationProcessingStatus(round.targetReview),
   };
 }
 
@@ -312,6 +315,20 @@ async function save(req: Request, res: Response): Promise<void> {
     return;
   }
   const dto = hostDto(canonical);
+  if (result.recommendationProcessing?.status === "failed") {
+    req.log.warn(
+      {
+        ...diagnosticBase,
+        round: canonical.round.round,
+        outcome: "recommendation_processing_failed",
+        recommendationRevision: result.recommendationProcessing.revision,
+        errorCode: result.recommendationProcessing.errorCode,
+        statusPersistence: result.recommendationProcessing.statusPersistence,
+        persistenceErrorCode: result.recommendationProcessing.persistenceErrorCode,
+      },
+      "Host onboarding recommendation processing failed after save committed",
+    );
+  }
   req.log.info(
     {
       ...diagnosticBase,
@@ -330,11 +347,27 @@ async function save(req: Request, res: Response): Promise<void> {
     photos: dto.photos,
     categories: dto.categories,
     contentSections: dto.contentSections,
+    recommendationProcessing: result.recommendationProcessing,
   });
 }
 
 router.patch("/admin/host/onboarding", save);
 router.post("/admin/host/onboarding/save", save);
+
+router.post("/admin/host/onboarding/recommendations/retry", async (req, res): Promise<void> => {
+  const actor = hostActor(req, res);
+  if (!actor) return;
+  const current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  if (!current) {
+    fail(res, 404, "Obrazec za to namestitev še ni odprt.");
+    return;
+  }
+  const recommendationProcessing = await processHostRecommendationIntents(
+    current.round.id,
+    current.round.revision,
+  );
+  res.json({ ok: recommendationProcessing.status !== "failed", recommendationProcessing });
+});
 
 router.post("/admin/host/onboarding/categories", async (req, res): Promise<void> => {
   const actor = hostActor(req, res);
@@ -564,6 +597,19 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     });
     return;
   }
+  if (result.recommendationProcessing?.status === "failed") {
+    req.log.warn(
+      {
+        ...diagnosticBase,
+        outcome: "recommendation_processing_failed",
+        recommendationRevision: result.recommendationProcessing.revision,
+        errorCode: result.recommendationProcessing.errorCode,
+        statusPersistence: result.recommendationProcessing.statusPersistence,
+        persistenceErrorCode: result.recommendationProcessing.persistenceErrorCode,
+      },
+      "Host onboarding recommendation processing failed after submit committed",
+    );
+  }
   req.log.info(
     { ...diagnosticBase, outcome: result.alreadySubmitted ? "replayed" : "submitted" },
     "Host onboarding submit completed",
@@ -571,6 +617,7 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
   res.json({
     ok: true,
     alreadySubmitted: result.alreadySubmitted,
+    recommendationProcessing: result.recommendationProcessing,
     message: "Hvala! Vaš vodnik pripravljamo — obvestili vas bomo, ko bo pripravljen za pregled.",
   });
 });

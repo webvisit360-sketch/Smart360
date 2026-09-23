@@ -108,6 +108,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/host/onboarding", binding: SELF },
   { method: "patch", path: "/admin/host/onboarding", binding: SELF },
   { method: "post", path: "/admin/host/onboarding/save", binding: SELF },
+  { method: "post", path: "/admin/host/onboarding/recommendations/retry", binding: SELF },
   { method: "post", path: "/admin/host/onboarding/categories", binding: SELF },
   { method: "post", path: "/admin/host/onboarding/submit", binding: SELF },
   { method: "post", path: "/admin/host/onboarding/photos/upload-url", binding: SELF },

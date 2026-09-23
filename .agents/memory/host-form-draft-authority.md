@@ -38,3 +38,15 @@ Recovery records need full local snapshots or explicit stable-ID reconstruction;
 **Why:** Shallowly overlaying a changed-row patch onto its base drops untouched rows when the page reloads.
 
 **How to apply:** Exercise refresh recovery with multiple rows and only one edited row. Retain the original base for conflict comparison and never interpret an omitted patch row as deletion.
+
+Host recommendation intents must commit before privileged Creator processing; actor identity alone does not reproduce host database permissions.
+
+**Why:** The host database role deliberately cannot read Creator tables. Recommendation processing in the ordinary save transaction reproduced SQLSTATE 42501 and rolled back unrelated fields. An audit-only simulated host concealed this permission boundary.
+
+**How to apply:** Exercise real host DB context in tests. Run Creator processing only after the host transaction commits, with revision/tenant scoping and independent failure reporting. Keep failure-status persistence errors from poisoning the already committed save.
+
+Recovered hydration must skip the stale render frame before autosave/persistence can read form state.
+
+**Why:** React effects from the pre-hydration render observed an empty form after the recovery effect restored refs, then overwrote both the restored input and its browser recovery record.
+
+**How to apply:** Test full browser reload while a conflict is unresolved, not merely GET refetch or reload after successful save. Unit tests of the merge function alone do not establish lifecycle safety.

@@ -57,6 +57,22 @@ paths:
       responses:
         "200": { description: Draft saved }
         "409": { description: Stale revision or immutable submission }
+  /admin/host/onboarding/recommendations/retry:
+    post:
+      operationId: retryHostOnboardingRecommendations
+      tags: [tenants]
+      responses:
+        "200":
+          description: Recommendation processing retried against the current draft revision
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, recommendationProcessing]
+                properties:
+                  ok: { type: boolean }
+                  recommendationProcessing:
+                    $ref: "#/components/schemas/HostOnboardingRecommendationProcessing"
   /admin/host/onboarding/categories:
     post:
       operationId: createHostOnboardingCategory
@@ -3119,6 +3135,19 @@ components:
         size: { type: number }
         status: { type: string, enum: [uploading, ready, submitted] }
         previewUrl: { type: string }
+    HostOnboardingRecommendationProcessing:
+      type: object
+      required: [status, revision]
+      properties:
+        status:
+          type: string
+          enum: [pending, succeeded, failed]
+        revision: { type: number }
+        errorCode: { type: string }
+        statusPersistence:
+          type: string
+          enum: [failed]
+        persistenceErrorCode: { type: string }
     HostOnboardingRound:
       type: object
       required: [id, tenantId, round, revision, canonicalRevision, status, data, categories, contentSections, photos, updatedAt]
@@ -3170,6 +3199,10 @@ components:
           items: { $ref: "#/components/schemas/HostOnboardingPhoto" }
         updatedAt: { type: string }
         submittedAt: { type: [string, "null"] }
+        recommendationProcessing:
+          oneOf:
+            - { $ref: "#/components/schemas/HostOnboardingRecommendationProcessing" }
+            - { type: "null" }
     OwnerHostOnboardingResponse:
       type: object
       required: [tenantId, tenantName, rounds]

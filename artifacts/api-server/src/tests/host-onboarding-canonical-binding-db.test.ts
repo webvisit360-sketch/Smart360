@@ -3,12 +3,14 @@ import { writeFile } from "node:fs/promises";
 import test from "node:test";
 import {
   creatorPlaceProposalsTable,
+  categoriesTable,
   db,
   hostOnboardingEventSuggestionsTable,
   hostOnboardingRoundsTable,
   itemsTable,
   mediaTable,
   publishedSnapshotsTable,
+  runWithHostDbContext,
   tenantsTable,
 } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
@@ -16,6 +18,7 @@ import {
   currentHostOnboarding,
   openHostOnboarding,
   ownerHostOnboarding,
+  processHostRecommendationIntents,
   saveHostOnboarding,
   submitHostOnboarding,
 } from "../lib/hostOnboarding";
@@ -465,4 +468,185 @@ test("development copy: admin and host onboarding are two views over one unpubli
 <li>Fotografije se brez izrecne spremembe ne odstranijo.</li>
 <li>Objavljeni posnetek ostane nespremenjen.</li></ul>
 <h2>Natančen rezultat</h2><pre>${escaped}</pre></main></body></html>`);
+});
+
+test("recommendation processing failure cannot roll back an ordinary canonical autosave", async (context) => {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Recommendation failure regression rejects production");
+  }
+  if (!process.env.DATABASE_URL) {
+    context.skip("development database is unavailable");
+    return;
+  }
+
+  let fixture: CanonicalOnboardingFixture | undefined;
+  try {
+    fixture = await createCanonicalOnboardingFixture();
+    const currentFixture = fixture;
+    const opened = await currentHostOnboarding(currentFixture.tenantId, currentFixture.hostUserId);
+    assert.ok(opened);
+    const result = await runWithHostDbContext(currentFixture.tenantId, () => saveHostOnboarding(
+      currentFixture.tenantId,
+      currentFixture.hostUserId,
+      opened.round.revision,
+      {
+        guestPhone: "+386 40 987 654",
+        recommendations: [{
+          id: "fast-autosave-hint",
+          categoryId: "shops",
+          name: "Hitro dodan in odstranjen namig",
+        }],
+      },
+      opened.canonicalRevision,
+    ));
+
+    assert.equal(result.ok, true, "ordinary save commits even when Creator processing fails");
+    const after = await currentHostOnboarding(currentFixture.tenantId, currentFixture.hostUserId);
+    assert.equal(after?.round.draftData.guestPhone, "+386 40 987 654");
+    assert.deepEqual(after?.round.draftData.recommendations, [{
+      id: "fast-autosave-hint",
+      categoryId: "shops",
+      name: "Hitro dodan in odstranjen namig",
+    }]);
+    assert.equal(result.ok && result.recommendationProcessing?.status, "succeeded");
+
+    await db.update(categoriesTable).set({ deletedAt: new Date() })
+      .where(eq(categoriesTable.id, currentFixture.categoryIds.shops));
+    const failedProcessingSave = await runWithHostDbContext(
+      currentFixture.tenantId,
+      () => saveHostOnboarding(
+        currentFixture.tenantId,
+        currentFixture.hostUserId,
+        after!.round.revision,
+        {
+          guestPhone: "+386 40 111 999",
+          recommendations: [{
+            id: "newer-fast-hint",
+            categoryId: "shops",
+            name: "Novejši namig ostane v osnutku",
+          }],
+        },
+      ),
+    );
+    assert.equal(failedProcessingSave.ok, true);
+    assert.equal(
+      failedProcessingSave.ok && failedProcessingSave.recommendationProcessing?.status,
+      "failed",
+    );
+    assert.equal(
+      failedProcessingSave.ok && failedProcessingSave.recommendationProcessing?.errorCode,
+      "RECOMMENDATION_PROCESSING_FAILED",
+    );
+    const afterFailure = await currentHostOnboarding(
+      currentFixture.tenantId,
+      currentFixture.hostUserId,
+    );
+    assert.equal(afterFailure?.round.draftData.guestPhone, "+386 40 111 999");
+    assert.equal(afterFailure?.round.draftData.recommendations[0]?.name, "Novejši namig ostane v osnutku");
+
+    await db.update(categoriesTable).set({ deletedAt: null })
+      .where(eq(categoriesTable.id, currentFixture.categoryIds.shops));
+    const retried = await processHostRecommendationIntents(
+      afterFailure!.round.id,
+      afterFailure!.round.revision,
+    );
+    assert.equal(retried.status, "succeeded");
+
+    const beforeDelete = await currentHostOnboarding(
+      currentFixture.tenantId,
+      currentFixture.hostUserId,
+    );
+    const supersededRevision = beforeDelete!.round.revision;
+    const deletedHint = await saveHostOnboarding(
+      currentFixture.tenantId,
+      currentFixture.hostUserId,
+      beforeDelete!.round.revision,
+      { recommendations: [] },
+    );
+    assert.equal(deletedHint.ok, true);
+    const staleRetry = await processHostRecommendationIntents(
+      beforeDelete!.round.id,
+      supersededRevision,
+    );
+    assert.equal(
+      staleRetry.revision,
+      deletedHint.ok ? deletedHint.round.revision : -1,
+      "an old retry observes the newer round and cannot process its deleted intent",
+    );
+    assert.equal(
+      (await db.select().from(creatorPlaceProposalsTable).where(and(
+        eq(creatorPlaceProposalsTable.tenantId, currentFixture.tenantId),
+        eq(creatorPlaceProposalsTable.proposedName, "Novejši namig ostane v osnutku"),
+      ))).length,
+      0,
+      "deleting a still-unresolved hint removes its queue row so it cannot reappear",
+    );
+  } finally {
+    if (fixture) {
+      await cleanupCanonicalOnboardingFixture(fixture);
+      await assertNoCanonicalOnboardingFixtureRows(fixture);
+    }
+  }
+});
+
+test("recommendation processing failure cannot roll back submit", async (context) => {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Recommendation submit regression rejects production");
+  }
+  if (!process.env.DATABASE_URL) {
+    context.skip("development database is unavailable");
+    return;
+  }
+
+  let fixture: CanonicalOnboardingFixture | undefined;
+  _setHostOnboardingDeliveryOverride(async () => ({
+    ok: true,
+    providerMessageId: "recommendation-submit-regression",
+  }));
+  try {
+    fixture = await createCanonicalOnboardingFixture();
+    const currentFixture = fixture;
+    const opened = await currentHostOnboarding(currentFixture.tenantId, currentFixture.hostUserId);
+    assert.ok(opened);
+    await db.update(categoriesTable).set({ deletedAt: new Date() })
+      .where(eq(categoriesTable.id, currentFixture.categoryIds.shops));
+
+    const result = await runWithHostDbContext(
+      currentFixture.tenantId,
+      () => submitHostOnboarding(
+        currentFixture.tenantId,
+        currentFixture.hostUserId,
+        opened.round.round,
+        opened.round.revision,
+        {
+          ...opened.round.draftData,
+          guestPhone: "+386 40 222 999",
+          recommendations: [{
+            id: "submit-failing-hint",
+            categoryId: "shops",
+            name: "Oddani namig ostane shranjen",
+          }],
+        },
+      ),
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(result.ok && result.recommendationProcessing?.status, "failed");
+    const submitted = await currentHostOnboarding(
+      currentFixture.tenantId,
+      currentFixture.hostUserId,
+    );
+    assert.equal(submitted?.round.status, "submitted");
+    assert.equal(submitted?.round.draftData.guestPhone, "+386 40 222 999");
+    assert.equal(
+      submitted?.round.draftData.recommendations[0]?.name,
+      "Oddani namig ostane shranjen",
+    );
+  } finally {
+    _setHostOnboardingDeliveryOverride(null);
+    if (fixture) {
+      await cleanupCanonicalOnboardingFixture(fixture);
+      await assertNoCanonicalOnboardingFixtureRows(fixture);
+    }
+  }
 });
