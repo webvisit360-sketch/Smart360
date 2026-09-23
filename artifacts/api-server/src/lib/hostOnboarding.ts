@@ -281,6 +281,74 @@ export async function saveHostOnboarding(
   });
 }
 
+export type CreateHostOnboardingCategoryResult =
+  | { ok: true; round: typeof hostOnboardingRoundsTable.$inferSelect; categoryId: string }
+  | { ok: false; kind: "missing" | "submitted" | "stale" | "missing_section"; currentRevision?: number };
+
+/**
+ * Creates a host-owned Stay/Offer category directly in the tenant draft.
+ * The onboarding row lock and canonical digest make this part of the same
+ * optimistic-concurrency boundary as ordinary form autosaves.
+ */
+export async function createHostOnboardingCategory(
+  tenantId: string,
+  hostUserId: string,
+  input: {
+    sourceId: string;
+    sectionKey: "stay" | "offer";
+    name: string;
+    revision: number;
+    canonicalRevision: string;
+  },
+): Promise<CreateHostOnboardingCategoryResult> {
+  return db.transaction(async (tx) => {
+    const [round] = await tx.select().from(hostOnboardingRoundsTable).where(and(
+      eq(hostOnboardingRoundsTable.tenantId, tenantId),
+      eq(hostOnboardingRoundsTable.hostUserId, hostUserId),
+    )).orderBy(desc(hostOnboardingRoundsTable.round)).limit(1).for("update");
+    if (!round) return { ok: false, kind: "missing" };
+    if (round.status !== "draft") return { ok: false, kind: "submitted" };
+    if (round.revision !== input.revision) {
+      return { ok: false, kind: "stale", currentRevision: round.revision };
+    }
+    const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId, true);
+    if (canonicalRevision !== input.canonicalRevision) {
+      return { ok: false, kind: "stale", currentRevision: round.revision };
+    }
+    const [section] = await tx.select({ id: sectionsTable.id }).from(sectionsTable).where(and(
+      eq(sectionsTable.tenantId, tenantId),
+      eq(sectionsTable.key, input.sectionKey),
+    )).limit(1);
+    if (!section) return { ok: false, kind: "missing_section" };
+
+    const key = customCategoryKey(round.id, `${input.sectionKey}:${input.sourceId}`);
+    const [existing] = await tx.select({ id: categoriesTable.id }).from(categoriesTable).where(and(
+      eq(categoriesTable.sectionId, section.id),
+      eq(categoriesTable.key, key),
+      isNull(categoriesTable.deletedAt),
+    )).limit(1);
+    const category = existing ?? await createCategoryWithTooling(tx, section.id, {
+        key,
+        label: input.name,
+        icon: "sparkle",
+        layout: input.sectionKey === "offer" ? "products" : "cards",
+        exploreGroup: input.sectionKey === "offer" ? "najem" : "vase_bivanje",
+      });
+    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, tenantId));
+    const [updated] = await tx.update(hostOnboardingRoundsTable).set({
+      revision: round.revision + 1,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(hostOnboardingRoundsTable.id, round.id),
+      eq(hostOnboardingRoundsTable.revision, input.revision),
+      eq(hostOnboardingRoundsTable.status, "draft"),
+    )).returning();
+    if (!updated) return { ok: false, kind: "stale", currentRevision: round.revision };
+    return { ok: true, round: updated, categoryId: category.id };
+  });
+}
+
 async function canonicalCategory(
   tx: Transaction,
   tenantId: string,

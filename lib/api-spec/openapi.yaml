@@ -57,6 +57,22 @@ paths:
       responses:
         "200": { description: Draft saved }
         "409": { description: Stale revision or immutable submission }
+  /admin/host/onboarding/categories:
+    post:
+      operationId: createHostOnboardingCategory
+      tags: [categories]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostOnboardingCategoryCreateRequest" }
+      responses:
+        "201":
+          description: Category created in the shared tenant draft
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HostOnboardingRound" }
+        "409": { description: Stale revision or immutable submission }
   /admin/host/onboarding/submit:
     post:
       operationId: confirmHostOnboardingSubmission
@@ -3049,6 +3065,16 @@ components:
             canonicalItems:
               type: array
               items: { $ref: "#/components/schemas/HostOnboardingCanonicalItem" }
+    HostOnboardingCategoryCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [sourceId, sectionKey, name, revision, canonicalRevision]
+      properties:
+        sourceId: { type: string, minLength: 1, maxLength: 100 }
+        sectionKey: { type: string, enum: [stay, offer] }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        revision: { type: number, minimum: 1 }
+        canonicalRevision: { type: string, minLength: 64, maxLength: 64 }
     HostOnboardingSubmitRequest:
       type: object
       additionalProperties: false

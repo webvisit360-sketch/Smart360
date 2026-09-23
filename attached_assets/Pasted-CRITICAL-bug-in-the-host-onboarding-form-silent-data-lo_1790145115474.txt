@@ -1,0 +1,39 @@
+CRITICAL bug in the host onboarding form: silent data loss. Sequence
+observed in production: user filled the form, clicked "Potrdi in oddaj", got
+"Spor sprememb — podatkov nismo prepisali. Osveži stran in preveri
+spremembe", refreshed — and PART of the entered data was gone. That means
+autosaves were failing (or stopped) before/after the conflict WITHOUT any
+visible warning: the footer kept implying the draft was safe.
+
+STEP 1 — FORENSICS from persisted evidence (server logs, draft rows,
+autosave request outcomes), not guesses: when did saves for this session
+start being rejected, which requests failed and why (version conflict with
+what — the operator's admin session, or the form's own earlier autosave),
+and which sections' data never reached the draft. Report the timeline.
+
+STEP 2 — FIX, requirements:
+1. Autosave must fail LOUDLY: the moment any save is rejected, the footer
+   switches from "Osnutek shranjen" to a persistent warm warning (#DD9A2B)
+   "Spremembe od <čas> niso shranjene" and keeps retrying; it must be
+   impossible to type for minutes while nothing is being saved and the UI
+   stays silent. Infrastructure failures must never be silent — standing
+   project rule.
+2. On a version conflict during autosave: automatically re-fetch the draft,
+   merge at FIELD level (changes to different fields never conflict),
+   re-apply the user's unsaved local edits, and retry. Only when the SAME
+   field was changed on both sides show the conflict message, listing the
+   affected fields by name — and even then the user's local input stays in
+   the fields, never discarded.
+3. "Osveži stran" must never be a path to data loss: unsaved local input is
+   preserved across the conflict flow; refresh is only suggested once
+   everything typed is either saved or explicitly shown as conflicting.
+4. Submit ("Potrdi in oddaj") uses the same merge logic; it may only refuse
+   on a genuine same-field conflict.
+
+STEP 3 — regression tests: form self-conflict (own autosaves only); admin
+edits a DIFFERENT field concurrently (auto-merge, no dialog); admin edits
+the SAME field (conflict shown, local input preserved); autosave rejected
+→ warning appears and retry succeeds later.
+
+Verify in a real browser with two parallel sessions (admin + form). Report
+with "POVZETEK ZA LASTNIKA" in Slovenian, then STOP. No publication.

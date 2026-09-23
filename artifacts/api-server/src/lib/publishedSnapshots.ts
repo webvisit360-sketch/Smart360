@@ -1,6 +1,16 @@
 import { createHash } from "node:crypto";
-import { eq, isNull, sql } from "drizzle-orm";
-import { db, publishedSnapshotsTable, tenantsTable, runWithDatabase, type Db, type Tenant } from "@workspace/db";
+import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import {
+  categoriesTable,
+  changelogTable,
+  db,
+  publishedSnapshotsTable,
+  sectionsTable,
+  tenantsTable,
+  runWithDatabase,
+  type Db,
+  type Tenant,
+} from "@workspace/db";
 import { buildTenantContent, type TenantContentTree } from "./contentTree";
 import { getUiAndPlurals } from "./translationKeys";
 
@@ -193,11 +203,62 @@ export function comparePublications(draft: PublishedContent, published: Publishe
   return { token: publicationToken(draft, published), total: changes.size, ...result };
 }
 
+/**
+ * Adds draft-only structural category creations to the guest-tree diff and
+ * binds those rows into the confirmation token. This must be used by both the
+ * preview and the publish transaction so a rename/delete after confirmation
+ * cannot be published with an older token.
+ */
+export async function publicationChangesForTenant(
+  tenantId: string,
+  draft: PublishedContent,
+  published: PublishedContent,
+): Promise<PublicationChanges> {
+  const changes = comparePublications(draft, published);
+  const [snapshot] = await db.select({ publishedAt: publishedSnapshotsTable.publishedAt })
+    .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenantId));
+  const categoryCreates = snapshot
+    ? await db.select({ operationKey: changelogTable.operationKey }).from(changelogTable).where(and(
+        eq(changelogTable.tenantId, tenantId),
+        eq(changelogTable.entity, "category"),
+        eq(changelogTable.action, "create"),
+        gt(changelogTable.createdAt, snapshot.publishedAt),
+      ))
+    : [];
+  const categoryIds = categoryCreates.flatMap(({ operationKey }) => {
+    const match = operationKey?.match(/^category-create:([0-9a-f-]{36})$/i);
+    return match?.[1] ? [match[1]] : [];
+  });
+  const currentCreatedCategories = categoryIds.length
+    ? await db.select({ id: categoriesTable.id, label: categoriesTable.label }).from(categoriesTable)
+        .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+        .where(and(
+          eq(sectionsTable.tenantId, tenantId),
+          inArray(categoriesTable.id, categoryIds),
+          isNull(categoriesTable.deletedAt),
+        ))
+    : [];
+  currentCreatedCategories.sort((a, b) => a.id.localeCompare(b.id));
+  for (const { label } of currentCreatedCategories) {
+    if (!changes.added.includes(label)) changes.added.push(label);
+  }
+  changes.total = changes.added.length + changes.changed.length + changes.removed.length;
+  changes.token = digest({
+    guestPublicationToken: changes.token,
+    createdCategories: currentCreatedCategories,
+  });
+  return changes;
+}
+
 export async function previewPublication(tenantId: string): Promise<PublicationChanges> {
   await ensureTenantPublication(tenantId);
   return db.transaction(async (tx) => runWithDatabase(tx as unknown as Db, async () => {
     const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId)).for("update");
     if (!tenant) throw new Error("Namestitev ni najdena.");
-    return comparePublications(await buildDraftPublication(tenant), await readPublishedContent(tenantId));
+    return publicationChangesForTenant(
+      tenantId,
+      await buildDraftPublication(tenant),
+      await readPublishedContent(tenantId),
+    );
   }), { isolationLevel: "repeatable read" });
 }

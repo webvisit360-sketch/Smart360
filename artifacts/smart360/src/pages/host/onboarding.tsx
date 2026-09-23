@@ -4,6 +4,7 @@ import { Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut, MapPin, Plus } f
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetHostOnboarding,
+  useCreateHostOnboardingCategory,
   usePatchHostOnboarding,
   useSaveHostOnboarding,
   useSubmitHostOnboarding,
@@ -207,6 +208,7 @@ export default function HostOnboarding() {
 
   const patchOnboarding = usePatchHostOnboarding();
   const saveOnboarding = useSaveHostOnboarding();
+  const createCategory = useCreateHostOnboardingCategory();
   const submitOnboarding = useSubmitHostOnboarding();
   
   const [formData, setFormData] = useState<HostOnboardingData>({});
@@ -245,6 +247,10 @@ export default function HostOnboarding() {
   const [transientContact, setTransientContact] = useState({id: generateId(), name: "", phone: ""});
   const [transientOffers, setTransientOffers] = useState<Record<string, TransientOffer>>({});
   const transientOfferIds = useRef<Record<string, string>>({});
+  const [transientSectionCategories, setTransientSectionCategories] = useState({
+    stay: { id: generateId(), name: "" },
+    offer: { id: generateId(), name: "" },
+  });
   const [transientCustomCategory, setTransientCustomCategory] = useState({
     id: generateId(),
     name: "",
@@ -505,6 +511,47 @@ export default function HostOnboarding() {
     try {
       await flush(true);
     } catch {}
+  };
+
+  const handleCreateSectionCategory = async (sectionKey: "stay" | "offer") => {
+    const draft = transientSectionCategories[sectionKey];
+    if (!draft.name.trim()) {
+      focusInput(`section-category:${sectionKey}`);
+      return;
+    }
+    try {
+      await flush(true);
+      const operation = queue.current.then(async () => {
+        const result = await createCategory.mutateAsync({
+          sourceId: draft.id,
+          sectionKey,
+          name: draft.name.trim(),
+          revision: revision.current,
+          canonicalRevision: canonicalRevision.current,
+        });
+        // Category creation participates in the same serialized revision
+        // authority as autosave and media writes. Do not replace formData
+        // here: typing that happened while the request was in flight belongs
+        // to the next queued autosave, while the fresh query result exposes
+        // the newly-created category immediately.
+        revision.current = result.revision;
+        canonicalRevision.current = result.canonicalRevision;
+        hydratedSource.current = `${result.id}:${result.revision}:${result.canonicalRevision}`;
+      });
+      queue.current = operation.then(() => undefined, () => undefined);
+      activeOperation.current = operation;
+      await operation;
+      setTransientSectionCategories((current) => ({
+        ...current,
+        [sectionKey]: { id: generateId(), name: "" },
+      }));
+      focusInput(`section-category:${sectionKey}`);
+    } catch (reason) {
+      const error = reason as Error & { status?: number };
+      setSaveError(error.message);
+      setSaveState(error.status === 409 ? "conflict" : "error");
+      if (error.status === 409) conflictBlocked.current = true;
+    }
   };
 
   const handleSubmit = async () => {
@@ -1006,6 +1053,34 @@ export default function HostOnboarding() {
                 </div>
               );
             })}
+            <div className="border-t border-[#D8DED9] pt-6">
+              <h3 className="font-bold text-[18px] text-[#121A14]">Svoja kategorija</h3>
+              <p className="mt-1 text-sm text-[#66716A]">
+                Dodajte svojo kategorijo destinacije in nato vanjo vnesite vsebino ter fotografije.
+              </p>
+              <input
+                ref={(input) => registerInput("section-category:stay", input)}
+                type="text"
+                aria-label="Ime nove kategorije destinacije"
+                placeholder="Ime kategorije"
+                value={transientSectionCategories.stay.name}
+                disabled={createCategory.isPending}
+                onChange={(event) => setTransientSectionCategories((current) => ({
+                  ...current,
+                  stay: { ...current.stay, name: event.target.value },
+                }))}
+                className="mt-4 w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+              />
+              <button
+                type="button"
+                aria-label="Dodaj svojo kategorijo destinacije"
+                disabled={createCategory.isPending}
+                onClick={() => void handleCreateSectionCategory("stay")}
+                className="mt-3 px-1 py-2 font-bold text-[#157347] hover:opacity-80 disabled:opacity-50"
+              >
+                + Dodaj …
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1130,6 +1205,34 @@ export default function HostOnboarding() {
                 </div>
               );
             })}
+            <div className="border-t border-[#D8DED9] pt-6">
+              <h3 className="font-bold text-[18px] text-[#121A14]">Svoja kategorija</h3>
+              <p className="mt-1 text-sm text-[#66716A]">
+                Dodajte svojo kategorijo ponudbe in nato vnesite naziv ter ceno.
+              </p>
+              <input
+                ref={(input) => registerInput("section-category:offer", input)}
+                type="text"
+                aria-label="Ime nove kategorije ponudbe"
+                placeholder="Ime kategorije"
+                value={transientSectionCategories.offer.name}
+                disabled={createCategory.isPending}
+                onChange={(event) => setTransientSectionCategories((current) => ({
+                  ...current,
+                  offer: { ...current.offer, name: event.target.value },
+                }))}
+                className="mt-4 w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
+              />
+              <button
+                type="button"
+                aria-label="Dodaj svojo kategorijo ponudbe"
+                disabled={createCategory.isPending}
+                onClick={() => void handleCreateSectionCategory("offer")}
+                className="mt-3 px-1 py-2 font-bold text-[#157347] hover:opacity-80 disabled:opacity-50"
+              >
+                + Dodaj …
+              </button>
+            </div>
           </div>
         </section>
 

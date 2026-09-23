@@ -134,6 +134,8 @@ export * from './hostAccountResponse';
 export * from './hostInviteDelivery';
 export * from './hostInviteDeliveryDeliveryStatus';
 export * from './hostOnboardingCanonicalItem';
+export * from './hostOnboardingCategoryCreateRequest';
+export * from './hostOnboardingCategoryCreateRequestSectionKey';
 export * from './hostOnboardingContact';
 export * from './hostOnboardingCustomCategory';
 export * from './hostOnboardingCustomCategoryEntry';

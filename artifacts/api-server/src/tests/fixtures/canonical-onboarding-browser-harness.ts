@@ -19,10 +19,17 @@ import {
   sectionsTable,
   tenantsTable,
 } from "@workspace/db";
-import { GetTenantResponse } from "@workspace/api-zod";
-import { eq, inArray } from "drizzle-orm";
+import {
+  CreateCategoryBody,
+  CreateCategoryResponse,
+  GetTenantResponse,
+  PreviewTenantPublicationResponse,
+} from "@workspace/api-zod";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { actorStorage, type Actor } from "../../lib/actorContext";
 import { createAdminPlace, searchAdminPlaces } from "../../lib/adminPlaceCreation";
+import { createCategoryWithTooling } from "../../lib/categoryTooling";
+import { logChange } from "../../lib/changelog";
 import { buildTenantContent } from "../../lib/contentTree";
 import { guestQrSvg, guestUrl } from "../../lib/guestUrl";
 import {
@@ -32,12 +39,13 @@ import {
 } from "../../lib/hostOnboarding";
 import { _setHostOnboardingDeliveryOverride } from "../../lib/hostOnboardingEmail";
 import { logger } from "../../lib/logger";
+import { previewPublication } from "../../lib/publishedSnapshots";
 import {
   ObjectStorageService,
   objectStorageClient,
 } from "../../lib/objectStorage";
 import { isWhatsappConfigured } from "../../lib/whatsapp";
-import { hostDto } from "../../routes/hostOnboarding";
+import hostOnboardingRouter, { hostDto } from "../../routes/hostOnboarding";
 import storageRouter, { VIDEO_MAX_BYTES } from "../../routes/storage";
 import {
   canonicalFixtureDigest,
@@ -157,6 +165,18 @@ async function inspect(): Promise<void> {
         apartItems.map((item) => item.id),
       ))
     : [];
+  const customCategories = await db.select({
+    id: categoriesTable.id,
+    key: categoriesTable.key,
+    label: categoriesTable.label,
+    sectionKey: sectionsTable.key,
+  }).from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(and(
+      eq(sectionsTable.tenantId, value.fixture.tenantId),
+      isNull(categoriesTable.deletedAt),
+    ));
+  const publicationPreview = await previewPublication(value.fixture.tenantId);
   console.log(JSON.stringify({
     command: "inspect",
     publishedSnapshotUnchanged: true,
@@ -165,6 +185,10 @@ async function inspect(): Promise<void> {
     apartItems,
     apartMedia,
     creatorQueue,
+    customCategories: customCategories.filter((category) =>
+      !Object.values(value.fixture.categoryIds).includes(category.id)
+    ),
+    publicationPreview,
   }));
 }
 
@@ -231,6 +255,23 @@ function publicFixture(value: HarnessState) {
     itemIds: value.fixture.itemIds,
     mediaIds: value.fixture.mediaIds,
   };
+}
+
+async function fixtureSection(
+  tenantId: string,
+  sectionId: string,
+): Promise<{ id: string; key: string }> {
+  const [section] = await db.select({
+    id: sectionsTable.id,
+    key: sectionsTable.key,
+  }).from(sectionsTable).where(and(
+    eq(sectionsTable.id, sectionId),
+    eq(sectionsTable.tenantId, tenantId),
+  )).limit(1);
+  if (!section || !["stay", "offer"].includes(section.key)) {
+    throw new Error("Section is outside the disposable stay/offer fixture");
+  }
+  return section;
 }
 
 async function adminTenantDto(tenantId: string) {
@@ -330,6 +371,50 @@ async function serve(): Promise<void> {
     try {
       response.set("Cache-Control", "no-store");
       response.json(await adminTenantDto(value.fixture.tenantId));
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.get("/admin/publish-preview", async (_request, response, next) => {
+    try {
+      response.set("Cache-Control", "no-store");
+      response.json(PreviewTenantPublicationResponse.parse(
+        await previewPublication(value.fixture.tenantId),
+      ));
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.post("/admin/sections/:id/categories", async (request, response, next) => {
+    try {
+      const section = await fixtureSection(
+        value.fixture.tenantId,
+        String(request.params.id ?? ""),
+      );
+      const parsed = CreateCategoryBody.safeParse(request.body);
+      if (!parsed.success) {
+        response.status(400).json({ error: parsed.error.message });
+        return;
+      }
+      const category = await actorStorage.run(
+        { kind: "owner", requestIp: request.ip },
+        async () => {
+          const created = await createCategoryWithTooling(db, section.id, parsed.data);
+          await logChange({
+            tenantId: value.fixture.tenantId,
+            tenantName: null,
+            action: "create",
+            entity: "category",
+            detail: parsed.data.label,
+            summary: `Ustvarjena kategorija · ${created.label}`,
+            operationKey: `category-create:${created.id}`,
+          });
+          await db.update(tenantsTable).set({ hasUnpublishedChanges: true })
+            .where(eq(tenantsTable.id, value.fixture.tenantId));
+          return created;
+        },
+      );
+      response.status(201).json(CreateCategoryResponse.parse(category));
     } catch (error) {
       next(error);
     }
@@ -531,6 +616,28 @@ async function serve(): Promise<void> {
       next(error);
     }
   });
+  app.use(
+    "/_real-host",
+    (request, response, next) => {
+      if (
+        request.method !== "POST" ||
+        request.path !== "/admin/host/onboarding/categories"
+      ) {
+        response.status(404).json({ error: "Fixture route not found" });
+        return;
+      }
+      const actor: Actor = {
+        kind: "host",
+        hostUserId: value.fixture.hostUserId,
+        tenantId: value.fixture.tenantId,
+        requestIp: request.ip,
+      };
+      request.actor = actor;
+      request.log = logger.child({ fixture: value.fixture.marker });
+      actorStorage.run(actor, next);
+    },
+    hostOnboardingRouter,
+  );
   app.use(
     "/_real",
     async (request, response, next) => {

@@ -300,6 +300,35 @@ export interface HostOnboardingSaveRequest {
   data: HostOnboardingSaveRequestData;
 }
 
+export type HostOnboardingCategoryCreateRequestSectionKey = typeof HostOnboardingCategoryCreateRequestSectionKey[keyof typeof HostOnboardingCategoryCreateRequestSectionKey];
+
+
+export const HostOnboardingCategoryCreateRequestSectionKey = {
+  stay: 'stay',
+  offer: 'offer',
+} as const;
+
+export interface HostOnboardingCategoryCreateRequest {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  sourceId: string;
+  sectionKey: HostOnboardingCategoryCreateRequestSectionKey;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /** @minimum 1 */
+  revision: number;
+  /**
+     * @minLength 64
+     * @maxLength 64
+     */
+  canonicalRevision: string;
+}
+
 /**
  * For a first submission, revision is required and data may be omitted to submit the persisted draft. For an immutable already-submitted round replay, only round is required; revision and data are ignored.
  */

@@ -522,6 +522,222 @@ export const SaveHostOnboardingBody = zod.object({
 export const SaveHostOnboardingResponse = zod.unknown()
 
 
+export const createHostOnboardingCategoryBodySourceIdMax = 100;
+
+export const createHostOnboardingCategoryBodyNameMax = 120;
+
+
+export const createHostOnboardingCategoryBodyCanonicalRevisionMin = 64;
+export const createHostOnboardingCategoryBodyCanonicalRevisionMax = 64;
+
+
+
+export const CreateHostOnboardingCategoryBody = zod.object({
+  "sourceId": zod.string().min(1).max(createHostOnboardingCategoryBodySourceIdMax),
+  "sectionKey": zod.enum(['stay', 'offer']),
+  "name": zod.string().min(1).max(createHostOnboardingCategoryBodyNameMax),
+  "revision": zod.number().min(1),
+  "canonicalRevision": zod.string().min(createHostOnboardingCategoryBodyCanonicalRevisionMin).max(createHostOnboardingCategoryBodyCanonicalRevisionMax)
+})
+
+export const createHostOnboardingCategoryResponseDataAccommodationNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataAddressMax = 2000;
+
+export const createHostOnboardingCategoryResponseDataGuestPhoneMax = 500;
+
+export const createHostOnboardingCategoryResponseDataGuestEmailMax = 254;
+
+export const createHostOnboardingCategoryResponseDataWebsiteMax = 2000;
+
+export const createHostOnboardingCategoryResponseDataContactsItemIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataContactsItemNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataContactsItemPhoneMax = 500;
+
+export const createHostOnboardingCategoryResponseDataContactsMax = 30;
+
+export const createHostOnboardingCategoryResponseDataWifiNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataWifiPasswordMax = 500;
+
+export const createHostOnboardingCategoryResponseDataHouseRulesParkingMax = 20000;
+
+export const createHostOnboardingCategoryResponseDataOffersItemIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataOffersItemNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataOffersItemPriceMax = 500;
+
+export const createHostOnboardingCategoryResponseDataOffersMax = 100;
+
+export const createHostOnboardingCategoryResponseDataRecommendationsItemIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataRecommendationsItemCategoryIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataRecommendationsItemNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataRecommendationsMax = 300;
+
+export const createHostOnboardingCategoryResponseDataCustomCategoriesItemIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataCustomCategoriesItemNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataCustomCategoriesItemEntriesItemIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataCustomCategoriesItemEntriesItemNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataCustomCategoriesItemEntriesMax = 100;
+
+export const createHostOnboardingCategoryResponseDataCustomCategoriesMax = 30;
+
+export const createHostOnboardingCategoryResponseDataEventsItemIdMax = 100;
+
+export const createHostOnboardingCategoryResponseDataEventsItemNameMax = 500;
+
+export const createHostOnboardingCategoryResponseDataEventsMax = 100;
+
+export const createHostOnboardingCategoryResponseDataMediaItemDurationSecMin = 0;
+
+export const createHostOnboardingCategoryResponseDataMediaItemWidthMin = 0;
+
+export const createHostOnboardingCategoryResponseDataMediaItemHeightMin = 0;
+
+export const createHostOnboardingCategoryResponseDataMediaMax = 500;
+
+
+
+export const CreateHostOnboardingCategoryResponse = zod.object({
+  "id": zod.string(),
+  "tenantId": zod.string(),
+  "round": zod.number(),
+  "revision": zod.number(),
+  "canonicalRevision": zod.string(),
+  "status": zod.enum(['draft', 'submitted']),
+  "data": zod.object({
+  "accommodationName": zod.string().max(createHostOnboardingCategoryResponseDataAccommodationNameMax),
+  "address": zod.string().max(createHostOnboardingCategoryResponseDataAddressMax),
+  "guestPhone": zod.string().max(createHostOnboardingCategoryResponseDataGuestPhoneMax),
+  "guestEmail": zod.string().max(createHostOnboardingCategoryResponseDataGuestEmailMax),
+  "website": zod.string().max(createHostOnboardingCategoryResponseDataWebsiteMax),
+  "checkInFrom": zod.string(),
+  "checkOutUntil": zod.string(),
+  "contacts": zod.array(zod.object({
+  "id": zod.string().min(1).max(createHostOnboardingCategoryResponseDataContactsItemIdMax),
+  "name": zod.string().max(createHostOnboardingCategoryResponseDataContactsItemNameMax),
+  "phone": zod.string().max(createHostOnboardingCategoryResponseDataContactsItemPhoneMax)
+})).max(createHostOnboardingCategoryResponseDataContactsMax),
+  "wifiName": zod.string().max(createHostOnboardingCategoryResponseDataWifiNameMax),
+  "wifiPassword": zod.string().max(createHostOnboardingCategoryResponseDataWifiPasswordMax),
+  "houseRulesParking": zod.string().max(createHostOnboardingCategoryResponseDataHouseRulesParkingMax),
+  "offers": zod.array(zod.object({
+  "id": zod.string().min(1).max(createHostOnboardingCategoryResponseDataOffersItemIdMax),
+  "name": zod.string().max(createHostOnboardingCategoryResponseDataOffersItemNameMax),
+  "price": zod.string().max(createHostOnboardingCategoryResponseDataOffersItemPriceMax),
+  "categoryId": zod.string().optional().describe('Canonical offer category ID. Present on reads; optional only for legacy write compatibility.')
+})).max(createHostOnboardingCategoryResponseDataOffersMax),
+  "recommendations": zod.array(zod.object({
+  "id": zod.string().min(1).max(createHostOnboardingCategoryResponseDataRecommendationsItemIdMax),
+  "categoryId": zod.string().min(1).max(createHostOnboardingCategoryResponseDataRecommendationsItemCategoryIdMax),
+  "name": zod.string().max(createHostOnboardingCategoryResponseDataRecommendationsItemNameMax)
+})).max(createHostOnboardingCategoryResponseDataRecommendationsMax),
+  "customCategories": zod.array(zod.object({
+  "id": zod.string().min(1).max(createHostOnboardingCategoryResponseDataCustomCategoriesItemIdMax),
+  "name": zod.string().max(createHostOnboardingCategoryResponseDataCustomCategoriesItemNameMax),
+  "entries": zod.array(zod.object({
+  "id": zod.string().min(1).max(createHostOnboardingCategoryResponseDataCustomCategoriesItemEntriesItemIdMax),
+  "name": zod.string().max(createHostOnboardingCategoryResponseDataCustomCategoriesItemEntriesItemNameMax)
+})).max(createHostOnboardingCategoryResponseDataCustomCategoriesItemEntriesMax)
+})).max(createHostOnboardingCategoryResponseDataCustomCategoriesMax),
+  "events": zod.array(zod.object({
+  "id": zod.string().min(1).max(createHostOnboardingCategoryResponseDataEventsItemIdMax),
+  "name": zod.string().max(createHostOnboardingCategoryResponseDataEventsItemNameMax),
+  "date": zod.string(),
+  "time": zod.string()
+})).max(createHostOnboardingCategoryResponseDataEventsMax),
+  "media": zod.array(zod.object({
+  "id": zod.string(),
+  "itemId": zod.string().nullable(),
+  "kind": zod.enum(['image', 'video']),
+  "url": zod.string(),
+  "alt": zod.string(),
+  "position": zod.number(),
+  "posterUrl": zod.string().nullable(),
+  "durationSec": zod.number().min(createHostOnboardingCategoryResponseDataMediaItemDurationSecMin).nullable(),
+  "width": zod.number().min(createHostOnboardingCategoryResponseDataMediaItemWidthMin).nullish(),
+  "height": zod.number().min(createHostOnboardingCategoryResponseDataMediaItemHeightMin).nullish(),
+  "focusX": zod.number().nullish(),
+  "focusY": zod.number().nullish()
+})).max(createHostOnboardingCategoryResponseDataMediaMax).optional(),
+  "deleteContactIds": zod.array(zod.string()).optional(),
+  "deleteOfferIds": zod.array(zod.string()).optional(),
+  "deleteEventIds": zod.array(zod.string()).optional(),
+  "deleteMediaIds": zod.array(zod.string()).optional(),
+  "canonicalItems": zod.array(zod.object({
+  "id": zod.string(),
+  "categoryId": zod.string(),
+  "categoryKey": zod.string().nullable(),
+  "sectionKey": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "price": zod.string(),
+  "priceUnit": zod.string(),
+  "phone": zod.string(),
+  "website": zod.string(),
+  "mapQuery": zod.string(),
+  "difficulty": zod.string(),
+  "duration": zod.string(),
+  "distance": zod.string(),
+  "noteType": zod.string(),
+  "noteText": zod.string(),
+  "bullets": zod.array(zod.string()),
+  "tint": zod.string(),
+  "frame": zod.string(),
+  "isVisible": zod.boolean(),
+  "orderEnabled": zod.boolean(),
+  "soldOut": zod.boolean(),
+  "producerName": zod.string(),
+  "producerNote": zod.string()
+})).optional(),
+  "hero": zod.object({
+  "url": zod.string(),
+  "alt": zod.string(),
+  "mediaId": zod.string().nullable()
+}).nullish()
+}),
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "order": zod.number()
+})),
+  "contentSections": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.enum(['stay', 'offer']),
+  "title": zod.string(),
+  "order": zod.number(),
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "order": zod.number()
+}))
+})).describe('Live canonical stay and offer structure in admin order.'),
+  "photos": zod.array(zod.object({
+  "id": zod.string(),
+  "fileName": zod.string(),
+  "contentType": zod.string(),
+  "size": zod.number(),
+  "status": zod.enum(['uploading', 'ready', 'submitted']),
+  "previewUrl": zod.string()
+})),
+  "updatedAt": zod.string(),
+  "submittedAt": zod.string().nullish()
+})
+
+
 
 export const confirmHostOnboardingSubmissionBodyCanonicalRevisionMin = 64;
 export const confirmHostOnboardingSubmissionBodyCanonicalRevisionMax = 64;

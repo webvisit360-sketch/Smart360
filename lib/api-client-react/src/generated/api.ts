@@ -84,6 +84,7 @@ import type {
   GuestThreadView,
   HealthStatus,
   HostAccountResponse,
+  HostOnboardingCategoryCreateRequest,
   HostOnboardingPhotoUploadRequest,
   HostOnboardingPhotoUploadResponse,
   HostOnboardingRound,
@@ -382,6 +383,71 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSaveHostOnboardingMutationOptions(options));
+    }
+
+export const getCreateHostOnboardingCategoryUrl = () => {
+
+
+
+
+  return `/api/admin/host/onboarding/categories`
+}
+
+export const createHostOnboardingCategory = async (hostOnboardingCategoryCreateRequest: HostOnboardingCategoryCreateRequest, options?: Parameters<typeof customFetch>[1]): Promise<HostOnboardingRound> => {
+
+  return customFetch<HostOnboardingRound>(getCreateHostOnboardingCategoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostOnboardingCategoryCreateRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateHostOnboardingCategoryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHostOnboardingCategory>>, TError,{data: BodyType<HostOnboardingCategoryCreateRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createHostOnboardingCategory>>, TError,{data: BodyType<HostOnboardingCategoryCreateRequest>}, TContext> => {
+
+const mutationKey = ['createHostOnboardingCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createHostOnboardingCategory>>, {data: BodyType<HostOnboardingCategoryCreateRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createHostOnboardingCategory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateHostOnboardingCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createHostOnboardingCategory>>>
+    export type CreateHostOnboardingCategoryMutationBody = BodyType<HostOnboardingCategoryCreateRequest>
+    export type CreateHostOnboardingCategoryMutationError = ErrorType<void>
+
+    export const useCreateHostOnboardingCategory = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHostOnboardingCategory>>, TError,{data: BodyType<HostOnboardingCategoryCreateRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createHostOnboardingCategory>>,
+        TError,
+        {data: BodyType<HostOnboardingCategoryCreateRequest>},
+        TContext
+      > => {
+      return useMutation(getCreateHostOnboardingCategoryMutationOptions(options));
     }
 
 export const getConfirmHostOnboardingSubmissionUrl = () => {

@@ -392,6 +392,7 @@ router.post(
       entity: "category",
       detail: parsed.data.label,
       summary: auditSummary("Ustvarjena kategorija", category!.label),
+      operationKey: `category-create:${category!.id}`,
     });
     res.status(201).json(CreateCategoryResponse.parse(category));
   },

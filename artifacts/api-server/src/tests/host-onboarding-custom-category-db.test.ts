@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { and, eq, like } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
@@ -13,9 +13,11 @@ import {
   publishedSnapshotsTable,
   sectionsTable,
   tenantsTable,
+  translationsTable,
 } from "@workspace/db";
 import {
   createHostOnboardingDraft,
+  createHostOnboardingCategory,
   currentHostOnboarding,
   ownerHostOnboarding,
   saveHostOnboarding,
@@ -29,6 +31,117 @@ import { _setHostOnboardingDeliveryOverride } from "../lib/hostOnboardingEmail";
 import { ensureTenantPublication } from "../lib/publishedSnapshots";
 import { seedTenantContent } from "../lib/tenantSeeds";
 import { syncApprovedCreatorPlace } from "../lib/creatorProposalLedger";
+import { buildKeyList, importTranslations } from "../lib/translationKeys";
+
+test("real DB: host creates shared-draft custom Stay and Offer categories without publishing", async () => {
+  const marker = randomUUID();
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `onboarding-section-custom-${marker}`,
+    name: "Disposable section-category integration",
+    tenantType: "apartmaji",
+    guestUiMode: "living-guide",
+  }).returning();
+  const [host] = await db.insert(hostUsersTable).values({
+    email: `onboarding-section-${marker}@example.invalid`,
+  }).returning();
+  assert.ok(tenant && host);
+  try {
+    await db.insert(hostMembershipsTable).values({ tenantId: tenant.id, hostUserId: host.id });
+    await seedTenantContent(tenant.id, "apartmaji");
+    await ensureTenantPublication(tenant.id);
+    const [publishedBefore] = await db.select({ content: publishedSnapshotsTable.content })
+      .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id));
+    assert.ok(publishedBefore);
+    await db.transaction((tx) => createHostOnboardingDraft(tx, tenant.id, host.id));
+
+    const initial = await currentHostOnboarding(tenant.id, host.id);
+    assert.ok(initial);
+    const stay = await createHostOnboardingCategory(tenant.id, host.id, {
+      sourceId: "custom-stay",
+      sectionKey: "stay",
+      name: "Skupni prostori",
+      revision: initial.round.revision,
+      canonicalRevision: initial.canonicalRevision,
+    });
+    assert.equal(stay.ok, true);
+
+    const afterStay = await currentHostOnboarding(tenant.id, host.id);
+    assert.ok(afterStay);
+    const offer = await createHostOnboardingCategory(tenant.id, host.id, {
+      sourceId: "custom-offer",
+      sectionKey: "offer",
+      name: "Skupna kuhinja",
+      revision: afterStay.round.revision,
+      canonicalRevision: afterStay.canonicalRevision,
+    });
+    assert.equal(offer.ok, true);
+
+    const current = await currentHostOnboarding(tenant.id, host.id);
+    assert.ok(current);
+    const customStay = current.contentSections.find((section) => section.key === "stay")
+      ?.categories.find((category) => category.label === "Skupni prostori");
+    const customOffer = current.contentSections.find((section) => section.key === "offer")
+      ?.categories.find((category) => category.label === "Skupna kuhinja");
+    assert.match(customStay?.key ?? "", /^host-custom-/);
+    assert.match(customOffer?.key ?? "", /^host-custom-/);
+    const rows = await db.select().from(categoriesTable).where(inArray(
+      categoriesTable.id,
+      [customStay!.id, customOffer!.id],
+    ));
+    assert.deepEqual(
+      rows.map(({ label, icon, layout }) => ({ label, icon, layout })).sort((a, b) => a.label.localeCompare(b.label)),
+      [
+        { label: "Skupna kuhinja", icon: "sparkle", layout: "products" },
+        { label: "Skupni prostori", icon: "sparkle", layout: "cards" },
+      ],
+    );
+    const translationKeys = await buildKeyList(tenant);
+    const stayTranslation = translationKeys.find((key) =>
+      key.model === "category" && key.recordId === customStay!.id && key.field === "label"
+    );
+    const offerTranslation = translationKeys.find((key) =>
+      key.model === "category" && key.recordId === customOffer!.id && key.field === "label"
+    );
+    assert.equal(stayTranslation?.source, "Skupni prostori");
+    assert.equal(offerTranslation?.source, "Skupna kuhinja");
+    assert.ok(stayTranslation && offerTranslation);
+    const translationWrite = await importTranslations(tenant, {
+      lang: "en",
+      content: {
+        [stayTranslation.key]: "Shared spaces",
+        [offerTranslation.key]: "Shared kitchen",
+      },
+    }, { overwrite: false });
+    assert.equal(translationWrite.set, 2);
+    const storedTranslations = await db.select({
+      recordId: translationsTable.recordId,
+      model: translationsTable.model,
+      field: translationsTable.field,
+      value: translationsTable.value,
+    }).from(translationsTable).where(and(
+      inArray(translationsTable.recordId, [customStay!.id, customOffer!.id]),
+      eq(translationsTable.lang, "en"),
+    ));
+    assert.deepEqual(
+      storedTranslations
+        .map(({ recordId, model, field, value }) => ({ recordId, model, field, value }))
+        .sort((a, b) => a.recordId.localeCompare(b.recordId)),
+      [
+        { recordId: customStay!.id, model: "category", field: "label", value: "Shared spaces" },
+        { recordId: customOffer!.id, model: "category", field: "label", value: "Shared kitchen" },
+      ].sort((a, b) => a.recordId.localeCompare(b.recordId)),
+    );
+    const [dirtyTenant] = await db.select({ dirty: tenantsTable.hasUnpublishedChanges })
+      .from(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+    assert.equal(dirtyTenant?.dirty, true);
+    const [publishedAfter] = await db.select({ content: publishedSnapshotsTable.content })
+      .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id));
+    assert.deepEqual(publishedAfter?.content, publishedBefore.content);
+  } finally {
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+    await db.delete(hostUsersTable).where(eq(hostUsersTable.id, host.id));
+  }
+});
 
 test("real DB: custom category survives save, uses category tooling, and submits idempotently", async () => {
   const marker = randomUUID();

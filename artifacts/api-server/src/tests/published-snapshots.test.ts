@@ -5,7 +5,7 @@ import express from "express";
 import type { AddressInfo } from "node:net";
 import { and, eq, inArray } from "drizzle-orm";
 import {
-  db, pool, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
+  changelogTable, db, pool, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
   publishedSnapshotsTable, translationsTable, runWithDatabase, type Db,
 } from "@workspace/db";
 import {
@@ -16,6 +16,74 @@ import { alignTenantSkeleton } from "../lib/tenantSkeletonAlignment";
 import { seedTenantContent } from "../lib/tenantSeeds";
 import publicTenantsRouter, { invalidateTenantCache } from "../routes/publicTenants";
 import ordersRouter from "../routes/orders";
+
+test("empty custom category stays guest-hidden but is listed before publication", async () => {
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `snapshot-empty-category-${randomUUID()}`,
+    name: "Empty category preview fixture",
+    isPublished: true,
+  }).returning();
+  assert.ok(tenant);
+  try {
+    const [section] = await db.insert(sectionsTable).values({
+      tenantId: tenant.id,
+      key: "offer",
+      title: "Naša ponudba",
+    }).returning();
+    await ensureTenantPublication(tenant.id);
+    const [category] = await db.insert(categoriesTable).values({
+      sectionId: section!.id,
+      key: `host-custom-${randomUUID()}`,
+      label: "Skupna kuhinja",
+      icon: "sparkle",
+      layout: "products",
+      exploreGroup: "najem",
+    }).returning();
+    await db.insert(changelogTable).values({
+      tenantId: tenant.id,
+      action: "create",
+      entity: "category",
+      summary: "Ustvarjena kategorija: Skupna kuhinja",
+      actorType: "host",
+      actorLabel: "Stranka",
+      operationKey: `category-create:${category!.id}`,
+    });
+    const preview = await previewPublication(tenant.id);
+    assert.ok(preview.added.includes("Skupna kuhinja"));
+    const publishedTree = (await readPublishedContent(tenant.id)).languages.sl!.tree;
+    assert.equal(
+      publishedTree.sections.flatMap((publishedSection) => publishedSection.categories).length,
+      0,
+      "the unchanged guest snapshot must not expose the empty category",
+    );
+
+    await db.update(categoriesTable).set({ label: "Poletna kuhinja" })
+      .where(eq(categoriesTable.id, category!.id));
+    const renamedPreview = await previewPublication(tenant.id);
+    assert.ok(renamedPreview.added.includes("Poletna kuhinja"));
+    assert.ok(!renamedPreview.added.includes("Skupna kuhinja"));
+    assert.notEqual(renamedPreview.token, preview.token);
+
+    await db.insert(itemsTable).values({
+      categoryId: category!.id,
+      title: "Najem skupne kuhinje",
+    });
+    const nonEmptyPreview = await previewPublication(tenant.id);
+    assert.equal(
+      nonEmptyPreview.added.filter((line) => line === "Poletna kuhinja").length,
+      1,
+      "the audit-backed category must not duplicate the publication-tree addition",
+    );
+
+    await db.update(categoriesTable).set({ deletedAt: new Date() })
+      .where(eq(categoriesTable.id, category!.id));
+    const deletedPreview = await previewPublication(tenant.id);
+    assert.ok(!deletedPreview.added.includes("Poletna kuhinja"));
+    assert.notEqual(deletedPreview.token, nonEmptyPreview.token);
+  } finally {
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+  }
+});
 
 test("one snapshot isolates draft edits, retains deleted photos, diffs accurately, replaces atomically", async () => {
   await ensurePublishedSnapshotSchema();

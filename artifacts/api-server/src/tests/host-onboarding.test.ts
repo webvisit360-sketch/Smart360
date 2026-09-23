@@ -151,8 +151,12 @@ test("actor gate classifies all onboarding routes without tenant identity from b
   const ownerRoutes = onboarding.filter((route) =>
     route.path.startsWith("/admin/tenants/"),
   );
-  assert.equal(hostRoutes.length, 8);
+  assert.equal(hostRoutes.length, 9);
   assert.ok(hostRoutes.every((route) => route.binding.kind === "host-self"));
+  const categoryCreate = hostRoutes.find((route) =>
+    route.method === "post" && route.path === "/admin/host/onboarding/categories"
+  );
+  assert.equal(categoryCreate?.binding.kind, "host-self");
   assert.equal(ownerRoutes.length, 4);
   assert.ok(ownerRoutes.every((route) => route.binding.kind === "owner-only"));
 });

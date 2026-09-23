@@ -5,6 +5,7 @@ import {
   AllocateHostOnboardingPhotoUploadBody,
   AutosaveHostOnboardingBody,
   ConfirmHostOnboardingSubmissionBody,
+  CreateHostOnboardingCategoryBody,
 } from "@workspace/api-zod";
 import {
   db,
@@ -19,6 +20,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { requireAdmin } from "../lib/adminAuth";
 import {
   currentHostOnboarding,
+  createHostOnboardingCategory,
   hostCustomCategoriesAreSubmittable,
   openHostOnboarding,
   ownerHostOnboarding,
@@ -35,6 +37,7 @@ import {
   hostOnboardingSanitizedObjectPath,
 } from "../lib/hostOnboardingPhotoPaths";
 import { ensureHostOnboardingGalleryItem } from "../lib/hostOnboardingCanonical";
+import { logChange } from "../lib/changelog";
 import { storePhotoVariants } from "./storage";
 
 const router: IRouter = Router();
@@ -265,6 +268,50 @@ async function save(req: Request, res: Response): Promise<void> {
 
 router.patch("/admin/host/onboarding", save);
 router.post("/admin/host/onboarding/save", save);
+
+router.post("/admin/host/onboarding/categories", async (req, res): Promise<void> => {
+  const actor = hostActor(req, res);
+  if (!actor) return;
+  const parsed = CreateHostOnboardingCategoryBody.safeParse(req.body);
+  if (!parsed.success || !Number.isInteger(parsed.data.revision)) {
+    fail(res, 400, "Podatki kategorije niso veljavni.");
+    return;
+  }
+  const result = await createHostOnboardingCategory(
+    actor.tenantId,
+    actor.hostUserId,
+    parsed.data,
+  );
+  if (!result.ok) {
+    if (result.kind === "stale") {
+      fail(res, 409, "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova.", {
+        currentRevision: result.currentRevision,
+      });
+      return;
+    }
+    fail(
+      res,
+      result.kind === "missing" || result.kind === "missing_section" ? 404 : 409,
+      result.kind === "submitted"
+        ? "Oddanega obrazca ni več mogoče spreminjati."
+        : "Obrazec ali razdelek za to namestitev ne obstaja.",
+    );
+    return;
+  }
+  const canonical = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  if (!canonical) {
+    fail(res, 404, "Obrazec za to namestitev še ni odprt.");
+    return;
+  }
+  await logChange({
+    tenantId: actor.tenantId,
+    action: "create",
+    entity: "category",
+    summary: `Ustvarjena kategorija: ${parsed.data.name}`,
+    operationKey: `category-create:${result.categoryId}`,
+  });
+  res.status(201).json(hostDto(canonical));
+});
 
 router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => {
   const actor = hostActor(req, res);

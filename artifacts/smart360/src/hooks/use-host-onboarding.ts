@@ -3,6 +3,11 @@ import type {
   HostOnboardingCanonicalItem,
   HostOnboardingDataHero,
 } from "@workspace/api-client-react";
+import {
+  getGetTenantQueryKey,
+  getGetTranslationOverviewQueryKey,
+  getListTenantTranslationsQueryKey,
+} from "@workspace/api-client-react";
 
 export interface HostOnboardingData {
   accommodationName?: string;
@@ -299,6 +304,41 @@ export function useSaveHostOnboarding() {
       queryClient.setQueryData<HostOnboardingResponse>(getHostOnboardingQueryKey(), (current) =>
         applyWriteResult(current, result, variables.data),
       );
+    },
+  });
+}
+
+export function useCreateHostOnboardingCategory() {
+  const queryClient = useQueryClient();
+  return useMutation<HostOnboardingResponse, Error, {
+    sourceId: string;
+    sectionKey: "stay" | "offer";
+    name: string;
+    revision: number;
+    canonicalRevision: string;
+  }>({
+    mutationFn: (payload) =>
+      customFetch("/api/admin/host/onboarding/categories", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (result) => {
+      queryClient.setQueryData<HostOnboardingResponse>(getHostOnboardingQueryKey(), result);
+      // The canonical category is shared with the admin content and
+      // translation views. Mark those reads stale without hydrating the host
+      // form from them; dirty host fields remain protected by the onboarding
+      // hydration gate.
+      void queryClient.invalidateQueries({
+        queryKey: getGetTenantQueryKey(result.tenantId),
+        exact: true,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getListTenantTranslationsQueryKey(result.tenantId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getGetTranslationOverviewQueryKey(result.tenantId),
+        exact: true,
+      });
     },
   });
 }

@@ -27,6 +27,8 @@ import {
   useTranslateMissingItemFields,
   upsertTranslation,
   getListTranslationsQueryKey,
+  getListTenantTranslationsQueryKey,
+  getGetTranslationOverviewQueryKey,
   type ItemTranslationLanguageDraft,
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search, CheckCircle2 } from "lucide-react";
@@ -73,6 +75,7 @@ import {
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
 import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
+import { getHostOnboardingQueryKey } from "@/hooks/use-host-onboarding";
 
 // ---------- Types ----------
 
@@ -402,7 +405,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   useEffect(() => {
     if (restored) {
       setTitle(restored.title);
-      setIcon(restored.icon);
+      setIcon(restored.icon || "sparkle");
       setSubtitle(restored.subtitle);
       setKey(restored.key);
       setIsVisible(restored.isVisible);
@@ -652,14 +655,14 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
         : "Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Okolica.";
 
   const [label, setLabel] = useState(category?.label ?? "");
-  const [icon, setIcon] = useState(category?.icon ?? "");
+  const [icon, setIcon] = useState(category?.icon ?? "sparkle");
   const [layout, setLayout] = useState(category?.layout ?? "text");
   const [exploreGroup, setExploreGroup] = useState<string>(initialGroup);
   const [isVisible, setIsVisible] = useState(category?.isVisible ?? true);
 
   const baseline = {
     label: category?.label ?? "",
-    icon: category?.icon ?? "",
+    icon: category?.icon ?? "sparkle",
     layout: category?.layout ?? "text",
     exploreGroup: initialGroup,
     isVisible: category?.isVisible ?? true,
@@ -683,7 +686,22 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
 
-  const refresh = () => refreshTenantAfterAdminWrite(queryClient, tenantId);
+  const refresh = async () => {
+    await Promise.all([
+      refreshTenantAfterAdminWrite(queryClient, tenantId),
+      // Host onboarding reads the same canonical category tree. Invalidating
+      // this cache exposes the admin-created row on the next/active host read;
+      // its dirty-draft hydration guard preserves concurrent local typing.
+      queryClient.invalidateQueries({ queryKey: getHostOnboardingQueryKey() }),
+      queryClient.invalidateQueries({
+        queryKey: getListTenantTranslationsQueryKey(tenantId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: getGetTranslationOverviewQueryKey(tenantId),
+        exact: true,
+      }),
+    ]);
+  };
 
   const handleSave = async () => {
     if (!label.trim() || !icon.trim() || !layout) {

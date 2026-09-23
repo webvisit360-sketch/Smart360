@@ -6,6 +6,7 @@ import {
   categoriesTable,
   creatorPlaceProposalsTable,
   db,
+  itemsTable,
   sectionsTable,
   tenantsTable,
   translationsTable,
@@ -329,7 +330,7 @@ test("development full copies apply the approved Gril split, preserve rows, and 
 <h2>Natančen rezultat</h2><pre>${escaped}</pre></main></body></html>`);
 });
 
-test("custom category is exempt from alignment and remains active", async (context) => {
+test("non-empty custom Stay and Offer categories are exempt from alignment", async (context) => {
   if (process.env["NODE_ENV"] === "production") throw new Error("Custom-category fixture rejects production");
   if (!process.env["DATABASE_URL"]) {
     context.skip("development database is unavailable");
@@ -346,24 +347,43 @@ test("custom category is exempt from alignment and remains active", async (conte
     throw error;
   }
   try {
-    const [explore] = await db.select().from(sectionsTable).where(and(
+    let sections = await db.select().from(sectionsTable).where(and(
       eq(sectionsTable.tenantId, fixtures.gril.tenantId),
-      eq(sectionsTable.key, "explore"),
+      inArray(sectionsTable.key, ["stay", "offer"]),
     ));
-    const [custom] = await db.insert(categoriesTable).values({
-      sectionId: explore!.id,
-      key: `host-custom-${fixtures.gril.tenantId}`,
-      label: "Gostiteljeva kategorija",
-      icon: "star",
-      layout: "cards",
-      exploreGroup: "experiences",
-      position: 91,
-    }).returning();
+    if (sections.length === 0) {
+      sections = await db.insert(sectionsTable).values([
+        { tenantId: fixtures.gril.tenantId, key: "stay", title: "Vaša destinacija", position: 90 },
+        { tenantId: fixtures.gril.tenantId, key: "offer", title: "Naša ponudba", position: 91 },
+      ]).returning();
+    }
+    assert.equal(sections.length, 2);
+    const custom = await db.insert(categoriesTable).values(sections.map((section, index) => ({
+      sectionId: section.id,
+      key: `host-custom-${section.key}-${fixtures.gril.tenantId}`,
+      label: section.key === "stay" ? "Skupni prostori" : "Posebna ponudba",
+      icon: "sparkle",
+      layout: section.key === "stay" ? "cards" : "products",
+      exploreGroup: section.key === "stay" ? "vase_bivanje" : "najem",
+      position: 91 + index,
+    }))).returning();
+    await db.insert(itemsTable).values(custom.map((category) => ({
+      categoryId: category.id,
+      title: `Neprazen vnos ${category.label}`,
+      position: 0,
+    })));
     await alignTenantSkeleton(fixtures.gril.tenantId);
-    const [after] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, custom!.id));
-    assert.equal(after?.label, custom?.label);
-    assert.equal(after?.position, 91);
-    assert.equal(after?.deletedAt, null);
+    const after = await db.select().from(categoriesTable).where(inArray(
+      categoriesTable.id,
+      custom.map((category) => category.id),
+    ));
+    for (const before of custom) {
+      const category = after.find((row) => row.id === before.id);
+      assert.equal(category?.label, before.label);
+      assert.equal(category?.position, before.position);
+      assert.equal(category?.deletedAt, null);
+      assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.categoryId, before.id))).length, 1);
+    }
   } finally {
     await cleanupFullCopyFixtures(fixtures);
   }
