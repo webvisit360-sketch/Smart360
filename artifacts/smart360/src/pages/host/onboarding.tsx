@@ -116,6 +116,141 @@ export function normalizeCanonicalSaveBaseline(
   };
 }
 
+export function shouldReuseQueuedHostSave(
+  snapshot: string,
+  queuedSnapshot: string,
+  explicit: boolean,
+): boolean {
+  // Autosave deduplicates identical work while it is queued. A user-directed
+  // retry must not inherit a rejected activeOperation merely because its
+  // snapshot is still present until the failed promise's finally callback.
+  return !explicit && snapshot === queuedSnapshot;
+}
+
+export function hostDraftFailureMessage(reason: unknown): string {
+  const details = hostFailureDetails(reason);
+  const status = details.status;
+  const mapped: Partial<Record<HostFailureReasonCode, string>> = {
+    validation_failed: "Osnutka ni mogoče shraniti, ker nekateri podatki niso veljavni.",
+    stale_revision: "Osnutek se je medtem spremenil. Osvežili smo podatke; preverite označena polja.",
+    session_unavailable: "Seja je potekla. Znova se prijavite in poskusite še enkrat.",
+    database_permission_denied: "Strežnik nima dovoljenja za shranjevanje osnutka. Podpora lahko napako preveri z referenco.",
+    save_failed: "Strežnik osnutka trenutno ne more shraniti. Poskusite znova čez nekaj trenutkov.",
+    submit_failed: "Osnutka trenutno ni mogoče shraniti. Poskusite znova.",
+  };
+  if (details.reasonCode && mapped[details.reasonCode]) {
+    return withSafeRequestReference(mapped[details.reasonCode]!, details.requestId);
+  }
+  if (status === 401 || status === 403) {
+    return withSafeRequestReference(
+      "Seja je potekla. Znova se prijavite in poskusite še enkrat.",
+      details.requestId,
+    );
+  }
+  if (status === 409) {
+    return withSafeRequestReference(
+      "Osnutek se je medtem spremenil. Osvežili smo podatke; preverite označena polja.",
+      details.requestId,
+    );
+  }
+  if (typeof status === "number" && status >= 500) {
+    return withSafeRequestReference(
+      "Strežnik osnutka trenutno ne more shraniti. Poskusite znova čez nekaj trenutkov.",
+      details.requestId,
+    );
+  }
+  return withSafeRequestReference(
+    "Osnutka ni bilo mogoče shraniti. Preverite povezavo in poskusite znova.",
+    details.requestId,
+  );
+}
+
+export function hostSubmitFailureMessage(reason: unknown): string {
+  const details = hostFailureDetails(reason);
+  const status = details.status;
+  const mapped: Partial<Record<HostFailureReasonCode, string>> = {
+    validation_failed: "Osnutek je shranjen, vendar nekateri podatki za oddajo niso veljavni.",
+    stale_revision: "Osnutek je shranjen, vendar se je medtem spremenil. Pred ponovno oddajo ga bomo osvežili.",
+    session_unavailable: "Osnutek je shranjen, seja pa je potekla. Znova se prijavite pred oddajo.",
+    database_permission_denied: "Osnutek je shranjen, strežnik pa nima dovoljenja za oddajo. Podpora lahko napako preveri z referenco.",
+    save_failed: "Osnutka pred oddajo ni bilo mogoče potrditi. Poskusite znova.",
+    submit_failed: "Osnutek je shranjen, oddaja pa trenutno ni uspela. Poskusite znova.",
+  };
+  if (details.reasonCode && mapped[details.reasonCode]) {
+    return withSafeRequestReference(mapped[details.reasonCode]!, details.requestId);
+  }
+  if (status === 400) {
+    return withSafeRequestReference(
+      "Osnutek je shranjen, vendar oddaja ni bila sprejeta. Preverite podatke in poskusite znova.",
+      details.requestId,
+    );
+  }
+  if (status === 401 || status === 403) {
+    return withSafeRequestReference(
+      "Osnutek je shranjen, seja pa je potekla. Znova se prijavite pred oddajo.",
+      details.requestId,
+    );
+  }
+  return withSafeRequestReference(
+    "Osnutek je shranjen, oddaja pa ni uspela. Poskusite znova.",
+    details.requestId,
+  );
+}
+
+type HostFailureReasonCode =
+  | "validation_failed"
+  | "stale_revision"
+  | "session_unavailable"
+  | "database_permission_denied"
+  | "save_failed"
+  | "submit_failed";
+
+const HOST_FAILURE_REASON_CODES = new Set<HostFailureReasonCode>([
+  "validation_failed",
+  "stale_revision",
+  "session_unavailable",
+  "database_permission_denied",
+  "save_failed",
+  "submit_failed",
+]);
+
+function hostFailureDetails(reason: unknown): {
+  status?: number;
+  reasonCode?: HostFailureReasonCode;
+  requestId?: string;
+} {
+  if (typeof reason !== "object" || reason === null) return {};
+  const candidate = reason as {
+    status?: unknown;
+    reasonCode?: unknown;
+    requestId?: unknown;
+  };
+  return {
+    status: typeof candidate.status === "number" ? candidate.status : undefined,
+    reasonCode: typeof candidate.reasonCode === "string"
+      && HOST_FAILURE_REASON_CODES.has(candidate.reasonCode as HostFailureReasonCode)
+      ? candidate.reasonCode as HostFailureReasonCode
+      : undefined,
+    requestId: typeof candidate.requestId === "string"
+      && /^[A-Za-z0-9_-]{1,64}$/.test(candidate.requestId)
+      ? candidate.requestId
+      : undefined,
+  };
+}
+
+function withSafeRequestReference(message: string, requestId?: string): string {
+  return requestId ? `${message} Referenca: ${requestId}` : message;
+}
+
+export function hostFailureRecoveryAction(input: {
+  hasUnsavedDraftFailure: boolean;
+  hasSubmitFailure: boolean;
+}): "save" | "submit" | "none" {
+  if (input.hasUnsavedDraftFailure) return "save";
+  if (input.hasSubmitFailure) return "submit";
+  return "none";
+}
+
 export function hasMeaningfulRichText(value: string): boolean {
   return value
     .replace(/<br\s*\/?>/gi, "")
@@ -312,6 +447,9 @@ export default function HostOnboarding() {
   const mounted = useRef(true);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [saveError, setSaveError] = useState("");
+  const [manualRetrying, setManualRetrying] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitRetrying, setSubmitRetrying] = useState(false);
   const [firstFailureAt, setFirstFailureAt] = useState<string | null>(null);
   const [recoveryUnavailable, setRecoveryUnavailable] = useState(false);
   const [draftConflicts, setDraftConflicts] = useState<DraftConflict[]>([]);
@@ -502,7 +640,9 @@ export default function HostOnboarding() {
     const snapshot = hostOnboardingSnapshot(data);
     if (conflictBlocked.current) return Promise.reject(new Error("Razrešite označena polja v sporu."));
     if (Object.keys(data).length === 0) return queue.current;
-    if (snapshot === queuedSnapshot.current) return activeOperation.current;
+    if (shouldReuseQueuedHostSave(snapshot, queuedSnapshot.current, explicit)) {
+      return activeOperation.current;
+    }
     queuedSnapshot.current = snapshot;
     setSaveState("saving");
     setSaveError("");
@@ -671,7 +811,7 @@ export default function HostOnboarding() {
       }
     }).catch((reason: Error & { status?: number }) => {
       if (mounted.current) {
-        setSaveError(reason.message);
+        setSaveError(hostDraftFailureMessage(reason));
         setSaveState(reason.status === 409 ? "conflict" : "error");
       }
       setFirstFailureAt((current) => current || new Date().toISOString());
@@ -872,10 +1012,81 @@ export default function HostOnboarding() {
     return () => observer.disconnect();
   }, [isLoading, sessionLoading, error, submittedMessage]);
 
+  const retryFailedSave = async () => {
+    setManualRetrying(true);
+    setSaveError("");
+    setSaveState("saving");
+    try {
+      // A manual retry first obtains a current CAS baseline. Rebase the
+      // protected local draft onto it rather than repeatedly sending a stale
+      // revision. Genuine same-field conflicts still require an explicit host
+      // choice; the refresh never chooses either side on the host's behalf.
+      const current = await fetchHostOnboardingSnapshot();
+      const rebased = rebaseHostOnboardingDraft(
+        lastSavedData.current,
+        latestData.current,
+        current.data,
+      );
+      revision.current = current.revision;
+      canonicalRevision.current = current.canonicalRevision;
+      hydratedSource.current = `${current.id}:${current.revision}:${current.canonicalRevision}`;
+      queryClient.setQueryData(["host-onboarding"], current);
+      latestData.current = rebased.data;
+      latestPayload.current = cleanData(rebased.data);
+      setFormData(rebased.data);
+      conflictRemote.current = current.data;
+      if (rebased.conflicts.length) {
+        setDraftConflicts(rebased.conflicts);
+        conflictBlocked.current = true;
+        setSaveError("Ista polja so bila spremenjena tudi drugje.");
+        setSaveState("conflict");
+        return;
+      }
+      conflictBlocked.current = false;
+      lastSavedData.current = current.data;
+      const pending = changedHostOnboardingFields(
+        cleanData(rebased.data),
+        current.data,
+      );
+      if (Object.keys(pending).length === 0) {
+        // This includes the production-observed legacy state where PATCH was
+        // acknowledged and a later submit 400 incorrectly set the old shared
+        // failure flag. GET is the proof that no draft data remains unsaved.
+        lastSaved.current = hostOnboardingSnapshot(cleanData(rebased.data));
+        setSaveState("saved");
+        setFirstFailureAt(null);
+        retryAttempt.current = 0;
+        if (recoveryKey) {
+          try {
+            sessionStorage.removeItem(recoveryKey);
+          } catch {
+            // The server-verified draft is saved; stale recovery cleanup is
+            // not allowed to reclassify it as unsaved.
+          }
+        }
+        return;
+      }
+      await flush(true);
+    } catch (reason) {
+      setSaveError(hostDraftFailureMessage(reason));
+      setSaveState("error");
+      setFirstFailureAt((current) => current || new Date().toISOString());
+    } finally {
+      if (mounted.current) setManualRetrying(false);
+    }
+  };
+
   const handleSave = async () => {
+    if (manualRetrying) return;
+    if (firstFailureAt && draftConflicts.length === 0) {
+      await retryFailedSave();
+      return;
+    }
     try {
       await flush(true);
-    } catch {}
+    } catch {
+      // enqueueSave owns the persistent, user-visible error state.
+    }
   };
 
   const handleConflictChoice = (conflict: DraftConflict, choice: "local" | "remote") => {
@@ -969,8 +1180,55 @@ export default function HostOnboarding() {
 
   const handleSubmit = async (retried = false) => {
     if (uploadsBlocking || entryUploadsBlocking) return;
+    const verifyCurrent = Boolean(submitError) && !retried;
+    setSubmitError("");
+    if (verifyCurrent) {
+      setSubmitRetrying(true);
+      try {
+        // A failed submit is not a failed draft save. Verify the acknowledged
+        // draft with GET, preserving/rebasing local input, before retrying the
+        // submit endpoint with the current revisions.
+        const current = await fetchHostOnboardingSnapshot();
+        const rebased = rebaseHostOnboardingDraft(
+          lastSavedData.current,
+          latestData.current,
+          current.data,
+        );
+        revision.current = current.revision;
+        canonicalRevision.current = current.canonicalRevision;
+        hydratedSource.current = `${current.id}:${current.revision}:${current.canonicalRevision}`;
+        queryClient.setQueryData(["host-onboarding"], current);
+        latestData.current = rebased.data;
+        latestPayload.current = cleanData(rebased.data);
+        setFormData(rebased.data);
+        conflictRemote.current = current.data;
+        if (rebased.conflicts.length) {
+          setDraftConflicts(rebased.conflicts);
+          conflictBlocked.current = true;
+          setSaveError("Ista polja so bila spremenjena tudi drugje.");
+          setSaveState("conflict");
+          if (mounted.current) setSubmitRetrying(false);
+          return;
+        }
+        conflictBlocked.current = false;
+        lastSavedData.current = current.data;
+      } catch (reason) {
+        setSubmitError(hostSubmitFailureMessage(reason));
+        if (mounted.current) setSubmitRetrying(false);
+        return;
+      }
+    }
+
     try {
       await flush();
+    } catch {
+      // The draft queue owns save/recovery state. Do not mislabel a failed
+      // flush as a submission failure.
+      if (mounted.current) setSubmitRetrying(false);
+      return;
+    }
+
+    try {
       const result = await submitOnboarding.mutateAsync(
           persistedHostOnboardingSubmitPayload(
             onboardingData?.round || 1,
@@ -982,9 +1240,7 @@ export default function HostOnboarding() {
     } catch (reason) {
       const submitError = reason as Error & { status?: number };
       if (submitError.status !== 409 || retried) {
-        setFirstFailureAt((current) => current || new Date().toISOString());
-        setSaveError(submitError.message);
-        setSaveState(submitError.status === 409 ? "conflict" : "error");
+        setSubmitError(hostSubmitFailureMessage(submitError));
         return;
       }
       try {
@@ -1011,10 +1267,10 @@ export default function HostOnboarding() {
         await flush(true);
         await handleSubmit(true);
       } catch (refreshError) {
-        setFirstFailureAt((currentFailure) => currentFailure || new Date().toISOString());
-        setSaveError(refreshError instanceof Error ? refreshError.message : "Shranjevanje ni uspelo.");
-        setSaveState("error");
+        setSubmitError(hostSubmitFailureMessage(refreshError));
       }
+    } finally {
+      if (mounted.current) setSubmitRetrying(false);
     }
   };
 
@@ -2255,7 +2511,7 @@ export default function HostOnboarding() {
         className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E8EBE6] px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-5 shadow-[0_-4px_24px_rgba(0,0,0,0.04)] z-50"
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-sm font-semibold flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+          <div className="relative z-[1] pointer-events-auto text-sm font-semibold flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
             {firstFailureAt ? (
               <span className="flex flex-col items-start gap-1" style={{ color: "#DD9A2B" }}>
                 <span>
@@ -2264,8 +2520,11 @@ export default function HostOnboarding() {
                     minute: "2-digit",
                   }).format(new Date(firstFailureAt))} niso shranjene
                 </span>
-                {recoveryUnavailable && saveError ? (
+                {saveError ? (
                   <span className="font-normal">{saveError}</span>
+                ) : null}
+                {recoveryUnavailable && !saveError ? (
+                  <span className="font-normal">Lokalna obnovitev ni na voljo. Ne osvežite strani.</span>
                 ) : null}
                 {draftConflicts.length > 0 ? (
                   <span className="flex flex-col gap-2 font-normal">
@@ -2291,8 +2550,14 @@ export default function HostOnboarding() {
                     ))}
                   </span>
                 ) : (
-                  <button type="button" className="underline py-1 self-start" onClick={() => void handleSave()}>
-                    Poskusi znova
+                  <button
+                    type="button"
+                    className="relative z-[1] inline-flex min-h-10 items-center gap-2 underline py-1 self-start pointer-events-auto"
+                    aria-busy={manualRetrying}
+                    onClick={() => void handleSave()}
+                  >
+                    {manualRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {manualRetrying ? "Poskušamo znova..." : "Poskusi znova"}
                   </button>
                 )}
               </span>
@@ -2302,11 +2567,30 @@ export default function HostOnboarding() {
               </span>
             ) : saveState === "dirty" ? (
               <span className="text-amber-700">Neshranjene spremembe</span>
-            ) : saveState === "error" || saveState === "conflict" || submitOnboarding.error ? (
+            ) : submitError ? (
               <span className="flex flex-col items-start" style={{ color: "#DD9A2B" }}>
-                <span>{saveError || submitOnboarding.error?.message}</span>
-                <button type="button" className="underline py-1" onClick={() => void handleSave()}>
-                  Poskusi znova
+                <span>{submitError}</span>
+                <button
+                  type="button"
+                  className="relative z-[1] inline-flex min-h-10 items-center gap-2 underline py-1 pointer-events-auto"
+                  aria-busy={submitRetrying || submitOnboarding.isPending}
+                  onClick={() => void handleSubmit()}
+                >
+                  {submitRetrying || submitOnboarding.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {submitRetrying || submitOnboarding.isPending ? "Preverjamo in oddajamo..." : "Poskusi znova oddati"}
+                </button>
+              </span>
+            ) : saveState === "error" || saveState === "conflict" ? (
+              <span className="flex flex-col items-start" style={{ color: "#DD9A2B" }}>
+                <span>{saveError}</span>
+                <button
+                  type="button"
+                  className="relative z-[1] inline-flex min-h-10 items-center gap-2 underline py-1 pointer-events-auto"
+                  aria-busy={manualRetrying}
+                  onClick={() => void handleSave()}
+                >
+                  {manualRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {manualRetrying ? "Poskušamo znova..." : "Poskusi znova"}
                 </button>
               </span>
             ) : (
@@ -2319,17 +2603,17 @@ export default function HostOnboarding() {
           <div className="flex gap-3 w-full sm:w-auto">
             <button 
               onClick={handleSave}
-              disabled={isSaving || submitOnboarding.isPending || draftConflicts.length > 0}
+              disabled={isSaving || manualRetrying || submitRetrying || submitOnboarding.isPending || draftConflicts.length > 0}
               className="flex-1 sm:flex-none bg-[#F4F6F2] text-[#121A14] border border-[#E8EBE6] px-5 py-3 rounded-full font-bold text-[15px] hover:bg-[#E8EBE6] transition-colors whitespace-nowrap"
             >
               Shrani osnutek
             </button>
             <button 
               onClick={() => void handleSubmit()}
-              disabled={submitOnboarding.isPending || isSaving || uploadsBlocking || entryUploadsBlocking || draftConflicts.length > 0}
+              disabled={submitOnboarding.isPending || submitRetrying || isSaving || manualRetrying || uploadsBlocking || entryUploadsBlocking || draftConflicts.length > 0}
               className="flex-1 sm:flex-none bg-[#157347] text-white px-7 py-3 rounded-full font-bold text-[15px] hover:bg-[#0f5835] transition-colors whitespace-nowrap shadow-md flex items-center justify-center gap-2"
             >
-              {submitOnboarding.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {(submitOnboarding.isPending || submitRetrying) && <Loader2 className="w-4 h-4 animate-spin" />}
               {uploadsBlocking || entryUploadsBlocking ? "Počakajte na fotografije" : "Potrdi in oddaj"}
             </button>
           </div>

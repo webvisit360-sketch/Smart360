@@ -80,6 +80,19 @@ test("submit contract accepts round-only immutable replay payload", () => {
   assert.deepEqual(replay, { round: 1 });
 });
 
+test("submit contract accepts persisted-draft first submission without data", () => {
+  const submission = ConfirmHostOnboardingSubmissionBody.parse({
+    round: 1,
+    revision: 697,
+    canonicalRevision: "a".repeat(64),
+  });
+  assert.deepEqual(submission, {
+    round: 1,
+    revision: 697,
+    canonicalRevision: "a".repeat(64),
+  });
+});
+
 test("incomplete custom category autosave shape remains valid but submission is blocked clearly", () => {
   const incomplete = {
     ...completeData,

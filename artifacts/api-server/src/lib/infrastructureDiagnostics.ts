@@ -1,4 +1,7 @@
+import { randomUUID } from "node:crypto";
+
 const SQLSTATE_RE = /^[0-9A-Z]{5}$/;
+const generatedRequestIds = new WeakMap<object, string>();
 
 export type SafeDatabaseErrorDiagnostic = {
   errorClass: "database" | "unknown";
@@ -29,4 +32,18 @@ export function safeDatabaseErrorDiagnostic(error: unknown): SafeDatabaseErrorDi
   }
 
   return { errorClass: "unknown" };
+}
+
+/**
+ * Preserve a non-empty request ID supplied by HTTP middleware, or allocate one
+ * once for lightweight harnesses and other callers without that middleware.
+ */
+export function safeRequestId(request: object & { id?: unknown }): string {
+  if (typeof request.id === "string" && request.id.trim()) return request.id;
+  if (typeof request.id === "number" && Number.isFinite(request.id)) return String(request.id);
+  const existing = generatedRequestIds.get(request);
+  if (existing) return existing;
+  const generated = randomUUID();
+  generatedRequestIds.set(request, generated);
+  return generated;
 }

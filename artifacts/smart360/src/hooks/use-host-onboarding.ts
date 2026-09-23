@@ -272,6 +272,21 @@ export function changedHostOnboardingFields(
   return patch;
 }
 
+export type HostOnboardingFailureReason =
+  | "validation_failed"
+  | "stale_revision"
+  | "session_unavailable"
+  | "database_permission_denied"
+  | "save_failed"
+  | "submit_failed";
+
+export type HostOnboardingRequestError = Error & {
+  status?: number;
+  currentRevision?: number;
+  reasonCode?: string;
+  requestId?: string;
+};
+
 const customFetch = async (url: string, options?: RequestInit) => {
   const res = await fetch(url, {
     ...options,
@@ -282,16 +297,22 @@ const customFetch = async (url: string, options?: RequestInit) => {
     credentials: "include",
   });
   if (!res.ok) {
-    let msg = "Napaka pri zahtevi";
     let currentRevision: number | undefined;
+    let reasonCode: string | undefined;
+    let requestId: string | undefined;
     try {
       const errData = await res.json();
-      if (errData.message) msg = errData.message;
       if (typeof errData.currentRevision === "number") currentRevision = errData.currentRevision;
+      if (typeof errData.reasonCode === "string") reasonCode = errData.reasonCode;
+      if (typeof errData.requestId === "string") requestId = errData.requestId;
     } catch {}
-    const error = new Error(msg) as Error & { status?: number; currentRevision?: number };
+    // Server messages can contain implementation details and are never
+    // rendered. Callers map the stable reasonCode whitelist to safe copy.
+    const error = new Error("Napaka pri zahtevi") as HostOnboardingRequestError;
     error.status = res.status;
     error.currentRevision = currentRevision;
+    error.reasonCode = reasonCode;
+    error.requestId = requestId;
     throw error;
   }
   if (res.status === 204) return undefined;

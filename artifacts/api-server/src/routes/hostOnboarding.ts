@@ -40,7 +40,10 @@ import {
 } from "../lib/hostOnboardingPhotoPaths";
 import { ensureHostOnboardingGalleryItem } from "../lib/hostOnboardingCanonical";
 import { logChange } from "../lib/changelog";
-import { safeDatabaseErrorDiagnostic } from "../lib/infrastructureDiagnostics";
+import {
+  safeDatabaseErrorDiagnostic,
+  safeRequestId,
+} from "../lib/infrastructureDiagnostics";
 import { storePhotoVariants } from "./storage";
 
 const router: IRouter = Router();
@@ -78,9 +81,59 @@ function fail(res: Response, status: number, message: string, extra?: object): v
   res.status(status).json({ message, ...extra });
 }
 
+function validationPaths(
+  issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey> }>,
+): string[] {
+  return [...new Set(issues.map(({ path }) => path.map(String).join(".") || "body"))];
+}
+
+type HostOnboardingFailureReason =
+  | "validation_failed"
+  | "stale_revision"
+  | "session_unavailable"
+  | "database_permission_denied"
+  | "save_failed"
+  | "submit_failed";
+
+function infrastructureFailure(
+  error: unknown,
+  fallback: "save_failed" | "submit_failed",
+) {
+  const diagnostic = safeDatabaseErrorDiagnostic(error);
+  const reasonCode: HostOnboardingFailureReason =
+    diagnostic.databaseCode === "42501" ? "database_permission_denied" : fallback;
+  return { diagnostic, reasonCode };
+}
+
+function failureDetails(
+  req: Request,
+  reasonCode: HostOnboardingFailureReason,
+  invalidFields?: string[],
+) {
+  return {
+    reasonCode,
+    requestId: safeRequestId(req),
+    ...(invalidFields ? { invalidFields } : {}),
+  };
+}
+
 function hostActor(req: Request, res: Response) {
   if (req.actor?.kind !== "host") {
-    fail(res, 401, "Za nadaljevanje se prijavite kot gostitelj.");
+    req.log.warn(
+      {
+        requestId: safeRequestId(req),
+        operation: "host_onboarding_request",
+        outcome: "rejected",
+        reasonCode: "session_unavailable",
+      },
+      "Host onboarding request rejected",
+    );
+    fail(
+      res,
+      401,
+      "Za nadaljevanje se prijavite kot gostitelj.",
+      failureDetails(req, "session_unavailable"),
+    );
     return null;
   }
   return req.actor;
@@ -209,11 +262,30 @@ async function save(req: Request, res: Response): Promise<void> {
     !Number.isInteger(parsed.data.revision) ||
     parsed.data.revision < 1
   ) {
-    fail(res, 400, "Podatki obrazca niso veljavni.");
+    const invalidFields = !parsed.success
+      ? validationPaths(parsed.error.issues)
+      : ["revision"];
+    req.log.warn(
+      {
+        requestId: safeRequestId(req),
+        operation: "host_onboarding_save",
+        tenantId: actor.tenantId,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields,
+      },
+      "Host onboarding save rejected",
+    );
+    fail(
+      res,
+      400,
+      "Podatki obrazca niso veljavni.",
+      failureDetails(req, "validation_failed", invalidFields),
+    );
     return;
   }
   const diagnosticBase = {
-    requestId: String(req.id),
+    requestId: safeRequestId(req),
     operation: "host_onboarding_save",
     tenantId: actor.tenantId,
     requestedRevision: parsed.data.revision,
@@ -222,15 +294,35 @@ async function save(req: Request, res: Response): Promise<void> {
   try {
     current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
   } catch (error) {
+    const failure = infrastructureFailure(error, "save_failed");
     req.log.error(
-      { ...diagnosticBase, outcome: "failed", ...safeDatabaseErrorDiagnostic(error) },
+      {
+        ...diagnosticBase,
+        outcome: "failed",
+        reasonCode: failure.reasonCode,
+        ...failure.diagnostic,
+      },
       "Host onboarding save infrastructure failure",
     );
-    fail(res, 500, "Shranjevanje trenutno ni uspelo. Poskusite znova.");
+    fail(
+      res,
+      500,
+      "Shranjevanje trenutno ni uspelo. Poskusite znova.",
+      failureDetails(req, failure.reasonCode),
+    );
     return;
   }
   if (!current) {
-    fail(res, 404, "Obrazec za to namestitev še ni odprt.");
+    req.log.warn(
+      { ...diagnosticBase, outcome: "rejected", reasonCode: "session_unavailable" },
+      "Host onboarding save rejected",
+    );
+    fail(
+      res,
+      404,
+      "Obrazec za to namestitev še ni odprt.",
+      failureDetails(req, "session_unavailable"),
+    );
     return;
   }
   const merged = ConfirmHostOnboardingSubmissionBody.safeParse({
@@ -239,7 +331,24 @@ async function save(req: Request, res: Response): Promise<void> {
     data: { ...current.round.draftData, ...parsed.data.data },
   });
   if (!merged.success || !merged.data.data || !dataFormatsAreValid(merged.data.data)) {
-    fail(res, 400, "Podatki obrazca niso veljavni.");
+    const invalidFields = !merged.success
+      ? validationPaths(merged.error.issues)
+      : ["data"];
+    req.log.warn(
+      {
+        ...diagnosticBase,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields,
+      },
+      "Host onboarding save rejected",
+    );
+    fail(
+      res,
+      400,
+      "Podatki obrazca niso veljavni.",
+      failureDetails(req, "validation_failed", invalidFields),
+    );
     return;
   }
   let result;
@@ -252,24 +361,37 @@ async function save(req: Request, res: Response): Promise<void> {
       (req.body as { canonicalRevision?: string }).canonicalRevision,
     );
   } catch (error) {
+    const failure = infrastructureFailure(error, "save_failed");
     req.log.error(
       {
         ...diagnosticBase,
         round: current.round.round,
         outcome: "failed",
-        ...safeDatabaseErrorDiagnostic(error),
+        reasonCode: failure.reasonCode,
+        ...failure.diagnostic,
       },
       "Host onboarding save infrastructure failure",
     );
-    fail(res, 500, "Shranjevanje trenutno ni uspelo. Poskusite znova.");
+    fail(
+      res,
+      500,
+      "Shranjevanje trenutno ni uspelo. Poskusite znova.",
+      failureDetails(req, failure.reasonCode),
+    );
     return;
   }
   if (!result.ok) {
+    const reasonCode: HostOnboardingFailureReason = result.kind === "stale"
+      ? "stale_revision"
+      : result.kind === "missing"
+        ? "session_unavailable"
+        : "save_failed";
     req.log.warn(
       {
         ...diagnosticBase,
         round: current.round.round,
         outcome: "rejected",
+        reasonCode,
         reason: result.kind === "stale" ? result.staleReason : result.kind,
         currentRevision: result.currentRevision,
       },
@@ -280,7 +402,10 @@ async function save(req: Request, res: Response): Promise<void> {
         res,
         409,
         "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova.",
-        { currentRevision: result.currentRevision },
+        {
+          ...failureDetails(req, reasonCode),
+          currentRevision: result.currentRevision,
+        },
       );
     } else {
       fail(
@@ -289,6 +414,7 @@ async function save(req: Request, res: Response): Promise<void> {
         result.kind === "missing"
           ? "Obrazec za to namestitev še ni odprt."
           : "Oddanega obrazca ni več mogoče spreminjati.",
+        failureDetails(req, reasonCode),
       );
     }
     return;
@@ -297,21 +423,42 @@ async function save(req: Request, res: Response): Promise<void> {
   try {
     canonical = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
   } catch (error) {
+    const failure = infrastructureFailure(error, "save_failed");
     req.log.error(
       {
         ...diagnosticBase,
         round: current.round.round,
         outcome: "failed",
         phase: "response_read",
-        ...safeDatabaseErrorDiagnostic(error),
+        reasonCode: failure.reasonCode,
+        ...failure.diagnostic,
       },
       "Host onboarding save infrastructure failure",
     );
-    fail(res, 500, "Sprememba je bila shranjena, vendar osvežitev podatkov ni uspela.");
+    fail(
+      res,
+      500,
+      "Sprememba je bila shranjena, vendar osvežitev podatkov ni uspela.",
+      failureDetails(req, failure.reasonCode),
+    );
     return;
   }
   if (!canonical) {
-    fail(res, 404, "Obrazec za to namestitev še ni odprt.");
+    req.log.warn(
+      {
+        ...diagnosticBase,
+        round: current.round.round,
+        outcome: "rejected",
+        reasonCode: "session_unavailable",
+      },
+      "Host onboarding save rejected",
+    );
+    fail(
+      res,
+      404,
+      "Obrazec za to namestitev še ni odprt.",
+      failureDetails(req, "session_unavailable"),
+    );
     return;
   }
   const dto = hostDto(canonical);
@@ -425,11 +572,27 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     !Number.isInteger(requestedRound) ||
     requestedRound < 1
   ) {
-    fail(res, 400, "Krog obrazca ni veljaven.");
+    req.log.warn(
+      {
+        requestId: safeRequestId(req),
+        operation: "host_onboarding_submit",
+        tenantId: actor.tenantId,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields: ["round"],
+      },
+      "Host onboarding submit rejected",
+    );
+    fail(
+      res,
+      400,
+      "Krog obrazca ni veljaven.",
+      failureDetails(req, "validation_failed", ["round"]),
+    );
     return;
   }
   const submitRequestDiagnostic = {
-    requestId: String(req.id),
+    requestId: safeRequestId(req),
     operation: "host_onboarding_submit",
     tenantId: actor.tenantId,
     round: requestedRound,
@@ -445,16 +608,23 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
       requestedRound,
     );
   } catch (error) {
+    const failure = infrastructureFailure(error, "submit_failed");
     req.log.error(
       {
         ...submitRequestDiagnostic,
         outcome: "failed",
         phase: "replay_lookup",
-        ...safeDatabaseErrorDiagnostic(error),
+        reasonCode: failure.reasonCode,
+        ...failure.diagnostic,
       },
       "Host onboarding submit infrastructure failure",
     );
-    fail(res, 500, "Oddaja trenutno ni uspela. Poskusite znova.");
+    fail(
+      res,
+      500,
+      "Oddaja trenutno ni uspela. Poskusite znova.",
+      failureDetails(req, failure.reasonCode),
+    );
     return;
   }
   if (replay) {
@@ -471,16 +641,44 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
   }
 
   const parsed = ConfirmHostOnboardingSubmissionBody.safeParse(req.body);
-  if (
-    !parsed.success ||
-    parsed.data.revision === undefined ||
-    !Number.isInteger(parsed.data.revision) ||
-    parsed.data.revision < 1
-  ) {
+  if (!parsed.success) {
+    const invalidFields = validationPaths(parsed.error.issues);
+    req.log.warn(
+      {
+        ...submitRequestDiagnostic,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields,
+      },
+      "Host onboarding submit rejected",
+    );
     fail(
       res,
       400,
       "Za prvo oddajo pošljite trenutno revizijo osnutka.",
+      failureDetails(req, "validation_failed", invalidFields),
+    );
+    return;
+  }
+  if (
+    parsed.data.revision === undefined ||
+    !Number.isInteger(parsed.data.revision) ||
+    parsed.data.revision < 1
+  ) {
+    req.log.warn(
+      {
+        ...submitRequestDiagnostic,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields: ["revision"],
+      },
+      "Host onboarding submit rejected",
+    );
+    fail(
+      res,
+      400,
+      "Za prvo oddajo pošljite trenutno revizijo osnutka.",
+      failureDetails(req, "validation_failed", ["revision"]),
     );
     return;
   }
@@ -490,17 +688,24 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     try {
       current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
     } catch (error) {
+      const failure = infrastructureFailure(error, "submit_failed");
       req.log.error(
         {
           ...submitRequestDiagnostic,
           requestedRevision: parsed.data.revision,
           outcome: "failed",
           phase: "draft_read",
-          ...safeDatabaseErrorDiagnostic(error),
+          reasonCode: failure.reasonCode,
+          ...failure.diagnostic,
         },
         "Host onboarding submit infrastructure failure",
       );
-      fail(res, 500, "Oddaja trenutno ni uspela. Poskusite znova.");
+      fail(
+        res,
+        500,
+        "Oddaja trenutno ni uspela. Poskusite znova.",
+        failureDetails(req, failure.reasonCode),
+      );
       return;
     }
     if (
@@ -508,7 +713,25 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
       current.round.round !== requestedRound ||
       current.round.status !== "draft"
     ) {
-      fail(res, 409, "Krog obrazca ni veljaven.");
+      const reasonCode: HostOnboardingFailureReason = current
+        ? "validation_failed"
+        : "session_unavailable";
+      req.log.warn(
+        {
+          ...submitRequestDiagnostic,
+          requestedRevision: parsed.data.revision,
+          outcome: "rejected",
+          reasonCode,
+          invalidFields: ["round"],
+        },
+        "Host onboarding submit rejected",
+      );
+      fail(
+        res,
+        409,
+        "Krog obrazca ni veljaven.",
+        failureDetails(req, reasonCode, ["round"]),
+      );
       return;
     }
     data = current.round.draftData;
@@ -519,7 +742,25 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     data,
   });
   if (!validated.success || !validated.data.data || !dataFormatsAreValid(validated.data.data)) {
-    fail(res, 400, "Podatki obrazca niso veljavni.");
+    const invalidFields = !validated.success
+      ? validationPaths(validated.error.issues)
+      : ["data"];
+    req.log.warn(
+      {
+        ...submitRequestDiagnostic,
+        requestedRevision: parsed.data.revision,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields,
+      },
+      "Host onboarding submit rejected",
+    );
+    fail(
+      res,
+      400,
+      "Podatki obrazca niso veljavni.",
+      failureDetails(req, "validation_failed", invalidFields),
+    );
     return;
   }
   data = validated.data.data;
@@ -532,24 +773,89 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     data.checkOutUntil,
   ];
   if (required.some((value) => !value.trim())) {
-    fail(res, 400, "Izpolnite vsa obvezna polja v osnovnih podatkih.");
+    const requiredFields = [
+      "data.accommodationName",
+      "data.address",
+      "data.guestPhone",
+      "data.guestEmail",
+      "data.checkInFrom",
+      "data.checkOutUntil",
+    ];
+    const invalidFields = requiredFields.filter((_, index) => !required[index]?.trim());
+    req.log.warn(
+      {
+        ...submitRequestDiagnostic,
+        requestedRevision: parsed.data.revision,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields,
+      },
+      "Host onboarding submit rejected",
+    );
+    fail(
+      res,
+      400,
+      "Izpolnite vsa obvezna polja v osnovnih podatkih.",
+      failureDetails(req, "validation_failed", invalidFields),
+    );
     return;
   }
   if (!data.contacts.some((contact) => contact.name.trim() && contact.phone.trim())) {
-    fail(res, 400, "Dodajte vsaj eno kontaktno osebo z imenom in telefonom.");
+    req.log.warn(
+      {
+        ...submitRequestDiagnostic,
+        requestedRevision: parsed.data.revision,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields: ["data.contacts"],
+      },
+      "Host onboarding submit rejected",
+    );
+    fail(
+      res,
+      400,
+      "Dodajte vsaj eno kontaktno osebo z imenom in telefonom.",
+      failureDetails(req, "validation_failed", ["data.contacts"]),
+    );
     return;
   }
   for (const event of data.events) {
     if (event.name.trim() && (!event.date || !event.time)) {
-      fail(res, 400, "Pri dogodku z nazivom izberite tudi datum in uro.");
+      req.log.warn(
+        {
+          ...submitRequestDiagnostic,
+          requestedRevision: parsed.data.revision,
+          outcome: "rejected",
+          reasonCode: "validation_failed",
+          invalidFields: ["data.events"],
+        },
+        "Host onboarding submit rejected",
+      );
+      fail(
+        res,
+        400,
+        "Pri dogodku z nazivom izberite tudi datum in uro.",
+        failureDetails(req, "validation_failed", ["data.events"]),
+      );
       return;
     }
   }
   if (!hostCustomCategoriesAreSubmittable(data)) {
+    req.log.warn(
+      {
+        ...submitRequestDiagnostic,
+        requestedRevision: parsed.data.revision,
+        outcome: "rejected",
+        reasonCode: "validation_failed",
+        invalidFields: ["data.customCategories"],
+      },
+      "Host onboarding submit rejected",
+    );
     fail(
       res,
       400,
       "Vnesite ime svoje kategorije ali odstranite njene vnose.",
+      failureDetails(req, "validation_failed", ["data.customCategories"]),
     );
     return;
   }
@@ -568,18 +874,37 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
       parsed.data.canonicalRevision,
     );
   } catch (error) {
+    const failure = infrastructureFailure(error, "submit_failed");
     req.log.error(
-      { ...diagnosticBase, outcome: "failed", ...safeDatabaseErrorDiagnostic(error) },
+      {
+        ...diagnosticBase,
+        outcome: "failed",
+        reasonCode: failure.reasonCode,
+        ...failure.diagnostic,
+      },
       "Host onboarding submit infrastructure failure",
     );
-    fail(res, 500, "Oddaja trenutno ni uspela. Poskusite znova.");
+    fail(
+      res,
+      500,
+      "Oddaja trenutno ni uspela. Poskusite znova.",
+      failureDetails(req, failure.reasonCode),
+    );
     return;
   }
   if (!result.ok) {
+    const reasonCode: HostOnboardingFailureReason = result.kind === "stale"
+      ? "stale_revision"
+      : result.kind === "missing"
+        ? "session_unavailable"
+        : result.kind === "invalid_custom_category" || result.kind === "wrong_round"
+          ? "validation_failed"
+          : "submit_failed";
     req.log.warn(
       {
         ...diagnosticBase,
         outcome: "rejected",
+        reasonCode,
         reason: result.kind === "stale" ? result.staleReason : result.kind,
         currentRevision: result.currentRevision,
       },
@@ -593,6 +918,15 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
       invalid_custom_category: "Vnesite ime svoje kategorije ali odstranite njene vnose.",
     } as const;
     fail(res, result.kind === "missing" ? 404 : 409, messages[result.kind], {
+      ...failureDetails(
+        req,
+        reasonCode,
+        result.kind === "invalid_custom_category"
+          ? ["data.customCategories"]
+          : result.kind === "wrong_round"
+            ? ["round"]
+            : undefined,
+      ),
       ...(result.currentRevision ? { currentRevision: result.currentRevision } : {}),
     });
     return;

@@ -17,7 +17,6 @@ import {
   openHostDbContext,
   pool,
   publishedSnapshotsTable,
-  runWithHostDbContext,
   sectionsTable,
   tenantsTable,
 } from "@workspace/db";
@@ -38,8 +37,6 @@ import { buildTenantContent } from "../../lib/contentTree";
 import { guestQrSvg, guestUrl } from "../../lib/guestUrl";
 import {
   currentHostOnboarding,
-  saveHostOnboarding,
-  submitHostOnboarding,
 } from "../../lib/hostOnboarding";
 import { _setHostOnboardingDeliveryOverride } from "../../lib/hostOnboardingEmail";
 import { logger } from "../../lib/logger";
@@ -49,7 +46,7 @@ import {
   objectStorageClient,
 } from "../../lib/objectStorage";
 import { isWhatsappConfigured } from "../../lib/whatsapp";
-import hostOnboardingRouter, { hostDto } from "../../routes/hostOnboarding";
+import hostOnboardingRouter from "../../routes/hostOnboarding";
 import storageRouter, { VIDEO_MAX_BYTES } from "../../routes/storage";
 import {
   canonicalFixtureDigest,
@@ -460,19 +457,6 @@ async function serve(): Promise<void> {
   );
 
   app.use(express.json({ limit: "256kb" }));
-  const fixtureHostActor = (request: express.Request): Actor => ({
-    kind: "host",
-    hostUserId: value.fixture.hostUserId,
-    tenantId: value.fixture.tenantId,
-    requestIp: request.ip,
-  });
-  const runAsFixtureHost = <T>(
-    request: express.Request,
-    operation: () => Promise<T>,
-  ): Promise<T> => runWithHostDbContext(
-    value.fixture.tenantId,
-    () => actorStorage.run(fixtureHostActor(request), operation),
-  );
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
   app.get("/host/session", (_request, response) => response.json({
     authenticated: true,
@@ -553,129 +537,6 @@ async function serve(): Promise<void> {
       response.status(201).json(CreateCategoryResponse.parse(category));
     } catch (error) {
       next(error);
-    }
-  });
-  app.get("/host/onboarding", async (request, response, next) => {
-    try {
-      const current = await runAsFixtureHost(
-        request,
-        () => currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId),
-      );
-      if (!current) {
-        response.status(404).json({ message: "Obrazec za to namestitev še ni odprt." });
-        return;
-      }
-      response.json(hostDto(current));
-    } catch (error) {
-      next(error);
-    }
-  });
-  const saveFixtureOnboarding: express.RequestHandler = async (request, response, next) => {
-    try {
-      const revision = Number(request.body?.revision);
-      const result = await runAsFixtureHost(
-        request,
-        () => saveHostOnboarding(
-          value.fixture.tenantId,
-          value.fixture.hostUserId,
-          revision,
-          request.body?.data ?? {},
-          String(request.body?.canonicalRevision ?? ""),
-        ),
-      );
-      if (!result.ok) {
-        response.status(result.kind === "missing" ? 404 : 409).json({
-          message: result.kind === "stale"
-            ? "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova."
-            : result.kind === "missing"
-              ? "Obrazec za to namestitev še ni odprt."
-              : "Oddanega obrazca ni več mogoče spreminjati.",
-          ...(result.currentRevision ? { currentRevision: result.currentRevision } : {}),
-        });
-        return;
-      }
-      const current = await runAsFixtureHost(
-        request,
-        () => currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId),
-      );
-      if (!current) {
-        response.status(404).json({ message: "Obrazec za to namestitev še ni odprt." });
-        return;
-      }
-      const dto = hostDto(current);
-      response.json({
-        ok: true,
-        revision: dto.revision,
-        canonicalRevision: dto.canonicalRevision,
-        updatedAt: dto.updatedAt,
-        data: dto.data,
-        photos: dto.photos,
-        categories: dto.categories,
-        contentSections: dto.contentSections,
-        recommendationProcessing: result.recommendationProcessing,
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-  app.patch("/host/onboarding", saveFixtureOnboarding);
-  app.post("/host/onboarding/save", saveFixtureOnboarding);
-  app.post("/host/onboarding/submit", async (request, response, next) => {
-    try {
-      const current = await runAsFixtureHost(
-        request,
-        () => currentHostOnboarding(value.fixture.tenantId, value.fixture.hostUserId),
-      );
-      if (!current) {
-        response.status(404).json({ message: "Obrazec za to namestitev še ni odprt." });
-        return;
-      }
-      const requestedRound = Number(request.body?.round);
-      if (!Number.isInteger(requestedRound) || requestedRound < 1) {
-        response.status(400).json({ message: "Krog obrazca ni veljaven." });
-        return;
-      }
-      const submittedData = request.body?.data ?? current.round.draftData;
-      _setHostOnboardingDeliveryOverride(async () => ({
-        ok: true,
-        providerMessageId: "browser-fixture-no-email",
-      }));
-      const result = await runAsFixtureHost(
-        request,
-        () => submitHostOnboarding(
-          value.fixture.tenantId,
-          value.fixture.hostUserId,
-          requestedRound,
-          Number(request.body?.revision),
-          submittedData,
-          String(request.body?.canonicalRevision ?? ""),
-        ),
-      );
-      if (!result.ok) {
-        response.status(result.kind === "missing" ? 404 : 409).json({
-          message: result.kind === "stale"
-            ? "Osnutek je bil medtem spremenjen. Osvežite obrazec in poskusite znova."
-            : result.kind === "wrong_round"
-              ? "Krog obrazca ni veljaven."
-              : result.kind === "photo_uploading"
-                ? "Počakajte, da se nalaganje fotografij konča."
-                : result.kind === "invalid_custom_category"
-                  ? "Vnesite ime svoje kategorije ali odstranite njene vnose."
-                  : "Obrazec za to namestitev še ni odprt.",
-          ...(result.currentRevision ? { currentRevision: result.currentRevision } : {}),
-        });
-        return;
-      }
-      response.json({
-        ok: true,
-        alreadySubmitted: result.alreadySubmitted,
-        recommendationProcessing: result.recommendationProcessing,
-        message: "Hvala! Vaš vodnik pripravljamo — obvestili vas bomo, ko bo pripravljen za pregled.",
-      });
-    } catch (error) {
-      next(error);
-    } finally {
-      _setHostOnboardingDeliveryOverride(null);
     }
   });
   app.get("/admin/place-search", async (request, response, next) => {
@@ -806,11 +667,15 @@ async function serve(): Promise<void> {
   app.use(
     "/_real-host",
     async (request, response, next) => {
-      const allowedPostPaths = new Set([
-        "/admin/host/onboarding/categories",
-        "/admin/host/onboarding/recommendations/retry",
+      const allowedRoutes = new Set([
+        "GET /admin/host/onboarding",
+        "PATCH /admin/host/onboarding",
+        "POST /admin/host/onboarding/save",
+        "POST /admin/host/onboarding/submit",
+        "POST /admin/host/onboarding/categories",
+        "POST /admin/host/onboarding/recommendations/retry",
       ]);
-      if (request.method !== "POST" || !allowedPostPaths.has(request.path)) {
+      if (!allowedRoutes.has(`${request.method} ${request.path}`)) {
         response.status(404).json({ error: "Fixture route not found" });
         return;
       }
@@ -885,12 +750,24 @@ async function serve(): Promise<void> {
       error: error instanceof Error ? error.message : "Fixture service failed",
     });
   });
+  _setHostOnboardingDeliveryOverride(async () => ({
+    ok: true,
+    providerMessageId: "browser-fixture-no-email",
+  }));
   app.listen(port, "127.0.0.1", () => {
     console.log(JSON.stringify({
       command: "serve",
       origin: `http://127.0.0.1:${port}`,
       scope: value.fixture.tenantId,
       authentication: "simulated actor binding restricted to disposable fixture",
+      realHostRoutes: [
+        "GET /_real-host/admin/host/onboarding",
+        "PATCH /_real-host/admin/host/onboarding",
+        "POST /_real-host/admin/host/onboarding/save",
+        "POST /_real-host/admin/host/onboarding/submit",
+        "POST /_real-host/admin/host/onboarding/categories",
+        "POST /_real-host/admin/host/onboarding/recommendations/retry",
+      ],
       adminTenantPatch: {
         path: `/admin/tenants/${value.fixture.tenantId}`,
         implementation: "production schema plus fixture-only direct transaction",

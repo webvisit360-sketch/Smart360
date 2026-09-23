@@ -56,3 +56,9 @@ Draft equality must ignore object-key insertion order while preserving array ord
 **Why:** Canonical responses and three-way merges construct equivalent objects in different key orders. Raw JSON string equality kept acknowledged drafts dirty and scheduled idle saves.
 
 **How to apply:** Use the same semantic snapshot for baseline, rebase, queue deduplication and dirty comparisons. Verify a lost successful response settles without manual intervention.
+
+Submission failure is not evidence that the draft failed to save.
+
+**Why:** A successful save followed by a rejected submission displayed a false unsaved warning. Its retry called an empty save and returned without feedback, leaving the user stuck.
+
+**How to apply:** Keep submission errors and retry actions separate from persistence errors. A retry of a legacy warning must visibly verify server state even when there is no local delta. Exercise production route validation in browser fixtures rather than calling submission services directly.

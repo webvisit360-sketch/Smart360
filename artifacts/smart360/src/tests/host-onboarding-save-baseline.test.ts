@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   hasMeaningfulRichText,
+  hostDraftFailureMessage,
+  hostFailureRecoveryAction,
+  hostSubmitFailureMessage,
   normalizeCanonicalSaveBaseline,
   reconcileCreatedCanonicalRows,
+  shouldReuseQueuedHostSave,
   shouldAppendStayEntry,
 } from "../pages/host/onboarding";
 import {
@@ -105,6 +109,86 @@ test("a rejected media serialization cannot poison the next upload retry", async
   });
   await retried;
   assert.equal(attempts, 2);
+});
+
+test("manual retry does not reuse the rejected active save while its snapshot is still queued", () => {
+  const failedSnapshot = '{"accommodationName":"Nov vnos"}';
+  assert.equal(
+    shouldReuseQueuedHostSave(failedSnapshot, failedSnapshot, false),
+    true,
+    "ordinary autosave still deduplicates an operation already in the queue",
+  );
+  assert.equal(
+    shouldReuseQueuedHostSave(failedSnapshot, failedSnapshot, true),
+    false,
+    "the retry click must enqueue fresh work instead of returning the rejected promise",
+  );
+});
+
+test("repeated save failures expose a safe actionable reason", () => {
+  assert.equal(
+    hostDraftFailureMessage(Object.assign(new Error("sensitive database detail"), { status: 503 })),
+    "Strežnik osnutka trenutno ne more shraniti. Poskusite znova čez nekaj trenutkov.",
+  );
+  assert.doesNotMatch(
+    hostDraftFailureMessage(new Error("sensitive database detail")),
+    /sensitive|database/i,
+  );
+});
+
+test("save and submit failures map only whitelisted reasons and safe request references", () => {
+  assert.equal(
+    hostDraftFailureMessage({
+      status: 500,
+      reasonCode: "database_permission_denied",
+      requestId: "req_42501-safe",
+      message: "raw database policy and table name",
+    }),
+    "Strežnik nima dovoljenja za shranjevanje osnutka. Podpora lahko napako preveri z referenco. Referenca: req_42501-safe",
+  );
+  assert.equal(
+    hostSubmitFailureMessage({
+      status: 400,
+      reasonCode: "validation_failed",
+      requestId: "21",
+      message: "raw validation internals",
+    }),
+    "Osnutek je shranjen, vendar nekateri podatki za oddajo niso veljavni. Referenca: 21",
+  );
+  const unsafe = hostSubmitFailureMessage({
+    status: 500,
+    reasonCode: "arbitrary_internal_reason",
+    requestId: "<script>alert(1)</script>",
+    message: "secret server detail",
+  });
+  assert.equal(
+    unsafe,
+    "Osnutek je shranjen, oddaja pa ni uspela. Poskusite znova.",
+  );
+  assert.doesNotMatch(unsafe, /arbitrary|script|secret/i);
+});
+
+test("a saved draft followed by submit 400 retries submission, not an empty save", () => {
+  assert.equal(
+    hostFailureRecoveryAction({
+      hasUnsavedDraftFailure: false,
+      hasSubmitFailure: true,
+    }),
+    "submit",
+  );
+  assert.equal(
+    hostSubmitFailureMessage(Object.assign(new Error("request schema internals"), { status: 400 })),
+    "Osnutek je shranjen, vendar oddaja ni bila sprejeta. Preverite podatke in poskusite znova.",
+  );
+});
+
+test("server verification can settle a legacy warning with no remaining draft delta", () => {
+  const acknowledged = data({ accommodationName: "Že shranjeno" });
+  assert.deepEqual(
+    changedHostOnboardingFields(acknowledged, acknowledged),
+    {},
+    "a successful GET with no local delta is sufficient to clear the stale save warning",
+  );
 });
 
 test("a title-only stay entry enters the canonical save", () => {
