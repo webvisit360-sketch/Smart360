@@ -1375,6 +1375,50 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   letter-spacing: -.035em;
 }
 
+.lg2-emergency-sheet {
+  padding-top: max(44px, calc(28px + env(safe-area-inset-top)));
+}
+
+.lg2-emergency-contacts {
+  display: grid;
+  gap: 12px;
+}
+
+.lg2-emergency-contact {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--tx);
+  text-decoration: none;
+  display: grid;
+  gap: 5px;
+}
+
+.lg2-emergency-contact strong {
+  overflow-wrap: anywhere;
+  color: var(--accg);
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lg2-emergency-contact span {
+  color: var(--tx2);
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.lg2-emergency-contact--fixed strong {
+  color: var(--accg);
+  font-size: 40px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
 .lg2-detail-title-row {
   margin: 0 0 16px;
   display: flex;

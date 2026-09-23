@@ -2333,6 +2333,37 @@ export interface TenantPublicationPreview {
   removed: string[];
 }
 
+export interface EmergencyContactInput {
+  id?: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  phone: string;
+}
+
+export type EmergencyContact = EmergencyContactInput & {
+  id: string;
+  /** @minimum 0 */
+  position: number;
+};
+
+export interface EmergencyContactsInput {
+  /** @maxItems 50 */
+  rows: EmergencyContactInput[];
+}
+
+export interface EmergencyContactsResponse {
+  /** @nullable */
+  categoryId: string | null;
+  rows: EmergencyContact[];
+}
+
 export interface SitePlanImageUpdate {
   /**
      * Caption text; null or empty clears it

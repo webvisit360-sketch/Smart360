@@ -65,7 +65,9 @@ export async function createCanonicalOnboardingFixture(): Promise<CanonicalOnboa
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 
   const marker = `${FIXTURE_PREFIX}${randomUUID()}`;
-  const tenantSlug = `cofx-${randomUUID()}`;
+  // Keep disposable browser slugs within the same public-route contract as
+  // real tenant slugs (SLUG_SHAPE allows at most 40 characters).
+  const tenantSlug = `cofx-${randomUUID().replaceAll("-", "").slice(0, 24)}`;
   let tenantId: string | undefined;
   let hostUserId: string | undefined;
   try {

@@ -215,6 +215,28 @@ export async function publicationChangesForTenant(
   published: PublishedContent,
 ): Promise<PublicationChanges> {
   const changes = comparePublications(draft, published);
+  // When the dedicated emergency category itself appears/disappears, the
+  // generic tree diff reports the parent category as one entity and therefore
+  // intentionally does not descend into it. Operators still need every
+  // contact name in the confirmation dialog, especially for removals.
+  const emergencyItems = (content: PublishedContent) =>
+    content.languages.sl?.tree.sections
+      .flatMap((section) => section.categories)
+      .find((category) => category.key === "operator-emergency-help")
+      ?.items ?? [];
+  const draftEmergency = emergencyItems(draft);
+  const publishedEmergency = emergencyItems(published);
+  if (!publishedEmergency.length && draftEmergency.length) {
+    for (const item of draftEmergency) {
+      const label = item.title?.trim();
+      if (label && !changes.added.includes(label)) changes.added.push(label);
+    }
+  } else if (publishedEmergency.length && !draftEmergency.length) {
+    for (const item of publishedEmergency) {
+      const label = item.title?.trim();
+      if (label && !changes.removed.includes(label)) changes.removed.push(label);
+    }
+  }
   const [snapshot] = await db.select({ publishedAt: publishedSnapshotsTable.publishedAt })
     .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenantId));
   const categoryCreates = snapshot

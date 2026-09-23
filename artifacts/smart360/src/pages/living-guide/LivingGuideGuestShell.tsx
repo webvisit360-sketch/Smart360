@@ -94,6 +94,7 @@ import {
   STAY_GROUPS,
   populatedSectionGroups,
 } from "./living-guide-groups";
+import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
 
 type GuestRecord = {
   unit: string;
@@ -711,7 +712,16 @@ export default function LivingGuideGuestShell({
   const routeCategoryId = pathParts[1] === "c" ? decodeURIComponent(pathParts[2] ?? "") : null;
   const routeItemId = pathParts[3] === "i" ? decodeURIComponent(pathParts[4] ?? "") : null;
 
-  const categoryContext = routeCategoryId ? allCategories.find((entry: any) => entry.category.id === routeCategoryId) ?? null : null;
+  const emergencyHelpCategory = useMemo(
+    () => buildEmergencyHelpCategory(sections, lang),
+    [lang, sections],
+  );
+  const categoryContext =
+    pathParts[1] === "help"
+      ? { category: emergencyHelpCategory, section: null }
+      : routeCategoryId
+        ? allCategories.find((entry: any) => entry.category.id === routeCategoryId) ?? null
+        : null;
   const currentSection = categoryContext?.section ?? (routeSectionKey ? sections.find((section: any) => section.key === routeSectionKey) ?? null : staySection);
 
   let screen: ScreenName = "cover";
@@ -1832,8 +1842,7 @@ export default function LivingGuideGuestShell({
   const openCategory = (id: string) => navigateDetail(`/${slug}/c/${id}`);
   const openItem = (categoryId: string, itemId: string) =>
     navigateDetail(`/${slug}/c/${categoryId}/i/${itemId}`);
-
-  const helpCategory = allCategories.find((c: any) => c.category.layout === "help")?.category;
+  const openEmergencyHelp = () => navigateDetail(`/${slug}/help`);
 
   const exploreCategories = useMemo(() => {
     const exploreSec = sections.find((s: any) => s.key === "explore");
@@ -1900,6 +1909,8 @@ export default function LivingGuideGuestShell({
             slug={slug}
             onSearch={() => setShowSearch(true)}
             navState={navState}
+            onOpenHelp={openEmergencyHelp}
+            helpTitle={emergencyHelpCategory.label}
           />
         )}
 
@@ -1944,7 +1955,8 @@ export default function LivingGuideGuestShell({
             onOpenCategory={openCategory}
             onOpenNotices={() => setShowNotices(true)}
             notices={notices}
-            helpCategoryId={helpCategory?.id}
+            onOpenHelp={openEmergencyHelp}
+            helpTitle={emergencyHelpCategory.label}
           />
         )}
 
@@ -1958,7 +1970,6 @@ export default function LivingGuideGuestShell({
             onEditGuest={requestCredentials}
             onOpenCategory={openCategory}
             onOpenNotices={() => setShowNotices(true)}
-            helpCategoryId={null}
             notices={[]}
             orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
@@ -2423,7 +2434,7 @@ function NoticeRow({ n, t }: { n: any, t: UiTranslator }) {
   );
 }
 
-function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, helpCategoryId, notices, orderSummary, onOpenOrders, onOpenOffer }: any) {
+function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, orderSummary, onOpenOrders, onOpenOffer }: any) {
   const categories = visible(section.categories);
   const featuredCategory = categories.find(isOperationalRulesCategory) ??
     categories.find((c: any) => { const firstItem = visible(c.items)[0]; return !firstItem?.tint && !!firstMedia(c); });
@@ -2531,11 +2542,6 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
             </button>
           )}
         </div>
-        {helpCategoryId && (
-          <div className="lg2-help-entry">
-            <button type="button" onClick={() => onOpenCategory(helpCategoryId)}>{t("UI.lg.helpEmergency")}</button>
-          </div>
-        )}
       </div>
     </section>
   );
@@ -2935,7 +2941,7 @@ function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem, 
 // Nastanitev (prototype #v-grid): one card per CATEGORY, meta = optional live
 // status · category label; greeting strip directly under the tabs, quiet help
 // link at the bottom of the list.
-function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, helpCategoryId }: any) {
+function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, onOpenHelp, helpTitle }: any) {
   const groups = useMemo(
     () =>
       populatedSectionGroups(section.categories, STAY_GROUPS),
@@ -3010,11 +3016,9 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
             />
           );
         })}
-        {helpCategoryId && (
-          <div className="lg2-help-entry">
-            <button type="button" onClick={() => onOpenCategory(helpCategoryId)}>{t("UI.lg.helpEmergency")}</button>
-          </div>
-        )}
+        <div className="lg2-help-entry">
+          <button type="button" onClick={onOpenHelp}>{helpTitle}</button>
+        </div>
         {groups.length === 0 && (
           <div className="lg2-empty">{t("UI.lg.search.empty")}</div>
         )}
@@ -3586,6 +3590,8 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
   } else {
     if (layout === "wifi") {
       content = <TemplateE category={category} items={items} tenant={tenant} t={t} onBack={onBack} />;
+    } else if (layout === "help") {
+      content = <EmergencyHelpTemplate category={category} items={items} onBack={onBack} />;
     } else if (layout === "tabs" && items.length === 2) {
       content = <TemplateD category={category} items={items} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "tabs" || layout === "apartments" || layout === "products" || layout === "poi" || layout === "routes" || layout === "events") {
@@ -3620,6 +3626,43 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
         <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
       )}
     </section>
+  );
+}
+
+function EmergencyHelpTemplate({ category, items, onBack }: any) {
+  return (
+    <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
+      <div className="lg2-detail-sheet-root">
+        <HeroGallery media={[]} onBack={onBack} singleOnly={true} />
+        <article className="lg2-detail-sheet lg2-detail-sheet--full-height lg2-emergency-sheet"
+          data-testid="emergency-help-sheet"
+        >
+          <div className="lg2-grabber" aria-hidden="true" />
+          <h1>{category.label}</h1>
+          <div className="lg2-emergency-contacts">
+            {items.map((item: any) => (
+              <a
+                className={`lg2-emergency-contact${item.fixed ? " lg2-emergency-contact--fixed" : ""}`}
+                href={`tel:${item.phone}`}
+                key={item.id}
+              >
+                {item.fixed ? (
+                  <>
+                    <strong>{item.phone}</strong>
+                    <span>{item.description}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{item.title}</span>
+                    <strong>{item.phone}</strong>
+                  </>
+                )}
+              </a>
+            ))}
+          </div>
+        </article>
+      </div>
+    </div>
   );
 }
 
@@ -4264,6 +4307,8 @@ function HomeView({
   slug,
   onSearch,
   navState,
+  onOpenHelp,
+  helpTitle,
 }: any) {
   const now = new Date();
   const eventDestination = datedEventDestination(sections);
@@ -4271,9 +4316,6 @@ function HomeView({
   const wifiCategory = sections
     .flatMap((section: any) => visible(section.categories))
     .find((category: any) => category.layout === "wifi");
-  const helpCategory = sections
-    .flatMap((section: any) => visible(section.categories))
-    .find((category: any) => category.layout === "help");
   const hasWifi =
     !!tenant.wifiSsid ||
     !!tenant.wifiNetwork ||
@@ -4454,10 +4496,9 @@ function HomeView({
         <div className="lg2-hhelp">
           <button
             type="button"
-            disabled={!helpCategory}
-            onClick={() => helpCategory && onOpenCategory(helpCategory.id)}
+            onClick={onOpenHelp}
           >
-            {t("UI.lg.helpEmergency", "Pomoč in nujni primeri")}
+            {helpTitle}
           </button>
         </div>
         <div className="lg2-made">

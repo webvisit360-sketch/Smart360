@@ -11,6 +11,12 @@ Remote browser tools cannot reach a workspace-only service at their own 127.0.0.
 
 Use managed background shell tasks for fixture servers, not detached subprocesses that may be killed when the tool call ends. Always clean the disposable tenant IDs afterward, including IDs from failed attempts.
 
+Prefer the normal development server, without interception, for public guest routes backed by disposable development data. Reserve the relay for authenticated fixture operations.
+
+**Why:** Relaying every guest request introduced aborted requests and apparent blank renders, while the ordinary public development API already served the same fixture correctly.
+
+**How to apply:** Check the ordinary public endpoint first. Use a clean browser context without routes for guest verification; allow the normal splash to finish. Keep the authenticated fixture bridge separate.
+
 For mocked browser checks, preserve API envelopes and canonical category keys rather than using blanket arrays or label-only objects.
 
 **Why:** An array in place of the storage-usage envelope caused a false dialog crash, and an omitted category key made a valid offer placeholder appear broken.

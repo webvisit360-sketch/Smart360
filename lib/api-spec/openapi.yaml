@@ -220,6 +220,44 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TenantPublicationPreview" }
         "404": { description: Tenant not found }
+  /admin/tenants/{id}/emergency-contacts:
+    get:
+      operationId: getTenantEmergencyContacts
+      tags: [tenants]
+      summary: Read operator-managed emergency contacts
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Emergency contact draft rows
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmergencyContactsResponse" }
+        "401": { description: Authentication required }
+        "403": { description: Smart360 operator required }
+        "404": { description: Tenant not found }
+    put:
+      operationId: updateTenantEmergencyContacts
+      tags: [tenants]
+      summary: Replace operator-managed emergency contact draft rows
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmergencyContactsInput" }
+      responses:
+        "200":
+          description: Saved emergency contact draft rows
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmergencyContactsResponse" }
+        "400": { description: Invalid contact rows }
+        "401": { description: Authentication required }
+        "403": { description: Smart360 operator required }
+        "404": { description: Tenant not found }
+        "409": { description: Concurrent or invalid row ownership conflict }
   /admin/tenants/{id}/align-skeleton:
     post:
       operationId: alignTenantSkeleton
@@ -4673,6 +4711,37 @@ components:
         changed: { type: array, items: { type: string } }
         removed: { type: array, items: { type: string } }
       required: [token, total, added, changed, removed]
+    EmergencyContactInput:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        phone: { type: string, minLength: 1, maxLength: 100 }
+      required: [title, phone]
+    EmergencyContact:
+      allOf:
+        - $ref: "#/components/schemas/EmergencyContactInput"
+        - type: object
+          properties:
+            id: { type: string }
+            position: { type: number, minimum: 0 }
+          required: [id, position]
+    EmergencyContactsInput:
+      type: object
+      properties:
+        rows:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/EmergencyContactInput" }
+      required: [rows]
+    EmergencyContactsResponse:
+      type: object
+      properties:
+        categoryId: { type: ["string", "null"] }
+        rows:
+          type: array
+          items: { $ref: "#/components/schemas/EmergencyContact" }
+      required: [categoryId, rows]
     SitePlanImageUpdate:
       type: object
       properties:

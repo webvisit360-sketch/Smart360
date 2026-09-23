@@ -1256,6 +1256,78 @@ export const PreviewTenantPublicationResponse = zod.object({
 
 
 /**
+ * @summary Read operator-managed emergency contacts
+ */
+export const GetTenantEmergencyContactsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const getTenantEmergencyContactsResponseRowsItemOneTitleMax = 200;
+
+export const getTenantEmergencyContactsResponseRowsItemOnePhoneMax = 100;
+
+export const getTenantEmergencyContactsResponseRowsItemTwoPositionMin = 0;
+
+
+
+export const GetTenantEmergencyContactsResponse = zod.object({
+  "categoryId": zod.string().nullable(),
+  "rows": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string().min(1).max(getTenantEmergencyContactsResponseRowsItemOneTitleMax),
+  "phone": zod.string().min(1).max(getTenantEmergencyContactsResponseRowsItemOnePhoneMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "position": zod.number().min(getTenantEmergencyContactsResponseRowsItemTwoPositionMin)
+})))
+})
+
+
+/**
+ * @summary Replace operator-managed emergency contact draft rows
+ */
+export const UpdateTenantEmergencyContactsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updateTenantEmergencyContactsBodyRowsItemTitleMax = 200;
+
+export const updateTenantEmergencyContactsBodyRowsItemPhoneMax = 100;
+
+export const updateTenantEmergencyContactsBodyRowsMax = 50;
+
+
+
+export const UpdateTenantEmergencyContactsBody = zod.object({
+  "rows": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "title": zod.string().min(1).max(updateTenantEmergencyContactsBodyRowsItemTitleMax),
+  "phone": zod.string().min(1).max(updateTenantEmergencyContactsBodyRowsItemPhoneMax)
+})).max(updateTenantEmergencyContactsBodyRowsMax)
+})
+
+export const updateTenantEmergencyContactsResponseRowsItemOneTitleMax = 200;
+
+export const updateTenantEmergencyContactsResponseRowsItemOnePhoneMax = 100;
+
+export const updateTenantEmergencyContactsResponseRowsItemTwoPositionMin = 0;
+
+
+
+export const UpdateTenantEmergencyContactsResponse = zod.object({
+  "categoryId": zod.string().nullable(),
+  "rows": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string().min(1).max(updateTenantEmergencyContactsResponseRowsItemOneTitleMax),
+  "phone": zod.string().min(1).max(updateTenantEmergencyContactsResponseRowsItemOnePhoneMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "position": zod.number().min(updateTenantEmergencyContactsResponseRowsItemTwoPositionMin)
+})))
+})
+
+
+/**
  * @summary Uskladi strukturo okolice s trenutnim skupnim skeletom
  */
 export const alignTenantSkeletonPathIdRegExp = new RegExp('^[0-9a-fA-F-]{36}$');

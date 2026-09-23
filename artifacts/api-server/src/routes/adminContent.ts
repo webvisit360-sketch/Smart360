@@ -47,6 +47,9 @@ import {
   RecomputeItemDistanceResponse,
   TranslateMissingItemFieldsBody,
   TranslateMissingItemFieldsResponse,
+  GetTenantEmergencyContactsResponse,
+  UpdateTenantEmergencyContactsBody,
+  UpdateTenantEmergencyContactsResponse,
 } from "@workspace/api-zod";
 import { getAdminUser, requireAdmin } from "../lib/adminAuth";
 import { currentActor } from "../lib/actorContext";
@@ -72,6 +75,7 @@ import {
   translateMissingEditorial,
 } from "../lib/creatorEditorialTranslation";
 import { createCategoryWithTooling } from "../lib/categoryTooling";
+import { requireOperator } from "../lib/actorGate";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -103,6 +107,8 @@ function cleanContentFields<T extends Record<string, unknown>>(data: T): T {
 
 const router: IRouter = Router();
 router.use("/admin", requireAdmin);
+
+const EMERGENCY_CATEGORY_KEY = "operator-emergency-help";
 
 function firstParam(v: string | string[] | undefined): string {
   return (Array.isArray(v) ? v[0] : v) ?? "";
@@ -225,6 +231,174 @@ export function mediaMutationSummary(
 function languageLabel(lang: string): string {
   return ({ sl: "slovenščina", en: "angleščina", de: "nemščina", it: "italijanščina" } as Record<string, string>)[lang] ?? auditLabel(lang);
 }
+
+async function emergencyCategoryForTenant(tenantId: string) {
+  const [row] = await db.select({ category: categoriesTable })
+    .from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(and(
+      eq(sectionsTable.tenantId, tenantId),
+      eq(categoriesTable.key, EMERGENCY_CATEGORY_KEY),
+      isNull(categoriesTable.deletedAt),
+    ))
+    .limit(1);
+  return row?.category ?? null;
+}
+
+router.get("/admin/tenants/:id/emergency-contacts", requireOperator, async (req, res): Promise<void> => {
+  const tenantId = firstParam(req.params["id"]);
+  const category = await emergencyCategoryForTenant(tenantId);
+  if (!category) {
+    res.json(GetTenantEmergencyContactsResponse.parse({ categoryId: null, rows: [] }));
+    return;
+  }
+  const rows = await db.select({
+    id: itemsTable.id,
+    title: itemsTable.title,
+    phone: itemsTable.phone,
+    position: itemsTable.position,
+  }).from(itemsTable).where(and(
+    eq(itemsTable.categoryId, category.id),
+    isNull(itemsTable.deletedAt),
+  )).orderBy(asc(itemsTable.position));
+  res.json(GetTenantEmergencyContactsResponse.parse({
+    categoryId: category.id,
+    rows: rows.map((row) => ({ ...row, title: row.title ?? "", phone: row.phone ?? "" })),
+  }));
+});
+
+router.put("/admin/tenants/:id/emergency-contacts", requireOperator, async (req, res): Promise<void> => {
+  const tenantId = firstParam(req.params["id"]);
+  const parsed = UpdateTenantEmergencyContactsBody.safeParse(req.body);
+  const inputRows = parsed.success
+    ? parsed.data.rows.map((row) => ({ ...row, title: row.title.trim(), phone: row.phone.trim() }))
+    : null;
+  if (!inputRows || inputRows.some((row) => !row.title || !row.phone)) {
+    res.status(400).json({ error: "Vnesite naziv in telefonsko številko za vsak kontakt." });
+    return;
+  }
+  if (inputRows.some((row) => /^(112|113)$/.test(row.phone.replace(/[\s()-]/g, "")))) {
+    res.status(400).json({ error: "Številki 112 in 113 sta sistemski in ju ni mogoče dodati ali urejati." });
+    return;
+  }
+  const [tenant] = await db.select({ id: tenantsTable.id, name: tenantsTable.name })
+    .from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
+  if (!tenant) {
+    res.status(404).json({ error: "Namestitev ni najdena." });
+    return;
+  }
+
+  try {
+    const saved = await db.transaction(async (tx) => {
+      // One tenant lock serializes category lazy-creation and complete
+      // replacement writes, preventing duplicate categories and lost updates.
+      const [lockedTenant] = await tx.select({ id: tenantsTable.id }).from(tenantsTable)
+        .where(eq(tenantsTable.id, tenantId)).for("update");
+      if (!lockedTenant) throw new Error("Namestitev ni najdena.");
+      let category = await (async () => {
+        const [row] = await tx.select({ category: categoriesTable })
+          .from(categoriesTable)
+          .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+          .where(and(
+            eq(sectionsTable.tenantId, tenantId),
+            eq(categoriesTable.key, EMERGENCY_CATEGORY_KEY),
+            isNull(categoriesTable.deletedAt),
+          )).limit(1);
+        return row?.category ?? null;
+      })();
+
+      if (!category && inputRows.length) {
+        const sections = await tx.select().from(sectionsTable)
+          .where(eq(sectionsTable.tenantId, tenantId))
+          .orderBy(asc(sectionsTable.position));
+        const section = sections.find((row) => row.key === "stay") ??
+          sections.find((row) => row.isVisible) ?? sections[0];
+        if (!section) throw new Error("Namestitev nima razdelka za vsebino.");
+        category = await createCategoryWithTooling(tx, section.id, {
+          key: EMERGENCY_CATEGORY_KEY,
+          label: "Pomoč in nujni primeri",
+          icon: "phone",
+          layout: "help",
+          exploreGroup: "experiences",
+          position: 999,
+        });
+      }
+      if (!category) return { categoryId: null, rows: [] };
+
+      await tx.update(categoriesTable).set({
+        label: "Pomoč in nujni primeri",
+        layout: "help",
+        isVisible: true,
+      }).where(eq(categoriesTable.id, category.id));
+
+      const existing = await tx.select().from(itemsTable).where(and(
+        eq(itemsTable.categoryId, category.id),
+        isNull(itemsTable.deletedAt),
+      )).for("update");
+      const existingById = new Map(existing.map((row) => [row.id, row]));
+      const incomingIds = inputRows.flatMap((row) => row.id ? [row.id] : []);
+      if (incomingIds.some((id) => !existingById.has(id))) {
+        throw new Error("Kontakt ne pripada tej namestitvi.");
+      }
+      const keep = new Set(incomingIds);
+      const removedIds = existing.filter((row) => !keep.has(row.id)).map((row) => row.id);
+      if (removedIds.length) {
+        await tx.update(itemsTable).set({ deletedAt: new Date() })
+          .where(inArray(itemsTable.id, removedIds));
+      }
+      const rows = [];
+      for (let position = 0; position < inputRows.length; position++) {
+        const input = inputRows[position]!;
+        if (input.id) {
+          const previous = existingById.get(input.id)!;
+          const title = sanitizePlain(input.title);
+          const [updated] = await tx.update(itemsTable).set({
+            title,
+            phone: sanitizePlain(input.phone),
+            position,
+            isVisible: true,
+          }).where(eq(itemsTable.id, input.id)).returning();
+          if (previous.title !== title) {
+            await tx.update(translationsTable).set({ stale: true }).where(and(
+              eq(translationsTable.model, "item"),
+              eq(translationsTable.recordId, input.id),
+              eq(translationsTable.field, "title"),
+              eq(translationsTable.stale, false),
+            ));
+          }
+          rows.push(updated!);
+        } else {
+          const [created] = await tx.insert(itemsTable).values({
+            categoryId: category.id,
+            title: sanitizePlain(input.title),
+            phone: sanitizePlain(input.phone),
+            position,
+            isVisible: true,
+          }).returning();
+          rows.push(created!);
+        }
+      }
+      return {
+        categoryId: category.id,
+        rows: rows.map((row) => ({
+          id: row.id, title: row.title ?? "", phone: row.phone ?? "", position: row.position,
+        })),
+      };
+    });
+    await logChange({
+      tenantId,
+      tenantName: tenant.name,
+      action: "update",
+      entity: "item",
+      detail: "Pomoč in nujni primeri",
+      summary: "Posodobljeni kontakti za pomoč in nujne primere",
+    });
+    invalidateTenantCache();
+    res.json(UpdateTenantEmergencyContactsResponse.parse(saved));
+  } catch (error) {
+    res.status(409).json({ error: error instanceof Error ? error.message : "Kontaktov ni bilo mogoče shraniti." });
+  }
+});
 
 // ---------- Sections ----------
 

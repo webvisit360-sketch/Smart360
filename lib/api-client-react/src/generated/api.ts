@@ -74,6 +74,8 @@ import type {
   DistanceRunResult,
   DistanceValueInput,
   DuplicateTenantResult,
+  EmergencyContactsInput,
+  EmergencyContactsResponse,
   EnrollOptionsBody,
   EnrollResult,
   EnrollVerifyBody,
@@ -1272,6 +1274,155 @@ export function usePreviewTenantPublication<TData = Awaited<ReturnType<typeof pr
 
 
 
+
+export const getGetTenantEmergencyContactsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/emergency-contacts`
+}
+
+/**
+ * @summary Read operator-managed emergency contacts
+ */
+export const getTenantEmergencyContacts = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<EmergencyContactsResponse> => {
+
+  return customFetch<EmergencyContactsResponse>(getGetTenantEmergencyContactsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTenantEmergencyContactsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/emergency-contacts`
+    ] as const;
+    }
+
+
+export const getGetTenantEmergencyContactsQueryOptions = <TData = Awaited<ReturnType<typeof getTenantEmergencyContacts>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantEmergencyContacts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantEmergencyContactsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantEmergencyContacts>>> = ({ signal }) => getTenantEmergencyContacts(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantEmergencyContacts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantEmergencyContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantEmergencyContacts>>>
+export type GetTenantEmergencyContactsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read operator-managed emergency contacts
+ */
+
+export function useGetTenantEmergencyContacts<TData = Awaited<ReturnType<typeof getTenantEmergencyContacts>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantEmergencyContacts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantEmergencyContactsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateTenantEmergencyContactsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/emergency-contacts`
+}
+
+/**
+ * @summary Replace operator-managed emergency contact draft rows
+ */
+export const updateTenantEmergencyContacts = async (id: string,
+    emergencyContactsInput: EmergencyContactsInput, options?: Parameters<typeof customFetch>[1]): Promise<EmergencyContactsResponse> => {
+
+  return customFetch<EmergencyContactsResponse>(getUpdateTenantEmergencyContactsUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(emergencyContactsInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateTenantEmergencyContactsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTenantEmergencyContacts>>, TError,{id: string;data: BodyType<EmergencyContactsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTenantEmergencyContacts>>, TError,{id: string;data: BodyType<EmergencyContactsInput>}, TContext> => {
+
+const mutationKey = ['updateTenantEmergencyContacts'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTenantEmergencyContacts>>, {id: string;data: BodyType<EmergencyContactsInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateTenantEmergencyContacts(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTenantEmergencyContactsMutationResult = NonNullable<Awaited<ReturnType<typeof updateTenantEmergencyContacts>>>
+    export type UpdateTenantEmergencyContactsMutationBody = BodyType<EmergencyContactsInput>
+    export type UpdateTenantEmergencyContactsMutationError = ErrorType<void>
+
+    /**
+ * @summary Replace operator-managed emergency contact draft rows
+ */
+export const useUpdateTenantEmergencyContacts = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTenantEmergencyContacts>>, TError,{id: string;data: BodyType<EmergencyContactsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTenantEmergencyContacts>>,
+        TError,
+        {id: string;data: BodyType<EmergencyContactsInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateTenantEmergencyContactsMutationOptions(options));
+    }
 
 export const getAlignTenantSkeletonUrl = (id: string,) => {
 

@@ -12,6 +12,7 @@ import {
   categoriesTable,
   creatorPlaceProposalsTable,
   db,
+  hostUsersTable,
   itemsTable,
   mediaTable,
   openHostDbContext,
@@ -40,7 +41,7 @@ import {
 } from "../../lib/hostOnboarding";
 import { _setHostOnboardingDeliveryOverride } from "../../lib/hostOnboardingEmail";
 import { logger } from "../../lib/logger";
-import { previewPublication } from "../../lib/publishedSnapshots";
+import { ensureTenantPublication, previewPublication } from "../../lib/publishedSnapshots";
 import {
   ObjectStorageService,
   objectStorageClient,
@@ -48,6 +49,8 @@ import {
 import { isWhatsappConfigured } from "../../lib/whatsapp";
 import hostOnboardingRouter from "../../routes/hostOnboarding";
 import adminContentRouter from "../../routes/adminContent";
+import adminTenantsRouter from "../../routes/adminTenants";
+import publicTenantsRouter from "../../routes/publicTenants";
 import storageRouter, { VIDEO_MAX_BYTES } from "../../routes/storage";
 import {
   canonicalFixtureDigest,
@@ -240,8 +243,30 @@ async function cleanup(): Promise<void> {
   const [snapshot] = await db.select({ content: publishedSnapshotsTable.content })
     .from(publishedSnapshotsTable)
     .where(eq(publishedSnapshotsTable.tenantId, value.fixture.tenantId));
-  if (!snapshot || canonicalFixtureDigest(snapshot.content) !== value.publishedDigest) {
-    throw new Error("Refusing cleanup because the published snapshot changed");
+  const publicationChanged =
+    !snapshot || canonicalFixtureDigest(snapshot.content) !== value.publishedDigest;
+  if (publicationChanged) {
+    const expectedAllowance = `${value.fixture.tenantId}:${value.fixture.marker}`;
+    if (
+      process.env.CANONICAL_FIXTURE_ALLOW_CHANGED_PUBLICATION_CLEANUP
+      !== expectedAllowance
+    ) {
+      throw new Error("Refusing cleanup because the published snapshot changed");
+    }
+    const [tenant] = await db.select({
+      slug: tenantsTable.slug,
+      name: tenantsTable.name,
+    }).from(tenantsTable).where(eq(tenantsTable.id, value.fixture.tenantId));
+    const [host] = await db.select({
+      email: hostUsersTable.email,
+    }).from(hostUsersTable).where(eq(hostUsersTable.id, value.fixture.hostUserId));
+    if (
+      tenant?.slug !== value.fixture.tenantSlug
+      || tenant.name !== "Operaterjev trenutni osnutek"
+      || host?.email !== `${value.fixture.marker}@example.invalid`
+    ) {
+      throw new Error("Refusing changed-publication cleanup because fixture ownership changed");
+    }
   }
   const storageObjectsDeleted = await cleanupFixtureStorage(value);
   await cleanupCanonicalOnboardingFixture(value.fixture);
@@ -459,6 +484,38 @@ async function serve(): Promise<void> {
 
   app.use(express.json({ limit: "256kb" }));
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
+  app.post("/fixture/emergency-initialize", async (_request, response, next) => {
+    try {
+      const [alreadyEdited] = await db.select({ id: categoriesTable.id })
+        .from(categoriesTable)
+        .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+        .where(and(
+          eq(sectionsTable.tenantId, value.fixture.tenantId),
+          eq(categoriesTable.key, "operator-emergency-help"),
+        ))
+        .limit(1);
+      if (alreadyEdited) {
+        response.status(409).json({
+          error: "Emergency fixture initialization is allowed only before browser edits.",
+        });
+        return;
+      }
+      await db.update(tenantsTable).set({ guestUiMode: "living-guide" })
+        .where(eq(tenantsTable.id, value.fixture.tenantId));
+      // This only inserts a missing first snapshot. It never republishes a
+      // pending draft; the canonical fixture normally already has its baseline.
+      await ensureTenantPublication(value.fixture.tenantId);
+      response.json({
+        ok: true,
+        tenantId: value.fixture.tenantId,
+        tenantSlug: value.fixture.tenantSlug,
+        guestUiMode: "living-guide",
+        baselineSnapshot: true,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
   app.get("/fixture/items/:id", async (request, response, next) => {
     try {
       const id = String(request.params.id ?? "");
@@ -718,7 +775,19 @@ async function serve(): Promise<void> {
         : String(request.body?.recordId ?? "");
       const allowed = itemPath
         ? fixtureItemIds.includes(decodeURIComponent(itemPath[1] ?? ""))
-        : request.path === "/admin/translations" && fixtureItemIds.includes(recordId);
+        : request.path === "/admin/translations" && fixtureItemIds.includes(recordId)
+          || request.path === `/admin/tenants/${value.fixture.tenantId}/emergency-contacts`
+          || request.path === `/admin/tenants/${value.fixture.tenantId}/publish-preview`
+          || request.path === `/admin/tenants/${value.fixture.tenantId}`;
+      const fixtureTenantRoute =
+        request.path === `/admin/tenants/${value.fixture.tenantId}/emergency-contacts`
+        || request.path === `/admin/tenants/${value.fixture.tenantId}/publish-preview`
+        || request.path === `/admin/tenants/${value.fixture.tenantId}`;
+      if (fixtureTenantRoute &&
+        request.get("x-emergency-fixture-tenant-id") !== value.fixture.tenantId) {
+        response.status(403).json({ error: "Emergency fixture tenant header is missing or invalid" });
+        return;
+      }
       if (!allowed) {
         response.status(404).json({ error: "Fixture route not found" });
         return;
@@ -729,6 +798,19 @@ async function serve(): Promise<void> {
       actorStorage.run(actor, next);
     },
     adminContentRouter,
+    adminTenantsRouter,
+  );
+  app.use(
+    "/_real-public",
+    (request, response, next) => {
+      if (request.path !== `/public/tenants/${value.fixture.tenantSlug}`) {
+        response.status(404).json({ error: "Fixture route not found" });
+        return;
+      }
+      request.log = logger.child({ fixture: value.fixture.marker });
+      next();
+    },
+    publicTenantsRouter,
   );
   app.use(
     "/_real-host",

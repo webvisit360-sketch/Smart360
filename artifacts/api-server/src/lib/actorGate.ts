@@ -138,6 +138,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
     binding: { kind: "tenant-url", param: "tenantId" },
   },
   { method: "get", path: "/admin/tenants/:id/publish-preview", binding: T_ID },
+  { method: "get", path: "/admin/tenants/:id/emergency-contacts", binding: OWNER },
+  { method: "put", path: "/admin/tenants/:id/emergency-contacts", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/notification-configuration", binding: T_ID },
   {
     method: "patch",

@@ -53,6 +53,7 @@ import {
 } from "@/lib/tenant-publication-flow";
 import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
 import { SkeletonAlignmentAction } from "@/components/admin/skeleton-alignment-action";
+import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-editor";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -1550,6 +1551,14 @@ export default function AdminTenantEdit() {
               </div>
             </CardContent>
           </Card>
+          {isOwner && <Card>
+            <CardHeader>
+              <CardTitle>Pomoč in nujni primeri</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EmergencyContactsEditor tenantId={id} />
+            </CardContent>
+          </Card>}
         </TabsContent>
         <TabsContent value="distances"><Card><CardHeader><CardTitle>Razdalje</CardTitle></CardHeader><CardContent><DistanceReview tenantId={id} /></CardContent></Card></TabsContent>
 

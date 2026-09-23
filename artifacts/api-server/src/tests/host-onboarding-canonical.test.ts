@@ -72,6 +72,18 @@ test("canonical onboarding reads admin draft and partial form saves preserve ric
       categoryId: category("pharm").id,
       title: "Dežurna lekarna",
     }).returning();
+    const [emergencyCategory] = await db.insert(categoriesTable).values({
+      sectionId: section.get("stay")!,
+      key: "operator-emergency-help",
+      label: "Pomoč in nujni primeri",
+      icon: "phone",
+      layout: "help",
+    }).returning();
+    await db.insert(itemsTable).values({
+      categoryId: emergencyCategory!.id,
+      title: "Dežurni zdravnik",
+      phone: "+386 1 234 56 78",
+    });
     const offerSectionId = section.get("offer");
     const offerCategory = categories.find((row) => row.sectionId === offerSectionId);
     assert.ok(offerCategory);
@@ -101,6 +113,11 @@ test("canonical onboarding reads admin draft and partial form saves preserve ric
       readCanonicalHostOnboarding(tx, tenantId, workflow())
     );
     assert.equal(before.accommodationName, "Admin ime");
+    assert.equal(
+      before.contacts.some((row) => row.name === "Dežurni zdravnik"),
+      false,
+      "operator emergency rows must never enter the host onboarding projection",
+    );
     assert.equal(before.houseRulesParking, "<p>Poljubno <strong>bogato</strong> besedilo</p>");
     assert.equal(before.media?.find((row) => row.id === video!.id)?.kind, "video");
     assert.ok(before.media?.some((row) =>
