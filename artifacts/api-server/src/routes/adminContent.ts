@@ -712,7 +712,9 @@ router.post("/admin/items/:id/translate-missing", async (req, res): Promise<void
       title: sanitizePlain(draft.title),
       description: sanitizeBody(draft.description),
     }));
-    const translations = (await translateMissingEditorial(drafts)).map((translation) => {
+    // Item-dialog generation is deliberately source-first: an empty Slovenian
+    // field stays empty instead of falling back to an existing target language.
+    const translations = (await translateMissingEditorial(drafts, undefined, "sl")).map((translation) => {
       const title = translation.title == null ? null : sanitizePlain(translation.title);
       const description = translation.description == null ? null : sanitizeBody(translation.description);
       if ((title != null && !hasMeaningfulEditorialText(title)) ||

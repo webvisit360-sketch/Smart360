@@ -11,3 +11,9 @@ Design:
 - `exportTranslations`/`importTranslations` take the **tenant row object**, not tenant.id — passing the id silently exports 0 rows (translations table has no tenantId column; everything is keyed by recordId).
 - **Why:** silent Slovene fallback is a product rule; export→reimport must be a zero-change no-op (verified for meli-pu).
 - **How to apply:** when adding guest UI strings, add to SL_UI + seed per-tenant EN row; when adding a new lang, extend CONTENT_LANGS (api) and the resolveLang/manifest whitelists; A6 print label and QR stay tenant default language.
+
+Item-editor regeneration must use the current Slovenian draft exclusively, not another populated language as a fallback.
+
+**Why:** The generic translator's first-populated-language behavior is inappropriate when an operator is correcting Slovenian source; an older target could otherwise become the new source.
+
+**How to apply:** Missing and stale fields are eligible, but populated replacements require explicit confirmation. Preserve target edits made after that confirmation while the request is running. Generated suggestions remain drafts until saving.

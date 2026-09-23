@@ -47,6 +47,7 @@ import {
 } from "../../lib/objectStorage";
 import { isWhatsappConfigured } from "../../lib/whatsapp";
 import hostOnboardingRouter from "../../routes/hostOnboarding";
+import adminContentRouter from "../../routes/adminContent";
 import storageRouter, { VIDEO_MAX_BYTES } from "../../routes/storage";
 import {
   canonicalFixtureDigest,
@@ -458,6 +459,35 @@ async function serve(): Promise<void> {
 
   app.use(express.json({ limit: "256kb" }));
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
+  app.get("/fixture/items/:id", async (request, response, next) => {
+    try {
+      const id = String(request.params.id ?? "");
+      const fixtureItemIds = [
+        value.fixture.itemIds.welcome,
+        ...value.fixture.itemIds.contacts,
+        value.fixture.itemIds.check,
+        value.fixture.itemIds.house,
+        value.fixture.itemIds.park,
+        value.fixture.itemIds.offer,
+        value.fixture.itemIds.customOffer,
+        value.fixture.itemIds.event,
+      ];
+      if (!fixtureItemIds.includes(id)) {
+        response.status(404).json({ error: "Fixture item not found" });
+        return;
+      }
+      const [item] = await db.select().from(itemsTable).where(eq(itemsTable.id, id));
+      if (!item) {
+        response.status(404).json({ error: "Fixture item not found" });
+        return;
+      }
+      const media = await db.select().from(mediaTable).where(eq(mediaTable.itemId, id));
+      response.set("Cache-Control", "no-store");
+      response.json({ tenantId: value.fixture.tenantId, item: { ...item, media } });
+    } catch (error) {
+      next(error);
+    }
+  });
   app.get("/host/session", (_request, response) => response.json({
     authenticated: true,
     email: `${value.fixture.marker}@example.invalid`,
@@ -664,6 +694,42 @@ async function serve(): Promise<void> {
       next(error);
     }
   });
+  app.get("/_real-owner/admin/session", (_request, response) => response.json({
+    authenticated: true,
+    email: `${value.fixture.marker}@example.invalid`,
+  }));
+  app.use(
+    "/_real-owner",
+    async (request, response, next) => {
+      const fixtureItemIds = [
+        value.fixture.itemIds.welcome,
+        ...value.fixture.itemIds.contacts,
+        value.fixture.itemIds.check,
+        value.fixture.itemIds.house,
+        value.fixture.itemIds.park,
+        value.fixture.itemIds.offer,
+        value.fixture.itemIds.customOffer,
+        value.fixture.itemIds.event,
+      ];
+      const itemPath = /^\/admin\/items\/([^/]+)(?:\/translate-missing|\/creator-status)?$/
+        .exec(request.path);
+      const recordId = request.method === "GET"
+        ? String(request.query.recordId ?? "")
+        : String(request.body?.recordId ?? "");
+      const allowed = itemPath
+        ? fixtureItemIds.includes(decodeURIComponent(itemPath[1] ?? ""))
+        : request.path === "/admin/translations" && fixtureItemIds.includes(recordId);
+      if (!allowed) {
+        response.status(404).json({ error: "Fixture route not found" });
+        return;
+      }
+      const actor: Actor = { kind: "owner", requestIp: request.ip };
+      request.actor = actor;
+      request.log = logger.child({ fixture: value.fixture.marker });
+      actorStorage.run(actor, next);
+    },
+    adminContentRouter,
+  );
   app.use(
     "/_real-host",
     async (request, response, next) => {
@@ -760,6 +826,14 @@ async function serve(): Promise<void> {
       origin: `http://127.0.0.1:${port}`,
       scope: value.fixture.tenantId,
       authentication: "simulated actor binding restricted to disposable fixture",
+      realOwnerItemRoutes: [
+        "GET /fixture/items/<fixture-item-id>",
+        "GET /_real-owner/admin/translations?model=item&recordId=<fixture-item-id>",
+        "PUT /_real-owner/admin/translations",
+        "PATCH /_real-owner/admin/items/<fixture-item-id>",
+        "POST /_real-owner/admin/items/<fixture-item-id>/translate-missing",
+        "GET /_real-owner/admin/items/<fixture-item-id>/creator-status",
+      ],
       realHostRoutes: [
         "GET /_real-host/admin/host/onboarding",
         "PATCH /_real-host/admin/host/onboarding",

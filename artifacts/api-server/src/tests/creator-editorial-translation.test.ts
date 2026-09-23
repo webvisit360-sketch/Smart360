@@ -80,3 +80,17 @@ test("translation service rejects content for a field that was not requested", a
     /varno preveriti/,
   );
 });
+
+test("strict Slovenian mode never falls back to populated target fields", async () => {
+  let called = false;
+  const result = await translateMissingEditorial(
+    drafts({ en: { title: "English only", description: "English description" } }),
+    { chat: { completions: { create: async () => {
+      called = true;
+      throw new Error("must not call AI");
+    } } } } as never,
+    "sl",
+  );
+  assert.deepEqual(result, []);
+  assert.equal(called, false);
+});

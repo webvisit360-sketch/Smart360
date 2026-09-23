@@ -23,7 +23,12 @@ export function hasMeaningfulEditorialText(value: string): boolean {
 function sourceFor(
   drafts: EditorialDraft[],
   field: "title" | "description",
+  sourceLanguage?: EditorialLanguage,
 ): { language: EditorialLanguage; text: string } | null {
+  if (sourceLanguage) {
+    const text = drafts.find((draft) => draft.language === sourceLanguage)?.[field]?.trim();
+    return text && hasMeaningfulEditorialText(text) ? { language: sourceLanguage, text } : null;
+  }
   for (const language of EDITORIAL_LANGUAGES) {
     const text = drafts.find((draft) => draft.language === language)?.[field]?.trim();
     if (text && hasMeaningfulEditorialText(text)) return { language, text };
@@ -34,6 +39,7 @@ function sourceFor(
 export async function translateMissingEditorial(
   drafts: EditorialDraft[],
   client = openai,
+  sourceLanguage?: EditorialLanguage,
 ): Promise<EditorialSuggestion[]> {
   if (drafts.length !== 4 ||
     new Set(drafts.map((draft) => draft.language)).size !== 4 ||
@@ -42,7 +48,7 @@ export async function translateMissingEditorial(
   }
 
   const tasks = (["title", "description"] as const).flatMap((field) => {
-    const source = sourceFor(drafts, field);
+    const source = sourceFor(drafts, field, sourceLanguage);
     if (!source) return [];
     const targetLanguages = EDITORIAL_LANGUAGES.filter((language) =>
       !hasMeaningfulEditorialText(

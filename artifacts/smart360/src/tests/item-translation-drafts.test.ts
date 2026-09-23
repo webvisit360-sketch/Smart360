@@ -4,7 +4,10 @@ import test from "node:test";
 import {
   buildItemLanguageDrafts,
   changedItemTranslationWrites,
+  draftsForItemTranslationRefresh,
   hasTranslatableMissingItemField,
+  itemTranslationRefreshFields,
+  mergeItemTranslationRefresh,
   mergeMissingItemLanguageDrafts,
 } from "../lib/item-translation-drafts";
 
@@ -64,7 +67,75 @@ test("item editor keeps translation responses scoped and writes translations onl
     "utf8",
   );
   assert.match(source, /Prevedi manjkajoče jezike/);
+  assert.match(source, /Posodobi prevode/);
   assert.match(source, /itemEditorIdRef\.current !== scopedItemId/);
-  assert.match(source, /mergeMissingItemLanguageDrafts/);
+  assert.match(source, /sourceDraftRef\.current !== scopedSource/);
+  assert.match(source, /translationDraftsRef\.current/);
+  assert.match(source, /requested\?\.\[entry\.field\] === live\?\.\[entry\.field\]/);
+  assert.match(source, /ročno spremenjeni prevodi niso bili prepisani/);
   assert.match(source, /handleSave[\s\S]*changedItemTranslationWrites/);
+});
+
+test("unsaved Slovenian edits immediately refresh populated targets from only the current source", () => {
+  const rows = [
+    { id: "en-title", model: "item", recordId: "item-1", field: "title", lang: "en", value: "Old EN", stale: false },
+    { id: "de-title", model: "item", recordId: "item-1", field: "title", lang: "de", value: "Alt DE", stale: false },
+    { id: "it-title", model: "item", recordId: "item-1", field: "title", lang: "it", value: "Vecchio IT", stale: false },
+  ];
+  const drafts = buildItemLanguageDrafts(
+    { title: "Nov naslov", description: "" },
+    rows,
+  );
+  const refresh = itemTranslationRefreshFields(
+    { title: "Star naslov", description: "" },
+    drafts,
+    rows,
+  );
+  assert.equal(refresh.length, 3);
+  assert.ok(refresh.every((entry) => entry.field === "title" && entry.stale && !entry.missing));
+  const request = draftsForItemTranslationRefresh(drafts, refresh);
+  assert.equal(request.find((draft) => draft.language === "sl")?.title, "Nov naslov");
+  assert.ok(request.filter((draft) => draft.language !== "sl").every((draft) => draft.title === ""));
+  const merged = mergeItemTranslationRefresh(drafts, [
+    { language: "en", title: "New EN", description: null },
+    { language: "de", title: "Neu DE", description: null },
+    { language: "it", title: "Nuovo IT", description: null },
+  ], refresh);
+  assert.equal(merged.find((draft) => draft.language === "en")?.title, "New EN");
+});
+
+test("persisted stale fields refresh after reopen while fresh populated fields stay protected", () => {
+  const rows = [
+    { id: "en-title", model: "item", recordId: "item-1", field: "title", lang: "en", value: "Old EN", stale: true },
+    { id: "de-title", model: "item", recordId: "item-1", field: "title", lang: "de", value: "Manual DE", stale: false },
+  ];
+  const drafts = buildItemLanguageDrafts({ title: "Naslov", description: "" }, rows);
+  const refresh = itemTranslationRefreshFields(
+    { title: "Naslov", description: "" },
+    drafts,
+    rows,
+  );
+  assert.deepEqual(
+    refresh.map(({ language, field, missing, stale }) => ({ language, field, missing, stale })),
+    [
+      { language: "en", field: "title", missing: false, stale: true },
+      { language: "it", field: "title", missing: true, stale: false },
+    ],
+  );
+});
+
+test("a generated identical value is still written so save can clear its stale flag", () => {
+  const rows = [
+    { id: "en-title", model: "item", recordId: "item-1", field: "title", lang: "en", value: "Same", stale: true },
+  ];
+  const drafts = buildItemLanguageDrafts({ title: "Naslov", description: "" }, rows);
+  const refresh = itemTranslationRefreshFields(
+    { title: "Naslov", description: "" },
+    drafts,
+    rows,
+  ).filter((entry) => entry.language === "en");
+  assert.deepEqual(
+    changedItemTranslationWrites("item-1", drafts, drafts, rows, refresh),
+    [{ model: "item", recordId: "item-1", field: "title", lang: "en", value: "Same" }],
+  );
 });

@@ -68,8 +68,10 @@ import { ItemCreatorPhotoProposals } from "@/components/admin/kreator-photo-prop
 import {
   buildItemLanguageDrafts,
   changedItemTranslationWrites,
-  hasTranslatableMissingItemField,
-  mergeMissingItemLanguageDrafts,
+  draftsForItemTranslationRefresh,
+  itemTranslationRefreshFields,
+  mergeItemTranslationRefresh,
+  type ItemTranslationRefreshField,
 } from "@/lib/item-translation-drafts";
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
@@ -896,7 +898,7 @@ type ItemDialogProps =
   | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; item?: undefined; onDone: () => void }
   | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; item: Item; onDone: () => void };
 
-function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories, allCategories, item, onDone }: ItemDialogProps) {
+export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories, allCategories, item, onDone }: ItemDialogProps) {
   if (mode === "create" && (sectionKey === "explore" || sectionKey === "services")) {
     return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />;
   }
@@ -961,8 +963,14 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
   );
   const [translationDrafts, setTranslationDrafts] = useState<ItemTranslationLanguageDraft[]>([]);
   const [translationBaseline, setTranslationBaseline] = useState<ItemTranslationLanguageDraft[]>([]);
+  const [generatedTranslation, setGeneratedTranslation] = useState<{
+    source: string;
+    fields: ItemTranslationRefreshField[];
+  } | null>(null);
   const translationsInitializedRef = useRef(false);
   const [translationError, setTranslationError] = useState("");
+  const translationDraftsRef = useRef<ItemTranslationLanguageDraft[]>([]);
+  translationDraftsRef.current = translationDrafts;
   useEffect(() => {
     if (mode !== "edit" || !translationsQuery.data || translationsInitializedRef.current) return;
     const drafts = buildItemLanguageDrafts(
@@ -981,6 +989,14 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
       ? draft
       : translationDrafts.find((candidate) => candidate.language === draft.language) ?? draft
   );
+  const translationRefresh = itemTranslationRefreshFields(
+    { title: item?.title ?? "", description: item?.body ?? "" },
+    allLanguageDrafts,
+    translationsQuery.data ?? [],
+  );
+  const hasMissingTranslation = translationRefresh.some((entry) => entry.missing);
+  const sourceDraftRef = useRef("");
+  sourceDraftRef.current = JSON.stringify({ title, body });
   const translateMissing = useTranslateMissingItemFields();
   const recomputeDistance = useRecomputeItemDistance({
     mutation: {
@@ -1068,6 +1084,10 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
     (!creatorStatus.isLoading && !creatorStatus.isError && creatorStatus.data !== undefined);
 
   const handleSave = async () => {
+    if (generatedTranslation && generatedTranslation.source !== sourceDraftRef.current) {
+      alert("Slovenski izvirnik se je po prevajanju spremenil. Pred shranjevanjem prevode posodobite znova.");
+      return;
+    }
     if (mode === "edit" && !creatorStatusReady) {
       alert("Stanja Creator materializacije ni bilo mogoče preveriti. Razdalje ni varno shraniti.");
       return;
@@ -1158,6 +1178,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
           originalDrafts,
           allLanguageDrafts,
           translationsQuery.data ?? [],
+          generatedTranslation?.fields ?? [],
         );
         await Promise.all(writes.map((data) => upsertTranslation(data)));
         if (writes.length) {
@@ -1245,41 +1266,75 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
                 translationsQuery.isLoading ||
                 translationsQuery.isError ||
                 translateMissing.isPending ||
-                !hasTranslatableMissingItemField(allLanguageDrafts)
+                translationRefresh.length === 0
               }
               onClick={() => {
                 const scopedItemId = item.id;
+                const scopedSource = sourceDraftRef.current;
+                const scopedRefresh = translationRefresh;
+                const requestDrafts = allLanguageDrafts;
+                const protectedFields = scopedRefresh.filter((entry) => {
+                  const target = allLanguageDrafts.find((draft) => draft.language === entry.language);
+                  return target && (entry.field === "title"
+                    ? target.title.replace(/<[^>]*>/g, "").trim()
+                    : target.description.replace(/<[^>]*>/g, "").replace(/&nbsp;|&#160;/gi, " ").trim());
+                });
+                if (protectedFields.length) {
+                  const protectedLanguages = [...new Set(
+                    protectedFields.map((entry) => entry.language.toUpperCase()),
+                  )].join(", ");
+                  if (!confirm(
+                    `Obstoječi ročno urejeni prevodi (${protectedLanguages}) bodo posodobljeni iz trenutne slovenščine. Želite nadaljevati?`,
+                  )) return;
+                }
                 setTranslationError("");
                 translateMissing.mutate({
                   id: scopedItemId,
-                  data: { translations: allLanguageDrafts },
+                  data: {
+                    translations: draftsForItemTranslationRefresh(allLanguageDrafts, scopedRefresh),
+                  },
                 }, {
                   onSuccess: (result) => {
                     if (itemEditorIdRef.current !== scopedItemId) return;
-                    const currentAll = buildItemLanguageDrafts(
-                      { title, description: body },
+                    if (sourceDraftRef.current !== scopedSource) {
+                      setTranslationError(
+                        "Slovenski izvirnik se je med prevajanjem spremenil. Rezultat ni bil uporabljen; prevedite znova.",
+                      );
+                      return;
+                    }
+                    const liveAll = buildItemLanguageDrafts(
+                      {
+                        title: requestDrafts.find((draft) => draft.language === "sl")!.title,
+                        description: requestDrafts.find((draft) => draft.language === "sl")!.description,
+                      },
                       [],
                     ).map((draft) =>
                       draft.language === "sl"
                         ? draft
-                        : translationDrafts.find((candidate) => candidate.language === draft.language) ?? draft
+                        : translationDraftsRef.current.find(
+                          (candidate) => candidate.language === draft.language,
+                        ) ?? draft
                     );
-                    const merged = mergeMissingItemLanguageDrafts(currentAll, result.translations);
-                    const sl = merged.find((draft) => draft.language === "sl")!;
-                    setTitle((currentTitle) => currentTitle.trim() ? currentTitle : sl.title);
-                    setBody((currentBody) => currentBody.trim() ? currentBody : sl.description);
-                    setTranslationDrafts((currentTranslations) => {
-                      const liveAll = buildItemLanguageDrafts(
-                        { title: "", description: "" },
-                        [],
-                      ).map((draft) =>
-                        draft.language === "sl"
-                          ? draft
-                          : currentTranslations.find((candidate) => candidate.language === draft.language) ?? draft
+                    const unchangedFields = scopedRefresh.filter((entry) => {
+                      const requested = requestDrafts.find(
+                        (draft) => draft.language === entry.language,
                       );
-                      return mergeMissingItemLanguageDrafts(liveAll, result.translations)
-                        .filter((draft) => draft.language !== "sl");
+                      const live = liveAll.find((draft) => draft.language === entry.language);
+                      return requested?.[entry.field] === live?.[entry.field];
                     });
+                    const skipped = scopedRefresh.length - unchangedFields.length;
+                    setTranslationDrafts(
+                      mergeItemTranslationRefresh(liveAll, result.translations, unchangedFields)
+                        .filter((draft) => draft.language !== "sl"),
+                    );
+                    setGeneratedTranslation(
+                      unchangedFields.length ? { source: scopedSource, fields: unchangedFields } : null,
+                    );
+                    if (skipped) {
+                      setTranslationError(
+                        `${skipped === 1 ? "En ročno spremenjen prevod ni bil prepisan" : `${skipped} ročno spremenjeni prevodi niso bili prepisani`}.`,
+                      );
+                    }
                   },
                   onError: (error) => {
                     if (itemEditorIdRef.current !== scopedItemId) return;
@@ -1291,7 +1346,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
               }}
             >
               {translateMissing.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Prevedi manjkajoče jezike
+              {hasMissingTranslation ? "Prevedi manjkajoče jezike" : "Posodobi prevode"}
             </Button>
           </div>
           {translationsQuery.isLoading && (
