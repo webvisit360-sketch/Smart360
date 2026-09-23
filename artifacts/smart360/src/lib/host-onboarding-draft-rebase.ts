@@ -1,4 +1,7 @@
-import type { HostOnboardingData } from "@/hooks/use-host-onboarding";
+import {
+  hostOnboardingSnapshot,
+  type HostOnboardingData,
+} from "@/hooks/use-host-onboarding";
 
 export type DraftConflict = {
   path: string;
@@ -40,7 +43,7 @@ const labels: Record<string, string> = {
 };
 
 const equal = (left: unknown, right: unknown) =>
-  JSON.stringify(left) === JSON.stringify(right);
+  hostOnboardingSnapshot(left) === hostOnboardingSnapshot(right);
 
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);

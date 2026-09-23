@@ -6,7 +6,17 @@ import {
   reconcileCreatedCanonicalRows,
   shouldAppendStayEntry,
 } from "../pages/host/onboarding";
-import type { HostOnboardingData } from "../hooks/use-host-onboarding";
+import {
+  changedHostOnboardingFields,
+  hostOnboardingSnapshot,
+  omitLegacyRichAliasForCanonicalItems,
+  preserveCanonicalMediaForWrite,
+  type HostOnboardingData,
+} from "../hooks/use-host-onboarding";
+import {
+  acknowledgeHostDraftWrite,
+  rebaseHostOnboardingDraft,
+} from "../lib/host-onboarding-draft-rebase";
 import type { HostOnboardingCanonicalItem } from "@workspace/api-client-react";
 import {
   blockingMediaQueueCount,
@@ -198,4 +208,160 @@ test("uncommitted offer inputs are absent from the canonical baseline", () => {
   const local = data();
   const normalized = normalizeCanonicalSaveBaseline(local);
   assert.deepEqual(normalized.offers, []);
+});
+
+test("lost-response ACK settles a full canonical draft despite response key insertion order", () => {
+  const item = destination("house-1", "<p>Mir po 22. uri.</p>");
+  const media = {
+    id: "media-1",
+    itemId: item.id,
+    kind: "image" as const,
+    url: "/house.jpg",
+    alt: "Hiša",
+    position: 0,
+    posterUrl: null,
+    durationSec: null,
+    width: 1600,
+    height: 900,
+    focusX: 0.5,
+    focusY: 0.5,
+  };
+  const ordinaryBaseline: HostOnboardingData = {
+    accommodationName: "Planinska hiša",
+    address: "Gorska pot 1",
+    guestPhone: "+386 40 000 000",
+    guestEmail: "gost@example.test",
+    website: "https://example.test",
+    checkInFrom: "15:00",
+    checkOutUntil: "10:00",
+    contacts: [
+      { id: "contact-1", name: "Ana", phone: "+386 40 111 111" },
+      { id: "contact-2", name: "Boris", phone: "+386 40 222 222" },
+    ],
+    wifiName: "Gost",
+    wifiPassword: "ordinary-fixture",
+    houseRulesParking: item.body,
+    offers: [
+      { id: "offer-1", categoryId: "food", name: "Zajtrk", price: "12 €" },
+      { id: "offer-2", categoryId: "food", name: "Večerja", price: "24 €" },
+    ],
+    recommendations: [{ id: "rec-1", categoryId: "walks", name: "Pot ob jezeru" }],
+    customCategories: [{
+      id: "custom-1",
+      name: "Posebnosti",
+      entries: [{ id: "entry-1", name: "Razgledna točka" }],
+    }],
+    events: [
+      { id: "event-1", name: "Sejem", date: "2026-10-01", time: "10:00" },
+      { id: "event-2", name: "Koncert", date: "2026-10-02", time: "20:00" },
+    ],
+    media: [media],
+    deleteContactIds: [],
+    deleteOfferIds: [],
+    deleteEventIds: [],
+    deleteMediaIds: [],
+    canonicalItems: [item],
+    hero: { url: "/hero.jpg", alt: "Pogled", mediaId: "media-1" },
+  };
+  const clean = (value: HostOnboardingData) => preserveCanonicalMediaForWrite(
+    omitLegacyRichAliasForCanonicalItems(normalizeCanonicalSaveBaseline(value)),
+    ordinaryBaseline.media || [],
+    false,
+  );
+
+  const local = {
+    ...ordinaryBaseline,
+    accommodationName: "Planinska hiša pod vrhom",
+  };
+  const sent = clean(local);
+
+  // The first PATCH committed but its response was lost. GET after the ensuing
+  // 409 returns the same semantic JSON with database/serializer key order.
+  const acceptedWithServerOrder: HostOnboardingData = {
+    hero: { mediaId: "media-1", alt: "Pogled", url: "/hero.jpg" },
+    canonicalItems: [{
+      producerNote: item.producerNote,
+      producerName: item.producerName,
+      soldOut: item.soldOut,
+      orderEnabled: item.orderEnabled,
+      isVisible: item.isVisible,
+      frame: item.frame,
+      tint: item.tint,
+      bullets: item.bullets,
+      noteText: item.noteText,
+      noteType: item.noteType,
+      distance: item.distance,
+      duration: item.duration,
+      difficulty: item.difficulty,
+      mapQuery: item.mapQuery,
+      website: item.website,
+      phone: item.phone,
+      priceUnit: item.priceUnit,
+      price: item.price,
+      body: item.body,
+      title: item.title,
+      sectionKey: item.sectionKey,
+      categoryKey: item.categoryKey,
+      categoryId: item.categoryId,
+      id: item.id,
+    }],
+    deleteMediaIds: [],
+    deleteEventIds: [],
+    deleteOfferIds: [],
+    deleteContactIds: [],
+    media: [{ ...media }],
+    events: [
+      { time: "20:00", date: "2026-10-02", name: "Koncert", id: "event-2" },
+      { time: "10:00", date: "2026-10-01", name: "Sejem", id: "event-1" },
+    ],
+    customCategories: [{
+      entries: [{ name: "Razgledna točka", id: "entry-1" }],
+      name: "Posebnosti",
+      id: "custom-1",
+    }],
+    recommendations: [{ name: "Pot ob jezeru", categoryId: "walks", id: "rec-1" }],
+    offers: [
+      { price: "24 €", name: "Večerja", categoryId: "food", id: "offer-2" },
+      { price: "12 €", name: "Zajtrk", categoryId: "food", id: "offer-1" },
+    ],
+    houseRulesParking: item.body,
+    wifiPassword: "ordinary-fixture",
+    wifiName: "Gost",
+    contacts: [
+      { phone: "+386 40 222 222", name: "Boris", id: "contact-2" },
+      { phone: "+386 40 111 111", name: "Ana", id: "contact-1" },
+    ],
+    checkOutUntil: "10:00",
+    checkInFrom: "15:00",
+    website: "https://example.test",
+    guestEmail: "gost@example.test",
+    guestPhone: "+386 40 000 000",
+    address: "Gorska pot 1",
+    accommodationName: "Planinska hiša pod vrhom",
+  };
+
+  const rebased = rebaseHostOnboardingDraft(ordinaryBaseline, local, acceptedWithServerOrder);
+  assert.deepEqual(rebased.conflicts, []);
+  assert.deepEqual(
+    changedHostOnboardingFields(clean(rebased.data), acceptedWithServerOrder),
+    {},
+    "GET already contains the lost PATCH and must not trigger another write",
+  );
+
+  const acknowledged = acknowledgeHostDraftWrite(sent, rebased.data, acceptedWithServerOrder);
+  assert.deepEqual(
+    changedHostOnboardingFields(clean(acknowledged), acceptedWithServerOrder),
+    {},
+    "a successful ACK must leave the realistic form lifecycle idle",
+  );
+  assert.notEqual(
+    JSON.stringify(clean(acknowledged)),
+    JSON.stringify(clean(acceptedWithServerOrder)),
+    "the fixture must retain the observed insertion-order-only mismatch",
+  );
+  assert.equal(
+    hostOnboardingSnapshot(clean(acknowledged)),
+    hostOnboardingSnapshot(clean(acceptedWithServerOrder)),
+    "the saved-state baseline must be semantic, not dependent on JSON object insertion order",
+  );
 });

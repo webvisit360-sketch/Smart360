@@ -23,6 +23,7 @@ import {
   useRetryHostOnboardingRecommendations,
   recommendationProcessingPresentation,
   automaticRecommendationRetryDelay,
+  hostOnboardingSnapshot,
 } from "@/hooks/use-host-onboarding";
 import { useHostSession } from "@/hooks/use-host-session";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
@@ -422,7 +423,7 @@ export default function HostOnboarding() {
     if (!onboardingData || onboardingData.status !== "draft") return;
     const source = `${onboardingData.id}:${onboardingData.revision}:${onboardingData.canonicalRevision}`;
     if (source === hydratedSource.current) return;
-    const localSnapshot = JSON.stringify(latestPayload.current);
+    const localSnapshot = hostOnboardingSnapshot(latestPayload.current);
     if (!canHydrateCanonicalDraft({
       initialized: initialized.current,
       localSnapshot,
@@ -482,7 +483,7 @@ export default function HostOnboarding() {
     latestData.current = canonical;
     latestPayload.current = canonicalPayload;
     lastSavedData.current = recoveredBase || canonical;
-    lastSaved.current = JSON.stringify(cleanData(recoveredBase || canonical));
+    lastSaved.current = hostOnboardingSnapshot(cleanData(recoveredBase || canonical));
     revision.current = onboardingData.revision;
     canonicalRevision.current = onboardingData.canonicalRevision;
     if (!recoveredConflicts.length) conflictBlocked.current = false;
@@ -498,7 +499,7 @@ export default function HostOnboarding() {
   }, [onboardingData, saveState, recoveryKey, reportRecoveryFailure]);
 
   const enqueueSave = useCallback((data: Partial<HostOnboardingData>, explicit = false) => {
-    const snapshot = JSON.stringify(data);
+    const snapshot = hostOnboardingSnapshot(data);
     if (conflictBlocked.current) return Promise.reject(new Error("Razrešite označena polja v sporu."));
     if (Object.keys(data).length === 0) return queue.current;
     if (snapshot === queuedSnapshot.current) return activeOperation.current;
@@ -650,9 +651,9 @@ export default function HostOnboarding() {
         mediaDirty.current,
         removedMediaIds.current,
       );
-      lastSaved.current = JSON.stringify(savedPayload);
+      lastSaved.current = hostOnboardingSnapshot(savedPayload);
       if (mounted.current) {
-        const fullySaved = JSON.stringify(latestPayload.current) === lastSaved.current;
+        const fullySaved = hostOnboardingSnapshot(latestPayload.current) === lastSaved.current;
         setSaveState(fullySaved ? "saved" : "dirty");
         if (fullySaved) {
           setFirstFailureAt(null);
@@ -750,7 +751,7 @@ export default function HostOnboarding() {
     if (!frame.shouldProcess) return;
     latestData.current = frame.latest;
     latestPayload.current = cleanData(formData);
-    const snapshot = JSON.stringify(latestPayload.current);
+    const snapshot = hostOnboardingSnapshot(latestPayload.current);
     if (snapshot === lastSaved.current) {
       setSaveState((state) => state === "dirty" ? "saved" : state);
       return;
@@ -820,7 +821,7 @@ export default function HostOnboarding() {
   useEffect(() => {
     if (!recoveryUnavailable) return;
     const protectUnsavedDraft = (event: BeforeUnloadEvent) => {
-      if (JSON.stringify(latestPayload.current) === lastSaved.current) return;
+      if (hostOnboardingSnapshot(latestPayload.current) === lastSaved.current) return;
       event.preventDefault();
       event.returnValue = "";
     };
@@ -854,7 +855,7 @@ export default function HostOnboarding() {
     return () => {
       mounted.current = false;
       if (patchTimeout.current !== null) window.clearTimeout(patchTimeout.current);
-      if (initialized.current && JSON.stringify(latestPayload.current) !== lastSaved.current) {
+      if (initialized.current && hostOnboardingSnapshot(latestPayload.current) !== lastSaved.current) {
         const patch = changedHostOnboardingFields(latestPayload.current, lastSavedData.current);
         void enqueueSaveRef.current(patch).catch(() => undefined);
       }

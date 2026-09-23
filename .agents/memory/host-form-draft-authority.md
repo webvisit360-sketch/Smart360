@@ -50,3 +50,9 @@ Recovered hydration must skip the stale render frame before autosave/persistence
 **Why:** React effects from the pre-hydration render observed an empty form after the recovery effect restored refs, then overwrote both the restored input and its browser recovery record.
 
 **How to apply:** Test full browser reload while a conflict is unresolved, not merely GET refetch or reload after successful save. Unit tests of the merge function alone do not establish lifecycle safety.
+
+Draft equality must ignore object-key insertion order while preserving array order.
+
+**Why:** Canonical responses and three-way merges construct equivalent objects in different key orders. Raw JSON string equality kept acknowledged drafts dirty and scheduled idle saves.
+
+**How to apply:** Use the same semantic snapshot for baseline, rebase, queue deduplication and dirty comparisons. Verify a lost successful response settles without manual intervention.

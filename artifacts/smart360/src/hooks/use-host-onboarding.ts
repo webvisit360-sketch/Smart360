@@ -143,6 +143,27 @@ export function automaticRecommendationRetryDelay(attempt: number): number | nul
   return [1_500, 5_000][attempt] ?? null;
 }
 
+/**
+ * Deterministic semantic snapshot for draft comparisons. JSON object member
+ * order is not data: API responses and three-way merges can construct the same
+ * canonical row in different insertion orders.
+ */
+export function hostOnboardingSnapshot(value: unknown): string {
+  return JSON.stringify(value, (_key, current: unknown) => {
+    if (
+      current === null ||
+      typeof current !== "object" ||
+      Array.isArray(current)
+    ) {
+      return current;
+    }
+    return Object.fromEntries(
+      Object.entries(current as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right)),
+    );
+  });
+}
+
 export function canHydrateCanonicalDraft(input: {
   initialized: boolean;
   localSnapshot: string;
@@ -239,12 +260,12 @@ export function changedHostOnboardingFields(
         (baseline.canonicalItems || []).map((row) => [row.id, row]),
       );
       const changedRows = (current.canonicalItems || []).filter(
-        (row) => JSON.stringify(row) !== JSON.stringify(baselineRows.get(row.id)),
+        (row) => hostOnboardingSnapshot(row) !== hostOnboardingSnapshot(baselineRows.get(row.id)),
       );
       if (changedRows.length) patch.canonicalItems = changedRows;
       continue;
     }
-    if (JSON.stringify(current[key]) !== JSON.stringify(baseline[key])) {
+    if (hostOnboardingSnapshot(current[key]) !== hostOnboardingSnapshot(baseline[key])) {
       (patch as Record<string, unknown>)[key] = current[key];
     }
   }
