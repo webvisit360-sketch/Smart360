@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import crypto from "node:crypto";
 import {
   loginHost,
   destroyHostSession,
@@ -9,20 +10,23 @@ import {
   issueHostPasswordReset,
   consumeHostPasswordReset,
   getHostAccountForTenant,
+  getHostInvitationHistoryForTenant,
   upsertHostAccountForTenant,
 } from "../lib/hostAuth";
 import { sendHostResetEmail } from "../lib/hostResetEmail";
 import { getWelcomePreview } from "../lib/welcomePreview";
 import { requireAdmin, rpOrigin } from "../lib/adminAuth";
 import { sendGuideReadyEmail, sendWelcomeEmail } from "../lib/lifecycleEmails";
+import { sendConciergeWelcomeEmail } from "../lib/conciergeWelcomeEmail";
 import { logChange } from "../lib/changelog";
 import { logger } from "../lib/logger";
 import { recordHostInviteDeliveryFailure } from "../lib/hostInviteDelivery";
 import { onboardingRequired } from "../lib/hostOnboarding";
 import { actorStorage } from "../lib/actorContext";
 import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
-import { db, hostInvitesTable } from "@workspace/db";
+import { db, hostInvitesTable, tenantsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { guestUrl } from "../lib/guestUrl";
 
 /**
  * Host account routes (Instruction #28, CHECKPOINT 2).
@@ -188,7 +192,11 @@ router.get("/admin/tenants/:id/host", requireAdmin, async (req, res): Promise<vo
   const tenantId = tenantParam(req, res);
   if (!tenantId) return;
   const account = await getHostAccountForTenant(tenantId);
-  res.json({ account });
+  const inviteHistory = await getHostInvitationHistoryForTenant(tenantId, account);
+  res.json({
+    account: account ? { ...account, inviteHistory } : null,
+    inviteHistory,
+  });
 });
 
 router.put("/admin/tenants/:id/host", requireAdmin, async (req, res): Promise<void> => {
@@ -233,6 +241,64 @@ router.post(
     const rawTemplate = (req.body as Record<string, unknown> | undefined)?.["template"];
     if (rawTemplate !== "welcome" && rawTemplate !== "guide-ready") {
       res.status(400).json({ error: "template must be welcome or guide-ready" });
+      return;
+    }
+    const [tenant] = await db
+      .select({
+        email: tenantsTable.email,
+        managementMode: tenantsTable.managementMode,
+        name: tenantsTable.name,
+        slug: tenantsTable.slug,
+      })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1);
+    if (!tenant) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    if (tenant.managementMode === "concierge") {
+      res.locals["skipAdminMutationInvalidation"] = true;
+      if (rawTemplate !== "welcome") {
+        res.status(409).json({ error: "V načinu Ureja Smart360 je mogoče poslati le dobrodošlico brez dostopa." });
+        return;
+      }
+      const recipient = tenant.email?.trim();
+      if (!recipient) {
+        res.status(409).json({ error: "Nastanitev nima e-poštnega naslova za dobrodošlico." });
+        return;
+      }
+      const sent = await sendConciergeWelcomeEmail(
+        {
+          recipient,
+          tenantName: tenant.name,
+          guideUrl: guestUrl(tenant.slug),
+        },
+        `concierge-welcome-${tenantId}-${crypto.randomUUID()}`,
+      );
+      if (!sent.ok) {
+        await logChange({
+          tenantId,
+          action: "send-failed",
+          entity: "concierge-welcome",
+          summary: "Pošiljanje dobrodošlice brez dostopa ni uspelo.",
+        });
+        res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });
+        return;
+      }
+      await logChange({
+        tenantId,
+        action: "send",
+        entity: "concierge-welcome",
+        summary: "Poslana je bila dobrodošlica brez dostopa.",
+      });
+      res.json({
+        sent: true,
+        to: recipient,
+        template: "welcome",
+        kind: "welcome_without_access",
+        label: "dobrodošlica brez dostopa",
+      });
       return;
     }
     const issued = await issueHostInviteForTenant(tenantId, rawTemplate, req);

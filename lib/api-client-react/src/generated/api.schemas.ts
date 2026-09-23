@@ -637,6 +637,20 @@ export interface AdminEnquiry {
   deliveryAttemptedAt?: string | null;
 }
 
+export type HostInviteDeliveryKind = typeof HostInviteDeliveryKind[keyof typeof HostInviteDeliveryKind];
+
+
+export const HostInviteDeliveryKind = {
+  invitation: 'invitation',
+} as const;
+
+export type HostInviteDeliveryLabel = typeof HostInviteDeliveryLabel[keyof typeof HostInviteDeliveryLabel];
+
+
+export const HostInviteDeliveryLabel = {
+  povabilo_z_dostopom: 'povabilo z dostopom',
+} as const;
+
 export type HostInviteDeliveryDeliveryStatus = typeof HostInviteDeliveryDeliveryStatus[keyof typeof HostInviteDeliveryDeliveryStatus];
 
 
@@ -650,6 +664,8 @@ export const HostInviteDeliveryDeliveryStatus = {
 } as const;
 
 export interface HostInviteDelivery {
+  kind: HostInviteDeliveryKind;
+  label: HostInviteDeliveryLabel;
   createdAt: string;
   /** @nullable */
   invalidatedAt: string | null;
@@ -666,6 +682,37 @@ export interface HostInviteDelivery {
   deliveryAttemptedAt: string | null;
 }
 
+export type WelcomeWithoutAccessDeliveryKind = typeof WelcomeWithoutAccessDeliveryKind[keyof typeof WelcomeWithoutAccessDeliveryKind];
+
+
+export const WelcomeWithoutAccessDeliveryKind = {
+  welcome_without_access: 'welcome_without_access',
+} as const;
+
+export type WelcomeWithoutAccessDeliveryLabel = typeof WelcomeWithoutAccessDeliveryLabel[keyof typeof WelcomeWithoutAccessDeliveryLabel];
+
+
+export const WelcomeWithoutAccessDeliveryLabel = {
+  dobrodošlica_brez_dostopa: 'dobrodošlica brez dostopa',
+} as const;
+
+export type WelcomeWithoutAccessDeliveryDeliveryStatus = typeof WelcomeWithoutAccessDeliveryDeliveryStatus[keyof typeof WelcomeWithoutAccessDeliveryDeliveryStatus];
+
+
+export const WelcomeWithoutAccessDeliveryDeliveryStatus = {
+  accepted: 'accepted',
+  failed: 'failed',
+} as const;
+
+export interface WelcomeWithoutAccessDelivery {
+  kind: WelcomeWithoutAccessDeliveryKind;
+  label: WelcomeWithoutAccessDeliveryLabel;
+  createdAt: string;
+  deliveryStatus: WelcomeWithoutAccessDeliveryDeliveryStatus;
+}
+
+export type HostInvitationHistoryEntry = HostInviteDelivery | WelcomeWithoutAccessDelivery;
+
 export interface HostAccount {
   email: string;
   hasPassword: boolean;
@@ -673,11 +720,13 @@ export interface HostAccount {
   lastLoginAt: string | null;
   createdAt: string;
   /** @maxItems 10 */
-  inviteHistory: HostInviteDelivery[];
+  inviteHistory: HostInvitationHistoryEntry[];
 }
 
 export interface HostAccountResponse {
   account: HostAccount | null;
+  /** @maxItems 10 */
+  inviteHistory: HostInvitationHistoryEntry[];
 }
 
 export interface HealthStatus {
@@ -1816,6 +1865,14 @@ export interface DistanceRunResult {
   counts: DistanceRunResultCounts;
 }
 
+export type TenantManagementModeProperty = typeof TenantManagementModeProperty[keyof typeof TenantManagementModeProperty];
+
+
+export const TenantManagementModeProperty = {
+  self_service: 'self_service',
+  concierge: 'concierge',
+} as const;
+
 /**
  * Exclusive host-notification delivery channel
  */
@@ -1853,6 +1910,7 @@ export const TenantLivingGuideNavItem = {
 export interface Tenant {
   id: string;
   slug: string;
+  managementMode: TenantManagementModeProperty;
   /** @nullable */
   customDomain?: string | null;
   name: string;
@@ -2030,6 +2088,18 @@ export interface Tenant {
   /** @nullable */
   renewsAt?: string | null;
   updatedAt: string;
+}
+
+export type TenantManagementModeManagementMode = typeof TenantManagementModeManagementMode[keyof typeof TenantManagementModeManagementMode];
+
+
+export const TenantManagementModeManagementMode = {
+  self_service: 'self_service',
+  concierge: 'concierge',
+} as const;
+
+export interface TenantManagementMode {
+  managementMode: TenantManagementModeManagementMode;
 }
 
 export interface NotificationConfigurationStatus {

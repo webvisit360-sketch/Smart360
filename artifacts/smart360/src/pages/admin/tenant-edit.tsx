@@ -28,6 +28,10 @@ import { parseVirtualTourInput, virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { DistanceReview } from "@/components/admin/distance-review";
 import { isLikelyUrl } from "@/lib/maps-href";
 import { HostInvitePanel } from "@/components/admin/host-invite-panel";
+import {
+  ManagementModeSetting,
+  type ManagementMode,
+} from "@/components/admin/management-mode-setting";
 import { useHostSession } from "@/hooks/use-host-session";
 import { collapseConsecutiveChangelog } from "@/lib/changelog-collapse";
 import {
@@ -518,6 +522,10 @@ export default function AdminTenantEdit() {
   const previewUrl = `${previewBase}${previewPath}?preview=1${showStructure ? "&fullStructure=1" : ""}`;
   const hasUnpublishedChanges =
     !tenant.isPublished || tenant.hasUnpublishedChanges;
+  const managementMode: ManagementMode =
+    tenant.managementMode === "concierge"
+      ? "concierge"
+      : "self_service";
   const lastPublishLabel = formatPublishTime(
     tenant.lastPublishedAt ?? tenant.firstPublishedAt,
   );
@@ -1123,6 +1131,20 @@ export default function AdminTenantEdit() {
               </div>
             </CardContent>
           </Card>
+          {isOwner && (
+            <ManagementModeSetting
+              tenantId={id}
+              value={managementMode}
+              onSaved={(nextMode) => {
+                queryClient.setQueryData(
+                  getGetTenantQueryKey(id),
+                  (old: unknown) => old && typeof old === "object"
+                    ? { ...old, managementMode: nextMode }
+                    : old,
+                );
+              }}
+            />
+          )}
           <Card data-testid="card-guest-ui-mode">
             <CardHeader>
               <CardTitle>Vmesnik za goste</CardTitle>
@@ -1194,7 +1216,7 @@ export default function AdminTenantEdit() {
               )}
             </CardContent>
           </Card>
-          {isOwner && <HostInvitePanel tenantId={id} />}
+          {isOwner && <HostInvitePanel tenantId={id} managementMode={managementMode} />}
         </TabsContent>
 
         <TabsContent value="onboarding" className="space-y-6">

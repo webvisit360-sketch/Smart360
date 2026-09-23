@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Eye, Loader2 } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { ManagementMode } from "./management-mode-setting";
 
 type Preview = {
   propertyName: string;
@@ -40,7 +41,13 @@ function EmailPreviewFrame({ html }: { html: string }) {
   );
 }
 
-export function WelcomePreview({ tenantId }: { tenantId: string }) {
+export function WelcomePreview({
+  tenantId,
+  managementMode = "self_service",
+}: {
+  tenantId: string;
+  managementMode?: ManagementMode;
+}) {
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState("");
@@ -77,7 +84,8 @@ export function WelcomePreview({ tenantId }: { tenantId: string }) {
           <DialogTitle>Predogled dobrodošlice</DialogTitle>
           <DialogDescription>
             Nič ne bo poslano. Povabila se ne ustvarijo ali razveljavijo.
-            Povezava za geslo je vzorčna in ne deluje. Povezave v predogledu niso klikljive.
+            {managementMode === "self_service" && " Povezava za geslo je vzorčna in ne deluje."}
+            {" "}Povezave v predogledu niso klikljive.
           </DialogDescription>
         </DialogHeader>
         {error ? <p role="alert" className="text-destructive">{error}</p> : !preview ? (

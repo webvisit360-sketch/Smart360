@@ -1,11 +1,40 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, RefreshCcw, ShieldAlert, ShieldCheck } from "lucide-react";
+import { getAdminTenantHostAccount } from "@workspace/api-client-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { WelcomePreview } from "./welcome-preview";
+import type { ManagementMode } from "./management-mode-setting";
+
+type InviteHistoryEntry = {
+  kind?: "invitation";
+  label?: "povabilo z dostopom";
+  createdAt: string;
+  invalidatedAt: string | null;
+  usedAt: string | null;
+  deliveryStatus: "pending" | "accepted" | "failed" | "delivered" | "bounced" | "complained";
+  providerMessageId: string | null;
+  providerEventName: string | null;
+  providerEventAt: string | null;
+  deliveryAttemptedAt: string | null;
+  deliveryFailure: {
+    stage: "configuration" | "provider" | "transport";
+    code: string;
+    message: string;
+    httpStatus: number | null;
+  } | null;
+};
+
+type WelcomeWithoutAccessHistoryEntry = {
+  kind: "welcome_without_access";
+  label?: "dobrodošlica brez dostopa";
+  createdAt: string;
+};
+
+type WelcomeHistoryEntry = InviteHistoryEntry | WelcomeWithoutAccessHistoryEntry;
 
 type HostAccount = {
   email: string;
@@ -13,22 +42,7 @@ type HostAccount = {
   passwordChangedAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;
-  inviteHistory: Array<{
-    createdAt: string;
-    invalidatedAt: string | null;
-    usedAt: string | null;
-    deliveryStatus: "pending" | "accepted" | "failed" | "delivered" | "bounced" | "complained";
-    providerMessageId: string | null;
-    providerEventName: string | null;
-    providerEventAt: string | null;
-    deliveryAttemptedAt: string | null;
-    deliveryFailure: {
-      stage: "configuration" | "provider" | "transport";
-      code: string;
-      message: string;
-      httpStatus: number | null;
-    } | null;
-  }>;
+  inviteHistory?: WelcomeHistoryEntry[];
 };
 
 const inviteDeliveryDetails = {
@@ -49,9 +63,16 @@ async function readError(response: Response): Promise<string> {
   }
 }
 
-export function HostInvitePanel({ tenantId }: { tenantId: string }) {
+export function HostInvitePanel({
+  tenantId,
+  managementMode,
+}: {
+  tenantId: string;
+  managementMode: ManagementMode;
+}) {
   const { toast } = useToast();
   const [account, setAccount] = useState<HostAccount | null>(null);
+  const [inviteHistory, setInviteHistory] = useState<WelcomeHistoryEntry[]>([]);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<"save" | "welcome" | "guide-ready" | "reset" | null>(null);
@@ -59,13 +80,12 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
   const load = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/tenants/${tenantId}/host`, {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error(await readError(response));
-      const data = await response.json() as { account: HostAccount | null };
-      setAccount(data.account);
-      setEmail(data.account?.email || "");
+      const data = await getAdminTenantHostAccount(tenantId, { cache: "no-store" });
+      const accountData = data.account as HostAccount | null;
+      const history = data.inviteHistory as WelcomeHistoryEntry[];
+      setAccount(accountData);
+      setInviteHistory(history ?? accountData?.inviteHistory ?? []);
+      setEmail(accountData?.email || "");
     } catch (error) {
       toast({
         title: "Gostiteljskega računa ni bilo mogoče prebrati",
@@ -79,7 +99,7 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
 
   useEffect(() => {
     void load();
-  }, [tenantId]);
+  }, [tenantId, managementMode]);
 
   const saveAccount = async () => {
     setBusy("save");
@@ -116,15 +136,19 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
       });
       if (!response.ok) throw new Error(await readError(response));
       toast({
-        title: "Vabilo je poslano",
+        title: managementMode === "concierge" ? "Dobrodošlica je poslana" : "Vabilo je poslano",
         description:
-          "Povezava velja 72 ur in enkrat. Novo vabilo je razveljavilo prejšnjega.",
+          managementMode === "concierge"
+            ? "Gostitelj je prejel dobrodošlico brez povezave za dostop."
+            : "Povezava velja 72 ur in enkrat. Novo vabilo je razveljavilo prejšnjega.",
       });
       await load();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Poskusite znova.";
       toast({
-        title: "Vabila ni bilo mogoče poslati",
+        title: managementMode === "concierge"
+          ? "Dobrodošlice ni bilo mogoče poslati"
+          : "Vabila ni bilo mogoče poslati",
         description: message,
         variant: "destructive",
       });
@@ -160,9 +184,13 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gostiteljski račun in povabila</CardTitle>
+        <CardTitle>
+          {managementMode === "concierge" ? "Dobrodošlica gostitelju" : "Gostiteljski račun in povabila"}
+        </CardTitle>
         <CardDescription>
-          Geslo nastavi gostitelj sam. Smart360 ga nikoli ne vidi in ga ne pošilja po e-pošti.
+          {managementMode === "concierge"
+            ? "Pošljite dobrodošlico brez ustvarjanja računa, gesla ali dostopa."
+            : "Geslo nastavi gostitelj sam. Smart360 ga nikoli ne vidi in ga ne pošilja po e-pošti."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -172,7 +200,33 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
           </div>
         ) : (
           <>
-            <div className="space-y-2">
+            {managementMode === "concierge" && (
+              <div className="rounded-[18px] border bg-muted/30 p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-bold">Gostitelj nima dostopa do administracije</p>
+                    <p className="text-sm text-muted-foreground">
+                      Dobrodošlica ne vsebuje gesla ali povezave za prijavo. Vsebino ureja Smart360.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    data-testid="send-concierge-welcome"
+                    onClick={() => void sendInvite("welcome")}
+                    disabled={busy !== null}
+                  >
+                    {busy === "welcome" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                    Pošlji dobrodošlico
+                  </Button>
+                  <WelcomePreview tenantId={tenantId} managementMode={managementMode} />
+                </div>
+              </div>
+            )}
+
+            {managementMode === "self_service" && (
+            <div className="space-y-2" data-testid="host-access-controls">
               <Label htmlFor="host-email">E-poštni naslov gostitelja</Label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
@@ -192,8 +246,9 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
                 </Button>
               </div>
             </div>
+            )}
 
-            {account && !account.hasPassword && (
+            {managementMode === "self_service" && account && !account.hasPassword && (
               <div className="rounded-[18px] border bg-muted/30 p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <Mail className="h-5 w-5 text-primary mt-0.5" />
@@ -209,7 +264,7 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
                     {busy === "welcome" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
                     Pošlji dobrodošlico
                   </Button>
-                  <WelcomePreview key={tenantId} tenantId={tenantId} />
+                  <WelcomePreview key={tenantId} tenantId={tenantId} managementMode={managementMode} />
                   <Button
                     variant="outline"
                     onClick={() => void sendInvite("guide-ready")}
@@ -222,17 +277,42 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
               </div>
             )}
 
-            {(!account || account.hasPassword) && <WelcomePreview key={tenantId} tenantId={tenantId} />}
+            {managementMode === "self_service" && (!account || account.hasPassword) && (
+              <WelcomePreview key={tenantId} tenantId={tenantId} managementMode={managementMode} />
+            )}
 
-            {account && account.inviteHistory.length > 0 && (
+            {inviteHistory.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-bold">Zgodovina poslanih vabil</p>
-                {account.inviteHistory.map((invite, index) => {
+                <p className="text-sm font-bold">Zgodovina poslanih dobrodošlic in vabil</p>
+                {inviteHistory.map((invite, index) => {
+                  if (invite.kind === "welcome_without_access") {
+                    return (
+                      <div
+                        key={`${invite.createdAt}-${index}`}
+                        data-testid={`row-welcome-history-${index}`}
+                        className="rounded-[18px] border bg-muted/30 p-4"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-medium">dobrodošlica brez dostopa</p>
+                          <time className="text-xs text-muted-foreground">
+                            {new Date(invite.createdAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}
+                          </time>
+                        </div>
+                      </div>
+                    );
+                  }
                   const delivery = inviteDeliveryDetails[invite.deliveryStatus];
                   const DeliveryIcon = delivery.icon;
                   const critical = invite.deliveryStatus === "bounced" || invite.deliveryStatus === "complained";
                   return (
-                    <div key={`${invite.createdAt}-${index}`} className={`rounded-[18px] border p-4 space-y-2 ${critical ? "border-red-300 bg-red-50" : "bg-muted/30"}`}>
+                    <div
+                      key={`${invite.createdAt}-${index}`}
+                      data-testid={`row-welcome-history-${index}`}
+                      className={`rounded-[18px] border p-4 space-y-2 ${critical ? "border-red-300 bg-red-50" : "bg-muted/30"}`}
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        povabilo z dostopom
+                      </p>
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className={`flex items-center gap-2 ${delivery.className}`}>
                           <DeliveryIcon className={`h-4 w-4 ${invite.deliveryStatus === "pending" ? "animate-spin" : ""}`} />
@@ -275,7 +355,7 @@ export function HostInvitePanel({ tenantId }: { tenantId: string }) {
               </div>
             )}
 
-            {account?.hasPassword && (
+            {managementMode === "self_service" && account?.hasPassword && (
               <div className="rounded-[18px] border bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="h-5 w-5 text-primary mt-0.5" />

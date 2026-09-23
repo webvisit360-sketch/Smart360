@@ -1366,6 +1366,8 @@ export const GetAdminTenantHostAccountParams = zod.object({
 
 export const getAdminTenantHostAccountResponseAccountOneInviteHistoryMax = 10;
 
+export const getAdminTenantHostAccountResponseInviteHistoryMax = 10;
+
 
 
 export const GetAdminTenantHostAccountResponse = zod.object({
@@ -1374,7 +1376,9 @@ export const GetAdminTenantHostAccountResponse = zod.object({
   "hasPassword": zod.boolean(),
   "lastLoginAt": zod.string().nullable(),
   "createdAt": zod.string(),
-  "inviteHistory": zod.array(zod.object({
+  "inviteHistory": zod.array(zod.union([zod.object({
+  "kind": zod.enum(['invitation']),
+  "label": zod.enum(['povabilo z dostopom']),
   "createdAt": zod.string(),
   "invalidatedAt": zod.string().nullable(),
   "usedAt": zod.string().nullable(),
@@ -1383,8 +1387,30 @@ export const GetAdminTenantHostAccountResponse = zod.object({
   "providerEventName": zod.string().nullable(),
   "providerEventAt": zod.string().nullable(),
   "deliveryAttemptedAt": zod.string().nullable()
-})).max(getAdminTenantHostAccountResponseAccountOneInviteHistoryMax)
-}),zod.null()])
+}),zod.object({
+  "kind": zod.enum(['welcome_without_access']),
+  "label": zod.enum(['dobrodošlica brez dostopa']),
+  "createdAt": zod.string(),
+  "deliveryStatus": zod.enum(['accepted', 'failed'])
+})])).max(getAdminTenantHostAccountResponseAccountOneInviteHistoryMax)
+}),zod.null()]),
+  "inviteHistory": zod.array(zod.union([zod.object({
+  "kind": zod.enum(['invitation']),
+  "label": zod.enum(['povabilo z dostopom']),
+  "createdAt": zod.string(),
+  "invalidatedAt": zod.string().nullable(),
+  "usedAt": zod.string().nullable(),
+  "deliveryStatus": zod.enum(['pending', 'accepted', 'failed', 'delivered', 'bounced', 'complained']),
+  "providerMessageId": zod.string().nullable(),
+  "providerEventName": zod.string().nullable(),
+  "providerEventAt": zod.string().nullable(),
+  "deliveryAttemptedAt": zod.string().nullable()
+}),zod.object({
+  "kind": zod.enum(['welcome_without_access']),
+  "label": zod.enum(['dobrodošlica brez dostopa']),
+  "createdAt": zod.string(),
+  "deliveryStatus": zod.enum(['accepted', 'failed'])
+})])).max(getAdminTenantHostAccountResponseInviteHistoryMax)
 })
 
 
@@ -1428,6 +1454,7 @@ export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItem
 export const GetPublicTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -1943,6 +1970,7 @@ export const listTenantsResponseLivingGuideNavMax = 5;
 export const ListTenantsResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -2041,6 +2069,7 @@ export const createTenantResponseLivingGuideNavMax = 5;
 export const CreateTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3428,6 +3457,7 @@ export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravel
 export const GetTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3699,6 +3729,7 @@ export const updateTenantResponseLivingGuideNavMax = 5;
 export const UpdateTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3779,6 +3810,22 @@ export const DeleteTenantParams = zod.object({
 })
 
 export const DeleteTenantResponse = zod.void()
+
+
+/**
+ * @summary Change the operator-only host access policy without changing guide content
+ */
+export const UpdateTenantManagementModeParams = zod.object({
+  "tenantId": zod.coerce.string()
+})
+
+export const UpdateTenantManagementModeBody = zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})
+
+export const UpdateTenantManagementModeResponse = zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})
 
 
 /**
@@ -4065,6 +4112,7 @@ export const DuplicateTenantResponse = zod.object({
   "tenant": zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -4170,6 +4218,7 @@ export const renewTenantResponseLivingGuideNavMax = 5;
 export const RenewTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),

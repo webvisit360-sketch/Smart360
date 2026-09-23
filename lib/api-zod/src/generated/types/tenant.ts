@@ -7,11 +7,13 @@
  */
 import type { TenantGuestUiMode } from './tenantGuestUiMode';
 import type { TenantLivingGuideNavItem } from './tenantLivingGuideNavItem';
+import type { TenantManagementModeProperty } from './tenantManagementModeProperty';
 import type { TenantNotificationChannel } from './tenantNotificationChannel';
 
 export interface Tenant {
   id: string;
   slug: string;
+  managementMode: TenantManagementModeProperty;
   /** @nullable */
   customDomain?: string | null;
   name: string;

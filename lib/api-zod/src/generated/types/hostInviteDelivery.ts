@@ -6,8 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { HostInviteDeliveryDeliveryStatus } from './hostInviteDeliveryDeliveryStatus';
+import type { HostInviteDeliveryKind } from './hostInviteDeliveryKind';
+import type { HostInviteDeliveryLabel } from './hostInviteDeliveryLabel';
 
 export interface HostInviteDelivery {
+  kind: HostInviteDeliveryKind;
+  label: HostInviteDeliveryLabel;
   createdAt: string;
   /** @nullable */
   invalidatedAt: string | null;

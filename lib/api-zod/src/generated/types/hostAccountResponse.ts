@@ -6,7 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { HostAccount } from './hostAccount';
+import type { HostInvitationHistoryEntry } from './hostInvitationHistoryEntry';
 
 export interface HostAccountResponse {
   account: HostAccount | null;
+  /** @maxItems 10 */
+  inviteHistory: HostInvitationHistoryEntry[];
 }

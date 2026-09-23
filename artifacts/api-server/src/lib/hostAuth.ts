@@ -9,10 +9,11 @@ import {
   hostInvitesTable,
   hostPasswordResetsTable,
   hostAuthEventsTable,
+  changelogTable,
   tenantsTable,
   type HostUser,
 } from "@workspace/db";
-import { and, desc, eq, gt, isNotNull, isNull, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull, isNull, like, or, sql } from "drizzle-orm";
 import {
   parseHostInviteDeliveryFailure,
   type HostInviteDeliveryFailure,
@@ -146,15 +147,31 @@ async function audit(
 
 // ---------- Sessions ----------
 
-async function createHostSession(hostUserId: string, req: Request, res: Response): Promise<void> {
+async function createHostSession(
+  hostUserId: string,
+  tenantId: string,
+  req: Request,
+  res: Response,
+): Promise<boolean> {
   const token = crypto.randomBytes(32).toString("base64url");
-  await db.insert(hostSessionsTable).values({
-    hostUserId,
-    tokenHash: sha256(token),
-    ip: req.ip ?? null,
-    userAgent: req.get("user-agent") ?? null,
-    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+  const inserted = await db.transaction(async (tx) => {
+    const [tenant] = await tx
+      .select({ managementMode: tenantsTable.managementMode })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1)
+      .for("update");
+    if (tenant?.managementMode !== "self_service") return false;
+    await tx.insert(hostSessionsTable).values({
+      hostUserId,
+      tokenHash: sha256(token),
+      ip: req.ip ?? null,
+      userAgent: req.get("user-agent") ?? null,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    });
+    return true;
   });
+  if (!inserted) return false;
   res.cookie(HOST_SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "strict",
@@ -162,6 +179,7 @@ async function createHostSession(hostUserId: string, req: Request, res: Response
     maxAge: SESSION_TTL_MS,
     path: "/",
   });
+  return true;
 }
 
 export type HostActorRow = {
@@ -182,13 +200,19 @@ export async function findHostActor(req: Request): Promise<HostActorRow | null> 
       hostUserId: hostUsersTable.id,
       email: hostUsersTable.email,
       tenantId: hostMembershipsTable.tenantId,
+      managementMode: tenantsTable.managementMode,
     })
     .from(hostSessionsTable)
     .innerJoin(hostUsersTable, eq(hostUsersTable.id, hostSessionsTable.hostUserId))
     .innerJoin(hostMembershipsTable, eq(hostMembershipsTable.hostUserId, hostUsersTable.id))
+    .innerJoin(tenantsTable, eq(tenantsTable.id, hostMembershipsTable.tenantId))
     .where(eq(hostSessionsTable.tokenHash, sha256(token)))
     .limit(1);
-  if (!row || row.expiresAt.getTime() <= Date.now()) return null;
+  if (
+    !row ||
+    row.managementMode !== "self_service" ||
+    row.expiresAt.getTime() <= Date.now()
+  ) return null;
   return {
     hostUserId: row.hostUserId,
     tenantId: row.tenantId,
@@ -230,12 +254,14 @@ export async function loginHost(
     .select({
       user: hostUsersTable,
       tenantId: hostMembershipsTable.tenantId,
+      managementMode: tenantsTable.managementMode,
     })
     .from(hostUsersTable)
     .innerJoin(hostMembershipsTable, eq(hostMembershipsTable.hostUserId, hostUsersTable.id))
+    .innerJoin(tenantsTable, eq(tenantsTable.id, hostMembershipsTable.tenantId))
     .where(eq(hostUsersTable.email, email))
     .limit(1);
-  if (!row || !row.user.passwordHash) {
+  if (!row || row.managementMode !== "self_service" || !row.user.passwordHash) {
     await argonVerify(await dummyHash(), password).catch(() => false);
     return { ok: false, status: 401 };
   }
@@ -266,7 +292,9 @@ export async function loginHost(
     .update(hostUsersTable)
     .set({ failedLoginCount: 0, lastFailedAt: null, lastLoginAt: new Date() })
     .where(eq(hostUsersTable.id, row.user.id));
-  await createHostSession(row.user.id, req, res);
+  if (!await createHostSession(row.user.id, row.tenantId, req, res)) {
+    return { ok: false, status: 401 };
+  }
   await audit("login", row.user.id, req);
   return { ok: true, tenantId: row.tenantId, email };
 }
@@ -300,6 +328,13 @@ export async function changeHostPassword(
   // another change) rewrote the password in the meantime, this writes nothing
   // — a stale session can never reinstate its own password after a reset.
   const changed = await db.transaction(async (tx) => {
+    const [tenant] = await tx
+      .select({ managementMode: tenantsTable.managementMode })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, actor.tenantId))
+      .limit(1)
+      .for("update");
+    if (tenant?.managementMode !== "self_service") return false;
     const updated = await tx
       .update(hostUsersTable)
       .set({ passwordHash: newHash, passwordChangedAt: new Date() })
@@ -364,6 +399,25 @@ export async function issueHostInviteForTenant(
 ): Promise<HostInviteIssue> {
   const token = crypto.randomBytes(32).toString("base64url");
   return db.transaction(async (tx) => {
+    const [tenant] = await tx
+      .select({
+        id: tenantsTable.id,
+        name: tenantsTable.name,
+        slug: tenantsTable.slug,
+        managementMode: tenantsTable.managementMode,
+      })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1)
+      .for("update");
+    if (!tenant) return { ok: false, status: 404, error: "Not found" };
+    if (tenant.managementMode !== "self_service") {
+      return {
+        ok: false,
+        status: 409,
+        error: "Dostop gostitelja je v načinu Ureja Smart360 onemogočen.",
+      };
+    }
     const [membership] = await tx
       .select({ hostUserId: hostMembershipsTable.hostUserId })
       .from(hostMembershipsTable)
@@ -435,12 +489,6 @@ export async function issueHostInviteForTenant(
       userAgent: req.get("user-agent") ?? null,
     });
 
-    const [tenant] = await tx
-      .select({ name: tenantsTable.name, slug: tenantsTable.slug })
-      .from(tenantsTable)
-      .where(eq(tenantsTable.id, tenantId))
-      .limit(1);
-    if (!tenant) return { ok: false, status: 404, error: "Not found" };
     return {
       ok: true,
       token,
@@ -486,12 +534,16 @@ export async function consumeHostInvite(
     // establish the server-owned actor context for the post-commit changelog;
     // neither identifier is exposed to the anonymous caller.
     const [membership] = await tx
-      .select({ tenantId: hostMembershipsTable.tenantId })
+      .select({
+        tenantId: hostMembershipsTable.tenantId,
+        managementMode: tenantsTable.managementMode,
+      })
       .from(hostMembershipsTable)
+      .innerJoin(tenantsTable, eq(tenantsTable.id, hostMembershipsTable.tenantId))
       .where(eq(hostMembershipsTable.hostUserId, invite.hostUserId))
       .limit(1)
       .for("update");
-    if (!membership) return null;
+    if (!membership || membership.managementMode !== "self_service") return null;
     const [issuedEvent] = await tx
       .select({ detail: hostAuthEventsTable.detail })
       .from(hostAuthEventsTable)
@@ -561,14 +613,16 @@ export async function issueHostPasswordReset(emailRaw: unknown, req: Request | n
   // so concurrent requests serialize and cannot each pass a stale count.
   return db.transaction(async (tx) => {
     const [user] = await tx
-      .select()
+      .select({ user: hostUsersTable, managementMode: tenantsTable.managementMode })
       .from(hostUsersTable)
+      .innerJoin(hostMembershipsTable, eq(hostMembershipsTable.hostUserId, hostUsersTable.id))
+      .innerJoin(tenantsTable, eq(tenantsTable.id, hostMembershipsTable.tenantId))
       .where(eq(hostUsersTable.email, email))
       .limit(1)
       .for("update");
     // A reset may only replace an EXISTING password. Passwordless accounts
     // must be claimed through a 72-hour invite of the distinct token type.
-    if (!user?.passwordHash) return null;
+    if (!user || user.managementMode !== "self_service" || !user.user.passwordHash) return null;
     const since = new Date(Date.now() - 60 * 60 * 1000);
     const recent = await tx
       .select({ id: hostAuthEventsTable.id })
@@ -576,25 +630,25 @@ export async function issueHostPasswordReset(emailRaw: unknown, req: Request | n
       .where(
         and(
           eq(hostAuthEventsTable.type, "reset_requested"),
-          eq(hostAuthEventsTable.hostUserId, user.id),
+          eq(hostAuthEventsTable.hostUserId, user.user.id),
           gt(hostAuthEventsTable.createdAt, since),
         ),
       );
     if (recent.length >= 3) return null;
     await tx.insert(hostPasswordResetsTable).values({
-      hostUserId: user.id,
+      hostUserId: user.user.id,
       tokenHash: sha256(token),
       expiresAt: new Date(Date.now() + RESET_TTL_MS),
     });
     // The audit row IS the quota counter — it must commit with the token.
     await tx.insert(hostAuthEventsTable).values({
-      hostUserId: user.id,
+      hostUserId: user.user.id,
       type: "reset_requested",
       detail: `actor=${inviteActor(req)}`,
       ip: req?.ip ?? null,
       userAgent: req?.get("user-agent") ?? null,
     });
-    return { token, hostUserId: user.id, email: user.email };
+    return { token, hostUserId: user.user.id, email: user.user.email };
   });
 }
 
@@ -631,12 +685,16 @@ export async function consumeHostPasswordReset(
     // Keep the actor identity coupled to the same successful token
     // consumption transaction. It is used only for the post-commit audit row.
     const [membership] = await tx
-      .select({ tenantId: hostMembershipsTable.tenantId })
+      .select({
+        tenantId: hostMembershipsTable.tenantId,
+        managementMode: tenantsTable.managementMode,
+      })
       .from(hostMembershipsTable)
+      .innerJoin(tenantsTable, eq(tenantsTable.id, hostMembershipsTable.tenantId))
       .where(eq(hostMembershipsTable.hostUserId, reset.hostUserId))
       .limit(1)
       .for("update");
-    if (!membership) return null;
+    if (!membership || membership.managementMode !== "self_service") return null;
     const [user] = await tx
       .update(hostUsersTable)
       .set({
@@ -682,6 +740,8 @@ export type HostAccountView = {
   lastLoginAt: string | null;
   createdAt: string;
   inviteHistory: Array<{
+    kind: "invitation";
+    label: "povabilo z dostopom";
     createdAt: string;
     invalidatedAt: string | null;
     usedAt: string | null;
@@ -693,6 +753,49 @@ export type HostAccountView = {
     deliveryFailure: HostInviteDeliveryFailure | null;
   }>;
 };
+
+export type HostInvitationHistoryEntry =
+  | HostAccountView["inviteHistory"][number]
+  | {
+      kind: "welcome_without_access";
+      label: "dobrodošlica brez dostopa";
+      createdAt: string;
+      deliveryStatus: "accepted" | "failed";
+    };
+
+async function conciergeWelcomeHistory(
+  tenantId: string,
+): Promise<HostInvitationHistoryEntry[]> {
+  const rows = await db
+    .select({ action: changelogTable.action, createdAt: changelogTable.createdAt })
+    .from(changelogTable)
+    .where(and(
+      eq(changelogTable.tenantId, tenantId),
+      eq(changelogTable.entity, "concierge-welcome"),
+      inArray(changelogTable.action, ["send", "send-failed"]),
+    ))
+    .orderBy(desc(changelogTable.createdAt))
+    .limit(10);
+  return rows.map((row) => ({
+    kind: "welcome_without_access" as const,
+    label: "dobrodošlica brez dostopa" as const,
+    createdAt: row.createdAt.toISOString(),
+    deliveryStatus: row.action === "send" ? "accepted" as const : "failed" as const,
+  }));
+}
+
+export async function getHostInvitationHistoryForTenant(
+  tenantId: string,
+  account: HostAccountView | null,
+): Promise<HostInvitationHistoryEntry[]> {
+  const entries: HostInvitationHistoryEntry[] = [
+    ...(account?.inviteHistory ?? []),
+    ...await conciergeWelcomeHistory(tenantId),
+  ];
+  return entries
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 10);
+}
 
 export async function getHostAccountForTenant(tenantId: string): Promise<HostAccountView | null> {
   const [row] = await db
@@ -751,6 +854,8 @@ export async function getHostAccountForTenant(tenantId: string): Promise<HostAcc
     lastLoginAt: row.user.lastLoginAt?.toISOString() ?? null,
     createdAt: row.user.createdAt.toISOString(),
     inviteHistory: invites.map((invite) => ({
+      kind: "invitation" as const,
+      label: "povabilo z dostopom" as const,
       createdAt: invite.createdAt.toISOString(),
       invalidatedAt: invite.invalidatedAt?.toISOString() ?? null,
       usedAt: invite.usedAt?.toISOString() ?? null,
@@ -772,11 +877,18 @@ export async function upsertHostAccountForTenant(
   const email = normalizeEmail(emailRaw);
   if (!email) return { ok: false, status: 400, error: "Neveljaven e-naslov." };
   const [tenant] = await db
-    .select({ id: tenantsTable.id })
+    .select({ id: tenantsTable.id, managementMode: tenantsTable.managementMode })
     .from(tenantsTable)
     .where(eq(tenantsTable.id, tenantId))
     .limit(1);
   if (!tenant) return { ok: false, status: 404, error: "Not found" };
+  if (tenant.managementMode !== "self_service") {
+    return {
+      ok: false,
+      status: 409,
+      error: "V načinu Ureja Smart360 se gostiteljski račun ne ustvari.",
+    };
+  }
   const [taken] = await db
     .select({ id: hostUsersTable.id })
     .from(hostUsersTable)

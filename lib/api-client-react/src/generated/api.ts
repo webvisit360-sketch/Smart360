@@ -142,6 +142,7 @@ import type {
   TenantContent,
   TenantDuplicateInput,
   TenantInput,
+  TenantManagementMode,
   TenantOverview,
   TenantPublicationPreview,
   TenantSkeletonAlignmentResult,
@@ -6084,6 +6085,78 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteTenantMutationOptions(options));
+    }
+
+export const getUpdateTenantManagementModeUrl = (tenantId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${tenantId}/management-mode`
+}
+
+/**
+ * @summary Change the operator-only host access policy without changing guide content
+ */
+export const updateTenantManagementMode = async (tenantId: string,
+    tenantManagementMode: TenantManagementMode, options?: Parameters<typeof customFetch>[1]): Promise<TenantManagementMode> => {
+
+  return customFetch<TenantManagementMode>(getUpdateTenantManagementModeUrl(tenantId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(tenantManagementMode)
+  }
+);}
+
+
+
+
+
+export const getUpdateTenantManagementModeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTenantManagementMode>>, TError,{tenantId: string;data: BodyType<TenantManagementMode>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTenantManagementMode>>, TError,{tenantId: string;data: BodyType<TenantManagementMode>}, TContext> => {
+
+const mutationKey = ['updateTenantManagementMode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTenantManagementMode>>, {tenantId: string;data: BodyType<TenantManagementMode>}> = (props) => {
+          const {tenantId,data} = props ?? {};
+
+          return  updateTenantManagementMode(tenantId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTenantManagementModeMutationResult = NonNullable<Awaited<ReturnType<typeof updateTenantManagementMode>>>
+    export type UpdateTenantManagementModeMutationBody = BodyType<TenantManagementMode>
+    export type UpdateTenantManagementModeMutationError = ErrorType<void>
+
+    /**
+ * @summary Change the operator-only host access policy without changing guide content
+ */
+export const useUpdateTenantManagementMode = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTenantManagementMode>>, TError,{tenantId: string;data: BodyType<TenantManagementMode>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTenantManagementMode>>,
+        TError,
+        {tenantId: string;data: BodyType<TenantManagementMode>},
+        TContext
+      > => {
+      return useMutation(getUpdateTenantManagementModeMutationOptions(options));
     }
 
 export const getGetTenantNotificationConfigurationUrl = (id: string,) => {

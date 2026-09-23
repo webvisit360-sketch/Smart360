@@ -14,3 +14,9 @@ The admin cache transition must be symmetric: publish success explicitly applies
 **Why:** Relying only on indirect query invalidation lets the header remain on a previously cached clean publish response even though the content mutation succeeded.
 
 **How to apply:** Route mutation success through the exact no-store tenant-detail query; content/media handlers may patch dirty immediately before refetch. Keep the persisted server flag authoritative across reloads.
+
+Management-mode changes and concierge welcomes are an explicit exception to the general dirty-state rule.
+
+**Why:** The owner requested management mode as an access policy only, independent of guide content and its publication state.
+
+**How to apply:** Preserve the current dirty flag and published snapshot during mode transitions and welcomes without access. Do not extend this exception to existing self-service account, invitation or reset actions; their prior behavior remains unchanged.

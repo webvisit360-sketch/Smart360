@@ -67,6 +67,9 @@ export const tenantAliasesTable = pgTable("tenant_aliases", {
 export const tenantsTable = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
+  // Host access policy. Concierge tenants are maintained exclusively by the
+  // Smart360 operator and cannot authenticate to the host portal.
+  managementMode: text("management_mode").notNull().default("self_service"),
   customDomain: text("custom_domain").unique(),
   name: text("name").notNull(),
   subtitle: text("subtitle"),
@@ -212,6 +215,10 @@ export const tenantsTable = pgTable("tenants", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 }, (t) => [
+  check(
+    "tenants_management_mode_check",
+    sql`${t.managementMode} IN ('self_service','concierge')`,
+  ),
   // DB-level guard: only the two approved UI modes are stored.
   check("tenants_guest_ui_mode_enum", sql`${t.guestUiMode} IN ('legacy','living-guide')`),
   check(

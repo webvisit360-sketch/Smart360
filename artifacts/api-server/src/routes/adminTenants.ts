@@ -75,6 +75,10 @@ import {
 import { hasTenantAdminChanges } from "../lib/guestPublishState";
 import { alignTenantSkeleton } from "../lib/tenantSkeletonAlignment";
 import { requireOperator } from "../lib/actorGate";
+import {
+  changeTenantManagementMode,
+  isManagementMode,
+} from "../lib/tenantManagementMode";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -514,6 +518,28 @@ router.get("/admin/tenants/:id", async (req, res): Promise<void> => {
     qrSvg,
   })));
 });
+
+router.patch(
+  "/admin/tenants/:tenantId/management-mode",
+  requireOperator,
+  async (req, res): Promise<void> => {
+    // Access policy is deliberately outside the ordinary tenant PATCH so host
+    // requests can never reach it and content-dirty middleware can be bypassed.
+    res.locals["skipAdminMutationInvalidation"] = true;
+    const tenantId = firstParam(req.params["tenantId"]);
+    const managementMode = (req.body as Record<string, unknown> | undefined)?.["managementMode"];
+    if (!isManagementMode(managementMode)) {
+      res.status(400).json({ error: "managementMode must be self_service or concierge" });
+      return;
+    }
+    const result = await changeTenantManagementMode(tenantId, managementMode, req);
+    if (!result.found) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json({ managementMode: result.managementMode });
+  },
+);
 
 router.get("/admin/tenants/:id/notification-configuration", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);

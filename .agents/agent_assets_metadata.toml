@@ -904,3 +904,31 @@ mtime_ms = 1790107157294
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/77529098-c07f-424a-abd3-173a820a4a69/e87c0cdd-4bc0-4680-adc8-fe44df1367f5"
 storage_version_token = "1790107199941432"
 content_type = "image/png"
+
+[[outputs]]
+id = "OZ8j449fl7os6R02WhGgr"
+uri = "file://previews/management-mode/self-service.html"
+type = "html"
+title = "Dobrodošlica — Gostitelj ureja sam"
+description = "HTML predogled obstoječe CGP predloge z nastavitvijo gesla. Prikazana povezava je demonstracijska, ne veljavno vabilo."
+logical_id = "1f2c25fd-a8f4-49ae-a833-aec63d585b7b"
+content_hash = "sha256:16b310a4491264555eff62e8dd58f4b7410a9ac911dc9a0888f1acef8ff9052f"
+size = 3785
+mtime_ms = 1790152198239
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1f2c25fd-a8f4-49ae-a833-aec63d585b7b/04ed9b69-3ef9-47a4-971f-ac48bebb978d"
+storage_version_token = "1790153134868582"
+content_type = "text/html"
+
+[[outputs]]
+id = "SYZNhM7-30Y-Qmi-r-WBQ"
+uri = "file://previews/management-mode/concierge.html"
+type = "html"
+title = "Dobrodošlica — Ureja Smart360"
+description = "HTML predogled iste CGP predloge z zahtevanim besedilom in gumbom Oglejte si svoj vodnik, brez povezave za dostop."
+logical_id = "08857711-df15-413a-a7fe-84e1b344b7b6"
+content_hash = "sha256:559807533326cce26b339d092debb5d6c18ee553f4d474096f06e8abd1a586ed"
+size = 4282
+mtime_ms = 1790152212541
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/08857711-df15-413a-a7fe-84e1b344b7b6/b5dc172f-b40d-4169-852c-6f1446ef0e55"
+storage_version_token = "1790153136626876"
+content_type = "text/html"

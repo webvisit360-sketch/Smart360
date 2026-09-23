@@ -5,7 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
-import type { HostInviteDelivery } from './hostInviteDelivery';
+import type { HostInvitationHistoryEntry } from './hostInvitationHistoryEntry';
 
 export interface HostAccount {
   email: string;
@@ -14,5 +14,5 @@ export interface HostAccount {
   lastLoginAt: string | null;
   createdAt: string;
   /** @maxItems 10 */
-  inviteHistory: HostInviteDelivery[];
+  inviteHistory: HostInvitationHistoryEntry[];
 }

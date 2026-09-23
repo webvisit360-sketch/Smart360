@@ -1476,6 +1476,35 @@ paths:
       responses:
         "204":
           description: Deleted
+  /admin/tenants/{tenantId}/management-mode:
+    patch:
+      operationId: updateTenantManagementMode
+      tags: [tenants]
+      summary: Change the operator-only host access policy without changing guide content
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantManagementMode"
+      responses:
+        "200":
+          description: Current management mode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantManagementMode"
+        "400":
+          description: Invalid management mode
+        "401":
+          description: Not authenticated
+        "404":
+          description: Tenant not found or unavailable to this actor
   /admin/tenants/{id}/notification-configuration:
     get:
       operationId: getTenantNotificationConfiguration
@@ -3353,12 +3382,17 @@ components:
         deliveryAttemptedAt: { type: ["string", "null"] }
     HostAccountResponse:
       type: object
-      required: [account]
+      required: [account, inviteHistory]
       properties:
         account:
           oneOf:
             - $ref: "#/components/schemas/HostAccount"
             - type: "null"
+        inviteHistory:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/HostInvitationHistoryEntry"
     HostAccount:
       type: object
       required: [email, hasPassword, lastLoginAt, createdAt, inviteHistory]
@@ -3371,11 +3405,19 @@ components:
           type: array
           maxItems: 10
           items:
-            $ref: "#/components/schemas/HostInviteDelivery"
+            $ref: "#/components/schemas/HostInvitationHistoryEntry"
+    HostInvitationHistoryEntry:
+      oneOf:
+        - $ref: "#/components/schemas/HostInviteDelivery"
+        - $ref: "#/components/schemas/WelcomeWithoutAccessDelivery"
+      discriminator:
+        propertyName: kind
     HostInviteDelivery:
       type: object
-      required: [createdAt, invalidatedAt, usedAt, deliveryStatus, providerMessageId, providerEventName, providerEventAt, deliveryAttemptedAt]
+      required: [kind, label, createdAt, invalidatedAt, usedAt, deliveryStatus, providerMessageId, providerEventName, providerEventAt, deliveryAttemptedAt]
       properties:
+        kind: { type: string, enum: [invitation] }
+        label: { type: string, enum: [povabilo z dostopom] }
         createdAt: { type: string }
         invalidatedAt: { type: ["string", "null"] }
         usedAt: { type: ["string", "null"] }
@@ -3386,6 +3428,14 @@ components:
         providerEventName: { type: ["string", "null"] }
         providerEventAt: { type: ["string", "null"] }
         deliveryAttemptedAt: { type: ["string", "null"] }
+    WelcomeWithoutAccessDelivery:
+      type: object
+      required: [kind, label, createdAt, deliveryStatus]
+      properties:
+        kind: { type: string, enum: [welcome_without_access] }
+        label: { type: string, enum: [dobrodošlica brez dostopa] }
+        createdAt: { type: string }
+        deliveryStatus: { type: string, enum: [accepted, failed] }
     HealthStatus:
       type: object
       properties:
@@ -4339,6 +4389,9 @@ components:
       properties:
         id: { type: string }
         slug: { type: string }
+        managementMode:
+          type: string
+          enum: [self_service, concierge]
         customDomain: { type: ["string", "null"] }
         name: { type: string }
         subtitle: { type: ["string", "null"] }
@@ -4461,7 +4514,14 @@ components:
         createdAt: { type: string }
         renewsAt: { type: ["string", "null"] }
         updatedAt: { type: string }
-      required: [id, slug, name, theme, guestUiMode, languages, isTemplate, isPublished, hasUnpublishedChanges, lastPublishedAt, orderNotifyEmail, messageNotifyEmail, notificationChannel, mediaQuotaBytes, createdAt, updatedAt]
+      required: [id, slug, managementMode, name, theme, guestUiMode, languages, isTemplate, isPublished, hasUnpublishedChanges, lastPublishedAt, orderNotifyEmail, messageNotifyEmail, notificationChannel, mediaQuotaBytes, createdAt, updatedAt]
+    TenantManagementMode:
+      type: object
+      required: [managementMode]
+      properties:
+        managementMode:
+          type: string
+          enum: [self_service, concierge]
     NotificationConfigurationStatus:
       type: object
       properties:
