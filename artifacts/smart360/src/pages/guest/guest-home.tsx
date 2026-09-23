@@ -5,7 +5,7 @@ import { Tabbar } from "./Tabbar";
 import { ContactSheet } from "./ContactSheet";
 import { SearchOverlay } from "./SearchOverlay";
 import { buildGuestPath } from "./guest-url";
-import { spriteId } from "./sprite-icon";
+import { CategoryIcon } from "@/components/category-icon";
 import { GuestSwipe } from "./GuestSwipe";
 import { getCoverVars, getTextVars } from "./cover-vars";
 import { Cover } from "./Cover";
@@ -200,7 +200,7 @@ export default function GuestHome() {
                     <>
                       <img loading="lazy" decoding="async" src={imgSrc(bc.photo, 620)} alt="" />
                       <span className="ov"></span>
-                      <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg></span>
+                      <span className="ico"><CategoryIcon icon={bc.icon} className="ic" /></span>
                       <span className="tx">
                         <b>{bc.title}</b>
                         <span>{plural(tenant, lang, "entries", bc.count)}</span>
@@ -208,7 +208,7 @@ export default function GuestHome() {
                     </>
                   ) : (
                     <span className="missing-photo">
-                      <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(bc.icon)}`} /></svg>
+                      <CategoryIcon icon={bc.icon} className="ic" />
                       <span>fotografija manjka</span>
                       <b>{bc.title}</b>
                       <small>{plural(tenant, lang, "entries", bc.count)}</small>
@@ -237,7 +237,7 @@ export default function GuestHome() {
                 <Link key={cat.id} href={buildGuestPath(`/${slug}/c/${cat.id}`)} className="hcard">
                   {!cat.photo ? (
                     <span className="im im--missing">
-                      <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
+                      <CategoryIcon icon={cat.icon} className="ic" />
                       <span>fotografija manjka</span>
                     </span>
                   ) : cat.tint ? (
@@ -247,7 +247,7 @@ export default function GuestHome() {
                       className={isLightHex(cat.tint) ? "im im--tint im--tint-light" : "im im--tint"}
                       style={{ "--tint": cat.tint } as React.CSSProperties}
                     >
-                      <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg>
+                      <CategoryIcon icon={cat.icon} className="ic" />
                     </span>
                   ) : (
                     <span className="im"><img loading="lazy" decoding="async" src={imgSrc(cat.photo, 620)} alt="" /></span>

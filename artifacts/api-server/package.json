@@ -23,6 +23,7 @@
     "@replit/connectors-sdk": "^0.4.1",
     "@simplewebauthn/server": "^13.3.2",
     "@workspace/api-zod": "workspace:*",
+    "@workspace/category-icons": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/integrations-openai-ai-server": "workspace:*",
     "compression": "^1.8.1",

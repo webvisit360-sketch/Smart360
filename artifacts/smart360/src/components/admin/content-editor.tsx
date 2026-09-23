@@ -33,7 +33,6 @@ import {
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search, CheckCircle2 } from "lucide-react";
 import { IconSprite } from "@/pages/guest/IconSprite";
-import { spriteId } from "@/pages/guest/sprite-icon";
 import { AdminButton as Button } from "@/components/ui/button";
 import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
 import { Input } from "@/components/ui/input";
@@ -76,6 +75,9 @@ import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { mutationErrorMessage } from "@/lib/manual-pin-feedback";
 import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
 import { getHostOnboardingQueryKey } from "@/hooks/use-host-onboarding";
+import { suggestCategoryIcon } from "@workspace/category-icons";
+import { CategoryIcon } from "@/components/category-icon";
+import { CategoryIconPicker } from "@/components/admin/category-icon-picker";
 
 // ---------- Types ----------
 
@@ -215,12 +217,7 @@ function getLayoutIcon(layout: string) {
 }
 
 function IconRenderer({ icon, className }: { icon?: string | null; className?: string }) {
-  const id = spriteId(icon);
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <use href={`#${id}`} />
-    </svg>
-  );
+  return <CategoryIcon icon={icon} className={className} />;
 }
 
 function formatTravelTime(s: number | null) {
@@ -382,14 +379,15 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   const [busy, setBusy] = useState(false);
 
   const [title, setTitle] = useState(section?.title ?? "");
-  const [icon, setIcon] = useState(section?.icon ?? "");
+  const [icon, setIcon] = useState(section?.icon ?? suggestCategoryIcon(""));
+  const iconManuallyChosen = useRef(mode === "edit");
   const [subtitle, setSubtitle] = useState(section?.subtitle ?? "");
   const [key, setKey] = useState(section?.key ?? "");
   const [isVisible, setIsVisible] = useState(section?.isVisible ?? true);
 
   const baseline = {
     title: section?.title ?? "",
-    icon: section?.icon ?? "",
+    icon: section?.icon ?? suggestCategoryIcon(""),
     subtitle: section?.subtitle ?? "",
     key: section?.key ?? "",
     isVisible: section?.isVisible ?? true,
@@ -405,7 +403,8 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   useEffect(() => {
     if (restored) {
       setTitle(restored.title);
-      setIcon(restored.icon || "sparkle");
+      setIcon(restored.icon || suggestCategoryIcon(restored.title));
+      iconManuallyChosen.current = true;
       setSubtitle(restored.subtitle);
       setKey(restored.key);
       setIsVisible(restored.isVisible);
@@ -477,28 +476,33 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
-      <div className="grid grid-cols-[1fr_80px] gap-3">
-        <div className="space-y-1">
-          <Label>Naslov *</Label>
-          <Input
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              if (mode === "create") setKey(slugify(e.target.value));
-            }}
-            placeholder="npr. Informacije"
-            disabled={busy}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>Ikona *</Label>
-          <Input
-            value={icon}
-            onChange={(e) => setIcon(e.target.value)}
-            placeholder="🏠"
-            disabled={busy}
-          />
-        </div>
+      <div className="space-y-1">
+        <Label>Naslov *</Label>
+        <Input
+          value={title}
+          onChange={(e) => {
+            const nextTitle = e.target.value;
+            setTitle(nextTitle);
+            if (mode === "create") {
+              setKey(slugify(nextTitle));
+              if (!iconManuallyChosen.current) setIcon(suggestCategoryIcon(nextTitle));
+            }
+          }}
+          placeholder="npr. Informacije"
+          disabled={busy}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label>Ikona *</Label>
+        <CategoryIconPicker
+          value={icon}
+          name={title}
+          disabled={busy}
+          onChange={(nextIcon) => {
+            iconManuallyChosen.current = true;
+            setIcon(nextIcon);
+          }}
+        />
       </div>
       <div className="space-y-1">
         <Label>Ključ (slug)</Label>
@@ -582,7 +586,7 @@ function DialogScrollBody({ children }: { children: React.ReactNode }) {
   );
 }
 
-function EditDialog({
+export function EditDialog({
   open,
   onOpenChange,
   title,
@@ -625,7 +629,7 @@ type CategoryDialogProps =
   | { mode: "create"; tenantId: string; sectionId: string; sectionKey?: string; category?: undefined; onDone: () => void }
   | { mode: "edit"; tenantId: string; sectionId: string; sectionKey?: string; category: Category; onDone: () => void };
 
-function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDone }: CategoryDialogProps) {
+export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDone }: CategoryDialogProps) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
@@ -655,14 +659,15 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
         : "Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Okolica.";
 
   const [label, setLabel] = useState(category?.label ?? "");
-  const [icon, setIcon] = useState(category?.icon ?? "sparkle");
+  const [icon, setIcon] = useState(category?.icon ?? suggestCategoryIcon(""));
+  const iconManuallyChosen = useRef(mode === "edit");
   const [layout, setLayout] = useState(category?.layout ?? "text");
   const [exploreGroup, setExploreGroup] = useState<string>(initialGroup);
   const [isVisible, setIsVisible] = useState(category?.isVisible ?? true);
 
   const baseline = {
     label: category?.label ?? "",
-    icon: category?.icon ?? "sparkle",
+    icon: category?.icon ?? suggestCategoryIcon(""),
     layout: category?.layout ?? "text",
     exploreGroup: initialGroup,
     isVisible: category?.isVisible ?? true,
@@ -679,6 +684,7 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
     if (restored) {
       setLabel(restored.label);
       setIcon(restored.icon);
+      iconManuallyChosen.current = true;
       setLayout(restored.layout);
       setExploreGroup(restored.exploreGroup ?? groupDefs[0]!.key);
       setIsVisible(restored.isVisible);
@@ -767,26 +773,33 @@ function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category, onDon
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
-      <div className="grid grid-cols-[1fr_80px] gap-3">
-        <div className="space-y-1">
-          <Label>Ime kategorije *</Label>
-          <Input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="npr. Restavracije"
-            disabled={busy}
-          />
-          <CharCounter value={label} max={BUDGET.categoryLabel} />
-        </div>
-        <div className="space-y-1">
-          <Label>Ikona *</Label>
-          <Input
-            value={icon}
-            onChange={(e) => setIcon(e.target.value)}
-            placeholder="🍽️"
-            disabled={busy}
-          />
-        </div>
+      <div className="space-y-1">
+        <Label>Ime kategorije *</Label>
+        <Input
+          value={label}
+          onChange={(e) => {
+            const nextLabel = e.target.value;
+            setLabel(nextLabel);
+            if (mode === "create" && !iconManuallyChosen.current) {
+              setIcon(suggestCategoryIcon(nextLabel));
+            }
+          }}
+          placeholder="npr. Restavracije"
+          disabled={busy}
+        />
+        <CharCounter value={label} max={BUDGET.categoryLabel} />
+      </div>
+      <div className="space-y-1">
+        <Label>Ikona *</Label>
+        <CategoryIconPicker
+          value={icon}
+          name={label}
+          disabled={busy}
+          onChange={(nextIcon) => {
+            iconManuallyChosen.current = true;
+            setIcon(nextIcon);
+          }}
+        />
       </div>
       <div className="space-y-1">
         <Label>Razporeditev *</Label>

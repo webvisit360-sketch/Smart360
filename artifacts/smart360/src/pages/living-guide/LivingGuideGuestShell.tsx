@@ -33,6 +33,7 @@ import {
 } from "../guest/i18n";
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import { livingGuideInterWoff2 } from "./inter-font-source";
+import { CategoryIcon, isAvailableLucideIcon } from "@/components/category-icon";
 import {
   isLivingTheme,
   type LivingTheme,
@@ -522,6 +523,7 @@ function detailHeroHeight(media: any[]): number {
 
 function categoryIcon(category: any): string {
   const firstItem = visible(category?.items)[0];
+  if (isAvailableLucideIcon(category?.icon)) return category.icon;
   if (category?.layout === "wifi") return "wifi";
   if (category?.layout === "apartments") return "bed";
   if (category?.layout === "products") return "bag";
@@ -532,6 +534,12 @@ function categoryIcon(category: any): string {
   if (firstItem?.hoursJson || firstItem?.open24) return "clk";
   if (firstItem?.mapQuery) return "pin";
   return "doc";
+}
+
+function LivingGuideCategoryIcon({ icon }: { icon: string }) {
+  return isAvailableLucideIcon(icon)
+    ? <CategoryIcon icon={icon} />
+    : <svg aria-hidden="true"><use href={`#lg-i-${icon}`} /></svg>;
 }
 
 function isOperationalRulesCategory(category: any): boolean {
@@ -2501,7 +2509,7 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
             }
             return (
               <button key={category.id} className={`lg2-utility-card${isWide ? " lg2-utility-card--wide" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
-                <span className="lg2-utility-icon" aria-hidden="true"><svg><use href={`#lg-i-${categoryIcon(category)}`} /></svg></span>
+                <span className="lg2-utility-icon" aria-hidden="true"><LivingGuideCategoryIcon icon={categoryIcon(category)} /></span>
                 <span>
                   <b>{category.label}</b>
                   {adminCategoryNote(category) && <small>{adminCategoryNote(category)}</small>}
@@ -2587,7 +2595,7 @@ function PCard({ ariaLabel, onOpen, media, meta, title, description, categoryIco
         )}
         {!media && (
           <span className="lg2-card-missing-photo" aria-label="fotografija manjka">
-            <svg aria-hidden="true"><use href={`#lg-i-${icon}`} /></svg>
+            <LivingGuideCategoryIcon icon={icon} />
             <span>fotografija manjka</span>
           </span>
         )}
@@ -2644,7 +2652,7 @@ function ExploreCard({
           />
         ) : (
           <span className="lg2-explore-card-missing-photo" aria-label="fotografija manjka">
-            <svg aria-hidden="true"><use href={`#lg-i-${icon}`} /></svg>
+            <LivingGuideCategoryIcon icon={icon} />
           </span>
         )}
       </div>
@@ -3775,7 +3783,7 @@ function TemplateB({ category, items, t, onBack, onOpenItem, onOrderClick, fullH
                 return (
                   <button type="button" className="lg2-sub2" key={item.id} onClick={() => onOpenItem(item.id)}>
                     <span className="lg2-sub-icon" aria-hidden="true">
-                      {normalizeGuestMedia(item.media)[0] ? <img src={mediaImgSrc(normalizeGuestMedia(item.media)[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(normalizeGuestMedia(item.media)[0])} className="lg2-sub-img" /> : <svg><use href={`#lg-i-${categoryIcon(category)}`}/></svg>}
+                       {normalizeGuestMedia(item.media)[0] ? <img src={mediaImgSrc(normalizeGuestMedia(item.media)[0], CARD_IMAGE_WIDTH)} alt="" style={imageStyle(normalizeGuestMedia(item.media)[0])} className="lg2-sub-img" /> : <LivingGuideCategoryIcon icon={categoryIcon(category)} />}
                     </span>
                      <div className="lg2-sub-content">
                        <span className="lg2-row-title">

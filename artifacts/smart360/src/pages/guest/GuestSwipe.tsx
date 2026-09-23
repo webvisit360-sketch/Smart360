@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { sanitizeHtml } from "../../lib/sanitize";
 import { formatTodayHours } from "../../lib/hours";
 import { buildGuestPath } from "./guest-url";
-import { spriteId } from "./sprite-icon";
+import { CategoryIcon } from "@/components/category-icon";
 import { getTextVars } from "./cover-vars";
 import { Cover } from "./Cover";
 import { ShareSheet } from "./ShareSheet";
@@ -292,7 +292,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                           className="findres__r"
                           onClick={() => { closeFind(); setLocation(buildGuestPath(`/${slug}/c/${r.catId}`)); }}
                         >
-                          <svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(r.icon)}`} /></svg>
+                          <CategoryIcon icon={r.icon} className="ic" />
                           <span className="t"><b>{r.title}</b><span>{r.sub}</span></span>
                           <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
                         </button>
@@ -326,7 +326,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                         style={{ "--tint": tint } as React.CSSProperties}
                         onClick={() => setLocation(buildGuestPath(`/${slug}/c/${cat.id}`))}
                       >
-                        <span className="gc__ic"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg></span>
+                        <span className="gc__ic"><CategoryIcon icon={cat.icon} className="ic" /></span>
                         <span className="cap">{cat.label}</span>
                       </button>
                     );
@@ -339,7 +339,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
                     <button className="gc" key={cat.id} onClick={() => setLocation(buildGuestPath(`/${slug}/c/${cat.id}`))}>
                       <img loading="lazy" decoding="async" src={firstImg} alt="" />
                       <span className="ov"></span>
-                      <span className="ico"><svg className="ic" viewBox="0 0 24 24"><use href={`#${spriteId(cat.icon)}`} /></svg></span>
+                      <span className="ico"><CategoryIcon icon={cat.icon} className="ic" /></span>
                       <span className="cap">{cat.label}</span>
                     </button>
                   );
@@ -404,7 +404,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
       <nav className={`tabdock ${!currentCategory && activeSectionIdx === 0 ? 'on-dark' : ''}`} id="tabdock">
         {sections.map((sec: any, idx: number) => {
           const fallback = ["i-home", "i-bag", "i-compass", "i-cart"];
-          const iconId = sec.icon ? spriteId(sec.icon) : (fallback[idx] || "i-doc");
+          const icon = sec.icon || fallback[idx] || "i-doc";
           const activeIdxNow = currentCategory && currentSection
             ? sections.indexOf(currentSection) + 1
             : activeSectionIdx;
@@ -417,7 +417,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
               aria-label={sec.title}
               title={sec.title}
             >
-              <svg className="ic" viewBox="0 0 24 24"><use href={`#${iconId}`} /></svg>
+              <CategoryIcon icon={icon} className="ic" />
             </button>
           );
         })}

@@ -91,7 +91,7 @@ test("real DB: host creates shared-draft custom Stay and Offer categories withou
     assert.deepEqual(
       rows.map(({ label, icon, layout }) => ({ label, icon, layout })).sort((a, b) => a.label.localeCompare(b.label)),
       [
-        { label: "Skupna kuhinja", icon: "sparkle", layout: "products" },
+        { label: "Skupna kuhinja", icon: "lucide:utensils", layout: "products" },
         { label: "Skupni prostori", icon: "sparkle", layout: "cards" },
       ],
     );

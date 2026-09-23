@@ -14,6 +14,7 @@ import {
   type HostOnboardingRecommendationReview,
   type HostOnboardingTargetReview,
 } from "@workspace/db";
+import { suggestCategoryIcon } from "@workspace/category-icons";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   enqueueHostRecommendations,
@@ -438,7 +439,7 @@ export async function createHostOnboardingCategory(
     const category = existing ?? await createCategoryWithTooling(tx, section.id, {
         key,
         label: input.name,
-        icon: "sparkle",
+        icon: suggestCategoryIcon(input.name),
         layout: input.sectionKey === "offer" ? "products" : "cards",
         exploreGroup: input.sectionKey === "offer" ? "najem" : "vase_bivanje",
       });
@@ -533,7 +534,7 @@ async function ensureHostCustomCategory(
   return createCategoryWithTooling(tx, section.id, {
     key,
     label,
-    icon: "star",
+    icon: suggestCategoryIcon(label),
     layout: "poi",
     exploreGroup: "experiences",
   });
