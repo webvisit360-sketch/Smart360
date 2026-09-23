@@ -1683,6 +1683,8 @@ export function guessCategory(candidate: SearchCandidateWithRouting, categories:
   return null;
 }
 
+const PLACE_ADDRESS_SEARCH_HINT = "Če imena ne najde, poiščite po naslovu (npr. Foršt 21, Ljubno) — naslovi so vedno v bazi.";
+
 function OkolicaPlaceCreate({
   tenantId,
   categoryId,
@@ -1811,6 +1813,7 @@ function OkolicaPlaceCreate({
                 </Button>
               </div>
               <p className="text-xs text-[#9AA39D] mt-2">Vpišite ime — kraj poiščemo na zemljevidu, razdaljo izračunamo sami.</p>
+              <p className="text-[13px] text-[#9AA39D] mt-2">{PLACE_ADDRESS_SEARCH_HINT}</p>
             </div>
             
             {search.isLoading && (
@@ -1825,7 +1828,8 @@ function OkolicaPlaceCreate({
 
             {search.isSuccess && candidates.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-[#C9D2CB] p-4 text-sm bg-[#F4F6F2]/50 text-center">
-                <p className="mb-3 text-[#66716A]">Ni zadetkov.</p>
+                <p className="mb-2 text-[#66716A]">Ni zadetkov.</p>
+                <p className="mb-3 text-[13px] text-[#9AA39D]">{PLACE_ADDRESS_SEARCH_HINT}</p>
                 <Button type="button" variant="outline" onClick={() => setManual(true)} className="border-[#157347] text-[#157347] hover:bg-[#157347] hover:text-white rounded-full">
                   <MapPin className="h-4 w-4 mr-2" /> Ročno označi na zemljevidu
                 </Button>
