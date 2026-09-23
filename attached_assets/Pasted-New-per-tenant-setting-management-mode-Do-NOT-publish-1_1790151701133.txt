@@ -1,0 +1,40 @@
+New per-tenant setting: management mode. Do NOT publish.
+
+1. On the tenant's "Splošno" tab add a setting "Način upravljanja" with two
+   values:
+   - "Gostitelj ureja sam" (default; current behavior: welcome email with
+     the password-setup link, host account, onboarding form, admin access);
+   - "Ureja Smart360" (concierge mode: NO invitation link, NO host account,
+     NO password anywhere; the operator maintains all content).
+   The setting is operator-only, changeable at any time, and does not touch
+   guide content or the published snapshot.
+
+2. Welcome email in "Ureja Smart360" mode: reuse the SAME CGP template
+   (identical znak, layout, colors, Reply-To info@webvisit360.com), but
+   replace the password-setup section with exactly this Slovenian copy
+   (translate analogously only if the email is ever sent in another
+   language):
+
+   "Vaš digitalni vodnik v celoti pripravljamo in urejamo mi — vam ni treba
+   storiti ničesar. Vse spremembe, dopolnitve ali fotografije nam kadar koli
+   pošljite na info@webvisit360.com in jih vnesemo za vas."
+
+   The button "Nastavite geslo" is removed in this variant; instead one
+   button "Oglejte si svoj vodnik" linking to the tenant's guest guide URL.
+   The rest of the email (podatki o vodniku, kontakti) stays.
+
+3. Sending logic: the "send welcome" action respects the mode — in concierge
+   mode it creates NO invitation and the invitation history records it as
+   "dobrodošlica brez dostopa". Switching a tenant later from concierge to
+   self-service simply enables sending a normal invitation (existing flow,
+   new invitation invalidates nothing because none existed); switching the
+   other way disables the host's login (existing sessions ended, recorded in
+   history) but keeps all content untouched.
+
+4. Guest guide, orders, messages, WhatsApp/e-mail notifications are
+   completely unaffected by the mode.
+
+Verify in dev: both email variants render (show HTML preview), concierge
+send creates no invitation, mode switch to self-service sends a working
+password link, switch back ends the host session. Report with "POVZETEK ZA
+LASTNIKA" in Slovenian, then STOP. No publication.
