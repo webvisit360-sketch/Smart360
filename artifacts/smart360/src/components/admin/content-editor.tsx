@@ -53,6 +53,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { entryNamePlaceholder } from "@/lib/entry-name-placeholder";
 import { ItemMediaEditor } from "@/components/admin/item-media-editor";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { formatDistanceMeters } from "@/pages/living-guide/living-guide-formatters";
@@ -869,6 +870,8 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
     return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />;
   }
   const queryClient = useQueryClient();
+  const category = sectionCategories?.find((candidate) => candidate.id === categoryId)
+    || allCategories?.find((candidate) => candidate.id === categoryId);
   const [busy, setBusy] = useState(false);
   const itemId = mode === "edit" ? item.id : "";
   const itemEditorIdRef = useRef(itemId);
@@ -1180,7 +1183,7 @@ function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories,
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="npr. Pizzeria Napoli"
+          placeholder={entryNamePlaceholder(category, sectionKey)}
           disabled={busy}
         />
         <CharCounter value={title} max={BUDGET.itemTitle} />
@@ -1664,6 +1667,11 @@ function OkolicaPlaceCreate({
   const isSelectedVisible = visibleCategories.some(c => c.id === selectedCatId);
   const fallbackCat = validAll.find(c => c.id === selectedCatId) || sectionCategories.find(c => c.id === selectedCatId);
   const chipsToRender = isSelectedVisible ? visibleCategories : [...visibleCategories, fallbackCat!].filter(Boolean);
+  const selectedCategory = validAll.find(c => c.id === selectedCatId)
+    || sectionCategories.find(c => c.id === selectedCatId);
+  const selectedSectionKey = (selectedCategory as (Category & { sectionKey?: string }) | undefined)?.sectionKey
+    || (sectionCategories.some(c => c.id === selectedCatId) ? "explore" : "services");
+  const namePlaceholder = entryNamePlaceholder(selectedCategory, selectedSectionKey);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 font-['Archivo']">
@@ -1683,7 +1691,7 @@ function OkolicaPlaceCreate({
                       setSubmittedQuery(query.trim());
                     }
                   }}
-                  placeholder="npr. Blejsko jezero"
+                  placeholder={namePlaceholder}
                   disabled={busy}
                   className="h-11 rounded-[10px] border-[#E8EBE6] focus-visible:ring-[#157347] bg-white text-[15px]"
                 />
@@ -1801,7 +1809,7 @@ function OkolicaPlaceCreate({
               <Input
                 value={manualName}
                 onChange={(e) => setManualName(e.target.value)}
-                placeholder="npr. Skrita plaža"
+                placeholder={namePlaceholder}
                 disabled={busy}
                 className="h-11 rounded-[10px]"
               />

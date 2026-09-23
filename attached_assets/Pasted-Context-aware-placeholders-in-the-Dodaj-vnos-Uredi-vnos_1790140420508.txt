@@ -1,0 +1,59 @@
+Context-aware placeholders in the "Dodaj vnos" / "Uredi vnos" dialog (admin)
+and in the host form's entry blocks. The NASLOV placeholder currently shows
+"npr. Pizzeria Napoli" for EVERY category, including Apartmaji — wrong.
+Do NOT publish.
+
+Rule: the example placeholder follows the category the entry is being added
+to. Use EXACTLY these (SL; translate analogously only where the UI language
+differs):
+
+Destination categories:
+- Apartmaji → "npr. Apartma 1"
+- Dobrodošli → "npr. Dobrodošli pri nas"
+- Vaše mesto → "npr. Ljubno ob Savinji"
+- Sanitarije → "npr. Sanitarni objekt"
+- Prijava in odjava → "npr. Prijava in odjava"
+- Parkiranje → "npr. Parkirišče ob recepciji"
+- Wi-Fi → "npr. Wi-Fi omrežje"
+- Hišni red → "npr. Hišni red"
+- Lokacija → "npr. Kako do nas"
+- Navodila za ograjo → "npr. Uporaba vhodnih vrat"
+- Navodila za opremo → "npr. Uporaba klime"
+- Bazen → "npr. Bazen"
+
+Offer categories (Naša ponudba): "npr. " + a short plausible offer for that
+category, e.g. Najem opreme → "npr. Najem kolesa", Žar in piknik → "npr.
+Najem žara", SUP deska → "npr. Najem SUP deske", Domači izdelki → "npr.
+Domača marmelada". For other offer categories derive the same way from the
+category name — an offer a guest can order, never a restaurant name.
+
+Okolica categories:
+- Zajtrk → "npr. Kavarna v centru"
+- Kulinarika → "npr. Gostilna Rogovilc"
+- Picerije → "npr. Pizzeria Peruzza"
+- Nočno življenje → "npr. Pub Ljubno"
+- Aktivnosti → "npr. Rafting na Savinji"
+- Pohodništvo → "npr. Pohod na Raduho"
+- Kolesarjenje → "npr. Kolesarska pot ob Savinji"
+- Plaže → "npr. Plaža ob Savinji"
+- Kulturna dediščina → "npr. Flosarski muzej"
+- Naravna dediščina → "npr. Slap Rinka"
+- Izleti → "npr. Izlet na Golte"
+- Trgovine → "npr. Trgovina Ljubno"
+- Pekarne → "npr. Pekarna Mozirje"
+- Bencinski servisi → "npr. Bencinski servis Mozirje"
+- Bankomati → "npr. Bankomat v centru"
+- Lekarne → "npr. Lekarna Mozirje"
+- Zdravstvo → "npr. Zdravstveni dom Mozirje"
+- Dogodki → "npr. Flosarski bal"
+
+Fallback for any custom/unknown category: "npr. ime vnosa".
+
+Apply the same category-aware examples consistently in the host form's
+dashed empty rows (okolica lists already have some; make them match this
+list) and entry NAZIV fields. Do not change any other dialog behavior.
+
+Verify in dev: open "Dodaj vnos" from at least Apartmaji, Kulinarika and one
+offer category and confirm the right example; check one custom category
+falls back. Report with "POVZETEK ZA LASTNIKA" in Slovenian, then STOP.
+No publication.

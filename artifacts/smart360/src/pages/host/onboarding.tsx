@@ -25,6 +25,7 @@ import {
   ItemMediaEditor,
   type ItemMediaEditorHandle,
 } from "@/components/admin/item-media-editor";
+import { entryNamePlaceholder } from "@/lib/entry-name-placeholder";
 
 const generateId = () => crypto.randomUUID();
 type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -863,6 +864,7 @@ export default function HostOnboarding() {
                       id={`rich-item-title-${item.id}`}
                       aria-label={`Naziv besedila ${index + 1}`}
                       type="text"
+                      placeholder={entryNamePlaceholder(houseCategory, "stay")}
                       value={item.title}
                       onChange={(event) => updateData((data) =>
                         updateCanonicalItemText(data, item.id, { title: event.target.value })
@@ -946,7 +948,7 @@ export default function HostOnboarding() {
                           aria-label={`Naziv vnosa ${cat.label} ${index + 1}`}
                           type="text"
                           value={item.title || ""}
-                          placeholder="Npr. Apartma 1, Vila, Bungalov"
+                          placeholder={entryNamePlaceholder(cat, "stay")}
                           onChange={(event) => materialize({ title: event.target.value })}
                           className="mb-3 w-full rounded-[10px] border border-[#E8EBE6] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#157347]"
                         />
@@ -1037,7 +1039,7 @@ export default function HostOnboarding() {
                       <input 
                         aria-label={`Naziv ponudbe ${i + 1}`}
                         type="text" 
-                        placeholder="Naziv ponudbe (npr. Zajtrk)"
+                        placeholder={entryNamePlaceholder(cat, "offer")}
                         value={offer.name}
                         onChange={(e) => updateData(d => {
                           const newOffers = [...(d.offers || [])];
@@ -1082,7 +1084,7 @@ export default function HostOnboarding() {
                       ref={(input) => registerInput(`offer:${offerKey}`, input)}
                       aria-label="Naziv nove ponudbe"
                       type="text" 
-                      placeholder="Naziv ponudbe"
+                      placeholder={entryNamePlaceholder(cat, "offer")}
                       value={tOffer.name}
                       onChange={(e) => setTransientOffers(prev => ({
                         ...prev,
@@ -1197,7 +1199,7 @@ export default function HostOnboarding() {
                         <input 
                           aria-label={`${cat.name}, priporočilo`}
                           type="text"
-                          placeholder="npr. Gostilna, planinska koča..."
+                          placeholder={entryNamePlaceholder(cat, "explore")}
                           value={rec.name}
                           onChange={(e) => updateData(d => {
                             const newRecs = [...(d.recommendations || [])];
@@ -1224,7 +1226,7 @@ export default function HostOnboarding() {
                          ref={(input) => registerInput(`recommendation:${cat.id}`, input)}
                         aria-label={`${cat.name}, novo priporočilo`}
                         type="text"
-                        placeholder="npr. Gostilna, planinska koča..."
+                        placeholder={entryNamePlaceholder(cat, "explore")}
                          value={transientRec.name}
                          onChange={(e) => setTransientRecs(prev => ({
                            ...prev,
@@ -1259,7 +1261,7 @@ export default function HostOnboarding() {
                       <input 
                         aria-label={`Naziv dogodka ${i + 1}`}
                         type="text" 
-                        placeholder="Naziv dogodka"
+                        placeholder={entryNamePlaceholder({ key: "events" }, "explore")}
                         value={event.name}
                         onChange={(e) => updateData(d => {
                           const newEvents = [...(d.events || [])];
@@ -1312,7 +1314,7 @@ export default function HostOnboarding() {
                       ref={(input) => registerInput("event", input)}
                       aria-label="Naziv novega dogodka"
                       type="text" 
-                      placeholder="Naziv dogodka"
+                      placeholder={entryNamePlaceholder({ key: "events" }, "explore")}
                       value={transientEvents.name}
                       onChange={(e) => setTransientEvents(prev => ({ ...prev, name: e.target.value }))}
                        className="min-w-0 flex-1 bg-white border border-[#E8EBE6] rounded-[10px] px-4 py-2.5 text-[16px] outline-none focus:border-[#157347]"
@@ -1450,7 +1452,7 @@ export default function HostOnboarding() {
                               <input
                               type="text"
                               aria-label={`${category.name || "Gostiteljeva kategorija"}, priporočilo ${entryIndex + 1}`}
-                              placeholder="npr. Gostilna, planinska koča..."
+                              placeholder={entryNamePlaceholder(undefined, "explore")}
                               value={entry.name}
                               onChange={(event) => updateData((data) => ({
                                 ...data,
@@ -1492,7 +1494,7 @@ export default function HostOnboarding() {
                              ref={(input) => registerInput(`custom-entry:${category.id}`, input)}
                             type="text"
                             aria-label={`Novo priporočilo za kategorijo ${category.name}`}
-                            placeholder="npr. Gostilna, planinska koča..."
+                            placeholder={entryNamePlaceholder(undefined, "explore")}
                             value={transientEntry.name}
                             onChange={(event) => setTransientCustomEntries((current) => ({
                               ...current,
