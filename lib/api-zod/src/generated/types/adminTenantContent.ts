@@ -5,10 +5,10 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
-import type { TenantBase } from './tenantBase';
+import type { TenantContent } from './tenantContent';
 import type { TenantManagementMode } from './tenantManagementMode';
 
 /**
- * Operator/host tenant record, including the operator-controlled access policy.
+ * Admin content tree with operator-controlled management mode.
  */
-export type Tenant = TenantBase & TenantManagementMode;
+export type AdminTenantContent = TenantContent & TenantManagementMode;

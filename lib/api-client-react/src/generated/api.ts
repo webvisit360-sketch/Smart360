@@ -30,6 +30,7 @@ import type {
   AdminSession,
   AdminSessionRevocationResult,
   AdminSessionsStatus,
+  AdminTenantContent,
   AdminThreadView,
   AuthEventList,
   Category,
@@ -6041,9 +6042,9 @@ export const getGetTenantUrl = (id: string,) => {
 /**
  * @summary Tenant with full content tree
  */
-export const getTenant = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TenantContent> => {
+export const getTenant = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AdminTenantContent> => {
 
-  return customFetch<TenantContent>(getGetTenantUrl(id),
+  return customFetch<AdminTenantContent>(getGetTenantUrl(id),
   {
     ...options,
     method: 'GET'

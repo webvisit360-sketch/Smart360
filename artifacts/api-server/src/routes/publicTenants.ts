@@ -7,8 +7,9 @@ import {
 } from "@workspace/api-zod";
 import {
   buildTenantContent,
+  projectGuestTenant,
   resolveGuestContentTree,
-  type TenantContentTree,
+  type GuestTenantContentTree,
 } from "../lib/contentTree";
 import { getUiAndPlurals } from "../lib/translationKeys";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
@@ -50,7 +51,7 @@ export function invalidateTenantCache(): void {
 // autoscale instances, which a save on this one cannot reach.
 type PayloadEntry = {
   payload: unknown;
-  tree: TenantContentTree;
+  tree: GuestTenantContentTree;
   expiresAt: number;
 };
 const payloadCache = new Map<string, PayloadEntry>();
@@ -69,10 +70,10 @@ async function buildPublicPayload(
   if (published && !saved) throw new Error("Objavljeni posnetek nima vsebine.");
   const tree = saved
     ? resolveGuestContentTree(saved.tree)
-    : await buildTenantContent(tenant, {
+    : projectGuestTenant(await buildTenantContent(tenant, {
         visibleOnly,
         lang: selectedLang === "sl" ? undefined : selectedLang,
-      });
+      }));
   const { ui, plurals } = saved ?? await getUiAndPlurals(tenant.id, selectedLang);
   const publicUrl = guestUrl(tree.slug);
   const qrSvg = await guestQrSvg(publicUrl);

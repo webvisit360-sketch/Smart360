@@ -11,11 +11,11 @@ import {
   type Db,
   type Tenant,
 } from "@workspace/db";
-import { buildTenantContent, type TenantContentTree } from "./contentTree";
+import { buildTenantContent, projectGuestTenant, type GuestTenantContentTree } from "./contentTree";
 import { getUiAndPlurals } from "./translationKeys";
 
 export type PublishedLanguage = {
-  tree: TenantContentTree;
+  tree: GuestTenantContentTree;
   ui: Record<string, string>;
   plurals: Record<string, Record<string, string>>;
 };
@@ -45,7 +45,7 @@ export async function ensurePublishedSnapshotSchema(): Promise<void> {
 export async function buildDraftPublication(tenant: Tenant): Promise<PublishedContent> {
   const languages: Record<string, PublishedLanguage> = {};
   for (const lang of new Set(["sl", "en", "de", "it", ...(tenant.languages ?? [])])) {
-    const tree = await buildTenantContent(tenant, { visibleOnly: true, lang: lang === "sl" ? undefined : lang });
+    const tree = projectGuestTenant(await buildTenantContent(tenant, { visibleOnly: true, lang: lang === "sl" ? undefined : lang }));
     const { ui, plurals } = await getUiAndPlurals(tenant.id, lang);
     languages[lang] = { tree, ui, plurals };
   }
@@ -96,6 +96,7 @@ export async function ensureTenantPublication(tenantId: string): Promise<void> {
 }
 
 const ignored = new Set([
+  "managementMode",
   "createdAt", "updatedAt", "deletedAt", "lastPublishedAt", "firstPublishedAt",
   "hasUnpublishedChanges", "isPublished", "creatorDraft", "creatorOriginRegion",
   "mediaQuotaBytes", "orderNotifyEmail", "messageNotifyEmail", "notificationChannel",

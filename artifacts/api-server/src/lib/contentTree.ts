@@ -102,6 +102,17 @@ export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
   sitePlanImages: SitePlanImageEntry[];
 };
 
+export type GuestTenantContentTree = Omit<TenantContentTree, "managementMode">;
+
+/** Strip operator access policy even from old snapshots that stored whole tenant rows. */
+export function projectGuestTenant(
+  tree: TenantContentTree | GuestTenantContentTree,
+): GuestTenantContentTree {
+  const { managementMode: _managementMode, ...guest } =
+    tree as GuestTenantContentTree & { managementMode?: Tenant["managementMode"] };
+  return guest;
+}
+
 /**
  * Guest read projection for already-published snapshots.
  *
@@ -110,10 +121,10 @@ export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
  * resolver enforce the empty-category rule for legacy snapshots immediately.
  */
 export function resolveGuestContentTree(
-  tree: TenantContentTree,
-): TenantContentTree {
+  tree: GuestTenantContentTree,
+): GuestTenantContentTree {
   return {
-    ...tree,
+    ...projectGuestTenant(tree),
     sections: tree.sections
       .filter(guestScope)
       .map((section) => ({

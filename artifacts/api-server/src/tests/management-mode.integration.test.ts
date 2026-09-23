@@ -189,6 +189,11 @@ test("management mode preserves guide state and closes every host access path", 
     ownerCookie, { managementMode: "self_service" },
   );
   assert.equal(selfService.status, 200);
+  const selfServiceAdmin = await request(
+    base, "GET", `/admin/tenants/${tenant!.id}`, ownerCookie,
+  );
+  assert.equal(selfServiceAdmin.status, 200);
+  assert.equal((await selfServiceAdmin.json() as { managementMode: string }).managementMode, "self_service");
   assert.deepEqual(await state(), before);
 
   const hostEmail = `host-${stamp}@example.com`;
@@ -249,6 +254,11 @@ test("management mode preserves guide state and closes every host access path", 
     ownerCookie, { managementMode: "concierge" },
   );
   assert.equal(concierge.status, 200);
+  const conciergeAdmin = await request(
+    base, "GET", `/admin/tenants/${tenant!.id}`, ownerCookie,
+  );
+  assert.equal(conciergeAdmin.status, 200);
+  assert.equal((await conciergeAdmin.json() as { managementMode: string }).managementMode, "concierge");
   assert.equal((await db.select().from(hostSessionsTable)
     .where(eq(hostSessionsTable.hostUserId, hostUserId))).length, 0);
   const revokedSession = await request(base, "GET", "/admin/host/session", hostCookie);

@@ -9,10 +9,10 @@
 /**
  * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
  */
-export type TenantGuestUiMode = typeof TenantGuestUiMode[keyof typeof TenantGuestUiMode];
+export type TenantBaseGuestUiMode = typeof TenantBaseGuestUiMode[keyof typeof TenantBaseGuestUiMode];
 
 
-export const TenantGuestUiMode = {
+export const TenantBaseGuestUiMode = {
   legacy: 'legacy',
   'living-guide': 'living-guide',
 } as const;

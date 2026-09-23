@@ -268,7 +268,7 @@ export function KreatorOriginConfirmation({
                 longitude={previewMutation.data.lng}
                 zoom={18}
                 ariaLabel="Zemljevid potrjene točke"
-                className="absolute inset-0"
+                className="!absolute inset-0"
               />
               <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border-[1.5px] border-border shadow-sm px-3 py-1.5 rounded-[10px] text-[12px] font-[800] flex items-center gap-1.5 pointer-events-none">
                 <MapPin className="w-3.5 h-3.5 text-primary" />

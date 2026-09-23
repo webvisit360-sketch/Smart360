@@ -1526,7 +1526,6 @@ export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItem
 export const GetPublicTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -2028,21 +2027,20 @@ export const ApplyPart5MeliPuCutoverResponse = zod.object({
 }))
 
 
-export const listTenantsResponseLatitudeMin = -90;
-export const listTenantsResponseLatitudeMax = 90;
+export const listTenantsResponseOneLatitudeMin = -90;
+export const listTenantsResponseOneLatitudeMax = 90;
 
-export const listTenantsResponseLongitudeMin = -180;
-export const listTenantsResponseLongitudeMax = 180;
+export const listTenantsResponseOneLongitudeMin = -180;
+export const listTenantsResponseOneLongitudeMax = 180;
 
-export const listTenantsResponseLivingGuideNavMin = 5;
-export const listTenantsResponseLivingGuideNavMax = 5;
+export const listTenantsResponseOneLivingGuideNavMin = 5;
+export const listTenantsResponseOneLivingGuideNavMax = 5;
 
 
 
 export const ListTenantsResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -2067,8 +2065,8 @@ export const ListTenantsResponseItem = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(listTenantsResponseLatitudeMin).max(listTenantsResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
-  "longitude": zod.number().min(listTenantsResponseLongitudeMin).max(listTenantsResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "latitude": zod.number().min(listTenantsResponseOneLatitudeMin).max(listTenantsResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(listTenantsResponseOneLongitudeMin).max(listTenantsResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
   "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
@@ -2100,7 +2098,7 @@ export const ListTenantsResponseItem = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
-  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(listTenantsResponseLivingGuideNavMin).max(listTenantsResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(listTenantsResponseOneLivingGuideNavMin).max(listTenantsResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
@@ -2115,7 +2113,9 @@ export const ListTenantsResponseItem = zod.object({
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
-})
+}).and(zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 export const ListTenantsResponse = zod.array(ListTenantsResponseItem)
 
 
@@ -2127,21 +2127,20 @@ export const CreateTenantBody = zod.object({
   "type": zod.enum(['kamp', 'hotel', 'apartmaji']).optional().describe('Seeds the default sections, categories and groups for this establishment type')
 })
 
-export const createTenantResponseLatitudeMin = -90;
-export const createTenantResponseLatitudeMax = 90;
+export const createTenantResponseOneLatitudeMin = -90;
+export const createTenantResponseOneLatitudeMax = 90;
 
-export const createTenantResponseLongitudeMin = -180;
-export const createTenantResponseLongitudeMax = 180;
+export const createTenantResponseOneLongitudeMin = -180;
+export const createTenantResponseOneLongitudeMax = 180;
 
-export const createTenantResponseLivingGuideNavMin = 5;
-export const createTenantResponseLivingGuideNavMax = 5;
+export const createTenantResponseOneLivingGuideNavMin = 5;
+export const createTenantResponseOneLivingGuideNavMax = 5;
 
 
 
 export const CreateTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -2166,8 +2165,8 @@ export const CreateTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(createTenantResponseLatitudeMin).max(createTenantResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
-  "longitude": zod.number().min(createTenantResponseLongitudeMin).max(createTenantResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "latitude": zod.number().min(createTenantResponseOneLatitudeMin).max(createTenantResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(createTenantResponseOneLongitudeMin).max(createTenantResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
   "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
@@ -2199,7 +2198,7 @@ export const CreateTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
-  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(createTenantResponseLivingGuideNavMin).max(createTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(createTenantResponseOneLivingGuideNavMin).max(createTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
@@ -2214,7 +2213,9 @@ export const CreateTenantResponse = zod.object({
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
-})
+}).and(zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 
 
 /**
@@ -3509,18 +3510,18 @@ export const GetTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
-export const getTenantResponseOneLatitudeMin = -90;
-export const getTenantResponseOneLatitudeMax = 90;
+export const getTenantResponseOneOneLatitudeMin = -90;
+export const getTenantResponseOneOneLatitudeMax = 90;
 
-export const getTenantResponseOneLongitudeMin = -180;
-export const getTenantResponseOneLongitudeMax = 180;
+export const getTenantResponseOneOneLongitudeMin = -180;
+export const getTenantResponseOneOneLongitudeMax = 180;
 
-export const getTenantResponseOneLivingGuideNavMin = 5;
-export const getTenantResponseOneLivingGuideNavMax = 5;
+export const getTenantResponseOneOneLivingGuideNavMin = 5;
+export const getTenantResponseOneOneLivingGuideNavMax = 5;
 
-export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
-export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
 
 
 
@@ -3529,7 +3530,6 @@ export const getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravel
 export const GetTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3554,8 +3554,8 @@ export const GetTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(getTenantResponseOneLatitudeMin).max(getTenantResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
-  "longitude": zod.number().min(getTenantResponseOneLongitudeMin).max(getTenantResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "latitude": zod.number().min(getTenantResponseOneOneLatitudeMin).max(getTenantResponseOneOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(getTenantResponseOneOneLongitudeMin).max(getTenantResponseOneOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
   "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
@@ -3587,7 +3587,7 @@ export const GetTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
-  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(getTenantResponseOneLivingGuideNavMin).max(getTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(getTenantResponseOneOneLivingGuideNavMin).max(getTenantResponseOneOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
@@ -3639,9 +3639,9 @@ export const GetTenantResponse = zod.object({
   "difficulty": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "distance": zod.string().nullish(),
-  "distanceMeters": zod.number().min(getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin).nullish(),
+  "distanceMeters": zod.number().min(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin).nullish(),
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullish().describe('Existing active Creator range classification when present'),
-  "travelDurationSeconds": zod.number().min(getTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
+  "travelDurationSeconds": zod.number().min(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin).nullish().describe('Existing active Creator OSRM travel duration when present'),
   "open24": zod.boolean(),
   "hoursJson": zod.string().nullish().describe('JSON array of 7 entries Mon-Sun, each [openMin, closeMin] in minutes or null when closed; close may pass midnight'),
   "noteType": zod.string().nullish(),
@@ -3698,7 +3698,9 @@ export const GetTenantResponse = zod.object({
   "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template'),
   "hostAnsweredMessageCount": zod.number().optional().describe('Real guest-to-host response cycles measured for this tenant'),
   "hostResponseMedianMinutes": zod.number().nullish().describe('Median response time rounded up to whole minutes; null until five cycles exist')
-}))
+})).and(zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})).describe('Admin content tree with operator-controlled management mode.')
 
 
 export const UpdateTenantParams = zod.object({
@@ -3787,21 +3789,20 @@ export const UpdateTenantBody = zod.object({
   "mediaQuotaBytes": zod.number().min(updateTenantBodyMediaQuotaBytesMin).optional()
 })
 
-export const updateTenantResponseLatitudeMin = -90;
-export const updateTenantResponseLatitudeMax = 90;
+export const updateTenantResponseOneLatitudeMin = -90;
+export const updateTenantResponseOneLatitudeMax = 90;
 
-export const updateTenantResponseLongitudeMin = -180;
-export const updateTenantResponseLongitudeMax = 180;
+export const updateTenantResponseOneLongitudeMin = -180;
+export const updateTenantResponseOneLongitudeMax = 180;
 
-export const updateTenantResponseLivingGuideNavMin = 5;
-export const updateTenantResponseLivingGuideNavMax = 5;
+export const updateTenantResponseOneLivingGuideNavMin = 5;
+export const updateTenantResponseOneLivingGuideNavMax = 5;
 
 
 
 export const UpdateTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3826,8 +3827,8 @@ export const UpdateTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(updateTenantResponseLatitudeMin).max(updateTenantResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
-  "longitude": zod.number().min(updateTenantResponseLongitudeMin).max(updateTenantResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "latitude": zod.number().min(updateTenantResponseOneLatitudeMin).max(updateTenantResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(updateTenantResponseOneLongitudeMin).max(updateTenantResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
   "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
@@ -3859,7 +3860,7 @@ export const UpdateTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
-  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(updateTenantResponseLivingGuideNavMin).max(updateTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(updateTenantResponseOneLivingGuideNavMin).max(updateTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
@@ -3874,7 +3875,9 @@ export const UpdateTenantResponse = zod.object({
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
-})
+}).and(zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 
 
 export const DeleteTenantParams = zod.object({
@@ -4169,14 +4172,14 @@ export const DuplicateTenantBody = zod.object({
   "copyContent": zod.boolean().optional().describe('Copy item contents too; false copies only the section\/category structure')
 })
 
-export const duplicateTenantResponseTenantLatitudeMin = -90;
-export const duplicateTenantResponseTenantLatitudeMax = 90;
+export const duplicateTenantResponseTenantOneLatitudeMin = -90;
+export const duplicateTenantResponseTenantOneLatitudeMax = 90;
 
-export const duplicateTenantResponseTenantLongitudeMin = -180;
-export const duplicateTenantResponseTenantLongitudeMax = 180;
+export const duplicateTenantResponseTenantOneLongitudeMin = -180;
+export const duplicateTenantResponseTenantOneLongitudeMax = 180;
 
-export const duplicateTenantResponseTenantLivingGuideNavMin = 5;
-export const duplicateTenantResponseTenantLivingGuideNavMax = 5;
+export const duplicateTenantResponseTenantOneLivingGuideNavMin = 5;
+export const duplicateTenantResponseTenantOneLivingGuideNavMax = 5;
 
 
 
@@ -4184,7 +4187,6 @@ export const DuplicateTenantResponse = zod.object({
   "tenant": zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -4209,8 +4211,8 @@ export const DuplicateTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(duplicateTenantResponseTenantLatitudeMin).max(duplicateTenantResponseTenantLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
-  "longitude": zod.number().min(duplicateTenantResponseTenantLongitudeMin).max(duplicateTenantResponseTenantLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "latitude": zod.number().min(duplicateTenantResponseTenantOneLatitudeMin).max(duplicateTenantResponseTenantOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(duplicateTenantResponseTenantOneLongitudeMin).max(duplicateTenantResponseTenantOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
   "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
@@ -4242,7 +4244,7 @@ export const DuplicateTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
-  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(duplicateTenantResponseTenantLivingGuideNavMin).max(duplicateTenantResponseTenantLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(duplicateTenantResponseTenantOneLivingGuideNavMin).max(duplicateTenantResponseTenantOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
@@ -4257,7 +4259,9 @@ export const DuplicateTenantResponse = zod.object({
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
-}),
+}).and(zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})).describe('Operator\/host tenant record, including the operator-controlled access policy.'),
   "dropped": zod.array(zod.object({
   "field": zod.string(),
   "label": zod.string(),
@@ -4276,21 +4280,20 @@ export const RenewTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
-export const renewTenantResponseLatitudeMin = -90;
-export const renewTenantResponseLatitudeMax = 90;
+export const renewTenantResponseOneLatitudeMin = -90;
+export const renewTenantResponseOneLatitudeMax = 90;
 
-export const renewTenantResponseLongitudeMin = -180;
-export const renewTenantResponseLongitudeMax = 180;
+export const renewTenantResponseOneLongitudeMin = -180;
+export const renewTenantResponseOneLongitudeMax = 180;
 
-export const renewTenantResponseLivingGuideNavMin = 5;
-export const renewTenantResponseLivingGuideNavMax = 5;
+export const renewTenantResponseOneLivingGuideNavMin = 5;
+export const renewTenantResponseOneLivingGuideNavMax = 5;
 
 
 
 export const RenewTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
-  "managementMode": zod.enum(['self_service', 'concierge']),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -4315,8 +4318,8 @@ export const RenewTenantResponse = zod.object({
   "address": zod.string().nullish(),
   "mapQuery": zod.string().nullish(),
   "mapUrl": zod.string().nullish(),
-  "latitude": zod.number().min(renewTenantResponseLatitudeMin).max(renewTenantResponseLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
-  "longitude": zod.number().min(renewTenantResponseLongitudeMin).max(renewTenantResponseLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "latitude": zod.number().min(renewTenantResponseOneLatitudeMin).max(renewTenantResponseOneLatitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
+  "longitude": zod.number().min(renewTenantResponseOneLongitudeMin).max(renewTenantResponseOneLongitudeMax).nullish().describe('Derived from mapUrl; writable only with coordinateOverride'),
   "coordinateOverride": zod.boolean().optional().describe('Super-admin correction path for derived coordinates'),
   "wifiSsid": zod.string().nullish(),
   "wifiPass": zod.string().nullish(),
@@ -4348,7 +4351,7 @@ export const RenewTenantResponse = zod.object({
   "navColor": zod.string().nullish(),
   "navColorOn": zod.string().nullish(),
   "languages": zod.array(zod.string()),
-  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(renewTenantResponseLivingGuideNavMin).max(renewTenantResponseLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
+  "livingGuideNav": zod.array(zod.enum(['home', 'stay', 'offer', 'explore', 'program', 'messages'])).min(renewTenantResponseOneLivingGuideNavMin).max(renewTenantResponseOneLivingGuideNavMax).nullish().describe('Ordered five-key Living Guide navigation bar. NULL = not yet configured; the frontend resolves the approved default. When set, must contain exactly five unique keys from the allowed set with \'home\' first.\n'),
   "isTemplate": zod.boolean(),
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
@@ -4363,7 +4366,9 @@ export const RenewTenantResponse = zod.object({
   "createdAt": zod.string(),
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
-})
+}).and(zod.object({
+  "managementMode": zod.enum(['self_service', 'concierge'])
+})).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 
 
 /**

@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type TenantLivingGuideNavItem = typeof TenantLivingGuideNavItem[keyof typeof TenantLivingGuideNavItem];
+export type TenantBaseLivingGuideNavItem = typeof TenantBaseLivingGuideNavItem[keyof typeof TenantBaseLivingGuideNavItem];
 
 
-export const TenantLivingGuideNavItem = {
+export const TenantBaseLivingGuideNavItem = {
   home: 'home',
   stay: 'stay',
   offer: 'offer',

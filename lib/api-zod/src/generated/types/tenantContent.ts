@@ -7,11 +7,11 @@
  */
 import type { SectionContent } from './sectionContent';
 import type { SitePlanImage } from './sitePlanImage';
-import type { Tenant } from './tenant';
+import type { TenantBase } from './tenantBase';
 import type { TenantContentPlurals } from './tenantContentPlurals';
 import type { TenantContentUi } from './tenantContentUi';
 
-export type TenantContent = Tenant & ({
+export type TenantContent = TenantBase & ({
   sections: SectionContent[];
   /** Ordered site-plan images for this tenant; empty array when none uploaded */
   sitePlanImages: SitePlanImage[];

@@ -9,10 +9,10 @@
 /**
  * Exclusive host-notification delivery channel
  */
-export type TenantNotificationChannel = typeof TenantNotificationChannel[keyof typeof TenantNotificationChannel];
+export type TenantBaseNotificationChannel = typeof TenantBaseNotificationChannel[keyof typeof TenantBaseNotificationChannel];
 
 
-export const TenantNotificationChannel = {
+export const TenantBaseNotificationChannel = {
   email: 'email',
   whatsapp: 'whatsapp',
 } as const;

@@ -1479,7 +1479,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TenantContent"
+                $ref: "#/components/schemas/AdminTenantContent"
         "404":
           description: Not found
     patch:
@@ -4422,14 +4422,11 @@ components:
             skipped: { type: number }
           required: [link, coordinates, geocoded, failed, manual, pending, approved, skipped]
       required: [processed, remaining, counts]
-    Tenant:
+    TenantBase:
       type: object
       properties:
         id: { type: string }
         slug: { type: string }
-        managementMode:
-          type: string
-          enum: [self_service, concierge]
         customDomain: { type: ["string", "null"] }
         name: { type: string }
         subtitle: { type: ["string", "null"] }
@@ -4552,7 +4549,12 @@ components:
         createdAt: { type: string }
         renewsAt: { type: ["string", "null"] }
         updatedAt: { type: string }
-      required: [id, slug, managementMode, name, theme, guestUiMode, languages, isTemplate, isPublished, hasUnpublishedChanges, lastPublishedAt, orderNotifyEmail, messageNotifyEmail, notificationChannel, mediaQuotaBytes, createdAt, updatedAt]
+      required: [id, slug, name, theme, guestUiMode, languages, isTemplate, isPublished, hasUnpublishedChanges, lastPublishedAt, orderNotifyEmail, messageNotifyEmail, notificationChannel, mediaQuotaBytes, createdAt, updatedAt]
+    Tenant:
+      description: Operator/host tenant record, including the operator-controlled access policy.
+      allOf:
+        - $ref: "#/components/schemas/TenantBase"
+        - $ref: "#/components/schemas/TenantManagementMode"
     TenantManagementMode:
       type: object
       required: [managementMode]
@@ -5558,7 +5560,7 @@ components:
           required: [categories]
     TenantContent:
       allOf:
-        - $ref: "#/components/schemas/Tenant"
+        - $ref: "#/components/schemas/TenantBase"
         - type: object
           properties:
             sections:
@@ -5598,6 +5600,11 @@ components:
               type: ["number", "null"]
               description: Median response time rounded up to whole minutes; null until five cycles exist
           required: [sections, sitePlanImages, publicUrl, qrSvg]
+    AdminTenantContent:
+      description: Admin content tree with operator-controlled management mode.
+      allOf:
+        - $ref: "#/components/schemas/TenantContent"
+        - $ref: "#/components/schemas/TenantManagementMode"
     SearchResult:
       type: object
       properties:

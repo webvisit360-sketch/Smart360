@@ -1865,21 +1865,13 @@ export interface DistanceRunResult {
   counts: DistanceRunResultCounts;
 }
 
-export type TenantManagementModeProperty = typeof TenantManagementModeProperty[keyof typeof TenantManagementModeProperty];
-
-
-export const TenantManagementModeProperty = {
-  self_service: 'self_service',
-  concierge: 'concierge',
-} as const;
-
 /**
  * Exclusive host-notification delivery channel
  */
-export type TenantNotificationChannel = typeof TenantNotificationChannel[keyof typeof TenantNotificationChannel];
+export type TenantBaseNotificationChannel = typeof TenantBaseNotificationChannel[keyof typeof TenantBaseNotificationChannel];
 
 
-export const TenantNotificationChannel = {
+export const TenantBaseNotificationChannel = {
   email: 'email',
   whatsapp: 'whatsapp',
 } as const;
@@ -1887,18 +1879,18 @@ export const TenantNotificationChannel = {
 /**
  * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
  */
-export type TenantGuestUiMode = typeof TenantGuestUiMode[keyof typeof TenantGuestUiMode];
+export type TenantBaseGuestUiMode = typeof TenantBaseGuestUiMode[keyof typeof TenantBaseGuestUiMode];
 
 
-export const TenantGuestUiMode = {
+export const TenantBaseGuestUiMode = {
   legacy: 'legacy',
   'living-guide': 'living-guide',
 } as const;
 
-export type TenantLivingGuideNavItem = typeof TenantLivingGuideNavItem[keyof typeof TenantLivingGuideNavItem];
+export type TenantBaseLivingGuideNavItem = typeof TenantBaseLivingGuideNavItem[keyof typeof TenantBaseLivingGuideNavItem];
 
 
-export const TenantLivingGuideNavItem = {
+export const TenantBaseLivingGuideNavItem = {
   home: 'home',
   stay: 'stay',
   offer: 'offer',
@@ -1907,10 +1899,9 @@ export const TenantLivingGuideNavItem = {
   messages: 'messages',
 } as const;
 
-export interface Tenant {
+export interface TenantBase {
   id: string;
   slug: string;
-  managementMode: TenantManagementModeProperty;
   /** @nullable */
   customDomain?: string | null;
   name: string;
@@ -1945,7 +1936,7 @@ export interface Tenant {
   /** Whether guest messages send the tenant a PII-safe notification email; defaults to true. Controls only the email bell, never feature availability. */
   messageNotifyEmail: boolean;
   /** Exclusive host-notification delivery channel */
-  notificationChannel: TenantNotificationChannel;
+  notificationChannel: TenantBaseNotificationChannel;
   /**
      * International E.164 WhatsApp recipient
      * @nullable
@@ -1993,7 +1984,7 @@ export interface Tenant {
   bgColor?: string | null;
   theme: string;
   /** Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell */
-  guestUiMode: TenantGuestUiMode;
+  guestUiMode: TenantBaseGuestUiMode;
   /** @nullable */
   coverTitle?: string | null;
   /** @nullable */
@@ -2047,7 +2038,7 @@ export interface Tenant {
      * @maxItems 5
      * @nullable
      */
-  livingGuideNav?: TenantLivingGuideNavItem[] | null;
+  livingGuideNav?: TenantBaseLivingGuideNavItem[] | null;
   isTemplate: boolean;
   isPublished: boolean;
   /** Server-owned flag indicating saved tenant admin changes since the last successful publish */
@@ -2101,6 +2092,11 @@ export const TenantManagementModeManagementMode = {
 export interface TenantManagementMode {
   managementMode: TenantManagementModeManagementMode;
 }
+
+/**
+ * Operator/host tenant record, including the operator-controlled access policy.
+ */
+export type Tenant = TenantBase & TenantManagementMode;
 
 export interface NotificationConfigurationStatus {
   configured: boolean;
@@ -3435,7 +3431,7 @@ export type TenantContentUi = {[key: string]: string};
  */
 export type TenantContentPlurals = {[key: string]: {[key: string]: string}};
 
-export type TenantContent = Tenant & ({
+export type TenantContent = TenantBase & ({
   sections: SectionContent[];
   /** Ordered site-plan images for this tenant; empty array when none uploaded */
   sitePlanImages: SitePlanImage[];
@@ -3460,6 +3456,11 @@ export type TenantContent = Tenant & ({
      */
   hostResponseMedianMinutes?: number | null;
 });
+
+/**
+ * Admin content tree with operator-controlled management mode.
+ */
+export type AdminTenantContent = TenantContent & TenantManagementMode;
 
 export interface SearchResult {
   itemId: string;

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { KreatorProposalQueue } from "../src/components/admin/kreator-proposal-queue";
 import { EditDialog, ItemDialog } from "../src/components/admin/content-editor";
+import { KreatorOriginConfirmation } from "../src/components/admin/kreator-origin-confirmation";
 import "../src/index.css";
 
 const queryClient = new QueryClient({
@@ -39,6 +40,11 @@ function Harness() {
         tenantName="Testna namestitev"
         origin={{ latitude: 46.31, longitude: 14.91 }}
       />
+      <section data-testid="origin-confirmation-harness" className="mt-8">
+        <KreatorOriginConfirmation
+          tenant={{ id: "manual-pin-test", name: "Testna namestitev" }}
+        />
+      </section>
       <EditDialog
         open={placeDialogOpen}
         onOpenChange={setPlaceDialogOpen}
