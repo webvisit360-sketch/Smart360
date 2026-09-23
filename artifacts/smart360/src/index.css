@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@100..900&display=swap');
+@import 'maplibre-gl/dist/maplibre-gl.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 

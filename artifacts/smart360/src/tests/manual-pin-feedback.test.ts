@@ -44,3 +44,31 @@ test("Creator queue keeps approval and translation feedback on the affected card
   assert.match(source, /editingIdRef\.current !== row\.id/);
   assert.match(source, /setEditTranslations\(\(current\) => current\.map/);
 });
+
+test("all admin pin maps use the shared OpenFreeMap vector component", () => {
+  const queue = readFileSync(
+    new URL("../components/admin/kreator-proposal-queue.tsx", import.meta.url),
+    "utf8",
+  );
+  const origin = readFileSync(
+    new URL("../components/admin/kreator-origin-confirmation.tsx", import.meta.url),
+    "utf8",
+  );
+  const sharedMap = readFileSync(
+    new URL("../components/admin/openfreemap.tsx", import.meta.url),
+    "utf8",
+  );
+  const provider = readFileSync(
+    new URL("../lib/map-provider.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(queue, /<OpenFreeMap/);
+  assert.match(origin, /<OpenFreeMap/);
+  assert.doesNotMatch(queue + origin, /tile\.openstreetmap\.org/);
+  assert.match(sharedMap, /import\("maplibre-gl"\)/);
+  assert.match(sharedMap, /ResizeObserver/);
+  assert.match(provider, /https:\/\/tiles\.openfreemap\.org\/styles\/liberty/);
+  assert.match(provider, /© OpenMapTiles/);
+  assert.match(provider, /© OpenStreetMap contributors/);
+});

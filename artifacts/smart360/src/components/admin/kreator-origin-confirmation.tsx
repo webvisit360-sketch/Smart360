@@ -6,67 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, MapPin, CheckCircle2, AlertTriangle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-function OsmTileMap({ lat, lng }: { lat: number; lng: number }) {
-  const zoom = 18;
-  const tileSize = 256;
-  const scale = 2 ** zoom;
-  const latitudeRadians = (lat * Math.PI) / 180;
-  const worldX = ((lng + 180) / 360) * scale;
-  const worldY =
-    ((1 -
-      Math.log(
-        Math.tan(latitudeRadians) + 1 / Math.cos(latitudeRadians),
-      ) /
-        Math.PI) /
-      2) *
-    scale;
-  const firstX = Math.floor(worldX) - 1;
-  const firstY = Math.floor(worldY) - 1;
-  const offsetX = (worldX - firstX) * tileSize;
-  const offsetY = (worldY - firstY) * tileSize;
-
-  return (
-    <div className="absolute inset-0 overflow-hidden bg-[#d9ddd5]" aria-label="Zemljevid potrjene točke">
-      <div
-        className="absolute grid grid-cols-3 grid-rows-3"
-        style={{
-          width: tileSize * 3,
-          height: tileSize * 3,
-          left: `calc(50% - ${offsetX}px)`,
-          top: `calc(50% - ${offsetY}px)`,
-        }}
-      >
-        {Array.from({ length: 9 }, (_, index) => {
-          const x = firstX + (index % 3);
-          const y = firstY + Math.floor(index / 3);
-          return (
-            <img
-              key={`${x}-${y}`}
-              src={`https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`}
-              alt=""
-              width={tileSize}
-              height={tileSize}
-              className="block h-64 w-64 max-w-none"
-              loading="eager"
-            />
-          );
-        })}
-      </div>
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full drop-shadow-md">
-        <MapPin className="h-10 w-10 fill-[#157347] text-white" strokeWidth={1.7} />
-      </div>
-      <a
-        href="https://www.openstreetmap.org/copyright"
-        target="_blank"
-        rel="noreferrer"
-        className="absolute bottom-1 right-1 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600"
-      >
-        © OpenStreetMap
-      </a>
-    </div>
-  );
-}
+import { OpenFreeMap } from "@/components/admin/openfreemap";
 
 export function KreatorOriginConfirmation({
   tenant,
@@ -323,7 +263,13 @@ export function KreatorOriginConfirmation({
             </div>
 
             <div className="bg-[#ECF0EA] relative min-h-[340px] flex flex-col border-l border-transparent">
-              <OsmTileMap lat={previewMutation.data.lat} lng={previewMutation.data.lng} />
+              <OpenFreeMap
+                latitude={previewMutation.data.lat}
+                longitude={previewMutation.data.lng}
+                zoom={18}
+                ariaLabel="Zemljevid potrjene točke"
+                className="absolute inset-0"
+              />
               <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border-[1.5px] border-border shadow-sm px-3 py-1.5 rounded-[10px] text-[12px] font-[800] flex items-center gap-1.5 pointer-events-none">
                 <MapPin className="w-3.5 h-3.5 text-primary" />
                 Zaznana lokacija

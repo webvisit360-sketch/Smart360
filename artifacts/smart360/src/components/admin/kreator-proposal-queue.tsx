@@ -22,6 +22,7 @@ import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent } from "@/components/ui/card";
 import { mutationErrorMessage, replaceSavedProposal } from "@/lib/manual-pin-feedback";
 import { formatSlovenianCount } from "@/lib/slovenian-plural";
+import { OpenFreeMap } from "@/components/admin/openfreemap";
 
 const locationForms = {
   one: "lokacijo",
@@ -43,73 +44,15 @@ export function PinPlacementMap({
 }) {
   const initialLat = Number(latitude) || origin?.latitude || 46.25;
   const initialLng = Number(longitude) || origin?.longitude || 14.9;
-  const zoom = 15;
-  const tileSize = 256;
-  const scale = 2 ** zoom;
-  const latitudeRadians = (initialLat * Math.PI) / 180;
-  const worldX = ((initialLng + 180) / 360) * scale;
-  const worldY = ((1 - Math.log(Math.tan(latitudeRadians) + 1 / Math.cos(latitudeRadians)) / Math.PI) / 2) * scale;
-  const firstX = Math.floor(worldX) - 1;
-  const firstY = Math.floor(worldY) - 1;
-  const offsetX = (worldX - firstX) * tileSize;
-  const offsetY = (worldY - firstY) * tileSize;
-  const placeFromPointer = (event: React.PointerEvent<HTMLDivElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const pixelX = worldX * tileSize + event.clientX - bounds.left - bounds.width / 2;
-    const pixelY = worldY * tileSize + event.clientY - bounds.top - bounds.height / 2;
-    const nextLng = pixelX / (tileSize * scale) * 360 - 180;
-    const mercator = Math.PI * (1 - 2 * pixelY / (tileSize * scale));
-    const nextLat = Math.atan(Math.sinh(mercator)) * 180 / Math.PI;
-    onPlace(nextLat, nextLng);
-  };
   return (
     <div className="overflow-hidden rounded-lg border border-amber-300 bg-slate-100">
-      <div
-        role="application"
-        aria-label="Zemljevid za ročno postavitev pina; kliknite ali povlecite oznako"
-        tabIndex={0}
-        className="relative h-56 w-full touch-none cursor-crosshair overflow-hidden bg-[#d9ddd5]"
-        onPointerDown={placeFromPointer}
-        onPointerMove={(event) => { if (event.buttons === 1) placeFromPointer(event); }}
-      >
-        <div
-          className="absolute grid grid-cols-3 grid-rows-3"
-          style={{
-            width: tileSize * 3,
-            height: tileSize * 3,
-            left: `calc(50% - ${offsetX}px)`,
-            top: `calc(50% - ${offsetY}px)`,
-          }}
-        >
-          {Array.from({ length: 9 }, (_, index) => {
-            const x = firstX + (index % 3);
-            const y = firstY + Math.floor(index / 3);
-            return (
-              <img
-                key={`${x}-${y}`}
-                src={`https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`}
-                alt=""
-                width={tileSize}
-                height={tileSize}
-                draggable={false}
-                className="block h-64 w-64 max-w-none select-none"
-              />
-            );
-          })}
-        </div>
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full drop-shadow-md">
-          <MapPin className="h-10 w-10 fill-[#157347] text-white" strokeWidth={1.7} />
-        </div>
-        <a
-          href="https://www.openstreetmap.org/copyright"
-          target="_blank"
-          rel="noreferrer"
-          className="absolute bottom-1 right-1 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600"
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          © OpenStreetMap
-        </a>
-      </div>
+      <OpenFreeMap
+        latitude={initialLat}
+        longitude={initialLng}
+        zoom={15}
+        onPlace={onPlace}
+        ariaLabel="Zemljevid za ročno postavitev pina; kliknite zemljevid ali povlecite oznako"
+      />
       <p className="border-t bg-white px-3 py-2 text-xs text-slate-700">
         Kliknite ali povlecite pin. Natančno vrednost lahko popravite tudi v dostopnih poljih koordinat spodaj.
       </p>
