@@ -45,6 +45,8 @@ import {
   GetItemCreatorStatusResponse,
   ListItemCreatorPhotoProposalsResponse,
   RecomputeItemDistanceResponse,
+  PinHostDraftItemBody,
+  PinHostDraftItemResponse,
   TranslateMissingItemFieldsBody,
   TranslateMissingItemFieldsResponse,
   GetTenantEmergencyContactsResponse,
@@ -64,6 +66,7 @@ import {
   getItemCreatorStatus,
   ItemDistanceError,
   recomputeItemDistance,
+  pinHostDraftItem,
   searchAdminPlaces,
 } from "../lib/adminPlaceCreation";
 import { CreatorBulkApprovalError } from "../lib/creatorProposalLedger";
@@ -938,6 +941,33 @@ router.post("/admin/items/:id/distance/recompute", async (req, res): Promise<voi
     res.status(status).json({
       error: error instanceof Error ? error.message : "Razdalje ni mogoče preračunati.",
     });
+  }
+});
+
+router.post("/admin/items/:id/coordinates", requireOperator, async (req, res): Promise<void> => {
+  const parsed = PinHostDraftItemBody.safeParse(req.body);
+  if (!parsed.success || !parsed.data.locationText.trim()) {
+    res.status(400).json({ error: "Vnesite veljavno točko in opis lokacije." });
+    return;
+  }
+  const itemId = firstParam(req.params["id"]);
+  try {
+    const result = await pinHostDraftItem({ itemId, ...parsed.data });
+    // The DB mutation has committed. Evict even if the subsequent audit write
+    // fails and the generic successful-response invalidator cannot run.
+    invalidateTenantCache();
+    await logChange({
+      ...await tenantContextForItem(itemId), action: "update", entity: "item",
+      summary: "Določena točka gostiteljevega osnutka",
+    });
+    res.json(PinHostDraftItemResponse.parse(result));
+  } catch (error) {
+    res.status(error instanceof AdminPlaceConflictError ? 409 :
+      error instanceof ItemDistanceError
+        ? error.kind === "not-found" ? 404 : error.kind === "conflict" ? 409 : 422
+        : 503).json(error instanceof AdminPlaceConflictError
+      ? adminPlaceConflictResponse(error)
+      : { error: error instanceof Error ? error.message : "Točke ni bilo mogoče določiti." });
   }
 });
 

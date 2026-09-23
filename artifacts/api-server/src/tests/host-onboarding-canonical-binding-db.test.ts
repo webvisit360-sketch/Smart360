@@ -346,8 +346,8 @@ test("development copy: admin and host onboarding are two views over one unpubli
         eq(creatorPlaceProposalsTable.tenantId, fixture.tenantId),
         eq(creatorPlaceProposalsTable.proposedName, "Namig ob shranjevanju"),
       ))).length,
-      1,
-      "a new surrounding-place hint reaches Creator on save, before submit",
+      0,
+      "saving the form must not create Creator proposals or ordinary places before submission",
     );
 
     const readyToSubmit = await currentHostOnboarding(fixture.tenantId, fixture.hostUserId);
@@ -367,8 +367,11 @@ test("development copy: admin and host onboarding are two views over one unpubli
         eq(creatorPlaceProposalsTable.tenantId, fixture.tenantId),
         eq(creatorPlaceProposalsTable.proposedName, "Trgovina iz čakalne vrste"),
       ));
-    assert.equal(proposals.length, 1, "the surrounding-place name remains a Creator queue hint");
-    assert.equal(proposals[0]?.status, "unresolved");
+    assert.equal(proposals.length, 0, "submission creates ordinary drafts, not Creator hints");
+    const submittedReview = (await ownerHostOnboarding(fixture.tenantId))?.rounds[0]?.round
+      .recommendationReview;
+    assert.ok(submittedReview?.some(row => row.name === "Trgovina iz čakalne vrste" &&
+      row.itemId && row.materializationStatus));
     assert.equal(
       (await db.select().from(hostOnboardingEventSuggestionsTable)
         .where(eq(hostOnboardingEventSuggestionsTable.tenantId, fixture.tenantId))).length,
@@ -413,8 +416,8 @@ test("development copy: admin and host onboarding are two views over one unpubli
         staleCanonicalFingerprintRejected: true,
         offersContactsWifiRulesAndEventsCanonical: true,
         canonicalEventsConsistentInOwnerRead: true,
-        okolicaNamesRemainCreatorQueueHints: true,
-        okolicaHintsQueuedOnSave: true,
+        okolicaNamesBecomeOrdinaryDraftItemsOnSubmit: true,
+        okolicaHintsDoNotEnqueueOnSave: true,
         stableIdsAcrossIdempotentSave: true,
         publishedSnapshotUnchanged: true,
       },
@@ -454,6 +457,9 @@ test("development copy: admin and host onboarding are two views over one unpubli
     ...report,
     cleanup: { fixtureTenantsRemaining: 0, fixtureHostUsersRemaining: 0 },
   };
+  // Existing checked-in reports describe the former Creator-queue behavior.
+  // Ordinary regression runs must not overwrite them with one-off fixture IDs.
+  if (process.env["GENERATE_CANONICAL_BINDING_REPORT"] !== "1") return;
   await writeFile(reportJsonUrl, JSON.stringify(finalReport, null, 2));
   const escaped = JSON.stringify(finalReport, null, 2)
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -508,7 +514,7 @@ test("recommendation processing failure cannot roll back an ordinary canonical a
       categoryId: "shops",
       name: "Hitro dodan in odstranjen namig",
     }]);
-    assert.equal(result.ok && result.recommendationProcessing?.status, "succeeded");
+    assert.equal(result.ok && result.recommendationProcessing, null);
 
     await db.update(categoriesTable).set({ deletedAt: new Date() })
       .where(eq(categoriesTable.id, currentFixture.categoryIds.shops));
@@ -529,14 +535,7 @@ test("recommendation processing failure cannot roll back an ordinary canonical a
       ),
     );
     assert.equal(failedProcessingSave.ok, true);
-    assert.equal(
-      failedProcessingSave.ok && failedProcessingSave.recommendationProcessing?.status,
-      "failed",
-    );
-    assert.equal(
-      failedProcessingSave.ok && failedProcessingSave.recommendationProcessing?.errorCode,
-      "RECOMMENDATION_PROCESSING_FAILED",
-    );
+    assert.equal(failedProcessingSave.ok && failedProcessingSave.recommendationProcessing, null);
     const afterFailure = await currentHostOnboarding(
       currentFixture.tenantId,
       currentFixture.hostUserId,
@@ -550,7 +549,7 @@ test("recommendation processing failure cannot roll back an ordinary canonical a
       afterFailure!.round.id,
       afterFailure!.round.revision,
     );
-    assert.equal(retried.status, "succeeded");
+    assert.equal(retried.errorCode, "ROUND_NOT_SUBMITTED");
 
     const beforeDelete = await currentHostOnboarding(
       currentFixture.tenantId,
@@ -569,9 +568,9 @@ test("recommendation processing failure cannot roll back an ordinary canonical a
       supersededRevision,
     );
     assert.equal(
-      staleRetry.revision,
-      deletedHint.ok ? deletedHint.round.revision : -1,
-      "an old retry observes the newer round and cannot process its deleted intent",
+      staleRetry.errorCode,
+      "ROUND_NOT_SUBMITTED",
+      "a draft cannot be materialized by retry before submission",
     );
     assert.equal(
       (await db.select().from(creatorPlaceProposalsTable).where(and(

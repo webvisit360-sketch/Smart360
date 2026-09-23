@@ -5,6 +5,7 @@ import {
   creatorPlaceProposalsTable,
   db,
   hostOnboardingRoundsTable,
+  itemsTable,
   runWithHostDbContext,
 } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
@@ -23,7 +24,7 @@ import {
   type CanonicalOnboardingFixture,
 } from "./helpers/canonicalOnboardingFixture";
 
-test("host recommendation save persists several Creator rows only in the privileged post-commit phase", async (context) => {
+test("host recommendation autosave does not materialize entries or Creator rows before submit", async (context) => {
   if (process.env.NODE_ENV === "production") {
     throw new Error("Host recommendation persistence proof rejects production");
   }
@@ -91,10 +92,7 @@ test("host recommendation save persists several Creator rows only in the privile
     });
 
     assert.equal(result.ok, true);
-    assert.equal(
-      result.ok && result.recommendationProcessing?.status,
-      "succeeded",
-    );
+    assert.equal(result.ok && result.recommendationProcessing, null);
 
     const proposals = await db.select({
       id: creatorPlaceProposalsTable.id,
@@ -111,32 +109,17 @@ test("host recommendation save persists several Creator rows only in the privile
       .filter(({ proposedName }) => expectedNames.includes(proposedName))
       .sort((left, right) => left.proposedName.localeCompare(right.proposedName));
 
-    assert.equal(proofRows.length, 2, "both ordinary recommendations must persist as Creator rows");
-    assert.deepEqual(proofRows.map(({ proposedName }) => proposedName), expectedNames);
-    assert.equal(new Set(proofRows.map(({ categoryId }) => categoryId)).size, 2);
-    for (const row of proofRows) {
-      assert.equal(row.status, "unresolved");
-      assert.equal(row.contentReady, false);
-      assert.equal(row.inclusionReason, HOST_ONBOARDING_PROVENANCE);
-      assert.equal(row.refusalReason, HOST_ONBOARDING_UNRESOLVED_REASON);
-    }
+    assert.equal(proofRows.length, 0, "a draft save must never create Creator queue rows");
 
     const [round] = await db.select({
       recommendationReview: hostOnboardingRoundsTable.recommendationReview,
     }).from(hostOnboardingRoundsTable)
       .where(eq(hostOnboardingRoundsTable.id, fixture.roundId));
     assert.ok(round);
-    assert.deepEqual(
-      round.recommendationReview
-        .filter(({ name }) => expectedNames.includes(name))
-        .map(({ name, proposalId }) => ({ name, proposalId }))
-        .sort((left, right) => left.name.localeCompare(right.name)),
-      proofRows.map(({ id, proposedName }) => ({ name: proposedName, proposalId: id })),
-      "the onboarding review must link to the persisted queue rows",
-    );
+    assert.deepEqual(round.recommendationReview, []);
 
     console.log(JSON.stringify({
-      proof: "host-recommendations-persisted",
+      proof: "host-recommendations-wait-for-submit",
       hostRoleDirectCreatorAccess: "denied",
       expectedCount: expectedNames.length,
       persistedCount: proofRows.length,

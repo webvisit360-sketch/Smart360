@@ -2,11 +2,18 @@ import { createHash } from "node:crypto";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   categoriesTable,
+  creatorCanonicalPlacesTable,
   creatorPlaceProposalsTable,
   db,
+  itemDistanceProposalsTable,
+  itemsTable,
   sectionsTable,
+  tenantsTable,
 } from "@workspace/db";
 import { MELI_PU_SKELETON } from "./tenantSeeds";
+import { computeRoadRoute } from "./distanceEngine";
+import { adminPlaceDuplicateRows, fetchAdminPlaceNominatim, findAdminPlaceDuplicate } from "./adminPlaceCreation";
+import { lockCreatorPlaceIdentity } from "./creatorProposalLedger";
 
 export const HOST_ONBOARDING_PROVENANCE = "vnesel gostitelj prek obrazca";
 export const HOST_ONBOARDING_UNRESOLVED_REASON = "host-name-awaiting-resolution";
@@ -21,6 +28,145 @@ export type HostRecommendation = {
   categoryId?: string;
   name: string;
 };
+
+export type HostDraftResult = HostRecommendation & {
+  proposalId: null;
+  itemId: string;
+  materializationStatus: "created" | "created_without_coordinates" | "matched_existing";
+  existingArchived?: boolean;
+  provenance: typeof HOST_ONBOARDING_PROVENANCE;
+};
+
+/**
+ * Form names are hints, not verified places. Only one exact OSM name at a
+ * routable location is sufficiently confident; otherwise create an editable
+ * ordinary item with no fabricated pin. Never route a Creator queue row.
+ */
+export async function materializeHostRecommendations(
+  tx: CreatorTransaction,
+  input: { tenantId: string; recommendations: HostRecommendation[] },
+  dependencies: {
+    search?: typeof fetchAdminPlaceNominatim;
+    route?: typeof computeRoadRoute;
+  } = {},
+): Promise<HostDraftResult[]> {
+  const allowed = new Set(getHostOnboardingCategories().map(row => row.key));
+  const categories = await tx.select({
+    id: categoriesTable.id, key: categoriesTable.key,
+  }).from(categoriesTable)
+    .innerJoin(sectionsTable, eq(sectionsTable.id, categoriesTable.sectionId))
+    .where(and(eq(sectionsTable.tenantId, input.tenantId),
+      isNull(categoriesTable.deletedAt)));
+  const [origin] = await tx.select({
+    latitude: tenantsTable.latitude, longitude: tenantsTable.longitude,
+  }).from(tenantsTable).where(eq(tenantsTable.id, input.tenantId)).limit(1);
+  const results: HostDraftResult[] = [];
+  for (const hint of input.recommendations) {
+    const name = hint.name.trim();
+    const normalized = normalizeHostRecommendationName(name);
+    const category = hint.categoryId
+      ? categories.find(row => row.id === hint.categoryId)
+      : categories.find(row => row.key === hint.categoryKey);
+    if (!name || !normalized || !category || (!hint.categoryId && !allowed.has(hint.categoryKey))) {
+      throw new Error("Kategorija ali ime priporočila gostitelja ni veljavno.");
+    }
+    let candidates: Awaited<ReturnType<typeof fetchAdminPlaceNominatim>> = [];
+    try {
+      candidates = await (dependencies.search ?? fetchAdminPlaceNominatim)("/search", {
+        q: name, limit: "8", namedetails: "1",
+      });
+    } catch {
+      // An unavailable geocoder must not discard the host's submitted name.
+    }
+    const exact = candidates.filter(row =>
+      typeof row.name === "string" &&
+      normalizeHostRecommendationName(row.name) === normalized &&
+      ["node", "way", "relation"].includes(String(row.osm_type)) &&
+      Number.isSafeInteger(Number(row.osm_id)) &&
+      Number.isFinite(Number(row.lat)) && Number.isFinite(Number(row.lon)));
+    const unique = exact.length === 1 ? exact[0]! : null;
+    const entityKey = unique
+      ? `osm:${unique.osm_type}:${unique.osm_id}` : `host-name:${normalized}`;
+    // All canonical writers acquire entity THEN name. Geocoding must precede
+    // the lock, or operator creation (entity -> name) can deadlock a host
+    // submission that took name first and then waited for the OSM entity.
+    await lockCreatorPlaceIdentity(tx, input.tenantId, entityKey, normalized);
+    const latitude = unique ? Number(unique.lat) : null;
+    const longitude = unique ? Number(unique.lon) : null;
+    const place = {
+      name, osmType: unique ? String(unique.osm_type) : null,
+      osmId: unique ? Number(unique.osm_id) : null, latitude, longitude,
+    };
+    const rows = await adminPlaceDuplicateRows(input.tenantId, tx as typeof db);
+    // Pending Creator evidence is dormant, not a canonical identity. Exclude
+    // it so an archived canonical item cannot be masked by a pending hint.
+    const identityMatch = unique
+      ? findAdminPlaceDuplicate(place, rows.filter(row => row.match.kind !== "pending"))
+      : null;
+    const byName = rows.filter(row => row.match.kind === "item" &&
+      row.match.categoryId === category.id &&
+      normalizeHostRecommendationName(row.name) === normalized);
+    // A verified different identity must NEVER fall through to a name-only
+    // match (including an old row without coordinates). Without a confident
+    // geocode, only one live same-category name can replay an unlocated hint.
+    const existing = identityMatch?.kind === "item" ||
+      identityMatch?.kind === "archived"
+      ? identityMatch : !unique && byName.length === 1 ? byName[0]!.match : null;
+    if (existing) {
+      const archived = existing.kind === "archived";
+      const itemId = archived
+        ? rows.find(row => row.match === existing)?.itemId ?? existing.id
+        : existing.id;
+      results.push({ ...hint, proposalId: null, itemId,
+        materializationStatus: "matched_existing",
+        ...(archived ? { existingArchived: true } : {}),
+        provenance: HOST_ONBOARDING_PROVENANCE });
+      continue;
+    }
+    let route: Awaited<ReturnType<typeof computeRoadRoute>> = null;
+    if (latitude !== null && longitude !== null &&
+      origin?.latitude !== null && origin?.longitude !== null &&
+      origin?.latitude !== undefined && origin?.longitude !== undefined) {
+      try {
+        route = await (dependencies.route ?? computeRoadRoute)(
+          { latitude: origin.latitude, longitude: origin.longitude }, { latitude, longitude });
+      } catch {
+        // An unroutable hint remains an editable coordinate-less draft.
+      }
+    }
+    const withCoordinates = Boolean(unique && route && route.durationMinutes <= 90);
+    const [item] = await tx.insert(itemsTable).values({
+      categoryId: category.id, title: name,
+      ...(withCoordinates ? {
+        mapQuery: String(unique!.display_name ?? name),
+        distanceMeters: Math.round(route!.distanceMeters),
+        duration: `${Math.round(route!.durationMinutes)} min`,
+      } : {}),
+    }).returning({ id: itemsTable.id });
+    if (withCoordinates) {
+      await tx.insert(creatorCanonicalPlacesTable).values({
+        tenantId: input.tenantId, entityKey, itemId: item!.id,
+      });
+      await tx.insert(itemDistanceProposalsTable).values({
+        tenantId: input.tenantId, itemId: item!.id,
+        status: "approved", source: HOST_ONBOARDING_PROVENANCE,
+        confidence: "high", latitude, longitude,
+        distanceMeters: Math.round(route!.distanceMeters),
+        durationMinutes: route!.durationMinutes,
+        resolvedAddress: String(unique!.display_name ?? name),
+        geocodeQuery: name, inputFingerprint: entityKey,
+      });
+    }
+    results.push({ ...hint, proposalId: null, itemId: item!.id,
+      materializationStatus: withCoordinates ? "created" : "created_without_coordinates",
+      provenance: HOST_ONBOARDING_PROVENANCE });
+  }
+  if (results.length) {
+    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, input.tenantId));
+  }
+  return results;
+}
 
 type CreatorTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 

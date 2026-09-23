@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, RefreshCcw } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, RefreshCcw, Route } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetTenantQueryKey,
@@ -8,6 +8,7 @@ import {
   getListTenantChangelogQueryKey,
   getListTenantOverviewQueryKey,
   useAlignTenantSkeleton,
+  useBackfillCreatorDistances,
 } from "@workspace/api-client-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -238,4 +239,35 @@ export function SkeletonAlignmentAction({ tenantId }: { tenantId: string }) {
       </CardContent>
     </Card>
   );
+}
+
+export function DistanceBackfillAction({ tenantId }: { tenantId: string }) {
+  const queryClient = useQueryClient();
+  const backfill = useBackfillCreatorDistances({
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(tenantId) });
+        void queryClient.invalidateQueries({ queryKey: ["portalPreviewTenant"] });
+      },
+    },
+  });
+
+  return <Card data-testid="structure-distance-backfill" className="mb-6">
+    <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="space-y-2">
+        <h3 className="flex items-center gap-2 font-bold"><Route className="h-4 w-4 text-primary" /> Preračunaj razdalje</h3>
+        <p className="text-sm text-muted-foreground">Dopolni manjkajočo cestno razdaljo za vnose s koordinatami. Obstoječe razdalje ostanejo nespremenjene.</p>
+        {backfill.data && <div role="status" className="text-sm">
+          Izračunano: {backfill.data.computed} · Preskočeno: {backfill.data.skipped} · Brez koordinat: {backfill.data.noCoordinates.length} · Napake: {backfill.data.failures.length}
+          {backfill.data.noCoordinates.length > 0 && <p>Brez koordinat: {backfill.data.noCoordinates.map((entry) => entry.itemName).join(", ")}</p>}
+          {backfill.data.failures.map((failure) => <p key={failure.itemId} className="text-destructive">{failure.itemName}: {failure.reason}</p>)}
+        </div>}
+        {backfill.error && <p role="alert" className="text-sm text-destructive">{errorMessage(backfill.error)}</p>}
+      </div>
+      <Button type="button" variant="outline" disabled={backfill.isPending} onClick={() => backfill.mutate({ id: tenantId })}>
+        {backfill.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {backfill.isPending ? "Preračunavam …" : "Preračunaj razdalje"}
+      </Button>
+    </CardContent>
+  </Card>;
 }

@@ -86,43 +86,30 @@ test("shared creator identity locks serialize competing writers", async () => {
   assert.equal(secondEntered, true);
 });
 
-test("admin creation duplicate conflict identifies pending queue row before route or write", async () => {
-  const name = `Pending pin ${crypto.randomUUID().slice(0, 8)}`;
+test("Dodaj kraj silently resolves a matching pending Gril-style proposal atomically", async () => {
+  // Real Gril naming, but exclusively on this disposable tenant.
+  const name = "Logarska dolina";
   const [pending] = await db.insert(creatorPlaceProposalsTable).values({
     tenantId, categoryId, runId: crypto.randomUUID(), proposedName: name,
     normalizedName: normalizeCreatorProposalName(name),
     originalQuery: name, status: "pending", contentReady: true,
     latitude: 46.39555, longitude: 14.62222,
   }).returning({ id: creatorPlaceProposalsTable.id });
-  const runsBefore = await db.select({ id: creatorRunsTable.id }).from(creatorRunsTable)
-    .where(eq(creatorRunsTable.tenantId, tenantId));
-  let caught: unknown;
-  try {
-    await createAdminPlace({
+  const created = await createAdminPlace({
     categoryId, actorId,
     selection: {
       mode: "manual", name, locationText: "Lega pri kraju",
       latitude: 46.39555, longitude: 14.62222,
     },
-    });
-  } catch (error) {
-    caught = error;
-  }
-  assert.ok(caught instanceof AdminPlaceConflictError);
-  assert.deepEqual(adminPlaceConflictResponse(caught), {
-    error: "Ta kraj čaka v Kreatorjevi vrsti.",
-    duplicateMatch: {
-      kind: "pending", id: pending.id, categoryId,
-      category: "Naravna dediščina", name, hidden: false,
-    },
-  }, "409 JSON must expose the exact queue target and category, not just a generic error");
+  }, { route: async () => ({ distanceMeters: 3200, durationMinutes: 9 }) });
+  const [resolved] = await db.select().from(creatorPlaceProposalsTable)
+    .where(eq(creatorPlaceProposalsTable.id, pending.id));
+  assert.equal(resolved?.status, "superseded");
+  assert.equal(resolved?.supersededBy, created.id);
   const proposals = await db.select({ id: creatorPlaceProposalsTable.id })
     .from(creatorPlaceProposalsTable).where(eq(creatorPlaceProposalsTable.tenantId, tenantId));
-  const runsAfter = await db.select({ id: creatorRunsTable.id }).from(creatorRunsTable)
-    .where(eq(creatorRunsTable.tenantId, tenantId));
-  assert.deepEqual(runsAfter, runsBefore, "a duplicate must not start a Creator run");
   assert.equal(proposals.filter(row => row.id === pending.id).length, 1);
-  assert.equal(proposals.length, 2, "no new approved place was inserted");
+  assert.equal(proposals.length, 3, "one ordinary materialized place and one resolved hint");
 });
 
 test("concurrent different identities with one normalized name remain two distinct places", async () => {

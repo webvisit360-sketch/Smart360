@@ -1,0 +1,35 @@
+Revised direction — the operator does NOT want proposal rows in the
+structure view. No Creator surface, no proposal rows anywhere. Instead:
+
+1. HOST FORM SUBMIT creates DRAFT ENTRIES DIRECTLY — no Creator queue step.
+   For each okolica name the host submitted: geocode it; with a confident
+   match create a normal draft entry in the target category with
+   coordinates and OSRM distance; without a confident match create the
+   draft entry anyway, without coordinates (the operator sets the pin later
+   in the entry editor / Dodaj kraj manual flow). Provenance stays recorded
+   ("vnesel gostitelj prek obrazca"). Draft entries are protected by the
+   existing publish gate and the guest-visibility rule, so nothing reaches
+   guests automatically.
+2. The duplicate/identity rules from the latest fix apply during this
+   materialization, so a host name never creates a second entry for a
+   place already in the guide.
+3. EXISTING PENDING PROPOSALS (the old queue, e.g. both Logarska dolina
+   items at Gril): no UI for them. When the operator adds a matching place
+   via "Dodaj kraj", the matching pending proposal is resolved SILENTLY —
+   no extra button, no blocking. Remaining unresolved proposals simply stay
+   dormant and harmless; nothing surfaces them in the structure.
+4. The "Vsebina gostitelja" tab keeps listing what the host submitted, with
+   the status now reflecting the direct materialization (created / created
+   without coordinates / matched existing).
+5. Operator actions still living on the Creator page that remain necessary
+   ("Uskladi strukturo s skeletom", "Preračunaj razdalje") get a home on
+   the Struktura vsebine page. The Creator page stays reachable but is no
+   longer part of any normal flow. List what you moved.
+
+Verify in dev: a form submission with three names (one clean match, one
+ambiguous, one already in the guide) produces two draft entries (one
+without coordinates), no duplicate for the third, correct statuses on the
+Vsebina gostitelja tab, and nothing guest-visible before publish. Adding
+Logarska dolina via "Dodaj kraj" resolves its pending proposal without any
+prompt. Report with "POVZETEK ZA LASTNIKA" in Slovenian, then STOP.
+No publication.

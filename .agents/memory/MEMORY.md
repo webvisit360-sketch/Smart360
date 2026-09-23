@@ -48,5 +48,5 @@
 - [Direct mail delivery](direct-mail-delivery.md) — direct Resend is intentional; do not restore connector fallback or infer old failure reasons.
 - [Admin scroll diagnosis](admin-scroll-measurement.md) — measure document and editor scroll ranges separately; normal padding and preview overflow can mislead.
 - [Browser fixture bridge](browser-fixture-bridge.md) — remote browser loopback is not workspace loopback; relay real fixture responses without inventing admin credentials.
-- [Host form draft authority](host-form-draft-authority.md) — owner replaced onboarding copies and silent conflict suggestions with direct draft edits; new place hints still go to Creator.
+- [Host form draft authority](host-form-draft-authority.md) — host content directly edits the shared draft; on submission Okolica names create unpublished ordinary drafts, not Creator proposals.
 - [Skeleton category merges](skeleton-category-merges.md) — dedupe original normalized names without resetting host metadata; historical creation age cannot be inferred from xmin.

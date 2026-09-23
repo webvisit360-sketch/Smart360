@@ -3,7 +3,7 @@ name: Host form draft authority
 description: Owner-approved direct binding replaces the former onboarding suggestion-on-conflict policy.
 ---
 
-The host form and operator editor are two views of the same tenant draft. Intentional host edits to ordinary content are authorized draft edits, not suggestions that silently retain an operator's older value. New Okolica place-name hints remain in the Creator queue with host provenance.
+The host form and operator editor are two views of the same tenant draft. Intentional host edits to ordinary content are authorized draft edits, not suggestions that silently retain an operator's older value. The newer owner decision supersedes the old Creator-queue rule: submitted Okolica names create ordinary unpublished draft items directly; never enqueue new host recommendations.
 
 **Why:** The owner explicitly replaced the separate onboarding-copy and suggestion-on-conflict model on 2026-09-22. Operator publication remains the sole boundary for guest visibility; direct host draft editing is not permission to publish.
 
@@ -39,11 +39,11 @@ Recovery records need full local snapshots or explicit stable-ID reconstruction;
 
 **How to apply:** Exercise refresh recovery with multiple rows and only one edited row. Retain the original base for conflict comparison and never interpret an omitted patch row as deletion.
 
-Host recommendation intents must commit before privileged Creator processing; actor identity alone does not reproduce host database permissions.
+Host recommendation names remain workflow hints until form submission. Submitted names are materialized in a privileged, tenant-scoped post-commit transaction, not Creator proposals; actor identity alone does not reproduce host database permissions.
 
-**Why:** The host database role deliberately cannot read Creator tables. Recommendation processing in the ordinary save transaction reproduced SQLSTATE 42501 and rolled back unrelated fields. An audit-only simulated host concealed this permission boundary.
+**Why:** The host database role deliberately cannot read privileged item-identity/coordinate tables. Processing in the ordinary save transaction reproduced SQLSTATE 42501 and rolled back unrelated fields. The operator no longer wants proposal rows in the structure or a Creator review step.
 
-**How to apply:** Exercise real host DB context in tests. Run Creator processing only after the host transaction commits, with revision/tenant scoping and independent failure reporting. Keep failure-status persistence errors from poisoning the already committed save.
+**How to apply:** Exercise real host DB context in tests. Only submission runs privileged direct-draft materialization after the host transaction commits, with revision/tenant scoping and independent failure reporting. A confident unique geocode plus routable OSRM distance gives a pinned draft; ambiguity or routing failure gives an editable coordinate-less draft. Deduplicate by verified identity or unambiguous same-category name, persist host provenance and status, and never publish automatically. Existing pending Creator proposals remain dormant; matching hints are silently resolved when an operator adds the place through Dodaj kraj. Keep failure-status persistence errors from poisoning the already committed form save.
 
 Recovered hydration must skip the stale render frame before autosave/persistence can read form state.
 

@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { KreatorProposalQueue } from "../src/components/admin/kreator-proposal-queue";
 import { ContentEditor, EditDialog, ItemDialog } from "../src/components/admin/content-editor";
 import { KreatorOriginConfirmation } from "../src/components/admin/kreator-origin-confirmation";
+import { HostOnboardingReview } from "../src/components/admin/host-onboarding-review";
+import { DistanceBackfillAction, SkeletonAlignmentAction } from "../src/components/admin/skeleton-alignment-action";
 import { adminPlaceTargetTab } from "../src/lib/manual-pin-feedback";
 import "../src/index.css";
 
@@ -23,9 +25,10 @@ const exploreCategory = {
 };
 
 function Harness() {
+  const hostDrafts = new URLSearchParams(window.location.search).has("hostDrafts");
   const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"content" | "distances" | "kreator">(
-    () => adminPlaceTargetTab(window.location.search) ?? "kreator",
+  const [activeTab, setActiveTab] = useState<"content" | "distances" | "kreator" | "host">(
+    () => adminPlaceTargetTab(window.location.search) ?? (hostDrafts ? "host" : "kreator"),
   );
   React.useEffect(() => {
     const navigate = (event: Event) => {
@@ -48,20 +51,39 @@ function Harness() {
           Dodaj kraj
         </button>
       </div>
+      {hostDrafts && <nav className="mb-4 flex gap-4" aria-label="Testne zavihke">
+        <button type="button" onClick={() => setActiveTab("host")}>Vsebina gostitelja</button>
+        <button type="button" onClick={() => setActiveTab("content")}>Struktura vsebine</button>
+      </nav>}
+      {activeTab === "host" && hostDrafts && <HostOnboardingReview tenantId="manual-pin-test" />}
       {activeTab === "kreator" && <KreatorProposalQueue
         tenantId="manual-pin-test"
         tenantName="Testna namestitev"
         origin={{ latitude: 46.31, longitude: 14.91 }}
       />}
       {activeTab === "distances" && <section data-testid="distance-review-fixture">Razdalje — brez urejevalnika vsebine</section>}
-      {activeTab === "content" && new URLSearchParams(window.location.search).has("existingPlace") && <section data-testid="existing-place-fixture">
+      {activeTab === "content" && (new URLSearchParams(window.location.search).has("existingPlace") || hostDrafts) && <section data-testid="existing-place-fixture">
+        {hostDrafts && <>
+          <h2>Struktura vsebine</h2>
+          <SkeletonAlignmentAction tenantId="manual-pin-test" />
+          <DistanceBackfillAction tenantId="manual-pin-test" />
+        </>}
         <ContentEditor tenantId="manual-pin-test" sections={[{
           id: "existing-section", key: "explore", title: "Okolica", icon: "map-pin",
           isVisible: true, position: 0,
           categories: [{
             id: "hidden-category", label: "Naravna dediščina", icon: "map-pin",
             layout: "default", exploreGroup: "trips", isVisible: true, position: 0,
-            items: [{
+            items: hostDrafts ? [{
+              id: "host-created-item", title: "Slap Rinka",
+              isVisible: false, position: 0, media: [],
+            }, {
+              id: "host-unlocated-item", title: "Skriti razgled",
+              isVisible: false, position: 1, media: [],
+            }, {
+              id: "existing-hidden-item", title: "Krajinski park Logarska dolina",
+              isVisible: false, position: 2, media: [],
+            }] : [{
               id: "existing-hidden-item", title: "Krajinski park Logarska dolina",
               isVisible: false, position: 0, media: [],
             }],

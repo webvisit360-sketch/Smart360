@@ -18,7 +18,6 @@ import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { KreatorProposalQueue } from "./kreator-proposal-queue";
 
 const SOURCE_KINDS = [
   "official_tourism",
@@ -454,7 +453,6 @@ export function KreatorSourceList({ tenantId, tenantName, origin }: { tenantId: 
               </p>
             </div>
           )}
-          <KreatorProposalQueue tenantId={tenantId} tenantName={tenantName} origin={origin} />
         </>
       )}
       {(runQuery.data?.status === 'failed') && (

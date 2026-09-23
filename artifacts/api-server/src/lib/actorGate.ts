@@ -200,6 +200,9 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/items/:id/translate-missing", binding: e("item") },
   { method: "get", path: "/admin/items/:id/creator-status", binding: e("item") },
   { method: "post", path: "/admin/items/:id/distance/recompute", binding: e("item") },
+  // Operator confirms a host draft's pin; the handler also validates its
+  // submitted-round item linkage and tenant before modifying coordinates.
+  { method: "post", path: "/admin/items/:id/coordinates", binding: OPERATOR_ONLY },
   { method: "post", path: "/admin/items/:id/creator/photos/discover", binding: OWNER },
   { method: "get", path: "/admin/items/:id/creator/photo-proposals", binding: OWNER },
   { method: "delete", path: "/admin/items/:id", binding: e("item") },

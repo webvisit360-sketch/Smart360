@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import {
   categoriesTable,
-  creatorPlaceProposalsTable,
   db,
   escapeHostDbContext,
   hostMembershipsTable,
@@ -17,11 +16,12 @@ import {
 import { suggestCategoryIcon } from "@workspace/category-icons";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
-  enqueueHostRecommendations,
+  materializeHostRecommendations,
   getHostOnboardingCategories,
   HOST_ONBOARDING_PROVENANCE,
-  HOST_ONBOARDING_UNRESOLVED_REASON,
 } from "./hostOnboardingCreator";
+import { computeRoadRoute } from "./distanceEngine";
+import { fetchAdminPlaceNominatim } from "./adminPlaceCreation";
 import {
   HOST_ONBOARDING_OPERATOR_EMAIL,
   sendHostOnboardingEmail,
@@ -37,6 +37,10 @@ import {
 } from "./hostOnboardingCanonical";
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type HostResolutionDependencies = {
+  search?: typeof fetchAdminPlaceNominatim;
+  route?: typeof computeRoadRoute;
+};
 const CANONICAL_BINDING_MARKER = "workflow.canonical_binding_v1";
 const RECOMMENDATION_PROCESSING_MARKER = "workflow.recommendation_processing_v1";
 export type RecommendationProcessing = {
@@ -341,21 +345,14 @@ export async function saveHostOnboarding(
         ? { customCategories: patch.customCategories }
         : {}),
     };
-    const recommendationsChanged =
-      patch.recommendations !== undefined || patch.customCategories !== undefined;
     const nextRevision = round.revision + 1;
-    const processing = recommendationsChanged
-      ? { status: "pending" as const, revision: nextRevision }
-      : recommendationProcessingStatus(round.targetReview);
     const [updated] = await tx
       .update(hostOnboardingRoundsTable)
       .set({
         // Workflow-only hints remain here. Canonical tenant content is read
         // fresh on every GET and is never authoritative in this JSON column.
         draftData: nextWorkflow,
-        targetReview: processing
-          ? withRecommendationProcessing([canonicalBindingReview()], processing)
-          : [canonicalBindingReview()],
+        targetReview: [canonicalBindingReview()],
         revision: nextRevision,
         updatedAt: new Date(),
       })
@@ -377,17 +374,11 @@ export async function saveHostOnboarding(
         staleReason: "cas_update",
       } as const;
     }
-    return { ok: true, round: updated, recommendationsChanged } as const;
+    return { ok: true, round: updated } as const;
   });
   if (!saved.ok) return saved;
-  // This call is intentionally after the awaited transaction above. actorGate
-  // scopes a dedicated SET ROLE connection to the request but does not open an
-  // outer SQL transaction; escapeHostDbContext therefore selects the base pool
-  // and processHostRecommendationIntents opens a distinct, post-commit tx.
-  const recommendationProcessing = saved.recommendationsChanged
-    ? await processHostRecommendationIntents(saved.round.id, saved.round.revision)
-    : recommendationProcessingStatus(saved.round.targetReview);
-  return { ok: true, round: saved.round, recommendationProcessing };
+  // Names are workflow hints until the host actually submits the form.
+  return { ok: true, round: saved.round, recommendationProcessing: null };
 }
 
 export type CreateHostOnboardingCategoryResult =
@@ -726,6 +717,7 @@ async function mapSubmission(
   onboardingId: string,
   data: HostOnboardingData,
   applyCanonical = true,
+  dependencies: HostResolutionDependencies = {},
 ): Promise<{
   targetReview: HostOnboardingTargetReview[];
   recommendationReview: HostOnboardingRecommendationReview[];
@@ -762,23 +754,13 @@ async function mapSubmission(
     }
   }
   const recommendations = data.recommendations
-    .filter((row) =>
-      recommendationNeedsCreatorQueue(row, canonicalById.get(row.id)) &&
-      !canonicalByIdentity.has(
-        `${clean(row.categoryId)}\0${clean(row.name).toLocaleLowerCase("sl")}`,
-      )
-    )
     .map((row) => ({ categoryKey: clean(row.categoryId), name: clean(row.name) }))
     .filter((row) => row.name);
-  const creator = await enqueueHostRecommendations(tx, {
+  const created = await materializeHostRecommendations(tx, {
     tenantId,
-    submissionId: onboardingId,
     recommendations,
-  });
-  const recommendationReview: HostOnboardingRecommendationReview[] = recommendations.map((row, index) => ({
-    ...row,
-    proposalId: creator.proposalIds[index] ?? null,
-  }));
+  }, dependencies);
+  const recommendationReview: HostOnboardingRecommendationReview[] = created;
   for (const customCategory of data.customCategories) {
     const categoryName = clean(customCategory.name);
     if (!categoryName) continue;
@@ -792,20 +774,16 @@ async function mapSubmission(
     const entries = customCategory.entries
       .map((entry) => ({ ...entry, name: clean(entry.name) }))
       .filter((entry) => entry.name);
-    const queued = await enqueueHostRecommendations(tx, {
+    const createdEntries = await materializeHostRecommendations(tx, {
       tenantId,
-      submissionId: onboardingId,
       recommendations: entries.map((entry) => ({
         categoryKey: category.key ?? category.id,
         categoryId: category.id,
         name: entry.name,
       })),
-    });
+    }, dependencies);
     recommendationReview.push(...entries.map((entry, index) => ({
-      categoryKey: category.key ?? category.id,
-      categoryId: category.id,
-      name: entry.name,
-      proposalId: queued.proposalIds[index] ?? null,
+      ...createdEntries[index]!,
       hostCreated: true,
       provenance: HOST_ONBOARDING_PROVENANCE,
       customCategoryId: customCategory.id,
@@ -837,6 +815,7 @@ async function mapSubmission(
 export async function processHostRecommendationIntents(
   onboardingId: string,
   intendedRevision: number,
+  dependencies: HostResolutionDependencies = {},
 ): Promise<RecommendationProcessing> {
   // Never call this while a caller-owned transaction still holds the round
   // lock. All production call sites invoke it only after their awaited commit.
@@ -851,12 +830,17 @@ export async function processHostRecommendationIntents(
       if (!round) {
         return { status: "failed", revision: intendedRevision, errorCode: "ROUND_MISSING" };
       }
+      if (round.status !== "submitted") {
+        return { status: "failed", revision: intendedRevision, errorCode: "ROUND_NOT_SUBMITTED" };
+      }
       if (round.revision !== intendedRevision) {
         return recommendationProcessingStatus(round.targetReview) ?? {
           status: "pending",
           revision: round.revision,
         };
       }
+      const alreadyProcessed = recommendationProcessingStatus(round.targetReview);
+      if (alreadyProcessed?.status === "succeeded") return alreadyProcessed;
 
       const mapped = await mapSubmission(
         tx,
@@ -864,21 +848,10 @@ export async function processHostRecommendationIntents(
         round.id,
         normalizeHostOnboardingData(round.draftData),
         false,
+        dependencies,
       );
-      const currentProposalIds = mapped.recommendationReview
-        .flatMap(({ proposalId }) => proposalId ? [proposalId] : []);
-      const staleProposalIds = round.recommendationReview
-        .flatMap(({ proposalId }) => proposalId ? [proposalId] : [])
-        .filter((id) => !currentProposalIds.includes(id));
-      if (staleProposalIds.length > 0) {
-        await tx.delete(creatorPlaceProposalsTable).where(and(
-          eq(creatorPlaceProposalsTable.tenantId, round.tenantId),
-          inArray(creatorPlaceProposalsTable.id, staleProposalIds),
-          eq(creatorPlaceProposalsTable.status, "unresolved"),
-          eq(creatorPlaceProposalsTable.refusalReason, HOST_ONBOARDING_UNRESOLVED_REASON),
-          eq(creatorPlaceProposalsTable.inclusionReason, HOST_ONBOARDING_PROVENANCE),
-        ));
-      }
+      // Legacy queue evidence stays dormant and untouched; only submitted
+      // names are materialized as ordinary items.
       const processing = { status: "succeeded" as const, revision: intendedRevision };
       await tx.update(hostOnboardingRoundsTable).set({
         recommendationReview: mapped.recommendationReview,
@@ -962,6 +935,7 @@ export async function submitHostOnboarding(
   revision: number,
   data: HostOnboardingData,
   expectedCanonicalRevision?: string,
+  dependencies: HostResolutionDependencies = {},
 ): Promise<SubmitResult> {
   const result = await escapeHostDbContext(() => db.transaction(async (tx) => {
     const [round] = await tx
@@ -1054,6 +1028,7 @@ export async function submitHostOnboarding(
     const recommendationProcessing = await processHostRecommendationIntents(
       result.id,
       revision + 1,
+      dependencies,
     );
     await dispatchHostOnboardingNotification(result.id);
     return { ...result, recommendationProcessing };

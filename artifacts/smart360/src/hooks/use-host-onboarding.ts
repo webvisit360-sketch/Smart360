@@ -548,14 +548,14 @@ export interface OwnerTargetReview {
 }
 export interface OwnerOnboardingRound extends Omit<HostOnboardingResponse, "tenantId" | "categories"> {
   targetReview: OwnerTargetReview[];
-  recommendations: Array<{ categoryKey: string; name: string; proposalId: string | null }>;
+  recommendations: Array<{ categoryKey: string; name: string; itemId: string | null; existingArchived?: boolean; materializationStatus: "created" | "created_without_coordinates" | "matched_existing" | null }>;
   customCategories: Array<{
     id: string;
     name: string;
     hostCreated: true;
     provenance: string;
     categoryId: string | null;
-    entries: Array<{ id: string; name: string; proposalId: string | null }>;
+    entries: Array<{ id: string; name: string; itemId: string | null; existingArchived?: boolean; materializationStatus: "created" | "created_without_coordinates" | "matched_existing" | null }>;
   }>;
   events: Array<{ id: string; name: string; date: string; time: string; status: "pending" }>;
   notification: {

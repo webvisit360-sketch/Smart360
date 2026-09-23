@@ -175,6 +175,11 @@ test("actor gate classifies all onboarding routes without tenant identity from b
   assert.equal(categoryCreate?.binding.kind, "host-self");
   assert.equal(ownerRoutes.length, 4);
   assert.ok(ownerRoutes.every((route) => route.binding.kind === "owner-only"));
+  const pin = ADMIN_ROUTE_REGISTRY.find((route) =>
+    route.method === "post" && route.path === "/admin/items/:id/coordinates"
+  );
+  assert.equal(pin?.binding.kind, "owner-only",
+    "only the operator may pin a submitted host item");
 });
 
 test("signed raw upload key can never be the immutable sanitized key", () => {

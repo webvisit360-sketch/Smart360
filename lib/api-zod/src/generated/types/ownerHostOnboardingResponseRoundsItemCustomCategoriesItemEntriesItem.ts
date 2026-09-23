@@ -5,10 +5,18 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus } from './ownerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus';
 
 export type OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItem = {
   id: string;
   name: string;
   /** @nullable */
   proposalId: string | null;
+  /** @nullable */
+  itemId?: string | null;
+  /** @nullable */
+  materializationStatus?: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus;
+  /** Matched identity belongs to an archived item */
+  existingArchived?: boolean;
+  provenance?: string;
 };

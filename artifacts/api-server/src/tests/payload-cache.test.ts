@@ -123,6 +123,7 @@ test("makeAdminMutationInvalidator clears caches exactly on successful admin mut
 
   // Successful admin mutations invalidate — POST/PATCH/PUT/DELETE alike.
   assert.equal(run("POST", "/admin/items/abc/media", 200), 1);
+  assert.equal(run("POST", "/admin/items/abc/coordinates", 200), 1);
   assert.equal(run("PATCH", "/admin/sections/abc", 200), 1);
   assert.equal(run("DELETE", "/admin/media/abc", 204), 1);
   assert.equal(run("POST", "/admin/tenants/abc/hero/upload", 201), 1);
@@ -134,6 +135,7 @@ test("makeAdminMutationInvalidator clears caches exactly on successful admin mut
 
   // Failed admin mutations must NOT invalidate (nothing changed).
   assert.equal(run("POST", "/admin/items/abc/media", 401), 0);
+  assert.equal(run("POST", "/admin/items/abc/coordinates", 409), 0);
   assert.equal(run("PATCH", "/admin/tenants/abc", 400), 0);
   assert.equal(run("POST", "/admin/tenants/abc/align-skeleton", 409), 0);
 

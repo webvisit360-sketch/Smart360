@@ -24,7 +24,7 @@ export type OwnerHostOnboardingResponseRoundsItem = {
   data?: HostOnboardingData;
   targetReview?: OwnerHostOnboardingResponseRoundsItemTargetReviewItem[];
   recommendations?: OwnerHostOnboardingResponseRoundsItemRecommendationsItem[];
-  /** Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage. */
+  /** Host-created okolica categories with draft item identity and materialization status. */
   customCategories: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem[];
   events?: OwnerHostOnboardingResponseRoundsItemEventsItem[];
   photos?: HostOnboardingPhoto[];

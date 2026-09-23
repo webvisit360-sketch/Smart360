@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
@@ -9,6 +9,7 @@ import {
   creatorVerificationAttemptsTable,
   creatorVerificationCandidatesTable,
   db,
+  hostOnboardingRoundsTable,
   itemDistanceProposalsTable,
   itemsTable,
   sectionsTable,
@@ -237,7 +238,7 @@ function straightDistanceM(a: { latitude: number; longitude: number }, b: { lati
 }
 
 type PlaceIdentity = { name: string; osmType: string | null; osmId: number | null; latitude: number | null; longitude: number | null };
-type DuplicateRow = PlaceIdentity & { match: PlaceDuplicateMatch };
+type DuplicateRow = PlaceIdentity & { match: PlaceDuplicateMatch; itemId?: string };
 
 /** Names alone never prove place identity, even for a legacy item without
  * coordinates. An uncertain record must not hard-block creation. */
@@ -285,8 +286,8 @@ export async function adminPlaceDuplicateRows(tenantId: string, client: typeof d
     categoryDeleted: categoriesTable.deletedAt, sectionVisible: sectionsTable.isVisible,
     itemVisible: itemsTable.isVisible, itemDeleted: itemsTable.deletedAt,
     entityKey: creatorCanonicalPlacesTable.entityKey,
-    latitude: creatorPlaceMaterializationsTable.latitude,
-    longitude: creatorPlaceMaterializationsTable.longitude,
+    latitude: sql<number | null>`coalesce(${creatorPlaceMaterializationsTable.latitude}, ${itemDistanceProposalsTable.latitude})`,
+    longitude: sql<number | null>`coalesce(${creatorPlaceMaterializationsTable.longitude}, ${itemDistanceProposalsTable.longitude})`,
   }).from(itemsTable)
     .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
@@ -294,11 +295,15 @@ export async function adminPlaceDuplicateRows(tenantId: string, client: typeof d
     .leftJoin(creatorPlaceMaterializationsTable, and(
       eq(creatorPlaceMaterializationsTable.itemId, itemsTable.id),
       eq(creatorPlaceMaterializationsTable.isActive, true)))
+    .leftJoin(itemDistanceProposalsTable, and(
+      eq(itemDistanceProposalsTable.itemId, itemsTable.id),
+      eq(itemDistanceProposalsTable.status, "approved")))
     .where(eq(sectionsTable.tenantId, tenantId));
   return [
     ...items.filter(row => row.name).map(row => {
       const osm = row.entityKey?.match(/^osm:(node|way|relation):(\d+)$/);
       return {
+        itemId: row.id,
         name: row.name!, osmType: osm?.[1] ?? null, osmId: osm ? Number(osm[2]) : null,
         latitude: row.latitude, longitude: row.longitude,
         match: {
@@ -340,7 +345,8 @@ export async function searchAdminPlaces(categoryId: string, query: string) {
   const candidates: AdminPlaceSearchCandidateBase[] = rows.flatMap((row) => {
     const place = parsedPlace(row);
     if (!place) return [];
-    const duplicateMatch = findAdminPlaceDuplicate(place, duplicates);
+    const match = findAdminPlaceDuplicate(place, duplicates);
+    const duplicateMatch = match?.kind === "pending" ? null : match;
     const duplicate = Boolean(duplicateMatch);
     return [{
       ...place,
@@ -376,7 +382,7 @@ export async function createAdminPlace(input: {
   selection:
     | { mode: "nominatim"; osmType: string; osmId: number }
     | { mode: "manual"; name: string; locationText: string; latitude: number; longitude: number };
-}) {
+}, dependencies: { route?: typeof computeRoadRoute } = {}) {
   const ctx = await context(input.categoryId);
   const place = input.selection.mode === "nominatim"
     ? await verifiedOsm(input.selection.osmType, input.selection.osmId)
@@ -390,8 +396,8 @@ export async function createAdminPlace(input: {
     throw new CreatorBulkApprovalError("Ime, opis lokacije in veljavna točka so obvezni.");
   }
   const existing = findAdminPlaceDuplicate(place, await adminPlaceDuplicateRows(ctx.tenantId));
-  if (existing) throw new AdminPlaceConflictError(existing);
-  const route = await computeRoadRoute(ctx, place as { latitude: number; longitude: number });
+  if (existing && existing.kind !== "pending") throw new AdminPlaceConflictError(existing);
+  const route = await (dependencies.route ?? computeRoadRoute)(ctx, place as { latitude: number; longitude: number });
   if (!route) throw new CreatorBulkApprovalError("Cestne razdalje ni bilo mogoče izračunati.");
   const roadDistanceM = Math.round(route.distanceMeters);
   const durationS = Math.round(route.durationMinutes * 60);
@@ -406,7 +412,7 @@ export async function createAdminPlace(input: {
   const result = await db.transaction(async (tx) => {
     await lockCreatorPlaceIdentity(tx, ctx.tenantId, entityKey, normalizedName);
     const lockedMatch = findAdminPlaceDuplicate(place, await adminPlaceDuplicateRows(ctx.tenantId, tx as typeof db));
-    if (lockedMatch) throw new AdminPlaceConflictError(lockedMatch);
+    if (lockedMatch && lockedMatch.kind !== "pending") throw new AdminPlaceConflictError(lockedMatch);
     const now = new Date();
     const [run] = await tx.insert(creatorRunsTable).values({
       tenantId: ctx.tenantId, status: "completed",
@@ -434,6 +440,23 @@ export async function createAdminPlace(input: {
       roadDistanceM, travelDurationS: durationS,
       range: route.durationMinutes <= 20 ? "near" : "excursion",
     }).returning();
+    // Pending evidence is dormant and cannot veto an operator add. Resolve
+    // matching hints silently and atomically with the new materialization.
+    const dormant = await tx.select().from(creatorPlaceProposalsTable)
+      .where(and(eq(creatorPlaceProposalsTable.tenantId, ctx.tenantId),
+        eq(creatorPlaceProposalsTable.status, "pending")));
+    for (const hint of dormant) {
+      const sameIdentity = sameAdminPlace(place, { ...hint, name: hint.proposedName });
+      const sameNamedCategory = hint.categoryId === input.categoryId &&
+        normalizeCreatorProposalName(hint.proposedName) === normalizedName &&
+        hint.osmId === null && hint.latitude === null && hint.longitude === null;
+      if (!sameIdentity && !sameNamedCategory) continue;
+      await tx.update(creatorPlaceProposalsTable).set({
+        status: "superseded", supersededBy: proposal.id,
+        refusalReason: "Usklajeno z vnosom operaterja prek Dodaj kraj",
+      }).where(and(eq(creatorPlaceProposalsTable.id, hint.id),
+        eq(creatorPlaceProposalsTable.status, "pending")));
+    }
     await assertNoLiveCreatorPlaceDuplicate(tx, {
       tenantId: ctx.tenantId,
       entityKey,
@@ -474,6 +497,87 @@ export async function createAdminPlace(input: {
   return result;
 }
 
+export async function pinHostDraftItem(input: {
+  itemId: string; latitude: number; longitude: number; locationText: string;
+}, dependencies: { route?: typeof computeRoadRoute } = {}) {
+  const [row] = await db.select({
+    id: itemsTable.id, name: itemsTable.title, tenantId: sectionsTable.tenantId,
+    originLatitude: tenantsTable.latitude, originLongitude: tenantsTable.longitude,
+  }).from(itemsTable)
+    .innerJoin(categoriesTable, eq(categoriesTable.id, itemsTable.categoryId))
+    .innerJoin(sectionsTable, eq(sectionsTable.id, categoriesTable.sectionId))
+    .innerJoin(tenantsTable, eq(tenantsTable.id, sectionsTable.tenantId))
+    .where(and(eq(itemsTable.id, input.itemId), isNull(itemsTable.deletedAt)))
+    .limit(1);
+  if (!row || !row.name) throw new ItemDistanceError("Vnos ni najden.", "not-found");
+  if (row.originLatitude === null || row.originLongitude === null) {
+    throw new ItemDistanceError("Namestitev nima potrjenega izhodišča.", "unprocessable");
+  }
+  const route = await (dependencies.route ?? computeRoadRoute)(
+    { latitude: row.originLatitude, longitude: row.originLongitude }, input);
+  if (!route) throw new ItemDistanceError("Cestne razdalje ni bilo mogoče izračunati.", "unprocessable");
+  const entityKey = `coordinates:${input.latitude.toFixed(5)}:${input.longitude.toFixed(5)}`;
+  const normalizedName = normalizeCreatorProposalName(row.name);
+  return db.transaction(async tx => {
+    await lockCreatorPlaceIdentity(tx, row.tenantId, entityKey, normalizedName);
+    const [locked] = await tx.select().from(itemsTable)
+      .where(and(eq(itemsTable.id, row.id), isNull(itemsTable.deletedAt)))
+      .for("update").limit(1);
+    if (!locked || locked.title !== row.name) {
+      throw new ItemDistanceError("Vnos se je med določanjem točke spremenil.", "conflict");
+    }
+    const rounds = await tx.select().from(hostOnboardingRoundsTable)
+      .where(and(eq(hostOnboardingRoundsTable.tenantId, row.tenantId),
+        eq(hostOnboardingRoundsTable.status, "submitted")));
+    const associated = rounds.filter(round =>
+      round.recommendationReview.some(entry => entry.itemId === row.id &&
+        entry.materializationStatus !== "matched_existing"));
+    if (!associated.length) {
+      throw new ItemDistanceError("Točko je mogoče določiti samo za osnutek, ki ga je poslal gostitelj.", "conflict");
+    }
+    const [alreadyPinned] = await tx.select().from(itemDistanceProposalsTable)
+      .where(and(eq(itemDistanceProposalsTable.itemId, row.id),
+        eq(itemDistanceProposalsTable.status, "approved"))).limit(1);
+    if (alreadyPinned) throw new ItemDistanceError("Vnos že ima potrjeno točko.", "conflict");
+    const match = findAdminPlaceDuplicate({
+      name: row.name!, osmType: null, osmId: null,
+      latitude: input.latitude, longitude: input.longitude,
+    }, (await adminPlaceDuplicateRows(row.tenantId, tx as typeof db))
+      .filter(candidate => candidate.match.id !== row.id));
+    if (match && match.kind !== "pending") throw new AdminPlaceConflictError(match);
+    await tx.insert(creatorCanonicalPlacesTable).values({
+      tenantId: row.tenantId, entityKey, itemId: row.id,
+    });
+    await tx.insert(itemDistanceProposalsTable).values({
+      tenantId: row.tenantId, itemId: row.id, status: "approved",
+      source: "vnesel gostitelj prek obrazca; točko določil operater",
+      confidence: "high", latitude: input.latitude, longitude: input.longitude,
+      distanceMeters: Math.round(route.distanceMeters),
+      durationMinutes: route.durationMinutes,
+      resolvedAddress: input.locationText.trim(),
+      geocodeQuery: row.name, inputFingerprint: entityKey,
+    });
+    await tx.update(itemsTable).set({
+      mapQuery: input.locationText.trim(),
+      distanceMeters: Math.round(route.distanceMeters),
+      duration: `${Math.round(route.durationMinutes)} min`,
+    }).where(eq(itemsTable.id, row.id));
+    for (const round of associated) {
+      await tx.update(hostOnboardingRoundsTable).set({
+        recommendationReview: round.recommendationReview.map(entry =>
+          entry.itemId === row.id
+            ? { ...entry, materializationStatus: "created" as const }
+            : entry),
+      }).where(eq(hostOnboardingRoundsTable.id, round.id));
+    }
+    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, row.tenantId));
+    return { itemId: row.id, latitude: input.latitude, longitude: input.longitude,
+      roadDistanceM: Math.round(route.distanceMeters),
+      travelDurationS: Math.round(route.durationMinutes * 60) };
+  });
+}
+
 export async function getItemCreatorStatus(itemId: string) {
   const [item] = await db.select({ distanceMeters: itemsTable.distanceMeters })
     .from(itemsTable)
@@ -496,13 +600,23 @@ export async function getItemCreatorStatus(itemId: string) {
       eq(creatorPlaceMaterializationsTable.isActive, true),
     ))
     .limit(1);
+  const [hostCoordinates] = row ? [] : await db.select({
+    latitude: itemDistanceProposalsTable.latitude,
+    longitude: itemDistanceProposalsTable.longitude,
+    roadDistanceM: itemDistanceProposalsTable.distanceMeters,
+    durationMinutes: itemDistanceProposalsTable.durationMinutes,
+  }).from(itemDistanceProposalsTable)
+    .where(and(eq(itemDistanceProposalsTable.itemId, itemId),
+      eq(itemDistanceProposalsTable.status, "approved")))
+    .limit(1);
   return {
     activeMaterialization: Boolean(row),
-    latitude: row?.latitude ?? null,
-    longitude: row?.longitude ?? null,
+    latitude: row?.latitude ?? hostCoordinates?.latitude ?? null,
+    longitude: row?.longitude ?? hostCoordinates?.longitude ?? null,
     distanceMeters: item.distanceMeters,
-    roadDistanceM: row?.roadDistanceM ?? null,
-    travelDurationS: row?.travelDurationS ?? null,
+    roadDistanceM: row?.roadDistanceM ?? hostCoordinates?.roadDistanceM ?? null,
+    travelDurationS: row?.travelDurationS ??
+      (hostCoordinates?.durationMinutes == null ? null : Math.round(hostCoordinates.durationMinutes * 60)),
     range: row?.range ?? null,
   };
 }

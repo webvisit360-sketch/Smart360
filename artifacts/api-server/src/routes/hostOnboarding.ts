@@ -1250,6 +1250,19 @@ router.get(
                     review.customCategoryId === category.id &&
                     review.customEntryId === entry.id
                   )?.proposalId ?? null,
+                  itemId: round.recommendationReview.find((review) =>
+                    review.hostCreated && review.customCategoryId === category.id &&
+                    review.customEntryId === entry.id
+                  )?.itemId ?? null,
+                  materializationStatus: round.recommendationReview.find((review) =>
+                    review.hostCreated && review.customCategoryId === category.id &&
+                    review.customEntryId === entry.id
+                  )?.materializationStatus ?? null,
+                  existingArchived: round.recommendationReview.find((review) =>
+                    review.hostCreated && review.customCategoryId === category.id &&
+                    review.customEntryId === entry.id
+                  )?.existingArchived ?? false,
+                  provenance: HOST_ONBOARDING_PROVENANCE,
                 })),
             };
           }),

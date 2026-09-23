@@ -53,7 +53,7 @@ import {
 } from "@/lib/tenant-publication-flow";
 import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
 import { adminPlaceTargetTab } from "@/lib/manual-pin-feedback";
-import { SkeletonAlignmentAction } from "@/components/admin/skeleton-alignment-action";
+import { SkeletonAlignmentAction, DistanceBackfillAction } from "@/components/admin/skeleton-alignment-action";
 import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-editor";
 
 const NAV_DEFAULTS = {
@@ -879,7 +879,6 @@ export default function AdminTenantEdit() {
             <TabsContent value="kreator">
               {isOwner ? (
                 <>
-                  <SkeletonAlignmentAction tenantId={tenant.id} />
                   <KreatorOriginConfirmation
                     tenant={tenant}
                     onConfirmed={() => {
@@ -1574,6 +1573,10 @@ export default function AdminTenantEdit() {
         <TabsContent value="content">
           <section className="bg-white">
             <h2 className="mb-4 text-lg font-extrabold">Struktura vsebine</h2>
+            {isOwner && <>
+              <SkeletonAlignmentAction tenantId={tenant.id} />
+              <DistanceBackfillAction tenantId={tenant.id} />
+            </>}
             <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} />
           </section>
         </TabsContent>

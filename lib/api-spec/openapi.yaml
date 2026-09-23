@@ -2117,6 +2117,42 @@ paths:
         "404": { description: Active materialization or tenant origin not found }
         "409": { description: Active materialization or tenant origin changed during routing; retry }
         "422": { description: OSRM route could not be computed }
+  /admin/items/{id}/coordinates:
+    post:
+      operationId: pinHostDraftItem
+      tags: [items]
+      summary: Set an operator-confirmed pin and OSRM distance on a coordinate-less host draft, without publishing
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [latitude, longitude, locationText]
+              properties:
+                latitude: { type: number, minimum: -90, maximum: 90 }
+                longitude: { type: number, minimum: -180, maximum: 180 }
+                locationText: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        "200":
+          description: Operator pin saved in the unpublished draft
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itemId, latitude, longitude, roadDistanceM, travelDurationS]
+                properties:
+                  itemId: { type: string }
+                  latitude: { type: number }
+                  longitude: { type: number }
+                  roadDistanceM: { type: number }
+                  travelDurationS: { type: number }
+        "404": { description: Item not found }
+        "409": { description: Duplicate pin or item changed }
+        "422": { description: OSRM route could not be computed }
   /admin/items/{id}/creator/photos/discover:
     post:
       operationId: discoverItemCreatorPhotos
@@ -3320,9 +3356,13 @@ components:
                     categoryKey: { type: string }
                     name: { type: string }
                     proposalId: { type: [string, "null"] }
+                    itemId: { type: [string, "null"] }
+                    materializationStatus: { type: [string, "null"], enum: [created, created_without_coordinates, matched_existing, null] }
+                    existingArchived: { type: boolean, description: Matched identity belongs to an archived item; do not open it as an active draft }
+                    provenance: { type: string }
               customCategories:
                 type: array
-                description: Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage.
+                description: Host-created okolica categories with draft item identity and materialization status.
                 items:
                   type: object
                   additionalProperties: false
@@ -3343,6 +3383,10 @@ components:
                           id: { type: string }
                           name: { type: string }
                           proposalId: { type: [string, "null"] }
+                          itemId: { type: [string, "null"] }
+                          materializationStatus: { type: [string, "null"], enum: [created, created_without_coordinates, matched_existing, null] }
+                          existingArchived: { type: boolean, description: Matched identity belongs to an archived item }
+                          provenance: { type: string }
               events:
                 type: array
                 items:

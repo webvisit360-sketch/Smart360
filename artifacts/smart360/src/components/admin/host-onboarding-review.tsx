@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { AlertCircle, Image as ImageIcon, Loader2, UserRoundCog } from "lucide-react";
-import { getListCreatorProposalsQueryKey, useListCreatorProposals } from "@workspace/api-client-react";
 import {
   OwnerOnboardingRound,
   useGetOwnerOnboarding,
@@ -11,32 +10,33 @@ import {
 import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminButton as Button } from "@/components/ui/button";
 
-const creatorStatusLabels = {
-  pending: "Čaka na pregled",
-  unresolved: "Lokacija ni razrešena",
-  approved: "Potrjeno",
-  rejected: "Zavrnjeno",
-  superseded: "Nadomeščeno",
+export const hostDraftStatusLabels = {
+  created: "Ustvarjen osnutek",
+  created_without_coordinates: "Ustvarjen osnutek brez koordinat",
+  matched_existing: "Povezano z obstoječim vnosom",
 };
 
-function RoundReview({
+type HostDraft = { itemId: string | null; existingArchived?: boolean; materializationStatus: keyof typeof hostDraftStatusLabels | null };
+
+export function hostDraftEntryTarget(entry: HostDraft): "placeItem" | "placeArchived" {
+  return entry.existingArchived ? "placeArchived" : "placeItem";
+}
+
+export function HostDraftStatus({ entry, onOpenEntry }: { entry: HostDraft; onOpenEntry: (entry: HostDraft) => void }) {
+  if (!entry.materializationStatus) return <span className="text-muted-foreground">Obdelava vnosa še poteka</span>;
+  const label = entry.existingArchived ? "Povezano z arhiviranim vnosom" : hostDraftStatusLabels[entry.materializationStatus];
+  return entry.itemId
+    ? <button type="button" className="font-semibold text-primary underline underline-offset-2" onClick={() => onOpenEntry(entry)}>{label} · {entry.existingArchived ? "Odpri arhiv" : "Odpri vnos"}</button>
+    : <span className="text-muted-foreground">{label}</span>;
+}
+
+export function RoundReview({
   round,
-  creatorStatuses,
-  creatorQueuePending,
-  creatorQueueError,
+  onOpenEntry,
 }: {
   round: OwnerOnboardingRound;
-  creatorStatuses: Map<string, keyof typeof creatorStatusLabels>;
-  creatorQueuePending: boolean;
-  creatorQueueError: boolean;
+  onOpenEntry: (entry: HostDraft) => void;
 }) {
-  const creatorStatus = (proposalId: string | null) => {
-    if (!proposalId) return "Ni v Creator vrsti";
-    if (creatorQueuePending) return "Preverjanje stanja …";
-    if (creatorQueueError) return "Stanja ni bilo mogoče naložiti";
-    const status = creatorStatuses.get(proposalId);
-    return status ? creatorStatusLabels[status] : "Stanje ni na voljo";
-  };
 
   return (
     <div className="space-y-6">
@@ -54,13 +54,13 @@ function RoundReview({
       </div>
 
       <section>
-        <h3 className="font-semibold border-b pb-2 mb-3">Predlogi za okolico</h3>
+        <h3 className="font-semibold border-b pb-2 mb-3">Kraji v okolici</h3>
         {round.recommendations.length ? <ul className="space-y-2">{round.recommendations.map((item, index) => (
           <li key={`${item.categoryKey}-${index}`} className="rounded-lg bg-muted/50 p-3 text-sm flex flex-wrap justify-between gap-x-3 gap-y-1">
             <span className="min-w-0 break-words"><span className="text-muted-foreground">{item.categoryKey}:</span> <b>{item.name}</b></span>
-            <span className="text-muted-foreground">{creatorStatus(item.proposalId)}</span>
+            <HostDraftStatus entry={item} onOpenEntry={onOpenEntry} />
           </li>
-        ))}</ul> : <p className="text-sm text-muted-foreground">Ni predlogov za okolico.</p>}
+        ))}</ul> : <p className="text-sm text-muted-foreground">Gostitelj ni dodal krajev v okolici.</p>}
       </section>
 
       <section>
@@ -77,7 +77,7 @@ function RoundReview({
                 </div>
                 <p className="mt-1 break-words text-xs text-muted-foreground">
                   Izvor: {category.provenance === "host_onboarding" ? "Obrazec gostitelja" : category.provenance}
-                  {category.categoryId ? <> · Kategorija ustvarjena: <span className="break-all">{category.categoryId}</span></> : " · Čaka na obravnavo operaterja"}
+                  {category.categoryId ? <> · Kategorija ustvarjena: <span className="break-all">{category.categoryId}</span></> : " · Kategorija še ni ustvarjena"}
                 </p>
                 {category.entries.length ? (
                   <ul className="mt-3 space-y-2">
@@ -85,7 +85,7 @@ function RoundReview({
                       <li key={entry.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm">
                         <b className="min-w-0 break-words">{entry.name}</b>
                         <span className="text-muted-foreground">
-                          {creatorStatus(entry.proposalId)}
+                           <HostDraftStatus entry={entry} onOpenEntry={onOpenEntry} />
                         </span>
                       </li>
                     ))}
@@ -126,20 +126,18 @@ function RoundReview({
 
 export function HostOnboardingReview({ tenantId }: { tenantId: string }) {
   const query = useGetOwnerOnboarding(tenantId, { enabled: !!tenantId });
-  const creatorQueue = useListCreatorProposals(tenantId, {
-    query: {
-      queryKey: getListCreatorProposalsQueryKey(tenantId),
-      enabled: !!tenantId,
-      refetchOnMount: true,
-    },
-  });
   const openMutation = useOpenOnboarding(tenantId);
   const reopenMutation = useReopenOnboarding(tenantId);
   const rounds = useMemo(() => [...(query.data?.rounds || [])].sort((a, b) => b.round - a.round), [query.data]);
-  const creatorStatuses = useMemo(
-    () => new Map((creatorQueue.data || []).map((proposal) => [proposal.id, proposal.status])),
-    [creatorQueue.data],
-  );
+  const openEntry = (entry: HostDraft) => {
+    if (!entry.itemId) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("placeItem");
+    url.searchParams.delete("placeArchived");
+    url.searchParams.set(hostDraftEntryTarget(entry), entry.itemId);
+    window.history.replaceState(window.history.state, "", url);
+    window.dispatchEvent(new CustomEvent("admin-place-navigate", { detail: { tab: "content" } }));
+  };
   const [selectedRound, setSelectedRound] = useState<number>();
   const activeRound = rounds.find((item) => item.round === selectedRound) || rounds[0];
 
@@ -164,9 +162,7 @@ export function HostOnboardingReview({ tenantId }: { tenantId: string }) {
     <CardContent>
       <RoundReview
         round={activeRound}
-        creatorStatuses={creatorStatuses}
-        creatorQueuePending={creatorQueue.isLoading}
-        creatorQueueError={creatorQueue.isError}
+        onOpenEntry={openEntry}
       />
     </CardContent>
   </Card>;

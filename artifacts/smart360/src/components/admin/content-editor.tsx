@@ -64,7 +64,6 @@ import {
 import { sectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
 import type { CategoryInputExploreGroup } from "@workspace/api-client-react";
 import { PinPlacementMap } from "@/components/admin/kreator-proposal-queue";
-import { ItemCreatorPhotoProposals } from "@/components/admin/kreator-photo-proposals";
 import {
   buildItemLanguageDrafts,
   changedItemTranslationWrites,
@@ -76,7 +75,7 @@ import {
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { adminPlaceTargetTab, mutationErrorMessage, validateManualPlace, type ManualPlaceErrors, type ManualPlaceField } from "@/lib/manual-pin-feedback";
 import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
-import { getHostOnboardingQueryKey } from "@/hooks/use-host-onboarding";
+import { getHostOnboardingQueryKey, getOwnerOnboardingQueryKey } from "@/hooks/use-host-onboarding";
 import { suggestCategoryIcon } from "@workspace/category-icons";
 import { CategoryIcon } from "@/components/category-icon";
 import { CategoryIconPicker } from "@/components/admin/category-icon-picker";
@@ -173,7 +172,7 @@ function openDuplicateMatch(match: PlaceDuplicateMatch) {
   url.searchParams.delete("placeProposal");
   url.searchParams.delete("placeArchived");
   url.searchParams.set(
-    match.kind === "pending" ? "placeProposal" : match.kind === "archived" ? "placeArchived" : "placeItem",
+    match.kind === "archived" ? "placeArchived" : "placeItem",
     match.id,
   );
   window.history.replaceState(window.history.state, "", url);
@@ -186,12 +185,10 @@ function DuplicatePlaceNotice({ match, onOpen }: { match: PlaceDuplicateMatch; o
   return (
     <div role="alert" className="rounded-[10px] border border-[#DD9A2B] bg-[#DD9A2B]/10 p-3 text-sm text-[#68460A]">
       <span>
-        {match.kind === "pending"
-          ? "Ta kraj čaka v Kreatorjevi vrsti."
-          : `Ta kraj je že v vodniku: ${match.category ?? "Brez kategorije"} → ${match.name}${match.hidden ? " (skrit)" : ""}${match.kind === "archived" ? " (v arhivu)" : ""}`}
+        {`Ta kraj je že v vodniku: ${match.category ?? "Brez kategorije"} → ${match.name}${match.hidden ? " (skrit)" : ""}${match.kind === "archived" ? " (v arhivu)" : ""}`}
       </span>{" "}
       <button type="button" onClick={onOpen} className="font-bold underline underline-offset-2">
-        {match.kind === "pending" ? "Odpri predlog" : match.kind === "archived" ? "Odpri arhiv" : "Odpri vnos"}
+        {match.kind === "archived" ? "Odpri arhiv" : "Odpri vnos"}
       </button>
     </div>
   );
@@ -962,7 +959,6 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
       refetchOnWindowFocus: true,
     },
   });
-  const { data: ownerSession } = useGetAdminSession();
 
   // Deferred media (new item): the grid queues files locally; Shrani creates
   // the item, then uploads them to it. If the dialog stays open after a
@@ -983,6 +979,12 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
   const [distanceMeters, setDistanceMeters] = useState(
     item?.distanceMeters != null ? String(item.distanceMeters) : "",
   );
+  const [pinLatitude, setPinLatitude] = useState("");
+  const [pinLongitude, setPinLongitude] = useState("");
+  const [pinLocation, setPinLocation] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [pinDuplicate, setPinDuplicate] = useState<PlaceDuplicateMatch | null>(null);
   const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
   // Barvna ploščica: prazno = fotografija, kot doslej (barvne-ploscice.md).
   const [tint, setTint] = useState(item?.tint ?? "");
@@ -1129,7 +1131,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
       return;
     }
     if (mode === "edit" && !creatorStatusReady) {
-      alert("Stanja Creator materializacije ni bilo mogoče preveriti. Razdalje ni varno shraniti.");
+      alert("Stanja koordinat ni bilo mogoče preveriti. Razdalje ni varno shraniti.");
       return;
     }
     const machineOwnedDistance = creatorStatus.data?.activeMaterialization === true;
@@ -1263,6 +1265,51 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
       alert("Brisanje ni uspelo.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const savePin = async () => {
+    const errors = validateManualPlace({
+      manualName: item?.title ?? "",
+      locationText: pinLocation,
+      latitude: pinLatitude,
+      longitude: pinLongitude,
+    });
+    if (errors.locationText || errors.latitude || errors.longitude) {
+      setPinError(errors.locationText || errors.latitude || errors.longitude || null);
+      return;
+    }
+    setPinSaving(true);
+    setPinError(null);
+    setPinDuplicate(null);
+    try {
+      const response = await fetch(`/api/admin/items/${encodeURIComponent(itemId)}/coordinates`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          latitude: Number(pinLatitude),
+          longitude: Number(pinLongitude),
+          locationText: pinLocation.trim(),
+        }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as { error?: string; duplicateMatch?: PlaceDuplicateMatch };
+        if (body.duplicateMatch?.kind === "item" || body.duplicateMatch?.kind === "archived") setPinDuplicate(body.duplicateMatch);
+        throw new Error(body.error || "Lokacije ni bilo mogoče shraniti.");
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getGetItemCreatorStatusQueryKey(itemId) }),
+        refreshTenantAfterAdminWrite(queryClient, tenantId),
+        queryClient.invalidateQueries({ queryKey: getOwnerOnboardingQueryKey(tenantId) }),
+      ]);
+      setPinLatitude("");
+      setPinLongitude("");
+      setPinLocation("");
+    } catch (error) {
+      setPinError(error instanceof Error ? error.message : "Lokacije ni bilo mogoče shraniti.");
+    } finally {
+      setPinSaving(false);
     }
   };
 
@@ -1440,9 +1487,6 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           onPendingChange={setPendingCount}
           frameRatio={frame === "tall" ? "4 / 5" : frame === "square" ? "1 / 1" : "5 / 3"}
         />
-        {mode === "edit" && ownerSession?.authenticated && creatorStatus.data?.activeMaterialization && (
-          <ItemCreatorPhotoProposals tenantId={tenantId} itemId={item.id} />
-        )}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
@@ -1488,7 +1532,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
       <div className="space-y-1">
         <Label>
           {!creatorStatusReady
-            ? "Razdalja (preverjanje Creator materializacije)"
+            ? "Razdalja (preverjanje koordinat)"
             : creatorStatus.data?.activeMaterialization
             ? "Razdalja (strojno izračunana)"
             : "Razdalja (metri) — legacy / brez shranjenih koordinat"}
@@ -1541,6 +1585,25 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           <p role="alert" className="text-xs text-destructive">Preračun razdalje ni uspel.</p>
         )}
       </div>
+      {mode === "edit" && (sectionKey === "explore" || sectionKey === "services") && creatorStatusReady && creatorStatus.data?.latitude == null && creatorStatus.data?.longitude == null && (
+        <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/40 p-4" data-testid="entry-editor-pin">
+          <h4 className="font-semibold">Nastavi lokacijo kraja</h4>
+          <p className="text-sm text-muted-foreground">Nastavite pin za vnos brez koordinat. Razdalja se izračuna po cesti; vnos se ne objavi samodejno.</p>
+          <PinPlacementMap latitude={pinLatitude} longitude={pinLongitude} onPlace={(lat, lng) => {
+            setPinLatitude(String(lat));
+            setPinLongitude(String(lng));
+            setPinError(null);
+          }} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><Label htmlFor="entry-pin-latitude">Geografska širina *</Label><Input id="entry-pin-latitude" value={pinLatitude} onChange={(event) => setPinLatitude(event.target.value)} inputMode="decimal" /></div>
+            <div><Label htmlFor="entry-pin-longitude">Geografska dolžina *</Label><Input id="entry-pin-longitude" value={pinLongitude} onChange={(event) => setPinLongitude(event.target.value)} inputMode="decimal" /></div>
+          </div>
+          <div><Label htmlFor="entry-pin-location">Opis lokacije *</Label><Input id="entry-pin-location" value={pinLocation} onChange={(event) => setPinLocation(event.target.value)} placeholder="npr. Solčava, Slovenija" /></div>
+          {pinError && <p role="alert" className="text-sm text-destructive">{pinError}</p>}
+          {pinDuplicate && <DuplicatePlaceNotice match={pinDuplicate} onOpen={() => openDuplicateMatch(pinDuplicate)} />}
+          <Button type="button" disabled={busy || pinSaving} onClick={() => void savePin()}>{pinSaving ? "Shranjujem …" : "Shrani pin in izračunaj razdaljo"}</Button>
+        </div>
+      )}
       <div className="space-y-1">
         <Label>Oblika fotografij</Label>
         <p className="text-xs text-muted-foreground">
@@ -1812,7 +1875,7 @@ function OkolicaPlaceCreate({
     } catch (error) {
       const data = error && typeof error === "object" && "data" in error ? error.data : null;
       const match = data && typeof data === "object" && "duplicateMatch" in data ? data.duplicateMatch : null;
-      if (match && typeof match === "object" && "id" in match && "kind" in match) {
+      if (match && typeof match === "object" && "id" in match && "kind" in match && match.kind !== "pending") {
         setDuplicateNotice(match as PlaceDuplicateMatch);
       } else {
         setServiceError(mutationErrorMessage(error) || "Kraja ni bilo mogoče dodati. Poskusite znova.");
@@ -1906,7 +1969,7 @@ function OkolicaPlaceCreate({
                         aria-pressed={isSelected}
                         style={{ borderColor: isSelected ? "#157347" : "#E8EBE6", borderWidth: isSelected ? 2 : 1 }}
                         onClick={() => {
-                          if (candidate.duplicateMatch) {
+                          if (candidate.duplicateMatch && candidate.duplicateMatch.kind !== "pending") {
                             setSelected(null);
                             setDuplicateNotice(candidate.duplicateMatch);
                             return;
@@ -1921,7 +1984,7 @@ function OkolicaPlaceCreate({
                          <div className="flex-1 min-w-0 pr-4">
                            <div className="flex items-center gap-2">
                              <span className={`font-bold text-[15px] truncate ${isSelected ? 'text-[#157347]' : 'text-[#1a1a1a]'}`}>{candidate.name}</span>
-                             {candidate.duplicate && <Badge className="bg-[#F4F6F2] text-[#66716A] hover:bg-[#F4F6F2] border-none font-medium">{candidate.duplicateMatch?.kind === "pending" ? "v Kreatorjevi vrsti" : "že v vodniku"}</Badge>}
+                             {candidate.duplicate && candidate.duplicateMatch?.kind !== "pending" && <Badge className="bg-[#F4F6F2] text-[#66716A] hover:bg-[#F4F6F2] border-none font-medium">že v vodniku</Badge>}
                            </div>
                            <span className="block text-[13px] text-[#9AA39D] mt-0.5 whitespace-normal break-words">{candidate.address}</span>
                          </div>

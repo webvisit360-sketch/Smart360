@@ -115,6 +115,9 @@ export type HostOnboardingRecommendationReview = {
   categoryKey: string;
   name: string;
   proposalId: string | null;
+  itemId?: string;
+  materializationStatus?: "created" | "created_without_coordinates" | "matched_existing";
+  existingArchived?: boolean;
   hostCreated?: boolean;
   provenance?: string;
   customCategoryId?: string;

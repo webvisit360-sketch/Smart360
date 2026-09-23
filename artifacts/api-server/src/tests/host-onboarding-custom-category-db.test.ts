@@ -92,7 +92,7 @@ test("real DB: host creates shared-draft custom Stay and Offer categories withou
       rows.map(({ label, icon, layout }) => ({ label, icon, layout })).sort((a, b) => a.label.localeCompare(b.label)),
       [
         { label: "Skupna kuhinja", icon: "lucide:utensils", layout: "products" },
-        { label: "Skupni prostori", icon: "sparkle", layout: "cards" },
+        { label: "Skupni prostori", icon: "lucide:star", layout: "cards" },
       ],
     );
     const translationKeys = await buildKeyList(tenant);
@@ -243,66 +243,12 @@ test("real DB: custom category survives save, uses category tooling, and submits
     assert.equal(customCategories.length, 1);
     assert.equal(customCategories[0]!.label, "Za deževne dni");
 
-    const proposalsBeforeReplay = await db.select()
-      .from(creatorPlaceProposalsTable)
-      .where(and(
-        eq(creatorPlaceProposalsTable.tenantId, tenant.id),
-        eq(creatorPlaceProposalsTable.categoryId, customCategories[0]!.id),
-      ));
-    assert.equal(proposalsBeforeReplay.length, 2);
-    assert.deepEqual(
-      new Set(proposalsBeforeReplay.map(({ proposedName }) => proposedName)),
-      new Set(["Muzej igrač", "Notranje plezanje"]),
-    );
-    assert.ok(proposalsBeforeReplay.every((proposal) =>
-      proposal.status === "unresolved" &&
-      proposal.refusalReason === HOST_ONBOARDING_UNRESOLVED_REASON &&
-      proposal.inclusionReason === HOST_ONBOARDING_PROVENANCE &&
-      proposal.contentReady === false &&
-      proposal.osmId === null &&
-      proposal.latitude === null &&
-      proposal.longitude === null
-    ));
-
-    // The normal Creator review/materialization path validates tenant-local
-    // category IDs directly (not a canonical skeleton enum). Prepare one
-    // disposable proposal as though an operator had resolved and edited it,
-    // then run approval validation only: no item is materialized here.
-    const compatibleProposal = proposalsBeforeReplay[0]!;
-    await db.update(creatorPlaceProposalsTable).set({
-      confirmationMethod: "exact",
-      confirmedQuery: compatibleProposal.proposedName,
-      resolvedName: compatibleProposal.proposedName,
-      resolvedAddress: "Testni naslov 1",
-      osmType: "node",
-      osmId: 987654321,
-      latitude: 46.1,
-      longitude: 14.8,
-      roadDistanceM: 1200,
-      travelDurationS: 300,
-      range: "near",
-      contentReady: true,
-    }).where(eq(creatorPlaceProposalsTable.id, compatibleProposal.id));
-    await db.insert(creatorProposalTranslationsTable).values(
-      ["sl", "en", "de", "it"].map((language) => ({
-        proposalId: compatibleProposal.id,
-        language,
-        name: compatibleProposal.proposedName,
-        description: "Testni opis za preverjanje združljivosti.",
-      })),
-    );
-    await db.transaction(async (tx) => {
-      const [resolved] = await tx.select().from(creatorPlaceProposalsTable)
-        .where(eq(creatorPlaceProposalsTable.id, compatibleProposal.id));
-      assert.ok(resolved);
-      await syncApprovedCreatorPlace(tx, resolved, { validateOnly: true });
-    });
-    assert.equal(
-      (await db.select().from(itemsTable)
-        .where(eq(itemsTable.categoryId, customCategories[0]!.id))).length,
-      0,
-      "validation must not auto-resolve or materialize the host suggestion",
-    );
+    const customItems = await db.select().from(itemsTable)
+      .where(eq(itemsTable.categoryId, customCategories[0]!.id));
+    assert.deepEqual(new Set(customItems.map(row => row.title)),
+      new Set(["Muzej igrač", "Notranje plezanje"]));
+    assert.ok(customReview.every(entry => entry.itemId &&
+      entry.materializationStatus && entry.proposalId === null));
 
     const replay = await submitHostOnboarding(
       tenant.id,
@@ -318,7 +264,7 @@ test("real DB: custom category survives save, uses category tooling, and submits
     assert.equal(
       (await db.select().from(creatorPlaceProposalsTable)
         .where(eq(creatorPlaceProposalsTable.tenantId, tenant.id))).length,
-      2,
+      0,
     );
     assert.equal(
       (await db.select().from(categoriesTable)

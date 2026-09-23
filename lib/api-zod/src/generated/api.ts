@@ -1158,7 +1158,11 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "recommendations": zod.array(zod.object({
   "categoryKey": zod.string().optional(),
   "name": zod.string().optional(),
-  "proposalId": zod.string().nullish()
+  "proposalId": zod.string().nullish(),
+  "itemId": zod.string().nullish(),
+  "materializationStatus": zod.union([zod.literal('created'),zod.literal('created_without_coordinates'),zod.literal('matched_existing'),zod.literal(null)]).nullish(),
+  "existingArchived": zod.boolean().optional().describe('Matched identity belongs to an archived item; do not open it as an active draft'),
+  "provenance": zod.string().optional()
 })).optional(),
   "customCategories": zod.array(zod.object({
   "id": zod.string(),
@@ -1169,9 +1173,13 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "entries": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "proposalId": zod.string().nullable()
+  "proposalId": zod.string().nullable(),
+  "itemId": zod.string().nullish(),
+  "materializationStatus": zod.union([zod.literal('created'),zod.literal('created_without_coordinates'),zod.literal('matched_existing'),zod.literal(null)]).nullish(),
+  "existingArchived": zod.boolean().optional().describe('Matched identity belongs to an archived item'),
+  "provenance": zod.string().optional()
 }))
-})).describe('Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage.'),
+})).describe('Host-created okolica categories with draft item identity and materialization status.'),
   "events": zod.array(zod.object({
   "id": zod.string().optional(),
   "name": zod.string().optional(),
@@ -5053,6 +5061,38 @@ export const RecomputeItemDistanceResponse = zod.object({
   "roadDistanceM": zod.number().min(recomputeItemDistanceResponseRoadDistanceMMin).nullable(),
   "travelDurationS": zod.number().min(recomputeItemDistanceResponseTravelDurationSMin).nullable(),
   "range": zod.union([zod.literal('practical'),zod.literal('near'),zod.literal('excursion'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * @summary Set an operator-confirmed pin and OSRM distance on a coordinate-less host draft, without publishing
+ */
+export const PinHostDraftItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const pinHostDraftItemBodyLatitudeMin = -90;
+export const pinHostDraftItemBodyLatitudeMax = 90;
+
+export const pinHostDraftItemBodyLongitudeMin = -180;
+export const pinHostDraftItemBodyLongitudeMax = 180;
+
+export const pinHostDraftItemBodyLocationTextMax = 2000;
+
+
+
+export const PinHostDraftItemBody = zod.object({
+  "latitude": zod.number().min(pinHostDraftItemBodyLatitudeMin).max(pinHostDraftItemBodyLatitudeMax),
+  "longitude": zod.number().min(pinHostDraftItemBodyLongitudeMin).max(pinHostDraftItemBodyLongitudeMax),
+  "locationText": zod.string().min(1).max(pinHostDraftItemBodyLocationTextMax)
+})
+
+export const PinHostDraftItemResponse = zod.object({
+  "itemId": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "roadDistanceM": zod.number(),
+  "travelDurationS": zod.number()
 })
 
 

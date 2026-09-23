@@ -484,18 +484,56 @@ export type OwnerHostOnboardingResponseRoundsItemTargetReviewItem = {
   suggestionVisible?: boolean;
 };
 
+/**
+ * @nullable
+ */
+export type OwnerHostOnboardingResponseRoundsItemRecommendationsItemMaterializationStatus = typeof OwnerHostOnboardingResponseRoundsItemRecommendationsItemMaterializationStatus[keyof typeof OwnerHostOnboardingResponseRoundsItemRecommendationsItemMaterializationStatus] | null;
+
+
+export const OwnerHostOnboardingResponseRoundsItemRecommendationsItemMaterializationStatus = {
+  created: 'created',
+  created_without_coordinates: 'created_without_coordinates',
+  matched_existing: 'matched_existing',
+} as const;
+
 export type OwnerHostOnboardingResponseRoundsItemRecommendationsItem = {
   categoryKey?: string;
   name?: string;
   /** @nullable */
   proposalId?: string | null;
+  /** @nullable */
+  itemId?: string | null;
+  /** @nullable */
+  materializationStatus?: OwnerHostOnboardingResponseRoundsItemRecommendationsItemMaterializationStatus;
+  /** Matched identity belongs to an archived item; do not open it as an active draft */
+  existingArchived?: boolean;
+  provenance?: string;
 };
+
+/**
+ * @nullable
+ */
+export type OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus = typeof OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus[keyof typeof OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus] | null;
+
+
+export const OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus = {
+  created: 'created',
+  created_without_coordinates: 'created_without_coordinates',
+  matched_existing: 'matched_existing',
+} as const;
 
 export type OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItem = {
   id: string;
   name: string;
   /** @nullable */
   proposalId: string | null;
+  /** @nullable */
+  itemId?: string | null;
+  /** @nullable */
+  materializationStatus?: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItemEntriesItemMaterializationStatus;
+  /** Matched identity belongs to an archived item */
+  existingArchived?: boolean;
+  provenance?: string;
 };
 
 export type OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem = {
@@ -539,7 +577,7 @@ export type OwnerHostOnboardingResponseRoundsItem = {
   data?: HostOnboardingData;
   targetReview?: OwnerHostOnboardingResponseRoundsItemTargetReviewItem[];
   recommendations?: OwnerHostOnboardingResponseRoundsItemRecommendationsItem[];
-  /** Host-created okolica categories, prominently marked with their submitted name-only entries and Creator linkage. */
+  /** Host-created okolica categories with draft item identity and materialization status. */
   customCategories: OwnerHostOnboardingResponseRoundsItemCustomCategoriesItem[];
   events?: OwnerHostOnboardingResponseRoundsItemEventsItem[];
   photos?: HostOnboardingPhoto[];
@@ -3603,6 +3641,32 @@ q: string;
 export type CreateAdminPlace409 = {
   error: string;
   duplicateMatch: AdminPlaceDuplicateMatch;
+};
+
+export type PinHostDraftItemBody = {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  locationText: string;
+};
+
+export type PinHostDraftItem200 = {
+  itemId: string;
+  latitude: number;
+  longitude: number;
+  roadDistanceM: number;
+  travelDurationS: number;
 };
 
 export type GetStorageCleanupPreviewParams = {

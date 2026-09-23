@@ -10,3 +10,4 @@ export type {
   ListTenantTranslationsParams,
   ExportTranslationsParams,
 } from "./generated/types";
+export { PinHostDraftItemBody } from "./generated/api";

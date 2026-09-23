@@ -119,6 +119,8 @@ import type {
   Part5MeliPuCutoverPreflight,
   Part5MeliPuCutoverResult,
   PasskeyList,
+  PinHostDraftItem200,
+  PinHostDraftItemBody,
   PublicEnquiry,
   PublicEnquiryResponse,
   RecoveryBody,
@@ -8629,6 +8631,78 @@ export const useRecomputeItemDistance = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRecomputeItemDistanceMutationOptions(options));
+    }
+
+export const getPinHostDraftItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/coordinates`
+}
+
+/**
+ * @summary Set an operator-confirmed pin and OSRM distance on a coordinate-less host draft, without publishing
+ */
+export const pinHostDraftItem = async (id: string,
+    pinHostDraftItemBody: PinHostDraftItemBody, options?: Parameters<typeof customFetch>[1]): Promise<PinHostDraftItem200> => {
+
+  return customFetch<PinHostDraftItem200>(getPinHostDraftItemUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(pinHostDraftItemBody)
+  }
+);}
+
+
+
+
+
+export const getPinHostDraftItemMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pinHostDraftItem>>, TError,{id: string;data: BodyType<PinHostDraftItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof pinHostDraftItem>>, TError,{id: string;data: BodyType<PinHostDraftItemBody>}, TContext> => {
+
+const mutationKey = ['pinHostDraftItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pinHostDraftItem>>, {id: string;data: BodyType<PinHostDraftItemBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  pinHostDraftItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PinHostDraftItemMutationResult = NonNullable<Awaited<ReturnType<typeof pinHostDraftItem>>>
+    export type PinHostDraftItemMutationBody = BodyType<PinHostDraftItemBody>
+    export type PinHostDraftItemMutationError = ErrorType<void>
+
+    /**
+ * @summary Set an operator-confirmed pin and OSRM distance on a coordinate-less host draft, without publishing
+ */
+export const usePinHostDraftItem = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pinHostDraftItem>>, TError,{id: string;data: BodyType<PinHostDraftItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof pinHostDraftItem>>,
+        TError,
+        {id: string;data: BodyType<PinHostDraftItemBody>},
+        TContext
+      > => {
+      return useMutation(getPinHostDraftItemMutationOptions(options));
     }
 
 export const getDiscoverItemCreatorPhotosUrl = (id: string,) => {
