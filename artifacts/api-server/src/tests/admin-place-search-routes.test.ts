@@ -28,6 +28,7 @@ function candidate(
     straightLineDistanceM: 1_000,
     duplicate: false,
     duplicateLabel: null,
+    duplicateMatch: null,
   };
 }
 

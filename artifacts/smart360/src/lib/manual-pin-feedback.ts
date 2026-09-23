@@ -32,6 +32,14 @@ export function mutationErrorMessage(error: unknown): string | null {
   return null;
 }
 
+/** Keep the tenant editor and browser harness on the same place deep-link tab. */
+export function adminPlaceTargetTab(search: string): "content" | "kreator" | null {
+  const params = new URLSearchParams(search);
+  if (params.has("placeProposal")) return "kreator";
+  if (params.has("placeItem") || params.has("placeArchived")) return "content";
+  return null;
+}
+
 export type ManualPlaceField = "manualName" | "locationText" | "latitude" | "longitude";
 export type ManualPlaceValues = Record<ManualPlaceField, string>;
 export type ManualPlaceErrors = Partial<Record<ManualPlaceField, string>>;

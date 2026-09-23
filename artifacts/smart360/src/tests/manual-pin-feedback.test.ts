@@ -2,10 +2,18 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  adminPlaceTargetTab,
   mutationErrorMessage,
   replaceSavedProposal,
   validateManualPlace,
 } from "../lib/manual-pin-feedback";
+
+test("place deep links target the actual ContentEditor tab, not DistanceReview", () => {
+  assert.equal(adminPlaceTargetTab("?placeItem=hidden-item"), "content");
+  assert.equal(adminPlaceTargetTab("?placeArchived=old-category"), "content");
+  assert.equal(adminPlaceTargetTab("?placeProposal=pending"), "kreator");
+  assert.equal(adminPlaceTargetTab("?q=other"), null);
+});
 import { pinPlacementMapCenter } from "../lib/map-provider";
 
 test("manual-pin success replaces the visible card immediately", () => {

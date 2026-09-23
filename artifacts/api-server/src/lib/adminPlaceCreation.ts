@@ -1,8 +1,9 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
   categoriesTable,
   creatorPlaceProposalsTable,
   creatorPlaceMaterializationsTable,
+  creatorCanonicalPlacesTable,
   creatorProposalTranslationsTable,
   creatorRunsTable,
   creatorVerificationAttemptsTable,
@@ -31,6 +32,7 @@ type AdminPlaceSearchCandidateBase = ReturnType<typeof parsedPlace> extends infe
       straightLineDistanceM: number;
       duplicate: boolean;
       duplicateLabel: "že v vodniku" | null;
+      duplicateMatch: PlaceDuplicateMatch | null;
     }
   : never;
 
@@ -44,6 +46,25 @@ export class ItemDistanceError extends Error {
   constructor(message: string, readonly kind: "not-found" | "unprocessable" | "conflict") {
     super(message);
   }
+}
+
+export type PlaceDuplicateMatch = {
+  kind: "item" | "pending" | "archived";
+  id: string;
+  categoryId: string | null;
+  category: string | null;
+  name: string;
+  hidden: boolean;
+};
+
+export class AdminPlaceConflictError extends CreatorBulkApprovalError {
+  constructor(readonly match: PlaceDuplicateMatch) {
+    super(match.kind === "pending" ? "Ta kraj čaka v Kreatorjevi vrsti." : "Ta kraj je že v vodniku.");
+  }
+}
+
+export function adminPlaceConflictResponse(error: AdminPlaceConflictError) {
+  return { error: error.message, duplicateMatch: error.match };
 }
 
 export function recomputedCreatorRange(
@@ -215,27 +236,96 @@ function straightDistanceM(a: { latitude: number; longitude: number }, b: { lati
   return 6_371_000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-export async function adminPlaceDuplicateKeys(tenantId: string) {
-  const proposals = await db.select({
-    osmType: creatorPlaceProposalsTable.osmType,
-    osmId: creatorPlaceProposalsTable.osmId,
-    normalizedName: creatorPlaceProposalsTable.normalizedName,
-  }).from(creatorPlaceProposalsTable).where(and(
-    eq(creatorPlaceProposalsTable.tenantId, tenantId),
-    eq(creatorPlaceProposalsTable.contentReady, true),
-    inArray(creatorPlaceProposalsTable.status, ["pending", "approved"]),
-  ));
-  const items = await db.select({ title: itemsTable.title })
-    .from(itemsTable)
+type PlaceIdentity = { name: string; osmType: string | null; osmId: number | null; latitude: number | null; longitude: number | null };
+type DuplicateRow = PlaceIdentity & { match: PlaceDuplicateMatch };
+
+/** Names alone never prove place identity, even for a legacy item without
+ * coordinates. An uncertain record must not hard-block creation. */
+export function sameAdminPlace(a: PlaceIdentity, b: PlaceIdentity): boolean {
+  if (a.osmType && a.osmId !== null && b.osmType && b.osmId !== null) {
+    return a.osmType === b.osmType && a.osmId === b.osmId;
+  }
+  if (a.latitude !== null && a.longitude !== null && b.latitude !== null && b.longitude !== null) {
+    if (a.latitude.toFixed(5) === b.latitude.toFixed(5) &&
+      a.longitude.toFixed(5) === b.longitude.toFixed(5)) return true;
+    // Operator pins and Nominatim centroids may differ slightly; never use
+    // proximity to merge two separately verified OSM identities.
+    return (!a.osmType || !b.osmType) &&
+      normalizeCreatorProposalName(a.name) === normalizeCreatorProposalName(b.name) &&
+      straightDistanceM(
+        { latitude: a.latitude, longitude: a.longitude },
+        { latitude: b.latitude, longitude: b.longitude },
+      ) <= 40;
+  }
+  return false;
+}
+
+export function findAdminPlaceDuplicate(place: PlaceIdentity, rows: DuplicateRow[]): PlaceDuplicateMatch | null {
+  return rows.find(row => row.match.kind === "item" && sameAdminPlace(place, row))?.match ??
+    rows.find(row => row.match.kind === "pending" && sameAdminPlace(place, row))?.match ??
+    rows.find(row => row.match.kind === "archived" && sameAdminPlace(place, row))?.match ?? null;
+}
+
+export async function adminPlaceDuplicateRows(tenantId: string, client: typeof db = db): Promise<DuplicateRow[]> {
+  const proposals = await client.select({
+    id: creatorPlaceProposalsTable.id, categoryId: creatorPlaceProposalsTable.categoryId,
+    name: creatorPlaceProposalsTable.proposedName, status: creatorPlaceProposalsTable.status,
+    osmType: creatorPlaceProposalsTable.osmType, osmId: creatorPlaceProposalsTable.osmId,
+    latitude: creatorPlaceProposalsTable.latitude, longitude: creatorPlaceProposalsTable.longitude,
+    label: categoriesTable.label, categoryVisible: categoriesTable.isVisible,
+    categoryDeleted: categoriesTable.deletedAt, sectionVisible: sectionsTable.isVisible,
+  }).from(creatorPlaceProposalsTable)
+    .leftJoin(categoriesTable, eq(categoriesTable.id, creatorPlaceProposalsTable.categoryId))
+    .leftJoin(sectionsTable, eq(sectionsTable.id, categoriesTable.sectionId))
+    .where(and(eq(creatorPlaceProposalsTable.tenantId, tenantId),
+      eq(creatorPlaceProposalsTable.status, "pending")));
+  const items = await client.select({
+    id: itemsTable.id, name: itemsTable.title, categoryId: categoriesTable.id,
+    label: categoriesTable.label, categoryVisible: categoriesTable.isVisible,
+    categoryDeleted: categoriesTable.deletedAt, sectionVisible: sectionsTable.isVisible,
+    itemVisible: itemsTable.isVisible, itemDeleted: itemsTable.deletedAt,
+    entityKey: creatorCanonicalPlacesTable.entityKey,
+    latitude: creatorPlaceMaterializationsTable.latitude,
+    longitude: creatorPlaceMaterializationsTable.longitude,
+  }).from(itemsTable)
     .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .where(and(eq(sectionsTable.tenantId, tenantId), isNull(itemsTable.deletedAt)));
+    .leftJoin(creatorCanonicalPlacesTable, eq(creatorCanonicalPlacesTable.itemId, itemsTable.id))
+    .leftJoin(creatorPlaceMaterializationsTable, and(
+      eq(creatorPlaceMaterializationsTable.itemId, itemsTable.id),
+      eq(creatorPlaceMaterializationsTable.isActive, true)))
+    .where(eq(sectionsTable.tenantId, tenantId));
+  return [
+    ...items.filter(row => row.name).map(row => {
+      const osm = row.entityKey?.match(/^osm:(node|way|relation):(\d+)$/);
+      return {
+        name: row.name!, osmType: osm?.[1] ?? null, osmId: osm ? Number(osm[2]) : null,
+        latitude: row.latitude, longitude: row.longitude,
+        match: {
+          kind: (row.itemDeleted || row.categoryDeleted ? "archived" : "item") as "archived" | "item",
+          id: row.categoryDeleted ? row.categoryId : row.id,
+          categoryId: row.categoryId, category: row.label, name: row.name!,
+          hidden: !row.itemVisible || !row.categoryVisible || !row.sectionVisible,
+        },
+      };
+    }),
+    ...proposals.filter(row => row.latitude !== null || row.osmType !== null).map(row => ({
+      name: row.name, osmType: row.osmType, osmId: row.osmId,
+      latitude: row.latitude, longitude: row.longitude,
+      match: {
+        kind: "pending" as const, id: row.id, categoryId: row.categoryId,
+        category: row.label, name: row.name,
+        hidden: !row.categoryVisible || !row.sectionVisible || Boolean(row.categoryDeleted),
+      },
+    })),
+  ];
+}
+
+export async function adminPlaceDuplicateKeys(tenantId: string) {
+  const rows = await adminPlaceDuplicateRows(tenantId);
   return {
-    osm: new Set(proposals.flatMap((row) => row.osmType && row.osmId !== null ? [`${row.osmType}:${row.osmId}`] : [])),
-    names: new Set([
-      ...proposals.map((row) => row.normalizedName),
-      ...items.flatMap((row) => row.title ? [normalizeCreatorProposalName(row.title)] : []),
-    ]),
+    osm: new Set(rows.flatMap(row => row.osmType && row.osmId !== null ? [`${row.osmType}:${row.osmId}`] : [])),
+    names: new Set(rows.map(row => normalizeCreatorProposalName(row.name))),
   };
 }
 
@@ -245,18 +335,19 @@ export async function searchAdminPlaces(categoryId: string, query: string) {
   if (q.length < 2 || q.length > 160) throw new CreatorBulkApprovalError("Vnesite vsaj dva znaka.");
   const [rows, duplicates] = await Promise.all([
     fetchAdminPlaceNominatim("/search", { q, limit: "8", namedetails: "1" }),
-    adminPlaceDuplicateKeys(ctx.tenantId),
+    adminPlaceDuplicateRows(ctx.tenantId),
   ]);
   const candidates: AdminPlaceSearchCandidateBase[] = rows.flatMap((row) => {
     const place = parsedPlace(row);
     if (!place) return [];
-    const duplicate = duplicates.osm.has(`${place.osmType}:${place.osmId}`) ||
-      duplicates.names.has(normalizeCreatorProposalName(place.name));
+    const duplicateMatch = findAdminPlaceDuplicate(place, duplicates);
+    const duplicate = Boolean(duplicateMatch);
     return [{
       ...place,
       straightLineDistanceM: Math.round(straightDistanceM(ctx, place)),
       duplicate,
       duplicateLabel: duplicate ? "že v vodniku" as const : null,
+      duplicateMatch,
     }];
   });
   const routedCandidates = await enrichAdminPlaceRoutes(ctx, candidates);
@@ -298,6 +389,8 @@ export async function createAdminPlace(input: {
   if (!place.name || !place.address || place.latitude === null || place.longitude === null) {
     throw new CreatorBulkApprovalError("Ime, opis lokacije in veljavna točka so obvezni.");
   }
+  const existing = findAdminPlaceDuplicate(place, await adminPlaceDuplicateRows(ctx.tenantId));
+  if (existing) throw new AdminPlaceConflictError(existing);
   const route = await computeRoadRoute(ctx, place as { latitude: number; longitude: number });
   if (!route) throw new CreatorBulkApprovalError("Cestne razdalje ni bilo mogoče izračunati.");
   const roadDistanceM = Math.round(route.distanceMeters);
@@ -312,6 +405,8 @@ export async function createAdminPlace(input: {
     : `coordinates:${place.latitude.toFixed(5)}:${place.longitude.toFixed(5)}`;
   const result = await db.transaction(async (tx) => {
     await lockCreatorPlaceIdentity(tx, ctx.tenantId, entityKey, normalizedName);
+    const lockedMatch = findAdminPlaceDuplicate(place, await adminPlaceDuplicateRows(ctx.tenantId, tx as typeof db));
+    if (lockedMatch) throw new AdminPlaceConflictError(lockedMatch);
     const now = new Date();
     const [run] = await tx.insert(creatorRunsTable).values({
       tenantId: ctx.tenantId, status: "completed",

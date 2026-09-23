@@ -42,6 +42,7 @@ import type {
   CleanupRestoreResult,
   CleanupRunsResult,
   ConfirmCreatorTenantOriginInput,
+  CreateAdminPlace409,
   CreateAdminPlaceInput,
   CreatorCategoryOption,
   CreatorCoordinateConfirmationInput,
@@ -8228,7 +8229,7 @@ export const createAdminPlace = async (id: string,
 
 
 
-export const getCreateAdminPlaceMutationOptions = <TError = ErrorType<unknown>,
+export const getCreateAdminPlaceMutationOptions = <TError = ErrorType<CreateAdminPlace409>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminPlace>>, TError,{id: string;data: BodyType<CreateAdminPlaceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createAdminPlace>>, TError,{id: string;data: BodyType<CreateAdminPlaceInput>}, TContext> => {
 
@@ -8257,12 +8258,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateAdminPlaceMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminPlace>>>
     export type CreateAdminPlaceMutationBody = BodyType<CreateAdminPlaceInput>
-    export type CreateAdminPlaceMutationError = ErrorType<unknown>
+    export type CreateAdminPlaceMutationError = ErrorType<CreateAdminPlace409>
 
     /**
  * @summary Verify and immediately materialize an operator-selected place
  */
-export const useCreateAdminPlace = <TError = ErrorType<unknown>,
+export const useCreateAdminPlace = <TError = ErrorType<CreateAdminPlace409>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminPlace>>, TError,{id: string;data: BodyType<CreateAdminPlaceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createAdminPlace>>,

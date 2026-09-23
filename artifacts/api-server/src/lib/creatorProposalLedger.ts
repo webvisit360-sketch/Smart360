@@ -179,8 +179,8 @@ export async function lockCreatorPlaceIdentity(
   )`);
 }
 
-/** Must run after lockCreatorPlaceIdentity.  The canonical entity may be
- * replayed idempotently, but a different live place may never claim its name. */
+/** Must run after lockCreatorPlaceIdentity. Reuse only the identical canonical
+ * entity; a name-only legacy item/proposal cannot prove a duplicate. */
 export async function assertNoLiveCreatorPlaceDuplicate(
   tx: any,
   input: {
@@ -199,42 +199,6 @@ export async function assertNoLiveCreatorPlaceDuplicate(
     ))
     .limit(1);
   const reusableItemId = sameEntity?.itemId ?? null;
-  const proposals = await tx.select().from(creatorPlaceProposalsTable)
-    .where(and(
-      eq(creatorPlaceProposalsTable.tenantId, input.tenantId),
-      eq(creatorPlaceProposalsTable.normalizedName, input.normalizedName),
-      ne(creatorPlaceProposalsTable.id, input.currentProposalId),
-      ne(creatorPlaceProposalsTable.status, "rejected"),
-    ));
-  const conflictingProposal = proposals.some((row: typeof creatorPlaceProposalsTable.$inferSelect) => {
-    const key = row.osmType && row.osmId !== null
-      ? `osm:${row.osmType}:${row.osmId}`
-      : row.latitude !== null && row.longitude !== null
-        ? `coordinates:${row.latitude.toFixed(5)}:${row.longitude.toFixed(5)}`
-        : null;
-    // Pending Creator rows can exist before either reviewer approves them.
-    // Give that race one stable winner; once it is approved/materialized the
-    // other row deterministically loses under the same name lock.
-    const earlierOrLive = row.status !== "pending" ||
-      row.createdAt < input.currentCreatedAt ||
-      (row.createdAt.getTime() === input.currentCreatedAt.getTime() && row.id < input.currentProposalId);
-    return key !== input.entityKey && earlierOrLive;
-  });
-  const itemRows = await tx.select({ id: itemsTable.id, title: itemsTable.title })
-    .from(itemsTable)
-    .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
-    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .where(and(
-      eq(sectionsTable.tenantId, input.tenantId),
-      isNull(itemsTable.deletedAt),
-    ));
-  const conflictingItem = itemRows.some((item: { id: string; title: string | null }) =>
-    item.id !== reusableItemId &&
-    item.title !== null &&
-    normalizeCreatorProposalName(item.title) === input.normalizedName);
-  if (conflictingProposal || conflictingItem) {
-    throw new CreatorBulkApprovalError("Ta kraj je že v vodniku.");
-  }
   return { reusableItemId };
 }
 

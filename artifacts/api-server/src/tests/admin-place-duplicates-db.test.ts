@@ -3,40 +3,43 @@ import crypto from "node:crypto";
 import { after, before, test } from "node:test";
 import { eq, inArray } from "drizzle-orm";
 import {
-  adminUsersTable, categoriesTable, creatorCanonicalPlacesTable,
+  adminUsersTable, categoriesTable,
   creatorPlaceMaterializationsTable, creatorPlaceProposalsTable,
-  creatorProposalTranslationsTable, db, itemsTable, sectionsTable, tenantsTable,
+  creatorProposalTranslationsTable, creatorRunsTable, db, itemsTable, sectionsTable, tenantsTable,
 } from "@workspace/db";
-import { adminPlaceDuplicateKeys } from "../lib/adminPlaceCreation";
+import { AdminPlaceConflictError, adminPlaceConflictResponse, adminPlaceDuplicateKeys, createAdminPlace } from "../lib/adminPlaceCreation";
 import {
-  approveCreatorProposalIndividually, CreatorBulkApprovalError,
+  approveCreatorProposalIndividually,
   lockCreatorPlaceIdentity, normalizeCreatorProposalName,
 } from "../lib/creatorProposalLedger";
 
 let tenantId = "";
-let proposalId = "";
 let actorId = "";
 let categoryId = "";
 const raceProposalIds: string[] = [];
-const raceItemIds: string[] = [];
 const unique = `Rejected place ${crypto.randomUUID().slice(0, 8)}`;
 
 before(async () => {
-  const [tenant] = await db.select({ id: tenantsTable.id }).from(tenantsTable)
-    .innerJoin(sectionsTable, eq(sectionsTable.tenantId, tenantsTable.id))
-    .innerJoin(categoriesTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .limit(1);
-  assert.ok(tenant, "development database needs one tenant");
+  // Entire test tree is disposable. Never attach proposals or items to a real tenant.
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `place-duplicate-test-${crypto.randomUUID()}`,
+    name: "Disposable canonical place regression",
+    isPublished: false,
+    latitude: 46.31,
+    longitude: 14.91,
+  }).returning({ id: tenantsTable.id });
   tenantId = tenant.id;
-  const [category] = await db.select({ id: categoriesTable.id }).from(categoriesTable)
-    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .where(eq(sectionsTable.tenantId, tenantId)).limit(1);
-  assert.ok(category, "development database needs one category");
+  const [section] = await db.insert(sectionsTable).values({
+    tenantId, key: "explore", title: "Okolica",
+  }).returning({ id: sectionsTable.id });
+  const [category] = await db.insert(categoriesTable).values({
+    sectionId: section.id, label: "Naravna dediščina",
+  }).returning({ id: categoriesTable.id });
   categoryId = category.id;
   const [actor] = await db.select({ id: adminUsersTable.id }).from(adminUsersTable).limit(1);
   assert.ok(actor, "development database needs one admin user");
   actorId = actor.id;
-  const [proposal] = await db.insert(creatorPlaceProposalsTable).values({
+  await db.insert(creatorPlaceProposalsTable).values({
     tenantId,
     runId: crypto.randomUUID(),
     proposedName: unique,
@@ -50,25 +53,11 @@ before(async () => {
     osmId: Date.now(),
     reviewedBy: actorId,
     reviewedAt: new Date(),
-  }).returning({ id: creatorPlaceProposalsTable.id });
-  proposalId = proposal.id;
+  });
 });
 
 after(async () => {
-  if (proposalId) await db.delete(creatorPlaceProposalsTable)
-    .where(eq(creatorPlaceProposalsTable.id, proposalId));
-  if (raceProposalIds.length) {
-    const materializations = await db.select({ itemId: creatorPlaceMaterializationsTable.itemId })
-      .from(creatorPlaceMaterializationsTable)
-      .where(inArray(creatorPlaceMaterializationsTable.proposalId, raceProposalIds));
-    raceItemIds.push(...materializations.map((row) => row.itemId));
-    await db.delete(creatorPlaceProposalsTable)
-      .where(inArray(creatorPlaceProposalsTable.id, raceProposalIds));
-    if (raceItemIds.length) {
-      await db.delete(creatorCanonicalPlacesTable).where(inArray(creatorCanonicalPlacesTable.itemId, raceItemIds));
-      await db.delete(itemsTable).where(inArray(itemsTable.id, raceItemIds));
-    }
-  }
+  if (tenantId) await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
 });
 
 test("rejected Creator proposals are not live place duplicates", async () => {
@@ -97,7 +86,46 @@ test("shared creator identity locks serialize competing writers", async () => {
   assert.equal(secondEntered, true);
 });
 
-test("concurrent different identities with one normalized name materialize exactly once", async () => {
+test("admin creation duplicate conflict identifies pending queue row before route or write", async () => {
+  const name = `Pending pin ${crypto.randomUUID().slice(0, 8)}`;
+  const [pending] = await db.insert(creatorPlaceProposalsTable).values({
+    tenantId, categoryId, runId: crypto.randomUUID(), proposedName: name,
+    normalizedName: normalizeCreatorProposalName(name),
+    originalQuery: name, status: "pending", contentReady: true,
+    latitude: 46.39555, longitude: 14.62222,
+  }).returning({ id: creatorPlaceProposalsTable.id });
+  const runsBefore = await db.select({ id: creatorRunsTable.id }).from(creatorRunsTable)
+    .where(eq(creatorRunsTable.tenantId, tenantId));
+  let caught: unknown;
+  try {
+    await createAdminPlace({
+    categoryId, actorId,
+    selection: {
+      mode: "manual", name, locationText: "Lega pri kraju",
+      latitude: 46.39555, longitude: 14.62222,
+    },
+    });
+  } catch (error) {
+    caught = error;
+  }
+  assert.ok(caught instanceof AdminPlaceConflictError);
+  assert.deepEqual(adminPlaceConflictResponse(caught), {
+    error: "Ta kraj čaka v Kreatorjevi vrsti.",
+    duplicateMatch: {
+      kind: "pending", id: pending.id, categoryId,
+      category: "Naravna dediščina", name, hidden: false,
+    },
+  }, "409 JSON must expose the exact queue target and category, not just a generic error");
+  const proposals = await db.select({ id: creatorPlaceProposalsTable.id })
+    .from(creatorPlaceProposalsTable).where(eq(creatorPlaceProposalsTable.tenantId, tenantId));
+  const runsAfter = await db.select({ id: creatorRunsTable.id }).from(creatorRunsTable)
+    .where(eq(creatorRunsTable.tenantId, tenantId));
+  assert.deepEqual(runsAfter, runsBefore, "a duplicate must not start a Creator run");
+  assert.equal(proposals.filter(row => row.id === pending.id).length, 1);
+  assert.equal(proposals.length, 2, "no new approved place was inserted");
+});
+
+test("concurrent different identities with one normalized name remain two distinct places", async () => {
   const uniqueName = `Race place ${crypto.randomUUID().slice(0, 8)}`;
   const normalizedName = normalizeCreatorProposalName(uniqueName);
   const rows = await db.insert(creatorPlaceProposalsTable).values([0, 1].map((index) => ({
@@ -134,12 +162,37 @@ test("concurrent different identities with one normalized name materialize exact
   const outcomes = await Promise.allSettled(rows.map((row) =>
     approveCreatorProposalIndividually(tenantId, row.id, actorId),
   ));
-  assert.equal(outcomes.filter((row) => row.status === "fulfilled").length, 1);
-  const loser = outcomes.find((row) => row.status === "rejected");
-  assert.equal(loser?.status, "rejected");
-  if (loser?.status === "rejected") assert.ok(loser.reason instanceof CreatorBulkApprovalError);
-  const materialized = await db.select({ id: creatorPlaceMaterializationsTable.id })
+  assert.equal(outcomes.filter((row) => row.status === "fulfilled").length, 2);
+  const materialized = await db.select({
+    id: creatorPlaceMaterializationsTable.id,
+    itemId: creatorPlaceMaterializationsTable.itemId,
+    proposalId: creatorPlaceMaterializationsTable.proposalId,
+  })
     .from(creatorPlaceMaterializationsTable)
     .where(inArray(creatorPlaceMaterializationsTable.proposalId, raceProposalIds));
-  assert.equal(materialized.length, 1);
+  assert.equal(materialized.length, 2);
+  const original = rows[0]!;
+  const itemId = materialized.find(row => row.proposalId === original.id)!.itemId;
+  const selection = {
+    mode: "manual" as const, name: uniqueName, locationText: "Obstoječi kraj",
+    latitude: original.latitude!, longitude: original.longitude!,
+  };
+  await assert.rejects(createAdminPlace({ categoryId, actorId, selection }), (error: unknown) =>
+    error instanceof AdminPlaceConflictError &&
+    error.match.kind === "item" &&
+    error.match.id === itemId &&
+    error.match.categoryId === categoryId &&
+    error.match.category === "Naravna dediščina" &&
+    error.match.name === uniqueName &&
+    error.match.hidden === false);
+  await db.update(itemsTable).set({ deletedAt: new Date() }).where(eq(itemsTable.id, itemId));
+  await assert.rejects(createAdminPlace({ categoryId, actorId, selection }), (error: unknown) =>
+    error instanceof AdminPlaceConflictError &&
+    error.match.kind === "archived" &&
+    error.match.id === itemId &&
+    error.match.category === "Naravna dediščina",
+  );
+  const [archived] = await db.select({ deletedAt: itemsTable.deletedAt })
+    .from(itemsTable).where(eq(itemsTable.id, itemId));
+  assert.ok(archived?.deletedAt, "duplicate creation must not resurrect an archived canonical item");
 });

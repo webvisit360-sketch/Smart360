@@ -8,6 +8,7 @@
 import type { AdminPlaceCandidateDuplicateLabel } from './adminPlaceCandidateDuplicateLabel';
 import type { AdminPlaceCandidateOsmType } from './adminPlaceCandidateOsmType';
 import type { AdminPlaceCandidateRouteStatus } from './adminPlaceCandidateRouteStatus';
+import type { AdminPlaceDuplicateMatch } from './adminPlaceDuplicateMatch';
 
 export interface AdminPlaceCandidate {
   name: string;
@@ -34,4 +35,5 @@ export interface AdminPlaceCandidate {
   duplicate: boolean;
   /** @nullable */
   duplicateLabel: AdminPlaceCandidateDuplicateLabel;
+  duplicateMatch: AdminPlaceDuplicateMatch | null;
 }

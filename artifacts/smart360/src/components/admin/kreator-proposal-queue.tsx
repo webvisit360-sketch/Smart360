@@ -150,6 +150,31 @@ export function KreatorProposalQueue({
   });
   const translateEditorial = useTranslateCreatorProposalEditorial();
   const rows = queue.data ?? [];
+  const targetProposalId = new URLSearchParams(window.location.search).get("placeProposal");
+  useEffect(() => {
+    if (!targetProposalId || !rows.some((row) => row.id === targetProposalId)) return;
+    setStatusFilter("all");
+    setReasonFilter("all");
+    setCategoryFilter("all");
+    setRangeFilter("all");
+    const timer = window.setTimeout(() =>
+      document.getElementById(`creator-proposal-${targetProposalId}`)?.scrollIntoView({ block: "center" }), 100);
+    return () => window.clearTimeout(timer);
+  }, [targetProposalId, rows]);
+  useEffect(() => {
+    const navigate = () => {
+      const target = new URLSearchParams(window.location.search).get("placeProposal");
+      if (!target || !rows.some((row) => row.id === target)) return;
+      setStatusFilter("all");
+      setReasonFilter("all");
+      setCategoryFilter("all");
+      setRangeFilter("all");
+      window.setTimeout(() =>
+        document.getElementById(`creator-proposal-${target}`)?.scrollIntoView({ block: "center" }), 100);
+    };
+    window.addEventListener("admin-place-navigate", navigate);
+    return () => window.removeEventListener("admin-place-navigate", navigate);
+  }, [rows]);
   const visibleRows = useMemo(() => rows.filter((row) =>
     (statusFilter === "all" || row.status === statusFilter) &&
     (reasonFilter === "all" || row.refusalReason === reasonFilter) &&
@@ -373,7 +398,7 @@ export function KreatorProposalQueue({
           ? row.translations.find((translation) => translation.language === "sl")?.name ?? row.proposedName
           : row.resolvedName ?? row.proposedName;
         return (
-          <Card key={row.id} className="overflow-hidden">
+          <Card key={row.id} id={`creator-proposal-${row.id}`} className="overflow-hidden">
             <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-start">
               <label className="mt-1 flex shrink-0 items-center">
                 <input

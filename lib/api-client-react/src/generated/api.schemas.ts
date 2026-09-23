@@ -2977,6 +2977,26 @@ export interface ItemInput {
   producerNote?: string;
 }
 
+export type AdminPlaceDuplicateMatchKind = typeof AdminPlaceDuplicateMatchKind[keyof typeof AdminPlaceDuplicateMatchKind];
+
+
+export const AdminPlaceDuplicateMatchKind = {
+  item: 'item',
+  pending: 'pending',
+  archived: 'archived',
+} as const;
+
+export interface AdminPlaceDuplicateMatch {
+  kind: AdminPlaceDuplicateMatchKind;
+  id: string;
+  /** @nullable */
+  categoryId: string | null;
+  /** @nullable */
+  category: string | null;
+  name: string;
+  hidden: boolean;
+}
+
 export type AdminPlaceCandidateOsmType = typeof AdminPlaceCandidateOsmType[keyof typeof AdminPlaceCandidateOsmType];
 
 
@@ -3029,6 +3049,7 @@ export interface AdminPlaceCandidate {
   duplicate: boolean;
   /** @nullable */
   duplicateLabel: AdminPlaceCandidateDuplicateLabel;
+  duplicateMatch: AdminPlaceDuplicateMatch | null;
 }
 
 export interface AdminPlaceSearchResponse {
@@ -3577,6 +3598,11 @@ export type SearchAdminPlacesParams = {
  * @maxLength 160
  */
 q: string;
+};
+
+export type CreateAdminPlace409 = {
+  error: string;
+  duplicateMatch: AdminPlaceDuplicateMatch;
 };
 
 export type GetStorageCleanupPreviewParams = {

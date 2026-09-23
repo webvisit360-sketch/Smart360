@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const proposalId = "11111111-1111-4111-8111-111111111111";
+const parkProposalId = "50a57309-79f2-4da3-952d-0511566365b1";
 const fixedTime = "2026-09-03T20:30:00.000Z";
 const unresolved = {
   id: proposalId,
@@ -153,17 +154,194 @@ const placeFields = [
   { id: "input-manual-place-longitude", error: "Vnesite geografsko dolžino.", value: "13.821" },
 ] as const;
 
-async function openManualPlace(page: Page) {
+async function openManualPlace(page: Page, existingPlace = false) {
   await installCommonRoutes(page, (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
-  await page.goto("/e2e/manual-pin-harness.html");
-  await page.getByRole("button", { name: "Dodaj kraj", exact: true }).click();
+  await page.goto(`/e2e/manual-pin-harness.html${existingPlace ? "?existingPlace=1" : ""}`);
+  await page.getByRole("button", { name: "Dodaj kraj", exact: true }).first().click();
   const dialog = page.locator('[role="dialog"]:visible').filter({ hasText: "Dodaj kraj" });
   await dialog.getByPlaceholder(/npr\./).first().fill("Neoznačena razgledna točka");
   await dialog.getByRole("button", { name: "Poišči" }).click();
   await dialog.getByRole("button", { name: /Ročno označi na zemljevidu/ }).click();
   return dialog;
 }
+
+test("Dodaj kraj shows a linked pending Creator duplicate inline, without creating or alerting", async ({ page }) => {
+  let writes = 0;
+  const dialogs: string[] = [];
+  page.on("dialog", (dialog) => { dialogs.push(dialog.message()); void dialog.dismiss(); });
+  await installCommonRoutes(page, (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{
+      ...saved, id: parkProposalId, proposedName: "Krajinski park Logarska dolina",
+      normalizedName: "krajinski park logarska dolina",
+      originalQuery: "Krajinski park Logarska dolina",
+      latitude: 46.396673, longitude: 14.62944,
+    }]) }));
+  await page.route("**/api/admin/categories/manual-pin-explore/place-search?*", route =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+      originLatitude: 46.31, originLongitude: 14.91,
+      candidates: [{
+         name: "Krajinski park Logarska dolina", address: "Logarska dolina",
+         latitude: 46.396673, longitude: 14.62944, osmType: null, osmId: null,
+         osmCategory: "boundary", osmFeatureType: "protected_area", osmAddressType: "boundary",
+        straightLineDistanceM: 1000, roadDistanceM: 1200, travelDurationS: 600,
+        routeStatus: "available", duplicate: true, duplicateLabel: "že v vodniku",
+        duplicateMatch: {
+           kind: "pending", id: parkProposalId, categoryId: "manual-pin-explore",
+           category: "Izleti", name: "Krajinski park Logarska dolina", hidden: false,
+        },
+      }],
+    }) }));
+  await page.route("**/api/admin/categories/manual-pin-explore/places", route => {
+    writes++;
+    return route.fulfill({ status: 400, body: '{"error":"Unexpected write"}' });
+  });
+  await page.goto("/e2e/manual-pin-harness.html");
+  await page.getByRole("button", { name: "Dodaj kraj", exact: true }).click();
+  const dialog = page.locator('[role="dialog"]:visible').filter({ hasText: "Dodaj kraj" });
+   await dialog.getByPlaceholder(/npr\./).first().fill("Krajinski park Logarska dolina");
+  await dialog.getByRole("button", { name: "Poišči" }).click();
+   await dialog.getByRole("button", { name: /Krajinski park Logarska dolina.*v Kreatorjevi vrsti/ }).click();
+  const notice = dialog.getByRole("alert").filter({ hasText: "Ta kraj čaka v Kreatorjevi vrsti." });
+   await expect(notice).toBeVisible();
+  await expect(notice).toHaveCSS("border-color", "rgb(221, 154, 43)");
+  await expect(notice).toHaveCSS("border-width", "1px");
+   await mkdir("/tmp/manual-place-duplicate-evidence", { recursive: true });
+   await dialog.screenshot({ path: "/tmp/manual-place-duplicate-evidence/pending-notice.png", animations: "disabled" });
+   await writeFile("/tmp/manual-place-duplicate-evidence/pending-notice.json", JSON.stringify(
+     await notice.evaluate(element => ({
+       text: element.textContent?.trim(),
+       borderWidth: getComputedStyle(element).borderWidth,
+       borderColor: getComputedStyle(element).borderColor,
+       backgroundColor: getComputedStyle(element).backgroundColor,
+     })), null, 2));
+  await notice.getByRole("button", { name: "Odpri predlog" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("active-admin-tab")).toHaveText("kreator");
+   const target = page.locator(`#creator-proposal-${parkProposalId}`);
+   await expect(target).toBeVisible();
+   await expect(target).toContainText("Krajinski park Logarska dolina");
+   expect(new URL(page.url()).searchParams.get("placeProposal")).toBe(parkProposalId);
+  expect(writes).toBe(0);
+  expect(dialogs).toEqual([]);
+});
+
+test("real development Gril valley duplicate replay opens the matching Creator queue item", async ({ page }) => {
+  // Identity and queue fields are asserted against the development DB by admin-place-identity.test.ts.
+  // This browser fixture replays that read-only result; it never posts to the API.
+  const valleyId = "684fea42-f7f5-4589-8fbf-5c48d86f06ad";
+  const duplicateMatch = {
+    kind: "pending", id: valleyId,
+    categoryId: "f357dded-b0b2-4e25-9b2b-89ac6529000f",
+    category: "Naravna dediščina", name: "Logarska dolina", hidden: false,
+  };
+  let writes = 0;
+  await installCommonRoutes(page, route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify([{
+      ...unresolved, id: valleyId, status: "pending", refusalReason: null,
+      proposedName: "Logarska dolina", resolvedName: "Logarska dolina",
+      normalizedName: "logarska dolina", originalQuery: "Logarska dolina",
+      categoryId: duplicateMatch.categoryId, categoryLabel: duplicateMatch.category,
+      osmType: "way", osmId: 1101539589,
+      latitude: 46.3912165, longitude: 14.6283021,
+    }]),
+  }));
+  await page.route("**/api/admin/categories/manual-pin-explore/place-search?*", route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({
+      originLatitude: 46.31, originLongitude: 14.91,
+      candidates: [{
+        name: "Logarska dolina", address: "Logarska dolina, Slovenija",
+        osmType: "way", osmId: 1101539589,
+        latitude: 46.3912165, longitude: 14.6283021,
+        osmCategory: "boundary", osmFeatureType: "protected_area", osmAddressType: "boundary",
+        straightLineDistanceM: 1000, roadDistanceM: 1200, travelDurationS: 600,
+        routeStatus: "available", duplicate: true, duplicateLabel: "že v vodniku",
+        duplicateMatch,
+      }],
+    }),
+  }));
+  await page.route("**/api/admin/categories/manual-pin-explore/places", route => {
+    writes++;
+    return route.fulfill({ status: 400, body: '{"error":"Unexpected write"}' });
+  });
+  await page.goto("/e2e/manual-pin-harness.html");
+  await page.getByRole("button", { name: "Dodaj kraj", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Dodaj kraj" });
+  await dialog.getByPlaceholder(/npr\./).first().fill("Logarska dolina");
+  await dialog.getByRole("button", { name: "Poišči" }).click();
+  await dialog.getByRole("button", { name: /Logarska dolina.*v Kreatorjevi vrsti/ }).click();
+  const notice = dialog.getByRole("alert").filter({ hasText: "Ta kraj čaka v Kreatorjevi vrsti." });
+  await expect(notice).toBeVisible();
+  await expect(notice).toHaveCSS("border-width", "1px");
+  await expect(notice).toHaveCSS("border-color", "rgb(221, 154, 43)");
+  await mkdir("/tmp/manual-place-duplicate-evidence", { recursive: true });
+  await dialog.screenshot({ path: "/tmp/manual-place-duplicate-evidence/dev-valley-pending-notice.png", animations: "disabled" });
+  await writeFile("/tmp/manual-place-duplicate-evidence/dev-valley-pending-notice.json", JSON.stringify(
+    await notice.evaluate(element => ({
+      text: element.textContent?.trim(),
+      borderWidth: getComputedStyle(element).borderWidth,
+      borderColor: getComputedStyle(element).borderColor,
+    })), null, 2));
+  await notice.getByRole("button", { name: "Odpri predlog" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("active-admin-tab")).toHaveText("kreator");
+  const target = page.locator(`#creator-proposal-${valleyId}`);
+  await expect(target).toBeVisible();
+  await expect(target.getByRole("heading", { name: "Logarska dolina" })).toBeVisible();
+  expect(new URL(page.url()).searchParams.get("placeProposal")).toBe(valleyId);
+  await target.screenshot({ path: "/tmp/manual-place-duplicate-evidence/dev-valley-queue-target.png", animations: "disabled" });
+  expect(writes).toBe(0);
+});
+
+test("manual duplicate 409 shows the hidden parent-category entry inline, not a generic error", async ({ page }) => {
+  const duplicateMatch = {
+    kind: "item", id: "existing-hidden-item", categoryId: "hidden-category",
+    category: "Naravna dediščina", name: "Krajinski park Logarska dolina", hidden: true,
+  };
+  let writes = 0;
+  const dialogs: string[] = [];
+  page.on("dialog", dialog => { dialogs.push(dialog.message()); void dialog.dismiss(); });
+  await page.route("**/api/admin/categories/manual-pin-explore/places", route => {
+    writes++;
+    return route.fulfill({
+      status: 409, contentType: "application/json",
+      body: JSON.stringify({ error: "Ta kraj je že v vodniku.", duplicateMatch }),
+    });
+  });
+  const dialog = await openManualPlace(page, true);
+  await dialog.getByTestId("input-manual-place-name").fill(duplicateMatch.name);
+  await dialog.getByTestId("input-manual-place-location").fill("Logarska dolina");
+  await dialog.getByTestId("input-manual-place-latitude").fill("46.396673");
+  await dialog.getByTestId("input-manual-place-longitude").fill("14.62944");
+  await dialog.getByRole("button", { name: "Dodaj v vodnik" }).click();
+  const notice = dialog.getByRole("alert").filter({ hasText: "Ta kraj je že v vodniku: Naravna dediščina → Krajinski park Logarska dolina (skrit)" });
+  await expect(notice).toBeVisible();
+  await expect(notice).toHaveCSS("border-color", "rgb(221, 154, 43)");
+  await expect(notice).toHaveCSS("border-width", "1px");
+  await expect(notice.getByRole("button", { name: "Odpri vnos" })).toBeVisible();
+  await mkdir("/tmp/manual-place-duplicate-evidence", { recursive: true });
+  await dialog.screenshot({ path: "/tmp/manual-place-duplicate-evidence/hidden-item-notice.png", animations: "disabled" });
+  await writeFile("/tmp/manual-place-duplicate-evidence/hidden-item-notice.json", JSON.stringify(
+    await notice.evaluate(element => ({
+      text: element.textContent?.trim(),
+      borderWidth: getComputedStyle(element).borderWidth,
+      borderColor: getComputedStyle(element).borderColor,
+      backgroundColor: getComputedStyle(element).backgroundColor,
+    })), null, 2));
+  await notice.getByRole("button", { name: "Odpri vnos" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("active-admin-tab")).toHaveText("content");
+  await expect(page.getByTestId("distance-review-fixture")).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.get("placeItem")).toBe(duplicateMatch.id);
+  const entry = page.getByRole("dialog", { name: "Uredi vnos" });
+  await expect(entry).toBeVisible();
+  await expect(entry.locator("input").first()).toHaveValue(duplicateMatch.name);
+  await entry.screenshot({ path: "/tmp/manual-place-duplicate-evidence/hidden-item-open-editor.png", animations: "disabled" });
+  expect(writes).toBe(1);
+  expect(dialogs).toEqual([]);
+});
 
 test("Dodaj kraj reports only missing manual fields inline and focuses the first invalid input", async ({ page }) => {
   let writes = 0;

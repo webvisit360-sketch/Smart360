@@ -4749,7 +4749,15 @@ export const SearchAdminPlacesResponse = zod.object({
   "travelDurationS": zod.number().min(searchAdminPlacesResponseCandidatesItemTravelDurationSMin).nullable(),
   "routeStatus": zod.enum(['available', 'unavailable']),
   "duplicate": zod.boolean(),
-  "duplicateLabel": zod.union([zod.literal('že v vodniku'),zod.literal(null)]).nullable()
+  "duplicateLabel": zod.union([zod.literal('že v vodniku'),zod.literal(null)]).nullable(),
+  "duplicateMatch": zod.union([zod.object({
+  "kind": zod.enum(['item', 'pending', 'archived']),
+  "id": zod.string(),
+  "categoryId": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "name": zod.string(),
+  "hidden": zod.boolean()
+}),zod.null()])
 }))
 })
 

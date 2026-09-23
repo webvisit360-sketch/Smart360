@@ -2021,6 +2021,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Item"
+        "409":
+          description: Existing item, archived item or pending Creator proposal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  duplicateMatch:
+                    $ref: "#/components/schemas/AdminPlaceDuplicateMatch"
+                required: [error, duplicateMatch]
   /admin/items/{id}:
     patch:
       operationId: updateItem
@@ -5220,6 +5231,16 @@ components:
         soldOut: { type: boolean }
         producerName: { type: string }
         producerNote: { type: string }
+    AdminPlaceDuplicateMatch:
+      type: object
+      properties:
+        kind: { type: string, enum: [item, pending, archived] }
+        id: { type: string }
+        categoryId: { type: ["string", "null"] }
+        category: { type: ["string", "null"] }
+        name: { type: string }
+        hidden: { type: boolean }
+      required: [kind, id, categoryId, category, name, hidden]
     AdminPlaceCandidate:
       type: object
       properties:
@@ -5237,7 +5258,11 @@ components:
         routeStatus: { type: string, enum: [available, unavailable] }
         duplicate: { type: boolean }
         duplicateLabel: { type: ["string", "null"], enum: ["že v vodniku", null] }
-      required: [name, address, latitude, longitude, osmType, osmId, osmCategory, osmFeatureType, straightLineDistanceM, roadDistanceM, travelDurationS, routeStatus, duplicate, duplicateLabel]
+        duplicateMatch:
+          oneOf:
+            - $ref: "#/components/schemas/AdminPlaceDuplicateMatch"
+            - type: "null"
+      required: [name, address, latitude, longitude, osmType, osmId, osmCategory, osmFeatureType, straightLineDistanceM, roadDistanceM, travelDurationS, routeStatus, duplicate, duplicateLabel, duplicateMatch]
     AdminPlaceSearchResponse:
       type: object
       properties:

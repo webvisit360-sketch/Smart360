@@ -74,7 +74,7 @@ import {
   type ItemTranslationRefreshField,
 } from "@/lib/item-translation-drafts";
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
-import { mutationErrorMessage, validateManualPlace, type ManualPlaceErrors, type ManualPlaceField } from "@/lib/manual-pin-feedback";
+import { adminPlaceTargetTab, mutationErrorMessage, validateManualPlace, type ManualPlaceErrors, type ManualPlaceField } from "@/lib/manual-pin-feedback";
 import { EmptyCategoryRow } from "@/components/admin/empty-category-row";
 import { getHostOnboardingQueryKey } from "@/hooks/use-host-onboarding";
 import { suggestCategoryIcon } from "@workspace/category-icons";
@@ -151,11 +151,51 @@ type SearchCandidateWithRouting = {
   osmFeatureType?: string;
   osmAddressType?: string;
   duplicate?: boolean;
+  duplicateMatch?: PlaceDuplicateMatch | null;
   straightLineDistanceM: number;
   roadDistanceM?: number | null;
   travelDurationS?: number | null;
   routeStatus?: "available" | "unavailable";
 };
+
+type PlaceDuplicateMatch = {
+  kind: "item" | "pending" | "archived";
+  id: string;
+  categoryId: string | null;
+  category: string | null;
+  name: string;
+  hidden: boolean;
+};
+
+function openDuplicateMatch(match: PlaceDuplicateMatch) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("placeItem");
+  url.searchParams.delete("placeProposal");
+  url.searchParams.delete("placeArchived");
+  url.searchParams.set(
+    match.kind === "pending" ? "placeProposal" : match.kind === "archived" ? "placeArchived" : "placeItem",
+    match.id,
+  );
+  window.history.replaceState(window.history.state, "", url);
+  window.dispatchEvent(new CustomEvent("admin-place-navigate", {
+    detail: { tab: adminPlaceTargetTab(url.search) },
+  }));
+}
+
+function DuplicatePlaceNotice({ match, onOpen }: { match: PlaceDuplicateMatch; onOpen: () => void }) {
+  return (
+    <div role="alert" className="rounded-[10px] border border-[#DD9A2B] bg-[#DD9A2B]/10 p-3 text-sm text-[#68460A]">
+      <span>
+        {match.kind === "pending"
+          ? "Ta kraj čaka v Kreatorjevi vrsti."
+          : `Ta kraj je že v vodniku: ${match.category ?? "Brez kategorije"} → ${match.name}${match.hidden ? " (skrit)" : ""}${match.kind === "archived" ? " (v arhivu)" : ""}`}
+      </span>{" "}
+      <button type="button" onClick={onOpen} className="font-bold underline underline-offset-2">
+        {match.kind === "pending" ? "Odpri predlog" : match.kind === "archived" ? "Odpri arhiv" : "Odpri vnos"}
+      </button>
+    </div>
+  );
+}
 
 export const OKOLICA_SKELETON_KEYS = [
   "breakfast",
@@ -1710,6 +1750,7 @@ function OkolicaPlaceCreate({
   const [longitude, setLongitude] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ManualPlaceErrors>({});
   const [serviceError, setServiceError] = useState<string | null>(null);
+  const [duplicateNotice, setDuplicateNotice] = useState<PlaceDuplicateMatch | null>(null);
   const manualNameRef = useRef<HTMLInputElement>(null);
   const locationTextRef = useRef<HTMLInputElement>(null);
   const latitudeRef = useRef<HTMLInputElement>(null);
@@ -1727,6 +1768,10 @@ function OkolicaPlaceCreate({
   const create = useCreateAdminPlace();
   const busy = create.isPending;
   const candidates = (search.data?.candidates ?? []) as SearchCandidateWithRouting[];
+  const navigateDuplicate = (match: PlaceDuplicateMatch) => {
+    onDone();
+    window.setTimeout(() => openDuplicateMatch(match), 0);
+  };
   const refresh = () => refreshTenantAfterAdminWrite(queryClient, tenantId);
 
   const updateManualField = (field: ManualPlaceField, value: string) => {
@@ -1735,6 +1780,7 @@ function OkolicaPlaceCreate({
       ? { ...current, [field]: validateManualPlace(nextValues)[field] }
       : current);
     setServiceError(null);
+    setDuplicateNotice(null);
     if (field === "manualName") setManualName(value);
     if (field === "locationText") setLocationText(value);
     if (field === "latitude") setLatitude(value);
@@ -1743,6 +1789,7 @@ function OkolicaPlaceCreate({
 
   const save = async () => {
     setServiceError(null);
+    setDuplicateNotice(null);
     try {
       if (manual) {
         const errors = validateManualPlace({ manualName, locationText, latitude, longitude });
@@ -1763,7 +1810,13 @@ function OkolicaPlaceCreate({
       await refresh();
       onDone();
     } catch (error) {
-      setServiceError(mutationErrorMessage(error) || "Kraja ni bilo mogoče dodati. Poskusite znova.");
+      const data = error && typeof error === "object" && "data" in error ? error.data : null;
+      const match = data && typeof data === "object" && "duplicateMatch" in data ? data.duplicateMatch : null;
+      if (match && typeof match === "object" && "id" in match && "kind" in match) {
+        setDuplicateNotice(match as PlaceDuplicateMatch);
+      } else {
+        setServiceError(mutationErrorMessage(error) || "Kraja ni bilo mogoče dodati. Poskusite znova.");
+      }
     }
   };
 
@@ -1791,11 +1844,12 @@ function OkolicaPlaceCreate({
               <div className="flex gap-2">
                 <Input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => { setQuery(event.target.value); setDuplicateNotice(null); }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
                       setSelected(null);
+                      setDuplicateNotice(null);
                       setSubmittedQuery(query.trim());
                     }
                   }}
@@ -1805,7 +1859,7 @@ function OkolicaPlaceCreate({
                 />
                 <Button
                   type="button"
-                  onClick={() => { setSelected(null); setSubmittedQuery(query.trim()); }}
+                  onClick={() => { setSelected(null); setDuplicateNotice(null); setSubmittedQuery(query.trim()); }}
                   disabled={busy || query.trim().length < 2}
                   className="bg-[#157347] text-white font-bold h-11 px-6 rounded-[10px] hover:bg-[#0f5935]"
                 >
@@ -1815,6 +1869,7 @@ function OkolicaPlaceCreate({
               <p className="text-xs text-[#9AA39D] mt-2">Vpišite ime — kraj poiščemo na zemljevidu, razdaljo izračunamo sami.</p>
               <p className="text-[13px] text-[#9AA39D] mt-2">{PLACE_ADDRESS_SEARCH_HINT}</p>
             </div>
+            {duplicateNotice && !manual && <DuplicatePlaceNotice match={duplicateNotice} onOpen={() => navigateDuplicate(duplicateNotice)} />}
             
             {search.isLoading && (
               <p className="flex items-center gap-2 text-sm text-[#66716A]">
@@ -1847,20 +1902,26 @@ function OkolicaPlaceCreate({
                       <button
                         key={`${candidate.osmType}:${candidate.osmId}`}
                         type="button"
-                        disabled={candidate.duplicate || busy}
+                        disabled={busy}
                         aria-pressed={isSelected}
                         style={{ borderColor: isSelected ? "#157347" : "#E8EBE6", borderWidth: isSelected ? 2 : 1 }}
                         onClick={() => {
+                          if (candidate.duplicateMatch) {
+                            setSelected(null);
+                            setDuplicateNotice(candidate.duplicateMatch);
+                            return;
+                          }
+                          setDuplicateNotice(null);
                           setSelected({ osmType: candidate.osmType, osmId: candidate.osmId });
                           const suggested = guessCategory(candidate, allCategories);
                           if (suggested) setSelectedCatId(suggested);
                         }}
-                        className={`w-full flex items-center justify-between text-left p-3 rounded-[10px] border transition-colors ${isSelected ? 'border-[#157347] border-2 bg-[#F4F6F2]' : 'border-[#E8EBE6] bg-white hover:border-[#C9D2CB]'} ${candidate.duplicate ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full flex items-center justify-between text-left p-3 rounded-[10px] border transition-colors ${isSelected ? 'border-[#157347] border-2 bg-[#F4F6F2]' : 'border-[#E8EBE6] bg-white hover:border-[#C9D2CB]'}`}
                       >
                          <div className="flex-1 min-w-0 pr-4">
                            <div className="flex items-center gap-2">
                              <span className={`font-bold text-[15px] truncate ${isSelected ? 'text-[#157347]' : 'text-[#1a1a1a]'}`}>{candidate.name}</span>
-                             {candidate.duplicate && <Badge className="bg-[#F4F6F2] text-[#66716A] hover:bg-[#F4F6F2] border-none font-medium">že v vodniku</Badge>}
+                             {candidate.duplicate && <Badge className="bg-[#F4F6F2] text-[#66716A] hover:bg-[#F4F6F2] border-none font-medium">{candidate.duplicateMatch?.kind === "pending" ? "v Kreatorjevi vrsti" : "že v vodniku"}</Badge>}
                            </div>
                            <span className="block text-[13px] text-[#9AA39D] mt-0.5 whitespace-normal break-words">{candidate.address}</span>
                          </div>
@@ -1891,7 +1952,7 @@ function OkolicaPlaceCreate({
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setSelectedCatId(c.id)}
+                    onClick={() => { setSelectedCatId(c.id); setDuplicateNotice(null); }}
                     className={`px-4 py-2 rounded-full text-[14px] font-bold border transition-colors ${selectedCatId === c.id ? 'bg-[#157347] text-white border-[#157347]' : 'bg-white text-[#66716A] border-[#E8EBE6] hover:bg-[#F4F6F2]'}`}
                   >
                     {c.label}
@@ -2009,6 +2070,7 @@ function OkolicaPlaceCreate({
       </DialogScrollBody>
       
       <DialogFooter className="gap-2 flex-wrap shrink-0 border-t border-[#E8EBE6] pt-4 mt-2 bg-white">
+        {duplicateNotice && manual && <DuplicatePlaceNotice match={duplicateNotice} onOpen={() => navigateDuplicate(duplicateNotice)} />}
         {serviceError && <p role="alert" data-testid="status-manual-place-service-error" className="w-full text-sm text-destructive">{serviceError}</p>}
         <p className="w-full text-xs text-[#66716A] mb-2 text-center sm:text-left">
           Opis in fotografije dodate po vnosu — kot osnutek, gostje vidijo šele po objavi.
@@ -2030,6 +2092,14 @@ function OkolicaPlaceCreate({
 
 function ItemRow({ item, tenantId, categoryId, sectionKey, sectionCategories, allCategories, layout }: { item: Item; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; layout?: string }) {
   const [editOpen, setEditOpen] = useState(false);
+  useEffect(() => {
+    const navigate = () => {
+      if (new URLSearchParams(window.location.search).get("placeItem") === item.id) setEditOpen(true);
+    };
+    navigate();
+    window.addEventListener("admin-place-navigate", navigate);
+    return () => window.removeEventListener("admin-place-navigate", navigate);
+  }, [item.id]);
 
   return (
     <>
@@ -2273,6 +2343,21 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
   const { data: session } = useGetAdminSession();
   const isOwner = Boolean(session?.authenticated);
   const [open, setOpen] = useState(false);
+  const archivedTarget = new URLSearchParams(window.location.search).get("placeArchived");
+  useEffect(() => {
+    if (archivedTarget) setOpen(true);
+  }, [archivedTarget]);
+  useEffect(() => {
+    const navigate = () => {
+      if (!new URLSearchParams(window.location.search).get("placeArchived")) return;
+      setOpen(true);
+      window.setTimeout(() =>
+        (document.getElementById(`archived-place-${new URLSearchParams(window.location.search).get("placeArchived")}`) ??
+          document.getElementById("admin-place-archive"))?.scrollIntoView({ block: "center" }), 250);
+    };
+    window.addEventListener("admin-place-navigate", navigate);
+    return () => window.removeEventListener("admin-place-navigate", navigate);
+  }, []);
   const [busyId, setBusyId] = useState<string | null>(null);
   const { data, isLoading } = useGetTrash(tenantId);
 
@@ -2314,7 +2399,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
   };
 
   return (
-    <div className="mt-8 border rounded-xl">
+    <div id="admin-place-archive" className="mt-8 border rounded-xl">
       <button
         type="button"
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
@@ -2348,7 +2433,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Kategorije</p>
                   {categories.map((cat) => (
-                    <div key={cat.id} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
+                    <div key={cat.id} id={`archived-place-${cat.id}`} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
                       <div className="min-w-0">
                         <span className="font-medium truncate">{cat.label}</span>
                         <span className="text-xs text-muted-foreground ml-1">v „{cat.sectionTitle}“</span>
@@ -2388,7 +2473,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                   {items.map((it) => {
                     const title = it.title || "(Brez naslova)";
                     return (
-                      <div key={it.id} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
+                      <div key={it.id} id={`archived-place-${it.id}`} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
                         <div className="min-w-0">
                           <span className="font-medium truncate">{title}</span>
                           <span className="text-xs text-muted-foreground ml-1">v „{it.categoryLabel}“</span>

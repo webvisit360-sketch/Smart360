@@ -52,6 +52,7 @@ import {
   publicationNeedsConfirmation,
 } from "@/lib/tenant-publication-flow";
 import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
+import { adminPlaceTargetTab } from "@/lib/manual-pin-feedback";
 import { SkeletonAlignmentAction } from "@/components/admin/skeleton-alignment-action";
 import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-editor";
 
@@ -274,7 +275,15 @@ export default function AdminTenantEdit() {
   const logoFileRef = useRef<HTMLInputElement>(null);
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
-  const [activeTab, setActiveTab] = useState("pregled");
+  const [activeTab, setActiveTab] = useState(() => adminPlaceTargetTab(window.location.search) ?? "pregled");
+  useEffect(() => {
+    const navigate = (event: Event) => {
+      const tab = (event as CustomEvent<{ tab: string }>).detail?.tab;
+      if (tab === "content" || tab === "kreator") setActiveTab(tab);
+    };
+    window.addEventListener("admin-place-navigate", navigate);
+    return () => window.removeEventListener("admin-place-navigate", navigate);
+  }, []);
   const isSettings = ["general", "onboarding", "appearance", "contacts", "translations", "guide", "changelog"].includes(activeTab);
   const isWideLayout = [
     "kreator",

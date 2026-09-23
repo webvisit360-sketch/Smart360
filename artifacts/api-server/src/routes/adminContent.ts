@@ -59,6 +59,8 @@ import { isRichField, normalizeAllContent } from "../lib/normalizeContent";
 import { invalidateTenantCache } from "./publicTenants";
 import {
   createAdminPlace,
+  AdminPlaceConflictError,
+  adminPlaceConflictResponse,
   getItemCreatorStatus,
   ItemDistanceError,
   recomputeItemDistance,
@@ -726,7 +728,9 @@ router.post("/admin/categories/:id/places", async (req, res): Promise<void> => {
     res.status(201).json(CreateAdminPlaceResponse.parse(await itemWithMedia(item.item)));
   } catch (error) {
     res.status(error instanceof CreatorBulkApprovalError ? 409 : 503)
-      .json({ error: error instanceof Error ? error.message : "Kraja ni bilo mogoče dodati." });
+      .json(error instanceof AdminPlaceConflictError
+        ? adminPlaceConflictResponse(error)
+        : { error: error instanceof Error ? error.message : "Kraja ni bilo mogoče dodati." });
   }
 });
 
