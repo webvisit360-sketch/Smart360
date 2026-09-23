@@ -18,6 +18,7 @@ import {
   omitLegacyRichAliasForCanonicalItems,
   persistedHostOnboardingSubmitPayload,
   updateCanonicalItemText,
+  fetchHostOnboardingSnapshot,
 } from "@/hooks/use-host-onboarding";
 import { useHostSession } from "@/hooks/use-host-session";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
@@ -27,6 +28,16 @@ import {
   type ItemMediaEditorHandle,
 } from "@/components/admin/item-media-editor";
 import { entryNamePlaceholder } from "@/lib/entry-name-placeholder";
+import {
+  rebaseHostOnboardingDraft,
+  recoveryStorageKey,
+  resolveDraftConflict,
+  restoreHostDraftRecovery,
+  safeRecoveryData,
+  hostDraftRetryDelay,
+  type DraftConflict,
+  type HostDraftRecovery,
+} from "@/lib/host-onboarding-draft-rebase";
 
 const generateId = () => crypto.randomUUID();
 type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -224,6 +235,7 @@ export default function HostOnboarding() {
   const queue = useRef<Promise<void>>(Promise.resolve());
   const activeOperation = useRef<Promise<void>>(Promise.resolve());
   const conflictBlocked = useRef(false);
+  const conflictRemote = useRef<HostOnboardingData | null>(null);
   const mediaDirty = useRef(false);
   const removedMediaIds = useRef(new Set<string>());
   const canonicalRowIds = useRef({
@@ -236,6 +248,11 @@ export default function HostOnboarding() {
   const mounted = useRef(true);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [saveError, setSaveError] = useState("");
+  const [firstFailureAt, setFirstFailureAt] = useState<string | null>(null);
+  const [recoveryUnavailable, setRecoveryUnavailable] = useState(false);
+  const [draftConflicts, setDraftConflicts] = useState<DraftConflict[]>([]);
+  const retryTimeout = useRef<number | null>(null);
+  const retryAttempt = useRef(0);
   const [uploadsBlocking, setUploadsBlocking] = useState(false);
   const [entryUploadsBlocking, setEntryUploadsBlocking] = useState(false);
   const [submittedMessage, setSubmittedMessage] = useState("");
@@ -262,6 +279,15 @@ export default function HostOnboarding() {
   const entryMediaRefs = useRef(new Map<string, ItemMediaEditorHandle>());
   const entryRenderKeys = useRef(new Map<string, string>());
   const entryPendingCounts = useRef(new Map<string, number>());
+
+  const recoveryKey = onboardingData && session?.tenantId
+    ? recoveryStorageKey(session.tenantId, onboardingData.round)
+    : null;
+  const reportRecoveryFailure = useCallback(() => {
+    setRecoveryUnavailable(true);
+    setFirstFailureAt((current) => current || new Date().toISOString());
+    setSaveError("Lokalna obnovitev ni na voljo. Ne osvežite strani.");
+  }, []);
 
   const cleanData = useCallback((data: HostOnboardingData): HostOnboardingData => {
     const finalData = normalizeCanonicalSaveBaseline(data);
@@ -294,7 +320,45 @@ export default function HostOnboarding() {
       saveState,
     })) return;
 
-    const canonical = onboardingData.data || {};
+    let canonical = onboardingData.data || {};
+    let recoveredBase: HostOnboardingData | null = null;
+    let recoveredConflicts: DraftConflict[] = [];
+    if (!initialized.current && recoveryKey) {
+      try {
+        const raw = sessionStorage.getItem(recoveryKey);
+        const recovery = raw ? JSON.parse(raw) as HostDraftRecovery : null;
+        if (
+          recovery &&
+          recovery.tenantId === session?.tenantId &&
+          recovery.round === onboardingData.round
+        ) {
+          const restored = restoreHostDraftRecovery(recovery, canonical);
+          canonical = restored.data;
+          recoveredBase = onboardingData.data || {};
+          conflictRemote.current = recoveredBase;
+          recoveredConflicts = restored.conflicts;
+          setDraftConflicts(recoveredConflicts);
+          conflictBlocked.current = recoveredConflicts.length > 0;
+          setFirstFailureAt(recovery.firstFailureAt || null);
+          const transient = recovery.transient || {};
+          if (transient.recs) setTransientRecs(transient.recs as Record<string, TransientRecommendation>);
+          if (transient.events) setTransientEvents(transient.events as typeof transientEvents);
+          if (transient.contact) setTransientContact(transient.contact as typeof transientContact);
+          if (transient.offers) setTransientOffers(transient.offers as Record<string, TransientOffer>);
+          if (transient.sectionCategories) {
+            setTransientSectionCategories(transient.sectionCategories as typeof transientSectionCategories);
+          }
+          if (transient.customCategory) {
+            setTransientCustomCategory(transient.customCategory as typeof transientCustomCategory);
+          }
+          if (transient.customEntries) {
+            setTransientCustomEntries(transient.customEntries as typeof transientCustomEntries);
+          }
+        }
+      } catch {
+        reportRecoveryFailure();
+      }
+    }
     mediaDirty.current = false;
     removedMediaIds.current.clear();
     canonicalRowIds.current = {
@@ -310,38 +374,113 @@ export default function HostOnboarding() {
     setFormData(canonical);
     latestData.current = canonical;
     latestPayload.current = canonicalPayload;
-    lastSavedData.current = canonical;
-    lastSaved.current = JSON.stringify(canonicalPayload);
+    lastSavedData.current = recoveredBase || canonical;
+    lastSaved.current = JSON.stringify(cleanData(recoveredBase || canonical));
     revision.current = onboardingData.revision;
     canonicalRevision.current = onboardingData.canonicalRevision;
-    conflictBlocked.current = false;
+    if (!recoveredConflicts.length) conflictBlocked.current = false;
     hydratedSource.current = source;
     initialized.current = true;
-    skipAutosaveOnce.current = true;
+    skipAutosaveOnce.current = !recoveredBase;
     setSaveError("");
-    setSaveState("saved");
-  }, [onboardingData, saveState]);
+    setSaveState(recoveredBase ? (recoveredConflicts.length ? "conflict" : "dirty") : "saved");
+  }, [onboardingData, saveState, recoveryKey, reportRecoveryFailure]);
 
   const enqueueSave = useCallback((data: Partial<HostOnboardingData>, explicit = false) => {
     const snapshot = JSON.stringify(data);
-    if (conflictBlocked.current) return Promise.reject(new Error("Osnutek je spremenjen v drugem zavihku."));
+    if (conflictBlocked.current) return Promise.reject(new Error("Razrešite označena polja v sporu."));
     if (Object.keys(data).length === 0) return queue.current;
     if (snapshot === queuedSnapshot.current) return activeOperation.current;
     queuedSnapshot.current = snapshot;
     setSaveState("saving");
     setSaveError("");
     const operation = queue.current.then(async () => {
-      const result = explicit
-        ? await saveOnboarding.mutateAsync({
-            data,
-            revision: revision.current,
-            canonicalRevision: canonicalRevision.current,
-          })
-        : await patchOnboarding.mutateAsync({
-            data,
-            revision: revision.current,
-            canonicalRevision: canonicalRevision.current,
-          });
+      // A queued patch is only a wake-up signal. Re-derive its actual payload
+      // at execution time, after all preceding writes/rebases have updated the
+      // canonical baseline. This prevents a stale full row captured before a
+      // 409 rebase from restoring an unrelated remote field.
+      let submitted = changedHostOnboardingFields(
+        cleanData(latestData.current),
+        lastSavedData.current,
+      );
+      if (Object.keys(submitted).length === 0) {
+        queuedSnapshot.current = "";
+        if (mounted.current) {
+          setSaveState("saved");
+          setFirstFailureAt(null);
+          retryAttempt.current = 0;
+          if (recoveryKey) {
+            try {
+              sessionStorage.removeItem(recoveryKey);
+            } catch {
+              // The draft is fully acknowledged, so failed cleanup is not a
+              // data-loss risk and must not replace the truthful saved state.
+            }
+          }
+        }
+        return;
+      }
+      let result;
+      try {
+        result = explicit
+          ? await saveOnboarding.mutateAsync({
+              data: submitted,
+              revision: revision.current,
+              canonicalRevision: canonicalRevision.current,
+            })
+          : await patchOnboarding.mutateAsync({
+              data: submitted,
+              revision: revision.current,
+              canonicalRevision: canonicalRevision.current,
+            });
+      } catch (reason) {
+        const error = reason as Error & { status?: number };
+        if (error.status !== 409) throw error;
+        const current = await fetchHostOnboardingSnapshot();
+        const rebased = rebaseHostOnboardingDraft(
+          lastSavedData.current,
+          latestData.current,
+          current.data,
+        );
+        revision.current = current.revision;
+        canonicalRevision.current = current.canonicalRevision;
+        hydratedSource.current = `${current.id}:${current.revision}:${current.canonicalRevision}`;
+        queryClient.setQueryData(["host-onboarding"], current);
+        latestData.current = rebased.data;
+        latestPayload.current = cleanData(rebased.data);
+        setFormData(rebased.data);
+        conflictRemote.current = current.data;
+        if (rebased.conflicts.length) {
+          setDraftConflicts(rebased.conflicts);
+          conflictBlocked.current = true;
+          const conflictError = new Error("Ista polja so bila spremenjena tudi drugje.") as Error & { status?: number };
+          conflictError.status = 409;
+          throw conflictError;
+        }
+        lastSavedData.current = current.data;
+        submitted = changedHostOnboardingFields(latestPayload.current, current.data);
+        if (Object.keys(submitted).length === 0) {
+          result = {
+            ok: true as const,
+            revision: current.revision,
+            canonicalRevision: current.canonicalRevision,
+            updatedAt: current.updatedAt,
+            data: current.data,
+          };
+        } else {
+          result = explicit
+            ? await saveOnboarding.mutateAsync({
+                data: submitted,
+                revision: current.revision,
+                canonicalRevision: current.canonicalRevision,
+              })
+            : await patchOnboarding.mutateAsync({
+                data: submitted,
+                revision: current.revision,
+                canonicalRevision: current.canonicalRevision,
+              });
+        }
+      }
       revision.current = result.revision;
       canonicalRevision.current = result.canonicalRevision;
       const canonical = result.data ?? { ...lastSavedData.current, ...data };
@@ -350,15 +489,15 @@ export default function HostOnboarding() {
           local: latestData.current,
           canonical,
           baseline: lastSavedData.current,
-          submitted: data,
+          submitted,
         });
-        for (const submitted of data.canonicalItems || []) {
-          if (!submitted.id.startsWith("new-")) continue;
-          const localIndex = latestData.current.canonicalItems?.findIndex((row) => row.id === submitted.id) ?? -1;
+        for (const submittedRow of submitted.canonicalItems || []) {
+          if (!submittedRow.id.startsWith("new-")) continue;
+          const localIndex = latestData.current.canonicalItems?.findIndex((row) => row.id === submittedRow.id) ?? -1;
           const created = localIndex >= 0 ? reconciled.canonicalItems?.[localIndex] : undefined;
-          const editor = entryMediaRefs.current.get(submitted.id);
+          const editor = entryMediaRefs.current.get(submittedRow.id);
           if (created && !created.id.startsWith("new-")) {
-            entryRenderKeys.current.set(created.id, submitted.id);
+            entryRenderKeys.current.set(created.id, submittedRow.id);
           }
           if (created && !created.id.startsWith("new-") && editor?.hasPending()) {
             await editor.uploadAllTo(created.id);
@@ -371,14 +510,14 @@ export default function HostOnboarding() {
           local: latestData.current,
           canonical,
           baseline: lastSavedData.current,
-          submitted: data,
+          submitted,
         });
         latestData.current = reconciled;
         setFormData(reconciled);
       }
-      for (const row of data.contacts || []) canonicalRowIds.current.contacts.add(row.id);
-      for (const row of data.offers || []) canonicalRowIds.current.offers.add(row.id);
-      for (const row of data.events || []) canonicalRowIds.current.events.add(row.id);
+      for (const row of submitted.contacts || []) canonicalRowIds.current.contacts.add(row.id);
+      for (const row of submitted.offers || []) canonicalRowIds.current.offers.add(row.id);
+      for (const row of submitted.events || []) canonicalRowIds.current.events.add(row.id);
       lastSavedData.current = canonical;
       const savedPayload = preserveCanonicalMediaForWrite(
         omitLegacyRichAliasForCanonicalItems(normalizeCanonicalSaveBaseline(canonical)),
@@ -388,14 +527,28 @@ export default function HostOnboarding() {
       );
       lastSaved.current = JSON.stringify(savedPayload);
       if (mounted.current) {
-        setSaveState(JSON.stringify(latestPayload.current) === lastSaved.current ? "saved" : "dirty");
+        const fullySaved = JSON.stringify(latestPayload.current) === lastSaved.current;
+        setSaveState(fullySaved ? "saved" : "dirty");
+        if (fullySaved) {
+          setFirstFailureAt(null);
+          retryAttempt.current = 0;
+          if (retryTimeout.current !== null) window.clearTimeout(retryTimeout.current);
+          if (recoveryKey) {
+            try {
+              sessionStorage.removeItem(recoveryKey);
+            } catch {
+              // Fully saved; stale session recovery is ignored by revision on
+              // the next open and this cleanup failure cannot lose input.
+            }
+          }
+        }
       }
     }).catch((reason: Error & { status?: number }) => {
       if (mounted.current) {
         setSaveError(reason.message);
         setSaveState(reason.status === 409 ? "conflict" : "error");
       }
-      if (reason.status === 409) conflictBlocked.current = true;
+      setFirstFailureAt((current) => current || new Date().toISOString());
       throw reason;
     }).finally(() => {
       if (queuedSnapshot.current === snapshot) queuedSnapshot.current = "";
@@ -403,7 +556,7 @@ export default function HostOnboarding() {
     queue.current = operation.catch(() => undefined);
     activeOperation.current = operation;
     return operation;
-  }, [cleanData, onboardingData?.data.media, patchOnboarding, saveOnboarding]);
+  }, [cleanData, onboardingData?.data.media, patchOnboarding, saveOnboarding, queryClient, recoveryKey, draftConflicts.length]);
   const enqueueSaveRef = useRef(enqueueSave);
   enqueueSaveRef.current = enqueueSave;
 
@@ -428,9 +581,9 @@ export default function HostOnboarding() {
   const refreshAfterEntryMediaWrite = useCallback(async () => {
     const response = await fetch("/api/admin/host/onboarding", { credentials: "include" });
     if (!response.ok) {
-      conflictBlocked.current = true;
       setSaveError("Mediji so shranjeni, osnutka pa ni bilo mogoče osvežiti.");
-      setSaveState("conflict");
+      setFirstFailureAt((current) => current || new Date().toISOString());
+      setSaveState("error");
       return;
     }
     const current = await response.json() as import("@/hooks/use-host-onboarding").HostOnboardingResponse;
@@ -486,6 +639,89 @@ export default function HostOnboarding() {
   }, [formData, cleanData, enqueueSave]);
 
   useEffect(() => {
+    if (!initialized.current || !recoveryKey) return;
+    const local = safeRecoveryData(latestData.current);
+    const patch = changedHostOnboardingFields(local, safeRecoveryData(lastSavedData.current));
+    const hasTransient = Boolean(
+      transientContact.name || transientContact.phone ||
+      transientEvents.name || transientEvents.date || transientEvents.time ||
+      Object.values(transientOffers).some((row) => row.name || row.price) ||
+      Object.values(transientRecs).some((row) => row.name) ||
+      transientSectionCategories.stay.name || transientSectionCategories.offer.name ||
+      transientCustomCategory.name ||
+      Object.values(transientCustomEntries).some((row) => row.name)
+    );
+    if (Object.keys(patch).length === 0 && !hasTransient && !firstFailureAt) {
+      try {
+        sessionStorage.removeItem(recoveryKey);
+        setRecoveryUnavailable(false);
+      } catch {
+        reportRecoveryFailure();
+      }
+      return;
+    }
+    const recovery: HostDraftRecovery = {
+      tenantId: session!.tenantId!,
+      round: onboardingData!.round,
+      base: safeRecoveryData(lastSavedData.current),
+      local,
+      firstFailureAt: firstFailureAt || undefined,
+      transient: {
+        recs: transientRecs,
+        events: transientEvents,
+        contact: transientContact,
+        offers: transientOffers,
+        sectionCategories: transientSectionCategories,
+        customCategory: transientCustomCategory,
+        customEntries: transientCustomEntries,
+      },
+    };
+    try {
+      sessionStorage.setItem(recoveryKey, JSON.stringify(recovery));
+      setRecoveryUnavailable(false);
+    } catch {
+      reportRecoveryFailure();
+    }
+  }, [
+    formData, firstFailureAt, recoveryKey, session, onboardingData,
+    transientRecs, transientEvents, transientContact, transientOffers,
+    transientSectionCategories, transientCustomCategory, transientCustomEntries,
+    reportRecoveryFailure,
+  ]);
+
+  useEffect(() => {
+    if (!recoveryUnavailable) return;
+    const protectUnsavedDraft = (event: BeforeUnloadEvent) => {
+      if (JSON.stringify(latestPayload.current) === lastSaved.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", protectUnsavedDraft);
+    return () => window.removeEventListener("beforeunload", protectUnsavedDraft);
+  }, [recoveryUnavailable]);
+
+  useEffect(() => {
+    if (!firstFailureAt || conflictBlocked.current || saveState === "saving") return;
+    if (retryTimeout.current !== null) window.clearTimeout(retryTimeout.current);
+    const delay = hostDraftRetryDelay(retryAttempt.current);
+    retryTimeout.current = window.setTimeout(() => {
+      retryAttempt.current += 1;
+      void flush().catch(() => undefined);
+    }, delay);
+    return () => {
+      if (retryTimeout.current !== null) window.clearTimeout(retryTimeout.current);
+    };
+  }, [firstFailureAt, saveState, flush]);
+
+  useEffect(() => {
+    const resume = () => {
+      if (firstFailureAt && !conflictBlocked.current) void flush().catch(() => undefined);
+    };
+    window.addEventListener("online", resume);
+    return () => window.removeEventListener("online", resume);
+  }, [firstFailureAt, flush]);
+
+  useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
@@ -513,7 +749,27 @@ export default function HostOnboarding() {
     } catch {}
   };
 
-  const handleCreateSectionCategory = async (sectionKey: "stay" | "offer") => {
+  const handleConflictChoice = (conflict: DraftConflict, choice: "local" | "remote") => {
+    const next = resolveDraftConflict(latestData.current, conflict, choice);
+    latestData.current = next;
+    latestPayload.current = cleanData(next);
+    setFormData(next);
+    setDraftConflicts((current) => {
+      const remaining = current.filter((item) => item.path !== conflict.path);
+      if (remaining.length === 0) {
+        conflictBlocked.current = false;
+        if (conflictRemote.current) lastSavedData.current = conflictRemote.current;
+        setSaveState("dirty");
+        window.setTimeout(() => void flush().catch(() => undefined), 0);
+      }
+      return remaining;
+    });
+  };
+
+  const handleCreateSectionCategory = async (
+    sectionKey: "stay" | "offer",
+    retried = false,
+  ) => {
     const draft = transientSectionCategories[sectionKey];
     if (!draft.name.trim()) {
       focusInput(`section-category:${sectionKey}`);
@@ -548,13 +804,41 @@ export default function HostOnboarding() {
       focusInput(`section-category:${sectionKey}`);
     } catch (reason) {
       const error = reason as Error & { status?: number };
+      if (error.status === 409 && !retried) {
+        try {
+          const current = await fetchHostOnboardingSnapshot();
+          const rebased = rebaseHostOnboardingDraft(
+            lastSavedData.current,
+            latestData.current,
+            current.data,
+          );
+          revision.current = current.revision;
+          canonicalRevision.current = current.canonicalRevision;
+          latestData.current = rebased.data;
+          latestPayload.current = cleanData(rebased.data);
+          setFormData(rebased.data);
+          lastSavedData.current = current.data;
+          conflictRemote.current = current.data;
+          if (!rebased.conflicts.length) {
+            await handleCreateSectionCategory(sectionKey, true);
+            return;
+          }
+          setDraftConflicts(rebased.conflicts);
+          conflictBlocked.current = true;
+        } catch (refreshError) {
+          setSaveError(refreshError instanceof Error ? refreshError.message : error.message);
+          setSaveState("error");
+          setFirstFailureAt((currentFailure) => currentFailure || new Date().toISOString());
+          return;
+        }
+      }
       setSaveError(error.message);
       setSaveState(error.status === 409 ? "conflict" : "error");
-      if (error.status === 409) conflictBlocked.current = true;
+      setFirstFailureAt((current) => current || new Date().toISOString());
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (retried = false) => {
     if (uploadsBlocking || entryUploadsBlocking) return;
     try {
       await flush();
@@ -566,7 +850,43 @@ export default function HostOnboarding() {
         ),
       );
       setSubmittedMessage(result.message);
-    } catch {}
+    } catch (reason) {
+      const submitError = reason as Error & { status?: number };
+      if (submitError.status !== 409 || retried) {
+        setFirstFailureAt((current) => current || new Date().toISOString());
+        setSaveError(submitError.message);
+        setSaveState(submitError.status === 409 ? "conflict" : "error");
+        return;
+      }
+      try {
+        const current = await fetchHostOnboardingSnapshot();
+        const rebased = rebaseHostOnboardingDraft(
+          lastSavedData.current,
+          latestData.current,
+          current.data,
+        );
+        revision.current = current.revision;
+        canonicalRevision.current = current.canonicalRevision;
+        latestData.current = rebased.data;
+        latestPayload.current = cleanData(rebased.data);
+        setFormData(rebased.data);
+        conflictRemote.current = current.data;
+        lastSavedData.current = current.data;
+        if (rebased.conflicts.length) {
+          setDraftConflicts(rebased.conflicts);
+          conflictBlocked.current = true;
+          setSaveState("conflict");
+          setFirstFailureAt((value) => value || new Date().toISOString());
+          return;
+        }
+        await flush(true);
+        await handleSubmit(true);
+      } catch (refreshError) {
+        setFirstFailureAt((currentFailure) => currentFailure || new Date().toISOString());
+        setSaveError(refreshError instanceof Error ? refreshError.message : "Shranjevanje ni uspelo.");
+        setSaveState("error");
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -575,6 +895,13 @@ export default function HostOnboarding() {
       await flush(true);
       const response = await fetch("/api/admin/host/logout", { method: "POST", credentials: "include" });
       if (!response.ok) throw new Error("Odjava ni uspela.");
+      if (recoveryKey) {
+        try {
+          sessionStorage.removeItem(recoveryKey);
+        } catch {
+          // Logout has succeeded and the in-memory draft is no longer active.
+        }
+      }
       queryClient.removeQueries({ queryKey: ["host-onboarding"] });
       setLocation("/admin/login");
     } catch (reason) {
@@ -1786,19 +2113,57 @@ export default function HostOnboarding() {
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-sm font-semibold flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
-            {submitOnboarding.error ? (
-              <span className="text-amber-600">{submitOnboarding.error.message}</span>
+            {firstFailureAt ? (
+              <span className="flex flex-col items-start gap-1" style={{ color: "#DD9A2B" }}>
+                <span>
+                  Spremembe od {new Intl.DateTimeFormat("sl-SI", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(firstFailureAt))} niso shranjene
+                </span>
+                {recoveryUnavailable && saveError ? (
+                  <span className="font-normal">{saveError}</span>
+                ) : null}
+                {draftConflicts.length > 0 ? (
+                  <span className="flex flex-col gap-2 font-normal">
+                    <span>Ista polja so bila spremenjena tudi drugje. Vaš vnos je ohranjen:</span>
+                    {draftConflicts.map((conflict) => (
+                      <span key={conflict.path} className="flex flex-wrap items-center gap-2">
+                        <strong className="font-semibold">{conflict.label}</strong>
+                        <button
+                          type="button"
+                          className="underline py-1 font-semibold"
+                          onClick={() => handleConflictChoice(conflict, "local")}
+                        >
+                          Obdrži moj vnos
+                        </button>
+                        <button
+                          type="button"
+                          className="underline py-1"
+                          onClick={() => handleConflictChoice(conflict, "remote")}
+                        >
+                          Uporabi spremembo od drugod
+                        </button>
+                      </span>
+                    ))}
+                  </span>
+                ) : (
+                  <button type="button" className="underline py-1 self-start" onClick={() => void handleSave()}>
+                    Poskusi znova
+                  </button>
+                )}
+              </span>
             ) : isSaving ? (
               <span className="text-[#66716A] flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" /> Shranjevanje...
               </span>
             ) : saveState === "dirty" ? (
               <span className="text-amber-700">Neshranjene spremembe</span>
-            ) : saveState === "error" || saveState === "conflict" ? (
-              <span className="text-amber-600 flex flex-col items-start">
-                <span>{saveState === "conflict" ? "Spor sprememb — podatkov nismo prepisali." : saveError}</span>
-                <button type="button" className="underline py-1" onClick={() => saveState === "conflict" ? window.location.reload() : void handleSave()}>
-                  {saveState === "conflict" ? "Osveži stran in preveri spremembe" : "Poskusi znova"}
+            ) : saveState === "error" || saveState === "conflict" || submitOnboarding.error ? (
+              <span className="flex flex-col items-start" style={{ color: "#DD9A2B" }}>
+                <span>{saveError || submitOnboarding.error?.message}</span>
+                <button type="button" className="underline py-1" onClick={() => void handleSave()}>
+                  Poskusi znova
                 </button>
               </span>
             ) : (
@@ -1811,14 +2176,14 @@ export default function HostOnboarding() {
           <div className="flex gap-3 w-full sm:w-auto">
             <button 
               onClick={handleSave}
-              disabled={isSaving || submitOnboarding.isPending || saveState === "conflict"}
+              disabled={isSaving || submitOnboarding.isPending || draftConflicts.length > 0}
               className="flex-1 sm:flex-none bg-[#F4F6F2] text-[#121A14] border border-[#E8EBE6] px-5 py-3 rounded-full font-bold text-[15px] hover:bg-[#E8EBE6] transition-colors whitespace-nowrap"
             >
               Shrani osnutek
             </button>
             <button 
-              onClick={handleSubmit}
-              disabled={submitOnboarding.isPending || isSaving || uploadsBlocking || entryUploadsBlocking || saveState === "conflict"}
+              onClick={() => void handleSubmit()}
+              disabled={submitOnboarding.isPending || isSaving || uploadsBlocking || entryUploadsBlocking || draftConflicts.length > 0}
               className="flex-1 sm:flex-none bg-[#157347] text-white px-7 py-3 rounded-full font-bold text-[15px] hover:bg-[#0f5835] transition-colors whitespace-nowrap shadow-md flex items-center justify-center gap-2"
             >
               {submitOnboarding.isPending && <Loader2 className="w-4 h-4 animate-spin" />}

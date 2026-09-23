@@ -223,6 +223,10 @@ const customFetch = async (url: string, options?: RequestInit) => {
   return res.json();
 };
 
+export function fetchHostOnboardingSnapshot(): Promise<HostOnboardingResponse> {
+  return customFetch("/api/admin/host/onboarding");
+}
+
 // Host endpoints
 
 export const getHostOnboardingQueryKey = () => ["host-onboarding"];

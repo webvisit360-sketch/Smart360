@@ -77,7 +77,12 @@ export const EMPTY_HOST_ONBOARDING_DATA: HostOnboardingData = {
 
 export type SaveOnboardingResult =
   | { ok: true; round: typeof hostOnboardingRoundsTable.$inferSelect }
-  | { ok: false; kind: "missing" | "submitted" | "stale"; currentRevision?: number };
+  | {
+      ok: false;
+      kind: "missing" | "submitted" | "stale";
+      currentRevision?: number;
+      staleReason?: "round_revision" | "canonical_revision" | "cas_update";
+    };
 
 function clean(value: string): string {
   return value.trim();
@@ -231,11 +236,21 @@ export async function saveHostOnboarding(
     if (!round) return { ok: false, kind: "missing" };
     if (round.status !== "draft") return { ok: false, kind: "submitted" };
     if (round.revision !== revision) {
-      return { ok: false, kind: "stale", currentRevision: round.revision };
+      return {
+        ok: false,
+        kind: "stale",
+        currentRevision: round.revision,
+        staleReason: "round_revision",
+      };
     }
     const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId, true);
     if (expectedCanonicalRevision && expectedCanonicalRevision !== canonicalRevision) {
-      return { ok: false, kind: "stale", currentRevision: round.revision };
+      return {
+        ok: false,
+        kind: "stale",
+        currentRevision: round.revision,
+        staleReason: "canonical_revision",
+      };
     }
     await applyCanonicalHostOnboardingPatch(tx, tenantId, patch);
     const workflow = normalizeHostOnboardingData(round.draftData);
@@ -275,7 +290,12 @@ export async function saveHostOnboarding(
         .select({ revision: hostOnboardingRoundsTable.revision })
         .from(hostOnboardingRoundsTable)
         .where(eq(hostOnboardingRoundsTable.id, round.id));
-      return { ok: false, kind: "stale", currentRevision: fresh?.revision };
+      return {
+        ok: false,
+        kind: "stale",
+        currentRevision: fresh?.revision,
+        staleReason: "cas_update",
+      };
     }
     return { ok: true, round: updated };
   });
@@ -724,6 +744,7 @@ export type SubmitResult =
       ok: false;
       kind: "missing" | "wrong_round" | "stale" | "photo_uploading" | "invalid_custom_category";
       currentRevision?: number;
+      staleReason?: "round_revision" | "canonical_revision";
     };
 
 /**
@@ -781,6 +802,7 @@ export async function submitHostOnboarding(
         ok: false,
         kind: "stale",
         currentRevision: round.revision,
+        staleReason: "round_revision",
       } as const;
     }
     const canonicalRevision = await canonicalHostOnboardingRevision(tx, tenantId, true);
@@ -789,6 +811,7 @@ export async function submitHostOnboarding(
         ok: false,
         kind: "stale",
         currentRevision: round.revision,
+        staleReason: "canonical_revision",
       } as const;
     }
     if (!hostCustomCategoriesAreSubmittable(data)) {

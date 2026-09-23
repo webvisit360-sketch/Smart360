@@ -26,3 +26,15 @@ Shared-draft media writes belong to the same serialization boundary as text auto
 **Why:** Flushing text only before an upload does not prevent autosave from racing the upload itself. Deferred uploads also leave time for further typing; restoring the pre-upload local snapshot would lose those edits.
 
 **How to apply:** Serialize the entire media operation and revision refresh, reconcile against the latest local edits afterward, and avoid re-entering that queue for uploads already inside an entry-creation save. Keep submission blocked throughout upload processing and failed-file recovery.
+
+Queued saves must derive their write from the latest acknowledged baseline when they execute, not replay a patch captured before a preceding merge.
+
+**Why:** A stale full-row patch can silently overwrite an unrelated operator edit after a previous queued request already refreshed the shared revision.
+
+**How to apply:** Test queued edits across a three-way rebase, including different properties of one row. A local conflict choice must retain any further typing, not the value captured when the conflict first appeared.
+
+Recovery records need full local snapshots or explicit stable-ID reconstruction; sparse API patches are not replacement arrays.
+
+**Why:** Shallowly overlaying a changed-row patch onto its base drops untouched rows when the page reloads.
+
+**How to apply:** Exercise refresh recovery with multiple rows and only one edited row. Retain the original base for conflict comparison and never interpret an omitted patch row as deletion.

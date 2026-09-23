@@ -38,6 +38,7 @@ import {
 } from "../lib/hostOnboardingPhotoPaths";
 import { ensureHostOnboardingGalleryItem } from "../lib/hostOnboardingCanonical";
 import { logChange } from "../lib/changelog";
+import { safeDatabaseErrorDiagnostic } from "../lib/infrastructureDiagnostics";
 import { storePhotoVariants } from "./storage";
 
 const router: IRouter = Router();
@@ -208,7 +209,23 @@ async function save(req: Request, res: Response): Promise<void> {
     fail(res, 400, "Podatki obrazca niso veljavni.");
     return;
   }
-  const current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  const diagnosticBase = {
+    requestId: String(req.id),
+    operation: "host_onboarding_save",
+    tenantId: actor.tenantId,
+    requestedRevision: parsed.data.revision,
+  };
+  let current;
+  try {
+    current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  } catch (error) {
+    req.log.error(
+      { ...diagnosticBase, outcome: "failed", ...safeDatabaseErrorDiagnostic(error) },
+      "Host onboarding save infrastructure failure",
+    );
+    fail(res, 500, "Shranjevanje trenutno ni uspelo. Poskusite znova.");
+    return;
+  }
   if (!current) {
     fail(res, 404, "Obrazec za to namestitev še ni odprt.");
     return;
@@ -222,14 +239,39 @@ async function save(req: Request, res: Response): Promise<void> {
     fail(res, 400, "Podatki obrazca niso veljavni.");
     return;
   }
-  const result = await saveHostOnboarding(
-    actor.tenantId,
-    actor.hostUserId,
-    parsed.data.revision,
-    parsed.data.data,
-    (req.body as { canonicalRevision?: string }).canonicalRevision,
-  );
+  let result;
+  try {
+    result = await saveHostOnboarding(
+      actor.tenantId,
+      actor.hostUserId,
+      parsed.data.revision,
+      parsed.data.data,
+      (req.body as { canonicalRevision?: string }).canonicalRevision,
+    );
+  } catch (error) {
+    req.log.error(
+      {
+        ...diagnosticBase,
+        round: current.round.round,
+        outcome: "failed",
+        ...safeDatabaseErrorDiagnostic(error),
+      },
+      "Host onboarding save infrastructure failure",
+    );
+    fail(res, 500, "Shranjevanje trenutno ni uspelo. Poskusite znova.");
+    return;
+  }
   if (!result.ok) {
+    req.log.warn(
+      {
+        ...diagnosticBase,
+        round: current.round.round,
+        outcome: "rejected",
+        reason: result.kind === "stale" ? result.staleReason : result.kind,
+        currentRevision: result.currentRevision,
+      },
+      "Host onboarding save rejected",
+    );
     if (result.kind === "stale") {
       fail(
         res,
@@ -248,12 +290,37 @@ async function save(req: Request, res: Response): Promise<void> {
     }
     return;
   }
-  const canonical = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  let canonical;
+  try {
+    canonical = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+  } catch (error) {
+    req.log.error(
+      {
+        ...diagnosticBase,
+        round: current.round.round,
+        outcome: "failed",
+        phase: "response_read",
+        ...safeDatabaseErrorDiagnostic(error),
+      },
+      "Host onboarding save infrastructure failure",
+    );
+    fail(res, 500, "Sprememba je bila shranjena, vendar osvežitev podatkov ni uspela.");
+    return;
+  }
   if (!canonical) {
     fail(res, 404, "Obrazec za to namestitev še ni odprt.");
     return;
   }
   const dto = hostDto(canonical);
+  req.log.info(
+    {
+      ...diagnosticBase,
+      round: canonical.round.round,
+      outcome: "saved",
+      resultingRevision: dto.revision,
+    },
+    "Host onboarding save completed",
+  );
   res.json({
     ok: true,
     revision: dto.revision,
@@ -328,15 +395,40 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     fail(res, 400, "Krog obrazca ni veljaven.");
     return;
   }
+  const submitRequestDiagnostic = {
+    requestId: String(req.id),
+    operation: "host_onboarding_submit",
+    tenantId: actor.tenantId,
+    round: requestedRound,
+  };
 
   // Immutable replay is resolved before mutable payload validation. It never
   // maps data, publishes, or admits another notification attempt.
-  const replay = await submittedHostOnboardingReplay(
-    actor.tenantId,
-    actor.hostUserId,
-    requestedRound,
-  );
+  let replay;
+  try {
+    replay = await submittedHostOnboardingReplay(
+      actor.tenantId,
+      actor.hostUserId,
+      requestedRound,
+    );
+  } catch (error) {
+    req.log.error(
+      {
+        ...submitRequestDiagnostic,
+        outcome: "failed",
+        phase: "replay_lookup",
+        ...safeDatabaseErrorDiagnostic(error),
+      },
+      "Host onboarding submit infrastructure failure",
+    );
+    fail(res, 500, "Oddaja trenutno ni uspela. Poskusite znova.");
+    return;
+  }
   if (replay) {
+    req.log.info(
+      { ...submitRequestDiagnostic, outcome: "replayed" },
+      "Host onboarding submit completed",
+    );
     res.json({
       ok: true,
       alreadySubmitted: true,
@@ -361,7 +453,23 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
   }
   let data = parsed.data.data;
   if (!data) {
-    const current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+    let current;
+    try {
+      current = await currentHostOnboarding(actor.tenantId, actor.hostUserId);
+    } catch (error) {
+      req.log.error(
+        {
+          ...submitRequestDiagnostic,
+          requestedRevision: parsed.data.revision,
+          outcome: "failed",
+          phase: "draft_read",
+          ...safeDatabaseErrorDiagnostic(error),
+        },
+        "Host onboarding submit infrastructure failure",
+      );
+      fail(res, 500, "Oddaja trenutno ni uspela. Poskusite znova.");
+      return;
+    }
     if (
       !current ||
       current.round.round !== requestedRound ||
@@ -412,15 +520,38 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     );
     return;
   }
-  const result = await submitHostOnboarding(
-    actor.tenantId,
-    actor.hostUserId,
-    requestedRound,
-    parsed.data.revision,
-    data,
-    parsed.data.canonicalRevision,
-  );
+  const diagnosticBase = {
+    ...submitRequestDiagnostic,
+    requestedRevision: parsed.data.revision,
+  };
+  let result;
+  try {
+    result = await submitHostOnboarding(
+      actor.tenantId,
+      actor.hostUserId,
+      requestedRound,
+      parsed.data.revision,
+      data,
+      parsed.data.canonicalRevision,
+    );
+  } catch (error) {
+    req.log.error(
+      { ...diagnosticBase, outcome: "failed", ...safeDatabaseErrorDiagnostic(error) },
+      "Host onboarding submit infrastructure failure",
+    );
+    fail(res, 500, "Oddaja trenutno ni uspela. Poskusite znova.");
+    return;
+  }
   if (!result.ok) {
+    req.log.warn(
+      {
+        ...diagnosticBase,
+        outcome: "rejected",
+        reason: result.kind === "stale" ? result.staleReason : result.kind,
+        currentRevision: result.currentRevision,
+      },
+      "Host onboarding submit rejected",
+    );
     const messages = {
       missing: "Obrazec za to namestitev še ni odprt.",
       wrong_round: "Krog obrazca ni veljaven.",
@@ -433,6 +564,10 @@ router.post("/admin/host/onboarding/submit", async (req, res): Promise<void> => 
     });
     return;
   }
+  req.log.info(
+    { ...diagnosticBase, outcome: result.alreadySubmitted ? "replayed" : "submitted" },
+    "Host onboarding submit completed",
+  );
   res.json({
     ok: true,
     alreadySubmitted: result.alreadySubmitted,

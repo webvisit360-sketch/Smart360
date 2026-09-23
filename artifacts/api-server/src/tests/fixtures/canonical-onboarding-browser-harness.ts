@@ -24,6 +24,8 @@ import {
   CreateCategoryResponse,
   GetTenantResponse,
   PreviewTenantPublicationResponse,
+  UpdateTenantBody,
+  UpdateTenantResponse,
 } from "@workspace/api-zod";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { actorStorage, type Actor } from "../../lib/actorContext";
@@ -181,6 +183,12 @@ async function inspect(): Promise<void> {
     command: "inspect",
     publishedSnapshotUnchanged: true,
     currentRevision: current.round.revision,
+    canonicalRevision: current.canonicalRevision,
+    ordinaryTenantFieldSummary: {
+      adminFieldKeys: Object.keys(adminOrdinaryFieldMap),
+      hostFieldKeys: Object.values(adminOrdinaryFieldMap),
+      valuesIncluded: false,
+    },
     mediaCount: current.round.draftData.media?.length ?? 0,
     apartItems,
     apartMedia,
@@ -289,6 +297,99 @@ async function adminTenantDto(tenantId: string) {
   })));
 }
 
+/**
+ * Fixture-only subset of the real PATCH /admin/tenants/:id contract.
+ *
+ * The production route does not expose its write transaction as a reusable
+ * service, and mounting the whole router here would expose unrelated tenant
+ * operations. Keep the browser contract exact, validate with the production
+ * schema, and write only ordinary fields that are canonical onboarding data.
+ */
+const adminOrdinaryFieldMap = {
+  name: "accommodationName",
+  address: "address",
+  phone: "guestPhone",
+  email: "guestEmail",
+  wifiSsid: "wifiName",
+  wifiPass: "wifiPassword",
+} as const;
+
+type AdminOrdinaryField = keyof typeof adminOrdinaryFieldMap;
+
+async function patchFixtureTenant(
+  value: HarnessState,
+  body: unknown,
+  requestIp: string | undefined,
+) {
+  const parsed = UpdateTenantBody.safeParse(body);
+  if (!parsed.success) {
+    return { ok: false as const, status: 400, error: parsed.error.message };
+  }
+  const input = parsed.data as Partial<Record<AdminOrdinaryField, string | null>>;
+  const patch: Partial<typeof tenantsTable.$inferInsert> = {};
+  const writtenAdminFields: AdminOrdinaryField[] = [];
+  const include = (field: AdminOrdinaryField): boolean => {
+    if (input[field] === undefined) return false;
+    writtenAdminFields.push(field);
+    return true;
+  };
+  if (include("name")) {
+    if (typeof input.name !== "string") {
+      return { ok: false as const, status: 400, error: "name must be a string" };
+    }
+    patch.name = input.name;
+  }
+  if (include("address")) patch.address = input.address;
+  if (include("phone")) patch.phone = input.phone;
+  if (include("email")) patch.email = input.email;
+  if (include("wifiSsid")) patch.wifiSsid = input.wifiSsid;
+  if (include("wifiPass")) patch.wifiPass = input.wifiPass;
+  if (!writtenAdminFields.length) {
+    return {
+      ok: false as const,
+      status: 400,
+      error: "Fixture PATCH accepts only ordinary canonical tenant fields",
+    };
+  }
+
+  const tenant = await actorStorage.run(
+    { kind: "owner", requestIp },
+    async () => db.transaction(async (tx) => {
+      const [owned] = await tx.select().from(tenantsTable)
+        .where(eq(tenantsTable.id, value.fixture.tenantId))
+        .for("update");
+      if (!owned) return null;
+      const [updated] = await tx.update(tenantsTable).set({
+        ...patch,
+        hasUnpublishedChanges: true,
+      }).where(eq(tenantsTable.id, value.fixture.tenantId)).returning();
+      return updated ?? null;
+    }),
+  );
+  if (!tenant) {
+    return { ok: false as const, status: 404, error: "Fixture tenant is missing" };
+  }
+  await logChange({
+    tenantId: tenant.id,
+    tenantName: tenant.name,
+    action: "update",
+    entity: "tenant",
+    summary: `Fixture browser update · ${writtenAdminFields.join(", ")}`,
+  });
+  return {
+    ok: true as const,
+    writtenAdminFields,
+    canonicalOnboardingFields: writtenAdminFields.map(
+      (field) => adminOrdinaryFieldMap[field],
+    ),
+    tenant: UpdateTenantResponse.parse(JSON.parse(JSON.stringify({
+      ...tenant,
+      orderPasswordConfigured: Boolean(tenant.orderPassword?.trim()),
+      whatsappConfigured: isWhatsappConfigured(),
+    }))),
+  };
+}
+
 async function serve(): Promise<void> {
   const value = await state();
   const app = express();
@@ -371,6 +472,29 @@ async function serve(): Promise<void> {
     try {
       response.set("Cache-Control", "no-store");
       response.json(await adminTenantDto(value.fixture.tenantId));
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.patch("/admin/tenants/:id", async (request, response, next) => {
+    try {
+      if (String(request.params.id ?? "") !== value.fixture.tenantId) {
+        response.status(403).json({
+          error: "Tenant is outside the disposable fixture",
+        });
+        return;
+      }
+      const result = await patchFixtureTenant(value, request.body, request.ip);
+      if (!result.ok) {
+        response.status(result.status).json({ error: result.error });
+        return;
+      }
+      response.set("Cache-Control", "no-store");
+      response.set(
+        "X-Canonical-Fixture-Fields",
+        result.canonicalOnboardingFields.join(","),
+      );
+      response.json(result.tenant);
     } catch (error) {
       next(error);
     }
@@ -685,6 +809,11 @@ async function serve(): Promise<void> {
       origin: `http://127.0.0.1:${port}`,
       scope: value.fixture.tenantId,
       authentication: "simulated actor binding restricted to disposable fixture",
+      adminTenantPatch: {
+        path: `/admin/tenants/${value.fixture.tenantId}`,
+        implementation: "production schema plus fixture-only direct transaction",
+        adminFieldKeys: Object.keys(adminOrdinaryFieldMap),
+      },
     }));
   });
 }
