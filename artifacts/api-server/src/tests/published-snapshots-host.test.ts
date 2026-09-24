@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { eq, inArray, sql } from "drizzle-orm";
 import {
-  db, pool, runWithHostDbContext, tenantsTable, sectionsTable, categoriesTable,
+  db, pool, runWithHostDbContext, tenantsTable, sectionsTable, categoriesTable, itemsTable,
   creatorPlaceProposalsTable, creatorProposalTranslationsTable,
-  creatorPlaceMaterializationsTable, adminUsersTable, hostUsersTable,
+  creatorPlaceMaterializationsTable, adminSessionsTable, adminUsersTable, hostUsersTable,
   hostMembershipsTable, translationsTable, changelogTable, publishedSnapshotsTable,
 } from "@workspace/db";
 import app from "../app";
@@ -44,6 +44,11 @@ test("RLS permits owner C4, isolates host reads, and host publication rejects st
   const [actor] = await db.insert(adminUsersTable).values({
     email: `snapshot-owner-${stamp}@example.test`,
   }).returning();
+  const ownerToken = randomBytes(32).toString("base64url");
+  const [ownerSession] = await db.insert(adminSessionsTable).values({
+    tokenHash: createHash("sha256").update(ownerToken).digest("hex"),
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+  }).returning();
   const password = `snapshot-test-${stamp}`;
   const [host] = await db.insert(hostUsersTable).values({
     email: `snapshot-host-${stamp}@example.test`, passwordHash: await hashPassword(password),
@@ -61,6 +66,7 @@ test("RLS permits owner C4, isolates host reads, and host publication rejects st
       await db.delete(tenantsTable).where(inArray(tenantsTable.id, tenantIds));
     }
     await db.delete(hostUsersTable).where(eq(hostUsersTable.id, host!.id));
+    await db.delete(adminSessionsTable).where(eq(adminSessionsTable.id, ownerSession!.id));
     await db.delete(adminUsersTable).where(eq(adminUsersTable.id, actor!.id));
   });
   const createFixture = async (suffix: string) => {
@@ -116,6 +122,14 @@ test("RLS permits owner C4, isolates host reads, and host publication rejects st
     assert.deepEqual(rows.map((row) => row.id), [A.materialized.id]);
     assert.deepEqual(await db.select().from(creatorPlaceMaterializationsTable)
       .where(eq(creatorPlaceMaterializationsTable.id, B.materialized.id)), []);
+    await assert.rejects(
+      db.select({ id: creatorPlaceMaterializationsTable.id })
+        .from(creatorPlaceMaterializationsTable)
+        .where(eq(creatorPlaceMaterializationsTable.itemId, A.materialized.itemId))
+        .for("update"),
+      (error: unknown) => (error as { cause?: { code?: string } }).cause?.code === "42501",
+      "SELECT FOR UPDATE requires UPDATE privilege even on a SELECT-granted Creator table",
+    );
     await assert.rejects(db.update(creatorPlaceMaterializationsTable).set({ range: "excursion" })
       .where(eq(creatorPlaceMaterializationsTable.id, A.materialized.id)),
     (error: unknown) => (error as { cause?: { code?: string } }).cause?.code === "42501");
@@ -184,6 +198,36 @@ test("RLS permits owner C4, isolates host reads, and host publication rejects st
   }
   assert.equal((await db.select().from(publishedSnapshotsTable)
     .where(eq(publishedSnapshotsTable.tenantId, A.tenant.id))).length, 1);
+  const linkedBefore = await db.select({ distanceMeters: itemsTable.distanceMeters })
+    .from(itemsTable).where(eq(itemsTable.id, A.materialized.itemId));
+  const linkedEdit = await request("PATCH", `/admin/items/${A.materialized.itemId}`, cookie, {
+    title: "Gostiteljev popravek kraja",
+    body: "<p>Gostiteljev opis kraja.</p>",
+    distanceMeters: 98765,
+  });
+  assert.equal(linkedEdit.status, 200, await linkedEdit.clone().text());
+  const [linkedAfter] = await db.select({
+    title: itemsTable.title, body: itemsTable.body, distanceMeters: itemsTable.distanceMeters,
+  }).from(itemsTable).where(eq(itemsTable.id, A.materialized.itemId));
+  assert.equal(linkedAfter?.title, "Gostiteljev popravek kraja");
+  assert.equal(linkedAfter?.body, "<p>Gostiteljev opis kraja.</p>");
+  assert.equal(linkedAfter?.distanceMeters, linkedBefore[0]?.distanceMeters,
+    "Creator's active distance remains machine-owned");
+  const operatorEdit = await request("PATCH", `/admin/items/${A.materialized.itemId}`,
+    `__Host-s360_admin=${ownerToken}`, { title: "Operaterjev popravek", distanceMeters: 98765 });
+  assert.equal(operatorEdit.status, 200, await operatorEdit.clone().text());
+  const [operatorAfter] = await db.select({
+    title: itemsTable.title, distanceMeters: itemsTable.distanceMeters,
+  }).from(itemsTable).where(eq(itemsTable.id, A.materialized.itemId));
+  assert.equal(operatorAfter?.title, "Operaterjev popravek");
+  assert.equal(operatorAfter?.distanceMeters, linkedBefore[0]?.distanceMeters);
+  const foreignEdit = await request("PATCH", `/admin/items/${B.materialized.itemId}`, cookie, {
+    title: "Nedovoljen popravek",
+  });
+  assert.equal(foreignEdit.status, 404);
+  const [foreignAfter] = await db.select({ title: itemsTable.title })
+    .from(itemsTable).where(eq(itemsTable.id, B.materialized.itemId));
+  assert.notEqual(foreignAfter?.title, "Nedovoljen popravek");
   // Returning a host connection to the pool must preserve non-host C4 access.
   assert.equal((await db.select().from(creatorPlaceMaterializationsTable)
     .where(inArray(creatorPlaceMaterializationsTable.tenantId, tenantIds))).length, 2);

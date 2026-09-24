@@ -844,19 +844,24 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     }
   }
   const item = await db.transaction(async (tx) => {
-    // A Creator materialization owns its road distance. Lock both the item and
-    // its active projection before accepting an editorial PATCH so a stale
-    // browser can never overwrite the machine value.
+    // Serialize item edits with Creator writes (which also update this row).
+    // Only the operator may row-lock Creator's projection: PostgreSQL requires
+    // UPDATE privilege for FOR UPDATE, while the host has SELECT only.
     await tx.select({ id: itemsTable.id }).from(itemsTable)
       .where(eq(itemsTable.id, id)).for("update");
-    const [activeMaterialization] = await tx.select({ id: creatorPlaceMaterializationsTable.id })
+    const activeQuery = tx.select({ id: creatorPlaceMaterializationsTable.id })
       .from(creatorPlaceMaterializationsTable)
       .where(and(
         eq(creatorPlaceMaterializationsTable.itemId, id),
         eq(creatorPlaceMaterializationsTable.isActive, true),
       ))
-      .for("update")
       .limit(1);
+    // Retain the materialization lock for operator edits, especially category
+    // moves. Host edits only need a read to protect the machine-owned distance;
+    // their item lock orders them against Creator's item mutations.
+    const [activeMaterialization] = currentActor()?.kind === "host"
+      ? await activeQuery
+      : await activeQuery.for("update");
     const fields = cleanContentFields(parsed.data);
     if (activeMaterialization) delete fields.distanceMeters;
     const [updated] = await tx.update(itemsTable)

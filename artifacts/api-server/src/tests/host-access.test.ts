@@ -337,8 +337,14 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     const patchSection = await jreq(base, "PATCH", `/admin/sections/${fx.sectionA}`, cookie, { title: "Sekcija A (urejeno)" });
     assert.equal(patchSection.status, 200);
 
-    const patchItem = await jreq(base, "PATCH", `/admin/items/${fx.itemA}`, cookie, { title: "Item A (urejeno)" });
-    assert.equal(patchItem.status, 200);
+    const patchItem = await jreq(base, "PATCH", `/admin/items/${fx.itemA}`, cookie, {
+      title: "Item A (urejeno)", body: "<p>Gostiteljev opis.</p>",
+    });
+    assert.equal(patchItem.status, 200, await patchItem.clone().text());
+    const [savedItem] = await db.select({ title: itemsTable.title, body: itemsTable.body })
+      .from(itemsTable).where(eq(itemsTable.id, fx.itemA));
+    assert.equal(savedItem?.title, "Item A (urejeno)");
+    assert.equal(savedItem?.body, "<p>Gostiteljev opis.</p>");
 
     const orders = await jreq(base, "GET", `/admin/tenants/${fx.tenantA}/orders`, cookie);
     assert.equal(orders.status, 200);

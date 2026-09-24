@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { once } from "node:events";
 import { writeFile } from "node:fs/promises";
 import test from "node:test";
 import {
@@ -14,6 +15,8 @@ import {
   tenantsTable,
 } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
+import app from "../app";
+import { ensureRowLevelSecurity } from "../lib/rls";
 import {
   currentHostOnboarding,
   openHostOnboarding,
@@ -34,6 +37,55 @@ import {
 
 const reportJsonUrl = new URL("../../../../reports/admin-host-canonical-binding-verification.json", import.meta.url);
 const reportHtmlUrl = new URL("../../../../reports/admin-host-canonical-binding-verification.html", import.meta.url);
+
+test("real host onboarding PATCH edits the canonical ordinary item using the limited role", async (context) => {
+  assert.notEqual(process.env.NODE_ENV, "production");
+  if (!process.env.DATABASE_URL) {
+    context.skip("development database is unavailable");
+    return;
+  }
+  await ensureRowLevelSecurity();
+  const fixture = await createCanonicalOnboardingFixture();
+  const server = app.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  context.after(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await cleanupCanonicalOnboardingFixture(fixture);
+  });
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const url = `http://127.0.0.1:${address.port}/api/admin/host/onboarding`;
+  const headers = { cookie: fixture.hostSessionCookie, "content-type": "application/json" };
+  const opened = await fetch(url, { headers });
+  assert.equal(opened.status, 200, await opened.clone().text());
+  const initial = await opened.json() as {
+    revision: number;
+    canonicalRevision: string;
+    data: { canonicalItems: Array<{ id: string; title: string; body: string }> };
+  };
+  const welcome = initial.data.canonicalItems.find((row) => row.id === fixture.itemIds.welcome);
+  assert.ok(welcome);
+  const saved = await fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({
+      revision: initial.revision,
+      canonicalRevision: initial.canonicalRevision,
+      data: {
+        canonicalItems: [{
+          ...welcome,
+          title: "Pozdrav gostitelja",
+          body: "<p>Posodobljen uvod.</p>",
+        }],
+      },
+    }),
+  });
+  assert.equal(saved.status, 200, await saved.clone().text());
+  const [row] = await db.select({ title: itemsTable.title, body: itemsTable.body })
+    .from(itemsTable).where(eq(itemsTable.id, fixture.itemIds.welcome));
+  assert.equal(row?.title, "Pozdrav gostitelja");
+  assert.equal(row?.body, "<p>Posodobljen uvod.</p>");
+});
 
 test("development copy: admin and host onboarding are two views over one unpublished canonical draft", async (context) => {
   if (process.env.NODE_ENV === "production") {

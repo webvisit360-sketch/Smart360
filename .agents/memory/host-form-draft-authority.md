@@ -62,3 +62,9 @@ Submission failure is not evidence that the draft failed to save.
 **Why:** A successful save followed by a rejected submission displayed a false unsaved warning. Its retry called an empty save and returned without feedback, leaving the user stuck.
 
 **How to apply:** Keep submission errors and retry actions separate from persistence errors. A retry of a legacy warning must visibly verify server state even when there is no local delta. Exercise production route validation in browser fixtures rather than calling submission services directly.
+
+Host-scoped content PATCH must not row-lock Creator's SELECT-only projection.
+
+**Why:** PostgreSQL requires UPDATE privilege for `SELECT ... FOR UPDATE` even when the query matches no rows. An ordinary host item edit consequently failed with SQLSTATE 42501 because the shared item PATCH locked `creator_place_materializations`, despite its host grant being SELECT only.
+
+**How to apply:** Keep host item writes under their tenant-scoped RLS connection and lock the item row to serialize with Creator item mutations. Read active Creator materializations without `FOR UPDATE` for hosts to preserve the machine-owned distance; retain projection row locks for operator edits. Do not grant hosts UPDATE on Creator tables or escape to the privileged pool for an ordinary edit. Onboarding autosave uses its own limited-role canonical transaction; only submitted recommendation processing deliberately enters the privileged, tenant-bound post-commit transaction. Test real HTTP host sessions and the limited DB role, including empty Creator matches.
