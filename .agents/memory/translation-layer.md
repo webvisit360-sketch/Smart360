@@ -17,3 +17,9 @@ Item-editor regeneration must use the current Slovenian draft exclusively, not a
 **Why:** The generic translator's first-populated-language behavior is inappropriate when an operator is correcting Slovenian source; an older target could otherwise become the new source.
 
 **How to apply:** Missing and stale fields are eligible, but populated replacements require explicit confirmation. Preserve target edits made after that confirmation while the request is running. Generated suggestions remain drafts until saving.
+
+Translation incident diagnosis must distinguish the application's HTTP response from the provider's response; never infer quota exhaustion or rate limiting from repeated use alone.
+
+**Why:** On 2026-09-24, production translation failures retained only `error: {}` and the application's generic 502. The historical provider reason could not be recovered.
+
+**How to apply:** Preserve allowlisted provider category/status/code in server logs, not raw SDK errors, messages, prompts or translated content. Treat historical empty-error records as unknown. Only genuine rate limits qualify for automatic retries; quota exhaustion does not.

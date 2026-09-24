@@ -41,6 +41,16 @@ test("manual-pin failure keeps the exact Slovenian server reason", () => {
   );
 });
 
+test("both translation admin views display the server's specific JSON.error reason", () => {
+  const reason = "Prevod ni na voljo: ponudniku je zmanjkalo dobroimetja ali kvote.";
+  assert.equal(mutationErrorMessage({ data: { error: reason } }), reason);
+  const content = readFileSync(new URL("../components/admin/content-editor.tsx", import.meta.url), "utf8");
+  const creator = readFileSync(new URL("../components/admin/kreator-proposal-queue.tsx", import.meta.url), "utf8");
+  assert.match(content, /setTranslationError\(\s*mutationErrorMessage\(error\) \?\?/);
+  assert.match(creator, /\[row\.id\]: mutationErrorMessage\(mutationError\) \?\?/);
+  assert.match(creator, /creator-translation-error-\$\{row\.id\}/);
+});
+
 test("manual place validation reports only blank fields, then clears each one", () => {
   const valid = { manualName: "Razgledna točka", locationText: "Nad kampom", latitude: "46.362", longitude: "13.821" };
   assert.deepEqual(validateManualPlace(valid), {});

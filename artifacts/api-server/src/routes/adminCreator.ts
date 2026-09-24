@@ -85,7 +85,7 @@ import {
   backfillCreatorDistances,
   CreatorDistanceBackfillError,
 } from "../lib/creatorDistanceBackfill";
-import { translateCreatorEditorial } from "../lib/creatorEditorialTranslation";
+import { normalizeTranslationFailure, translateCreatorEditorial, translationFailureMessage } from "../lib/creatorEditorialTranslation";
 import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { invalidateTenantCache } from "./publicTenants";
 import {
@@ -620,11 +620,14 @@ router.post("/admin/tenants/:id/creator/proposals/:proposalId/translate", async 
   }
   try {
     res.json(TranslateCreatorProposalEditorialResponse.parse({
-      translations: await translateCreatorEditorial(input.data),
+      translations: await translateCreatorEditorial(input.data, undefined, {
+        log: (event, metadata) => req.log.warn({ event, ...metadata }, "Creator editorial translation provider attempt"),
+      }),
     }));
   } catch (error) {
-    req.log.warn({ error, tenantId, proposalId }, "Creator editorial translation failed");
-    res.status(502).json({ error: "Prevodov ni bilo mogoče pripraviti." });
+    const failure = normalizeTranslationFailure(error);
+    req.log.warn({ category: failure.category, httpStatus: failure.httpStatus, code: failure.code, tenantId, proposalId }, "Creator editorial translation failed");
+    res.status(502).json({ error: translationFailureMessage(failure) });
   }
 });
 

@@ -77,6 +77,9 @@ import {
 } from "../lib/creatorWikimediaPhotos";
 import {
   hasMeaningfulEditorialText,
+  TranslationFailure,
+  normalizeTranslationFailure,
+  translationFailureMessage,
   translateMissingEditorial,
 } from "../lib/creatorEditorialTranslation";
 import { createCategoryWithTooling } from "../lib/categoryTooling";
@@ -895,19 +898,22 @@ router.post("/admin/items/:id/translate-missing", async (req, res): Promise<void
     }));
     // Item-dialog generation is deliberately source-first: an empty Slovenian
     // field stays empty instead of falling back to an existing target language.
-    const translations = (await translateMissingEditorial(drafts, undefined, "sl")).map((translation) => {
+    const translations = (await translateMissingEditorial(drafts, undefined, "sl", {
+      log: (event, metadata) => req.log.warn({ event, ...metadata }, "Item draft translation provider attempt"),
+    })).map((translation) => {
       const title = translation.title == null ? null : sanitizePlain(translation.title);
       const description = translation.description == null ? null : sanitizeBody(translation.description);
       if ((title != null && !hasMeaningfulEditorialText(title)) ||
         (description != null && !hasMeaningfulEditorialText(description))) {
-        throw new Error("Sanitiziran prevod je prazen.");
+        throw new TranslationFailure("invalid_output", null, null);
       }
       return { language: translation.language, title, description };
     });
     res.json(TranslateMissingItemFieldsResponse.parse({ translations }));
   } catch (error) {
-    req.log.warn({ error, itemId, tenantId: ctx.tenantId }, "Item draft translation failed");
-    res.status(502).json({ error: "Prevodov ni bilo mogoče pripraviti." });
+    const failure = normalizeTranslationFailure(error);
+    req.log.warn({ category: failure.category, httpStatus: failure.httpStatus, code: failure.code, itemId, tenantId: ctx.tenantId }, "Item draft translation failed");
+    res.status(502).json({ error: translationFailureMessage(failure) });
   }
 });
 
