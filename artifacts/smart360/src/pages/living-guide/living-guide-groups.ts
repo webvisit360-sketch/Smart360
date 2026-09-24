@@ -43,21 +43,42 @@ function visibleRows(rows: unknown): any[] {
 export function populatedSectionGroups(
   categories: unknown,
   defs: ReadonlyArray<SectionGroupDef>,
+  adminFullTree = false,
 ) {
-  const visibleCategories = visibleRows(categories);
+  // Admin structure preview deliberately retains empty/inactive categories.
+  // Guest groups, however, are populated only by published, guest-visible items.
+  const visibleCategories = adminFullTree
+    ? visibleRows(categories)
+    : visibleRows(categories).filter((category) => !category.deletedAt);
   const known = new Set(defs.map((def) => def.key));
   const groupOf = (category: any) =>
     known.has(category?.exploreGroup) ? category.exploreGroup : defs[0]!.key;
-  return defs.map((def) => {
+  const groups = defs.map((def) => {
     const groupCategories = visibleCategories.filter(
       (category) => groupOf(category) === def.key,
     );
+    const categoriesWithItems = adminFullTree
+      ? groupCategories
+      : groupCategories.filter((category) =>
+          visibleRows(category.items).some((item) => !item.deletedAt),
+        );
     return {
       ...def,
-      categories: groupCategories,
-      items: groupCategories.flatMap((category) =>
-        visibleRows(category.items).map((item) => ({ item, category })),
+      categories: categoriesWithItems,
+      items: categoriesWithItems.flatMap((category) =>
+        visibleRows(category.items)
+          .filter((item) => adminFullTree || !item.deletedAt)
+          .map((item) => ({ item, category })),
       ),
     };
   });
+  return adminFullTree ? groups : groups.filter((group) => group.items.length > 0);
+}
+
+/** Keep the current tab only while it still has guest-visible content. */
+export function selectedSectionGroup<T extends { key: string }>(
+  groups: T[],
+  activeKey: string | null,
+): T | undefined {
+  return groups.find((group) => group.key === activeKey) ?? groups[0];
 }

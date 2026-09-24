@@ -93,6 +93,7 @@ import {
   OFFER_GROUPS,
   STAY_GROUPS,
   populatedSectionGroups,
+  selectedSectionGroup,
 } from "./living-guide-groups";
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
 
@@ -1937,6 +1938,7 @@ export default function LivingGuideGuestShell({
           <ShopView
             tenant={tenant}
             section={baseSection}
+            adminFullTree={adminFullTree}
             t={t}
             orderSummary={orderSummary}
             onOpenOrders={() => setShowOrders(true)}
@@ -1949,6 +1951,7 @@ export default function LivingGuideGuestShell({
           <StayView
             tenant={tenant}
             section={baseSection}
+            adminFullTree={adminFullTree}
             t={t}
             guest={guest}
             onEditGuest={requestCredentials}
@@ -2695,8 +2698,7 @@ function useGroupTabsState(groups: any[]) {
     }
   }, [activeGroup, groups]);
 
-  const selectedGroup =
-    groups.find((group) => group.key === activeGroup) ?? groups[0];
+  const selectedGroup = selectedSectionGroup(groups, activeGroup);
 
   const selectGroup = (groupKey: string) => {
     setActiveGroup(groupKey);
@@ -2841,11 +2843,11 @@ function ExploreView({
 
 // Ponudba (prototype #v-shop): one card per ITEM, meta = authored price
 // text · CATEGORY; "Moja naročila" row on top when this device has orders.
-function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem, onOpenCategory }: any) {
+function ShopView({ tenant, section, adminFullTree, t, orderSummary, onOpenOrders, onOpenItem, onOpenCategory }: any) {
   const groups = useMemo(
     () =>
-      populatedSectionGroups(section.categories, OFFER_GROUPS),
-    [section.categories],
+      populatedSectionGroups(section.categories, OFFER_GROUPS, adminFullTree),
+    [section.categories, adminFullTree],
   );
   const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
 
@@ -2862,12 +2864,14 @@ function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem, 
           <h1>{section.title}</h1>
         </div>
       </header>
-      <GroupTabs
-        groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
-        selectedKey={selectedGroup?.key}
-        onSelect={selectGroup}
-        label={section.title}
-      />
+      {(adminFullTree || groups.length > 1) && (
+        <GroupTabs
+          groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+          selectedKey={selectedGroup?.key}
+          onSelect={selectGroup}
+          label={section.title}
+        />
+      )}
       <div
         className="lg2-screen-scroll lg2-explore-list"
         data-lg-scroll
@@ -2941,11 +2945,11 @@ function ShopView({ tenant, section, t, orderSummary, onOpenOrders, onOpenItem, 
 // Nastanitev (prototype #v-grid): one card per CATEGORY, meta = optional live
 // status · category label; greeting strip directly under the tabs, quiet help
 // link at the bottom of the list.
-function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, onOpenHelp, helpTitle }: any) {
+function StayView({ tenant, section, adminFullTree, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, onOpenHelp, helpTitle }: any) {
   const groups = useMemo(
     () =>
-      populatedSectionGroups(section.categories, STAY_GROUPS),
-    [section.categories],
+      populatedSectionGroups(section.categories, STAY_GROUPS, adminFullTree),
+    [section.categories, adminFullTree],
   );
   const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
   const hasNew = notices.some(isNewNotice);
@@ -2968,12 +2972,14 @@ function StayView({ tenant, section, t, guest, onEditGuest, onOpenCategory, onOp
           </button>
         )}
       </header>
-      <GroupTabs
-        groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
-        selectedKey={selectedGroup?.key}
-        onSelect={selectGroup}
-        label={section.title}
-      />
+      {(adminFullTree || groups.length > 1) && (
+        <GroupTabs
+          groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+          selectedKey={selectedGroup?.key}
+          onSelect={selectGroup}
+          label={section.title}
+        />
+      )}
       <div
         className="lg2-screen-scroll lg2-explore-list"
         data-lg-scroll

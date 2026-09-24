@@ -13,7 +13,68 @@ import {
   storedRoadDistanceMeters,
   storedTravelDurationMinutes,
 } from "../pages/living-guide/living-guide-explore";
+import {
+  OFFER_GROUPS,
+  STAY_GROUPS,
+  populatedSectionGroups,
+  selectedSectionGroup,
+} from "../pages/living-guide/living-guide-groups";
 import { LIVING_GUIDE_UI } from "../pages/guest/i18n";
+
+test("published offer/stay groups require a visible, non-deleted item", () => {
+  for (const defs of [OFFER_GROUPS, STAY_GROUPS]) {
+    const [first, second] = defs;
+    const category = (id: string, group: string, items: any[], extra = {}) => ({
+      id, exploreGroup: group, items, ...extra,
+    });
+    const hidden = category("hidden", second.key, [{ id: "hidden-item" }], { isVisible: false });
+    const deleted = category("deleted", second.key, [{ id: "deleted-item" }], { deletedAt: "2025-01-01" });
+    const empty = category("empty", second.key, []);
+    const hiddenItem = category("hidden-item-cat", second.key, [{ id: "invisible", isVisible: false }]);
+    const deletedItem = category("deleted-item-cat", second.key, [{ id: "removed", deletedAt: "2025-01-01" }]);
+    const excluded = [hidden, deleted, empty, hiddenItem, deletedItem];
+    assert.deepEqual(populatedSectionGroups(excluded, defs), [], "zero populated groups");
+
+    const one = category("one", first.key, [{ id: "visible" }, { id: "not-visible", isVisible: false }]);
+    const single = populatedSectionGroups([...excluded, one], defs);
+    assert.deepEqual(single.map((group) => group.key), [first.key], "one populated group");
+    assert.deepEqual(single[0].items.map(({ item }) => item.id), ["visible"]);
+    assert.deepEqual(single[0].categories.map((row) => row.id), ["one"]);
+
+    const two = category("two", second.key, [{ id: "second-visible" }]);
+    assert.deepEqual(
+      populatedSectionGroups([...excluded, one, two], defs).map((group) => group.key),
+      [first.key, second.key],
+      "two populated groups",
+    );
+    // A newly published item makes a previously empty group appear automatically.
+    const arriving = category("arriving", second.key, [{ id: "arrived" }]);
+    assert.deepEqual(
+      populatedSectionGroups([...excluded, one, arriving], defs).map((group) => group.key),
+      [first.key, second.key],
+    );
+
+    // Admin structure preview keeps all configured tabs and empty categories.
+    const admin = populatedSectionGroups([...excluded, one], defs, true);
+    assert.deepEqual(admin.map((group) => group.key), defs.map((def) => def.key));
+    assert.ok(admin.find((group) => group.key === second.key)?.categories.some((row) => row.id === "empty"));
+  }
+});
+
+test("group selection falls back when removed and can select a returning group", () => {
+  const [first, second] = OFFER_GROUPS;
+  const make = (secondVisible: boolean) => populatedSectionGroups([
+    { id: "one", exploreGroup: first.key, items: [{ id: "one-item" }] },
+    { id: "two", exploreGroup: second.key, items: secondVisible ? [{ id: "two-item" }] : [] },
+  ], OFFER_GROUPS);
+  const both = make(true);
+  assert.equal(selectedSectionGroup(both, second.key)?.key, second.key);
+  const onlyFirst = make(false);
+  assert.equal(selectedSectionGroup(onlyFirst, second.key)?.key, first.key);
+  assert.equal(selectedSectionGroup(make(true), first.key)?.key, first.key);
+  assert.equal(selectedSectionGroup(make(true), second.key)?.key, second.key);
+  assert.equal(selectedSectionGroup([], second.key), undefined);
+});
 
 test("negotiable price is localized semantically", () => {
   const labels: Record<string, string> = {
