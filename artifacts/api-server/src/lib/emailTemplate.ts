@@ -41,7 +41,7 @@ const LEGACY_THEME = {
 };
 const WELCOME_THEME: typeof LEGACY_THEME = {
   ctaBg: "#157347", ctaText: "#FFFFFF", border: "#E8EBE6", line: "#E8EBE6",
-  body: "#121A14", small: "#66716A", outer: "#FFFFFF", card: "#F4F6F2",
+  body: "#121A14", small: "#66716A", outer: "#FFFFFF", card: "#FFFFFF",
   font: "Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif",
   band: '<div style="height:3px;line-height:3px;font-size:0;background:#DD9A2B">&nbsp;</div>',
 };
@@ -49,6 +49,7 @@ const WELCOME_THEME: typeof LEGACY_THEME = {
 function brandMarkUrl(): string {
   return "https://smart360.info/brand/smart360-znak-40.png";
 }
+const OWNER_EMAIL_MARK_URL = "https://smart360.info/brand/smart360-email-header-60.png";
 
 export function escHtml(s: string): string {
   return s
@@ -171,7 +172,7 @@ export function renderEmail(spec: EmailSpec): { html: string; text: string } {
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:${theme.card};border:1px solid ${theme.border};border-radius:14px;border-collapse:separate;overflow:hidden;font-family:${theme.font}">
 <tr><td>${theme.band}</td></tr>
 <tr><td style="padding:26px 26px 14px">
-<div style="font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${TITLE_COLOR};font-family:${theme.font}"><img src="${escHtml(brandMarkUrl())}" width="20" height="20" alt="" style="vertical-align:-4px;margin-right:7px;border:0;display:inline-block">${escHtml(spec.brand)}</div>
+ <div style="font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${TITLE_COLOR};font-family:${theme.font}"><img src="${escHtml(theme === WELCOME_THEME ? OWNER_EMAIL_MARK_URL : brandMarkUrl())}" width="20" height="20" alt="" style="${theme === WELCOME_THEME ? "width:20px;height:20px;" : ""}vertical-align:-4px;margin-right:7px;border:0;display:inline-block">${escHtml(spec.brand)}</div>
 <h2 style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:${TITLE_COLOR};margin:8px 0 14px;line-height:1.25;font-family:${theme.font}">${escHtml(spec.title)}</h2>
 ${inner}
 </td></tr>

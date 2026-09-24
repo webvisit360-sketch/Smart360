@@ -88,9 +88,9 @@ export async function renderReadyNotice(input: ReadyInput, inline = "data") {
   const welcomeBrand = /<div style="font-size:13px;font-weight:800;letter-spacing:\.14em;text-transform:uppercase;color:#121A14;font-family:[^"]+"><img src="([^"]+)" width="20" height="20" alt="" style="[^"]+">Smart360<\/div>/;
   if (!html.includes(welcomeBand) || !welcomeBrand.test(html)) throw new Error("Welcome CGP header has changed");
   html = html.replace(welcomeBand, "");
-  html = html.replace(welcomeBrand, (_match, znak: string) =>
+  html = html.replace(welcomeBrand, () =>
     `<table role="presentation" cellpadding="0" cellspacing="0"><tr>` +
-    `<td width="46" style="width:46px"><img src="${znak}" width="46" height="46" alt="Smart360" style="display:block;width:46px;height:46px;border:0"></td>` +
+    `<td width="46" style="width:46px"><img src="https://smart360.info/brand/smart360-email-header-138.png" width="46" height="46" alt="Smart360" style="display:block;width:46px;height:46px;border:0"></td>` +
     `<td style="padding-left:12px;font-size:13px;font-weight:800;letter-spacing:.14em;color:#157347;font-family:Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif">SMART360</td>` +
     `</tr></table>`,
   );

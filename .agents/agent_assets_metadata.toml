@@ -937,14 +937,14 @@ content_type = "text/html"
 id = "WpTjuVzId-lZQE08MAO31"
 uri = "file://reports/gril-vodnik-pripravljen-samostojno.png"
 type = "image"
-title = "Vodnik je pripravljen — samostojno upravljanje"
-description = "Predogled za odobritev: Odprite vodnik in Uredite vodnik, uradni znak 46 px in QR."
+title = "Vodnik je pripravljen — samostojno urejanje"
+description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
 logical_id = "4f94eb05-6cb7-443c-a876-449408cc4528"
-content_hash = "sha256:ca466cf5452fca611ef99a58e9d00b3a191e39ff0dd70fe5b6885c1271646c24"
-size = 106745
-mtime_ms = 1790261970504
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4f94eb05-6cb7-443c-a876-449408cc4528/30cd1d0f-d950-4863-a223-a18b64f30dfb"
-storage_version_token = "1790262403054144"
+content_hash = "sha256:1377b543d56702201e1fc9a9d4eae37aaadba718cd6c8fe662731692b89d3aac"
+size = 107190
+mtime_ms = 1790273343290
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4f94eb05-6cb7-443c-a876-449408cc4528/eabdc028-20e4-4f32-8808-ec137e354e86"
+storage_version_token = "1790273471980795"
 content_type = "image/png"
 
 [[outputs]]
@@ -952,13 +952,13 @@ id = "3Ue3aBDRqvp5j6-BTeEHW"
 uri = "file://reports/gril-vodnik-pripravljen-ureja-smart360.png"
 type = "image"
 title = "Vodnik je pripravljen — ureja Smart360"
-description = "Predogled za odobritev: Odprite vodnik, brez gumba za urejanje."
+description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
 logical_id = "a741b1b8-ca5b-4187-be19-6a83a89bdf85"
-content_hash = "sha256:6e776d42a9cd41926a6d8e7ddd5a12000c4136800f206471c3aa78b36f0f4f9c"
-size = 100675
-mtime_ms = 1790261970880
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a741b1b8-ca5b-4187-be19-6a83a89bdf85/6f7d5ba9-3316-4496-8c5d-33f154a3a467"
-storage_version_token = "1790262403924644"
+content_hash = "sha256:026132a21ac29529deecb7a6c62357089b470b9ccf6c4b131cf18a0f2664319b"
+size = 100099
+mtime_ms = 1790273343862
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a741b1b8-ca5b-4187-be19-6a83a89bdf85/0892ecca-fefe-4d8b-8d97-c94c27bdbc76"
+storage_version_token = "1790273472821536"
 content_type = "image/png"
 
 [[outputs]]
@@ -1043,4 +1043,32 @@ size = 68189
 mtime_ms = 1790272647491
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3b9f978b-22e7-4647-ad1f-1c1944d3d040/1bb35b94-840e-474a-b024-c53a20c98b9b"
 storage_version_token = "1790272743180383"
+content_type = "image/png"
+
+[[outputs]]
+id = "w2wwgl13ElH_3lkujb949"
+uri = "file://reports/gril-dobrodosli-samostojno.png"
+type = "image"
+title = "Dobrodošli — samostojno urejanje"
+description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
+logical_id = "abebafa4-ad50-4eda-9011-5677a37071c9"
+content_hash = "sha256:65cd1a8edc1ad6560340055e3cdb01da4603c24606490c7555c2f78b284f0e92"
+size = 95168
+mtime_ms = 1790273342586
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/abebafa4-ad50-4eda-9011-5677a37071c9/8e6c5b69-c454-47cd-beda-bacfb9569af0"
+storage_version_token = "1790273470356630"
+content_type = "image/png"
+
+[[outputs]]
+id = "JfrbMNTLUt_2SgoUVgvkw"
+uri = "file://reports/gril-dobrodosli-ureja-smart360.png"
+type = "image"
+title = "Dobrodošli — ureja Smart360"
+description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
+logical_id = "56a6c109-00cb-4166-8e92-7e17a3a76501"
+content_hash = "sha256:35fecad1223796a171da69e43b581eda68a48f9cfbb19529ed97b4b0cd6053ce"
+size = 81841
+mtime_ms = 1790273342958
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/56a6c109-00cb-4166-8e92-7e17a3a76501/8d535a1d-6e29-4a53-82b4-853dd8fbd810"
+storage_version_token = "1790273471066556"
 content_type = "image/png"

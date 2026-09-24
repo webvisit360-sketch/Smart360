@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, test } from "node:test";
+import sharp from "sharp";
 
 import {
   _setConciergeWelcomeDeliveryOverride,
@@ -24,6 +25,18 @@ afterEach(() => {
 });
 
 describe("concierge welcome email", () => {
+  test("dedicated owner marks are 3x displayed size, opaque and white-field", async () => {
+    for (const [size, display] of [[60, 20], [138, 46]]) {
+      const file = new URL(`../../../smart360/public/brand/smart360-email-header-${size}.png`, import.meta.url);
+      const { data, info } = await sharp(readFileSync(file)).raw().toBuffer({ resolveWithObject: true });
+      assert.equal(size, display * 3);
+      assert.equal(info.width, size);
+      assert.equal(info.height, size);
+      assert.equal(info.channels, 3);
+      assert.deepEqual([...data.subarray(0, 3)], [255, 255, 255]);
+      assert.deepEqual([...data.subarray((size * size - 1) * 3)], [255, 255, 255]);
+    }
+  });
   test("uses the normal invitation's CGP renderer with exact concierge copy", () => {
     const body = renderConciergeWelcomeEmail(FIXTURE);
     for (const content of [body.html, body.text]) {
@@ -36,9 +49,9 @@ describe("concierge welcome email", () => {
       assert.doesNotMatch(content, /portal\/|token=/i);
     }
     assert.ok(body.html.includes("background:#157347;color:#FFFFFF"));
-    assert.ok(body.html.includes("background:#F4F6F2"));
+    assert.ok(body.html.includes("max-width:560px;background:#FFFFFF"));
     assert.ok(body.html.includes("height:3px;line-height:3px;font-size:0;background:#DD9A2B"));
-    assert.ok(body.html.includes("https://smart360.info/brand/smart360-znak-40.png"));
+    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-header-60.png" width="20" height="20" alt="" style="width:20px;height:20px;'));
   });
 
   test("escapes tenant content", () => {

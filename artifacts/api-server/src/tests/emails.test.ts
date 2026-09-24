@@ -187,12 +187,12 @@ describe("global rules hold for every template", () => {
       if (name === "welcome") {
         assert.equal((html.match(/background:#DD9A2B/g) ?? []).length, 1, "one amber accent");
         assert.ok(html.includes("height:3px;line-height:3px;font-size:0;background:#DD9A2B"));
-        assert.ok(html.includes("background:#F4F6F2"));
+        assert.ok(html.includes("max-width:560px;background:#FFFFFF"));
         assert.ok(html.includes('<body style="margin:0;padding:0;background:#FFFFFF">'));
         assert.equal((html.match(/background:#157347;color:#FFFFFF/g) ?? []).length, 1);
         assert.ok(html.includes("font-family:Archivo,"));
         assert.deepEqual(new Set(html.match(/#[0-9a-f]{6}/gi)), new Set([
-          "#FFFFFF", "#F4F6F2", "#121A14", "#66716A", "#E8EBE6", "#157347", "#DD9A2B",
+          "#FFFFFF", "#121A14", "#66716A", "#E8EBE6", "#157347", "#DD9A2B",
         ]), "only the exact approved CGP palette");
       } else {
         assert.equal((html.match(/height:5px;line-height:5px;font-size:0;background:/g) ?? []).length, 7);
@@ -204,11 +204,12 @@ describe("global rules hold for every template", () => {
         assert.ok(!html.includes("#157347"), "other templates unchanged");
       }
       assert.ok(html.includes("color:#121A14"), "dark brand kicker");
-      assert.ok(
-        html.includes("https://smart360.info/brand/smart360-znak-40.png"),
-        "stable hosted brand mark",
-      );
-      assert.ok(html.includes('width="20" height="20" alt=""'), "20px decorative mark");
+      assert.ok(html.includes(name === "welcome"
+        ? "https://smart360.info/brand/smart360-email-header-60.png"
+        : "https://smart360.info/brand/smart360-znak-40.png"), "stable hosted brand mark");
+      assert.ok(html.includes(name === "welcome"
+        ? 'width="20" height="20" alt="" style="width:20px;height:20px;'
+        : 'width="20" height="20" alt="" style="vertical-align:'), "20px decorative mark");
       assert.match(html, /letter-spacing:\.14em/, "brand kicker style");
       assert.match(html, /font-size:24px;font-weight:800/, "24px title");
     });
