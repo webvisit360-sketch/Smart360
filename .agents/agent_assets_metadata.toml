@@ -974,3 +974,45 @@ mtime_ms = 1790266568528
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ed5dd953-9643-469b-b397-7f299fa3dc52/f34d5c19-fc6c-4853-8c05-68d2b28ac319"
 storage_version_token = "1790266607633092"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "sry_mopoel4Oo5H84aZQ7"
+uri = "file://reports/smart360-home-icon-approval-180.png"
+type = "image"
+title = "Smart360 — ikona za iPhone 180 × 180"
+description = "Uradni znak na neprosojni beli podlagi. Za vizualno odobritev."
+logical_id = "15d2f29f-7407-4865-9922-c5b8dc5067d3"
+content_hash = "sha256:dd6e3ab831137180fd464d7c807db75a748b8515203fe75751486383043be2be"
+size = 9919
+mtime_ms = 1790268914238
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/5ffe3276-bee2-4de5-95fe-203ddc17521a"
+storage_version_token = "1790268944221725"
+content_type = "image/png"
+
+[[outputs]]
+id = "yeJBB7wdhba4fl4OhoSDF"
+uri = "file://reports/smart360-home-icon-approval-512.png"
+type = "image"
+title = "Smart360 — PWA ikona 512 × 512"
+description = "Bela neprosojna podlaga, znak v varnem območju tudi za maskable prikaz."
+logical_id = "6f83ed3b-8ae4-497c-ab4b-872a93946e56"
+content_hash = "sha256:9135e0aa38ccd3e3462932ca4387a009664b28b544227caa72944fd857ed0890"
+size = 32882
+mtime_ms = 1790268914238
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f83ed3b-8ae4-497c-ab4b-872a93946e56/15e4ecba-71ab-4ad4-9eec-acd65c26ccc0"
+storage_version_token = "1790268945190342"
+content_type = "image/png"
+
+[[outputs]]
+id = "3qkTrGB3m7wkKfWizuH5W"
+uri = "file://reports/smart360-home-icons-contact-sheet.png"
+type = "image"
+title = "Preverjanje ikon na črnem ozadju"
+description = "Primerjava neposrednega prikaza in prikaza na črni podlagi; bela površina ostaja nespremenjena."
+logical_id = "c7bd1c80-7a48-437b-ba0f-5a23e5fc48f5"
+content_hash = "sha256:09fd5e16716ca5d0476ec6afd0d596b009450acdace014d538d8fb16d5771621"
+size = 113259
+mtime_ms = 1790268914306
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c7bd1c80-7a48-437b-ba0f-5a23e5fc48f5/e0ab76a1-2e6d-4fbe-9dae-8905b8c376b8"
+storage_version_token = "1790268946021276"
+content_type = "image/png"

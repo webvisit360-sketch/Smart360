@@ -237,8 +237,8 @@ router.get(
     }
     const published = (await readPublishedContent(tenant.id)).languages.sl!.tree;
     const icons = [
-      { src: "/brand/ikona-smart360-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-      { src: "/brand/ikona-smart360-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+      { src: "/brand/ikona-smart360-home-192.png?v=white-1", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: "/brand/ikona-smart360-512.png?v=white-1", sizes: "512x512", type: "image/png", purpose: "any maskable" },
     ];
     res
       // Short client cache: a rename/publish change must reach installers

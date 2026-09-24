@@ -84,7 +84,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       document.head.appendChild(touch);
     }
     touch.sizes = "180x180";
-    touch.href = `${base}brand/ikona-smart360-180.png`;
+    touch.href = `${base}brand/ikona-smart360-180.png?v=white-1`;
 
     const upsertMeta = (name: string, content: string) => {
       let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
@@ -98,6 +98,11 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     upsertMeta("apple-mobile-web-app-title", "Smart360");
     upsertMeta("application-name", "Smart360");
     upsertMeta("theme-color", "#121A14");
+    return () => {
+      // Client navigation back to /admin must not leave the tenant's install
+      // scope behind in the document head.
+      link.href = `${base}manifest.webmanifest`;
+    };
   }, [tenant, slug, lang]);
 
   // Unknown slug → the app's own 404 with a way back. NEVER a default tenant.

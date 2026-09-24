@@ -1,5 +1,7 @@
 # Memory index
 
+- [Official mark white field](brand-white-field.md) — owner requires white behind the official mark; home-screen icons opaque with safe-zone padding.
+
 - [Map provider policy](map-provider-policy.md) — OSM raster returned a production policy block; never restore it as a fallback or conflate tiles with OSRM.
 
 - [Smart360 photo pipeline](photo-pipeline.md) — two-width object-storage images, first media row = tile, idempotent seed, forced public cache header.
