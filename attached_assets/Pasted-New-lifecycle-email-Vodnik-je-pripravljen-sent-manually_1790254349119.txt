@@ -1,0 +1,48 @@
+New lifecycle email: "Vodnik je pripravljen" — sent manually by the operator
+from the SAME place as the welcome email button (tenant settings), as a
+second button next to it. Do NOT publish.
+
+1. BUTTON: "Pošlji obvestilo: vodnik je pripravljen" beside the existing
+   welcome button, with the same preview-before-send flow and the same
+   send history (logged as its own type, with redacted provider errors,
+   via the direct Resend API and Reply-To info@webvisit360.com).
+   Works in BOTH management modes (self-service and concierge).
+
+2. EMAIL: same CGP template as the welcome email (official znak, layout,
+   colors). Use exactly this Slovenian copy (owner may edit in preview):
+
+   Zadeva: Vaš digitalni vodnik je pripravljen
+
+   "Spoštovani,
+   z veseljem sporočamo, da je vaš digitalni vodnik izdelan po vaših
+   navodilih in pripravljen za goste.
+
+   Vodnik si lahko ogledate na naslovu:
+   {guide_url}   (npr. https://smart360.info/glamping-gril)
+
+   V priponki vam pošiljamo nalepko s QR-kodo za tisk — namestite jo na
+   vidno mesto v nastanitvi, da bodo gostje vodnik odprli z enim samim
+   skenom.
+
+   Prosimo, da vodnik pregledate in nam morebitne popravke ali dopolnitve
+   sporočite kar z odgovorom na to sporočilo.
+
+   Ekipa Smart360"
+
+   Buttons in the email: "Odprite vodnik" → guide URL. In self-service mode
+   additionally a second line + button "Uredite vodnik" → admin login;
+   omit that in concierge mode.
+
+3. QR STICKER ATTACHMENT: generate server-side a print-ready PDF
+   ("nalepka-qr-{slug}.pdf", A6 landscape or similar) containing: the
+   official Smart360 znak (existing shared asset, never redrawn), the
+   tenant's naziv, a crisp QR code of the guide URL (high error
+   correction), the URL in text below, all in CGP colors on white.
+   Also embed the QR inline in the email body. QR generation must be a
+   well-established library, no external QR web services (privacy).
+
+4. Verify in dev: preview renders both mode variants; send (intercepted)
+   contains the PDF; the PDF prints sharp at 100% (vector or ≥600 dpi QR);
+   scanning the QR from screen opens the guide URL; history records the
+   send. Report with "POVZETEK ZA LASTNIKA" in Slovenian, then STOP.
+   No publication.

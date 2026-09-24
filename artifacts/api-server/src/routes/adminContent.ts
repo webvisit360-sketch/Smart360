@@ -122,6 +122,19 @@ function firstParam(v: string | string[] | undefined): string {
   return (Array.isArray(v) ? v[0] : v) ?? "";
 }
 
+/** Validation belongs at the mutation boundary, not the guest display layer. */
+export function validSectionGroupOrder(sectionKey: string, order: string[] | null): boolean {
+  const expected = sectionKey === "offer"
+    ? ["najem", "izleti_prevozi", "domaci_izdelki", "pri_hisi"]
+    : sectionKey === "stay"
+      ? ["vase_bivanje", "prihod_dostop", "prakticno"]
+      : null;
+  return expected !== null && (order === null ||
+    (order.length === expected.length &&
+      new Set(order).size === expected.length &&
+      order.every((key) => expected.includes(key))));
+}
+
 async function tenantNameForSection(
   sectionId: string,
 ): Promise<{ tenantId: string; tenantName: string } | null> {
@@ -458,9 +471,21 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
     .select()
     .from(sectionsTable)
     .where(eq(sectionsTable.id, id));
+  if (parsed.data.groupOrder !== undefined) {
+    if (!prevSection || !validSectionGroupOrder(prevSection.key, parsed.data.groupOrder) ||
+      (parsed.data.key !== undefined && parsed.data.key !== prevSection.key)) {
+      res.status(400).json({ error: "Vrstni red zavihkov mora vsebovati vse in samo zavihke te sekcije." });
+      return;
+    }
+  }
   const [section] = await db
     .update(sectionsTable)
-    .set(cleanContentFields(parsed.data))
+    .set({
+      ...cleanContentFields(parsed.data),
+      // A section renamed away from offer/stay must not retain tab metadata.
+      ...(prevSection?.groupOrder && parsed.data.key !== undefined &&
+        parsed.data.key !== prevSection.key ? { groupOrder: null } : {}),
+    })
     .where(eq(sectionsTable.id, id))
     .returning();
   if (!section) {

@@ -3,6 +3,7 @@ import test from "node:test";
 import { comparePublications, type PublishedContent } from "../lib/publishedSnapshots";
 import { collectStorageReferenceKeys } from "../lib/mediaCleanup";
 import { resolvePublishedOrderItem } from "../routes/orders";
+import { validSectionGroupOrder } from "../routes/adminContent";
 
 function publication(items: Array<Record<string, unknown>> = []): PublishedContent {
   const tree = { id: "tenant", sections: [{
@@ -17,6 +18,44 @@ function publication(items: Array<Record<string, unknown>> = []): PublishedConte
 function items(value: PublishedContent, language = "sl") {
   return value.languages[language]!.tree.sections[0]!.categories[0]!.items;
 }
+
+test("section tab-order API accepts exactly the canonical keys once, and only in offer/stay", () => {
+  const offer = ["najem", "izleti_prevozi", "domaci_izdelki", "pri_hisi"];
+  const stay = ["vase_bivanje", "prihod_dostop", "prakticno"];
+  assert.equal(validSectionGroupOrder("offer", [...offer].reverse()), true);
+  assert.equal(validSectionGroupOrder("stay", [...stay].reverse()), true);
+  assert.equal(validSectionGroupOrder("offer", null), true);
+  assert.equal(validSectionGroupOrder("offer", offer.slice(1)), false);
+  assert.equal(validSectionGroupOrder("offer", [...offer.slice(1), offer[1]!]), false);
+  assert.equal(validSectionGroupOrder("offer", [...offer.slice(1), stay[0]!]), false);
+  assert.equal(validSectionGroupOrder("stay", offer), false);
+  assert.equal(validSectionGroupOrder("explore", null), false);
+});
+
+test("tab-order review reports one source change and ignores legacy null canonical order", () => {
+  for (const [key, title, keys] of [
+    ["offer", "Ponudba", ["najem", "izleti_prevozi", "domaci_izdelki", "pri_hisi"]],
+    ["stay", "Nastanitev", ["vase_bivanje", "prihod_dostop", "prakticno"]],
+  ] as const) {
+    const before = publication();
+    for (const language of Object.keys(before.languages)) {
+      Object.assign(before.languages[language]!.tree.sections[0]!, { key, title });
+    }
+    const canonical = structuredClone(before);
+    for (const language of Object.keys(canonical.languages)) {
+      canonical.languages[language]!.tree.sections[0]!.groupOrder = [...keys];
+    }
+    assert.equal(comparePublications(canonical, before).total, 0);
+    const reordered = structuredClone(before);
+    for (const language of Object.keys(reordered.languages)) {
+      reordered.languages[language]!.tree.sections[0]!.groupOrder = [...keys].reverse();
+    }
+    const changes = comparePublications(reordered, before);
+    assert.deepEqual(changes.changed, [`Spremenjen vrstni red zavihkov: ${title}`]);
+    assert.equal(changes.total, 1);
+    assert.equal(comparePublications(before, reordered).total, 1);
+  }
+});
 
 test("diff identifies same-name entities by ID, never display label", () => {
   const before = publication();

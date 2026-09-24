@@ -12,6 +12,8 @@ export interface SectionUpdate {
   /** @nullable */
   subtitle?: string | null;
   icon?: string;
+  /** @nullable */
+  groupOrder?: string[] | null;
   position?: number;
   isVisible?: boolean;
 }

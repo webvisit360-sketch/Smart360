@@ -31,7 +31,7 @@ import {
   getGetTranslationOverviewQueryKey,
   type ItemTranslationLanguageDraft,
 } from "@workspace/api-client-react";
-import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, EyeOff, RotateCcw, XCircle, MapPin, Search, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, ChevronUp, GripVertical, EyeOff, RotateCcw, XCircle, MapPin, Search, CheckCircle2 } from "lucide-react";
 import { IconSprite } from "@/pages/guest/IconSprite";
 import { AdminButton as Button } from "@/components/ui/button";
 import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
@@ -61,7 +61,7 @@ import { formatDistanceMeters } from "@/pages/living-guide/living-guide-formatte
 import {
   EXPLORE_GROUPS,
 } from "@/pages/living-guide/living-guide-explore";
-import { sectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
+import { sectionGroupDefs, orderedSectionGroupDefs } from "@/pages/living-guide/living-guide-groups";
 import type { CategoryInputExploreGroup } from "@workspace/api-client-react";
 import { PinPlacementMap } from "@/components/admin/kreator-proposal-queue";
 import {
@@ -123,6 +123,7 @@ type Section = {
   icon: string;
   isVisible: boolean;
   position: number;
+  groupOrder?: string[] | null;
   categories?: Category[];
 };
 
@@ -423,6 +424,19 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   const [subtitle, setSubtitle] = useState(section?.subtitle ?? "");
   const [key, setKey] = useState(section?.key ?? "");
   const [isVisible, setIsVisible] = useState(section?.isVisible ?? true);
+  const groupDefs = mode === "edit" ? sectionGroupDefs(section.key) : null;
+  const [groupOrder, setGroupOrder] = useState<string[]>(
+    () => orderedSectionGroupDefs(groupDefs ?? [], section?.groupOrder).map((def) => def.key),
+  );
+  const draggedGroup = useRef<string | null>(null);
+  const moveGroup = (from: number, to: number) => {
+    if (from < 0 || to < 0 || from >= groupOrder.length || to >= groupOrder.length || from === to) return;
+    setGroupOrder((order) => {
+      const next = [...order];
+      next.splice(to, 0, next.splice(from, 1)[0]!);
+      return next;
+    });
+  };
 
   const baseline = {
     title: section?.title ?? "",
@@ -430,8 +444,9 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
     subtitle: section?.subtitle ?? "",
     key: section?.key ?? "",
     isVisible: section?.isVisible ?? true,
+    groupOrder: groupDefs ? orderedSectionGroupDefs(groupDefs, section?.groupOrder).map((def) => def.key) : [],
   };
-  const current = { title, icon, subtitle, key, isVisible };
+  const current = { title, icon, subtitle, key, isVisible, groupOrder };
   const { restored, clear, discardRestored } = useDraft(
     "section",
     mode === "edit" ? section.id : "new",
@@ -447,6 +462,9 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
       setSubtitle(restored.subtitle);
       setKey(restored.key);
       setIsVisible(restored.isVisible);
+      if (Array.isArray(restored.groupOrder) && groupDefs) {
+        setGroupOrder(orderedSectionGroupDefs(groupDefs, restored.groupOrder).map((def) => def.key));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored]);
@@ -476,6 +494,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
           icon: icon.trim(),
           subtitle: subtitle.trim() || null,
           isVisible,
+          ...(groupDefs && trimmedKey === section.key ? { groupOrder } : {}),
         });
       }
       clear();
@@ -572,6 +591,42 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
             disabled={busy}
           />
           <Label htmlFor="section-visible">Vidna gostom</Label>
+        </div>
+      )}
+      {groupDefs && (
+        <div className="space-y-2 border-t pt-4">
+          <Label>VRSTNI RED ZAVIHKOV</Label>
+          <p className="text-xs text-muted-foreground">Povlecite zavihek ali uporabite puščici. Prazni zavihki ostanejo na seznamu.</p>
+          <div className="space-y-2">
+            {groupOrder.map((groupKey, index) => (
+              <div
+                key={groupKey}
+                onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  moveGroup(groupOrder.indexOf(draggedGroup.current ?? ""), index);
+                  draggedGroup.current = null;
+                }}
+                className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2"
+              >
+                <span
+                  draggable={!busy}
+                  aria-label={`Povlecite ${groupDefs.find((def) => def.key === groupKey)?.adminLabel}`}
+                  onDragStart={(event) => {
+                    draggedGroup.current = groupKey;
+                    event.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragEnd={() => { draggedGroup.current = null; }}
+                  className="cursor-grab"
+                >
+                  <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                </span>
+                <span className="flex-1 text-sm font-medium">{groupDefs.find((def) => def.key === groupKey)?.adminLabel}</span>
+                <button type="button" aria-label={`Premakni ${groupDefs.find((def) => def.key === groupKey)?.adminLabel} gor`} disabled={busy || index === 0} onClick={() => moveGroup(index, index - 1)} className="p-1 disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button>
+                <button type="button" aria-label={`Premakni ${groupDefs.find((def) => def.key === groupKey)?.adminLabel} dol`} disabled={busy || index === groupOrder.length - 1} onClick={() => moveGroup(index, index + 1)} className="p-1 disabled:opacity-30"><ChevronDown className="h-4 w-4" /></button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       </DialogScrollBody>

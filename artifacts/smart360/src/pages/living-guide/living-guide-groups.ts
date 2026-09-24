@@ -34,6 +34,18 @@ export function sectionGroupDefs(sectionKey: string | undefined): ReadonlyArray<
   return null;
 }
 
+/** Group ordering is display-only; unknown category assignments still fall back
+ * to the first CANONICAL group, not the first reordered tab. */
+export function orderedSectionGroupDefs(
+  defs: ReadonlyArray<SectionGroupDef>,
+  order: unknown,
+): ReadonlyArray<SectionGroupDef> {
+  if (!Array.isArray(order) || order.length !== defs.length ||
+      new Set(order).size !== defs.length ||
+      !order.every((key) => defs.some((def) => def.key === key))) return defs;
+  return order.map((key) => defs.find((def) => def.key === key)!);
+}
+
 function visibleRows(rows: unknown): any[] {
   return Array.isArray(rows)
     ? rows.filter((row) => row?.isVisible !== false)
@@ -44,6 +56,7 @@ export function populatedSectionGroups(
   categories: unknown,
   defs: ReadonlyArray<SectionGroupDef>,
   adminFullTree = false,
+  groupOrder?: unknown,
 ) {
   // Admin structure preview deliberately retains empty/inactive categories.
   // Guest groups, however, are populated only by published, guest-visible items.
@@ -53,7 +66,7 @@ export function populatedSectionGroups(
   const known = new Set(defs.map((def) => def.key));
   const groupOf = (category: any) =>
     known.has(category?.exploreGroup) ? category.exploreGroup : defs[0]!.key;
-  const groups = defs.map((def) => {
+  const groups = orderedSectionGroupDefs(defs, groupOrder).map((def) => {
     const groupCategories = visibleCategories.filter(
       (category) => groupOf(category) === def.key,
     );

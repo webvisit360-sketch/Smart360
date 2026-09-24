@@ -2745,6 +2745,8 @@ export interface Section {
   icon: string;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  groupOrder?: string[] | null;
   position: number;
   isVisible: boolean;
 }
@@ -2763,6 +2765,8 @@ export interface SectionUpdate {
   /** @nullable */
   subtitle?: string | null;
   icon?: string;
+  /** @nullable */
+  groupOrder?: string[] | null;
   position?: number;
   isVisible?: boolean;
 }

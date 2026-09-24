@@ -41,7 +41,7 @@ import {
 } from "../../lib/hostOnboarding";
 import { _setHostOnboardingDeliveryOverride } from "../../lib/hostOnboardingEmail";
 import { logger } from "../../lib/logger";
-import { ensureTenantPublication, previewPublication } from "../../lib/publishedSnapshots";
+import { buildDraftPublication, ensureTenantPublication, previewPublication } from "../../lib/publishedSnapshots";
 import {
   ObjectStorageService,
   objectStorageClient,
@@ -67,6 +67,7 @@ type HarnessState = {
   fixture: CanonicalOnboardingFixture;
   reviewerId: string;
   publishedDigest: string;
+  groupOrderBaseline?: { stay: string; explore: string };
 };
 
 function guardEnvironment(): void {
@@ -77,6 +78,24 @@ function guardEnvironment(): void {
     throw new Error("Refusing: deployment environment detected");
   }
   if (!process.env.DATABASE_URL) throw new Error("Refusing: DATABASE_URL is unavailable");
+}
+
+async function guardDatabase(): Promise<void> {
+  const result = await pool.query<{ database_name: string; server_name: string }>(
+    "select current_database() as database_name, coalesce(inet_server_addr()::text, '') as server_name",
+  );
+  const identity = `${result.rows[0]?.database_name ?? ""} ${result.rows[0]?.server_name ?? ""} ${process.env.DATABASE_URL ?? ""}`;
+  if (/(^|[^a-z])(prod|production)([^a-z]|$)/i.test(identity)) {
+    throw new Error("Refusing: database identifies itself as production");
+  }
+}
+
+async function saveState(value: HarnessState): Promise<void> {
+  const temporary = `${STATE_PATH}.${process.pid}`;
+  await writeFile(temporary, `${JSON.stringify(value)}\n`, { mode: 0o600, flag: "wx" });
+  await chmod(temporary, 0o600);
+  await rename(temporary, STATE_PATH);
+  await chmod(STATE_PATH, 0o600);
 }
 
 async function state(): Promise<HarnessState> {
@@ -121,11 +140,7 @@ async function setup(): Promise<void> {
     reviewerId: reviewer.id,
     publishedDigest: canonicalFixtureDigest(fixture.publishedContent),
   };
-  const temporary = `${STATE_PATH}.${process.pid}`;
-  await writeFile(temporary, `${JSON.stringify(value)}\n`, { mode: 0o600, flag: "wx" });
-  await chmod(temporary, 0o600);
-  await rename(temporary, STATE_PATH);
-  await chmod(STATE_PATH, 0o600);
+  await saveState(value);
   console.log(JSON.stringify({
     command: "setup",
     tenantId: fixture.tenantId,
@@ -288,6 +303,13 @@ function publicFixture(value: HarnessState) {
     itemIds: value.fixture.itemIds,
     mediaIds: value.fixture.mediaIds,
   };
+}
+
+function publicationSections(content: unknown): Array<{ key?: string; groupOrder?: string[] | null; title?: string }> {
+  const result = content as { languages?: { sl?: { tree?: { sections?: Array<{ key?: string; groupOrder?: string[] | null; title?: string }> } } } };
+  const sections = result.languages?.sl?.tree?.sections;
+  if (!Array.isArray(sections)) throw new Error("Fixture published SL sections are missing");
+  return sections;
 }
 
 async function fixtureSection(
@@ -484,6 +506,77 @@ async function serve(): Promise<void> {
 
   app.use(express.json({ limit: "256kb" }));
   app.get("/fixture", (_request, response) => response.json(publicFixture(value)));
+  // Only fixture setup: freeze the *already-existing* canonical draft as the
+  // test's old guest snapshot. This is not the save or publish being tested.
+  app.post("/fixture/group-order-prepare", async (_request, response, next) => {
+    try {
+      if (value.groupOrderBaseline) {
+        const [current] = await db.select({ content: publishedSnapshotsTable.content })
+          .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, value.fixture.tenantId));
+        if (!current || canonicalFixtureDigest(current.content) !== value.publishedDigest) {
+          throw new Error("Refusing prepared fixture with changed publication");
+        }
+        const [offer] = await db.select().from(sectionsTable)
+          .where(and(eq(sectionsTable.tenantId, value.fixture.tenantId), eq(sectionsTable.key, "offer")));
+        if (!offer || offer.groupOrder) throw new Error("Refusing to normalize already edited fixture");
+        if (offer.title === "Ponudba") {
+          response.status(409).json({ error: "Group-order baseline was already prepared" });
+          return;
+        }
+      }
+      const [snapshot] = await db.select({ content: publishedSnapshotsTable.content })
+        .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, value.fixture.tenantId));
+      if (!snapshot || canonicalFixtureDigest(snapshot.content) !== value.publishedDigest) {
+        throw new Error("Refusing to replace a changed fixture publication");
+      }
+      const [offerSection] = await db.select({ id: sectionsTable.id }).from(sectionsTable)
+        .where(and(eq(sectionsTable.tenantId, value.fixture.tenantId), eq(sectionsTable.key, "offer")));
+      const customOfferId = value.fixture.categoryIds.customOffer;
+      if (!offerSection || !customOfferId) throw new Error("Fixture offer group is missing");
+      const [category] = await db.update(categoriesTable).set({ exploreGroup: "domaci_izdelki", isVisible: true })
+        .where(and(eq(categoriesTable.id, customOfferId), eq(categoriesTable.sectionId, offerSection.id))).returning();
+      if (!category) throw new Error("Fixture custom offer category is missing");
+      await db.update(sectionsTable).set({ title: "Ponudba" }).where(eq(sectionsTable.id, offerSection.id));
+      const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, value.fixture.tenantId));
+      if (!tenant) throw new Error("Fixture tenant missing");
+      const content = await buildDraftPublication(tenant);
+      const sections = publicationSections(content);
+      const stay = sections.find(section => section.key === "stay");
+      const explore = sections.find(section => section.key === "explore");
+      if (!stay || !explore || !sections.some(section => section.key === "offer")) {
+        throw new Error("Fixture publication sections are missing");
+      }
+      await db.update(publishedSnapshotsTable).set({ content: content as typeof snapshot.content })
+        .where(eq(publishedSnapshotsTable.tenantId, value.fixture.tenantId));
+      value.publishedDigest = canonicalFixtureDigest(content);
+      value.groupOrderBaseline = { stay: canonicalFixtureDigest(stay), explore: canonicalFixtureDigest(explore) };
+      await saveState(value);
+      response.json({ ok: true, baseline: "fixture draft frozen without application publish" });
+    } catch (error) { next(error); }
+  });
+  app.post("/fixture/group-order-accept", async (_request, response, next) => {
+    try {
+      if (!value.groupOrderBaseline) throw new Error("Refusing: fixture group-order baseline missing");
+      const [snapshot] = await db.select({ content: publishedSnapshotsTable.content })
+        .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, value.fixture.tenantId));
+      if (!snapshot || canonicalFixtureDigest(snapshot.content) === value.publishedDigest) {
+        throw new Error("Refusing: real publication has not changed fixture snapshot");
+      }
+      const sections = publicationSections(snapshot.content);
+      const offer = sections.find(section => section.key === "offer");
+      const stay = sections.find(section => section.key === "stay");
+      const explore = sections.find(section => section.key === "explore");
+      if (!offer || !stay || !explore ||
+        JSON.stringify(offer.groupOrder) !== JSON.stringify(["domaci_izdelki", "najem", "izleti_prevozi", "pri_hisi"]) ||
+        canonicalFixtureDigest(stay) !== value.groupOrderBaseline.stay ||
+        canonicalFixtureDigest(explore) !== value.groupOrderBaseline.explore) {
+        throw new Error("Refusing: published fixture snapshot does not match authorized group-order-only change");
+      }
+      value.publishedDigest = canonicalFixtureDigest(snapshot.content);
+      await saveState(value);
+      response.json({ ok: true, publishedFixtureOrderAccepted: true });
+    } catch (error) { next(error); }
+  });
   app.post("/fixture/emergency-initialize", async (_request, response, next) => {
     try {
       const [alreadyEdited] = await db.select({ id: categoriesTable.id })
@@ -738,15 +831,10 @@ async function serve(): Promise<void> {
         response.status(403).json({ error: "Section is outside the disposable fixture" });
         return;
       }
-      if (typeof request.body?.title !== "string" || !request.body.title.trim()) {
-        throw new Error("title must be a non-empty string");
-      }
-      const [updated] = await db.update(sectionsTable).set({ title: request.body.title.trim() })
-        .where(eq(sectionsTable.id, id)).returning();
-      if (!updated) throw new Error("Fixture section is missing");
-      await db.update(tenantsTable).set({ hasUnpublishedChanges: true })
-        .where(eq(tenantsTable.id, value.fixture.tenantId));
-      response.json(updated);
+      const actor: Actor = { kind: "owner", requestIp: request.ip };
+      request.actor = actor;
+      request.log = logger.child({ fixture: value.fixture.marker });
+      actorStorage.run(actor, () => adminContentRouter(request, response, next));
     } catch (error) {
       next(error);
     }
@@ -770,12 +858,17 @@ async function serve(): Promise<void> {
       ];
       const itemPath = /^\/admin\/items\/([^/]+)(?:\/translate-missing|\/creator-status)?$/
         .exec(request.path);
+      const sectionPath = /^\/admin\/sections\/([^/]+)$/.exec(request.path);
+      const fixtureSectionIds = await db.select({ id: sectionsTable.id }).from(sectionsTable)
+        .where(eq(sectionsTable.tenantId, value.fixture.tenantId));
       const recordId = request.method === "GET"
         ? String(request.query.recordId ?? "")
         : String(request.body?.recordId ?? "");
       const allowed = itemPath
         ? fixtureItemIds.includes(decodeURIComponent(itemPath[1] ?? ""))
-        : request.path === "/admin/translations" && fixtureItemIds.includes(recordId)
+        : (sectionPath && request.method === "PATCH"
+            && fixtureSectionIds.some((section) => section.id === decodeURIComponent(sectionPath[1] ?? "")))
+          || request.path === "/admin/translations" && fixtureItemIds.includes(recordId)
           || request.path === `/admin/tenants/${value.fixture.tenantId}/emergency-contacts`
           || request.path === `/admin/tenants/${value.fixture.tenantId}/publish-preview`
           || request.path === `/admin/tenants/${value.fixture.tenantId}`;
@@ -935,6 +1028,7 @@ async function serve(): Promise<void> {
 
 async function main(): Promise<void> {
   guardEnvironment();
+  await guardDatabase();
   const mode = process.argv[2] ?? "";
   if (!allowedModes.has(mode)) {
     throw new Error("Usage: canonical-onboarding-browser-harness.ts setup|serve|inspect|cleanup");

@@ -171,6 +171,18 @@ export function comparePublications(draft: PublishedContent, published: Publishe
       const old = before as Record<string, unknown>, next = after as Record<string, unknown>;
       for (const key of new Set([...Object.keys(old), ...Object.keys(next)])) {
         if (ignored.has(key) || key === "id" || key.endsWith("Id")) continue;
+        if (key === "groupOrder" && (old.key === "offer" || old.key === "stay")) {
+          const defaults = old.key === "offer"
+            ? ["najem", "izleti_prevozi", "domaci_izdelki", "pri_hisi"]
+            : ["vase_bivanje", "prihod_dostop", "prakticno"];
+          const oldOrder = old[key] ?? defaults;
+          const newOrder = next[key] ?? defaults;
+          if (digest(oldOrder) !== digest(newOrder)) {
+            record("changed", `Spremenjen vrstni red zavihkov: ${String(next.title ?? old.title ?? context)}`,
+              [...path, key], oldOrder, newOrder);
+          }
+          continue;
+        }
         walk(old[key], next[key], context, [...path, key], target, key);
       }
       return;

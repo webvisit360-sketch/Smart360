@@ -1615,6 +1615,7 @@ export const GetPublicTenantResponse = zod.object({
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
   "imageUrl": zod.string().nullish(),
+  "groupOrder": zod.array(zod.string()).nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 }).and(zod.object({
@@ -3619,6 +3620,7 @@ export const GetTenantResponse = zod.object({
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
   "imageUrl": zod.string().nullish(),
+  "groupOrder": zod.array(zod.string()).nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 }).and(zod.object({
@@ -4501,6 +4503,7 @@ export const CreateSectionResponse = zod.object({
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
   "imageUrl": zod.string().nullish(),
+  "groupOrder": zod.array(zod.string()).nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 })
@@ -4515,6 +4518,7 @@ export const UpdateSectionBody = zod.object({
   "title": zod.string().optional(),
   "subtitle": zod.string().nullish(),
   "icon": zod.string().optional(),
+  "groupOrder": zod.array(zod.string()).nullish(),
   "position": zod.number().optional(),
   "isVisible": zod.boolean().optional()
 })
@@ -4527,6 +4531,7 @@ export const UpdateSectionResponse = zod.object({
   "subtitle": zod.string().nullish(),
   "icon": zod.string(),
   "imageUrl": zod.string().nullish(),
+  "groupOrder": zod.array(zod.string()).nullish(),
   "position": zod.number(),
   "isVisible": zod.boolean()
 })

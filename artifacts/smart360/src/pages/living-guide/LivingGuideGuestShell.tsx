@@ -2848,8 +2848,8 @@ function ExploreView({
 function ShopView({ tenant, section, adminFullTree, t, orderSummary, onOpenOrders, onOpenItem, onOpenCategory }: any) {
   const groups = useMemo(
     () =>
-      populatedSectionGroups(section.categories, OFFER_GROUPS, adminFullTree),
-    [section.categories, adminFullTree],
+      populatedSectionGroups(section.categories, OFFER_GROUPS, adminFullTree, section.groupOrder),
+    [section.categories, section.groupOrder, adminFullTree],
   );
   const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
 
@@ -2950,8 +2950,8 @@ function ShopView({ tenant, section, adminFullTree, t, orderSummary, onOpenOrder
 function StayView({ tenant, section, adminFullTree, t, guest, onEditGuest, onOpenCategory, onOpenNotices, notices, onOpenHelp, helpTitle }: any) {
   const groups = useMemo(
     () =>
-      populatedSectionGroups(section.categories, STAY_GROUPS, adminFullTree),
-    [section.categories, adminFullTree],
+      populatedSectionGroups(section.categories, STAY_GROUPS, adminFullTree, section.groupOrder),
+    [section.categories, section.groupOrder, adminFullTree],
   );
   const { listRef, selectedGroup, selectGroup } = useGroupTabsState(groups);
   const hasNew = notices.some(isNewNotice);

@@ -17,6 +17,7 @@ import {
   OFFER_GROUPS,
   STAY_GROUPS,
   populatedSectionGroups,
+  orderedSectionGroupDefs,
   selectedSectionGroup,
 } from "../pages/living-guide/living-guide-groups";
 import { LIVING_GUIDE_UI } from "../pages/guest/i18n";
@@ -74,6 +75,29 @@ test("group selection falls back when removed and can select a returning group",
   assert.equal(selectedSectionGroup(make(true), first.key)?.key, first.key);
   assert.equal(selectedSectionGroup(make(true), second.key)?.key, second.key);
   assert.equal(selectedSectionGroup([], second.key), undefined);
+});
+
+test("offer and stay ordering includes empty tabs but never changes unknown category fallback", () => {
+  for (const defs of [OFFER_GROUPS, STAY_GROUPS]) {
+    const reversed = defs.map((def) => def.key).reverse();
+    assert.deepEqual(orderedSectionGroupDefs(defs, reversed).map((def) => def.key), reversed);
+    for (const invalid of [[defs[0].key], [...reversed.slice(1), reversed[1].key], [...reversed.slice(1), "foreign"], "foreign"]) {
+      assert.deepEqual(orderedSectionGroupDefs(defs, invalid), defs);
+    }
+    const categories = [
+      { id: "unknown", exploreGroup: "experiences", items: [{ id: "fallback" }] },
+      { id: "last", exploreGroup: reversed[0], items: [{ id: "explicit" }] },
+    ];
+    const groups = populatedSectionGroups(categories, defs, false, reversed);
+    assert.deepEqual(groups.map((group) => group.key), [reversed[0], defs[0].key],
+      "visible tabs follow stored order while empty tabs stay guest-hidden");
+    assert.deepEqual(groups.find((group) => group.key === defs[0].key)?.items.map(({ item }) => item.id), ["fallback"],
+      "unknown category keys remain assigned to the canonical first group");
+    assert.deepEqual(populatedSectionGroups(categories, defs, true, reversed).map((group) => group.key), reversed,
+      "the admin preview retains every empty canonical group");
+    assert.deepEqual(populatedSectionGroups(categories, defs, false, null).map((group) => group.key),
+      [defs[0].key, reversed[0]]);
+  }
 });
 
 test("negotiable price is localized semantically", () => {

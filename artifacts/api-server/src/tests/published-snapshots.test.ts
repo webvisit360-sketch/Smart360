@@ -17,6 +17,43 @@ import { seedTenantContent } from "../lib/tenantSeeds";
 import publicTenantsRouter, { invalidateTenantCache } from "../routes/publicTenants";
 import ordersRouter from "../routes/orders";
 
+test("section tab order stays draft-only until publication and marks the tenant dirty", async () => {
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: `snapshot-tab-order-${randomUUID()}`,
+    name: "Tab order fixture",
+    isPublished: true,
+  }).returning();
+  assert.ok(tenant);
+  try {
+    await seedTenantContent(tenant.id, "apartmaji");
+    await ensureTenantPublication(tenant.id);
+    const initial = await readPublishedContent(tenant.id);
+    const [offer] = await db.select().from(sectionsTable)
+      .where(and(eq(sectionsTable.tenantId, tenant.id), eq(sectionsTable.key, "offer")));
+    assert.ok(offer);
+    const order = ["pri_hisi", "domaci_izdelki", "izleti_prevozi", "najem"];
+    await db.update(tenantsTable).set({ hasUnpublishedChanges: false })
+      .where(eq(tenantsTable.id, tenant.id));
+    await db.update(sectionsTable).set({ groupOrder: order })
+      .where(eq(sectionsTable.id, offer.id));
+    const [dirty] = await db.select({ hasUnpublishedChanges: tenantsTable.hasUnpublishedChanges })
+      .from(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+    assert.equal(dirty?.hasUnpublishedChanges, true);
+    assert.equal((await readPublishedContent(tenant.id)).languages.sl!.tree.sections
+      .find((section) => section.key === "offer")?.groupOrder, null);
+    const changes = await previewPublication(tenant.id);
+    assert.deepEqual(changes.changed, [`Spremenjen vrstni red zavihkov: ${offer.title}`]);
+    const [currentTenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+    await replacePublishedSnapshot(currentTenant!);
+    assert.deepEqual((await readPublishedContent(tenant.id)).languages.sl!.tree.sections
+      .find((section) => section.key === "offer")?.groupOrder, order);
+    assert.equal((await previewPublication(tenant.id)).total, 0);
+    assert.notDeepEqual(await readPublishedContent(tenant.id), initial);
+  } finally {
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+  }
+});
+
 test("empty custom category stays guest-hidden but is listed before publication", async () => {
   const [tenant] = await db.insert(tenantsTable).values({
     slug: `snapshot-empty-category-${randomUUID()}`,

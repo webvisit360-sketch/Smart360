@@ -5117,6 +5117,9 @@ components:
         subtitle: { type: ["string", "null"] }
         icon: { type: string }
         imageUrl: { type: ["string", "null"] }
+        groupOrder:
+          type: ["array", "null"]
+          items: { type: string }
         position: { type: number }
         isVisible: { type: boolean }
       required: [id, tenantId, key, title, icon, position, isVisible]
@@ -5136,6 +5139,9 @@ components:
         title: { type: string }
         subtitle: { type: ["string", "null"] }
         icon: { type: string }
+        groupOrder:
+          type: ["array", "null"]
+          items: { type: string }
         position: { type: number }
         isVisible: { type: boolean }
     Category:
