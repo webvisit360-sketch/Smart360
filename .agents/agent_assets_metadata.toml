@@ -979,28 +979,28 @@ content_type = "application/pdf"
 id = "sry_mopoel4Oo5H84aZQ7"
 uri = "file://reports/smart360-home-icon-approval-180.png"
 type = "image"
-title = "Smart360 — ikona za iPhone 180 × 180"
-description = "Uradni znak na neprosojni beli podlagi. Za vizualno odobritev."
+title = "Smart360 — ponovno ustvarjena ikona 180 × 180"
+description = "Neposredni izris uradnega SVG-ja na belo podlago. Pikselno enaka prejšnji beli različici; izboljšanje ostrine na iPhonu še ni potrjeno."
 logical_id = "15d2f29f-7407-4865-9922-c5b8dc5067d3"
 content_hash = "sha256:dd6e3ab831137180fd464d7c807db75a748b8515203fe75751486383043be2be"
 size = 9919
-mtime_ms = 1790268914238
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/5ffe3276-bee2-4de5-95fe-203ddc17521a"
-storage_version_token = "1790268944221725"
+mtime_ms = 1790270491514
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/b5e2bec3-37b7-49f0-ae44-6a7ecd8fad13"
+storage_version_token = "1790271081015860"
 content_type = "image/png"
 
 [[outputs]]
 id = "yeJBB7wdhba4fl4OhoSDF"
 uri = "file://reports/smart360-home-icon-approval-512.png"
 type = "image"
-title = "Smart360 — PWA ikona 512 × 512"
-description = "Bela neprosojna podlaga, znak v varnem območju tudi za maskable prikaz."
+title = "Smart360 — ponovno ustvarjena ikona 512 × 512"
+description = "Uradni vektorski znak, neprosojna bela podlaga in varen odmik za maskable prikaz."
 logical_id = "6f83ed3b-8ae4-497c-ab4b-872a93946e56"
 content_hash = "sha256:9135e0aa38ccd3e3462932ca4387a009664b28b544227caa72944fd857ed0890"
 size = 32882
-mtime_ms = 1790268914238
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f83ed3b-8ae4-497c-ab4b-872a93946e56/15e4ecba-71ab-4ad4-9eec-acd65c26ccc0"
-storage_version_token = "1790268945190342"
+mtime_ms = 1790270491514
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f83ed3b-8ae4-497c-ab4b-872a93946e56/58aae391-f574-4980-8db9-775c2369b3d2"
+storage_version_token = "1790271082413936"
 content_type = "image/png"
 
 [[outputs]]

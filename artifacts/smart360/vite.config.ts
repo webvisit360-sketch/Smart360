@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'node:fs';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
@@ -7,6 +8,8 @@ import { defineConfig } from 'vite';
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
 import { scopeThemes } from './vite-plugin-scope-themes';
+import { renderPwaHead } from './pwa-head.mjs';
+const requestHost = new AsyncLocalStorage<string>();
 
 const rawPort = process.env.PORT;
 
@@ -114,6 +117,18 @@ export default defineConfig({
     __BUILD_ID__: JSON.stringify(buildId),
   },
   plugins: [
+    {
+      name: 'route-pwa-head',
+      apply: 'serve',
+      configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          requestHost.run(req.headers.host ?? 'localhost', next);
+        });
+      },
+      transformIndexHtml(html, context) {
+        return renderPwaHead(html, context.originalUrl ?? context.path, requestHost.getStore() ?? 'localhost', basePath);
+      },
+    },
     scopeThemes(),
     emitVersionJson(),
     adminSidebarLockup(),

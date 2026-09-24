@@ -63,10 +63,11 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     setLocation(`/${tenant.slug}${rest}${window.location.search}`, { replace: true });
   }, [tenant, slug, location, setLocation]);
 
-  // Per-tenant PWA manifest: "add to home screen" must open THIS accommodation,
-  // so scope/start_url are /<slug>/ (served by the API, injected per tenant).
+  // The initial HTML already has this tenant's manifest. Keep it synchronized
+  // with client-side navigation; never expose the platform manifest on a guest
+  // route, including while the tenant fetch is pending or has failed.
   useEffect(() => {
-    if (!tenant || !slug) return;
+    if (!slug) return;
     const base = (import.meta.env.BASE_URL || "/");
     let link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
     if (!link) {
@@ -84,7 +85,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       document.head.appendChild(touch);
     }
     touch.sizes = "180x180";
-    touch.href = `${base}brand/ikona-smart360-180.png?v=white-1`;
+    touch.href = `${base}brand/ikona-smart360-180.png?v=crisp-2`;
 
     const upsertMeta = (name: string, content: string) => {
       let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
@@ -95,13 +96,34 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       }
       meta.content = content;
     };
-    upsertMeta("apple-mobile-web-app-title", "Smart360");
-    upsertMeta("application-name", "Smart360");
+    if (tenant && tenant.slug === slug) {
+      upsertMeta("apple-mobile-web-app-title", tenant.name);
+      upsertMeta("application-name", tenant.name);
+      document.title = tenant.name;
+    } else {
+      // A stale tenant from a prior route must never label this installation.
+      document.querySelector('meta[name="apple-mobile-web-app-title"]')?.remove();
+      document.querySelector('meta[name="application-name"]')?.remove();
+      document.title = "Vodnik za goste";
+    }
     upsertMeta("theme-color", "#121A14");
     return () => {
-      // Client navigation back to /admin must not leave the tenant's install
-      // scope behind in the document head.
-      link.href = `${base}manifest.webmanifest`;
+      // A switch between guests must not briefly expose the admin start_url.
+      // Only platform/admin routes can restore the platform installation.
+      const path = window.location.pathname;
+      if (path === "/admin" || path.startsWith("/admin/") ||
+          ["/portal/", "/pogoji", "/povprasevanje", "/zasebnost", "/__living-guide/"].some((prefix) => path.startsWith(prefix)) ||
+          path === "/" && (window.location.hostname === "smart360.info" ||
+            /(^localhost$|^127\.|\.replit\.dev$|\.replit\.app$|\.repl\.co$)/.test(window.location.hostname))) {
+        link.href = `${base}manifest.webmanifest`;
+        upsertMeta("apple-mobile-web-app-title", "Smart360");
+        upsertMeta("application-name", "Smart360");
+        document.title = "Smart360";
+      } else {
+        link.remove();
+        document.querySelector('meta[name="apple-mobile-web-app-title"]')?.remove();
+        document.querySelector('meta[name="application-name"]')?.remove();
+      }
     };
   }, [tenant, slug, lang]);
 

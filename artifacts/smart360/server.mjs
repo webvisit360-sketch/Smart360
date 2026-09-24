@@ -18,10 +18,11 @@
  */
 import { createServer } from "node:http";
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
-import { createGzip } from "node:zlib";
+import { createGzip, gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
+import { renderPwaHead } from "./pwa-head.mjs";
 
 const root = resolve(fileURLToPath(new URL("./dist/public", import.meta.url)));
 const port = Number(process.env.PORT);
@@ -167,6 +168,11 @@ const server = createServer(async (req, res) => {
       }
     }
     const ext = extname(filePath).toLowerCase();
+    // The route-specific head is generated before responding, not after a
+    // client-side fetch. Never send the admin manifest in guest HTML.
+    const html = ext === ".html"
+      ? renderPwaHead(await readFile(filePath, "utf8"), req.url ?? "/", req.headers.host)
+      : null;
     const headers = {
       "content-type": TYPES[ext] ?? "application/octet-stream",
       "cache-control": cacheControlFor(pathname),
@@ -188,11 +194,20 @@ const server = createServer(async (req, res) => {
       headers["content-encoding"] = "gzip";
       headers["vary"] = "accept-encoding";
     } else {
-      headers["content-length"] = st.size;
+      headers["content-length"] = html === null ? st.size : Buffer.byteLength(html);
     }
     res.writeHead(200, headers);
     if (req.method === "HEAD") {
       res.end();
+      return;
+    }
+    if (html !== null) {
+      if (wantsGzip) {
+        const compressed = gzipSync(html);
+        res.end(compressed);
+      } else {
+        res.end(html);
+      }
       return;
     }
     const stream = createReadStream(filePath);

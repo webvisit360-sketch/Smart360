@@ -1,6 +1,6 @@
 // Run: node artifacts/api-server/scripts/generate-smart360-home-icons.mjs
-// The vector is the existing official ring; the approved 80px welcome/host
-// artwork is used as a guard against accidentally swapping in another mark.
+// Draw from the official vector at each output size. The approved 80px
+// welcome/host artwork is only a guard against swapping in another mark.
 import assert from "node:assert/strict";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -14,6 +14,10 @@ const vector = await readFile(path.join(brand, "smart360-kolobar-temno.svg"));
 const approved = await readFile(path.join(brand, "smart360-znak-40.png"));
 const sizes = [180, 192, 512, 1024];
 const markRatio = 0.66;
+const vectorMeta = await sharp(vector).metadata();
+assert.equal(vectorMeta.width, 1000, "Unexpected official vector intrinsic width");
+assert.equal(vectorMeta.height, 1000, "Unexpected official vector intrinsic height");
+assert.ok(!/<image\b|<filter\b|<feGaussianBlur\b/i.test(vector.toString()), "Mark SVG must be paths, not an embedded raster or blur");
 
 async function rgb(buffer) {
   const { data, info } = await sharp(buffer).removeAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -37,7 +41,17 @@ const generated = new Map();
 for (const size of sizes) {
   const markSize = Math.round(size * markRatio);
   const offset = Math.floor((size - markSize) / 2);
-  const mark = await sharp(vector).resize(markSize, markSize).png().toBuffer();
+  // Sharp's SVG density defaults to 72 DPI. Specify it explicitly to make
+  // the vector rasterize at this target mark size, never from an 80px raster.
+  const density = 72 * markSize / vectorMeta.width;
+  const source = sharp(vector, { density });
+  const sourceMeta = await source.metadata();
+  assert.ok(sourceMeta.width >= markSize && sourceMeta.height >= markSize,
+    `${size}px icon would upscale a ${sourceMeta.width}x${sourceMeta.height} SVG rasterization`);
+  const mark = await source.png().toBuffer();
+  const markMeta = await sharp(mark).metadata();
+  assert.equal(markMeta.width, markSize);
+  assert.equal(markMeta.height, markSize);
   const expected = await sharp({
     create: { width: size, height: size, channels: 3, background: white },
   }).composite([{ input: mark, left: offset, top: offset }]).flatten({ background: white }).removeAlpha().png().toBuffer();
@@ -92,4 +106,4 @@ const sheet = await sharp({
   ]),
 ]).removeAlpha().png().toBuffer();
 await writeFile(path.join(reports, "smart360-home-icons-contact-sheet.png"), sheet);
-console.log("Verified 180/192/512/1024: opaque RGB, white corners/center, same official mark, identical over black; saved approvals/contact sheet.");
+console.log("Verified 180/192/512/1024: direct target-size SVG rasterization, opaque RGB, white corners/center, same official mark, identical over black; saved approvals/contact sheet.");

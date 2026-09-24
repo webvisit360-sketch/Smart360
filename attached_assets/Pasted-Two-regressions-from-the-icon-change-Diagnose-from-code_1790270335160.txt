@@ -1,0 +1,23 @@
+Two regressions from the icon change. Diagnose from code, fix in dev. Report and STOP. No publication.
+
+BUG 1 — WRONG START PAGE (critical regression)
+The owner added smart360.info/meli-pu to an iPhone home screen. Tapping the new icon now opens the ADMIN/host login ("Portal za gostitelje") instead of the Meli Pu guest guide. This did not happen before the icon change. Your last report said "Povezan je tudi platformni manifest, ki prej ni bil povezan" — verify whether that platform manifest (or its start_url/scope) is now linked on GUEST guide pages.
+
+Required semantics:
+- Every guest guide page (/{slug}) must reference a PER-TENANT manifest: start_url and scope pointing at /{slug} (so the installed app opens THAT tenant's guide), name/short_name = the tenant's guide name (e.g. "Meli Pu"), the white icons.
+- The platform/admin manifest with its own start_url belongs ONLY on platform/admin pages. A guest page must never inherit the platform start_url.
+- Also check the apple-touch-icon / apple-mobile-web-app metadata on guest pages for the same leak.
+State in the report exactly which HTML head each surface serves (guest guide vs admin) and what start_url each manifest has.
+
+BUG 2 — BLURRY ICON
+The new white home-screen icon renders visibly blurry/soft ("zmazek") compared to the previous dark icons, which were sharp. Find the real cause in the generation pipeline. Check specifically:
+- What is the actual source used to draw the znak — the vector, or a small raster (e.g. an ~80 px PNG) scaled up? The previous sharp icons prove a high-resolution source exists; use THAT.
+- Are the served files really 180×180 / 192×192 / 512×512 with the znak rendered AT target resolution (no upscaling step anywhere)?
+- Is iOS being served the correct size (apple-touch-icon 180×180) rather than falling back to a small favicon?
+Regenerate all sizes with the znak rendered from the original high-resolution/vector asset directly at each target size. Never redraw or approximate the znak.
+
+VERIFY
+- Tests: per-tenant manifest start_url correctness for at least two tenants + admin surface separation.
+- Attach the regenerated 180×180 and 512×512 PNGs to the report for the owner's approval, and state the pixel dimensions and the source asset used.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
