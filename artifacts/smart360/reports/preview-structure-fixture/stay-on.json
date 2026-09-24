@@ -1,0 +1,24 @@
+{
+  "tabs": [
+    {
+      "text": "Vaše bivanje",
+      "opacity": "1"
+    },
+    {
+      "text": "Prihod in dostopPrazna — gostje je ne vidijo",
+      "opacity": "0.52"
+    },
+    {
+      "text": "PraktičnoPrazna — gostje je ne vidijo",
+      "opacity": "0.52"
+    }
+  ],
+  "cards": [],
+  "skeletonRows": [
+    {
+      "text": "Prazno bivanjePrazna — gostje je ne vidijo",
+      "opacity": "0.58"
+    }
+  ],
+  "tabRowCount": 1
+}

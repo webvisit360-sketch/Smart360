@@ -522,8 +522,10 @@ export default function AdminTenantEdit() {
 
   const firstPreviewCategoryId =
     ((previewTenant as any)?.sections || [])
+      .filter((section: any) => section?.isVisible !== false)
       .flatMap((section: any) => section.categories || [])
-      .find((category: any) => category?.isVisible !== false && typeof category?.id === "string")?.id ?? null;
+      .find((category: any) => category?.isVisible !== false && typeof category?.id === "string" &&
+        (category.items || []).some((item: any) => item?.isVisible !== false))?.id ?? null;
   const previewBase = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
   const previewPath =
     previewScreen === "category" && firstPreviewCategoryId

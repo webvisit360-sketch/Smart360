@@ -16,10 +16,85 @@ import {
 import {
   OFFER_GROUPS,
   STAY_GROUPS,
+  adminStructureCategoryStatus,
+  adminStructureGroupStatus,
+  guestVisibleDraftTree,
   populatedSectionGroups,
   orderedSectionGroupDefs,
   selectedSectionGroup,
 } from "../pages/living-guide/living-guide-groups";
+import { guestScope, resolveCategoriesForScope } from "../../../api-server/src/lib/contentTree";
+
+test("preview OFF projects draft through guest section/category/item visibility, without invented cards", () => {
+  for (const [sectionKey, defs] of [["offer", OFFER_GROUPS], ["stay", STAY_GROUPS]] as const) {
+    const category = (id: string, group: string, items: any[], more = {}) => ({
+      id, label: id, exploreGroup: group, isVisible: true, items, ...more,
+    });
+    const source = {
+      sections: [
+        { key: sectionKey, isVisible: true, categories: [
+          category("live", defs[0].key, [{ id: "real", isVisible: true }, { id: "hidden-item", isVisible: false }, { id: "deleted-item", isVisible: true, deletedAt: "today" }]),
+          category("empty", defs[1].key, []),
+          category("only-hidden", defs[1].key, [{ id: "hidden", isVisible: false }]),
+          category("only-deleted", defs[1].key, [{ id: "deleted", isVisible: true, deletedAt: "today" }]),
+          category("hidden-category", defs[1].key, [{ id: "real-hidden-category", isVisible: true }], { isVisible: false }),
+          category("deleted-category", defs[1].key, [{ id: "real-deleted-category", isVisible: true }], { deletedAt: "today" }),
+        ] },
+        { key: "hidden-section", isVisible: false, categories: [category("x", defs[1].key, [{ id: "x" }])] },
+        { key: "deleted-section", deletedAt: "today", categories: [category("y", defs[1].key, [{ id: "y" }])] },
+      ],
+    };
+    const projected = guestVisibleDraftTree(source);
+    const backendProjected = source.sections.filter(guestScope).map((section) => ({
+      key: section.key,
+      categories: resolveCategoriesForScope(section.categories, true),
+    }));
+    assert.deepEqual(projected.sections.map((section) => ({
+      key: section.key,
+      categories: section.categories,
+    })), backendProjected, "OFF draft projection matches the backend published guest category resolver");
+    assert.deepEqual(projected.sections.map((section) => section.key), [sectionKey]);
+    assert.deepEqual(projected.sections[0].categories.map((cat: any) => cat.id), ["live"]);
+    assert.deepEqual(projected.sections[0].categories[0].items.map((item: any) => item.id), ["real"]);
+    const groups = populatedSectionGroups(projected.sections[0].categories, defs);
+    assert.deepEqual(groups.map((group) => group.key), [defs[0].key]);
+    assert.equal(groups.length > 1, false, "one group must not have a tab row");
+    assert.deepEqual(groups[0].items.map(({ item }) => item.id), ["real"]);
+    assert.deepEqual(populatedSectionGroups(guestVisibleDraftTree({ sections: [{ categories: source.sections[0].categories.slice(1) }] }).sections[0].categories, defs), []);
+  }
+});
+
+test("ON distinguishes an inactive populated category from a truly empty guest category", () => {
+  const active = { isVisible: true };
+  const hidden = { isVisible: false };
+  assert.deepEqual(adminStructureCategoryStatus({ isVisible: false, items: [{ isVisible: true }] }, active), {
+    inactive: true, empty: false,
+  });
+  assert.deepEqual(adminStructureCategoryStatus({ isVisible: true, items: [{ isVisible: true }] }, hidden), {
+    inactive: true, empty: false,
+  });
+  assert.deepEqual(adminStructureCategoryStatus({ isVisible: true, items: [{ isVisible: false }] }, active), {
+    inactive: false, empty: true,
+  });
+  assert.deepEqual(adminStructureGroupStatus([]), { empty: true, inactive: false });
+  assert.deepEqual(adminStructureGroupStatus([{ __adminInactive: true, __adminGuestEmpty: false }]), {
+    empty: false, inactive: true,
+  });
+  assert.deepEqual(adminStructureGroupStatus([{ __adminInactive: false, __adminGuestEmpty: true }]), {
+    empty: true, inactive: false,
+  });
+  assert.deepEqual(adminStructureGroupStatus([{ __adminInactive: true, __adminGuestEmpty: false },
+    { __adminInactive: false, __adminGuestEmpty: false }]), { empty: false, inactive: false });
+});
+
+test("preview OFF uses the projection; empty skeleton rows are structure-only", async () => {
+  const shell = await readFile(new URL("../pages/living-guide/LivingGuideGuestShell.tsx", import.meta.url), "utf8");
+  assert.match(shell, /adminFullTree \? adminTreeTenant\(tenant\) : guestVisibleDraftTree\(tenant\)/);
+  assert.match(shell, /function adminCategoryNote[\s\S]*?if \(category\?\.__adminGuestEmpty\) return "Prazna — gostje je ne vidijo";\s*if \(category\?\.__adminInactive\) return "Neaktivna kategorija";/);
+  assert.match(shell, /emptyCategories\.map[\s\S]*?<AdminEmptyCategoryRow/);
+  assert.match(shell, /selectedGroup\?\.categories[\s\S]*?filter\(\(category: any\) => visible\(category\.items\)\.length === 0\)[\s\S]*?<AdminEmptyCategoryRow/);
+  assert.match(shell, /Prazna — gostje je ne vidijo/);
+});
 import { LIVING_GUIDE_UI } from "../pages/guest/i18n";
 
 test("published offer/stay groups require a visible, non-deleted item", () => {
@@ -316,7 +391,8 @@ test("compact list cards stay scoped to Okolica", async () => {
   assert.doesNotMatch(exploreCardSource, /description/);
   assert.match(exploreCardSource, /lg2-explore-card-photo--placeholder/);
   assert.doesNotMatch(exploreCardSource, /fotografija manjka<\/span>/);
-  assert.equal((exploreViewSource.match(/<ExploreCard/g) ?? []).length, 2);
+  assert.equal((exploreViewSource.match(/<ExploreCard/g) ?? []).length, 1, "only real items use place cards");
+  assert.match(exploreViewSource, /emptyCategories\.map[\s\S]*?<AdminEmptyCategoryRow/);
   assert.doesNotMatch(exploreViewSource, /<PCard/);
   assert.match(css, /\.lg2-explore-card \{[\s\S]*?gap: 12px;/);
   assert.match(

@@ -2149,7 +2149,39 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   color: var(--tx2) !important;
   font-size: 13px !important;
   font-weight: 750 !important;
-  text-transform: lowercase;
+}
+.lg2-admin-category-muted {
+  opacity: .52;
+  filter: grayscale(.65);
+}
+.lg2-admin-group-empty {
+  opacity: .52;
+  filter: grayscale(.65);
+}
+.lg2-admin-group-empty small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.lg2-admin-empty-category {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: calc(100% - 32px);
+  margin: 0 16px 14px;
+  padding: 14px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--tx2);
+  text-align: left;
+  cursor: pointer;
+  opacity: .58;
+}
+.lg2-admin-empty-category small {
+  margin-top: 4px;
+  font-size: 12px;
 }
 
 .lg2-explore-card {

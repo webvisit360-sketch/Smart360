@@ -1,0 +1,18 @@
+Diagnostic + fix task. Report and STOP. No publication.
+
+CONTEXT
+In the admin guide preview (the phone-frame preview with the "Pokaži celotno strukturo" toggle), tenant Glamping Gril, section Okolica: with the toggle OFF, the preview shows the chips "Nočno življenje" and "Plaže" and, inside each, a single card titled identically to its category ("Nočno življenje" / "Plaže"). On the real guest guide (published snapshot) these categories are hidden because they are empty. 
+
+QUESTIONS TO ANSWER FROM CODE AND PERSISTED DATA (not guesses)
+1. What exactly does the preview render — the draft or the published snapshot? State it explicitly.
+2. With "Pokaži celotno strukturo" OFF, does the preview apply the SAME guest-visibility rules as the guest app (empty category hidden; empty offer group tab hidden; single group → no tab row)? If not, list every divergence.
+3. What are those self-titled cards ("Plaže" inside Plaže, "Nočno življenje" inside Nočno življenje)? Check the draft data for tenant Glamping Gril: are these REAL draft items (if so: when and by which code path were they created — provenance, timestamps), or are they placeholder cards synthesized by the preview component? Quote the persisted rows or the component code that generates them.
+
+REQUIRED SEMANTICS (fix in dev if the code diverges)
+- Toggle OFF: the preview must be a faithful rendering of the DRAFT with guest-visibility rules applied — what guests would see if the draft were published right now. No synthetic placeholder cards, ever.
+- Toggle ON: show the full structure including empty categories/groups, each clearly marked as empty and hidden from guests (muted style, label "Prazna — gostje je ne vidijo"), so the operator can see the whole skeleton.
+- If the self-titled cards turn out to be REAL draft items, do NOT delete them; report their origin and wait for the owner's decision.
+
+Add a regression test: preview with toggle OFF hides empty categories and empty groups exactly like the guest app.
+
+Report what you found (answers 1–3 with evidence), what you changed, and test results. POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

@@ -94,6 +94,9 @@ import {
   OFFER_GROUPS,
   STAY_GROUPS,
   populatedSectionGroups,
+  guestVisibleDraftTree,
+  adminStructureCategoryStatus,
+  adminStructureGroupStatus,
   selectedSectionGroup,
 } from "./living-guide-groups";
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
@@ -299,19 +302,25 @@ function adminTreeTenant(tenant: any): any {
     ...tenant,
     sections: (tenant?.sections ?? []).map((section: any) => ({
       ...expose(section),
-      categories: (section.categories ?? []).map((category: any) => ({
-        ...expose(category),
-        __adminStructurePreview: true,
-        items: (category.items ?? []).map(expose),
-      })),
+      categories: (section.categories ?? []).map((category: any) => {
+        const status = adminStructureCategoryStatus(category, section);
+        return {
+          ...expose(category),
+          __adminStructurePreview: true,
+          __adminInactive: status.inactive,
+          __adminGuestEmpty: status.empty,
+          items: (category.items ?? []).map(expose),
+        };
+      }),
     })),
   };
 }
 
 function adminCategoryNote(category: any): string | null {
   if (!category?.__adminStructurePreview) return null;
+  if (category?.__adminGuestEmpty) return "Prazna — gostje je ne vidijo";
   if (category?.__adminInactive) return "Neaktivna kategorija";
-  return visible(category?.items).length === 0 ? "čaka vsebino" : null;
+  return null;
 }
 
 function bodyHtml(body: string | null | undefined): string {
@@ -641,7 +650,7 @@ export default function LivingGuideGuestShell({
 }) {
   const [location, setLocation] = useLocation();
   tenant = useMemo(
-    () => (adminFullTree ? adminTreeTenant(tenant) : tenant),
+    () => (adminFullTree ? adminTreeTenant(tenant) : guestVisibleDraftTree(tenant)),
     [adminFullTree, tenant],
   );
   const requestedTheme = new URLSearchParams(window.location.search).get("theme");
@@ -2509,7 +2518,7 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
 
             if (isPhotoCard) {
               return (
-                <button key={category.id} data-lg-card={category.label} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
+                <button key={category.id} data-lg-card={category.label} className={`lg2-photo-card${isWide ? " lg2-photo-card--wide" : ""}${adminCategoryNote(category) ? " lg2-admin-category-muted" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
                   {media ? (
                     <img data-lg-card-image src={mediaImgSrc(media, CARD_IMAGE_WIDTH)} alt="" loading={index < 2 ? "eager" : "lazy"} decoding="async" style={imageStyle(media)} />
                   ) : (
@@ -2524,7 +2533,7 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
               );
             }
             return (
-              <button key={category.id} className={`lg2-utility-card${isWide ? " lg2-utility-card--wide" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
+              <button key={category.id} className={`lg2-utility-card${isWide ? " lg2-utility-card--wide" : ""}${adminCategoryNote(category) ? " lg2-admin-category-muted" : ""}`} style={staggerStyle} type="button" onClick={() => onOpenCategory(category.id)}>
                 <span className="lg2-utility-icon" aria-hidden="true"><LivingGuideCategoryIcon icon={categoryIcon(category)} /></span>
                 <span>
                   <b>{category.label}</b>
@@ -2554,6 +2563,16 @@ function GridView({ tenant, section, lang, t, guest, onEditGuest, onOpenCategory
 
 // Shared Okolica building blocks (prototype .gtabs / .pcard), reused verbatim
 // by the Okolica, Ponudba and Nastanitev screens — never re-implemented.
+function AdminEmptyCategoryRow({ category, onOpen }: { category: any; onOpen: () => void }) {
+  return (
+    <button type="button" className="lg2-admin-empty-category" data-admin-state="Prazna — gostje je ne vidijo" onClick={onOpen}>
+      <span>{category.label}</span>
+      {category.__adminInactive && <small>Neaktivna kategorija</small>}
+      <small>Prazna — gostje je ne vidijo</small>
+    </button>
+  );
+}
+
 function GroupTabs({ groups, selectedKey, onSelect, label }: any) {
   return (
     <div
@@ -2567,11 +2586,13 @@ function GroupTabs({ groups, selectedKey, onSelect, label }: any) {
           type="button"
           role="tab"
           aria-selected={group.key === selectedKey}
-          className={group.key === selectedKey ? "is-active" : undefined}
+          className={`${group.key === selectedKey ? "is-active" : ""}${group.empty || group.inactive ? " lg2-admin-group-empty" : ""}`}
           key={group.key}
           onClick={() => onSelect(group.key)}
         >
           {group.label}
+          {group.empty && <small>Prazna — gostje je ne vidijo</small>}
+          {group.inactive && <small>{group.inactive === "group" ? "Neaktivna skupina — gostje je ne vidijo" : "Neaktivna kategorija"}</small>}
         </button>
       ))}
     </div>
@@ -2581,7 +2602,7 @@ function GroupTabs({ groups, selectedKey, onSelect, label }: any) {
 function PCard({ ariaLabel, onOpen, media, meta, title, description, categoryIcon: icon = "doc", adminNote }: any) {
   return (
     <article
-      className={`lg2-pcard${adminNote?.startsWith("Neaktivna") ? " lg2-pcard--inactive" : ""}`}
+      className={`lg2-pcard${adminNote ? " lg2-pcard--inactive" : ""}`}
       data-admin-state={adminNote || undefined}
       role="button"
       tabIndex={0}
@@ -2635,7 +2656,7 @@ function ExploreCard({
 }: any) {
   return (
     <article
-      className={`lg2-explore-card${adminNote?.startsWith("Neaktivna") ? " lg2-explore-card--inactive" : ""}`}
+      className={`lg2-explore-card${adminNote ? " lg2-explore-card--inactive" : ""}`}
       data-admin-state={adminNote || undefined}
       role="button"
       tabIndex={0}
@@ -2730,6 +2751,8 @@ function ExploreView({
       ...activeCategories.map((category: any) => ({
         key: category.id,
         label: category.label,
+        empty: category.__adminGuestEmpty === true && !category.__adminInactive,
+        inactive: category.__adminInactive === true,
       })),
     ],
     [activeCategories, t],
@@ -2828,16 +2851,8 @@ function ExploreView({
           </section>
         ))}
         {emptyCategories.map((category: any) => (
-            <ExploreCard
-              key={category.id}
-              ariaLabel={category.label}
-              onOpen={() => onOpenCategory(category.id)}
-              categoryIcon={categoryIcon(category)}
-              categoryLabel={category.label}
-              title={category.label}
-              adminNote={adminCategoryNote(category)}
-            />
-          ))}
+          <AdminEmptyCategoryRow key={category.id} category={category} onOpen={() => onOpenCategory(category.id)} />
+        ))}
       </div>
     </section>
   );
@@ -2868,7 +2883,11 @@ function ShopView({ tenant, section, adminFullTree, t, orderSummary, onOpenOrder
       </header>
       {(adminFullTree || groups.length > 1) && (
         <GroupTabs
-          groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+          groups={groups.map((group) => ({
+            key: group.key, label: t(group.labelKey),
+            empty: adminFullTree && adminStructureGroupStatus(group.categories).empty,
+            inactive: adminFullTree && adminStructureGroupStatus(group.categories).inactive ? "group" : false,
+          }))}
           selectedKey={selectedGroup?.key}
           onSelect={selectGroup}
           label={section.title}
@@ -2929,15 +2948,7 @@ function ShopView({ tenant, section, adminFullTree, t, orderSummary, onOpenOrder
         {selectedGroup?.categories
           .filter((category: any) => visible(category.items).length === 0)
           .map((category: any) => (
-            <PCard
-              key={category.id}
-              ariaLabel={category.label}
-              onOpen={() => onOpenCategory(category.id)}
-              categoryIcon={categoryIcon(category)}
-              meta={<span className="lg2-pcard-category">{category.label}</span>}
-              title={category.label}
-              adminNote={adminCategoryNote(category)}
-            />
+            <AdminEmptyCategoryRow key={category.id} category={category} onOpen={() => onOpenCategory(category.id)} />
           ))}
       </div>
     </section>
@@ -2976,7 +2987,11 @@ function StayView({ tenant, section, adminFullTree, t, guest, onEditGuest, onOpe
       </header>
       {(adminFullTree || groups.length > 1) && (
         <GroupTabs
-          groups={groups.map((group) => ({ key: group.key, label: t(group.labelKey) }))}
+          groups={groups.map((group) => ({
+            key: group.key, label: t(group.labelKey),
+            empty: adminFullTree && adminStructureGroupStatus(group.categories).empty,
+            inactive: adminFullTree && adminStructureGroupStatus(group.categories).inactive ? "group" : false,
+          }))}
           selectedKey={selectedGroup?.key}
           onSelect={selectGroup}
           label={section.title}
@@ -2999,6 +3014,7 @@ function StayView({ tenant, section, adminFullTree, t, guest, onEditGuest, onOpe
         )}
         {selectedGroup?.categories.map((category: any) => {
           const item = visible(category.items)[0];
+          if (!item) return <AdminEmptyCategoryRow key={category.id} category={category} onOpen={() => openStayCategory(category.id)} />;
           const status = item ? itemOpenStatus(item, t) : null;
           return (
             <PCard

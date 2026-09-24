@@ -52,6 +52,43 @@ function visibleRows(rows: unknown): any[] {
     : [];
 }
 
+/** The preview endpoint supplies the unfiltered draft. Apply the same section,
+ * category and item eligibility as the published guest tree without changing
+ * the draft or inventing cards for empty categories. */
+export function guestVisibleDraftTree<T extends { sections?: any[] }>(tenant: T): T {
+  return {
+    ...tenant,
+    sections: (tenant.sections ?? [])
+      .filter((section) => section.isVisible !== false && !section.deletedAt)
+      .map((section) => ({
+        ...section,
+        categories: (section.categories ?? [])
+          .filter((category: any) => category.isVisible !== false && !category.deletedAt)
+          .map((category: any) => ({
+            ...category,
+            items: (category.items ?? []).filter((item: any) =>
+              item.isVisible !== false && !item.deletedAt),
+          }))
+          .filter((category: any) => category.items.length > 0),
+      })),
+  };
+}
+
+export function adminStructureCategoryStatus(category: any, section: any) {
+  return {
+    inactive: section.isVisible === false || category.isVisible === false,
+    empty: !(category.items ?? []).some((item: any) =>
+      item.isVisible !== false && !item.deletedAt),
+  };
+}
+
+export function adminStructureGroupStatus(categories: any[]) {
+  const empty = categories.every((category) => category.__adminGuestEmpty);
+  const inactive = !empty && categories.every((category) =>
+    category.__adminInactive || category.__adminGuestEmpty);
+  return { empty, inactive };
+}
+
 export function populatedSectionGroups(
   categories: unknown,
   defs: ReadonlyArray<SectionGroupDef>,

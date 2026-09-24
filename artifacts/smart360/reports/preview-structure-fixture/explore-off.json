@@ -1,0 +1,20 @@
+{
+  "tabs": [
+    {
+      "text": "Vse",
+      "opacity": "1"
+    },
+    {
+      "text": "Narava",
+      "opacity": "1"
+    }
+  ],
+  "cards": [
+    {
+      "text": "NaravaNarava real placeodprto do 22:00",
+      "state": null
+    }
+  ],
+  "skeletonRows": [],
+  "tabRowCount": 1
+}

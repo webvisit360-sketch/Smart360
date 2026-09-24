@@ -1,0 +1,45 @@
+{
+  "tabs": [
+    {
+      "text": "Vse",
+      "opacity": "1"
+    },
+    {
+      "text": "Narava",
+      "opacity": "1"
+    },
+    {
+      "text": "Nočno življenjePrazna — gostje je ne vidijo",
+      "opacity": "0.52"
+    },
+    {
+      "text": "PlažePrazna — gostje je ne vidijo",
+      "opacity": "0.52"
+    },
+    {
+      "text": "Skrita vsebinaNeaktivna kategorija",
+      "opacity": "0.52"
+    }
+  ],
+  "cards": [
+    {
+      "text": "NaravaNarava real placeodprto do 22:00",
+      "state": null
+    },
+    {
+      "text": "Skrita vsebinaSkrita vsebina real placeNeaktivna kategorijaodprto do 22:00",
+      "state": "Neaktivna kategorija"
+    }
+  ],
+  "skeletonRows": [
+    {
+      "text": "Nočno življenjePrazna — gostje je ne vidijo",
+      "opacity": "0.58"
+    },
+    {
+      "text": "PlažePrazna — gostje je ne vidijo",
+      "opacity": "0.58"
+    }
+  ],
+  "tabRowCount": 1
+}

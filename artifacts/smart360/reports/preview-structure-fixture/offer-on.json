@@ -1,0 +1,28 @@
+{
+  "tabs": [
+    {
+      "text": "Najem",
+      "opacity": "1"
+    },
+    {
+      "text": "Izleti in prevoziPrazna — gostje je ne vidijo",
+      "opacity": "0.52"
+    },
+    {
+      "text": "Domači izdelkiNeaktivna skupina — gostje je ne vidijo",
+      "opacity": "0.52"
+    },
+    {
+      "text": "Pri hišiPrazna — gostje je ne vidijo",
+      "opacity": "0.52"
+    }
+  ],
+  "cards": [],
+  "skeletonRows": [
+    {
+      "text": "Prazna ponudbaPrazna — gostje je ne vidijo",
+      "opacity": "0.58"
+    }
+  ],
+  "tabRowCount": 1
+}
