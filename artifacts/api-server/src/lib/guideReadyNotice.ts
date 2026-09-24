@@ -111,10 +111,9 @@ async function asset(file: string): Promise<Buffer> {
 
 /** A6 landscape (419.53 × 297.64 pt), PDF vector squares, four-module quiet zone. */
 export async function makeReadySticker(input: ReadyInput): Promise<Buffer> {
-  const [titleFont, urlFont, znak] = await Promise.all([
+  const [titleFont, urlFont] = await Promise.all([
     asset("artifacts/api-server/assets/Archivo-800.ttf"),
     asset("artifacts/api-server/assets/Archivo-600.ttf"),
-    asset("artifacts/smart360/public/brand/smart360-znak-40.png"),
   ]);
   const matrix = QRCode.create(input.guideUrl, { errorCorrectionLevel: "H" }).modules;
   const width = 419.53, height = 297.64, qrSize = 174;
@@ -129,19 +128,18 @@ export async function makeReadySticker(input: ReadyInput): Promise<Buffer> {
     doc.rect(0, 0, width, height).fill("#FFFFFF");
     // Half-point hairline entirely inside the trim edge; no print bleed.
     doc.lineWidth(0.5).strokeColor("#E8EBE6").rect(0.25, 0.25, width - 0.5, height - 0.5).stroke();
-    doc.image(znak, 23, 19, { width: 46, height: 46 });
     doc.registerFont("Archivo800", titleFont);
     doc.registerFont("Archivo600", urlFont);
     // Wrap the complete tenant name (never use ellipsis). Shrink only if it
     // exceeds the header's two-line allowance; reject impossible long labels.
     const name = input.tenantName.trim();
     if (!name) throw new Error("Tenant name is required for QR sticker");
-    const nameWidth = width - 103;
+    const nameWidth = width - 46;
     let nameSize = 17;
     doc.font("Archivo800");
     while (nameSize >= 8 && doc.fontSize(nameSize).heightOfString(name, { width: nameWidth, lineGap: 0 }) > 44) nameSize -= 0.5;
     if (nameSize < 8) throw new Error("Tenant name is too long for A6 sticker");
-    doc.fontSize(nameSize).fillColor("#121A14").text(name, 80, 21, { width: nameWidth, lineGap: 0 });
+    doc.fontSize(nameSize).fillColor("#121A14").text(name, 23, 29, { width: nameWidth, lineGap: 0, align: "center" });
     doc.fillColor("#000000");
     for (let y = 0; y < matrix.size; y++) {
       for (let x = 0; x < matrix.size; x++) {

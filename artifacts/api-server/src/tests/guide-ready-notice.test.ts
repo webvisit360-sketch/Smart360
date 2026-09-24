@@ -72,6 +72,8 @@ test("intercepted recipient and independent archive each contain vector PDF + CI
       writeFileSync(file, pdf);
       const info = execFileSync("pdfinfo", [file], { encoding: "utf8" });
       assert.match(info, /Page size:\s+419\.53 x 297\.64 pts/);
+      const images = execFileSync("pdfimages", ["-list", file], { encoding: "utf8" });
+      assert.equal(images.trim().split("\n").length, 2, "sticker has no logo or raster images");
       const fonts = execFileSync("pdffonts", [file], { encoding: "utf8" });
       assert.match(fonts, /Archivo-ExtraBold/);
       assert.match(fonts, /Archivo-SemiBold/);

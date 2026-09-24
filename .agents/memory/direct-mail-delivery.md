@@ -20,3 +20,9 @@ Manual guide-ready mail must follow the owner's explicit visual specification, n
 **Why:** The existing welcome renderer had a 20px mark and an orange stripe, while the owner explicitly required a 46px official mark, no new decoration, green pill buttons and a 16px card. The requested PDF also requires distinct Archivo 800/600 weights, not merely an Archivo font.
 
 **How to apply:** Compare actual rendered previews and computed measurements against the approved specification before presenting mail for visual approval. Never send a real preview email without approval. Archive delivery is a separate best-effort send so an archive failure cannot invalidate the host's successful delivery.
+
+The owner explicitly removed the Smart360 mark from the print sticker only on 2026-09-24; email branding remains unchanged.
+
+**Why:** The print layout should contain only the centered tenant name, QR and URL with its existing cutting border, not reserve space for brand imagery.
+
+**How to apply:** Do not reintroduce the email's logo into the PDF when sharing rendering assets.
