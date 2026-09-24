@@ -94,6 +94,10 @@ import type {
   HostOnboardingRound,
   HostOnboardingSaveRequest,
   HostOnboardingSubmitRequest,
+  HostReadyEdit,
+  HostReadyPreview,
+  HostReadyRendered,
+  HostReadySendResult,
   HostReplyInput,
   HostWelcomePreview,
   Item,
@@ -1207,6 +1211,227 @@ export function useGetHostWelcomePreview<TData = Awaited<ReturnType<typeof getHo
 
 
 
+
+export const getGetHostReadyPreviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/ready-preview`
+}
+
+/**
+ * @summary Operator-only read-only preview of guide-ready notice and QR
+ */
+export const getHostReadyPreview = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<HostReadyPreview> => {
+
+  return customFetch<HostReadyPreview>(getGetHostReadyPreviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHostReadyPreviewQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/host/ready-preview`
+    ] as const;
+    }
+
+
+export const getGetHostReadyPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getHostReadyPreview>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostReadyPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHostReadyPreviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHostReadyPreview>>> = ({ signal }) => getHostReadyPreview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHostReadyPreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHostReadyPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getHostReadyPreview>>>
+export type GetHostReadyPreviewQueryError = ErrorType<void>
+
+
+/**
+ * @summary Operator-only read-only preview of guide-ready notice and QR
+ */
+
+export function useGetHostReadyPreview<TData = Awaited<ReturnType<typeof getHostReadyPreview>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHostReadyPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHostReadyPreviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRenderHostReadyEditUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/ready-preview`
+}
+
+/**
+ * @summary Operator-only ephemeral preview of edited guide-ready notice
+ */
+export const renderHostReadyEdit = async (id: string,
+    hostReadyEdit: HostReadyEdit, options?: Parameters<typeof customFetch>[1]): Promise<HostReadyRendered> => {
+
+  return customFetch<HostReadyRendered>(getRenderHostReadyEditUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostReadyEdit)
+  }
+);}
+
+
+
+
+
+export const getRenderHostReadyEditMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renderHostReadyEdit>>, TError,{id: string;data: BodyType<HostReadyEdit>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof renderHostReadyEdit>>, TError,{id: string;data: BodyType<HostReadyEdit>}, TContext> => {
+
+const mutationKey = ['renderHostReadyEdit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renderHostReadyEdit>>, {id: string;data: BodyType<HostReadyEdit>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  renderHostReadyEdit(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenderHostReadyEditMutationResult = NonNullable<Awaited<ReturnType<typeof renderHostReadyEdit>>>
+    export type RenderHostReadyEditMutationBody = BodyType<HostReadyEdit>
+    export type RenderHostReadyEditMutationError = ErrorType<void>
+
+    /**
+ * @summary Operator-only ephemeral preview of edited guide-ready notice
+ */
+export const useRenderHostReadyEdit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renderHostReadyEdit>>, TError,{id: string;data: BodyType<HostReadyEdit>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof renderHostReadyEdit>>,
+        TError,
+        {id: string;data: BodyType<HostReadyEdit>},
+        TContext
+      > => {
+      return useMutation(getRenderHostReadyEditMutationOptions(options));
+    }
+
+export const getSendHostReadyNoticeUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/host/send-ready`
+}
+
+/**
+ * @summary Operator-only manual guide-ready notice, with independent archive delivery
+ */
+export const sendHostReadyNotice = async (id: string,
+    hostReadyEdit: HostReadyEdit, options?: Parameters<typeof customFetch>[1]): Promise<HostReadySendResult> => {
+
+  return customFetch<HostReadySendResult>(getSendHostReadyNoticeUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(hostReadyEdit)
+  }
+);}
+
+
+
+
+
+export const getSendHostReadyNoticeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendHostReadyNotice>>, TError,{id: string;data: BodyType<HostReadyEdit>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendHostReadyNotice>>, TError,{id: string;data: BodyType<HostReadyEdit>}, TContext> => {
+
+const mutationKey = ['sendHostReadyNotice'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendHostReadyNotice>>, {id: string;data: BodyType<HostReadyEdit>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sendHostReadyNotice(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendHostReadyNoticeMutationResult = NonNullable<Awaited<ReturnType<typeof sendHostReadyNotice>>>
+    export type SendHostReadyNoticeMutationBody = BodyType<HostReadyEdit>
+    export type SendHostReadyNoticeMutationError = ErrorType<void>
+
+    /**
+ * @summary Operator-only manual guide-ready notice, with independent archive delivery
+ */
+export const useSendHostReadyNotice = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendHostReadyNotice>>, TError,{id: string;data: BodyType<HostReadyEdit>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendHostReadyNotice>>,
+        TError,
+        {id: string;data: BodyType<HostReadyEdit>},
+        TContext
+      > => {
+      return useMutation(getSendHostReadyNoticeMutationOptions(options));
+    }
 
 export const getPreviewTenantPublicationUrl = (id: string,) => {
 

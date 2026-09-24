@@ -27,9 +27,9 @@ const AGENCY_FOOTER = [
   "Tomšičeva ulica 12, SI-2310 Slovenska Bistrica · info@webvisit360.com",
 ];
 
-const INVITATION_SENDER_NOTE_SL =
+export const INVITATION_SENDER_NOTE_SL =
   "To sporočilo pošilja Smart360 prek svojega poštnega sistema na domeni webvisit360.com. Povezava vodi na smart360.info.";
-const INVITATION_SENDER_NOTE_EN =
+export const INVITATION_SENDER_NOTE_EN =
   "This message is sent by Smart360 through its mail system at webvisit360.com. The link points to smart360.info.";
 
 function fromHeader(): string {

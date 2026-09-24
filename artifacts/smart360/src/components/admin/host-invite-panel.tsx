@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, RefreshCcw, ShieldAlert, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Mail, MailCheck, ShieldAlert, ShieldCheck } from "lucide-react";
 import { getAdminTenantHostAccount } from "@workspace/api-client-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { WelcomePreview } from "./welcome-preview";
+import { ReadyPreview, WelcomePreview } from "./welcome-preview";
 import type { ManagementMode } from "./management-mode-setting";
 
 type InviteHistoryEntry = {
@@ -34,7 +34,17 @@ type WelcomeWithoutAccessHistoryEntry = {
   createdAt: string;
 };
 
-type WelcomeHistoryEntry = InviteHistoryEntry | WelcomeWithoutAccessHistoryEntry;
+type LifecycleHistoryEntry = {
+  kind: "welcome_with_access" | "welcome_without_access" | "guide_ready";
+  label: string;
+  createdAt: string;
+  deliveryStatus: "accepted" | "failed";
+  archiveStatus: "accepted" | "failed" | "not_attempted";
+  deliveryFailure: string | null;
+  archiveFailure: string | null;
+};
+
+type WelcomeHistoryEntry = InviteHistoryEntry | WelcomeWithoutAccessHistoryEntry | LifecycleHistoryEntry;
 
 type HostAccount = {
   email: string;
@@ -75,7 +85,7 @@ export function HostInvitePanel({
   const [inviteHistory, setInviteHistory] = useState<WelcomeHistoryEntry[]>([]);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<"save" | "welcome" | "guide-ready" | "reset" | null>(null);
+  const [busy, setBusy] = useState<"save" | "welcome" | "reset" | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -125,7 +135,7 @@ export function HostInvitePanel({
     }
   };
 
-  const sendInvite = async (template: "welcome" | "guide-ready") => {
+  const sendInvite = async (template: "welcome") => {
     setBusy(template);
     try {
       const response = await fetch(`/api/admin/tenants/${tenantId}/host/send-invite`, {
@@ -221,6 +231,7 @@ export function HostInvitePanel({
                     Pošlji dobrodošlico
                   </Button>
                   <WelcomePreview tenantId={tenantId} managementMode={managementMode} />
+                   <ReadyPreview tenantId={tenantId} onSent={load} />
                 </div>
               </div>
             )}
@@ -265,26 +276,32 @@ export function HostInvitePanel({
                     Pošlji dobrodošlico
                   </Button>
                   <WelcomePreview key={tenantId} tenantId={tenantId} managementMode={managementMode} />
-                  <Button
-                    variant="outline"
-                    onClick={() => void sendInvite("guide-ready")}
-                    disabled={busy !== null}
-                  >
-                    {busy === "guide-ready" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCcw className="h-4 w-4 mr-2" />}
-                    Vodnik je pripravljen
-                  </Button>
+                  <ReadyPreview tenantId={tenantId} onSent={load} />
                 </div>
               </div>
             )}
 
             {managementMode === "self_service" && (!account || account.hasPassword) && (
-              <WelcomePreview key={tenantId} tenantId={tenantId} managementMode={managementMode} />
+              <div className="flex flex-wrap gap-2">
+                <WelcomePreview key={tenantId} tenantId={tenantId} managementMode={managementMode} />
+                <ReadyPreview tenantId={tenantId} onSent={load} />
+              </div>
             )}
 
             {inviteHistory.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-bold">Zgodovina poslanih dobrodošlic in vabil</p>
                 {inviteHistory.map((invite, index) => {
+                  if ("archiveStatus" in invite) {
+                    return (
+                      <div key={`${invite.createdAt}-${index}`} data-testid={`row-welcome-history-${index}`} className="rounded-[18px] border bg-muted/30 p-4 text-sm space-y-1">
+                        <p className="font-bold">{invite.label}</p>
+                        <p>{invite.deliveryStatus === "accepted" ? "Gostitelju: sprejeto pri ponudniku" : `Gostitelju: ni uspelo (${invite.deliveryFailure ?? "napaka"})`}</p>
+                        <p>{invite.archiveStatus === "accepted" ? "Arhivska kopija: sprejeta pri ponudniku" : invite.archiveStatus === "failed" ? `Arhivska kopija: ni uspela (${invite.archiveFailure ?? "napaka"})` : "Arhivska kopija: ni bila poslana"}</p>
+                        <time className="text-xs text-muted-foreground">{new Date(invite.createdAt).toLocaleString("sl-SI", { dateStyle: "medium", timeStyle: "short" })}</time>
+                      </div>
+                    );
+                  }
                   if (invite.kind === "welcome_without_access") {
                     return (
                       <div

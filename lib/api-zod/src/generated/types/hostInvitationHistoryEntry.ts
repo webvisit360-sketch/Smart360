@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { HostInviteDelivery } from './hostInviteDelivery';
+import type { LifecycleEmailDelivery } from './lifecycleEmailDelivery';
 import type { WelcomeWithoutAccessDelivery } from './welcomeWithoutAccessDelivery';
 
-export type HostInvitationHistoryEntry = HostInviteDelivery | WelcomeWithoutAccessDelivery;
+export type HostInvitationHistoryEntry = HostInviteDelivery | WelcomeWithoutAccessDelivery | LifecycleEmailDelivery;

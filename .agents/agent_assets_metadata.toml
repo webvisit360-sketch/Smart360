@@ -932,3 +932,45 @@ mtime_ms = 1790152212541
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/08857711-df15-413a-a7fe-84e1b344b7b6/b5dc172f-b40d-4169-852c-6f1446ef0e55"
 storage_version_token = "1790153136626876"
 content_type = "text/html"
+
+[[outputs]]
+id = "WpTjuVzId-lZQE08MAO31"
+uri = "file://reports/gril-vodnik-pripravljen-samostojno.png"
+type = "image"
+title = "Vodnik je pripravljen — samostojno upravljanje"
+description = "Predogled za odobritev: Odprite vodnik in Uredite vodnik, uradni znak 46 px in QR."
+logical_id = "4f94eb05-6cb7-443c-a876-449408cc4528"
+content_hash = "sha256:ca466cf5452fca611ef99a58e9d00b3a191e39ff0dd70fe5b6885c1271646c24"
+size = 106745
+mtime_ms = 1790261970504
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4f94eb05-6cb7-443c-a876-449408cc4528/30cd1d0f-d950-4863-a223-a18b64f30dfb"
+storage_version_token = "1790262403054144"
+content_type = "image/png"
+
+[[outputs]]
+id = "3Ue3aBDRqvp5j6-BTeEHW"
+uri = "file://reports/gril-vodnik-pripravljen-ureja-smart360.png"
+type = "image"
+title = "Vodnik je pripravljen — ureja Smart360"
+description = "Predogled za odobritev: Odprite vodnik, brez gumba za urejanje."
+logical_id = "a741b1b8-ca5b-4187-be19-6a83a89bdf85"
+content_hash = "sha256:6e776d42a9cd41926a6d8e7ddd5a12000c4136800f206471c3aa78b36f0f4f9c"
+size = 100675
+mtime_ms = 1790261970880
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a741b1b8-ca5b-4187-be19-6a83a89bdf85/6f7d5ba9-3316-4496-8c5d-33f154a3a467"
+storage_version_token = "1790262403924644"
+content_type = "image/png"
+
+[[outputs]]
+id = "oGmJn9YQEpCHi-JghphoN"
+uri = "file://reports/nalepka-qr-glamping-gril.pdf"
+type = "pdf"
+title = "QR nalepka Gril — PDF za tisk"
+description = "A6 ležeče, vektorska črno-bela QR-koda, Archivo 800/600 in tanek rezalni rob. Za vizualno odobritev."
+logical_id = "ed5dd953-9643-469b-b397-7f299fa3dc52"
+content_hash = "sha256:06f9da8a9af40de37d5d781061eb442e27f4639bd64d4d895108459e541fe310"
+size = 15661
+mtime_ms = 1790262249428
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ed5dd953-9643-469b-b397-7f299fa3dc52/7fb556a5-5864-4996-8449-c39d080a38f6"
+storage_version_token = "1790262404730988"
+content_type = "application/pdf"

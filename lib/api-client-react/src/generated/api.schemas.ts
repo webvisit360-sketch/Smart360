@@ -749,7 +749,45 @@ export interface WelcomeWithoutAccessDelivery {
   deliveryStatus: WelcomeWithoutAccessDeliveryDeliveryStatus;
 }
 
-export type HostInvitationHistoryEntry = HostInviteDelivery | WelcomeWithoutAccessDelivery;
+export type LifecycleEmailDeliveryKind = typeof LifecycleEmailDeliveryKind[keyof typeof LifecycleEmailDeliveryKind];
+
+
+export const LifecycleEmailDeliveryKind = {
+  welcome_with_access: 'welcome_with_access',
+  welcome_without_access: 'welcome_without_access',
+  guide_ready: 'guide_ready',
+} as const;
+
+export type LifecycleEmailDeliveryDeliveryStatus = typeof LifecycleEmailDeliveryDeliveryStatus[keyof typeof LifecycleEmailDeliveryDeliveryStatus];
+
+
+export const LifecycleEmailDeliveryDeliveryStatus = {
+  accepted: 'accepted',
+  failed: 'failed',
+} as const;
+
+export type LifecycleEmailDeliveryArchiveStatus = typeof LifecycleEmailDeliveryArchiveStatus[keyof typeof LifecycleEmailDeliveryArchiveStatus];
+
+
+export const LifecycleEmailDeliveryArchiveStatus = {
+  accepted: 'accepted',
+  failed: 'failed',
+  not_attempted: 'not_attempted',
+} as const;
+
+export interface LifecycleEmailDelivery {
+  kind: LifecycleEmailDeliveryKind;
+  label: string;
+  createdAt: string;
+  deliveryStatus: LifecycleEmailDeliveryDeliveryStatus;
+  archiveStatus: LifecycleEmailDeliveryArchiveStatus;
+  /** @nullable */
+  deliveryFailure: string | null;
+  /** @nullable */
+  archiveFailure: string | null;
+}
+
+export type HostInvitationHistoryEntry = HostInviteDelivery | WelcomeWithoutAccessDelivery | LifecycleEmailDelivery;
 
 export interface HostAccount {
   email: string;
@@ -765,6 +803,62 @@ export interface HostAccountResponse {
   account: HostAccount | null;
   /** @maxItems 10 */
   inviteHistory: HostInvitationHistoryEntry[];
+}
+
+export type HostReadyPreviewManagementMode = typeof HostReadyPreviewManagementMode[keyof typeof HostReadyPreviewManagementMode];
+
+
+export const HostReadyPreviewManagementMode = {
+  self_service: 'self_service',
+  concierge: 'concierge',
+} as const;
+
+export interface HostReadyPreview {
+  propertyName: string;
+  /** @nullable */
+  recipient: string | null;
+  managementMode: HostReadyPreviewManagementMode;
+  guideUrl: string;
+  subject: string;
+  message: string;
+  html: string;
+  text: string;
+}
+
+export interface HostReadyEdit {
+  /** @maxLength 180 */
+  subject: string;
+  /** @maxLength 4000 */
+  message: string;
+}
+
+export interface HostReadyRendered {
+  subject: string;
+  message: string;
+  html: string;
+  text: string;
+}
+
+export type HostReadySendResultKind = typeof HostReadySendResultKind[keyof typeof HostReadySendResultKind];
+
+
+export const HostReadySendResultKind = {
+  guide_ready: 'guide_ready',
+} as const;
+
+export type HostReadySendResultArchiveStatus = typeof HostReadySendResultArchiveStatus[keyof typeof HostReadySendResultArchiveStatus];
+
+
+export const HostReadySendResultArchiveStatus = {
+  accepted: 'accepted',
+  failed: 'failed',
+} as const;
+
+export interface HostReadySendResult {
+  sent: boolean;
+  to: string;
+  kind: HostReadySendResultKind;
+  archiveStatus: HostReadySendResultArchiveStatus;
 }
 
 export interface HealthStatus {

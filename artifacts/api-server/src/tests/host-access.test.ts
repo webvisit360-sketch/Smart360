@@ -268,6 +268,9 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/host/send-invite`, {
       template: "welcome",
     });
+    await expectDenied("GET", `/admin/tenants/${fx.tenantA}/host/ready-preview`);
+    await expectDenied("POST", `/admin/tenants/${fx.tenantA}/host/ready-preview`, { subject: "x", message: "x" });
+    await expectDenied("POST", `/admin/tenants/${fx.tenantA}/host/send-ready`, { subject: "x", message: "x" });
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/host/send-reset`);
     await expectDenied("GET", `/admin/does-not-exist`);
   });

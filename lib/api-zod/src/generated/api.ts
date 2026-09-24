@@ -1250,6 +1250,86 @@ export const GetHostWelcomePreviewResponse = zod.object({
 })
 
 
+/**
+ * @summary Operator-only read-only preview of guide-ready notice and QR
+ */
+export const getHostReadyPreviewPathIdRegExp = new RegExp('^[0-9a-fA-F-]{36}$');
+
+
+export const GetHostReadyPreviewParams = zod.object({
+  "id": zod.coerce.string().regex(getHostReadyPreviewPathIdRegExp)
+})
+
+export const GetHostReadyPreviewResponse = zod.object({
+  "propertyName": zod.string(),
+  "recipient": zod.string().nullable(),
+  "managementMode": zod.enum(['self_service', 'concierge']),
+  "guideUrl": zod.string(),
+  "subject": zod.string(),
+  "message": zod.string(),
+  "html": zod.string(),
+  "text": zod.string()
+})
+
+
+/**
+ * @summary Operator-only ephemeral preview of edited guide-ready notice
+ */
+export const renderHostReadyEditPathIdRegExp = new RegExp('^[0-9a-fA-F-]{36}$');
+
+
+export const RenderHostReadyEditParams = zod.object({
+  "id": zod.coerce.string().regex(renderHostReadyEditPathIdRegExp)
+})
+
+export const renderHostReadyEditBodySubjectMax = 180;
+
+export const renderHostReadyEditBodyMessageMax = 4000;
+
+
+
+export const RenderHostReadyEditBody = zod.object({
+  "subject": zod.string().max(renderHostReadyEditBodySubjectMax),
+  "message": zod.string().max(renderHostReadyEditBodyMessageMax)
+})
+
+export const RenderHostReadyEditResponse = zod.object({
+  "subject": zod.string(),
+  "message": zod.string(),
+  "html": zod.string(),
+  "text": zod.string()
+})
+
+
+/**
+ * @summary Operator-only manual guide-ready notice, with independent archive delivery
+ */
+export const sendHostReadyNoticePathIdRegExp = new RegExp('^[0-9a-fA-F-]{36}$');
+
+
+export const SendHostReadyNoticeParams = zod.object({
+  "id": zod.coerce.string().regex(sendHostReadyNoticePathIdRegExp)
+})
+
+export const sendHostReadyNoticeBodySubjectMax = 180;
+
+export const sendHostReadyNoticeBodyMessageMax = 4000;
+
+
+
+export const SendHostReadyNoticeBody = zod.object({
+  "subject": zod.string().max(sendHostReadyNoticeBodySubjectMax),
+  "message": zod.string().max(sendHostReadyNoticeBodyMessageMax)
+})
+
+export const SendHostReadyNoticeResponse = zod.object({
+  "sent": zod.boolean(),
+  "to": zod.string(),
+  "kind": zod.enum(['guide_ready']),
+  "archiveStatus": zod.enum(['accepted', 'failed'])
+})
+
+
 export const PreviewTenantPublicationParams = zod.object({
   "id": zod.coerce.string()
 })
@@ -1472,6 +1552,14 @@ export const GetAdminTenantHostAccountResponse = zod.object({
   "label": zod.enum(['dobrodošlica brez dostopa']),
   "createdAt": zod.string(),
   "deliveryStatus": zod.enum(['accepted', 'failed'])
+}),zod.object({
+  "kind": zod.enum(['welcome_with_access', 'welcome_without_access', 'guide_ready']),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "deliveryStatus": zod.enum(['accepted', 'failed']),
+  "archiveStatus": zod.enum(['accepted', 'failed', 'not_attempted']),
+  "deliveryFailure": zod.string().nullable(),
+  "archiveFailure": zod.string().nullable()
 })])).max(getAdminTenantHostAccountResponseAccountOneInviteHistoryMax)
 }),zod.null()]),
   "inviteHistory": zod.array(zod.union([zod.object({
@@ -1490,6 +1578,14 @@ export const GetAdminTenantHostAccountResponse = zod.object({
   "label": zod.enum(['dobrodošlica brez dostopa']),
   "createdAt": zod.string(),
   "deliveryStatus": zod.enum(['accepted', 'failed'])
+}),zod.object({
+  "kind": zod.enum(['welcome_with_access', 'welcome_without_access', 'guide_ready']),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "deliveryStatus": zod.enum(['accepted', 'failed']),
+  "archiveStatus": zod.enum(['accepted', 'failed', 'not_attempted']),
+  "deliveryFailure": zod.string().nullable(),
+  "archiveFailure": zod.string().nullable()
 })])).max(getAdminTenantHostAccountResponseInviteHistoryMax)
 })
 

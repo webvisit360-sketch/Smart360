@@ -27,6 +27,10 @@ import { markTenantAdminChangeDirty } from "../lib/tenantPublicationState";
 import { db, hostInvitesTable, tenantsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { guestUrl } from "../lib/guestUrl";
+import { HOST_NOTIFICATION_REPLY_TO } from "../lib/businessContact";
+import { defaultReadyMessage, renderReadyNotice, sendReadyNotice, READY_SUBJECT } from "../lib/guideReadyNotice";
+import { recordLifecycleSend } from "../lib/lifecycleHistory";
+import type { ResendResult } from "../lib/resendDelivery";
 
 /**
  * Host account routes (Instruction #28, CHECKPOINT 2).
@@ -41,6 +45,15 @@ import { guestUrl } from "../lib/guestUrl";
 const router: IRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function archiveException(): ResendResult {
+  // The host delivery has already succeeded. Never let an archive transport
+  // exception turn that outcome into a false failure or persist raw details.
+  return { ok: false, error: {
+    code: "transport_error", message: "Arhivska kopija ni uspela",
+    stage: "transport", httpStatus: null,
+  } };
+}
 
 async function logAnonymousHostConfirmation(
   result: { hostUserId: string; tenantId: string },
@@ -232,6 +245,82 @@ router.get("/admin/tenants/:id/host/welcome-preview", requireAdmin, async (req, 
   res.json(preview);
 });
 
+router.get("/admin/tenants/:id/host/ready-preview", requireAdmin, async (req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "no-store");
+  const tenantId = tenantParam(req, res);
+  if (!tenantId) return;
+  const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
+  if (!tenant) { res.status(404).json({ error: "Not found" }); return; }
+  const url = guestUrl(tenant.slug);
+  const rendered = await renderReadyNotice({ tenantName: tenant.name, slug: tenant.slug, guideUrl: url, mode: tenant.managementMode === "concierge" ? "concierge" : "self_service" });
+  const account = tenant.managementMode === "self_service" ? await getHostAccountForTenant(tenantId) : null;
+  res.json({ propertyName: tenant.name, recipient: tenant.managementMode === "concierge" ? tenant.email : account?.email ?? null,
+    managementMode: tenant.managementMode, guideUrl: url, subject: rendered.subject, message: rendered.message, html: rendered.html, text: rendered.text });
+});
+
+router.post("/admin/tenants/:id/host/ready-preview", requireAdmin, async (req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "no-store");
+  res.locals["skipAdminMutationInvalidation"] = true;
+  const tenantId = tenantParam(req, res);
+  if (!tenantId) return;
+  const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
+  if (!tenant) { res.status(404).json({ error: "Not found" }); return; }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if (typeof body["subject"] !== "string" || typeof body["message"] !== "string") {
+    res.status(400).json({ error: "Neveljavna zadeva ali besedilo." }); return;
+  }
+  try {
+    const rendered = await renderReadyNotice({
+      tenantName: tenant.name, slug: tenant.slug, guideUrl: guestUrl(tenant.slug),
+      mode: tenant.managementMode === "concierge" ? "concierge" : "self_service", subject: body["subject"], message: body["message"],
+    });
+    res.json({ subject: rendered.subject, message: rendered.message, html: rendered.html, text: rendered.text });
+  } catch { res.status(400).json({ error: "Neveljavna zadeva ali besedilo." }); }
+});
+
+router.post("/admin/tenants/:id/host/send-ready", requireAdmin, async (req, res): Promise<void> => {
+  res.locals["skipAdminMutationInvalidation"] = true;
+  const tenantId = tenantParam(req, res);
+  if (!tenantId) return;
+  const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId)).limit(1);
+  if (!tenant) { res.status(404).json({ error: "Not found" }); return; }
+  const account = tenant.managementMode === "self_service" ? await getHostAccountForTenant(tenantId) : null;
+  const recipient = tenant.managementMode === "concierge" ? tenant.email?.trim() : account?.email;
+  if (!recipient) { res.status(409).json({ error: "Nastanitev nima e-poštnega naslova prejemnika." }); return; }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if ((body["subject"] !== undefined && typeof body["subject"] !== "string") ||
+      (body["message"] !== undefined && typeof body["message"] !== "string")) {
+    res.status(400).json({ error: "Neveljavno besedilo sporočila." }); return;
+  }
+  const input = {
+    recipient, tenantName: tenant.name, slug: tenant.slug,
+    guideUrl: guestUrl(tenant.slug), mode: tenant.managementMode === "concierge" ? "concierge" as const : "self_service" as const,
+    subject: (body["subject"] as string | undefined) ?? READY_SUBJECT,
+    message: (body["message"] as string | undefined) ?? defaultReadyMessage(guestUrl(tenant.slug)),
+  };
+  try {
+    // Validate/render before any provider call. An invalid edit cannot result in a send.
+    await renderReadyNotice(input);
+  } catch {
+    res.status(400).json({ error: "Neveljavna zadeva ali besedilo sporočila." }); return;
+  }
+  const key = `ready-${tenantId}-${crypto.randomUUID()}`;
+  let host: ResendResult;
+  try { host = await sendReadyNotice(input, key); }
+  catch {
+    res.status(503).json({ error: "Nalepke ni bilo mogoče pripraviti. Sporočilo ni bilo poslano." }); return;
+  }
+  // A failed recipient send never causes an accidental archive-only message.
+  let archive: ResendResult | null = null;
+  if (host.ok) {
+    try { archive = await sendReadyNotice({ ...input, recipient: HOST_NOTIFICATION_REPLY_TO }, `${key}-archive`); }
+    catch { archive = archiveException(); }
+  }
+  await recordLifecycleSend(tenantId, "guide_ready", host, archive);
+  if (!host.ok) { res.status(502).json({ sent: false, archiveStatus: "not_attempted", error: "Pošiljanje e-pošte ni uspelo." }); return; }
+  res.json({ sent: true, to: recipient, kind: "guide_ready", archiveStatus: archive?.ok ? "accepted" : "failed" });
+});
+
 router.post(
   "/admin/tenants/:id/host/send-invite",
   requireAdmin,
@@ -277,27 +366,25 @@ router.post(
         `concierge-welcome-${tenantId}-${crypto.randomUUID()}`,
       );
       if (!sent.ok) {
-        await logChange({
-          tenantId,
-          action: "send-failed",
-          entity: "concierge-welcome",
-          summary: "Pošiljanje dobrodošlice brez dostopa ni uspelo.",
-        });
+        await recordLifecycleSend(tenantId, "welcome_without_access", sent, null);
         res.status(502).json({ error: "Pošiljanje e-pošte ni uspelo. Poskusite znova." });
         return;
       }
-      await logChange({
-        tenantId,
-        action: "send",
-        entity: "concierge-welcome",
-        summary: "Poslana je bila dobrodošlica brez dostopa.",
-      });
+      let archive: ResendResult;
+      try {
+        archive = await sendConciergeWelcomeEmail(
+          { recipient: HOST_NOTIFICATION_REPLY_TO, tenantName: tenant.name, guideUrl: guestUrl(tenant.slug) },
+          `concierge-welcome-archive-${tenantId}-${crypto.randomUUID()}`,
+        );
+      } catch { archive = archiveException(); }
+      await recordLifecycleSend(tenantId, "welcome_without_access", sent, archive);
       res.json({
         sent: true,
         to: recipient,
         template: "welcome",
         kind: "welcome_without_access",
         label: "dobrodošlica brez dostopa",
+        archiveStatus: archive.ok ? "accepted" : "failed",
       });
       return;
     }
@@ -331,9 +418,20 @@ router.post(
           );
     if (!sent.ok) {
       const failure = await recordHostInviteDeliveryFailure(issued.inviteId, sent);
+      if (issued.template === "welcome") await recordLifecycleSend(tenantId, "welcome_with_access", sent, null);
       res.status(502).json({ error: failure.message });
       return;
     }
+    let archive: ResendResult | null = null;
+    if (issued.template === "welcome") {
+      try {
+        archive = await sendWelcomeEmail(
+          { to: HOST_NOTIFICATION_REPLY_TO, propertyName: issued.propertyName, setPasswordUrl },
+          `invite-archive-${issued.inviteId}`,
+        );
+      } catch { archive = archiveException(); }
+    }
+    if (issued.template === "welcome") await recordLifecycleSend(tenantId, "welcome_with_access", sent, archive);
     await db
       .update(hostInvitesTable)
       .set({
@@ -354,6 +452,7 @@ router.post(
       to: issued.email,
       template: issued.template,
       expiresAt: issued.expiresAt.toISOString(),
+      ...(archive ? { archiveStatus: archive.ok ? "accepted" : "failed" } : {}),
     });
   },
 );

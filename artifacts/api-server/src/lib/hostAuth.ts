@@ -19,6 +19,7 @@ import {
   type HostInviteDeliveryFailure,
 } from "./hostInviteDelivery";
 import { initializeWelcomeOnboardingDraft } from "./hostOnboarding";
+import { parseLifecycleHistory, type LifecycleStatus } from "./lifecycleHistory";
 
 /**
  * Host account authentication (Instruction #28, CHECKPOINT 2).
@@ -756,6 +757,7 @@ export type HostAccountView = {
 
 export type HostInvitationHistoryEntry =
   | HostAccountView["inviteHistory"][number]
+  | LifecycleStatus
   | {
       kind: "welcome_without_access";
       label: "dobrodošlica brez dostopa";
@@ -784,6 +786,17 @@ async function conciergeWelcomeHistory(
   }));
 }
 
+async function lifecycleHistory(tenantId: string): Promise<LifecycleStatus[]> {
+  const rows = await db.select({ detail: changelogTable.detail, createdAt: changelogTable.createdAt })
+    .from(changelogTable)
+    .where(and(eq(changelogTable.tenantId, tenantId), eq(changelogTable.entity, "lifecycle-email")))
+    .orderBy(desc(changelogTable.createdAt)).limit(20);
+  return rows.flatMap((row) => {
+    const parsed = parseLifecycleHistory(row.detail, row.createdAt);
+    return parsed ? [parsed] : [];
+  });
+}
+
 export async function getHostInvitationHistoryForTenant(
   tenantId: string,
   account: HostAccountView | null,
@@ -791,6 +804,7 @@ export async function getHostInvitationHistoryForTenant(
   const entries: HostInvitationHistoryEntry[] = [
     ...(account?.inviteHistory ?? []),
     ...await conciergeWelcomeHistory(tenantId),
+    ...await lifecycleHistory(tenantId),
   ];
   return entries
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

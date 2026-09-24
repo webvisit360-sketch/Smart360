@@ -22,6 +22,8 @@ import {
 import app from "../app";
 import { _setConciergeWelcomeDeliveryOverride } from "../lib/conciergeWelcomeEmail";
 import { _setLifecycleDeliveryOverride } from "../lib/lifecycleEmails";
+import { _setReadyDeliveryOverride } from "../lib/guideReadyNotice";
+import { HOST_NOTIFICATION_REPLY_TO } from "../lib/businessContact";
 import { ensureTenantPublication } from "../lib/publishedSnapshots";
 
 const sha256 = (value: string) =>
@@ -80,6 +82,7 @@ test("management mode preserves guide state and closes every host access path", 
   t.after(async () => {
     _setConciergeWelcomeDeliveryOverride(null);
     _setLifecycleDeliveryOverride(null);
+    _setReadyDeliveryOverride(null);
     await db.delete(changelogTable).where(eq(changelogTable.tenantId, tenant!.id));
     if (hostUserId) {
       await db.delete(hostAuthEventsTable).where(eq(hostAuthEventsTable.hostUserId, hostUserId));
@@ -142,18 +145,24 @@ test("management mode preserves guide state and closes every host access path", 
   assert.equal(failedConciergeSend.status, 502);
 
   let conciergeDeliveries = 0;
-  _setConciergeWelcomeDeliveryOverride(async (_body, options) => {
+  const conciergeBodies: Array<Record<string, unknown>> = [];
+  _setConciergeWelcomeDeliveryOverride(async (body, options) => {
+    conciergeBodies.push(body);
     conciergeDeliveries += 1;
     conciergeKeys.push(options?.idempotencyKey ?? "");
-    return { ok: true, providerMessageId: "fixture-concierge" };
+    return conciergeDeliveries === 1 ? { ok: true, providerMessageId: "fixture-concierge" } : {
+      ok: false, error: { code: "private-address@secret.test", message: "https://secret.test", stage: "provider", httpStatus: 503 },
+    };
   });
   const conciergeSend = await request(
     base, "POST", `/admin/tenants/${tenant!.id}/host/send-invite`,
     ownerCookie, { template: "welcome" },
   );
   assert.equal(conciergeSend.status, 200);
-  assert.equal(conciergeDeliveries, 1);
-  assert.equal(new Set(conciergeKeys).size, 2);
+  assert.equal(conciergeDeliveries, 2);
+  assert.equal(new Set(conciergeKeys).size, 3);
+  assert.deepEqual(conciergeBodies[1]!.to, [HOST_NOTIFICATION_REPLY_TO]);
+  assert.equal(conciergeBodies[0]!.html, conciergeBodies[1]!.html);
   assert.equal((await db.select().from(hostMembershipsTable)
     .where(eq(hostMembershipsTable.tenantId, tenant!.id))).length, 0);
   assert.deepEqual({
@@ -172,16 +181,54 @@ test("management mode preserves guide state and closes every host access path", 
       label: string;
       createdAt: string;
       deliveryStatus: string;
+      archiveStatus?: string;
     }>;
   };
   assert.equal(historyBody.account, null);
-  assert.deepEqual(historyBody.inviteHistory[0], {
-    kind: "welcome_without_access",
-    label: "dobrodošlica brez dostopa",
-    createdAt: historyBody.inviteHistory[0]!.createdAt,
-    deliveryStatus: "accepted",
-  });
+  assert.equal(historyBody.inviteHistory[0]?.kind, "welcome_without_access");
+  assert.equal(historyBody.inviteHistory[0]?.deliveryStatus, "accepted");
+  assert.equal(historyBody.inviteHistory[0]?.archiveStatus, "failed");
   assert.equal(historyBody.inviteHistory[1]?.deliveryStatus, "failed");
+  assert.doesNotMatch(JSON.stringify(historyBody), /secret\.test|private-address/);
+  // Re-send with a successful independent archive, without a live provider.
+  _setConciergeWelcomeDeliveryOverride(async () => ({ ok: true, providerMessageId: "fixture-concierge-archived" }));
+  const archivedConcierge = await request(
+    base, "POST", `/admin/tenants/${tenant!.id}/host/send-invite`, ownerCookie, { template: "welcome" },
+  );
+  assert.equal(archivedConcierge.status, 200);
+  assert.equal((await archivedConcierge.json() as { archiveStatus: string }).archiveStatus, "accepted");
+  let conciergeThrowCount = 0;
+  _setConciergeWelcomeDeliveryOverride(async () => {
+    conciergeThrowCount++;
+    if (conciergeThrowCount === 2) throw new Error("archive-only secret@example.test");
+    return { ok: true, providerMessageId: "fixture-host-before-archive-exception" };
+  });
+  const conciergeException = await request(base, "POST", `/admin/tenants/${tenant!.id}/host/send-invite`, ownerCookie, { template: "welcome" });
+  assert.equal(conciergeException.status, 200, "archive exception must not undo accepted host welcome");
+  assert.equal((await conciergeException.json() as { archiveStatus: string }).archiveStatus, "failed");
+  const conciergeReadyPreview = await request(base, "GET", `/admin/tenants/${tenant!.id}/host/ready-preview`, ownerCookie);
+  assert.equal(conciergeReadyPreview.status, 200);
+  assert.doesNotMatch((await conciergeReadyPreview.json() as { html: string }).html, /Uredite vodnik/);
+  const readyBodies: Array<Record<string, unknown>> = [];
+  _setReadyDeliveryOverride(async body => {
+    readyBodies.push(body);
+    return readyBodies.length === 1 ? { ok: true, providerMessageId: "ready-host" }
+      : { ok: false, error: { code: "private-address@secret.test", message: "https://secret.test", stage: "provider", httpStatus: 503 } };
+  });
+  const readySend = await request(base, "POST", `/admin/tenants/${tenant!.id}/host/send-ready`, ownerCookie, {});
+  assert.equal(readySend.status, 200);
+  assert.equal((await readySend.json() as { archiveStatus: string }).archiveStatus, "failed");
+  assert.deepEqual(readyBodies[1]?.["to"], [HOST_NOTIFICATION_REPLY_TO]);
+  const readyHistory = await request(base, "GET", `/admin/tenants/${tenant!.id}/host`, ownerCookie);
+  const readyHistoryText = await readyHistory.text();
+  assert.match(readyHistoryText, /"kind":"guide_ready"/);
+  assert.match(readyHistoryText, /"archiveStatus":"failed"/);
+  assert.doesNotMatch(readyHistoryText, /secret\.test|private-address/);
+  _setReadyDeliveryOverride(async () => ({ ok: true, providerMessageId: "concierge-ready-archived" }));
+  const archivedConciergeReady = await request(base, "POST", `/admin/tenants/${tenant!.id}/host/send-ready`, ownerCookie, {});
+  assert.equal(archivedConciergeReady.status, 200);
+  assert.equal((await archivedConciergeReady.json() as { archiveStatus: string }).archiveStatus, "accepted");
+  _setReadyDeliveryOverride(null);
   assert.deepEqual(await state(), before);
 
   const selfService = await request(
@@ -211,10 +258,13 @@ test("management mode preserves guide state and closes every host access path", 
   hostUserId = membership.hostUserId;
 
   let inviteToken: string | null = null;
+  const inviteBodies: Array<Record<string, unknown>> = [];
   _setLifecycleDeliveryOverride(async (body) => {
+    inviteBodies.push(body);
     const text = typeof body.text === "string" ? body.text : "";
     const match = text.match(/[?&]token=([A-Za-z0-9_-]+)/);
     inviteToken = match?.[1] ?? null;
+    if (inviteBodies.length > 1) throw new Error("archive-only secret@example.test");
     return { ok: true, providerMessageId: "fixture-invitation" };
   });
   const invitation = await request(
@@ -223,6 +273,36 @@ test("management mode preserves guide state and closes every host access path", 
   );
   assert.equal(invitation.status, 200);
   assert.ok(inviteToken);
+  assert.deepEqual(inviteBodies[1]?.["to"], [HOST_NOTIFICATION_REPLY_TO]);
+  assert.equal(inviteBodies[0]?.["html"], inviteBodies[1]?.["html"]);
+  const selfReadyPreview = await request(base, "GET", `/admin/tenants/${tenant!.id}/host/ready-preview`, ownerCookie);
+  assert.equal(selfReadyPreview.status, 200);
+  assert.match((await selfReadyPreview.json() as { html: string }).html, /Uredite vodnik/);
+  const invitesBeforeReady = (await db.select().from(hostInvitesTable)).length;
+  let selfReadyDeliveries = 0;
+  _setReadyDeliveryOverride(async body => {
+    readyBodies.push(body);
+    selfReadyDeliveries += 1;
+    return selfReadyDeliveries === 1 ? { ok: true, providerMessageId: "self-ready" } : {
+      ok: false, error: { code: "private-address@secret.test", message: "https://secret.test", stage: "provider", httpStatus: 503 },
+    };
+  });
+  const selfReady = await request(base, "POST", `/admin/tenants/${tenant!.id}/host/send-ready`, ownerCookie, {});
+  assert.equal(selfReady.status, 200);
+  assert.equal((await selfReady.json() as { archiveStatus: string }).archiveStatus, "failed");
+  assert.equal((await db.select().from(hostInvitesTable)).length, invitesBeforeReady, "ready must not issue/invalidate invitations");
+  const selfHistory = await request(base, "GET", `/admin/tenants/${tenant!.id}/host`, ownerCookie);
+  const selfHistoryText = await selfHistory.text();
+  assert.match(selfHistoryText, /"kind":"guide_ready"/);
+  assert.match(selfHistoryText, /"kind":"welcome_with_access"/);
+  assert.match(selfHistoryText, /"archiveStatus":"failed"/);
+  assert.doesNotMatch(selfHistoryText, /secret\.test|private-address/);
+  _setReadyDeliveryOverride(async () => ({ ok: true, providerMessageId: "self-ready-archived" }));
+  const archivedSelfReady = await request(base, "POST", `/admin/tenants/${tenant!.id}/host/send-ready`, ownerCookie, {});
+  assert.equal(archivedSelfReady.status, 200);
+  assert.equal((await archivedSelfReady.json() as { archiveStatus: string }).archiveStatus, "accepted");
+  assert.equal((await db.select().from(hostInvitesTable)).length, invitesBeforeReady);
+  _setReadyDeliveryOverride(null);
 
   const password = `Fixture-${stamp}-password`;
   const claim = await request(base, "POST", "/admin/host/invite/confirm", null, {

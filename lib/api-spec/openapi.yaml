@@ -207,6 +207,64 @@ paths:
           description: Authentication required
         "404":
           description: Tenant missing or access denied
+  /admin/tenants/{id}/host/ready-preview:
+    get:
+      operationId: getHostReadyPreview
+      tags: [tenants]
+      summary: Operator-only read-only preview of guide-ready notice and QR
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' } }
+      responses:
+        "200":
+          description: Rendered email; no invitation or notification is created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HostReadyPreview" }
+        "401": { description: Authentication required }
+        "404": { description: Tenant missing or access denied }
+    post:
+      operationId: renderHostReadyEdit
+      tags: [tenants]
+      summary: Operator-only ephemeral preview of edited guide-ready notice
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostReadyEdit" }
+      responses:
+        "200":
+          description: Rendered edited email; nothing sent or persisted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HostReadyRendered" }
+        "400": { description: Invalid edit }
+        "401": { description: Authentication required }
+        "404": { description: Tenant missing or access denied }
+  /admin/tenants/{id}/host/send-ready:
+    post:
+      operationId: sendHostReadyNotice
+      tags: [tenants]
+      summary: Operator-only manual guide-ready notice, with independent archive delivery
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F-]{36}$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HostReadyEdit" }
+      responses:
+        "200":
+          description: Recipient send accepted; archive may separately fail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HostReadySendResult" }
+        "400": { description: Invalid edit }
+        "401": { description: Authentication required }
+        "404": { description: Tenant missing or access denied }
+        "409": { description: Missing recipient }
+        "502": { description: Recipient delivery failed }
   /admin/tenants/{id}/publish-preview:
     get:
       operationId: previewTenantPublication
@@ -3503,6 +3561,7 @@ components:
       oneOf:
         - $ref: "#/components/schemas/HostInviteDelivery"
         - $ref: "#/components/schemas/WelcomeWithoutAccessDelivery"
+        - $ref: "#/components/schemas/LifecycleEmailDelivery"
       discriminator:
         propertyName: kind
     HostInviteDelivery:
@@ -3529,6 +3588,51 @@ components:
         label: { type: string, enum: [dobrodošlica brez dostopa] }
         createdAt: { type: string }
         deliveryStatus: { type: string, enum: [accepted, failed] }
+    LifecycleEmailDelivery:
+      type: object
+      required: [kind, label, createdAt, deliveryStatus, archiveStatus, deliveryFailure, archiveFailure]
+      properties:
+        kind: { type: string, enum: [welcome_with_access, welcome_without_access, guide_ready] }
+        label: { type: string }
+        createdAt: { type: string }
+        deliveryStatus: { type: string, enum: [accepted, failed] }
+        archiveStatus: { type: string, enum: [accepted, failed, not_attempted] }
+        deliveryFailure: { type: ["string", "null"] }
+        archiveFailure: { type: ["string", "null"] }
+    HostReadyPreview:
+      type: object
+      required: [propertyName, recipient, managementMode, guideUrl, subject, message, html, text]
+      properties:
+        propertyName: { type: string }
+        recipient: { type: ["string", "null"] }
+        managementMode: { type: string, enum: [self_service, concierge] }
+        guideUrl: { type: string }
+        subject: { type: string }
+        message: { type: string }
+        html: { type: string }
+        text: { type: string }
+    HostReadyEdit:
+      type: object
+      required: [subject, message]
+      properties:
+        subject: { type: string, maxLength: 180 }
+        message: { type: string, maxLength: 4000 }
+    HostReadyRendered:
+      type: object
+      required: [subject, message, html, text]
+      properties:
+        subject: { type: string }
+        message: { type: string }
+        html: { type: string }
+        text: { type: string }
+    HostReadySendResult:
+      type: object
+      required: [sent, to, kind, archiveStatus]
+      properties:
+        sent: { type: boolean }
+        to: { type: string }
+        kind: { type: string, enum: [guide_ready] }
+        archiveStatus: { type: string, enum: [accepted, failed] }
     HealthStatus:
       type: object
       properties:

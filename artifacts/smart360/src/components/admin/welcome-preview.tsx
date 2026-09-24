@@ -108,3 +108,117 @@ export function WelcomePreview({
     </Dialog>
   );
 }
+
+type ReadyPreviewData = Preview & { message: string; guideUrl: string };
+
+export function ReadyPreview({ tenantId, onSent }: { tenantId: string; onSent: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [preview, setPreview] = useState<ReadyPreviewData | null>(null);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+  const [rendered, setRendered] = useState<{ html: string; subject: string; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    setPreview(null);
+    setRendered(null);
+    setError("");
+    void (async () => {
+      try {
+        const response = await fetch(`/api/admin/tenants/${tenantId}/host/ready-preview`, {
+          credentials: "include", cache: "no-store", signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Predogleda ni bilo mogoče naložiti.");
+        const data = await response.json() as ReadyPreviewData;
+        if (!controller.signal.aborted) {
+          setPreview(data);
+          setSubject(data.subject);
+          setMessage(data.message);
+          setRendered({ html: data.html, subject: data.subject, message: data.message });
+        }
+      } catch (reason) {
+        if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Napaka pri nalaganju.");
+      }
+    })();
+    return () => controller.abort();
+  }, [open, tenantId]);
+
+  useEffect(() => {
+    if (!open || !preview || (subject === rendered?.subject && message === rendered.message)) return;
+    setRendered(null);
+    if (!subject.trim() || !message.trim()) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          const response = await fetch(`/api/admin/tenants/${tenantId}/host/ready-preview`, {
+            method: "POST", credentials: "include", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ subject, message }), signal: controller.signal,
+          });
+          if (!response.ok) throw new Error("Predogleda urejenega besedila ni bilo mogoče prikazati.");
+          const data = await response.json() as { html: string; subject: string; message: string };
+          if (!controller.signal.aborted) { setRendered(data); setError(""); }
+        } catch (reason) {
+          if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Napaka predogleda.");
+        }
+      })();
+    }, 350);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [open, tenantId, preview, subject, message, rendered]);
+
+  async function send() {
+    if (!preview || !window.confirm(`Pošljem sporočilo na ${preview.recipient}?`)) return;
+    setSending(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/tenants/${tenantId}/host/send-ready`, {
+        method: "POST", credentials: "include", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ subject, message }),
+      });
+      const result = await response.json() as { error?: string; archiveStatus?: string };
+      if (!response.ok) throw new Error(result.error ?? "Pošiljanje ni uspelo.");
+      await onSent();
+      setOpen(false);
+      if (result.archiveStatus === "failed") window.alert("Sporočilo je bilo poslano gostitelju, arhivska kopija pa ni uspela. Preverite zgodovino.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Pošiljanje ni uspelo.");
+      await onSent();
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button data-testid="send-ready-preview" variant="outline" onClick={() => setOpen(true)}>
+        <Eye className="h-4 w-4 mr-2" />Pošlji obvestilo: vodnik je pripravljen
+      </Button>
+      <DialogContent className="w-[calc(100%-2rem)] max-w-3xl max-h-[90dvh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Predogled: vodnik je pripravljen</DialogTitle>
+          <DialogDescription>Preglejte ali začasno uredite besedilo in zadevo. Spremembe veljajo samo za to pošiljanje. Nalepka QR je priložena kot PDF.</DialogDescription>
+        </DialogHeader>
+        {error && <p role="alert" className="text-destructive">{error}</p>}
+        {!preview ? (!error && <p role="status">Nalagam predogled …</p>) : (
+          <div className="space-y-4">
+            <p className="text-sm">Prejemnik: <strong>{preview.recipient ?? "Ni e-naslova — pošiljanje ni mogoče"}</strong></p>
+            <label className="block text-sm font-bold">Zadeva
+              <input className="mt-1 w-full rounded-md border p-2 font-normal" value={subject} maxLength={180} onChange={e => setSubject(e.target.value)} />
+            </label>
+            <label className="block text-sm font-bold">Besedilo
+              <textarea className="mt-1 w-full rounded-md border p-2 font-normal" rows={12} maxLength={4000} value={message} onChange={e => setMessage(e.target.value)} />
+            </label>
+            <p className="text-xs text-muted-foreground">Predogled se osveži po urejanju. Gumba, naslov vodnika in QR-koda ostanejo nespremenjeni.</p>
+            {rendered ? <EmailPreviewFrame html={rendered.html} /> : <p role="status">Osvežujem predogled …</p>}
+            <Button data-testid="confirm-send-ready" disabled={sending || !preview.recipient || !rendered || rendered.subject !== subject || rendered.message !== message} onClick={() => void send()}>
+              {sending ? "Pošiljam …" : "Potrdi in pošlji"}
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
