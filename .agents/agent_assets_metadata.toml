@@ -979,14 +979,14 @@ content_type = "application/pdf"
 id = "sry_mopoel4Oo5H84aZQ7"
 uri = "file://reports/smart360-home-icon-approval-180.png"
 type = "image"
-title = "Smart360 — ponovno ustvarjena ikona 180 × 180"
-description = "Neposredni izris uradnega SVG-ja na belo podlago. Pikselno enaka prejšnji beli različici; izboljšanje ostrine na iPhonu še ni potrjeno."
+title = "Nova ikona 180 × 180 — 4× supersampling"
+description = "Uradni SVG na beli podlagi, izris pri 720 × 720 in zmanjšanje z Lanczos3."
 logical_id = "15d2f29f-7407-4865-9922-c5b8dc5067d3"
-content_hash = "sha256:dd6e3ab831137180fd464d7c807db75a748b8515203fe75751486383043be2be"
-size = 9919
-mtime_ms = 1790270491514
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/b5e2bec3-37b7-49f0-ae44-6a7ecd8fad13"
-storage_version_token = "1790271081015860"
+content_hash = "sha256:047e65c6c7f476695aea230d6a47f66ce2a96aeb5212e1a538bc06cb38bd6d7d"
+size = 16383
+mtime_ms = 1790271687807
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/f17f8b5d-030f-46e7-8a45-abe745034c4c"
+storage_version_token = "1790271724654718"
 content_type = "image/png"
 
 [[outputs]]
@@ -1015,4 +1015,18 @@ size = 113259
 mtime_ms = 1790268914306
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c7bd1c80-7a48-437b-ba0f-5a23e5fc48f5/e0ab76a1-2e6d-4fbe-9dae-8905b8c376b8"
 storage_version_token = "1790268946021276"
+content_type = "image/png"
+
+[[outputs]]
+id = "zjU0ssJQtROLegEnkVZKd"
+uri = "file://reports/smart360-home-icon-180-old-vs-new-4x-nearest.png"
+type = "image"
+title = "Primerjava stare in nove ikone — dejanski piksli, povečani 4×"
+description = "Levo prejšnja ikona, desno nova. Obe povečani z nearest-neighbor, brez dodatnega glajenja."
+logical_id = "e12233a1-27aa-4b7e-a57d-1d7ec6f721db"
+content_hash = "sha256:f69806d2b366e72594832d4b0926e610964399a92c2277fb8a8c83ff5a27cb99"
+size = 56243
+mtime_ms = 1790271687867
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e12233a1-27aa-4b7e-a57d-1d7ec6f721db/aac17473-3369-4795-8f4c-6cabca4ff2ef"
+storage_version_token = "1790271726313816"
 content_type = "image/png"
