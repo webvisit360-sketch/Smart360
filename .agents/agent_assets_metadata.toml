@@ -1049,14 +1049,14 @@ content_type = "image/png"
 id = "w2wwgl13ElH_3lkujb949"
 uri = "file://reports/gril-dobrodosli-samostojno.png"
 type = "image"
-title = "Dobrodošli — samostojno urejanje"
-description = "Brez oranžne črte. Enoten logotip 198 × 46 px: znak 46 px, napis Archivo 800 pri 24 px, #121A14, razmik 12 px."
+title = "Dobrodošli — 48 px med logotipom in naslovom"
+description = "Posodobljen predogled. Vse štiri življenjske e-poštne različice uporabljajo isti 48 px tabelarični presledek."
 logical_id = "abebafa4-ad50-4eda-9011-5677a37071c9"
-content_hash = "sha256:8248a7ec1f720d2acee77a67822665a849135b5d95004ecb807ba2af1db0cc36"
-size = 101065
-mtime_ms = 1790275061515
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/abebafa4-ad50-4eda-9011-5677a37071c9/2c2fad32-c12d-4804-8b28-10e59146a867"
-storage_version_token = "1790275208916264"
+content_hash = "sha256:49f32764008772d3a73d6a7878850adb4888041b6a75abdbb5e76966fcf9c5f3"
+size = 101180
+mtime_ms = 1790275440991
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/abebafa4-ad50-4eda-9011-5677a37071c9/1258eaf6-2977-43f8-83cd-5127b834f4ef"
+storage_version_token = "1790275474403774"
 content_type = "image/png"
 
 [[outputs]]

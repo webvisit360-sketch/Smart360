@@ -37,10 +37,12 @@ describe("concierge welcome email", () => {
       (await renderReadyNotice({ tenantName: "Apartmaji Gril", slug: "glamping-gril", guideUrl: url, mode: "self_service" })).html,
       (await renderReadyNotice({ tenantName: "Apartmaji Gril", slug: "glamping-gril", guideUrl: url, mode: "concierge" })).html,
     ];
-    const img = /<img src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="width:198px;height:46px;[^"]*">/;
+    const img = /<img src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;[^"]*">/;
     const headers = htmls.map(html => {
       assert.doesNotMatch(html, /#DD9A2B|height:5px;line-height:5px;font-size:0;background:|<tr><td><div style="height:3px/);
       assert.doesNotMatch(html, />SMART360<\/|>Smart360<\/div>/);
+      assert.match(html, /<td height="48" style="height:48px;font-size:0;line-height:48px;mso-line-height-rule:exactly">&nbsp;<\/td>/);
+      assert.match(html, /<h2 style="[^"]*margin:0 0 14px;/);
       return html.match(img)?.[0];
     });
     assert.ok(headers[0], "canonical header is present");
@@ -77,7 +79,7 @@ describe("concierge welcome email", () => {
     assert.ok(body.html.includes("background:#157347;color:#FFFFFF"));
     assert.ok(body.html.includes("max-width:560px;background:#FFFFFF"));
     assert.doesNotMatch(body.html, /#DD9A2B|height:3px;line-height:3px;font-size:0;background:/);
-    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-lockup-host-594x138.png" width="198" height="46" alt="Smart360" style="width:198px;height:46px;'));
+    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-lockup-host-594x138.png" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;'));
     assert.doesNotMatch(body.html, />SMART360<\/|>Smart360<\/div>/);
   });
 

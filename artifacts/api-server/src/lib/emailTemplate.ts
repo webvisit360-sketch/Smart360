@@ -155,6 +155,7 @@ export function renderEmail(spec: EmailSpec): { html: string; text: string } {
   const theme = spec.theme === "welcome-cgp" ? WELCOME_THEME : LEGACY_THEME;
   const inner = spec.blocks.map((block) => blockHtml(block, theme)).join("\n");
   const footer = spec.footerLines.map(escHtml).join("<br>");
+  const lifecycleHeader = theme === WELCOME_THEME && spec.brand === "Smart360";
 
   const html = `<!DOCTYPE html>
 <html lang="sl">
@@ -164,8 +165,10 @@ export function renderEmail(spec: EmailSpec): { html: string; text: string } {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${theme.outer}"><tr><td align="center" style="padding:26px 12px 44px">
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:${theme.card};border:1px solid ${theme.border};border-radius:14px;border-collapse:separate;overflow:hidden;font-family:${theme.font}">
 <tr><td style="padding:26px 26px 14px">
- <div style="font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${TITLE_COLOR};font-family:${theme.font}"><img src="${EMAIL_LOCKUP_URL}" width="198" height="46" alt="Smart360" style="width:198px;height:46px;vertical-align:middle;${spec.brand === "Smart360" ? "" : "margin-right:7px;"}border:0;display:inline-block">${spec.brand === "Smart360" ? "" : escHtml(spec.brand)}</div>
-<h2 style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:${TITLE_COLOR};margin:8px 0 14px;line-height:1.25;font-family:${theme.font}">${escHtml(spec.title)}</h2>
+ ${lifecycleHeader
+    ? `<img src="${EMAIL_LOCKUP_URL}" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;border:0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%"><tr><td height="48" style="height:48px;font-size:0;line-height:48px;mso-line-height-rule:exactly">&nbsp;</td></tr></table>`
+    : `<div style="font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${TITLE_COLOR};font-family:${theme.font}"><img src="${EMAIL_LOCKUP_URL}" width="198" height="46" alt="Smart360" style="width:198px;height:46px;vertical-align:middle;${spec.brand === "Smart360" ? "" : "margin-right:7px;"}border:0;display:inline-block">${spec.brand === "Smart360" ? "" : escHtml(spec.brand)}</div>`}
+<h2 style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:${TITLE_COLOR};margin:${lifecycleHeader ? "0" : "8px"} 0 14px;line-height:1.25;font-family:${theme.font}">${escHtml(spec.title)}</h2>
 ${inner}
 </td></tr>
 <tr><td style="border-top:1px solid ${theme.line};padding:16px 26px 22px;font-size:13px;color:${theme.small};line-height:1.6;font-family:${theme.font}">${footer}</td></tr>

@@ -44,16 +44,22 @@ try {
       const image = document.querySelector('img[alt="Smart360"]') as HTMLImageElement | null;
       if (!image) throw new Error("Official lockup missing");
       const box = image.getBoundingClientRect();
-      return { width: box.width, height: box.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight };
+      const title = document.querySelector("h2");
+      if (!title) throw new Error("Email title missing");
+      return {
+        width: box.width, height: box.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight,
+        gap: title.getBoundingClientRect().top - box.bottom,
+      };
     });
     if (measurements.width !== 198 || measurements.height !== 46 ||
-        measurements.naturalWidth !== 594 || measurements.naturalHeight !== 138) {
+        measurements.naturalWidth !== 594 || measurements.naturalHeight !== 138 ||
+        measurements.gap !== 48) {
       throw new Error(`${name} lockup dimensions do not match: ${JSON.stringify(measurements)}`);
     }
     await page.screenshot({ path: path.join(reportDir, `${name}.png`), fullPage: true });
-    await page.screenshot({ path: path.join(reportDir, `${name}-header.png`), clip: { x: 75, y: 24, width: 550, height: 108 } });
+    await page.screenshot({ path: path.join(reportDir, `${name}-header.png`), clip: { x: 75, y: 24, width: 550, height: 180 } });
     await page.close();
-    console.log(`${name}: HTML + PNG; displayed ${measurements.width}x${measurements.height}, raster ${measurements.naturalWidth}x${measurements.naturalHeight}`);
+    console.log(`${name}: HTML + PNG; displayed ${measurements.width}x${measurements.height}, raster ${measurements.naturalWidth}x${measurements.naturalHeight}, title gap ${measurements.gap}px`);
   }
 } finally {
   await browser.close();

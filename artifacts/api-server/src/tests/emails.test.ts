@@ -213,9 +213,11 @@ describe("global rules hold for every template", () => {
       assert.doesNotMatch(html, /#DD9A2B|height:5px;line-height:5px;font-size:0;background:|<tr><td><div style="height:3px/, "no decorative top bands in any shared email");
       assert.ok(html.includes("color:#121A14"), "dark brand kicker");
       assert.ok(html.includes("https://smart360.info/brand/smart360-email-lockup-host-594x138.png"), "one hosted lockup");
-      assert.ok(html.includes('width="198" height="46" alt="Smart360" style="width:198px;height:46px;'), "46px lockup");
+      assert.ok(html.includes(name === "welcome"
+        ? 'width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;'
+        : 'width="198" height="46" alt="Smart360" style="width:198px;height:46px;'), "46px lockup");
       assert.doesNotMatch(html, />SMART360<\/|>Smart360<\/div>/, "no HTML brand wordmark");
-      assert.match(html, /letter-spacing:\.14em/, "brand kicker style");
+      if (name !== "welcome") assert.match(html, /letter-spacing:\.14em/, "tenant brand kicker style");
       assert.match(html, /font-size:24px;font-weight:800/, "24px title");
     });
 

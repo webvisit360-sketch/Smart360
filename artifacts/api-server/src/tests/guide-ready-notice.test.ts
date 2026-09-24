@@ -24,7 +24,7 @@ test("both ready email modes use exact copy, official brand and guarded owner ro
     assert.equal(rendered.subject, "Vaš digitalni vodnik je pripravljen");
     assert.match(rendered.text, /Spoštovani,[\s\S]*z veseljem sporočamo/);
     assert.ok(rendered.text.includes(defaultReadyMessage(url)));
-    assert.match(rendered.html, /src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="width:198px;height:46px;/);
+    assert.match(rendered.html, /src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;/);
     assert.ok(rendered.html.includes("background:#157347"));
     assert.ok(rendered.html.includes("max-width:560px;background:#FFFFFF"));
     assert.ok(rendered.html.includes("border-radius:16px;border-collapse:separate"));
