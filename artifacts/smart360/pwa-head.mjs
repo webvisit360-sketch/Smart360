@@ -43,7 +43,7 @@ export function guestSlugForRequest(url, host) {
 export function renderPwaHead(html, url, host, base = "/") {
   const slug = guestSlugForRequest(url, host);
   const prefix = base.endsWith("/") ? base : `${base}/`;
-  const touch = `<link rel="apple-touch-icon" sizes="180x180" href="${escapeHtml(prefix)}brand/ikona-smart360-180.png?v=crisp-2" />`;
+  const touch = `<link rel="apple-touch-icon" sizes="180x180" href="${escapeHtml(prefix)}brand/ikona-smart360-180.png?v=crisp-3" />`;
   const icon = `<link rel="icon" type="image/png" sizes="192x192" href="${escapeHtml(prefix)}brand/ikona-smart360-192.png?v=crisp-2" />`;
   const { searchParams } = new URL(url, "http://localhost");
   const lang = searchParams.get("lang");

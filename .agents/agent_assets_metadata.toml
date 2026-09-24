@@ -979,28 +979,28 @@ content_type = "application/pdf"
 id = "sry_mopoel4Oo5H84aZQ7"
 uri = "file://reports/smart360-home-icon-approval-180.png"
 type = "image"
-title = "Nova ikona 180 × 180 — 4× supersampling"
-description = "Uradni SVG na beli podlagi, izris pri 720 × 720 in zmanjšanje z Lanczos3."
+title = "V potrditev: 180 × 180 — znak 74 %"
+description = "Belo ozadje, izris pri 720 × 720 in zmanjšanje z Lanczos3."
 logical_id = "15d2f29f-7407-4865-9922-c5b8dc5067d3"
-content_hash = "sha256:047e65c6c7f476695aea230d6a47f66ce2a96aeb5212e1a538bc06cb38bd6d7d"
-size = 16383
-mtime_ms = 1790271687807
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/f17f8b5d-030f-46e7-8a45-abe745034c4c"
-storage_version_token = "1790271724654718"
+content_hash = "sha256:485f05c8a0bb1a39f62d8a2d3da6250bb77bfa64c0f610b180aa9360696cbffb"
+size = 18430
+mtime_ms = 1790272647435
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15d2f29f-7407-4865-9922-c5b8dc5067d3/ca8eb5f9-6394-475a-9909-f548e47e8d22"
+storage_version_token = "1790272741738563"
 content_type = "image/png"
 
 [[outputs]]
 id = "yeJBB7wdhba4fl4OhoSDF"
 uri = "file://reports/smart360-home-icon-approval-512.png"
 type = "image"
-title = "Smart360 — ponovno ustvarjena ikona 512 × 512"
-description = "Uradni vektorski znak, neprosojna bela podlaga in varen odmik za maskable prikaz."
+title = "V potrditev: 512 × 512 — znak 74 %"
+description = "Uradni znak, neposredni vektorski izris na neprosojni beli podlagi."
 logical_id = "6f83ed3b-8ae4-497c-ab4b-872a93946e56"
-content_hash = "sha256:9135e0aa38ccd3e3462932ca4387a009664b28b544227caa72944fd857ed0890"
-size = 32882
-mtime_ms = 1790270491514
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f83ed3b-8ae4-497c-ab4b-872a93946e56/58aae391-f574-4980-8db9-775c2369b3d2"
-storage_version_token = "1790271082413936"
+content_hash = "sha256:5ff9a520f36bedb4627d7a6150eec30dd8406097ca6f8320d9706a59f3e8561f"
+size = 36602
+mtime_ms = 1790272647435
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f83ed3b-8ae4-497c-ab4b-872a93946e56/e9405bac-f1c1-4b60-9a18-2c23d9d815f4"
+storage_version_token = "1790272742505562"
 content_type = "image/png"
 
 [[outputs]]
@@ -1029,4 +1029,18 @@ size = 56243
 mtime_ms = 1790271687867
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e12233a1-27aa-4b7e-a57d-1d7ec6f721db/aac17473-3369-4795-8f4c-6cabca4ff2ef"
 storage_version_token = "1790271726313816"
+content_type = "image/png"
+
+[[outputs]]
+id = "HMiY2HqvugFcwFA593H98"
+uri = "file://reports/smart360-home-icon-180-previous-66-vs-standard-74-4x-nearest.png"
+type = "image"
+title = "Primerjava 180 px: prejšnjih 66 % → novih 74 %"
+description = "Levo prejšnja supersamplana različica, desno nova. Obe povečani 4× z nearest-neighbor, brez dodatnega glajenja."
+logical_id = "3b9f978b-22e7-4647-ad1f-1c1944d3d040"
+content_hash = "sha256:223074c782f847639c9144172eb00b19b3c532078a3a82bf40f24e3a546993bd"
+size = 68189
+mtime_ms = 1790272647491
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3b9f978b-22e7-4647-ad1f-1c1944d3d040/1bb35b94-840e-474a-b024-c53a20c98b9b"
+storage_version_token = "1790272743180383"
 content_type = "image/png"

@@ -15,4 +15,6 @@ test("route-specific raw HTML never includes admin install metadata on guest rou
   assert.match(renderPwaHead(template, "/g/meli-pu/c/deep", "smart360.info"),
     /\/api\/public\/tenants\/meli-pu\/manifest\.webmanifest/);
   assert.match(renderPwaHead(template, "/admin/login", "smart360.info"), /href="\/manifest\.webmanifest"/);
+  assert.match(renderPwaHead(template, "/admin/login", "smart360.info"),
+    /ikona-smart360-180\.png\?v=crisp-3/);
 });
