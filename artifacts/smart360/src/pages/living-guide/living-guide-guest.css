@@ -1150,7 +1150,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   scroll-padding: 0;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-x;
   cursor: grab;
 }
 
@@ -1315,7 +1315,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
     calc(100% - min(360px, 58%))
   ));
   overflow: visible;
-  touch-action: pan-x;
+  touch-action: pan-y;
   transform: translate3d(0, var(--lg2-sheet-translate-y, 0px), 0);
   transition: transform 220ms cubic-bezier(.2, .8, .2, 1);
   will-change: transform;

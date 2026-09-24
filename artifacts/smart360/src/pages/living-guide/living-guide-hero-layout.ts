@@ -21,6 +21,16 @@ export type LivingGuideUniformGalleryLayout = {
   heroHeight: number;
 };
 
+// Clipped carousel slides inside the animated detail view may never be
+// considered visible by the browser's native lazy-image observer.
+export function galleryImageLoading(
+  index: number,
+  activeIndex: number,
+  layoutReady: boolean,
+): "eager" | "lazy" {
+  return !layoutReady || Math.abs(index - activeIndex) <= 1 ? "eager" : "lazy";
+}
+
 export function mediaAspectFromDimensions(
   width: unknown,
   height: unknown,

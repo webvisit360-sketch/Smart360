@@ -15,8 +15,8 @@ Draggable detail sheets intentionally have no back/close arrow. They must show o
 
 **How to apply:** Remove arrows only inside the shared draggable `DetailView` boundary. Preserve independent back controls on full-screen Explore, Messages, and any future non-draggable presentation.
 
-Custom horizontal gallery dragging must disable native image drag and suspend mandatory scroll snap from pointer-down until release.
+Gallery mouse dragging must disable native image drag and suspend mandatory scroll snap only after the horizontal direction has won the threshold. Touch galleries use native horizontal scrolling and scroll snap; vertical touch gestures originating over a gallery move the shared sheet.
 
 **Why:** Chromium consumed mouse movement as an image drag and snap immediately restored slide one, even though the pointer handler and scroll container were otherwise correct.
 
-**How to apply:** Claim the primary pointer at press-down, axis-lock after a small threshold, prevent native drag, update horizontal scroll continuously, then restore snap and settle to the nearest slide. Vertical sheet offset must remain unchanged.
+**How to apply:** Do not capture or prevent default at press-down. Lock once at a 6px threshold, with diagonal ties deterministically owned by the sheet. For mouse, capture only the winning axis, manually update gallery scroll during horizontal drag, then restore snap and settle. For touch, keep `touch-action: pan-x` on the gallery so the browser can scroll it horizontally, and `pan-y` on the sheet; use non-passive touchmove on the detail root to prevent native vertical panning only once the sheet owns the gesture. These elements are siblings; if a gallery is ever nested inside the sheet, pan-x and pan-y intersect to no native pan, so revisit the touch handling. Pointercancel should release ownership without closing the sheet. The old press-down capture rule was superseded because mobile browser panning could cancel or starve the gallery's pointermove stream before a horizontal swipe was recognized.

@@ -52,6 +52,7 @@ import {
   calculateLivingGuideUniformGalleryLayout,
   stableMediaAspect,
   nearestGalleryIndex,
+  galleryImageLoading,
 } from "./living-guide-hero-layout";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
@@ -96,6 +97,7 @@ import {
   selectedSectionGroup,
 } from "./living-guide-groups";
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
+import { lockDetailGesture, type DetailGestureLock } from "./detail-gesture-lock";
 
 type GuestRecord = {
   unit: string;
@@ -3039,11 +3041,8 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const suppressGalleryClickRef = useRef(false);
   const galleryDragRef = useRef<{
     pointerId: number;
-    startX: number;
-    startY: number;
     startScrollLeft: number;
-    axis: "horizontal" | "vertical" | null;
-  } | null>(null);
+  } & DetailGestureLock | null>(null);
   const frameWidth =
     typeof window === "undefined"
       ? 390
@@ -3124,13 +3123,15 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
 
   const scheduleGallerySettle = useCallback(
     (track: HTMLDivElement) => {
+      if (track.dataset.lgGalleryTouchActive || track.dataset.lgGalleryDragging) return;
       if (settleTimeoutRef.current !== null) {
         window.clearTimeout(settleTimeoutRef.current);
       }
       settleTimeoutRef.current = window.setTimeout(() => {
         settleTimeoutRef.current = null;
+        if (track.dataset.lgGalleryTouchActive || track.dataset.lgGalleryDragging) return;
         settleGallery(track);
-      }, 120);
+      }, 250);
     },
     [settleGallery],
   );
@@ -3141,6 +3142,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         !isUniformGallery ||
         !event.isPrimary ||
         event.button !== 0 ||
+        event.pointerType === "touch" ||
         galleryDragRef.current
       ) {
         return;
@@ -3153,9 +3155,6 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         axis: null,
       };
       suppressGalleryClickRef.current = false;
-      event.currentTarget.dataset.lgGalleryDragging = "true";
-      event.currentTarget.setPointerCapture(event.pointerId);
-      event.preventDefault();
     },
     [isUniformGallery],
   );
@@ -3163,15 +3162,22 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
   const moveGalleryDrag = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       const drag = galleryDragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!drag || drag.pointerId !== event.pointerId || event.pointerType === "touch") return;
       const dx = event.clientX - drag.startX;
-      const dy = event.clientY - drag.startY;
-      if (!drag.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 6) {
-        drag.axis =
-          Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
-        event.currentTarget.dataset.lgGalleryAxis = drag.axis;
+      const previousAxis = drag.axis;
+      const axis = lockDetailGesture(drag, event.clientX, event.clientY);
+      if (!previousAxis && axis === "horizontal") {
+        event.currentTarget.dataset.lgGalleryDragging = "true";
+        event.currentTarget.dataset.lgGalleryAxis = axis;
+        event.currentTarget.setPointerCapture(event.pointerId);
       }
-      if (drag.axis !== "horizontal") return;
+      if (axis === "vertical") {
+        // The sheet will capture this pointer as it bubbles; the gallery
+        // will not receive its pointerup, so clear its own pending drag now.
+        galleryDragRef.current = null;
+        return;
+      }
+      if (axis !== "horizontal") return;
       suppressGalleryClickRef.current = true;
       event.currentTarget.scrollLeft = drag.startScrollLeft - dx;
       event.preventDefault();
@@ -3201,6 +3207,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
     if (!track || !isUniformGallery || !media?.length) return;
 
     const handleScrollEnd = () => {
+      if (track.dataset.lgGalleryTouchActive || track.dataset.lgGalleryDragging) return;
       if (settleTimeoutRef.current !== null) {
         window.clearTimeout(settleTimeoutRef.current);
         settleTimeoutRef.current = null;
@@ -3299,7 +3306,25 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
         onPointerUp={finishGalleryDrag}
         onPointerCancel={finishGalleryDrag}
         onDragStart={(event) => event.preventDefault()}
+        onTouchStart={(event) => {
+          event.currentTarget.dataset.lgGalleryTouchActive = "true";
+          delete event.currentTarget.dataset.lgGallerySwiped;
+        }}
+        onTouchEnd={(event) => {
+          delete event.currentTarget.dataset.lgGalleryTouchActive;
+          scheduleGallerySettle(event.currentTarget);
+        }}
+        onTouchCancel={(event) => {
+          delete event.currentTarget.dataset.lgGalleryTouchActive;
+          scheduleGallerySettle(event.currentTarget);
+        }}
         onClick={(event) => {
+          if (event.currentTarget.dataset.lgGallerySwiped) {
+            delete event.currentTarget.dataset.lgGallerySwiped;
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
           if (!suppressGalleryClickRef.current) return;
           suppressGalleryClickRef.current = false;
           event.preventDefault();
@@ -3313,7 +3338,7 @@ function HeroGallery({ media, onBack, galleryIndex, onGalleryIndex, singleOnly, 
             <div className="lg2-gallery-slide" key={entryKey}>
               <AspectAwareHeroImage
                 entry={entry}
-                loading={index === 0 || !layoutReady ? "eager" : "lazy"}
+                loading={galleryImageLoading(index, activeIndex, layoutReady)}
                 sideBlur={false}
                 galleryCover
                 aspectReady
@@ -3419,7 +3444,11 @@ function useDraggableDetailSheet(
     const sheetRoot = root?.querySelector<HTMLElement>(".lg2-detail-sheet-root");
     if (!root || !sheet || !sheetRoot) return;
 
-    let activePointerId: number | null = null;
+    let activeGesture: (DetailGestureLock & {
+      id: number;
+      kind: "pointer" | "touch";
+      gallery: HTMLElement | null;
+    }) | null = null;
     let startClientY = 0;
     let startOffset = 0;
     let currentOffset = 0;
@@ -3486,50 +3515,74 @@ function useDraggableDetailSheet(
         ),
       );
 
-    const onPointerDown = (event: PointerEvent) => {
-      if (
-        activePointerId !== null ||
-        event.button !== 0 ||
-        !event.isPrimary ||
-        ignoredDragTarget(event.target)
-      ) {
-        return;
-      }
-      activePointerId = event.pointerId;
-      startClientY = event.clientY;
+    const begin = (
+      id: number,
+      kind: "pointer" | "touch",
+      x: number,
+      y: number,
+      time: number,
+      target: EventTarget | null,
+    ) => {
+      if (activeGesture || !(target instanceof Element)) return;
+      const gallery = target.closest<HTMLElement>(".lg2-gallery-track");
+      if (!gallery && (!target.closest(".lg2-detail-sheet") || ignoredDragTarget(target))) return;
+      activeGesture = {
+        id, kind, gallery,
+        startX: x, startY: y, axis: null,
+      };
+      startClientY = y;
       startOffset = currentOffset;
-      lastClientY = event.clientY;
-      lastMoveAt = event.timeStamp;
+      lastClientY = y;
+      lastMoveAt = time;
       velocity = 0;
-      sheet.setPointerCapture(event.pointerId);
-      writeOffset(currentOffset, "dragging");
     };
 
-    const onPointerMove = (event: PointerEvent) => {
-      if (activePointerId !== event.pointerId) return;
-      const elapsed = Math.max(1, event.timeStamp - lastMoveAt);
-      velocity = (event.clientY - lastClientY) / elapsed;
-      lastClientY = event.clientY;
-      lastMoveAt = event.timeStamp;
-      const rawOffset = startOffset + event.clientY - startClientY;
+    const move = (
+      kind: "pointer" | "touch", id: number, x: number, y: number,
+      time: number, event: Event,
+    ) => {
+      const gesture = activeGesture;
+      if (!gesture || gesture.kind !== kind || gesture.id !== id) return;
+      const previousAxis = gesture.axis;
+      const axis = lockDetailGesture(gesture, x, y);
+      if (kind === "touch" && axis && gesture.gallery) {
+        gesture.gallery.dataset.lgGallerySwiped = "true";
+      }
+      if (axis === "horizontal") {
+        return;
+      }
+      if (axis !== "vertical") return;
+      if (!previousAxis) {
+        writeOffset(currentOffset, "dragging");
+        if (kind === "pointer" && event instanceof PointerEvent) {
+          sheet.setPointerCapture(event.pointerId);
+        }
+      }
+      const elapsed = Math.max(1, time - lastMoveAt);
+      velocity = (y - lastClientY) / elapsed;
+      lastClientY = y;
+      lastMoveAt = time;
+      const rawOffset = startOffset + y - startClientY;
       const resistedOffset =
         rawOffset < minOffset
           ? minOffset + (rawOffset - minOffset) * 0.16
           : rawOffset;
       writeOffset(resistedOffset, "dragging");
-      event.preventDefault();
+      if (event.cancelable) event.preventDefault();
     };
 
-    const finishPointer = (event: PointerEvent) => {
-      if (activePointerId !== event.pointerId) return;
-      activePointerId = null;
-      if (sheet.hasPointerCapture(event.pointerId)) {
-        sheet.releasePointerCapture(event.pointerId);
+    const finish = (kind: "pointer" | "touch", id: number, cancelled = false) => {
+      const gesture = activeGesture;
+      if (!gesture || gesture.kind !== kind || gesture.id !== id) return;
+      activeGesture = null;
+      if (kind === "pointer" && sheet.hasPointerCapture(id)) {
+        sheet.releasePointerCapture(id);
       }
+      if (gesture.axis !== "vertical") return;
 
       const shouldClose =
-        currentOffset >= DETAIL_SHEET_CLOSE_DISTANCE ||
-        (currentOffset > 0 && velocity >= DETAIL_SHEET_CLOSE_VELOCITY);
+        !cancelled && (currentOffset >= DETAIL_SHEET_CLOSE_DISTANCE ||
+        (currentOffset > 0 && velocity >= DETAIL_SHEET_CLOSE_VELOCITY));
       if (shouldClose) {
         writeOffset(sheetRoot.clientHeight + 32, "closing");
         closeTimer = window.setTimeout(
@@ -3548,17 +3601,49 @@ function useDraggableDetailSheet(
         -DETAIL_SHEET_MAX_MOMENTUM,
         Math.min(
           DETAIL_SHEET_MAX_MOMENTUM,
-          velocity * DETAIL_SHEET_MOMENTUM_MS,
+          (cancelled ? 0 : velocity) * DETAIL_SHEET_MOMENTUM_MS,
         ),
       );
       const projected = currentOffset + momentum;
       writeOffset(Math.max(minOffset, Math.min(0, projected)), "settling");
     };
 
-    sheet.addEventListener("pointerdown", onPointerDown);
-    sheet.addEventListener("pointermove", onPointerMove, { passive: false });
-    sheet.addEventListener("pointerup", finishPointer);
-    sheet.addEventListener("pointercancel", finishPointer);
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== "touch" && event.button === 0 && event.isPrimary) {
+        begin(event.pointerId, "pointer", event.clientX, event.clientY, event.timeStamp, event.target);
+      }
+    };
+    const onPointerMove = (event: PointerEvent) =>
+      move("pointer", event.pointerId, event.clientX, event.clientY, event.timeStamp, event);
+    const onPointerUp = (event: PointerEvent) => finish("pointer", event.pointerId);
+    const onPointerCancel = (event: PointerEvent) => finish("pointer", event.pointerId, true);
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        if (activeGesture?.kind === "touch") finish("touch", activeGesture.id, true);
+        return;
+      }
+      const touch = event.changedTouches[0];
+      begin(touch.identifier, "touch", touch.clientX, touch.clientY, event.timeStamp, event.target);
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || activeGesture?.kind !== "touch") return;
+      const touch = Array.from(event.changedTouches).find((entry) => entry.identifier === activeGesture?.id);
+      if (touch) move("touch", touch.identifier, touch.clientX, touch.clientY, event.timeStamp, event);
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      for (const touch of Array.from(event.changedTouches)) finish("touch", touch.identifier);
+    };
+    const onTouchCancel = (event: TouchEvent) => {
+      for (const touch of Array.from(event.changedTouches)) finish("touch", touch.identifier, true);
+    };
+    root.addEventListener("pointerdown", onPointerDown);
+    root.addEventListener("pointermove", onPointerMove, { passive: false });
+    root.addEventListener("pointerup", onPointerUp);
+    root.addEventListener("pointercancel", onPointerCancel);
+    root.addEventListener("touchstart", onTouchStart, { passive: true });
+    root.addEventListener("touchmove", onTouchMove, { passive: false });
+    root.addEventListener("touchend", onTouchEnd);
+    root.addEventListener("touchcancel", onTouchCancel);
 
     return () => {
       if (closeTimer !== null) window.clearTimeout(closeTimer);
@@ -3566,10 +3651,14 @@ function useDraggableDetailSheet(
       resizeObserver?.disconnect();
       window.removeEventListener("resize", scheduleMeasure);
       window.removeEventListener("orientationchange", scheduleMeasure);
-      sheet.removeEventListener("pointerdown", onPointerDown);
-      sheet.removeEventListener("pointermove", onPointerMove);
-      sheet.removeEventListener("pointerup", finishPointer);
-      sheet.removeEventListener("pointercancel", finishPointer);
+      root.removeEventListener("pointerdown", onPointerDown);
+      root.removeEventListener("pointermove", onPointerMove);
+      root.removeEventListener("pointerup", onPointerUp);
+      root.removeEventListener("pointercancel", onPointerCancel);
+      root.removeEventListener("touchstart", onTouchStart);
+      root.removeEventListener("touchmove", onTouchMove);
+      root.removeEventListener("touchend", onTouchEnd);
+      root.removeEventListener("touchcancel", onTouchCancel);
     };
   }, [rootRef]);
 }
