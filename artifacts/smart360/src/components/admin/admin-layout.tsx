@@ -5,6 +5,7 @@ import { Loader2, LogOut } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { useHostSession } from "@/hooks/use-host-session";
 import { AdminSidebarIcon, AdminSidebarLockup } from "@/components/admin/admin-sidebar-brand";
+import { BrandLockup } from "@/components/brand-lockup";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -62,7 +63,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-[100dvh] bg-muted/30" data-surface="admin">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-5">
-          <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
+          <BrandLockup markSize={26} textSize={17} />
           <Button variant="outline" onClick={() => setLocation(hostTenantPath)} data-testid="button-back-to-tenant">
             Nazaj na nastanitev
           </Button>
@@ -111,7 +112,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <main className="admin-shell__main flex flex-col">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 md:hidden">
-          <img src="/brand/logo-smart360-moder.png" alt="Smart360" style={{ height: 26, width: "auto" }} />
+          <BrandLockup markSize={26} textSize={17} />
           <Button variant="ghost" size="icon" onClick={() => logoutMutation.mutate()}>
             <LogOut className="h-5 w-5 text-muted-foreground" />
           </Button>

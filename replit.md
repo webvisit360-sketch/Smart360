@@ -24,6 +24,8 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 - Demo najemnik: slug `meli-pu` (Apartmaji Meli Pu, Izola).
 - Administracija uporablja Archivo in Smart360 paleto: primarni gumb #157347 (nikoli moder), ozadje #F4F6F2, kartice #FFFFFF, robovi #E8EBE6, besedilo #121A14, umirjeno #66716A; vedno pravi znak in SMART360 napis.
 - Uradni Smart360 znak je nespremenjena datoteka `artifacts/smart360/public/brand/smart360-znak-40.png`, ki jo je lastnik izrecno potrdil s priloženim izvirnikom in z znakom v `reports/gril-dobrodoslica-cgp.html`. Ne prebarvaj, prerisuj ali stiliziraj ga. Tudi izraz »zeleni znak« ni navodilo za pretvorbo večbarvnega izvirnika v enobarvno različico. Obrazec in e-pošta uporabljata isto izvirno grafiko.
+- Pravilo CGP: Znak vedno izvira iz originalnih uradnih datotek, vedno stoji na beli podlagi in ga nikoli ne prerisujemo, prebarvamo ali približno poustvarimo. Besedni znak »SMART360« je vedno Archivo 800, barve #121A14, z razmikom med črkami 0.02em. Zelena #157347 je poudarna barva in se nikoli ne uporablja za znak ali besedni znak. V e-pošti je celoten logotip (znak + besedni znak) vedno ena vnaprej izrisana slika v retina ločljivosti, nikoli besedilo HTML.
+- Barva #DD9A2B je namenjena izključno opozorilom in brisanju, nikoli dekoraciji. E-poštne kartice nimajo okrasne oranžne zgornje črte.
 
 ## User preferences
 

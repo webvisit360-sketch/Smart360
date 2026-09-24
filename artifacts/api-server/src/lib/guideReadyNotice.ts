@@ -70,9 +70,8 @@ export async function renderReadyNotice(input: ReadyInput, inline = "data") {
     ],
     footerLines: FOOTER,
   });
-  // Start with the welcome CGP so its layout, typography, footer and sender
-  // note remain shared; the ready-only brand treatment is never applied to
-  // the existing welcome email. The QR uses no third-party service.
+  // Start with the welcome CGP so its branding, layout, typography, footer and
+  // sender note remain shared. The QR uses no third-party service.
   const qrSrc = inline === "cid" ? "cid:guide-ready-qr" : png;
   const qr = `<p style="margin:12px 0 18px"><img src="${qrSrc}" width="176" height="176" alt="QR-koda vodnika" style="display:block;width:176px;height:176px;border:4px solid #FFFFFF"></p>`;
   let html = rendered.html;
@@ -84,16 +83,6 @@ export async function renderReadyNotice(input: ReadyInput, inline = "data") {
   const senderNote = `<p style="font-size:13.5px;line-height:1.55;color:#66716A;margin:0 0 14px">${escHtml(INVITATION_SENDER_NOTE_SL)}</p>`;
   if (!html.includes(senderNote)) throw new Error("Welcome CGP sender note missing");
   html = html.replace(senderNote, qr + senderNote);
-  const welcomeBand = '<tr><td><div style="height:3px;line-height:3px;font-size:0;background:#DD9A2B">&nbsp;</div></td></tr>';
-  const welcomeBrand = /<div style="font-size:13px;font-weight:800;letter-spacing:\.14em;text-transform:uppercase;color:#121A14;font-family:[^"]+"><img src="([^"]+)" width="20" height="20" alt="" style="[^"]+">Smart360<\/div>/;
-  if (!html.includes(welcomeBand) || !welcomeBrand.test(html)) throw new Error("Welcome CGP header has changed");
-  html = html.replace(welcomeBand, "");
-  html = html.replace(welcomeBrand, () =>
-    `<table role="presentation" cellpadding="0" cellspacing="0"><tr>` +
-    `<td width="46" style="width:46px"><img src="https://smart360.info/brand/smart360-email-header-138.png" width="46" height="46" alt="Smart360" style="display:block;width:46px;height:46px;border:0"></td>` +
-    `<td style="padding-left:12px;font-size:13px;font-weight:800;letter-spacing:.14em;color:#157347;font-family:Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif">SMART360</td>` +
-    `</tr></table>`,
-  );
   html = html.replace("border-radius:14px;border-collapse:separate", "border-radius:16px;border-collapse:separate");
   html = html.replaceAll("border-radius:12px;font-family:", "border-radius:999px;font-family:");
   return { subject, message, html, text: rendered.text };

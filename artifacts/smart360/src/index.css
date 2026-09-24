@@ -58,12 +58,11 @@
 }
 
 .guest-entry-splash__wordmark {
-  width: 134px;
   height: 25px;
-  background: #121a14;
+  color: #121A14;
+  font: 800 24px/25px "Archivo", sans-serif;
+  letter-spacing: 0.02em;
   opacity: 0;
-  -webkit-mask: var(--guest-splash-wordmark) center / contain no-repeat;
-  mask: var(--guest-splash-wordmark) center / contain no-repeat;
   animation: guest-splash-fade .5s cubic-bezier(.22, 1, .36, 1) .3s forwards;
 }
 
@@ -200,11 +199,10 @@
 }
 
 .construction-page__wordmark {
-  width: 134px;
   height: 25px;
-  background: #121a14;
-  -webkit-mask: var(--construction-wordmark) center / contain no-repeat;
-  mask: var(--construction-wordmark) center / contain no-repeat;
+  color: #121A14;
+  font: 800 24px/25px "Archivo", sans-serif;
+  letter-spacing: 0.02em;
 }
 
 .construction-page__message {

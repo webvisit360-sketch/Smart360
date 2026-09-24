@@ -13,12 +13,10 @@ import { Label } from "@/components/ui/label";
 import { AdminCard as Card, AdminCardContent as CardContent, CardDescription, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, KeyRound } from "lucide-react";
-import loginDesignHtml from "@assets/Smart360-prijava_1787872268224.html?raw";
+import { BrandLockup } from "@/components/brand-lockup";
 import "./login.css";
 import { withAbortTimeout } from "@/lib/passkey-timeout";
 
-const suppliedLogoSvg =
-  loginDesignHtml.match(/<div class="brand"><div class="lk">([\s\S]*?<\/svg>)<\/div><\/div>/)?.[1] ?? "";
 const PASSKEY_TIMEOUT_MS = 60_000;
 const PASSKEY_CANCEL_OFFER_MS = 10_000;
 const PASSKEY_BROWSER_HELP =
@@ -295,12 +293,7 @@ export default function AdminLogin() {
       <img className="smart-login__ring" src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`} alt="" aria-hidden="true" />
       <main className="smart-login__card">
         <header className="smart-login__header">
-          <div
-            className="smart-login__logo"
-            role="img"
-            aria-label="Smart360"
-            dangerouslySetInnerHTML={{ __html: suppliedLogoSvg }}
-          />
+          <BrandLockup className="smart-login__logo" />
           <h1>Portal za gostitelje</h1>
           <p>Prijavite se in uredite vodnik za svoje goste.</p>
         </header>

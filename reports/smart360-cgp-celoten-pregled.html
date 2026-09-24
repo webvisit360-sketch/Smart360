@@ -1,0 +1,57 @@
+<!doctype html><html lang="sl"><meta charset="utf-8"><title>Smart360 — celoten pregled CGP</title><style>body{margin:40px;color:#121A14;background:#fff;font:15px/1.6 sans-serif}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><h1>Smart360 — celoten pregled CGP</h1><pre># Pregled besednega znaka SMART360 — površine zunaj e-pošte
+
+Izvorni pregled: `artifacts/smart360/src`, `artifacts/api-server/src`, `artifacts/mockup-sandbox/src`, uporabljene CSS-datoteke ter izvorni prototipi. E-poštni renderji, njihova kontrola in štirje predogledi so posebej popisani v `reports/smart360-email-lockup-audit.md`. Izvorne `attached_assets` prototipe, predhodne izvoze pod `reports/`, generirane `dist` datoteke, navadno besedilo v opisih/metapodatkih/imenih podjetja in logotipe najemnikov ločujemo od *prikazanega besednega znaka*. Ni bilo objave ali pošiljanja e-pošte.
+
+| Prikaz in izvor | Pred spremembo: barva; pisava, teža, razmik | Po spremembi |
+| --- | --- | --- |
+| Prijava gostitelja »Portal za gostitelje« (`artifacts/smart360/src/pages/admin/login.tsx`, `login.css`) | Odobren obrisani SVG iz `attached_assets/Smart360-prijava_1787872268224.html`: **#121A14**; črke so SVG poti, zato brez preverljivega CSS fonta/teže/razmika | Originalni znak + `BrandLockup`: **#121A14; Archivo 800; 0.02em**, bela podlaga |
+| Operaterski stranski meni (`artifacts/smart360/src/components/admin/admin-sidebar-brand.tsx`, `vite.config.ts`) | Uvoženi SVG iz `attached_assets/admin-2030_7_1788039435751.html`: **#121A14**; obrisane poti, brez določljivega runtime CSS fonta/razmika | `BrandLockup`: **#121A14; Archivo 800; 0.02em**, bela podlaga; arhivski SVG ni več uporabljen |
+| Povpraševanje (`artifacts/smart360/src/pages/enquiry.tsx`) | SVG iz `attached_assets/Smart360-povprasevanje_1_1787894314826.html`: **#121A14**; obrisane poti, brez določljivega runtime CSS fonta/razmika | `BrandLockup`: **#121A14; Archivo 800; 0.02em**, bela podlaga |
+| Račun gostitelja in mobilna zgornja vrstica admina (`artifacts/smart360/src/components/admin/admin-layout.tsx`, obe mesti) | Modra rastrska datoteka `logo-smart360-moder.png`: **#3B78DC**; brez preverljive pisave/teže/razmika | `BrandLockup`: **#121A14; Archivo 800; 0.02em**, bela podlaga |
+| Uvodni gostov zaslon (`artifacts/smart360/src/App.tsx`, `src/index.css`) | Isti modri raster kot CSS maska na ozadju **#121A14**; oblika iz bitmapa, brez določljive pisave/teže/razmika | Živo besedilo: **#121A14; Archivo 800; 0.02em**, bela podlaga |
+| Pristajalna stran v gradnji (`artifacts/smart360/src/pages/landing.tsx`, `src/index.css`) | Bitmap maska obarvana **#121A14**; brez določljive pisave/teže/razmika | Živo besedilo: **#121A14; Archivo 800; 0.02em**, bela podlaga |
+| Rezervni naslov pristajalne strani (`artifacts/smart360/src/pages/landing.tsx`) | `text-primary`: **#157347**; podedovana Archivo, `font-bold` **700**, `tracking-tight` **−0.025em** | **#121A14; Archivo 800; 0.02em** |
+| Povabilo in ponastavitev gesla gostitelja (`artifacts/smart360/src/pages/portal/password-token-page.tsx`, ista predloga za obe poti) | `text-primary`: **#157347**; podedovana Archivo, `font-extrabold` **800**, privzeti razmik **normal** | **#121A14; Archivo 800; 0.02em** |
+| Aktivni prototip admina (`artifacts/mockup-sandbox/src/components/mockups/smart360-admin-current/Current.tsx`, `_group.css`) | Modra `hsl(217 69% 54%)`; **Outfit 800**, razmik **−1.8px** | **#121A14; Archivo 800; 0.02em**, bela podlaga; Archivo je vključen v pisave prototipa |
+| Starejša A6 nalepka z besednim znakom (`artifacts/api-server/src/routes/adminTenants.ts`) | Obrisani sprite iz `src/lib/wordmark.ts`: **#3B78DC**; font ni določen, razmik ni določen | Vdelana `assets/Archivo-800.ttf`: **#121A14; Archivo 800; razmik 0.02 × velikost pisave**; položaj pred QR-kodo in velikost strani ostajata |
+| Gostiteljev obrazec (`artifacts/smart360/src/pages/host/onboarding.tsx`) | **#121A14; Archivo 800; 0.02em**, na belem ozadju | **Nespremenjeno, že skladno** |
+
+Skupni `BrandLockup` je v `artifacts/smart360/src/components/brand-lockup.tsx`. Uporablja uradni, večbarvni `brand/smart360-znak-40.png` brez spreminjanja barv in dejansko brskalniško pisavo Archivo; ne uporablja nekdanjega modrega bitmapa. Gostov recovery zaslon prikazuje le uradni znak, ne besednega znaka. Besedilo »Vodnik ustvarja Smart360« je opis, ne logotip. Samostojni izvorni sprite `src/lib/wordmark.ts` je star arhivski izvoz; po tej spremembi se ne uporablja za tisk.
+
+## Preverjanje v brskalniku in PDF
+
+- Posnetek dejanske razvojne strani `/admin/login`: `reports/smart360-login-cgp-header.jpg` (950 × 760 px). Brez prijave.
+- Computed-style pregled dejanskega elementa `.smart-login__logo span`: `textContent=SMART360`, `font-family=Archivo, sans-serif`, `font-weight=800`, `font-size=26px`, `letter-spacing=0.52px` (= 0.02em), `color=rgb(18, 26, 20)` (= #121A14); ozadje nadrejenega logotipa `rgb(255, 255, 255)` (= #FFFFFF); `document.fonts.status=loaded` in `document.fonts.check('800 26px Archivo', 'SMART360')=true`. Znak ima izvor `/brand/smart360-znak-40.png`.
+- Izoliran PDFKit izris istega novega bloka A6 besednega znaka v začasni `/tmp/smart360-wordmark-pdf-layout-qa.pdf`: format 297.638 × 419.528 pt (105 × 148 mm), `pdftotext` prebere **SMART360**, `pdffonts` potrdi vdelan **Archivo-ExtraBold**. Dejanskega avtenticiranega endpointa za A6 nalepko ni mogoče preskusiti brez avtorizacije; vzorčni PDF zato ni dokaz celotne nalepke.
+- Namenski PDF QR-nalepke (`artifacts/api-server/src/lib/guideReadyNotice.ts`, `makeReadySticker`) je **nedotaknjen**; ne vsebuje znaka.
+- `pnpm --filter @workspace/smart360 typecheck`, `pnpm --filter @workspace/api-server typecheck`, `pnpm --filter @workspace/mockup-sandbox typecheck` in `git diff --check` uspešni.
+
+## Trajno zapisano pravilo
+
+V `replit.md`, ob obstoječih pravilih za znak in obravnavo tihih napak, je dodano natanko:
+
+&gt; Pravilo CGP: Znak vedno izvira iz originalnih uradnih datotek, vedno stoji na beli podlagi in ga nikoli ne prerisujemo, prebarvamo ali približno poustvarimo. Besedni znak »SMART360« je vedno Archivo 800, barve #121A14, z razmikom med črkami 0.02em. Zelena #157347 je poudarna barva in se nikoli ne uporablja za znak ali besedni znak. V e-pošti je celoten logotip (znak + besedni znak) vedno ena vnaprej izrisana slika v retina ločljivosti, nikoli besedilo HTML.
+
+# Email lockup audit
+
+Scope: existing email wordmarks only. `Smart360` in ordinary message copy, headings, subjects, footers and sender addresses is **not** a brand-wordmark element. The public image URL follows the existing `https://smart360.info/brand/…` pattern; this audit does not imply publication or email delivery.
+
+Before the update, the shared `renderEmail` kicker in `emailTemplate.ts` displayed the official 20 × 20 mark (`smart360-znak-40.png`) followed by HTML brand text. Its text had `font-size:13px`, `font-weight:800`, `letter-spacing:.14em`, `text-transform:uppercase`, and `color:#121A14`; the welcome theme specified `Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif`, while the other theme used `-apple-system,'Segoe UI',Roboto,Arial,sans-serif`. The ready-notice override displayed the mark at 46 × 46 and HTML `SMART360` text in `Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif`, `font-size:13px`, `font-weight:800`, `letter-spacing:.14em`, and **green `#157347`** (no explicit `text-transform` on that uppercase literal). No HTML body copy or tenant name needs to be converted to an image.
+
+After the update, *every existing brand-mark image* in these templates uses **one** opaque white RGB lockup: `artifacts/smart360/public/brand/smart360-email-lockup-558x138.png` (558 × 138 pixels). The official unchanged SVG mark and actual loaded `Archivo-800.ttf` render the embedded uppercase wordmark in `#121A14` at `.02em` spacing, with no HTML wordmark. The complete lockup is displayed at 81 × 20 in shared headers or 186 × 46 in manual ready notices, with both HTML dimensions and matching inline CSS. The largest display has 3× raster resolution. The SVG and actual font are drawn together on white at 4× the final resolution and the composite is Lanczos3-downsampled.
+
+| Email render function | Previous header wordmark / dimensions | Current header / actual display |
+| --- | --- | --- |
+| `buildWelcomeEmailBody` | Shared welcome kicker: 20 × 20 mark + HTML `Smart360`, 13px Archivo 800, #121A14, .14em | Canonical lockup; 81 × 20 |
+| `renderConciergeWelcomeEmail` | Same shared welcome kicker | Canonical lockup; 81 × 20 |
+| `renderReadyNotice` (`self_service` and `concierge`) | 46 × 46 mark + HTML `SMART360`, 13px Archivo 800, **#157347**, .14em | Canonical lockup; 186 × 46 |
+| `buildGuideReadyEmailBody` | Shared legacy kicker: 20 × 20 mark + HTML `Smart360`, 13px system-font 800, #121A14, .14em | Canonical lockup; 81 × 20 |
+| `buildPublishedEmailBody` | Shared legacy kicker: 20 × 20 mark + HTML tenant name, 13px system-font 800, #121A14, .14em | Canonical lockup 81 × 20; original tenant-name HTML retained |
+| `buildEmailBody` (`orderEmail.ts`) | Same shared legacy kicker + HTML tenant name | Canonical lockup 81 × 20; original tenant-name HTML retained |
+| `buildMessageEmailBody` | Same shared legacy kicker + HTML tenant name | Canonical lockup 81 × 20; original tenant-name HTML retained |
+| `buildResetEmailBody` | Same shared legacy kicker + HTML `Smart360` | Canonical lockup; 81 × 20 |
+| `buildHostOnboardingEmail` | Same shared legacy kicker + HTML `Smart360` | Canonical lockup; 81 × 20 |
+| `buildAdminSecurityEmail` | Same shared legacy kicker + HTML `Smart360` | Canonical lockup; 81 × 20 |
+| `buildEnquiryEmail` | **No logo or brand-wordmark header.** `Novo povpraševanje Smart360` is ordinary prose in an `&lt;h1&gt;`. | **Unchanged:** no lockup/image added; same prose heading. |
+
+Inspection of the API Resend sender functions identified the shared renderer, manual ready override, and prose-only enquiry email; no other existing HTML brand-wordmark renderer was found. Approval screenshots of the four owner variants (full page and header crop) and self-contained HTML are in `reports/gril-{dobrodosli,vodnik-pripravljen}-{samostojno,ureja-smart360}` with `.html`, `.png` and `-header.png` suffixes. No QR-sticker rendering changes were made.</pre></html>

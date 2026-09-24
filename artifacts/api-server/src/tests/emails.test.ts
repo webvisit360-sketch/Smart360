@@ -3,7 +3,7 @@
  *
  * Pins for ALL SIX templates:
  *  - subject and inbox-preview lines exactly as approved,
- *  - the shared design system (seven-cell band, marked kicker, CTA, footer),
+ *  - the shared design system (no decorative band, marked kicker, CTA, footer),
  *  - the global rules: inline styles only, no web fonts, one hosted brand mark,
  *    no tracking pixels, no auto-login links, plain-text alternative.
  */
@@ -11,6 +11,7 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 
 import { buildEmailBody, type OrderEmailPayload } from "../lib/orderEmail";
+import { buildEnquiryEmail } from "../lib/enquiryEmail";
 import { buildMessageEmailBody } from "../lib/messageEmail";
 import { buildResetEmailBody, resetLink, HOST_RESET_FROM_NAME } from "../lib/hostResetEmail";
 import {
@@ -22,6 +23,15 @@ import {
 process.env["ORDER_EMAIL_FROM"] = "info@webvisit360.com";
 
 const FROM = "Smart360 <info@webvisit360.com>";
+
+test("raw operator enquiry has prose only, without introducing branding", () => {
+  const html = buildEnquiryEmail({
+    name: "Test", email: "test@example.invalid", propertyName: "Primer",
+    address: "Ulica 1", propertyType: "apartma",
+  }).html;
+  assert.ok(html.startsWith("<h1>Novo povpraševanje Smart360</h1>"), "ordinary prose is preserved");
+  assert.doesNotMatch(html, /<img|<svg|smart360-email-lockup/);
+});
 
 const ORDER: OrderEmailPayload = {
   to: "gostitelj@example.com",
@@ -185,31 +195,26 @@ describe("global rules hold for every template", () => {
 
     test(`${name}: design system present`, () => {
       if (name === "welcome") {
-        assert.equal((html.match(/background:#DD9A2B/g) ?? []).length, 1, "one amber accent");
-        assert.ok(html.includes("height:3px;line-height:3px;font-size:0;background:#DD9A2B"));
         assert.ok(html.includes("max-width:560px;background:#FFFFFF"));
         assert.ok(html.includes('<body style="margin:0;padding:0;background:#FFFFFF">'));
         assert.equal((html.match(/background:#157347;color:#FFFFFF/g) ?? []).length, 1);
         assert.ok(html.includes("font-family:Archivo,"));
         assert.deepEqual(new Set(html.match(/#[0-9a-f]{6}/gi)), new Set([
-          "#FFFFFF", "#121A14", "#66716A", "#E8EBE6", "#157347", "#DD9A2B",
+          "#FFFFFF", "#121A14", "#66716A", "#E8EBE6", "#157347",
         ]), "only the exact approved CGP palette");
       } else {
-        assert.equal((html.match(/height:5px;line-height:5px;font-size:0;background:/g) ?? []).length, 7);
-        assert.ok(html.includes("#E8801B"), "other emails retain their approved design");
+        assert.ok(html.includes("#E8801B") || !html.includes("<a href="), "other emails retain their CTA styling");
         if (html.includes("<a href=")) {
           assert.ok(html.includes("background:#E8801B"), "orange CTA");
           assert.ok(html.includes("color:#150C03"), "CTA ink");
         }
         assert.ok(!html.includes("#157347"), "other templates unchanged");
       }
+      assert.doesNotMatch(html, /#DD9A2B|height:5px;line-height:5px;font-size:0;background:|<tr><td><div style="height:3px/, "no decorative top bands in any shared email");
       assert.ok(html.includes("color:#121A14"), "dark brand kicker");
-      assert.ok(html.includes(name === "welcome"
-        ? "https://smart360.info/brand/smart360-email-header-60.png"
-        : "https://smart360.info/brand/smart360-znak-40.png"), "stable hosted brand mark");
-      assert.ok(html.includes(name === "welcome"
-        ? 'width="20" height="20" alt="" style="width:20px;height:20px;'
-        : 'width="20" height="20" alt="" style="vertical-align:'), "20px decorative mark");
+      assert.ok(html.includes("https://smart360.info/brand/smart360-email-lockup-host-594x138.png"), "one hosted lockup");
+      assert.ok(html.includes('width="198" height="46" alt="Smart360" style="width:198px;height:46px;'), "46px lockup");
+      assert.doesNotMatch(html, />SMART360<\/|>Smart360<\/div>/, "no HTML brand wordmark");
       assert.match(html, /letter-spacing:\.14em/, "brand kicker style");
       assert.match(html, /font-size:24px;font-weight:800/, "24px title");
     });

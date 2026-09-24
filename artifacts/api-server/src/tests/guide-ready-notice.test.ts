@@ -24,12 +24,12 @@ test("both ready email modes use exact copy, official brand and guarded owner ro
     assert.equal(rendered.subject, "Vaš digitalni vodnik je pripravljen");
     assert.match(rendered.text, /Spoštovani,[\s\S]*z veseljem sporočamo/);
     assert.ok(rendered.text.includes(defaultReadyMessage(url)));
-    assert.match(rendered.html, /src="https:\/\/smart360\.info\/brand\/smart360-email-header-138\.png" width="46" height="46" alt="Smart360" style="display:block;width:46px;height:46px;/);
+    assert.match(rendered.html, /src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="width:198px;height:46px;/);
     assert.ok(rendered.html.includes("background:#157347"));
     assert.ok(rendered.html.includes("max-width:560px;background:#FFFFFF"));
     assert.ok(rendered.html.includes("border-radius:16px;border-collapse:separate"));
     assert.equal((rendered.html.match(/border-radius:999px/g) ?? []).length, mode === "self_service" ? 2 : 1);
-    assert.match(rendered.html, /color:#157347[^>]*>SMART360/);
+    assert.doesNotMatch(rendered.html, />SMART360<\/|>Smart360<\/div>/);
     assert.doesNotMatch(rendered.html, /#DD9A2B|#E8801B|background:#121A14/);
     assert.ok(rendered.html.includes('src="data:image/png;base64,'));
     assert.ok(rendered.html.includes(`href="${url}"`));
@@ -129,11 +129,11 @@ test("Archivo instances carry actual 800/600 weights; long tenant name wraps wit
 test("owner approval reports: self-contained mode-specific HTML and A6 print PDF, never send", async () => {
   const reports = path.join(root, "reports");
   mkdirSync(reports, { recursive: true });
-  const mark = readFileSync(path.join(root, "artifacts/smart360/public/brand/smart360-email-header-138.png")).toString("base64");
+  const mark = readFileSync(path.join(root, "artifacts/smart360/public/brand/smart360-email-lockup-host-594x138.png")).toString("base64");
   const archivo = readFileSync(path.join(root, "artifacts/api-server/assets/Archivo.ttf")).toString("base64");
   for (const mode of ["self_service", "concierge"] as const) {
     const rendered = await renderReadyNotice({ ...base, mode });
-    const html = rendered.html.replaceAll("https://smart360.info/brand/smart360-email-header-138.png", `data:image/png;base64,${mark}`)
+    const html = rendered.html.replaceAll("https://smart360.info/brand/smart360-email-lockup-host-594x138.png", `data:image/png;base64,${mark}`)
       .replace("</head>", `<style>@font-face{font-family:Archivo;src:url(data:font/ttf;base64,${archivo}) format('truetype');font-weight:100 900}</style></head>`);
     const name = mode === "self_service" ? "samostojno" : "ureja-smart360";
     writeFileSync(path.join(reports, `gril-vodnik-pripravljen-${name}.html`), html);

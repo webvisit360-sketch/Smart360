@@ -1,10 +1,10 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import enquiryHtml from "@assets/Smart360-povprasevanje_1_1787894314826.html?raw";
+import { BrandLockup } from "@/components/brand-lockup";
 import "./enquiry.css";
 
 const propertyTypes = ["Apartma", "Hiša do 6 enot", "Kamp", "Hotel"] as const;
 const BUSINESS_CONTACT_EMAIL = "smart360hq@gmail.com";
-const logoSvg = enquiryHtml.match(/<div class="lk">([\s\S]*?<\/svg>)<\/div>/)?.[1] ?? "";
 const ringSvg = enquiryHtml.match(/<div class="bgring"[^>]*>([\s\S]*?<\/svg>)<\/div>/)?.[1] ?? "";
 
 export default function EnquiryPage() {
@@ -55,7 +55,7 @@ export default function EnquiryPage() {
       <div className="enquiry-ring" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ringSvg }} />
       <div className="enquiry-wrap">
         <header className="enquiry-head">
-          <div className="enquiry-logo" role="img" aria-label="Smart360" dangerouslySetInnerHTML={{ __html: logoSvg }} />
+          <BrandLockup className="enquiry-logo" markSize={50} textSize={25} />
           <h1>Poglejva, kako bi izgledal vaš vodnik</h1>
           <p>Pošljite pet podatkov. Odgovorim v enem delovnem dnevu — brez obveznosti.</p>
         </header>

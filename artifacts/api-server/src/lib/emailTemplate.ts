@@ -2,7 +2,7 @@
  * Shared e-mail template engine — the ONLY way Smart360 renders outgoing mail.
  *
  * Implements the owner-approved design (attached_assets/emaili-gostitelju):
- *   seven-colour table-cell band · white card · marked brand kicker ·
+ *   white card · marked brand kicker ·
  *   24px title · data-row table · orange CTA button · footer.
  *
  * Hard rules enforced here for every message:
@@ -30,26 +30,19 @@ const OUTER_BG = "#ECF0EA";
 const FONT =
   "-apple-system,'Segoe UI',Roboto,Arial,sans-serif";
 
-const COLOUR_BAND =
-  '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;width:100%"><tr><td height="5" style="height:5px;line-height:5px;font-size:0;background:#E3BE12">&nbsp;</td><td height="5" style="height:5px;line-height:5px;font-size:0;background:#E8801B">&nbsp;</td><td height="5" style="height:5px;line-height:5px;font-size:0;background:#8F4A1C">&nbsp;</td><td height="5" style="height:5px;line-height:5px;font-size:0;background:#2A4E86">&nbsp;</td><td height="5" style="height:5px;line-height:5px;font-size:0;background:#1F76C0">&nbsp;</td><td height="5" style="height:5px;line-height:5px;font-size:0;background:#12856B">&nbsp;</td><td height="5" style="height:5px;line-height:5px;font-size:0;background:#4FA524">&nbsp;</td></tr></table>';
-
 // Welcome-only CGP; other approved email templates keep their existing styling.
 const LEGACY_THEME = {
   ctaBg: CTA_BG, ctaText: CTA_TEXT, border: CARD_BORDER, line: ROW_LINE,
   body: BODY_COLOR, small: SMALL_COLOR, outer: OUTER_BG, card: "#FFFFFF",
-  font: FONT, band: COLOUR_BAND,
+  font: FONT,
 };
 const WELCOME_THEME: typeof LEGACY_THEME = {
   ctaBg: "#157347", ctaText: "#FFFFFF", border: "#E8EBE6", line: "#E8EBE6",
   body: "#121A14", small: "#66716A", outer: "#FFFFFF", card: "#FFFFFF",
   font: "Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif",
-  band: '<div style="height:3px;line-height:3px;font-size:0;background:#DD9A2B">&nbsp;</div>',
 };
 
-function brandMarkUrl(): string {
-  return "https://smart360.info/brand/smart360-znak-40.png";
-}
-const OWNER_EMAIL_MARK_URL = "https://smart360.info/brand/smart360-email-header-60.png";
+export const EMAIL_LOCKUP_URL = "https://smart360.info/brand/smart360-email-lockup-host-594x138.png";
 
 export function escHtml(s: string): string {
   return s
@@ -170,9 +163,8 @@ export function renderEmail(spec: EmailSpec): { html: string; text: string } {
 <div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0">${escHtml(spec.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${theme.outer}"><tr><td align="center" style="padding:26px 12px 44px">
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:${theme.card};border:1px solid ${theme.border};border-radius:14px;border-collapse:separate;overflow:hidden;font-family:${theme.font}">
-<tr><td>${theme.band}</td></tr>
 <tr><td style="padding:26px 26px 14px">
- <div style="font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${TITLE_COLOR};font-family:${theme.font}"><img src="${escHtml(theme === WELCOME_THEME ? OWNER_EMAIL_MARK_URL : brandMarkUrl())}" width="20" height="20" alt="" style="${theme === WELCOME_THEME ? "width:20px;height:20px;" : ""}vertical-align:-4px;margin-right:7px;border:0;display:inline-block">${escHtml(spec.brand)}</div>
+ <div style="font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${TITLE_COLOR};font-family:${theme.font}"><img src="${EMAIL_LOCKUP_URL}" width="198" height="46" alt="Smart360" style="width:198px;height:46px;vertical-align:middle;${spec.brand === "Smart360" ? "" : "margin-right:7px;"}border:0;display:inline-block">${spec.brand === "Smart360" ? "" : escHtml(spec.brand)}</div>
 <h2 style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:${TITLE_COLOR};margin:8px 0 14px;line-height:1.25;font-family:${theme.font}">${escHtml(spec.title)}</h2>
 ${inner}
 </td></tr>

@@ -11,6 +11,7 @@ import {
   type ConciergeWelcomeEmailBody,
 } from "../lib/conciergeWelcomeEmail";
 import { buildWelcomeEmailBody } from "../lib/lifecycleEmails";
+import { renderReadyNotice } from "../lib/guideReadyNotice";
 
 const EXACT_COPY =
   "Vaš digitalni vodnik v celoti pripravljamo in urejamo mi — vam ni treba storiti ničesar. Vse spremembe, dopolnitve ali fotografije nam kadar koli pošljite na info@webvisit360.com in jih vnesemo za vas.";
@@ -25,17 +26,42 @@ afterEach(() => {
 });
 
 describe("concierge welcome email", () => {
-  test("dedicated owner marks are 3x displayed size, opaque and white-field", async () => {
-    for (const [size, display] of [[60, 20], [138, 46]]) {
-      const file = new URL(`../../../smart360/public/brand/smart360-email-header-${size}.png`, import.meta.url);
-      const { data, info } = await sharp(readFileSync(file)).raw().toBuffer({ resolveWithObject: true });
-      assert.equal(size, display * 3);
-      assert.equal(info.width, size);
-      assert.equal(info.height, size);
-      assert.equal(info.channels, 3);
-      assert.deepEqual([...data.subarray(0, 3)], [255, 255, 255]);
-      assert.deepEqual([...data.subarray((size * size - 1) * 3)], [255, 255, 255]);
+  test("all four lifecycle variants share one exact 198x46 header without an accent bar", async () => {
+    const url = "https://smart360.info/glamping-gril";
+    const htmls = [
+      buildWelcomeEmailBody({
+        to: "preview@example.invalid", propertyName: "Apartmaji Gril",
+        setPasswordUrl: "https://preview.invalid/disabled-example",
+      }, "Smart360 <info@webvisit360.com>").html,
+      renderConciergeWelcomeEmail({ tenantName: "Apartmaji Gril", guideUrl: url }).html,
+      (await renderReadyNotice({ tenantName: "Apartmaji Gril", slug: "glamping-gril", guideUrl: url, mode: "self_service" })).html,
+      (await renderReadyNotice({ tenantName: "Apartmaji Gril", slug: "glamping-gril", guideUrl: url, mode: "concierge" })).html,
+    ];
+    const img = /<img src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="width:198px;height:46px;[^"]*">/;
+    const headers = htmls.map(html => {
+      assert.doesNotMatch(html, /#DD9A2B|height:5px;line-height:5px;font-size:0;background:|<tr><td><div style="height:3px/);
+      assert.doesNotMatch(html, />SMART360<\/|>Smart360<\/div>/);
+      return html.match(img)?.[0];
+    });
+    assert.ok(headers[0], "canonical header is present");
+    assert.deepEqual(headers, Array(4).fill(headers[0]));
+  });
+  test("one canonical lockup meets the largest 3x display, opaque white field and dark ink", async () => {
+    const file = new URL("../../../smart360/public/brand/smart360-email-lockup-host-594x138.png", import.meta.url);
+    const { data, info } = await sharp(readFileSync(file)).raw().toBuffer({ resolveWithObject: true });
+    assert.equal(info.width, 198 * 3);
+    assert.equal(info.height, 46 * 3);
+    assert.equal(info.channels, 3);
+    assert.deepEqual([...data.subarray(0, 3)], [255, 255, 255]);
+    assert.deepEqual([...data.subarray((info.width * info.height - 1) * 3)], [255, 255, 255]);
+    let darkWordmarkPixels = 0;
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 174; x < info.width; x++) {
+        const i = (y * info.width + x) * 3;
+        if (data[i] === 18 && data[i + 1] === 26 && data[i + 2] === 20) darkWordmarkPixels++;
+      }
     }
+    assert.ok(darkWordmarkPixels > 1000, "raster wordmark has solid #121A14 ink");
   });
   test("uses the normal invitation's CGP renderer with exact concierge copy", () => {
     const body = renderConciergeWelcomeEmail(FIXTURE);
@@ -50,8 +76,9 @@ describe("concierge welcome email", () => {
     }
     assert.ok(body.html.includes("background:#157347;color:#FFFFFF"));
     assert.ok(body.html.includes("max-width:560px;background:#FFFFFF"));
-    assert.ok(body.html.includes("height:3px;line-height:3px;font-size:0;background:#DD9A2B"));
-    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-header-60.png" width="20" height="20" alt="" style="width:20px;height:20px;'));
+    assert.doesNotMatch(body.html, /#DD9A2B|height:3px;line-height:3px;font-size:0;background:/);
+    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-lockup-host-594x138.png" width="198" height="46" alt="Smart360" style="width:198px;height:46px;'));
+    assert.doesNotMatch(body.html, />SMART360<\/|>Smart360<\/div>/);
   });
 
   test("escapes tenant content", () => {

@@ -55,8 +55,9 @@ import { tenantAliasesTable } from "@workspace/db";
 import QRCode from "qrcode";
 import PDFDocument from "pdfkit";
 import SVGtoPDF from "svg-to-pdfkit";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
-import { WORDMARK_SVG } from "../lib/wordmark";
 import {
   extractVirtualTourUrl,
   VirtualTourUrlError,
@@ -457,14 +458,24 @@ router.get("/admin/tenants/:id/label.pdf", async (req, res): Promise<void> => {
   );
   doc.pipe(res);
 
-  // Wordmark: 38 mm wide, aspect 4712:858.
+  // This legacy A6 label has a wordmark; the separate print QR sticker does not.
+  // Always use Archivo 800 here rather than the old blue outline sprite.
   const wmW = 38 * MM;
-  const wmH = (wmW * 858) / 4712;
+  const wmH = 20;
   let y = 14 * MM;
-  SVGtoPDF(doc, WORDMARK_SVG.replace("<svg ", '<svg fill="#3B78DC" '), (pageW - wmW) / 2, y, {
-    width: wmW,
-    height: wmH,
-    preserveAspectRatio: "xMidYMid meet",
+  const fontFile = "artifacts/api-server/assets/Archivo-800.ttf";
+  let archivo: Buffer;
+  try {
+    archivo = readFileSync(resolve(process.cwd(), fontFile));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    archivo = readFileSync(resolve(process.cwd(), "../..", fontFile));
+  }
+  doc.registerFont("Smart360Wordmark", archivo);
+  doc.font("Smart360Wordmark").fontSize(17).fillColor("#121A14");
+  doc.text("SMART360", (pageW - wmW) / 2, y, {
+    width: wmW, align: "center", characterSpacing: 17 * 0.02,
+    lineBreak: false,
   });
   y += wmH + 6 * MM;
 

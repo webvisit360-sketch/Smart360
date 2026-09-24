@@ -1,4 +1,4 @@
-import SMART360_LOCKUP_SVG from "virtual:admin-sidebar-lockup";
+import { BrandLockup } from "@/components/brand-lockup";
 
 export type AdminSidebarIconName =
   | "dashboard"
@@ -16,14 +16,7 @@ export type AdminSidebarIconName =
   | "settings";
 
 export function AdminSidebarLockup({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`admin-sidebar__lockup ${className}`.trim()}
-      role="img"
-      aria-label="Smart360"
-      dangerouslySetInnerHTML={{ __html: SMART360_LOCKUP_SVG }}
-    />
-  );
+  return <BrandLockup className={`admin-sidebar__lockup ${className}`.trim()} markSize={40} textSize={19} />;
 }
 
 export function AdminSidebarIcon({ name }: { name: AdminSidebarIconName }) {

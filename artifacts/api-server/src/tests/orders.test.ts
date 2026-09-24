@@ -656,13 +656,13 @@ describe("buildEmailBody", () => {
     assert.ok(!html.includes("Cena"), "no price row without a snapshot price");
   });
 
-  test("approved design: seven-cell band, marked tenant kicker, orange CTA", () => {
+  test("design: no decorative band, marked tenant kicker, orange CTA", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
-    assert.equal((html.match(/height:5px;line-height:5px;font-size:0;background:/g) ?? []).length, 7);
+    assert.doesNotMatch(html, /height:5px;line-height:5px;font-size:0;background:|#DD9A2B/);
     assert.ok(html.includes("background:#E8801B"), "approved orange CTA must be present");
     assert.ok(html.includes("color:#150C03"), "approved dark CTA text must be present");
-    assert.ok(html.includes("/brand/smart360-znak-40.png"), "hosted mark must be present");
+    assert.ok(html.includes("/brand/smart360-email-lockup-host-594x138.png"), "hosted lockup must be present");
     assert.ok(html.includes("Kmetija Testna"), "brand kicker is the tenant name");
     assert.match(html, /<a href="https?:\/\/[^"]*\/admin"/, "CTA links the plain portal login page");
     assert.ok(!/href="[^"]*token/i.test(html), "no auto-login or token links");

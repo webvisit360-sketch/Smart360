@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 
 const PLATFORM_HOSTS = /(^localhost$|^127\.|\.replit\.dev$|\.replit\.app$|\.repl\.co$)/;
@@ -26,10 +26,6 @@ export default function Landing() {
   }, [host, setLocation]);
 
   if (showConstructionPage) {
-    const wordmarkStyle = {
-      "--construction-wordmark": `url("${import.meta.env.BASE_URL}brand/logo-smart360-moder.png")`,
-    } as CSSProperties;
-
     return (
       <main className="construction-page" aria-label="Smart360 website under construction">
         <div className="construction-page__brand">
@@ -41,9 +37,8 @@ export default function Landing() {
           />
           <span
             className="construction-page__wordmark"
-            style={wordmarkStyle}
             aria-label="Smart360"
-          />
+          >SMART360</span>
           <p className="construction-page__message">Website under construction.</p>
         </div>
       </main>
@@ -53,7 +48,7 @@ export default function Landing() {
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background text-foreground p-6 text-center">
       <div className="max-w-md w-full space-y-4">
-        <h1 className="text-5xl font-bold tracking-tight text-primary">Smart360</h1>
+        <h1 className="text-5xl font-[800] font-sans tracking-[0.02em] text-[#121A14]">SMART360</h1>
         <p className="text-xl text-muted-foreground">Digitalni vodnik za goste vaše nastanitve.</p>
         <p className="text-sm text-muted-foreground">
           <a href="mailto:pi4.doo@gmail.com" className="underline">pi4.doo@gmail.com</a>

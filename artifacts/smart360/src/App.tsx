@@ -1,4 +1,4 @@
-import { lazy, Suspense, type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -68,10 +68,6 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
 
   if (phase === 'gone') return null;
 
-  const wordmarkStyle = {
-    '--guest-splash-wordmark': `url("${import.meta.env.BASE_URL}brand/logo-smart360-moder.png")`,
-  } as CSSProperties;
-
   return (
     <div
       className={`guest-entry-splash${phase === 'out' ? ' is-out' : ''}`}
@@ -87,9 +83,8 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
       </span>
       <span
         className="guest-entry-splash__wordmark"
-        style={wordmarkStyle}
         aria-hidden="true"
-      />
+      >SMART360</span>
       <span className="guest-entry-splash__subtitle">Pametni turistični vodnik</span>
     </div>
   );

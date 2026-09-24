@@ -74,7 +74,7 @@ export function PasswordTokenPage({ mode }: { mode: TokenMode }) {
         <div className="h-12 w-12 rounded-[14px] bg-[#157347] text-white flex items-center justify-center mb-5">
           <LockKeyhole className="h-6 w-6" />
         </div>
-        <p className="text-sm font-extrabold text-primary mb-2">Smart360</p>
+        <p className="text-sm font-[800] font-sans tracking-[0.02em] text-[#121A14] mb-2">SMART360</p>
         <h1 className="text-[26px] font-extrabold tracking-tight">
           {mode === "invite" ? "Nastavite geslo" : "Nastavite novo geslo"}
         </h1>

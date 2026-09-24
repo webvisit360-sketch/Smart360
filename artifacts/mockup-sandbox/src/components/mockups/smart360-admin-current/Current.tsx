@@ -130,7 +130,7 @@ const RECENT_CHANGES = [
 ];
 
 function Logo() {
-  return <div className="smart360-wordmark" aria-label="Smart360">Smart360</div>;
+  return <div className="smart360-wordmark" aria-label="Smart360">SMART360</div>;
 }
 
 function daysTo(date?: string) {

@@ -938,13 +938,13 @@ id = "WpTjuVzId-lZQE08MAO31"
 uri = "file://reports/gril-vodnik-pripravljen-samostojno.png"
 type = "image"
 title = "Vodnik je pripravljen — samostojno urejanje"
-description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
+description = "Brez oranžne črte. Enoten logotip 198 × 46 px: znak 46 px, napis Archivo 800 pri 24 px, #121A14, razmik 12 px."
 logical_id = "4f94eb05-6cb7-443c-a876-449408cc4528"
-content_hash = "sha256:1377b543d56702201e1fc9a9d4eae37aaadba718cd6c8fe662731692b89d3aac"
-size = 107190
-mtime_ms = 1790273343290
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4f94eb05-6cb7-443c-a876-449408cc4528/eabdc028-20e4-4f32-8808-ec137e354e86"
-storage_version_token = "1790273471980795"
+content_hash = "sha256:cb1282084fd8919c27f012fa082a7403e5ed1f747a2c3276e68c1a5586edbd94"
+size = 109797
+mtime_ms = 1790275062447
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4f94eb05-6cb7-443c-a876-449408cc4528/be8269a3-0bee-4864-b7a3-8aa0b3179db5"
+storage_version_token = "1790275210525671"
 content_type = "image/png"
 
 [[outputs]]
@@ -952,13 +952,13 @@ id = "3Ue3aBDRqvp5j6-BTeEHW"
 uri = "file://reports/gril-vodnik-pripravljen-ureja-smart360.png"
 type = "image"
 title = "Vodnik je pripravljen — ureja Smart360"
-description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
+description = "Brez oranžne črte. Enoten logotip 198 × 46 px: znak 46 px, napis Archivo 800 pri 24 px, #121A14, razmik 12 px."
 logical_id = "a741b1b8-ca5b-4187-be19-6a83a89bdf85"
-content_hash = "sha256:026132a21ac29529deecb7a6c62357089b470b9ccf6c4b131cf18a0f2664319b"
-size = 100099
-mtime_ms = 1790273343862
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a741b1b8-ca5b-4187-be19-6a83a89bdf85/0892ecca-fefe-4d8b-8d97-c94c27bdbc76"
-storage_version_token = "1790273472821536"
+content_hash = "sha256:f3964f3f1a7f320e3a122a3e164c35b835cfc9f0630e6bce85cf886024fa9aaf"
+size = 102847
+mtime_ms = 1790275062743
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a741b1b8-ca5b-4187-be19-6a83a89bdf85/2b66deaf-ab47-4904-8b23-20d0adbb6123"
+storage_version_token = "1790275211371083"
 content_type = "image/png"
 
 [[outputs]]
@@ -1050,13 +1050,13 @@ id = "w2wwgl13ElH_3lkujb949"
 uri = "file://reports/gril-dobrodosli-samostojno.png"
 type = "image"
 title = "Dobrodošli — samostojno urejanje"
-description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
+description = "Brez oranžne črte. Enoten logotip 198 × 46 px: znak 46 px, napis Archivo 800 pri 24 px, #121A14, razmik 12 px."
 logical_id = "abebafa4-ad50-4eda-9011-5677a37071c9"
-content_hash = "sha256:65cd1a8edc1ad6560340055e3cdb01da4603c24606490c7555c2f78b284f0e92"
-size = 95168
-mtime_ms = 1790273342586
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/abebafa4-ad50-4eda-9011-5677a37071c9/8e6c5b69-c454-47cd-beda-bacfb9569af0"
-storage_version_token = "1790273470356630"
+content_hash = "sha256:8248a7ec1f720d2acee77a67822665a849135b5d95004ecb807ba2af1db0cc36"
+size = 101065
+mtime_ms = 1790275061515
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/abebafa4-ad50-4eda-9011-5677a37071c9/2c2fad32-c12d-4804-8b28-10e59146a867"
+storage_version_token = "1790275208916264"
 content_type = "image/png"
 
 [[outputs]]
@@ -1064,11 +1064,95 @@ id = "JfrbMNTLUt_2SgoUVgvkw"
 uri = "file://reports/gril-dobrodosli-ureja-smart360.png"
 type = "image"
 title = "Dobrodošli — ureja Smart360"
-description = "Predogled za potrditev: bela vsebina kartice in znak v 3× ločljivosti. Brez pošiljanja e-pošte."
+description = "Brez oranžne črte. Enoten logotip 198 × 46 px: znak 46 px, napis Archivo 800 pri 24 px, #121A14, razmik 12 px."
 logical_id = "56a6c109-00cb-4166-8e92-7e17a3a76501"
-content_hash = "sha256:35fecad1223796a171da69e43b581eda68a48f9cfbb19529ed97b4b0cd6053ce"
-size = 81841
-mtime_ms = 1790273342958
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/56a6c109-00cb-4166-8e92-7e17a3a76501/8d535a1d-6e29-4a53-82b4-853dd8fbd810"
-storage_version_token = "1790273471066556"
+content_hash = "sha256:e20a3e5c2ab8348a8a094bda521c4c1f312ad08a2b3b006378accff57f5383bb"
+size = 87486
+mtime_ms = 1790275062071
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/56a6c109-00cb-4166-8e92-7e17a3a76501/28c74327-f20d-48c7-a3ac-3c73158c28cb"
+storage_version_token = "1790275209798089"
 content_type = "image/png"
+
+[[outputs]]
+id = "B5fVJBf-cOGeog8RKJtXd"
+uri = "file://reports/gril-dobrodosli-samostojno-header.png"
+type = "image"
+title = "Glava: Dobrodošli — samostojno"
+description = "Enotna retina slika: uradni znak + SMART360, Archivo 800, #121A14, razmik 0.02em."
+logical_id = "36f2d62b-7c11-4824-9f3c-b5c8c4098db3"
+content_hash = "sha256:21371549130eb3dd97ba18ff30f116aa5461dd7ff0a63749fe948e77e1fb92db"
+size = 5202
+mtime_ms = 1790274270594
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/36f2d62b-7c11-4824-9f3c-b5c8c4098db3/2d6c6ba0-74af-4eff-bda9-3fa23f71ccb4"
+storage_version_token = "1790274810269612"
+content_type = "image/png"
+
+[[outputs]]
+id = "CMwqLsvPsOWuYRP2Ejlsv"
+uri = "file://reports/gril-dobrodosli-ureja-smart360-header.png"
+type = "image"
+title = "Glava: Dobrodošli — ureja Smart360"
+description = "Enotna retina slika: uradni znak + SMART360, Archivo 800, #121A14, razmik 0.02em."
+logical_id = "2c7374d6-6598-4117-9080-f83cdc05059d"
+content_hash = "sha256:21371549130eb3dd97ba18ff30f116aa5461dd7ff0a63749fe948e77e1fb92db"
+size = 5202
+mtime_ms = 1790274270910
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2c7374d6-6598-4117-9080-f83cdc05059d/7b586653-bb74-409f-bf9e-f323f09b561c"
+storage_version_token = "1790274811064180"
+content_type = "image/png"
+
+[[outputs]]
+id = "XO_YtB5byqW_BQ4uqZyUq"
+uri = "file://reports/gril-vodnik-pripravljen-samostojno-header.png"
+type = "image"
+title = "Glava: Vodnik je pripravljen — samostojno"
+description = "Enotna retina slika: uradni znak + SMART360, Archivo 800, #121A14, razmik 0.02em."
+logical_id = "f55cdfc3-f005-43d6-b1f8-bb62c57460fb"
+content_hash = "sha256:31c030eaaf4265d0ec740ac749dd332c4216c8ce3c38ff259d2fcc9d20a62672"
+size = 13707
+mtime_ms = 1790274271194
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f55cdfc3-f005-43d6-b1f8-bb62c57460fb/68e565ed-cf9d-4241-827c-70919d035490"
+storage_version_token = "1790274811853300"
+content_type = "image/png"
+
+[[outputs]]
+id = "bNiVPx-opU8PNFopgxleA"
+uri = "file://reports/gril-vodnik-pripravljen-ureja-smart360-header.png"
+type = "image"
+title = "Glava: Vodnik je pripravljen — ureja Smart360"
+description = "Enotna retina slika: uradni znak + SMART360, Archivo 800, #121A14, razmik 0.02em."
+logical_id = "3f176f58-b94a-4687-b710-a2736cef7eed"
+content_hash = "sha256:31c030eaaf4265d0ec740ac749dd332c4216c8ce3c38ff259d2fcc9d20a62672"
+size = 13707
+mtime_ms = 1790274271475
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3f176f58-b94a-4687-b710-a2736cef7eed/9f2778c0-2f04-4a4e-ab9e-679b6c3d20bc"
+storage_version_token = "1790274812620607"
+content_type = "image/png"
+
+[[outputs]]
+id = "83GPR5YzEbm47Q41VY6np"
+uri = "file://reports/smart360-login-cgp-header.jpg"
+type = "image"
+title = "Portal za gostitelje — popravljena glava"
+description = "Razvojni predogled z izmerjeno pisavo Archivo 800, barvo #121A14 in razmikom 0.02em."
+logical_id = "0aef10fa-25bf-4191-acd6-3e0200952ba1"
+content_hash = "sha256:10145322d83e7f1739e28bdf0a81947b04c36b989b2f012425aab6d3613831e4"
+size = 31099
+mtime_ms = 1790274787982
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0aef10fa-25bf-4191-acd6-3e0200952ba1/cc7e22fe-b75d-4724-a142-ca80a40257ae"
+storage_version_token = "1790274813338802"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "kkcs6VEzctyDbr8RS3DHR"
+uri = "file://reports/smart360-cgp-celoten-pregled.html"
+type = "html"
+title = "Celoten pregled pojavitev in trajno pravilo CGP"
+description = "Datoteke, površine, barve in pisave pred/po spremembah, meritve ter omejitve preverjanja."
+logical_id = "4daddefa-2c7a-47ab-bfef-e10bb6ea490d"
+content_hash = "sha256:fd3b2c069b48c90b2e43c4aa2b44619e45026c80782b8fe75d76f581ca4b5821"
+size = 10406
+mtime_ms = 1790274814150
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4daddefa-2c7a-47ab-bfef-e10bb6ea490d/cc9c163b-80ff-4f99-9852-ca43a395126b"
+storage_version_token = "1790274814690325"
+content_type = "text/html"

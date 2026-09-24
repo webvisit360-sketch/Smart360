@@ -13,8 +13,7 @@ const oldPreviewDir = path.join(root, "previews/management-mode");
 await mkdir(reportDir, { recursive: true });
 const brandDir = path.join(root, "artifacts/smart360/public/brand");
 const font = (await readFile(path.join(root, "artifacts/api-server/assets/Archivo.ttf"))).toString("base64");
-const marks = new Map(await Promise.all([60, 138].map(async size =>
-  [size, (await readFile(path.join(brandDir, `smart360-email-header-${size}.png`))).toString("base64")] as const)));
+const lockup = (await readFile(path.join(brandDir, "smart360-email-lockup-host-594x138.png"))).toString("base64");
 const deadLink = "https://preview.invalid/disabled-example-not-a-real-link";
 const ready = { tenantName: "Piknik prostor in kamp Gril", slug: "glamping-gril", guideUrl: "https://smart360.info/glamping-gril" };
 const previews = [
@@ -33,9 +32,7 @@ try {
   for (const [name, original, olderPath] of previews) {
     if (olderPath) await writeFile(path.join(oldPreviewDir, olderPath), original);
     let html = original;
-    for (const [size, base64] of marks) {
-      html = html.replaceAll(`https://smart360.info/brand/smart360-email-header-${size}.png`, `data:image/png;base64,${base64}`);
-    }
+    html = html.replaceAll("https://smart360.info/brand/smart360-email-lockup-host-594x138.png", `data:image/png;base64,${lockup}`);
     html = html.replace("</head>", `<style>@font-face{font-family:Archivo;src:url(data:font/ttf;base64,${font}) format('truetype');font-weight:100 900}</style></head>`);
     if (/src="https?:/.test(html)) throw new Error(`External image in ${name}`);
     const htmlPath = path.join(reportDir, `${name}.html`);
@@ -43,9 +40,20 @@ try {
     const page = await browser.newPage({ viewport: { width: 720, height: 1000 }, deviceScaleFactor: 1 });
     await page.goto(`file://${htmlPath}`);
     await page.evaluate(() => document.fonts.ready);
+    const measurements = await page.evaluate(() => {
+      const image = document.querySelector('img[alt="Smart360"]') as HTMLImageElement | null;
+      if (!image) throw new Error("Official lockup missing");
+      const box = image.getBoundingClientRect();
+      return { width: box.width, height: box.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight };
+    });
+    if (measurements.width !== 198 || measurements.height !== 46 ||
+        measurements.naturalWidth !== 594 || measurements.naturalHeight !== 138) {
+      throw new Error(`${name} lockup dimensions do not match: ${JSON.stringify(measurements)}`);
+    }
     await page.screenshot({ path: path.join(reportDir, `${name}.png`), fullPage: true });
+    await page.screenshot({ path: path.join(reportDir, `${name}-header.png`), clip: { x: 75, y: 24, width: 550, height: 108 } });
     await page.close();
-    console.log(`${name}: HTML + PNG`);
+    console.log(`${name}: HTML + PNG; displayed ${measurements.width}x${measurements.height}, raster ${measurements.naturalWidth}x${measurements.naturalHeight}`);
   }
 } finally {
   await browser.close();
