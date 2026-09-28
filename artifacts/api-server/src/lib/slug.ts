@@ -1,4 +1,4 @@
-import { db, tenantsTable, tenantAliasesTable } from "@workspace/db";
+import { db, tenantsTable, tenantAliasesTable, tenantSlugReservationsTable } from "@workspace/db";
 import { eq, and, ne } from "drizzle-orm";
 
 /**
@@ -51,8 +51,11 @@ export async function checkSlugAvailability(
     .select({ tenantId: tenantAliasesTable.tenantId })
     .from(tenantAliasesTable)
     .where(eq(tenantAliasesTable.slug, slug));
-  // A tenant may move back to one of its own former slugs.
-  if (alias && alias.tenantId !== tenantId)
-    return { available: false, reason: "taken" };
+  // Historical URLs are NEVER reclaimed, even by their former owner.
+  if (alias) return { available: false, reason: "taken" };
+  const [claim] = await db.select({ tenantId: tenantSlugReservationsTable.tenantId })
+    .from(tenantSlugReservationsTable)
+    .where(eq(tenantSlugReservationsTable.slug, slug));
+  if (claim && claim.tenantId !== tenantId) return { available: false, reason: "taken" };
   return { available: true, reason: null };
 }

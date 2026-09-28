@@ -83,6 +83,7 @@ import type {
   EnrollVerifyBody,
   ExportTranslationsParams,
   GetPublicTenantParams,
+  GetPublishedSlugRedirect200,
   GetStorageCleanupPreviewParams,
   GuestMessageInput,
   GuestThreadView,
@@ -2014,6 +2015,83 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPublishedSlugRedirectUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/slug-redirect/${slug}`
+}
+
+/**
+ * @summary Resolve a historical published slug before serving guest HTML
+ */
+export const getPublishedSlugRedirect = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<GetPublishedSlugRedirect200> => {
+
+  return customFetch<GetPublishedSlugRedirect200>(getGetPublishedSlugRedirectUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublishedSlugRedirectQueryKey = (slug: string,) => {
+    return [
+    `/api/public/slug-redirect/${slug}`
+    ] as const;
+    }
+
+
+export const getGetPublishedSlugRedirectQueryOptions = <TData = Awaited<ReturnType<typeof getPublishedSlugRedirect>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublishedSlugRedirect>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublishedSlugRedirectQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublishedSlugRedirect>>> = ({ signal }) => getPublishedSlugRedirect(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublishedSlugRedirect>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublishedSlugRedirectQueryResult = NonNullable<Awaited<ReturnType<typeof getPublishedSlugRedirect>>>
+export type GetPublishedSlugRedirectQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Resolve a historical published slug before serving guest HTML
+ */
+
+export function useGetPublishedSlugRedirect<TData = Awaited<ReturnType<typeof getPublishedSlugRedirect>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublishedSlugRedirect>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublishedSlugRedirectQueryOptions(slug,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

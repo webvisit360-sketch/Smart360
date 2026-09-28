@@ -2034,6 +2034,11 @@ export const TenantBaseLivingGuideNavItem = {
 export interface TenantBase {
   id: string;
   slug: string;
+  /**
+     * Proposed URL after first publish; slug remains the published canonical address until confirmed publication
+     * @nullable
+     */
+  draftSlug?: string | null;
   /** @nullable */
   customDomain?: string | null;
   name: string;
@@ -2181,7 +2186,7 @@ export interface TenantBase {
      */
   lastPublishedAt: string | null;
   /**
-     * Set once on the first publish; freezes the slug forever after
+     * Set once on the first publish; future URL changes require a reviewed publish
      * @nullable
      */
   firstPublishedAt?: string | null;
@@ -3716,6 +3721,11 @@ export interface TenantOverview {
 export type RetryHostOnboardingRecommendations200 = {
   ok: boolean;
   recommendationProcessing: HostOnboardingRecommendationProcessing;
+};
+
+export type GetPublishedSlugRedirect200 = {
+  /** @nullable */
+  canonicalSlug: string | null;
 };
 
 export type GetPublicTenantParams = {

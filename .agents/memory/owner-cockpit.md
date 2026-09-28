@@ -5,14 +5,12 @@ description: Slug freeze, first-publish e-mail gating, type seeding, readiness/p
 
 # Owner cockpit decisions (Instruction #28, CP2b)
 
-## Slug freeze + first publish
+## Slug changes + first publish
 - `tenants.first_published_at` is stamped **exactly once**, via compare-and-set
   (`UPDATE … WHERE first_published_at IS NULL`) — never in the general update payload.
   **Why:** a code-review round proved read-then-write raced: parallel publishes double-sent
   the e-mail and a parallel rename could slip past the freeze.
-- Slug changes are rejected 409 once stamped; the rename UPDATE also carries
-  `WHERE first_published_at IS NULL` so the freeze is atomic, not just pre-checked.
-  Printed QR codes are the reason — old slugs additionally live forever as 301 aliases.
+- The owner superseded the post-publication slug freeze: operator edits stay draft-only until reviewed publication, then previous published addresses remain permanent 301 aliases. See [slug publication decisions](slug-publication-decisions.md).
 - The "guide published" lifecycle e-mail fires only for the CAS winner, best-effort
   (publish never fails on e-mail), idempotency key `published-<tenantId>`.
   Host publishes go through the same PATCH → also trigger it (intended).

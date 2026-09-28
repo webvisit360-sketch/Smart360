@@ -23,6 +23,7 @@ import { ensureCreatorDistanceBackfillSchema } from "./lib/creatorDistanceBackfi
 import { ensureGuestDirtyTriggers } from "./lib/guestDirtyTriggers";
 import { ensurePublishedSnapshotSchema, initializePublishedSnapshots } from "./lib/publishedSnapshots";
 import { runCreatorProposalContentReadySyncAtStartup } from "./lib/creatorProposalLedger";
+import { initializeSlugReservations } from "./lib/tenantSlugReservations";
 
 const rawPort = process.env["PORT"];
 
@@ -76,6 +77,9 @@ async function logBootstrapEnrollLink(): Promise<void> {
 }
 
 ensureAdminAccount()
+  // Publish migrates the schema first; only production's OWN tenant/alias
+  // rows seed the durable URL namespace. Fail closed on mismatched ownership.
+  .then(() => initializeSlugReservations())
   .then(() => ensureCreatorPhotoSchema())
   .then(() => ensureCreatorDistanceBackfillSchema())
   .then(() => ensurePublishedSnapshotSchema())

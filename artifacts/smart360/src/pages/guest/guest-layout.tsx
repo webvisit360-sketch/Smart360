@@ -16,7 +16,7 @@ import "../../styles/tema-sredozemska.css";
 import "../../styles/tema-poteg.css";
 
 export default function GuestLayout({ children }: { children: ReactNode }) {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const slug = location.split("/").filter(Boolean)[0] ?? "";
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
@@ -54,14 +54,14 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     if (tenant) clearGuestLoadRetryGuard();
   }, [tenant]);
 
-  // Alias canonicalization: an old (renamed) slug resolves to the tenant, but
-  // the address bar must always show the current slug — replace, keep the
-  // rest of the path and the query string.
+  // Only client-side navigation can reach an alias without a document request.
+  // Leave the SPA, rather than silently updating its history after a 200.
+  // Direct document requests to an old address receive HTTP 301 on the server.
   useEffect(() => {
     if (!tenant || !slug || tenant.slug === slug) return;
     const rest = location.startsWith(`/${slug}`) ? location.slice(slug.length + 1) : "";
-    setLocation(`/${tenant.slug}${rest}${window.location.search}`, { replace: true });
-  }, [tenant, slug, location, setLocation]);
+    window.location.replace(`/${tenant.slug}${rest}${window.location.search}`);
+  }, [tenant, slug, location]);
 
   // The initial HTML already has this tenant's manifest. Keep it synchronized
   // with client-side navigation; never expose the platform manifest on a guest

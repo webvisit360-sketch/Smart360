@@ -150,6 +150,7 @@ export default function AdminTenantEdit() {
       onSuccess: (data) => {
         queryClient.setQueryData(getGetTenantQueryKey(id), (old: any) => old ? { ...old, ...data } : old);
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+        if (!data.firstPublishedAt && data.slug) setOriginalSlug(data.slug);
         setFormData((prev) => {
           if (prev.tourUrl === (data.tourUrl || "")) return prev;
           return { ...prev, tourUrl: data.tourUrl || "" };
@@ -417,7 +418,7 @@ export default function AdminTenantEdit() {
       setMediaQuotaGb(((tenant.mediaQuotaBytes ?? 2_000_000_000) / 1_000_000_000).toFixed(1).replace(/\.0$/, ""));
       const initialForm = {
         name: tenant.name || "",
-        slug: tenant.slug || "",
+        slug: (tenant as typeof tenant & { draftSlug?: string | null }).draftSlug || tenant.slug || "",
         customDomain: tenant.customDomain || "",
         subtitle: tenant.subtitle || "",
         theme: (tenant.theme as ThemeKey) || "mediterran",
@@ -601,12 +602,13 @@ export default function AdminTenantEdit() {
         getGetTenantQueryKey(id),
         (old: any) => old ? { ...old, ...data } : old,
       );
+      setOriginalSlug(data.slug);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() }),
       ]);
-      lastSaved.current = { ...lastSaved.current, isPublished: true };
-      setFormData((previous) => ({ ...previous, isPublished: true }));
+      lastSaved.current = { ...lastSaved.current, slug: data.slug, isPublished: true };
+      setFormData((previous) => ({ ...previous, slug: data.slug, isPublished: true }));
       setPublicationDialogOpen(false);
       setPublicationPreview(null);
       toast({ title: "Objavljeno", description: "Spremembe so vidne gostom." });

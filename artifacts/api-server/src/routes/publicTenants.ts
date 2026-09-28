@@ -165,6 +165,39 @@ async function resolveTenantUncached(
   return byAlias;
 }
 
+/** Static web server queries this exact historical namespace before serving HTML. */
+router.get("/public/slug-redirect/:slug", async (req, res): Promise<void> => {
+  const slug = firstParam(req.params["slug"]);
+  if (!slug) { res.status(400).json({ error: "Missing slug" }); return; }
+  const [alias] = await db.select({ tenantId: tenantAliasesTable.tenantId })
+    .from(tenantAliasesTable).where(eq(tenantAliasesTable.slug, slug));
+  if (!alias) { res.set("Cache-Control", "no-store").json({ canonicalSlug: null }); return; }
+  const [tenant] = await db.select({ slug: tenantsTable.slug, isPublished: tenantsTable.isPublished })
+    .from(tenantsTable).where(eq(tenantsTable.id, alias.tenantId));
+  res.set("Cache-Control", "no-store").json({
+    canonicalSlug: tenant?.isPublished ? tenant.slug : null,
+  });
+});
+
+function redirectAlias(req: { originalUrl: string }, res: {
+  set: (name: string, value: string) => unknown;
+  redirect: (status: number, url: string) => unknown;
+}, oldSlug: string, currentSlug: string): void {
+  const prefix = `/public/tenants/${encodeURIComponent(oldSlug)}`;
+  const oldPath = req.originalUrl.indexOf(prefix);
+  if (oldPath < 0) throw new Error("Historical URL route did not match original request path");
+  res.set("Cache-Control", "public, max-age=60");
+  res.redirect(301, req.originalUrl.slice(0, oldPath) +
+    `/public/tenants/${encodeURIComponent(currentSlug)}` +
+    req.originalUrl.slice(oldPath + prefix.length));
+}
+
+async function isHistoricalSlugForTenant(slug: string, tenantId: string): Promise<boolean> {
+  const [alias] = await db.select({ tenantId: tenantAliasesTable.tenantId })
+    .from(tenantAliasesTable).where(eq(tenantAliasesTable.slug, slug));
+  return alias?.tenantId === tenantId;
+}
+
 // GET /public/tenant-by-domain
 // Resolves the tenant from the Host header alone (used when the guest app
 // is served on a custom domain and the slug is unknown to the frontend).
@@ -235,6 +268,10 @@ router.get(
       res.status(404).json({ error: "Not found" });
       return;
     }
+    if (tenant.slug !== slug && await isHistoricalSlugForTenant(slug, tenant.id)) {
+      redirectAlias(req, res, slug, tenant.slug);
+      return;
+    }
     const published = (await readPublishedContent(tenant.id)).languages.sl!.tree;
     const icons = [
       { src: "/brand/ikona-smart360-home-192.png?v=crisp-3", sizes: "192x192", type: "image/png", purpose: "any" },
@@ -283,6 +320,11 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  if (tenant.slug !== slug && tenant.isPublished &&
+      await isHistoricalSlugForTenant(slug, tenant.id)) {
+    redirectAlias(req, res, slug, tenant.slug);
+    return;
+  }
   const lang = enabledLang(tenant, req);
   // Preview (and unpublished) requests bypass the payload cache: the operator
   // must always see the database as it is right now.
@@ -310,6 +352,11 @@ router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {
   );
   if (!tenant || (!tenant.isPublished && !(await isAuthenticated(req)))) {
     res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (tenant.slug !== slug && tenant.isPublished &&
+      await isHistoricalSlugForTenant(slug, tenant.id)) {
+    redirectAlias(req, res, slug, tenant.slug);
     return;
   }
   const lang = enabledLang(tenant, req);

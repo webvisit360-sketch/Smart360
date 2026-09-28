@@ -64,9 +64,21 @@ export const tenantAliasesTable = pgTable("tenant_aliases", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** One durable, unique namespace for both current and historical tenant URLs.
+ * No FK: deleting a tenant must never free a printed URL for another tenant.
+ */
+export const tenantSlugReservationsTable = pgTable("tenant_slug_reservations", {
+  slug: text("slug").primaryKey(),
+  tenantId: uuid("tenant_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const tenantsTable = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
+  // After first publish only: proposed URL stays private until a confirmed
+  // publication atomically moves it to slug and reserves the former URL.
+  draftSlug: text("draft_slug"),
   // Host access policy. Concierge tenants are maintained exclusively by the
   // Smart360 operator and cannot authenticate to the host portal.
   managementMode: text("management_mode").notNull().default("self_service"),
@@ -181,8 +193,8 @@ export const tenantsTable = pgTable("tenants", {
   hasUnpublishedChanges: boolean("has_unpublished_changes").notNull().default(false),
   lastPublishedAt: timestamp("last_published_at", { withTimezone: true }),
   // Set exactly once, on the FIRST transition to published. Drives two rules
-  // (Instruction #28 CP2b): the slug freezes after first publish, and the
-  // "guide published" e-mail is sent only for this transition — never for
+  // (Instruction #28 CP2b): the first published URL acquires permanent
+  // history on subsequent publish; guide-published email sends only once.
   // later unpublish/republish toggles.
   firstPublishedAt: timestamp("first_published_at", { withTimezone: true }),
   // Cockpit provenance: which tenant this one was duplicated from. The owner

@@ -1599,6 +1599,18 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Resolve a historical published slug before serving guest HTML
+ */
+export const GetPublishedSlugRedirectParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const GetPublishedSlugRedirectResponse = zod.object({
+  "canonicalSlug": zod.string().nullable()
+})
+
+
+/**
  * @summary Full published content tree for a tenant (guest view)
  */
 export const GetPublicTenantParams = zod.object({
@@ -1630,6 +1642,7 @@ export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItem
 export const GetPublicTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -1692,7 +1705,7 @@ export const GetPublicTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),
@@ -2146,6 +2159,7 @@ export const listTenantsResponseOneLivingGuideNavMax = 5;
 export const ListTenantsResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -2208,7 +2222,7 @@ export const ListTenantsResponseItem = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),
@@ -2246,6 +2260,7 @@ export const createTenantResponseOneLivingGuideNavMax = 5;
 export const CreateTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -2308,7 +2323,7 @@ export const CreateTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),
@@ -3635,6 +3650,7 @@ export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemTra
 export const GetTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3697,7 +3713,7 @@ export const GetTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),
@@ -3909,6 +3925,7 @@ export const updateTenantResponseOneLivingGuideNavMax = 5;
 export const UpdateTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -3971,7 +3988,7 @@ export const UpdateTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),
@@ -4293,6 +4310,7 @@ export const DuplicateTenantResponse = zod.object({
   "tenant": zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -4355,7 +4373,7 @@ export const DuplicateTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),
@@ -4400,6 +4418,7 @@ export const renewTenantResponseOneLivingGuideNavMax = 5;
 export const RenewTenantResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
+  "draftSlug": zod.string().nullish().describe('Proposed URL after first publish; slug remains the published canonical address until confirmed publication'),
   "customDomain": zod.string().nullish(),
   "name": zod.string(),
   "subtitle": zod.string().nullish(),
@@ -4462,7 +4481,7 @@ export const RenewTenantResponse = zod.object({
   "isPublished": zod.boolean(),
   "hasUnpublishedChanges": zod.boolean().describe('Server-owned flag indicating saved tenant admin changes since the last successful publish'),
   "lastPublishedAt": zod.string().nullable().describe('Timestamp of the most recent successful publish'),
-  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; freezes the slug forever after'),
+  "firstPublishedAt": zod.string().nullish().describe('Set once on the first publish; future URL changes require a reviewed publish'),
   "tenantType": zod.string().nullish().describe('Creation type chosen in the cockpit: kamp | hotel | apartmaji; null for older tenants'),
   "creatorOriginRegion": zod.string().nullish().describe('Verified origin region\/display name used by Creator'),
   "municipality": zod.string().nullish().describe('Operator-entered municipality used to select curated Creator sources'),

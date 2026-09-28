@@ -3,7 +3,8 @@
  *
  * Proves:
  *  - create-by-type seeds the canonical sections + typed categories/groups,
- *  - the slug is editable before the first publish and frozen (409) after,
+ *  - the slug is editable before first publish; later changes are drafts
+ *    until confirmed publication creates permanent 301 aliases,
  *  - firstPublishedAt is stamped exactly once and the "guide published"
  *    e-mail fires exactly once (republish toggles never resend),
  *  - /admin/tenants/overview returns readiness + pending counts,
@@ -16,6 +17,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { once } from "node:events";
+import { request as httpRequest } from "node:http";
 import crypto from "node:crypto";
 import { asc, eq, inArray } from "drizzle-orm";
 import {
@@ -27,6 +29,8 @@ import {
   adminSessionsTable,
   hostUsersTable,
   hostMembershipsTable,
+  tenantAliasesTable,
+  tenantSlugReservationsTable,
 } from "@workspace/db";
 import app from "../app";
 import { hashPassword, _clearHostRateLimiters } from "../lib/hostAuth";
@@ -107,6 +111,8 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     if (tenantId) {
       await db.delete(changelogTable).where(eq(changelogTable.tenantId, tenantId));
       await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
+      await db.delete(tenantAliasesTable).where(eq(tenantAliasesTable.tenantId, tenantId));
+      await db.delete(tenantSlugReservationsTable).where(eq(tenantSlugReservationsTable.tenantId, tenantId));
     }
     await db.delete(adminSessionsTable).where(eq(adminSessionsTable.id, session!.id));
     await new Promise<void>((r) => server.close(() => r()));
@@ -182,7 +188,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
   });
 
   // ---------- Slug lifecycle + first publish ----------
-  await t.test("slug editable before first publish, frozen after; e-mail fires once", async () => {
+  await t.test("published slug changes require confirmation and A→B→C redirects", async () => {
     const newSlug = `${slug}-nov`;
     const rename = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { slug: newSlug });
     assert.equal(rename.status, 200, "slug change before first publish must succeed");
@@ -228,8 +234,61 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     const to = (sentMails[0] as { to?: string[] }).to;
     assert.deepEqual(to, [`cp2b-lastnik-${stamp}@example.com`]);
 
-    const frozen = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { slug: `${slug}-se-en` });
-    assert.equal(frozen.status, 409, "slug change after first publish must be 409");
+    const secondSlug = `${slug}-se-en`;
+    const thirdSlug = `${slug}-tretji`;
+    for (const [oldSlug, targetSlug] of [[newSlug, secondSlug], [secondSlug, thirdSlug]] as const) {
+      const draft = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { slug: targetSlug });
+      assert.equal(draft.status, 200, "published rename saves to the draft only");
+      const saved = await draft.json() as { slug: string; draftSlug: string | null };
+      assert.equal(saved.slug, oldSlug);
+      assert.equal(saved.draftSlug, targetSlug);
+      const liveBeforePublish = await jreq(base, "GET", `/public/tenants/${oldSlug}`, null);
+      assert.equal(liveBeforePublish.status, 200);
+      const liveGuest = await liveBeforePublish.json() as { slug: string; draftSlug?: string };
+      assert.equal(liveGuest.slug, oldSlug);
+      assert.ok(!Object.hasOwn(liveGuest, "draftSlug"), "private proposed URL must not leak to guests");
+      const [before] = await db.select({ slug: tenantsTable.slug })
+        .from(tenantsTable).where(eq(tenantsTable.id, tenantId));
+      assert.equal(before!.slug, oldSlug, "QR/PDF and public URL remain canonical before publication");
+      assert.equal((await db.select().from(tenantAliasesTable)
+        .where(eq(tenantAliasesTable.slug, oldSlug))).length, 0, "draft cannot write an alias");
+      const rawPreview = await jreq(base, "GET", `/admin/tenants/${tenantId}/publish-preview`, ownerCookie);
+      assert.equal(rawPreview.status, 200);
+      const preview = await rawPreview.json() as { token: string; changed: string[] };
+      assert.ok(preview.changed.includes(`Stari naslov ${oldSlug} bo za vedno preusmerjen na ${targetSlug}. Natisnjene QR kode bodo delovale še naprej.`));
+      const stale = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie,
+        { isPublished: true, publishNow: true });
+      assert.equal(stale.status, 409, "publish requires the displayed change-list token");
+      const publishedRename = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie,
+        { isPublished: true, publishNow: true, publishToken: preview.token });
+      assert.equal(publishedRename.status, 200, await publishedRename.clone().text());
+      const publishedRow = await publishedRename.json() as { slug: string; draftSlug: string | null };
+      assert.equal(publishedRow.slug, targetSlug);
+      assert.equal(publishedRow.draftSlug, null);
+      for (const aliasSlug of [newSlug, ...(targetSlug === thirdSlug ? [secondSlug] : [])]) {
+        const oldGuide = await fetch(`${base}/api/public/tenants/${aliasSlug}`, { redirect: "manual" });
+        assert.equal(oldGuide.status, 301);
+        assert.equal(oldGuide.headers.get("location"), `/api/public/tenants/${targetSlug}`);
+        const oldManifest = await fetch(`${base}/api/public/tenants/${aliasSlug}/manifest.webmanifest?lang=en`, { redirect: "manual" });
+        assert.equal(oldManifest.status, 301);
+        assert.equal(oldManifest.headers.get("location"), `/api/public/tenants/${targetSlug}/manifest.webmanifest?lang=en`);
+        const oldSearch = await fetch(`${base}/api/public/tenants/${aliasSlug}/search?q=camp&lang=en`, { redirect: "manual" });
+        assert.equal(oldSearch.status, 301);
+        assert.equal(oldSearch.headers.get("location"), `/api/public/tenants/${targetSlug}/search?q=camp&lang=en`);
+        const historicalRoute = await jreq(base, "GET", `/public/slug-redirect/${aliasSlug}`, null);
+        assert.equal(historicalRoute.status, 200);
+        assert.equal((await historicalRoute.json() as { canonicalSlug: string | null }).canonicalSlug, targetSlug);
+        const historical = await jreq(base, "GET", `/admin/slug-check?slug=${aliasSlug}`, ownerCookie);
+        assert.equal((await historical.json() as { available: boolean }).available, false);
+      }
+      const qr = await jreq(base, "GET", `/admin/tenants/${tenantId}/qr.png`, ownerCookie);
+      assert.equal(qr.status, 200);
+      assert.match(qr.headers.get("content-disposition") ?? "", new RegExp(targetSlug));
+      const sticker = await jreq(base, "GET", `/admin/tenants/${tenantId}/label.pdf`, ownerCookie);
+      assert.equal(sticker.status, 200);
+      assert.match(sticker.headers.get("content-disposition") ?? "", new RegExp(targetSlug));
+      await sticker.arrayBuffer();
+    }
 
     // Republish cycle: no new stamp, no new mail.
     const unpublish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie, { isPublished: false });
@@ -264,7 +323,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       .select({ slug: tenantsTable.slug })
       .from(tenantsTable)
       .where(eq(tenantsTable.id, tenantId));
-    assert.equal(row!.slug, newSlug, "the pre-publish rename sticks; the frozen one does not");
+    assert.equal(row!.slug, thirdSlug, "both historical slugs redirect to the latest canonical URL");
   });
 
   await t.test("repeated admin-change publish cycles survive reload", async () => {
@@ -748,6 +807,29 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.equal(sentMails.length, mailsBefore + 1, "exactly one published e-mail");
   });
 
+  await t.test("custom-domain path is not treated as a historical alias", async () => {
+    const customDomain = `cp2b-${stamp}.example.invalid`;
+    await db.update(tenantsTable).set({ customDomain })
+      .where(eq(tenantsTable.id, tenantId));
+    const [domainRow] = await db.select({ customDomain: tenantsTable.customDomain, isPublished: tenantsTable.isPublished })
+      .from(tenantsTable).where(eq(tenantsTable.id, tenantId));
+    assert.equal(domainRow!.customDomain, customDomain);
+    assert.equal(domainRow!.isPublished, true);
+    const unrelatedPath = `${slug}-unrelated`;
+    const requestWithHost = (path: string) => new Promise<number>((resolve, reject) => {
+      const req = httpRequest(`${base}${path}`, { headers: { host: customDomain } }, (response) => {
+        response.resume();
+        response.on("end", () => resolve(response.statusCode ?? 0));
+      });
+      req.on("error", reject);
+      req.end();
+    });
+    assert.equal(await requestWithHost(`/api/public/tenants/${unrelatedPath}`), 200,
+      "custom-domain guest routing remains available");
+    assert.equal(await requestWithHost(`/api/public/tenants/${unrelatedPath}/manifest.webmanifest`), 200,
+      "custom-domain manifest is not redirected as an alias");
+  });
+
   // ---------- Host access stays tenant-scoped ----------
   await t.test("host can read own history but not owner cockpit controls", async () => {
     const [host] = await db
@@ -764,6 +846,19 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     const m = /__Host-s360_host=([^;]+)/.exec(login.headers.get("set-cookie") ?? "");
     assert.ok(m);
     const hostCookie = `__Host-s360_host=${m![1]}`;
+    const pendingSlug = `${slug}-samo-lastnik`;
+    const pending = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie,
+      { slug: pendingSlug });
+    assert.equal(pending.status, 200);
+    const hostPublish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, hostCookie,
+      { isPublished: true, publishNow: true });
+    assert.equal(hostPublish.status, 403, "host cannot publish an owner-pending URL rename");
+    const [afterHost] = await db.select({ slug: tenantsTable.slug, draftSlug: tenantsTable.draftSlug })
+      .from(tenantsTable).where(eq(tenantsTable.id, tenantId));
+    assert.equal(afterHost!.draftSlug, pendingSlug);
+    const cancelDraft = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, ownerCookie,
+      { slug: afterHost!.slug });
+    assert.equal(cancelDraft.status, 200);
 
     const history = await jreq(base, "GET", `/admin/tenants/${tenantId}/changelog`, hostCookie);
     assert.equal(history.status, 200);

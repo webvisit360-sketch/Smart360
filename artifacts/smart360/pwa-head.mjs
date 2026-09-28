@@ -40,6 +40,30 @@ export function guestSlugForRequest(url, host) {
   return null;
 }
 
+// Look up only genuine guest paths before sending the first HTML response.
+// The public endpoint owns the published alias map; drafts never redirect.
+export async function guestAliasRedirect(url, host, apiOrigin = "http://127.0.0.1:8080", fetchFn = fetch) {
+  const request = new URL(url, "http://localhost");
+  const segments = request.pathname.split("/").filter(Boolean);
+  const legacy = segments[0] === "g";
+  const slug = guestSlugForRequest(url, host);
+  if (!slug || (legacy ? segments.length < 2 : segments.length < 1)) return null;
+  // Custom-domain root uses the host as the lookup key, not a path slug.
+  if (request.pathname === "/") return null;
+  const response = await fetchFn(`${apiOrigin}/api/public/slug-redirect/${encodeURIComponent(slug)}`, {
+    method: "GET",
+    signal: AbortSignal.timeout(3000),
+  });
+  if (!response.ok) throw new Error(`Alias lookup failed (HTTP ${response.status})`);
+  const canonical = (await response.json()).canonicalSlug;
+  if (canonical === null) return null;
+  if (typeof canonical !== "string" || canonical === slug || !SLUG.test(canonical) || RESERVED.has(canonical)) {
+    throw new Error("Alias redirect has an invalid canonical slug");
+  }
+  const tail = segments.slice(legacy ? 2 : 1).join("/");
+  return `/${canonical}${tail ? `/${tail}` : request.pathname.endsWith("/") ? "/" : ""}${request.search}`;
+}
+
 export function renderPwaHead(html, url, host, base = "/") {
   const slug = guestSlugForRequest(url, host);
   const prefix = base.endsWith("/") ? base : `${base}/`;

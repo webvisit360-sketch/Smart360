@@ -1156,3 +1156,17 @@ mtime_ms = 1790274814150
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4daddefa-2c7a-47ab-bfef-e10bb6ea490d/cc9c163b-80ff-4f99-9852-ca43a395126b"
 storage_version_token = "1790274814690325"
 content_type = "text/html"
+
+[[outputs]]
+id = "Ta4a0g84TGl9CkWJHD_h5"
+uri = "file://reports/slug-rename-schema-ritual.html"
+type = "html"
+title = "Celoten SQL ritual za spremembo naslova"
+description = "Natančen SQL, prenos ob objavi, produkcijski podatkovni bootstrap, preveritveni SELECT-i in pogojni operatorski SQL. Nič ni bilo objavljeno."
+logical_id = "82334a81-b46c-4d91-bbf9-f91d250abf42"
+content_hash = "sha256:473cad257f63bf54464f8faeb530ed89f0e05970b215e7f0718c347a3b9a01af"
+size = 14501
+mtime_ms = 1790620689333
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/82334a81-b46c-4d91-bbf9-f91d250abf42/ba5dba5b-eaff-4105-9b0e-9783cf8a745d"
+storage_version_token = "1790620690323906"
+content_type = "text/html"

@@ -52,6 +52,14 @@ import { checkSlugAvailability } from "../lib/slug";
 import { checkTenantMedia, dropBrokenReferences } from "../lib/mediaCheck";
 import { invalidateTenantCache } from "./publicTenants";
 import { tenantAliasesTable } from "@workspace/db";
+import { claimSlug, releaseUnpublishedSlug, SlugTakenError, SLUG_TAKEN_MESSAGE } from "../lib/tenantSlugReservations";
+
+function isSlugCollision(error: unknown): boolean {
+  if (error instanceof SlugTakenError) return true;
+  const dbError = (error as { cause?: { code?: string; constraint?: string } })?.cause ??
+    error as { code?: string; constraint?: string };
+  return dbError?.code === "23505" && Boolean(dbError.constraint?.includes("slug"));
+}
 import QRCode from "qrcode";
 import PDFDocument from "pdfkit";
 import SVGtoPDF from "svg-to-pdfkit";
@@ -292,6 +300,10 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
           copyContent: false,
         });
       } catch (error) {
+        if (isSlugCollision(error)) {
+          res.status(409).json({ error: SLUG_TAKEN_MESSAGE });
+          return;
+        }
         if (error instanceof TenantCopyContentError) {
           res.status(400).json({ code: "TENANT_COPY_CONTENT_BLOCKED", error: error.message });
           return;
@@ -322,7 +334,9 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
 
   // Creation and type seeding are one transaction: a seed failure must not
   // leave a structureless tenant squatting on the slug.
-  const [tenant] = await db.transaction(async (tx) => {
+  let tenant: typeof tenantsTable.$inferSelect | undefined;
+  try {
+    [tenant] = await db.transaction(async (tx) => {
     const rows = await tx
       .insert(tenantsTable)
       .values({
@@ -334,11 +348,19 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         renewsAt: plusOneYear(new Date()),
       })
       .returning();
+    await claimSlug(tx, slug, rows[0]!.id);
     // The chosen type seeds the default sections, categories and groups
     // (CP2b). The bottom bar derives from sections / the Living Guide default.
     await seedTenantContent(rows[0]!.id, tenantType ?? "apartmaji", tx);
     return rows;
-  });
+    });
+  } catch (error) {
+    if (isSlugCollision(error)) {
+      res.status(409).json({ error: SLUG_TAKEN_MESSAGE });
+      return;
+    }
+    throw error;
+  }
   invalidateTenantCache();
   await logChange({
     tenantId: tenant!.id,
@@ -715,18 +737,9 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   }
   const newSlug = (parsed.data as Record<string, unknown>)["slug"];
   if (typeof newSlug === "string" && newSlug !== before.slug) {
-    // The slug is editable only until the FIRST publish; printed QR codes
-    // must stay valid forever after that (CP2b).
-    if (before.firstPublishedAt) {
-      res.status(409).json({
-        error:
-          "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne.",
-      });
-      return;
-    }
     const verdict = await checkSlugAvailability(newSlug, id);
     if (!verdict.available) {
-      res.status(409).json({ error: `slug ${verdict.reason}` });
+      res.status(409).json({ error: SLUG_TAKEN_MESSAGE });
       return;
     }
   }
@@ -745,6 +758,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     ...restData
   } = parsed.data;
   const updateData: Record<string, unknown> = { ...restData };
+  delete updateData["slug"];
   // Empty input is omission, never a delete command.
   if (requestedWhatsappPhone !== undefined) {
     if (trimmedWhatsappPhone) updateData["notificationWhatsappPhone"] = trimmedWhatsappPhone;
@@ -819,7 +833,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   // markers and publish. If publish owns the lock first, a concurrent marker
   // waits and leaves the row dirty afterwards. If the marker owns it first,
   // publish sees that completed change and clears it.
-  const writeResult = await db.transaction(async (tx) => {
+  const writeTransaction = () => db.transaction(async (tx) => {
     const [lockedBefore] = await tx
       .select()
       .from(tenantsTable)
@@ -830,10 +844,19 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
         updated: null,
         beforeAtWrite: null,
         firstPublish: false,
-        slugFrozen: false,
       };
     }
     const writeData = { ...updateData };
+    const requestedSlug = typeof newSlug === "string" ? newSlug : null;
+    // Until first publish, the row slug is not a printed guest address.
+    // Afterwards it stays canonical while a replacement is only a draft.
+    if (requestedSlug !== null && lockedBefore.firstPublishedAt !== null) {
+      writeData["draftSlug"] = requestedSlug === lockedBefore.slug ? null : requestedSlug;
+    }
+    if (requestedSlug !== null && lockedBefore.firstPublishedAt === null &&
+        requestedSlug !== lockedBefore.slug) {
+      writeData["slug"] = requestedSlug;
+    }
     const firstPublish =
       wantsPublish && lockedBefore.firstPublishedAt === null;
     const successfulPublish =
@@ -846,15 +869,48 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     const unpublishing =
       writeData["isPublished"] === false && lockedBefore.isPublished === true;
     const publishTime = successfulPublish ? new Date() : null;
+    const publishedSlug = successfulPublish
+      ? requestedSlug ?? lockedBefore.draftSlug ?? lockedBefore.slug
+      : lockedBefore.slug;
+    // A host may publish content, but slug edits are owner-only. Otherwise
+    // a host could publish the owner's pending rename, which would require
+    // INSERT on the historical-alias table (hosts deliberately lack it).
+    if (successfulPublish && publishedSlug !== lockedBefore.slug &&
+        req.actor?.kind === "host") {
+      return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
+        hostSlugPublishDenied: true };
+    }
+    if (successfulPublish && publishedSlug !== lockedBefore.slug) {
+      writeData["slug"] = publishedSlug;
+      writeData["draftSlug"] = null;
+    } else if (successfulPublish) {
+      writeData["draftSlug"] = null;
+    }
     if (successfulPublish) {
       const changes = await runWithDatabase(tx as unknown as Db, async () =>
         publicationChangesForTenant(id, await buildDraftPublication({
-          ...lockedBefore, ...writeData,
+          ...lockedBefore, ...writeData, slug: publishedSlug,
         } as typeof lockedBefore), await readPublishedContent(id)));
       if ((publishTokenRaw && changes.token !== publishTokenRaw) || (!publishTokenRaw && changes.total > 0)) {
         return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
-          slugFrozen: false, stalePublication: true };
+          stalePublication: true };
       }
+    }
+    // No namespace writes are allowed until the review token has been
+    // verified: a stale confirmation must commit NOTHING, including aliases.
+    if (successfulPublish) {
+      await claimSlug(tx, publishedSlug, id);
+      if (publishedSlug !== lockedBefore.slug && lockedBefore.firstPublishedAt) {
+        await tx.insert(tenantAliasesTable)
+          .values({ slug: lockedBefore.slug, tenantId: id });
+      }
+    } else if (requestedSlug !== null && lockedBefore.firstPublishedAt === null &&
+        requestedSlug !== lockedBefore.slug) {
+      await claimSlug(tx, requestedSlug, id);
+    }
+    if (requestedSlug !== null && lockedBefore.firstPublishedAt === null &&
+        requestedSlug !== lockedBefore.slug) {
+      await releaseUnpublishedSlug(tx, lockedBefore.slug, id);
     }
     if (successfulPublish) {
       writeData["hasUnpublishedChanges"] = false;
@@ -871,16 +927,6 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     if (firstPublish) {
       writeData["firstPublishedAt"] = publishTime ?? new Date();
     }
-    const slugChanging =
-      typeof newSlug === "string" && newSlug !== lockedBefore.slug;
-    if (slugChanging && lockedBefore.firstPublishedAt !== null) {
-      return {
-        updated: null,
-        beforeAtWrite: lockedBefore,
-        firstPublish: false,
-        slugFrozen: true,
-      };
-    }
     const [updated] = await tx
       .update(tenantsTable)
       .set(writeData)
@@ -893,42 +939,44 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       updated: updated ?? null,
       beforeAtWrite: lockedBefore,
       firstPublish,
-      slugFrozen: false,
     };
   }, { isolationLevel: "repeatable read" });
+  let writeResult: Awaited<ReturnType<typeof writeTransaction>> | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      writeResult = await writeTransaction();
+      break;
+    } catch (error) {
+      const dbError = (error as { cause?: { code?: string } }).cause ?? error as { code?: string };
+      // REPEATABLE READ may abort a concurrent first publish after a row
+      // lock; retry with a fresh snapshot so the loser sees the CAS winner.
+      if (dbError.code === "40001" && attempt < 2) continue;
+      if (isSlugCollision(error) || dbError.code === "40001") {
+        res.status(409).json({ error: SLUG_TAKEN_MESSAGE });
+        return;
+      }
+      throw error;
+    }
+  }
+  if (!writeResult) throw new Error("Tenant publication did not produce a result");
   const {
     updated,
     beforeAtWrite,
     firstPublish,
-    slugFrozen,
   } = writeResult;
   if ("stalePublication" in writeResult && writeResult.stalePublication) {
     res.status(409).json({ error: "Osnutek se je spremenil. Pred objavo ponovno preglejte spremembe." });
     return;
   }
+  if ("hostSlugPublishDenied" in writeResult && writeResult.hostSlugPublishDenied) {
+    res.status(403).json({ error: "Naslov lahko spremeni in objavi samo skrbnik Smart360." });
+    return;
+  }
   if (!updated) {
-    if (slugFrozen) {
-      res.status(409).json({
-        error:
-          "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne.",
-      });
-      return;
-    }
     res.status(404).json({ error: "Not found" });
     return;
   }
   let tenant = updated;
-  if (typeof newSlug === "string" && newSlug !== beforeAtWrite!.slug) {
-    // Keep the old address working forever: permanent alias -> 301.
-    await db
-      .insert(tenantAliasesTable)
-      .values({ slug: beforeAtWrite!.slug, tenantId: id })
-      .onConflictDoNothing();
-    // If the tenant reclaimed one of its own old slugs, drop that alias.
-    await db
-      .delete(tenantAliasesTable)
-      .where(eq(tenantAliasesTable.slug, newSlug));
-  }
   invalidateTenantCache();
   renewsAtChanged =
     (tenant.renewsAt?.getTime() ?? null) !==
@@ -1102,6 +1150,10 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
       copyContent: copyContent ?? true,
     });
   } catch (error) {
+    if (isSlugCollision(error)) {
+      res.status(409).json({ error: SLUG_TAKEN_MESSAGE });
+      return;
+    }
     if (error instanceof TenantCopyContentError) {
       res.status(400).json({ code: "TENANT_COPY_CONTENT_BLOCKED", error: error.message });
       return;
@@ -1209,9 +1261,11 @@ export async function copyTenant(
         copiedFromTenantId: sourceId,
         // The copy has never been published; its slug stays editable.
         firstPublishedAt: null,
+        draftSlug: null,
         renewsAt: plusOneYear(new Date()),
       })
       .returning();
+    await claimSlug(tx, opts.slug, created!.id);
 
     // Build every new copy from the current master first. A legacy/template
     // source may be incomplete or have old labels and ordering, so it must

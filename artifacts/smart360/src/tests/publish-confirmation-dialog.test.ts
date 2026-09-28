@@ -14,6 +14,10 @@ const tenantEdit = readFileSync(
   new URL("../pages/admin/tenant-edit.tsx", import.meta.url),
   "utf8",
 );
+const slugField = readFileSync(
+  new URL("../components/admin/slug-field.tsx", import.meta.url),
+  "utf8",
+);
 
 test("publish confirmation presents exact Slovenian groups in a mobile scroll area", () => {
   assert.match(source, /Ta objava vsebuje \$\{preview\.total\} sprememb/);
@@ -35,6 +39,16 @@ test("tenant publish flow previews first and publishes only with the returned to
   assert.match(tenantEdit, /<PublishConfirmationDialog/);
   assert.doesNotMatch(tenantEdit, /publishWithoutConfirmation/);
   assert.doesNotMatch(tenantEdit, /\.\.\.tenantSaveDataFor\([^)]*\)[\s\S]{0,120}publishNow:\s*true/);
+});
+
+test("a saved rename remains a draft; live URLs and downloads keep their canonical slug", () => {
+  assert.match(tenantEdit, /draftSlug \|\| tenant\.slug/);
+  assert.match(tenantEdit, /publishToken:\s*preview\.token/);
+  assert.match(tenantEdit, /setOriginalSlug\(data\.slug\)/);
+  assert.match(slugField, /window\.location\.origin\}\/\$\{originalSlug\}/);
+  assert.match(slugField, /začne veljati šele po objavi/);
+  assert.match(slugField, /\/api\/admin\/tenants\/\$\{tenantId\}\/qr\.png/);
+  assert.match(slugField, /\/api\/admin\/tenants\/\$\{tenantId\}\/label\.pdf/);
 });
 
 test("only an authoritative clean preview may keep the green no-dialog behavior", () => {

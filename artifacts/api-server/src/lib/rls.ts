@@ -32,6 +32,7 @@ export const POLICIES: Record<string, { using: string; withCheck?: string }> = {
   published_snapshots: { using: `tenant_id = ${TID}` },
   creator_place_materializations: { using: `tenant_id = ${TID}` },
   tenant_aliases: { using: `tenant_id = ${TID}` },
+  tenant_slug_reservations: { using: `tenant_id = ${TID}` },
   sections: { using: `tenant_id = ${TID}` },
   categories: {
     using: `EXISTS (SELECT 1 FROM sections s WHERE s.id = categories.section_id AND s.tenant_id = ${TID})`,
@@ -125,6 +126,9 @@ export const HOST_ROLE_GRANTS: Record<string, string> = {
   // Materialization writes remain owner-only.
   creator_place_materializations: "SELECT",
   tenant_aliases: "SELECT",
+  // Host may publish its own existing URL; uniqueness and RLS prohibit
+  // claiming or reading another tenant's permanent URL.
+  tenant_slug_reservations: "SELECT, INSERT",
   // Orders are created by guests; the host reads and processes them.
   orders: "SELECT, UPDATE, DELETE",
   // Attribution is append-only from a host's perspective.

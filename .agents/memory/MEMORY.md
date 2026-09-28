@@ -21,7 +21,8 @@
 - [Prod data backfills](prod-data-backfills.md) — prod SQL is read-only; publish syncs schema not data; fix via self-disabling startup backfill with race-safe predicates. Also: itemMapsHref is the only POI maps builder.
 - [Scale audit 150 tenants](scale-audit-150-tenants.md) — one app suffices; hardening shipped (indexes, brotli, payload cache); guest-cache invalidation is CENTRALIZED middleware — never per-route.
 - [Operator and client access](host-portal.md) — two roles, shared audit/IP policy, client-owned passwords, and operator-only permanent purge.
-- [Owner cockpit](owner-cockpit.md) — slug frozen after first publish (CAS stamp!), published e-mail fires once via CAS winner, type seeding in one tx, buildTenantOverviews is the single readiness source.
+- [Owner cockpit](owner-cockpit.md) — first-publish email CAS, type seeding and readiness; old slug freeze superseded by reviewed renames.
+- [Slug publication decisions](slug-publication-decisions.md) — draft-only renames, permanent 301 history, global reservation namespace and explicitly approved startup data bootstrap.
 - [Playwright WebKit runtime](playwright-webkit-runtime.md) — local WPE starts but cannot create EGL; only claim WebKit after a real page opens on a supported host.
 - [Town-pack onboarding direction](town-pack-onboarding.md) — shared place catalogue is deferred; optimize tenant-local onboarding and require provenance for every new photograph.
 - [Guide Creator product rule](guide-creator-product-rule.md) — Creator prebuilds roughly 75% of each guide and is permanently operator-only; hosts must never receive an empty-guide workflow.

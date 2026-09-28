@@ -131,6 +131,7 @@ export * from './enrollVerifyBody';
 export * from './enrollVerifyBodyResponse';
 export * from './exportTranslationsParams';
 export * from './getPublicTenantParams';
+export * from './getPublishedSlugRedirect200';
 export * from './getStorageCleanupPreviewParams';
 export * from './getStorageCleanupPreviewScope';
 export * from './guestMessageInput';

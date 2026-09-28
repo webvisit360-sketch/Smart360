@@ -11,6 +11,7 @@ import { resolveCreatorOrigin } from "./creatorOrigin";
 import { runCreatorC1 } from "./creatorC1";
 import { logger } from "./logger";
 import { RESERVED_SLUGS, slugify } from "./slug";
+import { claimSlug } from "./tenantSlugReservations";
 import { seedTenantContent } from "./tenantSeeds";
 
 const MENINA_NAME = "Camping MENINA";
@@ -93,6 +94,7 @@ async function findOrCreateMeninaDraft(): Promise<string> {
         firstPublishedAt: null,
       }).onConflictDoNothing().returning({ id: tenantsTable.id });
       if (!tenant) continue;
+      await claimSlug(tx, slug, tenant.id);
       await seedTenantContent(tenant.id, "kamp", tx);
       return tenant.id;
     }

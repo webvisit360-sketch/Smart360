@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
 import { scopeThemes } from './vite-plugin-scope-themes';
-import { renderPwaHead } from './pwa-head.mjs';
+import { guestAliasRedirect, renderPwaHead } from './pwa-head.mjs';
 const requestHost = new AsyncLocalStorage<string>();
 
 const rawPort = process.env.PORT;
@@ -121,8 +121,21 @@ export default defineConfig({
       name: 'route-pwa-head',
       apply: 'serve',
       configureServer(server) {
-        server.middlewares.use((req, _res, next) => {
-          requestHost.run(req.headers.host ?? 'localhost', next);
+        server.middlewares.use((req, res, next) => {
+          requestHost.run(req.headers.host ?? 'localhost', () => {
+            if ((req.method !== 'GET' && req.method !== 'HEAD') ||
+              !String(req.headers.accept ?? '').includes('text/html')) {
+              next();
+              return;
+            }
+            void guestAliasRedirect(req.url ?? '/', req.headers.host,
+              process.env.SMART360_INTERNAL_API_ORIGIN ?? 'http://127.0.0.1:8080')
+              .then((location: string | null) => {
+                if (!location) return next();
+                res.writeHead(301, { location, 'cache-control': 'no-store' });
+                res.end();
+              }).catch(next);
+          });
         });
       },
       transformIndexHtml(html, context) {

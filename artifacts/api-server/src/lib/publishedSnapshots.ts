@@ -228,6 +228,11 @@ export async function publicationChangesForTenant(
   published: PublishedContent,
 ): Promise<PublicationChanges> {
   const changes = comparePublications(draft, published);
+  const oldSlug = published.languages.sl?.tree.slug;
+  const nextSlug = draft.languages.sl?.tree.slug;
+  if (oldSlug && nextSlug && oldSlug !== nextSlug) {
+    changes.changed.push(`Stari naslov ${oldSlug} bo za vedno preusmerjen na ${nextSlug}. Natisnjene QR kode bodo delovale še naprej.`);
+  }
   // When the dedicated emergency category itself appears/disappears, the
   // generic tree diff reports the parent category as one entity and therefore
   // intentionally does not descend into it. Operators still need every
@@ -292,7 +297,9 @@ export async function previewPublication(tenantId: string): Promise<PublicationC
     if (!tenant) throw new Error("Namestitev ni najdena.");
     return publicationChangesForTenant(
       tenantId,
-      await buildDraftPublication(tenant),
+      await buildDraftPublication({
+        ...tenant, slug: tenant.draftSlug ?? tenant.slug,
+      }),
       await readPublishedContent(tenantId),
     );
   }), { isolationLevel: "repeatable read" });

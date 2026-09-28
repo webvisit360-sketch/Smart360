@@ -22,7 +22,7 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
 import { createGzip, gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
-import { renderPwaHead } from "./pwa-head.mjs";
+import { guestAliasRedirect, renderPwaHead } from "./pwa-head.mjs";
 
 const root = resolve(fileURLToPath(new URL("./dist/public", import.meta.url)));
 const port = Number(process.env.PORT);
@@ -143,6 +143,17 @@ const server = createServer(async (req, res) => {
       res.writeHead(200, { "content-type": "text/plain", "cache-control": "no-store" });
       res.end("ok");
       return;
+    }
+    if (!extname(pathname)) {
+      const destination = await guestAliasRedirect(req.url ?? "/", req.headers.host,
+        process.env.SMART360_INTERNAL_API_ORIGIN ?? "http://127.0.0.1:8080");
+      if (destination) {
+        // Permanent status without browser caching the intermediate A → B
+        // Location: after B → C, A must immediately point straight to C.
+        res.writeHead(301, { location: destination, "cache-control": "no-store" });
+        res.end();
+        return;
+      }
     }
     let filePath = normalize(join(root, pathname));
     if (filePath !== root && !filePath.startsWith(root + "/")) {

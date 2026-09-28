@@ -53,7 +53,9 @@ export function SlugField({
     { query: { enabled, queryKey: ["slug-check", debounced, tenantId] } },
   );
 
-  const guestUrl = useMemo(() => `${window.location.origin}/${slug}`, [slug]);
+  // A saved edit to a published tenant is still draft. Copies and QR/PDF
+  // downloads must keep using the currently published URL until publication.
+  const guestUrl = useMemo(() => `${window.location.origin}/${originalSlug}`, [originalSlug]);
   const displayUrl = useMemo(() => `smart360.info/${slug}`, [slug]);
 
   const changed = slug !== originalSlug;
@@ -130,7 +132,10 @@ export function SlugField({
       </div>
 
       {changed && (
-        <p className="text-xs text-amber-600">Stari naslov bo za vedno preusmerjen na novega.</p>
+        <p className="text-xs text-muted-foreground">
+          Predlagani naslov {displayUrl} začne veljati šele po objavi. Do takrat deluje zgoraj prikazani naslov.
+          Spremembo in trajno preusmeritev boste potrdili v pregledu objave.
+        </p>
       )}
     </div>
   );

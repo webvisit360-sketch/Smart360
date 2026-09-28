@@ -102,14 +102,17 @@ export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
   sitePlanImages: SitePlanImageEntry[];
 };
 
-export type GuestTenantContentTree = Omit<TenantContentTree, "managementMode">;
+export type GuestTenantContentTree = Omit<TenantContentTree, "managementMode" | "draftSlug">;
 
 /** Strip operator access policy even from old snapshots that stored whole tenant rows. */
 export function projectGuestTenant(
   tree: TenantContentTree | GuestTenantContentTree,
 ): GuestTenantContentTree {
-  const { managementMode: _managementMode, ...guest } =
-    tree as GuestTenantContentTree & { managementMode?: Tenant["managementMode"] };
+  const { managementMode: _managementMode, draftSlug: _draftSlug, ...guest } =
+    tree as GuestTenantContentTree & {
+      managementMode?: Tenant["managementMode"];
+      draftSlug?: Tenant["draftSlug"];
+    };
   return guest;
 }
 
