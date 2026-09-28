@@ -1240,3 +1240,31 @@ mtime_ms = 1790630719883
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f0fd804-12e3-49d9-ba49-a6808df06a3c/fd3b0edd-0fd8-46e2-9a30-17ab10469839"
 storage_version_token = "1790630772888473"
 content_type = "image/png"
+
+[[outputs]]
+id = "h96QEQ6-h5sY3U3wHu7ey"
+uri = "file://artifacts/smart360/src/tests/screenshots/readiness-desktop.png"
+type = "image"
+title = "Razlaga pripravljenosti — namizni prikaz"
+description = "Dejanska komponenta v ločenem preizkusnem prikazu, s produkcijskim stanjem Turizma Drobež. Ni posnetek prijavljene administracije."
+logical_id = "25cb4850-f66c-41fa-a72a-57aeb97d94b7"
+content_hash = "sha256:ffe27d7c8e816839712d632779024a7a3cc7f9078a16fffca44bea71daa5f9cf"
+size = 66548
+mtime_ms = 1790632228214
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/25cb4850-f66c-41fa-a72a-57aeb97d94b7/e92b14cf-7ba4-4904-937b-7668235c0b21"
+storage_version_token = "1790632294294331"
+content_type = "image/png"
+
+[[outputs]]
+id = "EJ61QHG5iX-p_AvF5OGNn"
+uri = "file://artifacts/smart360/src/tests/screenshots/readiness-mobile.png"
+type = "image"
+title = "Razlaga pripravljenosti — mobilni prikaz"
+description = "Kontrolni seznam z drsenjem, zelenimi kljukicami in umirjenimi navodili za manjkajoče postavke."
+logical_id = "986233f4-4bfc-4e4c-b6bc-b798644e91f4"
+content_hash = "sha256:b1cb530bddbd46a2a825488aae6e1a3abeb5fcdc1fc74571cfa482b05e6b9a18"
+size = 50042
+mtime_ms = 1790632234562
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/986233f4-4bfc-4e4c-b6bc-b798644e91f4/4160bfae-9835-49fc-818c-feb47bc5d3e0"
+storage_version_token = "1790632295184780"
+content_type = "image/png"

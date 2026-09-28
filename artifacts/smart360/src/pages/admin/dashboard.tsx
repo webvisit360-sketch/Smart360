@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey, getGetAdminOverviewQueryKey, getListTenantOverviewQueryKey } from "@workspace/api-client-react";
 import { QrDialog } from "@/components/admin/qr-dialog";
 import { MediaCheckDialog } from "@/components/admin/media-check-dialog";
+import { TenantReadinessPopover } from "@/components/admin/tenant-readiness-popover";
 import { CleanupTrashDialog } from "@/components/admin/cleanup-trash-dialog";
 import { slugify } from "@/components/admin/slug-field";
 import {
@@ -345,7 +346,6 @@ export default function AdminDashboard() {
                         {(() => {
                           const o = overviewByTenant.get(tenant.id);
                           if (!o) return null;
-                          const undone = o.checks.filter(c => !c.done).map(c => c.label);
                           const pendingBadges = [
                             { n: o.pendingOrders, text: formatSlovenianCount(o.pendingOrders, ORDER_COUNT_FORMS), Icon: ClipboardList, to: "orders" },
                             { n: o.pendingMessages, text: formatSlovenianCount(o.pendingMessages, MESSAGE_COUNT_FORMS), Icon: MessageSquare, to: "orders" },
@@ -354,14 +354,20 @@ export default function AdminDashboard() {
                           ].filter(b => b.n > 0);
                           return (
                             <div className="mb-4 -mt-1 space-y-2">
-                              <div className="flex items-center gap-2" title={undone.length ? `Manjka: ${undone.join(", ")}` : "Vse pripravljeno"}>
+                              <div className="flex items-center gap-2">
                                 <div className="h-1.5 w-28 rounded-full bg-muted overflow-hidden shrink-0">
                                   <div
                                     className={`h-full rounded-full ${o.readinessPct >= 100 ? "bg-green-500" : o.readinessPct >= 60 ? "bg-primary" : "bg-amber-500"}`}
                                     style={{ width: `${o.readinessPct}%` }}
                                   />
                                 </div>
-                                <span className="text-xs font-medium text-muted-foreground">{o.readinessPct} % pripravljen</span>
+                                <TenantReadinessPopover
+                                  checks={o.checks}
+                                  readinessPct={o.readinessPct}
+                                  tenantName={tenant.name}
+                                  tenantSubtitle={tenant.subtitle}
+                                  missingPhotos={o.missingPhotos}
+                                />
                               </div>
                               {pendingBadges.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
