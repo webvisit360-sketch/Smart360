@@ -1,0 +1,20 @@
+NEW FEATURE: GPS cycling/hiking routes (GPX) on guide entries. Build in dev. Report and STOP. No publication.
+
+WHY
+Camp MENINA will record their own cycling routes and offer them to guests in their guide (category Kolesarjenje). Reference product: slovenia-outdoor.com route pages (map with track, elevation, time estimate, downloadable GPX).
+
+V1 SCOPE
+1. UPLOAD (admin + host form entry editor): an entry can carry one GPX file ("GPS-sled (GPX)"). Available on ANY entry regardless of category (cycling, hiking). Parse server-side on upload: tracks/segments/points, elevations. Reject malformed files with a Slovenian inline error. Enforce a sensible size limit (a few MB). Parse XML SAFELY (no external entity resolution).
+2. DERIVED DATA (computed at upload, stored with the entry): track polyline (simplified for rendering), length in km, total ascent/descent in m, min/max elevation, and an estimated duration (state in the report which formula you use for cycling vs hiking). Never invent data — everything comes from the GPX.
+3. GUEST VIEW (entry detail): a map section rendering the track on MapLibre with the existing shared OpenFreeMap liberty config (same attribution; never any other tile source), start/end markers; an elevation profile chart; the stats row (length, ascent, est. time); a "Prenesi GPX" download button serving the ORIGINAL uploaded file; and a "Pokaži moj položaj" toggle using browser geolocation to show the guest's live position dot on the map while open (ask permission only on tap; handle denial gracefully with a short Slovenian/localized notice). No voice/turn-by-turn navigation — out of scope.
+4. ZAKON 1: GPX and derived data are draft data; guests see them only after publish, from the snapshot. Deleting the GPX from an entry removes map/profile/download after the next publish.
+5. TRANSLATIONS: stats labels localized like the rest of the guide (SL/EN/DE/IT); numbers unaffected.
+6. CGP: reuse existing card/row/label tokens; no new colors or fonts. Elevation profile in accent #157347 on white.
+
+SCHEMA RITUAL
+Any new columns/tables: exact SQL, whether Publish carries each piece, verification SELECTs, conditional operator SQL — as with management_mode, group_order and slug reservations. GPX FILES are data: state where they are stored (same storage as photos?) and confirm dev files never transfer to production.
+
+VERIFY
+Tests: GPX parsing (valid, malformed, multi-segment), stats computation on a known fixture, size limit, entity-expansion attack rejected, guest snapshot isolation. E2E in dev: upload a sample route → publish in dev → guest view shows track, profile, stats, download works byte-identical. Attach screenshots (mobile width) of the guest entry with map + elevation profile.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
