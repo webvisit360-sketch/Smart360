@@ -14,7 +14,7 @@ import { db, tenantsTable } from "@workspace/db";
  *  - messages: OPEN threads whose latest message came from the guest
  *    (nothing marks threads read, so "guest spoke last" = waiting for host);
  *  - locations: distance-review proposals still 'pending';
- *  - photos: visible, non-deleted categories whose tile has neither a photo
+ *  - photos: guest-visible, non-empty categories whose tile has neither a photo
  *    (no visible item with media) nor a colour tile (no visible item tint).
  */
 
@@ -77,14 +77,30 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
           ) = 'guest'
         GROUP BY t.tenant_id`),
       db.execute(sql`
-        SELECT tenant_id, count(*)::int AS n FROM item_distance_proposals
-        WHERE status = 'pending'
-        GROUP BY tenant_id`),
+        SELECT p.tenant_id, count(*)::int AS n,
+               count(*) FILTER (
+                 WHERE i.is_visible AND i.deleted_at IS NULL
+                   AND c.is_visible AND c.deleted_at IS NULL
+                   AND s.is_visible
+                   AND s.tenant_id = p.tenant_id
+               )::int AS guest_pending
+        FROM item_distance_proposals p
+        LEFT JOIN items i ON i.id = p.item_id
+        LEFT JOIN categories c ON c.id = i.category_id
+        LEFT JOIN sections s ON s.id = c.section_id
+        WHERE p.status = 'pending'
+        GROUP BY p.tenant_id`),
       db.execute(sql`
         SELECT s.tenant_id, count(*)::int AS n
         FROM categories c
         JOIN sections s ON s.id = c.section_id
         WHERE c.deleted_at IS NULL AND c.is_visible
+          AND s.is_visible
+          AND EXISTS (
+            SELECT 1 FROM items visible_item
+            WHERE visible_item.category_id = c.id
+              AND visible_item.deleted_at IS NULL AND visible_item.is_visible
+          )
           AND NOT EXISTS (
             SELECT 1 FROM items i
             JOIN media m ON m.item_id = i.id
@@ -105,26 +121,27 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
         WHERE m.provisional = true
         GROUP BY s.tenant_id`),
       db.execute(sql`
-        SELECT s.tenant_id,
-               count(DISTINCT c.id)::int  AS n,
-               count(i.id)::int           AS items
+        SELECT s.tenant_id, count(i.id)::int AS items
         FROM sections s
-        LEFT JOIN categories c ON c.section_id = s.id
+        JOIN categories c ON c.section_id = s.id
           AND c.deleted_at IS NULL AND c.is_visible
-        LEFT JOIN items i ON i.category_id = c.id
+        JOIN items i ON i.category_id = c.id
           AND i.deleted_at IS NULL AND i.is_visible
+        WHERE s.is_visible
         GROUP BY s.tenant_id`),
     ]);
 
   const orders = toCountMap(ordersRes.rows as Array<Record<string, unknown>>);
   const messages = toCountMap(messagesRes.rows as Array<Record<string, unknown>>);
   const locations = toCountMap(locationsRes.rows as Array<Record<string, unknown>>);
+  const guestLocations = new Map(
+    (locationsRes.rows as Array<Record<string, unknown>>)
+      .map(r => [String(r["tenant_id"]), Number(r["guest_pending"])]),
+  );
   const photos = toCountMap(photosRes.rows as Array<Record<string, unknown>>);
   const provisional = toCountMap(provisionalRes.rows as Array<Record<string, unknown>>);
-  const categoriesCount: CountMap = new Map();
   const itemsCount: CountMap = new Map();
   for (const r of contentRes.rows as Array<Record<string, unknown>>) {
-    categoriesCount.set(String(r["tenant_id"]), Number(r["n"]));
     itemsCount.set(String(r["tenant_id"]), Number(r["items"]));
   }
 
@@ -133,7 +150,6 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
     const pendingMessages = messages.get(t.id) ?? 0;
     const pendingLocations = locations.get(t.id) ?? 0;
     const missingPhotos = photos.get(t.id) ?? 0;
-    const nCategories = categoriesCount.get(t.id) ?? 0;
     const nItems = itemsCount.get(t.id) ?? 0;
 
     const checks: ReadinessCheck[] = [
@@ -164,13 +180,15 @@ export async function buildTenantOverviews(): Promise<TenantOverviewRow[]> {
       },
       {
         key: "photos",
-        label: "Vse kategorije imajo fotografijo",
-        done: nCategories > 0 && missingPhotos === 0,
+        label: "Vse vidne kategorije imajo fotografijo ali barvno ploščico.",
+        // No guest-visible categories means no missing category artwork.
+        // The separate content check still requires a guest-visible item.
+        done: missingPhotos === 0,
       },
       {
         key: "locationsConfirmed",
         label: "Vse lokacije potrjene",
-        done: pendingLocations === 0,
+        done: (guestLocations.get(t.id) ?? 0) === 0,
       },
       {
         key: "published",

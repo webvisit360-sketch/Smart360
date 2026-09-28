@@ -31,12 +31,12 @@ function missingHint(
     case "visual": return "Dodajte logotip ali naslovno fotografijo.";
     case "contact": return "Dodajte e-pošto ali telefon.";
     case "location": return "Nastavite koordinate nastanitve.";
-    case "content": return "Dodajte vsaj en viden vnos vsebine.";
+    case "content": return "Dodajte vsaj en gostom viden vnos vsebine.";
     case "photos":
       return missingPhotos === 0
-        ? "Dodajte kategorije s fotografijami."
-        : "Dodajte fotografije ali barvne ploščice kategorijam.";
-    case "locationsConfirmed": return "Potrdite čakajoče predloge lokacij.";
+        ? "Preverite fotografije ali barvne ploščice vidnih kategorij."
+        : "Dodajte fotografije ali barvne ploščice vidnim kategorijam.";
+    case "locationsConfirmed": return "Potrdite čakajoče predloge lokacij gostom vidnih vnosov.";
     case "published": return "Objavite vodnik.";
     default: return check.label;
   }
