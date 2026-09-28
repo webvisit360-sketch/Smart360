@@ -1,0 +1,19 @@
+Feature task: allow slug (URL) change after first publish, with permanent redirects. Report and STOP. No publication.
+
+CONTEXT
+The publish confirmation dialog blocks any slug change after first publish: "Naslov (slug) je po prvi objavi zamrznjen — natisnjene QR kode morajo ostati veljavne." Yet the Splošno tab already promises: "Stari naslov bo za vedno preusmerjen na novega." The promise has no implementation. The owner wants renames to be possible (real case: Glamping Gril → Turizem Drobež, slug glamping-gril → turizem-drobez) WITHOUT breaking printed QR codes.
+
+FIRST, ANSWER FROM CODE
+1. What exactly does the guard check — slug alone, or does a name change also trip it?
+2. Where is the "Stari naslov bo za vedno preusmerjen" text rendered, and is there ANY redirect mechanism behind it today?
+
+REQUIRED DESIGN
+- A tenant_slug_history table (or equivalent): every previously PUBLISHED slug of a tenant is recorded permanently.
+- Guest routing: a request for an old slug issues a permanent redirect (301) to the current slug — guide pages, subpages, and the per-tenant manifest.webmanifest. Printed QR codes therefore keep working forever.
+- Old slugs are reserved: no other tenant can ever claim a slug that lives in any tenant's history (uniqueness across current + historical slugs). Validation message in Slovenian if attempted.
+- The publish dialog: replace the hard block with an explicit confirmation when the slug changed, in CGP style, stating: old address, new address, and that the old one will permanently redirect ("Stari naslov {old} bo za vedno preusmerjen na {new}. Natisnjene QR kode bodo delovale še naprej."). Publish proceeds only after this is shown in the change list.
+- After a slug change is published: QR download and the nalepka PDF generate with the NEW URL; lifecycle emails use the new URL; the admin shows the current URL everywhere.
+- Zakon 1 respected: the change takes effect only on publish; drafts do not affect the live redirect table.
+
+SCHEMA RITUAL
+This adds a table. State the exact SQL, whether Publish carries it to production, and
