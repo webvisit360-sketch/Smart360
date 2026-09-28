@@ -14,6 +14,7 @@ import {
 import { useGetPublicTenant } from '@workspace/api-client-react';
 
 import Landing from '@/pages/landing';
+import { BRAND_TAGLINE } from '@/lib/brand';
 import { AdminRouter } from '@/components/admin/admin-router';
 import GuestHome from '@/pages/guest/guest-home';
 import GuestCategory from '@/pages/guest/guest-category';
@@ -72,7 +73,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
     <div
       className={`guest-entry-splash${phase === 'out' ? ' is-out' : ''}`}
       role="status"
-      aria-label="Smart360 pametni turistični vodnik"
+      aria-label={`Smart360 — ${BRAND_TAGLINE}`}
       onClick={hide}
     >
       <span className="guest-entry-splash__mark" aria-hidden="true">
@@ -85,7 +86,7 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
         className="guest-entry-splash__wordmark"
         aria-hidden="true"
       >SMART360</span>
-      <span className="guest-entry-splash__subtitle">Pametni turistični vodnik</span>
+      <span className="guest-entry-splash__subtitle" lang="en" translate="no">{BRAND_TAGLINE}</span>
     </div>
   );
 }

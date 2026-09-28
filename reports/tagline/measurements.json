@@ -1,0 +1,38 @@
+[
+  {
+    "lang": "sl",
+    "text": "Everything about your stay, in one place.",
+    "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+    "spacing": "3.36px",
+    "width": 390,
+    "x": 0,
+    "translate": false
+  },
+  {
+    "lang": "en",
+    "text": "Everything about your stay, in one place.",
+    "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+    "spacing": "3.36px",
+    "width": 390,
+    "x": 0,
+    "translate": false
+  },
+  {
+    "lang": "de",
+    "text": "Everything about your stay, in one place.",
+    "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+    "spacing": "3.36px",
+    "width": 390,
+    "x": 0,
+    "translate": false
+  },
+  {
+    "lang": "it",
+    "text": "Everything about your stay, in one place.",
+    "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+    "spacing": "3.36px",
+    "width": 390,
+    "x": 0,
+    "translate": false
+  }
+]

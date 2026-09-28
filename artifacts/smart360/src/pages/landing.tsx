@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { BRAND_TAGLINE } from "@/lib/brand";
 import { useLocation } from "wouter";
 
 const PLATFORM_HOSTS = /(^localhost$|^127\.|\.replit\.dev$|\.replit\.app$|\.repl\.co$)/;
@@ -49,7 +50,7 @@ export default function Landing() {
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background text-foreground p-6 text-center">
       <div className="max-w-md w-full space-y-4">
         <h1 className="text-5xl font-[800] font-sans tracking-[0.02em] text-[#121A14]">SMART360</h1>
-        <p className="text-xl text-muted-foreground">Digitalni vodnik za goste vaše nastanitve.</p>
+        <p className="text-xl text-muted-foreground" lang="en" translate="no">{BRAND_TAGLINE}</p>
         <p className="text-sm text-muted-foreground">
           <a href="mailto:pi4.doo@gmail.com" className="underline">pi4.doo@gmail.com</a>
         </p>

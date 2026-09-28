@@ -1170,3 +1170,31 @@ mtime_ms = 1790620689333
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/82334a81-b46c-4d91-bbf9-f91d250abf42/ba5dba5b-eaff-4105-9b0e-9783cf8a745d"
 storage_version_token = "1790620690323906"
 content_type = "text/html"
+
+[[outputs]]
+id = "H6UqpT0Hl0SozC8PgC7US"
+uri = "file://reports/tagline/guest-sl.png"
+type = "image"
+title = "Uvodni zaslon vodnika — novi slogan"
+description = "Mobilni prikaz; ista skupna konstanta je preverjena pri sl, en, de in it. Obstoječa tipografija ostaja nespremenjena."
+logical_id = "7edf04b7-5703-4756-9a30-261005a3dcce"
+content_hash = "sha256:01cd9646f7dca921ca1cc4ceb91e47d0e858f614eaf9e79b71aaad36c6af4b39"
+size = 23039
+mtime_ms = 1790630116462
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7edf04b7-5703-4756-9a30-261005a3dcce/9c1d99d3-b34b-47b7-9c92-e8e8a83fd810"
+storage_version_token = "1790630213037335"
+content_type = "image/png"
+
+[[outputs]]
+id = "A1vXyS2s7Mxg8QmgO94rT"
+uri = "file://reports/tagline/platform-landing.png"
+type = "image"
+title = "Nadomestna pristajalna stran — novi slogan"
+description = "Posnetek lokalno zgrajene produkcijske različice; brez objave."
+logical_id = "ea4c33e6-e55b-48c0-ba10-4aeff1a385d7"
+content_hash = "sha256:525bee5231c6dc17137977fcf7d79b137484f7e55621ca311972e340b557bd63"
+size = 17961
+mtime_ms = 1790630120758
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ea4c33e6-e55b-48c0-ba10-4aeff1a385d7/14d1be65-1d0d-4dd3-b56c-1c746f41bae0"
+storage_version_token = "1790630213903919"
+content_type = "image/png"

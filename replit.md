@@ -27,6 +27,10 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 - Pravilo CGP: Znak vedno izvira iz originalnih uradnih datotek, vedno stoji na beli podlagi in ga nikoli ne prerisujemo, prebarvamo ali približno poustvarimo. Besedni znak »SMART360« je vedno Archivo 800, barve #121A14, z razmikom med črkami 0.02em. Zelena #157347 je poudarna barva in se nikoli ne uporablja za znak ali besedni znak. V e-pošti je celoten logotip (znak + besedni znak) vedno ena vnaprej izrisana slika v retina ločljivosti, nikoli besedilo HTML.
 - Barva #DD9A2B je namenjena izključno opozorilom in brisanju, nikoli dekoraciji. E-poštne kartice nimajo okrasne oranžne zgornje črte.
 
+## Brand tagline
+
+The Smart360 brand tagline is always English and never translated: “Everything about your stay, in one place.” Reuse `BRAND_TAGLINE` from `artifacts/smart360/src/lib/brand.ts` on every tagline surface. Keep it out of translation dictionaries and translation jobs; mark rendered slogan text `lang="en" translate="no"`. Typography and CGP remain unchanged.
+
 ## User preferences
 
 - Komunikacija v slovenščini.
