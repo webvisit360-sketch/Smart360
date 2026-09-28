@@ -1,3 +1,5 @@
+import { LivingGuideGpxRoute } from "@/pages/living-guide/living-guide-gpx";
+import type { UiTranslator } from "./i18n";
 import { useGetPublicTenant } from "@workspace/api-client-react";
 import { useRoute, useSearch, Link, useLocation } from "wouter";
 import { useState } from "react";
@@ -100,6 +102,7 @@ export default function GuestCategory() {
 
       <div className="pagepad">
         <CategoryContent category={currentCategory} tenant={tenant} t={t} lang={lang} items={items} />
+        <LegacyItemGpx items={items} slug={slug} t={t} />
         <div className="tail"></div>
       </div>
 
@@ -305,3 +308,23 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   ));
 }
 
+
+function LegacyItemGpx({ items, slug, t }: { items: any[]; slug: string; t: (key: string) => string }) {
+  const withRoutes = items.filter((item: any) => item?.gpxRoute?.fileId);
+  if (!slug || !withRoutes.length) return null;
+  return (
+    <>
+      {withRoutes.map((item: any) => (
+        <LivingGuideGpxRoute
+          key={item.id}
+          route={item.gpxRoute}
+          slug={slug}
+          itemId={item.id}
+          t={t as UiTranslator}
+          variant="legacy"
+          heading={withRoutes.length > 1 && item.title ? `${t("UI.lg.gpx.title")} · ${String(item.title).replace(/<[^>]*>/g, "")}` : undefined}
+        />
+      ))}
+    </>
+  );
+}

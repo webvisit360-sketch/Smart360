@@ -173,8 +173,81 @@ export interface HostOnboardingMedia {
   focusY?: number | null;
 }
 
+export type GpxRouteVersion = typeof GpxRouteVersion[keyof typeof GpxRouteVersion];
+
+
+export const GpxRouteVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export type GpxRouteEnvironment = typeof GpxRouteEnvironment[keyof typeof GpxRouteEnvironment];
+
+
+export const GpxRouteEnvironment = {
+  development: 'development',
+  production: 'production',
+} as const;
+
+export type GpxRouteActivity = typeof GpxRouteActivity[keyof typeof GpxRouteActivity];
+
+
+export const GpxRouteActivity = {
+  cycling: 'cycling',
+  hiking: 'hiking',
+} as const;
+
+export interface GpxPoint {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  lat: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  lon: number;
+}
+
+export interface GpxProfilePoint {
+  distanceKm: number;
+  /** @nullable */
+  elevationM: number | null;
+  segment: number;
+}
+
+export interface GpxRoute {
+  version: GpxRouteVersion;
+  fileId: string;
+  filename: string;
+  environment: GpxRouteEnvironment;
+  /** @maximum 5242880 */
+  byteSize: number;
+  sha256: string;
+  activity: GpxRouteActivity;
+  /**
+     * @maxItems 100
+     * @items.maxItems 400
+     */
+  segments: GpxPoint[][];
+  /** @maxItems 300 */
+  profile: GpxProfilePoint[];
+  distanceKm: number;
+  /** @nullable */
+  ascentM: number | null;
+  /** @nullable */
+  descentM: number | null;
+  /** @nullable */
+  minElevationM: number | null;
+  /** @nullable */
+  maxElevationM: number | null;
+  /** @nullable */
+  durationMinutes: number | null;
+}
+
 export interface HostOnboardingCanonicalItem {
   id: string;
+  gpxRoute?: GpxRoute | null;
   categoryId: string;
   /** @nullable */
   categoryKey: string | null;
@@ -2954,6 +3027,19 @@ export interface CategoryUpdate {
   isVisible?: boolean;
 }
 
+export type GpxUploadInputActivity = typeof GpxUploadInputActivity[keyof typeof GpxUploadInputActivity];
+
+
+export const GpxUploadInputActivity = {
+  cycling: 'cycling',
+  hiking: 'hiking',
+} as const;
+
+export interface GpxUploadInput {
+  file: Blob;
+  activity: GpxUploadInputActivity;
+}
+
 /**
  * Existing active Creator range classification when present
  * @nullable
@@ -2983,6 +3069,7 @@ export const ItemFrame = {
 export interface Item {
   id: string;
   categoryId: string;
+  gpxRoute?: GpxRoute | null;
   /** @nullable */
   title?: string | null;
   /** @nullable */

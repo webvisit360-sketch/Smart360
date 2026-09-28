@@ -13,6 +13,17 @@ const titleTransformer: InputTransformerFn = (config) => {
   return config;
 };
 
+// Multipart bytes are validated by multer + the bounded GPX parser, not a
+// browser File constructor (which is not part of our server type environment).
+const serverTransformer: InputTransformerFn = (config) => {
+  const result = titleTransformer(config);
+  const upload = result.components?.schemas?.GpxUploadInput;
+  if (upload && "properties" in upload && upload.properties) {
+    upload.properties.file = {};
+  }
+  return result;
+};
+
 export default defineConfig({
   "api-client-react": {
     input: {
@@ -44,7 +55,7 @@ export default defineConfig({
     input: {
       target: "./openapi.yaml",
       override: {
-        transformer: titleTransformer,
+        transformer: serverTransformer,
       },
     },
     output: {

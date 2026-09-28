@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { hostUsersTable } from "./hosts";
 import { tenantsTable } from "./tenants";
+import type { GpxRoute } from "./gpx";
 
 export type HostOnboardingContact = { id: string; name: string; phone: string };
 export type HostOnboardingOffer = {
@@ -42,6 +43,7 @@ export type HostOnboardingMedia = {
 };
 export type HostOnboardingCanonicalItem = {
   id: string;
+  gpxRoute?: GpxRoute | null;
   categoryId: string;
   categoryKey: string | null;
   sectionKey: string;

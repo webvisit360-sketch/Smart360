@@ -1,3 +1,5 @@
+import { LivingGuideGpxRoute } from "@/pages/living-guide/living-guide-gpx";
+import type { UiTranslator } from "./i18n";
 import { useLocation } from "wouter";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { sanitizeHtml } from "../../lib/sanitize";
@@ -554,6 +556,7 @@ function SwipeDetail({ tenant, category, section, slug, lang }: { tenant: any, c
                     <>
                       <h2 className="dh">{c.label}</h2>
                       <CategoryContent category={c} tenant={tenant} t={t} lang={lang} items={c.items?.filter((it: any) => it.isVisible) || []} />
+                      <LegacyItemGpx items={c.items?.filter((it: any) => it.isVisible) || []} slug={slug} t={t} />
                     </>
                   ) : null}
                 </div>
@@ -762,3 +765,23 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
   ));
 }
 
+
+function LegacyItemGpx({ items, slug, t }: { items: any[]; slug: string; t: (key: string) => string }) {
+  const withRoutes = items.filter((item: any) => item?.gpxRoute?.fileId);
+  if (!slug || !withRoutes.length) return null;
+  return (
+    <>
+      {withRoutes.map((item: any) => (
+        <LivingGuideGpxRoute
+          key={item.id}
+          route={item.gpxRoute}
+          slug={slug}
+          itemId={item.id}
+          t={t as UiTranslator}
+          variant="legacy"
+          heading={withRoutes.length > 1 && item.title ? `${t("UI.lg.gpx.title")} · ${String(item.title).replace(/<[^>]*>/g, "")}` : undefined}
+        />
+      ))}
+    </>
+  );
+}

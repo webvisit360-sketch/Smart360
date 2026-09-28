@@ -74,6 +74,20 @@ export const getHostOnboardingResponseDataMediaItemHeightMin = 0;
 
 export const getHostOnboardingResponseDataMediaMax = 500;
 
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneProfileMax = 300;
+
 
 
 export const GetHostOnboardingResponse = zod.object({
@@ -144,6 +158,30 @@ export const GetHostOnboardingResponse = zod.object({
   "deleteMediaIds": zod.array(zod.string()).optional(),
   "canonicalItems": zod.array(zod.object({
   "id": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemMax)).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "categoryId": zod.string(),
   "categoryKey": zod.string().nullable(),
   "sectionKey": zod.string(),
@@ -275,6 +313,20 @@ export const autosaveHostOnboardingBodyDataMediaItemHeightMin = 0;
 
 export const autosaveHostOnboardingBodyDataMediaMax = 500;
 
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneProfileMax = 300;
+
 
 
 export const AutosaveHostOnboardingBody = zod.object({
@@ -341,6 +393,30 @@ export const AutosaveHostOnboardingBody = zod.object({
   "deleteMediaIds": zod.array(zod.string()).optional(),
   "canonicalItems": zod.array(zod.object({
   "id": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemMax)).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "categoryId": zod.string(),
   "categoryKey": zod.string().nullable(),
   "sectionKey": zod.string(),
@@ -433,6 +509,20 @@ export const saveHostOnboardingBodyDataMediaItemHeightMin = 0;
 
 export const saveHostOnboardingBodyDataMediaMax = 500;
 
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneProfileMax = 300;
+
 
 
 export const SaveHostOnboardingBody = zod.object({
@@ -499,6 +589,30 @@ export const SaveHostOnboardingBody = zod.object({
   "deleteMediaIds": zod.array(zod.string()).optional(),
   "canonicalItems": zod.array(zod.object({
   "id": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemMax)).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "categoryId": zod.string(),
   "categoryKey": zod.string().nullable(),
   "sectionKey": zod.string(),
@@ -625,6 +739,20 @@ export const createHostOnboardingCategoryResponseDataMediaItemHeightMin = 0;
 
 export const createHostOnboardingCategoryResponseDataMediaMax = 500;
 
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneProfileMax = 300;
+
 
 
 export const CreateHostOnboardingCategoryResponse = zod.object({
@@ -695,6 +823,30 @@ export const CreateHostOnboardingCategoryResponse = zod.object({
   "deleteMediaIds": zod.array(zod.string()).optional(),
   "canonicalItems": zod.array(zod.object({
   "id": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemMax)).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "categoryId": zod.string(),
   "categoryKey": zod.string().nullable(),
   "sectionKey": zod.string(),
@@ -835,6 +987,20 @@ export const confirmHostOnboardingSubmissionBodyDataOneMediaItemHeightMin = 0;
 
 export const confirmHostOnboardingSubmissionBodyDataOneMediaMax = 500;
 
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneProfileMax = 300;
+
 
 
 export const ConfirmHostOnboardingSubmissionBody = zod.object({
@@ -902,6 +1068,30 @@ export const ConfirmHostOnboardingSubmissionBody = zod.object({
   "deleteMediaIds": zod.array(zod.string()).optional(),
   "canonicalItems": zod.array(zod.object({
   "id": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemMax)).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "categoryId": zod.string(),
   "categoryKey": zod.string().nullable(),
   "sectionKey": zod.string(),
@@ -1047,6 +1237,20 @@ export const getOwnerHostOnboardingResponseRoundsItemDataMediaItemHeightMin = 0;
 
 export const getOwnerHostOnboardingResponseRoundsItemDataMediaMax = 500;
 
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneProfileMax = 300;
+
 
 
 export const GetOwnerHostOnboardingResponse = zod.object({
@@ -1118,6 +1322,30 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "deleteMediaIds": zod.array(zod.string()).optional(),
   "canonicalItems": zod.array(zod.object({
   "id": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemMax)).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "categoryId": zod.string(),
   "categoryKey": zod.string().nullable(),
   "sectionKey": zod.string(),
@@ -1631,6 +1859,20 @@ export const getPublicTenantResponseOneLongitudeMax = 180;
 export const getPublicTenantResponseOneLivingGuideNavMin = 5;
 export const getPublicTenantResponseOneLivingGuideNavMax = 5;
 
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneProfileMax = 300;
+
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
@@ -1742,6 +1984,30 @@ export const GetPublicTenantResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemMax)).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
@@ -3639,6 +3905,20 @@ export const getTenantResponseOneOneLongitudeMax = 180;
 export const getTenantResponseOneOneLivingGuideNavMin = 5;
 export const getTenantResponseOneOneLivingGuideNavMax = 5;
 
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneByteSizeMax = 5242880;
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMin = -90;
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMin = -180;
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemMax = 400;
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsMax = 100;
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneProfileMax = 300;
+
 export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
 export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
@@ -3750,6 +4030,30 @@ export const GetTenantResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMax)
+})).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemMax)).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
@@ -4771,6 +5075,20 @@ export const CreateItemBody = zod.object({
   "producerNote": zod.string().optional()
 })
 
+export const createItemResponseGpxRouteOneByteSizeMax = 5242880;
+
+export const createItemResponseGpxRouteOneSegmentsItemItemLatMin = -90;
+export const createItemResponseGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const createItemResponseGpxRouteOneSegmentsItemItemLonMin = -180;
+export const createItemResponseGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const createItemResponseGpxRouteOneSegmentsItemMax = 400;
+
+export const createItemResponseGpxRouteOneSegmentsMax = 100;
+
+export const createItemResponseGpxRouteOneProfileMax = 300;
+
 export const createItemResponseDistanceMetersMin = 0;
 
 export const createItemResponseTravelDurationSecondsMin = 0;
@@ -4782,6 +5100,30 @@ export const createItemResponseTravelDurationSecondsMin = 0;
 export const CreateItemResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(createItemResponseGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(createItemResponseGpxRouteOneSegmentsItemItemLatMin).max(createItemResponseGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(createItemResponseGpxRouteOneSegmentsItemItemLonMin).max(createItemResponseGpxRouteOneSegmentsItemItemLonMax)
+})).max(createItemResponseGpxRouteOneSegmentsItemMax)).max(createItemResponseGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(createItemResponseGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
@@ -4921,6 +5263,20 @@ export const CreateAdminPlaceBody = zod.union([zod.object({
   "longitude": zod.number().min(createAdminPlaceBodyTwoLongitudeMin).max(createAdminPlaceBodyTwoLongitudeMax)
 })])
 
+export const createAdminPlaceResponseGpxRouteOneByteSizeMax = 5242880;
+
+export const createAdminPlaceResponseGpxRouteOneSegmentsItemItemLatMin = -90;
+export const createAdminPlaceResponseGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const createAdminPlaceResponseGpxRouteOneSegmentsItemItemLonMin = -180;
+export const createAdminPlaceResponseGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const createAdminPlaceResponseGpxRouteOneSegmentsItemMax = 400;
+
+export const createAdminPlaceResponseGpxRouteOneSegmentsMax = 100;
+
+export const createAdminPlaceResponseGpxRouteOneProfileMax = 300;
+
 export const createAdminPlaceResponseDistanceMetersMin = 0;
 
 export const createAdminPlaceResponseTravelDurationSecondsMin = 0;
@@ -4932,6 +5288,30 @@ export const createAdminPlaceResponseTravelDurationSecondsMin = 0;
 export const CreateAdminPlaceResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(createAdminPlaceResponseGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLatMin).max(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLonMin).max(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLonMax)
+})).max(createAdminPlaceResponseGpxRouteOneSegmentsItemMax)).max(createAdminPlaceResponseGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(createAdminPlaceResponseGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
@@ -5027,6 +5407,20 @@ export const UpdateItemBody = zod.object({
   "producerNote": zod.string().nullish()
 })
 
+export const updateItemResponseGpxRouteOneByteSizeMax = 5242880;
+
+export const updateItemResponseGpxRouteOneSegmentsItemItemLatMin = -90;
+export const updateItemResponseGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const updateItemResponseGpxRouteOneSegmentsItemItemLonMin = -180;
+export const updateItemResponseGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const updateItemResponseGpxRouteOneSegmentsItemMax = 400;
+
+export const updateItemResponseGpxRouteOneSegmentsMax = 100;
+
+export const updateItemResponseGpxRouteOneProfileMax = 300;
+
 export const updateItemResponseDistanceMetersMin = 0;
 
 export const updateItemResponseTravelDurationSecondsMin = 0;
@@ -5038,6 +5432,30 @@ export const updateItemResponseTravelDurationSecondsMin = 0;
 export const UpdateItemResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(updateItemResponseGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(updateItemResponseGpxRouteOneSegmentsItemItemLatMin).max(updateItemResponseGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(updateItemResponseGpxRouteOneSegmentsItemItemLonMin).max(updateItemResponseGpxRouteOneSegmentsItemItemLonMax)
+})).max(updateItemResponseGpxRouteOneSegmentsItemMax)).max(updateItemResponseGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(updateItemResponseGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
@@ -5097,6 +5515,73 @@ export const DeleteItemParams = zod.object({
 })
 
 export const DeleteItemResponse = zod.void()
+
+
+export const UploadItemGpxParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UploadItemGpxBody = zod.object({
+  "file": zod.unknown(),
+  "activity": zod.enum(['cycling', 'hiking'])
+})
+
+export const uploadItemGpxResponseByteSizeMax = 5242880;
+
+export const uploadItemGpxResponseSegmentsItemItemLatMin = -90;
+export const uploadItemGpxResponseSegmentsItemItemLatMax = 90;
+
+export const uploadItemGpxResponseSegmentsItemItemLonMin = -180;
+export const uploadItemGpxResponseSegmentsItemItemLonMax = 180;
+
+export const uploadItemGpxResponseSegmentsItemMax = 400;
+
+export const uploadItemGpxResponseSegmentsMax = 100;
+
+export const uploadItemGpxResponseProfileMax = 300;
+
+
+
+export const UploadItemGpxResponse = zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(uploadItemGpxResponseByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(uploadItemGpxResponseSegmentsItemItemLatMin).max(uploadItemGpxResponseSegmentsItemItemLatMax),
+  "lon": zod.number().min(uploadItemGpxResponseSegmentsItemItemLonMin).max(uploadItemGpxResponseSegmentsItemItemLonMax)
+})).max(uploadItemGpxResponseSegmentsItemMax)).max(uploadItemGpxResponseSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(uploadItemGpxResponseProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+})
+
+
+export const DeleteItemGpxParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteItemGpxResponse = zod.void()
+
+
+export const DownloadPublishedGpxParams = zod.object({
+  "slug": zod.coerce.string(),
+  "itemId": zod.coerce.string(),
+  "fileId": zod.coerce.string()
+})
+
+export const DownloadPublishedGpxResponse = zod.unknown()
 
 
 /**
@@ -5278,6 +5763,20 @@ export const DuplicateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const duplicateItemResponseGpxRouteOneByteSizeMax = 5242880;
+
+export const duplicateItemResponseGpxRouteOneSegmentsItemItemLatMin = -90;
+export const duplicateItemResponseGpxRouteOneSegmentsItemItemLatMax = 90;
+
+export const duplicateItemResponseGpxRouteOneSegmentsItemItemLonMin = -180;
+export const duplicateItemResponseGpxRouteOneSegmentsItemItemLonMax = 180;
+
+export const duplicateItemResponseGpxRouteOneSegmentsItemMax = 400;
+
+export const duplicateItemResponseGpxRouteOneSegmentsMax = 100;
+
+export const duplicateItemResponseGpxRouteOneProfileMax = 300;
+
 export const duplicateItemResponseDistanceMetersMin = 0;
 
 export const duplicateItemResponseTravelDurationSecondsMin = 0;
@@ -5289,6 +5788,30 @@ export const duplicateItemResponseTravelDurationSecondsMin = 0;
 export const DuplicateItemResponse = zod.object({
   "id": zod.string(),
   "categoryId": zod.string(),
+  "gpxRoute": zod.union([zod.object({
+  "version": zod.literal(1),
+  "fileId": zod.string(),
+  "filename": zod.string(),
+  "environment": zod.enum(['development', 'production']),
+  "byteSize": zod.number().max(duplicateItemResponseGpxRouteOneByteSizeMax),
+  "sha256": zod.string(),
+  "activity": zod.enum(['cycling', 'hiking']),
+  "segments": zod.array(zod.array(zod.object({
+  "lat": zod.number().min(duplicateItemResponseGpxRouteOneSegmentsItemItemLatMin).max(duplicateItemResponseGpxRouteOneSegmentsItemItemLatMax),
+  "lon": zod.number().min(duplicateItemResponseGpxRouteOneSegmentsItemItemLonMin).max(duplicateItemResponseGpxRouteOneSegmentsItemItemLonMax)
+})).max(duplicateItemResponseGpxRouteOneSegmentsItemMax)).max(duplicateItemResponseGpxRouteOneSegmentsMax),
+  "profile": zod.array(zod.object({
+  "distanceKm": zod.number(),
+  "elevationM": zod.number().nullable(),
+  "segment": zod.number()
+})).max(duplicateItemResponseGpxRouteOneProfileMax),
+  "distanceKm": zod.number(),
+  "ascentM": zod.number().nullable(),
+  "descentM": zod.number().nullable(),
+  "minElevationM": zod.number().nullable(),
+  "maxElevationM": zod.number().nullable(),
+  "durationMinutes": zod.number().nullable()
+}),zod.null()]).optional(),
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),

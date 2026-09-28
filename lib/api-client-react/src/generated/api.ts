@@ -85,6 +85,8 @@ import type {
   GetPublicTenantParams,
   GetPublishedSlugRedirect200,
   GetStorageCleanupPreviewParams,
+  GpxRoute,
+  GpxUploadInput,
   GuestMessageInput,
   GuestThreadView,
   HealthStatus,
@@ -8715,6 +8717,221 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getDeleteItemMutationOptions(options));
     }
+
+export const getUploadItemGpxUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/gpx`
+}
+
+export const uploadItemGpx = async (id: string,
+    gpxUploadInput: GpxUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<GpxRoute> => {
+    const formData = new FormData();
+formData.append(`file`, gpxUploadInput.file);
+formData.append(`activity`, gpxUploadInput.activity);
+
+  return customFetch<GpxRoute>(getUploadItemGpxUrl(id),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getUploadItemGpxMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadItemGpx>>, TError,{id: string;data: BodyType<GpxUploadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadItemGpx>>, TError,{id: string;data: BodyType<GpxUploadInput>}, TContext> => {
+
+const mutationKey = ['uploadItemGpx'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadItemGpx>>, {id: string;data: BodyType<GpxUploadInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  uploadItemGpx(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadItemGpxMutationResult = NonNullable<Awaited<ReturnType<typeof uploadItemGpx>>>
+    export type UploadItemGpxMutationBody = BodyType<GpxUploadInput>
+    export type UploadItemGpxMutationError = ErrorType<void>
+
+    export const useUploadItemGpx = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadItemGpx>>, TError,{id: string;data: BodyType<GpxUploadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadItemGpx>>,
+        TError,
+        {id: string;data: BodyType<GpxUploadInput>},
+        TContext
+      > => {
+      return useMutation(getUploadItemGpxMutationOptions(options));
+    }
+
+export const getDeleteItemGpxUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/items/${id}/gpx`
+}
+
+export const deleteItemGpx = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteItemGpxUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteItemGpxMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItemGpx>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteItemGpx>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteItemGpx'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteItemGpx>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteItemGpx(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteItemGpxMutationResult = NonNullable<Awaited<ReturnType<typeof deleteItemGpx>>>
+
+    export type DeleteItemGpxMutationError = ErrorType<unknown>
+
+    export const useDeleteItemGpx = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItemGpx>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteItemGpx>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteItemGpxMutationOptions(options));
+    }
+
+export const getDownloadPublishedGpxUrl = (slug: string,
+    itemId: string,
+    fileId: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/items/${itemId}/gpx/${fileId}`
+}
+
+export const downloadPublishedGpx = async (slug: string,
+    itemId: string,
+    fileId: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadPublishedGpxUrl(slug,itemId,fileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadPublishedGpxQueryKey = (slug: string,
+    itemId: string,
+    fileId: string,) => {
+    return [
+    `/api/public/tenants/${slug}/items/${itemId}/gpx/${fileId}`
+    ] as const;
+    }
+
+
+export const getDownloadPublishedGpxQueryOptions = <TData = Awaited<ReturnType<typeof downloadPublishedGpx>>, TError = ErrorType<void>>(slug: string,
+    itemId: string,
+    fileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadPublishedGpx>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadPublishedGpxQueryKey(slug,itemId,fileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadPublishedGpx>>> = ({ signal }) => downloadPublishedGpx(slug,itemId,fileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined && itemId !== null && itemId !== undefined && fileId !== null && fileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadPublishedGpx>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadPublishedGpxQueryResult = NonNullable<Awaited<ReturnType<typeof downloadPublishedGpx>>>
+export type DownloadPublishedGpxQueryError = ErrorType<void>
+
+
+
+export function useDownloadPublishedGpx<TData = Awaited<ReturnType<typeof downloadPublishedGpx>>, TError = ErrorType<void>>(
+ slug: string,
+    itemId: string,
+    fileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadPublishedGpx>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadPublishedGpxQueryOptions(slug,itemId,fileId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getTranslateMissingItemFieldsUrl = (id: string,) => {
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic test route near the Soča valley, not a navigable trail. -->
+<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Synthetic GPX test">
+  <metadata><name>Sintetična testna pot ob Soči</name></metadata>
+  <trk>
+    <name>Preizkusni odsek pri Bovcu</name>
+    <trkseg>
+      <trkpt lat="46.3374" lon="13.5521"><ele>450</ele></trkpt>
+      <trkpt lat="46.3380" lon="13.5530"><ele>480</ele></trkpt>
+      <trkpt lat="46.3390" lon="13.5540"><ele>465</ele></trkpt>
+    </trkseg>
+    <trkseg>
+      <trkpt lat="46.3500" lon="13.5700"><ele>510</ele></trkpt>
+      <trkpt lat="46.3510" lon="13.5710"><ele>530</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

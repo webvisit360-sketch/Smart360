@@ -2146,6 +2146,55 @@ paths:
       responses:
         "204":
           description: Deleted
+  /admin/items/{id}/gpx:
+    post:
+      operationId: uploadItemGpx
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/GpxUploadInput"
+      responses:
+        "200":
+          description: Validated original stored and bounded draft route updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GpxRoute"
+        "400": { description: Invalid GPX }
+        "413": { description: GPX exceeds 5 MB }
+    delete:
+      operationId: deleteItemGpx
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Removed from draft; published copy remains until publish }
+  /public/tenants/{slug}/items/{itemId}/gpx/{fileId}:
+    get:
+      operationId: downloadPublishedGpx
+      tags: [items]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: itemId, in: path, required: true, schema: { type: string } }
+        - { name: fileId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Byte-identical original referenced by a guest-visible published entry
+          content:
+            application/gpx+xml:
+              schema: { type: string, format: binary }
+        "404": { description: No published accessible GPX }
   /admin/items/{id}/translate-missing:
     post:
       operationId: translateMissingItemFields
@@ -3149,6 +3198,10 @@ components:
       required: [id, categoryId, categoryKey, sectionKey, title, body, price, priceUnit, phone, website, mapQuery, difficulty, duration, distance, noteType, noteText, bullets, tint, frame, isVisible, orderEnabled, soldOut, producerName, producerNote]
       properties:
         id: { type: string }
+        gpxRoute:
+          anyOf:
+            - $ref: "#/components/schemas/GpxRoute"
+            - { type: "null" }
         categoryId: { type: string }
         categoryKey: { type: ["string", "null"] }
         sectionKey: { type: string }
@@ -5310,11 +5363,62 @@ components:
           enum: [experiences, food_drink, nature_trails, sights, services, najem, izleti_prevozi, domaci_izdelki, pri_hisi, vase_bivanje, prihod_dostop, prakticno]
         position: { type: number }
         isVisible: { type: boolean }
+    GpxUploadInput:
+      type: object
+      required: [file, activity]
+      properties:
+        file: { type: string, format: binary }
+        activity: { type: string, enum: [cycling, hiking] }
+    GpxPoint:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lon: { type: number, minimum: -180, maximum: 180 }
+    GpxProfilePoint:
+      type: object
+      required: [distanceKm, elevationM, segment]
+      properties:
+        distanceKm: { type: number }
+        elevationM: { type: ["number", "null"] }
+        segment: { type: number }
+    GpxRoute:
+      type: object
+      required: [version, fileId, filename, environment, byteSize, sha256, activity, segments, profile, distanceKm, ascentM, descentM, minElevationM, maxElevationM, durationMinutes]
+      properties:
+        version: { type: number, enum: [1] }
+        fileId: { type: string }
+        filename: { type: string }
+        environment: { type: string, enum: [development, production] }
+        byteSize: { type: number, maximum: 5242880 }
+        sha256: { type: string }
+        activity: { type: string, enum: [cycling, hiking] }
+        segments:
+          type: array
+          maxItems: 100
+          items:
+            type: array
+            maxItems: 400
+            items: { $ref: "#/components/schemas/GpxPoint" }
+        profile:
+          type: array
+          maxItems: 300
+          items: { $ref: "#/components/schemas/GpxProfilePoint" }
+        distanceKm: { type: number }
+        ascentM: { type: ["number", "null"] }
+        descentM: { type: ["number", "null"] }
+        minElevationM: { type: ["number", "null"] }
+        maxElevationM: { type: ["number", "null"] }
+        durationMinutes: { type: ["number", "null"] }
     Item:
       type: object
       properties:
         id: { type: string }
         categoryId: { type: string }
+        gpxRoute:
+          anyOf:
+            - $ref: "#/components/schemas/GpxRoute"
+            - { type: "null" }
         title: { type: ["string", "null"] }
         body: { type: ["string", "null"] }
         eventStart:

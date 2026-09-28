@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import {
@@ -64,6 +65,16 @@ test("canonical onboarding reads admin draft and partial form saves preserve ric
       title: "Hišni red",
       body: "<p>Poljubno <strong>bogato</strong> besedilo</p>",
     }).returning();
+    const route = {
+      version: 1 as const, fileId: randomUUID(), filename: "host-route.gpx",
+      environment: "development" as const, byteSize: 4,
+      sha256: createHash("sha256").update("test").digest("hex"),
+      activity: "hiking" as const, segments: [[{ lat: 46, lon: 14 }]],
+      profile: [{ distanceKm: 0, elevationM: null, segment: 0 }],
+      distanceKm: 0, ascentM: null, descentM: null,
+      minElevationM: null, maxElevationM: null, durationMinutes: null,
+    };
+    await db.update(itemsTable).set({ gpxRoute: route }).where(eq(itemsTable.id, house!.id));
     const [place] = await db.insert(itemsTable).values({
       categoryId: category("culture").id,
       title: "Grad",
@@ -131,18 +142,22 @@ test("canonical onboarding reads admin draft and partial form saves preserve ric
 
     const canonicalHouse = before.canonicalItems?.find((row) => row.id === house!.id);
     assert.ok(canonicalHouse);
+    assert.deepEqual(canonicalHouse.gpxRoute, route, "form GET projects canonical GPX route");
+    const forged = {
+      ...canonicalHouse,
+      body: "<p>Izrecno urejeno kanonično besedilo</p>",
+      gpxRoute: { ...route, fileId: randomUUID() },
+    };
     await db.transaction((tx) => applyCanonicalHostOnboardingPatch(tx, tenantId, {
       // A full/stale form payload can still carry the old compatibility field.
       // The explicitly edited stable canonical row must win in this same patch.
       houseRulesParking: "<p>Zastarelo besedilo</p>",
-      canonicalItems: [{
-        ...canonicalHouse,
-        body: "<p>Izrecno urejeno kanonično besedilo</p>",
-      }],
+      canonicalItems: [forged],
     }));
     const [houseAfterMixedPatch] = await db.select().from(itemsTable)
       .where(eq(itemsTable.id, house!.id));
     assert.equal(houseAfterMixedPatch?.body, "<p>Izrecno urejeno kanonično besedilo</p>");
+    assert.deepEqual(houseAfterMixedPatch?.gpxRoute, route, "form save cannot forge GPX metadata");
 
     await db.transaction((tx) =>
       applyCanonicalHostOnboardingPatch(tx, tenantId, { guestPhone: "+386 40 222 222" })
@@ -156,6 +171,11 @@ test("canonical onboarding reads admin draft and partial form saves preserve ric
     const [unchangedSnapshot] = await db.select().from(publishedSnapshotsTable)
       .where(eq(publishedSnapshotsTable.tenantId, tenantId));
     assert.equal(unchangedHouse?.body, "<p>Izrecno urejeno kanonično besedilo</p>");
+    assert.deepEqual(unchangedHouse?.gpxRoute, route, "unrelated form autosave preserves GPX");
+    assert.deepEqual((await db.transaction((tx) =>
+      readCanonicalHostOnboarding(tx, tenantId, workflow())
+    )).canonicalItems.find((row) => row.id === house!.id)?.gpxRoute, route,
+    "form reload reads the persisted canonical GPX route");
     assert.deepEqual(unchangedVideo, video);
     assert.deepEqual(unchangedOfferPhoto, offerPhoto);
     assert.equal(unchangedOfferPhoto?.itemId, offer!.id);

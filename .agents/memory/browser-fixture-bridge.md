@@ -11,6 +11,10 @@ Remote browser tools cannot reach a workspace-only service at their own 127.0.0.
 
 Use managed background shell tasks for fixture servers, not detached subprocesses that may be killed when the tool call ends. Always clean the disposable tenant IDs afterward, including IDs from failed attempts.
 
+A fixture publishing through an imported service in a separate process cannot invalidate the running API's in-memory caches. Wait for their TTL before testing guest reload, or publish through the normal authenticated HTTP path.
+
+**Why:** A fixture-only publish removed the download reference immediately while the live API briefly served cached route metadata. This was not a production publication failure.
+
 Prefer the normal development server, without interception, for public guest routes backed by disposable development data. Reserve the relay for authenticated fixture operations.
 
 **Why:** Relaying every guest request introduced aborted requests and apparent blank renders, while the ordinary public development API already served the same fixture correctly.

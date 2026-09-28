@@ -1,4 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
+import { GpxRouteEditor } from "@/components/admin/gpx-route-editor";
+import type { GpxRoute } from "@/lib/gpx-route";
 import { useLocation } from "wouter";
 import { AlertTriangle, Loader2, Trash2, CheckCircle2, UploadCloud, X, LogOut, MapPin, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -844,10 +846,10 @@ export default function HostOnboarding() {
     return operation;
   }, [flush]);
 
-  const refreshAfterEntryMediaWrite = useCallback(async () => {
+  const refreshAfterEntryMediaWrite = useCallback(async (failureMessage = "Mediji so shranjeni, osnutka pa ni bilo mogoče osvežiti.") => {
     const response = await fetch("/api/admin/host/onboarding", { credentials: "include" });
     if (!response.ok) {
-      setSaveError("Mediji so shranjeni, osnutka pa ni bilo mogoče osvežiti.");
+      setSaveError(failureMessage);
       setFirstFailureAt((current) => current || new Date().toISOString());
       setSaveState("error");
       return;
@@ -863,6 +865,47 @@ export default function HostOnboarding() {
     setFormData(next);
     lastSavedData.current = { ...lastSavedData.current, media };
   }, [queryClient]);
+
+  const gpxRefreshFailure = "GPX sled je shranjena, osnutka pa ni bilo mogoče osvežiti. Osvežite stran.";
+  // Compact per-entry GPX attachment for rows edited by name only
+  // (recommendations, offers, events, custom entries, house texts). Only an
+  // entry that already exists as a canonical item can carry a route; unsaved
+  // names stay disabled and are never materialized by this control.
+  // Reflect a persisted GPX change in local draft state without touching text
+  // fields; also patch the saved baseline so autosave never resends it.
+  const patchCanonicalGpx = useCallback((itemId: string, route: GpxRoute | null) => {
+    const patch = (data: HostOnboardingData): HostOnboardingData => data.canonicalItems
+      ? { ...data, canonicalItems: data.canonicalItems.map((item) => item.id === itemId ? { ...item, gpxRoute: route } : item) }
+      : data;
+    latestData.current = patch(latestData.current);
+    lastSavedData.current = patch(lastSavedData.current);
+    setFormData((current) => patch(current));
+  }, []);
+  const afterGpxWrite = useCallback(async (itemId: string, route: GpxRoute | null) => {
+    patchCanonicalGpx(itemId, route);
+    await refreshAfterEntryMediaWrite(gpxRefreshFailure);
+  }, [patchCanonicalGpx, refreshAfterEntryMediaWrite]);
+  // Ids already rendered with a GPX control by a dedicated editor row.
+  const gpxCoveredIds = new Set<string>();
+  const renderEntryGpx = (rowId: string) => {
+    const canonical = (formData.canonicalItems || []).find((item) => item.id === rowId);
+    gpxCoveredIds.add(rowId);
+    return (
+      <details className="group -mt-1 mb-1 rounded-[10px] border border-[#E8EBE6] bg-white px-3 py-2 open:pb-3" data-testid={`gpx-entry-${rowId}`}>
+        <summary className="cursor-pointer select-none text-[12px] font-[700] uppercase text-[#66716A]">
+          GPX sled{canonical?.gpxRoute ? ` · ${canonical.gpxRoute.filename}` : canonical ? "" : " · na voljo po shranitvi vnosa"}
+        </summary>
+        <div className="mt-2">
+          <GpxRouteEditor
+            itemId={canonical ? canonical.id : null}
+            initialRoute={canonical?.gpxRoute ?? null}
+            serializeWrite={serializeEntryMediaWrite}
+            onAfterWrite={(route) => canonical ? afterGpxWrite(canonical.id, route) : undefined}
+          />
+        </div>
+      </details>
+    );
+  };
 
   const setEntryPending = useCallback((itemId: string, count: number) => {
     if (count > 0) entryPendingCounts.current.set(itemId, count);
@@ -1656,6 +1699,7 @@ export default function HostOnboarding() {
                         placeholder="Besedilo"
                       />
                     </div>
+                    {renderEntryGpx(item.id)}
                   </div>
                 ))}
               </div>
@@ -1753,6 +1797,15 @@ export default function HostOnboarding() {
                           onPendingChange={(count) => setEntryPending(renderKey, count)}
                         />
                       </div>
+                      <div className="mt-4 border-t border-[#E8EBE6] pt-3">
+                        {gpxCoveredIds.add(item.id) && null}
+                        <GpxRouteEditor
+                          itemId={item.id.startsWith("new-") ? null : item.id}
+                          initialRoute={item.gpxRoute ?? null}
+                          serializeWrite={serializeEntryMediaWrite}
+                          onAfterWrite={(route) => item.id.startsWith("new-") ? undefined : afterGpxWrite(item.id, route)}
+                        />
+                      </div>
                     </div>
                   )})}
                   <button
@@ -1836,7 +1889,7 @@ export default function HostOnboarding() {
                   </h3>
                   
                   {catOffers.map((offer, i) => (
-                    <div key={offer.id} className="flex flex-col md:flex-row gap-3">
+                    <Fragment key={offer.id}><div className="flex flex-col md:flex-row gap-3">
                       <input 
                         aria-label={`Naziv ponudbe ${i + 1}`}
                         type="text" 
@@ -1877,7 +1930,7 @@ export default function HostOnboarding() {
                           <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                         </button>
                       </div>
-                    </div>
+                    </div>{renderEntryGpx(offer.id)}</Fragment>
                   ))}
                   
                   <div className="flex flex-col md:flex-row gap-3">
@@ -2023,7 +2076,7 @@ export default function HostOnboarding() {
                   </h3>
                   <div className="space-y-1.5">
                     {catRecs.map((rec) => (
-                      <div key={rec.id} className="flex min-h-[46px] items-start min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
+                      <Fragment key={rec.id}><div className="flex min-h-[46px] items-start min-w-0 gap-2 rounded-[10px] border border-[#E8EBE6] bg-white p-1">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 ml-3 mt-3"><path d="M13.3333 4L6 11.3333L2.66667 8" stroke="#157347" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         <input 
                           aria-label={`${cat.name}, priporočilo`}
@@ -2048,7 +2101,7 @@ export default function HostOnboarding() {
                         >
                           <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                         </button>
-                      </div>
+                      </div>{renderEntryGpx(rec.id)}</Fragment>
                     ))}
                     {transientRec && <div style={{ borderColor: "#9AA39D" }} className="flex min-h-[46px] items-start min-w-0 gap-2 rounded-[10px] border border-dashed bg-white p-1">
                       <input 
@@ -2086,7 +2139,7 @@ export default function HostOnboarding() {
                
                <div className="space-y-4">
                   {(formData.events || []).map((event, i) => (
-                     <div key={event.id} className="min-w-0 bg-white border border-[#E8EBE6] rounded-[10px] p-4 md:p-3 flex flex-col md:flex-row gap-3">
+                     <Fragment key={event.id}><div className="min-w-0 bg-white border border-[#E8EBE6] rounded-[10px] p-4 md:p-3 flex flex-col md:flex-row gap-3">
                       <input 
                         aria-label={`Naziv dogodka ${i + 1}`}
                         type="text" 
@@ -2136,7 +2189,7 @@ export default function HostOnboarding() {
                           <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                         </button>
                       </div>
-                    </div>
+                    </div>{renderEntryGpx(event.id)}</Fragment>
                   ))}
                    <div className="min-w-0 bg-white border border-[#E8EBE6] rounded-[10px] p-4 md:p-3 flex flex-col md:flex-row gap-3">
                     <input 
@@ -2276,7 +2329,7 @@ export default function HostOnboarding() {
 
                       <div className="mt-4 space-y-1.5">
                         {(category.entries || []).map((entry, entryIndex) => (
-                          <div key={entry.id} className="flex min-w-0 gap-2">
+                          <Fragment key={entry.id}><div className="flex min-w-0 gap-2">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 ml-3 mt-3"><path d="M13.3333 4L6 11.3333L2.66667 8" stroke="#157347" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               <input
                               type="text"
@@ -2315,7 +2368,7 @@ export default function HostOnboarding() {
                             >
                               <X className="w-[18px] h-[18px]" strokeWidth={2.5} />
                             </button>
-                          </div>
+                          </div>{renderEntryGpx(entry.id)}</Fragment>
                         ))}
 
                         {transientEntry && <div className="flex min-w-0 gap-2">
@@ -2393,6 +2446,28 @@ export default function HostOnboarding() {
           </div>
         </section>
 
+
+        {(() => {
+          // Persisted entries without a dedicated editor row (e.g. Wi-Fi,
+          // contacts, check-in or other special items) still get one compact
+          // GPX control. Evaluated after all rows above, so no duplicates.
+          const remaining = (formData.canonicalItems || []).filter((item) => !gpxCoveredIds.has(item.id));
+          if (!remaining.length) return null;
+          return (
+            <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm" data-testid="gpx-other-entries">
+              <h2 className="text-xl font-bold">GPX sledi ostalih vnosov</h2>
+              <p className="mt-1 mb-4 text-sm text-[#66716A]">Obstoječi vnosi, ki zgoraj nimajo svojega polja.</p>
+              <div className="space-y-3">
+                {remaining.map((item) => (
+                  <div key={item.id} className="rounded-[10px] border border-[#E8EBE6] bg-white p-3">
+                    <p className="mb-2 break-words text-sm font-bold text-[#121A14]">{item.title?.replace(/<[^>]*>/g, "") || "Vnos brez naziva"}</p>
+                    {renderEntryGpx(item.id)}
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* SECTION 7 */}
         <section className="bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-5 md:p-8 shadow-sm">

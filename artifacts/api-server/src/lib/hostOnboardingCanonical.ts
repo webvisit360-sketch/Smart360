@@ -11,6 +11,12 @@ import { createHash } from "node:crypto";
 
 type Transaction = Parameters<Parameters<typeof import("@workspace/db").db.transaction>[0]>[0];
 type Patch = Partial<HostOnboardingData>;
+/** Read-only route metadata comes from the canonical item row, never the form patch. */
+export type CanonicalHostOnboardingWithGpx = Omit<HostOnboardingData, "canonicalItems"> & {
+  canonicalItems: Array<NonNullable<HostOnboardingData["canonicalItems"]>[number] & {
+    gpxRoute: typeof itemsTable.$inferSelect.gpxRoute;
+  }>;
+};
 
 const managedContact = "host-onboarding-contact";
 const managedGallery = "host-onboarding-gallery";
@@ -50,7 +56,7 @@ export async function readCanonicalHostOnboarding(
   tx: Transaction,
   tenantId: string,
   workflow: HostOnboardingData,
-): Promise<HostOnboardingData> {
+): Promise<CanonicalHostOnboardingWithGpx> {
   const [tenant] = await tx.select().from(tenantsTable)
     .where(eq(tenantsTable.id, tenantId)).limit(1);
   if (!tenant) throw new Error("Namestitev ne obstaja.");
@@ -152,6 +158,7 @@ export async function readCanonicalHostOnboarding(
     })),
     canonicalItems: items.map((row) => ({
       id: row.id,
+      gpxRoute: row.gpxRoute,
       categoryId: row.categoryId,
       categoryKey: categoryKey.get(row.categoryId) ?? null,
       sectionKey: categorySection.get(row.categoryId) ?? "",
@@ -422,6 +429,8 @@ async function applyCanonicalItems(
     throw new Error("Kanonični element ne pripada tej namestitvi.");
   }
   for (const row of rows) {
+    // gpxRoute is a server-owned projection. Deliberately do not persist it
+    // from canonical form data, whether omitted, null, stale, or forged.
     if (!uuidPattern.test(row.id)) {
       const [target] = await tx.select({
         categoryId: categoriesTable.id,

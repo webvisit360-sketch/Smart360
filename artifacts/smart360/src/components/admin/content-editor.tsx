@@ -56,6 +56,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { entryNamePlaceholder } from "@/lib/entry-name-placeholder";
 import { ItemMediaEditor } from "@/components/admin/item-media-editor";
+import { GpxRouteEditor } from "@/components/admin/gpx-route-editor";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { formatDistanceMeters } from "@/pages/living-guide/living-guide-formatters";
 import {
@@ -102,6 +103,7 @@ type Item = {
   soldOut?: boolean;
   producerName?: string | null;
   producerNote?: string | null;
+  gpxRoute?: import("@/lib/gpx-route").GpxRoute | null;
 };
 
 type Category = {
@@ -1541,6 +1543,14 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           media={mode === "edit" ? item.media || [] : []}
           onPendingChange={setPendingCount}
           frameRatio={frame === "tall" ? "4 / 5" : frame === "square" ? "1 / 1" : "5 / 3"}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label>GPX sled</Label>
+        <GpxRouteEditor
+          itemId={mode === "edit" ? item.id : null}
+          initialRoute={mode === "edit" ? item.gpxRoute ?? null : null}
+          onAfterWrite={() => refreshTenantAfterAdminWrite(queryClient, tenantId)}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">

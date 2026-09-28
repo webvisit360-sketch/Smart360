@@ -5,9 +5,11 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { GpxRoute } from './gpxRoute';
 
 export interface HostOnboardingCanonicalItem {
   id: string;
+  gpxRoute?: GpxRoute | null;
   categoryId: string;
   /** @nullable */
   categoryKey: string | null;

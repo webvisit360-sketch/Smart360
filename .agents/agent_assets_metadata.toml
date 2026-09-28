@@ -1268,3 +1268,31 @@ mtime_ms = 1790632234562
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/986233f4-4bfc-4e4c-b6bc-b798644e91f4/4160bfae-9835-49fc-818c-feb47bc5d3e0"
 storage_version_token = "1790632295184780"
 content_type = "image/png"
+
+[[outputs]]
+id = "_DGlk8SJJMkrc_Yu-RLg1"
+uri = "file://screenshots/gpx-guest-sl.png"
+type = "image"
+title = "GPX — mobilni prikaz v slovenščini"
+description = "Razvojni test: dejanski zemljevid OpenFreeMap, sled, višinski profil, statistika in prikaz testnega položaja."
+logical_id = "ac339923-64eb-408e-b6d7-69a554c26a52"
+content_hash = "sha256:36a5828f11e4ce83d82e196dc08fb21dff082975c16369b759de9e23f8a15983"
+size = 174562
+mtime_ms = 1790636504646
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ac339923-64eb-408e-b6d7-69a554c26a52/b808857b-ac76-47ee-abcf-e2d0e827f693"
+storage_version_token = "1790636831774149"
+content_type = "image/png"
+
+[[outputs]]
+id = "ZMh-6IsuWvoc-aepaVZQc"
+uri = "file://screenshots/gpx-guest.png"
+type = "image"
+title = "GPX — mobilni prikaz v angleščini"
+description = "Razvojni test: zemljevid in višinski profil, 402 × 874 CSS pikslov."
+logical_id = "c142fb46-a889-4741-9385-36f40074a030"
+content_hash = "sha256:e9fe219ee4692fbe8f6ea9e9916b504cf1d0df9e6d287c8bc0a8244b751f1681"
+size = 178241
+mtime_ms = 1790636413238
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c142fb46-a889-4741-9385-36f40074a030/ac336828-50ad-4539-aeba-cfed7ea5f281"
+storage_version_token = "1790636832510798"
+content_type = "image/png"

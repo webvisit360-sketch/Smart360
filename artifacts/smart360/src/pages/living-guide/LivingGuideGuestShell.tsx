@@ -1,6 +1,8 @@
 import {
   type CSSProperties,
   type FormEvent,
+  createContext,
+  useContext,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -26,6 +28,14 @@ import {
   mediaImgSrc,
 } from "../guest/img";
 import { buildGuestPath } from "../guest/guest-url";
+import { LivingGuideGpxRoute } from "./living-guide-gpx";
+
+const GpxSlugContext = createContext("");
+function ItemGpx({ item, t }: { item: any; t: UiTranslator }) {
+  const slug = useContext(GpxSlugContext);
+  if (!item?.gpxRoute || !slug) return null;
+  return <LivingGuideGpxRoute route={item.gpxRoute} slug={slug} itemId={item.id} t={t} />;
+}
 import {
   makeT,
   type UiLanguage,
@@ -3679,7 +3689,7 @@ function useDraggableDetailSheet(
   }, [rootRef]);
 }
 
-function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick }: any) {
+function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick, slug }: any) {
   const detailViewRef = useRef<HTMLElement>(null);
   useDraggableDetailSheet(detailViewRef, onBack);
   const items = visible(category.items);
@@ -3732,7 +3742,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
         }
       }}
     >
-      {content}
+      <GpxSlugContext.Provider value={slug ?? ""}>{content}</GpxSlugContext.Provider>
       {activeItem?.orderEnabled && layout !== "tabs" && (
         <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
       )}
@@ -3893,6 +3903,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
                     {item.title && <b><RichInline value={item.title} /></b>}
                     {itemBodyHtml(item, category) && <span dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
                     <StructuredBulletRows bullets={itemBullets(item, category)} />
+                    <ItemGpx item={item} t={t} />
                   </div>
                 </div>
               ))}
@@ -3905,6 +3916,7 @@ function TemplateA({ category, items, mediaOverride, titleOverride, tenant, show
               {firstItem?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(firstItem.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
             </div>
           )}
+          <ItemGpx item={firstItem} t={t} />
           {showHostContacts && <TenantContactRows tenant={tenant} t={t} />}
         </article>
       </div>
@@ -3990,6 +4002,7 @@ function TemplateC({ category, items, t, onBack, galleryIndex, onGalleryIndex }:
                      {item.title && <b><RichInline value={item.title} /></b>}
                      {itemBodyHtml(item, category) && <div dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
                      <StructuredBulletRows bullets={itemBullets(item, category)} />
+                     <ItemGpx item={item} t={t} />
                    </div>
                  </div>
                );
@@ -4134,6 +4147,7 @@ function TabbedDetail({
                >
                  {itemBodyHtml(item, category) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
                  <StructuredBulletRows bullets={itemBullets(item, category)} numbered={numbered} />
+                 <ItemGpx item={item} t={t} />
                  {item?.phone && (
                    <div className="lg2-actions lg2-actions--spaced">
                      <a className="lg2-primary-button" href={`tel:${item.phone}`}><svg aria-hidden="true"><use href="#lg-i-phone"/></svg>{t("UI.lg.action.call")}</a>
@@ -4199,6 +4213,8 @@ function TemplateE({ category, items, tenant, t, onBack }: any) {
 
            {itemBodyHtml(wifiItem, category) && <div className="lg2-detail-prose lg2-wifi-note" dangerouslySetInnerHTML={{ __html: itemBodyHtml(wifiItem, category) }} />}
            <StructuredBulletRows bullets={wifiBullets} />
+           <ItemGpx item={wifiItem} t={t} />
+           {items.slice(1).map((item: any) => <ItemGpx key={item.id} item={item} t={t} />)}
         </article>
       </div>
     </div>
@@ -4244,6 +4260,7 @@ function TemplateF({ item, category, lang, t, onBack, galleryIndex, onGalleryInd
                 {item?.website && <a className="lg2-primary-button lg2-secondary-button" href={externalUrl(item.website)} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#lg-i-comp"/></svg>{t("UI.lg.action.website")}</a>}
              </div>
            )}
+           <ItemGpx item={item} t={t} />
         </article>
       </div>
     </div>
@@ -4272,6 +4289,7 @@ function TemplateG({ item, category, t, onBack, galleryIndex, onGalleryIndex, on
            )}
            {itemBodyHtml(item, category) && <div className="lg2-detail-prose" dangerouslySetInnerHTML={{ __html: itemBodyHtml(item, category) }} />}
            <StructuredBulletRows bullets={bullets} />
+           <ItemGpx item={item} t={t} />
         </article>
       </div>
     </div>

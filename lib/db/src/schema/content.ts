@@ -16,6 +16,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import { tenantsTable } from "./tenants";
+import type { GpxRoute } from "./gpx";
 
 export const sectionsTable = pgTable("sections", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -68,6 +69,7 @@ export const itemsTable = pgTable("items", {
   // Optional ISO-8601 start used by Living Guide Program/event destinations.
   // Text keeps the public contract stable and avoids implicit timezone shifts.
   eventStart: text("event_start"),
+  gpxRoute: jsonb("gpx_route").$type<GpxRoute>(),
   price: text("price"),
   priceUnit: text("price_unit"),
   phone: text("phone"),

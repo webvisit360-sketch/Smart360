@@ -15,6 +15,7 @@ import adminCreatorRouter from "./adminCreator";
 import hostAuthRouter from "./hostAuth";
 import hostOnboardingRouter from "./hostOnboarding";
 import enquiriesRouter from "./enquiries";
+import gpxRouter from "./gpx";
 import { adminGate, assertAdminRoutesClassified } from "../lib/actorGate";
 
 const router: IRouter = Router();
@@ -58,6 +59,7 @@ router.use(adminAuthRouter);
 // anonymous host endpoints (login/reset) stay reachable.
 router.use(hostAuthRouter);
 router.use(hostOnboardingRouter);
+router.use(gpxRouter);
 router.use(adminTenantsRouter);
 router.use(adminCreatorRouter);
 router.use(adminContentRouter);
