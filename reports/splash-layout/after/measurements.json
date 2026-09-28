@@ -1,0 +1,224 @@
+[
+  {
+    "width": 390,
+    "containerWidth": 390,
+    "mark": {
+      "x": 143,
+      "y": 327.5,
+      "width": 104,
+      "height": 104,
+      "font": "16px / 24px Figtree, \"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "spacing": "normal",
+      "color": "rgb(20, 32, 31)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "text": "",
+      "src": null
+    },
+    "image": {
+      "x": 127.19603729248047,
+      "y": 311.696044921875,
+      "width": 135.60791015625,
+      "height": 135.60791015625,
+      "font": "16px / 24px Figtree, \"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "spacing": "normal",
+      "color": "rgb(20, 32, 31)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+      "transform": "matrix(0.378197, 0.925725, -0.925725, 0.378197, 0, 0)",
+      "text": "",
+      "src": "/brand/smart360-znak-40.png"
+    },
+    "wordmark": {
+      "x": 125.359375,
+      "y": 449.5,
+      "width": 139.265625,
+      "height": 25,
+      "font": "800 24px / 25px Archivo, sans-serif",
+      "spacing": "0.48px",
+      "color": "rgb(18, 26, 20)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+      "transform": "none",
+      "text": "SMART360",
+      "src": null
+    },
+    "tagline": {
+      "x": 25.8671875,
+      "y": 492.5,
+      "width": 338.265625,
+      "height": 24,
+      "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+      "spacing": "3.36px",
+      "color": "rgb(102, 113, 106)",
+      "textAlign": "center",
+      "textTransform": "uppercase",
+      "animation": "none 0s ease 0s 1 normal none running",
+      "transform": "matrix(1, 0, 0, 1, -169.133, 0)",
+      "text": "Everything about your stay, in one place.",
+      "src": null
+    },
+    "lines": [
+      {
+        "text": "Everything about your stay,",
+        "y": 492.5
+      },
+      {
+        "text": "in one place.",
+        "y": 504.5
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "containerWidth": 430,
+    "mark": {
+      "x": 163,
+      "y": 333.5,
+      "width": 104,
+      "height": 104,
+      "font": "16px / 24px Figtree, \"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "spacing": "normal",
+      "color": "rgb(20, 32, 31)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "text": "",
+      "src": null
+    },
+    "image": {
+      "x": 146.6566162109375,
+      "y": 317.1566162109375,
+      "width": 136.686767578125,
+      "height": 136.686767578125,
+      "font": "16px / 24px Figtree, \"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "spacing": "normal",
+      "color": "rgb(20, 32, 31)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+      "transform": "matrix(0.39608, 0.918216, -0.918216, 0.39608, 0, 0)",
+      "text": "",
+      "src": "/brand/smart360-znak-40.png"
+    },
+    "wordmark": {
+      "x": 145.359375,
+      "y": 455.5,
+      "width": 139.265625,
+      "height": 25,
+      "font": "800 24px / 25px Archivo, sans-serif",
+      "spacing": "0.48px",
+      "color": "rgb(18, 26, 20)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+      "transform": "none",
+      "text": "SMART360",
+      "src": null
+    },
+    "tagline": {
+      "x": 45.8515625,
+      "y": 498.5,
+      "width": 338.265625,
+      "height": 24,
+      "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+      "spacing": "3.36px",
+      "color": "rgb(102, 113, 106)",
+      "textAlign": "center",
+      "textTransform": "uppercase",
+      "animation": "none 0s ease 0s 1 normal none running",
+      "transform": "matrix(1, 0, 0, 1, -169.133, 0)",
+      "text": "Everything about your stay, in one place.",
+      "src": null
+    },
+    "lines": [
+      {
+        "text": "Everything about your stay,",
+        "y": 498.5
+      },
+      {
+        "text": "in one place.",
+        "y": 510.5
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "containerWidth": 428,
+    "mark": {
+      "x": 588,
+      "y": 333.5,
+      "width": 104,
+      "height": 104,
+      "font": "16px / 24px Figtree, \"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "spacing": "normal",
+      "color": "rgb(20, 32, 31)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "text": "",
+      "src": null
+    },
+    "image": {
+      "x": 570.6539306640625,
+      "y": 316.1539306640625,
+      "width": 138.692138671875,
+      "height": 138.692138671875,
+      "font": "16px / 24px Figtree, \"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "spacing": "normal",
+      "color": "rgb(20, 32, 31)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+      "transform": "matrix(0.431434, 0.902145, -0.902145, 0.431434, 0, 0)",
+      "text": "",
+      "src": "/brand/smart360-znak-40.png"
+    },
+    "wordmark": {
+      "x": 570.359375,
+      "y": 455.5,
+      "width": 139.265625,
+      "height": 25,
+      "font": "800 24px / 25px Archivo, sans-serif",
+      "spacing": "0.48px",
+      "color": "rgb(18, 26, 20)",
+      "textAlign": "start",
+      "textTransform": "none",
+      "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+      "transform": "none",
+      "text": "SMART360",
+      "src": null
+    },
+    "tagline": {
+      "x": 470.8515625,
+      "y": 498.5,
+      "width": 338.265625,
+      "height": 24,
+      "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+      "spacing": "3.36px",
+      "color": "rgb(102, 113, 106)",
+      "textAlign": "center",
+      "textTransform": "uppercase",
+      "animation": "none 0s ease 0s 1 normal none running",
+      "transform": "matrix(1, 0, 0, 1, -169.133, 0)",
+      "text": "Everything about your stay, in one place.",
+      "src": null
+    },
+    "lines": [
+      {
+        "text": "Everything about your stay,",
+        "y": 498.5
+      },
+      {
+        "text": "in one place.",
+        "y": 510.5
+      }
+    ]
+  }
+]

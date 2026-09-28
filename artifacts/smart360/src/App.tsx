@@ -86,7 +86,14 @@ function GuestEntrySplash({ ready }: { ready: boolean }) {
         className="guest-entry-splash__wordmark"
         aria-hidden="true"
       >SMART360</span>
-      <span className="guest-entry-splash__subtitle" lang="en" translate="no">{BRAND_TAGLINE}</span>
+      <span className="guest-entry-splash__subtitle" lang="en" translate="no">
+        {/* Preserve the original column height so the spinning mark never moves. */}
+        <span className="guest-entry-splash__tagline-footprint" aria-hidden="true">{BRAND_TAGLINE}</span>
+        <span className="guest-entry-splash__tagline-text">
+          <span className="guest-entry-splash__tagline-part">{BRAND_TAGLINE.slice(0, BRAND_TAGLINE.indexOf(",") + 1)}</span>{" "}
+          <span className="guest-entry-splash__tagline-part">{BRAND_TAGLINE.slice(BRAND_TAGLINE.indexOf(",") + 1).trim()}</span>
+        </span>
+      </span>
     </div>
   );
 }

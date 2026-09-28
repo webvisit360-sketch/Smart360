@@ -1198,3 +1198,45 @@ mtime_ms = 1790630120758
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ea4c33e6-e55b-48c0-ba10-4aeff1a385d7/14d1be65-1d0d-4dd3-b56c-1c746f41bae0"
 storage_version_token = "1790630213903919"
 content_type = "image/png"
+
+[[outputs]]
+id = "7XZoyY8uQyQ_IGhRPUPCJ"
+uri = "file://reports/splash-layout/after/390.png"
+type = "image"
+title = "Uvodni zaslon — 390 px"
+description = "Sredinsko poravnan slogan. Nespremenjena znak in napis SMART360; vrtenje preverjeno z meritvijo animacije."
+logical_id = "a3405fe1-a8f9-4f59-910c-bc1a29a8f270"
+content_hash = "sha256:d3ff55e2969069461dd11dee0dd3d9834e665a795ea059d9faf59812e6addfab"
+size = 22902
+mtime_ms = 1790630716183
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a3405fe1-a8f9-4f59-910c-bc1a29a8f270/ef4bf79f-aea7-4a3c-a8e2-e285678f1162"
+storage_version_token = "1790630771251474"
+content_type = "image/png"
+
+[[outputs]]
+id = "WuRF6uma8-R7nAyvSdNHu"
+uri = "file://reports/splash-layout/after/430.png"
+type = "image"
+title = "Uvodni zaslon — 430 px"
+description = "Sredinsko poravnan slogan. Nespremenjena znak in napis SMART360; vrtenje preverjeno z meritvijo animacije."
+logical_id = "019bf4aa-d476-49c6-b0fc-446c6dc0e7ea"
+content_hash = "sha256:5efcad273e71a31ce2f91af8bd9afd6a9f34787cc881802ea52d794a943aa01b"
+size = 22481
+mtime_ms = 1790630718083
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/019bf4aa-d476-49c6-b0fc-446c6dc0e7ea/63918248-7f31-4dd6-9ca5-ec1cd8a8363e"
+storage_version_token = "1790630772073686"
+content_type = "image/png"
+
+[[outputs]]
+id = "c2iL7JlPggJ6moccTY07g"
+uri = "file://reports/splash-layout/after/1280.png"
+type = "image"
+title = "Uvodni zaslon — 1280 px"
+description = "Sredinsko poravnan slogan. Nespremenjena znak in napis SMART360; vrtenje preverjeno z meritvijo animacije."
+logical_id = "6f0fd804-12e3-49d9-ba49-a6808df06a3c"
+content_hash = "sha256:288daea0c27dd1862f469dfd1200cbbc33f9c78f3a21714bc7539da08c384a8c"
+size = 32709
+mtime_ms = 1790630719883
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6f0fd804-12e3-49d9-ba49-a6808df06a3c/fd3b0edd-0fd8-46e2-9a30-17ab10469839"
+storage_version_token = "1790630772888473"
+content_type = "image/png"
