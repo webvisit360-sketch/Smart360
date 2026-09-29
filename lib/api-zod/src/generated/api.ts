@@ -4956,11 +4956,35 @@ export const UpdateSectionResponse = zod.object({
 })
 
 
+/**
+ * @summary Permanently delete a section (operator only)
+ */
 export const DeleteSectionParams = zod.object({
   "id": zod.coerce.string()
 })
 
 export const DeleteSectionResponse = zod.void()
+
+
+/**
+ * @summary Move a section and its subtree out of the active draft without deleting children
+ */
+export const TrashSectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const TrashSectionResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const RestoreSectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RestoreSectionResponse = zod.object({
+  "ok": zod.boolean()
+})
 
 
 export const ReorderSectionsBody = zod.object({
@@ -6176,13 +6200,18 @@ export const ExportTranslationsResponse = zod.object({
 
 
 /**
- * @summary Recently deleted categories and items (30-day trash)
+ * @summary Recently deleted sections, categories and items
  */
 export const GetTrashParams = zod.object({
   "id": zod.coerce.string()
 })
 
 export const GetTrashResponse = zod.object({
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "deletedAt": zod.string().nullable()
+})),
   "categories": zod.array(zod.object({
   "id": zod.string(),
   "label": zod.string(),

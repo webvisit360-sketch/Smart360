@@ -61,7 +61,7 @@ export async function readCanonicalHostOnboarding(
     .where(eq(tenantsTable.id, tenantId)).limit(1);
   if (!tenant) throw new Error("Namestitev ne obstaja.");
   const sections = await tx.select().from(sectionsTable)
-    .where(eq(sectionsTable.tenantId, tenantId)).orderBy(asc(sectionsTable.position));
+    .where(and(eq(sectionsTable.tenantId, tenantId), isNull(sectionsTable.deletedAt))).orderBy(asc(sectionsTable.position));
   const sectionIds = sections.map((row) => row.id);
   const categories = sectionIds.length
     ? await tx.select().from(categoriesTable).where(and(
@@ -203,6 +203,7 @@ export async function readCanonicalHostOnboardingStructure(
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       inArray(sectionsTable.key, ["stay", "offer"]),
+      isNull(sectionsTable.deletedAt),
     ))
     .orderBy(asc(sectionsTable.position));
   const sectionIds = sections.map((section) => section.id);
@@ -236,7 +237,7 @@ export async function canonicalHostOnboardingRevision(
   let tenantQuery = tx.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId));
   const tenantRows = lock ? await tenantQuery.for("update") : await tenantQuery;
   const sections = await tx.select().from(sectionsTable)
-    .where(eq(sectionsTable.tenantId, tenantId)).orderBy(asc(sectionsTable.id));
+    .where(and(eq(sectionsTable.tenantId, tenantId), isNull(sectionsTable.deletedAt))).orderBy(asc(sectionsTable.id));
   const sectionIds = sections.map((row) => row.id);
   const categories = sectionIds.length
     ? await tx.select().from(categoriesTable)
@@ -269,6 +270,7 @@ async function categoryByKey(tx: Transaction, tenantId: string, key: string) {
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(categoriesTable.key, key),
+      isNull(sectionsTable.deletedAt),
       isNull(categoriesTable.deletedAt),
     )).orderBy(asc(categoriesTable.position)).limit(1);
   return row ?? null;
@@ -280,6 +282,7 @@ async function firstCategoryInSection(tx: Transaction, tenantId: string, key: st
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(sectionsTable.key, key),
+      isNull(sectionsTable.deletedAt),
       isNull(categoriesTable.deletedAt),
     )).orderBy(asc(categoriesTable.position)).limit(1);
   return row ?? null;
@@ -369,6 +372,7 @@ async function replaceItems(
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(sectionsTable.key, sectionKey),
+      isNull(sectionsTable.deletedAt),
       isNull(categoriesTable.deletedAt),
     )).orderBy(asc(categoriesTable.position));
   if (!sectionCategories.length) throw new Error(`Manjka razdelek ${sectionKey}.`);
@@ -423,6 +427,7 @@ async function applyCanonicalItems(
         .where(and(
           eq(sectionsTable.tenantId, tenantId),
           inArray(itemsTable.id, persistedIds),
+          isNull(sectionsTable.deletedAt),
         )).for("update")
     : [];
   if (owned.length !== persistedIds.length) {
@@ -443,6 +448,7 @@ async function applyCanonicalItems(
           eq(categoriesTable.id, row.categoryId),
           eq(sectionsTable.tenantId, tenantId),
           eq(sectionsTable.key, "stay"),
+          isNull(sectionsTable.deletedAt),
           isNull(categoriesTable.deletedAt),
         )).limit(1);
       if (
@@ -580,7 +586,7 @@ export async function applyCanonicalHostOnboardingPatch(
   }
   if (patch.media !== undefined) {
     const sectionIds = (await tx.select({ id: sectionsTable.id }).from(sectionsTable)
-      .where(eq(sectionsTable.tenantId, tenantId))).map((row) => row.id);
+      .where(and(eq(sectionsTable.tenantId, tenantId), isNull(sectionsTable.deletedAt)))).map((row) => row.id);
     const categoryIds = sectionIds.length
       ? (await tx.select({ id: categoriesTable.id }).from(categoriesTable)
           .where(and(

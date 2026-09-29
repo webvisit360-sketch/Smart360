@@ -1938,6 +1938,7 @@ paths:
     delete:
       operationId: deleteSection
       tags: [sections]
+      summary: Permanently delete a section (operator only)
       parameters:
         - name: id
           in: path
@@ -1945,7 +1946,42 @@ paths:
           schema: { type: string }
       responses:
         "204":
-          description: Deleted
+          description: Permanently deleted
+        "403":
+          description: Operator only
+  /admin/sections/{id}/trash:
+    post:
+      operationId: trashSection
+      tags: [sections]
+      summary: Move a section and its subtree out of the active draft without deleting children
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Trashed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
+  /admin/sections/{id}/restore:
+    post:
+      operationId: restoreSection
+      tags: [sections]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkStatus"
   /admin/sections/reorder:
     post:
       operationId: reorderSections
@@ -2656,7 +2692,7 @@ paths:
     get:
       operationId: getTrash
       tags: [content]
-      summary: Recently deleted categories and items (30-day trash)
+      summary: Recently deleted sections, categories and items
       parameters:
         - name: id
           in: path
@@ -3726,6 +3762,13 @@ components:
         sectionTitle: { type: string }
         deletedAt: { type: ["string", "null"] }
       required: [id, label, sectionTitle, deletedAt]
+    TrashSection:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        deletedAt: { type: ["string", "null"] }
+      required: [id, title, deletedAt]
     TrashItem:
       type: object
       properties:
@@ -3737,6 +3780,10 @@ components:
     TrashResponse:
       type: object
       properties:
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrashSection"
         categories:
           type: array
           items:
@@ -3746,7 +3793,7 @@ components:
           items:
             $ref: "#/components/schemas/TrashItem"
         retentionDays: { type: number }
-      required: [categories, items, retentionDays]
+      required: [sections, categories, items, retentionDays]
     SlugCheckResponse:
       type: object
       properties:

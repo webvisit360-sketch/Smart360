@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   createSection,
   updateSection,
-  deleteSection,
+  trashSection,
+  restoreSection,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -518,10 +519,10 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
 
   const handleDelete = async () => {
     if (!section) return;
-    if (!confirm(`Izbrišem sekcijo "${section.title}"? Vse kategorije in vnosi v njej bodo trajno izbrisani.`)) return;
+    if (!confirm(`Premaknem sekcijo "${section.title}" v koš? Kategorije in vnosi ostanejo shranjeni.`)) return;
     setBusy(true);
     try {
-      await deleteSection(section.id);
+      await trashSection(section.id);
       clear();
       await refresh();
       onDone();
@@ -2497,8 +2498,9 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
   };
 
   const categories = data?.categories ?? [];
+  const sections = data?.sections ?? [];
   const items = data?.items ?? [];
-  const total = categories.length + items.length;
+  const total = sections.length + categories.length + items.length;
   const retentionDays = data?.retentionDays ?? 30;
 
   const run = async (id: string, fn: () => Promise<unknown>, failMsg: string) => {
@@ -2515,6 +2517,8 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
 
   const onRestoreCategory = (id: string) =>
     run(id, () => restoreCategory(id), "Obnovitev ni uspela.");
+  const onRestoreSection = (id: string) =>
+    run(id, () => restoreSection(id), "Obnovitev sekcije ni uspela.");
   const onPurgeCategory = (id: string, label: string) => {
     if (!confirm(`Kategorijo "${label}" trajno izbrišem? Tega ni mogoče razveljaviti.`)) return;
     run(id, () => purgeCategory(id), "Brisanje ni uspelo.");
@@ -2546,7 +2550,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
       {open && (
         <div className="px-4 pb-4 space-y-4">
           <p className="text-xs text-muted-foreground">
-            Vnosi se trajno izbrišejo po {retentionDays} dneh.
+            Kategorije in vnosi se trajno izbrišejo po {retentionDays} dneh. Sekcije ostanejo v košu do obnove.
           </p>
 
           {isLoading ? (
@@ -2557,6 +2561,21 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
             <p className="text-sm text-muted-foreground">Koš je prazen.</p>
           ) : (
             <>
+              {sections.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sekcije</p>
+                  {sections.map((section) => (
+                    <div key={section.id} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
+                      <span className="font-medium truncate">{section.title}</span>
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                        disabled={busyId === section.id} onClick={() => onRestoreSection(section.id)}>
+                        {busyId === section.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                        Obnovi
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
               {categories.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Kategorije</p>

@@ -827,7 +827,11 @@ async function handleTenantImageUpload(
   invalidateMediaUsage();
   const [updated] = await db
     .update(tenantsTable)
-    .set({ ...patch, hasUnpublishedChanges: true })
+    .set({
+      ...patch,
+      hasUnpublishedChanges: true,
+      ...(req.actor?.kind === "host" ? {} : { operatorDraftPending: true }),
+    })
     .where(eq(tenantsTable.id, tenantId))
     .returning({
       heroUrl: tenantsTable.heroUrl,

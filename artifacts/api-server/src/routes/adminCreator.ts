@@ -319,6 +319,7 @@ router.post("/admin/tenants/:id/creator/origin", async (req, res): Promise<void>
           creatorDraft: true,
           creatorOriginRegion: origin.nominatimDisplayName,
           hasUnpublishedChanges: true,
+          operatorDraftPending: true,
           municipality,
         })
         .where(eq(tenantsTable.id, tenantId))

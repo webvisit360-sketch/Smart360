@@ -88,6 +88,8 @@ import {
   changeTenantManagementMode,
   isManagementMode,
 } from "../lib/tenantManagementMode";
+import { hostOperatorDraftPublishDenied, operatorDraftAfterWrite } from "../lib/publicationSafety";
+import { denyAuthorization } from "../lib/authorizationDenial";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -636,6 +638,11 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
 
 router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
+  if (req.body && typeof req.body === "object" &&
+      Object.prototype.hasOwnProperty.call(req.body, "operatorDraftPending")) {
+    res.status(400).json({ error: "Polje operatorDraftPending upravlja samo strežnik." });
+    return;
+  }
   const rawNotificationChannel =
     req.body && typeof req.body === "object"
       ? (req.body as Record<string, unknown>)["notificationChannel"]
@@ -866,6 +873,15 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
         lockedBefore.isPublished === false ||
         firstPublish
       );
+    // Check under the same row lock as snapshot replacement. A host cannot
+    // acknowledge an operator's draft, even with a valid preview token or a
+    // simultaneous host edit. No writes have happened at this point.
+    if (hostOperatorDraftPublishDenied(
+      req.actor?.kind ?? "system", lockedBefore.operatorDraftPending, successfulPublish,
+    )) {
+      return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
+        hostOperatorDraftDenied: true };
+    }
     const unpublishing =
       writeData["isPublished"] === false && lockedBefore.isPublished === true;
     const publishTime = successfulPublish ? new Date() : null;
@@ -914,6 +930,9 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     }
     if (successfulPublish) {
       writeData["hasUnpublishedChanges"] = false;
+      writeData["operatorDraftPending"] = operatorDraftAfterWrite(
+        lockedBefore.operatorDraftPending, req.actor?.kind ?? "system", "publish",
+      );
       writeData["lastPublishedAt"] = publishTime;
     } else if (
       unpublishing ||
@@ -923,6 +942,9 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       )
     ) {
       writeData["hasUnpublishedChanges"] = true;
+      writeData["operatorDraftPending"] = operatorDraftAfterWrite(
+        lockedBefore.operatorDraftPending, req.actor?.kind ?? "system", "dirty",
+      );
     }
     if (firstPublish) {
       writeData["firstPublishedAt"] = publishTime ?? new Date();
@@ -966,6 +988,15 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
   } = writeResult;
   if ("stalePublication" in writeResult && writeResult.stalePublication) {
     res.status(409).json({ error: "Osnutek se je spremenil. Pred objavo ponovno preglejte spremembe." });
+    return;
+  }
+  if ("hostOperatorDraftDenied" in writeResult && writeResult.hostOperatorDraftDenied) {
+    await denyAuthorization(req, res, {
+      reason: "operator_draft_pending",
+      tenantId: id,
+      route: "/admin/tenants/:id",
+      message: "Vodnik vsebuje spremembe upravljavca, ki še niso potrjene — objavo opravi Smart360.",
+    });
     return;
   }
   if ("hostSlugPublishDenied" in writeResult && writeResult.hostSlugPublishDenied) {
@@ -1057,7 +1088,7 @@ router.post("/admin/tenants/:id/renew", async (req, res): Promise<void> => {
   const tenant = await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(tenantsTable)
-      .set({ renewsAt: next, hasUnpublishedChanges: true })
+      .set({ renewsAt: next, hasUnpublishedChanges: true, operatorDraftPending: true })
       .where(eq(tenantsTable.id, id))
       .returning();
     if (!updated) return null;

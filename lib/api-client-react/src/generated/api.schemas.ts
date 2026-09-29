@@ -950,6 +950,13 @@ export interface TrashCategory {
   deletedAt: string | null;
 }
 
+export interface TrashSection {
+  id: string;
+  title: string;
+  /** @nullable */
+  deletedAt: string | null;
+}
+
 export interface TrashItem {
   id: string;
   /** @nullable */
@@ -960,6 +967,7 @@ export interface TrashItem {
 }
 
 export interface TrashResponse {
+  sections: TrashSection[];
   categories: TrashCategory[];
   items: TrashItem[];
   retentionDays: number;

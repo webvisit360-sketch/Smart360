@@ -48,7 +48,16 @@ export async function ensureGuestDirtyTriggers(): Promise<void> {
       ELSIF TG_TABLE_NAME = 'item_category_attachments' THEN
         IF TG_OP <> 'INSERT' THEN
           UPDATE tenants
-          SET has_unpublished_changes = true, updated_at = now()
+          SET has_unpublished_changes = true,
+               operator_draft_pending = operator_draft_pending OR
+                 NOT COALESCE(
+                   (current_user = 'smart360_host'
+                     AND current_setting('app.role', true) = 'host')
+                   OR (current_user <> 'smart360_host'
+                     AND current_setting('smart360.draft_actor', true) = 'host'
+                     AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+                   false),
+               updated_at = now()
           WHERE id IN (
             SELECT s.tenant_id
             FROM items i
@@ -63,7 +72,16 @@ export async function ensureGuestDirtyTriggers(): Promise<void> {
         END IF;
         IF TG_OP <> 'DELETE' THEN
           UPDATE tenants
-          SET has_unpublished_changes = true, updated_at = now()
+          SET has_unpublished_changes = true,
+               operator_draft_pending = operator_draft_pending OR
+                 NOT COALESCE(
+                   (current_user = 'smart360_host'
+                     AND current_setting('app.role', true) = 'host')
+                   OR (current_user <> 'smart360_host'
+                     AND current_setting('smart360.draft_actor', true) = 'host'
+                     AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+                   false),
+               updated_at = now()
           WHERE id IN (
             SELECT s.tenant_id
             FROM items i
@@ -142,13 +160,31 @@ export async function ensureGuestDirtyTriggers(): Promise<void> {
         IF (TG_OP <> 'INSERT' AND old_tenant_id IS NULL)
           OR (TG_OP <> 'DELETE' AND new_tenant_id IS NULL) THEN
           UPDATE tenants
-          SET has_unpublished_changes = true, updated_at = now();
+          SET has_unpublished_changes = true,
+               operator_draft_pending = operator_draft_pending OR
+                 NOT COALESCE(
+                   (current_user = 'smart360_host'
+                     AND current_setting('app.role', true) = 'host')
+                   OR (current_user <> 'smart360_host'
+                     AND current_setting('smart360.draft_actor', true) = 'host'
+                     AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+                   false),
+               updated_at = now();
           IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
         END IF;
       END IF;
 
       UPDATE tenants
-      SET has_unpublished_changes = true, updated_at = now()
+      SET has_unpublished_changes = true,
+           operator_draft_pending = operator_draft_pending OR
+             NOT COALESCE(
+               (current_user = 'smart360_host'
+                 AND current_setting('app.role', true) = 'host')
+               OR (current_user <> 'smart360_host'
+                 AND current_setting('smart360.draft_actor', true) = 'host'
+                 AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+               false),
+           updated_at = now()
       WHERE id = old_tenant_id OR id = new_tenant_id;
       IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
     END;

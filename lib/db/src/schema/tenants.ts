@@ -191,6 +191,9 @@ export const tenantsTable = pgTable("tenants", {
   // Server-owned draft/publish gap. Guest-visible writes set the flag; only
   // a successful publish clears it and advances lastPublishedAt.
   hasUnpublishedChanges: boolean("has_unpublished_changes").notNull().default(false),
+  // Server-owned provenance: a host cannot publish an operator-authored draft.
+  // Sticky until a successful owner publication, even after subsequent host edits.
+  operatorDraftPending: boolean("operator_draft_pending").notNull().default(false),
   lastPublishedAt: timestamp("last_published_at", { withTimezone: true }),
   // Set exactly once, on the FIRST transition to published. Drives two rules
   // (Instruction #28 CP2b): the first published URL acquires permanent

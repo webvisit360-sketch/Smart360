@@ -7,8 +7,10 @@
  */
 import type { TrashCategory } from './trashCategory';
 import type { TrashItem } from './trashItem';
+import type { TrashSection } from './trashSection';
 
 export interface TrashResponse {
+  sections: TrashSection[];
   categories: TrashCategory[];
   items: TrashItem[];
   retentionDays: number;

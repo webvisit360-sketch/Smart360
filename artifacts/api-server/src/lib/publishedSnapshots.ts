@@ -98,7 +98,7 @@ export async function ensureTenantPublication(tenantId: string): Promise<void> {
 const ignored = new Set([
   "managementMode",
   "createdAt", "updatedAt", "deletedAt", "lastPublishedAt", "firstPublishedAt",
-  "hasUnpublishedChanges", "isPublished", "creatorDraft", "creatorOriginRegion",
+  "hasUnpublishedChanges", "operatorDraftPending", "isPublished", "creatorDraft", "creatorOriginRegion",
   "mediaQuotaBytes", "orderNotifyEmail", "messageNotifyEmail", "notificationChannel",
   "notificationWhatsappPhone", "orderPasswordConfigured", "renewsAt", "isTemplate",
   "hostAnsweredMessageCount", "hostResponseMedianMinutes",

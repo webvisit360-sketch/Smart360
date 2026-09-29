@@ -102,16 +102,18 @@ export type TenantContentTree = Omit<Tenant, "orderPassword"> & {
   sitePlanImages: SitePlanImageEntry[];
 };
 
-export type GuestTenantContentTree = Omit<TenantContentTree, "managementMode" | "draftSlug">;
+export type GuestTenantContentTree = Omit<TenantContentTree, "managementMode" | "draftSlug" | "operatorDraftPending">;
 
 /** Strip operator access policy even from old snapshots that stored whole tenant rows. */
 export function projectGuestTenant(
   tree: TenantContentTree | GuestTenantContentTree,
 ): GuestTenantContentTree {
-  const { managementMode: _managementMode, draftSlug: _draftSlug, ...guest } =
+  const { managementMode: _managementMode, draftSlug: _draftSlug,
+    operatorDraftPending: _operatorDraftPending, ...guest } =
     tree as GuestTenantContentTree & {
       managementMode?: Tenant["managementMode"];
       draftSlug?: Tenant["draftSlug"];
+      operatorDraftPending?: Tenant["operatorDraftPending"];
     };
   return guest;
 }
@@ -222,7 +224,7 @@ export async function buildTenantContent(
   const sections = await db
     .select()
     .from(sectionsTable)
-    .where(eq(sectionsTable.tenantId, tenant.id))
+    .where(and(eq(sectionsTable.tenantId, tenant.id), isNull(sectionsTable.deletedAt)))
     .orderBy(asc(sectionsTable.position));
 
   const sectionIds = sections.map((s) => s.id);

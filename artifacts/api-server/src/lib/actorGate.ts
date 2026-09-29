@@ -4,6 +4,7 @@ import { actorStorage, type Actor } from "./actorContext";
 import { isAuthenticated } from "./adminAuth";
 import { findHostActor } from "./hostAuth";
 import { logger } from "./logger";
+import { denyAuthorization } from "./authorizationDenial";
 
 /**
  * Ring 1 + Ring 2 — central actor gate and deny-by-default route fence
@@ -191,7 +192,9 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/tenants/:id/sections", binding: T_ID },
   { method: "post", path: "/admin/sections/:id/categories", binding: e("section") },
   { method: "patch", path: "/admin/sections/:id", binding: e("section") },
-  { method: "delete", path: "/admin/sections/:id", binding: e("section") },
+  { method: "delete", path: "/admin/sections/:id", binding: OPERATOR_ONLY },
+  { method: "post", path: "/admin/sections/:id/trash", binding: e("section") },
+  { method: "post", path: "/admin/sections/:id/restore", binding: e("section") },
   { method: "post", path: "/admin/sections/reorder", binding: RLS },
   { method: "patch", path: "/admin/categories/:id", binding: e("category") },
   { method: "delete", path: "/admin/categories/:id", binding: e("category") },
@@ -281,7 +284,11 @@ export function requireOperator(req: Request, res: Response, next: NextFunction)
     next();
     return;
   }
-  res.status(req.actor ? 403 : 401).json({ error: req.actor ? "Samo za operaterja Smart360." : "Not authenticated" });
+  if (!req.actor) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  denyAuthorization(req, res, { reason: "operator_required" }).catch(next);
 }
 
 // ---------- Runtime matching ----------
@@ -371,13 +378,18 @@ function notFound(res: Response): void {
   res.status(404).json({ error: "Not found" });
 }
 
-async function gate(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function gate(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  actorResolver: (req: Request) => Promise<Actor | null> = resolveActor,
+): Promise<void> {
   const hit = matchRoute(req.method, req.path);
 
   if (hit?.spec.binding.kind === "anon") {
     // No auth required; still pin the actor when one exists, so e.g. session
     // probes and logout can see it.
-    const actor = await resolveActor(req);
+    const actor = await actorResolver(req);
     if (actor) {
       req.actor = actor;
       actorStorage.run(actor, () => next());
@@ -387,7 +399,7 @@ async function gate(req: Request, res: Response, next: NextFunction): Promise<vo
     return;
   }
 
-  const actor = await resolveActor(req);
+  const actor = await actorResolver(req);
   if (!actor) {
     res.status(401).json({ error: "Not authenticated" });
     return;
@@ -410,6 +422,20 @@ async function gate(req: Request, res: Response, next: NextFunction): Promise<vo
     return;
   }
   const binding = hit.spec.binding;
+  if (binding.kind === "owner-only" && req.method === "DELETE" &&
+      hit.spec.path === "/admin/sections/:id") {
+    // A foreign/missing section is still invisible, even for this one
+    // operator-only route whose own-tenant denial is deliberately 403.
+    const id = paramValue(hit, "id");
+    if (!UUID_RE.test(id) || (await entityTenantId("section", id)) !== actor.tenantId) {
+      notFound(res);
+      return;
+    }
+    await denyAuthorization(req, res, {
+      reason: "operator_required", tenantId: actor.tenantId, route: hit.spec.path,
+    });
+    return;
+  }
   switch (binding.kind) {
     case "owner-only":
       notFound(res);
@@ -419,12 +445,27 @@ async function gate(req: Request, res: Response, next: NextFunction): Promise<vo
         notFound(res);
         return;
       }
-      if (binding.bodyDeny && req.body && typeof req.body === "object") {
+       if (binding.bodyDeny && req.body && typeof req.body === "object") {
         for (const field of binding.bodyDeny) {
           if (field in (req.body as Record<string, unknown>)) {
             res.status(400).json({ error: `Polje '${field}' lahko spreminja samo upravitelj.` });
             return;
           }
+       if (req.method === "PATCH" && hit.spec.path === "/admin/tenants/:id" &&
+           req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
+         const protectedFields = [
+           "isTemplate", "mediaQuotaBytes", "renewsAt", "coordinateOverride",
+           "rating", "reviewsCount",
+         ];
+         const denied = protectedFields.filter((field) =>
+           Object.prototype.hasOwnProperty.call(req.body, field));
+         if (denied.length) {
+           await denyAuthorization(req, res, {
+             reason: "operator_field", fields: denied, tenantId: actor.tenantId, route: hit.spec.path,
+           });
+           return;
+         }
+       }
         }
       }
       break;
@@ -472,6 +513,20 @@ export function adminGate(req: Request, res: Response, next: NextFunction): void
     return;
   }
   gate(req, res, next).catch(next);
+}
+
+/**
+ * Trusted in-process test harness only. Never mounted by the application:
+ * callers pass a server-side actor, not a request header/cookie/body value.
+ */
+export function createAdminGateForTests(actor: Actor): typeof adminGate {
+  return (req, res, next) => {
+    if (req.path !== "/admin" && !req.path.startsWith("/admin/")) {
+      next();
+      return;
+    }
+    gate(req, res, next, async () => actor).catch(next);
+  };
 }
 
 // ---------- Boot-time exhaustiveness assertion ----------

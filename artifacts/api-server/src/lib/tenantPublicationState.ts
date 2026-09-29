@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db, tenantsTable } from "@workspace/db";
+import { currentActor } from "./actorContext";
 
 /**
  * Marks a completed tenant-scoped admin mutation as unpublished.
@@ -12,6 +13,9 @@ export async function markTenantAdminChangeDirty(tenantId: string): Promise<void
   if (!tenantId) return;
   await db
     .update(tenantsTable)
-    .set({ hasUnpublishedChanges: true })
+    .set({
+      hasUnpublishedChanges: true,
+      ...(currentActor()?.kind === "host" ? {} : { operatorDraftPending: true }),
+    })
     .where(eq(tenantsTable.id, tenantId));
 }

@@ -570,7 +570,7 @@ export async function pinHostDraftItem(input: {
             : entry),
       }).where(eq(hostOnboardingRoundsTable.id, round.id));
     }
-    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true, operatorDraftPending: true })
       .where(eq(tenantsTable.id, row.tenantId));
     return { itemId: row.id, latitude: input.latitude, longitude: input.longitude,
       roadDistanceM: Math.round(route.distanceMeters),

@@ -824,7 +824,7 @@ export async function alignTenantSkeleton(
 
     const changed = Object.values(counts).some((value) => value > 0);
     if (changed) {
-      await tx.update(tenantsTable).set({ hasUnpublishedChanges: true }).where(eq(tenantsTable.id, tenantId));
+      await tx.update(tenantsTable).set({ hasUnpublishedChanges: true, operatorDraftPending: true }).where(eq(tenantsTable.id, tenantId));
     }
     const summary = changed
       ? `Uskladitev je končana: ${counts.sectionsUpdated} razdelkov, ${counts.categoriesUpdated} kategorij, ${counts.translationsUpdated} prevodov, ${counts.categoriesRetired} umaknjenih starih kategorij in ${counts.proposalsRekeyed} prerazvrščenih predlogov.`

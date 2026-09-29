@@ -31,6 +31,7 @@ export const sectionsTable = pgTable("sections", {
   groupOrder: jsonb("group_order").$type<string[]>(),
   position: integer("position").notNull().default(0),
   isVisible: boolean("is_visible").notNull().default(true),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (t) => [
   // Guest payload render path: every guide open filters by tenant.
   index("sections_tenant_idx").on(t.tenantId),

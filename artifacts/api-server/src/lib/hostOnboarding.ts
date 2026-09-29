@@ -28,6 +28,7 @@ import {
 } from "./hostOnboardingEmail";
 import { createCategoryWithTooling } from "./categoryTooling";
 import { safeDatabaseErrorDiagnostic } from "./infrastructureDiagnostics";
+import { currentActor } from "./actorContext";
 import {
   applyCanonicalHostOnboardingPatch,
   readCanonicalHostOnboarding,
@@ -37,6 +38,15 @@ import {
 } from "./hostOnboardingCanonical";
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** The privileged Creator escape preserves a VERIFIED host draft's origin.
+ * SET LOCAL never leaks into a pooled connection or another transaction.
+ */
+async function attributePrivilegedHostDraft(tx: Transaction, tenantId: string): Promise<void> {
+  await tx.execute(sql`
+    SELECT set_config('smart360.draft_actor', 'host', true),
+           set_config('smart360.draft_tenant', ${tenantId}, true)
+  `);
+}
 type HostResolutionDependencies = {
   search?: typeof fetchAdminPlaceNominatim;
   route?: typeof computeRoadRoute;
@@ -418,6 +428,7 @@ export async function createHostOnboardingCategory(
     const [section] = await tx.select({ id: sectionsTable.id }).from(sectionsTable).where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(sectionsTable.key, input.sectionKey),
+      isNull(sectionsTable.deletedAt),
     )).limit(1);
     if (!section) return { ok: false, kind: "missing_section" };
 
@@ -461,6 +472,7 @@ async function canonicalCategory(
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(categoriesTable.key, categoryKey),
+      isNull(sectionsTable.deletedAt),
       isNull(categoriesTable.deletedAt),
     ))
     .orderBy(asc(categoriesTable.position))
@@ -476,6 +488,7 @@ async function firstSectionCategory(tx: Transaction, tenantId: string, sectionKe
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(sectionsTable.key, sectionKey),
+      isNull(sectionsTable.deletedAt),
       isNull(categoriesTable.deletedAt),
     ))
     .orderBy(asc(categoriesTable.position))
@@ -508,6 +521,7 @@ async function ensureHostCustomCategory(
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       inArray(sectionsTable.key, ["explore", "services"]),
+      isNull(sectionsTable.deletedAt),
       eq(categoriesTable.key, key),
       isNull(categoriesTable.deletedAt),
     ))
@@ -519,6 +533,7 @@ async function ensureHostCustomCategory(
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(sectionsTable.key, "explore"),
+      isNull(sectionsTable.deletedAt),
     ))
     .limit(1);
   if (!section) throw new Error("Razdelek Odkrij okolico za namestitev ne obstaja.");
@@ -735,6 +750,7 @@ async function mapSubmission(
     .where(and(
       eq(sectionsTable.tenantId, tenantId),
       eq(sectionsTable.key, "explore"),
+      isNull(sectionsTable.deletedAt),
       isNull(itemsTable.deletedAt),
       isNull(categoriesTable.deletedAt),
     ));
@@ -842,6 +858,9 @@ export async function processHostRecommendationIntents(
       const alreadyProcessed = recommendationProcessingStatus(round.targetReview);
       if (alreadyProcessed?.status === "succeeded") return alreadyProcessed;
 
+      // The persisted submitted round, not an HTTP parameter, proves that
+      // this privileged materialization belongs to a host-authored draft.
+      if (round.hostUserId) await attributePrivilegedHostDraft(tx, round.tenantId);
       const mapped = await mapSubmission(
         tx,
         round.tenantId,
@@ -988,6 +1007,11 @@ export async function submitHostOnboarding(
       ))
       .limit(1);
     if (uploading) return { ok: false, kind: "photo_uploading" } as const;
+    const actor = currentActor();
+    if (actor?.kind === "host" && actor.tenantId === tenantId &&
+        round.hostUserId === hostUserId) {
+      await attributePrivilegedHostDraft(tx, tenantId);
+    }
     await applyCanonicalHostOnboardingPatch(tx, tenantId, data);
     const now = new Date();
     const nextRevision = round.revision + 1;

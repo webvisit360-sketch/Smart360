@@ -24,6 +24,7 @@ import { ensureGuestDirtyTriggers } from "./lib/guestDirtyTriggers";
 import { ensurePublishedSnapshotSchema, initializePublishedSnapshots } from "./lib/publishedSnapshots";
 import { runCreatorProposalContentReadySyncAtStartup } from "./lib/creatorProposalLedger";
 import { initializeSlugReservations } from "./lib/tenantSlugReservations";
+import { initializeOperatorDraftPending } from "./lib/operatorDraftBackfill";
 
 const rawPort = process.env["PORT"];
 
@@ -80,6 +81,7 @@ ensureAdminAccount()
   // Publish migrates the schema first; only production's OWN tenant/alias
   // rows seed the durable URL namespace. Fail closed on mismatched ownership.
   .then(() => initializeSlugReservations())
+  .then(() => initializeOperatorDraftPending())
   .then(() => ensureCreatorPhotoSchema())
   .then(() => ensureCreatorDistanceBackfillSchema())
   .then(() => ensurePublishedSnapshotSchema())

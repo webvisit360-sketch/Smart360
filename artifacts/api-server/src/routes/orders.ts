@@ -857,7 +857,10 @@ router.patch("/admin/orders/:orderRef/status", requireAdmin, async (req, res): P
     if (changed[0]) {
       await tx
         .update(tenantsTable)
-        .set({ hasUnpublishedChanges: true })
+        .set({
+          hasUnpublishedChanges: true,
+          ...(req.actor?.kind === "host" ? {} : { operatorDraftPending: true }),
+        })
         .where(eq(tenantsTable.id, changed[0].tenantId));
     }
     return changed;

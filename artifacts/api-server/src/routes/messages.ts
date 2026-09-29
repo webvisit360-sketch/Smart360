@@ -728,7 +728,10 @@ router.post(
 
         await tx
           .update(tenantsTable)
-          .set({ hasUnpublishedChanges: true })
+          .set({
+            hasUnpublishedChanges: true,
+            ...(req.actor?.kind === "host" ? {} : { operatorDraftPending: true }),
+          })
           .where(eq(tenantsTable.id, tenantId));
 
         return { thread: lockedThread };

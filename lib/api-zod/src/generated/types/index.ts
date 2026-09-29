@@ -334,6 +334,7 @@ export * from './translationOverview';
 export * from './trashCategory';
 export * from './trashItem';
 export * from './trashResponse';
+export * from './trashSection';
 export * from './webAuthnOptions';
 export * from './webAuthnOptionsOptions';
 export * from './webAuthnVerifyBody';

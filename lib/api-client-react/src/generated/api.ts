@@ -7970,6 +7970,9 @@ export const getDeleteSectionUrl = (id: string,) => {
   return `/api/admin/sections/${id}`
 }
 
+/**
+ * @summary Permanently delete a section (operator only)
+ */
 export const deleteSection = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
   return customFetch<void>(getDeleteSectionUrl(id),
@@ -7985,7 +7988,7 @@ export const deleteSection = async (id: string, options?: Parameters<typeof cust
 
 
 
-export const getDeleteSectionMutationOptions = <TError = ErrorType<unknown>,
+export const getDeleteSectionMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSection>>, TError,{id: string}, TContext> => {
 
@@ -8014,9 +8017,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteSectionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSection>>>
 
-    export type DeleteSectionMutationError = ErrorType<unknown>
+    export type DeleteSectionMutationError = ErrorType<void>
 
-    export const useDeleteSection = <TError = ErrorType<unknown>,
+    /**
+ * @summary Permanently delete a section (operator only)
+ */
+export const useDeleteSection = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof deleteSection>>,
@@ -8025,6 +8031,142 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteSectionMutationOptions(options));
+    }
+
+export const getTrashSectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/sections/${id}/trash`
+}
+
+/**
+ * @summary Move a section and its subtree out of the active draft without deleting children
+ */
+export const trashSection = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<OkStatus> => {
+
+  return customFetch<OkStatus>(getTrashSectionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getTrashSectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trashSection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trashSection>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['trashSection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trashSection>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  trashSection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrashSectionMutationResult = NonNullable<Awaited<ReturnType<typeof trashSection>>>
+
+    export type TrashSectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Move a section and its subtree out of the active draft without deleting children
+ */
+export const useTrashSection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trashSection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof trashSection>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getTrashSectionMutationOptions(options));
+    }
+
+export const getRestoreSectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/sections/${id}/restore`
+}
+
+export const restoreSection = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<OkStatus> => {
+
+  return customFetch<OkStatus>(getRestoreSectionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRestoreSectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreSection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreSection>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['restoreSection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreSection>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreSection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreSectionMutationResult = NonNullable<Awaited<ReturnType<typeof restoreSection>>>
+
+    export type RestoreSectionMutationError = ErrorType<unknown>
+
+    export const useRestoreSection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreSection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreSection>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getRestoreSectionMutationOptions(options));
     }
 
 export const getReorderSectionsUrl = () => {
@@ -10615,7 +10757,7 @@ export const getGetTrashUrl = (id: string,) => {
 }
 
 /**
- * @summary Recently deleted categories and items (30-day trash)
+ * @summary Recently deleted sections, categories and items
  */
 export const getTrash = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TrashResponse> => {
 
@@ -10662,7 +10804,7 @@ export type GetTrashQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Recently deleted categories and items (30-day trash)
+ * @summary Recently deleted sections, categories and items
  */
 
 export function useGetTrash<TData = Awaited<ReturnType<typeof getTrash>>, TError = ErrorType<unknown>>(

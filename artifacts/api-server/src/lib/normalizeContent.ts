@@ -84,7 +84,7 @@ export async function normalizeAllContent(): Promise<{
     if (Object.keys(upd).length) {
       await db
         .update(tenantsTable)
-        .set({ ...upd, hasUnpublishedChanges: true })
+        .set({ ...upd, hasUnpublishedChanges: true, operatorDraftPending: true })
         .where(eq(tenantsTable.id, t.id));
       changedTenantIds.add(t.id);
     }

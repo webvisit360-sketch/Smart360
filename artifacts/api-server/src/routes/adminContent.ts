@@ -146,6 +146,19 @@ async function tenantNameForSection(
   return row ?? null;
 }
 
+async function activeSection(sectionId: string): Promise<boolean> {
+  const [section] = await db.select({ id: sectionsTable.id }).from(sectionsTable)
+    .where(and(eq(sectionsTable.id, sectionId), isNull(sectionsTable.deletedAt)));
+  return Boolean(section);
+}
+
+async function activeCategory(categoryId: string): Promise<boolean> {
+  const [category] = await db.select({ id: categoriesTable.id }).from(categoriesTable)
+    .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+    .where(and(eq(categoriesTable.id, categoryId), isNull(categoriesTable.deletedAt), isNull(sectionsTable.deletedAt)));
+  return Boolean(category);
+}
+
 async function tenantContextForCategory(categoryId: string) {
   const [row] = await db
     .select({ tenantId: tenantsTable.id, tenantName: tenantsTable.name })
@@ -470,7 +483,11 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
   const [prevSection] = await db
     .select()
     .from(sectionsTable)
-    .where(eq(sectionsTable.id, id));
+    .where(and(eq(sectionsTable.id, id), isNull(sectionsTable.deletedAt)));
+  if (!prevSection) {
+    res.status(404).json({ error: "Section not found" });
+    return;
+  }
   if (parsed.data.groupOrder !== undefined) {
     if (!prevSection || !validSectionGroupOrder(prevSection.key, parsed.data.groupOrder) ||
       (parsed.data.key !== undefined && parsed.data.key !== prevSection.key)) {
@@ -486,7 +503,7 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
       ...(prevSection?.groupOrder && parsed.data.key !== undefined &&
         parsed.data.key !== prevSection.key ? { groupOrder: null } : {}),
     })
-    .where(eq(sectionsTable.id, id))
+    .where(and(eq(sectionsTable.id, id), isNull(sectionsTable.deletedAt)))
     .returning();
   if (!section) {
     res.status(404).json({ error: "Not found" });
@@ -506,7 +523,45 @@ router.patch("/admin/sections/:id", async (req, res): Promise<void> => {
   res.json(UpdateSectionResponse.parse(section));
 });
 
-router.delete("/admin/sections/:id", async (req, res): Promise<void> => {
+router.post("/admin/sections/:id/trash", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [section] = await db.transaction(async (tx) => {
+    const rows = await tx.update(sectionsTable).set({ deletedAt: new Date() })
+      .where(and(eq(sectionsTable.id, id), isNull(sectionsTable.deletedAt))).returning();
+    if (rows[0]) await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, rows[0].tenantId));
+    return rows;
+  });
+  if (!section) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const ctx = await tenantNameForSection(id);
+  await logChange({ ...ctx, action: "delete", entity: "section", detail: section.title,
+    summary: auditSummary("Premaknjen v koš razdelek", section.title) });
+  res.json({ ok: true });
+});
+
+router.post("/admin/sections/:id/restore", async (req, res): Promise<void> => {
+  const id = firstParam(req.params["id"]);
+  const [section] = await db.transaction(async (tx) => {
+    const rows = await tx.update(sectionsTable).set({ deletedAt: null })
+      .where(and(eq(sectionsTable.id, id), sql`${sectionsTable.deletedAt} IS NOT NULL`)).returning();
+    if (rows[0]) await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, rows[0].tenantId));
+    return rows;
+  });
+  if (!section) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const ctx = await tenantNameForSection(id);
+  await logChange({ ...ctx, action: "restore", entity: "section", detail: section.title,
+    summary: auditSummary("Obnovljen razdelek", section.title) });
+  res.json({ ok: true });
+});
+
+router.delete("/admin/sections/:id", requireOperator, async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
   const ctx = await tenantNameForSection(id);
   const [section] = await db
@@ -541,7 +596,7 @@ router.post("/admin/sections/reorder", async (req, res): Promise<void> => {
   const rows = await db
     .select({ id: sectionsTable.id, parent: sectionsTable.tenantId })
     .from(sectionsTable)
-    .where(inArray(sectionsTable.id, ids));
+    .where(and(inArray(sectionsTable.id, ids), isNull(sectionsTable.deletedAt)));
   const parents = new Set(rows.map((r) => r.parent));
   if (rows.length !== ids.length || parents.size !== 1) {
     res.status(400).json({ error: "ids must all belong to the same tenant" });
@@ -550,7 +605,7 @@ router.post("/admin/sections/reorder", async (req, res): Promise<void> => {
   const siblings = await db
     .select({ id: sectionsTable.id })
     .from(sectionsTable)
-    .where(eq(sectionsTable.tenantId, [...parents][0]!));
+    .where(and(eq(sectionsTable.tenantId, [...parents][0]!), isNull(sectionsTable.deletedAt)));
   if (siblings.length !== ids.length) {
     res.status(400).json({ error: "ids must include every section of the tenant" });
     return;
@@ -582,7 +637,7 @@ router.post(
     const [section] = await db
       .select()
       .from(sectionsTable)
-      .where(eq(sectionsTable.id, sectionId));
+      .where(and(eq(sectionsTable.id, sectionId), isNull(sectionsTable.deletedAt)));
     if (!section) {
       res.status(404).json({ error: "Section not found" });
       return;
@@ -616,6 +671,10 @@ router.patch("/admin/categories/:id", async (req, res): Promise<void> => {
     .select()
     .from(categoriesTable)
     .where(eq(categoriesTable.id, id));
+  if (!prevCategory || prevCategory.deletedAt || !(await activeSection(prevCategory.sectionId))) {
+    res.status(404).json({ error: "Category not found in active section" });
+    return;
+  }
   const [category] = await db
     .update(categoriesTable)
     .set(cleanContentFields(parsed.data))
@@ -682,6 +741,10 @@ router.post("/admin/categories/reorder", async (req, res): Promise<void> => {
   const parents = new Set(rows.map((r) => r.parent));
   if (rows.length !== ids.length || parents.size !== 1) {
     res.status(400).json({ error: "ids must all belong to the same section" });
+    return;
+  }
+  if (!(await activeSection([...parents][0]!))) {
+    res.status(409).json({ error: "Section is in trash" });
     return;
   }
   // Soft-deleted siblings live in the trash and are not part of the visible order.
@@ -791,7 +854,7 @@ router.post("/admin/categories/:id/items", async (req, res): Promise<void> => {
     .select({ category: categoriesTable, sectionKey: sectionsTable.key })
     .from(categoriesTable)
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
-    .where(eq(categoriesTable.id, categoryId));
+    .where(and(eq(categoriesTable.id, categoryId), isNull(categoriesTable.deletedAt), isNull(sectionsTable.deletedAt)));
   if (!category) {
     res.status(404).json({ error: "Category not found" });
     return;
@@ -837,7 +900,15 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
     .select()
     .from(itemsTable)
     .where(eq(itemsTable.id, id));
+  if (!prevItem || prevItem.deletedAt || !(await activeCategory(prevItem.categoryId))) {
+    res.status(404).json({ error: "Item not found in active section" });
+    return;
+  }
   if (prevItem && parsed.data.categoryId && parsed.data.categoryId !== prevItem.categoryId) {
+    if (!(await activeCategory(parsed.data.categoryId))) {
+      res.status(409).json({ error: "Target category is in trash" });
+      return;
+    }
     const [sourceContext, targetContext] = await Promise.all([
       tenantContextForCategory(prevItem.categoryId),
       tenantContextForCategory(parsed.data.categoryId),
@@ -1074,7 +1145,7 @@ router.post("/admin/items/:id/duplicate", async (req, res): Promise<void> => {
     .select()
     .from(itemsTable)
     .where(eq(itemsTable.id, id));
-  if (!source) {
+  if (!source || source.deletedAt || !(await activeCategory(source.categoryId))) {
     res.status(404).json({ error: "Not found" });
     return;
   }
@@ -1132,10 +1203,14 @@ router.post("/admin/items/reorder", async (req, res): Promise<void> => {
   const rows = await db
     .select({ id: itemsTable.id, parent: itemsTable.categoryId })
     .from(itemsTable)
-    .where(inArray(itemsTable.id, ids));
+    .where(and(inArray(itemsTable.id, ids), isNull(itemsTable.deletedAt)));
   const parents = new Set(rows.map((r) => r.parent));
   if (rows.length !== ids.length || parents.size !== 1) {
     res.status(400).json({ error: "ids must all belong to the same category" });
+    return;
+  }
+  if (!(await activeCategory([...parents][0]!))) {
+    res.status(409).json({ error: "Category or section is in trash" });
     return;
   }
   // Soft-deleted siblings live in the trash and are not part of the visible order.
@@ -1424,7 +1499,7 @@ async function purgeExpired(tenantId: string): Promise<void> {
     await db
       .select({ id: sectionsTable.id })
       .from(sectionsTable)
-      .where(eq(sectionsTable.tenantId, tenantId))
+      .where(and(eq(sectionsTable.tenantId, tenantId), isNull(sectionsTable.deletedAt)))
   ).map((s) => s.id);
   if (sectionIds.length === 0) return;
   const catIds = (
@@ -1470,6 +1545,14 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
   if (currentActor()?.kind === "owner") {
     await purgeExpired(tenantId);
   }
+  const sections = await db.select({
+    id: sectionsTable.id,
+    title: sectionsTable.title,
+    deletedAt: sectionsTable.deletedAt,
+  }).from(sectionsTable).where(and(
+    eq(sectionsTable.tenantId, tenantId),
+    sql`${sectionsTable.deletedAt} IS NOT NULL`,
+  ));
   const categories = await db
     .select({
       id: categoriesTable.id,
@@ -1483,6 +1566,7 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
       and(
         eq(sectionsTable.tenantId, tenantId),
         sql`${categoriesTable.deletedAt} IS NOT NULL`,
+        isNull(sectionsTable.deletedAt),
       ),
     );
   // Items deleted directly (their category is still alive); items that went to
@@ -1502,9 +1586,11 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
         eq(sectionsTable.tenantId, tenantId),
         sql`${itemsTable.deletedAt} IS NOT NULL`,
         isNull(categoriesTable.deletedAt),
+        isNull(sectionsTable.deletedAt),
       ),
     );
   res.json({
+    sections: sections.map((s) => ({ ...s, deletedAt: s.deletedAt?.toISOString() ?? null })),
     categories: categories.map((c) => ({
       ...c,
       deletedAt: c.deletedAt?.toISOString() ?? null,
@@ -1519,6 +1605,12 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
 
 router.post("/admin/categories/:id/restore", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
+  const [parent] = await db.select({ sectionId: categoriesTable.sectionId })
+    .from(categoriesTable).where(eq(categoriesTable.id, id));
+  if (!parent || !(await activeSection(parent.sectionId))) {
+    res.status(409).json({ error: "Restore the section first" });
+    return;
+  }
   const [category] = await db
     .update(categoriesTable)
     .set({ deletedAt: null })
@@ -1535,6 +1627,13 @@ router.post("/admin/categories/:id/restore", async (req, res): Promise<void> => 
 
 router.post("/admin/items/:id/restore", async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
+  const [parent] = await db.select({ sectionId: categoriesTable.sectionId })
+    .from(itemsTable).innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+    .where(eq(itemsTable.id, id));
+  if (!parent || !(await activeSection(parent.sectionId))) {
+    res.status(409).json({ error: "Restore the section first" });
+    return;
+  }
   const [item] = await db
     .update(itemsTable)
     .set({ deletedAt: null })

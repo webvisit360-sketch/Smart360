@@ -2,6 +2,7 @@ const PUBLICATION_CONTROL_FIELDS = new Set([
   "isPublished",
   "publishNow",
   "hasUnpublishedChanges",
+  "operatorDraftPending",
   "firstPublishedAt",
   "lastPublishedAt",
 ]);
