@@ -50,6 +50,7 @@ import {
 import {
   publicationDraftChanged,
   publicationNeedsConfirmation,
+  tenantSavePayload,
 } from "@/lib/tenant-publication-flow";
 import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
 import { adminPlaceTargetTab } from "@/lib/manual-pin-feedback";
@@ -277,6 +278,29 @@ export default function AdminTenantEdit() {
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => adminPlaceTargetTab(window.location.search) ?? "pregled");
+  const sidebarRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+    const revealSelected = () => {
+      if (window.innerWidth >= 900) return;
+      const selected = sidebar.querySelector<HTMLElement>('.admin-tenant-sidebar__item[data-active="true"]');
+      if (!selected) return;
+      const sidebarRect = sidebar.getBoundingClientRect();
+      const selectedRect = selected.getBoundingClientRect();
+      if (selectedRect.left < sidebarRect.left || selectedRect.right > sidebarRect.right) {
+        sidebar.scrollTo({
+          left: sidebar.scrollLeft + selectedRect.left - sidebarRect.left -
+            (sidebarRect.width - selectedRect.width) / 2,
+          behavior: "instant",
+        });
+      }
+    };
+    const observer = new ResizeObserver(revealSelected);
+    observer.observe(sidebar);
+    revealSelected();
+    return () => observer.disconnect();
+  }, [activeTab, isOwner, isLoading]);
   useEffect(() => {
     const navigate = (event: Event) => {
       const tab = (event as CustomEvent<{ tab: string }>).detail?.tab;
@@ -337,27 +361,9 @@ export default function AdminTenantEdit() {
       const quotaSnapshot = mediaQuotaGb;
       const t = setTimeout(() => {
         autoSaveTimer.current = null;
-        const notificationWhatsappPhone = notificationWhatsappPhoneForSave(
-          snapshot.notificationWhatsappPhone,
-        );
-        const {
-          latitude: _l,
-          longitude: _lo,
-          guestUiMode: _guestUiMode,
-          ...saveData
-        } = snapshot;
         const request = updateMutation.mutateAsync({
           id,
-          data: {
-            ...saveData,
-            customDomain: snapshot.customDomain.trim() || null,
-            email: snapshot.email.trim() || null,
-            mapUrl: snapshot.mapUrl.trim() || null,
-            wifiSsid: snapshot.wifiSsid.trim() || null,
-            wifiPass: snapshot.wifiPass || null,
-            mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(quotaSnapshot.replace(",", ".")) || 2) * 1_000_000_000),
-            notificationWhatsappPhone,
-          },
+          data: tenantSavePayload(snapshot, quotaSnapshot, isOwner),
         });
         autoSavePromise.current = request;
         void request
@@ -377,7 +383,7 @@ export default function AdminTenantEdit() {
       };
     }
     return undefined;
-  }, [formData, id, mediaQuotaGb]);
+  }, [formData, id, isOwner, mediaQuotaGb]);
 
   // Average luminance of the cover photo — for the contrast warning on the cover icons.
   const [coverLum, setCoverLum] = useState<number | null>(null);
@@ -546,26 +552,7 @@ export default function AdminTenantEdit() {
   const tenantSaveDataFor = (
     formSnapshot: typeof formData,
     quotaSnapshot: string,
-  ) => {
-    const {
-      latitude: _latitude,
-      longitude: _longitude,
-      guestUiMode: _guestUiMode,
-      ...saveFormData
-    } = formSnapshot;
-    return {
-      ...saveFormData,
-      customDomain: formSnapshot.customDomain.trim() || null,
-      email: formSnapshot.email.trim() || null,
-      mapUrl: formSnapshot.mapUrl.trim() || null,
-      wifiSsid: formSnapshot.wifiSsid.trim() || null,
-      wifiPass: formSnapshot.wifiPass || null,
-      mediaQuotaBytes: Math.round(Math.max(0.1, parseFloat(quotaSnapshot.replace(",", ".")) || 2) * 1_000_000_000),
-      notificationWhatsappPhone: notificationWhatsappPhoneForSave(
-        formSnapshot.notificationWhatsappPhone,
-      ),
-    };
-  };
+  ) => tenantSavePayload(formSnapshot, quotaSnapshot, isOwner);
 
   const isLocalDraftDirty = (
     formSnapshot: typeof formData,
@@ -732,11 +719,11 @@ export default function AdminTenantEdit() {
     >
 
       {/* SIDEBAR */}
-      <aside className="admin-sidebar admin-tenant-sidebar w-full md:w-[264px] border-b md:border-b-0 flex flex-row md:flex-col shrink-0 overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
+      <aside ref={sidebarRef} className="admin-sidebar admin-tenant-sidebar w-full md:w-[264px] border-b md:border-b-0 flex flex-row md:flex-col shrink-0 overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
         <AdminSidebarLockup className="admin-tenant-sidebar__lockup hidden md:block shrink-0" />
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
           <button data-active={activeTab === 'pregled'} onClick={() => setActiveTab('pregled')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="overview" /><span>Pregled</span></button>
-          <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>
+          {isOwner && <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>}
           <button data-active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between whitespace-nowrap transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
             <span className="flex items-center gap-[11px]"><SidebarNavIcon name="orders" /><span>Naročila</span></span>
             {(tenantOverview?.pendingOrders ?? 0) > 0 && (
@@ -761,7 +748,7 @@ export default function AdminTenantEdit() {
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsebina</div>
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col md:mb-auto shrink-0">
           <button data-active={activeTab === 'distances'} onClick={() => setActiveTab('distances')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'distances' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="area" /><span>Okolica</span></button>
-          <button data-active={activeTab === 'content'} onClick={() => setActiveTab('content')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="accommodation" /><span>Nastanitev</span></button>
+          <button data-testid="open-section-management" data-active={activeTab === 'content'} onClick={() => setActiveTab('content')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="accommodation" /><span>Sekcije in vnosi</span></button>
           <button data-active={isSettings} onClick={() => setActiveTab('general')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="settings" /><span>Nastavitve</span></button>
         </div>
 
@@ -920,7 +907,7 @@ export default function AdminTenantEdit() {
                   <Label>Ime namestitve</Label>
                   <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                 </div>
-                <div className="col-span-2">
+                {isOwner && <div className="col-span-2">
                   <SlugField
                     tenantId={id}
                     name={formData.name}
@@ -928,11 +915,11 @@ export default function AdminTenantEdit() {
                     originalSlug={originalSlug}
                     onChange={(slug) => setFormData({ ...formData, slug })}
                   />
-                </div>
-                <div className="space-y-2">
+                </div>}
+                {isOwner && <div className="space-y-2">
                   <Label>Lastna domena (neobvezno)</Label>
                   <Input placeholder="npr. gostje.mojapartma.si" value={formData.customDomain} onChange={e => setFormData({ ...formData, customDomain: e.target.value })} />
-                </div>
+                </div>}
                 <div className="space-y-2">
                   <Label>Podnaslov</Label>
                   <Input value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
@@ -973,11 +960,11 @@ export default function AdminTenantEdit() {
                     return null;
                   })()}
                 </div>
-                <div className="space-y-2">
+                {isOwner && <div className="space-y-2">
                   <Label>Kvota za medije (GB)</Label>
                   <Input type="number" min={0.1} step={0.5} value={mediaQuotaGb} onChange={e => setMediaQuotaGb(e.target.value)} />
                   <p className="text-xs text-muted-foreground">Pri 100 % so nova nalaganja zavrnjena; obstoječa vsebina se nikoli ne briše.</p>
-                </div>
+                </div>}
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t mt-4">
@@ -1174,7 +1161,7 @@ export default function AdminTenantEdit() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          {isOwner && <Card>
             <CardHeader>
               <CardTitle>Naročnina</CardTitle>
             </CardHeader>
@@ -1228,7 +1215,7 @@ export default function AdminTenantEdit() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </Card>}
           {isOwner && <HostInvitePanel tenantId={id} managementMode={managementMode} />}
         </TabsContent>
 
@@ -1549,11 +1536,11 @@ export default function AdminTenantEdit() {
                     readOnly
                     placeholder="—"
                   />
-                  <Button type="button" variant="link" className="px-0" onClick={() => {
+                  {isOwner && <Button type="button" variant="link" className="px-0" onClick={() => {
                     const latitude = prompt("Latitude"); const longitude = prompt("Longitude");
                     if (latitude === null || longitude === null) return;
                     updateMutation.mutate({ id, data: { latitude: Number(latitude), longitude: Number(longitude), coordinateOverride: true } });
-                  }}>Popravi koordinate (skrbnik)</Button>
+                  }}>Popravi koordinate (skrbnik)</Button>}
                 </div>
                 <div className="space-y-2 col-span-2">
                   <Label>Nadomestna poizvedba za zemljevid (Map Query)</Label>
@@ -1575,13 +1562,16 @@ export default function AdminTenantEdit() {
         <TabsContent value="distances"><Card><CardHeader><CardTitle>Razdalje</CardTitle></CardHeader><CardContent><DistanceReview tenantId={id} /></CardContent></Card></TabsContent>
 
         <TabsContent value="content">
-          <section className="bg-white">
-            <h2 className="mb-4 text-lg font-extrabold">Struktura vsebine</h2>
+          <section className="bg-white" data-testid="section-management">
+            <h2 className="mb-2 text-lg font-extrabold">Sekcije in vnosi</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Sekcije lahko premaknete v koš in jih obnovite pod seznamom vsebine. Objavljeni vodnik ostane nespremenjen do naslednje objave.
+            </p>
             {isOwner && <>
               <SkeletonAlignmentAction tenantId={tenant.id} />
               <DistanceBackfillAction tenantId={tenant.id} />
             </>}
-            <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} />
+            <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={isOwner} />
           </section>
         </TabsContent>
 

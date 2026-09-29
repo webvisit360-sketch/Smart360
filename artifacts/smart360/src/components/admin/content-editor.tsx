@@ -524,7 +524,10 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
     try {
       await trashSection(section.id);
       clear();
-      await refresh();
+      await Promise.all([
+        refresh(),
+        queryClient.invalidateQueries({ queryKey: getGetTrashQueryKey(tenantId), exact: true }),
+      ]);
       onDone();
     } catch {
       alert("Brisanje ni uspelo.");
@@ -857,7 +860,10 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
     try {
       await deleteCategory(category.id);
       clear();
-      await refresh();
+      await Promise.all([
+        refresh(),
+        queryClient.invalidateQueries({ queryKey: getGetTrashQueryKey(tenantId), exact: true }),
+      ]);
       onDone();
     } catch {
       alert("Brisanje ni uspelo.");
@@ -1317,7 +1323,10 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
     try {
       await deleteItem(item.id);
       clear();
-      await refresh();
+      await Promise.all([
+        refresh(),
+        queryClient.invalidateQueries({ queryKey: getGetTrashQueryKey(tenantId), exact: true }),
+      ]);
       onDone();
     } catch {
       alert("Brisanje ni uspelo.");
@@ -2281,7 +2290,7 @@ export function categoryAddLabel(sectionKey?: string): "Dodaj vnos" | "Dodaj pon
   return "Dodaj vnos";
 }
 
-function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isExplore, allCategories }: { category: Category; tenantId: string; sectionKey?: string; sectionCategories?: Category[]; isExplore?: boolean; allCategories?: Category[] }) {
+function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isExplore, allCategories, operatorPlaceCreation }: { category: Category; tenantId: string; sectionKey?: string; sectionCategories?: Category[]; isExplore?: boolean; allCategories?: Category[]; operatorPlaceCreation: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -2289,6 +2298,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
   const items = category.items || [];
   const isEmpty = items.length === 0;
   const addLabel = categoryAddLabel(sectionKey);
+  const canAdd = operatorPlaceCreation || (sectionKey !== "explore" && sectionKey !== "services");
 
   if (isEmpty) {
     return (
@@ -2301,15 +2311,15 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
           extraLabel={isCustom ? <span className="shrink-0 text-[10px] font-medium text-[#9AA39D]">gostiteljeva</span> : undefined}
           addLabel={addLabel}
           onEdit={() => setEditOpen(true)}
-          onAdd={() => setAddOpen(true)}
+          onAdd={canAdd ? () => setAddOpen(true) : undefined}
         />
 
         <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
             <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
         </EditDialog>
-        <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
+        {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
             <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
-        </EditDialog>
+        </EditDialog>}
       </>
     );
   }
@@ -2340,23 +2350,23 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
           {items.map((item) => (
             <ItemRow key={item.id} item={item} tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} layout={category.layout} />
           ))}
-          <button
+          {canAdd && <button
             type="button"
             className="w-full flex items-center justify-center gap-2 border border-dashed border-[#C9D2CB] rounded-[10px] py-2 text-[#157347] font-bold text-[14px] hover:bg-[#F4F6F2] transition-colors h-[46px]"
             onClick={() => setAddOpen(true)}
           >
             <Plus className="w-4 h-4" />
             {addLabel}
-          </button>
+          </button>}
         </div>
       </div>
 
       <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
           <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
       </EditDialog>
-      <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
+      {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
           <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
-      </EditDialog>
+      </EditDialog>}
     </>
   );
 }
@@ -2365,7 +2375,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
 // Section block
 // ==========================================
 
-function SectionBlock({ section, tenantId, allCategories }: { section: Section; tenantId: string; allCategories?: Category[] }) {
+function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation }: { section: Section; tenantId: string; allCategories?: Category[]; operatorPlaceCreation: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addCatOpen, setAddCatOpen] = useState(false);
 
@@ -2427,6 +2437,7 @@ function SectionBlock({ section, tenantId, allCategories }: { section: Section; 
               sectionCategories={sortedCategories}
               isExplore={isExplore}
               allCategories={allCategories}
+              operatorPlaceCreation={operatorPlaceCreation}
             />
           ))}
           <button
@@ -2488,7 +2499,10 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
     return () => window.removeEventListener("admin-place-navigate", navigate);
   }, []);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const { data, isLoading } = useGetTrash(tenantId);
+  const { data, isLoading, isError, refetch } = useGetTrash(tenantId, {
+    query: { queryKey: getGetTrashQueryKey(tenantId), refetchOnMount: "always" },
+    request: { cache: "no-store" },
+  });
 
   const refresh = async () => {
     await Promise.all([
@@ -2535,7 +2549,10 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
       <button
         type="button"
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (!open) void refetch();
+          setOpen((v) => !v);
+        }}
       >
         <span className="flex items-center gap-2 font-semibold text-sm">
           {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -2553,7 +2570,9 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
             Kategorije in vnosi se trajno izbrišejo po {retentionDays} dneh. Sekcije ostanejo v košu do obnove.
           </p>
 
-          {isLoading ? (
+          {isError ? (
+            <p role="alert" className="text-sm text-destructive">Koša ni bilo mogoče naložiti. Zaprite ga in poskusite znova.</p>
+          ) : isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> Nalaganje…
             </div>
@@ -2565,21 +2584,34 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sekcije</p>
                   {sections.map((section) => (
-                    <div key={section.id} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
-                      <span className="font-medium truncate">{section.title}</span>
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
-                        disabled={busyId === section.id} onClick={() => onRestoreSection(section.id)}>
-                        {busyId === section.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
-                        Obnovi
-                      </Button>
+                    <div key={section.id} className="bg-muted/40 border rounded p-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium truncate">{section.title}</span>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                          disabled={busyId === section.id} onClick={() => onRestoreSection(section.id)}>
+                          {busyId === section.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                          Obnovi
+                        </Button>
+                      </div>
+                      {(categories.some(cat => cat.sectionId === section.id) || items.some(it => it.sectionId === section.id)) && (
+                        <div className="mt-1 border-t pt-2 pl-2 text-xs text-muted-foreground">
+                          <p>Neodvisno izbrisani vnosi — najprej obnovite sekcijo:</p>
+                          {categories.filter(cat => cat.sectionId === section.id).map(cat => (
+                            <p key={cat.id} id={`archived-place-${cat.id}`}>Kategorija: {cat.label}</p>
+                          ))}
+                          {items.filter(it => it.sectionId === section.id).map(it => (
+                            <p key={it.id} id={`archived-place-${it.id}`}>Vnos: {it.title || "(Brez naslova)"} · {it.categoryLabel}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
-              {categories.length > 0 && (
+              {categories.some(cat => !cat.parentTrashed) && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Kategorije</p>
-                  {categories.map((cat) => (
+                  {categories.filter(cat => !cat.parentTrashed).map((cat) => (
                     <div key={cat.id} id={`archived-place-${cat.id}`} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
                       <div className="min-w-0">
                         <span className="font-medium truncate">{cat.label}</span>
@@ -2614,10 +2646,10 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                 </div>
               )}
 
-              {items.length > 0 && (
+              {items.some(it => !it.parentTrashed) && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Vnosi</p>
-                  {items.map((it) => {
+                  {items.filter(it => !it.parentTrashed).map((it) => {
                     const title = it.title || "(Brez naslova)";
                     return (
                       <div key={it.id} id={`archived-place-${it.id}`} className="flex items-center justify-between gap-2 bg-muted/40 border rounded p-2 text-sm">
@@ -2669,9 +2701,11 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
 export function ContentEditor({
   sections,
   tenantId,
+  operatorPlaceCreation = false,
 }: {
   sections: Section[];
   tenantId: string;
+  operatorPlaceCreation?: boolean;
 }) {
   const [addSectionOpen, setAddSectionOpen] = useState(false);
   const allCategories = React.useMemo(() => {
@@ -2688,7 +2722,7 @@ export function ContentEditor({
       ) : (
         <div className="space-y-6">
           {sections.map((section) => (
-            <SectionBlock key={section.id} section={section} tenantId={tenantId} allCategories={allCategories} />
+            <SectionBlock key={section.id} section={section} tenantId={tenantId} allCategories={allCategories} operatorPlaceCreation={operatorPlaceCreation} />
           ))}
         </div>
       )}

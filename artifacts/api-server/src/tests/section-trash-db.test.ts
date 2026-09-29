@@ -4,7 +4,7 @@ import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import test from "node:test";
 import express from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, isNotNull } from "drizzle-orm";
 import { db, runWithHostDbContext, tenantsTable, sectionsTable, categoriesTable, itemsTable } from "@workspace/db";
 import contentRouter from "../routes/adminContent";
 import { actorStorage } from "../lib/actorContext";
@@ -77,11 +77,15 @@ test("section trash keeps published snapshot, restores only independently active
       body: JSON.stringify({ title: "Cannot create in trash" }),
     })).status, 404);
     const trash = await (await fetch(`${root}/tenants/${first.tenant.id}/trash`)).json() as {
-      sections: Array<{ id: string }>; categories: unknown[]; items: unknown[];
+      sections: Array<{ id: string }>;
+      categories: Array<{ id: string; parentTrashed: boolean }>;
+      items: Array<{ id: string; parentTrashed: boolean }>;
     };
     assert.deepEqual(trash.sections.map(s => s.id), [first.section.id]);
-    assert.equal(trash.categories.length, 0);
-    assert.equal(trash.items.length, 0);
+    assert.deepEqual(trash.categories.map(c => [c.id, c.parentTrashed]),
+      [[first.independentlyDeletedCategory.id, true]]);
+    assert.deepEqual(trash.items.map(i => [i.id, i.parentTrashed]),
+      [[first.independentlyDeleted.id, true]]);
     assert.equal((await post(`/sections/${first.section.id}/restore`)).status, 200);
     const restored = (await buildTenantContent(draftTenant!, { visibleOnly: false })).sections;
     assert.equal(restored.length, 1);
@@ -89,6 +93,23 @@ test("section trash keeps published snapshot, restores only independently active
     assert.ok((await db.select().from(itemsTable).where(eq(itemsTable.id, first.independentlyDeleted.id)))[0]?.deletedAt);
     assert.ok((await db.select().from(categoriesTable)
       .where(eq(categoriesTable.id, first.independentlyDeletedCategory.id)))[0]?.deletedAt);
+    assert.equal((await fetch(`${root}/items/${first.item.id}`, { method: "DELETE" })).status, 204);
+    const itemTrash = await (await fetch(`${root}/tenants/${first.tenant.id}/trash`)).json() as {
+      items: Array<{ id: string }>;
+    };
+    assert.deepEqual(itemTrash.items.map(row => row.id).sort(),
+      [first.item.id, first.independentlyDeleted.id].sort(),
+      "items deleted directly under an active category remain in trash after a fresh GET");
+    await runWithHostDbContext(first.tenant.id, async () => {
+      const hostTrashItems = await db.select({ id: itemsTable.id }).from(itemsTable)
+        .innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
+        .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
+        .where(and(eq(sectionsTable.tenantId, first.tenant.id), isNotNull(itemsTable.deletedAt),
+          isNull(categoriesTable.deletedAt), isNull(sectionsTable.deletedAt)));
+      assert.deepEqual(hostTrashItems.map(row => row.id).sort(),
+        [first.item.id, first.independentlyDeleted.id].sort(),
+        "host sees directly deleted items through the same joins as GET trash");
+    });
     assert.equal((await fetch(`${root}/tenants/${second.tenant.id}/trash`)).status, 200);
     assert.equal((await post(`/sections/${second.section.id}/restore`)).status, 404);
   } finally {

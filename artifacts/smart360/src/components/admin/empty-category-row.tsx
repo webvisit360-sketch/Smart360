@@ -9,7 +9,7 @@ type EmptyCategoryRowProps = {
   extraLabel?: ReactNode;
   addLabel: string;
   onEdit?: () => void;
-  onAdd: () => void;
+  onAdd?: () => void;
 };
 
 export function EmptyCategoryRow({
@@ -54,14 +54,14 @@ export function EmptyCategoryRow({
             <Pencil className="h-4 w-4" />
           </button>
         )}
-        <button
+        {onAdd && <button
           data-testid={`button-add-empty-category-${id}`}
           type="button"
           onClick={onAdd}
           className="flex items-center gap-1 whitespace-nowrap text-sm font-bold text-[#157347] hover:underline"
         >
           <Plus className="h-4 w-4" /> {addLabel}
-        </button>
+        </button>}
       </div>
     </div>
   );

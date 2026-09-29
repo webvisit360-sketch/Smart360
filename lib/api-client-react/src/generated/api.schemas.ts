@@ -945,7 +945,9 @@ export interface OkStatus {
 export interface TrashCategory {
   id: string;
   label: string;
+  sectionId: string;
   sectionTitle: string;
+  parentTrashed: boolean;
   /** @nullable */
   deletedAt: string | null;
 }
@@ -962,6 +964,8 @@ export interface TrashItem {
   /** @nullable */
   title: string | null;
   categoryLabel: string;
+  sectionId: string;
+  parentTrashed: boolean;
   /** @nullable */
   deletedAt: string | null;
 }

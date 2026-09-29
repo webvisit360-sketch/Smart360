@@ -1296,3 +1296,17 @@ mtime_ms = 1790636413238
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c142fb46-a889-4741-9385-36f40074a030/ac336828-50ad-4539-aeba-cfed7ea5f281"
 storage_version_token = "1790636832510798"
 content_type = "image/png"
+
+[[outputs]]
+id = "itUg2szZWO1YgCXraYBfx"
+uri = "file://docs/security-phase1-release.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — varnostna faza 1"
+description = "Celotno poročilo, preverjanja obeh stolpcev in funkcije ter idempotentni pogojni SQL za prihodnjo odobreno produkcijsko objavo."
+logical_id = "c11fc2df-c8f3-4c23-9d10-781f8025618a"
+content_hash = "sha256:5ccd0e00517caaa7986e884baf40a7cea832570674f5baf67a1d805fdefbc121"
+size = 19576
+mtime_ms = 1790714503601
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c11fc2df-c8f3-4c23-9d10-781f8025618a/84fb5be4-a014-4c39-ba83-4c7d9743610d"
+storage_version_token = "1790714504432926"
+content_type = "text/html"

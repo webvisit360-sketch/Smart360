@@ -3759,9 +3759,11 @@ components:
       properties:
         id: { type: string }
         label: { type: string }
+        sectionId: { type: string }
         sectionTitle: { type: string }
+        parentTrashed: { type: boolean }
         deletedAt: { type: ["string", "null"] }
-      required: [id, label, sectionTitle, deletedAt]
+      required: [id, label, sectionId, sectionTitle, parentTrashed, deletedAt]
     TrashSection:
       type: object
       properties:
@@ -3775,8 +3777,10 @@ components:
         id: { type: string }
         title: { type: ["string", "null"] }
         categoryLabel: { type: string }
+        sectionId: { type: string }
+        parentTrashed: { type: boolean }
         deletedAt: { type: ["string", "null"] }
-      required: [id, title, categoryLabel, deletedAt]
+      required: [id, title, categoryLabel, sectionId, parentTrashed, deletedAt]
     TrashResponse:
       type: object
       properties:

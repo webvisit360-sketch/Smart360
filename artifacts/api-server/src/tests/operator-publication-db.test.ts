@@ -17,6 +17,12 @@ import tenantRouter from "../routes/adminTenants";
 import { actorStorage } from "../lib/actorContext";
 import { ensureTenantPublication, readPublishedContent } from "../lib/publishedSnapshots";
 import { ensureGuestDirtyTriggers } from "../lib/guestDirtyTriggers";
+import { initializeOperatorDraftPending } from "../lib/operatorDraftBackfill";
+import { currentHostOnboarding, submitHostOnboarding } from "../lib/hostOnboarding";
+import { _setHostOnboardingDeliveryOverride } from "../lib/hostOnboardingEmail";
+import {
+  createCanonicalOnboardingFixture, cleanupCanonicalOnboardingFixture,
+} from "./helpers/canonicalOnboardingFixture";
 
 test("real locked publication: operator edits block host, owner clears, host-only edits publish", {
   skip: process.env.SMART360_OPERATOR_DRAFT_DB_TEST !== "1",
@@ -25,6 +31,7 @@ test("real locked publication: operator edits block host, owner clears, host-onl
   // This changes a DB function. Never run this test until the owner has
   // approved the exact SQL in guestDirtyTriggers.ts.
   await ensureGuestDirtyTriggers();
+  await initializeOperatorDraftPending();
   const tenantId = randomUUID();
   const [created] = await db.insert(tenantsTable).values({
     id: tenantId, slug: `publication-actor-${tenantId}`, name: "Initial",
@@ -100,8 +107,12 @@ test("real locked publication: operator edits block host, owner clears, host-onl
   assert.equal(approved.status, 200, await approved.clone().text());
   assert.equal((await row()).operatorDraftPending, false);
   assert.equal((await row()).hasUnpublishedChanges, false);
+  await initializeOperatorDraftPending();
+  assert.equal((await row()).operatorDraftPending, false, "initializer replay after owner publish");
   assert.equal((await request("host", "PATCH", "", { name: "Host-only draft" })).status, 200);
   assert.equal((await row()).operatorDraftPending, false);
+  await initializeOperatorDraftPending();
+  assert.equal((await row()).operatorDraftPending, false, "initializer replay must not reflag host edits");
   const published = await request("host", "PATCH", "", {
     isPublished: true, publishNow: true, publishToken: await token("host"),
   });
@@ -146,4 +157,38 @@ test("real locked publication: operator edits block host, owner clears, host-onl
   assert.ok([200, 403, 409].includes(publish.status));
   assert.equal((await row()).operatorDraftPending, true);
   assert.notEqual((await readPublishedContent(tenantId)).languages.sl?.tree.name, "Concurrent operator draft");
+});
+
+test("real host onboarding escaped Creator transaction retains host provenance", {
+  skip: process.env.SMART360_OPERATOR_DRAFT_DB_TEST !== "1",
+}, async (t) => {
+  assert.notEqual(process.env.NODE_ENV, "production");
+  const fixture = await createCanonicalOnboardingFixture();
+  _setHostOnboardingDeliveryOverride(async () => ({
+    ok: true, providerMessageId: "operator-publication-db-test",
+  }));
+  t.after(async () => {
+    _setHostOnboardingDeliveryOverride(null);
+    await cleanupCanonicalOnboardingFixture(fixture);
+  });
+  // Fixture seeding is privileged operator content. Begin this provenance
+  // check at an owner-approved baseline, without any operator session.
+  await db.update(tenantsTable).set({
+    operatorDraftPending: false, hasUnpublishedChanges: false,
+  }).where(eq(tenantsTable.id, fixture.tenantId));
+  const opened = await currentHostOnboarding(fixture.tenantId, fixture.hostUserId);
+  assert.ok(opened);
+  const submitted = await runWithHostDbContext(fixture.tenantId, () =>
+    actorStorage.run({
+      kind: "host", hostUserId: fixture.hostUserId, tenantId: fixture.tenantId,
+    }, () => submitHostOnboarding(
+      fixture.tenantId, fixture.hostUserId,
+      opened.round.round, opened.round.revision, opened.round.draftData,
+      opened.canonicalRevision,
+    )),
+  );
+  assert.equal(submitted.ok, true);
+  const [after] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, fixture.tenantId));
+  assert.equal(after!.hasUnpublishedChanges, true);
+  assert.equal(after!.operatorDraftPending, false);
 });

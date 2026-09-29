@@ -1531,6 +1531,7 @@ async function purgeExpired(tenantId: string): Promise<void> {
 }
 
 router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const tenantId = firstParam(req.params["id"]);
   const [tenant] = await db
     .select({ id: tenantsTable.id })
@@ -1557,7 +1558,9 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
     .select({
       id: categoriesTable.id,
       label: categoriesTable.label,
+      sectionId: sectionsTable.id,
       sectionTitle: sectionsTable.title,
+      parentTrashed: sectionsTable.deletedAt,
       deletedAt: categoriesTable.deletedAt,
     })
     .from(categoriesTable)
@@ -1566,7 +1569,6 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
       and(
         eq(sectionsTable.tenantId, tenantId),
         sql`${categoriesTable.deletedAt} IS NOT NULL`,
-        isNull(sectionsTable.deletedAt),
       ),
     );
   // Items deleted directly (their category is still alive); items that went to
@@ -1576,6 +1578,8 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
       id: itemsTable.id,
       title: itemsTable.title,
       categoryLabel: categoriesTable.label,
+      sectionId: sectionsTable.id,
+      parentTrashed: sectionsTable.deletedAt,
       deletedAt: itemsTable.deletedAt,
     })
     .from(itemsTable)
@@ -1586,17 +1590,18 @@ router.get("/admin/tenants/:id/trash", async (req, res): Promise<void> => {
         eq(sectionsTable.tenantId, tenantId),
         sql`${itemsTable.deletedAt} IS NOT NULL`,
         isNull(categoriesTable.deletedAt),
-        isNull(sectionsTable.deletedAt),
       ),
     );
   res.json({
     sections: sections.map((s) => ({ ...s, deletedAt: s.deletedAt?.toISOString() ?? null })),
     categories: categories.map((c) => ({
       ...c,
+      parentTrashed: Boolean(c.parentTrashed),
       deletedAt: c.deletedAt?.toISOString() ?? null,
     })),
     items: items.map((i) => ({
       ...i,
+      parentTrashed: Boolean(i.parentTrashed),
       deletedAt: i.deletedAt?.toISOString() ?? null,
     })),
     retentionDays: TRASH_DAYS,

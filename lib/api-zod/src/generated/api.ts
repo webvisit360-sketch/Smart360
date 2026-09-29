@@ -6215,13 +6215,17 @@ export const GetTrashResponse = zod.object({
   "categories": zod.array(zod.object({
   "id": zod.string(),
   "label": zod.string(),
+  "sectionId": zod.string(),
   "sectionTitle": zod.string(),
+  "parentTrashed": zod.boolean(),
   "deletedAt": zod.string().nullable()
 })),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string().nullable(),
   "categoryLabel": zod.string(),
+  "sectionId": zod.string(),
+  "parentTrashed": zod.boolean(),
   "deletedAt": zod.string().nullable()
 })),
   "retentionDays": zod.number()

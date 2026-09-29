@@ -445,12 +445,14 @@ async function gate(
         notFound(res);
         return;
       }
-       if (binding.bodyDeny && req.body && typeof req.body === "object") {
+      if (binding.bodyDeny && req.body && typeof req.body === "object") {
         for (const field of binding.bodyDeny) {
           if (field in (req.body as Record<string, unknown>)) {
             res.status(400).json({ error: `Polje '${field}' lahko spreminja samo upravitelj.` });
             return;
           }
+        }
+      }
        if (req.method === "PATCH" && hit.spec.path === "/admin/tenants/:id" &&
            req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
          const protectedFields = [
@@ -466,8 +468,6 @@ async function gate(
            return;
          }
        }
-        }
-      }
       break;
     }
     case "entity": {

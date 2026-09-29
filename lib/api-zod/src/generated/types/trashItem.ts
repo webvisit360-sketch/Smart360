@@ -11,6 +11,8 @@ export interface TrashItem {
   /** @nullable */
   title: string | null;
   categoryLabel: string;
+  sectionId: string;
+  parentTrashed: boolean;
   /** @nullable */
   deletedAt: string | null;
 }

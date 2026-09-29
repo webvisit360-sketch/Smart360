@@ -9,7 +9,9 @@
 export interface TrashCategory {
   id: string;
   label: string;
+  sectionId: string;
   sectionTitle: string;
+  parentTrashed: boolean;
   /** @nullable */
   deletedAt: string | null;
 }

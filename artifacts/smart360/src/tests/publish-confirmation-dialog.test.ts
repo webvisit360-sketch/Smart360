@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   publicationDraftChanged,
   publicationNeedsConfirmation,
+  tenantSavePayload,
 } from "../lib/tenant-publication-flow";
 
 const source = readFileSync(
@@ -18,6 +19,48 @@ const slugField = readFileSync(
   new URL("../components/admin/slug-field.tsx", import.meta.url),
   "utf8",
 );
+
+test("autosave and save-before-publish share a role-aware tenant PATCH body", () => {
+  const form = {
+    name: "Apartma",
+    slug: "apartma",
+    customDomain: " guest.example.com ",
+    email: " host@example.com ",
+    mapUrl: " https://www.google.com/maps/place/example ",
+    wifiSsid: " Guest ",
+    wifiPass: "secret",
+    notificationWhatsappPhone: "",
+    latitude: "45.1",
+    longitude: "13.2",
+    guestUiMode: "living-guide",
+    isTemplate: true,
+    renewsAt: "2026-01-01",
+    rating: 5,
+    reviewsCount: 10,
+    coordinateOverride: true,
+  };
+  const owner = tenantSavePayload(form, "3", true);
+  const host = tenantSavePayload(form, "3", false);
+  for (const key of [
+    "slug", "customDomain", "isTemplate", "mediaQuotaBytes", "renewsAt",
+    "rating", "reviewsCount", "coordinateOverride",
+  ]) {
+    assert.ok(Object.hasOwn(owner, key), `operator keeps ${key}`);
+    assert.ok(!Object.hasOwn(host, key), `host omits ${key}`);
+  }
+  assert.equal(owner.mediaQuotaBytes, 3_000_000_000);
+  assert.equal(owner.customDomain, "guest.example.com");
+  assert.equal(host.name, "Apartma");
+  assert.equal(host.mapUrl, "https://www.google.com/maps/place/example");
+  assert.equal(host.email, "host@example.com");
+  for (const key of ["latitude", "longitude", "guestUiMode"]) {
+    assert.ok(!Object.hasOwn(host, key));
+    assert.ok(!Object.hasOwn(owner, key));
+  }
+  assert.match(tenantEdit, /data: tenantSavePayload\(snapshot, quotaSnapshot, isOwner\)/);
+  assert.match(tenantEdit, /data: tenantSaveDataFor\(formSnapshot, quotaSnapshot\)/);
+  assert.match(tenantEdit, /=> tenantSavePayload\(formSnapshot, quotaSnapshot, isOwner\)/);
+});
 
 test("publish confirmation presents exact Slovenian groups in a mobile scroll area", () => {
   assert.match(source, /Ta objava vsebuje \$\{preview\.total\} sprememb/);
