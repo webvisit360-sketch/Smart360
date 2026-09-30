@@ -96,6 +96,8 @@ export const tenantsTable = pgTable("tenants", {
   heroUrl: text("hero_url"),
   livingGuideHeroUrl: text("living_guide_hero_url"),
   tourUrl: text("tour_url"),
+  // Operator-owned guest feature. Only a confirmed publication exposes changes.
+  tourRecordingEnabled: boolean("tour_recording_enabled").notNull().default(false),
   phone: text("phone"),
   whatsapp: text("whatsapp"),
   viber: text("viber"),

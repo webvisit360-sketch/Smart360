@@ -14,10 +14,21 @@
 .s360-gpx-alert--bottom { top: auto; bottom: 30px; }
 .s360-gpx-attrib { position: absolute; right: 0; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px; background: rgba(255,255,255,.92); font-size: 10px; font-weight: 600; }
 .s360-gpx-attrib a { color: var(--tx2, #66716A); text-decoration: underline; }
+/* MapLibre positions markers with a translate transform from the map's
+   top-left; without vendor base CSS they flow below the canvas. Minimal,
+   scoped shim (same values as maplibre-gl.css) for start/end/me markers. */
+.s360-gpx-map .maplibregl-marker { position: absolute; top: 0; left: 0; will-change: transform; }
 .s360-gpx-marker { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 800 11px/1 var(--sans, system-ui, sans-serif); color: #fff; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
 .s360-gpx-marker--start { background: #157347; }
 .s360-gpx-marker--end { background: #121A14; }
 .s360-gpx-marker--me { width: 16px; height: 16px; background: #157347; border-width: 3px; }
+.s360-gpx-marker--me.s360-gpx-marker--course { width: 26px; height: 26px; border: 2px solid #fff; border-radius: 50%; background: #157347; }
+.s360-gpx-marker--course::after { content: ""; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #fff; transform: translateY(-1px); }
+.s360-gpx-camera-controls { position: absolute; z-index: 4; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px; }
+.s360-gpx-camera-toggle, .s360-gpx-compass { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line, #E8EBE6); background: #fff; color: #121A14; box-shadow: 0 2px 8px rgba(18,26,20,.16); font: 700 12px/1.2 var(--sans, system-ui, sans-serif); }
+.s360-gpx-compass { flex-direction: column; width: 36px; padding: 3px; font-size: 10px; color: #157347; }
+.s360-gpx-compass span { display: block; font-size: 14px; line-height: 15px; color: #157347; }
+.s360-gpx-full .s360-gpx-camera-controls { top: calc(max(12px, env(safe-area-inset-top)) + 76px); left: auto; right: 12px; flex-direction: column; align-items: flex-end; }
 .s360-gpx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .s360-gpx-stats div { background: var(--card, #F4F6F2); border: 1px solid var(--line, #E8EBE6); border-radius: 12px; padding: 9px 10px; min-width: 0; }
 .s360-gpx-stats dt { font-size: 11px; font-weight: 700; color: var(--tx2, #66716A); }

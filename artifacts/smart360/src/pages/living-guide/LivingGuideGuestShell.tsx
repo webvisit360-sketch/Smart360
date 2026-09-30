@@ -29,6 +29,7 @@ import {
 } from "../guest/img";
 import { buildGuestPath } from "../guest/guest-url";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
+import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
 
 const GpxSlugContext = createContext("");
 function ItemGpx({ item, t }: { item: any; t: UiTranslator }) {
@@ -2008,6 +2009,7 @@ export default function LivingGuideGuestShell({
             t={t}
             onOpenCategory={openCategory}
             onOpenItem={openItem}
+            slug={slug}
           />
         )}
 
@@ -2074,6 +2076,7 @@ export default function LivingGuideGuestShell({
               t={t}
               onOpenCategory={openCategory}
               onOpenItem={openItem}
+              slug={slug}
               onBack={() => closePresentedView(`/${slug}/home`)}
             />
           ) : (
@@ -2750,7 +2753,14 @@ function ExploreView({
   onOpenCategory,
   onOpenItem,
   onBack,
+  slug,
 }: any) {
+  // Published flag only, default off: no mount (no hook, no geolocation) when false.
+  const freeTourEnabled = isTourRecordingEnabled(tenant) && typeof slug === "string" && !!slug;
+  const freeTourCenter: [number, number] | null =
+    Number.isFinite(tenant?.longitude) && Number.isFinite(tenant?.latitude)
+      ? [tenant.longitude, tenant.latitude]
+      : null;
   const activeCategories = useMemo(
     () => activeExploreCategories(categories),
     [categories],
@@ -2829,6 +2839,7 @@ function ExploreView({
         data-lg-scroll
         ref={listRef}
       >
+        {freeTourEnabled && <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} />}
         {distanceSections.map((section) => (
           <section className="lg2-distance-section" key={section.key}>
             {section.labelKey && (

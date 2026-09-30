@@ -4725,6 +4725,10 @@ components:
         heroUrl: { type: ["string", "null"] }
         livingGuideHeroUrl: { type: ["string", "null"] }
         tourUrl: { type: ["string", "null"] }
+        tourRecordingEnabled:
+          type: boolean
+          default: false
+          description: Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.
         phone: { type: ["string", "null"] }
         whatsapp: { type: ["string", "null"] }
         viber: { type: ["string", "null"] }
@@ -4861,6 +4865,7 @@ components:
         slug: { type: string }
         name: { type: string }
         subtitle: { type: string }
+        tourRecordingEnabled: { type: boolean }
         fromTemplate: { type: boolean }
         type:
           type: string
@@ -4890,6 +4895,7 @@ components:
         heroUrl: { type: ["string", "null"] }
         livingGuideHeroUrl: { type: ["string", "null"] }
         tourUrl: { type: ["string", "null"] }
+        tourRecordingEnabled: { type: boolean }
         phone: { type: ["string", "null"] }
         whatsapp: { type: ["string", "null"] }
         viber: { type: ["string", "null"] }

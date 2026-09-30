@@ -1352,3 +1352,87 @@ mtime_ms = 1790730284412
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9b1957b4-132f-44f5-a1b9-920a87239210/339dec6e-9caf-48b7-a6c3-85f5f3096d05"
 storage_version_token = "1790730322365559"
 content_type = "image/png"
+
+[[outputs]]
+id = "7PK6uEDwo3UrxdeKUDcLb"
+uri = "file://screenshots/free-tour-card.png"
+type = "image"
+title = "Snemanje tur — začetna kartica"
+description = "Razvojni prikaz izbire dejavnosti in začetka snemanja."
+logical_id = "89b6a5a7-7609-41eb-8713-503d72677597"
+content_hash = "sha256:be73a0348f07991bb0f34c36990ef9ae86d8829966474842f7f3712d0c4f1f18"
+size = 37814
+mtime_ms = 1790731641353
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/89b6a5a7-7609-41eb-8713-503d72677597/79eec3b5-9331-4756-982a-939b433b6f6b"
+storage_version_token = "1790731819815543"
+content_type = "image/png"
+
+[[outputs]]
+id = "nZwxTMaGV6yxWkXfXFcvR"
+uri = "file://screenshots/free-tour-live.png"
+type = "image"
+title = "Snemanje tur — med snemanjem"
+description = "Sintetični GPS: sled, položaj, čas, razdalja in približen vzpon."
+logical_id = "f4172535-8268-4569-9ad9-66d8622f9ecf"
+content_hash = "sha256:257a811b0a93ffb95c0a812994aa99d02952e2ff491941b78e0ee17ab0a8172a"
+size = 127050
+mtime_ms = 1790731656625
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f4172535-8268-4569-9ad9-66d8622f9ecf/8fa86ec5-99bb-4228-9a8d-71380d930ba1"
+storage_version_token = "1790731820560837"
+content_type = "image/png"
+
+[[outputs]]
+id = "aTQwOXXqa-U0c07uOTPtO"
+uri = "file://screenshots/free-tour-fullscreen.png"
+type = "image"
+title = "Snemanje tur — celozaslonski zemljevid"
+description = "Dejanski izris OpenFreeMap, trenutni položaj, časovnik in spodnji profil."
+logical_id = "59410309-c79f-4b8c-9953-e881af498291"
+content_hash = "sha256:658e678a37da69e6f2417a882dce79183452e91783ec17d99ae8ba1e65b30930"
+size = 172462
+mtime_ms = 1790731657585
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/59410309-c79f-4b8c-9953-e881af498291/61109798-6820-4afe-baf5-4f72ffc49a69"
+storage_version_token = "1790731821288873"
+content_type = "image/png"
+
+[[outputs]]
+id = "KXycIa6q7CWcfOd686UCK"
+uri = "file://screenshots/free-tour-summary.png"
+type = "image"
+title = "Snemanje tur — zaključni povzetek"
+description = "Razvojni preizkus zaključka ture in izvozov."
+logical_id = "8c68b635-a419-40eb-a259-bc4a1c8af785"
+content_hash = "sha256:340e55bc6c253a02fa3a54c429995bf7f0ded5cc93b3e579ae74480de9a59a35"
+size = 81302
+mtime_ms = 1790731657877
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/8c68b635-a419-40eb-a259-bc4a1c8af785/ddabaed9-5756-45ea-a3e8-ab80daebe023"
+storage_version_token = "1790731821992884"
+content_type = "image/png"
+
+[[outputs]]
+id = "gjm6bZXAjO32JX6G2vZQH"
+uri = "file://artifacts/smart360/screenshots/gpx-course-up.png"
+type = "image"
+title = "GPX tura — smer vožnje"
+description = "Razvojni preizkus GPS-smeri: obrnjen zemljevid, smerna puščica in kompas."
+logical_id = "4f966eaf-d85e-42b8-a1e9-db695376dece"
+content_hash = "sha256:ae46ac263689f3c528f58eed5821fe172a3e28334363a0f126b628628d71e6aa"
+size = 133333
+mtime_ms = 1790732167805
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4f966eaf-d85e-42b8-a1e9-db695376dece/0bca87ec-ce8a-42c8-ae45-03598f7362a1"
+storage_version_token = "1790732222082342"
+content_type = "image/png"
+
+[[outputs]]
+id = "lU-h42UU-q5wOtx_O0YPx"
+uri = "file://artifacts/smart360/screenshots/free-course-compass.png"
+type = "image"
+title = "Snemanje ture — celozaslonska smer vožnje"
+description = "Razvojni preizkus: kompas, časovnik in profil ostanejo dostopni."
+logical_id = "da257308-cdc8-4c78-85eb-791275dc13b5"
+content_hash = "sha256:2059e457f6368339ad6aa93c15b8497365ab9b4ccc2ba7f72ce0861711ebe57c"
+size = 216211
+mtime_ms = 1790732175261
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/da257308-cdc8-4c78-85eb-791275dc13b5/91c70d24-81a9-4080-889d-fd3f06f1d860"
+storage_version_token = "1790732222846670"
+content_type = "image/png"

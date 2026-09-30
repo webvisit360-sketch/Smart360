@@ -11,6 +11,7 @@ export interface TenantInput {
   slug: string;
   name: string;
   subtitle?: string;
+  tourRecordingEnabled?: boolean;
   fromTemplate?: boolean;
   /** Seeds the default sections, categories and groups for this establishment type */
   type?: TenantInputType;

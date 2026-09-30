@@ -169,7 +169,7 @@ function auditTenantName(name: string): string {
 const tenantSettingCategories: ReadonlyArray<readonly [readonly string[], string]> = [
   [["slug", "name", "subtitle", "rating", "reviewsCount"], "osnovni podatki"],
   [["customDomain"], "povezava z domeno"],
-  [["logoUrl", "logoSquareUrl", "heroUrl", "livingGuideHeroUrl", "tourUrl"], "predstavitev in podoba"],
+  [["logoUrl", "logoSquareUrl", "heroUrl", "livingGuideHeroUrl", "tourUrl", "tourRecordingEnabled"], "predstavitev in podoba"],
   [["phone", "whatsapp", "viber", "instagram", "email"], "kontaktni podatki"],
   [["orderNotifyEmail", "messageNotifyEmail", "notificationChannel", "notificationWhatsappPhone"], "obvestila"],
   [["orderPassword"], "dostop do naročil"],
@@ -272,7 +272,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { slug, name, subtitle, fromTemplate } = parsed.data;
+  const { slug, name, subtitle, fromTemplate, tourRecordingEnabled } = parsed.data;
   const typeRaw = (parsed.data as Record<string, unknown>)["type"];
   const tenantType: TenantType | null =
     typeof typeRaw === "string" && (TENANT_TYPES as readonly string[]).includes(typeRaw)
@@ -317,9 +317,11 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
       const renewsAt = plusOneYear(new Date());
       await db
         .update(tenantsTable)
-        .set({ renewsAt, ...(subtitle !== undefined ? { subtitle } : {}) })
+        .set({ renewsAt, ...(subtitle !== undefined ? { subtitle } : {}),
+          tourRecordingEnabled: tourRecordingEnabled ?? false })
         .where(eq(tenantsTable.id, created.id));
       created.renewsAt = renewsAt;
+      created.tourRecordingEnabled = tourRecordingEnabled ?? false;
       if (subtitle !== undefined) created.subtitle = subtitle;
       await ensureTenantPublication(created.id);
       await logChange({
@@ -347,6 +349,7 @@ router.post("/admin/tenants", async (req, res): Promise<void> => {
         subtitle: subtitle ?? null,
         tenantType: tenantType ?? "apartmaji",
         guestUiMode: "living-guide",
+        tourRecordingEnabled: tourRecordingEnabled ?? false,
         renewsAt: plusOneYear(new Date()),
       })
       .returning();

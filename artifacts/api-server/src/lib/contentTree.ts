@@ -130,6 +130,8 @@ export function resolveGuestContentTree(
 ): GuestTenantContentTree {
   return {
     ...projectGuestTenant(tree),
+    // Legacy snapshots predate this setting; never consult the live draft row.
+    tourRecordingEnabled: tree.tourRecordingEnabled === true,
     sections: tree.sections
       .filter(guestScope)
       .map((section) => ({

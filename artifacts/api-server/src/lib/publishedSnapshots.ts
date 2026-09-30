@@ -113,6 +113,7 @@ const fieldLabels: Record<string, string> = {
   address: "Naslov namestitve", website: "Spletna stran", languages: "Jeziki", theme: "Tema",
   isVisible: "Vidnost", position: "Vrstni red", distanceMeters: "Razdalja", duration: "Trajanje",
   hours: "Odpiralni čas", noteText: "Opomba", mapUrl: "Lokacija", tourUrl: "Virtualni ogled",
+  tourRecordingEnabled: "Brezplačno snemanje virtualnega ogleda",
 };
 function empty(value: unknown): boolean {
   return value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0);

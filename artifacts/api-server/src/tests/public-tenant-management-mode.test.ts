@@ -62,6 +62,7 @@ test("public tenant works in both management modes and with legacy snapshots wit
     return parsed;
   };
   const selfService = await readGuest();
+  assert.equal(selfService.tourRecordingEnabled, false);
   const [before] = await db.select({ content: publishedSnapshotsTable.content })
     .from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id));
   assert.ok(before);
@@ -71,6 +72,24 @@ test("public tenant works in both management modes and with legacy snapshots wit
   for (const language of Object.values(snapshot.languages)) {
     assert.equal(Object.hasOwn(language.tree, "managementMode"), false);
   }
+  await db.update(tenantsTable).set({ tourRecordingEnabled: true })
+    .where(eq(tenantsTable.id, tenant.id));
+  invalidateTenantCache();
+  assert.equal((await readGuest()).tourRecordingEnabled, false,
+    "published guest must never read the live operator draft");
+  // Real old snapshot without the new key, while the live draft is enabled.
+  const preFeatureSnapshot = structuredClone(snapshot);
+  for (const language of Object.values(preFeatureSnapshot.languages)) {
+    delete (language.tree as { tourRecordingEnabled?: boolean }).tourRecordingEnabled;
+  }
+  await db.update(publishedSnapshotsTable).set({ content: preFeatureSnapshot })
+    .where(eq(publishedSnapshotsTable.tenantId, tenant.id));
+  invalidateTenantCache();
+  assert.equal((await readGuest()).tourRecordingEnabled, false,
+    "legacy snapshot defaults off independently of the live draft");
+  await db.update(publishedSnapshotsTable).set({ content: snapshot })
+    .where(eq(publishedSnapshotsTable.tenantId, tenant.id));
+  invalidateTenantCache();
 
   await db.update(tenantsTable).set({ managementMode: "concierge" })
     .where(eq(tenantsTable.id, tenant.id));

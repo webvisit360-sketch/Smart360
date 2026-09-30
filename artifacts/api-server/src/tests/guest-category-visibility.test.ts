@@ -108,4 +108,7 @@ test("guest read projects empty categories out of a legacy published snapshot", 
     ["legacy-empty", "legacy-all-hidden", "legacy-visible"],
     "view projection must not mutate stored snapshot content",
   );
+  assert.equal(resolved.tourRecordingEnabled, false, "old snapshot has no flag and must default off");
+  assert.equal(Object.hasOwn(legacyTree, "tourRecordingEnabled"), false,
+    "legacy snapshot is not rewritten");
 });

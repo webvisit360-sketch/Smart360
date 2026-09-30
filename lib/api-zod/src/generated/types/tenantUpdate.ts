@@ -30,6 +30,7 @@ export interface TenantUpdate {
   livingGuideHeroUrl?: string | null;
   /** @nullable */
   tourUrl?: string | null;
+  tourRecordingEnabled?: boolean;
   /** @nullable */
   phone?: string | null;
   /** @nullable */

@@ -36,6 +36,8 @@ export interface TenantBase {
   livingGuideHeroUrl?: string | null;
   /** @nullable */
   tourUrl?: string | null;
+  /** Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false. */
+  tourRecordingEnabled?: boolean;
   /** @nullable */
   phone?: string | null;
   /** @nullable */

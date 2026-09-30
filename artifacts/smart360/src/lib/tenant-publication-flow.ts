@@ -20,6 +20,7 @@ export function tenantSavePayload<T extends {
   notificationChannel?: "email" | "whatsapp";
   orderNotifyEmail?: boolean;
   messageNotifyEmail?: boolean;
+  tourRecordingEnabled?: boolean;
 }>(snapshot: T, quotaGb: string, isOwner: boolean) {
   const {
     latitude: _latitude,

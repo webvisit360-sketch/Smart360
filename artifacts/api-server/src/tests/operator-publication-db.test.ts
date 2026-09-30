@@ -70,6 +70,35 @@ test("real locked publication: owner publishes; host draft never publishes or un
   };
   const row = async () => (await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId)))[0]!;
   const initialSnapshot = await readPublishedContent(tenantId);
+  assert.equal(created.tourRecordingEnabled, false);
+  assert.equal(initialSnapshot.languages.sl?.tree.tourRecordingEnabled, false);
+  for (const enabled of [true, false]) {
+    const denied = await request("host", "PATCH", "", { tourRecordingEnabled: enabled });
+    assert.equal(denied.status, 403, "host cannot change the recording flag");
+    assert.equal((await row()).tourRecordingEnabled, false);
+  }
+  assert.equal((await request("owner", "PATCH", "", { tourRecordingEnabled: true })).status, 200);
+  assert.equal((await row()).tourRecordingEnabled, true);
+  assert.equal((await readPublishedContent(tenantId)).languages.sl?.tree.tourRecordingEnabled, false,
+    "draft must not leak into published snapshot");
+  const enablePreview = await request("owner", "GET", "/publish-preview");
+  assert.equal(enablePreview.status, 200);
+  assert.ok(((await enablePreview.json()) as { total: number }).total > 0);
+  const enabledPublish = await request("owner", "PATCH", "", {
+    isPublished: true, publishNow: true, publishToken: await token("owner"),
+  });
+  assert.equal(enabledPublish.status, 200, await enabledPublish.clone().text());
+  assert.equal((await readPublishedContent(tenantId)).languages.sl?.tree.tourRecordingEnabled, true);
+  assert.equal((await request("owner", "PATCH", "", { tourRecordingEnabled: false })).status, 200);
+  assert.equal((await row()).tourRecordingEnabled, false);
+  assert.equal((await readPublishedContent(tenantId)).languages.sl?.tree.tourRecordingEnabled, true,
+    "disabling is also draft-only until publish");
+  const disabledPublish = await request("owner", "PATCH", "", {
+    isPublished: true, publishNow: true, publishToken: await token("owner"),
+  });
+  assert.equal(disabledPublish.status, 200, await disabledPublish.clone().text());
+  assert.equal((await readPublishedContent(tenantId)).languages.sl?.tree.tourRecordingEnabled, false);
+  const baselineSnapshot = await readPublishedContent(tenantId);
 
   assert.equal((await request("owner", "PATCH", "", { name: "Operator draft" })).status, 200);
   assert.equal((await row()).operatorDraftPending, true);
@@ -84,7 +113,7 @@ test("real locked publication: owner publishes; host draft never publishes or un
   assert.deepEqual(await denied.json(), {
     error: "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.",
   });
-  assert.deepEqual(await readPublishedContent(tenantId), initialSnapshot);
+  assert.deepEqual(await readPublishedContent(tenantId), baselineSnapshot);
   assert.deepEqual((await row()).lastPublishedAt, pendingAt);
   assert.equal((await row()).operatorDraftPending, true);
   assert.equal((await request("host", "PATCH", "", { operatorDraftPending: false })).status, 403);

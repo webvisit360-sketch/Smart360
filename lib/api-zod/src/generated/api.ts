@@ -1850,6 +1850,7 @@ export const GetPublicTenantQueryParams = zod.object({
   "preview": zod.coerce.boolean().optional()
 })
 
+export const getPublicTenantResponseOneTourRecordingEnabledDefault = false;
 export const getPublicTenantResponseOneLatitudeMin = -90;
 export const getPublicTenantResponseOneLatitudeMax = 90;
 
@@ -1895,6 +1896,7 @@ export const GetPublicTenantResponse = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(getPublicTenantResponseOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -2411,6 +2413,7 @@ export const ApplyPart5MeliPuCutoverResponse = zod.object({
 }))
 
 
+export const listTenantsResponseOneTourRecordingEnabledDefault = false;
 export const listTenantsResponseOneLatitudeMin = -90;
 export const listTenantsResponseOneLatitudeMax = 90;
 
@@ -2436,6 +2439,7 @@ export const ListTenantsResponseItem = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(listTenantsResponseOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -2508,10 +2512,12 @@ export const CreateTenantBody = zod.object({
   "slug": zod.string(),
   "name": zod.string(),
   "subtitle": zod.string().optional(),
+  "tourRecordingEnabled": zod.boolean().optional(),
   "fromTemplate": zod.boolean().optional(),
   "type": zod.enum(['kamp', 'hotel', 'apartmaji']).optional().describe('Seeds the default sections, categories and groups for this establishment type')
 })
 
+export const createTenantResponseOneTourRecordingEnabledDefault = false;
 export const createTenantResponseOneLatitudeMin = -90;
 export const createTenantResponseOneLatitudeMax = 90;
 
@@ -2537,6 +2543,7 @@ export const CreateTenantResponse = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(createTenantResponseOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -3896,6 +3903,7 @@ export const GetTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getTenantResponseOneOneTourRecordingEnabledDefault = false;
 export const getTenantResponseOneOneLatitudeMin = -90;
 export const getTenantResponseOneOneLatitudeMax = 90;
 
@@ -3941,6 +3949,7 @@ export const GetTenantResponse = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(getTenantResponseOneOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -4160,6 +4169,7 @@ export const UpdateTenantBody = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().optional(),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -4215,6 +4225,7 @@ export const UpdateTenantBody = zod.object({
   "mediaQuotaBytes": zod.number().min(updateTenantBodyMediaQuotaBytesMin).optional()
 })
 
+export const updateTenantResponseOneTourRecordingEnabledDefault = false;
 export const updateTenantResponseOneLatitudeMin = -90;
 export const updateTenantResponseOneLatitudeMax = 90;
 
@@ -4240,6 +4251,7 @@ export const UpdateTenantResponse = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(updateTenantResponseOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -4599,6 +4611,7 @@ export const DuplicateTenantBody = zod.object({
   "copyContent": zod.boolean().optional().describe('Copy item contents too; false copies only the section\/category structure')
 })
 
+export const duplicateTenantResponseTenantOneTourRecordingEnabledDefault = false;
 export const duplicateTenantResponseTenantOneLatitudeMin = -90;
 export const duplicateTenantResponseTenantOneLatitudeMax = 90;
 
@@ -4625,6 +4638,7 @@ export const DuplicateTenantResponse = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(duplicateTenantResponseTenantOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),
@@ -4708,6 +4722,7 @@ export const RenewTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const renewTenantResponseOneTourRecordingEnabledDefault = false;
 export const renewTenantResponseOneLatitudeMin = -90;
 export const renewTenantResponseOneLatitudeMax = 90;
 
@@ -4733,6 +4748,7 @@ export const RenewTenantResponse = zod.object({
   "heroUrl": zod.string().nullish(),
   "livingGuideHeroUrl": zod.string().nullish(),
   "tourUrl": zod.string().nullish(),
+  "tourRecordingEnabled": zod.boolean().default(renewTenantResponseOneTourRecordingEnabledDefault).describe('Operator-controlled free tour recording; published guests read only the snapshot. Older snapshots default to false.'),
   "phone": zod.string().nullish(),
   "whatsapp": zod.string().nullish(),
   "viber": zod.string().nullish(),

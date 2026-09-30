@@ -1,5 +1,7 @@
 # Memory index
 
+- [Tour camera preference](tour-camera-mode.md) — new tours start course-up; manual north persists only for the same tour; no device compass fallback.
+
 - [Readiness guest visibility](readiness-visibility.md) — empty categories are deliberate, not missing content; guest-scoped readiness differs from admin work totals.
 - [GPX route boundaries](gpx-route-boundary.md) — bounded snapshot geometry, full-resolution private originals, and strict environment/published-reference isolation.
 - [Live tour export boundary](live-tour-export-boundary.md) — local image export is explicitly schematic; browser simulations cannot prove outdoor phone behavior.

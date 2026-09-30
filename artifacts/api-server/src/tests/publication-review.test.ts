@@ -4,6 +4,7 @@ import { comparePublications, type PublishedContent } from "../lib/publishedSnap
 import { collectStorageReferenceKeys } from "../lib/mediaCleanup";
 import { resolvePublishedOrderItem } from "../routes/orders";
 import { validSectionGroupOrder } from "../routes/adminContent";
+import { CreateTenantBody, UpdateTenantBody } from "@workspace/api-zod";
 
 function publication(items: Array<Record<string, unknown>> = []): PublishedContent {
   const tree = { id: "tenant", sections: [{
@@ -18,6 +19,26 @@ function publication(items: Array<Record<string, unknown>> = []): PublishedConte
 function items(value: PublishedContent, language = "sl") {
   return value.languages[language]!.tree.sections[0]!.categories[0]!.items;
 }
+
+test("recording flag is optional on legacy create/PATCH bodies and never defaults a partial PATCH", () => {
+  assert.equal(CreateTenantBody.parse({ slug: "example", name: "Example" }).tourRecordingEnabled, undefined);
+  assert.equal(UpdateTenantBody.parse({ name: "Example" }).tourRecordingEnabled, undefined);
+  assert.equal(UpdateTenantBody.parse({ tourRecordingEnabled: false }).tourRecordingEnabled, false);
+  assert.equal(UpdateTenantBody.parse({ tourRecordingEnabled: true }).tourRecordingEnabled, true);
+  assert.equal(UpdateTenantBody.safeParse({ tourRecordingEnabled: null }).success, false);
+});
+
+test("publication review includes recording flag transitions but legacy snapshots remain off", () => {
+  const off = publication();
+  const on = structuredClone(off);
+  for (const language of Object.values(on.languages)) language.tree.tourRecordingEnabled = true;
+  const enabled = comparePublications(on, off);
+  assert.ok(enabled.total > 0);
+  assert.ok(enabled.changed.some((label) => label.includes("Brezplačno snemanje")));
+  const disabled = comparePublications(off, on);
+  assert.ok(disabled.total > 0);
+  assert.notEqual(enabled.token, disabled.token);
+});
 
 test("section tab-order API accepts exactly the canonical keys once, and only in offer/stay", () => {
   const offer = ["najem", "izleti_prevozi", "domaci_izdelki", "pri_hisi"];

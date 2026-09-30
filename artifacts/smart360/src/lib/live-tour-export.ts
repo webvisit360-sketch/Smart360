@@ -25,7 +25,7 @@ export function tourGpx(state: TourState, name: string): string {
     `<gpx version="1.1" creator="Smart360" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>${xml(name)}</name>` +
     segments.map(segment => `<trkseg>${segment.map(point =>
       `<trkpt lat="${point.lat}" lon="${point.lon}">` +
-      (point.altitude == null ? '' : `<ele>${point.altitude}</ele>`) +
+       (point.altitude == null || Math.abs(point.altitude) > 12000 ? '' : `<ele>${point.altitude}</ele>`) +
       `<time>${new Date(point.timestamp).toISOString()}</time></trkpt>`).join('')}</trkseg>`).join('') +
     `</trk></gpx>`;
 }
@@ -67,10 +67,16 @@ export async function downloadTourImage(
     [labels.elapsed || 'Elapsed', labels.elapsedValue || duration(metrics.elapsedMs)],
     [labels.distance || 'Distance', labels.distanceValue || `${(metrics.distanceM / 1000).toFixed(2)} km`],
   ];
+  if (labels.ascent && metrics.ascentM !== undefined) {
+    stats.push([labels.ascent, labels.ascentValue || `${Math.round(metrics.ascentM)} m`]);
+  }
   stats.forEach(([label, value], i) => {
-    const x = 64 + i * 280;
-    ctx.font = '21px sans-serif'; ctx.fillStyle = muted; ctx.fillText(label, x, 196);
-    ctx.font = 'bold 32px sans-serif'; ctx.fillStyle = foreground; ctx.fillText(value, x, 241);
+    // The existing four-stat route image is unchanged; free recording opts into a fifth stat.
+    const x = stats.length === 5 ? 64 + i * 216 : 64 + i * 280;
+    ctx.font = stats.length === 5 ? '18px sans-serif' : '21px sans-serif';
+    ctx.fillStyle = muted; ctx.fillText(label, x, 196);
+    ctx.font = stats.length === 5 ? 'bold 28px sans-serif' : 'bold 32px sans-serif';
+    ctx.fillStyle = foreground; ctx.fillText(value, x, 241);
   });
   ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.strokeRect(64, 285, 1072, 530);
   const recorded = state.points.map(p => [p.lon, p.lat]);
@@ -106,8 +112,10 @@ export async function downloadTourImage(
   }
   ctx.fillStyle = muted; ctx.font = '20px sans-serif';
   ctx.fillText(labels.schematic || 'Schematic route diagram · not a map', 64, 856);
-  ctx.fillStyle = primary; ctx.fillRect(680, 840, 38, 5);
-  ctx.fillStyle = foreground; ctx.fillText(labels.planned || 'Planned', 730, 851);
+  if (plannedSegments.some(segment => segment.length > 0)) {
+    ctx.fillStyle = primary; ctx.fillRect(680, 840, 38, 5);
+    ctx.fillStyle = foreground; ctx.fillText(labels.planned || 'Planned', 730, 851);
+  }
   ctx.fillStyle = foreground; ctx.fillRect(910, 840, 38, 5);
   ctx.fillStyle = foreground; ctx.fillText(labels.recorded || 'Recorded', 960, 851);
   const blob = await new Promise<Blob>((resolve, reject) =>

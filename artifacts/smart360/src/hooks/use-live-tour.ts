@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   finishTour, loadTour, pauseTour, recordTourPoint, recoverTour, resumeTour,
-  saveTour, startTour, tourMetrics, MAX_ACCURACY_M, type TourState,
+  saveTour, startTour, tourMetrics, MAX_ACCURACY_M, type TourActivity, type TourState,
 } from '../lib/live-tour';
 
 export type WakeStatus = 'idle' | 'requesting' | 'held' | 'unavailable';
@@ -107,7 +107,7 @@ export function useLiveTour(key: string) {
   const keyRef = useRef(key);
   const [clock, setClock] = useState(() => Date.now());
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lon: number } | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lon: number; heading: number | null; speed: number | null } | null>(null);
   const [wakeStatus, setWakeStatus] = useState<WakeStatus>('idle');
   const [platform] = useState<'ios' | 'android' | 'other'>(() => {
     if (typeof navigator === 'undefined') return 'other';
@@ -162,14 +162,18 @@ export function useLiveTour(key: string) {
           setGeoError(null);
           const current = stateRef.current;
           if (!current || current.status === 'finished') return;
-          const { latitude: lat, longitude: lon, accuracy, altitude } = position.coords;
+            const { latitude: lat, longitude: lon, accuracy, altitude, altitudeAccuracy, heading, speed } = position.coords;
            if (Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 &&
                Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= MAX_ACCURACY_M) {
              // Current accurate fix is independent of downsampled recording and
              // remains live through manual pause; inaccurate jitter leaves it still.
-             setCurrentPosition({ lat, lon });
+              setCurrentPosition({
+                lat, lon,
+                heading: typeof heading === 'number' && Number.isFinite(heading) && heading >= 0 && heading <= 360 ? heading % 360 : null,
+                speed: typeof speed === 'number' && Number.isFinite(speed) && speed >= 0 ? speed : null,
+              });
            }
-          const next = recordTourPoint(current, { lat, lon, accuracy, altitude, timestamp: position.timestamp });
+           const next = recordTourPoint(current, { lat, lon, accuracy, altitude, altitudeAccuracy, timestamp: position.timestamp });
           if (next !== current) commit(next);
         },
         error => {
@@ -196,10 +200,10 @@ export function useLiveTour(key: string) {
     return () => window.clearInterval(timer);
   }, [active]);
 
-  const start = useCallback(() => {
+   const start = useCallback((activity: TourActivity = 'hiking') => {
     if (stateRef.current && stateRef.current.status !== 'finished') return;
     setGeoError(null);
-    commit(startTour(Date.now()));
+     commit(startTour(Date.now(), activity));
   }, [commit]);
   const pause = useCallback(() => {
     if (stateRef.current) commit(pauseTour(stateRef.current, Date.now()));

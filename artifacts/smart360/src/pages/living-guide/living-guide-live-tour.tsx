@@ -125,6 +125,8 @@ export type LiveTourPanelProps = {
   onFullscreen: () => void;
   onDownloadImage: () => void;
   onDownloadGpx: () => void;
+  /** Free recording has no planned GPX: hide the planned legend key. Default true. */
+  hasPlannedRoute?: boolean;
 };
 
 export function LiveTourPanel(p: LiveTourPanelProps) {
@@ -150,7 +152,7 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
         <h3>{t("UI.lg.liveTour.summaryTitle")}</h3>
         <LiveTourStats metrics={p.metrics} t={t} />
         <p className="s360-tour-legend">
-          <span className="s360-tour-key s360-tour-key--planned" aria-hidden="true" />{t("UI.lg.liveTour.planned")}
+          {p.hasPlannedRoute !== false && <><span className="s360-tour-key s360-tour-key--planned" aria-hidden="true" />{t("UI.lg.liveTour.planned")}</>}
           <span className="s360-tour-key s360-tour-key--recorded" aria-hidden="true" />{t("UI.lg.liveTour.recorded")}
         </p>
         <div className="s360-tour-row">

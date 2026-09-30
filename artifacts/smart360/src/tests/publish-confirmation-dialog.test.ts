@@ -38,17 +38,20 @@ test("autosave and save-before-publish share a role-aware tenant PATCH body", ()
     rating: 5,
     reviewsCount: 10,
     coordinateOverride: true,
+    tourRecordingEnabled: true,
   };
   const owner = tenantSavePayload(form, "3", true);
   const host = tenantSavePayload(form, "3", false);
   for (const key of [
     "slug", "customDomain", "isTemplate", "mediaQuotaBytes", "renewsAt",
     "rating", "reviewsCount", "coordinateOverride",
+    "tourRecordingEnabled",
   ]) {
     assert.ok(Object.hasOwn(owner, key), `operator keeps ${key}`);
     assert.ok(!Object.hasOwn(host, key), `host omits ${key}`);
   }
   assert.equal(owner.mediaQuotaBytes, 3_000_000_000);
+  assert.equal(owner.tourRecordingEnabled, true);
   assert.equal(owner.customDomain, "guest.example.com");
   assert.ok(!Object.hasOwn(host, "name"));
   assert.ok(!Object.hasOwn(host, "mapUrl"));
@@ -82,6 +85,9 @@ test("autosave and save-before-publish share a role-aware tenant PATCH body", ()
   assert.match(tenantEdit, /data: tenantSavePayload\(snapshot, quotaSnapshot, isOwner\)/);
   assert.match(tenantEdit, /data: tenantSaveDataFor\(formSnapshot, quotaSnapshot\)/);
   assert.match(tenantEdit, /=> tenantSavePayload\(formSnapshot, quotaSnapshot, isOwner\)/);
+  assert.match(tenantEdit, /tourRecordingEnabled: tenant\.tourRecordingEnabled \?\? false/);
+  assert.match(tenantEdit, /\{isOwner && <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border p-4">/);
+  assert.match(tenantEdit, /checked=\{formData\.tourRecordingEnabled\}/);
 });
 
 test("publish confirmation presents exact Slovenian groups in a mobile scroll area", () => {
