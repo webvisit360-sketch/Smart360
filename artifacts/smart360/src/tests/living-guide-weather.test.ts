@@ -90,10 +90,10 @@ test("six 2-hour slots 12..22 and afternoon probability", () => {
 test("home weather card sits between quick tiles and Danes; Danes untouched", () => {
   const src = readFileSync(fileURLToPath(new URL("../pages/living-guide/LivingGuideGuestShell.tsx", import.meta.url)), "utf8");
   const bar = src.indexOf('className="lg2-hqbar"');
-  const card = src.indexOf("<WeatherCard />");
+  const card = src.indexOf("<WeatherCard location={tenantWeatherLocation(tenant)} />");
   const danes = src.indexOf("{visibleDanesItems.length > 0 && (");
   assert.ok(bar > 0 && card > bar && danes > card);
-  assert.equal(src.split("<WeatherCard />").length, 2);
+  assert.equal(src.split("<WeatherCard location={tenantWeatherLocation(tenant)} />").length, 2);
   assert.match(src, /<WeatherProvider slug=\{slug\}/);
   const gpx = readFileSync(fileURLToPath(new URL("../pages/living-guide/living-guide-gpx.tsx", import.meta.url)), "utf8");
   assert.match(gpx, /\{lg && status === null && <TourWeatherStrip \/>\}/);
@@ -129,4 +129,29 @@ test("expiry is 3h after fetch, or local midnight if sooner", () => {
   assert.ok(Math.abs(exp - Date.UTC(2025, 6, 13, 22, 0)) <= 60_000);
   assert.ok(usableWeather(late, exp - 120_000));
   assert.equal(usableWeather(late, exp + 1000), null);
+});
+
+import { tenantWeatherLocation, formatHomeClock, formatHomeHour, WEATHER_LABELS as HOME_LABELS } from "../pages/living-guide/living-guide-weather-model";
+
+test("home weather location: explicit field, postal-address town, name fallback", () => {
+  assert.equal(tenantWeatherLocation({ city: "Mozirje", address: "Ter 35, 3333 Ljubno ob Savinji", name: "X" }), "Mozirje");
+  assert.equal(tenantWeatherLocation({ address: "Ter 35, 3333 Ljubno ob Savinji", name: "Turizem" }), "Ljubno ob Savinji");
+  assert.equal(tenantWeatherLocation({ address: "Nekje brez pošte", name: "Turizem Drobež" }), "Turizem Drobež");
+});
+
+test("home weather chips order and SL labels", () => {
+  const L = HOME_LABELS.sl;
+  assert.deepEqual([L.rain, L.wind, L.sunset], ["Padavine", "Veter", "Sončni zahod"]);
+  assert.equal(HOME_LABELS.en.sunset, "Sunset");
+  const src = readFileSync(fileURLToPath(new URL("../pages/living-guide/living-guide-weather.tsx", import.meta.url)), "utf8");
+  const card = src.slice(src.indexOf("export function WeatherCard"), src.indexOf("export function TourWeatherStrip"));
+  assert.ok(card.indexOf("L.rain") < card.indexOf("L.wind") && card.indexOf("L.wind") < card.indexOf("L.sunset"));
+  assert.ok(card.indexOf("lgw-kicker") < card.indexOf("lgw-loc") && card.indexOf("lgw-loc") < card.indexOf("lgw-now"));
+});
+
+test("home weather SL time formats", () => {
+  const ms = Date.UTC(2025, 5, 1, 16, 42);
+  assert.equal(formatHomeClock(ms, "Europe/Ljubljana", "sl"), "18.42");
+  assert.equal(formatHomeClock(ms, "Europe/Ljubljana", "en"), "18:42");
+  assert.equal(formatHomeHour(Date.UTC(2025, 5, 1, 10), "Europe/Ljubljana", "sl"), "12h");
 });

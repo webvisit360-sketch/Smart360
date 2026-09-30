@@ -187,7 +187,7 @@ export function warningText(w: TourWeatherWarning, tz: string | undefined, lang:
 }
 
 export const WEATHER_LABELS: Record<WeatherLang, { title: string; max: string; min: string; rain: string; wind: string; sunset: string; afternoon: (p: number) => string; afternoonFull: (p: number) => string; percent: (p: number) => string; warning: string }> = {
-  sl: { afternoonFull: (p) => `popoldne ${p} % verjetnost padavin`, title: "Vreme danes", max: "najv.", min: "najn.", rain: "Padavine", wind: "Veter", sunset: "Zahod", afternoon: (p) => `popoldne ${p} %`, percent: (p) => `${p} %`, warning: "Opozorilo" },
+  sl: { afternoonFull: (p) => `popoldne ${p} % verjetnost padavin`, title: "Vreme danes", max: "najv.", min: "najn.", rain: "Padavine", wind: "Veter", sunset: "Sončni zahod", afternoon: (p) => `popoldne ${p} %`, percent: (p) => `${p} %`, warning: "Opozorilo" },
   en: { afternoonFull: (p) => `${p}% chance of rain this afternoon`, title: "Weather today", max: "max", min: "min", rain: "Rain", wind: "Wind", sunset: "Sunset", afternoon: (p) => `afternoon ${p}%`, percent: (p) => `${p}%`, warning: "Warning" },
   de: { afternoonFull: (p) => `nachmittags ${p} % Regenwahrscheinlichkeit`, title: "Wetter heute", max: "max.", min: "min.", rain: "Regen", wind: "Wind", sunset: "Sonnenuntergang", afternoon: (p) => `nachm. ${p} %`, percent: (p) => `${p} %`, warning: "Warnung" },
   it: { afternoonFull: (p) => `${p}% di probabilità di pioggia nel pomeriggio`, title: "Meteo di oggi", max: "max", min: "min", rain: "Pioggia", wind: "Vento", sunset: "Tramonto", afternoon: (p) => `pomeriggio ${p}%`, percent: (p) => `${p}%`, warning: "Avviso" },
@@ -195,4 +195,35 @@ export const WEATHER_LABELS: Record<WeatherLang, { title: string; max: string; m
 
 export function formatTemp(c: number): string {
   return `${Math.round(c)}°`;
+}
+
+/** Home card clock: Slovenian reference uses "18.42"; other locales keep their own convention. */
+export function formatHomeClock(ms: number, tz: string | undefined, lang: string): string {
+  const base = formatClock(ms, tz, lang);
+  return weatherLang(lang) === "sl" ? base.replace(":", ".") : base;
+}
+
+/** Home hourly slot label: Slovenian "12h"; other locales keep formatClock. */
+export function formatHomeHour(ms: number, tz: string | undefined, lang: string): string {
+  if (weatherLang(lang) !== "sl") return formatClock(ms, tz, lang);
+  return `${Number(formatClock(ms, tz, lang).split(":")[0])}h`;
+}
+
+/**
+ * Header location from stored tenant fields only. Prefers explicit
+ * locationName/locality/city if present, else derives the town from a postal
+ * address ("Ter 35, 3333 Ljubno ob Savinji" -> "Ljubno ob Savinji"),
+ * else falls back to the tenant name.
+ */
+export function tenantWeatherLocation(tenant: any): string {
+  for (const key of ["locationName", "locality", "city", "town"]) {
+    const v = tenant?.[key];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  const address = typeof tenant?.address === "string" ? tenant.address : "";
+  for (const part of address.split(/[,\n]/).map((x: string) => x.trim()).reverse()) {
+    const m = part.match(/^(?:[A-Z]{1,2}[- ])?\d{4,5}\s+(.+)$/);
+    if (m && /\p{L}/u.test(m[1])) return m[1].trim();
+  }
+  return typeof tenant?.name === "string" ? tenant.name.trim() : "";
 }

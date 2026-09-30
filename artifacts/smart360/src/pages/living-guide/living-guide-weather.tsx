@@ -3,7 +3,8 @@ import { getGetTenantWeatherQueryKey, useGetTenantWeather } from "@workspace/api
 import {
   afternoonPrecipitation,
   describeWeather,
-  formatClock,
+  formatHomeClock,
+  formatHomeHour,
   formatTemp,
   todaySlots,
   tourWarning,
@@ -138,7 +139,7 @@ function Glyph({ name }: { name: "drop" | "wind" | "sunset" | "alert" }) {
 }
 
 /** Domov card: inserted between the quick tiles and "Danes". */
-export function WeatherCard() {
+export function WeatherCard({ location }: { location?: string }) {
   const ctx = useLivingGuideWeather();
   if (!ctx?.weather) return null;
   const { weather, lang } = ctx;
@@ -147,28 +148,31 @@ export function WeatherCard() {
   const slots = todaySlots(weather, l);
   const desc = describeWeather(weather.current.weatherCode, l);
   return (
-    <section className="lgw-card" aria-label={L.title} data-testid="card-home-weather">
+    <section className="lgw-card" lang={l} aria-label={L.title} data-testid="card-home-weather">
+      <div className="lgw-head">
+        <p className="lgw-kicker">{L.title}</p>
+        {location && <span className="lgw-loc" data-testid="text-weather-location">{location}</span>}
+      </div>
       <div className="lgw-now">
         <WeatherIcon code={weather.current.weatherCode} isDay={weather.current.isDay} className="lgw-now-icon" />
         <div className="lgw-now-temp" data-testid="text-weather-temp">{formatTemp(weather.current.temperatureC)}</div>
         <div className="lgw-now-copy">
-          <p className="lgw-kicker">{L.title}</p>
           <b data-testid="text-weather-desc">{desc}</b>
           <span className="lgw-range">
             {L.max} {formatTemp(weather.today.maxC)} <i aria-hidden="true">·</i> {L.min} {formatTemp(weather.today.minC)}
           </span>
         </div>
       </div>
-      <ul className="lgw-chips">
-        <li><Glyph name="drop" /><span className="lg-sr-only">{L.rain} </span>{L.percent(Math.round(weather.today.precipitationProbability))}</li>
-        <li><Glyph name="wind" /><span className="lg-sr-only">{L.wind} </span>{Math.round(weather.current.windKmh)} km/h</li>
-        <li><Glyph name="sunset" /><span className="lg-sr-only">{L.sunset} </span>{formatClock(weather.today.sunset, weather.timezone, l)}</li>
+      <ul className="lgw-chips" data-testid="list-weather-chips">
+        <li><span className="lgw-chip-k">{L.rain}</span><b>{L.percent(Math.round(weather.today.precipitationProbability))}</b></li>
+        <li><span className="lgw-chip-k">{L.wind}</span><b>{Math.round(weather.current.windKmh)} km/h</b></li>
+        <li><span className="lgw-chip-k">{L.sunset}</span><b>{formatHomeClock(weather.today.sunset, weather.timezone, l)}</b></li>
       </ul>
       {slots.length > 0 && (
         <ol className="lgw-slots" data-testid="list-weather-slots">
           {slots.map((slot) => (
             <li key={slot.time}>
-              <span className="lgw-slot-time">{slot.label}</span>
+              <span className="lgw-slot-time">{formatHomeHour(slot.time, weather.timezone, l)}</span>
               <WeatherIcon code={slot.weatherCode} isDay={slot.time < weather.today.sunset} />
               <b>{formatTemp(slot.temperatureC)}</b>
             </li>

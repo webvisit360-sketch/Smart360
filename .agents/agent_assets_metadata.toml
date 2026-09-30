@@ -1688,3 +1688,31 @@ mtime_ms = 1790791160882
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2a99753f-9c06-45b9-8de5-27b3e58656ad/8cbf1fa2-c276-49cb-a356-521a0ed90287"
 storage_version_token = "1790791342119574"
 content_type = "image/png"
+
+[[outputs]]
+id = "UiEMspOnSeK0Hn4xLet7d"
+uri = "file://screenshots/weather-reference-side-by-side-390.png"
+type = "image"
+title = "Vreme — predloga in izvedba pri 390 px"
+description = "Levo priloženi HTML, desno dejanska razvojna kartica. Primerjava s testnimi vremenskimi podatki; obstoječe črtne ikone so ohranjene."
+logical_id = "a66748da-8031-4d18-9113-4ef1335687f5"
+content_hash = "sha256:be52cdd1be48ba26caa3582fc530401f22f26f465effb80e3ff24a16e9434f34"
+size = 82107
+mtime_ms = 1790791791098
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a66748da-8031-4d18-9113-4ef1335687f5/0fbb71f4-102a-4422-92ca-395827d8b146"
+storage_version_token = "1790791904487422"
+content_type = "image/png"
+
+[[outputs]]
+id = "2RaTqC_Lhi6kK5y6CepfN"
+uri = "file://screenshots/weather-reference-matched-home-390.png"
+type = "image"
+title = "Domov — usklajena vremenska kartica"
+description = "Razvojni prikaz pri 390 px z vzorčnim naslovom za preverjanje kraja. Bližnjice, kartica in vrtiljak Danes."
+logical_id = "d5701f7c-58d1-418b-8943-a91f6049fb29"
+content_hash = "sha256:cc667a36f195eb5c3fd309dec6e1b6601e60edd379abe1d1d18350bf73203180"
+size = 89202
+mtime_ms = 1790791790926
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d5701f7c-58d1-418b-8943-a91f6049fb29/944143e8-c697-4225-a3ee-91dd6694d4c6"
+storage_version_token = "1790791905821925"
+content_type = "image/png"

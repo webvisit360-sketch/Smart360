@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — Domov z vremenom</title>
+<style>
+  :root{
+    --bg:#0B1220; --card:#121B2B; --card2:#0F1826; --line:#1E2A3D;
+    --txt:#F2F5F9; --muted:#8E9AAC; --amber:#F2B135; --green:#2E7D4F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#E9ECEF;padding:24px 12px;display:flex;justify-content:center;}
+  .phone{width:390px;background:var(--bg);border-radius:32px;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.3);position:relative;}
+
+  /* hero */
+  .hero{height:190px;background:
+    radial-gradient(120% 90% at 20% 0%,#9cc7e8 0%,#6fa8d8 35%,transparent 70%),
+    linear-gradient(180deg,#7fb2df 0%,#4f7d52 55%,#33543a 100%);position:relative;}
+  .hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:70px;
+    background:linear-gradient(180deg,transparent,var(--bg));}
+  .hbtns{position:absolute;top:14px;right:14px;display:flex;gap:8px;}
+  .hb{background:rgba(15,24,38,.75);color:#fff;border-radius:14px;padding:8px 12px;font-weight:700;font-size:13px;}
+
+  .sheet{padding:0 16px 84px;margin-top:-26px;position:relative;}
+
+  .namecard .n{color:var(--txt);font-weight:800;font-size:17px;}
+  .namecard .a{color:var(--muted);font-size:13px;margin-top:2px;}
+  .big{color:var(--txt);font-size:30px;font-weight:800;margin:8px 0 14px;}
+
+  .wifi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center;color:var(--txt);font-weight:700;margin-bottom:12px;}
+  .wifi span{color:var(--amber);margin-right:8px;}
+  .tiles{display:flex;gap:10px;margin-bottom:12px;}
+  .tile{flex:1;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;color:var(--txt);font-weight:700;font-size:13px;}
+  .tile .ic{color:var(--amber);font-size:18px;display:block;margin-bottom:6px;}
+
+  /* VREME */
+  .weather{background:linear-gradient(135deg,#14243C 0%,#121B2B 70%);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:16px;}
+  .weather .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .weather .head .t{font-size:11px;letter-spacing:.1em;color:var(--muted);font-weight:700;text-transform:uppercase;}
+  .weather .head .loc{font-size:12px;color:var(--muted);}
+  .now{display:flex;align-items:center;gap:12px;}
+  .now .ico{font-size:40px;line-height:1;}
+  .now .temp{font-size:38px;font-weight:800;color:var(--txt);}
+  .now .right{margin-left:auto;text-align:right;}
+  .now .desc{color:var(--txt);font-size:14px;font-weight:600;}
+  .now .hilo{color:var(--muted);font-size:13px;margin-top:2px;}
+  .meta{display:flex;gap:8px;margin-top:10px;}
+  .chipm{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:7px 6px;text-align:center;}
+  .chipm .k{color:var(--muted);font-size:11px;}
+  .chipm .v{color:var(--txt);font-size:14px;font-weight:700;margin-top:2px;}
+  .hours{display:flex;gap:6px;margin-top:10px;}
+  .hour{flex:1;background:rgba(255,255,255,.04);border-radius:10px;padding:6px 2px;text-align:center;}
+  .hour .h{color:var(--muted);font-size:10px;}
+  .hour .i{font-size:14px;margin:2px 0;}
+  .hour .t{color:var(--txt);font-size:12px;font-weight:700;}
+  .src{margin-top:8px;color:#5f6b7d;font-size:10px;text-align:right;}
+
+  /* DANES — premične kartice ostanejo */
+  .drow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .danes{color:var(--txt);font-weight:800;font-size:22px;}
+  .vec{color:var(--amber);font-weight:700;font-size:14px;}
+  .carousel{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;}
+  .carousel::-webkit-scrollbar{display:none;}
+  .pcard{min-width:250px;height:170px;border-radius:18px;position:relative;overflow:hidden;flex-shrink:0;}
+  .pcard .ph{position:absolute;inset:0;}
+  .p1 .ph{background:linear-gradient(160deg,#c8a24e 0%,#7d8c46 45%,#3f5a34 100%);}
+  .p2 .ph{background:linear-gradient(160deg,#e8b07a 0%,#b06a3c 50%,#5a3a2a 100%);}
+  .p3 .ph{background:linear-gradient(160deg,#8fb7d9 0%,#4e7fa8 55%,#274a63 100%);}
+  .pcard .sh{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(5,10,18,.85));}
+  .badge{position:absolute;left:12px;bottom:58px;background:var(--amber);color:#14243C;font-weight:800;font-size:11px;letter-spacing:.06em;border-radius:8px;padding:4px 8px;text-transform:uppercase;}
+  .pt{position:absolute;left:12px;right:12px;bottom:30px;color:#fff;font-weight:800;font-size:19px;}
+  .ps{position:absolute;left:12px;right:12px;bottom:10px;color:#cfd7e2;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* spodnja navigacija */
+  .nav{position:absolute;left:0;right:0;bottom:0;background:#0A101B;border-top:1px solid var(--line);display:flex;padding:10px 6px 16px;}
+  .ni{flex:1;text-align:center;color:var(--muted);font-size:11px;font-weight:600;}
+  .ni .i{font-size:18px;display:block;margin-bottom:3px;}
+  .ni.on{color:#fff;}
+  .ni.on .i{color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="hero">
+    <div class="hbtns"><div class="hb">360</div><div class="hb">&#128269;</div></div>
+  </div>
+
+  <div class="sheet">
+    <div class="namecard">
+      <div class="n">Turizem Drobež</div>
+      <div class="a">Ter 35, 3333 Ljubno ob Savinji</div>
+    </div>
+    <div class="big">Dobrodošli</div>
+
+    <div class="wifi"><span>&#128246;</span>WiFi</div>
+
+    <div class="tiles">
+      <div class="tile"><span class="ic">&#128276;</span>Obvestila</div>
+      <div class="tile"><span class="ic">&#128172;</span>Sporočila</div>
+      <div class="tile"><span class="ic">&#128205;</span>Zemljevid</div>
+    </div>
+
+    <!-- NOVO: vremenska kartica -->
+    <div class="weather">
+      <div class="head">
+        <div class="t">Vreme danes</div>
+        <div class="loc">Ljubno ob Savinji</div>
+      </div>
+      <div class="now">
+        <div class="ico">&#9925;</div>
+        <div class="temp">17°</div>
+        <div class="right">
+          <div class="desc">Delno oblačno</div>
+          <div class="hilo">najv. 21° · najn. 9°</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="chipm"><div class="k">Padavine</div><div class="v">20 %</div></div>
+        <div class="chipm"><div class="k">Veter</div><div class="v">8 km/h</div></div>
+        <div class="chipm"><div class="k">Sončni zahod</div><div class="v">18.42</div></div>
+      </div>
+      <div class="hours">
+        <div class="hour"><div class="h">12h</div><div class="i">&#9925;</div><div class="t">17°</div></div>
+        <div class="hour"><div class="h">14h</div><div class="i">&#9728;</div><div class="t">20°</div></div>
+        <div class="hour"><div class="h">16h</div><div class="i">&#9728;</div><div class="t">21°</div></div>
+        <div class="hour"><div class="h">18h</div><div class="i">&#9925;</div><div class="t">18°</div></div>
+        <div class="hour"><div class="h">20h</div><div class="i">&#127769;</div><div class="t">13°</div></div>
+        <div class="hour"><div class="h">22h</div><div class="i">&#127769;</div><div class="t">11°</div></div>
+      </div>
+      <div class="src">Open-Meteo</div>
+    </div>
+
+    <!-- DANES s premičnimi karticami — ostane nedotaknjeno -->
+    <div class="drow">
+      <div class="danes">Danes</div>
+      <div class="vec">več</div>
+    </div>
+    <div class="carousel">
+      <div class="pcard p1">
+        <div class="ph"></div><div class="sh"></div>
+        <div class="badge">Pohodništvo</div>
+        <div class="pt">Klemenča jama</div>
+        <div class="ps">Planina pod Ojstrico s pastirskimi stanovi …</div>
+      </div>
+      <div class="pcard p2">
+        <div class="ph"></div><div class="sh"></div>
+        <div class="badge">Kolesarjenje</div>
+        <div class="pt">Vzpon na Golte</div>
+        <div class="ps">16 km in 1010 m vzpona do planote …</div>
+      </div>
+      <div class="pcard p3">
+        <div class="ph"></div><div class="sh"></div>
+        <div class="badge">Znamenitosti</div>
+        <div class="pt">Logarska dolina</div>
+        <div class="ps">Ena najlepših alpskih dolin v Evropi …</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="ni on"><span class="i">&#127968;</span>Domov</div>
+    <div class="ni"><span class="i">&#9968;</span>Nastanitev</div>
+    <div class="ni"><span class="i">&#128717;</span>Ponudba</div>
+    <div class="ni"><span class="i">&#129517;</span>Okolica</div>
+    <div class="ni"><span class="i">&#128172;</span>Sporočila</div>
+  </div>
+</div>
+</body>
+</html>

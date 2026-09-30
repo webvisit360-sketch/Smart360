@@ -31,6 +31,7 @@ import { buildGuestPath } from "../guest/guest-url";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
+import { tenantWeatherLocation } from "./living-guide-weather-model";
 import type { TenantWeather } from "@workspace/api-client-react";
 import { EXPLORE_RECORDING_TAB_KEY, exploreCategoryChips, recordingTabLabel } from "./living-guide-explore-tabs";
 
@@ -4595,7 +4596,7 @@ function HomeView({
           )}
         </div>
 
-        <WeatherCard />
+        <WeatherCard location={tenantWeatherLocation(tenant)} />
 
         {visibleDanesItems.length > 0 && (
           <>
