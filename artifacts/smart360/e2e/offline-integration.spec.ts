@@ -73,6 +73,22 @@ async function visit(page: Page, slug: string, lang = "sl") {
     .filter(key => key.includes("/gpx/")).length).toBe(1);
 }
 async function snap(page: Page, name: string) {
+  // Visibility does not imply unobscured: startup splash can cover a mounted
+  // guide/banner for ~3 seconds. Never accept screenshots of that overlay.
+  await expect(page.locator(".guest-entry-splash")).toHaveCount(0, { timeout: 10_000 });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  });
+  if (name.startsWith("banner-")) {
+    const banner = page.getByTestId("banner-guide-offline");
+    await expect(banner).toBeVisible();
+    await expect.poll(() => banner.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, 10);
+      return !!hit && (hit === element || element.contains(hit));
+    }), { message: "Offline banner must win real hit testing at its horizontal center, y=10" }).toBe(true);
+  }
   await mkdir(reports, { recursive: true });
   await page.screenshot({ path: `${reports}/${name}.png` });
 }
