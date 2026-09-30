@@ -36,6 +36,9 @@ const LivingGuideTokensPage = import.meta.env.DEV
 const LivingGuideWeatherFixture = import.meta.env.DEV
   ? lazy(() => import('@/pages/living-guide/LivingGuideWeatherFixture'))
   : null;
+const LivingGuideSosFixture = import.meta.env.DEV
+  ? lazy(() => import('@/pages/living-guide/sos/LivingGuideSosFixture'))
+  : null;
 const LivingGuideProgramFixture = import.meta.env.DEV
   ? lazy(() => import('@/pages/living-guide/LivingGuideProgramFixture'))
   : null;
@@ -322,6 +325,14 @@ function Router() {
           <Route path="/__weather-fixture/*?">
             <Suspense fallback={null}>
               <LivingGuideWeatherFixture />
+            </Suspense>
+          </Route>
+        )}
+
+        {LivingGuideSosFixture && (
+          <Route path="/__sos-fixture">
+            <Suspense fallback={null}>
+              <LivingGuideSosFixture />
             </Suspense>
           </Route>
         )}

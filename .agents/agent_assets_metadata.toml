@@ -1884,3 +1884,59 @@ mtime_ms = 1790799893418
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d2b527b1-645d-4b97-b4c1-0efcd94e41cd/e7db556c-c6f6-47e6-a93b-a99d6bd5491d"
 storage_version_token = "1790799978327648"
 content_type = "image/png"
+
+[[outputs]]
+id = "JaNvtLpzLAl9BLrEgEW-5"
+uri = "file://reports/sos/help-entry.jpg"
+type = "image"
+title = "SOS na vrhu pomoči"
+description = "DEV, testna namestitev; obstoječa kontakta 112 in 113 ostajata nespremenjena."
+logical_id = "5d829de0-0e36-4f32-a850-85bcddbb7ea5"
+content_hash = "sha256:1837869bd6b028381915dab7051ca98159aa6ba1a34edcd68b193e84719972ae"
+size = 27989
+mtime_ms = 1790802857890
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5d829de0-0e36-4f32-a850-85bcddbb7ea5/01ce8a2f-4b23-4609-874a-7d6d2f9216f2"
+storage_version_token = "1790802937916069"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "djhLA5y3uwnsHAQhW6JLL"
+uri = "file://reports/sos/sos-active.jpg"
+type = "image"
+title = "SOS — lokacija in klic 112"
+description = "DEV s simulirano lokacijo, ne dejanski položaj gosta."
+logical_id = "020b803e-f616-4ba7-b197-441c9d5057a6"
+content_hash = "sha256:8237f0af44252738ec05f9bb73c3e44638972c30cf82f4703761fc91d9e8d9bb"
+size = 41742
+mtime_ms = 1790802551198
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/020b803e-f616-4ba7-b197-441c9d5057a6/3d6d669d-eb7e-4cde-8d76-f3a1c38f19d8"
+storage_version_token = "1790802938694458"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "DdKYPQzFPr5SUIuf71r7F"
+uri = "file://reports/sos/sos-denied.jpg"
+type = "image"
+title = "SOS — zavrnjeno dovoljenje"
+description = "Klic 112 ostaja dosegljiv; navodila za ponovno omogočanje lokacije."
+logical_id = "c7daddfc-fe98-4c45-9291-264016d65053"
+content_hash = "sha256:0d31c5b130e9009c15a111d4fa43b5434f822516825e346bc9f1172c0e2f511a"
+size = 39204
+mtime_ms = 1790802869122
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c7daddfc-fe98-4c45-9291-264016d65053/f2d13f02-ebae-4452-8fc6-43336b0330f2"
+storage_version_token = "1790802939608335"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "kt5wL39XkXkvcQFuNGuoR"
+uri = "file://reports/sos/tour-gpx-390x844.png"
+type = "image"
+title = "SOS med turo"
+description = "DEV, simulirana tura. Položaj gumba je izmerjen brez prekrivanja drugih kontrol."
+logical_id = "2268a50a-7a80-476e-a933-48d80236ad4f"
+content_hash = "sha256:57bfd5b2bf97af0ec5a7b24e67dee20d4519192dab92e1fd62cdd347099465bd"
+size = 93052
+mtime_ms = 1790802750758
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2268a50a-7a80-476e-a933-48d80236ad4f/93654c5f-d726-4ad9-9d2f-5efa7dfd41a8"
+storage_version_token = "1790802940384436"
+content_type = "image/png"

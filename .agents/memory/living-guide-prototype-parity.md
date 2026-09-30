@@ -104,6 +104,14 @@ The moving detail sheet has square top corners. The rounded 28 px white panel, g
 
 **How to apply:** Use a root-owned grid boundary at `heroHeight - 26px`, let the fixed-height hero overflow beneath the rounded panel, and keep route radius at zero. Test photo pixels and coordinates at 25%, 60%, and rest, plus one root-variable write.
 
+## Pixel-comparison raster alignment
+
+Record fractional screenshot origins when comparing a standalone HTML phone frame with the real application. Compare element geometry and typography first, then align only the reference's raster origin and disclose any colour-difference threshold.
+
+**Why:** A half-pixel reference-frame offset created apparent multi-percent SOS differences even where dimensions and styles matched. Global font smoothing also changed real raster output despite matching font families.
+
+**How to apply:** Preserve unmodified app captures; never treat thresholded element matches as proof of full-screen identity. Check global line-height, font smoothing, and fractional crop coordinates before changing correct layout.
+
 ## Detail sheets with fixed order docks
 
 An order dock must not reserve space by adding bottom padding to the detail scroller that owns the 100%-height sheet root. Reserve obstruction clearance inside the sheet instead. Cap the panel boundary so tall portrait media cannot reduce the usable sheet below a viewport-relative minimum.

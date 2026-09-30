@@ -1,0 +1,458 @@
+{
+  "base": "http://localhost:80",
+  "reference": "file:///home/runner/workspace/attached_assets/sos-dizajn_1790801495037.html",
+  "viewport": {
+    "actual": 390,
+    "reference": "414 (phone frame 390)"
+  },
+  "threshold": 48,
+  "frozenClock": "2026-06-01T10:00:00.000Z",
+  "elements": [
+    {
+      "element": "card",
+      "refBox": {
+        "x": 28,
+        "y": 179,
+        "width": 358,
+        "height": 192.5
+      },
+      "actBox": {
+        "x": 16,
+        "y": 16,
+        "width": 358,
+        "height": 192.5
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": 0
+      },
+      "refText": "SOS Kje sem? — lokacija za reševalce Ob klicu na 112 preberite operaterju svoje koordinate. Prikažemo jih z GPS-om vaše naprave. Pokaži mojo lokacijo",
+      "actText": "SOS Kje sem? — lokacija za reševalce Ob klicu na 112 preberite operaterju svoje koordinate. Prikažemo jih z GPS-om vaše naprave. Pokaži mojo lokacijo",
+      "textEqual": true,
+      "refSize": [
+        358,
+        193
+      ],
+      "actSize": [
+        358,
+        193
+      ],
+      "shift0": {
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "styleDiffs": [
+        {
+          "prop": "color",
+          "ref": "rgb(0, 0, 0)",
+          "act": "rgb(18, 26, 20)"
+        }
+      ]
+    },
+    {
+      "element": "coord",
+      "refBox": {
+        "x": 28,
+        "y": 918,
+        "width": 358,
+        "height": 225.78125
+      },
+      "actBox": {
+        "x": 16,
+        "y": 101,
+        "width": 358,
+        "height": 225.78125
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": -0.5
+      },
+      "refText": "KOORDINATE (WGS84) N 46.35812° E 14.83294° 46°21'29\" N · 14°49'59\" E Nadm. višina 612 m Natančnost ± 8 m Osveženo pred 3 s GPS aktiven — koordinate se osvežujejo",
+      "actText": "KOORDINATE (WGS84) N 46.35812° E 14.83294° 46°21'29\" N · 14°49'59\" E Nadm. višina 612 m Natančnost ± 8 m Osveženo pred 3 s GPS aktiven — koordinate se osvežujejo",
+      "textEqual": true,
+      "refSize": [
+        358,
+        226
+      ],
+      "actSize": [
+        358,
+        226
+      ],
+      "shift0": {
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "styleDiffs": [
+        {
+          "prop": "color",
+          "ref": "rgb(0, 0, 0)",
+          "act": "rgb(18, 26, 20)"
+        }
+      ]
+    },
+    {
+      "element": "near",
+      "refBox": {
+        "x": 28,
+        "y": 1156.78125,
+        "width": 358,
+        "height": 69
+      },
+      "actBox": {
+        "x": 16,
+        "y": 338.78125,
+        "width": 358,
+        "height": 69
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": 0.5
+      },
+      "refText": "📍 pribl. 2,4 km jugovzhodno od Turizem Drobež Ter 35, 3333 Ljubno ob Savinji",
+      "actText": "📍 pribl. 2,4 km jugovzhodno od Turizem Drobež Ter 35, 3333 Ljubno ob Savinji",
+      "textEqual": true,
+      "refSize": [
+        358,
+        70
+      ],
+      "actSize": [
+        358,
+        70
+      ],
+      "shift0": {
+        "diffPixels": 18,
+        "diffPct": 0.07,
+        "diffBBox": [
+          16,
+          29,
+          24,
+          44
+        ]
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 18,
+        "diffPct": 0.07,
+        "diffBBox": [
+          16,
+          29,
+          24,
+          44
+        ]
+      },
+      "styleDiffs": [
+        {
+          "prop": "color",
+          "ref": "rgb(0, 0, 0)",
+          "act": "rgb(18, 26, 20)"
+        }
+      ]
+    },
+    {
+      "element": "call112",
+      "refBox": {
+        "x": 28,
+        "y": 1237.78125,
+        "width": 358,
+        "height": 53
+      },
+      "actBox": {
+        "x": 16,
+        "y": 419.78125,
+        "width": 358,
+        "height": 53
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": 0.5
+      },
+      "refText": "📞 Pokliči 112",
+      "actText": "📞 Pokliči 112",
+      "textEqual": true,
+      "refSize": [
+        358,
+        54
+      ],
+      "actSize": [
+        358,
+        54
+      ],
+      "shift0": {
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "styleDiffs": [],
+      "diffColumns": [
+        {
+          "xRange": [
+            0,
+            45
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            45,
+            90
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            90,
+            134
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            134,
+            179
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            179,
+            224
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            224,
+            269
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            269,
+            313
+          ],
+          "diffPixels": 0
+        },
+        {
+          "xRange": [
+            313,
+            358
+          ],
+          "diffPixels": 0
+        }
+      ]
+    },
+    {
+      "element": "secrow",
+      "refBox": {
+        "x": 28,
+        "y": 1300.78125,
+        "width": 358,
+        "height": 41
+      },
+      "actBox": {
+        "x": 16,
+        "y": 482.78125,
+        "width": 358,
+        "height": 41
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": 0.5
+      },
+      "refText": "📋 Kopiraj koordinate 📤 Deli lokacijo",
+      "actText": "📋 Kopiraj koordinate 📤 Deli lokacijo",
+      "textEqual": true,
+      "refSize": [
+        358,
+        42
+      ],
+      "actSize": [
+        358,
+        42
+      ],
+      "shift0": {
+        "diffPixels": 72,
+        "diffPct": 0.51,
+        "diffBBox": [
+          28,
+          17,
+          100,
+          25
+        ]
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 72,
+        "diffPct": 0.51,
+        "diffBBox": [
+          28,
+          17,
+          100,
+          25
+        ]
+      },
+      "styleDiffs": [
+        {
+          "prop": "color",
+          "ref": "rgb(0, 0, 0)",
+          "act": "rgb(18, 26, 20)"
+        },
+        {
+          "prop": "border-top-color",
+          "ref": "rgb(0, 0, 0)",
+          "act": "rgb(18, 26, 20)"
+        }
+      ]
+    },
+    {
+      "element": "guide",
+      "refBox": {
+        "x": 28,
+        "y": 1353.78125,
+        "width": 358,
+        "height": 173.375
+      },
+      "actBox": {
+        "x": 16,
+        "y": 535.78125,
+        "width": 358,
+        "height": 173.375
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": 0.5
+      },
+      "refText": "1 Kje ste — počasi preberite koordinate z zaslona. 2 Kaj se je zgodilo in koliko je poškodovanih. 3 Ne prekinite klica, dokler operater ne reče, da lahko.",
+      "actText": "1 Kje ste — počasi preberite koordinate z zaslona. 2 Kaj se je zgodilo in koliko je poškodovanih. 3 Ne prekinite klica, dokler operater ne reče, da lahko.",
+      "textEqual": true,
+      "refSize": [
+        358,
+        175
+      ],
+      "actSize": [
+        358,
+        175
+      ],
+      "shift0": {
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "styleDiffs": [
+        {
+          "prop": "color",
+          "ref": "rgb(0, 0, 0)",
+          "act": "rgb(18, 26, 20)"
+        }
+      ]
+    },
+    {
+      "element": "priv",
+      "refBox": {
+        "x": 28,
+        "y": 1538.15625,
+        "width": 358,
+        "height": 49.5
+      },
+      "actBox": {
+        "x": 16,
+        "y": 721.15625,
+        "width": 358,
+        "height": 49.5
+      },
+      "referenceAlignNudgePx": {
+        "dx": 0,
+        "dy": -0.5
+      },
+      "refText": "Lokacija se prebere samo na vaši napravi in samo na tem zaslonu. Ničesar ne pošljemo na strežnik.",
+      "actText": "Lokacija se prebere samo na vaši napravi in samo na tem zaslonu. Ničesar ne pošljemo na strežnik.",
+      "textEqual": true,
+      "refSize": [
+        358,
+        50
+      ],
+      "actSize": [
+        358,
+        50
+      ],
+      "shift0": {
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "bestShift": {
+        "dx": 0,
+        "dy": 0,
+        "diffPixels": 0,
+        "diffPct": 0,
+        "diffBBox": null
+      },
+      "styleDiffs": []
+    }
+  ],
+  "screen2": {
+    "refBox": {
+      "x": 12,
+      "y": 817,
+      "width": 390,
+      "height": 882.65625
+    },
+    "actBox": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 2400
+    },
+    "refSize": [
+      390,
+      883
+    ],
+    "actSize": [
+      390,
+      882
+    ],
+    "shift0": {
+      "diffPct": 1.7,
+      "diffPixels": 5812
+    },
+    "bestShift": {
+      "dx": 0,
+      "dy": 0,
+      "diffPct": 1.7
+    },
+    "note": "Whole-screen diff includes known intentional deviations: close button, reference .caption omitted in app, phone corner radius/shadow of mock frame. Not a pixel-identity claim."
+  }
+}

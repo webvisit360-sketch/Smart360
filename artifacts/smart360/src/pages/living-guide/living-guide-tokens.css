@@ -1,5 +1,10 @@
 [data-living-guide] {
   --sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Guest non-emergency failures / deletion remain amber, including shared UI.
+     SOS owns its dedicated red inside .sos-scope; admin tokens are untouched. */
+  --danger: #DD9A2B;
+  --color-destructive: #DD9A2B;
+  --color-destructive-border: #F2B135;
   --ease: cubic-bezier(.22, 1, .36, 1);
   min-height: 100dvh;
   font: 15px/1.5 var(--sans);
@@ -429,7 +434,7 @@ body[data-t="noc"] [data-living-guide] .lg-stars {
 }
 
 [data-living-guide] .lg-rule--warning {
-  background: color-mix(in srgb, #D93A2B 8%, transparent);
+  background: color-mix(in srgb, #DD9A2B 8%, transparent);
   border-radius: 16px;
   border-bottom: 0;
   padding: 11px;
@@ -437,7 +442,7 @@ body[data-t="noc"] [data-living-guide] .lg-stars {
 
 [data-living-guide] .lg-rule--warning .lg-rule-icon {
   color: #FFFFFF;
-  background: #D93A2B;
+  background: #DD9A2B;
 }
 
 [data-living-guide] .lg-rule--warning .lg-rule-icon svg {

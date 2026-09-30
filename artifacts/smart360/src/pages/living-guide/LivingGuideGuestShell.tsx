@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import {
   getListDeviceOrdersQueryKey,
   useListDeviceOrders,
@@ -29,6 +29,8 @@ import {
 } from "../guest/img";
 import { buildGuestPath } from "../guest/guest-url";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
+import { SosCard, SosView } from "./sos/SosView";
+import { SosEntryContext } from "./living-guide-sos-context";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
 import { tenantWeatherLocation } from "./living-guide-weather-model";
@@ -688,6 +690,11 @@ export default function LivingGuideGuestShell({
     longitude: tenant?.longitude ?? null,
   });
   const t = makeT(tenant, lang);
+  // An independent sibling overlay: opening SOS must not navigate, replace the
+  // detail, reset a recorder, or unmount its timer / geolocation hook.
+  const [showSos, setShowSos] = useState(false);
+  const openSos = useCallback(() => setShowSos(true), []);
+  const sosEntry = useMemo(() => ({ lang, onOpen: openSos, isOpen: showSos }), [lang, openSos, showSos]);
   const rootRef = useRef<HTMLDivElement>(null);
   const heldLayerRef = useRef<HTMLDivElement>(null);
   const heldViewStackRef = useRef<HeldRouteSurface[]>([]);
@@ -1796,6 +1803,7 @@ export default function LivingGuideGuestShell({
   }, []);
 
   useEffect(() => {
+    if (showSos) return; // SOS owns Escape; do not close the retained tour/detail.
     if (screen !== "detail" && !showLanguages && !showNotices && !showSearch && !showSignIn) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -1812,6 +1820,7 @@ export default function LivingGuideGuestShell({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
+    showSos,
     cancelSignIn,
     closePresentedView,
     goBack,
@@ -1894,6 +1903,7 @@ export default function LivingGuideGuestShell({
   const notices = visible(tenant?.notices);
 
   return (
+    <SosEntryContext.Provider value={sosEntry}>
     <WeatherProvider slug={slug} lang={lang} override={import.meta.env.DEV ? devWeather : undefined}>
     <div
       ref={rootRef}
@@ -2226,8 +2236,13 @@ export default function LivingGuideGuestShell({
           }}
         />
       )}
+      {showSos && createPortal(
+        <div className="s360-sos-layer"><SosView tenant={tenant} lang={lang} onClose={() => setShowSos(false)} /></div>,
+        document.body,
+      )}
     </div>
     </WeatherProvider>
+    </SosEntryContext.Provider>
   );
 }
 
@@ -3803,6 +3818,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
 }
 
 function EmergencyHelpTemplate({ category, items, onBack }: any) {
+  const sos = useContext(SosEntryContext);
   return (
     <div className="lg2-screen-scroll lg2-detail-scroll" data-lg-scroll>
       <div className="lg2-detail-sheet-root">
@@ -3812,6 +3828,7 @@ function EmergencyHelpTemplate({ category, items, onBack }: any) {
         >
           <div className="lg2-grabber" aria-hidden="true" />
           <h1>{category.label}</h1>
+          {sos && <SosCard lang={sos.lang} onOpen={sos.onOpen} />}
           <div className="lg2-emergency-contacts">
             {items.map((item: any) => (
               <a

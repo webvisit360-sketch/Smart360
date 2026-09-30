@@ -1,0 +1,54 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "sos": {
+    "x": 334,
+    "y": 636,
+    "width": 44,
+    "height": 44
+  },
+  "controls": [
+    {
+      "selector": ".s360-gpx-full-exit",
+      "rect": {
+        "x": 234.234375,
+        "y": 12,
+        "width": 143.765625,
+        "height": 44
+      },
+      "intersectionArea": 0
+    },
+    {
+      "selector": ".s360-gpx-camera-controls",
+      "rect": {
+        "x": 271.203125,
+        "y": 88,
+        "width": 106.796875,
+        "height": 36
+      },
+      "intersectionArea": 0
+    },
+    {
+      "selector": ".s360-tour-toolbar",
+      "rect": {
+        "x": 12,
+        "y": 12,
+        "width": 366,
+        "height": 135.5
+      },
+      "intersectionArea": 0
+    },
+    {
+      "selector": ".s360-gpx-profile--compact",
+      "rect": {
+        "x": 12,
+        "y": 700,
+        "width": 366,
+        "height": 116
+      },
+      "intersectionArea": 0
+    }
+  ]
+}

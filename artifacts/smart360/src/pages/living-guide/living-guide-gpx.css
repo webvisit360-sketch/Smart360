@@ -6,11 +6,13 @@
 .s360-gpx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .s360-gpx-head h2 { font-size: 17px; font-weight: 800; color: var(--tx, #121A14); margin: 0; }
 .s360-gpx-map-wrap { position: relative; height: 240px; border-radius: 14px; overflow: hidden; background: var(--card2, #ECF0EA); border: 1px solid var(--line, #E8EBE6); }
+.s360-tour-sos-control { position: absolute; right: 12px; bottom: 24px; z-index: 4; }
+.s360-gpx-full .s360-tour-sos-control { bottom: max(164px, calc(env(safe-area-inset-bottom) + 164px)); }
 .s360-gpx .s360-gpx-map { position: absolute; inset: 0; width: 100%; height: 100%; }
 .s360-gpx-locate { position: absolute; top: 10px; right: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; border: 1px solid var(--line, #E8EBE6); background: var(--glass, rgba(255,255,255,.82)); color: var(--tx, #121A14); font-size: 12px; font-weight: 700; }
 .s360-gpx-locate.is-on { background: #157347; color: #fff; border-color: #157347; }
 .s360-gpx-locate-dot { width: 8px; height: 8px; border-radius: 50%; background: #157347; box-shadow: 0 0 0 2px #fff; }
-.s360-gpx-alert { position: absolute; left: 10px; right: 10px; top: 50px; z-index: 2; padding: 8px 10px; border-radius: 10px; background: var(--card, #F4F6F2); color: var(--danger, #D93A2B); font-size: 12px; font-weight: 700; border: 1px solid var(--line, #E8EBE6); }
+.s360-gpx-alert { position: absolute; left: 10px; right: 10px; top: 50px; z-index: 2; padding: 8px 10px; border-radius: 10px; background: var(--card, #F4F6F2); color: #DD9A2B; font-size: 12px; font-weight: 700; border: 1px solid var(--line, #E8EBE6); }
 .s360-gpx-alert--bottom { top: auto; bottom: 30px; }
 .s360-gpx-attrib { position: absolute; right: 0; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px; background: rgba(255,255,255,.92); font-size: 10px; font-weight: 600; }
 .s360-gpx-attrib a { color: var(--tx2, #66716A); text-decoration: underline; }
@@ -83,7 +85,7 @@
 .s360-tour-stats .is-net dd { font-size: 36px; line-height: 1.05; }
 .s360-tour-card { padding: 10px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--line, #E8EBE6); color: #121A14; font-size: 13px; }
 .s360-tour-card p { margin: 4px 0 0; line-height: 1.4; }
-.s360-tour-error { padding: 9px 11px; border-radius: 10px; background: #fff; border: 1px solid var(--line, #E8EBE6); color: var(--danger, #D93A2B); font-size: 13px; font-weight: 700; }
+.s360-tour-error { padding: 9px 11px; border-radius: 10px; background: #fff; border: 1px solid var(--line, #E8EBE6); color: #DD9A2B; font-size: 13px; font-weight: 700; }
 .s360-tour-fine { margin: 0; font-size: 12px; line-height: 1.4; color: var(--tx2, #66716A); }
 .s360-tour-fine--warn { color: var(--tx, #121A14); }
 .s360-tour-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font-size: 12px; font-weight: 700; color: var(--tx2, #66716A); }
@@ -95,6 +97,6 @@
 
 /* Fullscreen portal lives in <body>, outside [data-living-guide] and .s360-gpx:
    re-declare the CGP tokens (Dan palette) and the map sizing here. */
-.s360-gpx-full { --card: #F4F6F2; --card2: #ECF0EA; --tx: #121A14; --tx2: #66716A; --line: #E8EBE6; --glass: rgba(255,255,255,.82); --danger: #D93A2B; color: var(--tx); font-family: var(--sans, "Archivo", system-ui, sans-serif); }
+.s360-gpx-full { --card: #F4F6F2; --card2: #ECF0EA; --tx: #121A14; --tx2: #66716A; --line: #E8EBE6; --glass: rgba(255,255,255,.82); --danger: #DD9A2B; color: var(--tx); font-family: var(--sans, "Archivo", system-ui, sans-serif); }
 .s360-gpx-full .s360-gpx-map, .s360-gpx-slot > .s360-gpx-map { position: absolute; inset: 0; width: 100%; height: 100%; }
 .s360-gpx-full .s360-gpx-attrib a { color: #66716A; }

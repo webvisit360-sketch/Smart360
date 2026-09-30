@@ -314,7 +314,7 @@ export function MyOrdersSheet({
               <div key={o.orderRef} style={{ background: "var(--card2)", border: "1px solid var(--line)", borderRadius: "16px", padding: "14px 16px" }} data-testid={`order-row-${o.orderRef}`}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                   <b style={{ fontSize: "16px" }}>{o.snapshotTitle}</b>
-                  <span style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "10px", fontWeight: 750, background: o.status === "potrjeno" ? "var(--acc)" : o.status === "prevzeto" ? "var(--accg)" : o.status === "zavrnjeno" ? "#D93A2B" : "var(--card)", color: (o.status === "potrjeno" || o.status === "prevzeto" || o.status === "zavrnjeno") ? "#fff" : "var(--tx)" }}>
+                  <span style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "10px", fontWeight: 750, background: o.status === "potrjeno" ? "var(--acc)" : o.status === "prevzeto" ? "var(--accg)" : o.status === "zavrnjeno" ? "#DD9A2B" : "var(--card)", color: (o.status === "potrjeno" || o.status === "prevzeto" || o.status === "zavrnjeno") ? "#fff" : "var(--tx)" }}>
                     {t(`UI.lg.order.status.${o.status}`)}
                   </span>
                 </div>

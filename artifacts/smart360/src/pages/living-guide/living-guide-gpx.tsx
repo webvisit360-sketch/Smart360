@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { SosMapButton } from "./sos/SosView";
+import { SosEntryContext } from "./living-guide-sos-context";
 import { createPortal } from "react-dom";
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
@@ -59,6 +61,9 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
   overlay?: ReactNode;
   profileStrip?: ReactNode;
 }) {
+  const sos = useContext(SosEntryContext);
+  const sosOpenRef = useRef(false);
+  sosOpenRef.current = sos?.isOpen ?? false;
   // The MapLibre container is a detached element moved between the inline slot
   // and the body-level fullscreen slot, so the same map instance (and tiles)
   // survives the switch and escapes transformed/clipping sheet ancestors.
@@ -114,7 +119,7 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
 
   useEffect(() => {
     if (!fullscreen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onExitFullscreen?.(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !sosOpenRef.current) onExitFullscreen?.(); };
     const prev = document.body.style.overflow;
     const opener = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
@@ -348,6 +353,7 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
       <div className="s360-gpx-map-wrap">
         <div ref={inlineSlotRef} className="s360-gpx-slot" />
         {!fullscreen && cameraControls}
+        {!fullscreen && tourActive && sos && <div className="s360-tour-sos-control"><SosMapButton lang={sos.lang} onOpen={sos.onOpen} /></div>}
         {!tourActive && !fullscreen && !freeMode && (
           <button type="button" className={`s360-gpx-locate${locating ? " is-on" : ""}`} aria-pressed={locating} onClick={toggleLocation} data-testid="button-gpx-locate">
             <span className="s360-gpx-locate-dot" aria-hidden="true" />
@@ -362,6 +368,7 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
         <div className="s360-gpx-full" data-s360-tour-portal="" role="dialog" aria-modal="true" aria-label={t("UI.lg.liveTour.fullscreen")} data-testid="dialog-tour-fullscreen">
           <div ref={fullSlotRef} className="s360-gpx-slot" />
           {cameraControls}
+          {tourActive && sos && <div className="s360-tour-sos-control"><SosMapButton lang={sos.lang} onOpen={sos.onOpen} /></div>}
           <div className="s360-tour-toolbar">
           {overlay}
           <button ref={exitRef} type="button" className="s360-gpx-full-exit" onClick={onExitFullscreen} data-testid="button-tour-exit-fullscreen">

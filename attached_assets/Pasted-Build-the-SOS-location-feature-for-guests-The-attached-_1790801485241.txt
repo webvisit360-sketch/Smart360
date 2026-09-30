@@ -1,0 +1,28 @@
+Build the SOS location feature for guests. The attached file sos-dizajn.html is the BINDING design reference — match layout, spacing, colors and typography to it, same as we did for the weather card. Living Guide only. No operator toggle — SOS is always available for every tenant. This is a PURE CLIENT feature: no schema changes, no new server endpoints, and the guest's position must NEVER be sent to the server or logged anywhere.
+
+1. ENTRY POINT — "Pomoč in nujni primeri"
+Add the SOS card at the TOP of the existing "Pomoč in nujni primeri" sheet, per screen 1 of the reference. Nothing existing on that sheet is moved, renamed or deleted; the card is prepended. Button "Pokaži mojo lokacijo" opens the SOS view.
+
+2. SOS VIEW (screen 2 of the reference)
+- Coordinates via watchPosition, WGS84: decimal degrees with 5 decimals, large monospace, and beneath them the same position in degrees/minutes/seconds. Show altitude (m), accuracy (± m) and age of the last fix; green pulse line "GPS aktiven — koordinate se osvežujejo" while updates arrive.
+- Orientation row: approximate distance and localized cardinal direction from the tenant's coordinates ("pribl. 2,4 km jugovzhodno od {tenant name}") plus the tenant address. Hide this row entirely if the tenant has no coordinates.
+- Big red "Pokliči 112" button (tel:112), ALWAYS visible and enabled in every state, including before any fix and when location permission is denied.
+- "Kopiraj koordinate": copies plain text like "N 46.35812, E 14.83294 (±8 m)". "Deli lokacijo": Web Share API with the same text plus a standard maps URL for the position; fall back to copy where share is unavailable.
+- The three-step instruction list and the privacy footer exactly as in the reference.
+- States per screen 3: while accuracy is poor, amber banner with current ± m and the hint to wait under open sky, coordinates greyed until accuracy is reasonable; if permission is denied, show short per-OS instructions to enable location (web cannot open system settings — same approach as the wake-lock fallback), with the 112 button still on top.
+
+3. SOS DURING A TOUR
+During an active GPX tour and during free tour recording, show a small round SOS button on the map (corner position, never covering existing controls). It opens the same SOS view as an overlay without stopping the timer or the recording; closing it returns to the tour untouched.
+
+4. COLOR RULE
+Introduce a dedicated SOS red token per the reference. Red is reserved EXCLUSIVELY for the emergency context — audit the guest Living Guide and confirm red appears nowhere else; amber #F2B135/#DD9A2B keeps its existing meaning. Record this rule in replit.md.
+
+5. LANGUAGES
+All labels in code for SL/EN/DE/IT, like the tour features. The number 112 stays 112 in all languages. Localize the cardinal directions (jugovzhodno / southeast / südöstlich / a sud-est) and all state texts.
+
+6. TESTS
+Cover: decimal→DMS formatting; distance and cardinal direction from tenant coordinates; the three states (acquiring, active, permission denied) each keeping the 112 button; copy and share text content; per-language rendering with translated fixtures; orientation row hidden when tenant coordinates are missing; zero outgoing requests containing position data while the SOS view is open.
+
+Verify no server round-trip exists for any SOS interaction. Pixel-compare the SOS view against the reference like we did for the weather card.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — dizajn SOS</title>
+<style>
+  :root{
+    --bg:#0B1220; --card:#121B2B; --card2:#0F1826; --line:#1E2A3D;
+    --txt:#F2F5F9; --muted:#8E9AAC; --amber:#F2B135; --green:#2E7D4F;
+    --red:#D64541; --red2:#B03A36;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#E9ECEF;padding:24px 12px;display:flex;flex-wrap:wrap;gap:32px;justify-content:center;}
+  h2.cap{width:100%;text-align:center;font-size:15px;color:#5a6472;font-weight:600;margin-bottom:-14px;}
+  .phone{width:390px;background:var(--bg);border-radius:30px;padding:20px 16px 26px;box-shadow:0 12px 40px rgba(0,0,0,.28);}
+  .small{font-size:12px;letter-spacing:.12em;color:var(--amber);font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+  .h1{color:var(--txt);font-size:26px;font-weight:800;margin-bottom:4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+  .caption{color:#96a1b3;font-size:12px;text-align:center;margin-top:14px;line-height:1.5;}
+
+  /* ekran 1: Pomoč in nujni primeri */
+  .crow{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;align-items:center;}
+  .crow .ic{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+  .crow .t{color:var(--txt);font-weight:800;font-size:15px;}
+  .crow .s{color:var(--muted);font-size:12px;margin-top:2px;}
+  .crow .go{margin-left:auto;color:var(--muted);font-size:18px;}
+
+  .soscard{background:linear-gradient(135deg,rgba(214,69,65,.16),rgba(214,69,65,.06));border:1px solid rgba(214,69,65,.55);border-radius:18px;padding:16px;margin-bottom:12px;}
+  .soscard .h{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .soscard .sosdot{width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;letter-spacing:.04em;}
+  .soscard .t{color:var(--txt);font-weight:800;font-size:16px;}
+  .soscard .p{color:#c6cfdb;font-size:13px;line-height:1.5;margin-bottom:12px;}
+  .sosbtn{background:var(--red);color:#fff;text-align:center;font-weight:800;font-size:15px;border-radius:14px;padding:13px;}
+
+  /* ekran 2: SOS pogled */
+  .coord{background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;text-align:center;}
+  .coord .k{font-size:11px;letter-spacing:.12em;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+  .coord .big{color:var(--txt);font-size:24px;font-weight:800;font-family:'SF Mono',Menlo,Consolas,monospace;line-height:1.35;}
+  .coord .dms{color:var(--muted);font-size:13px;font-family:'SF Mono',Menlo,Consolas,monospace;margin-top:6px;}
+  .statrow{display:flex;gap:8px;margin-top:12px;}
+  .stat{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:8px 6px;}
+  .stat .sk{color:var(--muted);font-size:11px;}
+  .stat .sv{color:var(--txt);font-size:14px;font-weight:700;margin-top:2px;}
+  .fresh{color:var(--green);font-size:12px;margin-top:10px;font-weight:600;}
+  .fresh .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3E9663;margin-right:6px;}
+
+  .near{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:12px;}
+  .near .nt{color:var(--txt);font-size:13px;font-weight:600;}
+  .near .ns{color:var(--muted);font-size:12px;margin-top:1px;}
+
+  .call112{background:var(--red);color:#fff;text-align:center;font-weight:800;font-size:18px;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 6px 18px rgba(214,69,65,.35);}
+  .secrow{display:flex;gap:10px;margin-bottom:12px;}
+  .sec{flex:1;background:var(--card);border:1px solid var(--line);color:var(--txt);text-align:center;font-weight:700;font-size:13px;border-radius:14px;padding:12px 6px;}
+
+  .guide{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:6px 16px;margin-bottom:12px;}
+  .grow{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .grow:last-child{border-bottom:none;}
+  .grow .n{width:22px;height:22px;border-radius:50%;background:rgba(242,177,53,.15);border:1px solid var(--amber);color:var(--amber);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .grow .g{color:#c6cfdb;font-size:13px;line-height:1.45;}
+  .grow .g b{color:var(--txt);}
+
+  .priv{color:#5f6b7d;font-size:11px;text-align:center;line-height:1.5;}
+
+  /* stanje: iskanje signala */
+  .seek{background:rgba(242,177,53,.1);border:1px solid rgba(242,177,53,.4);border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;}
+  .seek .st{color:var(--txt);font-size:13px;font-weight:600;}
+  .seek .ss{color:var(--muted);font-size:12px;margin-top:1px;}
+</style>
+</head>
+<body>
+
+<h2 class="cap">1 · Vstopna točka — kartica SOS na vrhu lista »Pomoč in nujni primeri«</h2>
+<div class="phone">
+  <div class="small">Turizem Drobež</div>
+  <div class="h1">Pomoč in nujni primeri</div>
+  <div class="sub">Kontakti in pomoč v sili</div>
+
+  <div class="soscard">
+    <div class="h">
+      <div class="sosdot">SOS</div>
+      <div class="t">Kje sem? — lokacija za reševalce</div>
+    </div>
+    <div class="p">Ob klicu na 112 preberite operaterju svoje koordinate. Prikažemo jih z GPS-om vaše naprave.</div>
+    <div class="sosbtn">Pokaži mojo lokacijo</div>
+  </div>
+
+  <div class="crow">
+    <div class="ic">&#128222;</div>
+    <div>
+      <div class="t">Pokliči gostitelja</div>
+      <div class="s">Turizem Drobež · 041 xxx xxx</div>
+    </div>
+    <div class="go">&#8250;</div>
+  </div>
+
+  <div class="crow">
+    <div class="ic">&#128657;</div>
+    <div>
+      <div class="t">112 — klic v sili</div>
+      <div class="s">Reševalci, gasilci, policija</div>
+    </div>
+    <div class="go">&#8250;</div>
+  </div>
+
+  <div class="crow">
+    <div class="ic">&#128137;</div>
+    <div>
+      <div class="t">Dežurna lekarna in zdravnik</div>
+      <div class="s">Kontakti iz vodnika</div>
+    </div>
+    <div class="go">&#8250;</div>
+  </div>
+
+  <div class="caption">Rdeča je rezervirana samo za SOS — nikjer drugje v vodniku je ni.<br>Obstoječi kontakti lista ostanejo nespremenjeni, SOS kartica pride na vrh.</div>
+</div>
+
+<h2 class="cap">2 · SOS pogled — koordinate v živo, klic 112, navodilo za pogovor</h2>
+<div class="phone">
+  <div class="small">SOS</div>
+  <div class="h1">Moja lokacija</div>
+  <div class="sub">Podatki za klic 112</div>
+
+  <div class="coord">
+    <div class="k">Koordinate (WGS84)</div>
+    <div class="big">N 46.35812°<br>E 14.83294°</div>
+    <div class="dms">46°21'29" N · 14°49'59" E</div>
+    <div class="statrow">
+      <div class="stat"><div class="sk">Nadm. višina</div><div class="sv">612 m</div></div>
+      <div class="stat"><div class="sk">Natančnost</div><div class="sv">± 8 m</div></div>
+      <div class="stat"><div class="sk">Osveženo</div><div class="sv">pred 3 s</div></div>
+    </div>
+    <div class="fresh"><span class="pulse"></span>GPS aktiven — koordinate se osvežujejo</div>
+  </div>
+
+  <div class="near">
+    <div style="font-size:18px;">&#128205;</div>
+    <div>
+      <div class="nt">pribl. 2,4 km jugovzhodno od Turizem Drobež</div>
+      <div class="ns">Ter 35, 3333 Ljubno ob Savinji</div>
+    </div>
+  </div>
+
+  <div class="call112">&#128222;&nbsp; Pokliči 112</div>
+
+  <div class="secrow">
+    <div class="sec">&#128203;&nbsp; Kopiraj koordinate</div>
+    <div class="sec">&#128228;&nbsp; Deli lokacijo</div>
+  </div>
+
+  <div class="guide">
+    <div class="grow"><div class="n">1</div><div class="g"><b>Kje ste</b> — počasi preberite koordinate z zaslona.</div></div>
+    <div class="grow"><div class="n">2</div><div class="g"><b>Kaj se je zgodilo</b> in koliko je poškodovanih.</div></div>
+    <div class="grow"><div class="n">3</div><div class="g"><b>Ne prekinite klica</b>, dokler operater ne reče, da lahko.</div></div>
+  </div>
+
+  <div class="priv">Lokacija se prebere samo na vaši napravi in samo na tem zaslonu.<br>Ničesar ne pošljemo na strežnik.</div>
+
+  <div class="caption">GPS dela tudi brez mobilnega signala — stran mora biti le že odprta.<br>Klic 112 dela prek tel: povezave; »Deli lokacijo« odpre sistemsko deljenje (SMS, WhatsApp …).</div>
+</div>
+
+<h2 class="cap">3 · Stanje ob odprtju — dokler GPS še išče natančno lokacijo</h2>
+<div class="phone">
+  <div class="small">SOS</div>
+  <div class="h1">Moja lokacija</div>
+  <div class="sub">Podatki za klic 112</div>
+
+  <div class="seek">
+    <div style="font-size:18px;">&#128752;</div>
+    <div>
+      <div class="st">Pridobivam natančno lokacijo …</div>
+      <div class="ss">Trenutna natančnost ± 140 m — počakajte nekaj sekund, po možnosti pod odprtim nebom.</div>
+    </div>
+  </div>
+
+  <div class="coord">
+    <div class="k">Koordinate (WGS84)</div>
+    <div class="big" style="color:#8E9AAC;">N 46.358…°<br>E 14.832…°</div>
+    <div class="dms">natančnost se izboljšuje</div>
+  </div>
+
+  <div class="call112">&#128222;&nbsp; Pokliči 112</div>
+
+  <div class="caption">Klic 112 je vedno na voljo, tudi preden je lokacija natančna.<br>Če gost zavrne dostop do lokacije: zaslon pove, kako ga vklopi, gumb 112 ostane.</div>
+</div>
+
+</body>
+</html>

@@ -1538,8 +1538,16 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-rule-row--warning {
-  border-color: color-mix(in srgb, #D93A2B 18%, var(--line));
-  background: color-mix(in srgb, #D93A2B 8%, var(--card));
+  border-color: color-mix(in srgb, #DD9A2B 18%, var(--line));
+  background: color-mix(in srgb, #DD9A2B 8%, var(--card));
+}
+
+/* Portal above the retained fullscreen tour's z-index 2147483000.
+   A separate stacking context avoids changing any tour/map lifecycle. */
+.s360-sos-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483100;
 }
 
 .lg2-rule-icon {
@@ -1554,7 +1562,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 }
 
 .lg2-rule-row--warning .lg2-rule-icon {
-  background: #D93A2B;
+  background: #DD9A2B;
   color: #fff;
 }
 
@@ -2515,7 +2523,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
 
 .lg2-orders-error {
   padding: 28px 0;
-  color: #D93A2B;
+  color: #DD9A2B;
   text-align: center;
 }
 
@@ -2567,7 +2575,7 @@ body[data-t="swipe"] .lg2-order-dock {
 }
 
 .lg2-error-text {
-  color: #D93A2B;
+  color: #DD9A2B;
   font-size: 13px;
   margin-top: 12px;
   text-align: center;
@@ -2612,7 +2620,7 @@ body[data-t="swipe"] .lg2-order-dock {
 }
 
 .lg2-my-orders-status--zavrnjeno {
-  background: #D93A2B;
+  background: #DD9A2B;
   color: #fff;
 }
 
@@ -3250,7 +3258,7 @@ body[data-t="swipe"] .lg2-order-dock {
 .lg2-msg-send-error {
   margin: 0;
   padding: 9px 16px 0;
-  color: #b42318;
+  color: #DD9A2B;
   font-size: 13px;
   line-height: 1.4;
 }
