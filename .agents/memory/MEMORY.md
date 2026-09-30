@@ -1,5 +1,7 @@
 # Memory index
 
+- [Guest PWA installation](guest-pwa-install-boundary.md) — slug-only network worker; offline caching deferred; distinguish installability diagnostics from simulated OS prompts.
+
 - [Tour camera preference](tour-camera-mode.md) — new tours start course-up; manual north persists only for the same tour; no device compass fallback.
 
 - [Readiness guest visibility](readiness-visibility.md) — empty categories are deliberate, not missing content; guest-scoped readiness differs from admin work totals.

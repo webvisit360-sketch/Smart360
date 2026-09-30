@@ -51,6 +51,37 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     livingGuidePreview || tenant?.guestUiMode === "living-guide";
 
   useEffect(() => {
+    // Custom-domain root/host aliases are NOT within the canonical manifest
+    // scope. Only canonical published guest paths register; dev is intentional.
+    if (!tenant || tenant.slug !== slug || isPreview ||
+        !window.location.pathname.startsWith(`/${slug}/`) ||
+        !("serviceWorker" in navigator)) return;
+    let stopped = false;
+    let timer: number | undefined;
+    let registration: ServiceWorkerRegistration | undefined;
+    navigator.serviceWorker.register(
+      `/api/public/tenants/${encodeURIComponent(slug)}/sw.js`,
+      { scope: `/${slug}/`, updateViaCache: "none" },
+    ).then((result) => {
+      if (stopped) return;
+      registration = result;
+      const update = () => {
+        if (document.visibilityState === "visible") void registration?.update().catch(() => undefined);
+      };
+      document.addEventListener("visibilitychange", update);
+      // A single modest interval; no automatic reload (bundle freshness owns it).
+      timer = window.setInterval(update, 60 * 60_000);
+      cleanupVisible = () => document.removeEventListener("visibilitychange", update);
+    }).catch(() => undefined); // browser may block SW in non-secure contexts
+    let cleanupVisible = () => {};
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      cleanupVisible();
+    };
+  }, [tenant?.slug, slug, isPreview]);
+
+  useEffect(() => {
     if (tenant) clearGuestLoadRetryGuard();
   }, [tenant]);
 

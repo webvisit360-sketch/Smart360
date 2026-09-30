@@ -22,7 +22,7 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
 import { createGzip, gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
-import { guestAliasRedirect, renderPwaHead } from "./pwa-head.mjs";
+import { guestAliasRedirect, guestTrailingSlashRedirect, renderPwaHead } from "./pwa-head.mjs";
 
 const root = resolve(fileURLToPath(new URL("./dist/public", import.meta.url)));
 const port = Number(process.env.PORT);
@@ -151,6 +151,12 @@ const server = createServer(async (req, res) => {
         // Permanent status without browser caching the intermediate A → B
         // Location: after B → C, A must immediately point straight to C.
         res.writeHead(301, { location: destination, "cache-control": "no-store" });
+        res.end();
+        return;
+      }
+      const slashDestination = guestTrailingSlashRedirect(req.url ?? "/", req.headers.host);
+      if (slashDestination) {
+        res.writeHead(308, { location: slashDestination, "cache-control": "no-store" });
         res.end();
         return;
       }

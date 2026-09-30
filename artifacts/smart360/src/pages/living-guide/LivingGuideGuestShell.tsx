@@ -112,6 +112,7 @@ import {
 } from "./living-guide-groups";
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
 import { lockDetailGesture, type DetailGestureLock } from "./detail-gesture-lock";
+import { GuestInstallCard } from "./GuestInstallCard";
 
 type GuestRecord = {
   unit: string;
@@ -1401,7 +1402,7 @@ export default function LivingGuideGuestShell({
       }
       // buildGuestPath keeps the authenticated draft preview, language and
       // development Living Guide override across in-shell routes.
-      setLocation(buildGuestPath(path), {
+      setLocation(buildGuestPath(path === `/${slug}` ? `/${slug}/` : path), {
         replace: presentation === "detail" ? true : replace,
         state: {
           livingGuide: true,
@@ -1422,6 +1423,7 @@ export default function LivingGuideGuestShell({
       isDetailPresentation,
       location,
       setLocation,
+      slug,
     ],
   );
 
@@ -4437,6 +4439,7 @@ function BottomNav({
 function HomeView({
   tenant,
   sections,
+  lang,
   t,
   onOpenCategory,
   onOpenItem,
@@ -4530,6 +4533,7 @@ function HomeView({
               />
             )}
           </div>
+          <GuestInstallCard slug={tenant.slug} lang={lang} enabled={window.location.pathname.startsWith(`/${tenant.slug}/`) && !new URLSearchParams(window.location.search).has("preview")} />
 
         <div className="lg2-hqbar">
           <button

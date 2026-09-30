@@ -18,6 +18,7 @@ import { useThemeAttr } from "./use-theme-attr";
 import { useEffect } from "react";
 import { parseVirtualTourInput } from "@/lib/virtual-tour";
 import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
+import { GuestInstallCard } from "../living-guide/GuestInstallCard";
 
 export default function GuestHome() {
   const [, params] = useRoute("/:slug");
@@ -187,6 +188,7 @@ export default function GuestHome() {
           </button>
         }
       />
+      <GuestInstallCard slug={tenant.slug} lang={lang} placement="mediterranean" enabled={window.location.pathname.startsWith(`/${tenant.slug}/`) && !isPreview} />
 
       <div className="pagepad">
         

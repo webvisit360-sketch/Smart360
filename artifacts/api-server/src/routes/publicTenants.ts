@@ -17,6 +17,7 @@ import { wifiQrSvg } from "../lib/wifiQr";
 import { isAuthenticated } from "../lib/adminAuth";
 import { getHostResponseStats } from "../lib/hostResponseStats";
 import { readPublishedContent } from "../lib/publishedSnapshots";
+import { renderGuestServiceWorker } from "../lib/guestServiceWorker";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -182,11 +183,11 @@ router.get("/public/slug-redirect/:slug", async (req, res): Promise<void> => {
 function redirectAlias(req: { originalUrl: string }, res: {
   set: (name: string, value: string) => unknown;
   redirect: (status: number, url: string) => unknown;
-}, oldSlug: string, currentSlug: string): void {
+}, oldSlug: string, currentSlug: string, cacheControl = "public, max-age=60"): void {
   const prefix = `/public/tenants/${encodeURIComponent(oldSlug)}`;
   const oldPath = req.originalUrl.indexOf(prefix);
   if (oldPath < 0) throw new Error("Historical URL route did not match original request path");
-  res.set("Cache-Control", "public, max-age=60");
+  res.set("Cache-Control", cacheControl);
   res.redirect(301, req.originalUrl.slice(0, oldPath) +
     `/public/tenants/${encodeURIComponent(currentSlug)}` +
     req.originalUrl.slice(oldPath + prefix.length));
@@ -245,6 +246,30 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   res.json(payload);
+});
+
+// GET /public/tenants/:slug/manifest.webmanifest
+router.get("/public/tenants/:slug/sw.js", async (req, res): Promise<void> => {
+  const slug = firstParam(req.params["slug"]);
+  if (!slug || !/^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/.test(slug)) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // Resolve by the requested slug, not by Host: a custom-domain tenant must
+  // never lend its worker scope to an unrelated path on that host.
+  const tenant = await resolveTenantBySlugOrDomain(slug, undefined);
+  res.set("Cache-Control", "no-store");
+  if (!tenant || !tenant.isPublished) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (tenant.slug !== slug && await isHistoricalSlugForTenant(slug, tenant.id)) {
+    redirectAlias(req, res, slug, tenant.slug, "no-store");
+    return;
+  }
+  res.set("Service-Worker-Allowed", `/${tenant.slug}/`);
+  res.set("X-Content-Type-Options", "nosniff");
+  res.type("text/javascript").send(renderGuestServiceWorker(tenant.slug));
 });
 
 // GET /public/tenants/:slug/manifest.webmanifest

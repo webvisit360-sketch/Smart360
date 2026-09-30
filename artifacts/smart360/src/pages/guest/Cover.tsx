@@ -36,6 +36,8 @@ type CoverProps = {
   heroExtras?: ReactNode;
   /** Mediterranean theme: content after the title block (search field). */
   tcardExtra?: ReactNode;
+  /** Swipe guest installation card only; absent in admin preview. */
+  coverFooter?: ReactNode;
   /** Swipe theme: extra classes on .cover / .cover__top (e.g. "is-find"). */
   coverClass?: string;
   coverTopClass?: string;
@@ -60,7 +62,7 @@ function BrandLogo({ tenant, edit }: { tenant: any; edit?: CoverEdit }) {
   );
 }
 
-export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardExtra, coverClass, coverTopClass }: CoverProps) {
+export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardExtra, coverFooter, coverClass, coverTopClass }: CoverProps) {
   const cTitle = tenant.coverTitle || tenant.name;
   const cSub = tenant.coverSubtitle || tenant.subtitle;
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
@@ -111,6 +113,7 @@ export function Cover({ tenant, lang = "sl", edit, coverTop, heroExtras, tcardEx
             <div className="cover__meta">{locationMeta}</div>
           ) : null}
         </div>
+        {coverFooter}
       </div>
     );
   }

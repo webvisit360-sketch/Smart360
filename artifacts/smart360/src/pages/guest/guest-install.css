@@ -1,0 +1,69 @@
+/* Shared guide install card: inline in Living Guide; within the legacy cover
+   on Swipe and in normal document flow on Mediterranean. */
+html body .lg2-install-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 4px 0 20px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--tx, #14201f) 14%, transparent);
+  border-radius: 18px;
+  color: var(--tx, #14201f);
+  background: var(--card, #fff);
+  font-family: Jost, system-ui, sans-serif;
+  text-align: left;
+}
+html body .lg2-install-glyph {
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--tx, #14201f);
+  color: var(--bg, #fff);
+  font-size: 26px;
+  line-height: 1;
+}
+html body .lg2-install-body { flex: 1; min-width: 0; }
+html body .lg2-install-body strong { font-size: 14px; line-height: 1.3; }
+html body .lg2-install-body p { margin: 5px 0 0; color: var(--tx2, #66716a); font-size: 12px; line-height: 1.5; }
+html body .lg2-install-action {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--tx, #14201f);
+  color: var(--bg, #fff);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+html body .lg2-install-action span { margin-left: 8px; }
+html body .lg2-install-close {
+  display: grid;
+  flex: 0 0 28px;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tx2, #66716a);
+  font-size: 22px;
+  cursor: pointer;
+}
+/* The swipe cover is one viewport high; give the card its own space above
+   the fixed tab bar and shift the title up instead of covering either. */
+.cover:has(.guest-install-cover) .cover__txt {
+  bottom: calc(268px + env(safe-area-inset-bottom, 0px));
+}
+.guest-install-cover {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  z-index: 3;
+}
+.guest-install-cover .lg2-install-card { margin: 0; }
+.guest-install-mediterranean { margin: 16px; }

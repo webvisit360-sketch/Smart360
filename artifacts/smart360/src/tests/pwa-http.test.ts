@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { guestAliasRedirect, renderPwaHead } from "../../pwa-head.mjs";
+import { guestAliasRedirect, guestTrailingSlashRedirect, renderPwaHead } from "../../pwa-head.mjs";
 
 test("route-specific raw HTML never includes admin install metadata on guest routes", () => {
   const template = '<head><!-- PWA_HEAD --></head>';
@@ -48,4 +48,29 @@ test("old tenant URLs redirect before HTML, preserving deep paths and query stri
     /Alias lookup failed/,
     "do not silently serve old HTML when the alias resolver is unavailable",
   );
+});
+
+test("historical 301 wins over bare-slug 308; reserved and custom-domain root stay untouched", async () => {
+  const lookup = async (url: string) => Response.json({
+    canonicalSlug: url.endsWith("/old-a") ? "new-b" : null,
+  });
+  const route = async (url: string, host = "smart360.info") => {
+    // Exact ordering used by both Vite and the static HTML middleware.
+    const alias = await guestAliasRedirect(url, host, "http://api.local", lookup as typeof fetch);
+    if (alias) return { status: 301, location: alias };
+    const slash = guestTrailingSlashRedirect(url, host);
+    return slash ? { status: 308, location: slash } : null;
+  };
+  assert.deepEqual(await route("/old-a?lang=it&x=1"),
+    { status: 301, location: "/new-b?lang=it&x=1" });
+  assert.deepEqual(await route("/old-a/?lang=it&x=1"),
+    { status: 301, location: "/new-b/?lang=it&x=1" });
+  assert.deepEqual(await route("/new-b?lang=de"),
+    { status: 308, location: "/new-b/?lang=de" });
+  for (const path of ["/admin", "/portal", "/host", "/api"]) {
+    assert.equal(await route(path), null, `${path} must never receive guest slash redirect`);
+    assert.equal(guestTrailingSlashRedirect(path, "smart360.info"), null);
+  }
+  assert.equal(await route("/", "guest.example.com"), null,
+    "a custom-domain root is not the canonical manifest scope; never rewrite it");
 });

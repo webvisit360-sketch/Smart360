@@ -1436,3 +1436,59 @@ mtime_ms = 1790732175261
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/da257308-cdc8-4c78-85eb-791275dc13b5/91c70d24-81a9-4080-889d-fd3f06f1d860"
 storage_version_token = "1790732222846670"
 content_type = "image/png"
+
+[[outputs]]
+id = "XORdOTE_3x1f3XR7yTT7A"
+uri = "file://artifacts/smart360/screenshots/install-android-simulated.png"
+type = "image"
+title = "Namestitev — Android / Chromium"
+description = "Living Guide v razvojnem prikazu; beforeinstallprompt je simuliran."
+logical_id = "e83dbb36-6d2f-4c91-9817-ecb84510308d"
+content_hash = "sha256:dac9e0973f14170c1e450746a9ba998cb686f7ea7732149dcbc432bdaf91f57f"
+size = 785431
+mtime_ms = 1790742095442
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e83dbb36-6d2f-4c91-9817-ecb84510308d/7a6ec94c-d528-46c2-b7e1-c0aa1aa805ca"
+storage_version_token = "1790743035548172"
+content_type = "image/png"
+
+[[outputs]]
+id = "t0EgQmCmrWPOCE-VTweLQ"
+uri = "file://artifacts/smart360/screenshots/install-ios-simulated.png"
+type = "image"
+title = "Namestitev — iOS-navodilo"
+description = "Living Guide v razvojnem prikazu s simuliranim Safari iOS."
+logical_id = "9388a1ff-8daa-4f2f-a522-428fc862ab1a"
+content_hash = "sha256:fc2dfeb0245b816d30450491c8d596fd3032433ef462947497a2056dfdf9767e"
+size = 798540
+mtime_ms = 1790742145351
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9388a1ff-8daa-4f2f-a522-428fc862ab1a/41400a6b-8fc6-4a4c-99aa-6dd3cc36686e"
+storage_version_token = "1790743036297599"
+content_type = "image/png"
+
+[[outputs]]
+id = "pHJqtE8p0rKI-vsofUWIQ"
+uri = "file://artifacts/smart360/screenshots/install-standalone-simulated.png"
+type = "image"
+title = "Samostojni način — brez kartice"
+description = "Preverjen prikaz brez kartice pri simuliranem display-mode: standalone."
+logical_id = "2a5ad021-a539-4da0-b103-c1dbddcee039"
+content_hash = "sha256:e8bca65c4f97611d9948816fcf3d7b26c6388cc968c67725e874cf842b8ea0d2"
+size = 1329569
+mtime_ms = 1790742154100
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2a5ad021-a539-4da0-b103-c1dbddcee039/89c1d5b8-e375-4c04-96c1-1b30c0c5b3a7"
+storage_version_token = "1790743037043390"
+content_type = "image/png"
+
+[[outputs]]
+id = "DEPX2H3WOe8ZryiV7QHDy"
+uri = "file://artifacts/smart360/screenshots/install-legacy-swipe-simulated.png"
+type = "image"
+title = "Namestitev — obstoječa tema Swipe"
+description = "Dejanska razvojna tema vodnika, s simuliranim dogodkom za namestitev; podatki nastanitve niso spremenjeni."
+logical_id = "dd4a94b3-2e3e-465c-a58c-7c23b81f5d0b"
+content_hash = "sha256:bae07cd6e6c91fa7cb706fa1c9f28c204f9c8fb4fbb23c78d4cd566b0d1cf0e5"
+size = 1810315
+mtime_ms = 1790742859204
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/dd4a94b3-2e3e-465c-a58c-7c23b81f5d0b/2b5497f9-cc15-49df-b9e2-4a20f08f6cdb"
+storage_version_token = "1790743037851368"
+content_type = "image/png"

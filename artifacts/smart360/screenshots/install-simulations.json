@@ -1,0 +1,16 @@
+{
+  "syntheticPrompt": true,
+  "dismissed": {
+    "promptCalled": true,
+    "gesture": true,
+    "stored": "1790742017026"
+  },
+  "cooldownOnReload": {
+    "prevented": true,
+    "card": 0
+  },
+  "installedHidden": true,
+  "iosShareSvg": 1,
+  "iosDismissedOnReload": true,
+  "standaloneNoCard": true
+}

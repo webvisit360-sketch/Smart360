@@ -18,6 +18,7 @@ import { resolveTenantMapsUrl } from "@/lib/tenant-maps";
 import { mapsHrefForQuery } from "@/lib/maps-href";
 import { itemPriceText, normalizeGuestMedia } from "../living-guide/living-guide-formatters";
 import { GuestRichBody, GuestRichInline } from "./guest-rich-text";
+import { GuestInstallCard } from "../living-guide/GuestInstallCard";
 
 export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, slug: string, lang: string, categoryId: string | null }) {
   const [, setLocation] = useLocation();
@@ -246,6 +247,7 @@ export function GuestSwipe({ tenant, slug, lang, categoryId }: { tenant: any, sl
           <Cover
             tenant={tenant}
             lang={lang}
+            coverFooter={<GuestInstallCard slug={tenant.slug} lang={lang} placement="cover" enabled={window.location.pathname.startsWith(`/${tenant.slug}/`) && !new URLSearchParams(window.location.search).has("preview")} />}
             coverTopClass={findOpen ? "is-find" : undefined}
             coverTop={
               <>

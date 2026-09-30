@@ -4,7 +4,7 @@
 const RESERVED = new Set([
   "admin", "api", "app", "assets", "static", "media", "files", "uploads",
   "img", "css", "js", "fonts", "health", "status", "login", "auth", "logout",
-  "account", "my", "help", "support", "docs", "blog", "about", "contact",
+  "account", "my", "host", "help", "support", "docs", "blog", "about", "contact",
   "privacy", "terms", "www", "mail", "cdn", "preview", "test", "demo",
   "dev", "staging", "g", "portal", "povprasevanje", "pogoji", "zasebnost",
   "__living-guide",
@@ -62,6 +62,15 @@ export async function guestAliasRedirect(url, host, apiOrigin = "http://127.0.0.
   }
   const tail = segments.slice(legacy ? 2 : 1).join("/");
   return `/${canonical}${tail ? `/${tail}` : request.pathname.endsWith("/") ? "/" : ""}${request.search}`;
+}
+
+// Only the bare, valid guest slug needs canonicalizing: /slug is outside the
+// manifest's /slug/ scope. Run after the historical-slug 301 check.
+export function guestTrailingSlashRedirect(url, host) {
+  const request = new URL(url, "http://localhost");
+  const slug = guestSlugForRequest(url, host);
+  if (!slug || request.pathname !== `/${slug}`) return null;
+  return `/${slug}/${request.search}`;
 }
 
 export function renderPwaHead(html, url, host, base = "/") {

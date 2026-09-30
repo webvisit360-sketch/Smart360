@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
 import { scopeThemes } from './vite-plugin-scope-themes';
-import { guestAliasRedirect, renderPwaHead } from './pwa-head.mjs';
+import { guestAliasRedirect, guestTrailingSlashRedirect, renderPwaHead } from './pwa-head.mjs';
 const requestHost = new AsyncLocalStorage<string>();
 
 const rawPort = process.env.PORT;
@@ -131,8 +131,9 @@ export default defineConfig({
             void guestAliasRedirect(req.url ?? '/', req.headers.host,
               process.env.SMART360_INTERNAL_API_ORIGIN ?? 'http://127.0.0.1:8080')
               .then((location: string | null) => {
-                if (!location) return next();
-                res.writeHead(301, { location, 'cache-control': 'no-store' });
+                 const destination = location ?? guestTrailingSlashRedirect(req.url ?? '/', req.headers.host);
+                 if (!destination) return next();
+                 res.writeHead(location ? 301 : 308, { location: destination, 'cache-control': 'no-store' });
                 res.end();
               }).catch(next);
           });

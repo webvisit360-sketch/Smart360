@@ -1,0 +1,15 @@
+NEW FEATURE: one-tap install ("Dodaj na začetni zaslon"). Build in dev. Report and STOP. No publication.
+
+GOAL
+Guests on Android struggle to find "Add to home screen" in browser menus. Give the guide a proper PWA install flow.
+
+IMPLEMENT
+1. SERVICE WORKER (minimal, foundation for future offline): register a per-tenant-scoped service worker on guest guide pages (scope = the tenant's slug path, consistent with the per-tenant manifest). For now it only satisfies installability (a fetch handler passing requests through — network-first, NO caching of guide content yet; offline caching is a separate future task on this foundation). It must never interfere with the admin/host portal, redirects (301 slug aliases) or API calls, and must update itself promptly on new publishes (no stale-SW traps — describe your update strategy in the report).
+2. ANDROID/CHROMIUM: listen for beforeinstallprompt, suppress the default, and show our own CGP-styled banner/button "Dodaj vodnik na začetni zaslon" (localized SL/EN/DE/IT). Tap → trigger the native install prompt. Honor the user's choice: if dismissed, do not nag — re-offer at most once per a long interval (e.g. 14 days, best-effort localStorage, try/catch). Hide the banner entirely once installed (appinstalled event / display-mode standalone).
+3. iOS/SAFARI: no install API exists — show a one-time, dismissible hint card with the two steps (Deli → Dodaj na začetni zaslon), with the share icon glyph, localized; never shown when already running standalone.
+4. The banner must not cover content or the bottom navigation; place it as a dismissible card on the Domov tab.
+
+VERIFY
+Lighthouse/Chromium installability check passes for a tenant guide in dev; simulated beforeinstallprompt flow test; SW does not intercept or break: admin routes, host portal, 301 alias redirects, manifest, GPX downloads, API (tests for each); new publish reaches clients without manual cache clearing (describe and test the update path). Screenshots: Android banner, iOS hint, and proof the banner is absent in standalone mode.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
