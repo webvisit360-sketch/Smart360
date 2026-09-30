@@ -316,7 +316,6 @@ export default function AdminTenantEdit() {
     "orders",
     "messages",
     "events",
-    "obvestila",
     "ponudba",
     "distances",
     "content",
@@ -725,7 +724,6 @@ export default function AdminTenantEdit() {
         <AdminSidebarLockup className="admin-tenant-sidebar__lockup hidden md:block shrink-0" />
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
           <button data-active={activeTab === 'pregled'} onClick={() => setActiveTab('pregled')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'pregled' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="overview" /><span>Pregled</span></button>
-          {isOwner && <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>}
           <button data-active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center justify-between whitespace-nowrap transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
             <span className="flex items-center gap-[11px]"><SidebarNavIcon name="orders" /><span>Naročila</span></span>
             {(tenantOverview?.pendingOrders ?? 0) > 0 && (
@@ -743,7 +741,6 @@ export default function AdminTenantEdit() {
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col mb-0 md:mb-8 shrink-0">
           <button data-active={activeTab === 'events'} onClick={() => setActiveTab('events')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="events" /><span>Dogodki</span></button>
-          <button data-active={activeTab === 'obvestila'} onClick={() => setActiveTab('obvestila')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="notices" /><span>Obvestila</span></button>
           <button data-active={activeTab === 'ponudba'} onClick={() => setActiveTab('ponudba')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="offers" /><span>Ponudba in cene</span></button>
         </div>
 
@@ -753,6 +750,10 @@ export default function AdminTenantEdit() {
           <button data-testid="open-section-management" data-active={activeTab === 'content'} onClick={() => setActiveTab('content')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'content' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="accommodation" /><span>Sekcije in vnosi</span></button>
           <button data-active={isSettings} onClick={() => setActiveTab('general')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="settings" /><span>Nastavitve</span></button>
         </div>
+
+        {isOwner && <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
+          <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>
+        </div>}
 
         <div className="hidden md:flex mt-8 pt-4 border-t border-black/5 px-4 flex-col gap-1">
           <p className="text-sm font-semibold truncate">
@@ -871,33 +872,29 @@ export default function AdminTenantEdit() {
             <TabsContent value="pregled">
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} isOwner={isOwner} />
             </TabsContent>
-            <TabsContent value="kreator">
-              {isOwner ? (
-                <>
-                  <KreatorOriginConfirmation
-                    tenant={tenant}
-                    onConfirmed={() => {
-                      void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
-                      void queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() });
-                      void queryClient.invalidateQueries({ queryKey: getListTenantChangelogQueryKey(id) });
-                    }}
-                  />
-                  <KreatorSourceList
-                    tenantId={tenant.id}
-                    tenantName={tenant.name}
-                    origin={typeof tenant.latitude === 'number' && typeof tenant.longitude === 'number' ? { latitude: tenant.latitude, longitude: tenant.longitude } : undefined}
-                  />
-                  <KreatorPhotoProposals tenantId={tenant.id} tenantSlug={tenant.slug} content={previewTenant} />
-                </>
-              ) : (
-                <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">
-                  Kreator vodnika — V pripravi. Orodje Smart360 za pripravo vodnika, preden se gostitelj prvič prijavi.
-                </div>
-              )}
+            {isOwner && <TabsContent value="kreator">
+              <KreatorOriginConfirmation
+                tenant={tenant}
+                onConfirmed={() => {
+                  void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
+                  void queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() });
+                  void queryClient.invalidateQueries({ queryKey: getListTenantChangelogQueryKey(id) });
+                }}
+              />
+              <KreatorSourceList
+                tenantId={tenant.id}
+                tenantName={tenant.name}
+                origin={typeof tenant.latitude === 'number' && typeof tenant.longitude === 'number' ? { latitude: tenant.latitude, longitude: tenant.longitude } : undefined}
+              />
+              <KreatorPhotoProposals tenantId={tenant.id} tenantSlug={tenant.slug} content={previewTenant} />
+            </TabsContent>}
+            <TabsContent value="events">
+              <p className="mb-4 text-sm text-muted-foreground">Dogodki so prikazani v gostujočem Programu.</p>
+              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={isOwner} scope="events" />
             </TabsContent>
-            <TabsContent value="events"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Dogodki — V pripravi. Koledar dogodkov, ki jih gost vidi na domači strani.</div></TabsContent>
-            <TabsContent value="obvestila"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Obvestila — V pripravi. Obvestila, ki jih gost vidi v vodniku.</div></TabsContent>
-            <TabsContent value="ponudba"><div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-[22px] bg-white">Ponudba in cene — V pripravi. Izdelki, cene in oprema za najem.</div></TabsContent>
+            <TabsContent value="ponudba">
+              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={isOwner} scope="offer" />
+            </TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
         <TabsContent value="general" className="space-y-4">

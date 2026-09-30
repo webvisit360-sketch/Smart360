@@ -417,18 +417,19 @@ function DraftNotice({ onDiscard }: { onDiscard: () => void }) {
 // ==========================================
 
 type SectionDialogProps =
-  | { mode: "create"; tenantId: string; section?: undefined; onDone: () => void }
-  | { mode: "edit"; tenantId: string; section: Section; onDone: () => void };
+  | { mode: "create"; tenantId: string; section?: undefined; scope?: "events" | "offer"; onDone: () => void }
+  | { mode: "edit"; tenantId: string; section: Section; scope?: undefined; onDone: () => void };
 
-function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) {
+function SectionDialog({ mode, tenantId, section, scope, onDone }: SectionDialogProps) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
-  const [title, setTitle] = useState(section?.title ?? "");
-  const [icon, setIcon] = useState(section?.icon ?? suggestCategoryIcon(""));
+  const initialTitle = section?.title ?? (scope === "events" ? "Dogodki" : scope === "offer" ? "Ponudba" : "");
+  const [title, setTitle] = useState(initialTitle);
+  const [icon, setIcon] = useState(section?.icon ?? suggestCategoryIcon(initialTitle));
   const iconManuallyChosen = useRef(mode === "edit");
   const [subtitle, setSubtitle] = useState(section?.subtitle ?? "");
-  const [key, setKey] = useState(section?.key ?? "");
+  const [key, setKey] = useState(section?.key ?? scope ?? "");
   const [isVisible, setIsVisible] = useState(section?.isVisible ?? true);
   const groupDefs = mode === "edit" ? sectionGroupDefs(section.key) : null;
   const [groupOrder, setGroupOrder] = useState<string[]>(
@@ -445,17 +446,17 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
   };
 
   const baseline = {
-    title: section?.title ?? "",
-    icon: section?.icon ?? suggestCategoryIcon(""),
+    title: initialTitle,
+    icon: section?.icon ?? suggestCategoryIcon(initialTitle),
     subtitle: section?.subtitle ?? "",
-    key: section?.key ?? "",
+    key: section?.key ?? scope ?? "",
     isVisible: section?.isVisible ?? true,
     groupOrder: groupDefs ? orderedSectionGroupDefs(groupDefs, section?.groupOrder).map((def) => def.key) : [],
   };
   const current = { title, icon, subtitle, key, isVisible, groupOrder };
   const { restored, clear, discardRestored } = useDraft(
     "section",
-    mode === "edit" ? section.id : "new",
+    mode === "edit" ? section.id : scope ? `new-${scope}` : "new",
     current,
     baseline,
   );
@@ -479,7 +480,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
 
   const handleSave = async () => {
     const trimmedTitle = title.trim();
-    const trimmedKey = key.trim() || slugify(trimmedTitle);
+    const trimmedKey = scope ?? (key.trim() || slugify(trimmedTitle));
     if (!trimmedTitle || !trimmedKey || !icon.trim()) {
       alert("Naslov, ključ in ikona so obvezni.");
       return;
@@ -551,7 +552,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
             const nextTitle = e.target.value;
             setTitle(nextTitle);
             if (mode === "create") {
-              setKey(slugify(nextTitle));
+              if (!scope) setKey(slugify(nextTitle));
               if (!iconManuallyChosen.current) setIcon(suggestCategoryIcon(nextTitle));
             }
           }}
@@ -577,7 +578,7 @@ function SectionDialog({ mode, tenantId, section, onDone }: SectionDialogProps) 
           value={key}
           onChange={(e) => setKey(e.target.value)}
           placeholder="informacije"
-          disabled={busy}
+          disabled={busy || Boolean(scope)}
         />
         <p className="text-xs text-muted-foreground">Enolični identifikator za sekcijo (male črke, brez presledkov).</p>
       </div>
@@ -2727,33 +2728,43 @@ export function ContentEditor({
   sections,
   tenantId,
   operatorPlaceCreation = false,
+  scope,
 }: {
   sections: Section[];
   tenantId: string;
   operatorPlaceCreation?: boolean;
+  scope?: "events" | "offer";
 }) {
   const [addSectionOpen, setAddSectionOpen] = useState(false);
+  // Filter before deriving category/move targets as well as before rendering:
+  // a scoped editor must not expose unrelated sections in its item dialogs.
+  const visibleSections = React.useMemo(
+    () => scope ? sections.filter(section => section.key === scope) : sections,
+    [sections, scope],
+  );
   const allCategories = React.useMemo(() => {
-    return sections.flatMap(s => (s.categories || []).map(c => ({ ...c, sectionKey: s.key })));
-  }, [sections]);
+    return visibleSections.flatMap(s => (s.categories || []).map(c => ({ ...c, sectionKey: s.key })));
+  }, [visibleSections]);
 
   return (
     <div className="font-['Archivo']">
       <div style={{ display: "none" }} aria-hidden="true"><IconSprite /></div>
       {!operatorPlaceCreation && <p className="mb-4 rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">Sekcije in kategorije ureja Smart360. Vnose lahko še naprej dodajate, urejate in premikate med kategorijami.</p>}
-      {sections.length === 0 ? (
+      {visibleSections.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          {operatorPlaceCreation ? "Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek." : "Sekcij še ni. Za pripravo strukture se obrnite na Smart360."}
+          {operatorPlaceCreation
+            ? scope ? "Ta sekcija še ne obstaja. Ustvarite jo za začetek." : "Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek."
+            : "Sekcije še ni. Za pripravo strukture se obrnite na Smart360."}
         </div>
       ) : (
         <div className="space-y-6">
-          {sections.map((section) => (
+          {visibleSections.map((section) => (
             <SectionBlock key={section.id} section={section} tenantId={tenantId} allCategories={allCategories} operatorPlaceCreation={operatorPlaceCreation} />
           ))}
         </div>
       )}
 
-      {operatorPlaceCreation && <Button
+      {operatorPlaceCreation && (!scope || visibleSections.length === 0) && <Button
         className="w-full mt-4 h-[46px] border border-dashed border-[#C9D2CB] rounded-[10px] bg-white text-[#157347] font-bold hover:bg-[#F4F6F2]"
         variant="outline"
         onClick={() => setAddSectionOpen(true)}
@@ -2762,12 +2773,13 @@ export function ContentEditor({
         Dodaj sekcijo
       </Button>}
 
-      <TrashPanel tenantId={tenantId} />
+      {!scope && <TrashPanel tenantId={tenantId} />}
 
       {operatorPlaceCreation && <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
           <SectionDialog
             mode="create"
             tenantId={tenantId}
+            scope={scope}
             onDone={() => setAddSectionOpen(false)}
           />
       </EditDialog>}

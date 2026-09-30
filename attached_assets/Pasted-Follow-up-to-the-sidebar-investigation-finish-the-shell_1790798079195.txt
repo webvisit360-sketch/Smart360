@@ -1,0 +1,16 @@
+Follow-up to the sidebar investigation — finish the shell, no redesign. Build in dev. Report and STOP. No publication.
+
+DECISIONS (owner):
+1. PLACEHOLDER PAGES become real destinations — no "V pripravi" page may remain reachable:
+   - "Dogodki": opens the events editing directly — the ContentEditor scoped/scrolled to the events section, with a short header note that guests see these in the Program calendar. (A dedicated program editor can come later; today this page must be USEFUL, not a stub.)
+   - "Ponudba in cene": opens the ContentEditor scoped to the offer section.
+   - "Obvestila": answer first — where are guest announcements (the Obvestila tile on the guest Domov) edited today? Wire the page to that place; if no editor exists yet, say so plainly and make the sidebar item hidden until one exists — hidden, not "V pripravi".
+2. "KREATOR VODNIKA" is retired from the normal flow: move it to the BOTTOM of the sidebar, muted style, label unchanged. Still reachable, no longer prominent.
+3. Everything else in the sidebar stays as is (Nastavitve with the former tabs inside is accepted).
+
+SEPARATE LATENT BUG — livingGuideNav (read-only first):
+resolveLivingGuideNav() ignores the stored storedNav, so the admin setting saves but guests never see it. Before fixing: report what livingGuideNav values exist in production tenants (read-only). Then fix resolveLivingGuideNav to honor a VALID stored value (validate items against the allowed set; fall back to the fixed default on anything invalid), with tests: stored valid order respected, invalid/missing → default, and no change for tenants with no stored value. Flag in the report whether honoring stored values would visibly change any existing production tenant's guest nav.
+
+Add to project instructions: unfinished admin pages are never shipped reachable — a feature's navigation entry appears only when its page is functional.
+
+Screenshots: sidebar with demoted Kreator; Dogodki page opening real events editing; Ponudba in cene page. POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

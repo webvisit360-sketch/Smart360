@@ -27,6 +27,7 @@ const homeUrl = new URL(
   import.meta.url,
 ).href;
 const resolverModule = await import(resolverUrl);
+const { setProgramTodayOverride } = await import(resolverUrl.replace("living-guide-nav-resolver.ts", "living-guide-program-model.ts"));
 const gesturesModule = await import(gesturesUrl);
 const homeModule = await import(homeUrl);
 const resolveLivingGuideNav = resolverModule.resolveLivingGuideNav as (
@@ -159,7 +160,9 @@ test("More keeps the bottom bar while Cover and fullscreen Map hide it", () => {
   assert.equal(shouldShowLivingGuideBottomNav("site-map"), false);
 });
 
-test("availability requires renderable content and a dated Program item", () => {
+test("visible sections remain available; Program requires a current occurrence", (t) => {
+  setProgramTodayOverride("2026-08-23");
+  t.after(() => setProgramTodayOverride(null));
   const features = getLivingGuideAvailableFeatures([
     {
       key: "stay",
@@ -201,7 +204,7 @@ test("availability requires renderable content and a dated Program item", () => 
 
   assert.deepEqual(
     [...features],
-    ["home", "messages", "offer", "program"],
+    ["home", "messages", "stay", "offer", "explore", "program"],
   );
 });
 

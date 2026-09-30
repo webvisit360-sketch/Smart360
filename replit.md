@@ -13,6 +13,7 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 ## Ključne odločitve
 
 - **Oznake funkcij:** nikoli ne dodajaj trditev (npr. »brezplačno«), ki jih specifikacija ne vsebuje. Oznake in opisi morajo natančno opisovati dejansko funkcijo.
+- **Admin navigacija:** nedokončane admin strani nikoli ne pošiljaj kot dosegljive navigacijske izbire. Element menija se prikaže šele, ko vodi na delujoč urednik oziroma dejansko funkcionalno površino; »V pripravi« ni funkcionalna stran.
 
 - **Varnostni model (faza 2, razvoj; ni objavljeno):** vsak nov admin endpoint in vsako novo polje morata v centralnem `actorGate` izrecno določiti dostop **gostitelj lastne nastanitve / samo operater**; privzeto zavrni, preveri lastništvo najemnika in RLS. UI ne nadomešča strežniške avtorizacije. Zavrnitve se zabeležijo brez zavrnjenih vrednosti; tuji najemnik ostane neviden (404).
 

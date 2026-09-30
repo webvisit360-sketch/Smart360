@@ -116,9 +116,14 @@ export function resolveLivingGuideNav(
   // Actual valid ensures we don't accidentally consider a feature valid if it's not known
   const actualValid = allPossible.filter(f => validFeatures.has(f) || f === "home" || f === "messages");
 
-  // Living Guide always has the same five primary destinations. Optional
-  // features belong in secondary navigation and must never replace a real tab.
-  let baseNav: NavItem[] = [...PRESET_MELI_PU];
+  // Match the persisted contract strictly; never partially repair corrupt input.
+  // Availability remains a separate guest-visibility gate (notably Program).
+  const validStored = Array.isArray(storedNav) &&
+    storedNav.length === 5 &&
+    storedNav[0] === "home" &&
+    new Set(storedNav).size === 5 &&
+    storedNav.every(item => allPossible.includes(item));
+  let baseNav: NavItem[] = [...(validStored ? storedNav : PRESET_MELI_PU)];
 
   // Enforce "home" is always first and present exactly once
   baseNav = baseNav.filter(item => item !== "home");

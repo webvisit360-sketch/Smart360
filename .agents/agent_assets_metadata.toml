@@ -1828,3 +1828,45 @@ mtime_ms = 1790797101330
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/471926d9-0c96-4e0b-b887-f6cc68628db2/f6299910-c908-403d-9c0b-496d60dea56f"
 storage_version_token = "1790797149582939"
 content_type = "image/png"
+
+[[outputs]]
+id = "9wsMho9wyIjsZ9Q3b-Ig7"
+uri = "file://reports/admin-shell-synthetic/shell.png"
+type = "image"
+title = "Administracija — Kreator na dnu menija"
+description = "Dejanska razvojna komponenta s sintetičnimi API-odgovori. Kreator je manj poudarjen; Obvestila niso dosegljiva. Desni predogled vodnika ni predmet tega izoliranega testa."
+logical_id = "5ee22f57-9d7c-4257-8920-e81ab10454d2"
+content_hash = "sha256:189a1db6990ff796dc858075dccea7b6a8911b1fe8eec7619060ea96d7c3004f"
+size = 110318
+mtime_ms = 1790798509618
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5ee22f57-9d7c-4257-8920-e81ab10454d2/3f147f21-7c88-40f5-ae79-67c8cd4721d7"
+storage_version_token = "1790798586256443"
+content_type = "image/png"
+
+[[outputs]]
+id = "KbgAbsGgI6_OY-PlIqd49"
+uri = "file://reports/admin-shell-synthetic/events.png"
+type = "image"
+title = "Dogodki — delujoči urejevalnik vsebine"
+description = "Razvojni testni primer: stran prikazuje samo dogodke in omogoča urejanje vnosov namesto strani V pripravi."
+logical_id = "e4e5a43c-fa95-4b73-97ab-ce9f598da3bc"
+content_hash = "sha256:e368d43b443ef0ecadfe44d05462d24ef745e28c948e672e37e32f204e28d196"
+size = 104205
+mtime_ms = 1790798509878
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e4e5a43c-fa95-4b73-97ab-ce9f598da3bc/80191d77-fb81-4308-a70c-a96e412f8619"
+storage_version_token = "1790798587040557"
+content_type = "image/png"
+
+[[outputs]]
+id = "gJaQe7r_Oq3gQWWczKmmn"
+uri = "file://reports/admin-shell-synthetic/offer.png"
+type = "image"
+title = "Ponudba in cene — delujoči urejevalnik"
+description = "Razvojni testni primer: urejevalnik je omejen na sekcijo Ponudba."
+logical_id = "f7d2a877-1ac3-44dc-ac9e-16b641fa030d"
+content_hash = "sha256:a303d1890af19d52ec55c3c17a51a9fa2bd8f29f7075dc4293dc08d53c5c34af"
+size = 99305
+mtime_ms = 1790798510102
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f7d2a877-1ac3-44dc-ac9e-16b641fa030d/25279b6f-ad23-49be-9928-13c9be4de2b5"
+storage_version_token = "1790798588384237"
+content_type = "image/png"

@@ -1,0 +1,96 @@
+{
+  "evidence": "SYNTHETIC browser-route fixture; not production or authenticated admin data",
+  "shell": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "width": 248,
+      "height": 900
+    },
+    "panel": {
+      "x": 280,
+      "y": 126,
+      "width": 628,
+      "height": 414.5
+    },
+    "sidebarLabels": [
+      "Pregled",
+      "Naročila",
+      "Sporočila",
+      "Dogodki",
+      "Ponudba in cene",
+      "Okolica",
+      "Sekcije in vnosi",
+      "Nastavitve",
+      "Kreator vodnika",
+      "Nazaj na namestitve"
+    ],
+    "panelText": "Danes\nOsveži\nTrenutno nimate novih naročil ali neodgovorjenih sporočil.\nPotrebno pozornosti\nZačasnih fotografij: 0\nVse urejeno\nNi drugih zaznanih težav z vsebino.\nStanje vodnika\nOsnutek\nObjavljena različica: še ni objavljena\nPodatek o izvajalcu objave ni na voljo\nAktivni jeziki (1)\nSlovenščina"
+  },
+  "events": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "width": 248,
+      "height": 900
+    },
+    "panel": {
+      "x": 280,
+      "y": 126,
+      "width": 628,
+      "height": 327.5
+    },
+    "sidebarLabels": [
+      "Pregled",
+      "Naročila",
+      "Sporočila",
+      "Dogodki",
+      "Ponudba in cene",
+      "Okolica",
+      "Sekcije in vnosi",
+      "Nastavitve",
+      "Kreator vodnika",
+      "Nazaj na namestitve"
+    ],
+    "panelText": "Dogodki so prikazani v gostujočem Programu.\n\nDogodki\n\n1 elementov\n\nUredi sekcijo\nAktivnosti\n· 1 elementov\nUredi\nSintetični večer\nDogodki\nDodaj vnos\nDodaj kategorijo"
+  },
+  "offer": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "width": 248,
+      "height": 900
+    },
+    "panel": {
+      "x": 280,
+      "y": 126,
+      "width": 628,
+      "height": 291.5
+    },
+    "sidebarLabels": [
+      "Pregled",
+      "Naročila",
+      "Sporočila",
+      "Dogodki",
+      "Ponudba in cene",
+      "Okolica",
+      "Sekcije in vnosi",
+      "Nastavitve",
+      "Kreator vodnika",
+      "Nazaj na namestitve"
+    ],
+    "panelText": "Ponudba\n\n1 elementov\n\nUredi sekcijo\nIzposoja\n· 1 elementov\nUredi\nSintetično kolo\nIzdelek\nDodaj ponudbo\nDodaj kategorijo"
+  }
+}
