@@ -13,7 +13,7 @@ import { LivingGuideSprite } from "./LivingGuideSprite";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
 import { WeatherProvider } from "./living-guide-weather";
 import { isLivingTheme } from "./theme-clock";
-import { makeT } from "../guest/i18n";
+import { makeT, type UiLanguage } from "../guest/i18n";
 import { SYNTHETIC_GPX_ROUTE, syntheticTenant, syntheticWeather } from "./living-guide-weather-fixture-data";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
@@ -22,8 +22,11 @@ export default function LivingGuideWeatherFixture() {
   const [location] = useLocation();
   const search = new URLSearchParams(window.location.search);
   const mode = search.get("weather") === "warning" ? "warning" : "calm";
-  const [lang, setLang] = useState(() => search.get("lang") ?? "sl");
-  const tenant = useMemo(() => syntheticTenant(), []);
+  const [lang, setLang] = useState<UiLanguage>(() => {
+    const requested = search.get("lang");
+    return requested === "en" || requested === "de" || requested === "it" ? requested : "sl";
+  });
+  const tenant = useMemo(() => syntheticTenant(lang), [lang]);
   const weather = useMemo(() => syntheticWeather(mode), [mode]);
   const surface = location.split("/").filter(Boolean)[1] ?? "home";
 
@@ -33,7 +36,7 @@ export default function LivingGuideWeatherFixture() {
       tenant={tenant}
       slug={tenant.slug}
       lang={lang}
-      onLanguageChange={setLang}
+      onLanguageChange={(next) => setLang(next === "en" || next === "de" || next === "it" ? next : "sl")}
       devWeather={weather}
     />
   );

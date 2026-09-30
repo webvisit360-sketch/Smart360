@@ -26,3 +26,9 @@ Healthcare is a label-only broadening of the existing hospital category, not a n
 **Why:** The owner explicitly chose Zdravstvo / Healthcare / Gesundheit / Sanità so health centres can share the category without being described as hospitals.
 
 **How to apply:** Preserve the existing identity and item records. Do not rename actual hospital POIs or their editorial descriptions just because their containing category has a broader name.
+
+Multilingual navigation checks must combine translated fixture category names with stable identities and assert position, not just the translated tab label.
+
+**Why:** A four-language label test passed while its placement fixture still used Slovenian category text. In other languages, a label-based anchor failed and pushed the recorder to the end of the horizontally scrolling row.
+
+**How to apply:** Test each language with translated category labels, retaining the same stable keys; also check the rendered recorder uses the active language. Distinguish an off-screen appended tab from an actually absent tab when diagnosing reports.

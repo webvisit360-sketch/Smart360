@@ -1716,3 +1716,45 @@ mtime_ms = 1790791790926
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d5701f7c-58d1-418b-8943-a91f6049fb29/944143e8-c697-4225-a3ee-91dd6694d4c6"
 storage_version_token = "1790791905821925"
 content_type = "image/png"
+
+[[outputs]]
+id = "PZhRYCdgvKjd4Ogoj7TMR"
+uri = "file://screenshots/recording-tab-en-390.png"
+type = "image"
+title = "EN — Record a tour"
+description = "Razvojni prikaz pri 390 px: zavihek za Cycling in lokaliziran snemalnik."
+logical_id = "d84b1ff9-98fe-456e-9203-f1a2618af9f3"
+content_hash = "sha256:e5a9feeeabd4833a59031cb45eb778c404f07fe56041cb4dee4cb9200212f6a6"
+size = 50795
+mtime_ms = 1790793234274
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d84b1ff9-98fe-456e-9203-f1a2618af9f3/5ba72ae5-d70f-413b-a3a4-dfc910ad4f36"
+storage_version_token = "1790793350753373"
+content_type = "image/png"
+
+[[outputs]]
+id = "xJ0rpEhtpotMeqcFCVJxd"
+uri = "file://screenshots/recording-tab-de-390.png"
+type = "image"
+title = "DE — Tour aufzeichnen"
+description = "Razvojni prikaz pri 390 px: zavihek za Radfahren in lokaliziran snemalnik."
+logical_id = "0167772c-3f66-47e8-a3e9-1d76de6f110f"
+content_hash = "sha256:1aa845c5569d714f60430067fc62cc2801efc2f11582a7c2b91f763ca24eab7e"
+size = 55790
+mtime_ms = 1790793240070
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0167772c-3f66-47e8-a3e9-1d76de6f110f/5939b5e4-05d2-44a8-921b-e6770b90d573"
+storage_version_token = "1790793351523172"
+content_type = "image/png"
+
+[[outputs]]
+id = "2YaGV3qjNW2wypVselFVk"
+uri = "file://screenshots/recording-tab-it-390.png"
+type = "image"
+title = "IT — Registra un tour"
+description = "Razvojni prikaz pri 390 px: zavihek za In bicicletta in lokaliziran snemalnik."
+logical_id = "fdbda962-d4de-4106-8009-a6c17aefdcf8"
+content_hash = "sha256:93a7507062991aac84b3924ad51c840096398d760ee12014c8ed95372a4c341a"
+size = 52655
+mtime_ms = 1790793245718
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fdbda962-d4de-4106-8009-a6c17aefdcf8/cae20fce-cdc7-4e85-a896-a9ede770e0c8"
+storage_version_token = "1790793352398232"
+content_type = "image/png"

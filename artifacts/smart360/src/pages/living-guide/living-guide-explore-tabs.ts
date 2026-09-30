@@ -21,12 +21,8 @@ type ExploreCategoryChip = {
   inactive?: boolean;
 };
 
-function normalizedLabel(label: string): string {
-  return label.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("sl");
-}
-
 export function exploreCategoryChips(
-  categories: Array<{ id: string; label: string; __adminGuestEmpty?: boolean; __adminInactive?: boolean }>,
+  categories: Array<{ id: string; key?: string; label: string; __adminGuestEmpty?: boolean; __adminInactive?: boolean }>,
   allLabel: string,
   recordingLabel: string,
   recordingEnabled: boolean,
@@ -42,9 +38,11 @@ export function exploreCategoryChips(
   ];
   if (!recordingEnabled) return chips;
 
-  const cycling = chips.findIndex((chip) => normalizedLabel(chip.label) === "kolesarjenje");
-  const hiking = chips.findIndex((chip) => normalizedLabel(chip.label) === "pohodništvo");
-  const after = cycling >= 0 ? cycling : hiking >= 0 ? hiking : chips.length - 1;
+  // The published skeleton uses bike/hike keys. Never infer identity from
+  // display labels: those change with the guide language and tenant copy.
+  const cycling = categories.findIndex((category) => category.key === "bike" || category.id === "bike");
+  const hiking = categories.findIndex((category) => category.key === "hike" || category.id === "hike");
+  const after = cycling >= 0 ? cycling + 1 : hiking >= 0 ? hiking + 1 : chips.length - 1;
   chips.splice(after + 1, 0, { key: EXPLORE_RECORDING_TAB_KEY, label: recordingLabel });
   return chips;
 }

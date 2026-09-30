@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LIVING_GUIDE_UI } from "../pages/guest/i18n";
+import { LIVING_GUIDE_UI, makeT } from "../pages/guest/i18n";
 import { FreeTourAscent, FreeTourIntro, FreeTourOmitted, formatAscent, isTourRecordingEnabled, recordedProfileData } from "../pages/living-guide/living-guide-free-tour-view";
+import { TourProfileControl } from "../pages/living-guide/living-guide-tour-profile";
 
 
 const sl = (key: string, v?: Record<string, string | number>) => {
@@ -42,6 +43,26 @@ test("intro renders three activities, selected running state and privacy", () =>
   }
   assert.match(m, /data-testid="button-free-tour-start"/);
   assert.match(m, /data-testid="text-free-tour-privacy"/);
+});
+
+test("recorder choices, start, privacy and profile follow active guide language", () => {
+  for (const lang of ["sl", "en", "de", "it"] as const) {
+    const t = makeT(null, lang);
+    const intro = renderToStaticMarkup(createElement(FreeTourIntro, { t, activity: "cycling", onActivity: noop, onStart: noop }));
+    for (const activity of ["cycling", "hiking", "running"]) {
+      assert.ok(intro.includes(t(`UI.lg.gpx.${activity}`)), `${lang}: ${activity}`);
+    }
+    assert.ok(intro.includes(t("UI.lg.freeTour.start")), `${lang}: start`);
+    assert.ok(intro.includes(t("UI.lg.liveTour.privacy")), `${lang}: privacy`);
+    const controller = {
+      profile: {}, open: true, pending: true, storageError: false,
+      setOpen: noop, complete: noop, start: noop,
+    } as unknown as Parameters<typeof TourProfileControl>[0]["controller"];
+    const profile = renderToStaticMarkup(createElement(TourProfileControl, { t, activity: "cycling", tourActive: false, controller }));
+    assert.ok(profile.includes(t("UI.lg.calories.profile")), `${lang}: profile`);
+    assert.ok(profile.includes(t("UI.lg.calories.privacy")), `${lang}: profile privacy`);
+    assert.ok(profile.includes(t("UI.lg.calories.skip")), `${lang}: profile skip`);
+  }
 });
 
 test("ascent label is approximate; missing metric renders unavailable", () => {

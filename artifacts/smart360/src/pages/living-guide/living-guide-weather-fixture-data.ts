@@ -39,7 +39,13 @@ const item = (id: string, title: string, subtitle: string) => ({
   id, title, subtitle, isVisible: true, media: [], body: "", mapQuery: title,
 });
 
-export function syntheticTenant() {
+export function syntheticTenant(lang: "sl" | "en" | "de" | "it" = "sl") {
+  const labels = {
+    sl: { bike: "Kolesarjenje", hike: "Pohodništvo" },
+    en: { bike: "Cycling", hike: "Hiking" },
+    de: { bike: "Radfahren", hike: "Wandern" },
+    it: { bike: "In bicicletta", hike: "Escursioni a piedi" },
+  }[lang];
   return {
     id: "weather-fixture",
     slug: "__weather-fixture",
@@ -58,11 +64,11 @@ export function syntheticTenant() {
         { id: "c-house", label: "Hišni red", layout: "rules", isVisible: true, items: [item("i-quiet", "Nočni mir", "Od 22:00 do 7:00")] },
       ] },
       { id: "s-explore", key: "explore", label: "Raziskuj", isVisible: true, categories: [
-        { id: "c-bike", label: "Kolesarjenje", layout: "routes", isVisible: true, items: [
+        { id: "c-bike", key: "bike", label: labels.bike, layout: "routes", isVisible: true, items: [
           item("i-bike-1", "TEST kolesarska tura A", "Testni vnos · 18 km"),
           item("i-bike-2", "TEST kolesarska tura B", "Testni vnos · 32 km"),
         ] },
-        { id: "c-hike", label: "Pohodništvo", layout: "routes", isVisible: true, items: [
+        { id: "c-hike", key: "hike", label: labels.hike, layout: "routes", isVisible: true, items: [
           item("i-hike-1", "TEST pohod A", "Testni vnos · 2 h"),
           item("i-hike-2", "TEST pohod B", "Testni vnos · 3 h 30 min"),
         ] },

@@ -11,6 +11,12 @@ if (!import.meta.env.DEV) throw new Error("Explore recording fixture is developm
 const query = new URLSearchParams(location.search);
 const requestedLang = query.get("lang");
 const lang: UiLanguage = requestedLang === "en" || requestedLang === "de" || requestedLang === "it" ? requestedLang : "sl";
+const labels = {
+  sl: { bike: "Kolesarjenje", hike: "Pohodništvo" },
+  en: { bike: "Cycling", hike: "Hiking" },
+  de: { bike: "Radfahren", hike: "Wandern" },
+  it: { bike: "In bicicletta", hike: "Escursioni a piedi" },
+}[lang];
 const requestedTheme = query.get("theme");
 document.body.dataset.t = requestedTheme === "jutro" || requestedTheme === "dan" || requestedTheme === "vecer" ? requestedTheme : "noc";
 document.documentElement.lang = lang;
@@ -20,10 +26,10 @@ const categories = [
   { id: "fixture-food", label: "Hrana in pijača", isVisible: true, items: [
     { id: "fixture-cafe", title: "Kavarna ob poti", isVisible: true },
   ] },
-  { id: "fixture-cycling", label: "  KOLESARJENJE  ", isVisible: true, items: [
+  { id: "fixture-cycling", key: "bike", label: labels.bike, isVisible: true, items: [
     { id: "fixture-cycle-route", title: "Kolesarska pot", isVisible: true },
   ] },
-  { id: "fixture-hiking", label: "Pohodništvo", isVisible: true, items: [
+  { id: "fixture-hiking", key: "hike", label: labels.hike, isVisible: true, items: [
     { id: "fixture-hike-route", title: "Pohodniška pot", isVisible: true },
   ] },
   { id: "fixture-sights", label: "Znamenitosti", isVisible: true, items: [
