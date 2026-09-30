@@ -1170,7 +1170,7 @@ export const LIVING_GUIDE_UI = {
   },
   "UI.lg.calories.kcal": { sl: "Poraba", en: "Energy", de: "Energie", it: "Energia" },
   "UI.lg.calories.approx": { sl: "pribl.", en: "approx.", de: "ca.", it: "circa" },
-  "UI.lg.calories.profile": { sl: "Moj profil · Profil", en: "My profile · Profile", de: "Mein Profil · Profil", it: "Il mio profilo · Profilo" },
+  "UI.lg.calories.profile": { sl: "Moj profil", en: "My profile", de: "Mein Profil", it: "Il mio profilo" },
   "UI.lg.calories.privacy": {
     sl: "Neobvezno. Profil in ocena ostaneta samo v tej napravi; nič se ne pošlje na strežnik ali v GPX. Brez teže ni ocene kcal. Ocena ni zdravstvena meritev.",
     en: "Optional. Profile and estimate stay only on this device; nothing is sent to a server or GPX. No weight means no kcal estimate. Not a medical measurement.",
