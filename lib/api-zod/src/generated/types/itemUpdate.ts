@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { EventSchedule } from './eventSchedule';
 import type { ItemUpdateFrame } from './itemUpdateFrame';
 
 export interface ItemUpdate {
@@ -15,6 +16,7 @@ export interface ItemUpdate {
   body?: string | null;
   /** @nullable */
   eventStart?: string | null;
+  eventSchedule?: EventSchedule | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */

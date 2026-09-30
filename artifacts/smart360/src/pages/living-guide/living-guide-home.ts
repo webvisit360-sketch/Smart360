@@ -1,9 +1,9 @@
 import { suppressesGuestDescription } from "./living-guide-explore";
 import {
   findDatedEventDestination,
-  itemEventTimestamp,
 } from "./living-guide-nav-resolver";
 import { itemDistanceText } from "./living-guide-formatters";
+import { isProgramCategory, occursOn, programEventOf, programToday } from "./living-guide-program-model";
 
 const FALLBACK_CATEGORY_LABELS = new Set([
   "kolesarjenje",
@@ -133,15 +133,6 @@ function cardDetail(item: any, category: any): string {
     .join(" · ");
 }
 
-function isSameLocalDay(timestamp: number, now: Date): boolean {
-  const date = new Date(timestamp);
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
-}
-
 export function selectHomeTodayEntries(
   sections: any[] | null | undefined,
   now = new Date(),
@@ -155,9 +146,7 @@ export function selectHomeTodayEntries(
       const categoryLabel =
         typeof category.label === "string" ? category.label.trim() : "";
       const isProgrammeSurface =
-        category.layout === "events" ||
-        section.key === "events" ||
-        section.key === "program";
+        isProgramCategory(category, section);
 
       for (const item of visible<any>(category.items)) {
         const title =
@@ -170,8 +159,9 @@ export function selectHomeTodayEntries(
 
         if (hasProgramme) {
           if (!isProgrammeSurface) continue;
-          const timestamp = itemEventTimestamp(item);
-          if (timestamp === null || !isSameLocalDay(timestamp, now)) continue;
+          const event = programEventOf(item);
+          if (!event || !occursOn(event, programToday(now))) continue;
+          const [hh, mm] = (event.timeFrom || "00:00").split(":").map(Number);
           entries.push({
             id: `event-${item.id}`,
             categoryId: category.id,
@@ -179,7 +169,7 @@ export function selectHomeTodayEntries(
             detail,
             item,
             media,
-            sortValue: timestamp,
+            sortValue: (hh || 0) * 60 + (mm || 0),
           });
           continue;
         }

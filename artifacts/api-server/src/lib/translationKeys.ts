@@ -99,6 +99,8 @@ export async function buildKeyList(tenant: Tenant): Promise<KeyEntry[]> {
         );
         push(`${ip}.noteText`, "item", i.id, "noteText", i.noteText);
         push(`${ip}.priceUnit`, "item", i.id, "priceUnit", i.priceUnit);
+        push(`${ip}.eventSchedule.locationText`, "item", i.id, "eventSchedule.locationText", i.eventSchedule?.locationText);
+        push(`${ip}.eventSchedule.ageText`, "item", i.id, "eventSchedule.ageText", i.eventSchedule?.ageText);
       });
     });
   }

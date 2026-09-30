@@ -5,6 +5,7 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { EventSchedule } from './eventSchedule';
 import type { GpxRoute } from './gpxRoute';
 import type { ItemFrame } from './itemFrame';
 import type { ItemRange } from './itemRange';
@@ -23,6 +24,7 @@ export interface Item {
      * @nullable
      */
   eventStart?: string | null;
+  eventSchedule?: EventSchedule | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */

@@ -114,6 +114,7 @@ const fieldLabels: Record<string, string> = {
   isVisible: "Vidnost", position: "Vrstni red", distanceMeters: "Razdalja", duration: "Trajanje",
   hours: "Odpiralni čas", noteText: "Opomba", mapUrl: "Lokacija", tourUrl: "Virtualni ogled",
   tourRecordingEnabled: "SNEMANJE TUR",
+  eventSchedule: "Termin",
 };
 function empty(value: unknown): boolean {
   return value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0);
@@ -147,6 +148,10 @@ export function comparePublications(draft: PublishedContent, published: Publishe
     const record = (kind: Change["kind"], line: string, at = path, old = before, next = after, entity = false) => {
       target.set(JSON.stringify(at), { kind, line, transition: digest([old ?? null, next ?? null]), entity });
     };
+    if (field === "eventSchedule") {
+      record(empty(after) ? "removed" : "changed", `Termin${context ? `: ${context}` : ""}`);
+      return;
+    }
     if (Array.isArray(before) && Array.isArray(after) &&
       [...before, ...after].every((entry) => entry && typeof entry === "object" && "id" in entry)) {
       const oldRows = new Map(before.map((entry) => [entry.id, entry]));

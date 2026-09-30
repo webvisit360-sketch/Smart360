@@ -38,7 +38,7 @@
 - [Guide Creator product rule](guide-creator-product-rule.md) — Creator prebuilds roughly 75% of each guide and is permanently operator-only; hosts must never receive an empty-guide workflow.
 - [Enquiry delivery diagnosis](enquiry-delivery-diagnosis.md) — Gmail access is permanently declined; use persisted delivery state and provider status, never mailbox workarounds.
 - [Migration approval boundaries](migration-approval-boundaries.md) — additive approval never covers existing-schema changes or backfills; show exact SQL and wait.
-- [Events scheduling model](events-scheduling-model.md) — generated occurrences, tenant-local days, translation fallback, immutable history, and cross-midnight limit.
+- [Events scheduling model](events-scheduling-model.md) — snapshot-only client occurrences supersede unbuilt generated rows; approved legacy conversion requires an end, without backfill.
 - [Passkey cancellation](passkey-cancellation.md) — SimpleWebAuthn owns the native ceremony signal; external watchdogs must also cancel its internal ceremony.
 - [Release diff isolation](release-diff-isolation.md) — compare every publish to the deployed revision; include untracked files and re-read schema diff after startup security setup.
 - [Slovenian plural helper](slovenian-plural-helper.md) — with the next code change, fall back to `other` for impossible Intl plural categories; do not amend the current publish.

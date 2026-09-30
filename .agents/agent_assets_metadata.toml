@@ -1758,3 +1758,45 @@ mtime_ms = 1790793245718
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/fdbda962-d4de-4106-8009-a6c17aefdcf8/cae20fce-cdc7-4e85-a896-a9ede770e0c8"
 storage_version_token = "1790793352398232"
 content_type = "image/png"
+
+[[outputs]]
+id = "ZtK0LAI8tYc-CRBOGo0s1"
+uri = "file://screenshots/program-week-comparison-390.png"
+type = "image"
+title = "Program — tedenski pogled, primerjava pri 390 px"
+description = "Levo zavezujoča HTML-predloga, desno dejanska razvojna izvedba s testnimi podatki. Koledar uporablja pravi teden od ponedeljka do nedelje."
+logical_id = "5c6c0004-ad3c-472f-8ec5-5ff472a5a2df"
+content_hash = "sha256:8862c1f4f627c06a9d134c8dbebbf8ac723c4e7519367f27208be5b21ede0bd9"
+size = 130016
+mtime_ms = 1790796467362
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5c6c0004-ad3c-472f-8ec5-5ff472a5a2df/c8062b14-8361-4452-959b-8316f5102701"
+storage_version_token = "1790796554012350"
+content_type = "image/png"
+
+[[outputs]]
+id = "d_e7tbPIuTTcXBFXwq3Zn"
+uri = "file://screenshots/program-filtered-comparison-390.png"
+type = "image"
+title = "Program — filter V okolici, primerjava pri 390 px"
+description = "Levo izvirna predloga, desno izvedba z vključenim filtrom V okolici."
+logical_id = "893c5034-fe6a-4b7c-a714-30003bcbdca5"
+content_hash = "sha256:b783ad945aebc8342fea3412a33efe21b939862bcfef67ed3a7da0ee3e8724bc"
+size = 109618
+mtime_ms = 1790796467690
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/893c5034-fe6a-4b7c-a714-30003bcbdca5/c5cc351e-c170-4a67-a026-e7a17a75a9b5"
+storage_version_token = "1790796554777089"
+content_type = "image/png"
+
+[[outputs]]
+id = "ZT5b0jeLvZf2UfQtSsDOd"
+uri = "file://screenshots/program-detail-comparison-390.png"
+type = "image"
+title = "Dogodek — podrobnosti in ponavljanje pri 390 px"
+description = "Primerjava predloge in razvojnega dogodka. V izvedbi je v polju Kje prikazano celotno vneseno besedilo lokacije."
+logical_id = "4970fad7-5816-4d30-a251-23b657112cc6"
+content_hash = "sha256:f0d390719c82a4e7a072efc88b5e641f0a91d13b15de5728e618c432ca711a12"
+size = 179827
+mtime_ms = 1790796468134
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4970fad7-5816-4d30-a251-23b657112cc6/f7f7a904-8515-430f-8314-3e8415d1a4b7"
+storage_version_token = "1790796555560778"
+content_type = "image/png"

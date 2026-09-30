@@ -15,6 +15,7 @@ const hasMinimumPhoneDigits = (value: string) =>
 
 export function OrderSheet({
   item,
+  initialNote = "",
   slug,
   lang,
   t,
@@ -30,6 +31,8 @@ export function OrderSheet({
   onCredentialsRejected,
 }: {
   item: any;
+  /** Optional prefill (e.g. programme sign-up: event title + chosen date). */
+  initialNote?: string;
   slug: string;
   lang: UiLanguage;
   t: UiTranslator;
@@ -50,7 +53,7 @@ export function OrderSheet({
   const queryClient = useQueryClient();
   const [qty, setQty] = useState(1);
   const [phone, setPhone] = useState(guest?.phone ?? "");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(initialNote);
   const [guestName, setGuestName] = useState(guest?.name ?? "");
   const [guestUnit, setGuestUnit] = useState(guest?.unit ?? "");
   const [submitting, setSubmitting] = useState(false);

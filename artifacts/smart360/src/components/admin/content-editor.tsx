@@ -81,6 +81,7 @@ import { getHostOnboardingQueryKey, getOwnerOnboardingQueryKey } from "@/hooks/u
 import { suggestCategoryIcon } from "@workspace/category-icons";
 import { CategoryIcon } from "@/components/category-icon";
 import { CategoryIconPicker } from "@/components/admin/category-icon-picker";
+import { EventScheduleEditor, scheduleDraft, scheduleFromDraft, validateSchedule, type EventSchedule } from "@/components/admin/event-schedule-editor";
 
 // ---------- Types ----------
 
@@ -91,6 +92,7 @@ type Item = {
   title?: string | null;
   body?: string | null;
   eventStart?: string | null;
+  eventSchedule?: EventSchedule | null;
   price?: string | null;
   priceUnit?: string | null;
   phone?: string | null;
@@ -109,6 +111,7 @@ type Item = {
 
 type Category = {
   id: string;
+  key?: string;
   label: string;
   icon: string;
   layout: string;
@@ -1006,6 +1009,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
   const queryClient = useQueryClient();
   const category = sectionCategories?.find((candidate) => candidate.id === categoryId)
     || allCategories?.find((candidate) => candidate.id === categoryId);
+  const editingSchedule = sectionKey === "events" || category?.key === "events" || category?.layout === "events" || item?.eventSchedule != null;
   const [busy, setBusy] = useState(false);
   const itemId = mode === "edit" ? item.id : "";
   const itemEditorIdRef = useRef(itemId);
@@ -1035,6 +1039,8 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
   const [title, setTitle] = useState(item?.title ?? "");
   const [body, setBody] = useState(item?.body ?? "");
   const [eventStart, setEventStart] = useState(toDateTimeLocal(item?.eventStart));
+  const [eventScheduleDraft, setEventScheduleDraft] = useState(() => scheduleDraft(item?.eventSchedule, item?.eventStart));
+  const [scheduleError, setScheduleError] = useState("");
   const [price, setPrice] = useState(item?.price ?? "");
   const [priceUnit, setPriceUnit] = useState(item?.priceUnit ?? "");
   const [phone, setPhone] = useState(item?.phone ?? "");
@@ -1120,6 +1126,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
     title: item?.title ?? "",
     body: item?.body ?? "",
     eventStart: toDateTimeLocal(item?.eventStart),
+    ...(editingSchedule ? { eventScheduleDraft: scheduleDraft(item?.eventSchedule, item?.eventStart) } : {}),
     price: item?.price ?? "",
     priceUnit: item?.priceUnit ?? "",
     phone: item?.phone ?? "",
@@ -1136,6 +1143,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
     title,
     body,
     eventStart,
+    ...(editingSchedule ? { eventScheduleDraft } : {}),
     price,
     priceUnit,
     phone,
@@ -1162,6 +1170,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
       setTitle(restored.title);
       setBody(restored.body);
       setEventStart(restored.eventStart ?? "");
+      if (editingSchedule) setEventScheduleDraft(restored.eventScheduleDraft ?? scheduleDraft(item?.eventSchedule, item?.eventStart));
       setPrice(restored.price);
       setPriceUnit(restored.priceUnit);
       setPhone(restored.phone);
@@ -1190,6 +1199,14 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
     (!creatorStatus.isLoading && !creatorStatus.isError && creatorStatus.data !== undefined);
 
   const handleSave = async () => {
+    if (editingSchedule) {
+      const error = validateSchedule(eventScheduleDraft);
+      if (error) {
+        setScheduleError(error);
+        return;
+      }
+      setScheduleError("");
+    }
     if (generatedTranslation && generatedTranslation.source !== sourceDraftRef.current) {
       alert("Slovenski izvirnik se je po prevajanju spremenil. Pred shranjevanjem prevode posodobite znova.");
       return;
@@ -1212,7 +1229,9 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           const created = await createItem(categoryId, {
             title: title.trim() || undefined,
             body: body.trim() || undefined,
-            eventStart: toEventStartIso(eventStart) ?? undefined,
+            ...(editingSchedule
+              ? { eventSchedule: scheduleFromDraft(eventScheduleDraft) }
+              : { eventStart: toEventStartIso(eventStart) ?? undefined }),
             price: price.trim() || undefined,
             priceUnit: priceUnit.trim() || undefined,
             phone: phone.trim() || undefined,
@@ -1223,7 +1242,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
             soldOut,
             producerName: producerName.trim() || undefined,
             producerNote: producerNote.trim() || undefined,
-          });
+          } as Parameters<typeof createItem>[1]);
           id = created.id;
           createdIdRef.current = id;
         } else {
@@ -1232,7 +1251,9 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           await updateItem(id, {
             title: title.trim() || null,
             body: body.trim() || null,
-            eventStart: toEventStartIso(eventStart),
+            ...(editingSchedule
+              ? { eventSchedule: scheduleFromDraft(eventScheduleDraft) }
+              : { eventStart: toEventStartIso(eventStart) }),
             price: price.trim() || null,
             priceUnit: priceUnit.trim() || null,
             phone: phone.trim() || null,
@@ -1244,7 +1265,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           soldOut,
           producerName: producerName.trim() || null,
           producerNote: producerNote.trim() || null,
-          });
+          } as Parameters<typeof updateItem>[1]);
         }
         // Upload the queued media to the fresh item, one by one, with the
         // progress shown in the grid. On a failure the dialog stays open:
@@ -1262,7 +1283,9 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
         await updateItem(item.id, {
           title: title.trim() || null,
           body: body.trim() || null,
-          eventStart: toEventStartIso(eventStart),
+          ...(editingSchedule
+            ? { eventSchedule: scheduleFromDraft(eventScheduleDraft) }
+            : { eventStart: toEventStartIso(eventStart) }),
           price: price.trim() || null,
           priceUnit: priceUnit.trim() || null,
           phone: phone.trim() || null,
@@ -1274,7 +1297,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           soldOut,
           producerName: producerName.trim() || null,
           producerNote: producerNote.trim() || null,
-        });
+        } as Parameters<typeof updateItem>[1]);
         const originalDrafts = buildItemLanguageDrafts(
           { title: item.title ?? "", description: item.body ?? "" },
           translationsQuery.data ?? [],
@@ -1296,8 +1319,8 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
       clear();
       await refresh();
       onDone();
-    } catch {
-      alert("Shranjevanje ni uspelo.");
+    } catch (error) {
+      alert(`Shranjevanje ni uspelo: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
@@ -1592,7 +1615,9 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           disabled={busy}
         />
       </div>
-      <div className="space-y-1">
+      {editingSchedule ? (
+        <EventScheduleEditor draft={eventScheduleDraft} onChange={setEventScheduleDraft} disabled={busy} error={scheduleError} />
+      ) : <div className="space-y-1">
         <Label>Začetek dogodka</Label>
         <Input
           type="datetime-local"
@@ -1603,7 +1628,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
         <p className="text-xs text-muted-foreground">
           Neobvezno. Uporablja se za datirane vnose v kategorijah dogodkov in za zavihek Program.
         </p>
-      </div>
+      </div>}
       <div className="space-y-1">
         <Label>
           {!creatorStatusReady

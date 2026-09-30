@@ -197,6 +197,11 @@ export function applyTranslationFields<T extends { id: string }>(
   let bulletsArr: string[] | null = null;
   for (const [field, value] of Object.entries(translations)) {
     if (!hasMeaningfulContent(value)) continue;
+    if ((field === "eventSchedule.locationText" || field === "eventSchedule.ageText") &&
+      merged["eventSchedule"] && typeof merged["eventSchedule"] === "object") {
+      merged["eventSchedule"] = { ...merged["eventSchedule"] as Record<string, unknown>, [field.split(".")[1]!]: value };
+      continue;
+    }
     const sub = field.match(/^(body|bullets)\[(\d+)\]$/);
     if (sub) {
       const idx = Number(sub[2]);
@@ -299,6 +304,10 @@ export async function buildTenantContent(
       const source = row as Record<string, unknown>;
       const neededFallback = Object.fromEntries(
         Object.entries(fallback).filter(([field]) => {
+          if (field === "eventSchedule.locationText" || field === "eventSchedule.ageText") {
+            const key = field.split(".")[1]!;
+            return !hasMeaningfulContent((source["eventSchedule"] as Record<string, unknown> | null)?.[key]);
+          }
           const base = field.replace(/\[\d+\]$/, "");
           const value = source[base];
           return !hasMeaningfulContent(value);

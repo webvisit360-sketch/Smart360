@@ -18,6 +18,19 @@ import { z } from "zod/v4";
 import { tenantsTable } from "./tenants";
 import type { GpxRoute } from "./gpx";
 
+export type EventSchedule = {
+  type: "once" | "weekly";
+  date?: string;
+  days?: Array<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun">;
+  timeFrom: string;
+  timeTo: string;
+  validFrom?: string;
+  validTo?: string;
+  locationText?: string;
+  ageText?: string;
+  inCamp?: boolean;
+};
+
 export const sectionsTable = pgTable("sections", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id")
@@ -70,6 +83,7 @@ export const itemsTable = pgTable("items", {
   // Optional ISO-8601 start used by Living Guide Program/event destinations.
   // Text keeps the public contract stable and avoids implicit timezone shifts.
   eventStart: text("event_start"),
+  eventSchedule: jsonb("event_schedule").$type<EventSchedule>(),
   gpxRoute: jsonb("gpx_route").$type<GpxRoute>(),
   price: text("price"),
   priceUnit: text("price_unit"),

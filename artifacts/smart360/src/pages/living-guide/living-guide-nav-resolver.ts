@@ -1,3 +1,5 @@
+import { isProgramCategory, programEventOf } from "./living-guide-program-model";
+
 export type NavItem = "home" | "stay" | "offer" | "explore" | "program" | "messages";
 
 export interface NavState {
@@ -30,20 +32,28 @@ export function itemEventTimestamp(item: Record<string, unknown>): number | null
   return Number.isFinite(timestamp) ? timestamp : null;
 }
 
+/**
+ * Screen used for bottom-nav highlighting. A direct Program/detail link keeps
+ * baseScreen "home" underneath the sheet, so the programme category wins.
+ */
+export function bottomNavScreen(
+  screen: string,
+  baseScreen: string,
+  category: any,
+  section: any,
+): string {
+  if (screen === "detail" && category && isProgramCategory(category, section)) return "detail";
+  return baseScreen;
+}
+
 export function findDatedEventDestination(
   sections: any[] | null | undefined,
 ): { section: any; category: any } | null {
   for (const section of visible<any>(sections)) {
     for (const category of visible<any>(section.categories)) {
-      const isEventSurface =
-        category.layout === "events" ||
-        section.key === "events" ||
-        section.key === "program";
       if (
-        isEventSurface &&
-        visible<any>(category.items).some(
-          (item: Record<string, unknown>) => itemEventTimestamp(item) !== null,
-        )
+        isProgramCategory(category, section) &&
+        visible<any>(category.items).some((item: any) => programEventOf(item) !== null)
       ) {
         return { section, category };
       }

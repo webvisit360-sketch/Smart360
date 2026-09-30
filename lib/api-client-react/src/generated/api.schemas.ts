@@ -3100,6 +3100,63 @@ export interface GpxUploadInput {
   activity: GpxUploadInputActivity;
 }
 
+export type EventScheduleType = typeof EventScheduleType[keyof typeof EventScheduleType];
+
+
+export const EventScheduleType = {
+  once: 'once',
+  weekly: 'weekly',
+} as const;
+
+export type EventScheduleDaysItem = typeof EventScheduleDaysItem[keyof typeof EventScheduleDaysItem];
+
+
+export const EventScheduleDaysItem = {
+  mon: 'mon',
+  tue: 'tue',
+  wed: 'wed',
+  thu: 'thu',
+  fri: 'fri',
+  sat: 'sat',
+  sun: 'sun',
+} as const;
+
+/**
+ * Local Europe/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.
+ */
+export interface EventSchedule {
+  type: EventScheduleType;
+  /**
+     * Required for once; forbidden for weekly
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  date?: string;
+  /**
+     * Required for weekly; forbidden for once
+     * @minItems 1
+     */
+  days?: EventScheduleDaysItem[];
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  timeFrom: string;
+  /**
+     * Strictly later than timeFrom on the same day
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  timeTo: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  validFrom?: string;
+  /**
+     * Must be on or after validFrom
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  validTo?: string;
+  /** @maxLength 500 */
+  locationText?: string;
+  /** @maxLength 200 */
+  ageText?: string;
+  inCamp?: boolean;
+}
+
 /**
  * Existing active Creator range classification when present
  * @nullable
@@ -3139,6 +3196,7 @@ export interface Item {
      * @nullable
      */
   eventStart?: string | null;
+  eventSchedule?: EventSchedule | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */
@@ -3239,6 +3297,7 @@ export interface ItemInput {
   title?: string;
   body?: string;
   eventStart?: string;
+  eventSchedule?: EventSchedule;
   price?: string;
   priceUnit?: string;
   phone?: string;
@@ -3394,6 +3453,7 @@ export interface ItemUpdate {
   body?: string | null;
   /** @nullable */
   eventStart?: string | null;
+  eventSchedule?: EventSchedule | null;
   /** @nullable */
   price?: string | null;
   /** @nullable */

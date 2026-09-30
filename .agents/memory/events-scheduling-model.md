@@ -1,16 +1,22 @@
 ---
 name: Events scheduling model
-description: Approved boundaries for bounded recurring events, generated occurrences, tenant-local dates, pricing, and historical integrity.
+description: Owner-approved snapshot-based weekly event program, migration limits, and legacy conversion.
 ---
 
-Use source event rules plus generated occurrence rows. Recurrence supports only once, daily in a bounded range, or selected weekdays in a bounded range. A tenant-level IANA timezone, defaulting to Europe/Ljubljana, defines every product concept of “today”; stored absolute timestamps remain unchanged.
+The owner superseded the earlier, unbuilt generated-occurrence-table plan with schedules on existing items and client-side occurrence expansion from the published snapshot. Europe/Ljubljana defines program dates and “today”, regardless of the guest device timezone.
 
-**Why:** Public “today” and next-event reads must stay cheap, while hosts need reusable seasonal schedules and truthful historical records.
+**Why:** The approved request explicitly chose one additive nullable JSONB column, no default, no backfill, and no new occurrence tables. Weekly season bounds are optional.
 
-**How to apply:** Generate occurrences on save. Regeneration may update or replace only occurrences dated today or later. Occurrences before the tenant-local current date are immutable records of what actually happened. Preserve individually overridden future occurrences by stable event/date identity when per-occurrence state is introduced.
+**How to apply:** Never revive the older generated-row plan or tenant timezone schema without fresh approval. Guest program and home occurrences must use the same published data; draft editing cannot expose changed schedules.
 
-Null price means free and the guest UI localizes the free label. Non-null price text is translated with title, place, and description, using source-language fallback when a translation is absent.
+Legacy conversion happens only on a successful editor save: preserve the original eventStart, prefill its local date/start, and require the editor to supply an end time. Opening an editor does not migrate data.
 
-An optional same-day end time enables “happening now” and takes priority over the next future event in the home strip. Cross-midnight events are intentionally unsupported: enter a 22:00–01:00 party without an end time; it remains otherwise valid but never receives the “happening now” label. Supporting cross-midnight schedules requires separate approval.
+**Why:** The owner explicitly approved missing-end validation rather than inventing durations or backfilling existing entries. Old published entries remain readable without an end.
 
-Do not begin events until the e-mail sequence is complete in this order: shared webhook, invitation delivery evidence, seven-day invitations plus expired-link recovery, then smart360.info DNS records prepared for the owner.
+**How to apply:** New schedules require a same-day increasing time range. Missing camp/outside classification stays unknown; missing prices are omitted rather than described as free. Onboarding schedule fields were explicitly deferred, not the normal entry editor.
+
+The supplied program-dogodkov-dizajn HTML is binding for the guest program and detail, with real calendar dates rather than its illustrative date range.
+
+**Why:** The owner requested precise visual parity, including computed metrics as well as screenshots. Existing detail-sheet heading CSS can override less-specific program rules.
+
+**How to apply:** Verify actual rendered typography and geometry; keep fixture gradients confined to development. Registration must retain the selected occurrence date through the existing sign-in and order-note handoff.

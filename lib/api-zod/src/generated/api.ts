@@ -1874,6 +1874,16 @@ export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItem
 
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneProfileMax = 300;
 
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneLocationTextMax = 500;
+
+export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneAgeTextMax = 200;
+
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
 export const getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
@@ -2013,6 +2023,18 @@ export const GetPublicTenantResponse = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -3964,6 +3986,16 @@ export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpx
 
 export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneProfileMax = 300;
 
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneLocationTextMax = 500;
+
+export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneAgeTextMax = 200;
+
 export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemDistanceMetersMin = 0;
 
 export const getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemTravelDurationSecondsMin = 0;
@@ -4103,6 +4135,18 @@ export const GetTenantResponse = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -5120,6 +5164,16 @@ export const CreateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const createItemBodyEventScheduleDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const createItemBodyEventScheduleTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createItemBodyEventScheduleTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createItemBodyEventScheduleValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createItemBodyEventScheduleValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createItemBodyEventScheduleLocationTextMax = 500;
+
+export const createItemBodyEventScheduleAgeTextMax = 200;
+
 export const createItemBodyDistanceMetersMin = 0;
 
 export const createItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -5129,6 +5183,18 @@ export const CreateItemBody = zod.object({
   "title": zod.string().optional(),
   "body": zod.string().optional(),
   "eventStart": zod.string().optional(),
+  "eventSchedule": zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(createItemBodyEventScheduleDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(createItemBodyEventScheduleTimeFromRegExp),
+  "timeTo": zod.string().regex(createItemBodyEventScheduleTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(createItemBodyEventScheduleValidFromRegExp).optional(),
+  "validTo": zod.string().regex(createItemBodyEventScheduleValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(createItemBodyEventScheduleLocationTextMax).optional(),
+  "ageText": zod.string().max(createItemBodyEventScheduleAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).optional().describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),
   "price": zod.string().optional(),
   "priceUnit": zod.string().optional(),
   "phone": zod.string().optional(),
@@ -5165,6 +5231,16 @@ export const createItemResponseGpxRouteOneSegmentsItemMax = 400;
 export const createItemResponseGpxRouteOneSegmentsMax = 100;
 
 export const createItemResponseGpxRouteOneProfileMax = 300;
+
+export const createItemResponseEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const createItemResponseEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createItemResponseEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createItemResponseEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createItemResponseEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createItemResponseEventScheduleOneLocationTextMax = 500;
+
+export const createItemResponseEventScheduleOneAgeTextMax = 200;
 
 export const createItemResponseDistanceMetersMin = 0;
 
@@ -5204,6 +5280,18 @@ export const CreateItemResponse = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(createItemResponseEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(createItemResponseEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(createItemResponseEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(createItemResponseEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(createItemResponseEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(createItemResponseEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(createItemResponseEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -5354,6 +5442,16 @@ export const createAdminPlaceResponseGpxRouteOneSegmentsMax = 100;
 
 export const createAdminPlaceResponseGpxRouteOneProfileMax = 300;
 
+export const createAdminPlaceResponseEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const createAdminPlaceResponseEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createAdminPlaceResponseEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createAdminPlaceResponseEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createAdminPlaceResponseEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createAdminPlaceResponseEventScheduleOneLocationTextMax = 500;
+
+export const createAdminPlaceResponseEventScheduleOneAgeTextMax = 200;
+
 export const createAdminPlaceResponseDistanceMetersMin = 0;
 
 export const createAdminPlaceResponseTravelDurationSecondsMin = 0;
@@ -5392,6 +5490,18 @@ export const CreateAdminPlaceResponse = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(createAdminPlaceResponseEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(createAdminPlaceResponseEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(createAdminPlaceResponseEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(createAdminPlaceResponseEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(createAdminPlaceResponseEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(createAdminPlaceResponseEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(createAdminPlaceResponseEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -5450,6 +5560,16 @@ export const UpdateItemParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const updateItemBodyEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const updateItemBodyEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateItemBodyEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateItemBodyEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateItemBodyEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateItemBodyEventScheduleOneLocationTextMax = 500;
+
+export const updateItemBodyEventScheduleOneAgeTextMax = 200;
+
 export const updateItemBodyDistanceMetersMin = 0;
 
 export const updateItemBodyTintRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -5460,6 +5580,18 @@ export const UpdateItemBody = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish(),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(updateItemBodyEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(updateItemBodyEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(updateItemBodyEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(updateItemBodyEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(updateItemBodyEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(updateItemBodyEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(updateItemBodyEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -5497,6 +5629,16 @@ export const updateItemResponseGpxRouteOneSegmentsItemMax = 400;
 export const updateItemResponseGpxRouteOneSegmentsMax = 100;
 
 export const updateItemResponseGpxRouteOneProfileMax = 300;
+
+export const updateItemResponseEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const updateItemResponseEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateItemResponseEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateItemResponseEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateItemResponseEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateItemResponseEventScheduleOneLocationTextMax = 500;
+
+export const updateItemResponseEventScheduleOneAgeTextMax = 200;
 
 export const updateItemResponseDistanceMetersMin = 0;
 
@@ -5536,6 +5678,18 @@ export const UpdateItemResponse = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(updateItemResponseEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(updateItemResponseEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(updateItemResponseEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(updateItemResponseEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(updateItemResponseEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(updateItemResponseEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(updateItemResponseEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -5854,6 +6008,16 @@ export const duplicateItemResponseGpxRouteOneSegmentsMax = 100;
 
 export const duplicateItemResponseGpxRouteOneProfileMax = 300;
 
+export const duplicateItemResponseEventScheduleOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const duplicateItemResponseEventScheduleOneTimeFromRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const duplicateItemResponseEventScheduleOneTimeToRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const duplicateItemResponseEventScheduleOneValidFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const duplicateItemResponseEventScheduleOneValidToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const duplicateItemResponseEventScheduleOneLocationTextMax = 500;
+
+export const duplicateItemResponseEventScheduleOneAgeTextMax = 200;
+
 export const duplicateItemResponseDistanceMetersMin = 0;
 
 export const duplicateItemResponseTravelDurationSecondsMin = 0;
@@ -5892,6 +6056,18 @@ export const DuplicateItemResponse = zod.object({
   "title": zod.string().nullish(),
   "body": zod.string().nullish(),
   "eventStart": zod.string().nullish().describe('Optional event start; a dated item can make Program available in Living Guide navigation'),
+  "eventSchedule": zod.union([zod.object({
+  "type": zod.enum(['once', 'weekly']),
+  "date": zod.string().regex(duplicateItemResponseEventScheduleOneDateRegExp).optional().describe('Required for once; forbidden for weekly'),
+  "days": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).optional().describe('Required for weekly; forbidden for once'),
+  "timeFrom": zod.string().regex(duplicateItemResponseEventScheduleOneTimeFromRegExp),
+  "timeTo": zod.string().regex(duplicateItemResponseEventScheduleOneTimeToRegExp).describe('Strictly later than timeFrom on the same day'),
+  "validFrom": zod.string().regex(duplicateItemResponseEventScheduleOneValidFromRegExp).optional(),
+  "validTo": zod.string().regex(duplicateItemResponseEventScheduleOneValidToRegExp).optional().describe('Must be on or after validFrom'),
+  "locationText": zod.string().max(duplicateItemResponseEventScheduleOneLocationTextMax).optional(),
+  "ageText": zod.string().max(duplicateItemResponseEventScheduleOneAgeTextMax).optional(),
+  "inCamp": zod.boolean().optional()
+}).describe('Local Europe\/Ljubljana wall-clock schedule. Extras omitted when unknown; legacy eventStart remains readable.'),zod.null()]).optional(),
   "price": zod.string().nullish(),
   "priceUnit": zod.string().nullish(),
   "phone": zod.string().nullish(),

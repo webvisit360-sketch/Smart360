@@ -84,6 +84,7 @@ import {
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { instagramLink, viberHref } from "@/lib/contact-links";
 import {
+  bottomNavScreen,
   findDatedEventDestination as datedEventDestination,
   getLivingGuideAvailableFeatures,
   resolveLivingGuideNav,
@@ -117,6 +118,8 @@ import {
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
 import { lockDetailGesture, type DetailGestureLock } from "./detail-gesture-lock";
 import { GuestInstallCard } from "./GuestInstallCard";
+import { ProgramDetail, ProgramView } from "./LivingGuideProgram";
+import { isProgramCategory, orderPrefillNoteFor, programEventOf, signupNote } from "./living-guide-program-model";
 
 type GuestRecord = {
   unit: string;
@@ -847,6 +850,7 @@ export default function LivingGuideGuestShell({
   const [showSearch, setShowSearch] = useState(false);
     const [showLanguages, setShowLanguages] = useState(false);
   const [orderItemId, setOrderItemId] = useState<string | null>(null);
+  const [orderPrefill, setOrderPrefill] = useState<{ itemId: string; note: string } | null>(null);
   const [showOrders, setShowOrders] = useState(false);
   const [messageDraft, setMessageDraft] = useState("");
   const messagePasswordRequired = Boolean(tenant.orderPasswordConfigured);
@@ -1862,7 +1866,9 @@ export default function LivingGuideGuestShell({
     setShowSignIn(true);
   };
 
-  const requestOrder = (itemId: string) => {
+  const requestOrder = (itemId: string, prefillNote?: string) => {
+    // Keyed by item so the note survives the sign-in detour (pendingOrderItemId).
+    setOrderPrefill(typeof prefillNote === "string" && prefillNote ? { itemId, note: prefillNote } : null);
     if (messageAccessReady) {
       setOrderItemId(itemId);
       return;
@@ -2125,7 +2131,7 @@ export default function LivingGuideGuestShell({
           activeSectionKey={baseSection?.key ?? null}
           activeCategoryId={categoryContext?.category?.id ?? null}
           onNavigate={(path: string) => navigate(path, false, "tab")}
-          screen={baseScreen}
+          screen={bottomNavScreen(screen, baseScreen, categoryContext?.category, categoryContext?.section)}
         />
       )}
 
@@ -2157,6 +2163,7 @@ export default function LivingGuideGuestShell({
         return (
           <OrderSheet
             item={item}
+            initialNote={orderPrefillNoteFor(orderPrefill, item.id)}
             slug={slug}
             lang={lang as UiLanguage}
             t={t}
@@ -2166,7 +2173,7 @@ export default function LivingGuideGuestShell({
             canSubmitWithCredentials={messageAccessReady}
             credentialsRevision={credentialsRevision}
             credentialsCancelRevision={credentialsCancelRevision}
-            onClose={() => setOrderItemId(null)}
+            onClose={() => { setOrderItemId(null); setOrderPrefill(null); }}
             onOpenOrders={() => {
               setOrderItemId(null);
               setShowOrders(true);
@@ -3725,8 +3732,25 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
 
   const layout = category.layout || "";
 
+  const programSurface = isProgramCategory(category);
+  const programDetailItem =
+    activeItem && programSurface && programEventOf(activeItem) ? activeItem : null;
   let content = null;
-  if (activeItem) {
+  if (programDetailItem) {
+    content = (
+      <ProgramDetail
+        item={programDetailItem}
+        lang={lang}
+        t={t}
+        onBack={onBack}
+        onSignup={(item: any, event: any, date: string | null) =>
+          onOrderClick(item.id, signupNote(String(item.title ?? ""), date, event, lang))
+        }
+      />
+    );
+  } else if (!activeItem && programSurface && items.some((item: any) => programEventOf(item))) {
+    content = <ProgramView category={category} tenant={tenant} lang={lang} onOpenItem={onOpenItem} onBack={onBack} />;
+  } else if (activeItem) {
     if (layout === "poi") {
       content = <TemplateF item={activeItem} category={category} lang={lang} t={t} onBack={onBack} onOrderClick={onOrderClick} galleryIndex={galleryIndex} onGalleryIndex={onGalleryIndex} />;
     } else if (layout === "routes") {
@@ -3759,7 +3783,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
   return (
     <section
       ref={detailViewRef}
-      className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" ? " has-order-dock" : ""}`}
+      className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" && !programDetailItem ? " has-order-dock" : ""}`}
       onClick={(event) => {
         const target = event.target;
         if (
@@ -3771,7 +3795,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
       }}
     >
       <GpxSlugContext.Provider value={slug ?? ""}>{content}</GpxSlugContext.Provider>
-      {activeItem?.orderEnabled && layout !== "tabs" && (
+      {activeItem?.orderEnabled && layout !== "tabs" && !programDetailItem && (
         <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
       )}
     </section>

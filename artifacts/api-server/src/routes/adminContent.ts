@@ -84,6 +84,7 @@ import {
 } from "../lib/creatorEditorialTranslation";
 import { createCategoryWithTooling } from "../lib/categoryTooling";
 import { requireOperator } from "../lib/actorGate";
+import { validateEventSchedule } from "../lib/eventSchedule";
 
 /**
  * Server-side sanitization of every guest-facing string, regardless of what
@@ -845,6 +846,14 @@ router.post("/admin/categories/:id/items", async (req, res): Promise<void> => {
     res.status(400).json({ error: "GPX routes can only be set by uploading a GPX file" });
     return;
   }
+  if (req.body && Object.prototype.hasOwnProperty.call(req.body, "eventSchedule")) {
+    const schedule = validateEventSchedule(req.body.eventSchedule);
+    if (!schedule.success || schedule.data === null) {
+      res.status(400).json({ error: schedule.success ? "Za nov vnos termin ne sme biti null." : schedule.error });
+      return;
+    }
+    req.body.eventSchedule = schedule.data;
+  }
   const parsed = CreateItemBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -890,6 +899,14 @@ router.patch("/admin/items/:id", async (req, res): Promise<void> => {
   if (req.body && Object.prototype.hasOwnProperty.call(req.body, "gpxRoute")) {
     res.status(400).json({ error: "GPX routes can only be set by uploading a GPX file" });
     return;
+  }
+  if (req.body && Object.prototype.hasOwnProperty.call(req.body, "eventSchedule")) {
+    const schedule = validateEventSchedule(req.body.eventSchedule);
+    if (!schedule.success) {
+      res.status(400).json({ error: schedule.error });
+      return;
+    }
+    req.body.eventSchedule = schedule.data;
   }
   const parsed = UpdateItemBody.safeParse(req.body);
   if (!parsed.success) {
@@ -1364,6 +1381,13 @@ async function markStaleForChange(
   const changed: string[] = [];
   for (const key of Object.keys(after)) {
     if (key in before && before[key] !== after[key]) changed.push(key);
+  }
+  if (changed.includes("eventSchedule")) {
+    const previous = before["eventSchedule"] as Record<string, unknown> | null;
+    const next = after["eventSchedule"] as Record<string, unknown> | null;
+    for (const key of ["locationText", "ageText"]) {
+      if (previous?.[key] !== next?.[key]) changed.push(`eventSchedule.${key}`);
+    }
   }
   if (!changed.length) return;
   const rows = await db
