@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { SosCard, SosMapButton, SosView } from "./SosView";
 import type { SosGeolocationSource } from "./use-sos-geolocation";
 import type { SosTenant } from "./sos-model";
+import { LivingGuideSprite } from "../LivingGuideSprite";
 
 const TENANT: SosTenant = { name: "Turizem Drobež", latitude: 46.373381, longitude: 14.810827, address: "Ter 35, 3333 Ljubno ob Savinji" };
 const POS = { lat: 46.35812, lon: 14.83294 };
@@ -37,6 +38,7 @@ export default function LivingGuideSosFixture() {
   const source = useMemo(() => fakeSource(state), [state]);
   return (
     <div style={{ minHeight: "100dvh", background: "#0B1220", padding: 16 }}>
+      <LivingGuideSprite />
       <div style={{ maxWidth: 390, margin: "0 auto" }}>
         <SosCard lang={lang} onOpen={() => setOpen(true)} />
         <SosMapButton lang={lang} onOpen={() => setOpen(true)} />

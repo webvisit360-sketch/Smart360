@@ -2,6 +2,12 @@ export function LivingGuideSprite() {
   return (
     <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
       <defs>
+        <symbol id="lg-i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="8" y="8" width="12" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+        </symbol>
+        <symbol id="lg-i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 15V3m-4 4 4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+        </symbol>
         <symbol id="lg-i-srch" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
           <circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" />
         </symbol>

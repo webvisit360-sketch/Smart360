@@ -8,6 +8,10 @@ import {
 } from "./sos-model";
 import { useSosGeolocation, type SosGeolocationSource } from "./use-sos-geolocation";
 
+function SosIcon({ name }: { name: "phone" | "pin" | "copy" | "share" | "nav2" }) {
+  return <svg className="sos-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href={`#lg-i-${name}`} /></svg>;
+}
+
 export interface SosViewProps {
   tenant: SosTenant | null | undefined;
   lang: string;
@@ -110,7 +114,7 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
 
   const blocked = status.kind === "denied" || status.kind === "unsupported";
   const call = (
-    <a href="tel:112" className="call112 sticky">{"\u{1F4DE}\u00A0 "}{t.call}</a>
+    <a href="tel:112" className="call112 sticky"><SosIcon name="phone" />{"\u00A0 "}{t.call}</a>
   );
 
   let orientation: { nt: string; ns: string | null } | null = null;
@@ -135,7 +139,7 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
 
         {status.kind === "denied" && (
           <div className="seek top" role="alert">
-            <div style={{ fontSize: 18 }} aria-hidden="true">{"\u{1F4CD}"}</div>
+            <SosIcon name="pin" />
             <div>
               <div className="st">{t.deniedTitle}</div>
               <div className="ss">{t.deniedSub}</div>
@@ -147,25 +151,25 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
         )}
         {status.kind === "unsupported" && (
           <div className="seek" role="alert">
-            <div style={{ fontSize: 18 }} aria-hidden="true">{"\u{1F4CD}"}</div>
+            <SosIcon name="pin" />
             <div><div className="st">{t.unsupportedTitle}</div><div className="ss">{t.unsupportedSub}</div></div>
           </div>
         )}
         {status.kind === "acquiring" && (
           <div className="seek" role="status">
-            <div style={{ fontSize: 18 }} aria-hidden="true">{"\u{1F6F0}"}</div>
+            <SosIcon name="nav2" />
             <div><div className="st">{t.acquiringTitle}</div><div className="ss">{status.errored ? t.acquiringError : t.acquiringSub}</div></div>
           </div>
         )}
         {status.kind === "poor" && (
           <div className="seek" role="status">
-            <div style={{ fontSize: 18 }} aria-hidden="true">{"\u{1F6F0}"}</div>
+            <SosIcon name="nav2" />
             <div><div className="st">{t.poorTitle}</div><div className="ss">{t.poorSub(Math.round(status.fix.accuracy))}</div></div>
           </div>
         )}
         {status.kind === "stale" && (
           <div className="seek" role="status">
-            <div style={{ fontSize: 18 }} aria-hidden="true">{"\u{1F6F0}"}</div>
+            <SosIcon name="nav2" />
             <div><div className="st">{t.staleTitle}</div><div className="ss">{t.staleSub(ageSeconds(status.fix, now))}</div></div>
           </div>
         )}
@@ -204,7 +208,7 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
 
         {orientation && (
           <div className="near">
-            <div style={{ fontSize: 18 }} aria-hidden="true">{"\u{1F4CD}"}</div>
+            <SosIcon name="pin" />
             <div>
               <div className="nt">{orientation.nt}</div>
               {orientation.ns && <div className="ns">{orientation.ns}</div>}
@@ -217,8 +221,8 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
         {precise && (
           <>
             <div className="secrow">
-              <button type="button" className="sec" onClick={doCopy}>{"\u{1F4CB}\u00A0 "}{t.copy}</button>
-              <button type="button" className="sec" onClick={doShare}>{"\u{1F4E4}\u00A0 "}{t.share}</button>
+              <button type="button" className="sec" onClick={doCopy}><SosIcon name="copy" />{"\u00A0 "}{t.copy}</button>
+              <button type="button" className="sec" onClick={doShare}><SosIcon name="share" />{"\u00A0 "}{t.share}</button>
             </div>
             {msg && (
               <div className="sos-msg" role="status">

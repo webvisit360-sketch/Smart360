@@ -9,6 +9,8 @@
 .sos-scope button{border:none;background:none;cursor:pointer;display:block;width:100%;}
 .sos-scope a{text-decoration:none;display:block;}
 .sos-scope :focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+.sos-scope .sos-icon{display:inline-block;width:1em;height:1em;vertical-align:-.15em;flex-shrink:0;color:var(--txt);}
+.sos-scope .near > .sos-icon,.sos-scope .seek > .sos-icon{font-size:18px;}
 
 /* entry card */
 .sos-scope.soscard{background:linear-gradient(135deg,rgba(214,69,65,.16),rgba(214,69,65,.06)) var(--bg);border:1px solid rgba(214,69,65,.55);border-radius:18px;padding:16px;margin-bottom:12px;}

@@ -106,6 +106,12 @@ The moving detail sheet has square top corners. The rounded 28 px white panel, g
 
 ## Pixel-comparison raster alignment
 
+The owner's standing guide-icon rule overrides emoji shown in reference mockups: use the guide's shared line-icon set, never platform emoji glyphs.
+
+**Why:** The owner explicitly rejected device-dependent emoji rendering in SOS, even though the binding mockup contained emoji.
+
+**How to apply:** Preserve the reference layout but substitute shared SVG line icons for pictographic glyphs, including loading and error states.
+
 Record fractional screenshot origins when comparing a standalone HTML phone frame with the real application. Compare element geometry and typography first, then align only the reference's raster origin and disclose any colour-difference threshold.
 
 **Why:** A half-pixel reference-frame offset created apparent multi-percent SOS differences even where dimensions and styles matched. Global font smoothing also changed real raster output despite matching font families.
