@@ -26,3 +26,9 @@ For mocked browser checks, preserve API envelopes and canonical category keys ra
 **Why:** An array in place of the storage-usage envelope caused a false dialog crash, and an omitted category key made a valid offer placeholder appear broken.
 
 **How to apply:** Before changing application code for a fixture-only failure, compare the intercepted payload with the real response contract and report whether the defect was in the fixture or the app.
+
+Raw browser-intercepted modules bypass Vite's import rewriting and React Refresh preamble.
+
+**Why:** Source-extracted cosmetic checks failed before rendering when raw fixtures used named ReactDOM exports from Vite's CommonJS prebundle or omitted the Refresh preamble.
+
+**How to apply:** Prefer Vite-transformed fixtures. If serving raw modules through browser interception, initialize Refresh before importing real TSX components and use the prebundle's default React/ReactDOM exports. Clearly label these screenshots as isolated source-backed checks, not authenticated admin or production evidence.

@@ -966,8 +966,8 @@ export default function AdminTenantEdit() {
                 </div>}
                 {isOwner && <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border p-4">
                   <div>
-                    <Label htmlFor="tour-recording-enabled">Brezplačno snemanje virtualnega ogleda</Label>
-                    <p className="text-xs text-muted-foreground">Gostom bo na voljo po objavi sprememb.</p>
+                    <Label htmlFor="tour-recording-enabled">SNEMANJE TUR</Label>
+                    <p className="text-xs text-muted-foreground">Gostje lahko v vodniku posnamejo svojo kolesarsko, pohodniško ali tekaško turo. Vidno po objavi sprememb.</p>
                   </div>
                   <Switch id="tour-recording-enabled" checked={formData.tourRecordingEnabled}
                     onCheckedChange={(checked) => setFormData((previous) => ({ ...previous, tourRecordingEnabled: checked }))} />

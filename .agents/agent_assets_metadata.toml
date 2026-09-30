@@ -1562,3 +1562,31 @@ mtime_ms = 1790745498714
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d67d4f48-dc6a-4355-a0d2-a318bbb8fa63/62f44f96-8248-45c9-b216-3cfdcee17a32"
 storage_version_token = "1790745612677322"
 content_type = "image/png"
+
+[[outputs]]
+id = "I8RhFFde78sRDk85Jwbq4"
+uri = "file://screenshots/tour-recording-label-1100.png"
+type = "image"
+title = "Snemanje tur — namizni prikaz"
+description = "Posnetek dejanskega bloka obrazca z obstoječimi slogi v izoliranem razvojnem prikazu; ni posnetek prijavljenega admina ali produkcije."
+logical_id = "1d1abd7e-56f1-4e3e-b4b6-e517be980409"
+content_hash = "sha256:d7775246e8f1e4c4ffb613389dcd752de76a113752534e9af2fa3fd5b917a5b5"
+size = 17614
+mtime_ms = 1790788234198
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1d1abd7e-56f1-4e3e-b4b6-e517be980409/81003377-b5d4-416a-8f55-8ae8f31d25eb"
+storage_version_token = "1790788285387269"
+content_type = "image/png"
+
+[[outputs]]
+id = "5F4NADPBMUKEDKFUbbVcz"
+uri = "file://screenshots/tour-recording-label-390.png"
+type = "image"
+title = "Snemanje tur — mobilni prikaz"
+description = "Razvojni prikaz pri širini 390 px. Besedilo je preverjeno brez prelivanja."
+logical_id = "15a31d71-16e2-4f93-b599-1aef6d52ff68"
+content_hash = "sha256:c8c6bcbf6c04a0a63902f840348cfa447b130dcf90960bd944fa7c0b02fdb57b"
+size = 17465
+mtime_ms = 1790788234234
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15a31d71-16e2-4f93-b599-1aef6d52ff68/194f11e4-a50c-494f-be71-4ef3efe32d07"
+storage_version_token = "1790788287040560"
+content_type = "image/png"

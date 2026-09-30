@@ -34,7 +34,7 @@ test("publication review includes recording flag transitions but legacy snapshot
   for (const language of Object.values(on.languages)) language.tree.tourRecordingEnabled = true;
   const enabled = comparePublications(on, off);
   assert.ok(enabled.total > 0);
-  assert.ok(enabled.changed.some((label) => label.includes("Brezplačno snemanje")));
+  assert.ok(enabled.changed.some((label) => label === "SNEMANJE TUR"));
   const disabled = comparePublications(off, on);
   assert.ok(disabled.total > 0);
   assert.notEqual(enabled.token, disabled.token);
