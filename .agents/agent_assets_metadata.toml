@@ -1646,3 +1646,45 @@ mtime_ms = 1790789686778
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7e52c897-694c-4d44-93ab-026fe77cdef4/aad0a60a-5fe2-48b7-959b-a0d333790453"
 storage_version_token = "1790789751064285"
 content_type = "image/png"
+
+[[outputs]]
+id = "T8gvKN6aPB66uEmXgZPhk"
+uri = "file://screenshots/weather-home-390.png"
+type = "image"
+title = "Domov — vreme med bližnjicami in Danes"
+description = "390 px, temna tema. Dejanske komponente s testnimi podatki v razvoju; vrtiljak Danes ostaja prisoten."
+logical_id = "4ebbc403-b3e6-4586-a98a-b91f56c9934f"
+content_hash = "sha256:c207b2d762f0c3bebe3c42ac742ccbead7731215d797d8b0a786e22c55b45803"
+size = 57946
+mtime_ms = 1790791277866
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4ebbc403-b3e6-4586-a98a-b91f56c9934f/1b1b7182-2e23-4622-96c5-26972aa50bf6"
+storage_version_token = "1790791340349508"
+content_type = "image/png"
+
+[[outputs]]
+id = "6FwyBE252U5kb16mZKEGJ"
+uri = "file://screenshots/weather-tour-calm-390.png"
+type = "image"
+title = "Snemanje tur — mirno vreme"
+description = "390 px. Trenutno vreme in popoldanska verjetnost padavin pred začetkom snemanja."
+logical_id = "7347bda4-2445-4e1e-8a48-013a55667d2d"
+content_hash = "sha256:7903ec7ae81fcc109ee51cd89483c7847cb9916d0f0c8c11008fba73e9013391"
+size = 52313
+mtime_ms = 1790791159186
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7347bda4-2445-4e1e-8a48-013a55667d2d/84e83944-9587-4322-ad3f-fea4a3f4c919"
+storage_version_token = "1790791341238647"
+content_type = "image/png"
+
+[[outputs]]
+id = "jvrZUX-QVTPMfL5Sb3zD2"
+uri = "file://screenshots/weather-tour-warning-390.png"
+type = "image"
+title = "Snemanje tur — vremensko opozorilo"
+description = "390 px. Testna napoved neviht z uro in verjetnostjo padavin; jantarno opozorilo."
+logical_id = "2a99753f-9c06-45b9-8de5-27b3e58656ad"
+content_hash = "sha256:c8d189a35c70d1d50bf74c11ee419d37b052f1340bc9c9e5ef41674de279b6bd"
+size = 55713
+mtime_ms = 1790791160882
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2a99753f-9c06-45b9-8de5-27b3e58656ad/8cbf1fa2-c276-49cb-a356-521a0ed90287"
+storage_version_token = "1790791342119574"
+content_type = "image/png"

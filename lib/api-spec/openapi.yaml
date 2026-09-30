@@ -455,6 +455,27 @@ paths:
           description: Not found or unpublished
         "301":
           description: Permanently redirected to the tenant's canonical slug
+  /public/tenants/{slug}/weather:
+    get:
+      operationId: getTenantWeather
+      tags: [public]
+      summary: Current weather and forecast at the published tenant's stored location
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Weather, or null if location is unavailable or forecast cannot be retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantWeatherResponse"
+        "404":
+          description: Not found or unpublished
+        "301":
+          description: Permanently redirected to the tenant's canonical slug
   /public/tenants/{slug}/search:
     get:
       operationId: searchPublicTenant
@@ -3093,6 +3114,53 @@ paths:
           description: Thread or tenant not found
 components:
   schemas:
+    TenantWeatherResponse:
+      type: object
+      required: [weather]
+      properties:
+        weather:
+          oneOf:
+            - $ref: "#/components/schemas/TenantWeather"
+            - type: "null"
+    TenantWeather:
+      type: object
+      required: [fetchedAt, timezone, current, today, hourly]
+      properties:
+        fetchedAt: { type: string, pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$', description: ISO 8601 UTC timestamp }
+        timezone: { type: string }
+        current:
+          $ref: "#/components/schemas/TenantWeatherCurrent"
+        today:
+          $ref: "#/components/schemas/TenantWeatherToday"
+        hourly:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantWeatherHour"
+    TenantWeatherCurrent:
+      type: object
+      required: [time, temperatureC, weatherCode, isDay, windKmh]
+      properties:
+        time: { type: number, description: Epoch milliseconds }
+        temperatureC: { type: number }
+        weatherCode: { type: number }
+        isDay: { type: boolean }
+        windKmh: { type: number }
+    TenantWeatherToday:
+      type: object
+      required: [maxC, minC, precipitationProbability, sunset]
+      properties:
+        maxC: { type: number }
+        minC: { type: number }
+        precipitationProbability: { type: number }
+        sunset: { type: number, description: Epoch milliseconds }
+    TenantWeatherHour:
+      type: object
+      required: [time, temperatureC, weatherCode, precipitationProbability]
+      properties:
+        time: { type: number, description: Epoch milliseconds }
+        temperatureC: { type: number }
+        weatherCode: { type: number }
+        precipitationProbability: { type: number }
     TenantSkeletonAlignmentCounts:
       type: object
       properties:

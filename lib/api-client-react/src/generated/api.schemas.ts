@@ -5,6 +5,47 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export interface TenantWeatherCurrent {
+  /** Epoch milliseconds */
+  time: number;
+  temperatureC: number;
+  weatherCode: number;
+  isDay: boolean;
+  windKmh: number;
+}
+
+export interface TenantWeatherToday {
+  maxC: number;
+  minC: number;
+  precipitationProbability: number;
+  /** Epoch milliseconds */
+  sunset: number;
+}
+
+export interface TenantWeatherHour {
+  /** Epoch milliseconds */
+  time: number;
+  temperatureC: number;
+  weatherCode: number;
+  precipitationProbability: number;
+}
+
+export interface TenantWeather {
+  /**
+     * ISO 8601 UTC timestamp
+     * @pattern ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$
+     */
+  fetchedAt: string;
+  timezone: string;
+  current: TenantWeatherCurrent;
+  today: TenantWeatherToday;
+  hourly: TenantWeatherHour[];
+}
+
+export interface TenantWeatherResponse {
+  weather: TenantWeather | null;
+}
+
 export interface TenantSkeletonAlignmentCounts {
   sectionsUpdated: number;
   categoriesUpdated: number;

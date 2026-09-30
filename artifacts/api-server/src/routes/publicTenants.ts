@@ -3,6 +3,8 @@ import { eq } from "drizzle-orm";
 import { db, tenantsTable, tenantAliasesTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
+  GetTenantWeatherParams,
+  GetTenantWeatherResponse,
   SearchPublicTenantResponse,
 } from "@workspace/api-zod";
 import {
@@ -18,6 +20,7 @@ import { isAuthenticated } from "../lib/adminAuth";
 import { getHostResponseStats } from "../lib/hostResponseStats";
 import { readPublishedContent } from "../lib/publishedSnapshots";
 import { renderGuestServiceWorker } from "../lib/guestServiceWorker";
+import { getTenantWeatherCached } from "../lib/tenantWeather";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -361,6 +364,36 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
   res.json(payload);
+});
+
+router.get("/public/tenants/:slug/weather", async (req, res): Promise<void> => {
+  const params = GetTenantWeatherParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const { slug } = params.data;
+  const resolved = await resolveTenantBySlugOrDomain(slug, req.headers["host"] as string | undefined);
+  if (!resolved) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // Weather is runtime data, never snapshot content or the cached tenant row.
+  const [tenant] = await db.select({
+    id: tenantsTable.id, slug: tenantsTable.slug, isPublished: tenantsTable.isPublished,
+    latitude: tenantsTable.latitude, longitude: tenantsTable.longitude,
+  }).from(tenantsTable).where(eq(tenantsTable.id, resolved.id));
+  if (!tenant?.isPublished) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (tenant.slug !== slug && await isHistoricalSlugForTenant(slug, tenant.id)) {
+    redirectAlias(req, res, slug, tenant.slug, "no-store");
+    return;
+  }
+  const weather = await getTenantWeatherCached(tenant.id, tenant.latitude, tenant.longitude);
+  res.set("Cache-Control", "no-store");
+  res.json(GetTenantWeatherResponse.parse({ weather }));
 });
 
 router.get("/public/tenants/:slug/search", async (req, res): Promise<void> => {

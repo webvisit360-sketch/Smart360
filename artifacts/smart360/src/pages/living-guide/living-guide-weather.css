@@ -1,0 +1,82 @@
+[data-living-guide] .lgw-card {
+  position: relative;
+  margin: 14px 0 4px;
+  padding: 16px 16px 26px;
+  border-radius: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--tx);
+  animation: lgw-in .6s var(--ease) both;
+}
+@keyframes lgw-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+[data-living-guide] .lgw-now { display: flex; align-items: center; gap: 12px; }
+[data-living-guide] .lgw-now-icon { width: 44px; height: 44px; flex: none; color: var(--acc); }
+[data-living-guide] .lgw-now-temp {
+  font-size: 40px; line-height: 1; font-weight: 750; letter-spacing: -.045em;
+  font-variant-numeric: tabular-nums;
+}
+[data-living-guide] .lgw-now-copy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+[data-living-guide] .lgw-kicker {
+  margin: 0; color: var(--tx2); font-size: 10px; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+}
+[data-living-guide] .lgw-now-copy b { font-size: 15px; font-weight: 720; letter-spacing: -.01em; }
+[data-living-guide] .lgw-range { color: var(--tx2); font-size: 12px; font-variant-numeric: tabular-nums; }
+[data-living-guide] .lgw-range i { font-style: normal; opacity: .6; }
+
+[data-living-guide] .lgw-chips { list-style: none; display: flex; gap: 6px; margin: 14px 0 0; padding: 0; flex-wrap: wrap; }
+[data-living-guide] .lgw-chips li {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px 5px 8px; border-radius: 999px;
+  background: var(--card2); border: 1px solid var(--line);
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+[data-living-guide] .lgw-chips svg { width: 14px; height: 14px; color: var(--tx2); }
+
+[data-living-guide] .lgw-slots {
+  list-style: none; margin: 14px 0 0; padding: 12px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px;
+}
+[data-living-guide] .lgw-slots li { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+[data-living-guide] .lgw-slot-time { color: var(--tx2); font-size: 10.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
+[data-living-guide] .lgw-slots svg { width: 22px; height: 22px; color: var(--tx); opacity: .85; }
+[data-living-guide] .lgw-slots b { font-size: 13px; font-weight: 740; font-variant-numeric: tabular-nums; }
+
+[data-living-guide] .lgw-attrib {
+  position: absolute; right: 14px; bottom: 8px;
+  font-size: 9.5px; color: var(--tx2); opacity: .6; letter-spacing: .02em;
+}
+
+[data-living-guide] .lgw-strip {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; row-gap: 2px;
+  margin: 0 0 10px; padding: 9px 11px;
+  border-radius: 14px; background: var(--card2); border: 1px solid var(--line);
+  color: var(--tx2); font-size: 12.5px; line-height: 1.3;
+}
+[data-living-guide] .lgw-strip svg { width: 18px; height: 18px; color: var(--acc); flex: none; }
+[data-living-guide] .lgw-strip b { color: var(--tx); font-weight: 760; font-variant-numeric: tabular-nums; }
+[data-living-guide] .lgw-strip span:first-of-type { color: var(--tx); font-weight: 620; }
+[data-living-guide] .lgw-strip > * { white-space: nowrap; }
+[data-living-guide] .lgw-strip-rain { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; font-variant-numeric: tabular-nums; }
+[data-living-guide] .lgw-strip .lgw-strip-rain svg { width: 13px; height: 13px; color: var(--tx2); }
+
+[data-living-guide] .lgw-warn {
+  display: flex; gap: 11px; align-items: flex-start;
+  margin: 0 0 10px; padding: 11px 13px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--warm) 14%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--warm) 45%, transparent);
+  color: var(--tx);
+}
+[data-living-guide] .lgw-warn-icon {
+  width: 30px; height: 30px; flex: none; border-radius: 10px;
+  display: grid; place-items: center; background: var(--warm); color: #231803;
+}
+[data-living-guide] .lgw-warn-icon svg { width: 17px; height: 17px; }
+[data-living-guide] .lgw-warn b { display: block; font-size: 13.5px; font-weight: 760; }
+[data-living-guide] .lgw-warn span { display: block; margin-top: 1px; color: var(--tx2); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.lgw-fixture { padding: 18px 14px 60px; max-width: 430px; margin: 0 auto; display: grid; gap: 16px; }
+.lgw-fixture-note { color: var(--tx2); font-size: 11px; margin: 0; }

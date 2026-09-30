@@ -2084,6 +2084,43 @@ export const GetPublicTenantResponse = zod.object({
 
 
 /**
+ * @summary Current weather and forecast at the published tenant's stored location
+ */
+export const GetTenantWeatherParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const getTenantWeatherResponseWeatherOneFetchedAtRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$');
+
+
+export const GetTenantWeatherResponse = zod.object({
+  "weather": zod.union([zod.object({
+  "fetchedAt": zod.string().regex(getTenantWeatherResponseWeatherOneFetchedAtRegExp).describe('ISO 8601 UTC timestamp'),
+  "timezone": zod.string(),
+  "current": zod.object({
+  "time": zod.number().describe('Epoch milliseconds'),
+  "temperatureC": zod.number(),
+  "weatherCode": zod.number(),
+  "isDay": zod.boolean(),
+  "windKmh": zod.number()
+}),
+  "today": zod.object({
+  "maxC": zod.number(),
+  "minC": zod.number(),
+  "precipitationProbability": zod.number(),
+  "sunset": zod.number().describe('Epoch milliseconds')
+}),
+  "hourly": zod.array(zod.object({
+  "time": zod.number().describe('Epoch milliseconds'),
+  "temperatureC": zod.number(),
+  "weatherCode": zod.number(),
+  "precipitationProbability": zod.number()
+}))
+}),zod.null()])
+})
+
+
+/**
  * @summary Full-text search across a tenant's visible content
  */
 export const SearchPublicTenantParams = zod.object({

@@ -64,3 +64,4 @@
 - [Host form draft authority](host-form-draft-authority.md) — host content directly edits the shared draft; on submission Okolica names create unpublished ordinary drafts, not Creator proposals.
 - [Skeleton category merges](skeleton-category-merges.md) — dedupe original normalized names without resetting host metadata; historical creation age cannot be inferred from xmin.
 - [Operator draft boundary](operator-draft-boundary.md) — hosts cannot clear operator drafts; bootstrap once, attribute privileged host writes, and preserve independent child trash.
+- [Runtime weather](weather-runtime-boundary.md) — Living Guide only, outside snapshots; process-local cache does not guarantee a shared quota across replicas or restarts.

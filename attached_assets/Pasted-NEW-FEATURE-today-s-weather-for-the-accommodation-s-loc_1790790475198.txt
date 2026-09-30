@@ -1,0 +1,26 @@
+NEW FEATURE: today's weather for the accommodation's location. Build in dev. Report and STOP. No publication.
+
+DESIGN
+The owner approved a mock: a weather card on the Living Guide Domov tab, inserted BETWEEN the quick-action tiles (Obvestila/Sporočila/Zemljevid) and the "Danes" section. Nothing else on Domov moves or is removed — the "Danes" carousel stays exactly as is. Card contents: current temperature with weather icon, short description, today's max/min, three small chips (precipitation probability %, wind km/h, sunset time), a row of six 2-hour slots (time, icon, temp) up to late evening, and a small muted "Open-Meteo" attribution bottom-right. Styling follows the existing dark Living Guide card language.
+
+DATA SOURCE & ARCHITECTURE
+- Open-Meteo forecast API (no API key), using the TENANT'S stored coordinates. If the tenant has no coordinates, no card — silently.
+- Server-side cached proxy, NOT client-side calls to Open-Meteo: our API fetches per tenant at most once per 30 minutes (cache with TTL), guests receive the cached payload from our server. Guests' IPs must never reach the third party.
+- Failure policy per our standing rule: if the upstream fetch fails and the cache is older than 3 hours, the card DISAPPEARS entirely — never show stale data as fresh, never show an error to guests. Log the failure reason server-side with the same categorized, redacted logging as translations/email.
+- Weather is runtime data, independent of the publish snapshot (like distances rendering). No schema changes expected; if any prove necessary, stop and ask with the ritual.
+
+LOCALIZATION
+Map WMO weather codes to short descriptions in a fixed in-code dictionary for SL/EN/DE/IT ("Delno oblačno" / "Partly cloudy" / "Teilweise bewölkt" / "Parzialmente nuvoloso" etc.). Do NOT route these through the translation pipeline. Times and units per existing guide locale conventions.
+
+TOURS INTEGRATION (second approved mock)
+- On the "Snemanje tur" tab and on GPX entries above "Začni turo": a calm one-line strip — icon, current temp, description, afternoon precipitation probability.
+- WARNING state: when the forecast for the next ~6 hours contains thunderstorm WMO codes or heavy-rain probability ≥ 60 %, show an amber warning box (our warning color) above the start button: "Popoldne so napovedane nevihte." + a second line with the hour and probability (localized). Amber is used strictly per CGP as a warning.
+- The strip/warning uses the same cached tenant forecast — no extra upstream calls.
+
+SCOPE
+Living Guide only (like tour recording); state plainly that the legacy/Swipe interface is not covered.
+
+VERIFY
+Tests: WMO→description mapping for all four languages; cache TTL honored (second request within TTL hits cache); upstream failure with fresh cache → card shown; failure with stale cache → card absent and failure logged; warning threshold logic (thunderstorm code, 60 % rain, and a calm day that must NOT warn). Screenshots at 390 px: Domov with the card between tiles and "Danes" (carousel intact), the calm strip on Snemanje tur, and the warning state.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

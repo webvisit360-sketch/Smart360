@@ -33,6 +33,9 @@ const queryClient = new QueryClient();
 const LivingGuideTokensPage = import.meta.env.DEV
   ? lazy(() => import('@/pages/living-guide/LivingGuideTokensPage'))
   : null;
+const LivingGuideWeatherFixture = import.meta.env.DEV
+  ? lazy(() => import('@/pages/living-guide/LivingGuideWeatherFixture'))
+  : null;
 const LivingGuideGuestShell = lazy(
   () => import('@/pages/living-guide/LivingGuideGuestShell'),
 );
@@ -308,6 +311,14 @@ function Router() {
           <Route path="/__living-guide/tokens">
             <Suspense fallback={null}>
               <LivingGuideTokensPage />
+            </Suspense>
+          </Route>
+        )}
+
+        {LivingGuideWeatherFixture && (
+          <Route path="/__weather-fixture/*?">
+            <Suspense fallback={null}>
+              <LivingGuideWeatherFixture />
             </Suspense>
           </Route>
         )}

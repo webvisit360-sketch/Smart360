@@ -160,6 +160,7 @@ import type {
   TenantPublicationPreview,
   TenantSkeletonAlignmentResult,
   TenantUpdate,
+  TenantWeatherResponse,
   Translation,
   TranslationEntry,
   TranslationExport,
@@ -2183,6 +2184,83 @@ export function useGetPublicTenant<TData = Awaited<ReturnType<typeof getPublicTe
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPublicTenantQueryOptions(slug,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetTenantWeatherUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/tenants/${slug}/weather`
+}
+
+/**
+ * @summary Current weather and forecast at the published tenant's stored location
+ */
+export const getTenantWeather = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<TenantWeatherResponse> => {
+
+  return customFetch<TenantWeatherResponse>(getGetTenantWeatherUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTenantWeatherQueryKey = (slug: string,) => {
+    return [
+    `/api/public/tenants/${slug}/weather`
+    ] as const;
+    }
+
+
+export const getGetTenantWeatherQueryOptions = <TData = Awaited<ReturnType<typeof getTenantWeather>>, TError = ErrorType<void>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantWeather>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantWeatherQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantWeather>>> = ({ signal }) => getTenantWeather(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantWeather>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantWeatherQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantWeather>>>
+export type GetTenantWeatherQueryError = ErrorType<void>
+
+
+/**
+ * @summary Current weather and forecast at the published tenant's stored location
+ */
+
+export function useGetTenantWeather<TData = Awaited<ReturnType<typeof getTenantWeather>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantWeather>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantWeatherQueryOptions(slug,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

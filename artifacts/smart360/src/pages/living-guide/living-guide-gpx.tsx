@@ -15,6 +15,7 @@ import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
 import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration, tourSegments } from "./living-guide-live-tour";
 import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import "./living-guide-gpx.css";
+import { TourWeatherStrip } from "./living-guide-weather";
 
 const ROUTE_COLOR = "#157347";
 /** Recorded path uses the existing CGP ink token, not a new colour. */
@@ -554,6 +555,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         overlay={status && status !== "finished" ? <LiveTourOverlay metrics={tour.metrics} status={status} t={t} wakeStatus={tour.wakeStatus} platform={tour.platform} /> : null}
         profileStrip={fullscreen && <ElevationProfile route={route} t={t} projection={projection} compact />}
       />
+      {lg && status === null && <TourWeatherStrip />}
       <LiveTourPanel
         t={t}
         status={status}

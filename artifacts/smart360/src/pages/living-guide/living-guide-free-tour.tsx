@@ -11,6 +11,7 @@ import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration 
 import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import { RecordedElevationProfile, RouteMap } from "./living-guide-gpx";
 import "./living-guide-free-tour.css";
+import { TourWeatherStrip } from "./living-guide-weather";
 
 import { FreeTourAscent, FreeTourIntro, FreeTourOmitted, formatAscent, type FreeTourActivity } from "./living-guide-free-tour-view";
 
@@ -72,6 +73,7 @@ export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTrans
             : <p>{t("UI.lg.freeTour.intro")}</p>}
         </div>
       </header>
+      {!status && <TourWeatherStrip />}
       {!status && <FreeTourIntro t={t} activity={chosen} onActivity={setChosen} onStart={() => startWith(chosen)} />}
       <TourProfileControl t={t} activity={activity} tourActive={tourActive} controller={profile} />
       {status && (

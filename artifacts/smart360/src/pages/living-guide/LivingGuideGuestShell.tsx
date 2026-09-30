@@ -30,6 +30,8 @@ import {
 import { buildGuestPath } from "../guest/guest-url";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
+import { WeatherCard, WeatherProvider } from "./living-guide-weather";
+import type { TenantWeather } from "@workspace/api-client-react";
 import { EXPLORE_RECORDING_TAB_KEY, exploreCategoryChips, recordingTabLabel } from "./living-guide-explore-tabs";
 
 const GpxSlugContext = createContext("");
@@ -653,6 +655,7 @@ export default function LivingGuideGuestShell({
   adminFullTree = false,
   onLanguageChange,
   onReady,
+  devWeather,
 }: {
   tenant: any;
   slug: string;
@@ -660,6 +663,8 @@ export default function LivingGuideGuestShell({
   adminFullTree?: boolean;
   onLanguageChange: (lang: string) => void;
   onReady?: () => void;
+  /** Dev fixture only: deterministic weather, ignored in production builds. */
+  devWeather?: TenantWeather | null;
 }) {
   const [location, setLocation] = useLocation();
   tenant = useMemo(
@@ -1882,6 +1887,7 @@ export default function LivingGuideGuestShell({
   const notices = visible(tenant?.notices);
 
   return (
+    <WeatherProvider slug={slug} lang={lang} override={import.meta.env.DEV ? devWeather : undefined}>
     <div
       ref={rootRef}
       className="lg2-app notranslate"
@@ -2213,6 +2219,7 @@ export default function LivingGuideGuestShell({
         />
       )}
     </div>
+    </WeatherProvider>
   );
 }
 
@@ -4587,6 +4594,8 @@ function HomeView({
             </button>
           )}
         </div>
+
+        <WeatherCard />
 
         {visibleDanesItems.length > 0 && (
           <>
