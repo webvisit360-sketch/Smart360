@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — dizajn programa dogodkov</title>
+<style>
+  :root{
+    --bg:#0B1220; --card:#121B2B; --card2:#0F1826; --line:#1E2A3D;
+    --txt:#F2F5F9; --muted:#8E9AAC; --amber:#F2B135; --green:#2E7D4F; --green2:#3E9663;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#E9ECEF;padding:24px 12px;display:flex;flex-wrap:wrap;gap:32px;justify-content:center;}
+  h2.cap{width:100%;text-align:center;font-size:15px;color:#5a6472;font-weight:600;margin-bottom:-14px;}
+  .phone{width:390px;background:var(--bg);border-radius:30px;padding:20px 16px 26px;box-shadow:0 12px 40px rgba(0,0,0,.28);}
+  .small{font-size:12px;letter-spacing:.12em;color:var(--amber);font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+  .h1{color:var(--txt);font-size:26px;font-weight:800;margin-bottom:14px;}
+  .caption{color:#96a1b3;font-size:12px;text-align:center;margin-top:14px;line-height:1.5;}
+
+  /* tedenski trak */
+  .weeknav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .weeknav .rng{color:var(--txt);font-weight:800;font-size:15px;}
+  .weeknav .ar{color:var(--muted);font-size:18px;padding:4px 10px;}
+  .week{display:flex;gap:6px;margin-bottom:14px;}
+  .day{flex:1;text-align:center;padding:8px 0 6px;border-radius:14px;}
+  .day .dn{color:var(--muted);font-size:11px;font-weight:700;text-transform:lowercase;}
+  .day .dd{color:var(--txt);font-size:15px;font-weight:800;margin-top:2px;}
+  .day .dot{width:4px;height:4px;border-radius:50%;background:var(--amber);margin:5px auto 0;}
+  .day .nodot{width:4px;height:4px;margin:5px auto 0;}
+  .day.sel{background:var(--amber);}
+  .day.sel .dn,.day.sel .dd{color:#14243C;}
+  .day.sel .dot{background:#14243C;}
+
+  /* filtri */
+  .filters{display:flex;gap:8px;margin-bottom:14px;}
+  .f{border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;}
+  .f.on{background:var(--txt);color:#14243C;}
+  .f.off{background:var(--card);color:var(--muted);border:1px solid var(--line);}
+
+  /* kartice dogodkov */
+  .ev{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px;align-items:center;}
+  .ev .th{width:64px;height:64px;border-radius:12px;flex-shrink:0;}
+  .t1{background:linear-gradient(150deg,#e0b269,#8a6a35);}
+  .t2{background:linear-gradient(150deg,#7fb2df,#3d6a94);}
+  .t3{background:linear-gradient(150deg,#8fc98f,#3f7a4a);}
+  .t4{background:linear-gradient(150deg,#d98fb0,#8a4a68);}
+  .ev .mid{flex:1;min-width:0;}
+  .ev .time{color:var(--amber);font-weight:800;font-size:13px;}
+  .ev .name{color:var(--txt);font-weight:800;font-size:16px;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .badge{display:inline-block;font-size:11px;font-weight:800;border-radius:8px;padding:3px 8px;}
+  .b-in{background:var(--green);color:#fff;}
+  .b-out{background:transparent;color:var(--amber);border:1px solid var(--amber);}
+  .rep{color:var(--muted);font-size:11px;margin-left:6px;}
+
+  /* detajl */
+  .hero{height:170px;border-radius:20px;background:linear-gradient(160deg,#e0b269 0%,#9a7a3d 55%,#4a3a20 100%);position:relative;overflow:hidden;margin-bottom:14px;}
+  .hero .sh{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(5,10,18,.85));}
+  .hero .ht{position:absolute;left:14px;bottom:12px;color:#fff;font-size:24px;font-weight:800;}
+  .hero .back{position:absolute;top:12px;left:12px;background:rgba(15,24,38,.7);color:#fff;border-radius:12px;padding:6px 11px;font-weight:700;}
+  .rowb{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+  .timecard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;color:var(--txt);font-weight:800;font-size:15px;}
+  .timecard span{color:var(--muted);font-weight:600;font-size:12px;display:block;}
+  .days{display:flex;gap:6px;margin-bottom:14px;}
+  .dpill{border-radius:10px;padding:6px 0;flex:1;text-align:center;font-size:12px;font-weight:800;}
+  .dp-on{background:rgba(242,177,53,.15);border:1px solid var(--amber);color:var(--amber);}
+  .dp-off{background:var(--card);border:1px solid var(--line);color:#5f6b7d;}
+  .desc{color:#c6cfdb;font-size:14px;line-height:1.55;margin-bottom:14px;}
+  .meta{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:4px 16px;margin-bottom:14px;}
+  .mrow{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);}
+  .mrow:last-child{border-bottom:none;}
+  .mk{color:var(--muted);font-size:13px;font-weight:600;}
+  .mv{color:var(--txt);font-size:14px;font-weight:700;}
+  .cta{background:var(--green);color:#fff;text-align:center;font-weight:800;font-size:15px;border-radius:14px;padding:14px;}
+</style>
+</head>
+<body>
+
+<h2 class="cap">1 · Program — tedenski koledar z dnevi, filtroma in karticami dneva</h2>
+<div class="phone">
+  <div class="small">Camping Menina</div>
+  <div class="h1">Program</div>
+
+  <div class="weeknav">
+    <div class="ar">&#9664;</div>
+    <div class="rng">18.–24. avgust</div>
+    <div class="ar">&#9654;</div>
+  </div>
+
+  <div class="week">
+    <div class="day"><div class="dn">to</div><div class="dd">18</div><div class="dot"></div></div>
+    <div class="day"><div class="dn">sr</div><div class="dd">19</div><div class="dot"></div></div>
+    <div class="day sel"><div class="dn">če</div><div class="dd">20</div><div class="dot"></div></div>
+    <div class="day"><div class="dn">pe</div><div class="dd">21</div><div class="dot"></div></div>
+    <div class="day"><div class="dn">so</div><div class="dd">22</div><div class="dot"></div></div>
+    <div class="day"><div class="dn">ne</div><div class="dd">23</div><div class="dot"></div></div>
+    <div class="day"><div class="dn">po</div><div class="dd">24</div><div class="nodot"></div></div>
+  </div>
+
+  <div class="filters">
+    <div class="f on">Vse</div>
+    <div class="f off">V kampu</div>
+    <div class="f off">V okolici</div>
+  </div>
+
+  <div class="ev">
+    <div class="th t1"></div>
+    <div class="mid">
+      <div class="time">9.00–10.00</div>
+      <div class="name">Jutranja joga</div>
+      <span class="badge b-in">V kampu</span><span class="rep">&#8635; čet–ned</span>
+    </div>
+  </div>
+
+  <div class="ev">
+    <div class="th t2"></div>
+    <div class="mid">
+      <div class="time">9.00–10.30</div>
+      <div class="name">Otroški klub</div>
+      <span class="badge b-in">V kampu</span><span class="rep">&#8635; vsak dan</span>
+    </div>
+  </div>
+
+  <div class="ev">
+    <div class="th t3"></div>
+    <div class="mid">
+      <div class="time">10.00–15.00</div>
+      <div class="name">Vodena kolesarska tura</div>
+      <span class="badge b-out">V okolici</span>
+    </div>
+  </div>
+
+  <div class="ev">
+    <div class="th t4"></div>
+    <div class="mid">
+      <div class="time">19.00–21.30</div>
+      <div class="name">Degustacija piva</div>
+      <span class="badge b-in">V kampu</span><span class="rep">18+</span>
+    </div>
+  </div>
+
+  <div class="caption">Pika pod dnevom = ta dan ima program. Ponavljajoči se dogodki so označeni z &#8635;.<br>Do Programa: kategorija Dogodki in »Danes → več« na Domov.</div>
+</div>
+
+<h2 class="cap">2 · Detajl dogodka — ponavljanje, čas od–do in okenca lokacija/starost/cena</h2>
+<div class="phone">
+  <div class="hero">
+    <div class="sh"></div>
+    <div class="back">&#8592;</div>
+    <div class="ht">Jutranja joga</div>
+  </div>
+
+  <div class="rowb">
+    <div class="timecard"><span>Ura</span>9.00–10.00</div>
+    <div class="timecard" style="flex:1;"><span>Kje</span>Healthy Corner</div>
+    <span class="badge b-in" style="align-self:flex-start;margin-top:4px;">V kampu</span>
+  </div>
+
+  <div class="days">
+    <div class="dpill dp-off">pon</div>
+    <div class="dpill dp-off">tor</div>
+    <div class="dpill dp-off">sre</div>
+    <div class="dpill dp-on">čet</div>
+    <div class="dpill dp-on">pet</div>
+    <div class="dpill dp-on">sob</div>
+    <div class="dpill dp-on">ned</div>
+  </div>
+
+  <div class="desc">Začnite svoj dan umirjeno, sproščeno in povezano s svojim telesom. Dobrodošli ste vsi — predhodno znanje ni potrebno.</div>
+
+  <div class="meta">
+    <div class="mrow"><div class="mk">Lokacija</div><div class="mv">Healthy Corner — Kamp Menina</div></div>
+    <div class="mrow"><div class="mk">Starost</div><div class="mv">Za vse</div></div>
+    <div class="mrow"><div class="mk">Cena</div><div class="mv">10 € / osebo</div></div>
+  </div>
+
+  <div class="cta">Prijava prek sporočil</div>
+
+  <div class="caption">Vrstica dni pove ponavljanje na pogled. Gumb za prijavo se pokaže samo,<br>če gostitelj pri dogodku vklopi naročanje — prijava pristane med Sporočili.</div>
+</div>
+
+</body>
+</html>

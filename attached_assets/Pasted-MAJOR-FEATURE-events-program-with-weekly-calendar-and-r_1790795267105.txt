@@ -1,0 +1,30 @@
+MAJOR FEATURE: events program with weekly calendar and recurrence. The attached HTML (program-dogodkov-dizajn.html) is the BINDING visual reference approved by the owner. Build in dev. Report and STOP. No publication.
+
+WHY
+Camps run daily animation programs (reference case: Camping Menina — morning yoga Thu–Sun, kids' club daily, tastings). Today an event is an entry with only eventStart; hosts would need one entry per occurrence. We need recurring events, a time range, and a weekly calendar view.
+
+DATA MODEL (schema ritual applies)
+Prefer ONE additive nullable jsonb column on items, e.g. event_schedule, following the gpx_route pattern — no backfill, no default. It carries:
+- type: "once" (single date) or "weekly" (set of weekdays)
+- timeFrom / timeTo (HH:MM, Europe/Ljubljana)
+- for weekly: days [mon..sun], optional season validFrom/validTo (dates)
+- optional structured extras: locationText, ageText, inCamp (boolean: true = "V kampu", false = "V okolici")
+Existing eventStart stays readable for old data; the editor migrates an entry to event_schedule on first edit (report exactly how). Validation server-side (shape, time order, at least one day for weekly). Propose the exact SQL and go through the full ritual (Publish carriage, verification SELECTs, conditional operator SQL) BEFORE implementing — stop and ask as usual.
+
+ADMIN EDITING
+In the entry editor, when the entry belongs to the events section (or has a schedule), a "Termin" block per the reference semantics: choice Enkratni dogodek (date picker) / Tedenski (seven day toggles + optional season range), time from–to, location text, age text, V kampu/V okolici switch. Draft-based, orange publish button, publish-dialog line for changed schedules. Per the permission matrix these are entry fields — hosts may edit them.
+
+GUEST PROGRAM VIEW (Living Guide only; match the reference precisely)
+- Reached from the Dogodki category and from "Danes → več" on Domov.
+- Week strip: range label with arrows, seven day cells (lowercase two-letter day names, date), amber selected cell, a small dot under days that have at least one occurrence, no dot otherwise.
+- Filter chips: Vse / V kampu / V okolici.
+- Day list: cards with thumbnail, amber time range, title, badge (green filled "V kampu" / amber outlined "V okolici"), recurrence hint "↺ čet–ned" or "↺ vsak dan", and age hint like "18+" when set.
+- Detail: hero with title, time+place cards, badge, the seven-day pill row showing recurrence at a glance, description, meta box (Lokacija / Starost / Cena — rows only for filled fields), and a green "Prijava prek sporočil" button ONLY when the entry has ordering enabled — the sign-up lands in the existing messages/orders flow with the event name and selected date prefilled.
+- Occurrences are computed client-side from the published snapshot's schedules (respect season ranges and Europe/Ljubljana). Guests never see draft schedules (Zakon 1).
+- Titles/descriptions localized through the EXISTING translation pipeline like any entry; day names, "V kampu/V okolici", "vsak dan" and UI labels localized in code SL/EN/DE/IT.
+- The "Danes" carousel on Domov keeps working and now includes today's occurrences of weekly events, not only one-off eventStart dates.
+
+VERIFY
+Tests: occurrence expansion (weekly with season, once, day dots, "vsak dan" detection), timezone edges (event today at 00:05), filters, badge logic, snapshot isolation, old eventStart entries still render. Screenshots at 390 px side by side with the reference: week view (selected day with events), filtered view, detail with recurrence pills. State plainly what is deferred (e.g. host onboarding form fields for schedules) so nothing is silently dropped.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
