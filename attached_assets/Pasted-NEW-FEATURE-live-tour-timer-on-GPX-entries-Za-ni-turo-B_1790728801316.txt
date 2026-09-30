@@ -1,0 +1,24 @@
+NEW FEATURE: live tour timer on GPX entries ("Začni turo"). Build in dev. Report and STOP. No publication.
+
+WHY
+Guests riding/hiking a route from the guide want a real net tour time, like Strava: time runs while moving, auto-pauses while standing, and the result can be exported.
+
+BEHAVIOR
+1. On a guest entry with a GPX track, next to the existing map: a "Začni turo" button (localized SL/EN/DE/IT like other guide labels).
+2. On start: request geolocation (existing permission flow) AND a Screen Wake Lock so the phone stays awake during an active tour; release it on stop/finish. If Wake Lock is unavailable, show a short localized notice telling the guest to keep the screen on.
+3. Timer with AUTO-PAUSE: when the user stops, mark the stop point; while they remain within a 30 m radius of it, the net timer pauses and pause time accumulates. The moment they exit the 30 m circle, the net timer resumes and a new reference point logic applies. Use the geolocation accuracy value to ignore GPS jitter (a reading with accuracy worse than the threshold must not trigger resume). Track: net moving time, total paused time, elapsed wall time, distance actually covered (from the user's own positions, not the route length).
+4. Manual controls: pause/resume and "Zaključi turo". State must survive a page reload mid-tour (keep it in memory with a localStorage backup, all reads/writes in try/catch — recovery is best-effort, never a crash).
+5. FULLSCREEN MAP: a control to expand the tour map fullscreen; while fullscreen, a compact overlay stays pinned on the map showing the running NET TIME (plus small paused-time line), in CGP style, readable over any map background. Exit fullscreen returns to the normal entry view.
+6. FINISH → RESULT: a summary view: net time, pause time, total time, distance covered, and the route map with the user's traveled path drawn over the planned track. Export options: (a) download a summary IMAGE of this card (client-side render), (b) download the user's own recorded track as a GPX file (client-side generated). 
+7. PRIVACY: the guest's positions, times and results are processed and stored ONLY on the device (memory/localStorage). Nothing is sent to the server. State this in code comments and in the report.
+
+CONSTRAINTS
+- No new tiles source, no external services; reuse the shared MapLibre/OpenFreeMap config.
+- No schema changes expected (server stores nothing new); if any turn out needed, stop and ask.
+- CGP tokens throughout; no new colors.
+- Battery: use a sensible geolocation watch configuration; do not poll faster than needed.
+
+VERIFY
+Unit tests for the auto-pause state machine (moving→stopped→within 30 m→exit resumes; jitter with poor accuracy does not resume; pause accumulation math). Browser test with simulated geolocation sequence driving the full flow: start → move → stop → auto-pause → move → resume → finish → summary numbers correct → both exports produced. Screenshots: entry with "Začni turo", fullscreen map with the timer overlay, result card. State plainly what only a real outdoor device test can prove.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

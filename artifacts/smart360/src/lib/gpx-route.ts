@@ -26,7 +26,7 @@ export function boundedSegments(route: GpxRoute): Array<Array<[number, number]>>
   ).filter((s) => s.length > 0);
 }
 
-export type ProfilePoint = { distanceKm: number; elevationM: number | null };
+export type ProfilePoint = { distanceKm: number; elevationM: number | null; segment: number };
 
 /** Profile with a null break between segments so the chart shows gaps. */
 export function boundedProfile(route: GpxRoute): ProfilePoint[] {
@@ -35,12 +35,15 @@ export function boundedProfile(route: GpxRoute): ProfilePoint[] {
   const out: ProfilePoint[] = [];
   let lastSegment: number | null = null;
   src.forEach((p, i) => {
-    if (i !== 0 && i !== src.length - 1 && i % stride !== 0) return;
+    // Retain both endpoints of each independently sampled GPX segment. Otherwise
+    // stride selection may drop the segment transition and chart gap entirely.
+    if (i !== 0 && i !== src.length - 1 && i % stride !== 0 &&
+        src[i - 1]?.segment === p.segment && src[i + 1]?.segment === p.segment) return;
     if (lastSegment !== null && p.segment !== lastSegment) {
-      out.push({ distanceKm: p.distanceKm, elevationM: null });
+      out.push({ distanceKm: p.distanceKm, elevationM: null, segment: -1 });
     }
     lastSegment = p.segment;
-    out.push({ distanceKm: p.distanceKm, elevationM: p.elevationM ?? null });
+    out.push({ distanceKm: p.distanceKm, elevationM: p.elevationM ?? null, segment: p.segment });
   });
   return out;
 }

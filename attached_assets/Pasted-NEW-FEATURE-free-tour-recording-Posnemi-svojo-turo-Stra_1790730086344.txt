@@ -1,0 +1,18 @@
+NEW FEATURE: free tour recording ("Posnemi svojo turo") — Strava-like recording of a NEW route, without a pre-loaded GPX. Builds on the live tour timer. Build in dev. Report and STOP. No publication.
+
+PLACEMENT & CONTROL
+- New tenant setting on the Splošno tab: "Snemanje tur" (on/off, default OFF). Per the permission matrix this is operator-only. Schema: one boolean column on tenants — follow the full schema ritual (exact SQL, Publish carriage, verification SELECTs, conditional operator SQL).
+- When enabled, guests see a "Posnemi svojo turo" action card at the top of the Okolica tab (CGP style, localized SL/EN/DE/IT).
+
+RECORDING FLOW
+1. Start: choose activity (Kolesarjenje / Pohodništvo — affects only labels and the time-estimate formula context), then the same machinery as the route timer: geolocation watch, Wake Lock with the existing indicator/instruction fallback, auto-pause with the 30 m rule and accuracy-based jitter filtering.
+2. Live view: map (shared MapLibre/OpenFreeMap config) drawing the user's traced path as they move, current position dot, running NET time, distance, and elevation gain so far (from GPS altitudes — label it as approximate: "višina (GPS, približno)"). Fullscreen map with the pinned timer overlay, same as the route mode.
+3. Live elevation profile of the recorded path so far (compact strip), reusing the profile component.
+4. Finish → summary card: net time, pause time, total time, distance, approx. ascent, map of the recorded route. Exports: summary image + the recorded track as a standards-compliant GPX file (trk/trkseg/trkpt with ele and time), suitable for uploading straight into a guide entry.
+5. PRIVACY unchanged: everything on-device only (memory + best-effort localStorage recovery after reload, try/catch); nothing sent to the server.
+6. Memory bound: downsample the in-memory/localStorage path progressively on very long recordings so an all-day hike cannot exhaust storage; the exported GPX uses the highest resolution actually retained.
+
+VERIFY
+Reuse the auto-pause state-machine tests; add: recording accumulates points, downsampling preserves shape (start/end and total distance within tolerance), exported GPX parses with our own server-side parser and round-trips (upload the exported file to an entry in dev → stats computed, track rendered). Browser test with simulated geolocation: full record→finish→export flow. Screenshots: action card, live recording view, fullscreen with timer, summary.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

@@ -1324,3 +1324,31 @@ mtime_ms = 1790728086228
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/df8d2b63-0200-416a-af61-900db9d27d36/0768cbbf-91eb-4fd5-921f-ea79c704cbde"
 storage_version_token = "1790728087610636"
 content_type = "text/html"
+
+[[outputs]]
+id = "B8FzLwSOxr6D8FqWXuLHW"
+uri = "file://docs/live-tour-timer.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — merjenje ture in Wake Lock"
+description = "Funkcije, testi, omejitve spletnega GPS in trije razvojni posnetki dejanskega zemljevida. Brez objave."
+logical_id = "6c1f20e6-418c-4975-a4f2-550ec787fcd7"
+content_hash = "sha256:10a90c7db5e0e0405edab9897b54b67d4227bfb1a969ddec073cce7204c49730"
+size = 621116
+mtime_ms = 1790729798800
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6c1f20e6-418c-4975-a4f2-550ec787fcd7/8f32ab47-4db8-49e8-bc9b-0678be1e0e12"
+storage_version_token = "1790729799860051"
+content_type = "text/html"
+
+[[outputs]]
+id = "pjsxIUyRCZM5SKR1MiRba"
+uri = "file://artifacts/smart360/screenshots/gpx-profile-fullscreen-on.png"
+type = "image"
+title = "Položaj na višinskem profilu"
+description = "Razvojni preizkus s sintetično potjo: označen položaj, preostala razdalja in nespremenjen časovnik."
+logical_id = "9b1957b4-132f-44f5-a1b9-920a87239210"
+content_hash = "sha256:d1fb44cc81cd497f841fb1faa847ca86bbb16c0065d2a8035d1d8bcb171fe3ed"
+size = 197115
+mtime_ms = 1790730284412
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9b1957b4-132f-44f5-a1b9-920a87239210/339dec6e-9caf-48b7-a6c3-85f5f3096d05"
+storage_version_token = "1790730322365559"
+content_type = "image/png"
