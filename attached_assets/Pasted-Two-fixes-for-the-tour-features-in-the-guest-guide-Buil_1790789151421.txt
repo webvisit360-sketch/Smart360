@@ -1,0 +1,16 @@
+Two fixes for the tour features in the guest guide. Build in dev. Report and STOP. No publication.
+
+1. RECORDING ENTRY POINT MOVES TO ITS OWN TAB
+The "Posnemi svojo turo" card currently renders inside category listings (including "Vse"), which clutters the content. Change:
+- Remove the card from ALL category listings entirely.
+- Instead, when tour_recording_enabled is on, render a SYNTHETIC tab/chip "Snemanje tur" in the Okolica tab row, positioned immediately AFTER the category whose normalized label is "Kolesarjenje" (if absent, after "Pohodništvo"; if both absent, last). Selecting it shows the recorder view (activity choice, Začni snemanje, Moj profil, privacy note) as the tab's content.
+- CRITICAL: this is a UI-level pseudo-tab only, rendered in the guest guide when the setting is on. It must NOT create a category/section in the content structure, must not appear in the admin structure, tab-ordering dialogs, readiness checks, or the host form, and must not enter the translation pipeline (its label is localized in code: SL "Snemanje tur", EN "Record a tour", DE "Tour aufzeichnen", IT "Registra un tour").
+- Styling identical to real category chips/tabs; works in normal and fullscreen flows as before.
+
+2. "MOJ PROFIL" CARD CONTRAST BUG
+On the dark theme, the white "Moj profil" card renders its title and field labels (Starost, Spol, Teža, Vrsta kolesa) nearly invisible — they inherit light-on-dark text colors. Fix: inside the profile card, title and labels use the CGP on-white tokens (title #121A14, labels #66716A) regardless of the surrounding theme. Audit the tour summary and any other white-on-dark cards in the tour UI for the same inherited-color bug and fix consistently.
+
+VERIFY
+Tests: pseudo-tab visible only when enabled; absent from structure APIs, admin, readiness and translations; positioned after Kolesarjenje. Screenshots: Okolica tab row with the new tab (dark theme), recorder view inside it, fixed Moj profil card readable on dark theme, and a category listing (Vse + Kolesarjenje) with no recording card.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

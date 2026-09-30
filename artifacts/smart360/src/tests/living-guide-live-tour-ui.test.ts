@@ -84,3 +84,23 @@ test("fullscreen portal CSS carries CGP tokens and global map sizing", async () 
   assert.match(tsx, /MultiLineString", coordinates: coords/);
   assert.match(tsx, /schematic: t\("UI.lg.liveTour.schematic"\)/);
 });
+
+test("white tour surfaces use CGP on-white text, independent of the night palette", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync(new URL("../pages/living-guide/living-guide-gpx.css", import.meta.url), "utf8");
+  for (const [selector, color] of [
+    [".s360-profile-dialog", "#121A14"],
+    [".s360-profile-dialog h3", "#121A14"],
+    [".s360-profile-dialog label", "#66716A"],
+    [".s360-profile-dialog input, .s360-profile-dialog select", "#121A14"],
+    [".s360-profile-dialog .s360-tour-fine", "#66716A"],
+    [".s360-tour-stats dt", "#66716A"],
+    [".s360-tour-stats dd", "#121A14"],
+    [".s360-tour-card", "#121A14"],
+    [".s360-tour-overlay .s360-tour-wake", "#66716A"],
+    [".s360-gpx-full-exit", "#121A14"],
+  ]) {
+    const rule = css.split("\n").find(line => line.startsWith(`${selector} {`))?.split("}")[0];
+    assert.ok(rule?.includes(`color: ${color};`), `${selector} should use ${color} on white`);
+  }
+});

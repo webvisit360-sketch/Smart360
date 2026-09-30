@@ -30,6 +30,7 @@ import {
 import { buildGuestPath } from "../guest/guest-url";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
+import { EXPLORE_RECORDING_TAB_KEY, exploreCategoryChips, recordingTabLabel } from "./living-guide-explore-tabs";
 
 const GpxSlugContext = createContext("");
 function ItemGpx({ item, t }: { item: any; t: UiTranslator }) {
@@ -2747,7 +2748,7 @@ function useGroupTabsState(groups: any[]) {
   return { listRef, selectedGroup, selectGroup };
 }
 
-function ExploreView({
+export function ExploreView({
   tenant,
   categories,
   lang,
@@ -2768,22 +2769,22 @@ function ExploreView({
     [categories],
   );
   const categoryChips = useMemo(
-    () => [
-      { key: EXPLORE_ALL_CATEGORY_KEY, label: t("UI.lg.categoryFilter.all") },
-      ...activeCategories.map((category: any) => ({
-        key: category.id,
-        label: category.label,
-        empty: category.__adminGuestEmpty === true && !category.__adminInactive,
-        inactive: category.__adminInactive === true,
-      })),
-    ],
-    [activeCategories, t],
+    () => exploreCategoryChips(activeCategories, t("UI.lg.categoryFilter.all"), recordingTabLabel(lang), freeTourEnabled),
+    [activeCategories, t, lang, freeTourEnabled],
   );
   const {
     listRef,
     selectedGroup: selectedCategoryChip,
     selectGroup: selectCategoryChip,
   } = useGroupTabsState(categoryChips);
+  const recordingSelected = freeTourEnabled && selectedCategoryChip?.key === EXPLORE_RECORDING_TAB_KEY;
+  // Once opened, keep the recorder mounted while browsing other chips: unmounting
+  // useLiveTour would stop its geolocation watch and wake lock during a live tour.
+  const [recorderMounted, setRecorderMounted] = useState(false);
+  const selectExploreChip = (key: string) => {
+    if (key === EXPLORE_RECORDING_TAB_KEY) setRecorderMounted(true);
+    selectCategoryChip(key);
+  };
   const filteredItems = useMemo(
     () =>
       exploreItemsForCategory(
@@ -2833,7 +2834,7 @@ function ExploreView({
       <GroupTabs
         groups={categoryChips}
         selectedKey={selectedCategoryChip?.key}
-        onSelect={selectCategoryChip}
+        onSelect={selectExploreChip}
         label={t("UI.lg.exploreTitle")}
       />
       <div
@@ -2841,7 +2842,12 @@ function ExploreView({
         data-lg-scroll
         ref={listRef}
       >
-        {freeTourEnabled && <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} />}
+        {freeTourEnabled && recorderMounted && (
+          <div hidden={!recordingSelected} data-testid="explore-recording-panel">
+            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} />
+          </div>
+        )}
+        {!recordingSelected && <>
         {distanceSections.map((section) => (
           <section className="lg2-distance-section" key={section.key}>
             {section.labelKey && (
@@ -2876,6 +2882,7 @@ function ExploreView({
         {emptyCategories.map((category: any) => (
           <AdminEmptyCategoryRow key={category.id} category={category} onOpen={() => onOpenCategory(category.id)} />
         ))}
+        </>}
       </div>
     </section>
   );

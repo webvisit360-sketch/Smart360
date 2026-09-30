@@ -1590,3 +1590,59 @@ mtime_ms = 1790788234234
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/15a31d71-16e2-4f93-b599-1aef6d52ff68/194f11e4-a50c-494f-be71-4ef3efe32d07"
 storage_version_token = "1790788287040560"
 content_type = "image/png"
+
+[[outputs]]
+id = "Buj5488l3luN0HWJF6pw-"
+uri = "file://screenshots/tour-recorder-dark.png"
+type = "image"
+title = "Snemanje tur — lasten zavihek"
+description = "Temna tema; snemalnik v svojem zavihku. Razvojni prikaz z dejanskimi komponentami in testnimi podatki."
+logical_id = "f8252bff-3b2e-4ac6-94a1-a53496734a30"
+content_hash = "sha256:4f75dd7172af8614fb1bb7c616e2833f8e3316665a4c2b9217ac9f32169a7363"
+size = 43741
+mtime_ms = 1790789685846
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f8252bff-3b2e-4ac6-94a1-a53496734a30/c1504800-21e5-46e7-be97-29319647f713"
+storage_version_token = "1790789748380960"
+content_type = "image/png"
+
+[[outputs]]
+id = "sw70X7qLuIfHKRM66hZWA"
+uri = "file://screenshots/tour-profile-dark.png"
+type = "image"
+title = "Moj profil — popravljen kontrast"
+description = "Bel profil: temen naslov in berljive oznake vseh polj, vključno z vrsto kolesa."
+logical_id = "5f3cdbd6-4062-4f7d-8f7f-700b46b09a9e"
+content_hash = "sha256:512013051637222046c64d6dd30595cff8e0500986e084d5ae1279803726090e"
+size = 50849
+mtime_ms = 1790789641370
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5f3cdbd6-4062-4f7d-8f7f-700b46b09a9e/20929626-373e-4811-ac9a-542ce78b4a23"
+storage_version_token = "1790789749331695"
+content_type = "image/png"
+
+[[outputs]]
+id = "izeYD2wJQLRbHw8O63n02"
+uri = "file://screenshots/tour-vse-dark.png"
+type = "image"
+title = "Vse — brez kartice snemalnika"
+description = "Razvojni prikaz kategorij v temni temi."
+logical_id = "2ec99f2f-9b14-434a-aa97-6cc8238ab106"
+content_hash = "sha256:e346dcdf7e2f12d4b7aed91f2cb2ba8d06c38b00f67353f64e1603052cc431e9"
+size = 47784
+mtime_ms = 1790789640302
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2ec99f2f-9b14-434a-aa97-6cc8238ab106/3c10dfad-87cf-4bae-b6c9-87ae215225a5"
+storage_version_token = "1790789750166227"
+content_type = "image/png"
+
+[[outputs]]
+id = "R7DhFk7SVKRcWw832Jchl"
+uri = "file://screenshots/tour-cycling-dark.png"
+type = "image"
+title = "Kolesarjenje — brez kartice snemalnika"
+description = "Snemanje tur je naslednji zavihek za Kolesarjenjem; kategorija vsebuje samo svoje vnose."
+logical_id = "7e52c897-694c-4d44-93ab-026fe77cdef4"
+content_hash = "sha256:dc030d2d97cef07ca44b6dcb6f9004acf9139fbf36d04350bc5eba520456c748"
+size = 20653
+mtime_ms = 1790789686778
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7e52c897-694c-4d44-93ab-026fe77cdef4/aad0a60a-5fe2-48b7-959b-a0d333790453"
+storage_version_token = "1790789751064285"
+content_type = "image/png"

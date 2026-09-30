@@ -21,6 +21,12 @@ The Living Guide bottom navigation always has exactly five primary tabs: Domov, 
 
 **How to apply:** Keep the five tabs in the Meli Pu order and layout for every Living Guide tenant. Optional features such as Program belong outside those five primary slots.
 
+Tour recording belongs in a guest-only synthetic Okolica chip, never in authored categories or each category's listing.
+
+**Why:** The owner explicitly rejected recording controls cluttering place listings and any synthetic category entering admin, host forms, readiness, ordering, or tenant translation workflows.
+
+**How to apply:** Keep the recording entry entirely in guest presentation with code-localized labels; do not persist it or treat it as missing content. Switching chips must not stop an active tour.
+
 Virtual tours reuse the tenant’s canonical `tourUrl` field. Accept only a canonical HTTPS URL from approved providers; extract it server-side from plain URLs, iframe `src`, or script `data-*` values, and never persist or render pasted markup.
 
 **Why:** The field is shared across guest modes, so malformed or historic markup must not become an iframe or outbound link in either mode.
