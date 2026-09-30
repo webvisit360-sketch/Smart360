@@ -44,6 +44,11 @@ type Binding =
   | { kind: "anon" }
   /** Owner only. Hosts get 404 — the route's existence is not revealed. */
   | { kind: "owner-only" }
+  /** Newly operator-only, but resolve the host's tenant first: own=403, foreign=404. */
+  | { kind: "operator-tenant"; param: string }
+  | { kind: "operator-entity"; entity: EntityKind; param: string }
+  /** Reorder ids belong to a single tenant; foreign ids remain invisible. */
+  | { kind: "operator-reorder"; entity: EntityKind }
   /** Host session endpoints about the host themself (password change, logout). */
   | { kind: "host-self" }
   /** Tenant id in the URL must equal the host's tenant. */
@@ -65,9 +70,13 @@ const ANON: Binding = { kind: "anon" };
 const SELF: Binding = { kind: "host-self" };
 const RLS: Binding = { kind: "rls" };
 const T_ID: Binding = { kind: "tenant-url", param: "id" };
+const OP_T_ID: Binding = { kind: "operator-tenant", param: "id" };
 
 function e(entity: EntityKind, param = "id"): Binding {
   return { kind: "entity", entity, param };
+}
+function opEntity(entity: EntityKind, param = "id"): Binding {
+  return { kind: "operator-entity", entity, param };
 }
 
 export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
@@ -148,9 +157,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   {
     method: "patch",
     path: "/admin/tenants/:id",
-    // Identity/routing stays with the owner; content, wifi, theme, languages,
-    // publish state etc. are the host's own settings.
-    binding: { kind: "tenant-url", param: "id", bodyDeny: ["slug", "customDomain"] },
+    // Host writes are checked against a positive field allowlist below.
+    binding: T_ID,
   },
   { method: "post", path: "/admin/tenants/:id/renew", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/renewals", binding: OWNER },
@@ -189,16 +197,16 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/tenants/:id/creator/photo-proposals/:photoProposalId/reject", binding: OWNER },
 
   // ── Content (adminContent.ts) ────────────────────────────────────────────
-  { method: "post", path: "/admin/tenants/:id/sections", binding: T_ID },
-  { method: "post", path: "/admin/sections/:id/categories", binding: e("section") },
-  { method: "patch", path: "/admin/sections/:id", binding: e("section") },
-  { method: "delete", path: "/admin/sections/:id", binding: OPERATOR_ONLY },
-  { method: "post", path: "/admin/sections/:id/trash", binding: e("section") },
-  { method: "post", path: "/admin/sections/:id/restore", binding: e("section") },
-  { method: "post", path: "/admin/sections/reorder", binding: RLS },
-  { method: "patch", path: "/admin/categories/:id", binding: e("category") },
-  { method: "delete", path: "/admin/categories/:id", binding: e("category") },
-  { method: "post", path: "/admin/categories/reorder", binding: RLS },
+  { method: "post", path: "/admin/tenants/:id/sections", binding: OP_T_ID },
+  { method: "post", path: "/admin/sections/:id/categories", binding: opEntity("section") },
+  { method: "patch", path: "/admin/sections/:id", binding: opEntity("section") },
+  { method: "delete", path: "/admin/sections/:id", binding: opEntity("section") },
+  { method: "post", path: "/admin/sections/:id/trash", binding: opEntity("section") },
+  { method: "post", path: "/admin/sections/:id/restore", binding: opEntity("section") },
+  { method: "post", path: "/admin/sections/reorder", binding: { kind: "operator-reorder", entity: "section" } },
+  { method: "patch", path: "/admin/categories/:id", binding: opEntity("category") },
+  { method: "delete", path: "/admin/categories/:id", binding: opEntity("category") },
+  { method: "post", path: "/admin/categories/reorder", binding: { kind: "operator-reorder", entity: "category" } },
   { method: "post", path: "/admin/categories/:id/items", binding: e("category") },
   { method: "get", path: "/admin/categories/:id/place-search", binding: OWNER },
   { method: "post", path: "/admin/categories/:id/places", binding: OWNER },
@@ -224,7 +232,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "put", path: "/admin/translations", binding: RLS },
   { method: "post", path: "/admin/maintenance/normalize-content", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/trash", binding: T_ID },
-  { method: "post", path: "/admin/categories/:id/restore", binding: e("category") },
+  { method: "post", path: "/admin/categories/:id/restore", binding: opEntity("category") },
   { method: "post", path: "/admin/items/:id/restore", binding: e("item") },
   // Permanent content removal is a Smart360-only capability. Hosts retain
   // soft-delete/restore editing, but cannot invoke the purge endpoints.
@@ -239,10 +247,10 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
 
   // ── Site plan (adminSitePlan.ts) ─────────────────────────────────────────
   { method: "get", path: "/admin/tenants/:id/site-plan-images", binding: T_ID },
-  { method: "post", path: "/admin/tenants/:id/site-plan-images/upload", binding: T_ID },
-  { method: "post", path: "/admin/tenants/:id/site-plan-images/reorder", binding: T_ID },
-  { method: "patch", path: "/admin/site-plan-images/:id", binding: e("media") },
-  { method: "delete", path: "/admin/site-plan-images/:id", binding: e("media") },
+  { method: "post", path: "/admin/tenants/:id/site-plan-images/upload", binding: OP_T_ID },
+  { method: "post", path: "/admin/tenants/:id/site-plan-images/reorder", binding: OP_T_ID },
+  { method: "patch", path: "/admin/site-plan-images/:id", binding: opEntity("media") },
+  { method: "delete", path: "/admin/site-plan-images/:id", binding: opEntity("media") },
 
   // ── Orders ───────────────────────────────────────────────────────────────
   { method: "get", path: "/admin/tenants/:id/orders", binding: T_ID },
@@ -264,9 +272,9 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
 
   // ── Uploads (storage.ts) ─────────────────────────────────────────────────
   { method: "post", path: "/admin/items/:id/media/upload", binding: e("item") },
-  { method: "post", path: "/admin/tenants/:id/hero/upload", binding: T_ID },
-  { method: "post", path: "/admin/tenants/:id/living-guide-hero/upload", binding: T_ID },
-  { method: "post", path: "/admin/tenants/:id/logo/upload", binding: T_ID },
+  { method: "post", path: "/admin/tenants/:id/hero/upload", binding: OP_T_ID },
+  { method: "post", path: "/admin/tenants/:id/living-guide-hero/upload", binding: OP_T_ID },
+  { method: "post", path: "/admin/tenants/:id/logo/upload", binding: OP_T_ID },
 
   // ── Owner tooling ────────────────────────────────────────────────────────
   { method: "get", path: "/admin/storage/usage", binding: OWNER },
@@ -330,6 +338,17 @@ function paramValue(hit: { spec: CompiledSpec; match: RegExpExecArray }, param: 
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Positive list: unknown keys must not be silently stripped by the handler. */
+export const HOST_TENANT_WRITABLE_FIELDS = [
+  "phone", "email", "whatsapp", "viber", "instagram",
+  "orderNotifyEmail", "messageNotifyEmail", "notificationChannel",
+  "notificationWhatsappPhone", "orderPassword", "wifiSsid", "wifiPass", "wifiEnc",
+] as const;
+const HOST_TENANT_FIELDS = new Set<string>(HOST_TENANT_WRITABLE_FIELDS);
+export const HOST_PUBLISH_DENIAL =
+  "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.";
+const PUBLICATION_FIELDS = new Set(["isPublished", "publishNow", "publishToken"]);
 
 /**
  * Central entity → tenant resolver. Runs on the SHARED pool (before the host
@@ -422,52 +441,67 @@ async function gate(
     return;
   }
   const binding = hit.spec.binding;
-  if (binding.kind === "owner-only" && req.method === "DELETE" &&
-      hit.spec.path === "/admin/sections/:id") {
-    // A foreign/missing section is still invisible, even for this one
-    // operator-only route whose own-tenant denial is deliberately 403.
-    const id = paramValue(hit, "id");
-    if (!UUID_RE.test(id) || (await entityTenantId("section", id)) !== actor.tenantId) {
-      notFound(res);
-      return;
-    }
-    await denyAuthorization(req, res, {
-      reason: "operator_required", tenantId: actor.tenantId, route: hit.spec.path,
-    });
-    return;
-  }
   switch (binding.kind) {
     case "owner-only":
       notFound(res);
       return;
+    case "operator-tenant":
+      if (paramValue(hit, binding.param) !== actor.tenantId) {
+        notFound(res);
+        return;
+      }
+      await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
+      return;
+    case "operator-entity": {
+      const id = paramValue(hit, binding.param);
+      if (!UUID_RE.test(id) || (await entityTenantId(binding.entity, id)) !== actor.tenantId) {
+        notFound(res);
+        return;
+      }
+      await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
+      return;
+    }
+    case "operator-reorder": {
+      const ids = (req.body as { ids?: unknown } | undefined)?.ids;
+      if (Array.isArray(ids)) {
+        for (const id of ids) {
+          if (typeof id !== "string" || !UUID_RE.test(id) ||
+              (await entityTenantId(binding.entity, id)) !== actor.tenantId) {
+            notFound(res);
+            return;
+          }
+        }
+      }
+      await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
+      return;
+    }
     case "tenant-url": {
       if (paramValue(hit, binding.param) !== actor.tenantId) {
         notFound(res);
         return;
       }
       if (binding.bodyDeny && req.body && typeof req.body === "object") {
-        for (const field of binding.bodyDeny) {
-          if (field in (req.body as Record<string, unknown>)) {
-            res.status(400).json({ error: `Polje '${field}' lahko spreminja samo upravitelj.` });
-            return;
-          }
+        const denied = binding.bodyDeny.filter((field) =>
+          Object.prototype.hasOwnProperty.call(req.body, field));
+        if (denied.length) {
+          await denyAuthorization(req, res, { reason: "operator_field", fields: denied, route: hit.spec.path });
+          return;
         }
       }
-       if (req.method === "PATCH" && hit.spec.path === "/admin/tenants/:id" &&
-           req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
-         const protectedFields = [
-           "isTemplate", "mediaQuotaBytes", "renewsAt", "coordinateOverride",
-           "rating", "reviewsCount",
-         ];
-         const denied = protectedFields.filter((field) =>
-           Object.prototype.hasOwnProperty.call(req.body, field));
-         if (denied.length) {
-           await denyAuthorization(req, res, {
-             reason: "operator_field", fields: denied, tenantId: actor.tenantId, route: hit.spec.path,
-           });
-           return;
-         }
-       }
+      if (req.method === "PATCH" && hit.spec.path === "/admin/tenants/:id" &&
+          req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
+        const denied = Object.keys(req.body as Record<string, unknown>)
+          .filter((field) => !HOST_TENANT_FIELDS.has(field));
+        if (denied.length) {
+          const publishing = denied.some((field) => PUBLICATION_FIELDS.has(field));
+          await denyAuthorization(req, res, {
+            reason: publishing ? "operator_publication" : "operator_field",
+            fields: denied, route: hit.spec.path,
+            ...(publishing ? { message: HOST_PUBLISH_DENIAL } : {}),
+          });
+          return;
+        }
+      }
       break;
     }
     case "entity": {
@@ -481,11 +515,40 @@ async function gate(
         notFound(res);
         return;
       }
+      // A site-plan image is tenant media, not item media. The generic media
+      // route must not become an alternate write path for operator imagery.
+      if (binding.entity === "media" && hit.spec.path === "/admin/media/:id") {
+        const media = await pool.query<{ item_id: string | null }>(
+          "SELECT item_id FROM media WHERE id = $1", [id]);
+        if (!media.rows[0]?.item_id) {
+          await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
+          return;
+        }
+      }
       break;
     }
     case "host-self":
     case "rls":
       break;
+  }
+
+  if (hit.spec.path === "/admin/media/reorder") {
+    const ids = (req.body as { ids?: unknown } | undefined)?.ids;
+    if (Array.isArray(ids)) {
+      for (const id of ids) {
+        if (typeof id !== "string" || !UUID_RE.test(id)) continue;
+        if ((await entityTenantId("media", id)) !== actor.tenantId) {
+          notFound(res);
+          return;
+        }
+        const media = await pool.query<{ item_id: string | null }>(
+          "SELECT item_id FROM media WHERE id = $1", [id]);
+        if (!media.rows[0]?.item_id) {
+          await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
+          return;
+        }
+      }
+    }
   }
 
   // Ring 3: everything downstream runs on the tenant-scoped connection.

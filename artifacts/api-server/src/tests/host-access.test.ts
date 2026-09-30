@@ -304,7 +304,7 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
   await t.test("identity fields of the own tenant are owner-only", async () => {
     for (const body of [{ slug: "prevzet-slug" }, { customDomain: "evil.example.com" }]) {
       const res = await jreq(base, "PATCH", `/admin/tenants/${fx.tenantA}`, cookie, body);
-      assert.equal(res.status, 400, `PATCH with ${Object.keys(body)[0]} must be 400`);
+      assert.equal(res.status, 403, `PATCH with ${Object.keys(body)[0]} must be 403`);
       denied += 1;
     }
     const [aTenant] = await db.select({ slug: tenantsTable.slug })
@@ -326,16 +326,20 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     const get = await jreq(base, "GET", `/admin/tenants/${fx.tenantA}`, cookie);
     assert.equal(get.status, 200);
 
-    const patch = await jreq(base, "PATCH", `/admin/tenants/${fx.tenantA}`, cookie, { name: "CP2 A (urejeno)" });
+    const patch = await jreq(base, "PATCH", `/admin/tenants/${fx.tenantA}`, cookie, { wifiSsid: "CP2 Wi-Fi" });
     assert.equal(patch.status, 200);
+    const [savedSettings] = await db.select({ name: tenantsTable.name, wifiSsid: tenantsTable.wifiSsid })
+      .from(tenantsTable).where(eq(tenantsTable.id, fx.tenantA));
+    assert.equal(savedSettings!.name, "CP2 a", "host cannot alter tenant identity");
+    assert.equal(savedSettings!.wifiSsid, "CP2 Wi-Fi");
 
     const mkSection = await jreq(base, "POST", `/admin/tenants/${fx.tenantA}/sections`, cookie, { key: "cp2-nova", title: "Nova sekcija", icon: "sparkle" });
-    assert.ok(mkSection.status === 200 || mkSection.status === 201, `create section got ${mkSection.status}`);
-    const created = (await mkSection.json()) as { id?: string };
-    if (created.id) createdSectionIds.push(created.id);
+    assert.equal(mkSection.status, 403, "host cannot create structure");
 
     const patchSection = await jreq(base, "PATCH", `/admin/sections/${fx.sectionA}`, cookie, { title: "Sekcija A (urejeno)" });
-    assert.equal(patchSection.status, 200);
+    assert.equal(patchSection.status, 403, "host cannot edit structure");
+    const [savedSection] = await db.select({ title: sectionsTable.title }).from(sectionsTable).where(eq(sectionsTable.id, fx.sectionA));
+    assert.equal(savedSection!.title, "Sekcija A");
 
     const patchItem = await jreq(base, "PATCH", `/admin/items/${fx.itemA}`, cookie, {
       title: "Item A (urejeno)", body: "<p>Gostiteljev opis.</p>",

@@ -1310,3 +1310,17 @@ mtime_ms = 1790714503601
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c11fc2df-c8f3-4c23-9d10-781f8025618a/84fb5be4-a014-4c39-ba83-4c7d9743610d"
 storage_version_token = "1790714504432926"
 content_type = "text/html"
+
+[[outputs]]
+id = "CzTkXbDAjQl8I9cyn-GCZ"
+uri = "file://docs/security-phase2.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — varnostna faza 2"
+description = "Končna matrika pravic, razvojni testi in jasno označene meje brskalniškega preverjanja. Brez objave."
+logical_id = "df8d2b63-0200-416a-af61-900db9d27d36"
+content_hash = "sha256:2943a64da4a93a7fa621ac58d487a818039db4b119072aba94d2156ae89a6c71"
+size = 8201
+mtime_ms = 1790728086228
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/df8d2b63-0200-416a-af61-900db9d27d36/0768cbbf-91eb-4fd5-921f-ea79c704cbde"
+storage_version_token = "1790728087610636"
+content_type = "text/html"

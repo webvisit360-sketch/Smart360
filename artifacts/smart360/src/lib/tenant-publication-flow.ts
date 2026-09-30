@@ -12,6 +12,14 @@ export function tenantSavePayload<T extends {
   latitude?: unknown;
   longitude?: unknown;
   guestUiMode?: unknown;
+  wifiEnc?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  viber?: string | null;
+  instagram?: string | null;
+  notificationChannel?: "email" | "whatsapp";
+  orderNotifyEmail?: boolean;
+  messageNotifyEmail?: boolean;
 }>(snapshot: T, quotaGb: string, isOwner: boolean) {
   const {
     latitude: _latitude,
@@ -30,13 +38,22 @@ export function tenantSavePayload<T extends {
     notificationWhatsappPhone: notificationWhatsappPhoneForSave(snapshot.notificationWhatsappPhone),
   };
   if (!isOwner) {
-    const hostDeniedFields = [
-      "slug", "customDomain", "isTemplate", "mediaQuotaBytes", "renewsAt",
-      "rating", "reviewsCount", "coordinateOverride",
-    ] as const;
-    for (const field of hostDeniedFields) {
-      delete (data as Record<string, unknown>)[field];
-    }
+    // Explicit allowlist: a newly added operator setting must never leak into
+    // a host autosave (or the save-before-publish path).
+    return {
+      wifiSsid: data.wifiSsid,
+      wifiPass: data.wifiPass,
+      wifiEnc: snapshot.wifiEnc,
+      phone: snapshot.phone,
+      email: data.email,
+      whatsapp: snapshot.whatsapp,
+      viber: snapshot.viber,
+      instagram: snapshot.instagram,
+      notificationChannel: snapshot.notificationChannel,
+      notificationWhatsappPhone: data.notificationWhatsappPhone,
+      orderNotifyEmail: snapshot.orderNotifyEmail,
+      messageNotifyEmail: snapshot.messageNotifyEmail,
+    };
   }
   return data;
 }

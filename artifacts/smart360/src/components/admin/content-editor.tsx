@@ -996,11 +996,11 @@ function toEventStartIso(value: string): string | null {
 }
 
 type ItemDialogProps =
-  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; item?: undefined; onDone: () => void }
-  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; item: Item; onDone: () => void };
+  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item?: undefined; onDone: () => void }
+  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item: Item; onDone: () => void };
 
-export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories, allCategories, item, onDone }: ItemDialogProps) {
-  if (mode === "create" && (sectionKey === "explore" || sectionKey === "services")) {
+export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories, allCategories, item, onDone, operatorPlaceCreation }: ItemDialogProps) {
+  if (mode === "create" && operatorPlaceCreation && (sectionKey === "explore" || sectionKey === "services")) {
     return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />;
   }
   const queryClient = useQueryClient();
@@ -2298,7 +2298,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
   const items = category.items || [];
   const isEmpty = items.length === 0;
   const addLabel = categoryAddLabel(sectionKey);
-  const canAdd = operatorPlaceCreation || (sectionKey !== "explore" && sectionKey !== "services");
+  const canAdd = true;
 
   if (isEmpty) {
     return (
@@ -2310,15 +2310,15 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
           isVisible={category.isVisible}
           extraLabel={isCustom ? <span className="shrink-0 text-[10px] font-medium text-[#9AA39D]">gostiteljeva</span> : undefined}
           addLabel={addLabel}
-          onEdit={() => setEditOpen(true)}
+          onEdit={operatorPlaceCreation ? () => setEditOpen(true) : undefined}
           onAdd={canAdd ? () => setAddOpen(true) : undefined}
         />
 
-        <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+        {operatorPlaceCreation && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
             <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
-        </EditDialog>
+        </EditDialog>}
         {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
-            <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
+            <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} operatorPlaceCreation={operatorPlaceCreation} onDone={() => setAddOpen(false)} />
         </EditDialog>}
       </>
     );
@@ -2341,9 +2341,9 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
             )}
             <span className="font-normal text-[#9AA39D]">· {items.length} {isExplore ? 'krajev' : 'elementov'}</span>
           </h4>
-          <button type="button" onClick={() => setEditOpen(true)} className="text-[#157347] hover:underline flex items-center gap-1 text-[13px] font-bold">
+          {operatorPlaceCreation && <button type="button" onClick={() => setEditOpen(true)} className="text-[#157347] hover:underline flex items-center gap-1 text-[13px] font-bold">
             <Pencil className="w-3.5 h-3.5" /> Uredi
-          </button>
+          </button>}
         </div>
 
         <div className="space-y-1.5">
@@ -2361,11 +2361,11 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
         </div>
       </div>
 
-      <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+      {operatorPlaceCreation && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
           <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
-      </EditDialog>
+      </EditDialog>}
       {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
-          <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} onDone={() => setAddOpen(false)} />
+          <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} operatorPlaceCreation={operatorPlaceCreation} onDone={() => setAddOpen(false)} />
       </EditDialog>}
     </>
   );
@@ -2418,13 +2418,13 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
               <p className="text-[13px] text-[#66716A]">{subtitle}</p>
             </div>
           </div>
-          <button 
+          {operatorPlaceCreation && <button
             type="button"
             onClick={() => setEditOpen(true)}
             className="flex items-center gap-1 text-[#157347] font-bold text-[14px] hover:underline whitespace-nowrap"
           >
             <Pencil className="w-4 h-4" /> <span className="hidden sm:inline">Uredi sekcijo</span>
-          </button>
+          </button>}
         </div>
 
         <div className="space-y-3">
@@ -2440,29 +2440,29 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
               operatorPlaceCreation={operatorPlaceCreation}
             />
           ))}
-          <button
+          {operatorPlaceCreation && <button
             type="button"
             className="w-full flex items-center justify-center gap-2 border border-dashed border-[#C9D2CB] rounded-[10px] py-2 text-[#157347] font-bold text-[14px] hover:bg-white transition-colors h-[46px]"
             onClick={() => setAddCatOpen(true)}
           >
             <Plus className="w-4 h-4" />
             Dodaj kategorijo
-          </button>
+          </button>}
         </div>
       </div>
 
       {/* Edit section dialog */}
-      <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi sekcijo">
+      {operatorPlaceCreation && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi sekcijo">
           <SectionDialog
             mode="edit"
             tenantId={tenantId}
             section={section}
             onDone={() => setEditOpen(false)}
           />
-      </EditDialog>
+      </EditDialog>}
 
       {/* Add category dialog */}
-      <EditDialog open={addCatOpen} onOpenChange={setAddCatOpen} title="Nova kategorija">
+      {operatorPlaceCreation && <EditDialog open={addCatOpen} onOpenChange={setAddCatOpen} title="Nova kategorija">
           <CategoryDialog
             mode="create"
             tenantId={tenantId}
@@ -2470,7 +2470,7 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
             sectionKey={section.key}
             onDone={() => setAddCatOpen(false)}
           />
-      </EditDialog>
+      </EditDialog>}
     </>
   );
 }
@@ -2587,11 +2587,11 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                     <div key={section.id} className="bg-muted/40 border rounded p-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium truncate">{section.title}</span>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                        {isOwner && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
                           disabled={busyId === section.id} onClick={() => onRestoreSection(section.id)}>
                           {busyId === section.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                           Obnovi
-                        </Button>
+                        </Button>}
                       </div>
                       {(categories.some(cat => cat.sectionId === section.id) || items.some(it => it.sectionId === section.id)) && (
                         <div className="mt-1 border-t pt-2 pl-2 text-xs text-muted-foreground">
@@ -2618,7 +2618,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                         <span className="text-xs text-muted-foreground ml-1">v „{cat.sectionTitle}“</span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <Button
+                        {isOwner && <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2 text-xs"
@@ -2627,7 +2627,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                         >
                           {busyId === cat.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                           Obnovi
-                        </Button>
+                        </Button>}
                         {isOwner && (
                           <Button
                             variant="ghost"
@@ -2715,9 +2715,10 @@ export function ContentEditor({
   return (
     <div className="font-['Archivo']">
       <div style={{ display: "none" }} aria-hidden="true"><IconSprite /></div>
+      {!operatorPlaceCreation && <p className="mb-4 rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">Sekcije in kategorije ureja Smart360. Vnose lahko še naprej dodajate, urejate in premikate med kategorijami.</p>}
       {sections.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek.
+          {operatorPlaceCreation ? "Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek." : "Sekcij še ni. Za pripravo strukture se obrnite na Smart360."}
         </div>
       ) : (
         <div className="space-y-6">
@@ -2727,24 +2728,24 @@ export function ContentEditor({
         </div>
       )}
 
-      <Button
+      {operatorPlaceCreation && <Button
         className="w-full mt-4 h-[46px] border border-dashed border-[#C9D2CB] rounded-[10px] bg-white text-[#157347] font-bold hover:bg-[#F4F6F2]"
         variant="outline"
         onClick={() => setAddSectionOpen(true)}
       >
         <Plus className="w-4 h-4 mr-2" />
         Dodaj sekcijo
-      </Button>
+      </Button>}
 
       <TrashPanel tenantId={tenantId} />
 
-      <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
+      {operatorPlaceCreation && <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
           <SectionDialog
             mode="create"
             tenantId={tenantId}
             onDone={() => setAddSectionOpen(false)}
           />
-      </EditDialog>
+      </EditDialog>}
     </div>
   );
 }

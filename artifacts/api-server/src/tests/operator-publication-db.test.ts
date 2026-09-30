@@ -1,6 +1,6 @@
 /**
- * Post-approval DB regression. Opt in only after the reviewed trigger function
- * has been approved/applied. No owner account or session is created: this
+ * Post-approval DB regression. Opt in only on an already prepared dev DB.
+ * No schema/trigger ensure runs here. No owner account or session is created: this
  * isolated router injects trusted test actors, never a production auth path.
  */
 import assert from "node:assert/strict";
@@ -10,28 +10,23 @@ import { once } from "node:events";
 import express from "express";
 import { eq, sql } from "drizzle-orm";
 import {
-  db, openHostDbContext, runWithHostDbContext, tenantsTable, sectionsTable, changelogTable, publishedSnapshotsTable,
+  db, runWithHostDbContext, tenantsTable, sectionsTable, changelogTable, publishedSnapshotsTable,
   tenantSlugReservationsTable,
 } from "@workspace/db";
 import tenantRouter from "../routes/adminTenants";
 import { actorStorage } from "../lib/actorContext";
 import { ensureTenantPublication, readPublishedContent } from "../lib/publishedSnapshots";
-import { ensureGuestDirtyTriggers } from "../lib/guestDirtyTriggers";
-import { initializeOperatorDraftPending } from "../lib/operatorDraftBackfill";
+import { createAdminGateForTests } from "../lib/actorGate";
 import { currentHostOnboarding, submitHostOnboarding } from "../lib/hostOnboarding";
 import { _setHostOnboardingDeliveryOverride } from "../lib/hostOnboardingEmail";
 import {
   createCanonicalOnboardingFixture, cleanupCanonicalOnboardingFixture,
 } from "./helpers/canonicalOnboardingFixture";
 
-test("real locked publication: operator edits block host, owner clears, host-only edits publish", {
+test("real locked publication: owner publishes; host draft never publishes or unpublishes", {
   skip: process.env.SMART360_OPERATOR_DRAFT_DB_TEST !== "1",
 }, async (t) => {
   assert.notEqual(process.env.NODE_ENV, "production");
-  // This changes a DB function. Never run this test until the owner has
-  // approved the exact SQL in guestDirtyTriggers.ts.
-  await ensureGuestDirtyTriggers();
-  await initializeOperatorDraftPending();
   const tenantId = randomUUID();
   const [created] = await db.insert(tenantsTable).values({
     id: tenantId, slug: `publication-actor-${tenantId}`, name: "Initial",
@@ -40,41 +35,32 @@ test("real locked publication: operator edits block host, owner clears, host-onl
   assert.ok(created);
   await ensureTenantPublication(tenantId);
 
-  const isolated = express();
-  isolated.use(express.json());
-  isolated.use(async (req, res, next) => {
-    if (req.get("x-test-actor") === "host") {
-      const handle = await openHostDbContext(tenantId);
-      res.once("finish", () => { void handle.release(); });
-      handle.enter(() => actorStorage.run({
-        kind: "host", hostUserId: randomUUID(), tenantId,
-      }, () => {
-        req.actor = actorStorage.getStore();
-        next();
-      }));
-      return;
-    }
-    actorStorage.run({ kind: "owner" }, () => {
-      req.actor = actorStorage.getStore();
-      next();
-    });
-  });
-  isolated.use(tenantRouter);
-  const server = isolated.listen(0, "127.0.0.1");
-  await once(server, "listening");
-  const address = server.address();
-  assert.ok(address && typeof address !== "string");
-  const url = `http://127.0.0.1:${address.port}/admin/tenants/${tenantId}`;
+  const serverFor = async (actor: "host" | "owner") => {
+    const isolated = express();
+    isolated.use(express.json());
+    isolated.use(createAdminGateForTests(actor === "host"
+      ? { kind: "host", hostUserId: randomUUID(), tenantId }
+      : { kind: "owner" }));
+    isolated.use(tenantRouter);
+    const server = isolated.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    const address = server.address();
+    assert.ok(address && typeof address !== "string");
+    return { server, url: `http://127.0.0.1:${address.port}/admin/tenants/${tenantId}` };
+  };
+  const hostServer = await serverFor("host");
+  const ownerServer = await serverFor("owner");
   t.after(async () => {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await Promise.all([hostServer, ownerServer].map(({ server }) =>
+      new Promise<void>((resolve) => server.close(() => resolve()))));
     await db.delete(changelogTable).where(eq(changelogTable.tenantId, tenantId));
     await db.delete(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenantId));
     await db.delete(tenantSlugReservationsTable).where(eq(tenantSlugReservationsTable.tenantId, tenantId));
     await db.delete(tenantsTable).where(eq(tenantsTable.id, tenantId));
   });
   const request = (actor: "host" | "owner", method: string, path = "", body?: unknown) =>
-    fetch(url + path, {
-      method, headers: { "content-type": "application/json", "x-test-actor": actor },
+    fetch((actor === "host" ? hostServer.url : ownerServer.url) + path, {
+      method, headers: { "content-type": "application/json" },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
   const token = async (actor: "host" | "owner"): Promise<string> => {
@@ -87,19 +73,21 @@ test("real locked publication: operator edits block host, owner clears, host-onl
 
   assert.equal((await request("owner", "PATCH", "", { name: "Operator draft" })).status, 200);
   assert.equal((await row()).operatorDraftPending, true);
-  assert.equal((await request("host", "PATCH", "", { name: "Host following edit" })).status, 200);
+  assert.equal((await request("host", "PATCH", "", { name: "Host forbidden identity" })).status, 403);
+  assert.equal((await row()).name, "Operator draft");
+  assert.equal((await request("host", "PATCH", "", { wifiSsid: "Guest one" })).status, 200);
   const pendingAt = (await row()).lastPublishedAt;
   const denied = await request("host", "PATCH", "", {
     isPublished: true, publishNow: true, publishToken: await token("host"),
   });
   assert.equal(denied.status, 403);
   assert.deepEqual(await denied.json(), {
-    error: "Vodnik vsebuje spremembe upravljavca, ki še niso potrjene — objavo opravi Smart360.",
+    error: "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.",
   });
   assert.deepEqual(await readPublishedContent(tenantId), initialSnapshot);
   assert.deepEqual((await row()).lastPublishedAt, pendingAt);
   assert.equal((await row()).operatorDraftPending, true);
-  assert.equal((await request("host", "PATCH", "", { operatorDraftPending: false })).status, 400);
+  assert.equal((await request("host", "PATCH", "", { operatorDraftPending: false })).status, 403);
 
   const approved = await request("owner", "PATCH", "", {
     isPublished: true, publishNow: true, publishToken: await token("owner"),
@@ -107,17 +95,21 @@ test("real locked publication: operator edits block host, owner clears, host-onl
   assert.equal(approved.status, 200, await approved.clone().text());
   assert.equal((await row()).operatorDraftPending, false);
   assert.equal((await row()).hasUnpublishedChanges, false);
-  await initializeOperatorDraftPending();
-  assert.equal((await row()).operatorDraftPending, false, "initializer replay after owner publish");
-  assert.equal((await request("host", "PATCH", "", { name: "Host-only draft" })).status, 200);
+  assert.equal((await request("host", "PATCH", "", { wifiSsid: "Guest two" })).status, 200);
   assert.equal((await row()).operatorDraftPending, false);
-  await initializeOperatorDraftPending();
-  assert.equal((await row()).operatorDraftPending, false, "initializer replay must not reflag host edits");
   const published = await request("host", "PATCH", "", {
     isPublished: true, publishNow: true, publishToken: await token("host"),
   });
-  assert.equal(published.status, 200, await published.clone().text());
-  assert.equal((await readPublishedContent(tenantId)).languages.sl?.tree.name, "Host-only draft");
+  assert.equal(published.status, 403, await published.clone().text());
+  assert.deepEqual(await published.json(), {
+    error: "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.",
+  });
+  assert.equal((await readPublishedContent(tenantId)).languages.sl?.tree.name, "Operator draft");
+  const unpublish = await request("host", "PATCH", "", { isPublished: false });
+  assert.equal(unpublish.status, 403);
+  assert.deepEqual(await unpublish.json(), {
+    error: "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.",
+  });
 
   const rollback = new Error("rollback-provenance-test");
   await assert.rejects(runWithHostDbContext(tenantId, () => db.transaction(async (tx) => {
@@ -143,9 +135,7 @@ test("real locked publication: operator edits block host, owner clears, host-onl
     throw rollback;
   }), (error: unknown) => error === rollback);
 
-  // Whichever transaction wins the row lock, a racing owner edit cannot
-  // sneak into a host-published snapshot. If the host publishes first, the
-  // owner edit remains pending; if the edit wins, the host is denied.
+  // Host cannot publish even while an operator edit races it.
   const raceToken = await token("host");
   const [edit, publish] = await Promise.all([
     request("owner", "PATCH", "", { name: "Concurrent operator draft" }),
@@ -154,7 +144,7 @@ test("real locked publication: operator edits block host, owner clears, host-onl
     }),
   ]);
   assert.equal(edit.status, 200);
-  assert.ok([200, 403, 409].includes(publish.status));
+  assert.equal(publish.status, 403);
   assert.equal((await row()).operatorDraftPending, true);
   assert.notEqual((await readPublishedContent(tenantId)).languages.sl?.tree.name, "Concurrent operator draft");
 });

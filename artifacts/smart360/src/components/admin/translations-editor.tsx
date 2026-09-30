@@ -7,6 +7,7 @@ import {
   useGetTranslationOverview,
   useUpsertTranslation,
   useImportTranslations,
+  useGetAdminSession,
   exportTranslations,
   getListTenantTranslationsQueryKey,
   getGetTranslationOverviewQueryKey,
@@ -35,6 +36,8 @@ export function TranslationsEditor({ tenantId }: { tenantId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { data: adminSession } = useGetAdminSession();
+  const isOwner = Boolean(adminSession?.authenticated);
 
   const { data: overview } = useGetTranslationOverview(tenantId, {
     query: { enabled: !!tenantId, queryKey: getGetTranslationOverviewQueryKey(tenantId) },
@@ -127,7 +130,7 @@ export function TranslationsEditor({ tenantId }: { tenantId: string }) {
             {ov.stale > 0 && <span className="text-amber-600"> · {ov.stale} zastarelih</span>}
           </span>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        {isOwner && <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" /> Izvozi JSON
           </Button>
@@ -146,7 +149,7 @@ export function TranslationsEditor({ tenantId }: { tenantId: string }) {
               if (f) void handleImportFile(f);
             }}
           />
-        </div>
+        </div>}
       </div>
 
       <div className="flex items-center gap-2 text-sm">

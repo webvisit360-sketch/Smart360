@@ -1,0 +1,31 @@
+Security hardening phase 2 — the owner's permission model for self-service hosts. Build in dev. Report and STOP. No publication.
+
+THE MODEL (owner's decision)
+HOST KEEPS (for their own tenant):
+- Entries: create, edit (text, bullets, phone, website, map link, price, hours, event start, tint/frame, visibility, ordering, duplicate, soft-delete/restore), move between categories
+- Media on entries: upload, remove, reorder, crop focus; gallery videos
+- GPX: upload, replace, remove; distance recalculation and the distance review flow
+- Orders (status transitions + note) and guest message replies
+- Translations of their own content (single writes + translate-missing)
+- Wi-Fi (SSID, password, encryption)
+- Contact fields (phone, email, WhatsApp, Viber, Instagram), order/message notification settings and order password
+- Own password, QR PNG and nalepka PDF downloads, publish preview and change log (read)
+- The onboarding form flow, unchanged (it is a separate, reviewed flow — including its structured fields and form-created custom categories)
+
+OPERATOR-ONLY from now on (server-side 403 for hosts, everything already operator-only stays so):
+- Structure: sections (create/edit/rename/reorder/soft-delete/restore), categories (create/rename/icon/layout/visibility/reorder/group assignment/soft-delete/restore), group/tab order — ALL of it
+- Appearance: theme, guestUiMode, colors, typography, naslovnica settings, logo fields, hero photos (both), video/tour URL, plan/location-map images
+- Languages list; Living Guide navigation
+- Tenant identity: name, subtitle, address, mapQuery/mapUrl, coordinates (all paths)
+- Publishing AND unpublishing the guide (replaces the phase-1 conditional rule: host publish is now always refused, with a Slovenian message: "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.")
+
+IMPLEMENTATION REQUIREMENTS
+- Enforce in the central permission gate (actorGate) per field/route — never UI-only. Rejections logged like other denials, without rejected values.
+- Host UI: hide or disable the controls that are now operator-only (CGP muted style with a short Slovenian note where a whole page section disappears, e.g. structure editing) — a host must not discover the model through 403s.
+- The onboarding form paths must keep working exactly as today — add regression tests proving form save/submit still passes under the new gate.
+- Tests: for every newly restricted capability one host-403 test and one operator-allowed test; plus host-allowed tests for the KEEPS list (entries, media, GPX, orders, messages, translations, Wi-Fi, contacts).
+- Document the final permission matrix in the project instructions as a standing rule, so future features declare host/operator access explicitly.
+
+No schema changes expected; if any turn out to be needed, stop and ask with the usual ritual.
+
+POVZETEK ZA LASTNIKA in Slovenian, with the final matrix table. Report and STOP. No publication.

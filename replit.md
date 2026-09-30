@@ -12,6 +12,23 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 
 ## Ključne odločitve
 
+- **Varnostni model (faza 2, razvoj; ni objavljeno):** vsak nov admin endpoint in vsako novo polje morata v centralnem `actorGate` izrecno določiti dostop **gostitelj lastne nastanitve / samo operater**; privzeto zavrni, preveri lastništvo najemnika in RLS. UI ne nadomešča strežniške avtorizacije. Zavrnitve se zabeležijo brez zavrnjenih vrednosti; tuji najemnik ostane neviden (404).
+
+  | Zmožnost | Gostitelj (samo svoja nastanitev) | Operater Smart360 |
+  | --- | --- | --- |
+  | Vnosi in vrstni red; podvojitev, premik med kategorijami, koš/obnova | Urejanje in ustvarjanje dovoljeno | Dovoljeno |
+  | Predstavnost **vnosa** (fotografije, video, vrstni red, izrez), GPX in pregled razdalj | Dovoljeno | Dovoljeno |
+  | Naročila (status/opomba), odgovori na sporočila, lastni prevodi in »prevedi manjkajoče« | Dovoljeno | Dovoljeno |
+  | Wi-Fi; telefon, e-pošta, WhatsApp, Viber, Instagram; obvestila in geslo naročil | Dovoljeno | Dovoljeno |
+  | Lastno geslo, QR PNG, nalepka PDF, predogled objave in dnevnik sprememb | Dovoljeno (branje/prenos, kjer je ustrezno) | Dovoljeno |
+  | **Ločen pregledan obrazec za uvajanje** (shranitev/oddaja, strukturirana polja, kategorije ustvarjene prek obrazca) | **Izjema: dovoljeno samo prek onboarding poti** | Pregled in odprtje obrazca |
+  | Struktura: razdelki, kategorije, skupine/zavihki, vse spremembe in koš/obnova | **Ne** | Dovoljeno |
+  | Videz: tema, način UI, barve, tipografija, naslovnica, logo, obe hero fotografiji, video/virtualni ogled, tlorisi/lokacijske slike | **Ne** | Dovoljeno |
+  | Seznam jezikov, navigacija Living Guide; identiteta (ime, podnaslov, naslov, zemljevid, koordinate po vseh poteh) | **Ne** (razen polj ločenega onboarding obrazca) | Dovoljeno |
+  | Objava **in umik** vodnika | **Ne: 403** — »Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.« | Dovoljeno |
+
+  Obstoječe zmožnosti, ki so že samo operaterske (Creator, upravljanje računov, trajno brisanje, vzdrževanje itd.), ostanejo takšne. Ne dodajaj novih funkcij brez izrecne odločitve v matriki in centralnem registru; preveri tudi posamezna polja mešanih PATCH zahtevkov pred kakršnimkoli zapisom. Tehnični testni doseg in omejitve so v `docs/security-phase2.md`.
+
 - Infrastrukturne napake ne smejo biti tihe: zavrnjeno shranjevanje mora ostati jasno označeno, lokalni vnos se ohrani, ponovni poskusi pa ne smejo prikazovati »shranjeno«, dokler spremembe niso potrjene. Osvežitev strani ni rešitev, če bi zavrgla neshranjen vnos.
 
 - `vrsta-dela.md` je edini merodajni seznam dela. Stanje projektne kartice ga ne prekliče ali zaključi; zaključek zahteva produkcijo in v datoteki zahtevani dokaz.

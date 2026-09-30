@@ -819,7 +819,7 @@ export default function AdminTenantEdit() {
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <Button
+            {isOwner && <Button
               onClick={handlePublish}
               disabled={updateMutation.isPending || publicationLoading || publishing}
               className={[
@@ -837,8 +837,10 @@ export default function AdminTenantEdit() {
                 : hasUnpublishedChanges
                   ? "Objavi spremembe"
                   : "Objavljeno"}
-            </Button>
-            {hasUnpublishedChanges && (
+            </Button>}
+            {!isOwner ? (
+              <p className="max-w-[360px] text-right text-xs text-muted-foreground">Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.</p>
+            ) : hasUnpublishedChanges && (
               <p className="max-w-[210px] text-right text-[10px] font-medium leading-tight text-[#9A6818] sm:max-w-[360px] sm:text-[11px]">
                 Neobjavljene spremembe — kliknite Objavi.{" "}
                 {lastPublishLabel
@@ -856,10 +858,10 @@ export default function AdminTenantEdit() {
               <TabsList className="mb-6 bg-white border border-black/5 rounded-[14px] p-1">
                 <TabsTrigger value="general" className="rounded-[10px]">Splošno</TabsTrigger>
                 <TabsTrigger value="onboarding" className="rounded-[10px] text-[#157347]">Obrazec za gostitelja</TabsTrigger>
-                <TabsTrigger value="appearance" className="rounded-[10px]">Videz</TabsTrigger>
+                {isOwner && <TabsTrigger value="appearance" className="rounded-[10px]">Videz</TabsTrigger>}
                 <TabsTrigger value="contacts" className="rounded-[10px]">Stiki & Lokacija</TabsTrigger>
                 <TabsTrigger value="translations" className="rounded-[10px]">Prevodi</TabsTrigger>
-                <TabsTrigger value="guide" className="rounded-[10px]">Living Guide</TabsTrigger>
+                {isOwner && <TabsTrigger value="guide" className="rounded-[10px]">Living Guide</TabsTrigger>}
                 <TabsTrigger value="changelog" className="rounded-[10px]">Zgodovina sprememb</TabsTrigger>
               </TabsList>
             )}
@@ -903,10 +905,10 @@ export default function AdminTenantEdit() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                {isOwner && <div className="space-y-2">
                   <Label>Ime namestitve</Label>
                   <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                </div>
+                </div>}
                 {isOwner && <div className="col-span-2">
                   <SlugField
                     tenantId={id}
@@ -920,15 +922,15 @@ export default function AdminTenantEdit() {
                   <Label>Lastna domena (neobvezno)</Label>
                   <Input placeholder="npr. gostje.mojapartma.si" value={formData.customDomain} onChange={e => setFormData({ ...formData, customDomain: e.target.value })} />
                 </div>}
-                <div className="space-y-2">
+                {isOwner && <div className="space-y-2">
                   <Label>Podnaslov</Label>
                   <Input value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
-                </div>
-                <div className="space-y-2">
+                </div>}
+                {isOwner && <div className="space-y-2">
                   <Label>URL naslovnične (Hero) fotografije</Label>
                   <Input value={formData.heroUrl} onChange={e => setFormData({ ...formData, heroUrl: e.target.value })} />
-                </div>
-                <div className="col-span-2 space-y-2">
+                </div>}
+                {isOwner && <div className="col-span-2 space-y-2">
                   <Label>Virtualni sprehod</Label>
                   <Textarea
                     className="min-h-[96px]"
@@ -959,7 +961,7 @@ export default function AdminTenantEdit() {
                     }
                     return null;
                   })()}
-                </div>
+                </div>}
                 {isOwner && <div className="space-y-2">
                   <Label>Kvota za medije (GB)</Label>
                   <Input type="number" min={0.1} step={0.5} value={mediaQuotaGb} onChange={e => setMediaQuotaGb(e.target.value)} />
@@ -991,7 +993,7 @@ export default function AdminTenantEdit() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-4">
+              {isOwner && <div className="flex items-center gap-2 pt-4">
                 <button
                   type="button"
                   className={`w-12 h-6 rounded-full transition-colors relative ${formData.isPublished ? 'bg-primary' : 'bg-muted-foreground/30'}`}
@@ -1000,7 +1002,7 @@ export default function AdminTenantEdit() {
                   <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${formData.isPublished ? 'left-7' : 'left-1'}`} />
                 </button>
                 <Label>Objavljeno (vidno gostom)</Label>
-              </div>
+              </div>}
 
               <div className="border-t pt-4">
                 <div className="space-y-1">
@@ -1145,7 +1147,7 @@ export default function AdminTenantEdit() {
               }}
             />
           )}
-          <Card data-testid="card-guest-ui-mode">
+          {isOwner && <Card data-testid="card-guest-ui-mode">
             <CardHeader>
               <CardTitle>Vmesnik za goste</CardTitle>
             </CardHeader>
@@ -1160,7 +1162,7 @@ export default function AdminTenantEdit() {
                 </p>
               </div>
             </CardContent>
-          </Card>
+          </Card>}
           {isOwner && <Card>
             <CardHeader>
               <CardTitle>Naročnina</CardTitle>
@@ -1223,7 +1225,7 @@ export default function AdminTenantEdit() {
           <HostOnboardingReview tenantId={id} />
         </TabsContent>
 
-        <TabsContent value="appearance" className="space-y-6">
+        {isOwner && <TabsContent value="appearance" className="space-y-6">
           {/* Hidden file inputs for hero/logo upload */}
           <input
             ref={heroFileRef}
@@ -1480,7 +1482,7 @@ export default function AdminTenantEdit() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
+        </TabsContent>}
 
         <TabsContent value="contacts" className="space-y-4">
           <Card>
@@ -1509,7 +1511,7 @@ export default function AdminTenantEdit() {
                   <Label>E-pošta</Label>
                   <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="info@primer.si" />
                 </div>
-                <div className="space-y-2 col-span-2">
+                {isOwner && <div className="space-y-2 col-span-2">
                   <Label>Google Maps povezava</Label>
                   <Input
                     type="url"
@@ -1520,16 +1522,16 @@ export default function AdminTenantEdit() {
                   <p className="text-xs text-muted-foreground">
                     Če je vpisana, ima prednost pred koordinatami in naslovom.
                   </p>
-                </div>
-                <div className="space-y-2">
+                </div>}
+                {isOwner && <div className="space-y-2">
                   <Label>Latitude (zemljepisna širina) <span className="text-muted-foreground">samodejno iz povezave</span></Label>
                   <Input
                     value={formData.latitude}
                     readOnly
                     placeholder="—"
                   />
-                </div>
-                <div className="space-y-2">
+                </div>}
+                {isOwner && <div className="space-y-2">
                   <Label>Longitude (zemljepisna dolžina) <span className="text-muted-foreground">samodejno iz povezave</span></Label>
                   <Input
                     value={formData.longitude}
@@ -1541,12 +1543,12 @@ export default function AdminTenantEdit() {
                     if (latitude === null || longitude === null) return;
                     updateMutation.mutate({ id, data: { latitude: Number(latitude), longitude: Number(longitude), coordinateOverride: true } });
                   }}>Popravi koordinate (skrbnik)</Button>}
-                </div>
-                <div className="space-y-2 col-span-2">
+                </div>}
+                {isOwner && <div className="space-y-2 col-span-2">
                   <Label>Nadomestna poizvedba za zemljevid (Map Query)</Label>
                   <Input value={formData.mapQuery} onChange={e => setFormData({ ...formData, mapQuery: e.target.value })} placeholder="npr. Malija 143b, Izola" />
                   {isLikelyUrl(formData.mapQuery) && <p className="text-xs text-amber-700">To je povezava — uporabljena bo kot cilj. Za samodejne razdalje jo prilepite v polje »Google Maps povezava«.</p>}
-                </div>
+                </div>}
               </div>
             </CardContent>
           </Card>
@@ -1564,9 +1566,9 @@ export default function AdminTenantEdit() {
         <TabsContent value="content">
           <section className="bg-white" data-testid="section-management">
             <h2 className="mb-2 text-lg font-extrabold">Sekcije in vnosi</h2>
-            <p className="mb-4 text-sm text-muted-foreground">
+            {isOwner && <p className="mb-4 text-sm text-muted-foreground">
               Sekcije lahko premaknete v koš in jih obnovite pod seznamom vsebine. Objavljeni vodnik ostane nespremenjen do naslednje objave.
-            </p>
+            </p>}
             {isOwner && <>
               <SkeletonAlignmentAction tenantId={tenant.id} />
               <DistanceBackfillAction tenantId={tenant.id} />
@@ -1659,7 +1661,7 @@ export default function AdminTenantEdit() {
           </Card>
           <AdminTenantOrders tenantId={id} />
         </TabsContent>
-        <TabsContent value="guide" className="space-y-6">
+        {isOwner && <TabsContent value="guide" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Living Guide</CardTitle>
@@ -1668,7 +1670,7 @@ export default function AdminTenantEdit() {
               <AdminLivingGuideSettings tenant={tenant} id={tenant.id} />
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
 
         <TabsContent value="changelog">
           <TenantChangelogCard tenantId={tenant.id} />

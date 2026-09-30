@@ -93,9 +93,9 @@ test("phase1: field presence denies host atomically; owner reaches the real tena
   assert.equal(unchanged!.renewsAt, null);
   assert.equal(unchanged!.rating, null);
 
-  // Preserve historical routing-identity response and foreign-tenant opacity.
+  // Phase 2 rejects every operator-owned field uniformly before any write.
   for (const field of ["slug", "customDomain"]) {
-    assert.equal((await send(hostServer.base, "PATCH", path, { [field]: null })).status, 400);
+    assert.equal((await send(hostServer.base, "PATCH", path, { [field]: null })).status, 403);
   }
   assert.equal((await send(hostServer.base, "PATCH", `/admin/tenants/${foreign!.id}`,
     { isTemplate: true })).status, 404);
@@ -103,7 +103,7 @@ test("phase1: field presence denies host atomically; owner reaches the real tena
   const entries = await db.select({ detail: hostAuthEventsTable.detail })
     .from(hostAuthEventsTable).where(eq(hostAuthEventsTable.hostUserId, host!.id));
   const denials = entries.map((e) => e.detail ?? "").filter((s) => s.includes("operator_field"));
-  assert.equal(denials.length, restricted.length + 1);
+  assert.equal(denials.length, restricted.length + 1 + 2, "includes slug and customDomain");
   assert.ok(denials.every((s) => !s.includes("HACK") && !s.includes("2030-06-01") &&
     s.includes('"route":"/admin/tenants/:id"') && s.includes('"tenantId"')));
 
@@ -120,20 +120,20 @@ test("phase1: field presence denies host atomically; owner reaches the real tena
   assert.equal(saved!.rating, "4.9");
   assert.equal(saved!.reviewsCount, "9");
 
-  const ownEdit = await send(hostServer.base, "PATCH", path, { name: "Host allowed edit" });
-  assert.equal(ownEdit.status, 200, await ownEdit.clone().text());
+  const ownEdit = await send(hostServer.base, "PATCH", path, { name: "Host denied edit" });
+  assert.equal(ownEdit.status, 403, await ownEdit.clone().text());
   const [hostEdited] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenant!.id));
-  assert.equal(hostEdited!.name, "Host allowed edit");
+  assert.equal(hostEdited!.name, "Owner edit");
 
   assert.equal((await send(hostServer.base, "DELETE", `/admin/sections/${section!.id}`)).status, 403);
   assert.equal((await send(hostServer.base, "DELETE", `/admin/sections/${foreignSection!.id}`)).status, 404);
   const [stillThere] = await db.select().from(sectionsTable).where(eq(sectionsTable.id, section!.id));
   assert.ok(stillThere, "operator-only hard cascade did not run for host");
   assert.equal((await send(hostServer.base, "POST", `/admin/sections/${foreignSection!.id}/trash`)).status, 404);
-  assert.equal((await send(hostServer.base, "POST", `/admin/sections/${section!.id}/trash`)).status, 200);
-  assert.equal((await send(hostServer.base, "POST", `/admin/sections/${section!.id}/restore`)).status, 200);
+  assert.equal((await send(hostServer.base, "POST", `/admin/sections/${section!.id}/trash`)).status, 403);
+  assert.equal((await send(hostServer.base, "POST", `/admin/sections/${section!.id}/restore`)).status, 403);
   assert.equal(ADMIN_ROUTE_REGISTRY.find((r) =>
-    r.method === "post" && r.path === "/admin/sections/:id/trash")?.binding.kind, "entity");
+    r.method === "post" && r.path === "/admin/sections/:id/trash")?.binding.kind, "operator-entity");
   assert.equal(ADMIN_ROUTE_REGISTRY.find((r) =>
-    r.method === "post" && r.path === "/admin/sections/:id/restore")?.binding.kind, "entity");
+    r.method === "post" && r.path === "/admin/sections/:id/restore")?.binding.kind, "operator-entity");
 });

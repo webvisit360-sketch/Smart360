@@ -50,9 +50,31 @@ test("autosave and save-before-publish share a role-aware tenant PATCH body", ()
   }
   assert.equal(owner.mediaQuotaBytes, 3_000_000_000);
   assert.equal(owner.customDomain, "guest.example.com");
-  assert.equal(host.name, "Apartma");
-  assert.equal(host.mapUrl, "https://www.google.com/maps/place/example");
+  assert.ok(!Object.hasOwn(host, "name"));
+  assert.ok(!Object.hasOwn(host, "mapUrl"));
   assert.equal(host.email, "host@example.com");
+  assert.deepEqual(Object.keys(host).sort(), [
+    "email", "instagram", "messageNotifyEmail", "notificationChannel",
+    "notificationWhatsappPhone", "orderNotifyEmail", "phone", "viber",
+    "whatsapp", "wifiEnc", "wifiPass", "wifiSsid",
+  ].sort());
+  const hostileForm = {
+    ...form,
+    theme: "swipe",
+    isPublished: false,
+    publishNow: true,
+    mapQuery: "hidden",
+    heroUrl: "https://example.com/photo",
+    coverTitle: "hidden",
+    logoUrl: "https://example.com/logo",
+    navColor: "#000000",
+    tourUrl: "https://example.com/tour",
+    phone: "+386123",
+    wifiEnc: "WPA",
+    orderNotifyEmail: true,
+  };
+  assert.deepEqual(Object.keys(tenantSavePayload(hostileForm, "3", false)).sort(), Object.keys(host).sort());
+  assert.equal(tenantSavePayload(hostileForm, "3", false).phone, "+386123");
   for (const key of ["latitude", "longitude", "guestUiMode"]) {
     assert.ok(!Object.hasOwn(host, key));
     assert.ok(!Object.hasOwn(owner, key));
