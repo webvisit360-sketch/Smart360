@@ -13,7 +13,7 @@ Izvedeno v razvoju. Agent ni sprožil objave. Brez sprememb strežnika, sheme al
 
 ## Wake Lock
 
-Ko je zaklep dejansko pridobljen: »Zaslon ostaja med turo budén.«
+Ko je zaklep dejansko pridobljen: »Zaslon ostaja med turo buden.«
 
 Če API manjka ali ponovni prevzem ne uspe, so prikazana navodila za iPhone/iPad, Android oziroma splošna navodila za druge naprave. Ni povezav do sistemskih nastavitev. Ob odhodu zavihka v ozadje se zaklep sprosti; ob vrnitvi aktivna tura samodejno poskusi znova. Zaključek zaklep sprosti, tudi če je zahteva ob zaključku še v teku.
 

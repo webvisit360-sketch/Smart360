@@ -23,7 +23,7 @@ test("idle shows start + privacy", () => {
 });
 
 test("wake held shows exact muted text; unavailable shows platform card without links", () => {
-  assert.match(renderToStaticMarkup(createElement(LiveTourWakeNotice, { wakeStatus: "held", platform: "ios", t: sl })), /Zaslon ostaja med turo budén\./);
+  assert.match(renderToStaticMarkup(createElement(LiveTourWakeNotice, { wakeStatus: "held", platform: "ios", t: sl })), /Zaslon ostaja med turo buden\./);
   const ios = renderToStaticMarkup(createElement(LiveTourWakeNotice, { wakeStatus: "unavailable", platform: "ios", t: sl }));
   assert.match(ios, /Samodejno zaklepanje → Nikoli/);
   assert.doesNotMatch(ios, /<a /);
@@ -59,7 +59,7 @@ test("fullscreen overlay renders net and paused time", () => {
 
 test("fullscreen keeps wake feedback visible, including platform instructions", () => {
   const held = renderToStaticMarkup(createElement(LiveTourOverlay, { metrics, status: "moving", t: sl, wakeStatus: "held" }));
-  assert.match(held, /Zaslon ostaja med turo budén/);
+  assert.match(held, /Zaslon ostaja med turo buden/);
   const absent = renderToStaticMarkup(createElement(LiveTourOverlay, { metrics, status: "moving", t: sl, wakeStatus: "unavailable", platform: "ios" }));
   assert.match(absent, /Samodejno zaklepanje/);
 });

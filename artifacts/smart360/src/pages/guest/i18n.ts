@@ -1109,13 +1109,13 @@ export const LIVING_GUIDE_UI = {
     it: "Tour terminato",
   },
   "UI.lg.liveTour.wake.requesting": {
-    sl: "Zaslon ostaja budén …",
+    sl: "Zaslon ostaja buden …",
     en: "Keeping the screen awake …",
     de: "Bildschirm bleibt aktiv …",
     it: "Lo schermo resta acceso …",
   },
   "UI.lg.liveTour.wake.held": {
-    sl: "Zaslon ostaja med turo budén.",
+    sl: "Zaslon ostaja med turo buden.",
     en: "The screen stays awake during the tour.",
     de: "Der Bildschirm bleibt während der Tour aktiv.",
     it: "Lo schermo resta acceso durante il tour.",
