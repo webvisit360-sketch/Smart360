@@ -1940,3 +1940,31 @@ mtime_ms = 1790802750758
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2268a50a-7a80-476e-a933-48d80236ad4f/93654c5f-d726-4ad9-9d2f-5efa7dfd41a8"
 storage_version_token = "1790802940384436"
 content_type = "image/png"
+
+[[outputs]]
+id = "gQOYZIKsE7A9T89nHnT7w"
+uri = "file://artifacts/smart360/reports/offline/banner-sl.png"
+type = "image"
+title = "Vodnik brez povezave"
+description = "Testna namestitev: nevtralno obvestilo ob dejansko prekinjeni povezavi."
+logical_id = "2e23de0e-d636-4c59-b010-87d795405933"
+content_hash = "sha256:b493fa6644c9f2e67bc755d67e615987d74d5b21112b3aed0ddec960ac79ef43"
+size = 25094
+mtime_ms = 1790806778888
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2e23de0e-d636-4c59-b010-87d795405933/4c63eb58-8405-4b20-b8ad-07947b38eeed"
+storage_version_token = "1790808053290599"
+content_type = "image/png"
+
+[[outputs]]
+id = "dbT8oDE746u82BkLuai1O"
+uri = "file://artifacts/smart360/reports/offline/offline-gpx-timer.png"
+type = "image"
+title = "GPX tura brez povezave"
+description = "Prvi zagon ture brez omrežja: izris poti, položaj, višinski profil in časovnik. Neogledana podlaga ni prednaložena."
+logical_id = "00f28e87-1246-4c7d-9d4f-c7f709ecf779"
+content_hash = "sha256:923eeeee766eddc03a1161a9a90aeb1188fd8f321520fba0fc79c7c5a0435198"
+size = 48755
+mtime_ms = 1790807843584
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/00f28e87-1246-4c7d-9d4f-c7f709ecf779/fa7f5af3-d548-4fee-b3a5-4a13c1aaf11d"
+storage_version_token = "1790808054081288"
+content_type = "image/png"

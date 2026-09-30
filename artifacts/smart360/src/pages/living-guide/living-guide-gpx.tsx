@@ -18,6 +18,8 @@ import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration,
 import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import "./living-guide-gpx.css";
 import { TourWeatherStrip } from "./living-guide-weather";
+import { createInitialRouteStyleFallback } from "./living-guide-map-fallback";
+import { controlledMapWorkerUrl } from "./living-guide-map-worker";
 
 const ROUTE_COLOR = "#157347";
 /** Recorded path uses the existing CGP ink token, not a new colour. */
@@ -38,11 +40,13 @@ function markerEl(kind: "start" | "end" | "me", label: string) {
 
 type TourPoint = { lat: number; lon: number };
 
-export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoints, tourSegmentStarts, tourActive, tourStatus, tourKey, tourStartedAt, currentPosition, onPositionChange, fullscreen, onExitFullscreen, overlay, profileStrip }: {
+export function RouteMap({ route, t, freeMode = false, allowOfflineStyle = true, fallbackCenter, tourPoints, tourSegmentStarts, tourActive, tourStatus, tourKey, tourStartedAt, currentPosition, onPositionChange, fullscreen, onExitFullscreen, overlay, profileStrip }: {
   route?: GpxRoute | null;
   t: UiTranslator;
   /** Free recording: no planned GPX; map follows recorded geometry. */
   freeMode?: boolean;
+  /** Living Guide only; legacy retains its existing map-load behavior. */
+  allowOfflineStyle?: boolean;
   /** [lon, lat] used before the first fix in free mode. */
   fallbackCenter?: [number, number] | null;
   /** On-device recorded positions (never sent to the server). */
@@ -134,9 +138,16 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
     const markers: MapLibreMarker[] = [];
     const all = segments.flat();
     if (!mapEl || (!all.length && !freeMode)) return;
-    void import("maplibre-gl").then(({ Map, Marker, LngLatBounds, setWorkerUrl }) => {
+    void import("maplibre-gl").then(async ({ Map, Marker, LngLatBounds, setWorkerUrl }) => {
       if (disposed) return;
-      setWorkerUrl(mapWorkerUrl);
+      // Vite dev worker modules are unbundled; keep its normal dev transport.
+      // The emitted production worker is self-contained and can boot offline
+      // from a page-fetched Blob, without a second worker-origin HTTP request.
+      const workerUrl = allowOfflineStyle && !import.meta.env.DEV
+        ? await controlledMapWorkerUrl(mapWorkerUrl)
+        : mapWorkerUrl;
+      if (disposed) return; // another map may still share the in-flight fetch
+      setWorkerUrl(workerUrl);
       const bounds = all.length ? all.reduce((b, p) => b.extend(p), new LngLatBounds(all[0]!, all[0]!)) : null;
       const map = new Map({
         container: mapEl,
@@ -148,6 +159,7 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
         cooperativeGestures: true,
       });
       mapRef.current = map;
+      const recoverInitialStyle = createInitialRouteStyleFallback(map);
       map.on("rotate", () => {
         setMapBearing(map.getBearing());
         if (import.meta.env.DEV) mapEl.dataset.cameraBearing = String(map.getBearing());
@@ -157,28 +169,38 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
         mapEl.dataset.cameraCenter = JSON.stringify([center.lng, center.lat]);
         mapEl.dataset.cameraZoom = String(map.getZoom());
       });
-      map.on("load", () => {
+      let routeLayersInitialized = false;
+      const initializeRouteLayers = () => {
+        if (disposed || routeLayersInitialized) return;
+        routeLayersInitialized = true;
         setLoadError("");
         // The container may have been sized after construction (sheet
         // animation), so refit once the style is ready.
         map.resize();
         if (bounds) map.fitBounds(bounds, { padding: { top: 56, right: 28, bottom: 28, left: 28 }, maxZoom: 16, duration: 0 });
-        map.addSource("gpx", {
+        if (!map.getSource("gpx")) map.addSource("gpx", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: segments } },
         });
-        map.addLayer({ id: "gpx-casing", type: "line", source: "gpx", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": 7 } });
-        map.addLayer({ id: "gpx-line", type: "line", source: "gpx", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": ROUTE_COLOR, "line-width": 4 } });
+        if (!map.getLayer("gpx-casing")) map.addLayer({ id: "gpx-casing", type: "line", source: "gpx", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": 7 } });
+        if (!map.getLayer("gpx-line")) map.addLayer({ id: "gpx-line", type: "line", source: "gpx", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": ROUTE_COLOR, "line-width": 4 } });
         // Recorded tour path (on-device only), drawn over the planned track.
-        map.addSource("tour", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: [] } } });
-        map.addLayer({ id: "tour-casing", type: "line", source: "tour", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": 6 } });
-        map.addLayer({ id: "tour-line", type: "line", source: "tour", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": RECORDED_COLOR, "line-width": 3, "line-dasharray": [2, 1.4] } });
+        if (!map.getSource("tour")) map.addSource("tour", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: [] } } });
+        if (!map.getLayer("tour-casing")) map.addLayer({ id: "tour-casing", type: "line", source: "tour", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#FFFFFF", "line-width": 6 } });
+        if (!map.getLayer("tour-line")) map.addLayer({ id: "tour-line", type: "line", source: "tour", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": RECORDED_COLOR, "line-width": 3, "line-dasharray": [2, 1.4] } });
         setLoaded(true);
-      });
+      };
+      // style.load precedes tile completion, so cached/partial geography cannot
+      // block the local route, recording source or live GPS marker.
+      if (allowOfflineStyle) map.on("style.load", initializeRouteLayers);
+      map.on("load", initializeRouteLayers);
       map.on("error", (event) => {
         // Surface the real root cause in the console; keep guest text localized.
         console.error("[gpx-map]", event.error ?? event);
         setLoadError(t("UI.lg.gpx.mapError"));
+        // Try the configured provider/cache first. Only a missing initial style
+        // gets a neutral local canvas; never replace a style for tile errors.
+        if (!disposed && allowOfflineStyle) recoverInitialStyle();
       });
       if (segments.length) {
         const first = segments[0]![0]!;
@@ -206,7 +228,7 @@ export function RouteMap({ route, t, freeMode = false, fallbackCenter, tourPoint
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [segments, mapEl, freeMode]);
+  }, [segments, mapEl, freeMode, allowOfflineStyle]);
 
   // Draw the recorded path + tour position marker from tour positions.
   const points = tourPoints ?? [];
@@ -549,6 +571,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
       <RouteMap
         route={route}
         t={t}
+        allowOfflineStyle={lg}
         tourPoints={tour.state?.points}
         tourSegmentStarts={tour.state?.segmentStarts}
         tourActive={tourActive}

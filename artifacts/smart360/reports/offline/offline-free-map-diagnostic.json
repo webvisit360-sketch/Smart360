@@ -1,0 +1,48 @@
+{
+  "render": {
+    "plannedPixels": 0,
+    "recordedPixels": 32,
+    "neutralPixels": 329008,
+    "sourceGeometry": {
+      "planned": {
+        "type": "MultiLineString",
+        "coordinates": []
+      },
+      "recorded": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              14.461,
+              46.1245
+            ],
+            [
+              14.461,
+              46.124575
+            ],
+            [
+              14.461,
+              46.124649999999995
+            ],
+            [
+              14.461,
+              46.124725
+            ],
+            [
+              14.461,
+              46.1248
+            ]
+          ]
+        ]
+      }
+    },
+    "plannedRenderedFeatures": 0,
+    "recordedRenderedFeatures": 1,
+    "neutralFallback": true,
+    "canvas": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "workerRequests": []
+}

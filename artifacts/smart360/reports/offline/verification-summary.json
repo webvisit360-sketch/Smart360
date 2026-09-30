@@ -1,0 +1,61 @@
+{
+  "suite": "artifacts/smart360/e2e/offline-integration.spec.ts",
+  "command": "pnpm exec playwright test --config artifacts/smart360/e2e/playwright.offline.config.ts",
+  "application": "Complete production App built from the real Vite configuration; actual generated per-tenant worker; isolated HTTP fixture with explicitly synthetic tenant snapshots and GPX data",
+  "offlineMethod": "Chromium context.setOffline(true) PLUS fixture transport cut destroying actual app/SW request sockets. Chromium 138 page offline emulation alone was observed not to stop SW-owned fetches.",
+  "visualEvidenceCorrection": {
+    "verifiedScreenshot": "banner-sl.png",
+    "verifiedBy": "Screenshot helper waited for startup splash removal and checked elementFromPoint at banner horizontal center, y=10; resulting image opened and visually inspected",
+    "latestTargetedRun": "SL banner/message test: 1 passed, 0 failed, 44.0 seconds; real transport cut remained active during capture",
+    "otherBannerImages": "Previously saved EN/DE/IT banner screenshots were captured without splash readiness and must NOT be claimed as unobscured visual proof. Their computed-style/localization assertions remain evidence.",
+    "startupLogo": "Earlier uncached splash images were subsequently added to production worker essentials by the owner. Final GPX/free runs assert both /brand/smart360-znak-40.png and /brand/smart360-kolobar-temno.svg are cached and load with naturalWidth > 0 during the first transport-cut offline visit."
+  },
+  "finalMapEvidence": {
+    "gpx": "Full targeted GPX case passed (28.6s), including cold shell, actual canvas rendering, map marker, timer, exports and direct detail. The shell tool connection then terminated before free case completion/result aggregation.",
+    "free": "Reran only free case: 1 passed, 0 failed (23.1s test; 48.1s total).",
+    "gpxPixels": { "plannedGreen": 1961, "recordedInk": 42, "neutralBackground": 324244, "renderedPlannedFeatures": 3, "renderedRecordedFeatures": 1 },
+    "freePixels": { "recordedInk": 32, "neutralBackground": 329008, "renderedRecordedFeatures": 1 },
+    "actualMarker": ".s360-gpx-marker--me (26x26px within viewport), not the elevation-profile reference dot",
+    "screenshotsInspected": ["offline-gpx-timer.png", "offline-free-timer.png"],
+    "observation": "Real MapLibre source geometry, queryRenderedFeatures and WebGL framebuffer pixels read through a map-element property inserted only by the fixture Vite transform. No production global debug hooks.",
+    "network": "Browser offline + socket-level fixture transport cut + DNS failure for both OpenFreeMap hosts, ensuring genuinely unavailable unvisited basemap. Neutral fallback and local planned/recorded canvas lines verified."
+  },
+  "finalTargetedRun": {
+    "tests": ["actual storage image endpoint is cached only once viewed and works with transport cut", "cover revisit does not preload or cache an unopened full gallery"],
+    "passed": 2,
+    "failed": 0,
+    "durationSeconds": 46.5
+  },
+  "incrementalEvidence": [
+    "Transport-cut complete App cold navigation after HTTP-cache clearing; JS/CSS cache inventory and no named admin/portal chunks; offline Explore navigation to GPX, elevation profile, live position reference dot, advancing timer, GPX and PNG exports: passed.",
+    "Transport-cut direct cold GPX detail navigation after the deep-link fix: passed.",
+    "Transport-cut free recorder on first opening, synthetic GPS progress, advancing timer, GPX and PNG exports: passed.",
+    "SL/EN/DE/IT genuine cached-copy banners, computed neutral styles, friendly offline message errors and banner removal on reconnect: all assertions passed. The original combined tests then failed on a test-harness order sign-in selector; order flow was corrected and split into separate tests.",
+    "SL/EN/DE/IT offline order notices through real local guest identity form, no queued mutation on reconnect: four targeted tests passed.",
+    "Synthetic snapshot v2 next online visit and v3 through captured real hourly registration callback; obsolete content caches removed: passed.",
+    "Admin, unrelated API, API mutation, weather, other tenant and HTTP 301 never gain cache fallback; blank browser registration isolation: passed.",
+    "Real media-cache read touches LRU under test-only 16KiB cap; old entry evicted and measured metadata total below cap; injected Cache.put quota failure leaves guide online usable without writes: passed with transport cut.",
+    "Synthetic slug rename canonical 301 purges old scope caches and unregisters old worker: passed.",
+    "Actual /api/storage/img/... image request caches on view and loads after HTTP-cache clear plus transport cut: passed on final build.",
+    "Controlled cover revisit does not cache unopened full gallery: passed on final build."
+  ],
+  "bannerMeasurements": {
+    "background": "rgb(21, 29, 48)",
+    "foreground": "rgb(140, 151, 171)",
+    "cardToken": "#151D30",
+    "textToken": "#8C97AB",
+    "fontSize": "12px",
+    "topPx": 0,
+    "heightPx": { "sl": 34.390625, "en": 34.390625, "de": 51.78125, "it": 34.390625 }
+  },
+  "limits": [
+    "No publication, production mutation, schema change, database edits, admin credentials or production endpoints were used by the suite.",
+    "Version changes and rename were synthetic fixture server changes, not real publishing or database rename flows.",
+    "Hourly path used the real captured one-hour callback, not an elapsed one-hour wait or fabricated incoming worker messages.",
+    "LRU limit was injected into the real worker in the fixture only (16KiB instead of production 50MiB); quota failure was injected via Cache.prototype.put in the worker realm.",
+    "No iOS/Safari physical-device verification or actual browser disk-exhaustion test.",
+    "External map-tile cache hits and fresh-weather-card visibility suppression were not separately browser-verified; runtime-only weather exclusion was verified.",
+    "The final complete 16-test suite was not rerun together. Previously passing checks were deliberately preserved; the final run exercised only the two last affected media regressions.",
+    "SL split banner/message case now has a separate green run and visually inspected unobscured screenshot. EN/DE/IT retain passed assertion-level evidence from the earlier combined cases, rather than separate post-split all-green runner results."
+  ]
+}

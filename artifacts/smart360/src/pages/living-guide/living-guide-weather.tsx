@@ -1,3 +1,4 @@
+import { useLivingGuideOffline } from "./living-guide-offline";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getGetTenantWeatherQueryKey, useGetTenantWeather } from "@workspace/api-client-react";
 import {
@@ -38,10 +39,11 @@ export function useLivingGuideWeather(): WeatherContextValue | null {
  * `override` (dev fixture only) skips the network entirely.
  */
 export function WeatherProvider({ slug, lang, override, children }: { slug: string; lang: string; override?: TenantWeather | null; children: ReactNode }) {
+  const { disconnected } = useLivingGuideOffline();
   const useOverride = override !== undefined;
   const query = useGetTenantWeather(slug, {
     query: {
-      enabled: !useOverride && !!slug,
+      enabled: !disconnected && !useOverride && !!slug,
       queryKey: getGetTenantWeatherQueryKey(slug),
       staleTime: WEATHER_TTL_MS,
       gcTime: WEATHER_TTL_MS * 2,
@@ -71,7 +73,7 @@ export function WeatherProvider({ slug, lang, override, children }: { slug: stri
       window.removeEventListener("pageshow", tick);
     };
   }, []);
-  const weather = usableWeather(raw ?? null, now);
+  const weather = disconnected ? null : usableWeather(raw ?? null, now);
   const expiry = weather ? weatherExpiry(weather) : null;
   useEffect(() => {
     if (expiry === null) return;

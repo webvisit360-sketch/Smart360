@@ -13,9 +13,7 @@ import {
 } from 'wouter';
 import { useGetPublicTenant } from '@workspace/api-client-react';
 
-import Landing from '@/pages/landing';
 import { BRAND_TAGLINE } from '@/lib/brand';
-import { AdminRouter } from '@/components/admin/admin-router';
 import GuestHome from '@/pages/guest/guest-home';
 import GuestCategory from '@/pages/guest/guest-category';
 import GuestLayout from '@/pages/guest/guest-layout';
@@ -24,12 +22,19 @@ import { resolveLang, rememberLang, applyDocumentLang, clampLang } from '@/pages
 import { usePageBg } from '@/pages/guest/use-theme-attr';
 import { useBundleFreshness } from '@/lib/bundle-freshness';
 import { GuestLoadRecovery } from '@/pages/guest/guest-load-recovery';
-import { PasswordTokenPage } from '@/pages/portal/password-token-page';
-import TermsPage from '@/pages/admin/terms';
-import EnquiryPage from '@/pages/enquiry';
-import PrivacyPage from '@/pages/privacy';
 
 const queryClient = new QueryClient();
+// Keep non-guest route bundles out of the guest shell's eager dependency graph.
+const Landing = lazy(() => import('@/pages/landing'));
+const AdminRouter = lazy(() => import('@/components/admin/admin-router').then(
+  (module) => ({ default: module.AdminRouter }),
+));
+const PasswordTokenPage = lazy(() => import('@/pages/portal/password-token-page').then(
+  (module) => ({ default: module.PasswordTokenPage }),
+));
+const TermsPage = lazy(() => import('@/pages/admin/terms'));
+const EnquiryPage = lazy(() => import('@/pages/enquiry'));
+const PrivacyPage = lazy(() => import('@/pages/privacy'));
 const LivingGuideTokensPage = import.meta.env.DEV
   ? lazy(() => import('@/pages/living-guide/LivingGuideTokensPage'))
   : null;
@@ -152,7 +157,7 @@ function GuestHost() {
   // React Query caches this — GuestLayout already fetched it so this is a synchronous cache hit.
   const { data: tenant } = useGetPublicTenant(
     slug,
-    { lang: queryLang, preview: isPreview },
+    { lang: queryLang, preview: isPreview ? true : undefined },
     {
       query: {
         enabled: !!slug,
@@ -299,6 +304,7 @@ function GuestRoute({ slug }: { slug: string }) {
 function Router() {
   return (
     <RoutedErrorBoundary>
+      <Suspense fallback={null}>
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/admin" component={AdminRouter} />
@@ -357,6 +363,7 @@ function Router() {
 
         <Route component={NotFound} />
       </Switch>
+      </Suspense>
     </RoutedErrorBoundary>
   );
 }

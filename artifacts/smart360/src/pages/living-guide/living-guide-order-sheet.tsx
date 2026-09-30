@@ -9,6 +9,8 @@ import {
   rememberGuestIdentity,
 } from "./living-guide-orders";
 import { UiLanguage, UiTranslator } from "../guest/i18n";
+import { useLivingGuideOffline } from "./living-guide-offline";
+import { isOfflineFailure, offlineCopy } from "./living-guide-offline-model";
 
 const hasMinimumPhoneDigits = (value: string) =>
   (value.match(/\d/g)?.length ?? 0) >= 6;
@@ -51,6 +53,7 @@ export function OrderSheet({
   ) => void;
 }) {
   const queryClient = useQueryClient();
+  const { cached, reportNetworkFailure } = useLivingGuideOffline();
   const [qty, setQty] = useState(1);
   const [phone, setPhone] = useState(guest?.phone ?? "");
   const [note, setNote] = useState(initialNote);
@@ -65,6 +68,7 @@ export function OrderSheet({
   const previousCancelRevision = useRef(credentialsCancelRevision);
 
   const createMutation = useCreateOrder({
+    mutation: { networkMode: "always", retry: false },
     request: {
       headers: {
         "x-device-token": getDeviceToken(slug),
@@ -75,6 +79,11 @@ export function OrderSheet({
 
   const submitOrder = async () => {
     setErrorMsg("");
+    if (cached || !navigator.onLine) {
+      setPendingCredentialRetry(false);
+      setErrorMsg(offlineCopy(lang).retry);
+      return;
+    }
     if (
       !guestUnit.trim() ||
       !guestName.trim() ||
@@ -140,6 +149,13 @@ export function OrderSheet({
         queryKey: getListDeviceOrdersQueryKey(slug),
       });
     } catch (error: unknown) {
+      if (isOfflineFailure(error, navigator.onLine)) {
+        setPendingCredentialRetry(false);
+        setErrorMsg(offlineCopy(lang).retry);
+        reportNetworkFailure();
+        setSubmitting(false);
+        return;
+      }
       const data =
         typeof error === "object" && error !== null && "data" in error
           ? (error as { data?: unknown }).data

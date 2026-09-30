@@ -2,6 +2,9 @@ import { ReactNode, useEffect } from "react";
 import { IconSprite } from "./IconSprite";
 import { useLocation, useSearch } from "wouter";
 import { useGetPublicTenant } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { canRegisterGuestWorker, canRegisterLivingGuideWorker } from "../living-guide/living-guide-offline-model";
+import { registerLivingGuideWorker, registerPassthroughGuestWorker } from "../living-guide/living-guide-worker-registration";
 import { resolveLang } from "./i18n";
 import { installTapFeedback } from "./tap-feedback";
 import {
@@ -16,6 +19,7 @@ import "../../styles/tema-sredozemska.css";
 import "../../styles/tema-poteg.css";
 
 export default function GuestLayout({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [location] = useLocation();
   const slug = location.split("/").filter(Boolean)[0] ?? "";
   const searchStr = useSearch();
@@ -34,7 +38,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
 
   const { data: tenant, error, isError } = useGetPublicTenant(
     slug || "", 
-    { lang, preview: isPreview },
+    { lang, preview: isPreview ? true : undefined },
     // retry: false — an unknown slug must show the 404 immediately, not after
     // three retries of a request that will always 404.
     {
@@ -53,33 +57,19 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Custom-domain root/host aliases are NOT within the canonical manifest
     // scope. Only canonical published guest paths register; dev is intentional.
-    if (!tenant || tenant.slug !== slug || isPreview ||
-        !window.location.pathname.startsWith(`/${slug}/`) ||
-        !("serviceWorker" in navigator)) return;
-    let stopped = false;
-    let timer: number | undefined;
-    let registration: ServiceWorkerRegistration | undefined;
-    navigator.serviceWorker.register(
-      `/api/public/tenants/${encodeURIComponent(slug)}/sw.js`,
-      { scope: `/${slug}/`, updateViaCache: "none" },
-    ).then((result) => {
-      if (stopped) return;
-      registration = result;
-      const update = () => {
-        if (document.visibilityState === "visible") void registration?.update().catch(() => undefined);
-      };
-      document.addEventListener("visibilitychange", update);
-      // A single modest interval; no automatic reload (bundle freshness owns it).
-      timer = window.setInterval(update, 60 * 60_000);
-      cleanupVisible = () => document.removeEventListener("visibilitychange", update);
-    }).catch(() => undefined); // browser may block SW in non-secure contexts
-    let cleanupVisible = () => {};
-    return () => {
-      stopped = true;
-      window.clearInterval(timer);
-      cleanupVisible();
+    const workerRoute = {
+      slug, tenantSlug: tenant?.slug, mode: tenant?.guestUiMode,
+      pathname: window.location.pathname, search: window.location.search,
     };
-  }, [tenant?.slug, slug, isPreview]);
+    if (!("serviceWorker" in navigator) || !canRegisterGuestWorker(workerRoute)) return;
+    if (!canRegisterLivingGuideWorker(workerRoute)) return registerPassthroughGuestWorker(slug);
+    return registerLivingGuideWorker(slug, lang, () => {
+      // Refetch content in place: no navigation, remount or draft/tour reset.
+      void queryClient.invalidateQueries({
+        predicate: ({ queryKey }) => queryKey[0] === "getPublicTenant" && queryKey[1] === slug,
+      });
+    });
+  }, [tenant?.slug, tenant?.guestUiMode, slug, lang, searchStr, queryClient]);
 
   useEffect(() => {
     if (tenant) clearGuestLoadRetryGuard();

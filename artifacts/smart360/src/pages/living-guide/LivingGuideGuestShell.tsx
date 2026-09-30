@@ -33,6 +33,7 @@ import { SosCard, SosView } from "./sos/SosView";
 import { SosEntryContext } from "./living-guide-sos-context";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
+import { LivingGuideOfflineBanner, LivingGuideOfflineProvider } from "./living-guide-offline";
 import { tenantWeatherLocation } from "./living-guide-weather-model";
 import type { TenantWeather } from "@workspace/api-client-react";
 import { EXPLORE_RECORDING_TAB_KEY, exploreCategoryChips, recordingTabLabel } from "./living-guide-explore-tabs";
@@ -717,20 +718,8 @@ export default function LivingGuideGuestShell({
     useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const sections = useMemo(() => visible(tenant?.sections), [tenant?.sections]);
-  const detailHeroUrls = useMemo(() => {
-    const urls = new Set<string>();
-    sections.forEach((section: any) => {
-      visible(section.categories).forEach((category: any) => {
-        [...normalizeGuestMedia(category.media), ...visible(category.items).flatMap((item: any) => normalizeGuestMedia(item.media))]
-          .forEach((entry: any) => {
-            const source = mediaImgSrc(entry, HERO_IMAGE_WIDTH);
-            if (source) urls.add(source);
-          });
-      });
-    });
-    return [...urls];
-  }, [sections]);
-  const preloadedDetailImagesRef = useRef<HTMLImageElement[]>([]);
+  // Only mounted cards/details request their media. Do not warm every gallery
+  // from the tenant payload: the cover must not fill the offline browse cache.
 
   useEffect(() => {
     onReady?.();
@@ -795,7 +784,9 @@ export default function LivingGuideGuestShell({
     screen === "messages" ||
     screen === "explore";
   const isDetailPresentation =
-    detailPresentationRequested && canRenderDetailSheet;
+    // A valid category/item URL is a detail even on cold boot, where no SPA
+    // history metadata exists. Never assign "detail" to the base-only layer.
+    (detailPresentationRequested || screen === "detail") && canRenderDetailSheet;
   const [baseScreen, setBaseScreen] = useState<ScreenName>(() =>
     screen === "detail" ? "home" : screen,
   );
@@ -880,20 +871,6 @@ export default function LivingGuideGuestShell({
     guestIdentityComplete &&
     (!messagePasswordRequired || Boolean(messagePassword.trim()));
 
-  useEffect(() => {
-    // The prototype keeps every detail view in the document, so its hero
-    // requests begin before a tap. Mirror that behavior while retaining React
-    // routes: warm the exact detail-size sources as soon as the payload lands.
-    preloadedDetailImagesRef.current = detailHeroUrls.map((source) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.src = source;
-      return image;
-    });
-    return () => {
-      preloadedDetailImagesRef.current = [];
-    };
-  }, [detailHeroUrls]);
   const deviceToken = useMemo(() => getDeviceToken(slug), [slug]);
   const { data: deviceOrders } = useListDeviceOrders(slug, {
     query: {
@@ -1514,6 +1491,21 @@ export default function LivingGuideGuestShell({
       return;
     }
 
+    if (screen === "detail" && !detailPresentationRequested) {
+      // No live source list exists for a direct entry. Normalize this one
+      // history entry so both the close button and phone Back return safely
+      // to Home rather than rendering an empty base layer or leaving the app.
+      detailSourceLocationRef.current = `/${slug}/home`;
+      window.history.replaceState({
+        ...window.history.state,
+        livingGuide: true,
+        livingGuidePresentation: "detail",
+        livingGuideFromPresentation: "standard",
+        livingGuideDirectEntry: true,
+        livingGuideHeldDepth: 0,
+        livingGuideCloseGuard: false,
+      }, "", window.location.href);
+    }
     if (!window.history.state?.livingGuideCloseGuard) {
       window.history.pushState(
         { ...window.history.state, livingGuideCloseGuard: true },
@@ -1761,6 +1753,10 @@ export default function LivingGuideGuestShell({
       ) {
         return;
       }
+      if (window.history.state?.livingGuideDirectEntry) {
+        closePresentedView(`/${slug}/home`);
+        return;
+      }
       beginDetailCloseTransition(() => {
         restoreDetailFocusRef.current = true;
         compactHistoryAfterCloseRef.current = compactAfterClose;
@@ -1771,8 +1767,10 @@ export default function LivingGuideGuestShell({
     return () => window.removeEventListener("popstate", onPopState);
   }, [
     beginDetailCloseTransition,
+    closePresentedView,
     detailTransitionPhase,
     isDetailPresentation,
+    slug,
   ]);
 
   const goBack = useCallback(() => {
@@ -1904,6 +1902,7 @@ export default function LivingGuideGuestShell({
 
   return (
     <SosEntryContext.Provider value={sosEntry}>
+    <LivingGuideOfflineProvider slug={slug} lang={lang}>
     <WeatherProvider slug={slug} lang={lang} override={import.meta.env.DEV ? devWeather : undefined}>
     <div
       ref={rootRef}
@@ -1919,6 +1918,7 @@ export default function LivingGuideGuestShell({
       <style>{`@font-face{font-family:"Inter";src:url("${livingGuideInterWoff2}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`}</style>
       <LivingGuideSprite />
       <Starfield theme={theme} />
+      <LivingGuideOfflineBanner lang={lang} />
 
       <main className="lg2-stage">
         {heldViewStackRef.current.length > 0 && (
@@ -2242,6 +2242,7 @@ export default function LivingGuideGuestShell({
       )}
     </div>
     </WeatherProvider>
+    </LivingGuideOfflineProvider>
     </SosEntryContext.Provider>
   );
 }

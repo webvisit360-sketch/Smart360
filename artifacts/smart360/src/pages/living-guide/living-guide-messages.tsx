@@ -8,6 +8,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { UiTranslator } from "../guest/i18n";
 import { getDeviceToken } from "./living-guide-orders";
 import { beginGuestActivity, endGuestActivity } from "@/lib/bundle-freshness";
+import { useLivingGuideOffline } from "./living-guide-offline";
+import { isOfflineFailure, offlineCopy } from "./living-guide-offline-model";
 
 export function MessagesView({
   tenant,
@@ -44,6 +46,14 @@ export function MessagesView({
   const body = draft;
   const setBody = onDraftChange;
   const [pendingSend, setPendingSend] = useState(false);
+  const [offlineNotice, setOfflineNotice] = useState(false);
+  const { cached, reportNetworkFailure } = useLivingGuideOffline();
+  const rejectOfflineSend = () => {
+    if (!cached && navigator.onLine) return false;
+    setPendingSend(false);
+    setOfflineNotice(true);
+    return true;
+  };
 
   // A typed draft or an in-flight send must never be lost to the
   // stale-bundle self-reload.
@@ -64,12 +74,22 @@ export function MessagesView({
 
   const sendMutation = useSendGuestMessage({
     mutation: {
+      // Never pause a mutation for automatic transmission after reconnect.
+      networkMode: "always",
+      retry: false,
       onSuccess: () => {
+        setOfflineNotice(false);
         setBody("");
         setPendingSend(false);
         queryClient.invalidateQueries({ queryKey: getGetGuestMessagesQueryKey(slug) });
       },
       onError: (error) => {
+        if (isOfflineFailure(error, navigator.onLine)) {
+          setPendingSend(false);
+          setOfflineNotice(true);
+          reportNetworkFailure();
+          return;
+        }
         const status =
           typeof error === "object" && error !== null && "status" in error
             ? Number((error as { status?: unknown }).status)
@@ -101,6 +121,8 @@ export function MessagesView({
 
   const sendMessage = (text: string) => {
     if (!guest || sendMutation.isPending) return;
+    if (rejectOfflineSend()) return;
+    setOfflineNotice(false);
     setPendingSend(false);
     sendMutation.mutate({
       slug,
@@ -118,6 +140,8 @@ export function MessagesView({
   const handleSend = () => {
     const text = body.trim();
     if (!text || sendMutation.isPending) return;
+    if (rejectOfflineSend()) return;
+    setOfflineNotice(false);
     if (!canSend || !guest) {
       setPendingSend(true);
       onCredentialsRequired();
@@ -204,16 +228,18 @@ export function MessagesView({
       </div>
 
       <div className="lg2-msg-compose-area">
-        {sendMutation.isError && (
+        {(offlineNotice || sendMutation.isError) && (
           <div className="lg2-msg-send-error" role="alert" data-testid="messages-send-error">
             <p>
-              {sendErrorStatus === 429
+              {offlineNotice
+                ? offlineCopy(lang).retry
+                : sendErrorStatus === 429
                 ? t("UI.lg.msg.rateLimit")
                 : sendErrorStatus === 403
                   ? t("UI.lg.msg.invalidPassword")
                   : t("UI.lg.msg.sendError")}
             </p>
-            {sendErrorStatus === 403 && (
+            {!offlineNotice && sendErrorStatus === 403 && (
               <button
                 type="button"
                 className="lg2-later"
@@ -232,6 +258,7 @@ export function MessagesView({
             value={body}
             onChange={(e) => {
               setBody(e.target.value);
+              setOfflineNotice(false);
               if (sendMutation.isError) sendMutation.reset();
             }}
             onKeyDown={(e) => {

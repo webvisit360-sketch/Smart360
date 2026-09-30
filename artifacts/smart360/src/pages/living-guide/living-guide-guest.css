@@ -16,6 +16,32 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.lg2-app:has(> .lg2-offline-banner) {
+  display: flex;
+  flex-direction: column;
+}
+
+.lg2-offline-banner {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: min(100%, var(--lg2-shell-width));
+  margin: 0 auto;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
+  background: var(--card);
+  color: var(--tx2);
+  border-bottom: 1px solid var(--line);
+  font: 500 12px/1.45 var(--sans);
+  text-align: center;
+}
+
+.lg2-app:has(> .lg2-offline-banner) > .lg2-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
 .lg2-app button,
 .lg2-app a {
   touch-action: manipulation;

@@ -1,0 +1,25 @@
+Extend the existing per-tenant Living Guide service worker with offline support. The current SW is network-first with NO caching — that foundation stays; we now add a cache layer. No schema changes, no new server endpoints beyond what is needed to version the cache.
+
+1. WHAT IS CACHED
+- App shell (HTML/JS/CSS of the guest guide) and the published guide content for the tenant, versioned by the published snapshot: a new publish must invalidate and refresh the cache on the guest's next online visit and via the existing hourly update check.
+- All GPX route payloads of the tenant's published entries — tours must work fully offline: elevation profile, position dot, timer, free recording, exports.
+- Images: cache-as-you-browse with an LRU cap (~50 MB per tenant, oldest evicted first). Precache only lightweight essentials (logos, icons, hero). Do NOT precache full galleries or 360 panoramas; they are cached only once viewed.
+- Map tiles: cache-as-you-browse under the same LRU logic. Never attempt to prefetch tile areas.
+
+2. STRATEGY
+Network-first with cache fallback for content; stale content is served ONLY when the network fails. Guests online see exactly what they see today. The existing rules stay absolute: the SW must never intercept admin routes, API mutations, 301 redirects, or the weather proxy. Weather stays runtime-only: offline, the card disappears silently (existing >3 h stale rule effectively covers this).
+
+3. OFFLINE UX
+- When a page is served from cache because the network failed, show one slim, neutral banner at the top of the guide (muted card colors, NOT amber — this is information, not a warning): "Ni povezave — vodnik deluje iz shranjene kopije." It disappears as soon as connectivity returns. Localized SL/EN/DE/IT.
+- Sending a message or an order while offline must fail gracefully with a friendly localized notice to retry when back online — never a browser error page. Do not build background sync/outbox in this iteration.
+- Everything is automatic: no "download guide" button, no sync settings screen.
+
+4. LIMITS AND SAFETY
+- Living Guide only; Swipe/legacy unchanged. Custom-domain root remains out of SW scope as today.
+- Respect storage quotas: all cache writes wrapped so quota or eviction failures (notably iOS) degrade silently to network-only behavior, never break the guide.
+- Cache is strictly per tenant (scope /{slug}/), and a slug rename must not leave orphaned caches serving stale content on the old scope.
+
+5. TESTS
+Simulate offline (e.g. Playwright offline mode) and verify: guide navigation works from cache after one online visit; a GPX tour opens offline with profile and timer; publish bumps the version and an online revisit serves the new content; admin, API, 301 and weather requests are never served from cache; LRU eviction respects the cap; offline banner appears and disappears correctly in all four languages; offline message/order attempt shows the friendly notice.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

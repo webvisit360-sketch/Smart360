@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, tenantsTable, tenantAliasesTable } from "@workspace/db";
+import { db, tenantsTable, tenantAliasesTable, publishedSnapshotsTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
   GetTenantWeatherParams,
@@ -18,8 +18,8 @@ import { guestUrl, guestQrSvg } from "../lib/guestUrl";
 import { wifiQrSvg } from "../lib/wifiQr";
 import { isAuthenticated } from "../lib/adminAuth";
 import { getHostResponseStats } from "../lib/hostResponseStats";
-import { readPublishedContent } from "../lib/publishedSnapshots";
-import { renderGuestServiceWorker } from "../lib/guestServiceWorker";
+import { readPublishedContent, type PublishedContent } from "../lib/publishedSnapshots";
+import { guestOfflineConfig, renderGuestServiceWorker, renderLegacyGuestServiceWorker } from "../lib/guestServiceWorker";
 import { getTenantWeatherCached } from "../lib/tenantWeather";
 
 function serialize<T>(value: T): unknown {
@@ -270,9 +270,27 @@ router.get("/public/tenants/:slug/sw.js", async (req, res): Promise<void> => {
     redirectAlias(req, res, slug, tenant.slug, "no-store");
     return;
   }
+  if (tenant.slug !== slug) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // Read content and publication identity atomically: even an unchanged-content
+  // republish must generate new worker bytes and a fresh offline cache namespace.
+  const [publication] = await db.select({
+    content: publishedSnapshotsTable.content,
+    publishedAt: publishedSnapshotsTable.publishedAt,
+  }).from(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, tenant.id));
+  if (!publication) throw new Error("Objavljeni posnetek manjka. Objavljanje ni bilo inicializirano.");
+  const snapshot = publication.content as unknown as PublishedContent;
   res.set("Service-Worker-Allowed", `/${tenant.slug}/`);
   res.set("X-Content-Type-Options", "nosniff");
-  res.type("text/javascript").send(renderGuestServiceWorker(tenant.slug));
+  res.type("text/javascript").send(
+    snapshot.languages.sl?.tree.guestUiMode === "living-guide"
+      ? renderGuestServiceWorker(guestOfflineConfig(
+          tenant.id, tenant.slug, snapshot.languages, publication.publishedAt.toISOString(),
+        ))
+      : renderLegacyGuestServiceWorker(tenant.slug),
+  );
 });
 
 // GET /public/tenants/:slug/manifest.webmanifest
