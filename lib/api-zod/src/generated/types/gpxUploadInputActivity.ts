@@ -12,4 +12,6 @@ export type GpxUploadInputActivity = typeof GpxUploadInputActivity[keyof typeof 
 export const GpxUploadInputActivity = {
   cycling: 'cycling',
   hiking: 'hiking',
+  running: 'running',
+  tek: 'tek',
 } as const;

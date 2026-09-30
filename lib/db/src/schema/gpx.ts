@@ -6,7 +6,7 @@ export type GpxRoute = {
   environment: "development" | "production";
   byteSize: number;
   sha256: string;
-  activity: "cycling" | "hiking";
+  activity: "cycling" | "hiking" | "running";
   segments: Array<Array<{ lat: number; lon: number }>>;
   profile: Array<{ distanceKm: number; elevationM: number | null; segment: number }>;
   distanceKm: number;

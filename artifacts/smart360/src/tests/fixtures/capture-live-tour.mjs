@@ -2,6 +2,7 @@
 // Synthetic GPS stays inside this browser context; no tenant or database writes.
 import { chromium } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
+import assert from "node:assert/strict";
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium",
   headless: true,
@@ -30,10 +31,18 @@ try {
       },
     });
   });
-  await page.goto(`https://${process.env.REPLIT_DEV_DOMAIN}/src/tests/fixtures/live-tour.html`);
+  await page.goto(`https://${process.env.REPLIT_DEV_DOMAIN}/src/tests/fixtures/live-tour.html?activity=running`);
   await page.getByTestId("button-tour-start").waitFor();
+  const badge = page.getByTestId("badge-gpx-activity");
+  assert.equal(await badge.innerText(), "Tek");
+  const badgeBounds = await badge.boundingBox();
+  const headingBounds = await page.getByRole("heading", { name: "Obalna testna pot" }).boundingBox();
+  assert.ok(badgeBounds && headingBounds && badgeBounds.x >= headingBounds.x + headingBounds.width &&
+    badgeBounds.x + badgeBounds.width <= 390, "badge must fit beside heading at 390px");
+  console.log("RUNNING_BADGE_BOUNDS_390", badgeBounds, headingBounds);
   await page.waitForTimeout(7000);
   await mkdir("screenshots", { recursive: true });
+  await page.screenshot({ path: "screenshots/running-guest-gpx-detail.png" });
   await page.screenshot({ path: "screenshots/live-tour-entry-webgl.png" });
   await page.getByTestId("button-tour-start").click();
   await page.waitForTimeout(100);

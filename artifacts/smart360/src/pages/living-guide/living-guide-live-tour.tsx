@@ -10,11 +10,12 @@
 // Explicit React import: node --test (tsx) uses the classic JSX runtime.
 import React from "react";
 import type { UiTranslator } from "../guest/i18n";
+import { formatCalories } from "../../lib/tour-calories";
 
 export type LiveTourStatus = "moving" | "auto-paused" | "manual-paused" | "finished";
 export type LiveTourWake = "idle" | "requesting" | "held" | "unavailable";
 export type LiveTourPlatform = "ios" | "android" | "other";
-export type LiveTourMetrics = { movingMs: number; pausedMs: number; elapsedMs: number; distanceM: number };
+export type LiveTourMetrics = { movingMs: number; pausedMs: number; elapsedMs: number; distanceM: number; caloriesKcal?: number | null };
 
 export function formatTourDuration(ms: number) {
   const total = Math.max(0, Math.floor((Number.isFinite(ms) ? ms : 0) / 1000));
@@ -57,8 +58,10 @@ export function LiveTourStats({ metrics, t, compact = false }: { metrics: LiveTo
     ["total", t("UI.lg.liveTour.total"), formatTourDuration(metrics.elapsedMs)],
     ["distance", t("UI.lg.liveTour.distance"), formatTourDistance(metrics.distanceM)],
   ];
+  const kcal = formatCalories(metrics.caloriesKcal, t("UI.lg.calories.approx"));
+  if (kcal !== null) rows.push(["calories", t("UI.lg.calories.kcal"), kcal]);
   return (
-    <dl className={`s360-tour-stats${compact ? " is-compact" : ""}`}>
+    <dl className={`s360-tour-stats${compact ? " is-compact" : ""}${kcal !== null ? " has-calories" : ""}`}>
       {rows.map(([id, label, value]) => (
         <div key={id} className={id === "net" ? "is-net" : undefined}>
           <dt>{label}</dt><dd data-testid={`text-tour-${id}`}>{value}</dd>
@@ -77,6 +80,8 @@ export function LiveTourOverlay({ metrics, status, t, wakeStatus = "idle", platf
       <span className="s360-tour-overlay-sub" data-testid="text-tour-overlay-paused">
         {t("UI.lg.liveTour.paused")} {formatTourDuration(metrics.pausedMs)} · {t(STATUS_KEY[status])}
       </span>
+      {formatCalories(metrics.caloriesKcal, t("UI.lg.calories.approx")) !== null &&
+        <span className="s360-tour-overlay-sub" data-testid="text-tour-overlay-calories">{formatCalories(metrics.caloriesKcal, t("UI.lg.calories.approx"))}</span>}
       <LiveTourWakeNotice wakeStatus={wakeStatus} platform={platform} t={t} />
     </div>
   );

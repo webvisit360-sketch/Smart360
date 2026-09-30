@@ -1357,14 +1357,14 @@ content_type = "image/png"
 id = "7PK6uEDwo3UrxdeKUDcLb"
 uri = "file://screenshots/free-tour-card.png"
 type = "image"
-title = "Snemanje tur — začetna kartica"
-description = "Razvojni prikaz izbire dejavnosti in začetka snemanja."
+title = "Izbira aktivnosti — tri možnosti"
+description = "Razvojni preizkus: Kolesarjenje, Pohodništvo in Tek pri širini 390 px."
 logical_id = "89b6a5a7-7609-41eb-8713-503d72677597"
-content_hash = "sha256:be73a0348f07991bb0f34c36990ef9ae86d8829966474842f7f3712d0c4f1f18"
-size = 37814
-mtime_ms = 1790731641353
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/89b6a5a7-7609-41eb-8713-503d72677597/79eec3b5-9331-4756-982a-939b433b6f6b"
-storage_version_token = "1790731819815543"
+content_hash = "sha256:7ba18f23bfd9567045cf46832823d02592f3e681ed6f343cf27eb1a2b4ed13db"
+size = 39084
+mtime_ms = 1790744489690
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/89b6a5a7-7609-41eb-8713-503d72677597/4f080853-464b-4548-aefa-ac6211d8dee8"
+storage_version_token = "1790744672737864"
 content_type = "image/png"
 
 [[outputs]]
@@ -1491,4 +1491,74 @@ size = 1810315
 mtime_ms = 1790742859204
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/dd4a94b3-2e3e-465c-a58c-7c23b81f5d0b/2b5497f9-cc15-49df-b9e2-4a20f08f6cdb"
 storage_version_token = "1790743037851368"
+content_type = "image/png"
+
+[[outputs]]
+id = "TgJ26CzNux9MR2evxunWJ"
+uri = "file://screenshots/running-guest-gpx-detail.png"
+type = "image"
+title = "GPX za gosta — Tek"
+description = "Sintetična razvojna pot z oznako Tek in oceno časa po tekaški formuli; brez sprememb podatkov nastanitve."
+logical_id = "e79d6c25-2b8b-4cd1-a489-9ab37035e74d"
+content_hash = "sha256:c1d267ded3214cde919e288f2aac99fbe2a7dbc7763be0eceed6abb6702521d3"
+size = 121526
+mtime_ms = 1790744623310
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e79d6c25-2b8b-4cd1-a489-9ab37035e74d/06583bd5-d3d9-4c7c-a108-775721fd0d45"
+storage_version_token = "1790744673579287"
+content_type = "image/png"
+
+[[outputs]]
+id = "5YpfipPLlqPbZjeXynMxm"
+uri = "file://reports/live-tour-calorie-dev.html"
+type = "html"
+title = "Ocena kalorij — poročilo za lastnika"
+description = "Slovensko poročilo z vsemi formulami, konstantami, viri, omejitvami in rezultati preverjanja. Samo razvoj; brez objave."
+logical_id = "54d72f24-764b-43a5-85e7-643af2df0cf3"
+content_hash = "sha256:579dbe83a5aa2a21470f2a3527affc6dd3e4a52a11ba216dfa0d0658d6e8c811"
+size = 9878
+mtime_ms = 1790745472954
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/54d72f24-764b-43a5-85e7-643af2df0cf3/f4df6e8b-d3a5-4e95-942b-477eab2e9b25"
+storage_version_token = "1790745610154088"
+content_type = "text/html"
+
+[[outputs]]
+id = "PIIDKV_N1IP0Z8Fict2aF"
+uri = "file://artifacts/smart360/screenshots/calorie-ebike-profile.png"
+type = "image"
+title = "Moj profil — električno kolo"
+description = "Sintetični razvojni primer lokalnega profila z izbiro pomoči motorja."
+logical_id = "8e728fcb-1147-4a1d-a2e5-5b322850875b"
+content_hash = "sha256:02fa52a8c3380852c26d8874042c72cc57668d8f6da7a37c6e0216c9db9fad6c"
+size = 76446
+mtime_ms = 1790745286422
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/8e728fcb-1147-4a1d-a2e5-5b322850875b/6efffbed-a1db-4d23-bfa2-9b10dde1a7a9"
+storage_version_token = "1790745611118345"
+content_type = "image/png"
+
+[[outputs]]
+id = "_zHj84S11nL24ZlJtjSoz"
+uri = "file://artifacts/smart360/screenshots/calorie-running-live.png"
+type = "image"
+title = "Tek — približna poraba med turo"
+description = "Prave komponente s simuliranim GPS; podatki ostanejo v testnem brskalniku."
+logical_id = "82458777-64b2-4d0d-8590-5167b25be72e"
+content_hash = "sha256:21f700de6889b802c28b1cdd0474e20449a382d42a87b26884dfa4295b96a89f"
+size = 134667
+mtime_ms = 1790745280034
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/82458777-64b2-4d0d-8590-5167b25be72e/8897e425-3ee1-4a56-9ec9-9523b14fd7b0"
+storage_version_token = "1790745611917361"
+content_type = "image/png"
+
+[[outputs]]
+id = "Cf0zICwN8JLmu64iGfsFR"
+uri = "file://artifacts/smart360/screenshots/calorie-running.png"
+type = "image"
+title = "Izvoz povzetka s kalorijami"
+description = "Lokalni PNG s približno porabo in shematskim prikazom poti."
+logical_id = "d67d4f48-dc6a-4355-a0d2-a318bbb8fa63"
+content_hash = "sha256:61a714879952e3d35830df295a7a854cdc4a605d9d30c36fae3778276628a78c"
+size = 72311
+mtime_ms = 1790745498714
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d67d4f48-dc6a-4355-a0d2-a318bbb8fa63/62f44f96-8248-45c9-b216-3cfdcee17a32"
+storage_version_token = "1790745612677322"
 content_type = "image/png"

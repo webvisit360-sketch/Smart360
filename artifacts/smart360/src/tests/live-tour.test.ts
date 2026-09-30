@@ -5,7 +5,8 @@ import {
   recoverTour, saveTour, startTour, tourMetrics, tourStorageKey,
   MAX_TRACK_POINTS, MAX_TRACK_SEGMENTS, distanceMeters, type TourPoint, type TourState,
 } from '../lib/live-tour';
-import { tourGpx as exportGpx } from '../lib/live-tour-export';
+import { tourGpx as exportGpx, downloadTourImage } from '../lib/live-tour-export';
+import { LIVING_GUIDE_UI } from '../pages/guest/i18n';
 import { parseGpx } from '../../../api-server/src/lib/gpxParser';
 import { TourWakeController } from '../hooks/use-live-tour';
 
@@ -54,7 +55,7 @@ test('deterministic browser simulation: move, dwell, auto-pause, exit, finish ac
   s = finishTour(s, origin + 40000);
   assert.deepEqual(tourMetrics(s, origin + 50000), {
     movingMs: 17000, pausedMs: 23000, elapsedMs: 40000,
-     distanceM: s.distanceM, ascentM: s.ascentM,
+      distanceM: s.distanceM, ascentM: s.ascentM, caloriesKcal: null,
   });
   assert.ok(s.distanceM > 59 && s.distanceM < 61);
 });
@@ -114,7 +115,7 @@ test('low quality fixes cannot resume; gap remains paused within circle and begi
 
 test('no GPS wait/gaps credited as movement; long gap does not bridge distance', () => {
   let s = startTour(origin);
-   assert.deepEqual(tourMetrics(s, origin + 50000), { movingMs: 0, pausedMs: 50000, elapsedMs: 50000, distanceM: 0, ascentM: 0 });
+   assert.deepEqual(tourMetrics(s, origin + 50000), { movingMs: 0, pausedMs: 50000, elapsedMs: 50000, distanceM: 0, ascentM: 0, caloriesKcal: null });
   s = fix(s, 50000, 0);
   s = fix(s, 51000, 10);
   assert.ok(s.distanceM > 8);
@@ -178,6 +179,71 @@ test('versioned backup rejects corrupt/unknown data, blocks storage failures, is
   assert.equal(loadTour('a', blocked), null);
   assert.doesNotThrow(() => saveTour('a', s, blocked));
   assert.doesNotThrow(() => saveTour('a', null, blocked));
+});
+
+test('running recording keeps activity on recovery and exports importable named GPX', () => {
+  const memory = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => memory.get(k) ?? null,
+    setItem: (k: string, v: string) => { memory.set(k, v); },
+    removeItem: (k: string) => { memory.delete(k); },
+  };
+  let s = startTour(origin, 'running');
+  s = recordTourPoint(s, { ...point(1000, 0), altitude: 100 });
+  s = recordTourPoint(s, { ...point(11000, 30), altitude: 110 });
+  saveTour('running', s, storage);
+  const recovered = loadTour('running', storage);
+  assert.equal(recovered?.activity, 'running');
+  const gpx = exportGpx(finishTour(recovered!, origin + 12000), 'Moja tura · Tek');
+  assert.match(gpx, /<name>Moja tura · Tek<\/name>/);
+  assert.equal((gpx.match(/<time>/g) ?? []).length, 2);
+  const parsed = parseGpx(Buffer.from(gpx), 'running');
+  assert.equal(parsed.ascentM, 10);
+  assert.equal(parsed.durationMinutes, Number(((parsed.distanceKm / 10 + 10 / 600) * 60).toFixed(2)));
+});
+
+test('free recording PNG canvas writes the exact localized running activity in four languages', async () => {
+  const oldDocument = globalThis.document, oldWindow = globalThis.window;
+  const oldStyle = globalThis.getComputedStyle, oldUrl = URL.createObjectURL;
+  const lines: string[] = [];
+  const context = {
+    fillRect: () => undefined, strokeRect: () => undefined, fillText: (text: string) => { lines.push(text); },
+    measureText: (text: string) => ({ width: text.length * 14 }),
+    beginPath: () => undefined, moveTo: () => undefined, lineTo: () => undefined,
+    stroke: () => undefined, setLineDash: () => undefined,
+  };
+  const canvas = { getContext: () => context, toBlob: (done: (value: Blob) => void) => done(new Blob(['PNG'])) };
+  const link = { click: () => undefined, remove: () => undefined, href: '', download: '' };
+  Object.assign(globalThis, {
+    document: { documentElement: {}, body: { appendChild: () => undefined },
+      createElement: (tag: string) => tag === 'canvas' ? canvas : link },
+    window: { setTimeout: () => 0 },
+    getComputedStyle: () => ({ getPropertyValue: () => '' }),
+  });
+  URL.createObjectURL = () => 'blob:test-only';
+  try {
+    const state = finishTour(startTour(origin, 'running'), origin + 1000);
+    for (const [lang, text] of Object.entries({ sl: 'Tek', en: 'Running', de: 'Laufen', it: 'Corsa' })) {
+      lines.length = 0;
+      const routeName = `Moja tura · ${LIVING_GUIDE_UI['UI.lg.gpx.running'][lang as 'sl' | 'en' | 'de' | 'it']}`;
+      await downloadTourImage(state, tourMetrics(state, origin + 1000), [], {
+        title: 'Tour summary', routeName, schematic: 'Schematic route diagram · not a map',
+      });
+      assert.equal(routeName, `Moja tura · ${text}`);
+      assert.ok(lines.includes(routeName), `PNG canvas must print ${text}`);
+      assert.ok(lines.includes('Schematic route diagram · not a map'));
+      assert.ok(!lines.some(line => /kcal/i.test(line)), 'missing weight must not render kcal in PNG');
+    }
+    lines.length = 0;
+    const weighted = finishTour(startTour(origin, 'running', { weightKg: 70 }), origin + 1000);
+    await downloadTourImage(weighted, tourMetrics(weighted, origin + 1000), [], {
+      calories: 'Energy (approx.)', approx: 'approx.',
+    });
+    assert.ok(lines.includes('approx. 0 kcal'), 'weighted PNG contains the approximate kcal label');
+  } finally {
+    URL.createObjectURL = oldUrl;
+    Object.assign(globalThis, { document: oldDocument, window: oldWindow, getComputedStyle: oldStyle });
+  }
 });
 
 test('all-day track simplifies progressively without changing raw distance; GPX imports into our server parser', () => {

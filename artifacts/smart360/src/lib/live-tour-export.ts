@@ -1,4 +1,5 @@
 import type { TourMetrics, TourPoint, TourState } from './live-tour';
+import { formatCalories } from './tour-calories';
 
 // Exports are generated entirely in the browser from local tour data; no positions leave the device.
 const xml = (value: string) => value.replace(/[<>&"']/g, c =>
@@ -61,6 +62,8 @@ export async function downloadTourImage(
   ctx.fillText(labels.title || 'Tour', 64, 85);
   ctx.font = '24px sans-serif'; ctx.fillStyle = muted;
   ctx.fillText(new Date(state.startedAt).toLocaleString(), 64, 126);
+  // The free-tour heading is generic; include its localized activity in the image.
+  if (labels.routeName) ctx.fillText(labels.routeName, 64, 159);
   const stats: [string, string][] = [
     [labels.net || 'Moving', labels.netValue || duration(metrics.movingMs)],
     [labels.paused || 'Paused', labels.pausedValue || duration(metrics.pausedMs)],
@@ -70,15 +73,31 @@ export async function downloadTourImage(
   if (labels.ascent && metrics.ascentM !== undefined) {
     stats.push([labels.ascent, labels.ascentValue || `${Math.round(metrics.ascentM)} m`]);
   }
+  const kcal = formatCalories(metrics.caloriesKcal, labels.approx || 'approx.');
+  if (kcal !== null) stats.push([labels.calories || 'Energy (approx.)', kcal]);
+  const twoRows = stats.length === 6;
   stats.forEach(([label, value], i) => {
-    // The existing four-stat route image is unchanged; free recording opts into a fifth stat.
-    const x = stats.length === 5 ? 64 + i * 216 : 64 + i * 280;
-    ctx.font = stats.length === 5 ? '18px sans-serif' : '21px sans-serif';
-    ctx.fillStyle = muted; ctx.fillText(label, x, 196);
-    ctx.font = stats.length === 5 ? 'bold 28px sans-serif' : 'bold 32px sans-serif';
-    ctx.fillStyle = foreground; ctx.fillText(value, x, 241);
+    const column = twoRows ? i % 3 : i;
+    const row = twoRows ? Math.floor(i / 3) : 0;
+    const cellWidth = 1072 / (twoRows ? 3 : stats.length);
+    const x = 64 + column * cellWidth;
+    const maxWidth = cellWidth - 20;
+    ctx.font = stats.length >= 5 ? '18px sans-serif' : '21px sans-serif';
+    ctx.fillStyle = muted;
+    // Labels can be longer in SL/EN/DE/IT. Break on words rather than painting into the next cell.
+    const words = label.split(/\s+/);
+    const lines: string[] = [];
+    for (const word of words) {
+      const candidate = lines.length ? `${lines[lines.length - 1]} ${word}` : word;
+      if (lines.length && ctx.measureText(candidate).width > maxWidth) lines.push(word);
+      else if (lines.length) lines[lines.length - 1] = candidate;
+      else lines.push(word);
+    }
+    lines.forEach((line, n) => ctx.fillText(line, x, (twoRows ? 190 + row * 105 : 196) + n * 21, maxWidth));
+    ctx.font = stats.length >= 5 ? 'bold 27px sans-serif' : 'bold 32px sans-serif';
+    ctx.fillStyle = foreground; ctx.fillText(value, x, twoRows ? 243 + row * 105 : 241, maxWidth);
   });
-  ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.strokeRect(64, 285, 1072, 530);
+  ctx.strokeStyle = muted; ctx.lineWidth = 1; ctx.strokeRect(64, twoRows ? 380 : 285, 1072, twoRows ? 435 : 530);
   const recorded = state.points.map(p => [p.lon, p.lat]);
   const all = [...plannedSegments.flat(), ...recorded].filter(p =>
     Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]));
@@ -91,14 +110,14 @@ export async function downloadTourImage(
     const cosLat = Math.max(0.01, Math.cos(((minY + maxY) / 2) * Math.PI / 180));
     const spanX = Math.max(0.00001, (maxX - minX) * cosLat);
     const spanY = Math.max(0.00001, maxY - minY);
-    const scale = Math.min(960 / spanX, 420 / spanY);
+    const scale = Math.min(960 / spanX, (twoRows ? 340 : 420) / spanY);
     const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
     const draw = (segment: number[][]) => {
       let began = false;
       for (const p of segment) {
         if (!Number.isFinite(p?.[0]) || !Number.isFinite(p?.[1])) continue;
         const x = 600 + (p[0] - centerX) * cosLat * scale;
-        const y = 550 - (p[1] - centerY) * scale;
+        const y = (twoRows ? 595 : 550) - (p[1] - centerY) * scale;
         if (!began) { ctx.moveTo(x, y); began = true; } else ctx.lineTo(x, y);
       }
     };

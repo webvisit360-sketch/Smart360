@@ -5425,7 +5425,7 @@ components:
       required: [file, activity]
       properties:
         file: { type: string, format: binary }
-        activity: { type: string, enum: [cycling, hiking] }
+        activity: { type: string, enum: [cycling, hiking, running, tek] }
     GpxPoint:
       type: object
       required: [lat, lon]
@@ -5449,7 +5449,7 @@ components:
         environment: { type: string, enum: [development, production] }
         byteSize: { type: number, maximum: 5242880 }
         sha256: { type: string }
-        activity: { type: string, enum: [cycling, hiking] }
+        activity: { type: string, enum: [cycling, hiking, running] }
         segments:
           type: array
           maxItems: 100

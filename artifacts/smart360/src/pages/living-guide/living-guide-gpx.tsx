@@ -13,6 +13,7 @@ import type { UiTranslator } from "../guest/i18n";
 import { useLiveTour } from "@/hooks/use-live-tour";
 import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
 import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration, tourSegments } from "./living-guide-live-tour";
+import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import "./living-guide-gpx.css";
 
 const ROUTE_COLOR = "#157347";
@@ -467,6 +468,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
   const lg = variant === "lg";
   // All tour data is on-device only (memory + localStorage inside the hook).
   const tour = useLiveTour(`${slug}/${itemId}`);
+  const profile = useTourProfile();
   const [ordinaryPosition, setOrdinaryPosition] = useState<TourPoint | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [exporting, setExporting] = useState<"image" | "gpx" | null>(null);
@@ -501,6 +503,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         paused: t("UI.lg.liveTour.paused"),
         elapsed: t("UI.lg.liveTour.total"),
         distance: t("UI.lg.liveTour.distance"),
+        calories: t("UI.lg.calories.kcal"), approx: t("UI.lg.calories.approx"),
         planned: t("UI.lg.liveTour.planned"),
         recorded: t("UI.lg.liveTour.recorded"),
         schematic: t("UI.lg.liveTour.schematic"),
@@ -533,7 +536,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
     <section className={`s360-gpx${lg ? "" : " s360-gpx--legacy"}`} aria-label={t("UI.lg.gpx.title")} data-testid="lg-gpx-route">
       <div className="s360-gpx-head">
         <h2>{heading || t("UI.lg.gpx.title")}</h2>
-        <span className={lg ? "lg2-chip" : "s360-gpx-chip"}>{t(route.activity === "cycling" ? "UI.lg.gpx.cycling" : "UI.lg.gpx.hiking")}</span>
+        <span className={lg ? "lg2-chip" : "s360-gpx-chip"} data-testid="badge-gpx-activity">{t(`UI.lg.gpx.${route.activity}`)}</span>
       </div>
       <RouteMap
         route={route}
@@ -561,7 +564,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         geoError={tour.geoError}
         exporting={exporting}
         exportError={exportError}
-        onStart={() => { setExportError(false); tour.start(); }}
+        onStart={() => profile.start(snapshot => { setExportError(false); tour.start(route.activity, snapshot); })}
         onPause={tour.pause}
         onResume={tour.resume}
         onFinish={tour.finish}
@@ -570,6 +573,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         onDownloadImage={() => { void onDownloadImage(); }}
         onDownloadGpx={onDownloadGpx}
       />
+      <TourProfileControl t={t} activity={route.activity} tourActive={tourActive} controller={profile} />
       <dl className="s360-gpx-stats">
         {stats.map(([label, value]) => (
           <div key={label}><dt>{label}</dt><dd className={value === na ? "is-na" : undefined}>{value}</dd></div>

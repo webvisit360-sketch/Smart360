@@ -165,7 +165,7 @@ export const GetHostOnboardingResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getHostOnboardingResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -400,7 +400,7 @@ export const AutosaveHostOnboardingBody = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(autosaveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -596,7 +596,7 @@ export const SaveHostOnboardingBody = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(saveHostOnboardingBodyDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -830,7 +830,7 @@ export const CreateHostOnboardingCategoryResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(createHostOnboardingCategoryResponseDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -1075,7 +1075,7 @@ export const ConfirmHostOnboardingSubmissionBody = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(confirmHostOnboardingSubmissionBodyDataOneCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -1329,7 +1329,7 @@ export const GetOwnerHostOnboardingResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getOwnerHostOnboardingResponseRoundsItemDataCanonicalItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -1993,7 +1993,7 @@ export const GetPublicTenantResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getPublicTenantResponseTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -4046,7 +4046,7 @@ export const GetTenantResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMin).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMin).max(getTenantResponseOneTwoSectionsItemTwoCategoriesItemTwoItemsItemGpxRouteOneSegmentsItemItemLonMax)
@@ -5147,7 +5147,7 @@ export const CreateItemResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(createItemResponseGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(createItemResponseGpxRouteOneSegmentsItemItemLatMin).max(createItemResponseGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(createItemResponseGpxRouteOneSegmentsItemItemLonMin).max(createItemResponseGpxRouteOneSegmentsItemItemLonMax)
@@ -5335,7 +5335,7 @@ export const CreateAdminPlaceResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(createAdminPlaceResponseGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLatMin).max(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLonMin).max(createAdminPlaceResponseGpxRouteOneSegmentsItemItemLonMax)
@@ -5479,7 +5479,7 @@ export const UpdateItemResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(updateItemResponseGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(updateItemResponseGpxRouteOneSegmentsItemItemLatMin).max(updateItemResponseGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(updateItemResponseGpxRouteOneSegmentsItemItemLonMin).max(updateItemResponseGpxRouteOneSegmentsItemItemLonMax)
@@ -5563,7 +5563,7 @@ export const UploadItemGpxParams = zod.object({
 
 export const UploadItemGpxBody = zod.object({
   "file": zod.unknown(),
-  "activity": zod.enum(['cycling', 'hiking'])
+  "activity": zod.enum(['cycling', 'hiking', 'running', 'tek'])
 })
 
 export const uploadItemGpxResponseByteSizeMax = 5242880;
@@ -5589,7 +5589,7 @@ export const UploadItemGpxResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(uploadItemGpxResponseByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(uploadItemGpxResponseSegmentsItemItemLatMin).max(uploadItemGpxResponseSegmentsItemItemLatMax),
   "lon": zod.number().min(uploadItemGpxResponseSegmentsItemItemLonMin).max(uploadItemGpxResponseSegmentsItemItemLonMax)
@@ -5835,7 +5835,7 @@ export const DuplicateItemResponse = zod.object({
   "environment": zod.enum(['development', 'production']),
   "byteSize": zod.number().max(duplicateItemResponseGpxRouteOneByteSizeMax),
   "sha256": zod.string(),
-  "activity": zod.enum(['cycling', 'hiking']),
+  "activity": zod.enum(['cycling', 'hiking', 'running']),
   "segments": zod.array(zod.array(zod.object({
   "lat": zod.number().min(duplicateItemResponseGpxRouteOneSegmentsItemItemLatMin).max(duplicateItemResponseGpxRouteOneSegmentsItemItemLatMax),
   "lon": zod.number().min(duplicateItemResponseGpxRouteOneSegmentsItemItemLonMin).max(duplicateItemResponseGpxRouteOneSegmentsItemItemLonMax)

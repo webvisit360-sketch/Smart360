@@ -29,11 +29,17 @@ test("flag is default off and published-true only", () => {
   assert.equal(isTourRecordingEnabled({ tourRecordingEnabled: true }), true);
 });
 
-test("intro renders both activities, selected state and privacy", () => {
+test("intro renders three activities, selected running state and privacy", () => {
   const m = renderToStaticMarkup(createElement(FreeTourIntro, { t: sl, activity: "cycling", onActivity: noop, onStart: noop }));
   assert.match(m, /data-testid="radio-free-activity-cycling"[^>]*checked=""/);
   assert.match(m, /Kolesarjenje/);
   assert.match(m, /Pohodništvo/);
+  assert.match(m, /Tek/);
+  const running = renderToStaticMarkup(createElement(FreeTourIntro, { t: sl, activity: "running", onActivity: noop, onStart: noop }));
+  assert.match(running, /data-testid="radio-free-activity-running"[^>]*checked=""/);
+  for (const [lang, label] of Object.entries({ sl: "Tek", en: "Running", de: "Laufen", it: "Corsa" })) {
+    assert.equal((LIVING_GUIDE_UI as any)["UI.lg.gpx.running"][lang], label);
+  }
   assert.match(m, /data-testid="button-free-tour-start"/);
   assert.match(m, /data-testid="text-free-tour-privacy"/);
 });

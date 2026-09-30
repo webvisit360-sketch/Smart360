@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Razvojno poročilo — ocena kalorij med turo</title>
+  <style>
+    :root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f4f6f2;color:#17221b;font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+    main{max-width:1000px;margin:32px auto;padding:36px;background:#fff;border:1px solid #dde5dd;border-radius:16px}
+    h1,h2{line-height:1.2}h1{font-size:2rem}h2{margin-top:2rem;font-size:1.3rem;border-bottom:1px solid #dce4dd;padding-bottom:7px}
+    .badge{display:inline-block;background:#e4f3e9;color:#125534;padding:5px 10px;border-radius:6px;font-weight:700}
+    .warning{border-left:4px solid #157347;padding:8px 16px;background:#f4f8f4}
+    table{border-collapse:collapse;width:100%;font-size:.91rem}th,td{border:1px solid #dce4dd;padding:9px 11px;vertical-align:top;text-align:left}
+    th{background:#edf3ee}td:first-child{min-width:180px;font-weight:650}code{font-size:.88em;overflow-wrap:anywhere}
+    a{color:#126d44}li{margin:7px 0}small{color:#536357}
+    @media(max-width:650px){main{margin:0;padding:20px;border:0;border-radius:0}table{display:block;overflow-x:auto}td:first-child{min-width:130px}}
+    @media print{body{background:#fff}main{margin:0;padding:0;border:0}a{color:#126d44}}
+  </style>
+</head>
+<body><main>
+  <span class="badge">SAMO RAZVOJ · STOP · NI OBJAVLJENO</span>
+  <h1>Ocena kalorij med snemanjem ture</h1>
+  <p>Implementirano za tek, pohodništvo in kolesarjenje, pri načrtovani poti GPX in prostem snemanju. Rezultat je <strong>groba ocena, zaokrožena na 10 kcal in označena »pribl.«</strong>; ni individualno preverjena zdravstvena meritev.</p>
+
+  <h2>Zasebnost in profil</h2>
+  <p>Pred prvo turo je neobvezen korak »Moj profil«: leta, spol (ženska/moški), teža; pri kolesu še cestno/gorsko/treking-mestno/električno ter ob električnem nizka/srednja/visoka pomoč. Korak je mogoče preskočiti, profil pa spremeniti v majhnem kontrolniku »Profil« pri obeh vrstah ture. <strong>Brez vnesene teže ni prikaza kcal</strong> niti med vožnjo, v povzetku ali izvoženi sliki; teža ni nikoli privzeto ugibana. Podatki in ocena ostanejo le v pomnilniku naprave oziroma v zaščiteno dostopani lokalni shrambi. Če je shramba blokirana, se prikaže opozorilo; podatki tedaj veljajo samo do zaprtja strani. Ob začetku se shrani nespremenljiv posnetek profila z akumulatorjem kcal. Kasnejše urejanje velja šele za <em>naslednjo</em> turo; stare ture brez posnetka profila nimajo naknadno izračunane ocene. Ni prenosa profila, ocene, lokacij ali časov na API, v analitiko ali GPX. Izvorni format GPX ni spremenjen. Izvoz PNG je lokalna shema poti, ne posnetek zemljevida.</p>
+
+  <h2>Formule, vse konstante in razlogi</h2>
+  <p>Upoštevani so samo sprejeti premikajoči se GPS-segmenti. Premor in prekinitev GPS ne dodata kalorij; seštevek nastaja med snemanjem, nikoli iz poenostavljene ali okrnjene sledi. Naklon uporablja drseče okno najmanj 20 m sprejetih popravkov; pred prvim oknom je raven. Ob manjkajoči/neuporabni višini, prekoračeni natančnosti ali premoru se nagib ponastavi na raven. Veter ni merjen ali upoštevan.</p>
+  <table><thead><tr><th>Model ali konstanta</th><th>Vrednost, vir oziroma razlog</th></tr></thead><tbody>
+    <tr><td>Tek — Minetti</td><td><code>Cr(i)=155,4i⁵−30,4i⁴−43,3i³+46,3i²+19,5i+3,6</code> J/kg/m; <a href="https://journals.physiology.org/doi/10.1152/japplphysiol.01177.2001">Minetti idr., 2002</a>. Deljenje s 3,6 je namensko prilagajanje zahtevani ravninski osnovi <strong>1 kcal/kg/km</strong>.</td></tr>
+    <tr><td>Hoja navzdol — Minetti</td><td><code>Cw(i)=280,5i⁵−58,7i⁴−76,8i³+51,9i²+19,6i+2,5</code> J/kg/m; <a href="https://journals.physiology.org/doi/10.1152/japplphysiol.01177.2001">Minetti idr., 2002</a>. Strošek je deljen z 2,5 in pomnožen z ACSM ravninsko osnovo 0,5 kcal/kg/km.</td></tr>
+    <tr><td>Hoja po ravnem/navzgor</td><td><code>0,5 + 9i</code> kcal/kg/km; iz <a href="https://www.depts.ttu.edu/ksm/_documents/grad/acsm_comps/6a_Formulas_for_Met_Calucations-Table_7.3.pdf">enačbe ACSM za hojo</a> (0,1 + 1,8 × naklon ml/kg/m) s pretvorbo 5 kcal/L; komponenta počitka 3,5 ml/kg/min je odstranjena.</td></tr>
+    <tr><td>Spodnje meje spusta</td><td>Tek najmanj 0,35 in hoja najmanj 0,30 kcal/kg/km: previdnostna produktna omejitev proti negativnim ali absurdno nizkim vrednostim.</td></tr>
+    <tr><td>Meje naklona</td><td>Največ ±0,35; konservativno znotraj približno ±0,45 območja raziskave Minetti. Nad pragom, ob >2 m/s višinske hitrosti ali slabši natančnosti se uporabi raven naklon.</td></tr>
+    <tr><td>Kotalni koeficient Crr</td><td>Cestno 0,005; gorsko 0,012; treking-mestno 0,008; električno 0,010. Ponazorilne produktne predpostavke za cestne, grobe in uporabne plašče, <strong>ne izmerjene vrednosti posameznikovega kolesa</strong>. Fizikalna struktura: <a href="https://collections.lib.utah.edu/dl_files/b4/8e/b48ef26086091662c561e673d7bd990d77868437.pdf">Martin idr., 1998</a>.</td></tr>
+    <tr><td>Aerodinamični CdA</td><td>Cestno 0,32; gorsko 0,45; treking-mestno 0,42; električno 0,48 m². Ponazorilni produktni položaji telesa, ne meritev posameznika; veter ni na voljo.</td></tr>
+    <tr><td>Masa kolesa</td><td>Cestno 9; gorsko 14; treking-mestno 15; električno 24 kg: izrecne reprezentativne predpostavke. Če tip manjka, je predpostavljeno treking-mestno kolo; masa človeka je <em>vedno</em> le vnesena teža.</td></tr>
+    <tr><td>Sila in energija pri kolesu</td><td><code>F=(teža človeka+masa kolesa)×9,81×(Crr+i)+0,5×1,225×CdA×v²</code>; <code>kcal=max(5 W, max(0,F×v)×delež človeka)×sekunde/(0,24×4184)</code>. <a href="https://collections.lib.utah.edu/dl_files/b4/8e/b48ef26086091662c561e673d7bd990d77868437.pdf">Martin idr.</a> za ravnotežje kotalne/aerodinamične/gravitacijske moči; 9,81 m/s² standardni težni pospešek; 1,225 kg/m³ standardna gostota zraka pri morski gladini; 4184 J/kcal pretvorba; 0,24 je zahtevana <em>predpostavljena</em> bruto presnovna učinkovitost.</td></tr>
+    <tr><td>Spust in prosti tek</td><td>Negativna potrebna moč se omeji na nič, lahka osnova je 5 W mehanskega ekvivalenta; produktna približna ocena za prosti tek, brez »negativnih kalorij«.</td></tr>
+    <tr><td>Pomoč elektromotorja</td><td>Nizka 30 %, srednja 50 %, visoka 70 % motorne moči; zahtevani ponazorilni deleži, zato človeku ostane 70/50/30 % pozitivne potrebne moči. Če pomoč ni izbrana, velja srednja; 5 W osnova ostane.</td></tr>
+    <tr><td>Spol in starost</td><td>Ženska ×0,98; moški/neznano ×1. Do vključno 40 let oziroma pri neznani starosti ×1, nato −0,1 % na leto, največ −4 % (pri 80+). <strong>Majhna produktna heuristika, ne klinično ali individualno potrjen učinek</strong>; ne izhaja iz raziskave Minetti/ACSM.</td></tr>
+    <tr><td>Sprejem GPS in višine</td><td>Premik najmanj 8 m ali prag natančnosti končnih točk, vrzel največ 30 s, hitrost največ 45 m/s: obstoječa pravila snemalnika. Za nagib: okno najmanj 20 m, vodoravna natančnost ≤15 m, navpična ≤10 m, navpična hitrost ≤2 m/s, nagib ≤35 %: konservativni produktni filtri šuma, brez jamstva natančnosti tipala.</td></tr>
+  </tbody></table>
+  <p class="warning">Metode so približki. Minettijeva raziskava je obravnavala majhen vzorec tekačev, ne preverjenega individualnega merjenja za vsakega gosta. GPS višina, gume, položaj telesa, veter in dejanski navor motorja lahko pomembno spremenijo resnično porabo.</p>
+
+  <h2>Preverjanje v razvoju</h2>
+  <ul>
+    <li><strong>42/42</strong> ciljanih enotskih/regresijskih testov uspešnih; TypeScript typecheck uspešen. Ravninski tek 5 km pri 70 kg = <strong>350 kcal</strong>; pohod 5 km in 500 m vzpona pri 70 kg = <strong>490 kcal</strong>; cestno kolo 20 km pri 25 km/h ≈ <strong>265 kcal</strong>; električno kolo, visoka pomoč, 5 km in 500 m vzpona ≈ <strong>159 kcal</strong> (30 % človeški delež). Testi zajemajo premore, 11-metrske popravke v vzpon, ponovni zagon, blokirano shrambo, odsotnost teže in nespremenjen izvoz GPX.</li>
+    <li>En usmerjen sintetični Chromium/SwiftShader prehod z dejanskimi komponentami: prvi načrtovani pohod preskoči profil in ne kaže kcal niti v PNG; profil za prosto snemanje se shrani; tek/pohod/kolesarjenje kažejo približek v živo, rezultatu in PNG. Med tekom urejena teža 73 → 81 kg ne spremeni 73 kg posnetka aktivne ture. Štiri vrste koles in električna pomoč so preverjene; nastavitve ostanejo po osvežitvi. Načrtovano kolesarjenje preverjeno ločeno. Prestrezanje je zabeležilo <strong>0 zahtevkov za pisanje in 0 odhodnih URL-jev/teles s polji profila</strong>.</li>
+    <li>Popravljen prekrivajoč se napis v 6-elementnem PNG povzetku: zdaj 3 stolpci × 2 vrstici, zemljevid pomaknjen nižje; pri 4/5 metrikah prejšnja enovrstična razporeditev ostaja. Ločen izvoz v <strong>SL/EN/DE/IT</strong> je preveril dejanske slike in z <code>measureText</code> izmeril, da se vsi napisi/vrednosti držijo meja stolpcev. Primer: <code>artifacts/smart360/screenshots/calorie-export-layout-sl.png</code>; izmere v <code>calorie-export-bounds.json</code>.</li>
+    <li>Mobilni posnetki profila, poteka in rezultatov za vse tri aktivnosti ter izračunana geometrija 390 px: <code>artifacts/smart360/screenshots/calorie-*.png</code> in <code>calorie-bounds.json</code>. Uporabljene so bile izključno sintetične lokalne testne poti, brez pravih računov ali podatkov najemnikov.</li>
+  </ul>
+  <p><strong>Stanje:</strong> samo razvoj; brez objave, brez posegov v bazo, shemo ali strežnik.</p>
+  <small>Poročilo je samostojna statična datoteka HTML; zunanje povezave so samo citirani viri, ne zahtevane odvisnosti za prikaz.</small>
+</main></body>
+</html>

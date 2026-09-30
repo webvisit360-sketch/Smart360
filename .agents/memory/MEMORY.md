@@ -1,5 +1,7 @@
 # Memory index
 
+- [Tour calorie boundary](tour-calorie-boundary.md) — device-only immutable tour profiles; short accepted GPS fixes need rolling grade windows, not per-fix slope rejection.
+
 - [Guest PWA installation](guest-pwa-install-boundary.md) — slug-only network worker; offline caching deferred; distinguish installability diagnostics from simulated OS prompts.
 
 - [Tour camera preference](tour-camera-mode.md) — new tours start course-up; manual north persists only for the same tour; no device compass fallback.

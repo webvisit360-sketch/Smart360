@@ -4,7 +4,7 @@ import React from "react";
 import type { UiTranslator } from "../guest/i18n";
 import { distanceMeters } from "../../lib/live-tour";
 
-export type FreeTourActivity = "cycling" | "hiking";
+export type FreeTourActivity = "cycling" | "hiking" | "running";
 
 /** Published tenant flag only; default OFF (missing/any non-true value → off). */
 export function isTourRecordingEnabled(tenant: unknown): boolean {
@@ -21,10 +21,10 @@ export function FreeTourIntro({ t, activity, onActivity, onStart }: { t: UiTrans
     <div className="s360-free-intro" data-testid="panel-free-tour-idle">
       <fieldset className="s360-free-activity">
         <legend>{t("UI.lg.freeTour.chooseActivity")}</legend>
-        {(["cycling", "hiking"] as const).map((a) => (
+        {(["cycling", "hiking", "running"] as const).map((a) => (
           <label key={a} className={`s360-free-choice${activity === a ? " is-on" : ""}`} data-testid={`option-free-activity-${a}`}>
             <input type="radio" name="s360-free-activity" value={a} checked={activity === a} onChange={() => onActivity(a)} data-testid={`radio-free-activity-${a}`} />
-            <span>{t(a === "cycling" ? "UI.lg.gpx.cycling" : "UI.lg.gpx.hiking")}</span>
+            <span>{t(`UI.lg.gpx.${a}`)}</span>
           </label>
         ))}
       </fieldset>

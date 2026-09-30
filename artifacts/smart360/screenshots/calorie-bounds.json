@@ -1,0 +1,245 @@
+{
+  "observations": {
+    "plannedFirstProfile": {
+      "dialog-tour-profile": {
+        "x": 28,
+        "y": 573.59375,
+        "width": 334,
+        "height": 416.1875
+      },
+      "input-tour-weight": {
+        "x": 45,
+        "y": 870.78125,
+        "width": 300,
+        "height": 42
+      },
+      "button-tour-profile-skip": {
+        "x": 199,
+        "y": 924.78125,
+        "width": 146,
+        "height": 48
+      }
+    },
+    "noWeightImage": [],
+    "freeProfile": {
+      "dialog-tour-profile": {
+        "x": 33,
+        "y": 439.875,
+        "width": 324,
+        "height": 436.1875
+      },
+      "input-tour-weight": {
+        "x": 50,
+        "y": 756.5625,
+        "width": 290,
+        "height": 42
+      },
+      "button-tour-profile-save": {
+        "x": 50,
+        "y": 810.5625,
+        "width": 141,
+        "height": 48.5
+      }
+    },
+    "running": {
+      "live": {
+        "panel-tour-live": {
+          "x": 33,
+          "y": 725,
+          "width": 324,
+          "height": 548.78125
+        },
+        "text-tour-calories": {
+          "x": 210,
+          "y": 955.796875,
+          "width": 121,
+          "height": 51
+        },
+        "button-tour-profile": {
+          "x": 33,
+          "y": 148.5,
+          "width": 124.9375,
+          "height": 40
+        }
+      },
+      "kcal": "pribl. 20 kcal",
+      "result": {
+        "panel-tour-result": {
+          "x": 33,
+          "y": 281,
+          "width": 324,
+          "height": 512.390625
+        },
+        "text-tour-calories": {
+          "x": 210,
+          "y": 514.796875,
+          "width": 121,
+          "height": 51
+        }
+      },
+      "png": [
+        "pribl. 20 kcal"
+      ]
+    },
+    "runningImmutableSnapshot": {
+      "old": 73,
+      "snapshot": 73
+    },
+    "hiking": {
+      "live": {
+        "panel-tour-live": {
+          "x": 33,
+          "y": 740,
+          "width": 324,
+          "height": 548.78125
+        },
+        "text-tour-calories": {
+          "x": 210,
+          "y": 970.796875,
+          "width": 121,
+          "height": 51
+        },
+        "button-tour-profile": {
+          "x": 33,
+          "y": 163.5,
+          "width": 124.9375,
+          "height": 40
+        }
+      },
+      "kcal": "pribl. 20 kcal",
+      "result": {
+        "panel-tour-result": {
+          "x": 33,
+          "y": 281,
+          "width": 324,
+          "height": 512.390625
+        },
+        "text-tour-calories": {
+          "x": 210,
+          "y": 514.796875,
+          "width": 121,
+          "height": 51
+        }
+      },
+      "png": [
+        "pribl. 20 kcal"
+      ]
+    },
+    "cycling": {
+      "live": {
+        "panel-tour-live": {
+          "x": 33,
+          "y": 740,
+          "width": 324,
+          "height": 548.78125
+        },
+        "text-tour-calories": {
+          "x": 210,
+          "y": 970.796875,
+          "width": 121,
+          "height": 51
+        },
+        "button-tour-profile": {
+          "x": 33,
+          "y": 163.5,
+          "width": 124.9375,
+          "height": 40
+        }
+      },
+      "kcal": "pribl. 10 kcal",
+      "result": {
+        "panel-tour-result": {
+          "x": 33,
+          "y": 281,
+          "width": 324,
+          "height": 512.390625
+        },
+        "text-tour-calories": {
+          "x": 210,
+          "y": 514.796875,
+          "width": 121,
+          "height": 51
+        }
+      },
+      "png": [
+        "pribl. 10 kcal"
+      ]
+    },
+    "ebikeProfile": {
+      "dialog-tour-profile": {
+        "x": 33,
+        "y": 439.875,
+        "width": 324,
+        "height": 593.1875
+      },
+      "select-tour-bike": {
+        "x": 50,
+        "y": 835.0625,
+        "width": 290,
+        "height": 42
+      },
+      "select-tour-assist": {
+        "x": 50,
+        "y": 913.5625,
+        "width": 290,
+        "height": 42
+      }
+    },
+    "ebikePng": [
+      "pribl. 10 kcal"
+    ],
+    "plannedEdit": {
+      "dialog-tour-profile": {
+        "x": 28,
+        "y": 573.59375,
+        "width": 334,
+        "height": 564.1875
+      },
+      "select-tour-bike": {
+        "x": 45,
+        "y": 944.78125,
+        "width": 300,
+        "height": 42
+      },
+      "select-tour-assist": {
+        "x": 45,
+        "y": 1018.78125,
+        "width": 300,
+        "height": 42
+      }
+    },
+    "plannedWeighted": {
+      "panel-tour-live": {
+        "x": 28,
+        "y": 247,
+        "width": 334,
+        "height": 491.78125
+      },
+      "text-tour-calories": {
+        "x": 210,
+        "y": 456.796875,
+        "width": 126,
+        "height": 20
+      }
+    },
+    "plannedWeightedResult": {
+      "panel-tour-result": {
+        "x": 28,
+        "y": 247,
+        "width": 334,
+        "height": 447.390625
+      },
+      "text-tour-calories": {
+        "x": 210,
+        "y": 459.796875,
+        "width": 126,
+        "height": 20
+      }
+    },
+    "plannedWeightedPng": [
+      "pribl. 10 kcal"
+    ]
+  },
+  "leaks": [],
+  "created": []
+}

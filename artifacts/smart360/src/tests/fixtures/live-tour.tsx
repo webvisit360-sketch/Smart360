@@ -10,16 +10,19 @@ import { LIVING_GUIDE_UI, type UiLanguage } from "../../pages/guest/i18n";
 import type { GpxRoute } from "../../lib/gpx-route";
 
 const lang = (new URLSearchParams(location.search).get("lang") || "sl") as UiLanguage;
+// Fixture-only activity override; never reads or modifies a tenant route.
+const requestedActivity = new URLSearchParams(location.search).get("activity");
+const activity = requestedActivity === "running" || requestedActivity === "cycling" ? requestedActivity : "hiking";
 const route = {
   fileId: "browser-test-only",
   filename: "planned-test-route.gpx",
-  activity: "hiking",
+  activity,
   distanceKm: 0.38,
   ascentM: 10,
   descentM: 10,
   minElevationM: 5,
   maxElevationM: 15,
-  durationMinutes: 12,
+  durationMinutes: Number((60 * (0.38 / (activity === "running" ? 10 : 5) + 10 / 600)).toFixed(2)),
   segments: [[
     { lat: 45.536, lon: 13.66 },
     { lat: 45.537, lon: 13.66 },

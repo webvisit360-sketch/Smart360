@@ -77,10 +77,10 @@ function sampled<T>(points: T[], count: number): T[] {
 }
 
 /** Strict, non-resolving XML parser. Original track points live only during this call. */
-export function parseGpx(buffer: Buffer, activity: "cycling" | "hiking"): GpxDerived {
+export function parseGpx(buffer: Buffer, activity: "cycling" | "hiking" | "running"): GpxDerived {
   if (!Buffer.isBuffer(buffer) || !buffer.length) invalid("datoteka je prazna.");
   if (buffer.length > MAX_GPX_BYTES) invalid("datoteka presega omejitev 5 MB.");
-  if (activity !== "cycling" && activity !== "hiking") invalid("vrsta dejavnosti ni podprta.");
+  if (activity !== "cycling" && activity !== "hiking" && activity !== "running") invalid("vrsta dejavnosti ni podprta.");
   let xml: string;
   try {
     xml = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(buffer);
@@ -209,6 +209,6 @@ export function parseGpx(buffer: Buffer, activity: "cycling" | "hiking"): GpxDer
     minElevationM,
     maxElevationM,
     durationMinutes: missingElevation ? null
-      : round((distanceKm / (activity === "cycling" ? 15 : 5) + ascentM / 600) * 60, 2),
+      : round((distanceKm / (activity === "cycling" ? 15 : activity === "running" ? 10 : 5) + ascentM / 600) * 60, 2),
   };
 }

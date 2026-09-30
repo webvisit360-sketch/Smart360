@@ -12,4 +12,5 @@ export type GpxRouteActivity = typeof GpxRouteActivity[keyof typeof GpxRouteActi
 export const GpxRouteActivity = {
   cycling: 'cycling',
   hiking: 'hiking',
+  running: 'running',
 } as const;

@@ -3,6 +3,7 @@ import {
   finishTour, loadTour, pauseTour, recordTourPoint, recoverTour, resumeTour,
   saveTour, startTour, tourMetrics, MAX_ACCURACY_M, type TourActivity, type TourState,
 } from '../lib/live-tour';
+import type { TourProfile } from '../lib/tour-calories';
 
 export type WakeStatus = 'idle' | 'requesting' | 'held' | 'unavailable';
 type WakeSentinel = { released: boolean; release(): Promise<void>; addEventListener(type: 'release', listener: () => void): void };
@@ -200,10 +201,10 @@ export function useLiveTour(key: string) {
     return () => window.clearInterval(timer);
   }, [active]);
 
-   const start = useCallback((activity: TourActivity = 'hiking') => {
+   const start = useCallback((activity: TourActivity = 'hiking', profile: TourProfile = {}) => {
     if (stateRef.current && stateRef.current.status !== 'finished') return;
     setGeoError(null);
-     commit(startTour(Date.now(), activity));
+      commit(startTour(Date.now(), activity, profile));
   }, [commit]);
   const pause = useCallback(() => {
     if (stateRef.current) commit(pauseTour(stateRef.current, Date.now()));

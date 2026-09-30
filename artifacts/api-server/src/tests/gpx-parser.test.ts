@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { MAX_GPX_BYTES, parseGpx } from "../lib/gpxParser";
 
 const fixture = readFileSync(fileURLToPath(new URL("./fixtures/synthetic-soca-route.gpx", import.meta.url)));
-const parse = (xml: string, activity: "cycling" | "hiking" = "hiking") =>
+const parse = (xml: string, activity: "cycling" | "hiking" | "running" = "hiking") =>
   parseGpx(Buffer.from(xml), activity);
 const document = (body: string) => `<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1">${body}</gpx>`;
 const point = (lat: string, lon: string, ele?: string) =>
@@ -27,6 +27,8 @@ test("synthetic Slovenian route preserves segment breaks and full-resolution sta
   assert.equal(result.durationMinutes, Number((result.distanceKm / 5 * 60 + 5).toFixed(2)));
   const cycling = parseGpx(fixture, "cycling");
   assert.equal(cycling.durationMinutes, Number((cycling.distanceKm / 15 * 60 + 5).toFixed(2)));
+  const running = parseGpx(fixture, "running");
+  assert.equal(running.durationMinutes, Number(((running.distanceKm / 10 + running.ascentM! / 600) * 60).toFixed(2)));
 });
 
 test("namespaced route points and a singleton segment are supported", () => {
@@ -45,6 +47,7 @@ test("missing elevation nulls ascent, descent and estimates but keeps known extr
   assert.equal(result.minElevationM, 50);
   assert.equal(result.maxElevationM, 100);
   assert.equal(result.profile[1]?.elevationM, null);
+  assert.equal(parseGpx(Buffer.from(document(`<trk><trkseg>${point("46", "14", "100")}${point("46.01", "14")}</trkseg></trk>`)), "running").durationMinutes, null);
   const allMissing = parse(document(`<rte><rtept lat="46" lon="14"/></rte>`));
   assert.equal(allMissing.minElevationM, null);
   assert.equal(allMissing.maxElevationM, null);

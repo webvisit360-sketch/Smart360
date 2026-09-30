@@ -12,6 +12,18 @@ import { requireAdmin } from "../lib/adminAuth";
 const router: IRouter = Router();
 type GpxRoute = NonNullable<typeof itemsTable.$inferSelect.gpxRoute>;
 const storage = new ObjectStorageService();
+type UploadDependencies = {
+  database: Pick<typeof db, "select" | "update">;
+  objectFile: typeof gpxObjectFile;
+};
+let uploadDependencies: UploadDependencies = { database: db, objectFile: gpxObjectFile };
+/** In-process fixture only: never substitute persistence in a deployed service. */
+export function setGpxUploadDependenciesForTests(deps: UploadDependencies | null): void {
+  if (process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT) {
+    throw new Error("GPX fixture overrides are forbidden in production");
+  }
+  uploadDependencies = deps ?? { database: db, objectFile: gpxObjectFile };
+}
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_GPX_BYTES, files: 1, fields: 1 } });
 const routeKeys = new Set([
@@ -52,7 +64,7 @@ export function isBoundedGpxRoute(route: unknown): route is GpxRoute {
     && (r.environment === "production" || r.environment === "development")
     && number(r.byteSize) && (r.byteSize as number) > 0 && (r.byteSize as number) <= MAX_GPX_BYTES
     && typeof r.sha256 === "string" && /^[a-f0-9]{64}$/.test(r.sha256)
-    && (r.activity === "cycling" || r.activity === "hiking")
+    && (r.activity === "cycling" || r.activity === "hiking" || r.activity === "running")
     && Array.isArray(r.segments) && r.segments.length >= 1 && r.segments.length <= 100
     && r.segments.reduce((count: number, segment: unknown) =>
       count + (Array.isArray(segment) ? segment.length : 401), 0) <= 400
@@ -120,18 +132,20 @@ router.post("/admin/items/:id/gpx", requireAdmin, (req: Request, res: Response, 
   const id = param(req.params["id"]);
   if (!uuid.test(id)) { res.status(404).json({ error: "Vnos ni najden." }); return; }
   const file = req.file;
-  if (!file || !file.buffer.length || (req.body?.activity !== "cycling" && req.body?.activity !== "hiking")) {
-    res.status(400).json({ error: "Izberite datoteko GPX in dejavnost (kolesarjenje ali pohodništvo)." });
+  const requestedActivity: unknown = req.body?.activity;
+  if (!file || !file.buffer.length || !["cycling", "hiking", "running", "tek"].includes(requestedActivity as string)) {
+    res.status(400).json({ error: "Izberite datoteko GPX in dejavnost (kolesarjenje, pohodništvo ali tek)." });
     return;
   }
-  const [owner] = await db.select({ tenantId: sectionsTable.tenantId })
+  const activity = requestedActivity === "tek" ? "running" : requestedActivity as "cycling" | "hiking" | "running";
+  const [owner] = await uploadDependencies.database.select({ tenantId: sectionsTable.tenantId })
     .from(itemsTable).innerJoin(categoriesTable, eq(itemsTable.categoryId, categoriesTable.id))
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
     .where(eq(itemsTable.id, id));
   if (!owner) { res.status(404).json({ error: "Vnos ni najden." }); return; }
   let derived: ReturnType<typeof parseGpx>;
   try {
-    derived = parseGpx(file.buffer, req.body.activity);
+    derived = parseGpx(file.buffer, activity);
   } catch (error) {
     res.status(400).json({ error: error instanceof Error && error.message.startsWith("Neveljavna datoteka GPX:")
       ? error.message : "Datoteka GPX ni veljavna." });
@@ -141,7 +155,7 @@ router.post("/admin/items/:id/gpx", requireAdmin, (req: Request, res: Response, 
     ...derived, version: 1, fileId: randomUUID(),
     filename: uploadedFilename(file.originalname),
     environment: gpxEnvironment(), byteSize: file.buffer.length,
-    sha256: createHash("sha256").update(file.buffer).digest("hex"), activity: req.body.activity,
+    sha256: createHash("sha256").update(file.buffer).digest("hex"), activity,
   };
   if (!isBoundedGpxRoute(route)) {
     res.status(400).json({ error: "Pot GPX presega dovoljeno velikost prikaza (400 točk, 64 KB)." });
@@ -149,7 +163,7 @@ router.post("/admin/items/:id/gpx", requireAdmin, (req: Request, res: Response, 
   }
   let object: ReturnType<typeof gpxObjectFile>;
   try {
-    object = gpxObjectFile(route.environment, owner.tenantId, route.fileId);
+    object = uploadDependencies.objectFile(route.environment, owner.tenantId, route.fileId);
     await object.save(file.buffer, { contentType: "application/gpx+xml", resumable: false });
   } catch (error) {
     req.log.error({ error }, "GPX private storage upload failed");
@@ -159,7 +173,7 @@ router.post("/admin/items/:id/gpx", requireAdmin, (req: Request, res: Response, 
   // A failed DB write leaves an unreferenced new object; never remove old
   // objects here: the published snapshot can still refer to the old version.
   try {
-    const [updated] = await db.update(itemsTable).set({ gpxRoute: route })
+    const [updated] = await uploadDependencies.database.update(itemsTable).set({ gpxRoute: route })
       .where(eq(itemsTable.id, id)).returning({ id: itemsTable.id });
     if (!updated) {
       await object.delete({ ignoreNotFound: true }).catch(() => undefined);

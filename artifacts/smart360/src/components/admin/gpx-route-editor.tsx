@@ -16,7 +16,7 @@ type Props = {
   disabled?: boolean;
 };
 
-const ACTIVITY_LABEL: Record<GpxActivity, string> = { cycling: "Kolesarjenje", hiking: "Pohodništvo" };
+const ACTIVITY_LABEL: Record<GpxActivity, string> = { cycling: "Kolesarjenje", hiking: "Pohodništvo", running: "Tek" };
 
 function fmt(value: number | null | undefined, unit: string, digits = 0) {
   return value == null || !Number.isFinite(value) ? "ni podatka" : `${value.toFixed(digits).replace(".", ",")} ${unit}`;
@@ -62,7 +62,7 @@ export function GpxRouteEditor({ itemId, initialRoute = null, onBeforeWrite, ser
   const handleUpload = async () => {
     setError(""); setSuccess("");
     if (!itemId) { setError("Najprej shranite vnos, nato dodajte GPX."); return; }
-    if (!activity) { setError("Izberite dejavnost: kolesarjenje ali pohodništvo."); return; }
+    if (!activity) { setError("Izberite dejavnost: kolesarjenje, pohodništvo ali tek."); return; }
     if (!file) { setError("Izberite datoteko .gpx."); return; }
     if (file.size > GPX_MAX_BYTES) { setError("Datoteka je prevelika (največ 5 MiB)."); return; }
     if (!/\.gpx$/i.test(file.name)) { setError("Dovoljene so samo datoteke .gpx."); return; }
@@ -139,6 +139,7 @@ export function GpxRouteEditor({ itemId, initialRoute = null, onBeforeWrite, ser
             <option value="">Izberite …</option>
             <option value="cycling">Kolesarjenje</option>
             <option value="hiking">Pohodništvo</option>
+            <option value="running">Tek</option>
           </select>
         </label>
         <label className="space-y-1 text-xs font-semibold text-[#66716A]">

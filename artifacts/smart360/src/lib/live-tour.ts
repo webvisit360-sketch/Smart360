@@ -1,9 +1,16 @@
 // All tour positions and timestamps remain on the guest's device. Never send this state to an API.
+import { segmentCalories, validProfile, type TourProfile } from './tour-calories';
 export type TourPoint = { lat: number; lon: number; accuracy: number; timestamp: number; altitude?: number | null; altitudeAccuracy?: number | null };
 export type TourStatus = 'moving' | 'auto-paused' | 'manual-paused' | 'finished';
-export type TourActivity = 'cycling' | 'hiking';
+export type TourActivity = 'cycling' | 'hiking' | 'running';
 export type TourState = {
   activity: TourActivity;
+  /** Immutable snapshot: edits to the saved profile apply to the NEXT tour only. */
+  calorieProfile?: TourProfile;
+  caloriesKcal?: number | null;
+  /** Short-fix grade uses a bounded rolling 20m elevation window, never retained geometry. */
+  gradeAnchor?: TourPoint | null;
+  smoothedGrade?: number;
   status: TourStatus;
   startedAt: number;
   updatedAt: number;
@@ -27,7 +34,7 @@ export type TourState = {
   stationarySince: number | null;
   stopPoint: TourPoint | null;
 };
-export type TourMetrics = { movingMs: number; pausedMs: number; elapsedMs: number; distanceM: number; ascentM?: number };
+export type TourMetrics = { movingMs: number; pausedMs: number; elapsedMs: number; distanceM: number; ascentM?: number; caloriesKcal?: number | null };
 
 export const MAX_TRACK_POINTS = 4096;
 // Match the server GPX import limit so even an all-day export remains uploadable.
@@ -47,9 +54,11 @@ export function distanceMeters(a: Pick<TourPoint, 'lat' | 'lon'>, b: Pick<TourPo
   return 6371000 * 2 * Math.asin(Math.min(1, Math.sqrt(x)));
 }
 
-export function startTour(now: number, activity: TourActivity = 'hiking'): TourState {
+export function startTour(now: number, activity: TourActivity = 'hiking', profile: TourProfile = {}): TourState {
   return {
-    activity, status: 'moving', startedAt: now, updatedAt: now, movingMs: 0, pausedMs: 0,
+    activity, calorieProfile: validProfile(profile), caloriesKcal: validProfile(profile).weightKg === undefined ? null : 0,
+    gradeAnchor: null, smoothedGrade: 0,
+    status: 'moving', startedAt: now, updatedAt: now, movingMs: 0, pausedMs: 0,
     distanceM: 0, ascentM: 0, points: [], segmentStarts: [0], omittedSegments: 0,
     lastFixAt: null, lastFixPoint: null, distanceAnchor: null, ascentBaseline: null, ascentBaselineAt: null,
     stationarySince: null, stopPoint: null,
@@ -75,19 +84,20 @@ export function tourMetrics(state: TourState | null, now: number): TourMetrics {
   return {
     movingMs: current.movingMs, pausedMs: current.pausedMs,
     elapsedMs: current.updatedAt - current.startedAt, distanceM: current.distanceM, ascentM: current.ascentM,
+    caloriesKcal: current.caloriesKcal ?? null,
   };
 }
 
 export function pauseTour(state: TourState, now: number): TourState {
   if (state.status === 'finished' || state.status === 'manual-paused') return state;
   return { ...advanceTour(state, now), status: 'manual-paused', stationarySince: null, stopPoint: null,
-    distanceAnchor: null, ascentBaseline: null, ascentBaselineAt: null };
+    distanceAnchor: null, ascentBaseline: null, ascentBaselineAt: null, gradeAnchor: null, smoothedGrade: 0 };
 }
 export function resumeTour(state: TourState, now: number): TourState {
   if (state.status !== 'manual-paused') return state;
   // A resumed watch must establish a new fix. Never credit unobserved time or bridge across pause.
   return { ...advanceTour(state, now), status: 'moving', lastFixAt: null, lastFixPoint: null, distanceAnchor: null,
-    ascentBaseline: null, ascentBaselineAt: null, stationarySince: null, stopPoint: null };
+    ascentBaseline: null, ascentBaselineAt: null, gradeAnchor: null, smoothedGrade: 0, stationarySince: null, stopPoint: null };
 }
 export function finishTour(state: TourState, now: number): TourState {
   if (state.status === 'finished') return state;
@@ -99,7 +109,7 @@ export function finishTour(state: TourState, now: number): TourState {
 export function recoverTour(state: TourState, now: number): TourState {
   if (state.status === 'finished') return state;
   return { ...advanceTour(state, now), lastFixAt: null, lastFixPoint: null, distanceAnchor: null,
-    ascentBaseline: null, ascentBaselineAt: null,
+    ascentBaseline: null, ascentBaselineAt: null, gradeAnchor: null, smoothedGrade: 0,
     stationarySince: null, stopPoint: state.status === 'auto-paused' ? state.stopPoint : null };
 }
 
@@ -218,6 +228,28 @@ export function recordTourPoint(state: TourState, point: TourPoint): TourState {
   // Auto-pause stops the timer, not the traveled-track recorder: count accurate
   // steps inside the circle and the step which exits it. Manual pause records neither.
   const distanceM = state.distanceM + (movement && state.status !== 'manual-paused' ? step : 0);
+  // Only accepted, distance-counted moving segments contribute. No interpolation across gaps,
+  // pause or retained-track thinning. Short GPS steps accumulate in a rolling grade window,
+  // independent of track retention; until 20m use last observed slope (initially flat).
+  const altitudeOK = (p: TourPoint) => p.altitude != null && Math.abs(p.altitude) <= 12000 &&
+    p.accuracy <= 15 && p.altitudeAccuracy != null && p.altitudeAccuracy <= 10;
+  const seconds = anchor ? (point.timestamp - anchor.timestamp) / 1000 : 0;
+  const gradeReference = !gap && state.status === 'moving' && state.gradeAnchor && altitudeOK(state.gradeAnchor) &&
+    altitudeOK(point) ? state.gradeAnchor : null;
+  const gradeDistance = gradeReference ? distanceMeters(gradeReference, point) : 0;
+  const deltaH = gradeReference ? point.altitude! - gradeReference.altitude! : 0;
+  const gradeSeconds = gradeReference ? (point.timestamp - gradeReference.timestamp) / 1000 : 0;
+  const gradeReady = movement && gradeDistance >= 20;
+  const gradeValid = gradeReady && gradeSeconds > 0 && Math.abs(deltaH) / gradeSeconds <= 2 &&
+    Math.abs(deltaH / gradeDistance) <= 0.35;
+  const smoothedGrade = !altitudeOK(point) || gap || state.status !== 'moving' ? 0 :
+    gradeReady ? (gradeValid ? deltaH / gradeDistance : 0) : state.smoothedGrade ?? 0;
+  const gradeAnchor = !altitudeOK(point) || state.status !== 'moving' ? null :
+    gap || !gradeReference || gradeReady ? point : gradeReference;
+  const calorieStep = movement && state.status === 'moving' && !gap && state.caloriesKcal != null &&
+    state.calorieProfile && seconds > 0 && seconds <= TRACK_GAP_MS / 1000
+    ? segmentCalories(state.activity, state.calorieProfile, step, seconds, smoothedGrade) : null;
+  const caloriesKcal = state.caloriesKcal == null ? null : state.caloriesKcal + (calorieStep ?? 0);
   const altitudeUsable = point.altitude != null && Math.abs(point.altitude) <= 12000 && point.accuracy <= 15 &&
     (point.altitudeAccuracy == null || point.altitudeAccuracy <= 20);
   const baseline = !gap && altitudeUsable && state.ascentBaseline !== null ? state.ascentBaseline : null;
@@ -230,7 +262,7 @@ export function recordTourPoint(state: TourState, point: TourPoint): TourState {
     baseline === null || rise <= -3 || (rise >= 3 && validRise) ? point.altitude! : baseline;
   const ascentBaselineAt = ascentBaseline === null ? null :
     ascentBaseline === point.altitude ? point.timestamp : state.ascentBaselineAt;
-  const recorded = { points, segmentStarts, omittedSegments, distanceM, ascentM,
+  const recorded = { points, segmentStarts, omittedSegments, distanceM, ascentM, caloriesKcal, gradeAnchor, smoothedGrade,
     ascentBaseline, ascentBaselineAt, lastFixAt: point.timestamp, lastFixPoint: point, distanceAnchor };
   if (state.status === 'manual-paused') {
     // Manual pause deliberately does not record track/distance; resume starts a fresh segment.
@@ -261,7 +293,7 @@ export function recordTourPoint(state: TourState, point: TourPoint): TourState {
     // Reclassify the observed stationary dwell as paused rather than moving.
     const credit = Math.min(point.timestamp - stationarySince, next.movingMs);
     return { ...next, ...recorded,
-      status: 'auto-paused', stationarySince: null, stopPoint,
+      status: 'auto-paused', stationarySince: null, stopPoint, gradeAnchor: null, smoothedGrade: 0,
       movingMs: next.movingMs - credit, pausedMs: next.pausedMs + credit };
   }
   return { ...next, ...recorded,
@@ -294,13 +326,20 @@ export function loadTour(key: string, storage?: StorageLike): TourState | null {
         !(s.stopPoint === null || validPoint(s.stopPoint)) ||
         (s.status === 'finished' && !Number.isFinite(s.finishedAt))) return null;
     // Existing v1 local backups had no activity, raw-fix or ascent fields.
-    const activity: TourActivity = s.activity === 'cycling' ? 'cycling' : 'hiking';
-    const normalized = { ...s, activity, ascentM: Number.isFinite(s.ascentM) && s.ascentM >= 0 ? s.ascentM : 0,
+    const activity: TourActivity = s.activity === 'cycling' || s.activity === 'running' ? s.activity : 'hiking';
+    const calorieProfile = validProfile(s.calorieProfile);
+    const normalized = { ...s, activity, calorieProfile,
+      caloriesKcal: calorieProfile.weightKg !== undefined && typeof s.caloriesKcal === 'number' &&
+        Number.isFinite(s.caloriesKcal) && s.caloriesKcal >= 0 ? s.caloriesKcal : null,
+      ascentM: Number.isFinite(s.ascentM) && s.ascentM >= 0 ? s.ascentM : 0,
       omittedSegments: Number.isInteger(s.omittedSegments) && s.omittedSegments >= 0 ? s.omittedSegments : 0,
       lastFixPoint: s.lastFixPoint && validPoint(s.lastFixPoint) ? s.lastFixPoint :
         s.points.at(-1)?.timestamp === s.lastFixAt ? s.points.at(-1)! : null,
       distanceAnchor: s.distanceAnchor && validPoint(s.distanceAnchor) ? s.distanceAnchor :
         s.lastFixAt === null ? null : s.points.at(-1) ?? null,
+      gradeAnchor: s.gradeAnchor && validPoint(s.gradeAnchor) && s.gradeAnchor.altitude != null ? s.gradeAnchor : null,
+      smoothedGrade: typeof s.smoothedGrade === 'number' && Number.isFinite(s.smoothedGrade) &&
+        Math.abs(s.smoothedGrade) <= 0.35 ? s.smoothedGrade : 0,
       ascentBaseline: Number.isFinite(s.ascentBaseline) ? s.ascentBaseline : null,
       ascentBaselineAt: Number.isFinite(s.ascentBaselineAt) ? s.ascentBaselineAt : null };
     // Legacy backups may be large; compact before any future save.

@@ -1,0 +1,17 @@
+NEW FEATURE: calorie estimation for live tours (all three activities). Build in dev. Report and STOP. No publication.
+
+1. GUEST PROFILE (device-only)
+Before the first tour, an optional "Moj profil" step: age (leta), sex (spol: ženska/moški), weight in kg (teža). For cycling additionally: bike type (cestno / gorsko / treking-mestno / električno) and, when električno, assist level (nizka / srednja / visoka). Stored ONLY on the device (localStorage, try/catch, editable later via a small "Profil" control in the tour UI). Never sent to the server — same privacy stance as tour data, stated in the report. Weight is required for kcal; without it, tours simply show no kcal (no defaults, no guessing). Age/sex apply only a minor correction.
+
+2. CALCULATION — segment-based, from the live GPS stream (speed + grade per segment), during net moving time only (auto-paused time burns nothing extra):
+- RUNNING: Minetti energy-cost-of-gradient model (or ACSM running equation for moderate grades), weight-scaled; flat baseline ≈ 1.0 kcal per kg per km, rising on climbs, reduced but never negative on descents.
+- HIKING/WALKING: ACSM walking equation with grade term; steep descents cost more than flat-model would suggest — use Minetti's curve, floor at a sensible minimum.
+- CYCLING: physics power model per segment: rolling resistance (Crr by bike type) + aerodynamic drag (CdA by bike type, no wind data — say so) + gravity (weight × grade × speed); convert mechanical work to kcal with ~24 % gross efficiency. E-BIKE: assist level reduces the HUMAN share of power (nizka ≈ 30 %, srednja ≈ 50 %, visoka ≈ 70 % motor contribution) — kcal counts only the human share. Descents: coasting ≈ near-zero power, floored at a light baseline.
+- Sex/age: small multiplicative adjustment (state the exact factors you use).
+State EVERY constant (Crr, CdA per bike type, efficiency, assist shares, correction factors) in the report with a one-line source/rationale each. No invented precision: display kcal rounded to tens, labeled "pribl." / "approx.".
+
+3. UI: live kcal tile alongside time/distance during the tour; kcal in the finish summary, the summary image export, and (as extensions if trivial) nothing else — GPX file format stays untouched. Localized SL/EN/DE/IT.
+
+4. Tests: unit tests of each model against hand-computed reference scenarios (flat run 5 km @ 70 kg; hike 500 m ascent; road bike 20 km flat @ 25 km/h; e-bike visoka on a climb → human share drops accordingly); paused time adds no kcal; no weight → no kcal anywhere; profile persists across reloads.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

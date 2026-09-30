@@ -8,6 +8,7 @@ import type { UiTranslator } from "../guest/i18n";
 import { useLiveTour } from "@/hooks/use-live-tour";
 import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
 import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration } from "./living-guide-live-tour";
+import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import { RecordedElevationProfile, RouteMap } from "./living-guide-gpx";
 import "./living-guide-free-tour.css";
 
@@ -18,7 +19,8 @@ export { isTourRecordingEnabled } from "./living-guide-free-tour-view";
 export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTranslator; center?: [number, number] | null }) {
   const [chosen, setChosen] = useState<FreeTourActivity>("hiking");
   const tour = useLiveTour(`${slug}/free-tour`);
-  const startWith = tour.start as (activity?: FreeTourActivity) => void;
+  const profile = useTourProfile();
+  const startWith = (activity: FreeTourActivity) => profile.start(snapshot => { setExportError(false); tour.start(activity, snapshot); });
   const state = tour.state as (NonNullable<typeof tour.state> & { activity?: FreeTourActivity; omittedSegments?: number }) | null;
   const activity: FreeTourActivity = state?.activity ?? (state ? "hiking" : chosen);
   const ascentM = (tour.metrics as typeof tour.metrics & { ascentM?: number }).ascentM;
@@ -29,7 +31,7 @@ export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTrans
   const [exportError, setExportError] = useState(false);
   const exitFullscreen = useCallback(() => setFullscreen(false), []);
   useEffect(() => { if (!tourActive) setFullscreen(false); }, [tourActive]);
-  const activityLabel = t(activity === "cycling" ? "UI.lg.gpx.cycling" : "UI.lg.gpx.hiking");
+  const activityLabel = t(`UI.lg.gpx.${activity}`);
   const name = `${t("UI.lg.freeTour.routeName")} · ${activityLabel}`;
   const na = t("UI.lg.gpx.unavailable");
 
@@ -50,6 +52,7 @@ export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTrans
         net: t("UI.lg.liveTour.net"), paused: t("UI.lg.liveTour.paused"), elapsed: t("UI.lg.liveTour.total"),
         distance: t("UI.lg.liveTour.distance"), planned: t("UI.lg.liveTour.planned"), recorded: t("UI.lg.liveTour.recorded"),
         schematic: t("UI.lg.liveTour.schematic"), ascent: t("UI.lg.freeTour.ascent"),
+        calories: t("UI.lg.calories.kcal"), approx: t("UI.lg.calories.approx"),
         netValue: formatTourDuration(m.movingMs), pausedValue: formatTourDuration(m.pausedMs),
         elapsedValue: formatTourDuration(m.elapsedMs), distanceValue: formatTourDistance(m.distanceM),
         ascentValue: formatAscent(ascentM, na),
@@ -69,7 +72,8 @@ export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTrans
             : <p>{t("UI.lg.freeTour.intro")}</p>}
         </div>
       </header>
-      {!status && <FreeTourIntro t={t} activity={chosen} onActivity={setChosen} onStart={() => { setExportError(false); startWith(chosen); }} />}
+      {!status && <FreeTourIntro t={t} activity={chosen} onActivity={setChosen} onStart={() => startWith(chosen)} />}
+      <TourProfileControl t={t} activity={activity} tourActive={tourActive} controller={profile} />
       {status && (
         <>
           <div className="s360-free-map" data-testid="map-free-tour">

@@ -194,6 +194,7 @@ export type GpxRouteActivity = typeof GpxRouteActivity[keyof typeof GpxRouteActi
 export const GpxRouteActivity = {
   cycling: 'cycling',
   hiking: 'hiking',
+  running: 'running',
 } as const;
 
 export interface GpxPoint {
@@ -3049,6 +3050,8 @@ export type GpxUploadInputActivity = typeof GpxUploadInputActivity[keyof typeof 
 export const GpxUploadInputActivity = {
   cycling: 'cycling',
   hiking: 'hiking',
+  running: 'running',
+  tek: 'tek',
 } as const;
 
 export interface GpxUploadInput {

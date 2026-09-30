@@ -14,12 +14,19 @@ try {
   page.on("response", r => { if (/openfreemap.*\.pbf/.test(r.url())) tiles.push(r.status()); });
   await page.goto(`https://${process.env.REPLIT_DEV_DOMAIN}/free-tour.html`);
   await page.getByTestId("button-free-tour-start").waitFor();
+  const choices = await page.locator(".s360-free-choice").evaluateAll(nodes => nodes.map(el => {
+    const r = el.getBoundingClientRect();
+    return { label: el.textContent, x: r.x, right: r.right, top: r.top, bottom: r.bottom };
+  }));
+  assert.equal(choices.length, 3);
+  assert.ok(choices.every((c, i) => c.x >= 0 && c.right <= 390 && (!i || c.x >= choices[i - 1].right)));
+  console.log("CHOICE_BOUNDS_390", choices);
   console.log("SELECTED_STYLE", await page.locator(".s360-free-choice.is-on").evaluate(el => ({
     color: getComputedStyle(el).color, border: getComputedStyle(el).borderColor,
   })));
   await mkdir("screenshots", { recursive: true });
   await page.screenshot({ path: "screenshots/free-tour-card.png", fullPage: true });
-  await page.getByTestId("radio-free-activity-cycling").check();
+  await page.getByTestId("radio-free-activity-running").check();
   await page.getByTestId("button-free-tour-start").click();
   await page.waitForTimeout(15000);
   const distance = await page.getByTestId("text-tour-distance").innerText();
@@ -36,6 +43,7 @@ try {
   await page.getByTestId("button-tour-exit-fullscreen").click();
   await page.getByTestId("button-tour-finish").click();
   await page.getByTestId("panel-tour-result").waitFor();
+  assert.equal(await page.getByTestId("text-free-tour-activity").innerText(), "Tek");
   await page.screenshot({ path: "screenshots/free-tour-summary.png", fullPage: true });
   for (const [button, name] of [["button-tour-download-image", "free-tour.png"], ["button-tour-download-gpx", "free-tour.gpx"]]) {
     const downloadPromise = page.waitForEvent("download");
