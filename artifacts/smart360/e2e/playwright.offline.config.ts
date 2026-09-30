@@ -22,7 +22,12 @@ export default defineConfig({
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ??
         "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium",
-      args: ["--no-sandbox"],
+      args: [
+        "--no-sandbox",
+        // Unvisited external map styles must genuinely fail, including SW-owned
+        // requests unaffected by Chromium's page-only offline emulation.
+        "--host-resolver-rules=MAP tiles.openfreemap.org ~NOTFOUND, MAP tiles-eu.openfreemap.org ~NOTFOUND",
+      ],
     },
   },
   webServer: {

@@ -17,7 +17,23 @@ const out = await mkdtemp(resolve(tmpdir(), "living-guide-offline-e2e-"));
 process.env.PORT = "4193";
 process.env.BASE_PATH = "/";
 process.env.NODE_ENV = "production";
-await build({ configFile: resolve(root, "vite.config.ts"), build: { outDir: out, emptyOutDir: true }, logLevel: "warn" });
+await build({
+  configFile: resolve(root, "vite.config.ts"),
+  build: { outDir: out, emptyOutDir: true },
+  logLevel: "warn",
+  plugins: [{
+    name: "offline-e2e-map-observation",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.split("?")[0]!.endsWith("/living-guide-gpx.tsx")) return;
+      const anchor = "mapRef.current = map;";
+      if (!code.includes(anchor)) throw new Error("Map observation fixture anchor changed");
+      // Test-build-only observation, attached to that map's DOM element.
+      // No global debug hook and no changes to map rendering/network behavior.
+      return code.replace(anchor, `${anchor}\nObject.defineProperty(mapEl, "__offlineTestMap", { configurable: true, value: map });`);
+    },
+  }],
+});
 const states = new Map<string, { revision: number; renamed?: string; quota?: boolean; limit?: number }>();
 const traffic: { method: string; path: string }[] = [];
 let transportDown = false;
@@ -86,8 +102,27 @@ const server = createServer(async (req, res) => {
       }
       if (suffix === "/sw.js") {
         const config = guestOfflineConfig(`synthetic-${slug!.replace(/-renamed$/, "")}`, slug!,
-          Object.fromEntries(["sl", "en", "de", "it"].map(lang => [lang, { tree: tenant(slug!, lang) }])));
+          Object.fromEntries(["sl", "en", "de", "it"].map(lang => [lang, { tree: tenant(slug!, lang) }])),
+          `synthetic-publication-${s.revision}`);
         let worker = renderGuestServiceWorker(config);
+        // Synthetic-only diagnostics for dedicated-worker bootstrap admission.
+        worker += `
+self.addEventListener("fetch", (event) => {
+  if (!event.request.url.includes("maplibre-gl-worker")) return;
+  event.waitUntil((async () => {
+    const client = event.clientId ? await self.clients.get(event.clientId) : null;
+    const evidence = {
+      type: "OFFLINE_FIXTURE_BOOTSTRAP", clientId: event.clientId,
+      resultingClientId: event.resultingClientId, destination: event.request.destination,
+      mode: event.request.mode, referrer: event.request.referrer,
+      url: event.request.url, client: client ? { url: client.url, type: client.type } : null,
+      category: kind(event.request), allowed: await sourceAllowed(event),
+      cached: !!await read(SHELL, event.request.url),
+    };
+    for (const window of await self.clients.matchAll({ type: "window", includeUncontrolled: true })) window.postMessage(evidence);
+  })());
+});
+`;
         // Test-only fault injection; production generator has no test switches.
         if (s.limit) worker = worker.replace("const LIMIT = 50 * 1024 * 1024;", `const LIMIT = ${s.limit};`);
         if (s.quota) worker = `Cache.prototype.put = async function () { throw new DOMException("Synthetic quota denial", "QuotaExceededError"); };\n${worker}`;

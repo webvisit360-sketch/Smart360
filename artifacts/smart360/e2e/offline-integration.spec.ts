@@ -24,8 +24,11 @@ async function control(request: APIRequestContext, slug: string, changes: Record
 }
 async function instrument(page: Page) {
   await page.addInitScript(() => {
-    const evidence = { outbound: [] as any[], hourly: [] as (() => void)[] };
+    const evidence = { outbound: [] as any[], inbound: [] as any[], hourly: [] as (() => void)[] };
     (window as any).__offlineEvidence = evidence;
+    navigator.serviceWorker.addEventListener("message", event => {
+      if (event.data?.type === "OFFLINE_FIXTURE_BOOTSTRAP") evidence.inbound.push(event.data);
+    });
     const post = ServiceWorker.prototype.postMessage;
     ServiceWorker.prototype.postMessage = function (message: any, ...args: any[]) {
       evidence.outbound.push(message);
@@ -92,6 +95,83 @@ async function snap(page: Page, name: string) {
   await mkdir(reports, { recursive: true });
   await page.screenshot({ path: `${reports}/${name}.png` });
 }
+async function proveMapDrawing(page: Page, surface: "gpx" | "free") {
+  const mapElement = page.getByTestId("map-gpx");
+  // This is the live DOM MapLibre marker, not Recharts' elevation reference dot.
+  await expect(mapElement.locator(".s360-gpx-marker--me")).toBeVisible();
+  const marker = await mapElement.locator(".s360-gpx-marker--me").boundingBox();
+  expect(marker!.width).toBeGreaterThan(0);
+  expect(marker!.x).toBeGreaterThanOrEqual(0);
+  expect(marker!.y).toBeGreaterThanOrEqual(0);
+  expect(marker!.x + marker!.width).toBeLessThanOrEqual(390);
+  expect(marker!.y + marker!.height).toBeLessThanOrEqual(844);
+  const inspect = () => mapElement.evaluate(async element => {
+    const map = (element as any).__offlineTestMap;
+    if (!map?.getLayer("tour-line")) return null;
+    return new Promise<any>(resolve => {
+      map.once("render", () => {
+        const canvas = map.getCanvas() as HTMLCanvasElement;
+        const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+        if (!gl) return resolve({ error: "WebGL context unavailable" });
+        const pixels = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+        gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        let plannedPixels = 0, recordedPixels = 0, neutralPixels = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          const matches = (r: number, g: number, b: number) =>
+            Math.abs(pixels[i]! - r) < 5 && Math.abs(pixels[i + 1]! - g) < 5 && Math.abs(pixels[i + 2]! - b) < 5 && pixels[i + 3]! > 240;
+          if (matches(21, 115, 71)) plannedPixels++;
+          if (matches(18, 26, 20)) recordedPixels++;
+          if (matches(244, 246, 242)) neutralPixels++;
+        }
+        const style = map.getStyle();
+        resolve({
+          plannedPixels, recordedPixels, neutralPixels,
+          sourceGeometry: {
+            planned: style.sources.gpx?.data?.geometry,
+            recorded: style.sources.tour?.data?.geometry,
+          },
+          plannedRenderedFeatures: map.queryRenderedFeatures({ layers: ["gpx-line"] }).length,
+          recordedRenderedFeatures: map.queryRenderedFeatures({ layers: ["tour-line"] }).length,
+          neutralFallback: !!map.getLayer("offline-background"),
+          canvas: { width: canvas.width, height: canvas.height },
+        });
+      });
+      map.triggerRepaint();
+    });
+  });
+  await mkdir(reports, { recursive: true });
+  try {
+    await expect.poll(async () => (await inspect())?.recordedPixels ?? 0).toBeGreaterThan(2);
+  } finally {
+    await writeFile(`${reports}/offline-${surface}-map-diagnostic.json`, JSON.stringify({
+      render: await inspect(),
+      workerRequests: await page.evaluate(() => (window as any).__offlineEvidence.inbound),
+    }, null, 2));
+  }
+  if (surface === "gpx") await expect.poll(async () => (await inspect())?.plannedPixels ?? 0).toBeGreaterThan(30);
+  const evidence = await inspect();
+  expect(evidence.neutralFallback).toBe(true);
+  expect(evidence.neutralPixels).toBeGreaterThan(1000);
+  expect(evidence.recordedRenderedFeatures).toBeGreaterThan(0);
+  expect(evidence.sourceGeometry.recorded.coordinates.flat().length).toBeGreaterThan(3);
+  if (surface === "gpx") {
+    expect(evidence.plannedRenderedFeatures).toBeGreaterThan(0);
+    expect(evidence.sourceGeometry.planned.coordinates.flat()).toHaveLength(4);
+  }
+  await mkdir(reports, { recursive: true });
+  await writeFile(`${reports}/offline-${surface}-map-evidence.json`, JSON.stringify({ marker, ...evidence }, null, 2));
+}
+async function proveColdBrandImages(page: Page) {
+  const assets = ["/brand/smart360-znak-40.png", "/brand/smart360-kolobar-temno.svg"];
+  const keys = Object.values(await inventory(page)).flat();
+  for (const asset of assets) expect(keys).toContain(asset);
+  expect(await page.evaluate(async assets => Promise.all(assets.map(src => new Promise<boolean>(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img.naturalWidth > 0);
+    img.onerror = () => resolve(false);
+    img.src = src;
+  }))), assets)).toEqual([true, true]);
+}
 async function recordTour(page: Page, surface: "gpx" | "free") {
   if (surface === "free") {
     await page.getByRole("tab", { name: "Snemanje tur", exact: true }).click();
@@ -115,6 +195,7 @@ async function recordTour(page: Page, surface: "gpx" | "free") {
   const timer = page.getByTestId("text-tour-overlay-net");
   const before = await timer.textContent();
   await expect.poll(() => timer.textContent()).not.toBe(before);
+  await proveMapDrawing(page, surface);
   await snap(page, `offline-${surface}-timer`);
   if (surface === "gpx") {
     await expect(page.getByTestId("profile-fullscreen").locator(".recharts-reference-dot")).toBeVisible();
@@ -150,6 +231,7 @@ test("one online visit caches complete App dependencies; cold offline Explore na
   await cdp.detach();
   await offline(context, request, true);
   await page.goto(`/${slug}/s/explore?lang=sl`);
+  await proveColdBrandImages(page);
   await expect(page.getByTestId("banner-guide-offline")).toHaveText(OFFLINE_COPY.sl.banner);
   await page.getByRole("tab", { name: "Pohodništvo", exact: true }).click();
   await page.getByRole("button", { name: "TEST pohod A", exact: true }).click();
@@ -168,6 +250,7 @@ test("free recording works on first offline opening and exports GPX/image", asyn
   await visit(page, "offline-free");
   await offline(context, request, true);
   await page.goto("/offline-free/s/explore?lang=sl");
+  await proveColdBrandImages(page);
   await recordTour(page, "free");
 });
 
