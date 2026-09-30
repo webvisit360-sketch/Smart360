@@ -1,4 +1,4 @@
-import { isProgramCategory, programEventOf } from "./living-guide-program-model";
+import { isProgramCategory, programEventOf, nextOccurrence, programToday } from "./living-guide-program-model";
 
 export type NavItem = "home" | "stay" | "offer" | "explore" | "program" | "messages";
 
@@ -48,12 +48,18 @@ export function bottomNavScreen(
 
 export function findDatedEventDestination(
   sections: any[] | null | undefined,
+  today = programToday(),
 ): { section: any; category: any } | null {
   for (const section of visible<any>(sections)) {
     for (const category of visible<any>(section.categories)) {
       if (
         isProgramCategory(category, section) &&
-        visible<any>(category.items).some((item: any) => programEventOf(item) !== null)
+        visible<any>(category.items).some((item: any) => {
+          const event = programEventOf(item);
+          if (!event) return false;
+          const next = nextOccurrence(event, today);
+          return next !== null && next >= today;
+        })
       ) {
         return { section, category };
       }

@@ -20,3 +20,9 @@ The supplied program-dogodkov-dizajn HTML is binding for the guest program and d
 **Why:** The owner requested precise visual parity, including computed metrics as well as screenshots. Existing detail-sheet heading CSS can override less-specific program rules.
 
 **How to apply:** Verify actual rendered typography and geometry; keep fixture gradients confined to development. Registration must retain the selected occurrence date through the existing sign-in and order-note handoff.
+
+The owner clarified that the program must never become a permanent empty navigation destination, and that inclusive age copy such as “Za vse” belongs only in detail, not on day-list cards.
+
+**Why:** The reference's short card hints convey restrictions, not every populated age field; an old event record alone does not mean a tenant still offers a program.
+
+**How to apply:** Preserve these boundaries when changing navigation or localization. Keep nonrestrictive age information in detail, and evaluate program availability from guest-visible published occurrences, not category existence.

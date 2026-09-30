@@ -30,7 +30,20 @@ export default function LivingGuideProgramFixture() {
   const search = new URLSearchParams(window.location.search);
   if (import.meta.env.DEV) configureOnce(search);
   const [lang, setLang] = useState<ProgramLang>(() => programLang(search.get("lang") ?? "sl"));
-  const tenant = useMemo(() => programFixtureTenant(lang), [lang]);
+  const withoutEvents = search.get("events") === "none";
+  const tenant = useMemo(() => {
+    const data = programFixtureTenant(lang);
+    if (withoutEvents) {
+      // Synthetic empty published-content fixture; never a real tenant.
+      data.name = "Testna nastanitev brez programa";
+      for (const section of data.sections) {
+        for (const category of section.categories) {
+          if (category.id === "c-events") category.items = [];
+        }
+      }
+    }
+    return data;
+  }, [lang, withoutEvents]);
   return (
     <LivingGuideGuestShell
       tenant={tenant}

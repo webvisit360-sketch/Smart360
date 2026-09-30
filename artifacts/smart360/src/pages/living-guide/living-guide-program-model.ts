@@ -247,6 +247,16 @@ export function nextOccurrence(event: ProgramEvent, from: string, horizonDays = 
   return null;
 }
 
+/** Cards show restrictions, never inclusive or unrecognized age copy.
+ * The original text remains available in the detail meta box. */
+export function restrictiveAgeHint(value: string | null | undefined): string | null {
+  const age = value?.trim();
+  if (!age) return null;
+  const normalized = age.toLocaleLowerCase().replace(/[.!]$/, "").trim();
+  if (/^(za vse|vse starosti|za vse starosti|brez starostnih omejitev|all ages|for all ages|for everyone|everyone|no age restrictions|alle altersgruppen|für alle|für jedes alter|ohne altersbeschränkung|per tutti|tutte le età|per tutte le età|senza limiti di età)$/.test(normalized)) return null;
+  return /\d|odrasl|otrok|otroc|mladost|adult|child|teen|erwachsen|kinder|jugend|bambin|ragazz|minoren|maggiorenn|senior/i.test(age) ? age : null;
+}
+
 /* ---------- Labels (SL/EN/DE/IT) ---------- */
 export function programLang(lang: string): ProgramLang {
   return lang === "en" || lang === "de" || lang === "it" ? lang : "sl";

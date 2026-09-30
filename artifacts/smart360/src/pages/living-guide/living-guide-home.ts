@@ -138,7 +138,7 @@ export function selectHomeTodayEntries(
   now = new Date(),
 ): { hasProgramme: boolean; entries: HomeTodayEntry[] } {
   const visibleSections = visible<any>(sections);
-  const hasProgramme = findDatedEventDestination(visibleSections) !== null;
+  const hasProgramme = findDatedEventDestination(visibleSections, programToday(now)) !== null;
   const entries: HomeTodayEntry[] = [];
 
   for (const section of visibleSections) {

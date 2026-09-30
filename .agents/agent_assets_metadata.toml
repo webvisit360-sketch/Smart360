@@ -1800,3 +1800,31 @@ mtime_ms = 1790796468134
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4970fad7-5816-4d30-a251-23b657112cc6/f7f7a904-8515-430f-8314-3e8415d1a4b7"
 storage_version_token = "1790796555560778"
 content_type = "image/png"
+
+[[outputs]]
+id = "DgP4WBAI3igTWQBzFdOvC"
+uri = "file://screenshots/program-corrected-cards-and-nav-390.png"
+type = "image"
+title = "Popravljene kartice in navigacija s programom · 390 px"
+description = "Razvojni testni primer: joga brez »Za vse«, degustacija z »18+«, v navigaciji je Program."
+logical_id = "efd1614d-17bd-4d9b-961c-21a216c9e583"
+content_hash = "sha256:4652226b0a68f4b29263600002027305020d20d0c26cd64aa12b305846a1bd86"
+size = 62946
+mtime_ms = 1790797098986
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/efd1614d-17bd-4d9b-961c-21a216c9e583/230badbf-2faf-4f97-9048-03fd4679a457"
+storage_version_token = "1790797148337725"
+content_type = "image/png"
+
+[[outputs]]
+id = "u57J7zBEV13Uppj4QqziE"
+uri = "file://screenshots/program-no-events-nav-390.png"
+type = "image"
+title = "Navigacija brez programa · 390 px"
+description = "Razvojna testna nastanitev s prazno kategorijo dogodkov: Program ni prikazan. To ni posnetek produkcijskega Turizma Drobež."
+logical_id = "471926d9-0c96-4e0b-b887-f6cc68628db2"
+content_hash = "sha256:a62c5028a866b5c2a136e4339e7ef718482c8bfe41f3459e0788f5708f13d898"
+size = 99305
+mtime_ms = 1790797101330
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/471926d9-0c96-4e0b-b887-f6cc68628db2/f6299910-c908-403d-9c0b-496d60dea56f"
+storage_version_token = "1790797149582939"
+content_type = "image/png"

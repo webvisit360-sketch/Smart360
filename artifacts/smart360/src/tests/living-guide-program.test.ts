@@ -133,7 +133,8 @@ test("sign-up note carries title and chosen date", () => {
 
 import { readFileSync } from "node:fs";
 import { bottomNavScreen } from "../pages/living-guide/living-guide-nav-resolver";
-import { orderPrefillNoteFor } from "../pages/living-guide/living-guide-program-model";
+import { orderPrefillNoteFor, restrictiveAgeHint } from "../pages/living-guide/living-guide-program-model";
+import { resolveLivingGuideNav } from "../pages/living-guide/living-guide-nav-resolver";
 
 test("direct Program/detail link highlights Program, not Domov", () => {
   const events = { id: "c-events", layout: "events" };
@@ -152,9 +153,16 @@ test("sign-up prefill survives sign-in detour and is keyed to the item", () => {
   assert.match(shell, /initialNote=\{orderPrefillNoteFor\(orderPrefill, item\.id\)\}/);
 });
 
-test("card shows any age text (not only digits) and program scope uses reference system font", () => {
+test("cards show restrictions only; detail retains original age text", () => {
+  for (const value of [null, "", "Za vse", " za vse ", "All ages", "For everyone", "Für alle", "Alle Altersgruppen", "Per tutti", "Tutte le età", "Dobrodošli"]) {
+    assert.equal(restrictiveAgeHint(value), null);
+  }
+  for (const value of ["18+", "6–12 let", "Za odrasle", "Adults only", "Nur Erwachsene", "Solo adulti"]) {
+    assert.equal(restrictiveAgeHint(value), value);
+  }
   const view = readFileSync(new URL("../pages/living-guide/LivingGuideProgram.tsx", import.meta.url), "utf8");
-  assert.match(view, /\{event\.ageText && <span className="lgp-rep">\{event\.ageText\}<\/span>\}/);
+  assert.match(view, /restrictiveAgeHint\(event.ageText\) && <span/);
+  assert.match(view, /event.ageText && <div className="lgp-mrow">/);
   const css = readFileSync(new URL("../pages/living-guide/living-guide-program.css", import.meta.url), "utf8");
   assert.match(css, /\.lg2-app \.lgp-root \{ font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: normal;/);
 });
@@ -164,6 +172,24 @@ test("week without occurrences yields no dots and empty day; legacy-only categor
   assert.ok(buildWeek(rows, "2026-08-20").every((c) => !c.hasEvents));
   assert.equal(occurrencesOn(rows, "2026-08-20").length, 0);
   const legacy = [{ key: "events", isVisible: true, categories: [cat([{ id: "l", title: "L", eventStart: "2025-05-01T18:00:00+02:00" }])] }];
-  assert.equal(findDatedEventDestination(legacy)?.category.id, "c");
+  assert.equal(findDatedEventDestination(legacy), null);
   assert.equal(programItems(legacy[0]!.categories[0]).length, 1);
+});
+
+test("Program nav requires a visible upcoming occurrence, not an empty or expired category", () => {
+  setProgramTodayOverride("2026-08-20");
+  try {
+    const nav = (sections: any[]) => resolveLivingGuideNav(["program"], getLivingGuideAvailableFeatures(sections), false).resolved;
+    const sections = (items: any[]) => [{ key: "events", categories: [cat(items)] }];
+    assert.ok(!nav([]).includes("program"));
+    assert.ok(!nav(sections([])).includes("program"));
+    assert.ok(!nav(sections([{ eventStart: "2025-01-01T10:00:00" }])).includes("program"));
+    assert.ok(!nav(sections([{ eventSchedule: weekly(["mon"], { validTo: "2026-08-19" }) }])).includes("program"));
+    assert.ok(!nav(sections([{ isVisible: false, eventSchedule: weekly(["mon"]) }])).includes("program"));
+    assert.ok(!nav(sections([{ deletedAt: "2026-08-19", eventSchedule: weekly(["mon"]) }])).includes("program"));
+    assert.ok(!nav([{ ...sections([])[0], isVisible: false, categories: [cat([{ eventSchedule: weekly(["mon"]) }])] }]).includes("program"));
+    assert.ok(nav(sections([{ eventSchedule: weekly(["mon"]) }])).includes("program"));
+    assert.ok(nav(sections([{ eventSchedule: weekly(["mon"], { validFrom: "2029-01-01" }) }])).includes("program"));
+    assert.ok(nav(sections([{ eventStart: "2026-09-01T10:00:00" }])).includes("program"));
+  } finally { setProgramTodayOverride(null); }
 });

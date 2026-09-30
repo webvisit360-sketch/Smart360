@@ -18,6 +18,7 @@ import {
   programToday,
   programUiState,
   recurrenceHint,
+  restrictiveAgeHint,
   weekRangeLabel,
   type ProgramEvent,
   type ProgramFilter,
@@ -128,7 +129,7 @@ export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any)
                   <div className="lgp-name">{item.title}</div>
                   <Badge event={event} lang={lang} />
                   {hint && <span className="lgp-rep">&#8635; {hint}</span>}
-                  {event.ageText && <span className="lgp-rep">{event.ageText}</span>}
+                  {restrictiveAgeHint(event.ageText) && <span className="lgp-rep">{event.ageText}</span>}
                 </div>
               </button>
             );

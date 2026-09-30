@@ -4396,12 +4396,7 @@ function BottomNav({
         path: `/${slug}/c/${eventDestination.category.id}`,
         categoryId: eventDestination.category.id,
       }
-    : {
-        key: "program",
-        label: t("UI.lg.nav.program"),
-        icon: "cal",
-        path: `/${slug}/home`, // fallback
-      };
+    : null;
   const messages = {
     key: "messages",
     label: t("UI.lg.nav.messages"),
