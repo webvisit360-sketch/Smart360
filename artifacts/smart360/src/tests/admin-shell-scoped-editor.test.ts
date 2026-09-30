@@ -30,6 +30,7 @@ test("scoped editor filters all section and move targets, hides cross-section tr
   assert.match(editor, /scope=\{scope\}[\s\S]*?onDone=\{\(\) => setAddSectionOpen\(false\)\}/);
   assert.match(editor, /const trimmedKey = scope \?\?/);
   assert.match(editor, /await createSection\(tenantId/);
-  assert.match(editor, /operatorPlaceCreation && \(!scope \|\| visibleSections\.length === 0\)/);
+  assert.match(editor, /const canCreateSection = operatorPlaceCreation && \(!scope \|\| visibleSections\.length === 0\)/);
+  assert.match(editor, /if \(!canCreateSection\) setAddSectionOpen\(false\)/);
   assert.match(instructions, /nedokončane admin strani nikoli ne pošiljaj kot dosegljive navigacijske izbire/);
 });

@@ -452,17 +452,38 @@ router.post("/admin/tenants/:id/sections", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Tenant not found" });
     return;
   }
-  const existing = await db
-    .select({ position: sectionsTable.position })
-    .from(sectionsTable)
-    .where(eq(sectionsTable.tenantId, tenantId));
-  const position =
-    parsed.data.position ??
-    (existing.length ? Math.max(...existing.map((s) => s.position)) + 1 : 0);
-  const [section] = await db
-    .insert(sectionsTable)
-    .values({ ...cleanContentFields(parsed.data), position, tenantId })
-    .returning();
+  // Offer is a single stable section per tenant. Lock the tenant/key pair
+  // across concurrent requests, then check active rows inside the transaction.
+  // Archived sections do not block a new offer.
+  const result = parsed.data.key === "offer"
+    ? await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('section:offer'), hashtext(${tenantId}))`);
+        const [activeOffer] = await tx.select({ id: sectionsTable.id }).from(sectionsTable)
+          .where(and(eq(sectionsTable.tenantId, tenantId), eq(sectionsTable.key, "offer"), isNull(sectionsTable.deletedAt)))
+          .limit(1);
+        if (activeOffer) return { existing: true as const };
+        const existing = await tx.select({ position: sectionsTable.position }).from(sectionsTable)
+          .where(eq(sectionsTable.tenantId, tenantId));
+        const position = parsed.data.position ??
+          (existing.length ? Math.max(...existing.map((s) => s.position)) + 1 : 0);
+        const [section] = await tx.insert(sectionsTable)
+          .values({ ...cleanContentFields(parsed.data), position, tenantId }).returning();
+        return { existing: false as const, section: section! };
+      })
+    : await (async () => {
+        const existing = await db.select({ position: sectionsTable.position }).from(sectionsTable)
+          .where(eq(sectionsTable.tenantId, tenantId));
+        const position = parsed.data.position ??
+          (existing.length ? Math.max(...existing.map((s) => s.position)) + 1 : 0);
+        const [section] = await db.insert(sectionsTable)
+          .values({ ...cleanContentFields(parsed.data), position, tenantId }).returning();
+        return { existing: false as const, section: section! };
+      })();
+  if (result.existing) {
+    res.status(409).json({ error: "Sekcija Ponudba že obstaja. Osvežite stran in uredite obstoječo sekcijo." });
+    return;
+  }
+  const section = result.section;
   await logChange({
     tenantId,
     tenantName: tenant.name,

@@ -7932,7 +7932,7 @@ export const createSection = async (id: string,
 
 
 
-export const getCreateSectionMutationOptions = <TError = ErrorType<unknown>,
+export const getCreateSectionMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSection>>, TError,{id: string;data: BodyType<SectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSection>>, TError,{id: string;data: BodyType<SectionInput>}, TContext> => {
 
@@ -7961,9 +7961,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateSectionMutationResult = NonNullable<Awaited<ReturnType<typeof createSection>>>
     export type CreateSectionMutationBody = BodyType<SectionInput>
-    export type CreateSectionMutationError = ErrorType<unknown>
+    export type CreateSectionMutationError = ErrorType<void>
 
-    export const useCreateSection = <TError = ErrorType<unknown>,
+    export const useCreateSection = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSection>>, TError,{id: string;data: BodyType<SectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createSection>>,

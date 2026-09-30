@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { scheduleDraft, scheduleFromDraft, validateSchedule } from "../components/admin/event-schedule-editor";
+import { isEventScheduleItem, scheduleDraft, scheduleFromDraft, validateSchedule } from "../components/admin/event-schedule-editor";
 
 test("a new event cannot save without a date, start, and end", () => {
   const draft = scheduleDraft();
@@ -71,9 +71,10 @@ test("times are same-day and extras can stay unspecified", () => {
 
 test("editor keeps opening read-only, retains eventStart and uses the ordinary draft/write flow", () => {
   const editor = readFileSync(new URL("../components/admin/content-editor.tsx", import.meta.url), "utf8");
-  assert.match(editor, /sectionKey === "events" \|\| category\?\.key === "events" \|\| category\?\.layout === "events" \|\| item\?\.eventSchedule != null/);
+  assert.match(editor, /isEventScheduleItem\(sectionKey, category, item\)/);
   assert.match(editor, /sectionKey=\{section\.key\}/);
   assert.match(editor, /sectionKey=\{sectionKey\}/);
+  assert.match(editor, /category=\{category\}/);
   assert.match(editor, /useState\(\(\) => scheduleDraft\(item\?\.eventSchedule, item\?\.eventStart\)\)/);
   assert.match(editor, /eventScheduleDraft: scheduleDraft\(item\?\.eventSchedule, item\?\.eventStart\)/);
   assert.match(editor, /if \(editingSchedule\) \{\s*const error = validateSchedule\(eventScheduleDraft\)/);
@@ -81,6 +82,17 @@ test("editor keeps opening read-only, retains eventStart and uses the ordinary d
   // Saving a schedule sends no legacy eventStart field, so the old timestamp stays readable.
   assert.match(editor, /\? \{ eventSchedule: scheduleFromDraft\(eventScheduleDraft\) \}\s*: \{ eventStart: toEventStartIso\(eventStart\) \}/);
   assert.doesNotMatch(editor, /useEffect\(\(\) => \{\s*updateItem\(/);
+});
+
+test("Termin follows stored section/category identity rather than translated or custom display titles", () => {
+  assert.equal(isEventScheduleItem("events", { key: "host-custom", layout: "text" }), true);
+  assert.equal(isEventScheduleItem("events", undefined), true);
+  assert.equal(isEventScheduleItem("explore", { key: "events", layout: "text" }), true);
+  assert.equal(isEventScheduleItem(undefined, { key: "events", layout: "text" }), true);
+  assert.equal(isEventScheduleItem(undefined, { key: "host-custom", layout: "events" }), true);
+  assert.equal(isEventScheduleItem("my-events", { key: "host-custom", layout: "text" }), false);
+  assert.equal(isEventScheduleItem("offer", { key: "host-custom", layout: "products" }), false);
+  assert.equal(isEventScheduleItem("offer", undefined, { eventSchedule: { type: "once", date: "2026-09-30", timeFrom: "09:00", timeTo: "10:00" } }), true);
 });
 
 test("isolated fixture mounts production editor, validates in memory and never calls admin writes", () => {

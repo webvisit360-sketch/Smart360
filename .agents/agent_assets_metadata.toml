@@ -1870,3 +1870,17 @@ mtime_ms = 1790798510102
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f7d2a877-1ac3-44dc-ac9e-16b641fa030d/25279b6f-ad23-49be-9928-13c9be4de2b5"
 storage_version_token = "1790798588384237"
 content_type = "image/png"
+
+[[outputs]]
+id = "CVkMrQyYro_QXzODT84eI"
+uri = "file://reports/admin-shell-synthetic/event-termin-edit.png"
+type = "image"
+title = "Termin neposredno pod naslovom vnosa — DEV"
+description = "Dejanski urejevalnik s sintetičnimi podatki. Preverjen prikaz Termina tudi ob poljubnem imenu in postavitvi kategorije znotraj sekcije events; to ni posnetek produkcijskega vnosa Joga."
+logical_id = "d2b527b1-645d-4b97-b4c1-0efcd94e41cd"
+content_hash = "sha256:1da3850da23cac38d555e5aaa566d67af4384dc1713cabdb8f89c7b624f64275"
+size = 48309
+mtime_ms = 1790799893418
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d2b527b1-645d-4b97-b4c1-0efcd94e41cd/e7db556c-c6f6-47e6-a93b-a99d6bd5491d"
+storage_version_token = "1790799978327648"
+content_type = "image/png"

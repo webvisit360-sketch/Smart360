@@ -15,9 +15,10 @@ const tenant = {
     {
       id: "fixture-events", key: "events", title: "Dogodki", icon: "calendar-days",
       isVisible: true, position: 0, categories: [
-        { id: "fixture-event-category", key: "events", label: "Aktivnosti", icon: "calendar-days",
-          layout: "events", exploreGroup: "other", isVisible: true, position: 0, items: [
+        { id: "fixture-event-category", key: "host-custom-evenings", label: "Popolnoma preimenovano", icon: "calendar-days",
+          layout: "text", exploreGroup: "other", isVisible: true, position: 0, items: [
             { id: "fixture-event", title: "Sintetični večer", isVisible: true, position: 0, media: [] },
+             { id: "fixture-event-two", title: "Drugi termin", isVisible: true, position: 1, media: [] },
           ] },
       ],
     },
@@ -40,8 +41,10 @@ const tenant = {
   ],
 };
 
-async function installSyntheticApi(page: Page, sections = tenant.sections) {
+async function installSyntheticApi(page: Page, sections = tenant.sections, handleOfferCreate = false) {
   const unexpected: string[] = [];
+  let currentSections: Array<{ id: string; key: string; title: string; icon: string; isVisible: boolean; position: number; categories: unknown[] }> = [...sections];
+  const offerWrites: Array<{ key: string; id: string }> = [];
   await page.route("**/api/**", async route => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -50,8 +53,25 @@ async function installSyntheticApi(page: Page, sections = tenant.sections) {
     if (path === "/api/admin/session" && method === "GET") body = { authenticated: true, email: "synthetic@example.invalid" };
     else if (path === "/api/admin/host/session" && method === "GET") body = { authenticated: false };
     else if (path === `/api/admin/tenants/${id}/operator-entry` && method === "POST") body = {};
-    else if (path === `/api/admin/tenants/${id}` && method === "GET") body = { ...tenant, sections };
-    else if (path === `/api/public/tenants/${id}` && method === "GET") body = { ...tenant, sections };
+    else if (path === `/api/admin/tenants/${id}` && method === "GET") body = { ...tenant, sections: currentSections };
+    else if (path === `/api/public/tenants/${id}` && method === "GET") body = { ...tenant, sections: currentSections };
+    else if (handleOfferCreate && path === `/api/admin/tenants/${id}/sections` && method === "POST") {
+      const input = request.postDataJSON() as { key: string; title: string; icon: string };
+      if (input.key !== "offer") {
+        unexpected.push(`unexpected key ${input.key}`);
+        await route.fulfill({ status: 400, contentType: "application/json", body: '{"error":"Wrong section key"}' });
+        return;
+      }
+      if (currentSections.some(section => section.key === "offer")) {
+        await route.fulfill({ status: 409, contentType: "application/json", body: '{"error":"Sekcija Ponudba že obstaja."}' });
+        return;
+      }
+      const created = { ...input, id: "fixture-created-offer", position: currentSections.length, isVisible: true, categories: [] };
+      currentSections = [...currentSections, created];
+      offerWrites.push({ key: input.key, id: created.id });
+      await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(created) });
+      return;
+    }
     else if (path === `/api/admin/tenants/${id}/notification-configuration` && method === "GET") body = { configured: false };
     else if (path === "/api/admin/tenants/overview" && method === "GET") body = [];
     else if (method === "GET" && path.startsWith(`/api/admin/tenants/${id}/`)) body = [];
@@ -62,7 +82,7 @@ async function installSyntheticApi(page: Page, sections = tenant.sections) {
     }
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(body) });
   });
-  return unexpected;
+  return { unexpected, offerWrites };
 }
 
 async function measure(page: Page) {
@@ -83,7 +103,7 @@ async function measure(page: Page) {
 }
 
 test("synthetic browser API: actual shell, events and offer panels remain scoped", async ({ page }) => {
-  const unexpected = await installSyntheticApi(page);
+  const { unexpected } = await installSyntheticApi(page);
   await mkdir(output, { recursive: true });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${base}/admin/tenants/${id}`, { waitUntil: "domcontentloaded" });
@@ -118,7 +138,7 @@ test("synthetic browser API: actual shell, events and offer panels remain scoped
 });
 
 test("missing event section offers the existing owner creation dialog with the guest key", async ({ page }) => {
-  const unexpected = await installSyntheticApi(page, tenant.sections.filter(section => section.key !== "events"));
+  const { unexpected } = await installSyntheticApi(page, tenant.sections.filter(section => section.key !== "events"));
   await page.goto(`${base}/admin/tenants/${id}`, { waitUntil: "domcontentloaded" });
   await page.locator(".admin-tenant-sidebar").getByRole("button", { name: "Dogodki" }).click();
   const panel = page.getByRole("tabpanel");
@@ -130,4 +150,87 @@ test("missing event section offers the existing owner creation dialog with the g
   await expect(dialog.locator('input[value="Dogodki"]')).toBeVisible();
   // Do not save; this fixture never sends any section mutation.
   expect(unexpected).toEqual([]);
+});
+
+test("every item in the events section has Termin despite custom category identity and title", async ({ page }) => {
+  const { unexpected } = await installSyntheticApi(page);
+  await page.goto(`${base}/admin/tenants/${id}`, { waitUntil: "domcontentloaded" });
+  await page.locator(".admin-tenant-sidebar").getByRole("button", { name: "Dogodki" }).click();
+  const panel = page.getByRole("tabpanel");
+  for (const name of ["Sintetični večer", "Drugi termin"]) {
+    await panel.getByText(name, { exact: true }).locator("..").getByRole("button").click();
+    const dialog = page.getByRole("dialog", { name: "Uredi vnos" });
+    await expect(dialog.getByTestId("event-schedule-editor")).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Termin" })).toBeVisible();
+    if (name === "Sintetični večer") {
+      await mkdir(output, { recursive: true });
+      const heading = await dialog.getByRole("heading", { name: "Termin" }).boundingBox();
+      const bounds = await dialog.boundingBox();
+      expect(heading).not.toBeNull();
+      expect(bounds).not.toBeNull();
+      expect(heading!.y).toBeGreaterThan(bounds!.y);
+      expect(heading!.y + heading!.height).toBeLessThan(page.viewportSize()!.height);
+      await writeFile(`${output}/event-termin-measurements.json`, JSON.stringify({
+        evidence: "synthetic browser API, real editor",
+        viewport: page.viewportSize(), dialog: bounds, terminHeading: heading,
+      }, null, 2));
+      await dialog.screenshot({ path: `${output}/event-termin-edit.png`, animations: "disabled" });
+    }
+    await dialog.getByRole("button", { name: "Prekliči" }).click();
+  }
+  await page.locator(".admin-tenant-sidebar").getByRole("button", { name: "Ponudba in cene" }).click();
+  await panel.getByText("Sintetično kolo", { exact: true }).locator("..").getByRole("button").click();
+  await expect(page.getByRole("dialog", { name: "Uredi vnos" }).getByTestId("event-schedule-editor")).toHaveCount(0);
+  expect(unexpected).toEqual([]);
+});
+
+test("existing offer reuses its section id in full editor; missing offer creates once with stable key", async ({ page }) => {
+  const { unexpected, offerWrites } = await installSyntheticApi(page, tenant.sections, true);
+  await page.goto(`${base}/admin/tenants/${id}`, { waitUntil: "domcontentloaded" });
+  const sidebar = page.locator(".admin-tenant-sidebar");
+  await sidebar.getByRole("button", { name: "Ponudba in cene" }).click();
+  const panel = page.getByRole("tabpanel");
+  await expect(panel.getByRole("button", { name: "Dodaj sekcijo" })).toHaveCount(0);
+  await sidebar.getByRole("button", { name: "Sekcije in vnosi" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("Sintetično kolo");
+  await sidebar.getByRole("button", { name: "Ponudba in cene" }).click();
+  await expect(panel).toContainText("Sintetično kolo");
+  expect(offerWrites).toEqual([]);
+  expect(unexpected).toEqual([]);
+});
+
+test("duplicate legacy offer keys fail explicitly instead of showing parallel offers", async ({ page }) => {
+  const offer = tenant.sections.find(section => section.key === "offer")!;
+  await installSyntheticApi(page, [...tenant.sections, { ...offer, id: "legacy-duplicate-offer" }]);
+  await page.goto(`${base}/admin/tenants/${id}`, { waitUntil: "domcontentloaded" });
+  await page.locator(".admin-tenant-sidebar").getByRole("button", { name: "Ponudba in cene" }).click();
+  const panel = page.getByRole("tabpanel");
+  await expect(panel.getByRole("alert")).toContainText("Obstaja več sekcij");
+  await expect(panel.getByRole("button", { name: "Dodaj sekcijo" })).toHaveCount(0);
+  await expect(panel.getByText("Sintetično kolo", { exact: true })).toHaveCount(0);
+});
+
+test("missing offer creates using offer key and stops showing create after refresh", async ({ page }) => {
+  const { unexpected, offerWrites } = await installSyntheticApi(page, tenant.sections.filter(section => section.key !== "offer"), true);
+  await page.goto(`${base}/admin/tenants/${id}`, { waitUntil: "domcontentloaded" });
+  const sidebar = page.locator(".admin-tenant-sidebar");
+  await sidebar.getByRole("button", { name: "Ponudba in cene" }).click();
+  const panel = page.getByRole("tabpanel");
+  await panel.getByRole("button", { name: "Dodaj sekcijo" }).click();
+  const dialog = page.getByRole("dialog", { name: "Nova sekcija" });
+  await expect(dialog.locator('input[value="offer"]')).toBeDisabled();
+  await dialog.getByRole("button", { name: "Ustvari" }).click();
+  await expect(dialog).toBeHidden();
+  await page.reload();
+  await sidebar.getByRole("button", { name: "Ponudba in cene" }).click();
+  await expect(panel.getByRole("button", { name: "Dodaj sekcijo" })).toHaveCount(0);
+  await expect(panel).toContainText("Ponudba");
+  expect(offerWrites).toEqual([{ key: "offer", id: "fixture-created-offer" }]);
+  expect(unexpected).toEqual([]);
+  await mkdir(output, { recursive: true });
+  await panel.screenshot({ path: `${output}/offer-created-once.png`, animations: "disabled" });
+  await writeFile(`${output}/offer-created-once.json`, JSON.stringify({
+    fixture: "SYNTHETIC browser-only routes", offerWrites,
+    createButtonsAfterReload: await panel.getByRole("button", { name: "Dodaj sekcijo" }).count(),
+  }, null, 2));
 });

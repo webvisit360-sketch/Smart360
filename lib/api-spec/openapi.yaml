@@ -1934,6 +1934,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Section"
+        "409":
+          description: Active offer section already exists for this tenant
   /admin/sections/{id}:
     patch:
       operationId: updateSection

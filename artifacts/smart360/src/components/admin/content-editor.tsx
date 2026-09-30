@@ -81,7 +81,7 @@ import { getHostOnboardingQueryKey, getOwnerOnboardingQueryKey } from "@/hooks/u
 import { suggestCategoryIcon } from "@workspace/category-icons";
 import { CategoryIcon } from "@/components/category-icon";
 import { CategoryIconPicker } from "@/components/admin/category-icon-picker";
-import { EventScheduleEditor, scheduleDraft, scheduleFromDraft, validateSchedule, type EventSchedule } from "@/components/admin/event-schedule-editor";
+import { EventScheduleEditor, isEventScheduleItem, scheduleDraft, scheduleFromDraft, validateSchedule, type EventSchedule } from "@/components/admin/event-schedule-editor";
 
 // ---------- Types ----------
 
@@ -507,8 +507,18 @@ function SectionDialog({ mode, tenantId, section, scope, onDone }: SectionDialog
       clear();
       await refresh();
       onDone();
-    } catch {
-      alert("Shranjevanje ni uspelo.");
+    } catch (error) {
+      alert(mutationErrorMessage(error) ?? "Shranjevanje ni uspelo.");
+      if (mode === "create" && scope === "offer" &&
+          error && typeof error === "object" && "status" in error && error.status === 409) {
+        try {
+          await refresh();
+        } catch (refreshError) {
+          alert(mutationErrorMessage(refreshError) ?? "Ponudbe ni bilo mogoče osvežiti.");
+        }
+        clear();
+        onDone();
+      }
     } finally {
       setBusy(false);
     }
@@ -1000,17 +1010,18 @@ function toEventStartIso(value: string): string | null {
 }
 
 type ItemDialogProps =
-  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item?: undefined; onDone: () => void }
-  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item: Item; onDone: () => void };
+  | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; category?: Category; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item?: undefined; onDone: () => void }
+  | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; category?: Category; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item: Item; onDone: () => void };
 
-export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCategories, allCategories, item, onDone, operatorPlaceCreation }: ItemDialogProps) {
+export function ItemDialog({ mode, tenantId, categoryId, sectionKey, category: rowCategory, sectionCategories, allCategories, item, onDone, operatorPlaceCreation }: ItemDialogProps) {
   if (mode === "create" && operatorPlaceCreation && (sectionKey === "explore" || sectionKey === "services")) {
     return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />;
   }
   const queryClient = useQueryClient();
-  const category = sectionCategories?.find((candidate) => candidate.id === categoryId)
+  const category = (rowCategory?.id === categoryId ? rowCategory : undefined)
+    || sectionCategories?.find((candidate) => candidate.id === categoryId)
     || allCategories?.find((candidate) => candidate.id === categoryId);
-  const editingSchedule = sectionKey === "events" || category?.key === "events" || category?.layout === "events" || item?.eventSchedule != null;
+  const editingSchedule = isEventScheduleItem(sectionKey, category, item);
   const [busy, setBusy] = useState(false);
   const itemId = mode === "edit" ? item.id : "";
   const itemEditorIdRef = useRef(itemId);
@@ -1418,6 +1429,9 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
         />
         <CharCounter value={title} max={BUDGET.itemTitle} />
       </div>
+      {editingSchedule && (
+        <EventScheduleEditor draft={eventScheduleDraft} onChange={setEventScheduleDraft} disabled={busy} error={scheduleError} />
+      )}
       <div className="space-y-1">
         <Label>Opis / besedilo</Label>
         <RichTextEditor
@@ -1616,9 +1630,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, sectionCate
           disabled={busy}
         />
       </div>
-      {editingSchedule ? (
-        <EventScheduleEditor draft={eventScheduleDraft} onChange={setEventScheduleDraft} disabled={busy} error={scheduleError} />
-      ) : <div className="space-y-1">
+      {!editingSchedule && <div className="space-y-1">
         <Label>Začetek dogodka</Label>
         <Input
           type="datetime-local"
@@ -2254,7 +2266,8 @@ function OkolicaPlaceCreate({
 // Item row
 // ==========================================
 
-function ItemRow({ item, tenantId, categoryId, sectionKey, sectionCategories, allCategories, layout }: { item: Item; tenantId: string; categoryId: string; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[]; layout?: string }) {
+function ItemRow({ item, tenantId, category, sectionKey, sectionCategories, allCategories }: { item: Item; tenantId: string; category: Category; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[] }) {
+  const layout = category.layout;
   const [editOpen, setEditOpen] = useState(false);
   useEffect(() => {
     const navigate = () => {
@@ -2294,7 +2307,8 @@ function ItemRow({ item, tenantId, categoryId, sectionKey, sectionCategories, al
           <ItemDialog
             mode="edit"
             tenantId={tenantId}
-            categoryId={categoryId}
+             categoryId={category.id}
+             category={category}
             sectionKey={sectionKey}
             sectionCategories={sectionCategories}
             allCategories={allCategories}
@@ -2374,7 +2388,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
 
         <div className="space-y-1.5">
           {items.map((item) => (
-            <ItemRow key={item.id} item={item} tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} layout={category.layout} />
+             <ItemRow key={item.id} item={item} tenantId={tenantId} category={category} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} />
           ))}
           {canAdd && <button
             type="button"
@@ -2742,6 +2756,12 @@ export function ContentEditor({
     () => scope ? sections.filter(section => section.key === scope) : sections,
     [sections, scope],
   );
+  const canCreateSection = operatorPlaceCreation && (!scope || visibleSections.length === 0);
+  // If a section arrives while its create dialog is open, close/unmount that
+  // stale form before it can submit a second section with the same stable key.
+  useEffect(() => {
+    if (!canCreateSection) setAddSectionOpen(false);
+  }, [canCreateSection]);
   const allCategories = React.useMemo(() => {
     return visibleSections.flatMap(s => (s.categories || []).map(c => ({ ...c, sectionKey: s.key })));
   }, [visibleSections]);
@@ -2750,7 +2770,11 @@ export function ContentEditor({
     <div className="font-['Archivo']">
       <div style={{ display: "none" }} aria-hidden="true"><IconSprite /></div>
       {!operatorPlaceCreation && <p className="mb-4 rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">Sekcije in kategorije ureja Smart360. Vnose lahko še naprej dodajate, urejate in premikate med kategorijami.</p>}
-      {visibleSections.length === 0 ? (
+      {scope === "offer" && visibleSections.length > 1 ? (
+        <p role="alert" className="rounded-xl border p-4 text-sm">
+          Obstaja več sekcij s ključem offer. V »Sekcije in vnosi« naj operater preveri podvojene sekcije. Tukaj ni mogoče ustvariti dodatne ponudbe.
+        </p>
+      ) : visibleSections.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           {operatorPlaceCreation
             ? scope ? "Ta sekcija še ne obstaja. Ustvarite jo za začetek." : "Trenutno ni nobenih sekcij. Ustvarite prvo sekcijo za začetek."
@@ -2764,7 +2788,7 @@ export function ContentEditor({
         </div>
       )}
 
-      {operatorPlaceCreation && (!scope || visibleSections.length === 0) && <Button
+      {canCreateSection && <Button
         className="w-full mt-4 h-[46px] border border-dashed border-[#C9D2CB] rounded-[10px] bg-white text-[#157347] font-bold hover:bg-[#F4F6F2]"
         variant="outline"
         onClick={() => setAddSectionOpen(true)}
@@ -2775,7 +2799,7 @@ export function ContentEditor({
 
       {!scope && <TrashPanel tenantId={tenantId} />}
 
-      {operatorPlaceCreation && <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
+      {canCreateSection && <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
           <SectionDialog
             mode="create"
             tenantId={tenantId}

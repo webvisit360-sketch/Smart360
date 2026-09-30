@@ -1,0 +1,10 @@
+{
+  "fixture": "SYNTHETIC browser-only routes",
+  "offerWrites": [
+    {
+      "key": "offer",
+      "id": "fixture-created-offer"
+    }
+  ],
+  "createButtonsAfterReload": 0
+}

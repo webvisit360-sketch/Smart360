@@ -16,6 +16,16 @@ export type EventSchedule = {
   inCamp?: boolean;
 };
 
+// Section identity covers every Events item regardless of the category's
+// custom name or layout. Legacy event categories can also live in Explore.
+export function isEventScheduleItem(
+  sectionKey?: string,
+  category?: { key?: string; layout?: string },
+  item?: { eventSchedule?: EventSchedule | null },
+): boolean {
+  return sectionKey === "events" || category?.key === "events" || category?.layout === "events" || item?.eventSchedule != null;
+}
+
 // Keep empty inputs in the local draft, not in the published schedule.
 export type ScheduleDraft = {
   type: "once" | "weekly";

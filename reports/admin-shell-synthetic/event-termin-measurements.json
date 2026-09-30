@@ -1,0 +1,19 @@
+{
+  "evidence": "synthetic browser API, real editor",
+  "viewport": {
+    "width": 1100,
+    "height": 1000
+  },
+  "dialog": {
+    "x": 294,
+    "y": 70,
+    "width": 512,
+    "height": 860
+  },
+  "terminHeading": {
+    "x": 335,
+    "y": 255.5,
+    "width": 430,
+    "height": 24
+  }
+}
