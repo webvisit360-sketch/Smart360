@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — dizajn povzetka ture</title>
+<style>
+  :root{
+    --bg:#0B1220; --card:#121B2B; --line:#1E2A3D; --txt:#F2F5F9; --muted:#8E9AAC;
+    --amber:#F2B135; --green:#157347; --ink:#121A14; --inkmut:#66716A; --paper:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#E9ECEF;padding:24px 12px;display:flex;flex-wrap:wrap;gap:32px;justify-content:center;align-items:flex-start;}
+  h2.cap{width:100%;text-align:center;font-size:15px;color:#5a6472;font-weight:600;margin-bottom:-14px;}
+  .caption{color:#96a1b3;font-size:12px;text-align:center;margin-top:14px;line-height:1.5;}
+
+  /* ====== IZVOŽENA SLIKA (bela kartica — to postane PNG) ====== */
+  .export{width:420px;background:var(--paper);border-radius:18px;overflow:hidden;box-shadow:0 10px 36px rgba(0,0,0,.22);}
+  .ex-head{padding:18px 20px 12px;}
+  .ex-title{color:var(--ink);font-size:23px;font-weight:800;letter-spacing:-.01em;}
+  .ex-meta{color:var(--inkmut);font-size:13px;margin-top:3px;}
+  .ex-meta b{color:var(--green);font-weight:700;}
+
+  .band{height:7px;background:linear-gradient(90deg,#E8862E 0%,#2F72C4 30%,#3E9E4E 55%,#F5C62E 80%,#E8862E 100%);}
+  .map{height:230px;position:relative;background:
+    radial-gradient(90% 70% at 18% 20%,#DCEAD9 0%,transparent 60%),
+    radial-gradient(70% 60% at 85% 75%,#D7E6D2 0%,transparent 55%),
+    linear-gradient(160deg,#EEF2EA 0%,#E6EDE2 100%);}
+  .map .riv{position:absolute;left:0;right:0;top:52%;height:7px;background:#BFD9EA;border-radius:4px;transform:rotate(-7deg);}
+  .map .rd1{position:absolute;left:-5%;right:30%;top:30%;height:3px;background:#fff;transform:rotate(5deg);}
+  .map .rd2{position:absolute;left:40%;right:-5%;top:68%;height:3px;background:#fff;transform:rotate(-12deg);}
+  .map svg{position:absolute;inset:0;width:100%;height:100%;}
+  .map .lbl{position:absolute;left:10px;bottom:8px;background:rgba(255,255,255,.85);color:#5a6472;font-size:9px;border-radius:6px;padding:2px 7px;}
+  .pin{position:absolute;width:22px;height:22px;border-radius:50%;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+  .pin.s{background:var(--green);left:11%;top:34%;}
+  .pin.e{background:#B03A36;right:7%;top:56%;}
+
+  .prof{height:64px;padding:8px 20px 0;background:var(--paper);}
+  .prof svg{width:100%;height:100%;}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:6px 8px 2px;}
+  .st{padding:10px 12px;}
+  .st .k{color:var(--inkmut);font-size:11px;letter-spacing:.02em;}
+  .st .v{color:var(--ink);font-size:19px;font-weight:800;margin-top:2px;letter-spacing:-.01em;}
+  .st .v small{font-size:12px;font-weight:700;color:var(--inkmut);}
+
+  .ex-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 16px;border-top:1px solid #ECEFEA;margin-top:6px;}
+  .lockup{display:flex;align-items:center;gap:9px;}
+  .ring{width:26px;height:26px;border-radius:50%;background:conic-gradient(#157347,#F2B135,#2E5AAC,#B03A36,#157347);-webkit-mask:radial-gradient(circle at center,transparent 7px,#000 7.5px);mask:radial-gradient(circle at center,transparent 7px,#000 7.5px);}
+  .word{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:.02em;}
+  .attr{color:#9aa39b;font-size:8.5px;text-align:right;line-height:1.5;}
+
+  /* ====== EKRAN V APLIKACIJI ====== */
+  .phone{width:390px;background:var(--bg);border-radius:30px;padding:20px 16px 26px;box-shadow:0 12px 40px rgba(0,0,0,.28);}
+  .small{font-size:12px;letter-spacing:.12em;color:var(--amber);font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+  .h1{color:var(--txt);font-size:24px;font-weight:800;margin-bottom:12px;}
+  .mini{border-radius:16px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;transform:scale(1);}
+  .mini .export{width:100%;border-radius:0;box-shadow:none;}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:13px;font-weight:800;font-size:15px;margin-bottom:10px;}
+  .b1{background:var(--green);color:#fff;}
+  .b2{background:var(--card);border:1px solid var(--line);color:var(--txt);font-size:13px;flex:1;margin:0;}
+  .row2{display:flex;gap:10px;margin-bottom:10px;}
+  .note{color:#5f6b7d;font-size:11px;text-align:center;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<h2 class="cap">1 · Izvožena slika — bela kartica z zemljevidom, profilom, vso statistiko in logotipom</h2>
+<div>
+<div class="export">
+  <div class="ex-head">
+    <div class="ex-title">Jutranji pohod nad Ter</div>
+    <div class="ex-meta">1. 10. 2026, 10.53 · Pohodništvo · <b>Turizem Drobež</b></div>
+  </div>
+
+  <div class="band"></div>
+  <div class="map">
+    <div class="rd1"></div><div class="rd2"></div><div class="riv"></div>
+    <svg viewBox="0 0 420 230">
+      <path d="M48,84 C90,60 130,96 170,88 C215,78 230,120 265,128 C300,136 310,180 345,172 C370,166 385,140 392,128"
+            fill="none" stroke="#157347" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+    <div class="pin s">S</div>
+    <div class="pin e">C</div>
+    <div class="lbl">pravi zemljevid poti (OpenFreeMap)</div>
+  </div>
+
+  <div class="prof">
+    <svg viewBox="0 0 380 56" preserveAspectRatio="none">
+      <path d="M0,50 L40,42 L95,28 L150,14 L195,8 L240,18 L290,30 L340,44 L380,50 L380,56 L0,56 Z" fill="rgba(21,115,71,.14)"/>
+      <path d="M0,50 L40,42 L95,28 L150,14 L195,8 L240,18 L290,30 L340,44 L380,50" fill="none" stroke="#157347" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <div class="stats">
+    <div class="st"><div class="k">Razdalja</div><div class="v">2,12 <small>km</small></div></div>
+    <div class="st"><div class="k">Vzpon</div><div class="v">241 <small>m</small></div></div>
+    <div class="st"><div class="k">Najv. višina</div><div class="v">612 <small>m</small></div></div>
+    <div class="st"><div class="k">Neto čas</div><div class="v">24:29</div></div>
+    <div class="st"><div class="k">Premori</div><div class="v">01:57</div></div>
+    <div class="st"><div class="k">Skupni čas</div><div class="v">26:26</div></div>
+    <div class="st"><div class="k">Povp. hitrost</div><div class="v">5,2 <small>km/h</small></div></div>
+    <div class="st"><div class="k">Tempo</div><div class="v">11:33 <small>/km</small></div></div>
+    <div class="st"><div class="k">Poraba</div><div class="v">~270 <small>kcal</small></div></div>
+  </div>
+
+  <div class="ex-foot">
+    <div class="lockup"><div class="ring"></div><div class="word">SMART360</div></div>
+    <div class="attr">© OpenFreeMap · OpenMapTiles<br>© OpenStreetMap contributors</div>
+  </div>
+</div>
+<div class="caption">Slika, ki jo gost shrani ali deli. Zemljevid je pravi izsek s potjo (zelena črta),<br>S = start (zeleno), C = cilj (rdeče). Brez slike zemljevida (offline) ostane shematski prikaz.</div>
+</div>
+
+<h2 class="cap">2 · Ekran po končani turi — predogled in deljenje</h2>
+<div class="phone">
+  <div class="small">Tura končana</div>
+  <div class="h1">Tvoj povzetek</div>
+
+  <div class="mini">
+    <div class="export" style="pointer-events:none;">
+      <div class="ex-head" style="padding:12px 14px 8px;">
+        <div class="ex-title" style="font-size:17px;">Jutranji pohod nad Ter</div>
+        <div class="ex-meta" style="font-size:11px;">1. 10. 2026 · Pohodništvo · <b>Turizem Drobež</b></div>
+      </div>
+      <div class="band"></div>
+      <div class="map" style="height:120px;">
+        <div class="riv"></div>
+        <svg viewBox="0 0 420 230"><path d="M48,84 C90,60 130,96 170,88 C215,78 230,120 265,128 C300,136 310,180 345,172 C370,166 385,140 392,128" fill="none" stroke="#157347" stroke-width="5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="stats" style="padding:2px 4px;">
+        <div class="st" style="padding:6px 10px;"><div class="k">Razdalja</div><div class="v" style="font-size:15px;">2,12 km</div></div>
+        <div class="st" style="padding:6px 10px;"><div class="k">Vzpon</div><div class="v" style="font-size:15px;">241 m</div></div>
+        <div class="st" style="padding:6px 10px;"><div class="k">Neto čas</div><div class="v" style="font-size:15px;">24:29</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn b1">&#8599;&nbsp; Deli turo</div>
+  <div class="row2">
+    <div class="btn b2">Shrani sliko</div>
+    <div class="btn b2">Prenesi GPX</div>
+  </div>
+
+  <div class="note">»Deli turo« odpre sistemsko deljenje s sliko — Instagram, Facebook, WhatsApp, kamor koli.<br>Slika nastane na napravi; na strežnik ne pošljemo ničesar. Preden deliš, vidiš natanko to sliko —<br>zemljevid razkrije, kje si hodil, zato deliš sam, aplikacija nikoli sama.</div>
+</div>
+
+</body>
+</html>

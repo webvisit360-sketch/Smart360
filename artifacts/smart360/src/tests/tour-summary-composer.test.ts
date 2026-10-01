@@ -3,7 +3,21 @@ import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { startTour, type TourPoint } from '../lib/live-tour';
 import { buildTourSummaryModel, elevationProfile, retainedGpsMaxSpeed, summaryLabels, type TourSummaryInput } from '../lib/tour-summary-model';
-import { encodeWithSchematicFallback, SUMMARY_BRAND, SUMMARY_LAYOUT, summaryFooter } from '../lib/tour-summary-render';
+import { drawSummaryStrip, encodeWithSchematicFallback, SUMMARY_BRAND, SUMMARY_LAYOUT, SUMMARY_STRIP, summaryFooter } from '../lib/tour-summary-render';
+
+test('export strip uses exact owner stops, full width and 7 logical / 14 native pixels immediately above map', () => {
+  const stops: Array<[number, string]> = [];
+  const rectangles: number[][] = [];
+  const axes: number[][] = [];
+  drawSummaryStrip({
+    createLinearGradient: (...a: number[]) => { axes.push(a); return { addColorStop: (n: number, c: string) => stops.push([n, c]) }; },
+    fillRect: (...r: number[]) => rectangles.push(r),
+  } as unknown as CanvasRenderingContext2D);
+  assert.deepEqual(stops, [[0, '#E8862E'], [0.3, '#2F72C4'], [0.55, '#3E9E4E'], [0.8, '#F5C62E'], [1, '#E8862E']]);
+  assert.deepEqual(axes, [[0, 0, SUMMARY_LAYOUT.width, 0]]);
+  assert.deepEqual(rectangles, [[0, SUMMARY_LAYOUT.mapY - 7, SUMMARY_LAYOUT.width, 7]]);
+  assert.equal(SUMMARY_STRIP.height * SUMMARY_LAYOUT.scale, 14);
+});
 
 const origin = Date.UTC(2026, 9, 1, 10, 53);
 const point = (seconds: number, meters: number, altitude: number | null = 600): TourPoint => ({

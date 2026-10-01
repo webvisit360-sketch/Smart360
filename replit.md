@@ -1,3 +1,7 @@
+# Smart360 trak
+
+Smart360 trak = the kolobar unrolled (oranžna→modra→zelena→rumena, saturated); appears EXCLUSIVELY on exported/shared images, never inside the app UI, so in-app color semantics (red=SOS, amber=warning) stay untouched.
+
 # Smart360
 
 Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastanitev. Gost skenira QR kodo in vidi vse o nastanitvi in okolici — brez prijave. En sam operater (lastnik) ureja vse najemnike v admin vmesniku.

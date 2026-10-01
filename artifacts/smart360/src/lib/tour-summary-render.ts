@@ -5,6 +5,17 @@ export type { TourSummaryInput } from './tour-summary-model';
 export type TourSummaryImage = { blob: Blob; fileName: string; width: number; height: number; mapKind: 'map' | 'schematic' };
 // Draw vectors/text directly into a 2x backing store, never enlarge a 1x card.
 export const SUMMARY_LAYOUT = { width: 540, height: 806, scale: 2, mapY: 112, mapHeight: 296, profileY: 408, statsY: 490, footerY: 726 } as const;
+export const SUMMARY_STRIP = {
+  height: 7,
+  stops: [[0, '#E8862E'], [0.30, '#2F72C4'], [0.55, '#3E9E4E'], [0.80, '#F5C62E'], [1, '#E8862E']],
+} as const;
+/** Export-only branding; never a separate app UI decoration. */
+export function drawSummaryStrip(ctx: CanvasRenderingContext2D) {
+  const gradient = ctx.createLinearGradient(0, 0, SUMMARY_LAYOUT.width, 0);
+  for (const [offset, color] of SUMMARY_STRIP.stops) gradient.addColorStop(offset, color);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, SUMMARY_LAYOUT.mapY - SUMMARY_STRIP.height, SUMMARY_LAYOUT.width, SUMMARY_STRIP.height);
+}
 export const SUMMARY_BRAND = { svg: '/brand/smart360-kolobar-temno.svg', font: '/fonts/Archivo-800.ttf', color: '#121A14', weight: 800, letterSpacingEm: 0.02 } as const;
 const GREEN = '#157347', INK = '#121A14', MUTED = '#66716A';
 const attribution = '© OpenFreeMap · OpenMapTiles · © OpenStreetMap contributors';
@@ -62,6 +73,9 @@ async function brandLockup(): Promise<HTMLCanvasElement> {
       ctx.fillText(letter, x, 54);
       x += ctx.measureText(letter).width + 40 * SUMMARY_BRAND.letterSpacingEm;
     }
+    ctx.fillStyle = MUTED;
+    ctx.font = '18px Arial, sans-serif';
+    ctx.fillText('smart360.info', 90, 77);
     return c;
   })().catch(error => { brandPromise = undefined; throw error; });
   return brandPromise;
@@ -145,6 +159,8 @@ export async function createTourSummaryImage(input: TourSummaryInput): Promise<T
     ctx.fillStyle = GREEN; fit(ctx, input.tenantName, 26, 93, 15, 488, true);
     if (kind === 'map' && map) ctx.drawImage(map.canvas, 0, 112, 540, 296);
     else drawSchematic(ctx, segments, model.labels.noRoute);
+    // Paint last so schematic border antialiasing cannot bleed into the 14px band.
+    drawSummaryStrip(ctx);
     drawProfile(ctx, input, model.labels.noElevation);
     model.stats.forEach((s, i) => {
       const x = 26 + (i % 3) * 169, y = 510 + Math.floor(i / 3) * 72;

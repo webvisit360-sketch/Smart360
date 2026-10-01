@@ -1,0 +1,435 @@
+{
+  "runs": {
+    "map": {
+      "kind": "map",
+      "dimensions": [
+        1080,
+        1612
+      ],
+      "strip": {
+        "height": 7,
+        "stops": [
+          [
+            0,
+            "#E8862E"
+          ],
+          [
+            0.3,
+            "#2F72C4"
+          ],
+          [
+            0.55,
+            "#3E9E4E"
+          ],
+          [
+            0.8,
+            "#F5C62E"
+          ],
+          [
+            1,
+            "#E8862E"
+          ]
+        ]
+      },
+      "layout": {
+        "width": 540,
+        "height": 806,
+        "scale": 2,
+        "mapY": 112,
+        "mapHeight": 296,
+        "profileY": 408,
+        "statsY": 490,
+        "footerY": 726
+      },
+      "gradients": [
+        {
+          "coords": [
+            0,
+            0,
+            540,
+            0
+          ],
+          "stops": [
+            [
+              0,
+              "#E8862E"
+            ],
+            [
+              0.3,
+              "#2F72C4"
+            ],
+            [
+              0.55,
+              "#3E9E4E"
+            ],
+            [
+              0.8,
+              "#F5C62E"
+            ],
+            [
+              1,
+              "#E8862E"
+            ]
+          ]
+        }
+      ],
+      "stripRowDeviation": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "boundaryPixels": [
+        [
+          209,
+          [
+            255,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          210,
+          [
+            59,
+            149,
+            101,
+            255
+          ]
+        ],
+        [
+          223,
+          [
+            59,
+            149,
+            102,
+            255
+          ]
+        ],
+        [
+          224,
+          [
+            255,
+            238,
+            170,
+            255
+          ]
+        ]
+      ],
+      "samples": [
+        [
+          0,
+          [
+            232,
+            134,
+            46,
+            255
+          ]
+        ],
+        [
+          324,
+          [
+            47,
+            114,
+            196,
+            255
+          ]
+        ],
+        [
+          594,
+          [
+            63,
+            158,
+            78,
+            255
+          ]
+        ],
+        [
+          864,
+          [
+            245,
+            198,
+            46,
+            255
+          ]
+        ],
+        [
+          1079,
+          [
+            233,
+            135,
+            46,
+            255
+          ]
+        ]
+      ],
+      "websiteText": [
+        {
+          "text": "smart360.info",
+          "font": "18px Arial, sans-serif",
+          "args": [
+            90,
+            77
+          ]
+        }
+      ],
+      "websiteInk": 687,
+      "websiteSolidInk": 124,
+      "previewSha256": "ceac52806adba0a8a75f0274134272faa2234c3178e69998e35835417631c492",
+      "downloadSha256": "ceac52806adba0a8a75f0274134272faa2234c3178e69998e35835417631c492",
+      "downloadName": "Ljubljanski grad.png"
+    },
+    "schematic": {
+      "kind": "schematic",
+      "dimensions": [
+        1080,
+        1612
+      ],
+      "strip": {
+        "height": 7,
+        "stops": [
+          [
+            0,
+            "#E8862E"
+          ],
+          [
+            0.3,
+            "#2F72C4"
+          ],
+          [
+            0.55,
+            "#3E9E4E"
+          ],
+          [
+            0.8,
+            "#F5C62E"
+          ],
+          [
+            1,
+            "#E8862E"
+          ]
+        ]
+      },
+      "layout": {
+        "width": 540,
+        "height": 806,
+        "scale": 2,
+        "mapY": 112,
+        "mapHeight": 296,
+        "profileY": 408,
+        "statsY": 490,
+        "footerY": 726
+      },
+      "gradients": [
+        {
+          "coords": [
+            0,
+            0,
+            540,
+            0
+          ],
+          "stops": [
+            [
+              0,
+              "#E8862E"
+            ],
+            [
+              0.3,
+              "#2F72C4"
+            ],
+            [
+              0.55,
+              "#3E9E4E"
+            ],
+            [
+              0.8,
+              "#F5C62E"
+            ],
+            [
+              1,
+              "#E8862E"
+            ]
+          ]
+        }
+      ],
+      "stripRowDeviation": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "boundaryPixels": [
+        [
+          209,
+          [
+            255,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          210,
+          [
+            59,
+            149,
+            101,
+            255
+          ]
+        ],
+        [
+          223,
+          [
+            59,
+            149,
+            102,
+            255
+          ]
+        ],
+        [
+          224,
+          [
+            227,
+            233,
+            224,
+            255
+          ]
+        ]
+      ],
+      "samples": [
+        [
+          0,
+          [
+            232,
+            134,
+            46,
+            255
+          ]
+        ],
+        [
+          324,
+          [
+            47,
+            114,
+            196,
+            255
+          ]
+        ],
+        [
+          594,
+          [
+            63,
+            158,
+            78,
+            255
+          ]
+        ],
+        [
+          864,
+          [
+            245,
+            198,
+            46,
+            255
+          ]
+        ],
+        [
+          1079,
+          [
+            233,
+            135,
+            46,
+            255
+          ]
+        ]
+      ],
+      "websiteText": [
+        {
+          "text": "smart360.info",
+          "font": "18px Arial, sans-serif",
+          "args": [
+            90,
+            77
+          ]
+        }
+      ],
+      "websiteInk": 687,
+      "websiteSolidInk": 124,
+      "previewSha256": "52ffdecce2e8e3153d7378b07d6b4085af52a36a4870979ff0caded1c9a40d8b",
+      "downloadSha256": "52ffdecce2e8e3153d7378b07d6b4085af52a36a4870979ff0caded1c9a40d8b",
+      "downloadName": "Ljubljanski grad.png"
+    }
+  },
+  "svg": [
+    {
+      "degreesClockwiseFromTop": 0,
+      "hex": "#FFED16"
+    },
+    {
+      "degreesClockwiseFromTop": 30,
+      "hex": "#FFC01C"
+    },
+    {
+      "degreesClockwiseFromTop": 60,
+      "hex": "#FF9521"
+    },
+    {
+      "degreesClockwiseFromTop": 90,
+      "hex": "#D06E22"
+    },
+    {
+      "degreesClockwiseFromTop": 120,
+      "hex": "#865E50"
+    },
+    {
+      "degreesClockwiseFromTop": 150,
+      "hex": "#3461A7"
+    },
+    {
+      "degreesClockwiseFromTop": 180,
+      "hex": "#2C7CCE"
+    },
+    {
+      "degreesClockwiseFromTop": 210,
+      "hex": "#2595E5"
+    },
+    {
+      "degreesClockwiseFromTop": 240,
+      "hex": "#1B9FA9"
+    },
+    {
+      "degreesClockwiseFromTop": 270,
+      "hex": "#28AF71"
+    },
+    {
+      "degreesClockwiseFromTop": 300,
+      "hex": "#53C63D"
+    },
+    {
+      "degreesClockwiseFromTop": 330,
+      "hex": "#ACDA23"
+    }
+  ],
+  "failures": []
+}
