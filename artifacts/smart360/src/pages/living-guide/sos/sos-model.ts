@@ -153,12 +153,28 @@ export function shareText(fix: SosFix): string {
   return `${copyText(fix)}\n${mapsUrl(fix)}`;
 }
 
+/** ASCII-only bilingual draft. Optional measurements are omitted when unknown. */
+export function smsText(fix: Pick<SosFix, "lat" | "lon"> & { altitude?: number | null; accuracy?: number | null }): string {
+  const la = formatDecimal(fix.lat, "lat").replace("°", "");
+  const lo = formatDecimal(fix.lon, "lon").replace("°", "");
+  const accuracy = typeof fix.accuracy === "number" && Number.isFinite(fix.accuracy) && fix.accuracy >= 0
+    ? ` (+/-${Math.round(fix.accuracy)} m)` : "";
+  const altitude = typeof fix.altitude === "number" && Number.isFinite(fix.altitude)
+    ? `, visina/alt ${Math.round(fix.altitude)} m` : "";
+  return `SOS - potrebujem pomoc / I need help. Lokacija/Location: ${la}, ${lo}${accuracy}${altitude}.`;
+}
+
+/** Opens the device's SMS composer only; the user must send the draft manually. */
+export function smsUrl(fix: Parameters<typeof smsText>[0], os: "ios" | "android" | "desktop"): string {
+  return `sms:112${os === "ios" ? "&" : "?"}body=${encodeURIComponent(smsText(fix))}`;
+}
+
 export function ageSeconds(fix: SosFix, now: number): number {
   return Math.max(0, Math.round((now - fix.timestamp) / 1000));
 }
 
-export function detectOs(ua: string): "ios" | "android" | "desktop" {
-  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && /Mobile/.test(ua))) return "ios";
+export function detectOs(ua: string, maxTouchPoints = 0): "ios" | "android" | "desktop" {
+  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh|MacIntel/i.test(ua) && (/Mobile/i.test(ua) || maxTouchPoints > 1))) return "ios";
   if (/Android/i.test(ua)) return "android";
   return "desktop";
 }

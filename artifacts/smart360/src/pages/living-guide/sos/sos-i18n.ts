@@ -17,8 +17,12 @@ export interface SosDict {
   near: (dist: string, dir: string, name: string) => string;
   dir: Record<Cardinal, string>;
   call: string;
+  callReassurance: string;
   copy: string;
   share: string;
+  sms: string;
+  smsHint: string;
+  smsManual: string;
   copied: string;
   copyFailed: string;
   manualCopy: string;
@@ -34,6 +38,7 @@ export interface SosDict {
   staleSub: (s: number) => string;
   deniedTitle: string;
   deniedSub: string;
+  deniedReassurance: string;
   unsupportedTitle: string;
   unsupportedSub: string;
   os: { ios: string[]; android: string[]; desktop: string[] };
@@ -60,13 +65,17 @@ const sl: SosDict = {
   near: (d, dir, n) => `pribl. ${d} ${dir} od ${n}`,
   dir: { N: "severno", NE: "severovzhodno", E: "vzhodno", SE: "jugovzhodno", S: "južno", SW: "jugozahodno", W: "zahodno", NW: "severozahodno" },
   call: "Pokliči 112",
+  callReassurance: "Ob klicu na 112 sodobni telefoni samodejno pošljejo vašo lokacijo reševalcem. Koordinate zgoraj so potrditev in rezerva.",
   copy: "Kopiraj koordinate",
   share: "Deli lokacijo",
+  sms: "SMS na 112",
+  smsHint: "Za SMS z lokacijo počakajte na GPS.",
+  smsManual: "Odpre osnutek SMS-a. Sporočilo pošljete sami.",
   copied: "Koordinate so kopirane.",
   copyFailed: "Kopiranje ni uspelo. Označite in kopirajte besedilo ročno:",
   manualCopy: "Besedilo za ročno kopiranje",
   guide: [
-    ["Kje ste", " — počasi preberite koordinate z zaslona."],
+    ["Kje ste", " — operater praviloma že vidi vašo lokacijo. Za potrditev počasi preberite koordinate z zaslona."],
     ["Kaj se je zgodilo", " in koliko je poškodovanih."],
     ["Ne prekinite klica", ", dokler operater ne reče, da lahko."],
   ],
@@ -81,6 +90,7 @@ const sl: SosDict = {
   staleSub: (s) => `Zadnja lokacija je stara ${s} s. Čakam na novo meritev …`,
   deniedTitle: "Dostop do lokacije je zavrnjen",
   deniedSub: "Spletna stran ne more odpreti sistemskih nastavitev. Lokacijo vklopite takole:",
+  deniedReassurance: "Zavrnitev lokacije v brskalniku ne prepreči samodejnega posredovanja lokacije ob klicu na 112, ki ga sodobni telefoni praviloma omogočajo. Ne odlašajte s klicem.",
   unsupportedTitle: "Lokacija ni na voljo",
   unsupportedSub: "Ta brskalnik ne podpira določanja lokacije. Klic 112 deluje.",
   os: {
@@ -111,13 +121,17 @@ const en: SosDict = {
   near: (d, dir, n) => `approx. ${d} ${dir} of ${n}`,
   dir: { N: "north", NE: "northeast", E: "east", SE: "southeast", S: "south", SW: "southwest", W: "west", NW: "northwest" },
   call: "Call 112",
+  callReassurance: "When you call 112, modern phones automatically send your location to rescuers. The coordinates above are confirmation and a backup.",
   copy: "Copy coordinates",
   share: "Share location",
+  sms: "SMS to 112",
+  smsHint: "Wait for GPS to include your location in the SMS.",
+  smsManual: "Opens an SMS draft. You send the message yourself.",
   copied: "Coordinates copied.",
   copyFailed: "Copy failed. Select and copy the text manually:",
   manualCopy: "Text for manual copy",
   guide: [
-    ["Where you are", " — read the coordinates from the screen slowly."],
+    ["Where you are", " — the operator usually already sees your location. Read the coordinates from the screen slowly to confirm."],
     ["What happened", " and how many people are injured."],
     ["Don't hang up", " until the operator says you can."],
   ],
@@ -132,6 +146,7 @@ const en: SosDict = {
   staleSub: (s) => `Last fix is ${s} s old. Waiting for a new reading …`,
   deniedTitle: "Location access denied",
   deniedSub: "A web page can't open system settings. Turn location on like this:",
+  deniedReassurance: "Denying location access in the browser does not block automatic location sharing during a 112 call, which modern phones usually support. Don't hesitate to call.",
   unsupportedTitle: "Location unavailable",
   unsupportedSub: "This browser doesn't support geolocation. Calling 112 still works.",
   os: {
@@ -162,13 +177,17 @@ const de: SosDict = {
   near: (d, dir, n) => `ca. ${d} ${dir} von ${n}`,
   dir: { N: "nördlich", NE: "nordöstlich", E: "östlich", SE: "südöstlich", S: "südlich", SW: "südwestlich", W: "westlich", NW: "nordwestlich" },
   call: "112 anrufen",
+  callReassurance: "Wenn Sie die 112 anrufen, senden moderne Telefone Ihren Standort automatisch an die Rettungskräfte. Die Koordinaten oben dienen als Bestätigung und Reserve.",
   copy: "Koordinaten kopieren",
   share: "Standort teilen",
+  sms: "SMS an 112",
+  smsHint: "Warten Sie auf GPS für den Standort in der SMS.",
+  smsManual: "Öffnet einen SMS-Entwurf. Sie senden die Nachricht selbst.",
   copied: "Koordinaten kopiert.",
   copyFailed: "Kopieren fehlgeschlagen. Text markieren und manuell kopieren:",
   manualCopy: "Text zum manuellen Kopieren",
   guide: [
-    ["Wo Sie sind", " — lesen Sie die Koordinaten langsam vom Bildschirm vor."],
+    ["Wo Sie sind", " — der Disponent sieht Ihren Standort in der Regel bereits. Lesen Sie zur Bestätigung die Koordinaten langsam vom Bildschirm vor."],
     ["Was passiert ist", " und wie viele verletzt sind."],
     ["Legen Sie nicht auf", ", bis der Disponent es erlaubt."],
   ],
@@ -183,6 +202,7 @@ const de: SosDict = {
   staleSub: (s) => `Letzte Messung ist ${s} s alt. Warte auf neue Messung …`,
   deniedTitle: "Standortzugriff verweigert",
   deniedSub: "Eine Webseite kann die Systemeinstellungen nicht öffnen. So aktivieren Sie den Standort:",
+  deniedReassurance: "Die verweigerte Standortfreigabe im Browser verhindert nicht die automatische Standortübermittlung beim Notruf 112, die moderne Telefone in der Regel unterstützen. Zögern Sie nicht anzurufen.",
   unsupportedTitle: "Standort nicht verfügbar",
   unsupportedSub: "Dieser Browser unterstützt keine Standortbestimmung. Der Notruf 112 funktioniert.",
   os: {
@@ -213,13 +233,17 @@ const it: SosDict = {
   near: (d, dir, n) => `circa ${d} ${dir} da ${n}`,
   dir: { N: "a nord", NE: "a nord-est", E: "a est", SE: "a sud-est", S: "a sud", SW: "a sud-ovest", W: "a ovest", NW: "a nord-ovest" },
   call: "Chiama il 112",
+  callReassurance: "Quando chiami il 112, i telefoni moderni inviano automaticamente la tua posizione ai soccorritori. Le coordinate sopra sono una conferma e una riserva.",
   copy: "Copia coordinate",
   share: "Condividi posizione",
+  sms: "SMS al 112",
+  smsHint: "Attendi il GPS per includere la posizione nell'SMS.",
+  smsManual: "Apre una bozza SMS. Invii tu il messaggio.",
   copied: "Coordinate copiate.",
   copyFailed: "Copia non riuscita. Seleziona e copia il testo manualmente:",
   manualCopy: "Testo da copiare manualmente",
   guide: [
-    ["Dove sei", " — leggi lentamente le coordinate dallo schermo."],
+    ["Dove sei", " — di solito l'operatore vede già la tua posizione. Leggi lentamente le coordinate dallo schermo per confermarla."],
     ["Cosa è successo", " e quanti sono i feriti."],
     ["Non riattaccare", " finché l'operatore non lo dice."],
   ],
@@ -234,6 +258,7 @@ const it: SosDict = {
   staleSub: (s) => `L'ultima posizione risale a ${s} s fa. In attesa di una nuova misura …`,
   deniedTitle: "Accesso alla posizione negato",
   deniedSub: "Una pagina web non può aprire le impostazioni di sistema. Attiva la posizione così:",
+  deniedReassurance: "Negare la posizione nel browser non impedisce l'invio automatico della posizione durante una chiamata al 112, che i telefoni moderni di solito supportano. Non esitare a chiamare.",
   unsupportedTitle: "Posizione non disponibile",
   unsupportedSub: "Questo browser non supporta la geolocalizzazione. La chiamata al 112 funziona.",
   os: {

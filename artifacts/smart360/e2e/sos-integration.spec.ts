@@ -6,6 +6,7 @@
  */
 import { test, expect, type Page } from "@playwright/test";
 import { sosT } from "../src/pages/living-guide/sos/sos-i18n";
+import { smsText } from "../src/pages/living-guide/sos/sos-model";
 import { writeFile } from "node:fs/promises";
 
 type Traffic = { kind: string; url: string; body: string };
@@ -65,6 +66,190 @@ async function fixture(page: Page, query = "") {
 const overlay = (page: Page) => page.locator(".sos-overlay");
 const emergencyCall = (page: Page) => overlay(page).locator('a[href="tel:112"]');
 const closeSos = (page: Page) => overlay(page).locator(".sos-close").click();
+
+async function smsGeometry(page: Page) {
+  const geometry = await overlay(page).evaluate(view => {
+    const measure = (selector: string) => {
+      const element = view.querySelector<HTMLElement>(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+        right: rect.right, bottom: rect.bottom, fontSize: style.fontSize,
+        lineHeight: style.lineHeight, color: style.color, background: style.backgroundColor,
+        borderRadius: style.borderRadius, fontWeight: style.fontWeight,
+        opacity: style.opacity,
+      };
+    };
+    const call = view.querySelector('a[href="tel:112"]')!;
+    return {
+      viewport: { width: innerWidth, height: innerHeight },
+      overflow: {
+        document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        overlay: view.scrollWidth - view.clientWidth,
+      },
+      call: measure(".call112")!,
+      reassurance: measure(".call-reassurance")!,
+      immediatelyAfterCall: call.nextElementSibling?.matches(".call-reassurance"),
+      denied: measure(".denied-reassurance"),
+      deniedHeading: measure(".seek .st"),
+      sms: measure('[data-testid="link-sos-sms"], [data-testid="button-sos-sms"]'),
+      copy: measure(".secrow button:not([data-testid])"),
+      hint: measure(".sms-hint"),
+    };
+  });
+  expect(geometry.overflow.document, "Document has no horizontal overflow").toBe(0);
+  expect(geometry.overflow.overlay, "SOS overlay has no horizontal overflow").toBe(0);
+  expect(geometry.immediatelyAfterCall).toBe(true);
+  expect(geometry.reassurance.fontSize).toBe("11px");
+  expect(geometry.reassurance.lineHeight).toBe("16.5px");
+  expect(geometry.reassurance.color).toBe("rgb(142, 154, 172)");
+  expect(geometry.reassurance.y - geometry.call.bottom).toBeCloseTo(10, 1);
+  expect(geometry.reassurance.x).toBe(geometry.call.x);
+  expect(geometry.reassurance.width).toBe(geometry.call.width);
+  expect(geometry.call.background).toBe("rgb(214, 69, 65)");
+  if (geometry.denied) {
+    expect(geometry.denied.fontSize).toBe("12px");
+    expect(geometry.denied.lineHeight).toBe("18px");
+    expect(geometry.denied.color).toBe("rgb(142, 154, 172)");
+    expect(geometry.denied.y - geometry.deniedHeading!.bottom).toBeCloseTo(6, 1);
+  }
+  if (geometry.sms) {
+    expect(geometry.sms.background).toBe("rgb(18, 27, 43)");
+    expect(geometry.sms.color).toBe("rgb(242, 245, 249)");
+    expect(geometry.sms.fontSize).toBe("13px");
+    expect(geometry.sms.fontWeight).toBe("700");
+    expect(geometry.sms.borderRadius).toBe("14px");
+    expect(geometry.sms.y).toBeGreaterThanOrEqual(geometry.reassurance.bottom);
+    expect(geometry.sms.x).toBeGreaterThanOrEqual(0);
+    expect(geometry.sms.right).toBeLessThanOrEqual(geometry.viewport.width);
+    if (geometry.copy) {
+      expect(geometry.sms.y).toBe(geometry.copy.y);
+      expect(geometry.sms.width).toBeCloseTo(geometry.copy.width, 1);
+      expect(geometry.sms.height).toBe(geometry.copy.height);
+      expect(geometry.sms.background).toBe(geometry.copy.background);
+    }
+  }
+  if (geometry.hint) {
+    expect(geometry.hint.fontSize).toBe("11px");
+    expect(geometry.hint.color).toBe("rgb(142, 154, 172)");
+    expect(geometry.hint.y).toBeGreaterThanOrEqual(geometry.sms!.bottom);
+    expect(geometry.sms!.opacity).toBe("0.45");
+  }
+  return geometry;
+}
+
+for (const lang of ["sl", "en", "de", "it"]) {
+  test(`SOS SMS fixture ${lang}: real fixes enabled, no-fix disabled, denied hidden`, async ({ page }, testInfo) => {
+    const t = sosT(lang);
+    const measurements = [];
+    for (const state of ["active", "poor", "stale", "acquiring", "unsupported", "denied"]) {
+      await test.step(state, async () => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.goto(`/__sos-fixture?state=${state}&lang=${lang}&os=ios`);
+        const view = overlay(page);
+        await expect(view).toBeVisible();
+        await expect(view.getByTestId("text-sos-call-reassurance")).toHaveText(t.callReassurance);
+        await expect(view.locator('a[href="tel:112"] + .call-reassurance')).toHaveText(t.callReassurance);
+        await expect(view.locator(".guide .g").first()).toHaveText(t.guide[0].join(""));
+        const smsLink = view.getByTestId("link-sos-sms");
+        const smsDisabled = view.getByTestId("button-sos-sms");
+        if (state === "denied") {
+          await expect(view.getByTestId("text-sos-denied-reassurance")).toHaveText(t.deniedReassurance);
+          await expect(smsLink).toHaveCount(0);
+          await expect(smsDisabled).toHaveCount(0);
+          await expect(view.locator('[href^="sms:"]')).toHaveCount(0);
+          await expect(view.getByTestId("text-sos-sms-hint")).toHaveCount(0);
+        } else if (state === "acquiring" || state === "unsupported") {
+          if (state === "unsupported") await expect(view.locator('[role="alert"]')).toContainText(t.unsupportedTitle);
+          await expect(smsDisabled).toBeDisabled();
+          await expect(smsDisabled).toHaveText(t.sms);
+          await expect(smsDisabled).toHaveAttribute("aria-describedby", "sos-sms-hint");
+          await expect(view.getByTestId("text-sos-sms-hint")).toHaveText(t.smsHint);
+          await expect(smsLink).toHaveCount(0);
+          await expect(view.locator('[href^="sms:"]')).toHaveCount(0);
+        } else {
+          await expect(smsLink).toHaveText(t.sms);
+          await expect(smsLink).toHaveAttribute("title", t.smsManual);
+          await expect(smsDisabled).toHaveCount(0);
+          await expect(view.getByTestId("text-sos-sms-hint")).toHaveCount(0);
+          const href = await smsLink.getAttribute("href");
+          expect(href).toMatch(/^sms:112&body=/);
+          expect(decodeURIComponent(href!.slice("sms:112&body=".length))).toBe(smsText({
+            lat: 46.35812, lon: 14.83294, altitude: 612, accuracy: state === "poor" ? 140 : 8,
+          }));
+          if (state !== "poor") {
+            await expect(view.locator(".secrow > *")).toHaveCount(3);
+            await expect(view.locator(".secrow > *").nth(2)).toHaveAttribute("href", href!);
+          }
+        }
+        await expect(emergencyCall(page)).toBeVisible();
+        await expect(emergencyCall(page)).not.toHaveAttribute("aria-disabled", "true");
+        measurements.push({ state, ...await smsGeometry(page) });
+        if (lang === "sl" && (state === "active" || state === "denied")) {
+          const screenshotPath = `reports/sos/sms-${state}-390x844.jpg`;
+          await page.screenshot({ path: screenshotPath });
+          await testInfo.attach(`sms-${state}-390x844`, { path: screenshotPath, contentType: "image/jpeg" });
+        }
+        await page.setViewportSize({ width: 320, height: 844 });
+        measurements.push({ state, ...await smsGeometry(page) });
+        if (lang === "de" && state === "active") {
+          const screenshotPath = "reports/sos/sms-active-de-320x844.png";
+          await page.screenshot({ path: screenshotPath });
+          await testInfo.attach("sms-active-de-320x844", { path: screenshotPath, contentType: "image/png" });
+        }
+      });
+    }
+    const geometryPath = `reports/sos/sms-fixture-${lang}-geometry.json`;
+    await writeFile(geometryPath, JSON.stringify(measurements, null, 2));
+    await testInfo.attach("sms-geometry", { path: geometryPath, contentType: "application/json" });
+  });
+}
+
+for (const device of [
+  { name: "iPhone", ua: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", touches: 5, prefix: "sms:112&body=" },
+  { name: "iPad desktop UA", ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) Version/18.0 Safari/605.1.15", touches: 5, prefix: "sms:112&body=" },
+  { name: "Android", ua: "Mozilla/5.0 (Linux; Android 14)", touches: 5, prefix: "sms:112?body=" },
+]) {
+  test(`SOS SMS composer URI: ${device.name}, no automatic send or outgoing position`, async ({ page }, testInfo) => {
+    await mockDevice(page);
+    await page.addInitScript(({ ua, touches }) => {
+      Object.defineProperty(navigator, "userAgent", { configurable: true, value: ua });
+      Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: touches });
+    }, device);
+    const traffic = collectTraffic(page);
+    await fixture(page);
+    await page.locator(".soscard button").click();
+    const link = overlay(page).getByTestId("link-sos-sms");
+    await expect(link).toBeVisible();
+    const href = await link.getAttribute("href");
+    expect(href).toMatch(new RegExp(`^${device.prefix.replace(/[?&]/g, "\\$&")}`));
+    expect(decodeURIComponent(href!.slice(device.prefix.length))).toBe(smsText({
+      lat: 46.35812791, lon: 14.83294713, altitude: 312, accuracy: 8,
+    }));
+    expect(decodeURIComponent(href!.slice(device.prefix.length))).toMatch(/^[\x20-\x7e]+$/);
+    // Capture the native protocol destination without launching an external app.
+    await link.evaluate(element => {
+      element.addEventListener("click", event => {
+        event.preventDefault();
+        (window as any).__sosComposerDestination = (element as HTMLAnchorElement).getAttribute("href");
+      }, { once: true });
+    });
+    await link.click();
+    expect(await page.evaluate(() => (window as any).__sosComposerDestination)).toBe(href);
+    expect(traffic.filter(row => /46\.358|14\.832/.test(decodeURIComponent(`${row.url} ${row.body}`)))).toEqual([]);
+    const observed = await page.evaluate(() => (window as any).__sosTestDevice);
+    expect(observed.beacons).toEqual([]);
+    expect(observed.copies).toEqual([]);
+    expect(observed.shares).toEqual([]);
+    const evidencePath = `reports/sos/sms-composer-${device.name.toLowerCase().replace(/\s+/g, "-")}.json`;
+    await writeFile(evidencePath, JSON.stringify({
+      href, decoded: decodeURIComponent(href!.slice(device.prefix.length)), traffic, observed,
+    }, null, 2));
+    await testInfo.attach("sms-composer-intent-and-traffic", { path: evidencePath, contentType: "application/json" });
+  });
+}
 
 for (const lang of ["sl", "en", "de", "it"]) {
   for (const state of ["acquiring", "active", "denied"] as const) {

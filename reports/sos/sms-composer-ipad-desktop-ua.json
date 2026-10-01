@@ -1,0 +1,546 @@
+{
+  "href": "sms:112&body=SOS%20-%20potrebujem%20pomoc%20%2F%20I%20need%20help.%20Lokacija%2FLocation%3A%20N%2046.35813%2C%20E%2014.83295%20(%2B%2F-8%20m)%2C%20visina%2Falt%20312%20m.",
+  "decoded": "SOS - potrebujem pomoc / I need help. Lokacija/Location: N 46.35813, E 14.83295 (+/-8 m), visina/alt 312 m.",
+  "traffic": [
+    {
+      "kind": "document",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/e2e/sos-integration-harness.html?",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@vite/client",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@replit/vite-plugin-dev-banner/banner-script.js",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/e2e/sos-integration-harness.tsx?t=1790829195660",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@react-refresh",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.1_yaml@2.9.0/node_modules/vite/dist/client/env.mjs",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/react-dom_client.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/LivingGuideGuestShell.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-weather-fixture-data.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/index.css?t=1790829195660",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-tokens.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-guest.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-3WKCCWCR.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-ILHRZGIS.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-STOM27A7.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-SVLXKSLZ.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/react.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/react-dom.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/lib/api-client-react/src/index.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/wouter.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/hours.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/sanitize.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/tenant-maps.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/maps-href.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/bundle-freshness.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/guest/img.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/guest/guest-url.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-gpx.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/sos/SosView.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-sos-context.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-free-tour.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-weather.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-offline.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-weather-model.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-explore-tabs.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/guest/i18n.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/LivingGuideSprite.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/inter-font-source.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/components/category-icon.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/theme-clock.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/LivingGuideSearchSheet.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/LivingGuideLanguageSheet.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-formatters.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-hero-layout.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-order-sheet.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-messages.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-orders.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/virtual-tour.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/contact-links.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-nav-resolver.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-home.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/SiteMapGuestView.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/MoreGuestView.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-explore.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-groups.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-emergency-help.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/detail-gesture-lock.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/GuestInstallCard.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/LivingGuideProgram.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-program-model.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/lib/api-client-react/src/generated/api.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/lib/api-client-react/src/generated/api.schemas.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/lib/api-client-react/src/custom-fetch.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-VPKXZ7I6.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/dompurify.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/node_modules/.pnpm/maplibre-gl@6.10.0/node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/recharts.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/map-provider.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/gpx-route.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/gpx-projection.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/live-tour.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/tour-course.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-free-tour-view.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/hooks/use-live-tour.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/live-tour-export.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-live-tour.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-tour-profile.tsx",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-gpx.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-map-fallback.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-map-worker.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-offline-model.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/sos/sos.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/sos/sos-i18n.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/sos/sos-model.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/sos/use-sos-geolocation.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-worker-registration.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@id/__x00__virtual:living-guide-inter-font",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-free-tour.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-weather.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-program.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/living-guide-gestures.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/lucide-react_dynamicIconImports.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/@fs/home/runner/workspace/lib/category-icons/src/index.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/guest/sprite-icon.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/guest/guest-install.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/guest/guest-install.css",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/pages/living-guide/sun-times.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/src/lib/tour-calories.ts",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-SIU35MPB.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-QLLRVF3Y.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "script",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/node_modules/.vite/deps/chunk-JC6PTGIL.js?v=517176aa",
+      "body": ""
+    },
+    {
+      "kind": "stylesheet",
+      "url": "https://fonts.googleapis.com/css2?family=Archivo:wght@100..900&display=swap",
+      "body": ""
+    },
+    {
+      "kind": "image",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/brand/smart360-znak-40.png",
+      "body": ""
+    },
+    {
+      "kind": "fetch",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/api/public/tenants/__weather-fixture/orders",
+      "body": ""
+    }
+  ],
+  "observed": {
+    "next": 1,
+    "watches": [
+      1
+    ],
+    "cleared": [],
+    "copies": [],
+    "shares": [],
+    "beacons": []
+  }
+}

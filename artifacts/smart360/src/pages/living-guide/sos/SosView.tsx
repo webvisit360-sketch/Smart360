@@ -4,11 +4,11 @@ import { sosLang, sosT } from "./sos-i18n";
 import {
   ageSeconds, bearingDeg, cardinal, copyText, detectOs, distanceMeters,
   formatDecimal, formatDecimalRough, formatDistance, formatDmsPair, shareText,
-  sosStatus, tenantHasCoords, type SosTenant,
+  smsUrl, sosStatus, tenantHasCoords, type SosTenant,
 } from "./sos-model";
 import { useSosGeolocation, type SosGeolocationSource } from "./use-sos-geolocation";
 
-function SosIcon({ name }: { name: "phone" | "pin" | "copy" | "share" | "nav2" }) {
+function SosIcon({ name }: { name: "phone" | "pin" | "copy" | "share" | "nav2" | "chat" }) {
   return <svg className="sos-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href={`#lg-i-${name}`} /></svg>;
 }
 
@@ -90,7 +90,11 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
   }, []);
 
   const precise = status.kind === "active" || status.kind === "stale" ? status.fix : null;
-  const os = osOverride ?? detectOs(typeof navigator !== "undefined" ? navigator.userAgent : "");
+  const smsFix = status.kind === "active" || status.kind === "stale" || status.kind === "poor" ? status.fix : null;
+  const os = osOverride ?? detectOs(
+    typeof navigator !== "undefined" ? navigator.userAgent : "",
+    typeof navigator !== "undefined" ? navigator.maxTouchPoints : 0,
+  );
 
   const doCopy = async () => {
     if (!precise) return;
@@ -114,7 +118,10 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
 
   const blocked = status.kind === "denied" || status.kind === "unsupported";
   const call = (
-    <a href="tel:112" className="call112 sticky"><SosIcon name="phone" />{"\u00A0 "}{t.call}</a>
+    <>
+      <a href="tel:112" className="call112 sticky"><SosIcon name="phone" />{"\u00A0 "}{t.call}</a>
+      <div className="call-reassurance" data-testid="text-sos-call-reassurance">{t.callReassurance}</div>
+    </>
   );
 
   let orientation: { nt: string; ns: string | null } | null = null;
@@ -142,6 +149,7 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
             <SosIcon name="pin" />
             <div>
               <div className="st">{t.deniedTitle}</div>
+              <div className="ss denied-reassurance" data-testid="text-sos-denied-reassurance">{t.deniedReassurance}</div>
               <div className="ss">{t.deniedSub}</div>
               <div className="os-label">{t.osLabel[os]}</div>
               <ol className="os-list">{t.os[os].map((s) => <li key={s}>{s}</li>)}</ol>
@@ -218,12 +226,22 @@ export function SosView({ tenant, lang, onClose, geolocation, osOverride }: SosV
 
         {!blocked && call}
 
-        {precise && (
+        {status.kind !== "denied" && (
           <>
             <div className="secrow">
-              <button type="button" className="sec" onClick={doCopy}><SosIcon name="copy" />{"\u00A0 "}{t.copy}</button>
-              <button type="button" className="sec" onClick={doShare}><SosIcon name="share" />{"\u00A0 "}{t.share}</button>
+              {precise && (
+                <>
+                  <button type="button" className="sec" onClick={doCopy}><SosIcon name="copy" />{"\u00A0 "}{t.copy}</button>
+                  <button type="button" className="sec" onClick={doShare}><SosIcon name="share" />{"\u00A0 "}{t.share}</button>
+                </>
+              )}
+              {smsFix ? (
+                <a className="sec" data-testid="link-sos-sms" href={smsUrl(smsFix, os)} title={t.smsManual}><SosIcon name="chat" />{"\u00A0 "}{t.sms}</a>
+              ) : (
+                <button type="button" className="sec" data-testid="button-sos-sms" disabled aria-describedby="sos-sms-hint"><SosIcon name="chat" />{"\u00A0 "}{t.sms}</button>
+              )}
             </div>
+            {!smsFix && <div id="sos-sms-hint" className="sms-hint" data-testid="text-sos-sms-hint">{t.smsHint}</div>}
             {msg && (
               <div className="sos-msg" role="status">
                 {msg.kind === "ok" ? t.copied : (
