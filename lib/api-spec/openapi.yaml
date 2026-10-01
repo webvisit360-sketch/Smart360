@@ -22,6 +22,99 @@ tags:
   - name: messages
   - name: site-plan
 paths:
+  /guest/{slug}/announcements:
+    get:
+      operationId: getGuestAnnouncements
+      tags: [public]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Active runtime announcements, newest first. Never cached.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnnouncementList" }
+        "404": { description: Published Living Guide not found }
+  /admin/tenants/{tenantId}/announcements:
+    parameters:
+      - { name: tenantId, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' } }
+    get:
+      operationId: getTenantAnnouncements
+      tags: [tenants]
+      responses:
+        "200":
+          description: Non-deleted runtime announcements including scheduled and expired entries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnnouncementList" }
+        "401": { description: Authentication required }
+        "404": { description: Tenant not found }
+    post:
+      operationId: createTenantAnnouncement
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AnnouncementInput" }
+      responses:
+        "201":
+          description: Saved and immediately live within its validity window
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnnouncementResult" }
+        "400": { description: Invalid announcement }
+        "401": { description: Authentication required }
+        "404": { description: Tenant not found }
+  /admin/tenants/{tenantId}/announcements/image:
+    post:
+      operationId: uploadTenantAnnouncementImage
+      tags: [tenants]
+      parameters:
+        - { name: tenantId, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/AnnouncementImageInput" }
+      responses:
+        "201":
+          description: Image stored using existing variants and tenant media quota
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnnouncementImageResult" }
+        "400": { description: Invalid image }
+        "401": { description: Authentication required }
+        "404": { description: Tenant not found }
+        "413": { description: Tenant media quota exceeded }
+  /admin/tenants/{tenantId}/announcements/{announcementId}:
+    parameters:
+      - { name: tenantId, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' } }
+      - { name: announcementId, in: path, required: true, schema: { type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' } }
+    patch:
+      operationId: updateTenantAnnouncement
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AnnouncementUpdate" }
+      responses:
+        "200":
+          description: Updated immediately, without publishing guide content
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnnouncementResult" }
+        "400": { description: Invalid announcement }
+        "401": { description: Authentication required }
+        "404": { description: Announcement or tenant not found }
+    delete:
+      operationId: deleteTenantAnnouncement
+      tags: [tenants]
+      responses:
+        "204": { description: Soft-deleted immediately }
+        "401": { description: Authentication required }
+        "404": { description: Announcement or tenant not found }
   /admin/host/onboarding:
     get:
       operationId: getHostOnboarding
@@ -3116,6 +3209,66 @@ paths:
           description: Thread or tenant not found
 components:
   schemas:
+    Announcement:
+      type: object
+      required: [id, tenantId, titleSl, titleEn, titleDe, titleIt, bodySl, bodyEn, bodyDe, bodyIt, imageUrl, validFrom, validTo, createdAt, updatedAt, deletedAt]
+      properties:
+        id: { type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' }
+        tenantId: { type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' }
+        titleSl: { type: ["string", "null"] }
+        titleEn: { type: ["string", "null"] }
+        titleDe: { type: ["string", "null"] }
+        titleIt: { type: ["string", "null"] }
+        bodySl: { type: ["string", "null"] }
+        bodyEn: { type: ["string", "null"] }
+        bodyDe: { type: ["string", "null"] }
+        bodyIt: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        validFrom: { type: string, format: date-time }
+        validTo: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        deletedAt: { type: ["string", "null"], format: date-time }
+    AnnouncementList:
+      type: object
+      required: [announcements]
+      properties:
+        announcements:
+          type: array
+          items: { $ref: "#/components/schemas/Announcement" }
+    AnnouncementResult:
+      type: object
+      required: [announcement]
+      properties:
+        announcement: { $ref: "#/components/schemas/Announcement" }
+    AnnouncementInput:
+      type: object
+      additionalProperties: false
+      properties:
+        titleSl: { type: ["string", "null"], maxLength: 250 }
+        titleEn: { type: ["string", "null"], maxLength: 250 }
+        titleDe: { type: ["string", "null"], maxLength: 250 }
+        titleIt: { type: ["string", "null"], maxLength: 250 }
+        bodySl: { type: ["string", "null"], maxLength: 20000 }
+        bodyEn: { type: ["string", "null"], maxLength: 20000 }
+        bodyDe: { type: ["string", "null"], maxLength: 20000 }
+        bodyIt: { type: ["string", "null"], maxLength: 20000 }
+        imageUrl: { type: ["string", "null"], maxLength: 2000 }
+        validFrom: { type: string, format: date-time }
+        validTo: { type: ["string", "null"], format: date-time }
+    AnnouncementUpdate:
+      allOf:
+        - $ref: "#/components/schemas/AnnouncementInput"
+    AnnouncementImageInput:
+      type: object
+      required: [file]
+      properties:
+        file: { type: string, format: binary }
+    AnnouncementImageResult:
+      type: object
+      required: [imageUrl]
+      properties:
+        imageUrl: { type: string }
     TenantWeatherResponse:
       type: object
       required: [weather]

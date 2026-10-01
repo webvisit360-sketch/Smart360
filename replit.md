@@ -22,6 +22,7 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
   | Vnosi in vrstni red; podvojitev, premik med kategorijami, koš/obnova | Urejanje in ustvarjanje dovoljeno | Dovoljeno |
   | Predstavnost **vnosa** (fotografije, video, vrstni red, izrez), GPX in pregled razdalj | Dovoljeno | Dovoljeno |
   | Naročila (status/opomba), odgovori na sporočila, lastni prevodi in »prevedi manjkajoče« | Dovoljeno | Dovoljeno |
+  | Obvestila Living Guide: ustvarjanje, urejanje in mehko brisanje | Dovoljeno samo za svojo nastanitev; shranjevanje učinkuje takoj | Dovoljeno za vse nastanitve |
   | Wi-Fi; telefon, e-pošta, WhatsApp, Viber, Instagram; obvestila in geslo naročil | Dovoljeno | Dovoljeno |
   | Lastno geslo, QR PNG, nalepka PDF, predogled objave in dnevnik sprememb | Dovoljeno (branje/prenos, kjer je ustrezno) | Dovoljeno |
   | **Ločen pregledan obrazec za uvajanje** (shranitev/oddaja, strukturirana polja, kategorije ustvarjene prek obrazca) | **Izjema: dovoljeno samo prek onboarding poti** | Pregled in odprtje obrazca |
@@ -47,7 +48,14 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 - Pravilo CGP: Znak vedno izvira iz originalnih uradnih datotek, vedno stoji na beli podlagi in ga nikoli ne prerisujemo, prebarvamo ali približno poustvarimo. Besedni znak »SMART360« je vedno Archivo 800, barve #121A14, z razmikom med črkami 0.02em. Zelena #157347 je poudarna barva in se nikoli ne uporablja za znak ali besedni znak. V e-pošti je celoten logotip (znak + besedni znak) vedno ena vnaprej izrisana slika v retina ločljivosti, nikoli besedilo HTML.
 - Barva #DD9A2B je namenjena izključno opozorilom in brisanju, nikoli dekoraciji. E-poštne kartice nimajo okrasne oranžne zgornje črte.
 - **Living Guide – SOS:** namenski rdeči token `--sos-red` po zavezujočem SOS prototipu je rezerviran izključno za nujne primere (SOS in nujni telefonski kontakti). Napake GPS, zavrnjena naročila, brisanje in druga nenujna opozorila v gostujočem Living Guide uporabljajo obstoječi jantarni barvi #F2B135 / #DD9A2B, nikoli SOS rdeče. SOS je vedno na voljo vsem najemnikom samo v Living Guide; GPS SOS se hrani samo v pomnilniku med odprtim pogledom, brez pošiljanja, beleženja ali shranjevanja. SOS prekrivni pogled ne spreminja življenjskega cikla ture ali snemalnika.
+- **Living Guide – obvestila:** obvestila so sprotni podatki (kot sporočila in naročila), niso del objavljenega posnetka in ne čakajo na Publish. Shranjevanje učinkuje takoj, ob upoštevanju časovnega okna veljavnosti. Zakon 1 za vsebino vodnika ostaja nespremenjen. Stanje prebrano/neprebrano se vodi samo na napravi gosta, ne na strežniku. Prevodi imajo fallback na prvi neprazen jezik v vrstnem redu SL → EN → DE → IT. Obvestila niso na voljo iz predpomnilnika brez povezave.
+- **Living Guide – videz obvestil in menija:** priloženi `obvestila-meni-dizajn` določa postavitev, razmike in hierarhijo; površine in besedilo uporabljajo tokene teme najemnika (svetla/temna), s preverjanjem WCAG AA besedilnega kontrasta. Značka »Novo« in neprebrana pikica ohranita zeleno barvo iz reference v obeh temah.
+
 - **Living Guide – snemanje tur:** ob vključenem operaterskem stikalu SNEMANJE TUR je snemalnik zadnja kartica vsake vidne kategorije s ključem `bike`, `hike`, `run` ali `activities` (tudi prazne), nikoli »Vse« ali drugih kategorij. Zavihek »Snemanje tur« ostane samo kot fallback, če noben od teh ključev ni viden; prevedena imena in `act` ne štejejo.
+
+## Backlog — ločena odobritev za RLS
+
+- Obstoječi politiki `host_scope` na `orders` in `message_threads` še uporabljata `NOT (current_setting('app.role', true) = 'host')`. Če `app.role` ni nastavljen, izraz vrne NULL in lahko zavrne povezavo, za katero se politika dejansko uveljavlja. Pregled in uskladitev z `current_setting('app.role', true) IS DISTINCT FROM 'host'` sodita v ločeno, izrecno odobreno nalogo. **V nalogi za obvestila teh politik ne spreminjamo.** Nova politika za `tenant_announcements` uporablja popravljeni izraz v USING in WITH CHECK; preverjanje dostopa na ravni aplikacije ostaja obvezno.
 
 ## Brand tagline
 

@@ -8,6 +8,233 @@
 import * as zod from 'zod';
 
 
+export const GetGuestAnnouncementsParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const getGuestAnnouncementsResponseAnnouncementsItemIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const getGuestAnnouncementsResponseAnnouncementsItemTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const GetGuestAnnouncementsResponse = zod.object({
+  "announcements": zod.array(zod.object({
+  "id": zod.string().regex(getGuestAnnouncementsResponseAnnouncementsItemIdRegExp),
+  "tenantId": zod.string().regex(getGuestAnnouncementsResponseAnnouncementsItemTenantIdRegExp),
+  "titleSl": zod.string().nullable(),
+  "titleEn": zod.string().nullable(),
+  "titleDe": zod.string().nullable(),
+  "titleIt": zod.string().nullable(),
+  "bodySl": zod.string().nullable(),
+  "bodyEn": zod.string().nullable(),
+  "bodyDe": zod.string().nullable(),
+  "bodyIt": zod.string().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "validFrom": zod.coerce.date(),
+  "validTo": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable()
+}))
+})
+
+
+export const getTenantAnnouncementsPathTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const GetTenantAnnouncementsParams = zod.object({
+  "tenantId": zod.coerce.string().regex(getTenantAnnouncementsPathTenantIdRegExp)
+})
+
+export const getTenantAnnouncementsResponseAnnouncementsItemIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const getTenantAnnouncementsResponseAnnouncementsItemTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const GetTenantAnnouncementsResponse = zod.object({
+  "announcements": zod.array(zod.object({
+  "id": zod.string().regex(getTenantAnnouncementsResponseAnnouncementsItemIdRegExp),
+  "tenantId": zod.string().regex(getTenantAnnouncementsResponseAnnouncementsItemTenantIdRegExp),
+  "titleSl": zod.string().nullable(),
+  "titleEn": zod.string().nullable(),
+  "titleDe": zod.string().nullable(),
+  "titleIt": zod.string().nullable(),
+  "bodySl": zod.string().nullable(),
+  "bodyEn": zod.string().nullable(),
+  "bodyDe": zod.string().nullable(),
+  "bodyIt": zod.string().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "validFrom": zod.coerce.date(),
+  "validTo": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable()
+}))
+})
+
+
+export const createTenantAnnouncementPathTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const CreateTenantAnnouncementParams = zod.object({
+  "tenantId": zod.coerce.string().regex(createTenantAnnouncementPathTenantIdRegExp)
+})
+
+export const createTenantAnnouncementBodyTitleSlMax = 250;
+
+export const createTenantAnnouncementBodyTitleEnMax = 250;
+
+export const createTenantAnnouncementBodyTitleDeMax = 250;
+
+export const createTenantAnnouncementBodyTitleItMax = 250;
+
+export const createTenantAnnouncementBodyBodySlMax = 20000;
+
+export const createTenantAnnouncementBodyBodyEnMax = 20000;
+
+export const createTenantAnnouncementBodyBodyDeMax = 20000;
+
+export const createTenantAnnouncementBodyBodyItMax = 20000;
+
+export const createTenantAnnouncementBodyImageUrlMax = 2000;
+
+
+
+export const CreateTenantAnnouncementBody = zod.object({
+  "titleSl": zod.string().max(createTenantAnnouncementBodyTitleSlMax).nullish(),
+  "titleEn": zod.string().max(createTenantAnnouncementBodyTitleEnMax).nullish(),
+  "titleDe": zod.string().max(createTenantAnnouncementBodyTitleDeMax).nullish(),
+  "titleIt": zod.string().max(createTenantAnnouncementBodyTitleItMax).nullish(),
+  "bodySl": zod.string().max(createTenantAnnouncementBodyBodySlMax).nullish(),
+  "bodyEn": zod.string().max(createTenantAnnouncementBodyBodyEnMax).nullish(),
+  "bodyDe": zod.string().max(createTenantAnnouncementBodyBodyDeMax).nullish(),
+  "bodyIt": zod.string().max(createTenantAnnouncementBodyBodyItMax).nullish(),
+  "imageUrl": zod.string().max(createTenantAnnouncementBodyImageUrlMax).nullish(),
+  "validFrom": zod.coerce.date().optional(),
+  "validTo": zod.coerce.date().nullish()
+})
+
+export const createTenantAnnouncementResponseAnnouncementIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const createTenantAnnouncementResponseAnnouncementTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const CreateTenantAnnouncementResponse = zod.object({
+  "announcement": zod.object({
+  "id": zod.string().regex(createTenantAnnouncementResponseAnnouncementIdRegExp),
+  "tenantId": zod.string().regex(createTenantAnnouncementResponseAnnouncementTenantIdRegExp),
+  "titleSl": zod.string().nullable(),
+  "titleEn": zod.string().nullable(),
+  "titleDe": zod.string().nullable(),
+  "titleIt": zod.string().nullable(),
+  "bodySl": zod.string().nullable(),
+  "bodyEn": zod.string().nullable(),
+  "bodyDe": zod.string().nullable(),
+  "bodyIt": zod.string().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "validFrom": zod.coerce.date(),
+  "validTo": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable()
+})
+})
+
+
+export const uploadTenantAnnouncementImagePathTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const UploadTenantAnnouncementImageParams = zod.object({
+  "tenantId": zod.coerce.string().regex(uploadTenantAnnouncementImagePathTenantIdRegExp)
+})
+
+export const UploadTenantAnnouncementImageBody = zod.object({
+  "file": zod.unknown()
+})
+
+export const UploadTenantAnnouncementImageResponse = zod.object({
+  "imageUrl": zod.string()
+})
+
+
+export const updateTenantAnnouncementPathTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const updateTenantAnnouncementPathAnnouncementIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const UpdateTenantAnnouncementParams = zod.object({
+  "tenantId": zod.coerce.string().regex(updateTenantAnnouncementPathTenantIdRegExp),
+  "announcementId": zod.coerce.string().regex(updateTenantAnnouncementPathAnnouncementIdRegExp)
+})
+
+export const updateTenantAnnouncementBodyOneTitleSlMax = 250;
+
+export const updateTenantAnnouncementBodyOneTitleEnMax = 250;
+
+export const updateTenantAnnouncementBodyOneTitleDeMax = 250;
+
+export const updateTenantAnnouncementBodyOneTitleItMax = 250;
+
+export const updateTenantAnnouncementBodyOneBodySlMax = 20000;
+
+export const updateTenantAnnouncementBodyOneBodyEnMax = 20000;
+
+export const updateTenantAnnouncementBodyOneBodyDeMax = 20000;
+
+export const updateTenantAnnouncementBodyOneBodyItMax = 20000;
+
+export const updateTenantAnnouncementBodyOneImageUrlMax = 2000;
+
+
+
+export const UpdateTenantAnnouncementBody = zod.object({
+  "titleSl": zod.string().max(updateTenantAnnouncementBodyOneTitleSlMax).nullish(),
+  "titleEn": zod.string().max(updateTenantAnnouncementBodyOneTitleEnMax).nullish(),
+  "titleDe": zod.string().max(updateTenantAnnouncementBodyOneTitleDeMax).nullish(),
+  "titleIt": zod.string().max(updateTenantAnnouncementBodyOneTitleItMax).nullish(),
+  "bodySl": zod.string().max(updateTenantAnnouncementBodyOneBodySlMax).nullish(),
+  "bodyEn": zod.string().max(updateTenantAnnouncementBodyOneBodyEnMax).nullish(),
+  "bodyDe": zod.string().max(updateTenantAnnouncementBodyOneBodyDeMax).nullish(),
+  "bodyIt": zod.string().max(updateTenantAnnouncementBodyOneBodyItMax).nullish(),
+  "imageUrl": zod.string().max(updateTenantAnnouncementBodyOneImageUrlMax).nullish(),
+  "validFrom": zod.coerce.date().optional(),
+  "validTo": zod.coerce.date().nullish()
+})
+
+export const updateTenantAnnouncementResponseAnnouncementIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const updateTenantAnnouncementResponseAnnouncementTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const UpdateTenantAnnouncementResponse = zod.object({
+  "announcement": zod.object({
+  "id": zod.string().regex(updateTenantAnnouncementResponseAnnouncementIdRegExp),
+  "tenantId": zod.string().regex(updateTenantAnnouncementResponseAnnouncementTenantIdRegExp),
+  "titleSl": zod.string().nullable(),
+  "titleEn": zod.string().nullable(),
+  "titleDe": zod.string().nullable(),
+  "titleIt": zod.string().nullable(),
+  "bodySl": zod.string().nullable(),
+  "bodyEn": zod.string().nullable(),
+  "bodyDe": zod.string().nullable(),
+  "bodyIt": zod.string().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "validFrom": zod.coerce.date(),
+  "validTo": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable()
+})
+})
+
+
+export const deleteTenantAnnouncementPathTenantIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+export const deleteTenantAnnouncementPathAnnouncementIdRegExp = new RegExp('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+
+export const DeleteTenantAnnouncementParams = zod.object({
+  "tenantId": zod.coerce.string().regex(deleteTenantAnnouncementPathTenantIdRegExp),
+  "announcementId": zod.coerce.string().regex(deleteTenantAnnouncementPathAnnouncementIdRegExp)
+})
+
+export const DeleteTenantAnnouncementResponse = zod.void()
+
+
 export const getHostOnboardingResponseDataAccommodationNameMax = 500;
 
 export const getHostOnboardingResponseDataAddressMax = 2000;

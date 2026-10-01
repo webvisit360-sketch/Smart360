@@ -27,7 +27,13 @@ const HOST = "current_setting('app.role', true) = 'host'";
 const TID = "nullif(current_setting('app.tenant_id', true), '')::uuid";
 
 /** tableName -> { using, withCheck? } (host-side predicate; non-host bypasses). */
-export const POLICIES: Record<string, { using: string; withCheck?: string }> = {
+export const POLICIES: Record<string, { using: string; withCheck?: string; nonHostPredicate?: string }> = {
+  // Explicit approval applies ONLY here. Existing policies retain their old
+  // predicate until a separate reviewed task (see replit.md backlog).
+  tenant_announcements: {
+    using: `tenant_id = ${TID}`,
+    nonHostPredicate: "current_setting('app.role', true) IS DISTINCT FROM 'host'",
+  },
   tenants: { using: `id = ${TID}` },
   published_snapshots: { using: `tenant_id = ${TID}` },
   creator_place_materializations: { using: `tenant_id = ${TID}` },
@@ -106,6 +112,7 @@ export const HOST_DB_ROLE = "smart360_host";
  * a new table is invisible to hosts until it is deliberately added here.
  */
 export const HOST_ROLE_GRANTS: Record<string, string> = {
+  tenant_announcements: "SELECT, INSERT, UPDATE",
   // Content the host manages. Categories/items are soft-deleted with UPDATE;
   // DELETE is intentionally absent so permanent purge stays owner-only even
   // when a handler-level fence regresses.
@@ -182,8 +189,9 @@ async function ensureHostRole(): Promise<void> {
 export async function ensureRowLevelSecurity(): Promise<void> {
   await ensureHostRole();
   for (const [table, p] of Object.entries(POLICIES)) {
-    const using = `(NOT (${HOST})) OR (${p.using})`;
-    const withCheck = `(NOT (${HOST})) OR (${p.withCheck ?? p.using})`;
+    const bypass = p.nonHostPredicate ?? `NOT (${HOST})`;
+    const using = `(${bypass}) OR (${p.using})`;
+    const withCheck = `(${bypass}) OR (${p.withCheck ?? p.using})`;
     await db.execute(sql.raw(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`));
     await db.execute(sql.raw(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY`));
     await db.execute(sql.raw(`DROP POLICY IF EXISTS host_scope ON ${table}`));

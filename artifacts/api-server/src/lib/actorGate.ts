@@ -259,6 +259,12 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   // ── Messages ─────────────────────────────────────────────────────────────
   { method: "get", path: "/admin/tenants/:tenantId/messages", binding: { kind: "tenant-url", param: "tenantId" } },
   { method: "post", path: "/admin/tenants/:tenantId/messages/:threadRef", binding: { kind: "tenant-url", param: "tenantId" } },
+  // Runtime announcements: full management for the host's OWN tenant.
+  { method: "get", path: "/admin/tenants/:tenantId/announcements", binding: { kind: "tenant-url", param: "tenantId" } },
+  { method: "post", path: "/admin/tenants/:tenantId/announcements", binding: { kind: "tenant-url", param: "tenantId" } },
+  { method: "post", path: "/admin/tenants/:tenantId/announcements/image", binding: { kind: "tenant-url", param: "tenantId" } },
+  { method: "patch", path: "/admin/tenants/:tenantId/announcements/:announcementId", binding: { kind: "tenant-url", param: "tenantId" } },
+  { method: "delete", path: "/admin/tenants/:tenantId/announcements/:announcementId", binding: { kind: "tenant-url", param: "tenantId" } },
 
   // ── Distance review (adminDistanceReview.ts) ─────────────────────────────
   { method: "get", path: "/admin/tenants/:id/distance-review", binding: T_ID },

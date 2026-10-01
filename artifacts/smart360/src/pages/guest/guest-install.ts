@@ -14,6 +14,21 @@ let capturing = false;
 const memory = new Map<string, string>();
 const COOLDOWN = 14 * 24 * 60 * 60 * 1000;
 
+let requestedSlug: string | null = null;
+
+/** On-demand reveal from the guest menu: overrides an earlier dismissal/cooldown once. */
+export function requestGuestInstall(slug: string): void {
+  requestedSlug = slug;
+  notify();
+}
+
+export function isGuestStandalone(slug: string): boolean {
+  try {
+    return installedSlug === slug || window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
+  } catch { return false; }
+}
+
 function notify() { subscribers.forEach((fn) => fn()); }
 export function captureGuestInstallPrompt(): void {
   if (capturing) return;
@@ -70,9 +85,11 @@ export function useGuestInstall(slug: string, enabled: boolean) {
   const previous = read(key);
   const hidden = ios ? previous === "dismissed" :
     previous !== null && Number.isFinite(Number(previous)) && Date.now() - Number(previous) < COOLDOWN;
-  const mode = !enabled || standalone || hidden ? null :
-    ios ? "ios" : (promptEvent && promptSlug === slug) || promptError ? "chromium" : null;
+  const requested = requestedSlug === slug;
+  const mode = !enabled || standalone || (hidden && !requested) ? null :
+    ios ? "ios" : (promptEvent && promptSlug === slug) || promptError || requested ? "chromium" : null;
   const dismiss = () => {
+    if (requestedSlug === slug) requestedSlug = null;
     write(key, ios ? "dismissed" : String(Date.now()));
     refresh((value) => value + 1);
   };
@@ -105,5 +122,5 @@ export function useGuestInstall(slug: string, enabled: boolean) {
       setPromptError(true);
     }
   };
-  return { mode, dismiss, install, promptError, canPrompt: !!promptEvent && promptSlug === slug };
+  return { mode, dismiss, install, promptError, requested, canPrompt: !!promptEvent && promptSlug === slug };
 }

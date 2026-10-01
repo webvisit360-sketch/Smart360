@@ -17,9 +17,11 @@ const titleTransformer: InputTransformerFn = (config) => {
 // browser File constructor (which is not part of our server type environment).
 const serverTransformer: InputTransformerFn = (config) => {
   const result = titleTransformer(config);
-  const upload = result.components?.schemas?.GpxUploadInput;
-  if (upload && "properties" in upload && upload.properties) {
-    upload.properties.file = {};
+  for (const name of ["GpxUploadInput", "AnnouncementImageInput"]) {
+    const upload = result.components?.schemas?.[name];
+    if (upload && "properties" in upload && upload.properties) {
+      upload.properties.file = {};
+    }
   }
   return result;
 };

@@ -1,0 +1,144 @@
+/* Obvestila + guest menu — geometry from obvestila-meni-dizajn.html, colours from tenant tokens.
+   Brand green for "Novo" badge and unread dot is fixed (AA: #FFF on #2E7D4F = 5.2:1). */
+[data-living-guide] {
+  --lg2-brand-green: #2E7D4F;
+  --lg2-brand-green-dot: #3E9663;
+  /* Local AA tokens for the new surfaces only (theme --tx2/--accg fall below 4.5:1
+     on --card2 in jutro/vecer). Worst case measured on --card2. */
+  --lg2-ann-muted: #59635C;  /* dan: 5.42 */
+  --lg2-ann-accent: #157347; /* dan: 5.10 */
+}
+body[data-t="jutro"] [data-living-guide] { --lg2-ann-muted: #6B5D42; --lg2-ann-accent: #8A5300; } /* 5.44 / 5.36 */
+body[data-t="dan"] [data-living-guide] { --lg2-ann-muted: #59635C; --lg2-ann-accent: #157347; }   /* 5.42 / 5.10 */
+body[data-t="vecer"] [data-living-guide] { --lg2-ann-muted: #6A5942; --lg2-ann-accent: #9A4518; } /* 5.51 / 5.31 */
+body[data-t="noc"] [data-living-guide] { --lg2-ann-muted: #8C97AB; --lg2-ann-accent: #F2B84B; }   /* 5.15 / 8.47 */
+
+/* ---------- full-screen layer ---------- */
+.lg2-ann-layer {
+  position: fixed; z-index: 120; inset: 0;
+  width: min(100%, var(--lg2-shell-width, 430px)); margin: 0 auto;
+  background: var(--bg); color: var(--tx);
+  overflow-y: auto; overscroll-behavior: contain;
+  font-family: var(--sans);
+  animation: lg2-ann-in .28s var(--ease, ease) both;
+}
+@keyframes lg2-ann-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.lg2-ann-list { padding: max(20px, env(safe-area-inset-top)) 16px calc(26px + env(safe-area-inset-bottom)); }
+.lg2-ann-top { display: flex; margin-bottom: 12px; }
+.lg2-ann-back {
+  width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--card); color: var(--tx); display: grid; place-items: center; cursor: pointer;
+}
+.lg2-ann-back svg, .lg2-ann-hero-back svg { width: 20px; height: 20px; }
+.lg2-ann-kicker {
+  margin: 0 0 4px; font-size: 12px; letter-spacing: .12em; font-weight: 700; text-transform: uppercase;
+  color: var(--lg2-ann-accent);
+}
+[data-living-guide] .lg2-ann-h1, .lg2-ann-h1 { margin: 0 0 14px; font-size: 26px; font-weight: 800; line-height: 1.2; letter-spacing: normal; color: var(--tx); }
+
+/* ---------- cards ---------- */
+.lg2-ann-card {
+  display: flex; gap: 12px; align-items: center; width: 100%; text-align: left;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 10px; margin: 0 0 10px; color: var(--tx); cursor: pointer; font: inherit;
+  transition: transform .12s;
+}
+.lg2-ann-card:active { transform: scale(.985); }
+.lg2-ann-card:focus-visible, .lg2-menu-row:focus-visible, .lg2-ann-back:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.lg2-ann-thumb { width: 64px; height: 64px; border-radius: 12px; flex-shrink: 0; object-fit: cover; background: var(--card2); }
+.lg2-ann-noimg { width: 12px; flex-shrink: 0; }
+.lg2-ann-mid { flex: 1; min-width: 0; display: block; }
+.lg2-ann-date { display: block; color: var(--lg2-ann-muted); font-weight: 600; font-size: 12px; }
+.lg2-ann-name { display: block; color: var(--tx); font-weight: 800; font-size: 16px; margin: 2px 0 4px; line-height: 1.3; }
+.lg2-ann-snip { display: block; color: var(--lg2-ann-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lg2-ann-badge {
+  display: inline-block; font-size: 11px; font-weight: 800; border-radius: 8px; padding: 3px 8px;
+  background: var(--lg2-brand-green); color: #FFFFFF; margin-left: 8px; vertical-align: 1px; line-height: 1.2;
+}
+.lg2-ann-skel { height: 86px; cursor: default; background: linear-gradient(90deg, var(--card) 0%, var(--card2) 50%, var(--card) 100%); background-size: 200% 100%; animation: lg2-ann-shim 1.3s linear infinite; }
+@keyframes lg2-ann-shim { to { background-position: -200% 0; } }
+
+.lg2-ann-notice, .lg2-ann-empty {
+  background: var(--card2); border: 1px solid var(--line); border-radius: 16px; padding: 16px; color: var(--lg2-ann-muted); font-size: 14px; line-height: 1.5;
+}
+.lg2-ann-notice p { margin: 0 0 10px; color: var(--tx); }
+.lg2-ann-notice button {
+  border: 0; border-radius: 10px; padding: 8px 14px; background: var(--acc); color: var(--onacc); font: 700 13px var(--sans); cursor: pointer;
+}
+.lg2-ann-empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 28px 18px; }
+.lg2-ann-empty svg { width: 30px; height: 30px; color: var(--lg2-ann-accent); }
+.lg2-ann-empty strong { color: var(--tx); font-size: 15px; }
+.lg2-ann-empty p { margin: 0; }
+
+/* ---------- detail ---------- */
+.lg2-ann-detail { padding-bottom: calc(26px + env(safe-area-inset-bottom)); }
+.lg2-ann-hero { position: relative; height: 280px; overflow: hidden; border-radius: 0 0 24px 24px; margin-bottom: 14px; background: var(--card2); }
+.lg2-ann-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lg2-ann-hero-sh { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,10,18,.25) 0%, transparent 30%, rgba(5,10,18,.9) 100%); }
+.lg2-ann-hero-back {
+  position: absolute; top: max(14px, env(safe-area-inset-top)); left: 14px; width: 40px; height: 40px;
+  border: 0; border-radius: 12px; background: rgba(15,24,38,.7); color: #FFFFFF; display: grid; place-items: center; cursor: pointer;
+}
+/* Beats global "[data-living-guide] h1" (0,1,1) so the title stays white on the dark gradient. */
+[data-living-guide] .lg2-ann-hero-title, .lg2-ann-layer .lg2-ann-hero-title { text-shadow: 0 1px 2px rgba(5,10,18,.55); position: absolute; left: 16px; right: 16px; bottom: 14px; margin: 0; color: #FFFFFF; font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: normal; }
+.lg2-ann-plainhead { padding: max(20px, env(safe-area-inset-top)) 16px 0; }
+.lg2-ann-plainhead .lg2-ann-back { margin-bottom: 12px; }
+.lg2-ann-detail-body { padding: 0 16px; }
+.lg2-ann-meta { margin: 0 0 10px; color: var(--lg2-ann-muted); font-size: 13px; }
+.lg2-ann-text { color: var(--tx); font-size: 14px; line-height: 1.6; margin-bottom: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lg2-ann-valid {
+  display: flex; align-items: center; gap: 8px; background: var(--card2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 12px; color: var(--lg2-ann-muted); font-size: 12px;
+}
+.lg2-ann-valid svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Home tile unread dot — fixed brand green */
+.lg2-qd.lg2-qd--ann { background: var(--lg2-brand-green-dot); box-shadow: 0 0 0 2px var(--card); }
+
+/* ---------- menu ---------- */
+.lg2-hhero-fab.lg2-hhero-menu svg { width: 20px; height: 20px; }
+.lg2-menu-scrim {
+  position: fixed; z-index: 115; inset: 0; width: 100%; margin: 0;
+  /* Full-viewport dim; panel stays on the guide column's right edge. */
+  padding-right: max(0px, calc((100vw - var(--lg2-shell-width, 430px)) / 2));
+  background: var(--scrim, rgba(4,8,6,.4)); display: flex; justify-content: flex-end;
+  animation: lg2-overlay-in .22s ease both; font-family: var(--sans);
+}
+.lg2-menu-panel {
+  position: relative; width: min(88%, 360px); height: 100%; overflow-y: auto;
+  background: var(--bg); color: var(--tx); border-left: 1px solid var(--line);
+  padding: max(20px, env(safe-area-inset-top)) 16px calc(26px + env(safe-area-inset-bottom));
+  box-shadow: -12px 0 40px rgba(0,0,0,.22);
+  animation: lg2-menu-in .3s var(--ease, ease) both;
+}
+@keyframes lg2-menu-in { from { transform: translateX(100%); } to { transform: none; } }
+.lg2-menu-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.lg2-menu-title { font-size: 22px; font-weight: 800; color: var(--tx); }
+.lg2-menu-x { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--tx); display: grid; place-items: center; cursor: pointer; }
+.lg2-menu-x svg { width: 18px; height: 18px; }
+.lg2-menu-sheet { background: var(--card2); border: 1px solid var(--line); border-radius: 20px; padding: 6px 0; }
+.lg2-menu-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; text-align: left;
+  border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--tx); font: inherit; cursor: pointer;
+}
+.lg2-menu-row:last-child { border-bottom: 0; }
+.lg2-menu-row:active { background: var(--card); }
+.lg2-menu-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--card); color: var(--lg2-ann-accent); display: grid; place-items: center; flex-shrink: 0; }
+.lg2-menu-ic svg { width: 19px; height: 19px; }
+.lg2-menu-txt { display: block; min-width: 0; }
+.lg2-menu-mt { display: block; color: var(--tx); font-weight: 700; font-size: 15px; }
+.lg2-menu-ms { display: block; color: var(--lg2-ann-muted); font-size: 12px; margin-top: 1px; line-height: 1.35; }
+.lg2-menu-go { margin-left: auto; color: var(--lg2-ann-muted); display: grid; }
+.lg2-menu-go svg { width: 16px; height: 16px; }
+.lg2-menu-foot { color: var(--lg2-ann-muted); font-size: 11px; text-align: center; margin: 12px 0 0; }
+.lg2-menu-profile { position: absolute; inset: 0; z-index: 3; background: var(--scrim, rgba(4,8,6,.4)); padding: max(60px, env(safe-area-inset-top)) 12px 12px; overflow-y: auto; }
+.lg2-menu-profile .s360-tour-link { display: none; }
+
+/* ---------- about ---------- */
+.lg2-about-block { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+.lg2-about-block h2 { margin: 0 0 6px; font-size: 15px; font-weight: 800; color: var(--tx); }
+.lg2-about-block p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--lg2-ann-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lg2-ann-layer, .lg2-menu-panel, .lg2-menu-scrim, .lg2-ann-skel { animation: none; }
+}

@@ -5,6 +5,107 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export interface Announcement {
+  /** @pattern ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ */
+  id: string;
+  /** @pattern ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ */
+  tenantId: string;
+  /** @nullable */
+  titleSl: string | null;
+  /** @nullable */
+  titleEn: string | null;
+  /** @nullable */
+  titleDe: string | null;
+  /** @nullable */
+  titleIt: string | null;
+  /** @nullable */
+  bodySl: string | null;
+  /** @nullable */
+  bodyEn: string | null;
+  /** @nullable */
+  bodyDe: string | null;
+  /** @nullable */
+  bodyIt: string | null;
+  /** @nullable */
+  imageUrl: string | null;
+  validFrom: string;
+  /** @nullable */
+  validTo: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  deletedAt: string | null;
+}
+
+export interface AnnouncementList {
+  announcements: Announcement[];
+}
+
+export interface AnnouncementResult {
+  announcement: Announcement;
+}
+
+export interface AnnouncementInput {
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleSl?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleEn?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleDe?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleIt?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodySl?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyEn?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyDe?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyIt?: string | null;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  imageUrl?: string | null;
+  validFrom?: string;
+  /** @nullable */
+  validTo?: string | null;
+}
+
+export type AnnouncementUpdate = AnnouncementInput;
+
+export interface AnnouncementImageInput {
+  file: Blob;
+}
+
+export interface AnnouncementImageResult {
+  imageUrl: string;
+}
+
 export interface TenantWeatherCurrent {
   /** Epoch milliseconds */
   time: number;

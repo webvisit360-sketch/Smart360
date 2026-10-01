@@ -110,7 +110,7 @@ test("synthetic browser API: actual shell, events and offer panels remain scoped
   const sidebar = page.locator(".admin-tenant-sidebar");
   await expect(sidebar.getByRole("button", { name: "Pregled" })).toBeVisible();
   await expect(sidebar.getByRole("button", { name: "Kreator vodnika" })).toBeVisible();
-  await expect(sidebar.getByRole("button", { name: "Obvestila", exact: true })).toHaveCount(0);
+  await expect(sidebar.getByRole("button", { name: "Obvestila", exact: true })).toBeVisible();
   const shell = await measure(page);
   expect(shell.sidebarLabels.indexOf("Kreator vodnika")).toBeGreaterThan(shell.sidebarLabels.indexOf("Nastavitve"));
   await page.screenshot({ path: `${output}/shell.png`, animations: "disabled" });

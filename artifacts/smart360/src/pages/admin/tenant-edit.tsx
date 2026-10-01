@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AdminTenantOverview } from "@/components/admin/admin-tenant-overview";
 import { AdminTenantOrders } from "@/components/admin/admin-tenant-orders";
 import { AdminTenantMessages } from "@/components/admin/admin-tenant-messages";
+import { AdminTenantAnnouncements } from "@/components/admin/admin-tenant-announcements";
 import { ContentEditor } from "@/components/admin/content-editor";
 import { TranslationsEditor } from "@/components/admin/translations-editor";
 import { KreatorOriginConfirmation } from "@/components/admin/kreator-origin-confirmation";
@@ -315,6 +316,7 @@ export default function AdminTenantEdit() {
     "kreator",
     "orders",
     "messages",
+    "obvestila",
     "events",
     "ponudba",
     "distances",
@@ -333,6 +335,7 @@ export default function AdminTenantEdit() {
     let timer: ReturnType<typeof setTimeout> | null = null;
     return queryClient.getMutationCache().subscribe((event: any) => {
       if (event?.type !== "updated" || event?.action?.type !== "success") return;
+      if (event.mutation?.options?.mutationKey?.[0] === "admin-announcements") return;
       void queryClient.invalidateQueries({ queryKey: getGetTenantQueryKey(id) });
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => setPreviewKey((key) => key + 1), 40);
@@ -740,6 +743,7 @@ export default function AdminTenantEdit() {
 
         <div className="hidden md:block mb-2 px-4 text-xs font-[800] text-muted-foreground uppercase tracking-widest">Vsak dan</div>
         <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col mb-0 md:mb-8 shrink-0">
+          {tenant.guestUiMode === "living-guide" && <button data-testid="button-open-announcements" data-active={activeTab === 'obvestila'} onClick={() => setActiveTab('obvestila')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'obvestila' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="notices" /><span>Obvestila</span></button>}
           <button data-active={activeTab === 'events'} onClick={() => setActiveTab('events')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="events" /><span>Dogodki</span></button>
           <button data-active={activeTab === 'ponudba'} onClick={() => setActiveTab('ponudba')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'ponudba' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="offers" /><span>Ponudba in cene</span></button>
         </div>
@@ -821,7 +825,7 @@ export default function AdminTenantEdit() {
             )}
           </div>
 
-          <div className="flex shrink-0 flex-col items-end gap-1">
+          {activeTab !== "obvestila" && <div className="flex shrink-0 flex-col items-end gap-1">
             {isOwner && <Button
               onClick={handlePublish}
               disabled={updateMutation.isPending || publicationLoading || publishing}
@@ -851,7 +855,7 @@ export default function AdminTenantEdit() {
                   : "Vodnik še ni bil objavljen."}
               </p>
             )}
-          </div>
+          </div>}
         </header>
 
         {/* SCROLLABLE VIEW */}
@@ -897,6 +901,7 @@ export default function AdminTenantEdit() {
             </TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
+            {tenant.guestUiMode === "living-guide" && <TabsContent value="obvestila"><AdminTenantAnnouncements key={id} tenantId={id} /></TabsContent>}
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>

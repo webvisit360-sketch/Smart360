@@ -9,6 +9,7 @@ import adminSitePlanRouter from "./adminSitePlan";
 import storageRouter from "./storage";
 import ordersRouter from "./orders";
 import messagesRouter from "./messages";
+import announcementsRouter from "./announcements";
 import part5MeliPuCutoverRouter from "./part5MeliPuCutover";
 import adminDistanceReviewRouter from "./adminDistanceReview";
 import adminCreatorRouter from "./adminCreator";
@@ -68,6 +69,7 @@ router.use(adminSitePlanRouter);
   router.use(adminDistanceReviewRouter);
 router.use(ordersRouter);
 router.use(messagesRouter);
+router.use(announcementsRouter);
 router.use(part5MeliPuCutoverRouter);
 
 // Boot-time exhaustiveness check: every /admin route must be classified in

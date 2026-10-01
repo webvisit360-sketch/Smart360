@@ -59,6 +59,14 @@ export async function deletePhotoVariants(
 ): Promise<void> {
   const { publishedSnapshotReferences } = await import("../lib/publishedSnapshots");
   if (await publishedSnapshotReferences(`/api/storage/img/${slug}/${name}`)) return;
+  // Runtime announcements may reuse an existing photo; even soft-deleted
+  // entries keep their stored references until an explicit permanent purge.
+  const { tenantAnnouncementsTable } = await import("@workspace/db");
+  const [announcement] = await db.select({ id: tenantAnnouncementsTable.id })
+    .from(tenantAnnouncementsTable)
+    .where(eq(tenantAnnouncementsTable.imageUrl, `/api/storage/img/${slug}/${name}`))
+    .limit(1);
+  if (announcement) return;
   const searchPath = storage.getPublicObjectSearchPaths()[0];
   if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
   await Promise.all(IMG_WIDTHS.map(async (w) => {
@@ -366,7 +374,7 @@ async function tenantSlugs(tenantId: string): Promise<string[]> {
 }
 
 /** Quota admission for one upload; see mediaUsage.admitUpload. */
-async function admitTenantUpload(
+export async function admitTenantUpload(
   tenantId: string,
   quotaBytes: number,
   incomingBytes: number,

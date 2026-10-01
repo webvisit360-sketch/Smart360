@@ -9,8 +9,15 @@ const instructions = readFileSync(new URL("../../../../replit.md", import.meta.u
 test("every reachable daily content tab mounts the real section-scoped editor", () => {
   assert.match(shell, /<TabsContent value="events">[\s\S]*?gostujočem Programu[\s\S]*?<ContentEditor[^>]*scope="events"/);
   assert.match(shell, /<TabsContent value="ponudba">[\s\S]*?<ContentEditor[^>]*scope="offer"/);
-  assert.doesNotMatch(shell, /value="obvestila"|activeTab === 'obvestila'/);
+  assert.match(shell, /activeTab === 'obvestila'/);
+  assert.match(shell, /tenant\.guestUiMode === "living-guide" && <button data-testid="button-open-announcements"/);
+  assert.match(shell, /<TabsContent value="obvestila"><AdminTenantAnnouncements key=\{id\} tenantId=\{id\}/);
   assert.doesNotMatch(shell, /V pripravi/);
+});
+
+test("runtime announcements do not offer guide publication or refresh its draft after saving", () => {
+  assert.match(shell, /activeTab !== "obvestila" && <div/);
+  assert.match(shell, /event\.mutation\?\.options\?\.mutationKey\?\.\[0\] === "admin-announcements"/);
 });
 
 test("owner-only Creator is below standard navigation and has a real surface", () => {

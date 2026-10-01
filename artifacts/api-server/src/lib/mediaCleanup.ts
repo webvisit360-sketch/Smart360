@@ -8,6 +8,7 @@ import {
   translationsTable,
   cleanupRunsTable,
   publishedSnapshotsTable,
+  tenantAnnouncementsTable,
   type CleanupRunFile,
 } from "@workspace/db";
 import { desc, eq, isNull, lt, and } from "drizzle-orm";
@@ -82,7 +83,7 @@ export function collectStorageReferenceKeys(value: unknown, keys = new Set<strin
  * in the schema, extend this list in the same change.
  */
 async function getReferencedKeys(): Promise<Set<string>> {
-  const [mediaRows, sectionRows, itemRows, translationRows, tenantRows] = await Promise.all([
+  const [mediaRows, sectionRows, itemRows, translationRows, tenantRows, announcementRows] = await Promise.all([
     db.select({ url: mediaTable.url, posterUrl: mediaTable.posterUrl }).from(mediaTable),
     db.select({ imageUrl: sectionsTable.imageUrl }).from(sectionsTable),
     db.select({ body: itemsTable.body, noteText: itemsTable.noteText }).from(itemsTable),
@@ -95,6 +96,9 @@ async function getReferencedKeys(): Promise<Set<string>> {
         logoSquareUrl: tenantsTable.logoSquareUrl,
       })
       .from(tenantsTable),
+    // Include expired and soft-deleted entries: removal from guest visibility
+    // must not silently erase their referenced file bytes.
+    db.select({ imageUrl: tenantAnnouncementsTable.imageUrl }).from(tenantAnnouncementsTable),
   ]);
   const keys = new Set<string>();
   const add = (url: string | null | undefined) => {
@@ -106,6 +110,7 @@ async function getReferencedKeys(): Promise<Set<string>> {
     add(r.posterUrl);
   }
   for (const s of sectionRows) add(s.imageUrl);
+  for (const announcement of announcementRows) add(announcement.imageUrl);
   // Rich text / translations may EMBED storage URLs anywhere in the string.
   const scan = (text: string | null | undefined) => {
     collectStorageReferenceKeys(text, keys);

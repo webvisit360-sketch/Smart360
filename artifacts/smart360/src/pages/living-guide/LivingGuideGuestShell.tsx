@@ -121,6 +121,10 @@ import {
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
 import { lockDetailGesture, type DetailGestureLock } from "./detail-gesture-lock";
 import { GuestInstallCard } from "./GuestInstallCard";
+import { LivingGuideAnnouncements } from "./LivingGuideAnnouncements";
+import { LivingGuideAbout, LivingGuideMenu, MenuGlyph, menuCopy } from "./LivingGuideMenu";
+import { useGuestAnnouncements } from "./use-guest-announcements";
+import { isGuestStandalone, requestGuestInstall } from "../guest/guest-install";
 import { ProgramDetail, ProgramView } from "./LivingGuideProgram";
 import { isProgramCategory, orderPrefillNoteFor, programEventOf, signupNote } from "./living-guide-program-model";
 
@@ -845,6 +849,8 @@ export default function LivingGuideGuestShell({
   const [credentialsCancelRevision, setCredentialsCancelRevision] = useState(0);
   const [pendingOrderItemId, setPendingOrderItemId] = useState<string | null>(null);
   const [showNotices, setShowNotices] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
     const [showLanguages, setShowLanguages] = useState(false);
   const [orderItemId, setOrderItemId] = useState<string | null>(null);
@@ -1899,6 +1905,8 @@ export default function LivingGuideGuestShell({
   }, [sections]);
 
   const notices = visible(tenant?.notices);
+  const announcements = useGuestAnnouncements(slug, String(tenant?.id ?? slug));
+  const installEnabled = typeof window !== "undefined" && window.location.pathname.startsWith(`/${slug}/`) && !new URLSearchParams(window.location.search).has("preview");
 
   return (
     <SosEntryContext.Provider value={sosEntry}>
@@ -1953,6 +1961,8 @@ export default function LivingGuideGuestShell({
             onOpenItem={openItem}
             onOpenNotices={() => setShowNotices(true)}
             notices={notices}
+            announcementsUnread={announcements.unread}
+            onOpenMenu={() => setShowMenu(true)}
             navigate={navigate}
             navigateDetail={navigateDetail}
             slug={slug}
@@ -2147,9 +2157,28 @@ export default function LivingGuideGuestShell({
 
 
 
-      {showNotices && notices.length > 0 && (
-        <NoticesSheet notices={notices} onClose={() => setShowNotices(false)} t={t} />
+      {showNotices && (
+        <LivingGuideAnnouncements state={announcements} lang={lang} tenantName={tenant?.name ?? ""} onClose={() => setShowNotices(false)} />
       )}
+
+      {showMenu && (
+        <LivingGuideMenu
+          lang={lang}
+          t={t}
+          installAvailable={installEnabled && !isGuestStandalone(slug)}
+          onClose={() => setShowMenu(false)}
+          onLanguage={() => { setShowMenu(false); setShowLanguages(true); }}
+          onInstall={() => {
+            setShowMenu(false);
+            requestGuestInstall(slug);
+            window.requestAnimationFrame(() => document.querySelector("[data-lg-install-card]")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+          }}
+          onHelp={() => { setShowMenu(false); openEmergencyHelp(); }}
+          onAbout={() => { setShowMenu(false); setShowAbout(true); }}
+        />
+      )}
+
+      {showAbout && <LivingGuideAbout lang={lang} onClose={() => setShowAbout(false)} />}
 
       {showSearch && (
         <LivingGuideSearchSheet
@@ -4504,7 +4533,8 @@ function HomeView({
   onOpenCategory,
   onOpenItem,
   onOpenNotices,
-  notices,
+  announcementsUnread,
+  onOpenMenu,
   navigate,
   navigateDetail,
   slug,
@@ -4524,7 +4554,6 @@ function HomeView({
     !!tenant.wifiNetwork ||
     !!tenant.wifiPassword ||
     !!wifiCategory;
-  const newNoticesCount = notices.filter(isNewNotice).length;
 
   const heroMedia = resolveHomeHeroMedia(
     tenant.livingGuideHeroUrl,
@@ -4573,6 +4602,16 @@ function HomeView({
             >
               <svg aria-hidden="true"><use href="#lg-i-srch" /></svg>
             </button>
+            <button
+              className="lg2-hhero-fab lg2-hhero-menu"
+              type="button"
+              onClick={onOpenMenu}
+              aria-label={menuCopy(lang).menu}
+              aria-haspopup="dialog"
+              data-testid="button-home-menu"
+            >
+              <MenuGlyph />
+            </button>
           </div>
         </div>
 
@@ -4613,10 +4652,11 @@ function HomeView({
             className="lg2-q"
             type="button"
             onClick={onOpenNotices}
+            data-testid="button-home-announcements"
           >
             <svg aria-hidden="true"><use href="#lg-i-bell" /></svg>
             <b>{t("UI.lg.notices.title", "Obvestila")}</b>
-            {newNoticesCount > 0 && <span className="lg2-qd" />}
+            {announcementsUnread && <span className="lg2-qd lg2-qd--ann" data-testid="dot-announcements-unread" />}
           </button>
           <button
             className="lg2-q"
