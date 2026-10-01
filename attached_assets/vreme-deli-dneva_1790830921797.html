@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — vreme po delih dneva</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#F4EFE3;padding:28px 14px;display:flex;flex-wrap:wrap;gap:26px;justify-content:center;}
+  h2.cap{width:100%;text-align:center;font-size:15px;color:#6a6254;font-weight:600;margin-bottom:-8px;}
+  .wrap{width:390px;}
+  .lbl{font-size:13px;font-weight:800;color:#6a6254;margin:0 2px 8px;letter-spacing:.04em;text-transform:uppercase;}
+  .when{font-weight:600;color:#9a9082;font-size:12px;text-transform:none;letter-spacing:0;}
+
+  .weather{border-radius:18px;padding:14px 16px;border:1px solid transparent;}
+  .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .head .t{font-size:11px;letter-spacing:.1em;font-weight:700;text-transform:uppercase;}
+  .head .loc{font-size:12px;}
+  .now{display:flex;align-items:center;gap:12px;}
+  .now .ico{font-size:38px;line-height:1;}
+  .now .temp{font-size:38px;font-weight:800;}
+  .now .right{margin-left:auto;text-align:right;}
+  .now .desc{font-size:14px;font-weight:700;}
+  .now .hilo{font-size:13px;margin-top:2px;}
+  .meta{display:flex;gap:8px;margin-top:10px;}
+  .chipm{flex:1;border-radius:12px;padding:7px 6px;text-align:center;}
+  .chipm .k{font-size:11px;}
+  .chipm .v{font-size:14px;font-weight:700;margin-top:2px;}
+  .hours{display:flex;gap:6px;margin-top:10px;}
+  .hour{flex:1;border-radius:10px;padding:6px 2px;text-align:center;}
+  .hour .h{font-size:10px;}
+  .hour .i{font-size:14px;margin:2px 0;}
+  .hour .t2{font-size:12px;font-weight:700;}
+  .src{margin-top:8px;font-size:10px;text-align:right;}
+
+  /* ===== JUTRO — od pol ure pred vzhodom do ~2 h po njem ===== */
+  .morning{background:linear-gradient(135deg,#FFE9C9 0%,#FBD9A0 55%,#F6C98A 100%);border-color:#EBCB96;}
+  .morning .t{color:#8A6A3A;} .morning .loc{color:#8A6A3A;}
+  .morning .ico{color:#D98A2B;} .morning .temp{color:#3A2E1C;}
+  .morning .desc{color:#3A2E1C;} .morning .hilo{color:#8A6A3A;}
+  .morning .chipm{background:rgba(255,255,255,.45);border:1px solid rgba(138,106,58,.22);}
+  .morning .k{color:#8A6A3A;} .morning .v{color:#3A2E1C;}
+  .morning .hour{background:rgba(255,255,255,.35);}
+  .morning .h{color:#8A6A3A;} .morning .t2{color:#3A2E1C;}
+  .morning .src{color:#A98B5E;}
+
+  /* ===== DAN — do ~2 h pred zahodom ===== */
+  .day{background:linear-gradient(135deg,#DFF0FB 0%,#BBDCF3 60%,#A6CFEC 100%);border-color:#A9CBE4;}
+  .day .t{color:#4A6B86;} .day .loc{color:#4A6B86;}
+  .day .ico{color:#E8A93B;} .day .temp{color:#14243C;}
+  .day .desc{color:#14243C;} .day .hilo{color:#4A6B86;}
+  .day .chipm{background:rgba(255,255,255,.5);border:1px solid rgba(74,107,134,.2);}
+  .day .k{color:#4A6B86;} .day .v{color:#14243C;}
+  .day .hour{background:rgba(255,255,255,.4);}
+  .day .h{color:#4A6B86;} .day .t2{color:#14243C;}
+  .day .src{color:#7A99B3;}
+
+  /* ===== VEČER — zadnji ~2 h pred zahodom do pol ure po njem ===== */
+  .evening{background:linear-gradient(135deg,#FBD8A6 0%,#F2A96B 48%,#D97B42 100%);border-color:#E0A878;}
+  .evening .t{color:#7A4526;} .evening .loc{color:#7A4526;}
+  .evening .ico{color:#B5482F;} .evening .temp{color:#361F10;}
+  .evening .desc{color:#361F10;} .evening .hilo{color:#7A4526;}
+  .evening .chipm{background:rgba(255,255,255,.38);border:1px solid rgba(122,69,38,.25);}
+  .evening .k{color:#7A4526;} .evening .v{color:#361F10;}
+  .evening .hour{background:rgba(255,255,255,.3);}
+  .evening .h{color:#7A4526;} .evening .t2{color:#361F10;}
+  .evening .src{color:#95603A;}
+
+  /* ===== NOČ — od pol ure po zahodu do pol ure pred vzhodom (današnja kartica) ===== */
+  .night{background:linear-gradient(135deg,#14243C 0%,#121B2B 70%);border-color:#1E2A3D;}
+  .night .t{color:#8E9AAC;} .night .loc{color:#8E9AAC;}
+  .night .ico{color:#F2B135;} .night .temp{color:#F2F5F9;}
+  .night .desc{color:#F2F5F9;} .night .hilo{color:#8E9AAC;}
+  .night .chipm{background:rgba(255,255,255,.05);border:1px solid #1E2A3D;}
+  .night .k{color:#8E9AAC;} .night .v{color:#F2F5F9;}
+  .night .hour{background:rgba(255,255,255,.04);}
+  .night .h{color:#8E9AAC;} .night .t2{color:#F2F5F9;}
+  .night .src{color:#5f6b7d;}
+
+  .caption{color:#8a8172;font-size:12px;text-align:center;margin-top:20px;line-height:1.6;width:100%;}
+</style>
+</head>
+<body>
+
+<h2 class="cap">Vremenska kartica sledi delu dneva — meje določata sončni vzhod in zahod iz Open-Metea</h2>
+
+<div class="wrap">
+  <div class="lbl">Jutro <span class="when">· pol ure pred vzhodom do 2 h po njem</span></div>
+  <div class="weather morning">
+    <div class="head"><div class="t">Vreme danes</div><div class="loc">Turizem Drobež</div></div>
+    <div class="now">
+      <div class="ico">&#9728;</div>
+      <div class="temp">9°</div>
+      <div class="right"><div class="desc">Jasno</div><div class="hilo">najv. 20° · najn. 9°</div></div>
+    </div>
+    <div class="meta">
+      <div class="chipm"><div class="k">Padavine</div><div class="v">0 %</div></div>
+      <div class="chipm"><div class="k">Veter</div><div class="v">7 km/h</div></div>
+      <div class="chipm"><div class="k">Sončni zahod</div><div class="v">18.40</div></div>
+    </div>
+    <div class="hours">
+      <div class="hour"><div class="h">10h</div><div class="i">&#9728;</div><div class="t2">15°</div></div>
+      <div class="hour"><div class="h">12h</div><div class="i">&#9728;</div><div class="t2">19°</div></div>
+      <div class="hour"><div class="h">14h</div><div class="i">&#9925;</div><div class="t2">20°</div></div>
+      <div class="hour"><div class="h">16h</div><div class="i">&#9925;</div><div class="t2">20°</div></div>
+      <div class="hour"><div class="h">18h</div><div class="i">&#9728;</div><div class="t2">17°</div></div>
+      <div class="hour"><div class="h">20h</div><div class="i">&#127769;</div><div class="t2">12°</div></div>
+    </div>
+    <div class="src">Open-Meteo</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="lbl">Dan <span class="when">· do 2 h pred zahodom</span></div>
+  <div class="weather day">
+    <div class="head"><div class="t">Vreme danes</div><div class="loc">Turizem Drobež</div></div>
+    <div class="now">
+      <div class="ico">&#9728;</div>
+      <div class="temp">19°</div>
+      <div class="right"><div class="desc">Sončno</div><div class="hilo">najv. 20° · najn. 9°</div></div>
+    </div>
+    <div class="meta">
+      <div class="chipm"><div class="k">Padavine</div><div class="v">0 %</div></div>
+      <div class="chipm"><div class="k">Veter</div><div class="v">9 km/h</div></div>
+      <div class="chipm"><div class="k">Sončni zahod</div><div class="v">18.40</div></div>
+    </div>
+    <div class="hours">
+      <div class="hour"><div class="h">12h</div><div class="i">&#9728;</div><div class="t2">19°</div></div>
+      <div class="hour"><div class="h">14h</div><div class="i">&#9925;</div><div class="t2">20°</div></div>
+      <div class="hour"><div class="h">16h</div><div class="i">&#9925;</div><div class="t2">20°</div></div>
+      <div class="hour"><div class="h">18h</div><div class="i">&#9728;</div><div class="t2">17°</div></div>
+      <div class="hour"><div class="h">20h</div><div class="i">&#127769;</div><div class="t2">12°</div></div>
+      <div class="hour"><div class="h">22h</div><div class="i">&#127769;</div><div class="t2">9°</div></div>
+    </div>
+    <div class="src">Open-Meteo</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="lbl">Večer <span class="when">· zadnji 2 h pred zahodom do pol ure po njem</span></div>
+  <div class="weather evening">
+    <div class="head"><div class="t">Vreme danes</div><div class="loc">Turizem Drobež</div></div>
+    <div class="now">
+      <div class="ico">&#9728;</div>
+      <div class="temp">17°</div>
+      <div class="right"><div class="desc">Jasno</div><div class="hilo">najv. 20° · najn. 9°</div></div>
+    </div>
+    <div class="meta">
+      <div class="chipm"><div class="k">Padavine</div><div class="v">0 %</div></div>
+      <div class="chipm"><div class="k">Veter</div><div class="v">5 km/h</div></div>
+      <div class="chipm"><div class="k">Sončni zahod</div><div class="v">18.40</div></div>
+    </div>
+    <div class="hours">
+      <div class="hour"><div class="h">18h</div><div class="i">&#9728;</div><div class="t2">17°</div></div>
+      <div class="hour"><div class="h">19h</div><div class="i">&#9728;</div><div class="t2">15°</div></div>
+      <div class="hour"><div class="h">20h</div><div class="i">&#127769;</div><div class="t2">12°</div></div>
+      <div class="hour"><div class="h">21h</div><div class="i">&#127769;</div><div class="t2">11°</div></div>
+      <div class="hour"><div class="h">22h</div><div class="i">&#127769;</div><div class="t2">9°</div></div>
+      <div class="hour"><div class="h">23h</div><div class="i">&#127769;</div><div class="t2">8°</div></div>
+    </div>
+    <div class="src">Open-Meteo</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="lbl">Noč <span class="when">· pol ure po zahodu do pol ure pred vzhodom — današnja kartica</span></div>
+  <div class="weather night">
+    <div class="head"><div class="t">Vreme danes</div><div class="loc">Turizem Drobež</div></div>
+    <div class="now">
+      <div class="ico">&#127769;</div>
+      <div class="temp">9°</div>
+      <div class="right"><div class="desc">Jasno</div><div class="hilo">najv. 20° · najn. 9°</div></div>
+    </div>
+    <div class="meta">
+      <div class="chipm"><div class="k">Padavine</div><div class="v">0 %</div></div>
+      <div class="chipm"><div class="k">Veter</div><div class="v">7 km/h</div></div>
+      <div class="chipm"><div class="k">Sončni vzhod</div><div class="v">7.02</div></div>
+    </div>
+    <div class="hours">
+      <div class="hour"><div class="h">0h</div><div class="i">&#127769;</div><div class="t2">8°</div></div>
+      <div class="hour"><div class="h">2h</div><div class="i">&#127769;</div><div class="t2">7°</div></div>
+      <div class="hour"><div class="h">4h</div><div class="i">&#127769;</div><div class="t2">6°</div></div>
+      <div class="hour"><div class="h">6h</div><div class="i">&#127769;</div><div class="t2">6°</div></div>
+      <div class="hour"><div class="h">8h</div><div class="i">&#9728;</div><div class="t2">8°</div></div>
+      <div class="hour"><div class="h">10h</div><div class="i">&#9728;</div><div class="t2">12°</div></div>
+    </div>
+    <div class="src">Open-Meteo</div>
+  </div>
+</div>
+
+<div class="caption">
+  Postavitev, tipografija in vsebina so povsod enake kot danes — zamenjajo se samo barvni žetoni.<br>
+  Ikona ob temperaturi upošteva dan/noč (sonce podnevi, luna ponoči). Ponoči tretji žeton pokaže sončni vzhod namesto zahoda.<br>
+  Ikone so simbolne — v aplikaciji ostanejo obstoječe linijske.
+</div>
+
+</body>
+</html>
