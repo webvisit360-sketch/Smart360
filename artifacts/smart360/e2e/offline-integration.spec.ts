@@ -162,7 +162,7 @@ async function proveMapDrawing(page: Page, surface: "gpx" | "free") {
   await writeFile(`${reports}/offline-${surface}-map-evidence.json`, JSON.stringify({ marker, ...evidence }, null, 2));
 }
 async function proveColdBrandImages(page: Page) {
-  const assets = ["/brand/smart360-znak-40.png", "/brand/smart360-kolobar-temno.svg"];
+  const assets = ["/brand/smart360-znak-40.png?v=faceted-1"];
   const keys = Object.values(await inventory(page)).flat();
   for (const asset of assets) expect(keys).toContain(asset);
   expect(await page.evaluate(async assets => Promise.all(assets.map(src => new Promise<boolean>(resolve => {
@@ -170,7 +170,7 @@ async function proveColdBrandImages(page: Page) {
     img.onload = () => resolve(img.naturalWidth > 0);
     img.onerror = () => resolve(false);
     img.src = src;
-  }))), assets)).toEqual([true, true]);
+  }))), assets)).toEqual([true]);
 }
 async function recordTour(page: Page, surface: "gpx" | "free") {
   if (surface === "free") {

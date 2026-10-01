@@ -15,10 +15,10 @@ export function guestOfflineConfig(tenantId: string, slug: string, languages: Re
 }>, publishedAt: string): GuestOfflineConfig {
   const gpx = new Set<string>();
   const essentials = new Set<string>([
-    "/brand/smart360-znak-40.png",
-    "/brand/smart360-kolobar-temno.svg",
-    "/brand/ikona-smart360-home-192.png?v=crisp-3",
-    "/brand/ikona-smart360-512.png?v=crisp-3",
+    "/brand/smart360-znak-40.png?v=faceted-1",
+    "/brand/smart360-kolobar-faceted.svg",
+    "/brand/ikona-smart360-home-192.png?v=faceted-1",
+    "/brand/ikona-smart360-512.png?v=faceted-1",
   ]);
   function visit(value: unknown): void {
     if (!value || typeof value !== "object") return;

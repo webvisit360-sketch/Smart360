@@ -42,7 +42,7 @@ const WELCOME_THEME: typeof LEGACY_THEME = {
   font: "Archivo,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif",
 };
 
-export const EMAIL_LOCKUP_URL = "https://smart360.info/brand/smart360-email-lockup-host-594x138.png";
+export const EMAIL_LOCKUP_URL = "https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1";
 
 export function escHtml(s: string): string {
   return s

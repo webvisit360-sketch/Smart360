@@ -1,0 +1,29 @@
+{
+  "email": [
+    {
+      "name": "before",
+      "width": 594,
+      "height": 138,
+      "channels": 3,
+      "bytes": 33996,
+      "sha256": "c9b1268f742cc16dab79dfe30655f3ada5621a32415985032c366d3ecdcf0874"
+    },
+    {
+      "name": "after",
+      "width": 594,
+      "height": 138,
+      "channels": 3,
+      "bytes": 34438,
+      "sha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5"
+    }
+  ],
+  "display": [
+    198,
+    46
+  ],
+  "unchangedWordmarkPixels": true,
+  "qrArtwork": "Not applicable: admin A6 label uses text-only Archivo800 SMART360; ready sticker has no platform mark.",
+  "qrRenderedBeforeAfterIdentical": true,
+  "fixture": "Isolated example.invalid tenant; actual current generator executed twice because production QR code is unchanged. No historical PDF claim.",
+  "sideEffects": "No DB, auth, send or publish"
+}

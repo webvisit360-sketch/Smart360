@@ -5,7 +5,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 
-const OUT = 'reports/tour-summary-strip';
+const OUT = process.env.TOUR_SUMMARY_OUT || 'reports/tour-summary-strip';
 const base = process.env.TOUR_SUMMARY_BASE_URL || 'http://127.0.0.1:80';
 const stops = [[0, '#E8862E'], [0.3, '#2F72C4'], [0.55, '#3E9E4E'], [0.8, '#F5C62E'], [1, '#E8862E']];
 const sha = bytes => createHash('sha256').update(Buffer.from(bytes)).digest('hex');
@@ -110,9 +110,13 @@ try {
   }
   const page = await browser.newPage({ viewport: { width: 600, height: 600 } });
   await page.goto(`${base}/src/tests/fixtures/tour-summary.html`);
-  await page.setContent(`<body style="margin:0;background:white"><img width="600" height="600" src="${base}/brand/smart360-kolobar-temno.svg"></body>`);
+  await page.setContent('<body style="margin:0;background:white"><img width="600" height="600"></body>');
   report.svg = await page.evaluate(async () => {
-    const img = document.querySelector('img'); await img.decode();
+    const module = await import('/src/lib/tour-summary-render.ts');
+    const canonical = await (await fetch(module.SUMMARY_BRAND.svg)).text();
+    const img = document.querySelector('img');
+    img.src = module.summarySvgImageSource(canonical);
+    await img.decode();
     const c = document.createElement('canvas'); c.width = c.height = 1000;
     const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, 1000, 1000);
     return [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(degrees => {
@@ -122,7 +126,7 @@ try {
       return { degreesClockwiseFromTop: degrees, hex: '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase() };
     });
   });
-  await page.screenshot({ path: `${OUT}/original-svg.png` });
+  await page.screenshot({ path: `${OUT}/canonical-svg.png` });
   await writeFile(`${OUT}/verification.json`, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
   assert.deepEqual(report.failures, [], 'all fourteen strip rows must remain unobscured');

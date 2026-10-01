@@ -1,0 +1,575 @@
+{
+  "boundsThreshold": "alpha >15 and >15/255 contrast from corner background; inclusive pixel coordinates",
+  "assets": [
+    {
+      "filename": "ikona-smart360-1024.png",
+      "unchanged": true,
+      "oldSha256": "f2c0f5897632a08c9af294b4d41c797af130ee44d82ec593436770f164972bbc",
+      "newSha256": "f2c0f5897632a08c9af294b4d41c797af130ee44d82ec593436770f164972bbc",
+      "before": {
+        "width": 1024,
+        "height": 1024,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          133,
+          133,
+          890,
+          890
+        ]
+      },
+      "after": {
+        "width": 1024,
+        "height": 1024,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          133,
+          133,
+          890,
+          890
+        ]
+      }
+    },
+    {
+      "filename": "ikona-smart360-180.png",
+      "unchanged": true,
+      "oldSha256": "8efb396a288c9375059f7693a55bab469cb06dc6d05ff0040fc046af87e1246a",
+      "newSha256": "8efb396a288c9375059f7693a55bab469cb06dc6d05ff0040fc046af87e1246a",
+      "before": {
+        "width": 180,
+        "height": 180,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          23,
+          23,
+          155,
+          155
+        ]
+      },
+      "after": {
+        "width": 180,
+        "height": 180,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          23,
+          23,
+          155,
+          155
+        ]
+      }
+    },
+    {
+      "filename": "ikona-smart360-192.png",
+      "unchanged": false,
+      "oldSha256": "8b8066d46b020c8ca6d647f6f92aa21036dc1e12e0fc6d4c072c296d74a843c8",
+      "newSha256": "19d672c7dcf6a7b09b2b1ee3f3da8a9b408ea494a8c48fefc89ea8b94e592663",
+      "before": {
+        "width": 192,
+        "height": 192,
+        "cornerRGBA": [
+          18,
+          26,
+          20,
+          255
+        ],
+        "visibleBounds": [
+          25,
+          25,
+          166,
+          166
+        ]
+      },
+      "after": {
+        "width": 192,
+        "height": 192,
+        "cornerRGBA": [
+          18,
+          26,
+          20,
+          255
+        ],
+        "visibleBounds": [
+          25,
+          25,
+          166,
+          166
+        ]
+      }
+    },
+    {
+      "filename": "ikona-smart360-512.png",
+      "unchanged": true,
+      "oldSha256": "19b61f9e86295c73d5538a86577fb2896d7e963b08415fd53be62b681024b8bc",
+      "newSha256": "19b61f9e86295c73d5538a86577fb2896d7e963b08415fd53be62b681024b8bc",
+      "before": {
+        "width": 512,
+        "height": 512,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          66,
+          66,
+          444,
+          444
+        ]
+      },
+      "after": {
+        "width": 512,
+        "height": 512,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          66,
+          66,
+          444,
+          444
+        ]
+      }
+    },
+    {
+      "filename": "ikona-smart360-home-192.png",
+      "unchanged": true,
+      "oldSha256": "3777e1f3e0014dd266fcb42c635b5220d70cbb346c4fca257256a1f8a4f7c662",
+      "newSha256": "3777e1f3e0014dd266fcb42c635b5220d70cbb346c4fca257256a1f8a4f7c662",
+      "before": {
+        "width": 192,
+        "height": 192,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          25,
+          25,
+          166,
+          166
+        ]
+      },
+      "after": {
+        "width": 192,
+        "height": 192,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          25,
+          25,
+          166,
+          166
+        ]
+      }
+    },
+    {
+      "filename": "ikona-smart360-maskable-192.png",
+      "unchanged": true,
+      "oldSha256": "8777a2f737a3613f45813ade75f8d7634a863ebca319c87f5474ea259e90ebaa",
+      "newSha256": "8777a2f737a3613f45813ade75f8d7634a863ebca319c87f5474ea259e90ebaa",
+      "before": {
+        "width": 192,
+        "height": 192,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          32,
+          32,
+          158,
+          158
+        ]
+      },
+      "after": {
+        "width": 192,
+        "height": 192,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          32,
+          32,
+          158,
+          158
+        ]
+      }
+    },
+    {
+      "filename": "ikona-smart360-maskable-512.png",
+      "unchanged": true,
+      "oldSha256": "bfa8a8a8b3bfcfd74aaa0c981e6956df4ae9f2fb3c798a80e3a93629c29edbe2",
+      "newSha256": "bfa8a8a8b3bfcfd74aaa0c981e6956df4ae9f2fb3c798a80e3a93629c29edbe2",
+      "before": {
+        "width": 512,
+        "height": 512,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          87,
+          87,
+          424,
+          424
+        ]
+      },
+      "after": {
+        "width": 512,
+        "height": 512,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          87,
+          87,
+          424,
+          424
+        ]
+      }
+    },
+    {
+      "filename": "logo-smart360-moder.png",
+      "unchanged": true,
+      "oldSha256": "83617b0a8cbfb21ca2dc51599624410d4634da169ff64ddd3a603d728b7ca724",
+      "newSha256": "83617b0a8cbfb21ca2dc51599624410d4634da169ff64ddd3a603d728b7ca724",
+      "before": {
+        "width": 1024,
+        "height": 186,
+        "cornerRGBA": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "visibleBounds": [
+          14,
+          13,
+          1009,
+          172
+        ]
+      },
+      "after": {
+        "width": 1024,
+        "height": 186,
+        "cornerRGBA": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "visibleBounds": [
+          14,
+          13,
+          1009,
+          172
+        ]
+      }
+    },
+    {
+      "filename": "smart360-email-header-138.png",
+      "unchanged": false,
+      "oldSha256": "51c41ba9b6f0f714185547325916f641d9712d733e4310550feca2e8da5ed28e",
+      "newSha256": "cdf78bc397e9381a62eab084f21fdf102b78b40bf74857b2a7c48c1cfd394c63",
+      "before": {
+        "width": 138,
+        "height": 138,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          137,
+          137
+        ]
+      },
+      "after": {
+        "width": 138,
+        "height": 138,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          137,
+          137
+        ]
+      }
+    },
+    {
+      "filename": "smart360-email-header-60.png",
+      "unchanged": false,
+      "oldSha256": "ca6cf814faff87c0c62b107c17aaf96105aac481b1ea63f6627ade5d000470f4",
+      "newSha256": "f5a1ff7057daccf582a036dd9a3b0d34618219546c4526f3f5c8b952a722fe39",
+      "before": {
+        "width": 60,
+        "height": 60,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          59,
+          59
+        ]
+      },
+      "after": {
+        "width": 60,
+        "height": 60,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          59,
+          59
+        ]
+      }
+    },
+    {
+      "filename": "smart360-email-lockup-558x138.png",
+      "unchanged": false,
+      "oldSha256": "89128d7c66b56982d01c355643a7adef3146f0d4724fee1ca809176d18cb2750",
+      "newSha256": "b4508a9a6b950555fb63b768365ebb742c59aa9594309003b2779f21f0ab7b13",
+      "before": {
+        "width": 558,
+        "height": 138,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          536,
+          137
+        ]
+      },
+      "after": {
+        "width": 558,
+        "height": 138,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          536,
+          137
+        ]
+      }
+    },
+    {
+      "filename": "smart360-email-lockup-host-594x138.png",
+      "unchanged": false,
+      "oldSha256": "c9b1268f742cc16dab79dfe30655f3ada5621a32415985032c366d3ecdcf0874",
+      "newSha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5",
+      "before": {
+        "width": 594,
+        "height": 138,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          588,
+          137
+        ]
+      },
+      "after": {
+        "width": 594,
+        "height": 138,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          588,
+          137
+        ]
+      }
+    },
+    {
+      "filename": "smart360-kolobar-faceted.svg",
+      "unchanged": true,
+      "oldSha256": "ca00d0eed25c2f3164105ecfa58617f51351e45dbc1648b28301ccbed8112eaa",
+      "newSha256": "ca00d0eed25c2f3164105ecfa58617f51351e45dbc1648b28301ccbed8112eaa",
+      "before": {
+        "width": 1000,
+        "height": 1000,
+        "cornerRGBA": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          999,
+          999
+        ]
+      },
+      "after": {
+        "width": 1000,
+        "height": 1000,
+        "cornerRGBA": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          999,
+          999
+        ]
+      }
+    },
+    {
+      "filename": "smart360-kolobar-temno.svg",
+      "unchanged": true,
+      "oldSha256": "a9fa1661427a9af1d0c5542bacfc664b70541df6458131fd9f0a157a47e8c4be",
+      "newSha256": "a9fa1661427a9af1d0c5542bacfc664b70541df6458131fd9f0a157a47e8c4be",
+      "before": {
+        "width": 1000,
+        "height": 1000,
+        "cornerRGBA": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          999,
+          999
+        ]
+      },
+      "after": {
+        "width": 1000,
+        "height": 1000,
+        "cornerRGBA": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          999,
+          999
+        ]
+      }
+    },
+    {
+      "filename": "smart360-znak-40.png",
+      "unchanged": false,
+      "oldSha256": "4d2b85601eedaed1148291592c3e3de45e4d8dd79ec94fc853acb28b646b9d39",
+      "newSha256": "7f36e538c7721c66a141e0c75a8d87abc2beaa833051bb7b3dc274c683b2e6cd",
+      "before": {
+        "width": 80,
+        "height": 80,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          79,
+          79
+        ]
+      },
+      "after": {
+        "width": 80,
+        "height": 80,
+        "cornerRGBA": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "visibleBounds": [
+          0,
+          0,
+          79,
+          79
+        ]
+      }
+    }
+  ]
+}

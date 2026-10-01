@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { startTour, type TourPoint } from '../lib/live-tour';
 import { buildTourSummaryModel, elevationProfile, retainedGpsMaxSpeed, summaryLabels, type TourSummaryInput } from '../lib/tour-summary-model';
-import { drawSummaryStrip, encodeWithSchematicFallback, SUMMARY_BRAND, SUMMARY_LAYOUT, SUMMARY_STRIP, summaryFooter } from '../lib/tour-summary-render';
+import { drawSummaryStrip, encodeWithSchematicFallback, SUMMARY_BRAND, SUMMARY_LAYOUT, SUMMARY_STRIP, summaryFooter, summarySvgImageSource } from '../lib/tour-summary-render';
 
 test('export strip uses exact owner stops, full width and 7 logical / 14 native pixels immediately above map', () => {
   const stops: Array<[number, string]> = [];
@@ -120,7 +120,7 @@ test('map success preserves exact Blob; null map uses schematic; abort never gen
   const ctrl = new AbortController(); ctrl.abort();
   await assert.rejects(encodeWithSchematicFallback(draw, true, ctrl.signal), { name: 'AbortError' });
 });
-test('2x backing store and original SVG / exact licensed Archivo 800 brand asset', () => {
+test('2x backing store and byte-identical canonical faceted SVG / exact licensed Archivo 800 brand asset', () => {
   assert.equal(SUMMARY_LAYOUT.scale, 2);
   assert.equal(SUMMARY_LAYOUT.width * SUMMARY_LAYOUT.scale, 1080);
   assert.equal(SUMMARY_BRAND.color, '#121A14');
@@ -128,13 +128,27 @@ test('2x backing store and original SVG / exact licensed Archivo 800 brand asset
   assert.equal(SUMMARY_BRAND.letterSpacingEm, .02);
   assert.deepEqual(readFileSync(new URL('../../public/fonts/Archivo-800.ttf', import.meta.url)), readFileSync(new URL('../../../api-server/assets/Archivo-800.ttf', import.meta.url)));
   assert.deepEqual(readFileSync(new URL('../assets/tour-summary/Archivo-800.ttf', import.meta.url)), readFileSync(new URL('../../../api-server/assets/Archivo-800.ttf', import.meta.url)));
-  const svg = readFileSync(new URL(`../../public${SUMMARY_BRAND.svg}`, import.meta.url), 'utf8');
-  assert.equal(readFileSync(new URL('../assets/tour-summary/smart360-kolobar-temno.svg', import.meta.url), 'utf8'), svg);
+  assert.equal(SUMMARY_BRAND.svg, '/brand/smart360-kolobar-faceted.svg');
+  const canonical = readFileSync(new URL('../../public/brand/smart360-kolobar-faceted.svg', import.meta.url));
+  assert.deepEqual(readFileSync(new URL('../assets/tour-summary/smart360-kolobar-faceted.svg', import.meta.url)), canonical);
+  const svg = canonical.toString('utf8');
   assert.match(svg, /<svg/);
   const renderer = readFileSync(new URL('../lib/tour-summary-render.ts', import.meta.url), 'utf8');
   assert.match(renderer, /ctx.scale\(scale, scale\)/);
   assert.match(renderer, /width \* scale, height \* scale/);
   assert.match(renderer, /new FontFace/);
   assert.match(renderer, /eager: true, query: '\?url&inline'/);
+  assert.doesNotMatch(renderer, /smart360-kolobar-temno/);
+  assert.match(renderer, /artwork\['\.\.\/assets\/tour-summary\/smart360-kolobar-faceted\.svg'\]/);
+  assert.match(renderer, /eager: true, query: '\?raw'/);
   assert.match(renderer, /ctx.drawImage\(img, 0, 4, 72, 72\)/);
+});
+
+test('standalone SVG adapter adds only missing namespace without changing canonical artwork', () => {
+  const canonical = readFileSync(new URL('../../public/brand/smart360-kolobar-faceted.svg', import.meta.url), 'utf8');
+  const decode = (source: string) => decodeURIComponent(source.slice(source.indexOf(',') + 1));
+  const adapted = decode(summarySvgImageSource(canonical));
+  assert.equal(adapted, canonical.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"'));
+  assert.equal(decode(summarySvgImageSource(adapted)), adapted, 'already namespaced sources are unchanged');
+  assert.equal(adapted.replace(' xmlns="http://www.w3.org/2000/svg"', ''), canonical, 'all artwork bytes survive serialization');
 });

@@ -4,9 +4,11 @@ Smart360 trak = the kolobar unrolled (oranžna→modra→zelena→rumena, satura
 
 # Smart360
 
-## Izvor ikon za domači zaslon
+## Edini vir znaka Smart360
 
-Ikone gostujočih vodičev se generirajo iz `artifacts/smart360/public/brand/smart360-kolobar-faceted.svg`: dobesedno izločenega SVG znotraj `#splash .sm` iz lastnikovega prototipa Smart360-prototip-2030_1.html. Lastnik je ta fasetirani znak določil kot avtoritativni izvor za ikone. Prejšnji `smart360-kolobar-temno.svg` ostaja za druge uporabe, dokler lastnik ne naroči drugače.
+Edini vir znaka je smart360-kolobar-faceted.svg; vse rasterizacije izhajajo iz njega.
+
+Avtoritativni izvirnik je `artifacts/smart360/public/brand/smart360-kolobar-faceted.svg`, dobesedno izločen SVG znotraj `#splash .sm` iz lastnikovega prototipa Smart360-prototip-2030_1.html. Velja za celotno aplikacijo, e-pošto in izvoze, ne le za ikone domačega zaslona. Prejšnji `smart360-kolobar-temno.svg` je arhiviran in se ne uporablja za izris.
 
 Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastanitev. Gost skenira QR kodo in vidi vse o nastanitvi in okolici — brez prijave. En sam operater (lastnik) ureja vse najemnike v admin vmesniku.
 
@@ -65,7 +67,7 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 - Tema "mediterran" je zavezujoča: tokens (accent #3B78DC), radij kartic 26px/fotk 24px, 3D gumbi, brez gradientov.
 - Demo najemnik: slug `meli-pu` (Apartmaji Meli Pu, Izola).
 - Administracija uporablja Archivo in Smart360 paleto: primarni gumb #157347 (nikoli moder), ozadje #F4F6F2, kartice #FFFFFF, robovi #E8EBE6, besedilo #121A14, umirjeno #66716A; vedno pravi znak in SMART360 napis.
-- Uradni Smart360 znak je nespremenjena datoteka `artifacts/smart360/public/brand/smart360-znak-40.png`, ki jo je lastnik izrecno potrdil s priloženim izvirnikom in z znakom v `reports/gril-dobrodoslica-cgp.html`. Ne prebarvaj, prerisuj ali stiliziraj ga. Tudi izraz »zeleni znak« ni navodilo za pretvorbo večbarvnega izvirnika v enobarvno različico. Obrazec in e-pošta uporabljata isto izvirno grafiko.
+- Uradni Smart360 znak izvira iz `artifacts/smart360/public/brand/smart360-kolobar-faceted.svg`; `smart360-znak-40.png` je le izpeljana rasterizacija, ne samostojen izvirnik. Ne prebarvaj, prerisuj ali stiliziraj ga. Tudi izraz »zeleni znak« ni navodilo za pretvorbo večbarvnega izvirnika v enobarvno različico. Obrazec in e-pošta uporabljata isti avtoritativni znak.
 - Pravilo CGP: Znak vedno izvira iz originalnih uradnih datotek, vedno stoji na beli podlagi in ga nikoli ne prerisujemo, prebarvamo ali približno poustvarimo. Besedni znak »SMART360« je vedno Archivo 800, barve #121A14, z razmikom med črkami 0.02em. Zelena #157347 je poudarna barva in se nikoli ne uporablja za znak ali besedni znak. V e-pošti je celoten logotip (znak + besedni znak) vedno ena vnaprej izrisana slika v retina ločljivosti, nikoli besedilo HTML.
 - Barva #DD9A2B je namenjena izključno opozorilom in brisanju, nikoli dekoraciji. E-poštne kartice nimajo okrasne oranžne zgornje črte.
 - **Living Guide – SOS:** namenski rdeči token `--sos-red` po zavezujočem SOS prototipu je rezerviran izključno za nujne primere (SOS in nujni telefonski kontakti). Napake GPS, zavrnjena naročila, brisanje in druga nenujna opozorila v gostujočem Living Guide uporabljajo obstoječi jantarni barvi #F2B135 / #DD9A2B, nikoli SOS rdeče. SOS je vedno na voljo vsem najemnikom samo v Living Guide; GPS SOS se hrani samo v pomnilniku med odprtim pogledom, brez pošiljanja, beleženja ali shranjevanja. SOS prekrivni pogled ne spreminja življenjskega cikla ture ali snemalnika.

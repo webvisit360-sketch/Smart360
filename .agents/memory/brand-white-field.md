@@ -5,6 +5,12 @@ description: Owner's binding white-background rule for the Smart360 mark and hom
 
 The official Smart360 mark must sit on a pure white field. Home-screen icons must be fully opaque and centered. Standard 180/192/512/1024 icons have a measured ring outer diameter of 74% of the canvas (±1%); separate 192/512 maskable icons retain the 66% safe-zone artwork.
 
+The artwork-only global unification explicitly preserves existing backgrounds, including the separate dark browser-tab favicon. Do not interpret the white home-screen requirement as permission to redesign that favicon.
+
+**Why:** The owner required the new authoritative artwork everywhere while keeping every existing dimension, ratio, position and background unchanged.
+
+**How to apply:** Distinguish home-screen icons from browser-tab artwork; the dark tab icon is not an alternate source mark.
+
 **Why:** The owner explicitly rejected dark-field home-screen icons. This is a brand requirement, not merely a workaround for iOS transparency handling.
 
 **How to apply:** Reuse official artwork without redrawing or recoloring it. Preserve the separate decision that the print QR sticker has no mark at all. Do not infer transparency from a black-looking icon; inspect its pixels and alpha channel.

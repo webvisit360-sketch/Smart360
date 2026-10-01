@@ -9,7 +9,7 @@ export function BrandLockup({ className = "", markSize = 52, textSize = 26 }: {
       display: "flex", alignItems: "center", justifyContent: "center",
       gap: 8, background: "#FFFFFF", whiteSpace: "nowrap",
     }}>
-      <img src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`}
+      <img src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png?v=faceted-1`}
         width={markSize} height={markSize} alt="" style={{ display: "block" }} />
       <span aria-hidden="true" style={{
         fontFamily: "Archivo, sans-serif", fontSize: textSize, fontWeight: 800,

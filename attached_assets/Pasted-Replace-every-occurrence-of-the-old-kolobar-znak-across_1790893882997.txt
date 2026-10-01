@@ -1,0 +1,11 @@
+Replace every occurrence of the old kolobar znak across the entire application with the new authoritative faceted asset (public/brand/smart360-kolobar-faceted.svg). The owner's instruction: one znak, everywhere.
+
+1. INVENTORY FIRST: search the whole codebase and asset folders for every place the znak is rendered or embedded — at minimum check: guest splash screen (the rotating znak — rotation behavior and slogan layout must stay exactly as they are), admin login page, admin header/sidebar logo, favicon and browser-tab icons (all sizes, light and dark variants), the pre-rendered 3x retina email lockup used in all four email templates, the tour summary export footer lockup, QR sticker/PDF generators that carry Smart360 branding, the install banner and iOS hint card if they show the znak, the guest menu "O vodniku" page, and any og:image/social preview images. List EVERY location found in the report, including ones listed here that turned out not to exist.
+
+2. REPLACE: regenerate each occurrence from the faceted SVG, keeping every dimension, position, ratio and background exactly as today — this is an artwork swap, not a layout change. Pre-rendered rasters (email lockup, favicons, og images, PDF assets) must be re-rendered at the same pixel sizes with the supersample+Lanczos discipline where small. The wordmark SMART360 (Archivo 800 #121A14) is untouched.
+
+3. RETIRE: after replacement, no code path may reference the old kolobar SVG for rendering; keep the old file in the brand folder marked as archived. Add the rule to replit.md: "Edini vir znaka je smart360-kolobar-faceted.svg; vse rasterizacije izhajajo iz njega."
+
+4. VERIFY: a repo-wide search proving zero remaining render-references to the old asset; screenshots or rendered samples of each replaced location (splash, login, admin header, favicon at native 16/32 px, email lockup at native size, tour export footer, QR sticker) old-vs-new at 100%; existing icon ratio and sharpness tests still green; email lockup dimensions byte-measured unchanged (198x46 displayed, 3x retina).
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

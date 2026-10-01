@@ -298,7 +298,7 @@ export default function AdminLogin() {
 
   return (
     <div className="smart-login" data-surface="admin">
-      <img className="smart-login__ring" src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`} alt="" aria-hidden="true" />
+      <img className="smart-login__ring" src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png?v=faceted-1`} alt="" aria-hidden="true" />
       <main className="smart-login__card">
         <header className="smart-login__header">
           <BrandLockup className="smart-login__logo" />

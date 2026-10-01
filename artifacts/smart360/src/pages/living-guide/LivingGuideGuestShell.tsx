@@ -4757,7 +4757,7 @@ function HomeView({
         </div>
         <div className="lg2-made">
           <img
-            src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`}
+            src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png?v=faceted-1`}
             alt=""
             aria-hidden="true"
           />

@@ -24,7 +24,7 @@ test("both ready email modes use exact copy, official brand and guarded owner ro
     assert.equal(rendered.subject, "Vaš digitalni vodnik je pripravljen");
     assert.match(rendered.text, /Spoštovani,[\s\S]*z veseljem sporočamo/);
     assert.ok(rendered.text.includes(defaultReadyMessage(url)));
-    assert.match(rendered.html, /src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;/);
+    assert.match(rendered.html, /src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png\?v=faceted-1" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;/);
     assert.ok(rendered.html.includes("background:#157347"));
     assert.ok(rendered.html.includes("max-width:560px;background:#FFFFFF"));
     assert.ok(rendered.html.includes("border-radius:16px;border-collapse:separate"));
@@ -133,7 +133,7 @@ test("owner approval reports: self-contained mode-specific HTML and A6 print PDF
   const archivo = readFileSync(path.join(root, "artifacts/api-server/assets/Archivo.ttf")).toString("base64");
   for (const mode of ["self_service", "concierge"] as const) {
     const rendered = await renderReadyNotice({ ...base, mode });
-    const html = rendered.html.replaceAll("https://smart360.info/brand/smart360-email-lockup-host-594x138.png", `data:image/png;base64,${mark}`)
+    const html = rendered.html.replaceAll("https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1", `data:image/png;base64,${mark}`)
       .replace("</head>", `<style>@font-face{font-family:Archivo;src:url(data:font/ttf;base64,${archivo}) format('truetype');font-weight:100 900}</style></head>`);
     const name = mode === "self_service" ? "samostojno" : "ureja-smart360";
     writeFileSync(path.join(reports, `gril-vodnik-pripravljen-${name}.html`), html);

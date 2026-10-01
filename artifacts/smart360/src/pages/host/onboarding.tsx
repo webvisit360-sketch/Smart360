@@ -1428,7 +1428,7 @@ export default function HostOnboarding() {
         </div>
         <div className="flex flex-col items-start max-w-[720px] mx-auto">
           <div data-testid="host-onboarding-brand" className="mb-[48px] flex items-center gap-[12px]">
-            <img src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`} alt="" className="h-[46px] w-[46px] object-contain" />
+            <img src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png?v=faceted-1`} alt="" className="h-[46px] w-[46px] object-contain" />
             <span className="font-[800] text-[24px] text-[#121A14] tracking-[0.02em]">SMART360</span>
           </div>
           <h1 className="text-[30px] font-[800] text-[#121A14] leading-tight">

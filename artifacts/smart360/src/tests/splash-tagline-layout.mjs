@@ -49,7 +49,7 @@ try {
       return {
         containerWidth: document.querySelector(".guest-entry-splash").clientWidth,
         mark: info(".guest-entry-splash__mark"),
-        image: info(".guest-entry-splash__mark img"),
+        image: info(".guest-entry-splash__mark svg, .guest-entry-splash__mark img"),
         wordmark: info(".guest-entry-splash__wordmark"),
         tagline: info(document.querySelector(".guest-entry-splash__tagline-text")
           ? ".guest-entry-splash__tagline-text" : ".guest-entry-splash__subtitle"),
@@ -58,7 +58,7 @@ try {
       };
     });
     await page.waitForTimeout(180);
-    const nextTransform = await page.locator(".guest-entry-splash__mark img")
+    const nextTransform = await page.locator(".guest-entry-splash__mark svg, .guest-entry-splash__mark img")
       .evaluate(el => getComputedStyle(el).transform);
     assert.notEqual(metrics.image.transform, nextTransform, "mark must keep spinning");
     if (stage === "after") {

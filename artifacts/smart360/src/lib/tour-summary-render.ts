@@ -16,7 +16,7 @@ export function drawSummaryStrip(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, SUMMARY_LAYOUT.mapY - SUMMARY_STRIP.height, SUMMARY_LAYOUT.width, SUMMARY_STRIP.height);
 }
-export const SUMMARY_BRAND = { svg: '/brand/smart360-kolobar-temno.svg', font: '/fonts/Archivo-800.ttf', color: '#121A14', weight: 800, letterSpacingEm: 0.02 } as const;
+export const SUMMARY_BRAND = { svg: '/brand/smart360-kolobar-faceted.svg', font: '/fonts/Archivo-800.ttf', color: '#121A14', weight: 800, letterSpacingEm: 0.02 } as const;
 const GREEN = '#157347', INK = '#121A14', MUTED = '#66716A';
 const attribution = '© OpenFreeMap · OpenMapTiles · © OpenStreetMap contributors';
 export function summaryFooter(mapKind: 'map' | 'schematic', schematic: string): string {
@@ -39,6 +39,15 @@ function fit(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, 
   ctx.fillText(text, x, y);
 }
 let brandPromise: Promise<HTMLCanvasElement> | undefined;
+/** Canonical artwork stays byte-for-byte intact on disk. Standalone SVG images
+ * require the XML namespace that an inline HTML SVG can omit. Add only that
+ * serialization attribute to the in-memory image source, never alter artwork. */
+export function summarySvgImageSource(svg: string): string {
+  const standalone = /<svg\b[^>]*\sxmlns\s*=/.test(svg)
+    ? svg
+    : svg.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(standalone)}`;
+}
 /** Eager Vite imports become data URLs in the loaded module, including the 119KB
  * font (explicit inline bypasses assetsInlineLimit). No font/SVG request at compose
  * time, even when the first composition is offline. Kept inside a function so
@@ -46,11 +55,14 @@ let brandPromise: Promise<HTMLCanvasElement> | undefined;
 function bundledBrandAssets() {
   const assets = import.meta.glob<string>([
     '../assets/tour-summary/Archivo-800.ttf',
-    '../assets/tour-summary/smart360-kolobar-temno.svg',
   ], { eager: true, query: '?url&inline', import: 'default' });
+  const artwork = import.meta.glob<string>([
+    '../assets/tour-summary/smart360-kolobar-faceted.svg',
+  ], { eager: true, query: '?raw', import: 'default' });
   const font = assets['../assets/tour-summary/Archivo-800.ttf'];
-  const svg = assets['../assets/tour-summary/smart360-kolobar-temno.svg'];
-  if (!font?.startsWith('data:') || !svg?.startsWith('data:')) throw new Error('Bundled SMART360 brand assets are unavailable.');
+  const source = artwork['../assets/tour-summary/smart360-kolobar-faceted.svg'];
+  if (!font?.startsWith('data:') || !source?.includes('<svg')) throw new Error('Bundled SMART360 brand assets are unavailable.');
+  const svg = summarySvgImageSource(source);
   return { font, svg };
 }
 /** Original SVG + locally bundled exact Archivo 800, rasterized on white at export resolution. */

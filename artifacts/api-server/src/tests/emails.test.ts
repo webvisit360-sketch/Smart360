@@ -212,7 +212,7 @@ describe("global rules hold for every template", () => {
       }
       assert.doesNotMatch(html, /#DD9A2B|height:5px;line-height:5px;font-size:0;background:|<tr><td><div style="height:3px/, "no decorative top bands in any shared email");
       assert.ok(html.includes("color:#121A14"), "dark brand kicker");
-      assert.ok(html.includes("https://smart360.info/brand/smart360-email-lockup-host-594x138.png"), "one hosted lockup");
+      assert.ok(html.includes("https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1"), "one cache-busted faceted hosted lockup");
       assert.ok(html.includes(name === "welcome"
         ? 'width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;'
         : 'width="198" height="46" alt="Smart360" style="width:198px;height:46px;'), "46px lockup");

@@ -26,6 +26,15 @@ afterEach(() => {
 });
 
 describe("concierge welcome email", () => {
+  test("email raster generator uses canonical faceted paths and the unchanged supersampled pipeline", () => {
+    const generator = readFileSync(new URL("../../scripts/generate-email-header-marks.mjs", import.meta.url), "utf8");
+    assert.match(generator, /smart360-kolobar-faceted\.svg/);
+    assert.doesNotMatch(generator, /smart360-kolobar-temno\.svg/);
+    assert.match(generator, /Archivo-800\.ttf/);
+    assert.match(generator, /retina = 3, scale = 4/);
+    assert.match(generator, /kernel: "lanczos3"/);
+    assert.match(generator, /ctx\.fillStyle = "#121A14"/);
+  });
   test("all four lifecycle variants share one exact 198x46 header without an accent bar", async () => {
     const url = "https://smart360.info/glamping-gril";
     const htmls = [
@@ -37,7 +46,7 @@ describe("concierge welcome email", () => {
       (await renderReadyNotice({ tenantName: "Apartmaji Gril", slug: "glamping-gril", guideUrl: url, mode: "self_service" })).html,
       (await renderReadyNotice({ tenantName: "Apartmaji Gril", slug: "glamping-gril", guideUrl: url, mode: "concierge" })).html,
     ];
-    const img = /<img src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;[^"]*">/;
+    const img = /<img src="https:\/\/smart360\.info\/brand\/smart360-email-lockup-host-594x138\.png\?v=faceted-1" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;[^"]*">/;
     const headers = htmls.map(html => {
       assert.doesNotMatch(html, /#DD9A2B|height:5px;line-height:5px;font-size:0;background:|<tr><td><div style="height:3px/);
       assert.doesNotMatch(html, />SMART360<\/|>Smart360<\/div>/);
@@ -79,7 +88,7 @@ describe("concierge welcome email", () => {
     assert.ok(body.html.includes("background:#157347;color:#FFFFFF"));
     assert.ok(body.html.includes("max-width:560px;background:#FFFFFF"));
     assert.doesNotMatch(body.html, /#DD9A2B|height:3px;line-height:3px;font-size:0;background:/);
-    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-lockup-host-594x138.png" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;'));
+    assert.ok(body.html.includes('src="https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;'));
     assert.doesNotMatch(body.html, />SMART360<\/|>Smart360<\/div>/);
   });
 

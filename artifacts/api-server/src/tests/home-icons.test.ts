@@ -33,10 +33,9 @@ test("faceted vector is the exact verbatim splash artwork, not the old gradient 
   }
 });
 
-test("legacy original, dark tab icon and both pre-faceted baselines remain byte-identical", async () => {
+test("archived original and both pre-faceted baselines remain byte-identical", async () => {
   for (const [base, filename, hash] of [
-    [brand, "smart360-kolobar-temno.svg", "a9fa1661427a9af1d0c5542bacfc664b70541df6458131fd9f0a157a47e8c4be"],
-    [brand, "ikona-smart360-192.png", "8b8066d46b020c8ca6d647f6f92aa21036dc1e12e0fc6d4c072c296d74a843c8"],
+    [reports, "brand-unification/before/brand/smart360-kolobar-temno.svg", "a9fa1661427a9af1d0c5542bacfc664b70541df6458131fd9f0a157a47e8c4be"],
     [reports, "smart360-prefaceted-180.png", "485f05c8a0bb1a39f62d8a2d3da6250bb77bfa64c0f610b180aa9360696cbffb"],
     [reports, "smart360-prefaceted-192.png", "8bc7c5d10b2ae8c0fb452769cfa797d25417ba5ed214d7c5552ffc7a74ac9f72"],
   ] as const) {

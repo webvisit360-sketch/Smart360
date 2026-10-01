@@ -404,8 +404,11 @@ test("snapshot config includes only public digest, route IDs and lightweight roo
     sections: [{ items: [{ id: "one", gpxRoute: { fileId: "gpx-one" }, images: ["/gallery.jpg"] }] }] } } };
   const publishedAt = "2026-07-01T12:00:00.000Z";
   const first = guestOfflineConfig("tenant-1", "alpine-lodge", languages, publishedAt);
-  assert.ok(first.essentials.includes("/brand/smart360-znak-40.png"));
-  assert.ok(first.essentials.includes("/brand/smart360-kolobar-temno.svg"));
+  assert.ok(first.essentials.includes("/brand/smart360-znak-40.png?v=faceted-1"));
+  assert.ok(first.essentials.includes("/brand/smart360-kolobar-faceted.svg"));
+  assert.ok(first.essentials.includes("/brand/ikona-smart360-home-192.png?v=faceted-1"));
+  assert.ok(first.essentials.includes("/brand/ikona-smart360-512.png?v=faceted-1"));
+  assert.ok(first.essentials.every(url => !/temno|crisp-3/.test(url)));
   const second = guestOfflineConfig("tenant-1", "alpine-lodge", { sl: { tree: { ...languages.sl.tree, name: "New publish" } } }, publishedAt);
   assert.notEqual(first.version, second.version);
   assert.deepEqual(first.gpx, [api + "/items/one/gpx/gpx-one"]);

@@ -6,6 +6,7 @@ import { chromium } from "@playwright/test";
 import { buildWelcomeEmailBody } from "../src/lib/lifecycleEmails";
 import { renderConciergeWelcomeEmail } from "../src/lib/conciergeWelcomeEmail";
 import { renderReadyNotice } from "../src/lib/guideReadyNotice";
+import { EMAIL_LOCKUP_URL } from "../src/lib/emailTemplate";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const reportDir = path.join(root, "reports");
@@ -32,7 +33,7 @@ try {
   for (const [name, original, olderPath] of previews) {
     if (olderPath) await writeFile(path.join(oldPreviewDir, olderPath), original);
     let html = original;
-    html = html.replaceAll("https://smart360.info/brand/smart360-email-lockup-host-594x138.png", `data:image/png;base64,${lockup}`);
+    html = html.replaceAll(EMAIL_LOCKUP_URL, `data:image/png;base64,${lockup}`);
     html = html.replace("</head>", `<style>@font-face{font-family:Archivo;src:url(data:font/ttf;base64,${font}) format('truetype');font-weight:100 900}</style></head>`);
     if (/src="https?:/.test(html)) throw new Error(`External image in ${name}`);
     const htmlPath = path.join(reportDir, `${name}.html`);

@@ -32,7 +32,7 @@ export default function Landing() {
         <div className="construction-page__brand">
           <img
             className="construction-page__mark"
-            src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png`}
+            src={`${import.meta.env.BASE_URL}brand/smart360-znak-40.png?v=faceted-1`}
             alt=""
             aria-hidden="true"
           />

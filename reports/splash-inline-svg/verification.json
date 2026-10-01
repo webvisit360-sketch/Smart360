@@ -1,0 +1,1198 @@
+{
+  "fixture": "Source-derived actual splash JSX/CSS, not authenticated UI or full app",
+  "oldSource": "git HEAD before inline SVG switch; current faceted 80×80 raster (not older pre-faceted artwork)",
+  "newSource": "App.tsx actual dangerouslySetInnerHTML with its imported raw canonical SVG",
+  "canonicalSha256": "ca00d0eed25c2f3164105ecfa58617f51351e45dbc1648b28301ccbed8112eaa",
+  "oldRasterSha256": "7f36e538c7721c66a141e0c75a8d87abc2beaa833051bb7b3dc274c683b2e6cd",
+  "animationTimeMs": 1800,
+  "deviceScaleFactor": 3,
+  "nativeScreenshotSizes": [
+    "3840×2532 (1280×844 CSS)",
+    "1170×2532 (390×844 CSS)"
+  ],
+  "crop": "104×104 CSS wrapper = 312×312 native screenshot pixels, extracted without scaling",
+  "sourceTimingUnchanged": true,
+  "sourceCssOnlySelectorChanged": true,
+  "measurements": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 844
+      },
+      "reducedMotion": "no-preference",
+      "identical": true,
+      "old": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "640px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 588,
+          "y": 333.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+          "animationName": "guest-splash-mark-in",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 568.9666748046875,
+          "y": 314.4666748046875,
+          "width": 142.066650390625,
+          "height": 142.066650390625,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(-0.5, 0.866025, -0.866025, -0.5, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+          "animationName": "guest-splash-turn",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 570.375,
+          "y": 455.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 411.03125,
+          "y": 498.5,
+          "width": 457.921875,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "228.961px 6px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.46s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 411.015625,
+          "y": 498.5,
+          "width": 457.9375,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -228.969, 0)",
+          "transformOrigin": "228.969px 6px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 498.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 498.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-mark-in",
+            "currentTime": 1800,
+            "duration": 620,
+            "delay": 60,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-turn",
+            "currentTime": 1800,
+            "duration": 5400,
+            "delay": 0,
+            "iterations": "Infinity"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 300,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 460,
+            "iterations": "1"
+          }
+        ]
+      },
+      "new": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "640px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 588,
+          "y": 333.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+          "animationName": "guest-splash-mark-in",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 568.9666748046875,
+          "y": 314.4666748046875,
+          "width": 142.066650390625,
+          "height": 142.066650390625,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(-0.5, 0.866025, -0.866025, -0.5, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+          "animationName": "guest-splash-turn",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 570.375,
+          "y": 455.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 411.03125,
+          "y": 498.5,
+          "width": 457.921875,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "228.961px 6px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.46s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 411.015625,
+          "y": 498.5,
+          "width": 457.9375,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -228.969, 0)",
+          "transformOrigin": "228.969px 6px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 498.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 498.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-mark-in",
+            "currentTime": 1800,
+            "duration": 620,
+            "delay": 60,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-turn",
+            "currentTime": 1800,
+            "duration": 5400,
+            "delay": 0,
+            "iterations": "Infinity"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 300,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 460,
+            "iterations": "1"
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 844
+      },
+      "reducedMotion": "reduce",
+      "identical": true,
+      "old": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "640px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 588,
+          "y": 333.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 588,
+          "y": 333.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0s ease 0s 1 normal none running none",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 570.375,
+          "y": 455.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 411.03125,
+          "y": 498.5,
+          "width": 457.921875,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "228.961px 6px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 411.015625,
+          "y": 498.5,
+          "width": 457.9375,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -228.969, 0)",
+          "transformOrigin": "228.969px 6px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 498.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 498.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          }
+        ]
+      },
+      "new": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "640px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 588,
+          "y": 333.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 588,
+          "y": 333.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0s ease 0s 1 normal none running none",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 570.375,
+          "y": 455.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 411.03125,
+          "y": 498.5,
+          "width": 457.921875,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "228.961px 6px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 411.015625,
+          "y": 498.5,
+          "width": 457.9375,
+          "height": 12,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -228.969, 0)",
+          "transformOrigin": "228.969px 6px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 498.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 498.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "reducedMotion": "no-preference",
+      "identical": true,
+      "old": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "195px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 143,
+          "y": 327.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+          "animationName": "guest-splash-mark-in",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 123.9666748046875,
+          "y": 308.4666748046875,
+          "width": 142.066650390625,
+          "height": 142.066650390625,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(-0.5, 0.866025, -0.866025, -0.5, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+          "animationName": "guest-splash-turn",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 125.375,
+          "y": 449.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 0,
+          "y": 492.5,
+          "width": 390,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "195px 12px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.46s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 19.359375,
+          "y": 492.5,
+          "width": 351.28125,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -175.641, 0)",
+          "transformOrigin": "175.641px 12px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 492.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 504.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-mark-in",
+            "currentTime": 1800,
+            "duration": 620,
+            "delay": 60,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-turn",
+            "currentTime": 1800,
+            "duration": 5400,
+            "delay": 0,
+            "iterations": "Infinity"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 300,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 460,
+            "iterations": "1"
+          }
+        ]
+      },
+      "new": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "195px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 143,
+          "y": 327.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(1, 0, 0, 1, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s 1 normal forwards running guest-splash-mark-in",
+          "animationName": "guest-splash-mark-in",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 123.9666748046875,
+          "y": 308.4666748046875,
+          "width": 142.066650390625,
+          "height": 142.066650390625,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "matrix(-0.5, 0.866025, -0.866025, -0.5, 0, 0)",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "5.4s linear 0s infinite normal none running guest-splash-turn",
+          "animationName": "guest-splash-turn",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 125.375,
+          "y": 449.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 0,
+          "y": 492.5,
+          "width": 390,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "195px 12px",
+          "opacity": "1",
+          "animation": "0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.46s 1 normal forwards running guest-splash-fade",
+          "animationName": "guest-splash-fade",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 19.359375,
+          "y": 492.5,
+          "width": 351.28125,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -175.641, 0)",
+          "transformOrigin": "175.641px 12px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 492.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 504.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-mark-in",
+            "currentTime": 1800,
+            "duration": 620,
+            "delay": 60,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-turn",
+            "currentTime": 1800,
+            "duration": 5400,
+            "delay": 0,
+            "iterations": "Infinity"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 300,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-fade",
+            "currentTime": 1800,
+            "duration": 500,
+            "delay": 460,
+            "iterations": "1"
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "reducedMotion": "reduce",
+      "identical": true,
+      "old": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "195px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 143,
+          "y": 327.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 143,
+          "y": 327.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0s ease 0s 1 normal none running none",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 125.375,
+          "y": 449.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 0,
+          "y": 492.5,
+          "width": 390,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "195px 12px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 19.359375,
+          "y": 492.5,
+          "width": 351.28125,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -175.641, 0)",
+          "transformOrigin": "175.641px 12px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 492.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 504.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          }
+        ]
+      },
+      "new": {
+        "dpr": 3,
+        "splash": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "195px 422px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        "mark": {
+          "x": 143,
+          "y": 327.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "artwork": {
+          "x": 143,
+          "y": 327.5,
+          "width": 104,
+          "height": 104,
+          "font": "16px \"Times New Roman\"",
+          "letterSpacing": "normal",
+          "color": "rgb(0, 0, 0)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "52px 52px",
+          "opacity": "1",
+          "animation": "0s ease 0s 1 normal none running none",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "wordmark": {
+          "x": 125.375,
+          "y": 449.5,
+          "width": 139.25,
+          "height": 25,
+          "font": "800 24px / 25px Archivo, sans-serif",
+          "letterSpacing": "0.48px",
+          "color": "rgb(18, 26, 20)",
+          "textAlign": "start",
+          "textTransform": "none",
+          "transform": "none",
+          "transformOrigin": "69.625px 12.5px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "subtitle": {
+          "x": 0,
+          "y": 492.5,
+          "width": 390,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "start",
+          "textTransform": "uppercase",
+          "transform": "none",
+          "transformOrigin": "195px 12px",
+          "opacity": "1",
+          "animation": "0.2s linear 0s 1 normal forwards running guest-splash-reduced-entry",
+          "animationName": "guest-splash-reduced-entry",
+          "transition": "all"
+        },
+        "tagline": {
+          "x": 19.359375,
+          "y": 492.5,
+          "width": 351.28125,
+          "height": 24,
+          "font": "600 12px / 12px Inter, ui-sans-serif, system-ui, sans-serif",
+          "letterSpacing": "3.36px",
+          "color": "rgb(102, 113, 106)",
+          "textAlign": "center",
+          "textTransform": "uppercase",
+          "transform": "matrix(1, 0, 0, 1, -175.641, 0)",
+          "transformOrigin": "175.641px 12px",
+          "opacity": "1",
+          "animation": "none 0s ease 0s 1 normal none running",
+          "animationName": "none",
+          "transition": "all"
+        },
+        "lines": [
+          {
+            "text": "Everything about your stay,",
+            "y": 492.5,
+            "height": 12
+          },
+          {
+            "text": "in one place.",
+            "y": 504.5,
+            "height": 12
+          }
+        ],
+        "animations": [
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          },
+          {
+            "name": "guest-splash-reduced-entry",
+            "currentTime": 1800,
+            "duration": 200,
+            "delay": 0,
+            "iterations": "1"
+          }
+        ]
+      }
+    }
+  ]
+}

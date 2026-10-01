@@ -10,7 +10,10 @@ import { chromium } from "@playwright/test";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const brand = path.join(root, "artifacts/smart360/public/brand");
-const vector = await readFile(path.join(brand, "smart360-kolobar-temno.svg"));
+// Canonical paths are unchanged; supply standalone SVG dimensions/namespace
+// because the canonical source is also used as an inline HTML SVG.
+const source = await readFile(path.join(brand, "smart360-kolobar-faceted.svg"), "utf8");
+const vector = Buffer.from(source.replace(/<svg\b[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">'));
 const font = await readFile(path.join(root, "artifacts/api-server/assets/Archivo-800.ttf"));
 const svgMeta = await sharp(vector).metadata();
 assert.equal(svgMeta.width, 1000);
@@ -72,6 +75,8 @@ try {
   await browser.close();
 }
 const outputWidth = raster.displayWidth * retina, outputHeight = displayHeight * retina;
+assert.equal(outputWidth, 594, "Artwork-only swap must preserve the email canvas width");
+assert.equal(outputHeight, 138, "Artwork-only swap must preserve the email canvas height");
 const composite = Buffer.from(raster.base64, "base64");
 const final = await sharp(composite).flatten({ background: "#FFFFFF" })
   .resize(outputWidth, outputHeight, { kernel: "lanczos3" }).removeAlpha().png().toBuffer();

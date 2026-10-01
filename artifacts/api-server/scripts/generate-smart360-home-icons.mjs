@@ -1,7 +1,7 @@
 // Run: node artifacts/api-server/scripts/generate-smart360-home-icons.mjs
 // Draw from the official vector. Small icons use a 4x white-field render
 // downsampled only after compositing; larger icons retain their direct pipeline.
-// The attached prototype's splash SVG is the authoritative, verbatim artwork.
+// The checked-in canonical SVG is authoritative; never re-extract historical artwork.
 import assert from "node:assert/strict";
 import { readFile, mkdir, writeFile, copyFile } from "node:fs/promises";
 import { constants } from "node:fs";
@@ -13,18 +13,15 @@ import { createHash } from "node:crypto";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const brand = path.join(root, "artifacts/smart360/public/brand");
 const reports = path.join(root, "reports");
-const prototypePath = path.join(root, "attached_assets/Smart360-prototip-2030_1_1790892799958.html");
-const prototype = await readFile(prototypePath, "utf8");
-const splash = prototype.slice(prototype.indexOf('<div id="splash">'));
-const extracted = splash.match(/<span class="sm">(<svg\b[\s\S]*?<\/svg>)<\/span>/)?.[1];
-assert.ok(extracted, "Missing #splash .sm SVG");
+const prototypePath = path.join(brand, "smart360-kolobar-faceted.svg");
+const extracted = await readFile(prototypePath, "utf8");
+assert.ok(extracted, "Missing canonical faceted SVG");
 assert.match(extracted, /viewBox="0 0 1000 1000"/);
 assert.doesNotMatch(extracted, /gradient|url\(|<image\b|<filter\b|<use\b/i);
 const paths = extracted.match(/<path\b[^>]*\/>/g) ?? [];
 assert.ok(paths.length > 0);
 assert.ok(paths.every(p => /\sd="[^"]+"/.test(p) && /\sfill="#[0-9a-f]{6}"/i.test(p)), "Every path needs explicit geometry and solid fill");
 const vector = Buffer.from(extracted);
-await writeFile(path.join(brand, "smart360-kolobar-faceted.svg"), vector);
 assert.ok((await readFile(path.join(brand, "smart360-kolobar-faceted.svg"))).equals(vector));
 const sizes = [
   ...[180, 192, 512, 1024].map(size => ({
@@ -216,7 +213,7 @@ for (const size of [180, 192]) {
   evidenceRows.push(`<h2>${size}px sources</h2><img width="460" height="${size + 65}" alt="Old and new native ${size}px icons at 100%" src="data:image/png;base64,${native.toString("base64")}"><br><img width="600" height="180" alt="Illustrative home-screen scale; not actual OS screenshots" src="data:image/png;base64,${launcher.toString("base64")}">`);
 }
 const report = {
-  source: path.relative(root, prototypePath), selector: "#splash .sm svg", sha256: createHash("sha256").update(vector).digest("hex"),
+  source: path.relative(root, prototypePath), selector: "canonical file", sha256: createHash("sha256").update(vector).digest("hex"),
   bytes: vector.length, pathCount: paths.length, measurements,
   metric: "Adjacent-pixel RGB RMS contrast weighted by magnitude: sum(d²)/sum(d), full unscaled image, no threshold. Edge-mass normalized; artwork/color dependent, not optical MTF.",
   sharpness,

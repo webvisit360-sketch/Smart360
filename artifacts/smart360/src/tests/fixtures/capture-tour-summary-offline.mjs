@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
+const OUT = process.env.TOUR_SUMMARY_OUT || 'screenshots';
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || execFileSync('which', ['chromium'], { encoding: 'utf8' }).trim(),
   headless: true, args: ['--no-sandbox'],
@@ -44,7 +45,7 @@ try {
     const c = document.createElement('canvas');
     c.width = result.width; c.height = result.height;
     const ctx = c.getContext('2d'); ctx.drawImage(image, 0, 0);
-    // Actual rendered footer: exact dark brand pixels plus original colored sign.
+    // Actual rendered footer: exact dark brand pixels plus canonical colored sign.
     const footer = ctx.getImageData(52, 1488, 370, 80).data;
     let ink = 0, color = 0, white = 0;
     for (let i = 0; i < footer.length; i += 4) {
@@ -63,11 +64,12 @@ try {
   assert.equal(output.kind, 'schematic');
   assert.equal(output.width, 1080); assert.equal(output.height, 1612);
   assert.ok(output.size > 20000); assert.equal(output.fontLoaded, true);
-  assert.ok(output.ink > 1000 && output.color > 500 && output.white > 10000, 'sharp original sign and exact dark wordmark on white');
+  assert.ok(output.ink > 1000 && output.color > 500 && output.white > 10000, 'sharp canonical sign and exact dark wordmark on white');
   assert.deepEqual(requested, [], 'first offline composition must make ZERO network requests');
-  await mkdir('screenshots', { recursive: true });
-  await writeFile('screenshots/tour-summary-first-offline.png', Buffer.from(output.png));
-  await page.screenshot({ path: 'screenshots/tour-summary-first-offline-browser.png', fullPage: true });
+  await mkdir(OUT, { recursive: true });
+  await writeFile(`${OUT}/tour-summary-first-offline.png`, Buffer.from(output.png));
+  await page.screenshot({ path: `${OUT}/tour-summary-first-offline-browser.png`, fullPage: true });
+  await writeFile(`${OUT}/tour-summary-first-offline.json`, JSON.stringify({ ...output, png: undefined, networkRequests: requested.length }, null, 2));
   console.log(JSON.stringify({ ...output, png: undefined, networkRequests: requested.length }));
   await context.close();
 } finally { await browser.close(); }
