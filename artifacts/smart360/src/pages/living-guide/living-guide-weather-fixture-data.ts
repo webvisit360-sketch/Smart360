@@ -41,10 +41,10 @@ const item = (id: string, title: string, subtitle: string) => ({
 
 export function syntheticTenant(lang: "sl" | "en" | "de" | "it" = "sl") {
   const labels = {
-    sl: { bike: "Kolesarjenje", hike: "Pohodništvo" },
-    en: { bike: "Cycling", hike: "Hiking" },
-    de: { bike: "Radfahren", hike: "Wandern" },
-    it: { bike: "In bicicletta", hike: "Escursioni a piedi" },
+    sl: { bike: "Kolesarjenje", hike: "Pohodništvo", run: "Tek", activities: "Aktivnosti" },
+    en: { bike: "Cycling", hike: "Hiking", run: "Running", activities: "Activities" },
+    de: { bike: "Radfahren", hike: "Wandern", run: "Laufen", activities: "Aktivitäten" },
+    it: { bike: "In bicicletta", hike: "Escursioni a piedi", run: "Corsa", activities: "Attività" },
   }[lang];
   return {
     id: "weather-fixture",
@@ -71,6 +71,12 @@ export function syntheticTenant(lang: "sl" | "en" | "de" | "it" = "sl") {
         { id: "c-hike", key: "hike", label: labels.hike, layout: "routes", isVisible: true, items: [
           item("i-hike-1", "TEST pohod A", "Testni vnos · 2 h"),
           item("i-hike-2", "TEST pohod B", "Testni vnos · 3 h 30 min"),
+        ] },
+        { id: "c-run", key: "run", label: labels.run, layout: "routes", isVisible: true, items: [
+          item("i-run-1", "TEST tek A", "Testni vnos · 5 km"),
+        ] },
+        { id: "c-activities", key: "activities", label: labels.activities, layout: "cards", isVisible: true, items: [
+          item("i-activities-1", "TEST aktivnost A", "Testni vnos"),
         ] },
       ] },
     ],

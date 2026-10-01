@@ -174,7 +174,7 @@ async function proveColdBrandImages(page: Page) {
 }
 async function recordTour(page: Page, surface: "gpx" | "free") {
   if (surface === "free") {
-    await page.getByRole("tab", { name: "Snemanje tur", exact: true }).click();
+    await page.getByRole("tab", { name: "Kolesarjenje", exact: true }).click();
     await page.getByTestId("button-free-tour-start").click();
   } else {
     await expect(page.getByTestId("profile-normal")).toBeVisible();

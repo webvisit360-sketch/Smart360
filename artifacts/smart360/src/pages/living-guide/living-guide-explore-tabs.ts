@@ -21,8 +21,35 @@ type ExploreCategoryChip = {
   inactive?: boolean;
 };
 
+type ExploreCategory = {
+  id: string;
+  key?: string;
+  label: string;
+  isVisible?: boolean;
+  __adminGuestEmpty?: boolean;
+  __adminInactive?: boolean;
+};
+
+/** Only these stable category keys host the recorder; translated labels do not. */
+function isRecordingCategory(category: ExploreCategory): boolean {
+  return category.isVisible !== false &&
+    ["bike", "hike", "run", "activities"].includes(category.key ?? category.id);
+}
+
+export function exploreRecorderVisible(
+  categories: ExploreCategory[],
+  selectedKey: string,
+  recordingEnabled: boolean,
+): boolean {
+  if (!recordingEnabled || selectedKey === EXPLORE_ALL_CATEGORY_KEY) return false;
+  if (selectedKey === EXPLORE_RECORDING_TAB_KEY) {
+    return !categories.some(isRecordingCategory);
+  }
+  return categories.some((category) => category.id === selectedKey && isRecordingCategory(category));
+}
+
 export function exploreCategoryChips(
-  categories: Array<{ id: string; key?: string; label: string; __adminGuestEmpty?: boolean; __adminInactive?: boolean }>,
+  categories: ExploreCategory[],
   allLabel: string,
   recordingLabel: string,
   recordingEnabled: boolean,
@@ -36,13 +63,10 @@ export function exploreCategoryChips(
       inactive: category.__adminInactive === true,
     })),
   ];
-  if (!recordingEnabled) return chips;
-
-  // The published skeleton uses bike/hike keys. Never infer identity from
-  // display labels: those change with the guide language and tenant copy.
-  const cycling = categories.findIndex((category) => category.key === "bike" || category.id === "bike");
-  const hiking = categories.findIndex((category) => category.key === "hike" || category.id === "hike");
-  const after = cycling >= 0 ? cycling + 1 : hiking >= 0 ? hiking + 1 : chips.length - 1;
-  chips.splice(after + 1, 0, { key: EXPLORE_RECORDING_TAB_KEY, label: recordingLabel });
+  // Keep the old standalone entry only when no visible eligible category exists,
+  // including guides with no categories. Empty eligible categories still qualify.
+  if (recordingEnabled && !categories.some(isRecordingCategory)) {
+    chips.push({ key: EXPLORE_RECORDING_TAB_KEY, label: recordingLabel });
+  }
   return chips;
 }

@@ -36,7 +36,7 @@ import { WeatherCard, WeatherProvider } from "./living-guide-weather";
 import { LivingGuideOfflineBanner, LivingGuideOfflineProvider } from "./living-guide-offline";
 import { tenantWeatherLocation } from "./living-guide-weather-model";
 import type { TenantWeather } from "@workspace/api-client-react";
-import { EXPLORE_RECORDING_TAB_KEY, exploreCategoryChips, recordingTabLabel } from "./living-guide-explore-tabs";
+import { EXPLORE_RECORDING_TAB_KEY, exploreCategoryChips, exploreRecorderVisible, recordingTabLabel } from "./living-guide-explore-tabs";
 
 const GpxSlugContext = createContext("");
 function ItemGpx({ item, t }: { item: any; t: UiTranslator }) {
@@ -2808,12 +2808,20 @@ export function ExploreView({
     selectedGroup: selectedCategoryChip,
     selectGroup: selectCategoryChip,
   } = useGroupTabsState(categoryChips);
-  const recordingSelected = freeTourEnabled && selectedCategoryChip?.key === EXPLORE_RECORDING_TAB_KEY;
+  const recordingVisible = exploreRecorderVisible(
+    activeCategories,
+    selectedCategoryChip?.key ?? EXPLORE_ALL_CATEGORY_KEY,
+    freeTourEnabled,
+  );
+  const recordingSelected = recordingVisible && selectedCategoryChip?.key === EXPLORE_RECORDING_TAB_KEY;
   // Once opened, keep the recorder mounted while browsing other chips: unmounting
   // useLiveTour would stop its geolocation watch and wake lock during a live tour.
   const [recorderMounted, setRecorderMounted] = useState(false);
+  useEffect(() => {
+    if (recordingVisible) setRecorderMounted(true);
+  }, [recordingVisible]);
   const selectExploreChip = (key: string) => {
-    if (key === EXPLORE_RECORDING_TAB_KEY) setRecorderMounted(true);
+    if (exploreRecorderVisible(activeCategories, key, freeTourEnabled)) setRecorderMounted(true);
     selectCategoryChip(key);
   };
   const filteredItems = useMemo(
@@ -2873,11 +2881,6 @@ export function ExploreView({
         data-lg-scroll
         ref={listRef}
       >
-        {freeTourEnabled && recorderMounted && (
-          <div hidden={!recordingSelected} data-testid="explore-recording-panel">
-            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} />
-          </div>
-        )}
         {!recordingSelected && <>
         {distanceSections.map((section) => (
           <section className="lg2-distance-section" key={section.key}>
@@ -2914,6 +2917,11 @@ export function ExploreView({
           <AdminEmptyCategoryRow key={category.id} category={category} onOpen={() => onOpenCategory(category.id)} />
         ))}
         </>}
+        {freeTourEnabled && (recorderMounted || recordingVisible) && (
+          <div hidden={!recordingVisible} data-testid="explore-recording-panel">
+            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} />
+          </div>
+        )}
       </div>
     </section>
   );

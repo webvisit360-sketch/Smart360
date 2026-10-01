@@ -335,7 +335,7 @@ for (const surface of ["gpx", "free"]) {
     const traffic = collectTraffic(page);
     await fixture(page, `surface=${surface}`);
     if (surface === "free") {
-      await page.getByRole("tab", { name: "Snemanje tur", exact: true }).click();
+      await page.getByRole("tab", { name: "Kolesarjenje", exact: true }).click();
       await page.getByTestId("button-free-tour-start").click();
     } else {
       await page.getByTestId("button-tour-start").click();
@@ -388,7 +388,7 @@ for (const surface of ["gpx", "free"]) {
       await mockDevice(page, "active", true);
       await fixture(page, `surface=${surface}`);
       if (surface === "free") {
-        await page.getByRole("tab", { name: "Snemanje tur", exact: true }).click();
+        await page.getByRole("tab", { name: "Kolesarjenje", exact: true }).click();
         await page.getByTestId("button-free-tour-start").click();
       } else await page.getByTestId("button-tour-start").click();
       await page.getByTestId("button-tour-profile-skip").click();
