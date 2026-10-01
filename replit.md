@@ -4,6 +4,10 @@ Smart360 trak = the kolobar unrolled (oranžna→modra→zelena→rumena, satura
 
 # Smart360
 
+## Izvor ikon za domači zaslon
+
+Ikone gostujočih vodičev se generirajo iz `artifacts/smart360/public/brand/smart360-kolobar-faceted.svg`: dobesedno izločenega SVG znotraj `#splash .sm` iz lastnikovega prototipa Smart360-prototip-2030_1.html. Lastnik je ta fasetirani znak določil kot avtoritativni izvor za ikone. Prejšnji `smart360-kolobar-temno.svg` ostaja za druge uporabe, dokler lastnik ne naroči drugače.
+
 Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastanitev. Gost skenira QR kodo in vidi vse o nastanitvi in okolici — brez prijave. En sam operater (lastnik) ureja vse najemnike v admin vmesniku.
 
 ## Struktura

@@ -16,7 +16,7 @@ test("route-specific raw HTML never includes admin install metadata on guest rou
     /\/api\/public\/tenants\/meli-pu\/manifest\.webmanifest/);
   assert.match(renderPwaHead(template, "/admin/login", "smart360.info"), /href="\/manifest\.webmanifest"/);
   assert.match(renderPwaHead(template, "/admin/login", "smart360.info"),
-    /ikona-smart360-180\.png\?v=crisp-3/);
+    /ikona-smart360-180\.png\?v=faceted-1/);
 });
 
 test("old tenant URLs redirect before HTML, preserving deep paths and query strings", async () => {

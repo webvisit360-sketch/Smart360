@@ -2164,3 +2164,45 @@ mtime_ms = 1790892686542
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/01705521-40d5-4129-9034-f2c496dc2c0e/5ea9be69-1564-4cc3-9057-6bf0b37ae6ff"
 storage_version_token = "1790892701358606"
 content_type = "image/png"
+
+[[outputs]]
+id = "pHencJQWI1p3nYQZOmeIq"
+uri = "file://reports/smart360-faceted-comparison.html"
+type = "html"
+title = "Ikone — primerjava staro / novo pri 100 %"
+description = "Samostojna primerjava 180 in 192 px v izvorni velikosti ter ilustraciji domačega zaslona za Turizem Drobež in Meli Pu. Ilustraciji nista posnetka dejansko nameščenih ikon."
+logical_id = "086751bb-e5da-48b1-b1a5-09fa1e7b565a"
+content_hash = "sha256:3c23b8a848357153084597e0e6b13234164610d8c28a07b8204147e5fff4ddb4"
+size = 180272
+mtime_ms = 1790892967586
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/086751bb-e5da-48b1-b1a5-09fa1e7b565a/9e822ce1-a2c3-43aa-a7df-38d0f4c0ecd3"
+storage_version_token = "1790893114202599"
+content_type = "text/html"
+
+[[outputs]]
+id = "5TdyKBMg6q8qeouK35slY"
+uri = "file://reports/smart360-faceted-native-180.png"
+type = "image"
+title = "180 px — staro in novo"
+description = "Ikoni sta prikazani pri izvornih 180 × 180 pikah."
+logical_id = "71bd4f60-2980-424e-a326-6efcb55a9397"
+content_hash = "sha256:ddf3ed694fe2a37b5f4a52b317e0e51c1ffe1436db4ad5125e15970161beaed2"
+size = 41947
+mtime_ms = 1790892967506
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/71bd4f60-2980-424e-a326-6efcb55a9397/0baffb09-fdd6-4ae8-9f0a-76a311acabe5"
+storage_version_token = "1790893114977136"
+content_type = "image/png"
+
+[[outputs]]
+id = "5zBfRV_5GTQWFMCVSbI8i"
+uri = "file://reports/smart360-faceted-native-192.png"
+type = "image"
+title = "192 px — staro in novo"
+description = "Ikoni sta prikazani pri izvornih 192 × 192 pikah."
+logical_id = "571bc6b4-8cd1-4776-8b47-a2d46843f465"
+content_hash = "sha256:51dafb8284d14d4c4b09a48c7e6df0b4f2b41b07ecc0ca2a3fea516d661a61bd"
+size = 44883
+mtime_ms = 1790892967554
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/571bc6b4-8cd1-4776-8b47-a2d46843f465/63cafb9d-1857-4768-83e2-4233db7315db"
+storage_version_token = "1790893115837470"
+content_type = "image/png"

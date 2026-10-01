@@ -106,7 +106,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
       document.head.appendChild(touch);
     }
     touch.sizes = "180x180";
-    touch.href = `${base}brand/ikona-smart360-180.png?v=crisp-3`;
+    touch.href = `${base}brand/ikona-smart360-180.png?v=faceted-1`;
 
     const upsertMeta = (name: string, content: string) => {
       let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);

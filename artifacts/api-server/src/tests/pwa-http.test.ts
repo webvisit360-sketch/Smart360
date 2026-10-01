@@ -92,11 +92,11 @@ test("real HTTP: two published tenant manifests, raw production HTML, admin and 
       assert.deepEqual(manifest.icons.map(({ sizes, purpose }) => [sizes, purpose]), [
         ["192x192", "any"], ["512x512", "any"], ["192x192", "maskable"], ["512x512", "maskable"],
       ]);
-      assert.ok(manifest.icons.every((icon) => icon.src.includes("crisp-3")));
+      assert.ok(manifest.icons.every((icon) => icon.src.includes("faceted-1")));
       const initial = (await (await fetch(`${webOrigin}/${slug}/c/deep-link?preview=1`)).text()).split("</head>")[0];
       assert.match(initial, new RegExp(`rel="manifest" href="/api/public/tenants/${slug}/manifest.webmanifest"`));
       assert.doesNotMatch(initial, /href="\/manifest\.webmanifest"|apple-mobile-web-app-title" content="Smart360"/);
-      assert.match(initial, /rel="apple-touch-icon" sizes="180x180" href="\/brand\/ikona-smart360-180.png\?v=crisp-3"/);
+      assert.match(initial, /rel="apple-touch-icon" sizes="180x180" href="\/brand\/ikona-smart360-180.png\?v=faceted-1"/);
     }
     const legacy = (await (await fetch(`${webOrigin}/g/${specs[0]!.slug}/c/deep-link`)).text()).split("</head>")[0];
     assert.match(legacy, new RegExp(`/api/public/tenants/${specs[0]!.slug}/manifest.webmanifest`));
@@ -127,13 +127,13 @@ test("real HTTP: two published tenant manifests, raw production HTML, admin and 
     assert.deepEqual(platformManifest.icons.map(({ sizes, purpose }) => [sizes, purpose]), [
       ["192x192", "any"], ["512x512", "any"], ["192x192", "maskable"], ["512x512", "maskable"],
     ]);
-    assert.ok(platformManifest.icons.every(icon => icon.src.includes("crisp-3")));
+    assert.ok(platformManifest.icons.every(icon => icon.src.includes("faceted-1")));
     const unavailable = (await (await fetch(`${webOrigin}/pwatest-unavailable/`)).text()).split("</head>")[0];
     assert.match(unavailable, /href="\/api\/public\/tenants\/pwatest-unavailable\/manifest\.webmanifest"/);
     assert.doesNotMatch(unavailable, /href="\/manifest\.webmanifest"|apple-mobile-web-app-title" content="Smart360"/);
     assert.equal((await fetch(`${apiOrigin}/api/public/tenants/pwatest-unavailable/manifest.webmanifest`)).status, 404);
 
-    const touch = await fetch(`${webOrigin}/brand/ikona-smart360-180.png?v=crisp-3`);
+    const touch = await fetch(`${webOrigin}/brand/ikona-smart360-180.png?v=faceted-1`);
     assert.equal(touch.status, 200);
     const bytes = Buffer.from(await touch.arrayBuffer());
     assert.equal(bytes.subarray(1, 4).toString(), "PNG");
