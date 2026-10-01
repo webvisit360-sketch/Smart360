@@ -13,6 +13,10 @@ import { courseIdentity, nextCourseBearing, sessionCourseMode, shortestBearing, 
 import { recordedProfileData, type RecordedProfilePoint } from "./living-guide-free-tour-view";
 import type { UiTranslator } from "../guest/i18n";
 import { useLiveTour } from "@/hooks/use-live-tour";
+import { useGuidedTourPreflight } from "@/hooks/use-guided-tour-preflight";
+import { GUIDED_COPY, formatGuidedDistance, guidedSummaryEligible } from "@/lib/guided-tour-preflight";
+import { sosLang, sosT } from "./sos/sos-i18n";
+import { detectOs } from "./sos/sos-model";
 import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
 import { plannedFromLonLat, useTourSummaryContext } from "./living-guide-tour-summary";
 import "./living-guide-tour-summary.css";
@@ -42,11 +46,13 @@ function markerEl(kind: "start" | "end" | "me", label: string) {
 
 type TourPoint = { lat: number; lon: number };
 
-export function RouteMap({ route, t, freeMode = false, allowOfflineStyle = true, fallbackCenter, tourPoints, tourSegmentStarts, tourActive, tourStatus, tourKey, tourStartedAt, currentPosition, onPositionChange, fullscreen, onExitFullscreen, overlay, profileStrip }: {
+export function RouteMap({ route, t, freeMode = false, externalLocation = false, allowOfflineStyle = true, fallbackCenter, tourPoints, tourSegmentStarts, tourActive, tourStatus, tourKey, tourStartedAt, currentPosition, onPositionChange, fullscreen, onExitFullscreen, overlay, profileStrip }: {
   route?: GpxRoute | null;
   t: UiTranslator;
   /** Free recording: no planned GPX; map follows recorded geometry. */
   freeMode?: boolean;
+  /** Guided preflight owns idle GPS; never start an ordinary parallel watch. */
+  externalLocation?: boolean;
   /** Living Guide only; legacy retains its existing map-load behavior. */
   allowOfflineStyle?: boolean;
   /** [lon, lat] used before the first fix in free mode. */
@@ -241,21 +247,23 @@ export function RouteMap({ route, t, freeMode = false, allowOfflineStyle = true,
     const src = map.getSource("tour") as { setData?: (d: unknown) => void } | undefined;
     src?.setData?.({ type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: coords } });
     if (freeMode && !(tourActive && mode === "course")) followRecorded(map, coords, tourActive ? currentPosition ?? null : null);
-    if (!tourActive || !currentPosition) { tourMeRef.current?.remove(); tourMeRef.current = null; return; }
+    if ((!tourActive && !externalLocation) || !currentPosition) { tourMeRef.current?.remove(); tourMeRef.current = null; return; }
     const lngLat: [number, number] = [currentPosition.lon, currentPosition.lat];
     if (tourMeRef.current) {
       tourMeRef.current.setLngLat(lngLat);
       tourMeRef.current.getElement().classList.toggle("s360-gpx-marker--course", mode === "course");
       return;
     }
+    let cancelled = false;
     void import("maplibre-gl").then(({ Marker }) => {
-      if (!mapRef.current || tourMeRef.current) return;
+      if (cancelled || !mapRef.current || tourMeRef.current) return;
       const el = markerEl("me", t("UI.lg.gpx.you"));
       el.classList.toggle("s360-gpx-marker--course", mode === "course");
       tourMeRef.current = new Marker({ element: el, rotationAlignment: "viewport" }).setLngLat(lngLat).addTo(mapRef.current);
     });
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points.length, currentPosition?.lat, currentPosition?.lon, tourSegmentStarts?.join(","), tourActive, loaded, mode]);
+  }, [points.length, currentPosition?.lat, currentPosition?.lon, tourSegmentStarts?.join(","), tourActive, externalLocation, loaded, mode]);
 
   // The live tour's single GPS watch supplies course and position. Never derive
   // direction from the route or recorded track; invalid/slow fixes retain bearing.
@@ -312,11 +320,12 @@ export function RouteMap({ route, t, freeMode = false, allowOfflineStyle = true,
 
   // Avoid a parallel watch: the tour hook owns geolocation while a tour is live.
   useEffect(() => {
-    if (tourActive) { stopWatch(); setGeoError(""); }
+    if (tourActive || externalLocation) { stopWatch(); setGeoError(""); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tourActive]);
+  }, [tourActive, externalLocation]);
 
   const toggleLocation = () => {
+    if (externalLocation) return;
     setGeoError("");
     if (locating) { stopWatch(); return; }
     if (!("geolocation" in navigator)) { setGeoError(t("UI.lg.gpx.geo.unsupported")); return; }
@@ -378,7 +387,7 @@ export function RouteMap({ route, t, freeMode = false, allowOfflineStyle = true,
         <div ref={inlineSlotRef} className="s360-gpx-slot" />
         {!fullscreen && cameraControls}
         {!fullscreen && tourActive && sos && <div className="s360-tour-sos-control"><SosMapButton lang={sos.lang} onOpen={sos.onOpen} /></div>}
-        {!tourActive && !fullscreen && !freeMode && (
+        {!tourActive && !fullscreen && !freeMode && !externalLocation && (
           <button type="button" className={`s360-gpx-locate${locating ? " is-on" : ""}`} aria-pressed={locating} onClick={toggleLocation} data-testid="button-gpx-locate">
             <span className="s360-gpx-locate-dot" aria-hidden="true" />
             {locating ? t("UI.lg.gpx.hideLocation") : t("UI.lg.gpx.showLocation")}
@@ -491,26 +500,37 @@ export function RecordedElevationProfile({ points, segmentStarts, t, compact = f
   );
 }
 
-export function LivingGuideGpxRoute(props: { route: GpxRoute | null | undefined; slug: string; itemId: string; t: UiTranslator; variant?: "lg" | "legacy"; heading?: string }) {
+export function LivingGuideGpxRoute(props: { route: GpxRoute | null | undefined; slug: string; itemId: string; t: UiTranslator; lang?: string; variant?: "lg" | "legacy"; heading?: string }) {
   if (!props.route || !props.route.fileId) return null;
-  return <GpxRouteBody {...props} route={props.route} />;
+  return <GpxRouteBody key={`${props.slug}/${props.itemId}/${props.route.fileId}`} {...props} route={props.route} />;
 }
 
-function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { route: GpxRoute; slug: string; itemId: string; t: UiTranslator; variant?: "lg" | "legacy"; heading?: string }) {
+function GpxRouteBody({ route, slug, itemId, t, lang: requestedLang, variant = "lg", heading }: { route: GpxRoute; slug: string; itemId: string; t: UiTranslator; lang?: string; variant?: "lg" | "legacy"; heading?: string }) {
   const lg = variant === "lg";
   // All tour data is on-device only (memory + localStorage inside the hook).
-  const tour = useLiveTour(`${slug}/${itemId}`);
+  const tour = useLiveTour(`${slug}/${itemId}`, { ephemeralFinished: true });
   const summaryCtx = useTourSummaryContext();
   const profile = useTourProfile();
-  const [ordinaryPosition, setOrdinaryPosition] = useState<TourPoint | null>(null);
+  const [, setOrdinaryPosition] = useState<TourPoint | null>(null);
+  const [shortNotice, setShortNotice] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [exporting, setExporting] = useState<"image" | "gpx" | null>(null);
   const [exportError, setExportError] = useState(false);
   const plannedSegments = useMemo(() => boundedSegments(route), [route]);
   const summaryPlanned = useMemo(() => plannedFromLonLat(plannedSegments), [plannedSegments]);
-  const position = tour.currentPosition ?? ordinaryPosition;
-  const projection = useMemo(() => position ? projectRoutePosition(plannedSegments, route.profile, position) : null, [plannedSegments, route.profile, position]);
   const status = tour.state?.status ?? null;
+  const preflight = useGuidedTourPreflight(plannedSegments, status === null);
+  const position = tour.currentPosition ?? preflight.position;
+  const projection = useMemo(() => position ? projectRoutePosition(plannedSegments, route.profile, position) : null, [plannedSegments, route.profile, position]);
+  const lang = sosLang(requestedLang ?? summaryCtx.lang);
+  const copy = GUIDED_COPY[lang];
+  const locationCopy = sosT(lang);
+  const os = typeof navigator === "undefined" ? "desktop" : detectOs(navigator.userAgent, navigator.maxTouchPoints);
+  // Inspect the committed finished metrics, not a possibly stale click-handler snapshot.
+  const shortFinished = status === "finished" && !guidedSummaryEligible(tour.metrics.distanceM);
+  useEffect(() => {
+    if (shortFinished) { tour.reset(); setShortNotice(true); }
+  }, [shortFinished, tour.reset]);
   const tourActive = status !== null && status !== "finished";
   const exitFullscreen = useCallback(() => setFullscreen(false), []);
   useEffect(() => { if (!tourActive) setFullscreen(false); }, [tourActive]);
@@ -551,7 +571,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
       setExportError(true);
     } finally { setExporting(null); }
   };
-  const onReset = () => { setExportError(false); tour.reset(); };
+  const onReset = () => { setExportError(false); setShortNotice(false); tour.reset(); };
 
   const na = t("UI.lg.gpx.unavailable");
   const m = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? na : `${Math.round(v)} m`);
@@ -576,13 +596,14 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         route={route}
         t={t}
         allowOfflineStyle={lg}
+        externalLocation
         tourPoints={tour.state?.points}
         tourSegmentStarts={tour.state?.segmentStarts}
         tourActive={tourActive}
         tourStatus={status}
         tourKey={`${slug}/${itemId}`}
         tourStartedAt={tour.state?.startedAt}
-        currentPosition={tour.currentPosition}
+        currentPosition={position}
         onPositionChange={setOrdinaryPosition}
         fullscreen={fullscreen}
         onExitFullscreen={exitFullscreen}
@@ -590,9 +611,15 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         profileStrip={fullscreen && <ElevationProfile route={route} t={t} projection={projection} compact />}
       />
       {lg && status === null && <TourWeatherStrip />}
+      {(shortNotice || shortFinished) && <p role="status" className="s360-gpx-preflight" data-testid="notice-tour-too-short">{copy.short}</p>}
+      {status === null && preflight.status !== "near" && <div role="status" className="s360-gpx-preflight" data-testid={`guided-preflight-${preflight.status}`}>
+        {preflight.status === "denied" ? <><p>{locationCopy.deniedSub}</p><ol>{locationCopy.os[os].map(step => <li key={step}>{step}</li>)}</ol></> :
+          preflight.status === "unsupported" ? locationCopy.unsupportedSub :
+          preflight.status === "far" ? copy.far(formatGuidedDistance(preflight.distanceM!, lang)) : copy.waiting}
+      </div>}
       <LiveTourPanel
         t={t}
-        status={status}
+        status={shortFinished ? null : status}
         metrics={tour.metrics}
         pointCount={tour.state?.points.length ?? 0}
         wakeStatus={tour.wakeStatus}
@@ -600,7 +627,14 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         geoError={tour.geoError}
         exporting={exporting}
         exportError={exportError}
-        onStart={() => profile.start(snapshot => { setExportError(false); tour.start(route.activity, snapshot); })}
+        startDisabled={preflight.status !== "near" || shortFinished}
+        onStart={() => {
+          if (!preflight.canStart()) return;
+          profile.start(snapshot => {
+            if (!preflight.canStart()) return;
+            setExportError(false); setShortNotice(false); tour.start(route.activity, snapshot);
+          });
+        }}
         onPause={tour.pause}
         onResume={tour.resume}
         onFinish={tour.finish}
@@ -608,7 +642,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         onFullscreen={() => setFullscreen(true)}
         onDownloadImage={() => { void onDownloadImage(); }}
         onDownloadGpx={onDownloadGpx}
-        summary={tour.state && status === "finished" ? { state: tour.state, plannedSegments: summaryPlanned, tourName, tenantName: summaryCtx.tenantName, lang: summaryCtx.lang } : undefined}
+        summary={tour.state && status === "finished" && !shortFinished ? { state: tour.state, plannedSegments: summaryPlanned, tourName, tenantName: summaryCtx.tenantName, lang } : undefined}
       />
       <TourProfileControl t={t} activity={route.activity} tourActive={tourActive} controller={profile} />
       <dl className="s360-gpx-stats">

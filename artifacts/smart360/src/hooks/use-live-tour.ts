@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  finishTour, loadTour, pauseTour, recordTourPoint, recoverTour, resumeTour,
-  saveTour, startTour, tourMetrics, MAX_ACCURACY_M, type TourActivity, type TourState,
+  finishTour, pauseTour, recordTourPoint, resumeTour,
+  startTour, tourMetrics, MAX_ACCURACY_M, type TourActivity, type TourState,
 } from '../lib/live-tour';
+import { loadTourForView, saveTourForView } from '../lib/guided-tour-persistence';
 import type { TourProfile } from '../lib/tour-calories';
 
 export type WakeStatus = 'idle' | 'requesting' | 'held' | 'unavailable';
@@ -97,15 +98,11 @@ function browserWakeEnvironment(): WakeEnvironment {
   };
 }
 
-export function useLiveTour(key: string) {
-  const [state, setState] = useState<TourState | null>(() => {
-    const saved = loadTour(key);
-    const recovered = saved && recoverTour(saved, Date.now());
-    if (recovered && recovered !== saved) saveTour(key, recovered);
-    return recovered;
-  });
+export function useLiveTour(key: string, { ephemeralFinished = false }: { ephemeralFinished?: boolean } = {}) {
+  const [state, setState] = useState<TourState | null>(() => loadTourForView(key, Date.now(), ephemeralFinished));
   const stateRef = useRef(state);
   const keyRef = useRef(key);
+  const persistenceRef = useRef(ephemeralFinished);
   const [clock, setClock] = useState(() => Date.now());
   const [geoError, setGeoError] = useState<string | null>(null);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lon: number; heading: number | null; speed: number | null } | null>(null);
@@ -123,22 +120,30 @@ export function useLiveTour(key: string) {
     stateRef.current = next;
     setState(next);
     if (!next || next.status === 'finished') setCurrentPosition(null);
-    saveTour(keyRef.current, next);
+    saveTourForView(keyRef.current, next, ephemeralFinished);
     setClock(Date.now());
-  }, []);
+  }, [ephemeralFinished]);
 
   // Key changes isolate tours. Do not accidentally persist an old tour under a new entry.
   useEffect(() => {
-    if (keyRef.current === key) return;
+    if (keyRef.current === key && persistenceRef.current === ephemeralFinished) return;
     keyRef.current = key;
-    const saved = loadTour(key);
-    const loaded = saved && recoverTour(saved, Date.now());
-    if (loaded && loaded !== saved) saveTour(key, loaded);
+    persistenceRef.current = ephemeralFinished;
+    const loaded = loadTourForView(key, Date.now(), ephemeralFinished);
     stateRef.current = loaded;
     setState(loaded);
     setCurrentPosition(null);
     setGeoError(null);
-  }, [key]);
+  }, [key, ephemeralFinished]);
+
+  // A browser back/forward-cache restoration must not resurrect a completed
+  // guided result either. Active recording and free-tour results are untouched.
+  useEffect(() => {
+    if (!ephemeralFinished) return;
+    const leavePage = () => { if (stateRef.current?.status === 'finished') commit(null); };
+    window.addEventListener('pagehide', leavePage);
+    return () => window.removeEventListener('pagehide', leavePage);
+  }, [ephemeralFinished, commit]);
 
   useEffect(() => {
     const controller = new TourWakeController(browserWakeEnvironment(), setWakeStatus);

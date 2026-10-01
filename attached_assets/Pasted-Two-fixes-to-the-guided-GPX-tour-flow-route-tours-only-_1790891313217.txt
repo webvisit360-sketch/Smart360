@@ -1,0 +1,19 @@
+Two fixes to the guided GPX tour flow (route tours only; free recording unchanged).
+
+1. STALE "TURA KONČANA" STATE (bug, observed in production)
+A route tour finished days ago (a 9-second, 0.00 km test) still renders its "TURA KONČANA — Tvoj povzetek" card when the entry is opened later. Investigate how the finished-tour state is persisted. Required behavior:
+- The summary appears immediately after finishing a tour and stays until the guest taps "Zapri rezultat" or navigates away from the tour view. It must NEVER resurface on a later visit to the entry — the default state of a route tour is always the Start flow.
+- On app load, purge any persisted finished-tour leftovers (treat as expired).
+- If a finished tour recorded less than 50 m of movement, skip the summary entirely and show a short localized notice ("Tura je bila prekratka za povzetek.") — no share card for a 0.00 km tour.
+
+2. DISTANCE GUARD ON START
+When the guest opens a route tour, before enabling Start compute the distance from their current position to the NEAREST point of the route (reuse the existing nearest-segment projection from the elevation-profile dot):
+- Farther than 250 m: Start button disabled, with live-updating localized text like "Od najbližje točke ture ste oddaljeni 76 km." (format: meters under 1 km, otherwise km with one decimal). The text and button update as the guest moves; within 250 m, Start becomes enabled.
+- While waiting for the first GPS fix: Start disabled with "Pridobivam lokacijo …".
+- Location permission denied: show the existing per-OS location hint; Start stays disabled (a route tour without GPS is meaningless).
+- Accuracy worse than 100 m: treat as no fix yet (avoid false "76 km" from a bad first fix).
+- All four languages. No server involvement — everything on device.
+
+3. TESTS: stale summary purged on load; summary dismissed stays dismissed; <50 m tour skips summary; distance guard states (far/near/no fix/denied/poor accuracy) with simulated positions; threshold boundary at 250 m; formatting of m vs km; four languages; free recording Start unaffected by the guard.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

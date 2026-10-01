@@ -996,6 +996,10 @@ export default function LivingGuideGuestShell({
         );
         return;
       }
+      // Held navigation backgrounds are inert snapshots, not live route views.
+      // Do not let an expired guided result reappear in one of these snapshots.
+      clone.querySelectorAll('[data-testid="lg-gpx-route"] [data-testid="panel-tour-result"]')
+        .forEach(result => result.remove());
       const sourceBottomNav =
         rootRef.current?.querySelector<HTMLElement>(":scope > .lg2-bottom-nav");
       const bottomNavClone = sourceBottomNav?.cloneNode(true) as

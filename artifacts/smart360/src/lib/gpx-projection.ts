@@ -12,11 +12,10 @@ export type RouteProjection = { distanceKm: number; perpendicularM: number; segm
  * between segments; neither does this projection. Intermediate accuracy is
  * limited by geometry sampling, coordinate rounding and profile sampling.
  */
-export function projectRoutePosition(
+export function nearestRouteGeometry(
   segments: Coordinate[][],
-  profile: GpxRoute["profile"],
   fix: { lat: number; lon: number },
-): RouteProjection | null {
+) {
   if (!Number.isFinite(fix.lat) || !Number.isFinite(fix.lon) ||
       Math.abs(fix.lat) > 90 || Math.abs(fix.lon) > 180) return null;
   let nearest: { perpendicularM: number; segment: number; alongM: number; segmentLengthM: number } | null = null;
@@ -53,6 +52,16 @@ export function projectRoutePosition(
   });
   if (!nearest) return null;
   const hit: { perpendicularM: number; segment: number; alongM: number; segmentLengthM: number } = nearest;
+  return hit;
+}
+
+export function projectRoutePosition(
+  segments: Coordinate[][],
+  profile: GpxRoute["profile"],
+  fix: { lat: number; lon: number },
+): RouteProjection | null {
+  const hit = nearestRouteGeometry(segments, fix);
+  if (!hit) return null;
   const samples = (profile || []).filter(p => p.segment === hit.segment && Number.isFinite(p.distanceKm));
   // A route without profile distances cannot safely locate a dot on the chart.
   if (!samples.length) return null;

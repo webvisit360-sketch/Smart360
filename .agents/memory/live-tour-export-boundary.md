@@ -14,3 +14,9 @@ Free recording deliberately favors bounded device storage and re-importable GPX 
 **Why:** Segment boundaries and the importer’s limits must coexist with all-day recording. Accumulated session metrics may cover more history than a retained export.
 
 **How to apply:** Keep retention-loss notices and distinguish recorded session totals from statistics recomputed after importing a simplified or truncated GPX.
+
+Guided-route results are deliberately view-scoped, unlike free-recording results. Leaving the route expires its summary; active guided recordings remain recoverable. Do not make these two lifecycles identical.
+
+**Why:** The owner reported a days-old, nine-second guided test resurfacing as a completed tour, and explicitly required the correction to leave free recording unchanged.
+
+**How to apply:** Include navigation snapshots and browser back/forward restoration when checking expiration, not only storage reloads. Never broaden guided-result cleanup to free recordings.

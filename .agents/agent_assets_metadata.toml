@@ -2108,3 +2108,31 @@ mtime_ms = 1790890056748
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b12c8617-18ab-4d0e-9edd-507327bec763/0a28ca84-4188-404c-94c1-61beb522b109"
 storage_version_token = "1790890074907840"
 content_type = "image/png"
+
+[[outputs]]
+id = "F6IuK7uOKYdAuvOz2QxvC"
+uri = "file://artifacts/smart360/screenshots/guided-guards/far-390.png"
+type = "image"
+title = "Vodena tura — začetek predaleč od poti"
+description = "Razvojni preizkus pri širini 390 px: simulirana oddaljenost 76,0 km, onemogočen gumb Začni turo."
+logical_id = "0cd64af2-09d6-4402-b635-aa5934e291be"
+content_hash = "sha256:4aafc9091533ad5e05a5162ac7e5b0d2f4c5c6a9325d895778fe0638ab41e08c"
+size = 53638
+mtime_ms = 1790891826334
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0cd64af2-09d6-4402-b635-aa5934e291be/2a94586a-6a28-46f1-aed7-fce1a6f4c13c"
+storage_version_token = "1790891905187084"
+content_type = "image/png"
+
+[[outputs]]
+id = "EBRngHvuzfKwuyeQCFp71"
+uri = "file://artifacts/smart360/screenshots/guided-guards/short-390.png"
+type = "image"
+title = "Vodena tura — prekratka za povzetek"
+description = "Razvojni preizkus: po turi pod 50 m je prikazano obvestilo, brez kartice za deljenje. Sintetični podatki."
+logical_id = "12601d0d-e4ad-487f-945b-76c78cf7dbe4"
+content_hash = "sha256:ecfb795d40d508571bf71fafad81230604809ddaf6bb04ab82740fadebbcc75d"
+size = 51309
+mtime_ms = 1790891827104
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/12601d0d-e4ad-487f-945b-76c78cf7dbe4/3f2991c4-5f7e-4970-b489-ae33ab6993b5"
+storage_version_token = "1790891906022881"
+content_type = "image/png"

@@ -124,6 +124,7 @@ export type LiveTourPanelProps = {
   exporting: "image" | "gpx" | null;
   exportError: boolean;
   onStart: () => void;
+  startDisabled?: boolean;
   onPause: () => void;
   onResume: () => void;
   onFinish: () => void;
@@ -145,7 +146,7 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
   if (!status) {
     return (
       <div className="s360-tour" data-testid="panel-tour-idle">
-        <button type="button" className="s360-tour-btn s360-tour-btn--primary" onClick={p.onStart} data-testid="button-tour-start">
+        <button type="button" className="s360-tour-btn s360-tour-btn--primary" disabled={p.startDisabled} onClick={p.onStart} data-testid="button-tour-start">
           <span className="s360-tour-play" aria-hidden="true" />{t("UI.lg.liveTour.start")}
         </button>
         {geo}

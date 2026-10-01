@@ -1,0 +1,198 @@
+{
+  "checks": [
+    {
+      "name": "guard no-fix/poor/far/near/errors, single watch, profile confirmation recheck",
+      "passed": true
+    },
+    {
+      "name": "short finish skips summary, localized notice, new idle watch",
+      "passed": true
+    },
+    {
+      "name": "stale finished persisted state rejected at entry",
+      "passed": true
+    },
+    {
+      "name": "active reload preserved, >=50m summary preview, dismiss and revisit",
+      "passed": true
+    },
+    {
+      "name": "finished summary disappears on reload, unmount and pagehide",
+      "passed": true
+    },
+    {
+      "name": "watch throw is unsupported, disabled, cleans up",
+      "passed": true
+    },
+    {
+      "name": "four languages waiting, distance, permission and short notice",
+      "passed": true
+    },
+    {
+      "name": "real main app startup purges finished guided only",
+      "passed": true
+    },
+    {
+      "name": "free recording Start remains enabled without guided preflight",
+      "passed": true
+    }
+  ],
+  "console": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "[gpx-map] TypeError: Failed to fetch",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "Image \"lift_gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"sports_centre\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"office\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"shooting\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"bollard\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"recycling\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0054 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0072 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0067 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0020 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0052 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0065 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0070 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0075 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0062 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+006C locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0069 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+006B locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0043 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0061 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+006E locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+006A locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0076 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0064 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+006F locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0042 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+007A locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0063 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0050 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0073 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0074 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+004A locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0044 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0049 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+002F locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0031 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0038 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+004D locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+002D locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0056 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+004B locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+0068 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+002E locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 0, 0-255. Rendering codepoint U+006D locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 1, 256-511. Rendering codepoint U+0161 locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 1, 256-511. Rendering codepoint U+017E locally instead. TypeError: Failed to fetch",
+    "Unable to load glyph range 1, 256-511. Rendering codepoint U+0160 locally instead. TypeError: Failed to fetch",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "Image \"lift_gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"bollard\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"recycling\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"sports_centre\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"office\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "Image \"shooting\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-non-us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[highway-shield-us-interstate].filter[1]: Expected value to be of type number, but found null instead. Falling back to false.",
+    "layers[road_shield_us].filter[1]: Expected value to be of type number, but found null instead. Falling back to false."
+  ],
+  "pageErrors": [],
+  "buttons": [
+    {
+      "name": "waiting",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Začni turo",
+      "width": 304
+    },
+    {
+      "name": "far",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Začni turo",
+      "width": 304
+    },
+    {
+      "name": "near",
+      "disabled": false,
+      "opacity": "1",
+      "text": "Začni turo",
+      "width": 304
+    },
+    {
+      "name": "denied",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Začni turo",
+      "width": 304
+    },
+    {
+      "name": "short",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Začni turo",
+      "width": 304
+    },
+    {
+      "name": "permission-sl",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Začni turo",
+      "width": 304
+    },
+    {
+      "name": "permission-en",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Start tour",
+      "width": 304
+    },
+    {
+      "name": "permission-de",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Tour starten",
+      "width": 304
+    },
+    {
+      "name": "permission-it",
+      "disabled": true,
+      "opacity": "0.55",
+      "text": "Inizia il tour",
+      "width": 304
+    }
+  ]
+}

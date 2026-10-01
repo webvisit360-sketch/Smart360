@@ -20,6 +20,13 @@ test("idle shows start + privacy", () => {
   assert.match(m, /data-testid="button-tour-start"/);
   assert.match(m, /Začni turo/);
   assert.match(m, /samo na tej napravi/);
+  assert.doesNotMatch(m, /disabled=/);
+});
+
+test("guided idle Start can be disabled without changing default free recording Start", () => {
+  assert.match(render({ startDisabled: true }), /disabled=""/);
+  assert.doesNotMatch(render({}), /disabled=/);
+  assert.doesNotMatch(render({ startDisabled: false }), /disabled=/);
 });
 
 test("wake held shows exact muted text; unavailable shows platform card without links", () => {

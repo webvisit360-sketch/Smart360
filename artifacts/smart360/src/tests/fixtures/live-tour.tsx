@@ -3,7 +3,7 @@
  * with a synthetic planned route; no tenant data, API writes, or authentication.
  * This HTML entry is not included in the production Vite build.
  */
-import React from "react";
+import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { LivingGuideGpxRoute } from "../../pages/living-guide/living-guide-gpx";
 import { LIVING_GUIDE_UI, type UiLanguage } from "../../pages/guest/i18n";
@@ -49,21 +49,26 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-createRoot(document.getElementById("root")!).render(
+function Fixture() {
+  const [visible, setVisible] = useState(true);
+  return (
   <main>
     <small>Razvojni preizkus · sintetična načrtovana pot</small>
+    <button data-testid="fixture-toggle-route" onClick={() => setVisible(v => !v)}>Mount / unmount route</button>
     <div className="fixture-sheet">
-      <LivingGuideGpxRoute
+      {visible && <LivingGuideGpxRoute
         route={route}
         slug="tour-browser-fixture"
         itemId="synthetic-route"
         heading="Obalna testna pot"
         variant="legacy"
+        lang={lang}
         t={(key, variables) => {
           const entry = LIVING_GUIDE_UI[key as keyof typeof LIVING_GUIDE_UI];
           return (entry?.[lang] || entry?.sl || key).replace(/\{(\w+)\}/g, (_, name: string) => String(variables?.[name] ?? ""));
         }}
-      />
+      />}
     </div>
-  </main>,
-);
+  </main>);
+}
+createRoot(document.getElementById("root")!).render(<Fixture />);

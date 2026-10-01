@@ -102,7 +102,7 @@ export default function GuestCategory() {
 
       <div className="pagepad">
         <CategoryContent category={currentCategory} tenant={tenant} t={t} lang={lang} items={items} />
-        <LegacyItemGpx items={items} slug={slug} t={t} />
+        <LegacyItemGpx items={items} slug={slug} t={t} lang={lang} />
         <div className="tail"></div>
       </div>
 
@@ -309,7 +309,7 @@ function CategoryContent({ category, tenant, t, lang, items }: { category: any, 
 }
 
 
-function LegacyItemGpx({ items, slug, t }: { items: any[]; slug: string; t: (key: string) => string }) {
+function LegacyItemGpx({ items, slug, t, lang }: { items: any[]; slug: string; t: (key: string) => string; lang: string }) {
   const withRoutes = items.filter((item: any) => item?.gpxRoute?.fileId);
   if (!slug || !withRoutes.length) return null;
   return (
@@ -321,6 +321,7 @@ function LegacyItemGpx({ items, slug, t }: { items: any[]; slug: string; t: (key
           slug={slug}
           itemId={item.id}
           t={t as UiTranslator}
+          lang={lang}
           variant="legacy"
           heading={withRoutes.length > 1 && item.title ? `${t("UI.lg.gpx.title")} · ${String(item.title).replace(/<[^>]*>/g, "")}` : undefined}
         />
