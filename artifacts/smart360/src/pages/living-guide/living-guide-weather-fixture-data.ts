@@ -1,7 +1,13 @@
 /** Deterministic synthetic weather + tenant for the dev-only weather fixture. */
-import type { TenantWeather } from "./living-guide-weather-model";
+import type { TenantWeather, WeatherSkin } from "./living-guide-weather-model";
 
 const HOUR = 60 * 60 * 1000;
+
+/** Frozen CET date for real screenshots; only the DEV fixture reads skin params. */
+export function weatherFixtureTime(skin: WeatherSkin): number {
+  const hour = { morning: 7, day: 12, evening: 18, night: 23 }[skin];
+  return Date.UTC(2026, 0, 15, hour - 1);
+}
 
 /** Epoch ms of today's HH:MM in Europe/Ljubljana, independent of the current clock time. */
 function ljubljanaToday(hour: number, minute: number, now: number): number {
@@ -26,11 +32,23 @@ export function syntheticWeather(mode: "calm" | "warning", now = Date.now()): Te
       precipitationProbability: stormy ? 72 : mode === "warning" ? 38 : 12 + (Math.abs(wave) % 9),
     });
   }
+  const sunrise = ljubljanaToday(7, 2, now);
+  const sunset = ljubljanaToday(18, 40, now);
+  // Fixture-only synthetic solar measurements, explicitly not production data.
+  // Resolve tomorrow at local noon, rather than assuming DST days are 24 h long.
+  const tomorrowNoon = ljubljanaToday(12, 0, now) + 24 * HOUR;
+  const date = (time: number) => new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Ljubljana", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date(time));
   return {
     fetchedAt: new Date(now - 7 * 60 * 1000).toISOString(),
     timezone: "Europe/Ljubljana",
-    current: { time: hourStart, temperatureC: 22.6, weatherCode: mode === "warning" ? 3 : 2, isDay: true, windKmh: 11.3 },
-    today: { maxC: 26.8, minC: 14.2, precipitationProbability: mode === "warning" ? 72 : 18, sunset: ljubljanaToday(18, 40, now) },
+    current: { time: hourStart, temperatureC: 22.6, weatherCode: mode === "warning" ? 3 : 2, isDay: hourStart >= sunrise && hourStart < sunset, windKmh: 11.3 },
+    today: { maxC: 26.8, minC: 14.2, precipitationProbability: mode === "warning" ? 72 : 18, sunrise, sunset },
+    solarDaily: [
+      { date: date(sunrise), sunrise, sunset },
+      { date: date(tomorrowNoon), sunrise: ljubljanaToday(7, 2, tomorrowNoon), sunset: ljubljanaToday(18, 40, tomorrowNoon) },
+    ],
     hourly,
   };
 }

@@ -46,16 +46,25 @@ export function parseTenantWeather(raw: unknown, now: number): TenantWeather {
   if (typeof timezone !== "string" || !timezone || timezone.length > 100) throw new TranslationFailure("invalid_output", null, null);
   try { new Intl.DateTimeFormat("en-CA", { timeZone: timezone }); }
   catch { throw new TranslationFailure("invalid_output", null, null); }
-  const offset = range(root["utc_offset_seconds"], -50_400, 50_400);
+  range(root["utc_offset_seconds"], -50_400, 50_400);
   const current = object(root["current"]);
   const daily = object(root["daily"]);
   const hourly = object(root["hourly"]);
-  const [days, max, min, probability, sunsets] = aligned(daily,
-    ["time", "temperature_2m_max", "temperature_2m_min", "precipitation_probability_max", "sunset"]);
-  const dayIndex = days.findIndex((value) => {
-    const timestamp = epoch(value);
-    return new Date(timestamp + offset * 1000).toISOString().slice(0, 10) === localDay(now, timezone);
+  const [days, max, min, probability, sunrises, sunsets] = aligned(daily,
+    ["time", "temperature_2m_max", "temperature_2m_min", "precipitation_probability_max", "sunrise", "sunset"]);
+  // Resolve each date with its own IANA offset: the two forecast days can
+  // straddle a DST change (the response's single utc_offset_seconds cannot).
+  const solarDaily = days.map((value, i) => {
+    const date = localDay(epoch(value), timezone);
+    const sunrise = epoch(sunrises[i]);
+    const sunset = epoch(sunsets[i]);
+    if (sunrise >= sunset || localDay(sunrise, timezone) !== date || localDay(sunset, timezone) !== date) {
+      throw new TranslationFailure("invalid_output", null, null);
+    }
+    return { date, sunrise, sunset };
   });
+  if (new Set(solarDaily.map((day) => day.date)).size !== solarDaily.length) throw new TranslationFailure("invalid_output", null, null);
+  const dayIndex = solarDaily.findIndex((day) => day.date === localDay(now, timezone));
   if (dayIndex < 0) throw new TranslationFailure("invalid_output", null, null);
   const [times, temperatures, codes, precipitation] = aligned(hourly,
     ["time", "temperature_2m", "weather_code", "precipitation_probability"]);
@@ -70,7 +79,7 @@ export function parseTenantWeather(raw: unknown, now: number): TenantWeather {
     throw new TranslationFailure("invalid_output", null, null);
   }
   const isDay = current["is_day"];
-  if (isDay !== 0 && isDay !== 1) throw new TranslationFailure("invalid_output", null, null);
+  if (isDay !== undefined && isDay !== 0 && isDay !== 1) throw new TranslationFailure("invalid_output", null, null);
   const weatherCode = range(current["weather_code"], 0, 99);
   if (!Number.isInteger(weatherCode)) throw new TranslationFailure("invalid_output", null, null);
   return {
@@ -80,15 +89,17 @@ export function parseTenantWeather(raw: unknown, now: number): TenantWeather {
       time: epoch(current["time"]),
       temperatureC: range(current["temperature_2m"], -100, 70),
       weatherCode,
-      isDay: isDay === 1,
+      ...(isDay === undefined ? {} : { isDay: isDay === 1 }),
       windKmh: range(current["wind_speed_10m"], 0, 500),
     },
     today: {
       maxC: range(max[dayIndex], -100, 70),
       minC: range(min[dayIndex], -100, 70),
       precipitationProbability: range(probability[dayIndex], 0, 100),
+      sunrise: solarDaily[dayIndex]!.sunrise,
       sunset: epoch(sunsets[dayIndex]),
     },
+    solarDaily,
     hourly: hours,
   };
 }
@@ -176,7 +187,7 @@ async function fetchOpenMeteo(latitude: number, longitude: number, now: number):
   url.search = new URLSearchParams({
     latitude: String(latitude), longitude: String(longitude),
     current: "temperature_2m,weather_code,is_day,wind_speed_10m",
-    daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunset",
+    daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset",
     hourly: "temperature_2m,weather_code,precipitation_probability",
     forecast_days: "2", timeformat: "unixtime", timezone: "auto",
   }).toString();

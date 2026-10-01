@@ -7,6 +7,7 @@
  */
 import type { TenantWeatherCurrent } from './tenantWeatherCurrent';
 import type { TenantWeatherHour } from './tenantWeatherHour';
+import type { TenantWeatherSolarDay } from './tenantWeatherSolarDay';
 import type { TenantWeatherToday } from './tenantWeatherToday';
 
 export interface TenantWeather {
@@ -19,4 +20,6 @@ export interface TenantWeather {
   current: TenantWeatherCurrent;
   today: TenantWeatherToday;
   hourly: TenantWeatherHour[];
+  /** Date-paired solar times from the existing two-day forecast, never synthesized */
+  solarDaily: TenantWeatherSolarDay[];
 }

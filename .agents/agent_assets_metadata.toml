@@ -1968,3 +1968,59 @@ mtime_ms = 1790807843584
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/00f28e87-1246-4c7d-9d4f-c7f709ecf779/fa7f5af3-d548-4fee-b3a5-4a13c1aaf11d"
 storage_version_token = "1790808054081288"
 content_type = "image/png"
+
+[[outputs]]
+id = "GC9JQAxCznoQjGk0Ivf9o"
+uri = "file://reports/weather-skins/morning-390.png"
+type = "image"
+title = "Vreme — jutro"
+description = "Dejanski prikaz razvojne kartice s testnimi vremenskimi podatki."
+logical_id = "4d841e03-edac-4356-a727-30d290104a7c"
+content_hash = "sha256:7d5ada8d792db5c33ed953a16d5210d4f0a2da0b523db987c44c0fc68990db98"
+size = 55789
+mtime_ms = 1790832204171
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4d841e03-edac-4356-a727-30d290104a7c/290b6149-c30f-48e2-bea6-1d8136283e6f"
+storage_version_token = "1790832300412213"
+content_type = "image/png"
+
+[[outputs]]
+id = "V3utqr11wPx9Q2fvHn-75"
+uri = "file://reports/weather-skins/day-390.png"
+type = "image"
+title = "Vreme — dan"
+description = "Dejanski prikaz razvojne kartice s testnimi vremenskimi podatki."
+logical_id = "0a67130a-a227-4d54-94e4-4a67ce82f9d7"
+content_hash = "sha256:0bc611f281ecd6e444ef8918eeb4f7d176a0838d731e24112b6a2721af9277a8"
+size = 55320
+mtime_ms = 1790832207067
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0a67130a-a227-4d54-94e4-4a67ce82f9d7/d7207e79-9a19-4e16-80d7-2c90772f29c6"
+storage_version_token = "1790832301176885"
+content_type = "image/png"
+
+[[outputs]]
+id = "QVHx2Jd9S6DXSupZSLDtm"
+uri = "file://reports/weather-skins/evening-390.png"
+type = "image"
+title = "Vreme — večer"
+description = "Dejanski prikaz razvojne kartice s testnimi vremenskimi podatki."
+logical_id = "f275be41-956d-48ee-8796-596f489a6d45"
+content_hash = "sha256:facf240d02cfb90937ef77074de51a1d4af4f7cb9ac0b81f61f5080a62c58d82"
+size = 58173
+mtime_ms = 1790832209271
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f275be41-956d-48ee-8796-596f489a6d45/ecf49d5b-457b-4610-b8ab-34661fb2f6fb"
+storage_version_token = "1790832302097887"
+content_type = "image/png"
+
+[[outputs]]
+id = "UuKpKWsJOu8MInSpGmyU2"
+uri = "file://reports/weather-skins/night-390.png"
+type = "image"
+title = "Vreme — noč"
+description = "Dejanski prikaz razvojne kartice s testnimi vremenskimi podatki."
+logical_id = "6cdbdbbe-fccb-4a27-8dcc-e421001a84b5"
+content_hash = "sha256:7bfa7e128df2e57f1ecac4fef7fe87677f821d599a7c633b84e2d46da94158ca"
+size = 46307
+mtime_ms = 1790832211927
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6cdbdbbe-fccb-4a27-8dcc-e421001a84b5/e1416bd2-1707-4bd5-88a5-195561058a98"
+storage_version_token = "1790832302838146"
+content_type = "image/png"

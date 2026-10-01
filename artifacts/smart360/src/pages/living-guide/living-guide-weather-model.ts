@@ -8,6 +8,11 @@ import type { TenantWeather } from "@workspace/api-client-react";
 export type { TenantWeather };
 export type WeatherLang = "sl" | "en" | "de" | "it";
 export type WeatherIconKind = "clear" | "partly" | "cloud" | "fog" | "drizzle" | "rain" | "snow" | "storm";
+export type WeatherSkin = "morning" | "day" | "evening" | "night";
+
+export const HOME_WEATHER_ZONE = "Europe/Ljubljana";
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
 
 type Entry = { icon: WeatherIconKind; sl: string; en: string; de: string; it: string };
 
@@ -78,6 +83,54 @@ function localParts(ms: number, tz: string | undefined): { day: string; hour: nu
   return { day: `${get("year")}-${get("month")}-${get("day")}`, hour: Number(get("hour")) % 24 };
 }
 
+/** Never carry today's solar times across midnight or invent a missing day. */
+export function weatherSolarTimes(weather: TenantWeather, at: number): { sunrise: number; sunset: number } | null {
+  if (!Number.isFinite(at)) return null;
+  const date = localParts(at, HOME_WEATHER_ZONE).day;
+  const candidates = [...(weather.solarDaily ?? []), weather.today];
+  return candidates.find((day) =>
+    Number.isFinite(day.sunrise) && Number.isFinite(day.sunset) && day.sunrise < day.sunset &&
+    localParts(day.sunrise, HOME_WEATHER_ZONE).day === date &&
+    localParts(day.sunset, HOME_WEATHER_ZONE).day === date &&
+    (!("date" in day) || day.date === date),
+  ) ?? null;
+}
+
+export function weatherSkin(weather: TenantWeather, now: number): WeatherSkin | null {
+  const sun = weatherSolarTimes(weather, now);
+  if (!sun) return null;
+  if (now < sun.sunrise - 30 * MINUTE || now >= sun.sunset + 30 * MINUTE) return "night";
+  if (now < sun.sunrise + 2 * HOUR) return "morning";
+  if (now < sun.sunset - 2 * HOUR) return "day";
+  return "evening";
+}
+
+/** The skin's twilight margins do NOT apply to sun/moon icons. */
+export function weatherIsDayAt(weather: TenantWeather, at: number): boolean | undefined {
+  const sun = weatherSolarTimes(weather, at);
+  return sun ? at >= sun.sunrise && at < sun.sunset : undefined;
+}
+
+/** Use provider is_day only while it remains valid for the actual display time. */
+export function currentWeatherIsDay(weather: TenantWeather, now: number): boolean | undefined {
+  const displayed = weatherIsDayAt(weather, now);
+  const measured = Number.isFinite(weather.current.time) ? weatherIsDayAt(weather, weather.current.time) : undefined;
+  if (typeof weather.current.isDay === "boolean" &&
+      (displayed === undefined || (measured === displayed && weather.current.isDay === displayed))) {
+    return weather.current.isDay;
+  }
+  return displayed;
+}
+
+/** Local render-only deadline, never an extra request or a query invalidation. */
+export function nextWeatherTransition(weather: TenantWeather, now: number): number | null {
+  const events = [...(weather.solarDaily ?? []), weather.today].flatMap((sun) => [
+    sun.sunrise - 30 * MINUTE, sun.sunrise, sun.sunrise + 2 * HOUR,
+    sun.sunset - 2 * HOUR, sun.sunset, sun.sunset + 30 * MINUTE,
+  ]).filter((time) => Number.isFinite(time) && time > now);
+  return events.length ? Math.min(...events) : null;
+}
+
 export const MAX_WEATHER_AGE_MS = 3 * 60 * 60 * 1000;
 
 /** Epoch ms at which this payload stops being usable (3 h age or local midnight). */
@@ -86,8 +139,8 @@ export function weatherExpiry(weather: TenantWeather): number {
   const day = localParts(fetched, weather.timezone).day;
   let hi = fetched + MAX_WEATHER_AGE_MS;
   if (localParts(hi, weather.timezone).day === day) return hi;
-  let lo = fetched; // binary search the local day boundary to the minute
-  while (hi - lo > 60_000) {
+  let lo = fetched; // exact local midnight, including 23/25-hour DST dates
+  while (hi - lo > 1) {
     const mid = Math.floor((lo + hi) / 2);
     if (localParts(mid, weather.timezone).day === day) lo = mid; else hi = mid;
   }
@@ -186,12 +239,23 @@ export function warningText(w: TourWeatherWarning, tz: string | undefined, lang:
   return { head: WARNING_HEAD[l][w.kind][dayPart(localParts(w.time, tz).hour)], detail: WARNING_DETAIL[l](time, Math.round(w.probability)) };
 }
 
-export const WEATHER_LABELS: Record<WeatherLang, { title: string; max: string; min: string; rain: string; wind: string; sunset: string; afternoon: (p: number) => string; afternoonFull: (p: number) => string; percent: (p: number) => string; warning: string }> = {
-  sl: { afternoonFull: (p) => `popoldne ${p} % verjetnost padavin`, title: "Vreme danes", max: "najv.", min: "najn.", rain: "Padavine", wind: "Veter", sunset: "Sončni zahod", afternoon: (p) => `popoldne ${p} %`, percent: (p) => `${p} %`, warning: "Opozorilo" },
-  en: { afternoonFull: (p) => `${p}% chance of rain this afternoon`, title: "Weather today", max: "max", min: "min", rain: "Rain", wind: "Wind", sunset: "Sunset", afternoon: (p) => `afternoon ${p}%`, percent: (p) => `${p}%`, warning: "Warning" },
-  de: { afternoonFull: (p) => `nachmittags ${p} % Regenwahrscheinlichkeit`, title: "Wetter heute", max: "max.", min: "min.", rain: "Regen", wind: "Wind", sunset: "Sonnenuntergang", afternoon: (p) => `nachm. ${p} %`, percent: (p) => `${p} %`, warning: "Warnung" },
-  it: { afternoonFull: (p) => `${p}% di probabilità di pioggia nel pomeriggio`, title: "Meteo di oggi", max: "max", min: "min", rain: "Pioggia", wind: "Vento", sunset: "Tramonto", afternoon: (p) => `pomeriggio ${p}%`, percent: (p) => `${p}%`, warning: "Avviso" },
+export const WEATHER_LABELS: Record<WeatherLang, { title: string; max: string; min: string; rain: string; wind: string; sunrise: string; sunset: string; afternoon: (p: number) => string; afternoonFull: (p: number) => string; percent: (p: number) => string; warning: string }> = {
+  sl: { afternoonFull: (p) => `popoldne ${p} % verjetnost padavin`, title: "Vreme danes", max: "najv.", min: "najn.", rain: "Padavine", wind: "Veter", sunrise: "Sončni vzhod", sunset: "Sončni zahod", afternoon: (p) => `popoldne ${p} %`, percent: (p) => `${p} %`, warning: "Opozorilo" },
+  en: { afternoonFull: (p) => `${p}% chance of rain this afternoon`, title: "Weather today", max: "max", min: "min", rain: "Rain", wind: "Wind", sunrise: "Sunrise", sunset: "Sunset", afternoon: (p) => `afternoon ${p}%`, percent: (p) => `${p}%`, warning: "Warning" },
+  de: { afternoonFull: (p) => `nachmittags ${p} % Regenwahrscheinlichkeit`, title: "Wetter heute", max: "max.", min: "min.", rain: "Regen", wind: "Wind", sunrise: "Sonnenaufgang", sunset: "Sonnenuntergang", afternoon: (p) => `nachm. ${p} %`, percent: (p) => `${p} %`, warning: "Warnung" },
+  it: { afternoonFull: (p) => `${p}% di probabilità di pioggia nel pomeriggio`, title: "Meteo di oggi", max: "max", min: "min", rain: "Pioggia", wind: "Vento", sunrise: "Alba", sunset: "Tramonto", afternoon: (p) => `pomeriggio ${p}%`, percent: (p) => `${p}%`, warning: "Avviso" },
 };
+
+export function homeSolarChip(weather: TenantWeather, now: number, lang: string): { label: string; time: number | null } {
+  const L = WEATHER_LABELS[weatherLang(lang)];
+  if (weatherSkin(weather, now) !== "night") {
+    return { label: L.sunset, time: weatherSolarTimes(weather, now)?.sunset ?? null };
+  }
+  const sunrises = [...(weather.solarDaily ?? []), weather.today]
+    .filter((sun) => weatherSolarTimes(weather, sun.sunrise)?.sunrise === sun.sunrise)
+    .map((sun) => sun.sunrise).filter((time) => time > now);
+  return { label: L.sunrise, time: sunrises.length ? Math.min(...sunrises) : null };
+}
 
 export function formatTemp(c: number): string {
   return `${Math.round(c)}°`;

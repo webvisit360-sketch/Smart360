@@ -1,0 +1,86 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 1100
+  },
+  "deviceScaleFactor": 1,
+  "screenshotOnlyVisits": 4,
+  "captures": [
+    {
+      "skin": "morning",
+      "lang": "sl",
+      "screenshot": "reports/weather-skins/morning-390.png",
+      "x": 16,
+      "y": 430.34375,
+      "width": 358,
+      "height": 239,
+      "bottom": 669.34375,
+      "navTop": 1022,
+      "fullyAboveNavigation": true,
+      "allCornersUnobscured": true
+    },
+    {
+      "skin": "day",
+      "lang": "sl",
+      "screenshot": "reports/weather-skins/day-390.png",
+      "x": 16,
+      "y": 430.34375,
+      "width": 358,
+      "height": 239,
+      "bottom": 669.34375,
+      "navTop": 1022,
+      "fullyAboveNavigation": true,
+      "allCornersUnobscured": true
+    },
+    {
+      "skin": "evening",
+      "lang": "sl",
+      "screenshot": "reports/weather-skins/evening-390.png",
+      "x": 16,
+      "y": 430.34375,
+      "width": 358,
+      "height": 239,
+      "bottom": 669.34375,
+      "navTop": 1022,
+      "fullyAboveNavigation": true,
+      "allCornersUnobscured": true
+    },
+    {
+      "skin": "night",
+      "lang": "sl",
+      "screenshot": "reports/weather-skins/night-390.png",
+      "x": 16,
+      "y": 430.34375,
+      "width": 358,
+      "height": 239,
+      "bottom": 669.34375,
+      "navTop": 1022,
+      "fullyAboveNavigation": true,
+      "allCornersUnobscured": true
+    }
+  ],
+  "errors": [],
+  "apiIntercepts": [
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    }
+  ],
+  "forwardedApiRequests": 0
+}

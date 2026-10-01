@@ -4,14 +4,20 @@ import { getGetTenantWeatherQueryKey, useGetTenantWeather } from "@workspace/api
 import {
   afternoonPrecipitation,
   describeWeather,
+  currentWeatherIsDay,
   formatHomeClock,
   formatHomeHour,
   formatTemp,
+  homeSolarChip,
+  HOME_WEATHER_ZONE,
+  nextWeatherTransition,
   todaySlots,
   tourWarning,
   usableWeather,
   warningText,
   weatherIconKind,
+  weatherIsDayAt,
+  weatherSkin,
   weatherExpiry,
   weatherLang,
   WEATHER_LABELS,
@@ -28,6 +34,8 @@ export const WEATHER_CLOCK_MS = 60 * 1000;
 
 /** Default null: legacy / non-Living-Guide surfaces never render weather. */
 export const WeatherContext = createContext<WeatherContextValue | null>(null);
+/** Supplied only by the DEV-only fixture, never by production URL parameters. */
+export const WeatherFixtureClockContext = createContext<number | undefined>(undefined);
 
 export function useLivingGuideWeather(): WeatherContextValue | null {
   return useContext(WeatherContext);
@@ -41,6 +49,8 @@ export function useLivingGuideWeather(): WeatherContextValue | null {
 export function WeatherProvider({ slug, lang, override, children }: { slug: string; lang: string; override?: TenantWeather | null; children: ReactNode }) {
   const { disconnected } = useLivingGuideOffline();
   const useOverride = override !== undefined;
+  const fixtureClock = useContext(WeatherFixtureClockContext);
+  const fixedNow = import.meta.env.DEV && useOverride ? fixtureClock : undefined;
   const query = useGetTenantWeather(slug, {
     query: {
       enabled: !disconnected && !useOverride && !!slug,
@@ -58,6 +68,7 @@ export function WeatherProvider({ slug, lang, override, children }: { slug: stri
   // timer at expiry, and visibility/focus/online wake-ups.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
+    if (fixedNow !== undefined) return;
     const tick = () => setNow(Date.now());
     const interval = window.setInterval(tick, WEATHER_CLOCK_MS);
     const onVisible = () => { if (document.visibilityState === "visible") tick(); };
@@ -72,15 +83,18 @@ export function WeatherProvider({ slug, lang, override, children }: { slug: stri
       window.removeEventListener("online", tick);
       window.removeEventListener("pageshow", tick);
     };
-  }, []);
-  const weather = disconnected ? null : usableWeather(raw ?? null, now);
+  }, [fixedNow]);
+  const displayNow = fixedNow ?? now;
+  const weather = disconnected ? null : usableWeather(raw ?? null, displayNow);
   const expiry = weather ? weatherExpiry(weather) : null;
+  const transition = weather ? nextWeatherTransition(weather, displayNow) : null;
   useEffect(() => {
-    if (expiry === null) return;
-    const timer = window.setTimeout(() => setNow(Date.now()), Math.max(0, expiry - Date.now()) + 50);
+    if (expiry === null || fixedNow !== undefined) return;
+    const deadline = Math.min(expiry, transition ?? Infinity);
+    const timer = window.setTimeout(() => setNow(Date.now()), Math.max(0, deadline - Date.now()) + 1);
     return () => window.clearTimeout(timer);
-  }, [expiry]);
-  const value = useMemo(() => ({ weather, lang, now }), [weather, lang, now]);
+  }, [expiry, transition, fixedNow]);
+  const value = useMemo(() => ({ weather, lang, now: displayNow }), [weather, lang, displayNow]);
   return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;
 }
 
@@ -144,19 +158,22 @@ function Glyph({ name }: { name: "drop" | "wind" | "sunset" | "alert" }) {
 export function WeatherCard({ location }: { location?: string }) {
   const ctx = useLivingGuideWeather();
   if (!ctx?.weather) return null;
-  const { weather, lang } = ctx;
+  const { weather, lang, now } = ctx;
+  const skin = weatherSkin(weather, now);
+  if (!skin) return null; // Missing astronomical data is never synthesized.
   const l = weatherLang(lang);
   const L = WEATHER_LABELS[l];
   const slots = todaySlots(weather, l);
   const desc = describeWeather(weather.current.weatherCode, l);
+  const solarChip = homeSolarChip(weather, now, l);
   return (
-    <section className="lgw-card" lang={l} aria-label={L.title} data-testid="card-home-weather">
+    <section className="lgw-card" data-weather-skin={skin} lang={l} aria-label={L.title} data-testid="card-home-weather">
       <div className="lgw-head">
         <p className="lgw-kicker">{L.title}</p>
         {location && <span className="lgw-loc" data-testid="text-weather-location">{location}</span>}
       </div>
       <div className="lgw-now">
-        <WeatherIcon code={weather.current.weatherCode} isDay={weather.current.isDay} className="lgw-now-icon" />
+        <WeatherIcon code={weather.current.weatherCode} isDay={currentWeatherIsDay(weather, now)} className="lgw-now-icon" />
         <div className="lgw-now-temp" data-testid="text-weather-temp">{formatTemp(weather.current.temperatureC)}</div>
         <div className="lgw-now-copy">
           <b data-testid="text-weather-desc">{desc}</b>
@@ -168,14 +185,14 @@ export function WeatherCard({ location }: { location?: string }) {
       <ul className="lgw-chips" data-testid="list-weather-chips">
         <li><span className="lgw-chip-k">{L.rain}</span><b>{L.percent(Math.round(weather.today.precipitationProbability))}</b></li>
         <li><span className="lgw-chip-k">{L.wind}</span><b>{Math.round(weather.current.windKmh)} km/h</b></li>
-        <li><span className="lgw-chip-k">{L.sunset}</span><b>{formatHomeClock(weather.today.sunset, weather.timezone, l)}</b></li>
+        <li><span className="lgw-chip-k">{solarChip.label}</span><b>{solarChip.time === null ? "—" : formatHomeClock(solarChip.time, HOME_WEATHER_ZONE, l)}</b></li>
       </ul>
       {slots.length > 0 && (
         <ol className="lgw-slots" data-testid="list-weather-slots">
           {slots.map((slot) => (
             <li key={slot.time}>
-              <span className="lgw-slot-time">{formatHomeHour(slot.time, weather.timezone, l)}</span>
-              <WeatherIcon code={slot.weatherCode} isDay={slot.time < weather.today.sunset} />
+              <span className="lgw-slot-time">{formatHomeHour(slot.time, HOME_WEATHER_ZONE, l)}</span>
+              <WeatherIcon code={slot.weatherCode} isDay={weatherIsDayAt(weather, slot.time)} />
               <b>{formatTemp(slot.temperatureC)}</b>
             </li>
           ))}

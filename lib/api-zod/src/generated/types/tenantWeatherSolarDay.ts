@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TenantWeatherToday {
-  maxC: number;
-  minC: number;
-  precipitationProbability: number;
+export interface TenantWeatherSolarDay {
+  /**
+     * Local calendar date in the forecast timezone
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  date: string;
   /** Epoch milliseconds */
   sunrise: number;
   /** Epoch milliseconds */

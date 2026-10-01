@@ -1,0 +1,370 @@
+{
+  "combinations": 16,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "deviceScaleFactor": 1,
+  "screenshotViewport": {
+    "width": 390,
+    "height": 1100
+  },
+  "screenshotOnlyCorrection": {
+    "visits": 4,
+    "language": "sl",
+    "matrixOrUnitRepeat": false,
+    "cardTop": 430.34375,
+    "cardBottom": 669.34375,
+    "fixedNavigationTop": 1022,
+    "fullyAboveNavigation": true,
+    "allCornersUnobscured": true,
+    "runtimeErrors": [],
+    "forwardedApiRequests": 0,
+    "detailsFile": "capture-summary.json"
+  },
+  "fixtureSolar": {
+    "sunrise": "2026-01-15 07:02 CET",
+    "sunset": "2026-01-15 18:40 CET",
+    "nightNextSunrise": "2026-01-16 07:02 CET"
+  },
+  "errors": [],
+  "apiIntercepts": [
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/tenants/__weather-fixture/orders",
+      "action": "fixture-empty-orders"
+    }
+  ],
+  "forwardedApiRequests": 0,
+  "cards": [
+    {
+      "skin": "morning",
+      "lang": "sl",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sončni zahod",
+        "value": "18.40"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "day",
+      "lang": "sl",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sončni zahod",
+        "value": "18.40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "evening",
+      "lang": "sl",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sončni zahod",
+        "value": "18.40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "night",
+      "lang": "sl",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sončni vzhod",
+        "value": "07.02"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "morning",
+      "lang": "en",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sunset",
+        "value": "18:40"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "day",
+      "lang": "en",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sunset",
+        "value": "18:40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "evening",
+      "lang": "en",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sunset",
+        "value": "18:40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "night",
+      "lang": "en",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Sunrise",
+        "value": "07:02"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "morning",
+      "lang": "de",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 237
+      },
+      "solar": {
+        "label": "Sonnenuntergang",
+        "value": "18:40"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "day",
+      "lang": "de",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 237
+      },
+      "solar": {
+        "label": "Sonnenuntergang",
+        "value": "18:40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "evening",
+      "lang": "de",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 237
+      },
+      "solar": {
+        "label": "Sonnenuntergang",
+        "value": "18:40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "night",
+      "lang": "de",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 237
+      },
+      "solar": {
+        "label": "Sonnenaufgang",
+        "value": "07:02"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "morning",
+      "lang": "it",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Tramonto",
+        "value": "18:40"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    },
+    {
+      "skin": "day",
+      "lang": "it",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Tramonto",
+        "value": "18:40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "evening",
+      "lang": "it",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Tramonto",
+        "value": "18:40"
+      },
+      "currentIcon": "sun",
+      "clippedLabels": []
+    },
+    {
+      "skin": "night",
+      "lang": "it",
+      "card": {
+        "x": 16,
+        "width": 358,
+        "height": 239
+      },
+      "solar": {
+        "label": "Alba",
+        "value": "07:02"
+      },
+      "currentIcon": "moon",
+      "clippedLabels": []
+    }
+  ],
+  "assertionFailures": [],
+  "visualInspection": {
+    "imagesInspected": ["morning-390.png", "day-390.png", "evening-390.png", "night-390.png"],
+    "primaryHierarchy": "23-degree temperature and description remain clearly primary; title, location, range and chip labels remain secondary in all four skins",
+    "wholeCardVisible": true,
+    "hourlyIconsAndTemperatures": "All six rows fully visible: sun/partly-cloudy at 12h/14h/16h/18h, moon/partly-cloudy at 20h/22h",
+    "attribution": "Open-Meteo fully visible on all four cards; secondary but readable",
+    "occlusion": "None in corrected captures"
+  },
+  "limits": [
+    "Chromium only, synthetic DEV fixture, no live weather/API/database exercised",
+    "Base typography compared to current git HEAD stylesheet",
+    "AA full-gradient coverage belongs to the already-passed unit suite; not rerun here"
+  ]
+}

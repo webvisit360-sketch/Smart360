@@ -10,7 +10,7 @@ export interface TenantWeatherCurrent {
   time: number;
   temperatureC: number;
   weatherCode: number;
-  isDay: boolean;
+  isDay?: boolean;
   windKmh: number;
 }
 
@@ -18,6 +18,8 @@ export interface TenantWeatherToday {
   maxC: number;
   minC: number;
   precipitationProbability: number;
+  /** Epoch milliseconds */
+  sunrise: number;
   /** Epoch milliseconds */
   sunset: number;
 }
@@ -30,6 +32,18 @@ export interface TenantWeatherHour {
   precipitationProbability: number;
 }
 
+export interface TenantWeatherSolarDay {
+  /**
+     * Local calendar date in the forecast timezone
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  date: string;
+  /** Epoch milliseconds */
+  sunrise: number;
+  /** Epoch milliseconds */
+  sunset: number;
+}
+
 export interface TenantWeather {
   /**
      * ISO 8601 UTC timestamp
@@ -40,6 +54,8 @@ export interface TenantWeather {
   current: TenantWeatherCurrent;
   today: TenantWeatherToday;
   hourly: TenantWeatherHour[];
+  /** Date-paired solar times from the existing two-day forecast, never synthesized */
+  solarDaily: TenantWeatherSolarDay[];
 }
 
 export interface TenantWeatherResponse {

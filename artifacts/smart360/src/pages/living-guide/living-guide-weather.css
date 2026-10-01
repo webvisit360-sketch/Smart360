@@ -1,14 +1,48 @@
-/* Home card: binding reference (vreme-domov-celota), night palette scoped to the card. */
+/* Home card: binding vreme-deli-dneva backgrounds/borders/compositing.
+   Only failing text tokens are minimally mixed in sRGB toward black/white.
+   Contrast tests read these actual declarations against the attached reference. */
 [data-living-guide] .lgw-card {
   --lgw-txt: #F2F5F9; --lgw-muted: #8E9AAC; --lgw-line: #1E2A3D;
+  --lgw-bg: linear-gradient(135deg, #14243C 0%, #121B2B 70%);
+  --lgw-chip-bg: rgba(255,255,255,.05); --lgw-chip-line: #1E2A3D;
+  --lgw-slot-bg: rgba(255,255,255,.04);
+  --lgw-chip-k: #8E9AAC; --lgw-slot-time: #8E9AAC;
+  --lgw-icon: #F2B135; --lgw-attrib: #818B99;
   margin: 0 16px 16px; padding: 14px 16px;
   font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   line-height: normal;
   border-radius: 18px;
-  background: linear-gradient(135deg, #14243C 0%, #121B2B 70%);
+  background: var(--lgw-bg);
   border: 1px solid var(--lgw-line);
   color: var(--lgw-txt);
   animation: lgw-in .6s var(--ease) both;
+}
+[data-living-guide] .lgw-card[data-weather-skin="morning"] {
+  --lgw-bg: linear-gradient(135deg, #FFE9C9 0%, #FBD9A0 55%, #F6C98A 100%);
+  --lgw-line: #EBCB96;
+  --lgw-chip-bg: rgba(255,255,255,.45); --lgw-chip-line: rgba(138,106,58,.22);
+  --lgw-slot-bg: rgba(255,255,255,.35);
+  --lgw-txt: #3A2E1C; --lgw-muted: #6F552F;
+  --lgw-chip-k: #7F6135; --lgw-slot-time: #7B5F34;
+  --lgw-icon: #D98A2B; --lgw-attrib: #69573B;
+}
+[data-living-guide] .lgw-card[data-weather-skin="day"] {
+  --lgw-bg: linear-gradient(135deg, #DFF0FB 0%, #BBDCF3 60%, #A6CFEC 100%);
+  --lgw-line: #A9CBE4;
+  --lgw-chip-bg: rgba(255,255,255,.5); --lgw-chip-line: rgba(74,107,134,.2);
+  --lgw-slot-bg: rgba(255,255,255,.4);
+  --lgw-txt: #14243C; --lgw-muted: #3D586F;
+  --lgw-chip-k: #496984; --lgw-slot-time: #476680;
+  --lgw-icon: #E8A93B; --lgw-attrib: #465766;
+}
+[data-living-guide] .lgw-card[data-weather-skin="evening"] {
+  --lgw-bg: linear-gradient(135deg, #FBD8A6 0%, #F2A96B 48%, #D97B42 100%);
+  --lgw-line: #E0A878;
+  --lgw-chip-bg: rgba(255,255,255,.38); --lgw-chip-line: rgba(122,69,38,.25);
+  --lgw-slot-bg: rgba(255,255,255,.3);
+  --lgw-txt: #361F10; --lgw-muted: #422615;
+  --lgw-chip-k: #6F3E22; --lgw-slot-time: #663920;
+  --lgw-icon: #B5482F; --lgw-attrib: #3E2818;
 }
 [data-living-guide] .lgw-card * { font-family: inherit; line-height: normal; }
 @keyframes lgw-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -16,7 +50,7 @@
 [data-living-guide] .lgw-kicker { margin: 0; font-size: 11px; letter-spacing: .1em; color: var(--lgw-muted); font-weight: 700; text-transform: uppercase; }
 [data-living-guide] .lgw-loc { font-size: 12px; color: var(--lgw-muted); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-living-guide] .lgw-now { display: flex; align-items: center; gap: 12px; }
-[data-living-guide] .lgw-now-icon { width: 40px; height: 40px; flex: none; color: #F2B135; }
+[data-living-guide] .lgw-now-icon { width: 40px; height: 40px; flex: none; color: var(--lgw-icon); }
 [data-living-guide] .lgw-now-temp { font-size: 38px; font-weight: 800; color: var(--lgw-txt); font-variant-numeric: tabular-nums; }
 [data-living-guide] .lgw-now-copy { margin-left: auto; text-align: right; min-width: 0; display: flex; flex-direction: column; }
 [data-living-guide] .lgw-now-copy b { color: var(--lgw-txt); font-size: 14px; font-weight: 600; }
@@ -25,20 +59,20 @@
 [data-living-guide] .lgw-chips { list-style: none; display: flex; gap: 8px; margin: 10px 0 0; padding: 0; }
 [data-living-guide] .lgw-chips li {
   flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center;
-  background: rgba(255,255,255,.05); border: 1px solid var(--lgw-line); border-radius: 12px; padding: 7px 6px; text-align: center;
+  background: var(--lgw-chip-bg); border: 1px solid var(--lgw-chip-line); border-radius: 12px; padding: 7px 6px; text-align: center;
 }
-[data-living-guide] .lgw-chip-k { color: var(--lgw-muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+[data-living-guide] .lgw-chip-k { color: var(--lgw-chip-k); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 [data-living-guide] .lgw-card:lang(de) .lgw-chip-k { font-size: 10px; }
 [data-living-guide] .lgw-chips b { color: var(--lgw-txt); font-size: 14px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
 [data-living-guide] .lgw-slots { list-style: none; display: flex; gap: 6px; margin: 10px 0 0; padding: 0; }
 [data-living-guide] .lgw-slots li {
   flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center;
-  background: rgba(255,255,255,.04); border-radius: 10px; padding: 6px 2px; text-align: center;
+  background: var(--lgw-slot-bg); border-radius: 10px; padding: 6px 2px; text-align: center;
 }
-[data-living-guide] .lgw-slot-time { color: var(--lgw-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+[data-living-guide] .lgw-slot-time { color: var(--lgw-slot-time); font-size: 10px; font-variant-numeric: tabular-nums; }
 [data-living-guide] .lgw-slots svg { width: 14px; height: 16px; margin: 2px 0; color: var(--lgw-txt); }
 [data-living-guide] .lgw-slots b { color: var(--lgw-txt); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
-[data-living-guide] .lgw-attrib { display: block; margin-top: 8px; color: #5f6b7d; font-size: 10px; text-align: right; }
+[data-living-guide] .lgw-attrib { display: block; margin-top: 8px; color: var(--lgw-attrib); font-size: 10px; text-align: right; }
 
 [data-living-guide] .lgw-strip {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap; row-gap: 2px;

@@ -324,6 +324,7 @@ export * from './tenantWeather';
 export * from './tenantWeatherCurrent';
 export * from './tenantWeatherHour';
 export * from './tenantWeatherResponse';
+export * from './tenantWeatherSolarDay';
 export * from './tenantWeatherToday';
 export * from './translation';
 export * from './translationEntry';

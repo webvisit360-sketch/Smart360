@@ -11,6 +11,6 @@ export interface TenantWeatherCurrent {
   time: number;
   temperatureC: number;
   weatherCode: number;
-  isDay: boolean;
+  isDay?: boolean;
   windKmh: number;
 }

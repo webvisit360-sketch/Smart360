@@ -23,7 +23,8 @@ function base(now: number, hourly: TenantWeather["hourly"]): TenantWeather {
     fetchedAt: new Date(now - 5 * 60_000).toISOString(),
     timezone: "Europe/Ljubljana",
     current: { time: now, temperatureC: 20, weatherCode: 1, isDay: true, windKmh: 8 },
-    today: { maxC: 25, minC: 13, precipitationProbability: 20, sunset: now + 6 * HOUR },
+    today: { maxC: 25, minC: 13, precipitationProbability: 20, sunrise: now - 4 * HOUR, sunset: now + 6 * HOUR },
+    solarDaily: [],
     hourly,
   };
 }
@@ -145,7 +146,7 @@ test("home weather chips order and SL labels", () => {
   assert.equal(HOME_LABELS.en.sunset, "Sunset");
   const src = readFileSync(fileURLToPath(new URL("../pages/living-guide/living-guide-weather.tsx", import.meta.url)), "utf8");
   const card = src.slice(src.indexOf("export function WeatherCard"), src.indexOf("export function TourWeatherStrip"));
-  assert.ok(card.indexOf("L.rain") < card.indexOf("L.wind") && card.indexOf("L.wind") < card.indexOf("L.sunset"));
+  assert.ok(card.indexOf("L.rain") < card.indexOf("L.wind") && card.indexOf("L.wind") < card.indexOf("solarChip.label"));
   assert.ok(card.indexOf("lgw-kicker") < card.indexOf("lgw-loc") && card.indexOf("lgw-loc") < card.indexOf("lgw-now"));
 });
 

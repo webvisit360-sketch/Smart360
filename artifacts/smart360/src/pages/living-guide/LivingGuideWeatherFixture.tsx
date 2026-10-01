@@ -11,10 +11,10 @@ import { useLocation } from "wouter";
 import LivingGuideGuestShell from "./LivingGuideGuestShell";
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import { LivingGuideGpxRoute } from "./living-guide-gpx";
-import { WeatherProvider } from "./living-guide-weather";
+import { WeatherFixtureClockContext, WeatherProvider } from "./living-guide-weather";
 import { isLivingTheme } from "./theme-clock";
 import { makeT, type UiLanguage } from "../guest/i18n";
-import { SYNTHETIC_GPX_ROUTE, syntheticTenant, syntheticWeather } from "./living-guide-weather-fixture-data";
+import { SYNTHETIC_GPX_ROUTE, syntheticTenant, syntheticWeather, weatherFixtureTime } from "./living-guide-weather-fixture-data";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
 
@@ -22,23 +22,28 @@ export default function LivingGuideWeatherFixture() {
   const [location] = useLocation();
   const search = new URLSearchParams(window.location.search);
   const mode = search.get("weather") === "warning" ? "warning" : "calm";
+  const skin = search.get("skin");
+  const fixedNow = skin === "morning" || skin === "day" || skin === "evening" || skin === "night" ? weatherFixtureTime(skin) : undefined;
   const [lang, setLang] = useState<UiLanguage>(() => {
     const requested = search.get("lang");
     return requested === "en" || requested === "de" || requested === "it" ? requested : "sl";
   });
   const tenant = useMemo(() => syntheticTenant(lang), [lang]);
-  const weather = useMemo(() => syntheticWeather(mode), [mode]);
+  const weather = useMemo(() => syntheticWeather(mode, fixedNow), [mode, fixedNow]);
   const surface = location.split("/").filter(Boolean)[1] ?? "home";
 
-  if (surface === "gpx") return <GpxSurface tenant={tenant} lang={lang} weather={weather} theme={search.get("theme")} />;
   return (
-    <LivingGuideGuestShell
-      tenant={tenant}
-      slug={tenant.slug}
-      lang={lang}
-      onLanguageChange={(next) => setLang(next === "en" || next === "de" || next === "it" ? next : "sl")}
-      devWeather={weather}
-    />
+    <WeatherFixtureClockContext.Provider value={fixedNow}>
+      {surface === "gpx" ? <GpxSurface tenant={tenant} lang={lang} weather={weather} theme={search.get("theme")} /> : (
+        <LivingGuideGuestShell
+          tenant={tenant}
+          slug={tenant.slug}
+          lang={lang}
+          onLanguageChange={(next) => setLang(next === "en" || next === "de" || next === "it" ? next : "sl")}
+          devWeather={weather}
+        />
+      )}
+    </WeatherFixtureClockContext.Provider>
   );
 }
 

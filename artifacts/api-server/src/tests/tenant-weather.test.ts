@@ -7,7 +7,8 @@ function weather(at = noon): TenantWeather {
   return {
     fetchedAt: new Date(at).toISOString(), timezone: "Europe/Ljubljana",
     current: { time: at, temperatureC: 8, weatherCode: 2, isDay: true, windKmh: 9 },
-    today: { maxC: 12, minC: 2, precipitationProbability: 20, sunset: noon + 4 * 3_600_000 },
+    today: { maxC: 12, minC: 2, precipitationProbability: 20, sunrise: noon - 4 * 3_600_000, sunset: noon + 4 * 3_600_000 },
+    solarDaily: [],
     hourly: [{ time: at + 3_600_000, temperatureC: 7, weatherCode: 2, precipitationProbability: 20 }],
   };
 }
@@ -128,6 +129,7 @@ test("unix timestamps, daily local-day alignment and strict incomplete payload r
     daily: {
       time: [start, start + 86400], temperature_2m_max: [12, 13],
       temperature_2m_min: [2, 3], precipitation_probability_max: [20, 40],
+      sunrise: [start + 7 * 3600, start + 31 * 3600],
       sunset: [start + 16 * 3600, start + 40 * 3600],
     },
     hourly: {
@@ -138,7 +140,52 @@ test("unix timestamps, daily local-day alignment and strict incomplete payload r
     },
   };
   assert.equal(parseTenantWeather(raw, noon).today.sunset, (start + 16 * 3600) * 1000);
+  assert.equal(parseTenantWeather(raw, noon).today.sunrise, (start + 7 * 3600) * 1000);
+  assert.deepEqual(parseTenantWeather(raw, noon).solarDaily, [
+    { date: "2026-01-01", sunrise: (start + 7 * 3600) * 1000, sunset: (start + 16 * 3600) * 1000 },
+    { date: "2026-01-02", sunrise: (start + 31 * 3600) * 1000, sunset: (start + 40 * 3600) * 1000 },
+  ]);
   assert.equal(parseTenantWeather(raw, noon).hourly.length, 48);
   assert.throws(() => parseTenantWeather({ ...raw, hourly: { ...raw.hourly, precipitation_probability: [] } }, noon));
   assert.throws(() => parseTenantWeather({ ...raw, current: { ...raw.current, wind_speed_10m: null } }, noon));
+  assert.throws(() => parseTenantWeather({ ...raw, daily: { ...raw.daily, sunrise: [] } }, noon));
+  assert.throws(() => parseTenantWeather({ ...raw, daily: { ...raw.daily, sunrise: raw.daily.sunset } }, noon));
+  assert.throws(() => parseTenantWeather({ ...raw, daily: { ...raw.daily, sunrise: [start + 31 * 3600, start + 7 * 3600] } }, noon));
+  const { is_day: _missing, ...withoutDay } = raw.current;
+  assert.equal(parseTenantWeather({ ...raw, current: withoutDay }, noon).current.isDay, undefined);
+});
+
+test("date-paired solar days survive spring and autumn DST; no fixed-offset date borrowing", () => {
+  for (const [midnights, sunrises, sunsets, offset] of [
+    [["2026-03-28T23:00:00Z", "2026-03-29T22:00:00Z"], ["2026-03-29T04:50:00Z", "2026-03-30T04:48:00Z"], ["2026-03-29T17:25:00Z", "2026-03-30T17:26:00Z"], 3600],
+    [["2026-10-24T22:00:00Z", "2026-10-25T23:00:00Z"], ["2026-10-25T05:30:00Z", "2026-10-26T05:32:00Z"], ["2026-10-25T15:55:00Z", "2026-10-26T15:53:00Z"], 7200],
+  ] as const) {
+    const epoch = (iso: string) => Date.parse(iso) / 1000;
+    const now = Date.parse(sunrises[0]) + 4 * 3_600_000;
+    const raw = {
+      timezone: "Europe/Ljubljana", utc_offset_seconds: offset,
+      current: { time: now / 1000, temperature_2m: 8, weather_code: 0, is_day: 1, wind_speed_10m: 9 },
+      daily: {
+        time: midnights.map(epoch), sunrise: sunrises.map(epoch), sunset: sunsets.map(epoch),
+        temperature_2m_max: [12, 13], temperature_2m_min: [2, 3], precipitation_probability_max: [20, 40],
+      },
+      hourly: {
+        time: Array.from({ length: 48 }, (_, i) => epoch(midnights[0]) + i * 3600),
+        temperature_2m: Array(48).fill(8), weather_code: Array(48).fill(0), precipitation_probability: Array(48).fill(20),
+      },
+    };
+    const result = parseTenantWeather(raw, now);
+    const dates = sunrises.map((iso) => iso.slice(0, 10));
+    assert.deepEqual(result.solarDaily.map((day) => day.date), dates);
+    assert.equal(result.today.sunrise, Date.parse(sunrises[0]));
+  }
+});
+
+test("the existing upstream request adds sunrise only; forecast horizon and call budgets unchanged", async () => {
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(new URL("../lib/tenantWeather.ts", import.meta.url), "utf8");
+  assert.match(source, /daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"/);
+  assert.match(source, /forecast_days: "2"/);
+  assert.equal((source.match(/await fetch\(/g) ?? []).length, 1);
+  assert.match(source, /const TTL = 30 \* 60_000/);
 });

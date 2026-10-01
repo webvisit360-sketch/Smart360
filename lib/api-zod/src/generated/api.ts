@@ -2113,6 +2113,7 @@ export const GetTenantWeatherParams = zod.object({
 })
 
 export const getTenantWeatherResponseWeatherOneFetchedAtRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$');
+export const getTenantWeatherResponseWeatherOneSolarDailyItemDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 
 export const GetTenantWeatherResponse = zod.object({
@@ -2123,13 +2124,14 @@ export const GetTenantWeatherResponse = zod.object({
   "time": zod.number().describe('Epoch milliseconds'),
   "temperatureC": zod.number(),
   "weatherCode": zod.number(),
-  "isDay": zod.boolean(),
+  "isDay": zod.boolean().optional(),
   "windKmh": zod.number()
 }),
   "today": zod.object({
   "maxC": zod.number(),
   "minC": zod.number(),
   "precipitationProbability": zod.number(),
+  "sunrise": zod.number().describe('Epoch milliseconds'),
   "sunset": zod.number().describe('Epoch milliseconds')
 }),
   "hourly": zod.array(zod.object({
@@ -2137,7 +2139,12 @@ export const GetTenantWeatherResponse = zod.object({
   "temperatureC": zod.number(),
   "weatherCode": zod.number(),
   "precipitationProbability": zod.number()
-}))
+})),
+  "solarDaily": zod.array(zod.object({
+  "date": zod.string().regex(getTenantWeatherResponseWeatherOneSolarDailyItemDateRegExp).describe('Local calendar date in the forecast timezone'),
+  "sunrise": zod.number().describe('Epoch milliseconds'),
+  "sunset": zod.number().describe('Epoch milliseconds')
+})).describe('Date-paired solar times from the existing two-day forecast, never synthesized')
 }),zod.null()])
 })
 
