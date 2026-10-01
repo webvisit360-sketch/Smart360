@@ -1,0 +1,67 @@
+<!doctype html><html lang="sl"><meta charset="utf-8"><title>DEV preverjanje in dokaz čiščenja</title><style>body{font:16px/1.55 system-ui,sans-serif;max-width:1000px;margin:40px auto;padding:0 24px;color:#18221b;background:#fff}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%;margin:20px 0}td,th{border:1px solid #d7ddd8;padding:8px;text-align:left}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f6f2;padding:18px;font-size:12px}.ok{color:#157347;font-weight:bold}</style><h1>DEV preverjanje in dokaz čiščenja</h1><p>Preverjeno: 2026-10-01T18:12:11.239Z. Brez objave aplikacije. Produkcijske avtentikacijske tabele niso bile predmet posegov.</p><h2>Ustvarjeni testni računi in nastanitvi</h2><ul><li>A: mme2e-cbaf10ea3e73-a — nastanitev e8310f59-62a1-4d6c-8eb4-659c3e174c90, gostitelj 10320f88-5610-4d4e-adf9-5289612bdfd7.</li><li>B: mme2e-cbaf10ea3e73-b — nastanitev 7a531ecd-3ccd-42b4-8baf-66fa25cfc6df, gostitelj fcc158d0-1e86-431a-91b2-e3bc391a0774.</li><li>Operaterski račun ni bil ustvarjen; obstoječa prijava podpira enega operaterja.</li></ul><p>Samo sintetični podatki. Nobenega testnega računa na Turizmu Drobež, Meli Pu ali Camping Menina. Naključna gesla niso vključena; zasebni datoteki z gesli in izhodiščnim stanjem sta odstranjeni.</p><h2>Preverjeno vedenje</h2><p>Resnična gostiteljska prijava, ustvarjanje tedenskega dogodka in obvestila, sprememba cene 5 → 8, pregledana objava in prikaz gostu. Po popravku programa je ponedeljkov dogodek viden z uro 17.00–18.00 in pravilno povezavo v vseh štirih jezikih. Preklop pravic v isti seji v obe smeri, concierge zavrnitev objave, self-service zavrnitve sluga/umika/naročniškega polja in zaščita tujega najemnika so potrjeni. Preklop med brskalniškim preizkusom je izvedlo varovano orodje samo na sintetični nastanitvi, ne operaterski vmesnik.</p><h2>Odstranjeni zapisi</h2><table><thead><tr><th>Tabela</th><th>Odstranjeno</th></tr></thead><tbody><tr><td>changelog</td><td>6</td></tr><tr><td>host_auth_events</td><td>11</td></tr><tr><td>host_memberships</td><td>2</td></tr><tr><td>published_snapshots</td><td>2</td></tr><tr><td>tenant_announcements</td><td>1</td></tr><tr><td>tenant_slug_reservations</td><td>2</td></tr><tr><td>items</td><td>9</td></tr><tr><td>translations</td><td>246</td></tr><tr><td>host_users</td><td>2</td></tr><tr><td>categories</td><td>75</td></tr><tr><td>sections</td><td>9</td></tr><tr><td>tenants</td><td>2</td></tr></tbody></table><p class="ok">Skupaj 367 testnih zapisov. Vseh 48 natančnih kontrol: 0 preostalih. Kontrola obstoječih zapisov pred in po čiščenju: brez sprememb.</p><h2>Izvedena kontrolna poizvedba</h2><pre>WITH fixture AS (
+  SELECT ARRAY['e8310f59-62a1-4d6c-8eb4-659c3e174c90','7a531ecd-3ccd-42b4-8baf-66fa25cfc6df']::uuid[] AS tenants,
+         ARRAY['10320f88-5610-4d4e-adf9-5289612bdfd7','fcc158d0-1e86-431a-91b2-e3bc391a0774']::uuid[] AS hosts,
+         ARRAY['mme2e-cbaf10ea3e73-a@example.invalid','mme2e-cbaf10ea3e73-b@example.invalid']::text[] AS emails,
+         'mme2e-cbaf10ea3e73'::text AS marker
+)
+SELECT 'tenants_ids_or_marker' AS scope, count(*)::int AS remaining FROM tenants, fixture
+ WHERE id=ANY(fixture.tenants) OR slug LIKE fixture.marker || '%' OR subtitle=fixture.marker
+UNION ALL SELECT 'host_users_ids_or_emails', count(*)::int FROM host_users, fixture
+ WHERE id=ANY(fixture.hosts) OR email=ANY(fixture.emails)
+UNION ALL SELECT 'host_memberships', count(*)::int FROM host_memberships, fixture
+ WHERE tenant_id=ANY(fixture.tenants) OR host_user_id=ANY(fixture.hosts)
+UNION ALL SELECT 'host_sessions', count(*)::int FROM host_sessions, fixture WHERE host_user_id=ANY(fixture.hosts)
+UNION ALL SELECT 'host_auth_events_ids_or_marker', count(*)::int FROM host_auth_events, fixture
+ WHERE host_user_id=ANY(fixture.hosts) OR detail LIKE '%' || fixture.marker || '%'
+UNION ALL SELECT 'host_password_resets', count(*)::int FROM host_password_resets, fixture WHERE host_user_id=ANY(fixture.hosts)
+UNION ALL SELECT 'host_invites', count(*)::int FROM host_invites, fixture WHERE host_user_id=ANY(fixture.hosts)
+UNION ALL SELECT 'tenant_aliases', count(*)::int FROM tenant_aliases, fixture
+ WHERE tenant_id=ANY(fixture.tenants) OR slug LIKE fixture.marker || '%'
+UNION ALL SELECT 'tenant_slug_reservations', count(*)::int FROM tenant_slug_reservations, fixture
+ WHERE tenant_id=ANY(fixture.tenants) OR slug LIKE fixture.marker || '%'
+UNION ALL SELECT 'changelog_ids_emails_or_marker', count(*)::int FROM changelog, fixture
+ WHERE tenant_id=ANY(fixture.tenants) OR actor_id=ANY(fixture.hosts)
+ OR actor_email=ANY(fixture.emails) OR detail LIKE '%' || fixture.marker || '%'
+ORDER BY scope;
+</pre><h2>Dejanski rezultat po potrjenem brisanju</h2><pre>[
+  {
+    "scope": "changelog_ids_emails_or_marker",
+    "remaining": 0
+  },
+  {
+    "scope": "host_auth_events_ids_or_marker",
+    "remaining": 0
+  },
+  {
+    "scope": "host_invites",
+    "remaining": 0
+  },
+  {
+    "scope": "host_memberships",
+    "remaining": 0
+  },
+  {
+    "scope": "host_password_resets",
+    "remaining": 0
+  },
+  {
+    "scope": "host_sessions",
+    "remaining": 0
+  },
+  {
+    "scope": "host_users_ids_or_emails",
+    "remaining": 0
+  },
+  {
+    "scope": "tenant_aliases",
+    "remaining": 0
+  },
+  {
+    "scope": "tenant_slug_reservations",
+    "remaining": 0
+  },
+  {
+    "scope": "tenants_ids_or_marker",
+    "remaining": 0
+  }
+]</pre><p>Izvorni dokaz: reports/management-mode-e2e/cleanup-zero-verification.json. Natančni izbrisani identifikatorji: cleanup-exact-ids.json. Celotna poizvedba: cleanup-verification.sql.</p></html>

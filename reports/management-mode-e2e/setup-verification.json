@@ -1,0 +1,47 @@
+{
+  "verifiedAt": "2026-10-01T17:46:56.613Z",
+  "method": "Actual exact-ID SQL counts",
+  "counts": [
+    {
+      "tenant_id": "e8310f59-62a1-4d6c-8eb4-659c3e174c90",
+      "slug": "mme2e-cbaf10ea3e73-a",
+      "management_mode": "self_service",
+      "is_published": true,
+      "has_unpublished_changes": false,
+      "operator_draft_pending": false,
+      "hosts": 1,
+      "memberships": 1,
+      "sessions": 0,
+      "auth_events": 0,
+      "password_resets": 0,
+      "invites": 0,
+      "snapshots": 1,
+      "sections": 4,
+      "categories": 37,
+      "items": 4
+    },
+    {
+      "tenant_id": "7a531ecd-3ccd-42b4-8baf-66fa25cfc6df",
+      "slug": "mme2e-cbaf10ea3e73-b",
+      "management_mode": "concierge",
+      "is_published": true,
+      "has_unpublished_changes": false,
+      "operator_draft_pending": false,
+      "hosts": 1,
+      "memberships": 1,
+      "sessions": 0,
+      "auth_events": 0,
+      "password_resets": 0,
+      "invites": 0,
+      "snapshots": 1,
+      "sections": 4,
+      "categories": 37,
+      "items": 4
+    }
+  ],
+  "credentialFileMode": "0600",
+  "operatorIdentitiesCreatedByScript": 0,
+  "sessionsPrecreatedByScript": 0,
+  "emailsSentByScript": 0,
+  "initialPublication": "Synthetic baseline only; browser must test subsequent publish"
+}

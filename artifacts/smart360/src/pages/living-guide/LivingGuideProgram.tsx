@@ -13,6 +13,7 @@ import {
   nextOccurrence,
   occurrencesOn,
   programEventOf,
+  programEntries,
   programItems,
   programLabel,
   programToday,
@@ -52,7 +53,10 @@ function bodyText(body: unknown): string {
 }
 
 export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any) {
-  const rows = useMemo(() => programItems(category), [category]);
+  const rows = useMemo(() => Array.isArray(tenant?.sections)
+    ? programEntries(tenant.sections)
+    : programItems(category).map((row) => ({ ...row, categoryId: category.id })),
+  [tenant?.sections, category]);
   const today = programToday();
   const [selected, setSelected] = useState<string>(() => programUiState.selectedDate ?? today);
   const [filter, setFilterState] = useState<ProgramFilter>(() => programUiState.filter);
@@ -114,13 +118,16 @@ export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any)
             <p>{programLabel(lang, filter === "all" ? "empty" : "emptyFilter")}</p>
           </div>
         ) : (
-          list.map(({ item, event, date }) => {
+          list.map(({ item, event, date, categoryId }) => {
             const media = normalizeGuestMedia(item.media)[0];
             const src = media ? mediaImgSrc(media, CARD_IMAGE_WIDTH) : null;
             const tint = fixtureTint(item);
             const hint = recurrenceHint(event, lang);
             return (
-              <button type="button" className="lgp-ev" key={`${item.id}-${date}`} onClick={() => { programUiState.selectedDate = date; onOpenItem(item.id); }} data-testid={`program-card-${item.id}`}>
+              <button type="button" className="lgp-ev" key={`${item.id}-${date}`} onClick={() => {
+                programUiState.selectedDate = date;
+                onOpenItem(item.id, categoryId);
+              }} data-testid={`program-card-${item.id}`}>
                 <div className={`lgp-th${tint ? ` lgp-t${tint}` : ""}`}>
                   {src && <img src={src} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
                 </div>

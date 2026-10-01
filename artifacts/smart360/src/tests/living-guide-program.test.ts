@@ -11,6 +11,8 @@ import {
   occurrencesOn,
   parseLegacyEventStart,
   programEventOf,
+  programEntries,
+  isProgramCategory,
   programItems,
   programLabel,
   programToday,
@@ -26,6 +28,46 @@ import { programFixtureTenant } from "../pages/living-guide/living-guide-program
 
 const weekly = (days: string[], extra: object = {}) => ({ type: "weekly", days, timeFrom: "09:00", timeTo: "10:00", ...extra });
 const cat = (items: any[]) => ({ id: "c", layout: "events", isVisible: true, items });
+
+test("host-created default text category inherits its events section and joins legacy Program entries", () => {
+  const event = { id: "host-weekly", title: "Weekly Termin", eventSchedule: weekly(["mon"], { timeFrom: "17:00", timeTo: "18:00" }) };
+  const newCategory = { id: "host-events-category", key: null, layout: "text", label: "Tedenski dogodki", items: [event] };
+  const sections = [
+    { key: "explore", categories: [{ id: "legacy-events", key: "events", layout: "events", items: [
+      { id: "legacy-daily", eventSchedule: weekly(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]) },
+    ] }] },
+    { key: "events", categories: [newCategory] },
+  ];
+  const before = structuredClone(sections);
+  assert.equal(isProgramCategory(newCategory, sections[1]), true);
+  const rows = programEntries(sections);
+  assert.deepEqual(rows.map((row) => row.item.id), ["legacy-daily", "host-weekly"]);
+  const monday = occurrencesOn(rows, "2026-09-28");
+  assert.deepEqual(monday.map((row) => [row.item.id, row.categoryId]), [
+    ["legacy-daily", "legacy-events"], ["host-weekly", "host-events-category"],
+  ]);
+  assert.equal(monday[1]?.event.timeFrom, "17:00");
+  assert.equal(monday[1]?.event.timeTo, "18:00");
+  assert.deepEqual(occurrencesOn(rows, "2026-10-01").map((row) => row.item.id), ["legacy-daily"]);
+  assert.equal(findDatedEventDestination(sections, "2026-10-01")?.category.id, "legacy-events",
+    "existing nav route remains canonical, but its Program view includes all categories");
+  assert.deepEqual(sections, before, "aggregation never changes published content or its schedule");
+});
+
+test("aggregate Programme excludes hidden/deleted categories, sections and entries and unrelated scheduled content", () => {
+  const item = (id: string) => ({ id, eventSchedule: weekly(["mon"]) });
+  const sections = [
+    { key: "events", categories: [
+      { id: "visible", layout: "text", items: [item("visible"), { ...item("hidden"), isVisible: false }, { ...item("deleted"), deletedAt: "2026-01-01" }] },
+      { id: "hidden-category", isVisible: false, items: [item("hidden-category-item")] },
+      { id: "deleted-category", deletedAt: "2026-01-01", items: [item("deleted-category-item")] },
+    ] },
+    { key: "events", isVisible: false, categories: [cat([item("hidden-section-item")])] },
+    { key: "events", deletedAt: "2026-01-01", categories: [cat([item("deleted-section-item")])] },
+    { key: "stay", categories: [{ id: "ordinary-text", layout: "text", items: [item("not-programme")] }] },
+  ];
+  assert.deepEqual(programEntries(sections).map((row) => row.item.id), ["visible"]);
+});
 
 test("weekly expansion respects inclusive season", () => {
   const rows = programItems(cat([{ id: "a", title: "A", eventSchedule: weekly(["thu"], { validFrom: "2026-08-20", validTo: "2026-08-27" }) }]));

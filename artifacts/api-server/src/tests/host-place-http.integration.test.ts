@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import test from "node:test";
 import { eq, inArray, sql } from "drizzle-orm";
-import { CreateAdminPlaceResponse, SearchAdminPlacesResponse } from "@workspace/api-zod";
+import { CreateAdminPlaceResponse, SearchAdminPlacesResponse, GetItemCreatorStatusResponse } from "@workspace/api-zod";
 import {
   db, runWithHostDbContext, tenantsTable, sectionsTable, categoriesTable, itemsTable,
   hostUsersTable, hostMembershipsTable, hostSessionsTable, hostAuthEventsTable,
@@ -13,7 +13,7 @@ import {
 import app from "../app";
 import { setHostPlaceDependenciesForTests } from "../lib/adminPlaceCreation";
 
-test("real HOST HTTP place search/create uses shared identity without Creator privileges", async t => {
+test("real HOST HTTP: both-mode ordinary offer status/edit and self-service places without Creator privileges", async t => {
   assert.notEqual(process.env.NODE_ENV, "production");
   const stamp = randomUUID();
   const tenants = await db.insert(tenantsTable).values(["a", "b"].map(key => ({
@@ -30,6 +30,18 @@ test("real HOST HTTP place search/create uses shared identity without Creator pr
   }))).returning();
   const ca = categories.find(c => c.sectionId === sections.find(s => s.tenantId === a.id)!.id)!;
   const cb = categories.find(c => c.sectionId === sections.find(s => s.tenantId === b.id)!.id)!;
+  const offerSections = await db.insert(sectionsTable).values(tenants.map(tenant => ({
+    tenantId: tenant.id, key: "offer", title: "Ponudba",
+  }))).returning();
+  const offerCategories = await db.insert(categoriesTable).values(offerSections.map(section => ({
+    sectionId: section.id, label: "Ordinary offers",
+  }))).returning();
+  const offerItems = await db.insert(itemsTable).values(offerCategories.map(category => ({
+    categoryId: category.id, title: "Ordinary host offer", price: "12",
+  }))).returning();
+  const offerFor = (tenantId: string) => offerItems.find(item => item.categoryId ===
+    offerCategories.find(category => category.sectionId ===
+      offerSections.find(section => section.tenantId === tenantId)!.id)!.id)!;
   const [host] = await db.insert(hostUsersTable).values({ email: `host-place-${stamp}@example.test` }).returning();
   await db.insert(hostMembershipsTable).values({ hostUserId: host!.id, tenantId: a.id });
   const token = randomUUID();
@@ -68,6 +80,22 @@ test("real HOST HTTP place search/create uses shared identity without Creator pr
     locationText: "Explicitly selected map pin", latitude: 46.32, longitude: 14.82 };
   for (const mode of ["self_service", "concierge"] as const) {
     await db.update(tenantsTable).set({ managementMode: mode }).where(eq(tenantsTable.id, a.id));
+    const status = await request("GET", `/admin/items/${offerFor(a.id).id}/creator-status`);
+    assert.equal(status.status, 200, `${mode}: ${await status.clone().text()}`);
+    assert.deepEqual(GetItemCreatorStatusResponse.parse(await status.json()), {
+      activeMaterialization: false, latitude: null, longitude: null,
+      distanceMeters: null, roadDistanceM: null, travelDurationS: null, range: null,
+    });
+    assert.equal((await request("GET", `/admin/items/${offerFor(b.id).id}/creator-status`)).status, 404);
+    assert.equal((await request("PATCH", `/admin/items/${offerFor(a.id).id}`,
+      { title: `Edited ordinary offer in ${mode}` })).status, 200);
+    for (const [method, path] of [
+      ["POST", `/admin/tenants/${a.id}/creator/runs`],
+      ["POST", `/admin/items/${offerFor(a.id).id}/creator/photos/discover`],
+      ["GET", `/admin/items/${offerFor(a.id).id}/creator/photo-proposals`],
+    ] as const) {
+      assert.equal((await request(method, path, method === "POST" ? {} : undefined)).status, 404);
+    }
     for (const [method, path, body] of [
       ["GET", `/admin/categories/${cb.id}/place-search?q=fixture`],
       ["POST", `/admin/categories/${cb.id}/places`, manual],
@@ -120,7 +148,7 @@ test("real HOST HTTP place search/create uses shared identity without Creator pr
   assert.equal(fresh!.operatorDraftPending, false, "privileged write retains host attribution");
   assert.equal(fresh!.hasUnpublishedChanges, true);
   const history = await db.select().from(changelogTable).where(eq(changelogTable.tenantId, a.id));
-  assert.equal(history.filter(row => row.actorType === "host" && row.entity === "item").length, 2);
+  assert.equal(history.filter(row => row.actorType === "host" && row.entity === "item" && row.action === "create").length, 2);
   assert.equal((await db.select().from(itemsTable).where(eq(itemsTable.categoryId, cb.id))).length, 0);
   assert.equal((await request("POST", `/admin/tenants/${a.id}/creator/runs`, {})).status, 404);
   // Reverse switch applies to this same persisted session immediately.

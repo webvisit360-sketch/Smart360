@@ -1,0 +1,29 @@
+{
+  "plannedAt": "2026-10-01T17:46:58.510Z",
+  "dryRun": true,
+  "deletionsExecuted": 0,
+  "orderedTables": [
+    "host_memberships",
+    "published_snapshots",
+    "tenant_slug_reservations",
+    "items",
+    "translations",
+    "host_users",
+    "categories",
+    "sections",
+    "tenants"
+  ],
+  "counts": {
+    "host_memberships": 2,
+    "published_snapshots": 2,
+    "tenant_slug_reservations": 2,
+    "items": 8,
+    "translations": 246,
+    "host_users": 2,
+    "categories": 74,
+    "sections": 8,
+    "tenants": 2
+  },
+  "preexistingRowsSelected": 0,
+  "operatorTablesSelected": 0
+}

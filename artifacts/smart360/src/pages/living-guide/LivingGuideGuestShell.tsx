@@ -2087,6 +2087,7 @@ export default function LivingGuideGuestShell({
           {screen === "detail" && categoryContext ? (
           <DetailView
             category={categoryContext.category}
+            section={categoryContext.section}
             itemId={routeItemId}
             lang={lang}
             t={t}
@@ -2096,7 +2097,7 @@ export default function LivingGuideGuestShell({
             slug={slug}
             setLocation={setLocation}
             tenant={tenant}
-            onOpenItem={(id: string) => openItem(categoryContext.category.id, id)}
+            onOpenItem={(id: string, categoryId?: string) => openItem(categoryId ?? categoryContext.category.id, id)}
             showHostContacts={
               categoryContext.section?.key === "stay" &&
               categoryContext.category.id ===
@@ -3777,7 +3778,7 @@ function useDraggableDetailSheet(
   }, [rootRef]);
 }
 
-function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick, slug }: any) {
+function DetailView({ category, section, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick, slug }: any) {
   const detailViewRef = useRef<HTMLElement>(null);
   useDraggableDetailSheet(detailViewRef, onBack);
   const items = visible(category.items);
@@ -3785,7 +3786,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
 
   const layout = category.layout || "";
 
-  const programSurface = isProgramCategory(category);
+  const programSurface = isProgramCategory(category, section);
   const programDetailItem =
     activeItem && programSurface && programEventOf(activeItem) ? activeItem : null;
   let content = null;
@@ -3801,7 +3802,7 @@ function DetailView({ category, itemId, lang, t, galleryIndex, onGalleryIndex, o
         }
       />
     );
-  } else if (!activeItem && programSurface && items.some((item: any) => programEventOf(item))) {
+  } else if (!activeItem && programSurface) {
     content = <ProgramView category={category} tenant={tenant} lang={lang} onOpenItem={onOpenItem} onBack={onBack} />;
   } else if (activeItem) {
     if (layout === "poi") {
@@ -4416,6 +4417,9 @@ function BottomNav({
   const sectionFor = (key: string) =>
     sections.find((section: any) => section.key === key);
   const eventDestination = datedEventDestination(sections);
+  const programActive = sections.some((section: any) =>
+    visible(section.categories).some((category: any) =>
+      category.id === activeCategoryId && isProgramCategory(category, section)));
   const normalizedActive =
     activeSectionKey === "services" ? "explore" : activeSectionKey;
 
@@ -4487,10 +4491,9 @@ function BottomNav({
           screen === "messages"
             ? tab.key === "messages"
             : (tab.key === "home" && screen === "home") ||
+              (screen !== "home" && tab.key === "program" && programActive) ||
               (screen !== "home" &&
-                tab.categoryId &&
-                activeCategoryId === tab.categoryId) ||
-              (screen !== "home" &&
+                !programActive &&
                 tab.key !== "home" &&
                 tab.key !== "program" &&
                 normalizedActive === tab.key);

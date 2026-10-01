@@ -197,20 +197,38 @@ export function programItems(category: any): { item: any; event: ProgramEvent }[
     .filter((row): row is { item: any; event: ProgramEvent } => row.event !== null);
 }
 
+/** One programme across legacy events categories and dedicated events sections.
+ * Retain the owning category so a card opens its real, shareable item route.
+ */
+export function programEntries(sections: any[] | null | undefined): {
+  item: any;
+  event: ProgramEvent;
+  categoryId: string;
+}[] {
+  return visibleRows(sections).flatMap((section) =>
+    visibleRows(section.categories)
+      .filter((category) => isProgramCategory(category, section))
+      .flatMap((category) => programItems(category).map((row) => ({
+        ...row,
+        categoryId: category.id,
+      }))),
+  );
+}
+
 export function matchesFilter(event: ProgramEvent, filter: ProgramFilter): boolean {
   if (filter === "in") return event.inCamp === true;
   if (filter === "out") return event.inCamp === false;
   return true;
 }
 
-export function occurrencesOn(
-  rows: { item: any; event: ProgramEvent }[],
+export function occurrencesOn<T extends { item: any; event: ProgramEvent }>(
+  rows: T[],
   key: string,
   filter: ProgramFilter = "all",
-): ProgramOccurrence[] {
+): Array<T & { date: string }> {
   return rows
     .filter(({ event }) => occursOn(event, key) && matchesFilter(event, filter))
-    .map(({ item, event }) => ({ item, event, date: key }))
+    .map((row) => ({ ...row, date: key }))
     .sort((a, b) =>
       a.event.timeFrom.localeCompare(b.event.timeFrom) ||
       String(a.item?.title ?? "").localeCompare(String(b.item?.title ?? "")),

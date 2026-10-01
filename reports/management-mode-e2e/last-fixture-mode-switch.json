@@ -1,0 +1,7 @@
+{
+  "tenantId": "e8310f59-62a1-4d6c-8eb4-659c3e174c90",
+  "mode": "self_service",
+  "method": "DEV fixture SQL, not an operator UI action",
+  "switchedAt": "2026-10-01T18:03:30.541Z",
+  "sessionsModifiedByScript": 0
+}

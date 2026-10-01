@@ -2024,3 +2024,17 @@ mtime_ms = 1790832211927
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6cdbdbbe-fccb-4a27-8dcc-e421001a84b5/e1416bd2-1707-4bd5-88a5-195561058a98"
 storage_version_token = "1790832302838146"
 content_type = "image/png"
+
+[[outputs]]
+id = "A2NjKJNT_6ws0jVdU6x5z"
+uri = "file://reports/management-mode-e2e/porocilo-lastnik.html"
+type = "html"
+title = "Poročilo preverjanja in dokaz čiščenja DEV"
+description = "Ustvarjeni testni zapisi, odstranjene vrstice, natančna SQL-poizvedba in dejanski rezultat: nič preostalih testnih podatkov."
+logical_id = "92b65eda-1c69-4649-8ede-f10c309b6589"
+content_hash = "sha256:3a059b239869ec5d4dc04e7da850843e5ab268e5cc516229b80b42b5a2c2b32a"
+size = 5591
+mtime_ms = 1790878410608
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/92b65eda-1c69-4649-8ede-f10c309b6589/838abb74-4d86-4a37-8f67-56f8966a420f"
+storage_version_token = "1790878412012974"
+content_type = "text/html"

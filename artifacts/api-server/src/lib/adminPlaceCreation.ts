@@ -703,7 +703,22 @@ export async function getItemCreatorStatus(itemId: string) {
     .where(and(eq(itemsTable.id, itemId), isNull(itemsTable.deletedAt)))
     .limit(1);
   if (!item) throw new CreatorBulkApprovalError("Vnos ni najden.");
-  const [row] = await db.select({
+  const actor = currentActor();
+  // Hosts need only the machine-managed content projection to edit an item.
+  // It is already tenant-RLS-readable; proposal/evidence tables intentionally
+  // are not. Never join those tables (even for an ordinary, unmanaged item).
+  const [row] = actor?.kind === "host" ? await db.select({
+    latitude: creatorPlaceMaterializationsTable.latitude,
+    longitude: creatorPlaceMaterializationsTable.longitude,
+    roadDistanceM: creatorPlaceMaterializationsTable.roadDistanceM,
+    travelDurationS: creatorPlaceMaterializationsTable.travelDurationS,
+    range: creatorPlaceMaterializationsTable.range,
+  }).from(creatorPlaceMaterializationsTable)
+    .where(and(
+      eq(creatorPlaceMaterializationsTable.tenantId, actor.tenantId),
+      eq(creatorPlaceMaterializationsTable.itemId, itemId),
+      eq(creatorPlaceMaterializationsTable.isActive, true),
+    )).limit(1) : await db.select({
     latitude: creatorPlaceMaterializationsTable.latitude,
     longitude: creatorPlaceMaterializationsTable.longitude,
     roadDistanceM: creatorPlaceProposalsTable.roadDistanceM,
