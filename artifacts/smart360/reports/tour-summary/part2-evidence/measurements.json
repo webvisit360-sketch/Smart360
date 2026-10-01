@@ -1,0 +1,68 @@
+[
+  {
+    "lang": "sl",
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "image": {
+      "width": 1080,
+      "height": 1612,
+      "mapKind": "map"
+    },
+    "primary": {
+      "label": "Deli turo",
+      "background": "rgb(21, 115, 71)",
+      "width": 304,
+      "height": 48
+    },
+    "secondary": [
+      {
+        "label": "Shrani sliko",
+        "width": 148
+      },
+      {
+        "label": "Prenesi GPX",
+        "width": 148
+      }
+    ],
+    "headingFont": "24px",
+    "fallback": {
+      "hint": "Deljenje slik tu ni podprto — slika je shranjena v prenose.",
+      "canShareCalls": 1,
+      "shareCalls": 0,
+      "samePreviewAndDownload": true
+    }
+  },
+  {
+    "lang": "en",
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "image": {
+      "width": 1080,
+      "height": 1612,
+      "mapKind": "map"
+    },
+    "primary": {
+      "label": "Share tour",
+      "background": "rgb(21, 115, 71)",
+      "width": 304,
+      "height": 48
+    },
+    "secondary": [
+      {
+        "label": "Save image",
+        "width": 148
+      },
+      {
+        "label": "Download GPX",
+        "width": 148
+      }
+    ],
+    "headingFont": "24px",
+    "fallback": {
+      "hint": "Image sharing is not supported here — the image was saved to downloads.",
+      "canShareCalls": 1,
+      "shareCalls": 0,
+      "samePreviewAndDownload": true
+    }
+  }
+]

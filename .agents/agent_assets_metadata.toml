@@ -2052,3 +2052,59 @@ mtime_ms = 1790880750010
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b0370d61-f608-43ce-b3a4-3c29ba9972b0/2cc374da-dd86-4809-bd7f-03b9211f4a01"
 storage_version_token = "1790881028497880"
 content_type = "image/png"
+
+[[outputs]]
+id = "GAo-CkSbA9kH587b3XtIH"
+uri = "file://artifacts/smart360/reports/tour-summary/part2-evidence/sl-post-tour-390.png"
+type = "image"
+title = "Slovenian — post-tour screen, 390px"
+description = "Current shared post-tour component: exact PNG preview, Deli turo, Shrani sliko and Prenesi GPX. Synthetic development fixture, not production."
+logical_id = "92c84157-07c8-4934-9c61-0bcad9014770"
+content_hash = "sha256:d844129d74d3ee70ab4d025ea181fbb160dbcfc43d076f3ae3bd63ba422a07f0"
+size = 128807
+mtime_ms = 1790890049065
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/92c84157-07c8-4934-9c61-0bcad9014770/d7feb00c-3c86-4c01-b52c-0ff06a7cf86e"
+storage_version_token = "1790890072708060"
+content_type = "image/png"
+
+[[outputs]]
+id = "y0dVlwedxQ58UviJKfldD"
+uri = "file://artifacts/smart360/reports/tour-summary/part2-evidence/en-post-tour-390.png"
+type = "image"
+title = "English — post-tour screen, 390px"
+description = "Same component in English, captured at 390px viewport width. Full-page screenshot."
+logical_id = "08276c5d-77e0-41a7-8c5c-0b6fd96d1195"
+content_hash = "sha256:08759008658fa607b0cde20afc484461139a7365e18a23411fdbfed43b6674d3"
+size = 131135
+mtime_ms = 1790890054112
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/08276c5d-77e0-41a7-8c5c-0b6fd96d1195/126b3f9b-4f49-460a-ae48-c908a11fed21"
+storage_version_token = "1790890073449101"
+content_type = "image/png"
+
+[[outputs]]
+id = "RM0ty_aq1dNQTkidpwj5n"
+uri = "file://artifacts/smart360/reports/tour-summary/part2-evidence/sl-share-unavailable-390.png"
+type = "image"
+title = "Slovenian — file-sharing fallback, 390px"
+description = "After clicking Deli turo with navigator.canShare(files) returning false: download completed and localized fallback hint visible."
+logical_id = "516bb4a8-dff0-4d89-bf56-68b19c201f83"
+content_hash = "sha256:2059ddd900e8f389f2f8db997ccc671a8ee5f76efe47f1f89b9670389daf3e7c"
+size = 133760
+mtime_ms = 1790890051766
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/516bb4a8-dff0-4d89-bf56-68b19c201f83/7a878097-056a-41f7-ba1f-ef1fee3c8f03"
+storage_version_token = "1790890074136980"
+content_type = "image/png"
+
+[[outputs]]
+id = "FrfzhIKdJRyS2WrmKjumW"
+uri = "file://artifacts/smart360/reports/tour-summary/part2-evidence/en-share-unavailable-390.png"
+type = "image"
+title = "English — file-sharing fallback, 390px"
+description = "English fallback hint visible after Share tour downloads the PNG instead of opening Web Share."
+logical_id = "b12c8617-18ab-4d0e-9edd-507327bec763"
+content_hash = "sha256:d4784d57b95f98a83508ff6112ef5b747535df2ef868ef601c3cc122b9f2adfa"
+size = 138101
+mtime_ms = 1790890056748
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b12c8617-18ab-4d0e-9edd-507327bec763/0a28ca84-4188-404c-94c1-61beb522b109"
+storage_version_token = "1790890074907840"
+content_type = "image/png"
