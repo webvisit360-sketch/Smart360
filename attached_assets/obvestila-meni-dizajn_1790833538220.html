@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — dizajn obvestil in menija</title>
+<style>
+  :root{
+    --bg:#0B1220; --card:#121B2B; --card2:#0F1826; --line:#1E2A3D;
+    --txt:#F2F5F9; --muted:#8E9AAC; --amber:#F2B135; --green:#2E7D4F; --green2:#3E9663;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#E9ECEF;padding:24px 12px;display:flex;flex-wrap:wrap;gap:32px;justify-content:center;}
+  h2.cap{width:100%;text-align:center;font-size:15px;color:#5a6472;font-weight:600;margin-bottom:-14px;}
+  .phone{width:390px;background:var(--bg);border-radius:30px;padding:20px 16px 26px;box-shadow:0 12px 40px rgba(0,0,0,.28);position:relative;overflow:hidden;}
+  .small{font-size:12px;letter-spacing:.12em;color:var(--amber);font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+  .h1{color:var(--txt);font-size:26px;font-weight:800;margin-bottom:14px;}
+  .caption{color:#96a1b3;font-size:12px;text-align:center;margin-top:14px;line-height:1.5;}
+
+  /* kartice obvestil */
+  .nv{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px;align-items:center;}
+  .nv .th{width:64px;height:64px;border-radius:12px;flex-shrink:0;}
+  .n1{background:linear-gradient(150deg,#e0b269,#8a6a35);}
+  .n2{background:linear-gradient(150deg,#7fb2df,#3d6a94);}
+  .n3{background:linear-gradient(150deg,#8fc98f,#3f7a4a);}
+  .nv .noimg{width:12px;flex-shrink:0;}
+  .nv .mid{flex:1;min-width:0;}
+  .nv .date{color:var(--muted);font-weight:600;font-size:12px;}
+  .nv .name{color:var(--txt);font-weight:800;font-size:16px;margin:2px 0 4px;}
+  .nv .snip{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .badge{display:inline-block;font-size:11px;font-weight:800;border-radius:8px;padding:3px 8px;background:var(--green);color:#fff;margin-left:8px;vertical-align:1px;}
+
+  /* ploščica z nepreбrano pikico */
+  .tiles{display:flex;gap:10px;margin-bottom:16px;}
+  .tile{flex:1;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;color:var(--txt);font-weight:700;font-size:13px;position:relative;}
+  .tile .ic{color:var(--amber);font-size:18px;display:block;margin-bottom:6px;}
+  .dotu{position:absolute;top:10px;right:14px;width:9px;height:9px;border-radius:50%;background:var(--green2);border:2px solid var(--bg);}
+
+  /* detajl — velika fotografija, naslov na njej */
+  .hero{height:280px;border-radius:20px;background:linear-gradient(160deg,#7fb2df 0%,#4e7fa8 55%,#274a63 100%);position:relative;overflow:hidden;margin:-20px -16px 14px;border-radius:30px 30px 24px 24px;}
+  .hero .sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,10,18,.25) 0%,transparent 30%,rgba(5,10,18,.9) 100%);}
+  .hero .back{position:absolute;top:14px;left:14px;background:rgba(15,24,38,.7);color:#fff;border-radius:12px;padding:6px 11px;font-weight:700;}
+  .hero .ht{position:absolute;left:16px;right:16px;bottom:14px;color:#fff;font-size:24px;font-weight:800;line-height:1.25;}
+  .dmeta{color:var(--muted);font-size:13px;margin-bottom:10px;}
+  .dbody{color:#c6cfdb;font-size:14px;line-height:1.6;margin-bottom:14px;}
+  .valid{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--muted);font-size:12px;}
+
+  /* hero z menijem */
+  .mhero{height:120px;border-radius:20px;background:linear-gradient(160deg,#9cc7e8 0%,#4f7d52 70%);position:relative;margin-bottom:14px;}
+  .mhero .hb{position:absolute;top:12px;background:rgba(15,24,38,.75);color:#fff;border-radius:14px;padding:8px 12px;font-weight:700;font-size:13px;}
+  .b360{right:106px;}
+  .bsearch{right:58px;}
+  .bmenu{right:12px;outline:2px solid var(--amber);}
+
+  /* meni list */
+  .sheet{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:6px 0;}
+  .mrow{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);}
+  .mrow:last-child{border-bottom:none;}
+  .mrow .mi{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .mrow .mt{color:var(--txt);font-weight:700;font-size:15px;}
+  .mrow .ms{color:var(--muted);font-size:12px;margin-top:1px;}
+  .mrow .go{margin-left:auto;color:var(--muted);font-size:18px;}
+  .foot{color:#5f6b7d;font-size:11px;text-align:center;margin-top:12px;}
+</style>
+</head>
+<body>
+
+<h2 class="cap">1 · Obvestila — seznam; ploščica na Domov dobi zeleno pikico ob neprebranem</h2>
+<div class="phone">
+  <div class="small">Camping Menina</div>
+  <div class="h1">Obvestila</div>
+
+  <div class="tiles">
+    <div class="tile"><span class="ic">&#128276;</span>Obvestila<span class="dotu"></span></div>
+    <div class="tile"><span class="ic">&#128172;</span>Sporočila</div>
+    <div class="tile"><span class="ic">&#128205;</span>Zemljevid</div>
+  </div>
+
+  <div class="nv">
+    <div class="th n2"></div>
+    <div class="mid">
+      <div class="date">danes · 8.10</div>
+      <div class="name">Recepcija popoldne zaprta<span class="badge">Novo</span></div>
+      <div class="snip">Danes med 14.00 in 17.00 je recepcija zaprta …</div>
+    </div>
+  </div>
+
+  <div class="nv">
+    <div class="th n3"></div>
+    <div class="mid">
+      <div class="date">včeraj</div>
+      <div class="name">Degustacija piva v petek</div>
+      <div class="snip">V petek ob 19.00 vas vabimo na degustacijo …</div>
+    </div>
+  </div>
+
+  <div class="nv">
+    <div class="noimg"></div>
+    <div class="mid">
+      <div class="date">28. sep.</div>
+      <div class="name">Nov urnik savne</div>
+      <div class="snip">Od oktobra je savna odprta od 16.00 do 21.00 …</div>
+    </div>
+  </div>
+
+  <div class="caption">Brez slike kartica ostane besedilna — slika ni obvezna.<br>Potekla obvestila izginejo sama; »Novo« in pikica se vodita samo na napravi gosta.</div>
+</div>
+
+<h2 class="cap">2 · Obvestilo — detajl: fotografija čez vrh, naslov na njej (kot pri dogodkih)</h2>
+<div class="phone">
+  <div class="hero">
+    <div class="sh"></div>
+    <div class="back">&#8592;</div>
+    <div class="ht">Večer risank za otroke ob 20.00</div>
+  </div>
+  <div class="dmeta">Objavljeno danes ob 8.10</div>
+  <div class="dbody">Nocoj ob 20.00 vas pri šotoru ob gostilni čaka filmski večer za najmlajše. Pridite malo prej, poiščite svoj kotiček in prinesite odejo. Kokice pripravimo mi!</div>
+  <div class="valid">&#8986;&nbsp; Velja do: nocoj, 22.00 — nato obvestilo samodejno izgine</div>
+  <div class="caption">Brez slike: naslov stoji na vrhu strani brez fotografije, ostalo enako.<br>Naslov in besedilo lahko gostitelj vnese v več jezikih; gost vidi svojega, sicer prvi vneseni.</div>
+</div>
+
+<h2 class="cap">3 · Meni — tri črtice zgoraj desno na hero fotografiji</h2>
+<div class="phone">
+  <div class="mhero">
+    <div class="hb b360">360</div>
+    <div class="hb bsearch">&#128269;</div>
+    <div class="hb bmenu">&#9776;</div>
+  </div>
+
+  <div class="sheet">
+    <div class="mrow">
+      <div class="mi">&#127760;</div>
+      <div><div class="mt">Jezik</div><div class="ms">Slovenščina</div></div>
+      <div class="go">&#8250;</div>
+    </div>
+    <div class="mrow">
+      <div class="mi">&#128100;</div>
+      <div><div class="mt">Moj profil</div><div class="ms">Za izračun kalorij pri turah — ostane na napravi</div></div>
+      <div class="go">&#8250;</div>
+    </div>
+    <div class="mrow">
+      <div class="mi">&#128241;</div>
+      <div><div class="mt">Dodaj na začetni zaslon</div><div class="ms">Vodnik kot aplikacija z ikono</div></div>
+      <div class="go">&#8250;</div>
+    </div>
+    <div class="mrow">
+      <div class="mi">&#10133;</div>
+      <div><div class="mt">Pomoč in nujni primeri</div><div class="ms">Kontakti, 112, SOS lokacija</div></div>
+      <div class="go">&#8250;</div>
+    </div>
+    <div class="mrow">
+      <div class="mi">&#8505;</div>
+      <div><div class="mt">O vodniku</div><div class="ms">Zasebnost in viri podatkov</div></div>
+      <div class="go">&#8250;</div>
+    </div>
+  </div>
+
+  <div class="foot">Digitalni vodnik poganja Smart360 · smart360.info</div>
+  <div class="caption">Meni je plošča čez zaslon (od desne), zapre se s tapom izven nje.<br>Ikonice so simbolne — v aplikaciji linijske iz skupnega nabora.</div>
+</div>
+
+</body>
+</html>

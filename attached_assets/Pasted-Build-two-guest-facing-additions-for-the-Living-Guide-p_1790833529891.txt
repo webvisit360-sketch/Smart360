@@ -1,0 +1,23 @@
+Build two guest-facing additions for the Living Guide, per the attached BINDING design reference obvestila-meni-dizajn.html: tenant announcements ("Obvestila") and a guest menu. Living Guide only; Swipe/legacy unchanged.
+
+PART A — ANNOUNCEMENTS
+
+1. NATURE: announcements are RUNTIME data, like messages and orders — NOT part of the published snapshot and NOT gated by publish. Creating or editing one takes effect for guests immediately. Zakon 1 is untouched for guide content; document this distinction in replit.md.
+
+2. SCHEMA: propose a new table (suggested: tenant_announcements with id uuid PK, tenant_id uuid NOT NULL, localized title and body (SL/EN/DE/IT with fallback to the first filled language), optional image using our existing media handling, valid_from timestamptz NOT NULL DEFAULT now(), valid_to timestamptz NULL, created_at, updated_at, deleted_at timestamptz NULL for soft delete). Follow our standard schema ritual: state the exact SQL, whether Publish carries it to production, read-only verification SELECTs for the production console, and conditional idempotent SQL for the case it is missing. STOP for approval before applying, as always.
+
+3. VISIBILITY: guests see an announcement only while now() is within [valid_from, valid_to] (no valid_to = until deleted), not soft-deleted. Expired ones disappear automatically. List is newest first.
+
+4. GUEST UI per reference: list cards (optional 64px thumb, date, title, one-line snippet, green "Novo" badge); detail with full-bleed hero image and title overlaid on the photo with dark gradient (same pattern as the event detail) — without an image the title renders as a plain page heading; "Objavljeno ..." meta line; body; validity row "Velja do: ..." shown only when valid_to is set. The Domov "Obvestila" tile opens this list and shows a small green unread dot when any active announcement is unread. Read/unread state lives ONLY on the device (localStorage, wrapped in try/catch) — nothing is reported to the server. Localized UI labels SL/EN/DE/IT in code; announcement content uses the per-language fields with fallback.
+
+5. ADMIN: restore the "Obvestila" item in the left sidebar (the one previously removed), now opening a real editor: list of announcements with create/edit/soft-delete; fields title/body per language, optional image, valid from/to (Europe/Ljubljana). No publish step — saving is live; make that explicit in the editor ("Obvestilo je vidno gostom takoj po shranjevanju."). HOSTS ARE ALLOWED full announcement management for their tenant (extend the host permission matrix in replit.md accordingly); operator retains everything.
+
+6. OFFLINE: announcements are fetched live and are not served by the service worker cache. Offline, the list shows a friendly localized notice instead of an error.
+
+PART B — GUEST MENU
+
+7. Add a hamburger button on the hero, right of the existing 360/search buttons, same style. It opens a right-side panel per the reference with exactly these rows: Jezik (current language, opens existing language selection), Moj profil (the existing device-only tour profile), Dodaj na začetni zaslon (triggers our existing install banner / iOS hint on demand, hidden when already installed/standalone), Pomoč in nujni primeri (opens the existing sheet), O vodniku (short page: what the guide is, privacy summary — tours/profile/SOS stay on device, weather via Open-Meteo — and data sources). Footer line "Digitalni vodnik poganja Smart360 · smart360.info". Panel closes on outside tap. All labels SL/EN/DE/IT. Line icons from the shared set, no emoji.
+
+8. TESTS: announcement visibility window incl. no-valid_to and soft-delete; language fallback; unread dot set/cleared per device; host vs operator permissions (host of tenant A cannot touch tenant B); admin editor create/edit/delete; immediate effect without publish; offline notice; menu rows present and functional in all four languages; install row hidden when standalone; detail with and without image. Pixel-compare list and detail against the reference.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
