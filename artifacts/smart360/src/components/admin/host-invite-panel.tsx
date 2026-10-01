@@ -215,7 +215,7 @@ export function HostInvitePanel({
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-bold">Gostitelj nima dostopa do administracije</p>
+                    <p className="font-bold">Smart360 ureja vodnik in objave; obstoječi račun ohrani omejen dostop</p>
                     <p className="text-sm text-muted-foreground">
                       Dobrodošlica ne vsebuje gesla ali povezave za prijavo. Vsebino ureja Smart360.
                     </p>

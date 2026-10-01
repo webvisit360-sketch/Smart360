@@ -1,0 +1,20 @@
+Rework host permissions to be driven by the tenant's management mode (the existing "Način upravljanja" setting on Splošno). Investigate first how that mode is stored; if it is not yet a proper persisted field, follow our standard schema ritual and STOP for approval before any DDL.
+
+1. TWO MODES
+- CONCIERGE ("Ureja Smart360"): the current restricted host matrix stays EXACTLY as today, including the publish 403.
+- SELF-SERVICE: the host manages their tenant fully and independently — all content (sections, entries incl. events with Termin, offer/prices, okolica, GPX routes, media, translations), structure and tab order, appearance/theme, Living Guide navigation, identity data, address and coordinates, Wi-Fi, contacts, notification settings, the SNEMANJE TUR toggle, announcements (already host-allowed), AND PUBLISH ("Objavi spremembe") with the same draft→publish semantics, dialog and change history as the operator. Publishing by a host clears operator_draft_pending like an operator publish would.
+
+2. OPERATOR-ONLY IN BOTH MODES (unchanged 403s with the existing Slovenian message style):
+slug / draft_slug rename and anything touching tenant_slug_reservations or redirects; unpublish (taking the guide offline); isTemplate; mediaQuotaBytes; renewsAt/subscription fields; rating/reviewsCount; hard deletes beyond the existing soft-delete; tenant creation/deletion.
+
+3. ADMIN NAVIGATION FOR SELF-SERVICE HOSTS
+They must see and use the full content sidebar: Pregled, Naročila, Sporočila, Dogodki, Ponudba in cene, Obvestila, Okolica, Sekcije in vnosi, Nastavitve (with the tabs a host may use; operator-only tabs/fields hidden or read-only, not erroring). Add any of these that are currently hidden from hosts. Kreator vodnika stays accessible to them only if it cannot touch operator-only fields — otherwise hide it for hosts.
+
+4. MODE SWITCHING
+Changing the mode on Splošno (operator-only action) must take effect for host sessions immediately or at latest on their next request — no stale permissions. Switching a tenant to concierge re-imposes all current restrictions.
+
+5. DOCUMENTATION: update the permission matrix in replit.md to the two-mode model.
+
+6. TESTS: concierge host still gets 403 on publish and restricted fields; self-service host full flow end-to-end (create event with weekly Termin, create announcement, edit offer, publish, guest sees it); self-service host still 403 on slug rename, unpublish, subscription fields; host of tenant A never touches tenant B in either mode; mode switch applies immediately both directions.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.

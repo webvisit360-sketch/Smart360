@@ -61,6 +61,7 @@ import { isRichField, normalizeAllContent } from "../lib/normalizeContent";
 import { invalidateTenantCache } from "./publicTenants";
 import {
   createAdminPlace,
+  createHostPlace,
   AdminPlaceConflictError,
   adminPlaceConflictResponse,
   getItemCreatorStatus,
@@ -280,7 +281,7 @@ async function emergencyCategoryForTenant(tenantId: string) {
   return row?.category ?? null;
 }
 
-router.get("/admin/tenants/:id/emergency-contacts", requireOperator, async (req, res): Promise<void> => {
+router.get("/admin/tenants/:id/emergency-contacts", async (req, res): Promise<void> => {
   const tenantId = firstParam(req.params["id"]);
   const category = await emergencyCategoryForTenant(tenantId);
   if (!category) {
@@ -302,7 +303,7 @@ router.get("/admin/tenants/:id/emergency-contacts", requireOperator, async (req,
   }));
 });
 
-router.put("/admin/tenants/:id/emergency-contacts", requireOperator, async (req, res): Promise<void> => {
+router.put("/admin/tenants/:id/emergency-contacts", async (req, res): Promise<void> => {
   const tenantId = firstParam(req.params["id"]);
   const parsed = UpdateTenantEmergencyContactsBody.safeParse(req.body);
   const inputRows = parsed.success
@@ -814,23 +815,26 @@ router.post("/admin/categories/:id/places", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const actor = await getAdminUser();
-  if (!actor) {
+  const actor = req.actor?.kind === "host" ? null : await getAdminUser();
+  if (req.actor?.kind !== "host" && !actor) {
     res.status(403).json({ error: "Dostop je dovoljen samo operaterju." });
     return;
   }
   const categoryId = firstParam(req.params["id"]);
   try {
-    const proposal = await createAdminPlace({
-      categoryId,
-      actorId: actor.id,
-      selection: parsed.data,
-    });
-    const [item] = await db.select({ item: itemsTable })
-      .from(creatorPlaceMaterializationsTable)
-      .innerJoin(itemsTable, eq(creatorPlaceMaterializationsTable.itemId, itemsTable.id))
-      .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id))
-      .limit(1);
+    const item = req.actor?.kind === "host"
+      ? { item: await createHostPlace(categoryId, parsed.data) }
+      : await (async () => {
+        const proposal = await createAdminPlace({
+          categoryId, actorId: actor!.id, selection: parsed.data,
+        });
+        const [created] = await db.select({ item: itemsTable })
+          .from(creatorPlaceMaterializationsTable)
+          .innerJoin(itemsTable, eq(creatorPlaceMaterializationsTable.itemId, itemsTable.id))
+          .where(eq(creatorPlaceMaterializationsTable.proposalId, proposal.id))
+          .limit(1);
+        return created;
+      })();
     if (!item) throw new Error("Ustvarjenega vnosa ni mogoče prebrati.");
     const ctx = await tenantContextForItem(item.item.id);
     await logChange({

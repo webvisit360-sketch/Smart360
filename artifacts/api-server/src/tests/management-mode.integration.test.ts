@@ -46,7 +46,7 @@ async function request(
   });
 }
 
-test("management mode preserves guide state and closes every host access path", async (t) => {
+test("management mode preserves guide state and retains restricted host access", async (t) => {
   const stamp = `${Date.now().toString(36)}-${crypto.randomBytes(3).toString("hex")}`;
   const [tenant] = await db.insert(tenantsTable).values({
     slug: `management-mode-${stamp}`,
@@ -340,13 +340,13 @@ test("management mode preserves guide state and closes every host access path", 
   assert.equal(conciergeAdmin.status, 200);
   assert.equal((await conciergeAdmin.json() as { managementMode: string }).managementMode, "concierge");
   assert.equal((await db.select().from(hostSessionsTable)
-    .where(eq(hostSessionsTable.hostUserId, hostUserId))).length, 0);
+    .where(eq(hostSessionsTable.hostUserId, hostUserId))).length, 1);
   const revokedSession = await request(base, "GET", "/admin/host/session", hostCookie);
-  assert.equal((await revokedSession.json() as { authenticated: boolean }).authenticated, false);
+  assert.equal((await revokedSession.json() as { authenticated: boolean }).authenticated, true);
   assert.equal((await request(base, "POST", "/admin/host/login", null, {
     email: hostEmail,
     password,
-  })).status, 401);
+  })).status, 200);
   const [passwordAfter] = await db.select({ hash: hostUsersTable.passwordHash })
     .from(hostUsersTable).where(eq(hostUsersTable.id, hostUserId));
   assert.equal(passwordAfter!.hash, passwordBefore!.hash);

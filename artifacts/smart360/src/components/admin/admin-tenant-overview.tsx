@@ -27,12 +27,12 @@ export function AdminTenantOverview({ tenantId, onTabChange, isOwner = false }: 
     query: { queryKey: getListTenantThreadsQueryKey(tenantId), refetchInterval: 15000 },
   });
   const { data: overviews, refetch: refetchOverview } = useListTenantOverview({
-    query: { queryKey: getListTenantOverviewQueryKey() },
+    query: { queryKey: getListTenantOverviewQueryKey(), enabled: isOwner },
   });
   const { data: changelog } = useListTenantChangelog(tenantId, {
     query: { queryKey: getListTenantChangelogQueryKey(tenantId) },
   });
-  const overview = overviews?.find((row) => row.tenantId === tenantId);
+  const overview = isOwner ? overviews?.find((row) => row.tenantId === tenantId) : undefined;
 
   const updateStatus = useUpdateOrderStatus({
     mutation: {
@@ -100,7 +100,7 @@ export function AdminTenantOverview({ tenantId, onTabChange, isOwner = false }: 
   const handleRefresh = () => {
     refetchOrders();
     refetchThreads();
-    refetchOverview();
+    if (isOwner) refetchOverview();
   };
 
   const formatWaitTime = (date: Date) => {
@@ -221,10 +221,16 @@ export function AdminTenantOverview({ tenantId, onTabChange, isOwner = false }: 
               </div>
             )}
             
-            {distancesCount === 0 && photolessCount === 0 && (
+            {overview && distancesCount === 0 && photolessCount === 0 && (
               <div className="relative pb-[15px] before:content-[''] before:absolute before:left-[-18px] before:top-[5px] before:w-[9px] before:h-[9px] before:rounded-full before:bg-white before:border-[2.5px] before:border-[#1D9159]">
                 <div className="font-[700] text-[13.5px] text-[#121A14]">Vse urejeno</div>
                 <div className="font-[500] text-[12.5px] text-[#66716A] mt-[2px]">Ni drugih zaznanih težav z vsebino.</div>
+              </div>
+            )}
+            {!isOwner && !overview && (
+              <div className="relative pb-[15px]">
+                <p className="text-[13px] text-[#66716A]">Vsebino vodnika preverite v sekcijah in vnosih.</p>
+                <button onClick={() => onTabChange("content")} data-testid="button-overview-content" className="mt-1 text-[13px] font-extrabold text-[#157347] hover:underline">Odpri vsebino</button>
               </div>
             )}
           </div>

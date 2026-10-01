@@ -20,7 +20,8 @@ test("management mode uses its dedicated generated mutation and exact labels", (
   assert.match(setting, /Gostitelj ureja sam/);
   assert.match(setting, /Ureja Smart360/);
   assert.match(setting, /save-management-mode/);
-  assert.match(setting, /aktivne seje bodo končane/);
+  assert.match(setting, /gostitelj obdrži prijavo/);
+  assert.doesNotMatch(setting, /aktivne seje bodo končane|prijava gostitelja onemogočena|nima dostopa do administracije/);
   assert.doesNotMatch(setting, /useUpdateTenant\W/);
 });
 

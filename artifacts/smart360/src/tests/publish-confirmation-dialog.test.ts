@@ -82,11 +82,11 @@ test("autosave and save-before-publish share a role-aware tenant PATCH body", ()
     assert.ok(!Object.hasOwn(host, key));
     assert.ok(!Object.hasOwn(owner, key));
   }
-  assert.match(tenantEdit, /data: tenantSavePayload\(snapshot, quotaSnapshot, isOwner\)/);
-  assert.match(tenantEdit, /data: tenantSaveDataFor\(formSnapshot, quotaSnapshot\)/);
-  assert.match(tenantEdit, /=> tenantSavePayload\(formSnapshot, quotaSnapshot, isOwner\)/);
+  assert.match(tenantEdit, /const payload = tenantSavePayload\(snapshot, quotaSnapshot, isOwner, permissions\.canManageContent\)/);
+  assert.match(tenantEdit, /const payload = tenantSaveDataFor\(formSnapshot, quotaSnapshot\)/);
+  assert.match(tenantEdit, /=> tenantSavePayload\(formSnapshot, quotaSnapshot, isOwner, permissions\.canManageContent\)/);
   assert.match(tenantEdit, /tourRecordingEnabled: tenant\.tourRecordingEnabled \?\? false/);
-  assert.match(tenantEdit, /\{isOwner && <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border p-4">/);
+  assert.match(tenantEdit, /\{permissions\.canManageContent && <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border p-4">/);
   assert.match(tenantEdit, /checked=\{formData\.tourRecordingEnabled\}/);
 });
 

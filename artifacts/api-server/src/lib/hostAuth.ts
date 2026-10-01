@@ -162,7 +162,7 @@ async function createHostSession(
       .where(eq(tenantsTable.id, tenantId))
       .limit(1)
       .for("update");
-    if (tenant?.managementMode !== "self_service") return false;
+    if (!tenant) return false;
     await tx.insert(hostSessionsTable).values({
       hostUserId,
       tokenHash: sha256(token),
@@ -186,6 +186,7 @@ async function createHostSession(
 export type HostActorRow = {
   hostUserId: string;
   tenantId: string;
+  managementMode: "self_service" | "concierge";
   email: string;
   sessionId: string;
 };
@@ -211,12 +212,13 @@ export async function findHostActor(req: Request): Promise<HostActorRow | null> 
     .limit(1);
   if (
     !row ||
-    row.managementMode !== "self_service" ||
+    (row.managementMode !== "self_service" && row.managementMode !== "concierge") ||
     row.expiresAt.getTime() <= Date.now()
   ) return null;
   return {
     hostUserId: row.hostUserId,
     tenantId: row.tenantId,
+    managementMode: row.managementMode,
     email: row.email,
     sessionId: row.sessionId,
   };
@@ -262,7 +264,7 @@ export async function loginHost(
     .innerJoin(tenantsTable, eq(tenantsTable.id, hostMembershipsTable.tenantId))
     .where(eq(hostUsersTable.email, email))
     .limit(1);
-  if (!row || row.managementMode !== "self_service" || !row.user.passwordHash) {
+  if (!row || !row.user.passwordHash) {
     await argonVerify(await dummyHash(), password).catch(() => false);
     return { ok: false, status: 401 };
   }
@@ -335,7 +337,7 @@ export async function changeHostPassword(
       .where(eq(tenantsTable.id, actor.tenantId))
       .limit(1)
       .for("update");
-    if (tenant?.managementMode !== "self_service") return false;
+    if (!tenant) return false;
     const updated = await tx
       .update(hostUsersTable)
       .set({ passwordHash: newHash, passwordChangedAt: new Date() })
@@ -412,13 +414,6 @@ export async function issueHostInviteForTenant(
       .limit(1)
       .for("update");
     if (!tenant) return { ok: false, status: 404, error: "Not found" };
-    if (tenant.managementMode !== "self_service") {
-      return {
-        ok: false,
-        status: 409,
-        error: "Dostop gostitelja je v načinu Ureja Smart360 onemogočen.",
-      };
-    }
     const [membership] = await tx
       .select({ hostUserId: hostMembershipsTable.hostUserId })
       .from(hostMembershipsTable)
@@ -544,7 +539,7 @@ export async function consumeHostInvite(
       .where(eq(hostMembershipsTable.hostUserId, invite.hostUserId))
       .limit(1)
       .for("update");
-    if (!membership || membership.managementMode !== "self_service") return null;
+    if (!membership) return null;
     const [issuedEvent] = await tx
       .select({ detail: hostAuthEventsTable.detail })
       .from(hostAuthEventsTable)
@@ -623,7 +618,7 @@ export async function issueHostPasswordReset(emailRaw: unknown, req: Request | n
       .for("update");
     // A reset may only replace an EXISTING password. Passwordless accounts
     // must be claimed through a 72-hour invite of the distinct token type.
-    if (!user || user.managementMode !== "self_service" || !user.user.passwordHash) return null;
+    if (!user || !user.user.passwordHash) return null;
     const since = new Date(Date.now() - 60 * 60 * 1000);
     const recent = await tx
       .select({ id: hostAuthEventsTable.id })
@@ -695,7 +690,7 @@ export async function consumeHostPasswordReset(
       .where(eq(hostMembershipsTable.hostUserId, reset.hostUserId))
       .limit(1)
       .for("update");
-    if (!membership || membership.managementMode !== "self_service") return null;
+    if (!membership) return null;
     const [user] = await tx
       .update(hostUsersTable)
       .set({
@@ -896,13 +891,6 @@ export async function upsertHostAccountForTenant(
     .where(eq(tenantsTable.id, tenantId))
     .limit(1);
   if (!tenant) return { ok: false, status: 404, error: "Not found" };
-  if (tenant.managementMode !== "self_service") {
-    return {
-      ok: false,
-      status: 409,
-      error: "V načinu Ureja Smart360 se gostiteljski račun ne ustvari.",
-    };
-  }
   const [taken] = await db
     .select({ id: hostUsersTable.id })
     .from(hostUsersTable)

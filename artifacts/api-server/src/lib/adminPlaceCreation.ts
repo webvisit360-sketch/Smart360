@@ -9,12 +9,16 @@ import {
   creatorVerificationAttemptsTable,
   creatorVerificationCandidatesTable,
   db,
+  escapeHostDbContext,
+  hostMembershipsTable,
   hostOnboardingRoundsTable,
   itemDistanceProposalsTable,
   itemsTable,
   sectionsTable,
   tenantsTable,
 } from "@workspace/db";
+import { currentActor } from "./actorContext";
+import { sanitizePlain } from "./sanitizeBody";
 import { acquireNominatimTurn, computeRoadRoute } from "./distanceEngine";
 import {
   CREATOR_MAX_QUEUE_DURATION_S,
@@ -213,7 +217,7 @@ async function context(categoryId: string) {
   }).from(categoriesTable)
     .innerJoin(sectionsTable, eq(categoriesTable.sectionId, sectionsTable.id))
     .innerJoin(tenantsTable, eq(sectionsTable.tenantId, tenantsTable.id))
-    .where(and(eq(categoriesTable.id, categoryId), isNull(categoriesTable.deletedAt)))
+    .where(and(eq(categoriesTable.id, categoryId), isNull(categoriesTable.deletedAt), isNull(sectionsTable.deletedAt)))
     .limit(1);
   if (!row) throw new CreatorBulkApprovalError("Kategorija ni najdena.");
   if (!["explore", "services"].includes(row.sectionKey)) {
@@ -336,11 +340,17 @@ export async function adminPlaceDuplicateKeys(tenantId: string) {
 
 export async function searchAdminPlaces(categoryId: string, query: string) {
   const ctx = await context(categoryId);
+  const host = currentActor()?.kind === "host" ? selfServicePlaceActor() : null;
+  if (host && ctx.tenantId !== host.tenantId) throw new CreatorBulkApprovalError("Kategorija ni najdena.");
   const q = query.trim().replace(/\s+/g, " ");
   if (q.length < 2 || q.length > 160) throw new CreatorBulkApprovalError("Vnesite vsaj dva znaka.");
   const [rows, duplicates] = await Promise.all([
-    fetchAdminPlaceNominatim("/search", { q, limit: "8", namedetails: "1" }),
-    adminPlaceDuplicateRows(ctx.tenantId),
+    (host ? hostPlaceDependencies.search : fetchAdminPlaceNominatim)("/search", { q, limit: "8", namedetails: "1" }),
+    host ? escapeHostDbContext(() => db.transaction(async tx => {
+      await verifyHostPlaceScope(tx, host, categoryId);
+      return (await adminPlaceDuplicateRows(host.tenantId, tx as typeof db))
+        .filter(row => row.match.kind !== "pending");
+    })) : adminPlaceDuplicateRows(ctx.tenantId),
   ]);
   const candidates: AdminPlaceSearchCandidateBase[] = rows.flatMap((row) => {
     const place = parsedPlace(row);
@@ -356,7 +366,8 @@ export async function searchAdminPlaces(categoryId: string, query: string) {
       duplicateMatch,
     }];
   });
-  const routedCandidates = await enrichAdminPlaceRoutes(ctx, candidates);
+  const routedCandidates = await enrichAdminPlaceRoutes(ctx, candidates,
+    host ? { computeRoute: hostPlaceDependencies.route } : {});
   return {
     originLatitude: ctx.latitude,
     originLongitude: ctx.longitude,
@@ -364,17 +375,125 @@ export async function searchAdminPlaces(categoryId: string, query: string) {
   };
 }
 
-async function verifiedOsm(osmType: string, osmId: number) {
+async function verifiedOsm(osmType: string, osmId: number, search = fetchAdminPlaceNominatim) {
   const prefix = ({ node: "N", way: "W", relation: "R" } as Record<string, string>)[osmType];
   if (!prefix || !Number.isSafeInteger(osmId) || osmId <= 0) {
     throw new CreatorBulkApprovalError("Neveljavna identiteta OSM.");
   }
-  const rows = await fetchAdminPlaceNominatim("/lookup", { osm_ids: `${prefix}${osmId}`, namedetails: "1" });
+  const rows = await search("/lookup", { osm_ids: `${prefix}${osmId}`, namedetails: "1" });
   const place = rows[0] ? parsedPlace(rows[0]) : null;
   if (!place || place.osmType !== osmType || place.osmId !== osmId) {
     throw new CreatorBulkApprovalError("Izbranega kraja ni bilo mogoče ponovno preveriti.");
   }
   return place;
+}
+
+type HostPlaceActor = { kind: "host"; hostUserId: string; tenantId: string };
+type PlaceSelection =
+  | { mode: "nominatim"; osmType: string; osmId: number }
+  | { mode: "manual"; name: string; locationText: string; latitude: number; longitude: number };
+type PlaceTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+let hostPlaceDependencies = { search: fetchAdminPlaceNominatim, route: computeRoadRoute };
+
+/** Provider-only fixture seam: HTTP, persistence, locks and actor/RLS remain real. */
+export function setHostPlaceDependenciesForTests(
+  dependencies: Partial<typeof hostPlaceDependencies> | null,
+): void {
+  if (process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT) {
+    throw new Error("Host place fixture overrides are forbidden in production");
+  }
+  hostPlaceDependencies = { search: fetchAdminPlaceNominatim, route: computeRoadRoute, ...dependencies };
+}
+
+function selfServicePlaceActor(): HostPlaceActor {
+  const actor = currentActor();
+  if (actor?.kind !== "host" || actor.managementMode !== "self_service") {
+    throw new CreatorBulkApprovalError("Dodajanje krajev je dovoljeno le v samostojnem načinu.");
+  }
+  return actor;
+}
+
+/** Revalidate ALL bindings inside privileged work; never accept a request tenant ID. */
+async function verifyHostPlaceScope(tx: PlaceTransaction, actor: HostPlaceActor, categoryId: string) {
+  const [scope] = await tx.select({
+    latitude: tenantsTable.latitude, longitude: tenantsTable.longitude,
+  }).from(categoriesTable)
+    .innerJoin(sectionsTable, eq(sectionsTable.id, categoriesTable.sectionId))
+    .innerJoin(tenantsTable, eq(tenantsTable.id, sectionsTable.tenantId))
+    .innerJoin(hostMembershipsTable, eq(hostMembershipsTable.tenantId, tenantsTable.id))
+    .where(and(
+      eq(categoriesTable.id, categoryId), eq(tenantsTable.id, actor.tenantId),
+      eq(hostMembershipsTable.hostUserId, actor.hostUserId),
+      eq(tenantsTable.managementMode, "self_service"),
+      isNull(categoriesTable.deletedAt), isNull(sectionsTable.deletedAt),
+      sql`${sectionsTable.key} IN ('explore', 'services')`,
+    )).limit(1);
+  if (!scope) throw new CreatorBulkApprovalError("Kategorija ni na voljo za samostojno urejanje.");
+  return scope;
+}
+
+/**
+ * Hosts explicitly select a place, not a Creator proposal. Keep the existing
+ * canonical identity locks/ledger shared with operator and onboarding writers,
+ * but create ONLY an ordinary draft item and its confirmed distance record.
+ * No runs/proposals/evidence/translations/AI, no approved Creator materialization.
+ * The small privileged transaction is necessary because the shared canonical
+ * ledger has intentionally no host grants. Everything else stays under RLS.
+ */
+export async function createHostPlace(categoryId: string, selection: PlaceSelection) {
+  const actor = selfServicePlaceActor();
+  const ctx = await context(categoryId);
+  if (ctx.tenantId !== actor.tenantId) throw new CreatorBulkApprovalError("Kategorija ni najdena.");
+  const place = selection.mode === "nominatim"
+    ? await verifiedOsm(selection.osmType, selection.osmId, hostPlaceDependencies.search)
+    : { name: selection.name, address: selection.locationText, osmType: null, osmId: null,
+        latitude: finiteCoordinate(selection.latitude, -90, 90),
+        longitude: finiteCoordinate(selection.longitude, -180, 180) };
+  const name = sanitizePlain(place.name).trim();
+  const address = sanitizePlain(place.address).trim();
+  if (!name || !address || place.latitude === null || place.longitude === null) {
+    throw new CreatorBulkApprovalError("Ime, opis lokacije in veljavna točka so obvezni.");
+  }
+  const point = { latitude: place.latitude, longitude: place.longitude };
+  const route = await hostPlaceDependencies.route(ctx, point);
+  if (!route) throw new CreatorBulkApprovalError("Cestne razdalje ni bilo mogoče izračunati.");
+  if (route.durationMinutes * 60 > CREATOR_MAX_QUEUE_DURATION_S) {
+    throw new CreatorBulkApprovalError("Kraj je oddaljen več kot 90 minut vožnje.");
+  }
+  const entityKey = place.osmType && place.osmId !== null
+    ? `osm:${place.osmType}:${place.osmId}`
+    : `coordinates:${point.latitude.toFixed(5)}:${point.longitude.toFixed(5)}`;
+  return escapeHostDbContext(() => db.transaction(async tx => {
+    await verifyHostPlaceScope(tx, actor, categoryId);
+    await lockCreatorPlaceIdentity(tx, actor.tenantId, entityKey, normalizeCreatorProposalName(name));
+    // Canonical identity lock precedes tenant lock, matching existing writers.
+    await tx.select({ id: tenantsTable.id }).from(tenantsTable)
+      .where(eq(tenantsTable.id, actor.tenantId)).for("update");
+    const fresh = await verifyHostPlaceScope(tx, actor, categoryId);
+    if (fresh.latitude !== ctx.latitude || fresh.longitude !== ctx.longitude) {
+      throw new CreatorBulkApprovalError("Izhodišče se je spremenilo. Ponovno izberite kraj.");
+    }
+    const duplicate = findAdminPlaceDuplicate(place,
+      (await adminPlaceDuplicateRows(actor.tenantId, tx as typeof db))
+        .filter(row => row.match.kind !== "pending"));
+    if (duplicate) throw new AdminPlaceConflictError(duplicate);
+    await tx.execute(sql`SELECT set_config('smart360.draft_actor', 'host', true),
+      set_config('smart360.draft_tenant', ${actor.tenantId}, true)`);
+    const [item] = await tx.insert(itemsTable).values({
+      categoryId, title: name, mapQuery: address,
+      distanceMeters: Math.round(route.distanceMeters), duration: `${Math.round(route.durationMinutes)} min`,
+    }).returning();
+    await tx.insert(creatorCanonicalPlacesTable).values({ tenantId: actor.tenantId, entityKey, itemId: item!.id });
+    await tx.insert(itemDistanceProposalsTable).values({
+      tenantId: actor.tenantId, itemId: item!.id, status: "approved",
+      source: "kraj izbral gostitelj", confidence: "high", ...point,
+      distanceMeters: Math.round(route.distanceMeters), durationMinutes: route.durationMinutes,
+      resolvedAddress: address, geocodeQuery: name, inputFingerprint: entityKey,
+    });
+    await tx.update(tenantsTable).set({ hasUnpublishedChanges: true })
+      .where(eq(tenantsTable.id, actor.tenantId));
+    return item!;
+  }));
 }
 
 export async function createAdminPlace(input: {

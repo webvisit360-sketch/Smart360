@@ -98,6 +98,7 @@ router.post("/admin/host/login", async (req, res): Promise<void> => {
 });
 
 router.get("/admin/host/session", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const actor = await findHostActor(req);
   if (!actor) {
     res.json({ authenticated: false });
@@ -107,6 +108,7 @@ router.get("/admin/host/session", async (req, res): Promise<void> => {
     authenticated: true,
     email: actor.email,
     tenantId: actor.tenantId,
+    managementMode: actor.managementMode,
     onboardingRequired: await onboardingRequired(actor.tenantId, actor.hostUserId),
   });
 });
@@ -346,7 +348,9 @@ router.post(
       res.status(404).json({ error: "Not found" });
       return;
     }
-    if (tenant.managementMode === "concierge") {
+    // Concierge without an account retains the no-access welcome. An explicitly
+    // configured client account can receive an invitation in either mode.
+    if (tenant.managementMode === "concierge" && !await getHostAccountForTenant(tenantId)) {
       res.locals["skipAdminMutationInvalidation"] = true;
       if (rawTemplate !== "welcome") {
         res.status(409).json({ error: "V načinu Ureja Smart360 je mogoče poslati le dobrodošlico brez dostopa." });

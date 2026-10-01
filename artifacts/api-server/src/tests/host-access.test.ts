@@ -85,7 +85,7 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
   const mkTenant = async (suffix: string) => {
     const [row] = await db
       .insert(tenantsTable)
-      .values({ slug: `cp2-${suffix}-${stamp}`, name: `CP2 ${suffix}` })
+      .values({ slug: `cp2-${suffix}-${stamp}`, name: `CP2 ${suffix}`, managementMode: "concierge" })
       .returning({ id: tenantsTable.id });
     return row!.id;
   };

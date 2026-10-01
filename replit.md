@@ -15,23 +15,36 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 - **Oznake funkcij:** nikoli ne dodajaj trditev (npr. »brezplačno«), ki jih specifikacija ne vsebuje. Oznake in opisi morajo natančno opisovati dejansko funkcijo.
 - **Admin navigacija:** nedokončane admin strani nikoli ne pošiljaj kot dosegljive navigacijske izbire. Element menija se prikaže šele, ko vodi na delujoč urednik oziroma dejansko funkcionalno površino; »V pripravi« ni funkcionalna stran.
 
-- **Varnostni model (faza 2, razvoj; ni objavljeno):** vsak nov admin endpoint in vsako novo polje morata v centralnem `actorGate` izrecno določiti dostop **gostitelj lastne nastanitve / samo operater**; privzeto zavrni, preveri lastništvo najemnika in RLS. UI ne nadomešča strežniške avtorizacije. Zavrnitve se zabeležijo brez zavrnjenih vrednosti; tuji najemnik ostane neviden (404).
+- **Varnostni model (faza 2, razvoj; ni objavljeno):** vsak nov admin endpoint in vsako novo polje morata v centralnem `actorGate` izrecno določiti dostop **prijavljen gostitelj lastne nastanitve v načinu `concierge` / prijavljen gostitelj lastne nastanitve v načinu `self_service` / samo operater**; privzeto zavrni, preveri lastništvo najemnika in RLS. Oba načina zahtevata prijavo gostitelja; noben ne daje dostopa do tuje nastanitve. UI ne nadomešča strežniške avtorizacije. Zavrnitve se zabeležijo brez zavrnjenih vrednosti; tuji najemnik ostane neviden (404).
 
-  | Zmožnost | Gostitelj (samo svoja nastanitev) | Operater Smart360 |
-  | --- | --- | --- |
-  | Vnosi in vrstni red; podvojitev, premik med kategorijami, koš/obnova | Urejanje in ustvarjanje dovoljeno | Dovoljeno |
-  | Predstavnost **vnosa** (fotografije, video, vrstni red, izrez), GPX in pregled razdalj | Dovoljeno | Dovoljeno |
-  | Naročila (status/opomba), odgovori na sporočila, lastni prevodi in »prevedi manjkajoče« | Dovoljeno | Dovoljeno |
-  | Obvestila Living Guide: ustvarjanje, urejanje in mehko brisanje | Dovoljeno samo za svojo nastanitev; shranjevanje učinkuje takoj | Dovoljeno za vse nastanitve |
-  | Wi-Fi; telefon, e-pošta, WhatsApp, Viber, Instagram; obvestila in geslo naročil | Dovoljeno | Dovoljeno |
-  | Lastno geslo, QR PNG, nalepka PDF, predogled objave in dnevnik sprememb | Dovoljeno (branje/prenos, kjer je ustrezno) | Dovoljeno |
-  | **Ločen pregledan obrazec za uvajanje** (shranitev/oddaja, strukturirana polja, kategorije ustvarjene prek obrazca) | **Izjema: dovoljeno samo prek onboarding poti** | Pregled in odprtje obrazca |
-  | Struktura: razdelki, kategorije, skupine/zavihki, vse spremembe in koš/obnova | **Ne** | Dovoljeno |
-  | Videz: tema, način UI, barve, tipografija, naslovnica, logo, obe hero fotografiji, video/virtualni ogled, tlorisi/lokacijske slike | **Ne** | Dovoljeno |
-  | Seznam jezikov, navigacija Living Guide; identiteta (ime, podnaslov, naslov, zemljevid, koordinate po vseh poteh) | **Ne** (razen polj ločenega onboarding obrazca) | Dovoljeno |
-  | Objava **in umik** vodnika | **Ne: 403** — »Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.« | Dovoljeno |
+  | Zmožnost | Gostitelj `concierge` (»Ureja Smart360«, samo svoja nastanitev) | Gostitelj `self_service` (samo svoja nastanitev) | Operater Smart360 |
+  | --- | --- | --- | --- |
+  | Vnosi in vrstni red; podvojitev, premik med kategorijami, koš/obnova | Urejanje in ustvarjanje dovoljeno | Dovoljeno za vso vsebino, tudi dogodke s Terminom (vključno s tedenskim), ponudbo/cene in okolico | Dovoljeno |
+  | Predstavnost **vnosa** (fotografije, video, vrstni red, izrez), GPX in pregled razdalj | Dovoljeno | Dovoljeno | Dovoljeno |
+  | Naročila (status/opomba), odgovori na sporočila, lastni prevodi in »prevedi manjkajoče« | Dovoljeno | Dovoljeno | Dovoljeno |
+  | Obvestila Living Guide: ustvarjanje, urejanje in mehko brisanje | Dovoljeno samo za svojo nastanitev; shranjevanje učinkuje takoj | Dovoljeno samo za svojo nastanitev; shranjevanje učinkuje takoj | Dovoljeno za vse nastanitve |
+  | Wi-Fi; telefon, e-pošta, WhatsApp, Viber, Instagram; obvestila in geslo naročil | Dovoljeno | Dovoljeno | Dovoljeno |
+  | Lastno geslo, QR PNG, nalepka PDF, predogled objave in dnevnik sprememb | Dovoljeno (branje/prenos, kjer je ustrezno) | Dovoljeno (branje/prenos, kjer je ustrezno) | Dovoljeno |
+  | **Ločen pregledan obrazec za uvajanje** (shranitev/oddaja, strukturirana polja, kategorije ustvarjene prek obrazca) | **Izjema: dovoljeno samo prek onboarding poti** | Dovoljeno; urejanje dovoljenih polj ni omejeno na onboarding | Pregled in odprtje obrazca |
+  | Struktura: razdelki, kategorije, skupine/zavihki, vrstni red, vse spremembe in koš/obnova | **Ne** | Dovoljeno | Dovoljeno |
+  | Videz: tema, način UI, barve, tipografija, naslovnica, logo, obe hero fotografiji, video/virtualni ogled, tlorisi/lokacijske slike | **Ne** | Dovoljeno | Dovoljeno |
+  | Seznam jezikov, navigacija Living Guide; identiteta (ime, podnaslov, naslov, zemljevid, koordinate po vseh poteh) | **Ne** (razen polj ločenega onboarding obrazca) | Dovoljeno | Dovoljeno |
+  | Stikalo SNEMANJE TUR | **Ne** | Dovoljeno | Dovoljeno |
+  | Objava vodnika (»Objavi spremembe«) | **Ne: 403** — »Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.« | Dovoljeno z enakim preglednim potrditvenim dialogom, pravili osnutek → objava in dnevnikom sprememb kot pri operaterju; uspešna objava počisti `operatorDraftPending` (`operator_draft_pending`) | Dovoljeno |
+  | Umik objave (vodnik brez povezave) | **Ne: 403** — »Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.« | **Ne: 403**, obstoječi slovenski slog sporočila | Dovoljeno |
+  | Način upravljanja na Splošno (`concierge` / `self_service`) | **Ne: 403** | **Ne: 403** | Dovoljeno |
+  | Preimenovanje `slug` / `draft_slug`; vse spremembe `tenant_slug_reservations` ali preusmeritev | **Ne: 403** | **Ne: 403** | Dovoljeno |
+  | `isTemplate`, `mediaQuotaBytes`, `renewsAt` in naročniška polja, `rating` / `reviewsCount` | **Ne: 403** | **Ne: 403** | Dovoljeno |
+  | Trajno brisanje (hard purge, zunaj dovoljenega mehkega brisanja), ustvarjanje/brisanje najemnikov | **Ne: 403** | **Ne: 403** | Dovoljeno |
+  | Creator / Kreator vodnika, upravljanje admin računov in vzdrževanje | **Ne: 403** | **Ne: 403** | Dovoljeno |
 
-  Obstoječe zmožnosti, ki so že samo operaterske (Creator, upravljanje računov, trajno brisanje, vzdrževanje itd.), ostanejo takšne. Ne dodajaj novih funkcij brez izrecne odločitve v matriki in centralnem registru; preveri tudi posamezna polja mešanih PATCH zahtevkov pred kakršnimkoli zapisom. Tehnični testni doseg in omejitve so v `docs/security-phase2.md`.
+  Merodajen je trenutni shranjeni način upravljanja najemnika pri **vsaki zahtevi**, ne način iz prijavne seje ali zastarelega predpomnilnika. Operaterska sprememba načina učinkuje takoj oziroma najpozneje ob naslednji zahtevi gostitelja v obe smeri; prehod na `concierge` ponovno uveljavi vse dosedanje omejitve brez razširitve izjem.
+
+  `self_service` uporablja enaka pravila osnutka in objavljenega posnetka kot operater: spremembe vsebine vodnika ostanejo v osnutku do pregledane in potrjene objave; gost vidi samo objavljeni posnetek. Objava uporablja isti dialog in dnevnik sprememb ter počisti `operatorDraftPending`. Sprotna obvestila, sporočila in naročila ohranijo obstoječo izjemo in ne čakajo na objavo.
+
+  Prijavljenemu gostitelju `self_service` je dostopna celotna vsebinska navigacija: Pregled, Naročila, Sporočila, Dogodki, Ponudba in cene, Obvestila, Okolica, Sekcije in vnosi ter Nastavitve z dovoljenimi zavihki. Operaterski zavihki/polja so skriti ali samo za branje, ne površine, ki šele ob uporabi javijo napako. Creator ostane samo operaterski.
+
+  Ne dodajaj novih funkcij brez izrecne odločitve v matriki in centralnem registru; preveri tudi posamezna polja mešanih PATCH zahtevkov pred kakršnimkoli zapisom. Omejitve na lastni nastanitvi uporabljajo 403 in obstoječi slovenski slog sporočil; globalne skrite operaterske poti in tuji podatki ohranijo zaščitni 404. Starejši tehnični opis je v `docs/security-phase2.md`; pri obsegu dovoljenj velja ta dvonačinska matrika.
 
 - Infrastrukturne napake ne smejo biti tihe: zavrnjeno shranjevanje mora ostati jasno označeno, lokalni vnos se ohrani, ponovni poskusi pa ne smejo prikazovati »shranjeno«, dokler spremembe niso potrjene. Osvežitev strani ni rešitev, če bi zavrgla neshranjen vnos.
 

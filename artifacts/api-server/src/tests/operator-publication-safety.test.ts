@@ -2,18 +2,18 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { hostOperatorDraftPublishDenied, operatorDraftAfterWrite } from "../lib/publicationSafety";
+import { operatorDraftAfterWrite } from "../lib/publicationSafety";
 
 const source = (relative: string) =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
-test("operator draft followed by host edits cannot be published by host", () => {
+test("ordinary host edits preserve operator draft; authorized self-service publication clears it", () => {
   let pending = operatorDraftAfterWrite(false, "owner", "dirty");
   pending = operatorDraftAfterWrite(pending, "host", "dirty");
   assert.equal(pending, true);
-  assert.equal(hostOperatorDraftPublishDenied("host", pending, true), true);
   assert.equal(operatorDraftAfterWrite(pending, "host", "noop"), true);
   assert.equal(operatorDraftAfterWrite(pending, "host", "publish"), true);
+  assert.equal(operatorDraftAfterWrite(pending, "host", "publish", true), false);
 });
 
 test("owner publication clears the bit; later host-only edits remain publishable", () => {
@@ -21,7 +21,6 @@ test("owner publication clears the bit; later host-only edits remain publishable
   assert.equal(pending, false);
   const hostDraft = operatorDraftAfterWrite(pending, "host", "dirty");
   assert.equal(hostDraft, false);
-  assert.equal(hostOperatorDraftPublishDenied("host", hostDraft, true), false);
   assert.equal(operatorDraftAfterWrite(hostDraft, "host", "publish"), false);
   assert.equal(operatorDraftAfterWrite(hostDraft, "system", "dirty"), true);
 });
@@ -29,11 +28,11 @@ test("owner publication clears the bit; later host-only edits remain publishable
 test("publish guard precedes snapshot, alias, and tenant writes inside locked transaction", () => {
   const route = source("../routes/adminTenants.ts");
   const lock = route.indexOf('.for("update")', route.indexOf("const writeTransaction"));
-  const guard = route.indexOf("hostOperatorDraftPublishDenied(", lock);
+  const guard = route.indexOf('lockedBefore.managementMode !== "self_service"', lock);
   const snapshot = route.indexOf("replacePublishedSnapshot(updated)", guard);
   const slug = route.indexOf("await claimSlug(tx, publishedSlug", guard);
   assert.ok(lock >= 0 && lock < guard && guard < slug && slug < snapshot);
-  assert.match(route, /hostOperatorDraftDenied[\s\S]*?await denyAuthorization\(req, res,[\s\S]*?message: "Vodnik vsebuje spremembe upravljavca, ki še niso potrjene — objavo opravi Smart360\."/);
+  assert.match(route, /hostOperatorDraftDenied[\s\S]*?await denyAuthorization\(req, res,[\s\S]*?message: "Objavo vodnika opravi Smart360/);
   assert.match(source("../lib/authorizationDenial.ts"), /res\.status\(403\)\.json\(\{ error: options\.message/);
 });
 

@@ -8,7 +8,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
  */
 export type Actor =
   | { kind: "owner"; requestIp?: string | null }
-  | { kind: "host"; hostUserId: string; tenantId: string; requestIp?: string | null };
+  | { kind: "host"; hostUserId: string; tenantId: string; managementMode?: "self_service" | "concierge"; requestIp?: string | null };
 
 export const actorStorage = new AsyncLocalStorage<Actor>();
 

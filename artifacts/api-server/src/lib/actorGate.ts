@@ -44,9 +44,9 @@ type Binding =
   | { kind: "anon" }
   /** Owner only. Hosts get 404 — the route's existence is not revealed. */
   | { kind: "owner-only" }
-  /** Newly operator-only, but resolve the host's tenant first: own=403, foreign=404. */
+  /** Legacy names: concierge own=403, self-service allowed, foreign always=404. */
   | { kind: "operator-tenant"; param: string }
-  | { kind: "operator-entity"; entity: EntityKind; param: string }
+  | { kind: "operator-entity"; entity: EntityKind; param: string; selfService?: boolean }
   /** Reorder ids belong to a single tenant; foreign ids remain invisible. */
   | { kind: "operator-reorder"; entity: EntityKind }
   /** Host session endpoints about the host themself (password change, logout). */
@@ -75,8 +75,8 @@ const OP_T_ID: Binding = { kind: "operator-tenant", param: "id" };
 function e(entity: EntityKind, param = "id"): Binding {
   return { kind: "entity", entity, param };
 }
-function opEntity(entity: EntityKind, param = "id"): Binding {
-  return { kind: "operator-entity", entity, param };
+function opEntity(entity: EntityKind, param = "id", selfService = true): Binding {
+  return { kind: "operator-entity", entity, param, selfService };
 }
 
 export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
@@ -151,8 +151,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
     binding: { kind: "tenant-url", param: "tenantId" },
   },
   { method: "get", path: "/admin/tenants/:id/publish-preview", binding: T_ID },
-  { method: "get", path: "/admin/tenants/:id/emergency-contacts", binding: OWNER },
-  { method: "put", path: "/admin/tenants/:id/emergency-contacts", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/emergency-contacts", binding: OP_T_ID },
+  { method: "put", path: "/admin/tenants/:id/emergency-contacts", binding: OP_T_ID },
   { method: "get", path: "/admin/tenants/:id/notification-configuration", binding: T_ID },
   {
     method: "patch",
@@ -200,7 +200,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "post", path: "/admin/tenants/:id/sections", binding: OP_T_ID },
   { method: "post", path: "/admin/sections/:id/categories", binding: opEntity("section") },
   { method: "patch", path: "/admin/sections/:id", binding: opEntity("section") },
-  { method: "delete", path: "/admin/sections/:id", binding: opEntity("section") },
+  { method: "delete", path: "/admin/sections/:id", binding: opEntity("section", "id", false) },
   { method: "post", path: "/admin/sections/:id/trash", binding: opEntity("section") },
   { method: "post", path: "/admin/sections/:id/restore", binding: opEntity("section") },
   { method: "post", path: "/admin/sections/reorder", binding: { kind: "operator-reorder", entity: "section" } },
@@ -208,8 +208,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "delete", path: "/admin/categories/:id", binding: opEntity("category") },
   { method: "post", path: "/admin/categories/reorder", binding: { kind: "operator-reorder", entity: "category" } },
   { method: "post", path: "/admin/categories/:id/items", binding: e("category") },
-  { method: "get", path: "/admin/categories/:id/place-search", binding: OWNER },
-  { method: "post", path: "/admin/categories/:id/places", binding: OWNER },
+  { method: "get", path: "/admin/categories/:id/place-search", binding: opEntity("category") },
+  { method: "post", path: "/admin/categories/:id/places", binding: opEntity("category") },
   { method: "patch", path: "/admin/items/:id", binding: e("item") },
   { method: "post", path: "/admin/items/:id/gpx", binding: e("item") },
   { method: "delete", path: "/admin/items/:id/gpx", binding: e("item") },
@@ -242,8 +242,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   // ── Tenant translations bundle (adminTranslations.ts) ───────────────────
   { method: "get", path: "/admin/tenants/:id/translations", binding: T_ID },
   { method: "get", path: "/admin/tenants/:id/translations/overview", binding: T_ID },
-  { method: "post", path: "/admin/tenants/:id/translations/import", binding: OWNER },
-  { method: "get", path: "/admin/tenants/:id/translations/export", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/translations/import", binding: OP_T_ID },
+  { method: "get", path: "/admin/tenants/:id/translations/export", binding: OP_T_ID },
 
   // ── Site plan (adminSitePlan.ts) ─────────────────────────────────────────
   { method: "get", path: "/admin/tenants/:id/site-plan-images", binding: T_ID },
@@ -352,6 +352,20 @@ export const HOST_TENANT_WRITABLE_FIELDS = [
   "notificationWhatsappPhone", "orderPassword", "wifiSsid", "wifiPass", "wifiEnc",
 ] as const;
 const HOST_TENANT_FIELDS = new Set<string>(HOST_TENANT_WRITABLE_FIELDS);
+/** Deliberately explicit: future schema fields do not grant host capabilities. */
+export const SELF_SERVICE_TENANT_WRITABLE_FIELDS = [
+  ...HOST_TENANT_WRITABLE_FIELDS,
+  "customDomain", "name", "subtitle", "address", "mapQuery", "mapUrl",
+  "latitude", "longitude", "logoUrl", "logoSquareUrl", "heroUrl",
+  "livingGuideHeroUrl", "tourUrl", "tourRecordingEnabled", "bgColor", "theme",
+  "guestUiMode", "coverTitle", "coverSubtitle", "coverTitleSize",
+  "coverTitleOpacity", "coverTextColor", "coverSubSize", "coverSubOpacity",
+  "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil", "textScale",
+  "textFont", "textColor", "coverAlign", "coverShowRating", "logoX", "logoY",
+  "logoW", "logoOpacity", "navColorCover", "navColor", "navColorOn",
+  "languages", "livingGuideNav", "isPublished", "publishNow", "publishToken",
+] as const;
+const SELF_SERVICE_TENANT_FIELDS = new Set<string>(SELF_SERVICE_TENANT_WRITABLE_FIELDS);
 export const HOST_PUBLISH_DENIAL =
   "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.";
 const PUBLICATION_FIELDS = new Set(["isPublished", "publishNow", "publishToken"]);
@@ -394,7 +408,8 @@ async function resolveActor(req: Request): Promise<Actor | null> {
   if (await isAuthenticated(req)) return { kind: "owner", requestIp };
   const host = await findHostActor(req);
   if (host) {
-    return { kind: "host", hostUserId: host.hostUserId, tenantId: host.tenantId, requestIp };
+    return { kind: "host", hostUserId: host.hostUserId, tenantId: host.tenantId,
+      managementMode: host.managementMode, requestIp };
   }
   return null;
 }
@@ -447,6 +462,7 @@ async function gate(
     return;
   }
   const binding = hit.spec.binding;
+  const selfService = actor.managementMode === "self_service";
   switch (binding.kind) {
     case "owner-only":
       notFound(res);
@@ -456,6 +472,7 @@ async function gate(
         notFound(res);
         return;
       }
+      if (selfService) break;
       await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
       return;
     case "operator-entity": {
@@ -464,6 +481,7 @@ async function gate(
         notFound(res);
         return;
       }
+      if (selfService && binding.selfService) break;
       await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
       return;
     }
@@ -478,6 +496,7 @@ async function gate(
           }
         }
       }
+      if (selfService) break;
       await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
       return;
     }
@@ -497,7 +516,8 @@ async function gate(
       if (req.method === "PATCH" && hit.spec.path === "/admin/tenants/:id" &&
           req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
         const denied = Object.keys(req.body as Record<string, unknown>)
-          .filter((field) => !HOST_TENANT_FIELDS.has(field));
+          .filter((field) => !(selfService ? SELF_SERVICE_TENANT_FIELDS : HOST_TENANT_FIELDS).has(field) ||
+            (field === "isPublished" && req.body[field] !== true));
         if (denied.length) {
           const publishing = denied.some((field) => PUBLICATION_FIELDS.has(field));
           await denyAuthorization(req, res, {
@@ -526,7 +546,7 @@ async function gate(
       if (binding.entity === "media" && hit.spec.path === "/admin/media/:id") {
         const media = await pool.query<{ item_id: string | null }>(
           "SELECT item_id FROM media WHERE id = $1", [id]);
-        if (!media.rows[0]?.item_id) {
+        if (!media.rows[0]?.item_id && !selfService) {
           await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
           return;
         }
@@ -549,7 +569,7 @@ async function gate(
         }
         const media = await pool.query<{ item_id: string | null }>(
           "SELECT item_id FROM media WHERE id = $1", [id]);
-        if (!media.rows[0]?.item_id) {
+        if (!media.rows[0]?.item_id && !selfService) {
           await denyAuthorization(req, res, { reason: "operator_required", route: hit.spec.path });
           return;
         }
@@ -594,7 +614,12 @@ export function createAdminGateForTests(actor: Actor): typeof adminGate {
       next();
       return;
     }
-    gate(req, res, next, async () => actor).catch(next);
+    gate(req, res, next, async () => {
+      if (actor.kind !== "host") return actor;
+      const result = await pool.query<{ management_mode: "self_service" | "concierge" }>(
+        "SELECT management_mode FROM tenants WHERE id = $1", [actor.tenantId]);
+      return result.rows[0] ? { ...actor, managementMode: result.rows[0].management_mode } : null;
+    }).catch(next);
   };
 }
 

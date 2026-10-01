@@ -24,7 +24,7 @@ test("owner-only Creator is below standard navigation and has a real surface", (
   const creator = shell.indexOf("onClick={() => setActiveTab('kreator')}");
   assert.ok(creator > shell.indexOf("<span>Nastavitve</span>"));
   assert.ok(creator < shell.indexOf("{/* MAIN CONTENT AREA */}"));
-  assert.match(shell, /\{isOwner && <TabsContent value="kreator">/);
+  assert.match(shell, /\{permissions\.canUseCreator && <TabsContent value="kreator">/);
   assert.match(shell, /<KreatorSourceList/);
 });
 
@@ -38,6 +38,6 @@ test("scoped editor filters all section and move targets, hides cross-section tr
   assert.match(editor, /const trimmedKey = scope \?\?/);
   assert.match(editor, /await createSection\(tenantId/);
   assert.match(editor, /const canCreateSection = operatorPlaceCreation && \(!scope \|\| visibleSections\.length === 0\)/);
-  assert.match(editor, /if \(!canCreateSection\) setAddSectionOpen\(false\)/);
+  assert.match(editor, /if \(scope && visibleSections\.length > 0\) setAddSectionOpen\(false\)/);
   assert.match(instructions, /nedokončane admin strani nikoli ne pošiljaj kot dosegljive navigacijske izbire/);
 });

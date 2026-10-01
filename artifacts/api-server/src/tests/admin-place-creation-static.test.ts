@@ -13,8 +13,8 @@ test("operator place endpoints enforce OKOLICA server-side", () => {
 });
 
 test("creation re-verifies OSM and computes road metrics server-side", () => {
-  assert.match(service, /fetchAdminPlaceNominatim\("\/lookup"/);
-  assert.match(service, /computeRoadRoute\(ctx/);
+  assert.match(service, /search\("\/lookup"/);
+  assert.match(service, /\(dependencies\.route \?\? computeRoadRoute\)\(ctx/);
   assert.match(service, /dodal operater prek iskanja/);
   assert.match(service, /syncApprovedCreatorPlace\(tx, proposal\)/);
 });

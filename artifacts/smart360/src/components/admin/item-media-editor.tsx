@@ -5,6 +5,7 @@ import { fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { refreshTenantAfterAdminWrite } from "@/lib/tenant-publication-state";
 import { Loader2, Plus, Play, RotateCcw, X } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
+import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
 
 type Media = {
   id: string;
@@ -110,6 +111,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   serializeWrite,
 }, handleRef) {
   const queryClient = useQueryClient();
+  const { isOperator } = useTenantPermissions(hostMode ? "" : tenantId);
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -164,7 +166,7 @@ export const ItemMediaEditor = forwardRef<ItemMediaEditorHandle, {
   // controls at 100 % — the server refuses the upload anyway, this just
   // saves the host a pointless 100 MB transfer.
   const { data: storageUsage } = useGetStorageUsage({
-    query: { enabled: !hostMode, queryKey: getGetStorageUsageQueryKey() },
+    query: { enabled: !hostMode && isOperator, queryKey: getGetStorageUsageQueryKey() },
   });
   const tenantUsage = storageUsage?.tenants.find(t => t.tenantId === tenantId);
   const quotaPct = tenantUsage ? usagePct(tenantUsage.usedBytes, tenantUsage.quotaBytes) : 0;

@@ -9,6 +9,25 @@ import {
 } from "@/hooks/use-host-onboarding";
 import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminButton as Button } from "@/components/ui/button";
+import { TabsContent, TabsTrigger } from "@/components/ui/tabs";
+import type { tenantPermissions } from "@/lib/tenant-permissions";
+
+type ReviewAccess = Pick<ReturnType<typeof tenantPermissions>, "canReviewOnboarding">;
+
+export function HostOnboardingReviewTrigger({ permissions }: { permissions: ReviewAccess }) {
+  if (!permissions.canReviewOnboarding) return null;
+  return <TabsTrigger value="onboarding" className="rounded-[10px] text-[#157347]" data-testid="tab-onboarding-review">
+    Obrazec za gostitelja
+  </TabsTrigger>;
+}
+
+export function HostOnboardingReviewPanel({ tenantId, permissions }: { tenantId: string; permissions: ReviewAccess }) {
+  // Guard outside the query-bearing component, not only its tab button.
+  if (!permissions.canReviewOnboarding) return null;
+  return <TabsContent value="onboarding" className="space-y-6">
+    <HostOnboardingReview tenantId={tenantId} />
+  </TabsContent>;
+}
 
 export const hostDraftStatusLabels = {
   created: "Ustvarjen osnutek",
@@ -124,7 +143,7 @@ export function RoundReview({
   );
 }
 
-export function HostOnboardingReview({ tenantId }: { tenantId: string }) {
+function HostOnboardingReview({ tenantId }: { tenantId: string }) {
   const query = useGetOwnerOnboarding(tenantId, { enabled: !!tenantId });
   const openMutation = useOpenOnboarding(tenantId);
   const reopenMutation = useReopenOnboarding(tenantId);

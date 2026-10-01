@@ -1,5 +1,14 @@
 import { notificationWhatsappPhoneForSave } from "./notification-channel";
 
+/** A restricted save must not mark hidden, still-unsaved draft fields as saved. */
+export function savedTenantDraft<T extends object>(previous: T, snapshot: T, payload: object): T {
+  const saved = { ...previous };
+  for (const key of Object.keys(payload) as Array<keyof T>) {
+    if (key in snapshot) saved[key] = snapshot[key];
+  }
+  return saved;
+}
+
 // Shared by debounced autosave and the explicit save-before-publish path.
 export function tenantSavePayload<T extends {
   slug: string;
@@ -21,7 +30,7 @@ export function tenantSavePayload<T extends {
   orderNotifyEmail?: boolean;
   messageNotifyEmail?: boolean;
   tourRecordingEnabled?: boolean;
-}>(snapshot: T, quotaGb: string, isOwner: boolean) {
+}>(snapshot: T, quotaGb: string, isOwner: boolean, canManageContent = isOwner) {
   const {
     latitude: _latitude,
     longitude: _longitude,
@@ -41,7 +50,7 @@ export function tenantSavePayload<T extends {
   if (!isOwner) {
     // Explicit allowlist: a newly added operator setting must never leak into
     // a host autosave (or the save-before-publish path).
-    return {
+    const contacts = {
       wifiSsid: data.wifiSsid,
       wifiPass: data.wifiPass,
       wifiEnc: snapshot.wifiEnc,
@@ -55,6 +64,23 @@ export function tenantSavePayload<T extends {
       orderNotifyEmail: snapshot.orderNotifyEmail,
       messageNotifyEmail: snapshot.messageNotifyEmail,
     };
+    if (!canManageContent) return contacts;
+    // Explicit host allowlist: never carry a stale slug, unpublish toggle, quota,
+    // review/subscription field, management mode or future operator field into autosave.
+    const editableFields = [
+      "name", "subtitle", "customDomain", "theme", "mapQuery", "mapUrl", "tourUrl",
+      "tourRecordingEnabled", "heroUrl", "logoUrl", "coverTitle", "coverSubtitle",
+      "coverTitleSize", "coverTitleOpacity", "coverTextColor", "coverSubSize",
+      "coverSubOpacity", "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil",
+      "textScale", "textFont", "textColor", "coverAlign", "coverShowRating",
+      "logoX", "logoY", "logoW", "logoOpacity", "navColorCover", "navColor",
+      "navColorOn", "bgColor",
+    ] as const;
+    const hostData: Record<string, unknown> = { ...contacts };
+    for (const field of editableFields) {
+      if (field in data) hostData[field] = (data as Record<string, unknown>)[field];
+    }
+    return hostData as typeof contacts;
   }
   return data;
 }

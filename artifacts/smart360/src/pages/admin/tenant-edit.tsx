@@ -1,4 +1,4 @@
-import { useGetAdminSession, useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, useGetTenantNotificationConfiguration, usePreviewTenantPublication, getPreviewTenantPublicationQueryKey, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey, getGetTenantNotificationConfigurationQueryKey } from "@workspace/api-client-react";
+import { useGetPublicTenant, useGetTenant, useUpdateTenant, useRenewTenant, useListTenantRenewals, useListTenantChangelog, useListTenantOverview, useGetTenantNotificationConfiguration, usePreviewTenantPublication, getPreviewTenantPublicationQueryKey, getGetTenantQueryKey, getListTenantsQueryKey, getListTenantRenewalsQueryKey, getGetAdminOverviewQueryKey, getListTenantChangelogQueryKey, getListTenantOverviewQueryKey, getGetTenantNotificationConfigurationQueryKey } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
 import { Loader2, RefreshCcw, Upload, ImageIcon, UserRoundCog } from "lucide-react";
 import { actorLabel } from "@/pages/admin/dashboard";
@@ -34,6 +34,7 @@ import {
   type ManagementMode,
 } from "@/components/admin/management-mode-setting";
 import { useHostSession } from "@/hooks/use-host-session";
+import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
 import { collapseConsecutiveChangelog } from "@/lib/changelog-collapse";
 import {
   AdminSidebarIcon as SidebarNavIcon,
@@ -51,9 +52,10 @@ import {
 import {
   publicationDraftChanged,
   publicationNeedsConfirmation,
+  savedTenantDraft,
   tenantSavePayload,
 } from "@/lib/tenant-publication-flow";
-import { HostOnboardingReview } from "@/components/admin/host-onboarding-review";
+import { HostOnboardingReviewTrigger, HostOnboardingReviewPanel } from "@/components/admin/host-onboarding-review";
 import { adminPlaceTargetTab } from "@/lib/manual-pin-feedback";
 import { SkeletonAlignmentAction, DistanceBackfillAction } from "@/components/admin/skeleton-alignment-action";
 import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-editor";
@@ -111,9 +113,9 @@ export default function AdminTenantEdit() {
   const id = params?.id || "";
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: session } = useGetAdminSession();
   const { data: hostSession } = useHostSession();
-  const isOwner = Boolean(session?.authenticated);
+  const permissions = useTenantPermissions(id);
+  const isOwner = permissions.isOperator;
 
   const operatorEntryCalled = useRef(false);
   useEffect(() => {
@@ -131,9 +133,9 @@ export default function AdminTenantEdit() {
     request: { cache: "no-store" },
   });
   const { data: tenantOverviews } = useListTenantOverview({
-    query: { queryKey: getListTenantOverviewQueryKey() },
+    query: { queryKey: getListTenantOverviewQueryKey(), enabled: isOwner },
   });
-  const tenantOverview = tenantOverviews?.find((row) => row.tenantId === id);
+  const tenantOverview = isOwner ? tenantOverviews?.find((row) => row.tenantId === id) : undefined;
   const { data: notificationStatus } = useGetTenantNotificationConfiguration(id, { query: { enabled: !!id, queryKey: getGetTenantNotificationConfigurationQueryKey(id) } });
   const whatsappConfigured = notificationStatus?.configured ?? false;
 
@@ -149,12 +151,13 @@ export default function AdminTenantEdit() {
   );
   const updateMutation = useUpdateTenant({
     mutation: {
-      onSuccess: (data) => {
+      onSuccess: (data, variables) => {
         queryClient.setQueryData(getGetTenantQueryKey(id), (old: any) => old ? { ...old, ...data } : old);
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
         if (!data.firstPublishedAt && data.slug) setOriginalSlug(data.slug);
         setFormData((prev) => {
-          if (prev.tourUrl === (data.tourUrl || "")) return prev;
+          if (variables.data.tourUrl === undefined || prev.tourUrl !== variables.data.tourUrl ||
+              prev.tourUrl === (data.tourUrl || "")) return prev;
           return { ...prev, tourUrl: data.tourUrl || "" };
         });
       },
@@ -280,6 +283,17 @@ export default function AdminTenantEdit() {
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => adminPlaceTargetTab(window.location.search) ?? "pregled");
+  useEffect(() => {
+    if ((!permissions.canUseCreator && activeTab === "kreator") ||
+        (!permissions.canReviewOnboarding && activeTab === "onboarding") ||
+        (!permissions.canEditAppearance && ["appearance", "guide"].includes(activeTab))) {
+      setActiveTab("general");
+    }
+    if (!permissions.canPublish) {
+      setPublicationDialogOpen(false);
+      setPublicationPreview(null);
+    }
+  }, [activeTab, permissions.canUseCreator, permissions.canReviewOnboarding, permissions.canEditAppearance, permissions.canPublish]);
   const sidebarRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const sidebar = sidebarRef.current;
@@ -364,15 +378,16 @@ export default function AdminTenantEdit() {
       const quotaSnapshot = mediaQuotaGb;
       const t = setTimeout(() => {
         autoSaveTimer.current = null;
+        const payload = tenantSavePayload(snapshot, quotaSnapshot, isOwner, permissions.canManageContent);
         const request = updateMutation.mutateAsync({
           id,
-          data: tenantSavePayload(snapshot, quotaSnapshot, isOwner),
+          data: payload,
         });
         autoSavePromise.current = request;
         void request
           .then(() => {
-            lastSaved.current = snapshot;
-            lastSavedMediaQuotaGb.current = quotaSnapshot;
+            lastSaved.current = savedTenantDraft(lastSaved.current, snapshot, payload);
+            if (isOwner) lastSavedMediaQuotaGb.current = quotaSnapshot;
           })
           .catch(() => undefined)
           .finally(() => {
@@ -386,7 +401,7 @@ export default function AdminTenantEdit() {
       };
     }
     return undefined;
-  }, [formData, id, isOwner, mediaQuotaGb]);
+  }, [formData, id, isOwner, permissions.canManageContent, mediaQuotaGb]);
 
   // Average luminance of the cover photo — for the contrast warning on the cover icons.
   const [coverLum, setCoverLum] = useState<number | null>(null);
@@ -556,7 +571,7 @@ export default function AdminTenantEdit() {
   const tenantSaveDataFor = (
     formSnapshot: typeof formData,
     quotaSnapshot: string,
-  ) => tenantSavePayload(formSnapshot, quotaSnapshot, isOwner);
+  ) => tenantSavePayload(formSnapshot, quotaSnapshot, isOwner, permissions.canManageContent);
 
   const isLocalDraftDirty = (
     formSnapshot: typeof formData,
@@ -624,6 +639,7 @@ export default function AdminTenantEdit() {
   };
 
   const preparePublication = async (autoPublishCleanPreview: boolean) => {
+    if (!permissions.canPublish) return;
     const formSnapshot = formDataRef.current;
     const quotaSnapshot = mediaQuotaGbRef.current;
     const localDirtyAtClick = isLocalDraftDirty(formSnapshot, quotaSnapshot);
@@ -645,12 +661,13 @@ export default function AdminTenantEdit() {
 
       const mustSaveClickSnapshot = isLocalDraftDirty(formSnapshot, quotaSnapshot);
       if (mustSaveClickSnapshot) {
+        const payload = tenantSaveDataFor(formSnapshot, quotaSnapshot);
         await updateMutation.mutateAsync({
           id,
-          data: tenantSaveDataFor(formSnapshot, quotaSnapshot),
+          data: payload,
         });
-        lastSaved.current = formSnapshot;
-        lastSavedMediaQuotaGb.current = quotaSnapshot;
+        lastSaved.current = savedTenantDraft(lastSaved.current, formSnapshot, payload);
+        if (isOwner) lastSavedMediaQuotaGb.current = quotaSnapshot;
       }
 
       const preview = await fetchPublicationPreview();
@@ -686,7 +703,7 @@ export default function AdminTenantEdit() {
   };
 
   const confirmPublication = async () => {
-    if (!publicationPreview) return;
+    if (!permissions.canPublish || !publicationPreview) return;
     await finishPublication(publicationPreview);
   };
 
@@ -755,7 +772,7 @@ export default function AdminTenantEdit() {
           <button data-active={isSettings} onClick={() => setActiveTab('general')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${isSettings ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><SidebarNavIcon name="settings" /><span>Nastavitve</span></button>
         </div>
 
-        {isOwner && <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
+        {permissions.canUseCreator && <div className="admin-tenant-sidebar__nav flex flex-row md:flex-col shrink-0">
           <button data-active={activeTab === 'kreator'} onClick={() => setActiveTab('kreator')} className={`admin-tenant-sidebar__item h-[42px] md:h-[47px] rounded-[14px] text-[14px] md:text-[16px] font-[650] flex items-center whitespace-nowrap transition-colors ${activeTab === 'kreator' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}><SidebarNavIcon name="creator" /><span>Kreator vodnika</span></button>
         </div>}
 
@@ -789,8 +806,7 @@ export default function AdminTenantEdit() {
                     toast({ title: "Odjava ni uspela", variant: "destructive" });
                     return;
                   }
-                  queryClient.removeQueries({ queryKey: ["host-onboarding"] });
-                  queryClient.removeQueries({ queryKey: getGetTenantQueryKey(id) });
+                  queryClient.clear();
                   setLocation("/admin/login");
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground text-left"
@@ -826,7 +842,8 @@ export default function AdminTenantEdit() {
           </div>
 
           {activeTab !== "obvestila" && <div className="flex shrink-0 flex-col items-end gap-1">
-            {isOwner && <Button
+            {permissions.canPublish && <Button
+              data-testid="button-publish-changes"
               onClick={handlePublish}
               disabled={updateMutation.isPending || publicationLoading || publishing}
               className={[
@@ -845,7 +862,7 @@ export default function AdminTenantEdit() {
                   ? "Objavi spremembe"
                   : "Objavljeno"}
             </Button>}
-            {!isOwner ? (
+            {!permissions.canPublish ? (
               <p className="max-w-[360px] text-right text-xs text-muted-foreground">Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.</p>
             ) : hasUnpublishedChanges && (
               <p className="max-w-[210px] text-right text-[10px] font-medium leading-tight text-[#9A6818] sm:max-w-[360px] sm:text-[11px]">
@@ -864,11 +881,11 @@ export default function AdminTenantEdit() {
             {isSettings && (
               <TabsList className="mb-6 bg-white border border-black/5 rounded-[14px] p-1">
                 <TabsTrigger value="general" className="rounded-[10px]">Splošno</TabsTrigger>
-                <TabsTrigger value="onboarding" className="rounded-[10px] text-[#157347]">Obrazec za gostitelja</TabsTrigger>
-                {isOwner && <TabsTrigger value="appearance" className="rounded-[10px]">Videz</TabsTrigger>}
+                <HostOnboardingReviewTrigger permissions={permissions} />
+                {permissions.canEditAppearance && <TabsTrigger value="appearance" className="rounded-[10px]" data-testid="tab-appearance">Videz</TabsTrigger>}
                 <TabsTrigger value="contacts" className="rounded-[10px]">Stiki & Lokacija</TabsTrigger>
                 <TabsTrigger value="translations" className="rounded-[10px]">Prevodi</TabsTrigger>
-                {isOwner && <TabsTrigger value="guide" className="rounded-[10px]">Living Guide</TabsTrigger>}
+                {permissions.canEditAppearance && <TabsTrigger value="guide" className="rounded-[10px]" data-testid="tab-living-guide">Living Guide</TabsTrigger>}
                 <TabsTrigger value="changelog" className="rounded-[10px]">Zgodovina sprememb</TabsTrigger>
               </TabsList>
             )}
@@ -876,7 +893,7 @@ export default function AdminTenantEdit() {
             <TabsContent value="pregled">
               <AdminTenantOverview tenantId={id} onTabChange={setActiveTab} isOwner={isOwner} />
             </TabsContent>
-            {isOwner && <TabsContent value="kreator">
+            {permissions.canUseCreator && <TabsContent value="kreator">
               <KreatorOriginConfirmation
                 tenant={tenant}
                 onConfirmed={() => {
@@ -894,10 +911,10 @@ export default function AdminTenantEdit() {
             </TabsContent>}
             <TabsContent value="events">
               <p className="mb-4 text-sm text-muted-foreground">Dogodki so prikazani v gostujočem Programu.</p>
-              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={isOwner} scope="events" />
+              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={permissions.canManageContent} scope="events" />
             </TabsContent>
             <TabsContent value="ponudba">
-              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={isOwner} scope="offer" />
+              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={permissions.canManageContent} scope="offer" />
             </TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
@@ -909,9 +926,9 @@ export default function AdminTenantEdit() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                {isOwner && <div className="space-y-2">
+                {permissions.canEditIdentity && <div className="space-y-2">
                   <Label>Ime namestitve</Label>
-                  <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                  <Input data-testid="input-tenant-name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                 </div>}
                 {isOwner && <div className="col-span-2">
                   <SlugField
@@ -922,19 +939,19 @@ export default function AdminTenantEdit() {
                     onChange={(slug) => setFormData({ ...formData, slug })}
                   />
                 </div>}
-                {isOwner && <div className="space-y-2">
+                {permissions.canEditIdentity && <div className="space-y-2">
                   <Label>Lastna domena (neobvezno)</Label>
                   <Input placeholder="npr. gostje.mojapartma.si" value={formData.customDomain} onChange={e => setFormData({ ...formData, customDomain: e.target.value })} />
                 </div>}
-                {isOwner && <div className="space-y-2">
+                {permissions.canEditIdentity && <div className="space-y-2">
                   <Label>Podnaslov</Label>
                   <Input value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
                 </div>}
-                {isOwner && <div className="space-y-2">
+                {permissions.canEditAppearance && <div className="space-y-2">
                   <Label>URL naslovnične (Hero) fotografije</Label>
                   <Input value={formData.heroUrl} onChange={e => setFormData({ ...formData, heroUrl: e.target.value })} />
                 </div>}
-                {isOwner && <div className="col-span-2 space-y-2">
+                {permissions.canManageContent && <div className="col-span-2 space-y-2">
                   <Label>Virtualni sprehod</Label>
                   <Textarea
                     className="min-h-[96px]"
@@ -966,12 +983,12 @@ export default function AdminTenantEdit() {
                     return null;
                   })()}
                 </div>}
-                {isOwner && <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border p-4">
+                {permissions.canManageContent && <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border p-4">
                   <div>
                     <Label htmlFor="tour-recording-enabled">SNEMANJE TUR</Label>
                     <p className="text-xs text-muted-foreground">Gostje lahko v vodniku posnamejo svojo kolesarsko, pohodniško ali tekaško turo. Vidno po objavi sprememb.</p>
                   </div>
-                  <Switch id="tour-recording-enabled" checked={formData.tourRecordingEnabled}
+                  <Switch id="tour-recording-enabled" data-testid="switch-tour-recording" checked={formData.tourRecordingEnabled}
                     onCheckedChange={(checked) => setFormData((previous) => ({ ...previous, tourRecordingEnabled: checked }))} />
                 </div>}
                 {isOwner && <div className="space-y-2">
@@ -1233,11 +1250,9 @@ export default function AdminTenantEdit() {
           {isOwner && <HostInvitePanel tenantId={id} managementMode={managementMode} />}
         </TabsContent>
 
-        <TabsContent value="onboarding" className="space-y-6">
-          <HostOnboardingReview tenantId={id} />
-        </TabsContent>
+        <HostOnboardingReviewPanel tenantId={id} permissions={permissions} />
 
-        {isOwner && <TabsContent value="appearance" className="space-y-6">
+        {permissions.canEditAppearance && <TabsContent value="appearance" className="space-y-6">
           {/* Hidden file inputs for hero/logo upload */}
           <input
             ref={heroFileRef}
@@ -1523,7 +1538,7 @@ export default function AdminTenantEdit() {
                   <Label>E-pošta</Label>
                   <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="info@primer.si" />
                 </div>
-                {isOwner && <div className="space-y-2 col-span-2">
+                {permissions.canEditIdentity && <div className="space-y-2 col-span-2">
                   <Label>Google Maps povezava</Label>
                   <Input
                     type="url"
@@ -1535,7 +1550,7 @@ export default function AdminTenantEdit() {
                     Če je vpisana, ima prednost pred koordinatami in naslovom.
                   </p>
                 </div>}
-                {isOwner && <div className="space-y-2">
+                {permissions.canEditIdentity && <div className="space-y-2">
                   <Label>Latitude (zemljepisna širina) <span className="text-muted-foreground">samodejno iz povezave</span></Label>
                   <Input
                     value={formData.latitude}
@@ -1543,20 +1558,31 @@ export default function AdminTenantEdit() {
                     placeholder="—"
                   />
                 </div>}
-                {isOwner && <div className="space-y-2">
+                {permissions.canEditIdentity && <div className="space-y-2">
                   <Label>Longitude (zemljepisna dolžina) <span className="text-muted-foreground">samodejno iz povezave</span></Label>
                   <Input
                     value={formData.longitude}
                     readOnly
                     placeholder="—"
                   />
-                  {isOwner && <Button type="button" variant="link" className="px-0" onClick={() => {
+                  <Button type="button" variant="link" className="px-0" data-testid="button-edit-coordinates" onClick={() => {
                     const latitude = prompt("Latitude"); const longitude = prompt("Longitude");
                     if (latitude === null || longitude === null) return;
-                    updateMutation.mutate({ id, data: { latitude: Number(latitude), longitude: Number(longitude), coordinateOverride: true } });
-                  }}>Popravi koordinate (skrbnik)</Button>}
+                    if (!latitude.trim() || !longitude.trim() || !Number.isFinite(Number(latitude)) ||
+                        !Number.isFinite(Number(longitude)) || Math.abs(Number(latitude)) > 90 || Math.abs(Number(longitude)) > 180) {
+                      toast({ title: "Neveljavne koordinate", description: "Vnesite širino od −90 do 90 in dolžino od −180 do 180.", variant: "destructive" });
+                      return;
+                    }
+                    updateMutation.mutate({ id, data: { latitude: Number(latitude), longitude: Number(longitude), ...(isOwner ? { coordinateOverride: true } : {}) } }, {
+                      onSuccess: (data) => {
+                        const coordinates = { latitude: data.latitude?.toString() ?? "", longitude: data.longitude?.toString() ?? "" };
+                        lastSaved.current = { ...lastSaved.current, ...coordinates };
+                        setFormData((current) => ({ ...current, ...coordinates }));
+                      },
+                    });
+                  }}>Popravi koordinate</Button>
                 </div>}
-                {isOwner && <div className="space-y-2 col-span-2">
+                {permissions.canEditIdentity && <div className="space-y-2 col-span-2">
                   <Label>Nadomestna poizvedba za zemljevid (Map Query)</Label>
                   <Input value={formData.mapQuery} onChange={e => setFormData({ ...formData, mapQuery: e.target.value })} placeholder="npr. Malija 143b, Izola" />
                   {isLikelyUrl(formData.mapQuery) && <p className="text-xs text-amber-700">To je povezava — uporabljena bo kot cilj. Za samodejne razdalje jo prilepite v polje »Google Maps povezava«.</p>}
@@ -1564,7 +1590,7 @@ export default function AdminTenantEdit() {
               </div>
             </CardContent>
           </Card>
-          {isOwner && <Card>
+          {permissions.canManageContent && <Card>
             <CardHeader>
               <CardTitle>Pomoč in nujni primeri</CardTitle>
             </CardHeader>
@@ -1578,14 +1604,14 @@ export default function AdminTenantEdit() {
         <TabsContent value="content">
           <section className="bg-white" data-testid="section-management">
             <h2 className="mb-2 text-lg font-extrabold">Sekcije in vnosi</h2>
-            {isOwner && <p className="mb-4 text-sm text-muted-foreground">
+            {permissions.canManageContent && <p className="mb-4 text-sm text-muted-foreground">
               Sekcije lahko premaknete v koš in jih obnovite pod seznamom vsebine. Objavljeni vodnik ostane nespremenjen do naslednje objave.
             </p>}
             {isOwner && <>
               <SkeletonAlignmentAction tenantId={tenant.id} />
               <DistanceBackfillAction tenantId={tenant.id} />
             </>}
-            <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={isOwner} />
+            <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={permissions.canManageContent} />
           </section>
         </TabsContent>
 
@@ -1673,7 +1699,7 @@ export default function AdminTenantEdit() {
           </Card>
           <AdminTenantOrders tenantId={id} />
         </TabsContent>
-        {isOwner && <TabsContent value="guide" className="space-y-6">
+        {permissions.canEditAppearance && <TabsContent value="guide" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Living Guide</CardTitle>
@@ -1694,7 +1720,7 @@ export default function AdminTenantEdit() {
 
       {/* PREVIEW RAIL */}
       <aside className="admin-tenant-preview w-full bg-[#F5F5F7] border-l border-black/5 shrink-0 hidden flex-col items-center py-[30px]">
-        {isOwner && (
+        {permissions.canManageContent && (
           <div className="flex items-center gap-2 mb-4">
             <Switch
               id="structure-view-toggle"
@@ -1743,7 +1769,7 @@ export default function AdminTenantEdit() {
         </p>
       </aside>
       <PublishConfirmationDialog
-        open={publicationDialogOpen}
+        open={permissions.canPublish && publicationDialogOpen}
         preview={publicationPreview}
         loading={publicationLoading}
         publishing={publishing}

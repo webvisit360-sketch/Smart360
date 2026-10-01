@@ -88,7 +88,7 @@ import {
   changeTenantManagementMode,
   isManagementMode,
 } from "../lib/tenantManagementMode";
-import { hostOperatorDraftPublishDenied, operatorDraftAfterWrite } from "../lib/publicationSafety";
+import { operatorDraftAfterWrite } from "../lib/publicationSafety";
 import { denyAuthorization } from "../lib/authorizationDenial";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
@@ -723,7 +723,11 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       return;
     }
   }
-  const coordinateOverride = requestData["coordinateOverride"] === true;
+  // Self-service hosts may edit their coordinates, but never impersonate the
+  // separate operator-only correction flag.
+  const coordinateOverride = requestData["coordinateOverride"] === true ||
+    (req.actor?.kind === "host" && req.actor.managementMode === "self_service" &&
+      (requestData["latitude"] !== undefined || requestData["longitude"] !== undefined));
   const requestedLatitude = requestData["latitude"];
   const requestedLongitude = requestData["longitude"];
   if (
@@ -876,12 +880,10 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
         lockedBefore.isPublished === false ||
         firstPublish
       );
-    // Check under the same row lock as snapshot replacement. A host cannot
-    // acknowledge an operator's draft, even with a valid preview token or a
-    // simultaneous host edit. No writes have happened at this point.
-    if (hostOperatorDraftPublishDenied(
-      req.actor?.kind ?? "system", lockedBefore.operatorDraftPending, successfulPublish,
-    )) {
+    // Recheck publication capability at the serialization point too. Approved
+    // self-service publication acknowledges the entire shared content draft.
+    if (req.actor?.kind === "host" && successfulPublish &&
+        lockedBefore.managementMode !== "self_service") {
       return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
         hostOperatorDraftDenied: true };
     }
@@ -889,20 +891,13 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       writeData["isPublished"] === false && lockedBefore.isPublished === true;
     const publishTime = successfulPublish ? new Date() : null;
     const publishedSlug = successfulPublish
-      ? requestedSlug ?? lockedBefore.draftSlug ?? lockedBefore.slug
+      ? req.actor?.kind === "host" ? lockedBefore.slug
+        : requestedSlug ?? lockedBefore.draftSlug ?? lockedBefore.slug
       : lockedBefore.slug;
-    // A host may publish content, but slug edits are owner-only. Otherwise
-    // a host could publish the owner's pending rename, which would require
-    // INSERT on the historical-alias table (hosts deliberately lack it).
-    if (successfulPublish && publishedSlug !== lockedBefore.slug &&
-        req.actor?.kind === "host") {
-      return { updated: null, beforeAtWrite: lockedBefore, firstPublish: false,
-        hostSlugPublishDenied: true };
-    }
     if (successfulPublish && publishedSlug !== lockedBefore.slug) {
       writeData["slug"] = publishedSlug;
       writeData["draftSlug"] = null;
-    } else if (successfulPublish) {
+    } else if (successfulPublish && req.actor?.kind !== "host") {
       writeData["draftSlug"] = null;
     }
     if (successfulPublish) {
@@ -917,7 +912,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     }
     // No namespace writes are allowed until the review token has been
     // verified: a stale confirmation must commit NOTHING, including aliases.
-    if (successfulPublish) {
+    if (successfulPublish && req.actor?.kind !== "host") {
       await claimSlug(tx, publishedSlug, id);
       if (publishedSlug !== lockedBefore.slug && lockedBefore.firstPublishedAt) {
         await tx.insert(tenantAliasesTable)
@@ -932,9 +927,11 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       await releaseUnpublishedSlug(tx, lockedBefore.slug, id);
     }
     if (successfulPublish) {
-      writeData["hasUnpublishedChanges"] = false;
+      // A pending operator rename is deliberately not published or discarded.
+      writeData["hasUnpublishedChanges"] = req.actor?.kind === "host" && !!lockedBefore.draftSlug;
       writeData["operatorDraftPending"] = operatorDraftAfterWrite(
         lockedBefore.operatorDraftPending, req.actor?.kind ?? "system", "publish",
+        lockedBefore.managementMode === "self_service",
       );
       writeData["lastPublishedAt"] = publishTime;
     } else if (
@@ -964,6 +961,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       updated: updated ?? null,
       beforeAtWrite: lockedBefore,
       firstPublish,
+      successfulPublish,
     };
   }, { isolationLevel: "repeatable read" });
   let writeResult: Awaited<ReturnType<typeof writeTransaction>> | undefined;
@@ -998,12 +996,8 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
       reason: "operator_draft_pending",
       tenantId: id,
       route: "/admin/tenants/:id",
-      message: "Vodnik vsebuje spremembe upravljavca, ki še niso potrjene — objavo opravi Smart360.",
+      message: "Objavo vodnika opravi Smart360 — sporočite nam, ko so spremembe pripravljene.",
     });
-    return;
-  }
-  if ("hostSlugPublishDenied" in writeResult && writeResult.hostSlugPublishDenied) {
-    res.status(403).json({ error: "Naslov lahko spremeni in objavi samo skrbnik Smart360." });
     return;
   }
   if (!updated) {
@@ -1031,7 +1025,7 @@ router.patch("/admin/tenants/:id", async (req, res): Promise<void> => {
     beforeAtWrite!.isPublished !== tenant.isPublished;
   const action = firstPublish
     ? "publish"
-    : publicationTransition && tenant.isPublished && beforeAtWrite!.firstPublishedAt !== null
+    : "successfulPublish" in writeResult && writeResult.successfulPublish
       ? "republish"
       : publicationTransition && !tenant.isPublished
         ? "unpublish"

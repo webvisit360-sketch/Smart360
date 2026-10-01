@@ -20,7 +20,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export type ManagementMode = "self_service" | "concierge";
+import type { ManagementMode } from "@/lib/tenant-permissions";
+export type { ManagementMode } from "@/lib/tenant-permissions";
 
 type ManagementModeSettingProps = {
   tenantId: string;
@@ -94,13 +95,13 @@ export function ManagementModeSetting({
     {
       value: "self_service",
       label: "Gostitelj ureja sam",
-      description: "Gostitelj dobi račun, nastavi geslo in sam ureja vsebino.",
+      description: "Gostitelj sam ureja vsebino, nastavitve in objavlja spremembe vodnika.",
       testId: "management-mode-self-service",
     },
     {
       value: "concierge",
       label: "Ureja Smart360",
-      description: "Smart360 ureja vsebino; gostitelj nima dostopa do administracije.",
+      description: "Smart360 ureja vodnik in objave; gostitelj obdrži omejen dostop za vsakodnevna opravila.",
       testId: "management-mode-concierge",
     },
   ];
@@ -186,8 +187,9 @@ export function ManagementModeSetting({
           <AlertDialogHeader>
             <AlertDialogTitle>Preklop na »Ureja Smart360«?</AlertDialogTitle>
             <AlertDialogDescription>
-              Po shranjevanju bo prijava gostitelja onemogočena in vse njegove aktivne seje bodo končane.
-              Vsebina vodnika ostane nespremenjena.
+              Po shranjevanju gostitelj obdrži prijavo in omejen dostop za vsakodnevna opravila.
+              Urejanje strukture, videza in objavljanje prevzame Smart360. Nove pravice veljajo že pri naslednji zahtevi.
+              Vsebina in objavljena različica vodnika ostaneta nespremenjeni.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

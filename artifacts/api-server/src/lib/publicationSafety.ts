@@ -3,16 +3,9 @@ export function operatorDraftAfterWrite(
   pending: boolean,
   actor: "host" | "owner" | "system",
   action: "dirty" | "publish" | "noop",
+  selfServicePublish = false,
 ): boolean {
-  if (action === "publish" && actor === "owner") return false;
+  if (action === "publish" && (actor === "owner" || (actor === "host" && selfServicePublish))) return false;
   if (action === "dirty" && actor !== "host") return true;
   return pending;
-}
-
-export function hostOperatorDraftPublishDenied(
-  actor: "host" | "owner" | "system",
-  pending: boolean,
-  publishing: boolean,
-): boolean {
-  return actor === "host" && publishing && pending;
 }

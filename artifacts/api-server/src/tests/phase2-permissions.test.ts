@@ -10,7 +10,7 @@ import {
 } from "@workspace/db";
 import {
   ADMIN_ROUTE_REGISTRY, createAdminGateForTests,
-  HOST_PUBLISH_DENIAL, HOST_TENANT_WRITABLE_FIELDS,
+  HOST_PUBLISH_DENIAL, HOST_TENANT_WRITABLE_FIELDS, SELF_SERVICE_TENANT_WRITABLE_FIELDS,
 } from "../lib/actorGate";
 import type { Actor } from "../lib/actorContext";
 
@@ -42,7 +42,7 @@ async function send(url: string, method: string, path: string, body?: unknown) {
 test("phase2: central route and field policy, own/foreign binding and onboarding exception", async (t) => {
   const stamp = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const [tenant] = await db.insert(tenantsTable)
-    .values({ slug: `phase2-${stamp}`, name: "Phase2" }).returning({ id: tenantsTable.id });
+    .values({ slug: `phase2-${stamp}`, name: "Phase2", managementMode: "concierge" }).returning({ id: tenantsTable.id });
   const [foreign] = await db.insert(tenantsTable)
     .values({ slug: `phase2-foreign-${stamp}`, name: "Foreign" }).returning({ id: tenantsTable.id });
   const [host] = await db.insert(hostUsersTable)
@@ -195,4 +195,17 @@ test("phase2: central route and field policy, own/foreign binding and onboarding
     .where(eq(hostAuthEventsTable.hostUserId, host!.id));
   assert.ok(events.some((row) => row.detail?.includes("operator_publication")));
   assert.ok(events.every((row) => !row.detail?.includes("secret") && !row.detail?.includes("ssid")));
+
+  await db.update(tenantsTable).set({ managementMode: "self_service" })
+    .where(eq(tenantsTable.id, tid));
+  const selfServiceFields = new Set<string>(SELF_SERVICE_TENANT_WRITABLE_FIELDS);
+  for (const field of [...schemaKeys, "draftSlug", "managementMode", "operatorDraftPending", "futureSensitiveField"]) {
+    const response = await send(hostServer.url, "PATCH", path, { [field]: field === "isPublished" ? true : null });
+    assert.equal(response.status, selfServiceFields.has(field) ? 209 : 403, `self-service field ${field}`);
+  }
+  for (const [method, route, body] of restricted) {
+    const hardDelete = method === "DELETE" && route === `/admin/sections/${sid}`;
+    assert.equal((await send(hostServer.url, method, route, body)).status, hardDelete ? 403 : 209,
+      `self-service ${method} ${route}`);
+  }
 });

@@ -13,6 +13,7 @@ import {
 } from "@workspace/db";
 import { buildTenantContent, projectGuestTenant, type GuestTenantContentTree } from "./contentTree";
 import { getUiAndPlurals } from "./translationKeys";
+import { currentActor } from "./actorContext";
 
 export type PublishedLanguage = {
   tree: GuestTenantContentTree;
@@ -304,7 +305,7 @@ export async function previewPublication(tenantId: string): Promise<PublicationC
     return publicationChangesForTenant(
       tenantId,
       await buildDraftPublication({
-        ...tenant, slug: tenant.draftSlug ?? tenant.slug,
+        ...tenant, slug: currentActor()?.kind === "host" ? tenant.slug : tenant.draftSlug ?? tenant.slug,
       }),
       await readPublishedContent(tenantId),
     );

@@ -23,7 +23,7 @@ export async function getWelcomePreview(tenantId: string) {
     .where(eq(tenantsTable.id, tenantId))
     .limit(1);
   if (!tenant) return null;
-  if (tenant.managementMode === "concierge") {
+  if (tenant.managementMode === "concierge" && !tenant.recipient) {
     const body = renderConciergeWelcomeEmail({
       tenantName: tenant.propertyName,
       guideUrl: guestUrl(tenant.slug),

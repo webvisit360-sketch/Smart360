@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetPasskeyLoginOptions,
   useVerifyPasskeyLogin,
@@ -24,6 +25,7 @@ const PASSKEY_BROWSER_HELP =
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
@@ -53,7 +55,10 @@ export default function AdminLogin() {
   const useRecoveryMutation = useUseRecoveryCode({
     mutation: {
       onSuccess: (data) => {
-        if (data.authenticated) setLocation("/admin");
+        if (data.authenticated) {
+          queryClient.clear();
+          setLocation("/admin");
+        }
       },
       onError: (err: any) => {
         if (err?.response?.status === 429) {
@@ -104,6 +109,7 @@ export default function AdminLogin() {
         }
       });
       
+      queryClient.clear();
       setLocation("/admin");
     } catch (err: any) {
       if (controller.signal.aborted || err?.name === "TimeoutError" || err?.name === "AbortError") {
@@ -150,6 +156,7 @@ export default function AdminLogin() {
       await passwordLoginMutation.mutateAsync({
         data: { email: "smart360hq@gmail.com", password: operatorPassword },
       });
+      queryClient.clear();
       setLocation("/admin");
     } catch (error: any) {
       setLoginError(
@@ -178,6 +185,7 @@ export default function AdminLogin() {
       if (!response.ok || !body.tenantId) {
         throw new Error(body.error || "Napačen e-naslov ali geslo.");
       }
+      queryClient.clear();
       setLocation(`/admin/tenants/${body.tenantId}`);
     } catch (error) {
       setHostError(error instanceof Error ? error.message : "Prijava ni uspela.");

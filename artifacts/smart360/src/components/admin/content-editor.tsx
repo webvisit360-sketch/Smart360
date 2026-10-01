@@ -17,7 +17,6 @@ import {
   purgeCategory,
   purgeItem,
   getGetTrashQueryKey,
-  useGetAdminSession,
   useSearchAdminPlaces,
   useCreateAdminPlace,
   getSearchAdminPlacesQueryKey,
@@ -33,6 +32,7 @@ import {
   type ItemTranslationLanguageDraft,
 } from "@workspace/api-client-react";
 import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, ChevronUp, GripVertical, EyeOff, RotateCcw, XCircle, MapPin, Search, CheckCircle2 } from "lucide-react";
+import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
 import { IconSprite } from "@/pages/guest/IconSprite";
 import { AdminButton as Button } from "@/components/ui/button";
 import type { ItemMediaEditorHandle } from "@/components/admin/item-media-editor";
@@ -1013,11 +1013,33 @@ type ItemDialogProps =
   | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; category?: Category; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item?: undefined; onDone: () => void }
   | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; category?: Category; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item: Item; onDone: () => void };
 
-export function ItemDialog({ mode, tenantId, categoryId, sectionKey, category: rowCategory, sectionCategories, allCategories, item, onDone, operatorPlaceCreation }: ItemDialogProps) {
-  if (mode === "create" && operatorPlaceCreation && (sectionKey === "explore" || sectionKey === "services")) {
-    return <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />;
+function ContentDraftAccess({ allowed, children }: { allowed: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      {!allowed && <p role="status" data-testid="status-content-draft-restricted" className="mb-4 rounded-xl border bg-muted p-3 text-sm">
+        Način upravljanja se je spremenil. Osnutek ostaja odprt; urejanje in shranjevanje te vsebine zdaj opravi Smart360.
+      </p>}
+      <fieldset disabled={!allowed} className="min-w-0">{children}</fieldset>
+    </div>
+  );
+}
+
+export function ItemDialog(props: ItemDialogProps) {
+  const { mode, operatorPlaceCreation, sectionKey, tenantId, categoryId, sectionCategories, allCategories, onDone } = props;
+  // Choose once per opened dialog: changing management mode must neither change
+  // hook order nor replace a user's in-progress place form with a blank item form.
+  const [placeCreation] = useState(() => mode === "create" && operatorPlaceCreation && (sectionKey === "explore" || sectionKey === "services"));
+  if (placeCreation) {
+    return <ContentDraftAccess allowed={Boolean(operatorPlaceCreation)}>
+      <OkolicaPlaceCreate tenantId={tenantId} categoryId={categoryId} sectionCategories={sectionCategories} allCategories={allCategories} onDone={onDone} />
+    </ContentDraftAccess>;
   }
+  return <OrdinaryItemDialog {...props} />;
+}
+
+function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: rowCategory, sectionCategories, allCategories, item, onDone }: ItemDialogProps) {
   const queryClient = useQueryClient();
+  const permissions = useTenantPermissions(tenantId);
   const category = (rowCategory?.id === categoryId ? rowCategory : undefined)
     || sectionCategories?.find((candidate) => candidate.id === categoryId)
     || allCategories?.find((candidate) => candidate.id === categoryId);
@@ -1698,7 +1720,7 @@ export function ItemDialog({ mode, tenantId, categoryId, sectionKey, category: r
           <p role="alert" className="text-xs text-destructive">Preračun razdalje ni uspel.</p>
         )}
       </div>
-      {mode === "edit" && (sectionKey === "explore" || sectionKey === "services") && creatorStatusReady && creatorStatus.data?.latitude == null && creatorStatus.data?.longitude == null && (
+      {permissions.canConfirmHostPin && mode === "edit" && (sectionKey === "explore" || sectionKey === "services") && creatorStatusReady && creatorStatus.data?.latitude == null && creatorStatus.data?.longitude == null && (
         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/40 p-4" data-testid="entry-editor-pin">
           <h4 className="font-semibold">Nastavi lokacijo kraja</h4>
           <p className="text-sm text-muted-foreground">Nastavite pin za vnos brez koordinat. Razdalja se izračuna po cesti; vnos se ne objavi samodejno.</p>
@@ -2354,8 +2376,10 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
           onAdd={canAdd ? () => setAddOpen(true) : undefined}
         />
 
-        {operatorPlaceCreation && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+        {(operatorPlaceCreation || editOpen) && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+          <ContentDraftAccess allowed={operatorPlaceCreation}>
             <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
+          </ContentDraftAccess>
         </EditDialog>}
         {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
             <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} operatorPlaceCreation={operatorPlaceCreation} onDone={() => setAddOpen(false)} />
@@ -2401,8 +2425,10 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
         </div>
       </div>
 
-      {operatorPlaceCreation && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+      {(operatorPlaceCreation || editOpen) && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+        <ContentDraftAccess allowed={operatorPlaceCreation}>
           <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
+        </ContentDraftAccess>
       </EditDialog>}
       {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
           <ItemDialog mode="create" tenantId={tenantId} categoryId={category.id} sectionKey={sectionKey} sectionCategories={sectionCategories} allCategories={allCategories} operatorPlaceCreation={operatorPlaceCreation} onDone={() => setAddOpen(false)} />
@@ -2492,17 +2518,20 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
       </div>
 
       {/* Edit section dialog */}
-      {operatorPlaceCreation && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi sekcijo">
+      {(operatorPlaceCreation || editOpen) && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi sekcijo">
+        <ContentDraftAccess allowed={operatorPlaceCreation}>
           <SectionDialog
             mode="edit"
             tenantId={tenantId}
             section={section}
             onDone={() => setEditOpen(false)}
           />
+        </ContentDraftAccess>
       </EditDialog>}
 
       {/* Add category dialog */}
-      {operatorPlaceCreation && <EditDialog open={addCatOpen} onOpenChange={setAddCatOpen} title="Nova kategorija">
+      {(operatorPlaceCreation || addCatOpen) && <EditDialog open={addCatOpen} onOpenChange={setAddCatOpen} title="Nova kategorija">
+        <ContentDraftAccess allowed={operatorPlaceCreation}>
           <CategoryDialog
             mode="create"
             tenantId={tenantId}
@@ -2510,6 +2539,7 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
             sectionKey={section.key}
             onDone={() => setAddCatOpen(false)}
           />
+        </ContentDraftAccess>
       </EditDialog>}
     </>
   );
@@ -2520,8 +2550,7 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
 
 function TrashPanel({ tenantId }: { tenantId: string }) {
   const queryClient = useQueryClient();
-  const { data: session } = useGetAdminSession();
-  const isOwner = Boolean(session?.authenticated);
+  const permissions = useTenantPermissions(tenantId);
   const [open, setOpen] = useState(false);
   const archivedTarget = new URLSearchParams(window.location.search).get("placeArchived");
   useEffect(() => {
@@ -2627,7 +2656,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                     <div key={section.id} className="bg-muted/40 border rounded p-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium truncate">{section.title}</span>
-                        {isOwner && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                        {permissions.canManageContent && <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
                           disabled={busyId === section.id} onClick={() => onRestoreSection(section.id)}>
                           {busyId === section.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                           Obnovi
@@ -2658,7 +2687,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                         <span className="text-xs text-muted-foreground ml-1">v „{cat.sectionTitle}“</span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {isOwner && <Button
+                        {permissions.canManageContent && <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2 text-xs"
@@ -2668,7 +2697,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                           {busyId === cat.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                           Obnovi
                         </Button>}
-                        {isOwner && (
+                        {permissions.canPurge && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -2708,7 +2737,7 @@ function TrashPanel({ tenantId }: { tenantId: string }) {
                             {busyId === it.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
                             Obnovi
                           </Button>
-                          {isOwner && (
+                          {permissions.canPurge && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -2760,8 +2789,8 @@ export function ContentEditor({
   // If a section arrives while its create dialog is open, close/unmount that
   // stale form before it can submit a second section with the same stable key.
   useEffect(() => {
-    if (!canCreateSection) setAddSectionOpen(false);
-  }, [canCreateSection]);
+    if (scope && visibleSections.length > 0) setAddSectionOpen(false);
+  }, [scope, visibleSections.length]);
   const allCategories = React.useMemo(() => {
     return visibleSections.flatMap(s => (s.categories || []).map(c => ({ ...c, sectionKey: s.key })));
   }, [visibleSections]);
@@ -2799,13 +2828,15 @@ export function ContentEditor({
 
       {!scope && <TrashPanel tenantId={tenantId} />}
 
-      {canCreateSection && <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
+      {(canCreateSection || addSectionOpen) && <EditDialog open={addSectionOpen} onOpenChange={setAddSectionOpen} title="Nova sekcija">
+        <ContentDraftAccess allowed={canCreateSection}>
           <SectionDialog
             mode="create"
             tenantId={tenantId}
             scope={scope}
             onDone={() => setAddSectionOpen(false)}
           />
+        </ContentDraftAccess>
       </EditDialog>}
     </div>
   );

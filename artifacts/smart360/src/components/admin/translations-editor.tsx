@@ -7,7 +7,6 @@ import {
   useGetTranslationOverview,
   useUpsertTranslation,
   useImportTranslations,
-  useGetAdminSession,
   exportTranslations,
   getListTenantTranslationsQueryKey,
   getGetTranslationOverviewQueryKey,
@@ -21,6 +20,7 @@ import { Loader2, Download, Upload, Check } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
 
 const LANGS = [
   { code: "en", label: "Angleščina (EN)" },
@@ -36,8 +36,7 @@ export function TranslationsEditor({ tenantId }: { tenantId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
-  const { data: adminSession } = useGetAdminSession();
-  const isOwner = Boolean(adminSession?.authenticated);
+  const permissions = useTenantPermissions(tenantId);
 
   const { data: overview } = useGetTranslationOverview(tenantId, {
     query: { enabled: !!tenantId, queryKey: getGetTranslationOverviewQueryKey(tenantId) },
@@ -130,7 +129,7 @@ export function TranslationsEditor({ tenantId }: { tenantId: string }) {
             {ov.stale > 0 && <span className="text-amber-600"> · {ov.stale} zastarelih</span>}
           </span>
         )}
-        {isOwner && <div className="ml-auto flex items-center gap-2">
+        {permissions.canManageContent && <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" /> Izvozi JSON
           </Button>

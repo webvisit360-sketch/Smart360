@@ -4,10 +4,12 @@ import { useLocation, Link } from "wouter";
 import { Loader2, LogOut } from "lucide-react";
 import { AdminButton as Button } from "@/components/ui/button";
 import { useHostSession } from "@/hooks/use-host-session";
+import { useQueryClient } from "@tanstack/react-query";
 import { AdminSidebarIcon, AdminSidebarLockup } from "@/components/admin/admin-sidebar-brand";
 import { BrandLockup } from "@/components/brand-lockup";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
   const { data: session, isLoading, isError } = useGetAdminSession();
   const { data: hostSession, isLoading: hostLoading } = useHostSession();
@@ -15,6 +17,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const logoutMutation = useAdminLogout({
     mutation: {
       onSuccess: () => {
+        queryClient.clear();
         setLocation("/admin/login");
       }
     }
