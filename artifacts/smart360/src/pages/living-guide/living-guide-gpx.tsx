@@ -14,6 +14,8 @@ import { recordedProfileData, type RecordedProfilePoint } from "./living-guide-f
 import type { UiTranslator } from "../guest/i18n";
 import { useLiveTour } from "@/hooks/use-live-tour";
 import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
+import { plannedFromLonLat, useTourSummaryContext } from "./living-guide-tour-summary";
+import "./living-guide-tour-summary.css";
 import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration, tourSegments } from "./living-guide-live-tour";
 import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import "./living-guide-gpx.css";
@@ -498,12 +500,14 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
   const lg = variant === "lg";
   // All tour data is on-device only (memory + localStorage inside the hook).
   const tour = useLiveTour(`${slug}/${itemId}`);
+  const summaryCtx = useTourSummaryContext();
   const profile = useTourProfile();
   const [ordinaryPosition, setOrdinaryPosition] = useState<TourPoint | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [exporting, setExporting] = useState<"image" | "gpx" | null>(null);
   const [exportError, setExportError] = useState(false);
   const plannedSegments = useMemo(() => boundedSegments(route), [route]);
+  const summaryPlanned = useMemo(() => plannedFromLonLat(plannedSegments), [plannedSegments]);
   const position = tour.currentPosition ?? ordinaryPosition;
   const projection = useMemo(() => position ? projectRoutePosition(plannedSegments, route.profile, position) : null, [plannedSegments, route.profile, position]);
   const status = tour.state?.status ?? null;
@@ -604,6 +608,7 @@ function GpxRouteBody({ route, slug, itemId, t, variant = "lg", heading }: { rou
         onFullscreen={() => setFullscreen(true)}
         onDownloadImage={() => { void onDownloadImage(); }}
         onDownloadGpx={onDownloadGpx}
+        summary={tour.state && status === "finished" ? { state: tour.state, plannedSegments: summaryPlanned, tourName, tenantName: summaryCtx.tenantName, lang: summaryCtx.lang } : undefined}
       />
       <TourProfileControl t={t} activity={route.activity} tourActive={tourActive} controller={profile} />
       <dl className="s360-gpx-stats">

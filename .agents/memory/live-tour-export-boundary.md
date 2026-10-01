@@ -1,13 +1,13 @@
 ---
 name: Live tour export and verification boundary
-description: Why local tour image exports are schematic and hardware claims require outdoor evidence.
+description: Device-only real-map exports, schematic fallback, offline brand assets and hardware verification limits.
 ---
 
-Keep image-export evidence distinct from rendered map evidence: the local PNG uses an explicitly labeled schematic of both tracks, while the live result map uses the shared vector provider.
+Tour summary exports now prefer a verified, client-rendered OpenFreeMap snapshot and fall back to an explicitly labeled schematic. Keep image-export evidence distinct from an on-screen map: successful tiles alone do not prove a readable/exportable canvas.
 
-**Why:** The export must remain device-only without adding services or depending on capture of cross-origin tile imagery. Do not silently describe this PNG as a screenshot of geographic tiles.
+**Why:** The owner replaced schematic-only exports with real-map exports while retaining device-only composition and offline fallback. Direct CORS canvas capture has been verified; no screenshot proxy or route upload is authorized.
 
-**How to apply:** Preserve the localized schematic label unless implementing and verifying actual client-side tile capture. Simulated geolocation and Wake Lock tests prove application transitions, not GPS quality, battery usage or background operation on physical phones.
+**How to apply:** Include map attribution only for real geographic captures; use the localized schematic label for fallback. Bundle original brand artwork and font with the composer: first-time offline export must not depend on an earlier font/image fetch or a service-worker cache hit. Test preview/download byte equality and offline first composition. Browser share spies do not prove native sharing on a physical phone; simulated geolocation and Wake Lock do not prove outdoor GPS, battery usage or background operation.
 
 Free recording deliberately favors bounded device storage and re-importable GPX over indefinite lossless history. If retention ever omits complete old segments, disclose it visibly; never bridge missing GPS intervals or present the exported path as complete.
 

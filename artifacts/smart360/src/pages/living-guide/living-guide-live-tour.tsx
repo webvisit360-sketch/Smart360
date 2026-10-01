@@ -9,6 +9,7 @@
  */
 // Explicit React import: node --test (tsx) uses the classic JSX runtime.
 import React from "react";
+import { SUMMARY_COPY, TourSummaryShare, summaryLang, type TourSummaryShareProps } from "./living-guide-tour-summary";
 import type { UiTranslator } from "../guest/i18n";
 import { formatCalories } from "../../lib/tour-calories";
 
@@ -132,6 +133,8 @@ export type LiveTourPanelProps = {
   onDownloadGpx: () => void;
   /** Free recording has no planned GPX: hide the planned legend key. Default true. */
   hasPlannedRoute?: boolean;
+  /** When present, the finished state shows the composed PNG preview + share. */
+  summary?: Omit<TourSummaryShareProps, "metrics" | "onDownloadGpx" | "gpxDisabled" | "exportingGpx">;
 };
 
 export function LiveTourPanel(p: LiveTourPanelProps) {
@@ -147,6 +150,24 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
         </button>
         {geo}
         {privacy}
+      </div>
+    );
+  }
+
+  if (status === "finished" && p.summary) {
+    return (
+      <div className="s360-tour s360-tour--result" data-testid="panel-tour-result">
+        <p className="s360-sum-kicker" data-testid="text-tour-summary-kicker">{SUMMARY_COPY[summaryLang(p.summary.lang)].kicker}</p>
+        <h3 data-testid="text-tour-summary-heading">{SUMMARY_COPY[summaryLang(p.summary.lang)].heading}</h3>
+        <TourSummaryShare
+          {...p.summary}
+          metrics={p.metrics}
+          onDownloadGpx={p.onDownloadGpx}
+          gpxDisabled={p.exporting !== null || p.pointCount === 0}
+          exportingGpx={p.exporting === "gpx"}
+        />
+        {p.exportError && <div role="alert" className="s360-tour-error" data-testid="status-tour-export-error">{t("UI.lg.liveTour.exportError")}</div>}
+        <button type="button" className="s360-tour-link" onClick={p.onReset} data-testid="button-tour-reset">{t("UI.lg.liveTour.reset")}</button>
       </div>
     );
   }

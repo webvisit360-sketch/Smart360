@@ -32,6 +32,7 @@ import { LivingGuideGpxRoute } from "./living-guide-gpx";
 import { SosCard, SosView } from "./sos/SosView";
 import { SosEntryContext } from "./living-guide-sos-context";
 import { FreeTourRecorder, isTourRecordingEnabled } from "./living-guide-free-tour";
+import { TourSummaryContext } from "./living-guide-tour-summary";
 import { WeatherCard, WeatherProvider } from "./living-guide-weather";
 import { LivingGuideOfflineBanner, LivingGuideOfflineProvider } from "./living-guide-offline";
 import { tenantWeatherLocation } from "./living-guide-weather-model";
@@ -2949,7 +2950,7 @@ export function ExploreView({
         </>}
         {freeTourEnabled && (recorderMounted || recordingVisible) && (
           <div hidden={!recordingVisible} data-testid="explore-recording-panel">
-            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} />
+            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} tenantName={tenant?.name ?? ""} lang={lang} />
           </div>
         )}
       </div>
@@ -3848,7 +3849,7 @@ function DetailView({ category, section, itemId, lang, t, galleryIndex, onGaller
         }
       }}
     >
-      <GpxSlugContext.Provider value={slug ?? ""}>{content}</GpxSlugContext.Provider>
+      <TourSummaryContext.Provider value={{ tenantName: tenant?.name ?? "", lang: lang ?? "sl" }}><GpxSlugContext.Provider value={slug ?? ""}>{content}</GpxSlugContext.Provider></TourSummaryContext.Provider>
       {activeItem?.orderEnabled && layout !== "tabs" && !programDetailItem && (
         <OrderDock item={activeItem} t={t} onOrderClick={onOrderClick} />
       )}

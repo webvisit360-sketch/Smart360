@@ -8,6 +8,7 @@ import type { UiTranslator } from "../guest/i18n";
 import { useLiveTour } from "@/hooks/use-live-tour";
 import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
 import { LiveTourOverlay, LiveTourPanel, formatTourDistance, formatTourDuration } from "./living-guide-live-tour";
+import { NO_PLANNED_SEGMENTS } from "./living-guide-tour-summary";
 import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import { RecordedElevationProfile, RouteMap } from "./living-guide-gpx";
 import "./living-guide-free-tour.css";
@@ -17,7 +18,7 @@ import { FreeTourAscent, FreeTourIntro, FreeTourOmitted, formatAscent, type Free
 
 export { isTourRecordingEnabled } from "./living-guide-free-tour-view";
 
-export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTranslator; center?: [number, number] | null }) {
+export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl" }: { slug: string; t: UiTranslator; center?: [number, number] | null; tenantName?: string; lang?: string }) {
   const [chosen, setChosen] = useState<FreeTourActivity>("hiking");
   const tour = useLiveTour(`${slug}/free-tour`);
   const profile = useTourProfile();
@@ -110,6 +111,7 @@ export function FreeTourRecorder({ slug, t, center }: { slug: string; t: UiTrans
             onFullscreen={() => setFullscreen(true)}
             onDownloadImage={() => { void onDownloadImage(); }}
             onDownloadGpx={onDownloadGpx}
+            summary={state && status === "finished" ? { state, plannedSegments: NO_PLANNED_SEGMENTS, tourName: name, tenantName, lang } : undefined}
           />
         </>
       )}

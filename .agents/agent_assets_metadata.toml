@@ -2038,3 +2038,17 @@ mtime_ms = 1790878410608
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/92b65eda-1c69-4649-8ede-f10c309b6589/838abb74-4d86-4a37-8f67-56f8966a420f"
 storage_version_token = "1790878412012974"
 content_type = "text/html"
+
+[[outputs]]
+id = "d8a5PsBmuNrnSJ2YueYYF"
+uri = "file://artifacts/smart360/reports/tour-summary/export-map-guided-sl.png"
+type = "image"
+title = "Primer novega izvoza ture"
+description = "PNG 1080 × 1612 z dejanskim zemljevidom OpenFreeMap. Prikazana pot in statistika sta sintetična testna podatka."
+logical_id = "b0370d61-f608-43ce-b3a4-3c29ba9972b0"
+content_hash = "sha256:6b9efb9010dff1870c25c7d4620107ea9d26dfaba22f4ab4c074576f23dae0b3"
+size = 556383
+mtime_ms = 1790880750010
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b0370d61-f608-43ce-b3a4-3c29ba9972b0/2cc374da-dd86-4809-bd7f-03b9211f4a01"
+storage_version_token = "1790881028497880"
+content_type = "image/png"

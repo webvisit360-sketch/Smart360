@@ -8,7 +8,7 @@
 
 - [Readiness guest visibility](readiness-visibility.md) — empty categories are deliberate, not missing content; guest-scoped readiness differs from admin work totals.
 - [GPX route boundaries](gpx-route-boundary.md) — bounded snapshot geometry, full-resolution private originals, and strict environment/published-reference isolation.
-- [Live tour export boundary](live-tour-export-boundary.md) — local image export is explicitly schematic; browser simulations cannot prove outdoor phone behavior.
+- [Live tour export boundary](live-tour-export-boundary.md) — client-only real map with labeled fallback; bundle branding for first offline export; browser proof is not phone proof.
 
 - [Official mark white field](brand-white-field.md) — owner requires white behind the official mark; home-screen icons opaque with safe-zone padding.
 

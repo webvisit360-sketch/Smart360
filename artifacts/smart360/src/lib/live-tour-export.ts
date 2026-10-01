@@ -1,5 +1,7 @@
 import type { TourMetrics, TourPoint, TourState } from './live-tour';
 import { formatCalories } from './tour-calories';
+export { createTourSummaryImage } from './tour-summary-render';
+export type { TourSummaryImage, TourSummaryInput } from './tour-summary-render';
 
 // Exports are generated entirely in the browser from local tour data; no positions leave the device.
 const xml = (value: string) => value.replace(/[<>&"']/g, c =>

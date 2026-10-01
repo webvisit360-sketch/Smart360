@@ -1,0 +1,16 @@
+Rebuild the tour summary export in Strava style, per the attached BINDING reference tura-povzetek-dizajn.html. It replaces the current schematic-only summary PNG, for both free tour recording and guided GPX tours. Everything happens ON DEVICE — composing, saving and sharing the image send nothing to our server.
+
+1. EXPORT IMAGE (white card, exported as PNG at 2x, at least 1080 px wide, sharp for social media):
+- Header: tour name (default by activity + date, e.g. "Moja tura"; keep whatever naming exists), date/time, activity, tenant name in brand green.
+- MAP: a real map snapshot of the route from our existing map stack (OpenFreeMap tiles), route drawn in brand green #157347, start pin green "S", finish pin red "C", framed with sensible padding. Compose the rendered map canvas into the export. If tiles are unavailable (offline or canvas tainting prevents export), FALL BACK to the current schematic path drawing — never a broken/blank map. Verify the tile/canvas pipeline actually allows canvas export (CORS); state in the report how this was solved.
+- Elevation profile strip under the map (green line, soft fill), as in the reference.
+- Stats grid 3x3: Razdalja, Vzpon, Najv. višina, Neto čas, Premori, Skupni čas, then activity-dependent: kolesarjenje → Povp. hitrost + Najv. hitrost (GPS-filtered); tek → Tempo (min/km) + Povp. hitrost; pohodništvo → Povp. hitrost + Tempo. Poraba (kcal) is shown ONLY when a calorie estimate exists (guest profile with weight); otherwise that cell shows another sensible stat or stays empty — never "0 kcal". Values use the existing computed stats; averages use NET time.
+- Footer: SMART360 lockup — znak from the ORIGINAL brand asset (artifacts/smart360/public/brand SVG) plus wordmark in Archivo 800 #121A14, pre-rendered sharp at export scale (same discipline as the email lockup; never rebuilt as shapes, never green wordmark) — and on the right the map attribution, REQUIRED on the image whenever the real map is used: "© OpenFreeMap · OpenMapTiles · © OpenStreetMap contributors" (omit when the schematic fallback is used, keep "Shematski prikaz poti").
+
+2. POST-TOUR SCREEN per reference: preview of the exact image, primary green button "Deli turo" (Web Share API Level 2 with the PNG file; where file sharing is unavailable, fall back to saving the image with a short localized hint), secondary "Shrani sliko" and "Prenesi GPX" (existing GPX export unchanged). Sharing is always user-initiated; the guest sees the image before sharing. All labels SL/EN/DE/IT.
+
+3. Keep the existing summary data flow and GPX round-trip untouched; this changes presentation and adds sharing only. No schema changes, no server changes.
+
+4. TESTS: stat correctness against known fixtures (incl. pace/speed per activity and net-time averages); kcal cell absent without profile; map fallback path; attribution present on map exports and absent on schematic; share fallback when navigator.canShare(files) is false; four languages; export sharpness at 2x (no blurry 1x canvas scaling); logo lockup measured against the brand rule.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
