@@ -81,7 +81,7 @@ test("intercepted recipient and independent archive each contain both vector PDF
       const info = execFileSync("pdfinfo", [file], { encoding: "utf8" });
       assert.match(info, /Pages:\s+1/);
       const images = execFileSync("pdfimages", ["-list", file], { encoding: "utf8" });
-      assert.equal(images.trim().split("\n").length, 2, "sticker has no logo or raster images");
+      assert.equal(images.trim().split("\n").length, 3, "only the print-safe signature strip is raster; QR and text stay vector");
       const fonts = execFileSync("pdffonts", [file], { encoding: "utf8" });
       assert.match(fonts, /Archivo-ExtraBold/);
       execFileSync("pdftoppm", ["-f", "1", "-singlefile", "-scale-to", "1600", "-png", file, path.join(dir, "screen")]);

@@ -1,0 +1,725 @@
+{
+  "dpi": 600,
+  "independent_engines": {
+    "poppler": "pdftoppm version 25.07.0",
+    "mupdf": "PyMuPDF 1.28.2: Python bindings for the MuPDF 1.28.2 library.\nPython 3.13 running on linux (64-bit).",
+    "python_binding": "1.28.2"
+  },
+  "files": {
+    "large": {
+      "pdf": "/home/runner/workspace/reports/stickers-print-robust/turizem-drobez-large.pdf",
+      "sha256": "8b34ccbaa16493573a4d3168b6c616d2f5e4d949d920392c7fb1da4b8a4dfa36",
+      "pages": 1,
+      "page_size_pt": [
+        0.0,
+        0.0,
+        205.51181030273438,
+        311.81103515625
+      ],
+      "archived_older_pre_gradient_pdf": "/home/runner/workspace/reports/stickers-final/turizem-drobez-large.pdf",
+      "archived_shading_bounds": [],
+      "archived_older_rule_bbox_pt": [
+        [
+          15.590551376342773,
+          267.8740234375,
+          189.92124938964844,
+          268.72442626953125
+        ]
+      ],
+      "comparison_baseline": "Immediate pre-change guideStickers.ts read by verifier: inset 5.5/2.8mm; ruleY 94.5/48mm; height 1.2/0.7mm; width 61.5/30.7mm. Archived stickers-final predates that gradient and has thinner 0.3/0.15mm rules.",
+      "raster_resolution_policy": "ceil(mm / 25.4 * 600) in each dimension: at least 600dpi; actual effective DPI disclosed",
+      "prior_rule_geometry_mm_xywh": [
+        5.5,
+        94.5,
+        61.5,
+        1.2
+      ],
+      "actual_image_geometry_mm_xywh": [
+        5.500000068876478,
+        94.5000027126736,
+        61.49999624358283,
+        1.2000021192762587
+      ],
+      "geometry_unchanged": true,
+      "shading_objects": 0,
+      "shading_paint_operator": false,
+      "image_count": 1,
+      "image_rgb_8bit_no_smask_600dpi_pass": true,
+      "image_dimensions_px": [
+        1453,
+        29
+      ],
+      "image_effective_dpi": [
+        600.1008496622624,
+        613.8322492665728
+      ],
+      "text": [
+        {
+          "text": "YOUR DIGITAL GUIDE",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            48.1685676574707,
+            18.70867156982422,
+            157.34324645996094,
+            28.269365310668945
+          ]
+        },
+        {
+          "text": "Turizem",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            50.531494140625,
+            27.93612289428711,
+            154.98031616210938,
+            56.3462028503418
+          ]
+        },
+        {
+          "text": "Drobe\u017e",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            56.0933952331543,
+            55.353939056396484,
+            149.41842651367188,
+            83.76402282714844
+          ]
+        },
+        {
+          "text": "Scan with your phone camera.",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            39.483211517333984,
+            249.7322998046875,
+            166.0286102294922,
+            259.9098205566406
+          ]
+        },
+        {
+          "text": "SMART360",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            60.961605072021484,
+            276.37799072265625,
+            144.55020141601562,
+            292.10687255859375
+          ]
+        },
+        {
+          "text": "Everything about your stay, in one place.",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            23.647323608398438,
+            295.93701171875,
+            181.86453247070312,
+            305.4977111816406
+          ]
+        }
+      ],
+      "all_text_121A14": true,
+      "all_text_boxes_inside_page": true,
+      "renders": {
+        "MuPDF": {
+          "png": "/home/runner/workspace/reports/stickers-print-robust/turizem-drobez-large-mupdf-600dpi.png",
+          "dimensions_px": [
+            1713,
+            2599
+          ],
+          "strip_pixel_bbox_exclusive": [
+            129,
+            2232,
+            1583,
+            2261
+          ],
+          "expected_prior_geometry_bbox_px": [
+            129.9212598425197,
+            2232.283464566929,
+            1582.6771653543308,
+            2260.629921259843
+          ],
+          "edge_delta_px": [
+            -0.9212598425197029,
+            -0.2834645669290694,
+            0.32283464566921793,
+            0.3700787401571688
+          ],
+          "strip_height_px": 29,
+          "strip_width_px": 1454,
+          "continuous_full_rule_width": true,
+          "stop_samples": [
+            {
+              "stop": 0,
+              "pixel": [
+                130,
+                2246
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                232,
+                134,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.3,
+              "pixel": [
+                566,
+                2246
+              ],
+              "expected_rgb": [
+                47,
+                114,
+                196
+              ],
+              "actual_rgb": [
+                47,
+                114,
+                196
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.55,
+              "pixel": [
+                929,
+                2246
+              ],
+              "expected_rgb": [
+                62,
+                158,
+                78
+              ],
+              "actual_rgb": [
+                62,
+                158,
+                78
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.8,
+              "pixel": [
+                1292,
+                2246
+              ],
+              "expected_rgb": [
+                245,
+                198,
+                46
+              ],
+              "actual_rgb": [
+                245,
+                198,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 1,
+              "pixel": [
+                1581,
+                2246
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                232,
+                134,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            }
+          ],
+          "pass": true
+        },
+        "Poppler": {
+          "png": "/home/runner/workspace/reports/stickers-print-robust/turizem-drobez-large-poppler-600dpi.png",
+          "dimensions_px": [
+            1713,
+            2599
+          ],
+          "strip_pixel_bbox_exclusive": [
+            129,
+            2232,
+            1583,
+            2261
+          ],
+          "expected_prior_geometry_bbox_px": [
+            129.9212598425197,
+            2232.283464566929,
+            1582.6771653543308,
+            2260.629921259843
+          ],
+          "edge_delta_px": [
+            -0.9212598425197029,
+            -0.2834645669290694,
+            0.32283464566921793,
+            0.3700787401571688
+          ],
+          "strip_height_px": 29,
+          "strip_width_px": 1454,
+          "continuous_full_rule_width": true,
+          "stop_samples": [
+            {
+              "stop": 0,
+              "pixel": [
+                130,
+                2246
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                232,
+                134,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.3,
+              "pixel": [
+                566,
+                2246
+              ],
+              "expected_rgb": [
+                47,
+                114,
+                196
+              ],
+              "actual_rgb": [
+                47,
+                114,
+                196
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.55,
+              "pixel": [
+                929,
+                2246
+              ],
+              "expected_rgb": [
+                62,
+                158,
+                78
+              ],
+              "actual_rgb": [
+                62,
+                158,
+                78
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.8,
+              "pixel": [
+                1292,
+                2246
+              ],
+              "expected_rgb": [
+                245,
+                198,
+                46
+              ],
+              "actual_rgb": [
+                245,
+                198,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 1,
+              "pixel": [
+                1581,
+                2246
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                232,
+                134,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            }
+          ],
+          "pass": true
+        }
+      },
+      "pass": true
+    },
+    "small": {
+      "pdf": "/home/runner/workspace/reports/stickers-print-robust/turizem-drobez-small.pdf",
+      "sha256": "7f23d360c6f61cd01f1e56d1fa04d381e506f1b82f3fce753c014341359eb852",
+      "pages": 1,
+      "page_size_pt": [
+        0.0,
+        0.0,
+        102.89763641357422,
+        155.905517578125
+      ],
+      "archived_older_pre_gradient_pdf": "/home/runner/workspace/reports/stickers-final/turizem-drobez-small.pdf",
+      "archived_shading_bounds": [],
+      "archived_older_rule_bbox_pt": [
+        [
+          7.937007904052734,
+          136.06298828125,
+          94.96063232421875,
+          136.48818969726562
+        ]
+      ],
+      "comparison_baseline": "Immediate pre-change guideStickers.ts read by verifier: inset 5.5/2.8mm; ruleY 94.5/48mm; height 1.2/0.7mm; width 61.5/30.7mm. Archived stickers-final predates that gradient and has thinner 0.3/0.15mm rules.",
+      "raster_resolution_policy": "ceil(mm / 25.4 * 600) in each dimension: at least 600dpi; actual effective DPI disclosed",
+      "prior_rule_geometry_mm_xywh": [
+        2.8,
+        48,
+        30.7,
+        0.7
+      ],
+      "actual_image_geometry_mm_xywh": [
+        2.800000010596381,
+        47.99999864366319,
+        30.700000837114118,
+        0.7000003390842013
+      ],
+      "geometry_unchanged": true,
+      "shading_objects": 0,
+      "shading_paint_operator": false,
+      "image_count": 1,
+      "image_rgb_8bit_no_smask_600dpi_pass": true,
+      "image_dimensions_px": [
+        726,
+        17
+      ],
+      "image_effective_dpi": [
+        600.6644787353512,
+        616.8568440479853
+      ],
+      "text": [
+        {
+          "text": "YOUR DIGITAL GUIDE",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            20.620346069335938,
+            9.354339599609375,
+            82.27728271484375,
+            14.905709266662598
+          ]
+        },
+        {
+          "text": "Turizem",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            25.370079040527344,
+            17.81235122680664,
+            77.52755737304688,
+            31.99918556213379
+          ]
+        },
+        {
+          "text": "Drobe\u017e",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            28.147464752197266,
+            31.50368881225586,
+            74.75017547607422,
+            45.690521240234375
+          ]
+        },
+        {
+          "text": "SMART360",
+          "rgb_hex": "121A14",
+          "bbox_pt": [
+            30.14192008972168,
+            141.1653594970703,
+            72.75572204589844,
+            149.1840057373047
+          ]
+        }
+      ],
+      "all_text_121A14": true,
+      "all_text_boxes_inside_page": true,
+      "renders": {
+        "MuPDF": {
+          "png": "/home/runner/workspace/reports/stickers-print-robust/turizem-drobez-small-mupdf-600dpi.png",
+          "dimensions_px": [
+            858,
+            1300
+          ],
+          "strip_pixel_bbox_exclusive": [
+            66,
+            1133,
+            792,
+            1151
+          ],
+          "expected_prior_geometry_bbox_px": [
+            66.14173228346456,
+            1133.8582677165355,
+            791.3385826771654,
+            1150.3937007874017
+          ],
+          "edge_delta_px": [
+            -0.14173228346456312,
+            -0.8582677165354653,
+            0.661417322834609,
+            0.6062992125982873
+          ],
+          "strip_height_px": 18,
+          "strip_width_px": 726,
+          "continuous_full_rule_width": true,
+          "stop_samples": [
+            {
+              "stop": 0,
+              "pixel": [
+                67,
+                1142
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                231,
+                134,
+                47
+              ],
+              "max_channel_error": 1,
+              "pass": true
+            },
+            {
+              "stop": 0.3,
+              "pixel": [
+                284,
+                1142
+              ],
+              "expected_rgb": [
+                47,
+                114,
+                196
+              ],
+              "actual_rgb": [
+                47,
+                114,
+                196
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.55,
+              "pixel": [
+                465,
+                1142
+              ],
+              "expected_rgb": [
+                62,
+                158,
+                78
+              ],
+              "actual_rgb": [
+                62,
+                158,
+                78
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.8,
+              "pixel": [
+                646,
+                1142
+              ],
+              "expected_rgb": [
+                245,
+                198,
+                46
+              ],
+              "actual_rgb": [
+                245,
+                198,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 1,
+              "pixel": [
+                790,
+                1142
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                232,
+                134,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            }
+          ],
+          "pass": true
+        },
+        "Poppler": {
+          "png": "/home/runner/workspace/reports/stickers-print-robust/turizem-drobez-small-poppler-600dpi.png",
+          "dimensions_px": [
+            858,
+            1300
+          ],
+          "strip_pixel_bbox_exclusive": [
+            66,
+            1133,
+            792,
+            1151
+          ],
+          "expected_prior_geometry_bbox_px": [
+            66.14173228346456,
+            1133.8582677165355,
+            791.3385826771654,
+            1150.3937007874017
+          ],
+          "edge_delta_px": [
+            -0.14173228346456312,
+            -0.8582677165354653,
+            0.661417322834609,
+            0.6062992125982873
+          ],
+          "strip_height_px": 18,
+          "strip_width_px": 726,
+          "continuous_full_rule_width": true,
+          "stop_samples": [
+            {
+              "stop": 0,
+              "pixel": [
+                67,
+                1142
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                231,
+                134,
+                47
+              ],
+              "max_channel_error": 1,
+              "pass": true
+            },
+            {
+              "stop": 0.3,
+              "pixel": [
+                284,
+                1142
+              ],
+              "expected_rgb": [
+                47,
+                114,
+                196
+              ],
+              "actual_rgb": [
+                47,
+                114,
+                196
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.55,
+              "pixel": [
+                465,
+                1142
+              ],
+              "expected_rgb": [
+                62,
+                158,
+                78
+              ],
+              "actual_rgb": [
+                62,
+                158,
+                78
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 0.8,
+              "pixel": [
+                646,
+                1142
+              ],
+              "expected_rgb": [
+                245,
+                198,
+                46
+              ],
+              "actual_rgb": [
+                245,
+                198,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            },
+            {
+              "stop": 1,
+              "pixel": [
+                790,
+                1142
+              ],
+              "expected_rgb": [
+                232,
+                134,
+                46
+              ],
+              "actual_rgb": [
+                232,
+                134,
+                46
+              ],
+              "max_channel_error": 0,
+              "pass": true
+            }
+          ],
+          "pass": true
+        }
+      },
+      "pass": true
+    }
+  },
+  "pass": true
+}

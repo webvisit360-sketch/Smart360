@@ -2458,3 +2458,59 @@ mtime_ms = 1790918334815
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9ce875ee-2cfe-4fdc-8e60-aa34b8e5ca30/3a2f082b-695a-40bd-9b19-358771bf3727"
 storage_version_token = "1790918509813607"
 content_type = "image/png"
+
+[[outputs]]
+id = "2RF4aRPQpUnbE5LXKv6Hc"
+uri = "file://reports/stickers-print-robust/turizem-drobez-large.pdf"
+type = "pdf"
+title = "Turizem Drobež — velika nalepka za tisk"
+description = "72,5 × 110 mm. Trak 1,2 mm kot vdelana RGB-slika pri najmanj 600 dpi; QR in besedilo ostajata vektorska."
+logical_id = "ab2db016-f7b4-4c6b-8f6d-e5ec50361cf5"
+content_hash = "sha256:8b34ccbaa16493573a4d3168b6c616d2f5e4d949d920392c7fb1da4b8a4dfa36"
+size = 16274
+mtime_ms = 1790919454178
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ab2db016-f7b4-4c6b-8f6d-e5ec50361cf5/e1c212a8-236e-486a-9340-db759bb74acd"
+storage_version_token = "1790919594143114"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "MsjHVBY6qJFV-Ni6rKBL3"
+uri = "file://reports/stickers-print-robust/turizem-drobez-small.pdf"
+type = "pdf"
+title = "Turizem Drobež — mala nalepka za tisk"
+description = "36,3 × 55 mm. Trak 0,7 mm kot vdelana RGB-slika pri najmanj 600 dpi."
+logical_id = "4a0c5511-c59a-41dd-8a35-4f7fb38bcf42"
+content_hash = "sha256:7f23d360c6f61cd01f1e56d1fa04d381e506f1b82f3fce753c014341359eb852"
+size = 11673
+mtime_ms = 1790919454190
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4a0c5511-c59a-41dd-8a35-4f7fb38bcf42/abd5efdb-8b1d-4cf8-9823-f91c2ffda14f"
+storage_version_token = "1790919594847931"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "oIHh_8EYqomKEegF40uUR"
+uri = "file://reports/stickers-print-robust/turizem-drobez-large-poppler-600dpi.png"
+type = "image"
+title = "Velika nalepka — neodvisni izris 600 dpi"
+description = "Celoten izris PDF z izrisovalnikom Poppler: 1713 × 2599 pik. Trak je prisoten; potrjeno tudi z MuPDF."
+logical_id = "0373b8de-47a5-4c60-b2c8-9514326c6a99"
+content_hash = "sha256:1ecccecadab0ef72b2861fc87bc7ce33b250f046f5bf4a9e6917e6986e26f85a"
+size = 113605
+mtime_ms = 1790919480003
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0373b8de-47a5-4c60-b2c8-9514326c6a99/ceb040c7-ed82-4f7e-8463-64affe8a6437"
+storage_version_token = "1790919595778162"
+content_type = "image/png"
+
+[[outputs]]
+id = "cCWDGNwCDsl0NcPR4aFBF"
+uri = "file://reports/stickers-print-robust/turizem-drobez-small-poppler-600dpi.png"
+type = "image"
+title = "Mala nalepka — neodvisni izris 600 dpi"
+description = "Celoten izris PDF z izrisovalnikom Poppler: 858 × 1300 pik. Trak je prisoten; potrjeno tudi z MuPDF."
+logical_id = "cf8b7d89-8d62-434e-84e5-5946afbea0ce"
+content_hash = "sha256:27529bc2e005af26ec0ede4936f53f7f9c290afae18242917699fab4661ff849"
+size = 40851
+mtime_ms = 1790919480247
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/cf8b7d89-8d62-434e-84e5-5946afbea0ce/cd34f1cb-86bc-432f-ba35-71d7303c88f1"
+storage_version_token = "1790919596643153"
+content_type = "image/png"

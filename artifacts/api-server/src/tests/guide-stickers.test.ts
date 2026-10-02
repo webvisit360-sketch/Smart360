@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { inflateSync } from "node:zlib";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import jsQR from "jsqr";
@@ -63,7 +64,7 @@ test("name layout uses two measured lines at most, bounded sizes, and grapheme-s
   }
 });
 
-test("both vector PDFs have exact trim/QR sizes, embedded fonts, expected text, and decode after print rasterization", async () => {
+test("both PDFs have one RGB strip, vector text/QR, exact geometry, and decode after print rasterization", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "guide-stickers-"));
   try {
     for (const [index, name] of names.entries()) {
@@ -81,25 +82,51 @@ test("both vector PDFs have exact trim/QR sizes, embedded fonts, expected text, 
         const layout = guideStickerLayout(size);
         assert.ok(Math.abs(layout.qr.size * 25.4 / 72 - expected[2]) < 0.00001);
         assert.equal(layout.qr.quietModules, 4);
-        assert.doesNotMatch(raw, /\/Subtype \/Image/);
-        assert.match(raw, /\/ShadingType 2\b/);
-        assert.match(raw, /\/Bounds \[0\.3 0\.55 0\.8\]/);
+        assert.equal([...raw.matchAll(/\/Subtype \/Image\b/g)].length, 1);
+        assert.doesNotMatch(raw, /\/Shading/);
+        assert.doesNotMatch(raw, /\/SMask|\/DCTDecode/);
         assert.match(raw, /\/ColorSpace \/DeviceRGB/);
-        const axes = raw.match(/\/Coords \[([\d. ]+)\]/)![1].split(" ").map(Number);
-        [layout.inset, layout.ruleY, layout.width - layout.inset, layout.ruleY].forEach((value, axis) => {
-          assert.ok(Math.abs(axes[axis] - value) < 0.00001, "Gradient spans the full content width at the unchanged y");
+        const streams = [...raw.matchAll(/<<(.*?)>>\s*stream\r?\n([\s\S]*?)\r?\nendstream/gs)]
+          .filter((match) => /\/FlateDecode/.test(match[1]) && !/\/Subtype \/Image/.test(match[1]))
+          .map((match) => inflateSync(Buffer.from(match[2], "latin1")).toString("latin1"));
+        const content = streams.find((stream) => /\/I\d+ Do/.test(stream))!;
+        assert.ok(content, "Page has an image draw operation");
+        assert.ok([...content.matchAll(/\bre\b/g)].length > 100, "QR remains vector rectangles");
+        assert.match(content, /\bBT\b/);
+        assert.doesNotMatch(content, /0\.4 0\.443137 0\.415686/);
+        const fills = [...content.matchAll(/([\d.]+) ([\d.]+) ([\d.]+) scn/g)];
+        assert.ok(fills.length > 3);
+        fills.forEach((fill) => {
+          const rgb = fill.slice(1).map(Number);
+          assert.ok(rgb.every((c) => c === 1) ||
+            rgb.every((c, i) => Math.abs(c * 255 - [18, 26, 20][i]) < 0.001),
+          "All foreground text/QR fills are INK");
         });
+        const placement = content.match(/([\d.]+) 0 0 (-[\d.]+) ([\d.]+) ([\d.]+) cm\s*\/I\d+ Do/)!;
+        assert.ok(placement);
+        [layout.width - 2 * layout.inset, -layout.ruleHeight, layout.inset, layout.ruleY + layout.ruleHeight]
+          .forEach((value, i) => assert.ok(Math.abs(Number(placement[i + 1]) - value) < 0.00001));
+        const stripPrefix = path.join(directory, `strip-${index}-${size}`);
+        execFileSync("pdfimages", ["-png", file, stripPrefix], { stdio: "pipe" });
+        const strip = await sharp(`${stripPrefix}-000.png`).raw().toBuffer({ resolveWithObject: true });
+        assert.equal(strip.info.width, Math.ceil((layout.width - 2 * layout.inset) * 600 / 72));
+        assert.equal(strip.info.height, Math.ceil(layout.ruleHeight * 600 / 72));
+        assert.equal(strip.info.channels, 3);
         const expectedColors = [
           [232, 134, 46], [47, 114, 196], [62, 158, 78], [245, 198, 46], [232, 134, 46],
         ];
-        const colorFunctions = [...raw.matchAll(/\/C0 \[([\d. ]+)\]\s*\/C1 \[([\d. ]+)\]/g)];
-        assert.equal(colorFunctions.length, 4);
-        colorFunctions.forEach((match, index) => {
-          for (const [offset, group] of [match[1], match[2]].entries()) {
-            const channels = group.split(" ").map(Number);
-            channels.forEach((channel, c) => assert.ok(Math.abs(channel * 255 - expectedColors[index + offset][c]) < 0.001));
+        const positions = [0, 0.30, 0.55, 0.80, 1];
+        for (let y = 0; y < strip.info.height; y++) {
+          for (let x = 0; x < strip.info.width; x++) {
+            const at = x / (strip.info.width - 1);
+            const end = positions.findIndex((p, i) => i > 0 && at <= p);
+            const fraction = (at - positions[end - 1]) / (positions[end] - positions[end - 1]);
+            for (let c = 0; c < 3; c++) {
+              const expected = Math.round(expectedColors[end - 1][c] + fraction * (expectedColors[end][c] - expectedColors[end - 1][c]));
+              assert.equal(strip.data[(y * strip.info.width + x) * 3 + c], expected);
+            }
           }
-        });
+        }
         assert.ok(Math.abs(layout.ruleHeight * 25.4 / 72 - (size === "large" ? 1.2 : 0.7)) < 0.00001);
         assert.ok(Math.abs(layout.ruleY * 25.4 / 72 - (size === "large" ? 94.5 : 48)) < 0.00001);
         assert.match(raw, /\/FontFile2/);

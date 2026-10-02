@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Independent sticker print verification</title>
+<style>body{font:16px/1.5 system-ui;max-width:1080px;margin:40px auto;padding:0 20px;color:#121a14}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #ccd5cd;text-align:left}figure{display:inline-block;width:45%;vertical-align:top;margin:2%}img{width:100%;border:1px solid #ddd}code{overflow-wrap:anywhere}</style>
+<h1>Independent sticker print verification — PASS</h1>
+<p>Both final Turizem Drobež PDFs rendered at 600 dpi using two independent engines: <strong>Poppler 25.07.0</strong> and <strong>MuPDF 1.28.2 / PyMuPDF 1.28.2</strong>. Existing installed tools were used; no packages installed, production files changed, database operations, sending, or publishing.</p>
+<p>Verification waited until each PDF contained exactly one embedded image and no shading objects, avoiding the old vector-gradient PDFs. SHA-256 hashes bind all checks to the files listed in <a href="independent-verification.json">machine-readable evidence</a>. Hash stability was checked after rendering.</p>
+<table><tr><th>Check</th><th>Large</th><th>Small</th></tr>
+<tr><td>Full-page PNG pixels, both engines</td><td>1713 × 2599</td><td>858 × 1300</td></tr>
+<tr><td>Strip geometry (x, y, width, height), mm</td><td>5.5, 94.5, 61.5, 1.2</td><td>2.8, 48, 30.7, 0.7</td></tr>
+<tr><td>Actual strip pixel bounds [left, top, right-exclusive, bottom-exclusive], both engines</td><td>[129, 2232, 1583, 2261]</td><td>[66, 1133, 792, 1151]</td></tr>
+<tr><td>Continuous painted width / height</td><td>1454 / 29 pixels</td><td>726 / 18 pixels</td></tr>
+<tr><td>Embedded RGB image</td><td>1453 × 29, 8-bit, no alpha mask</td><td>726 × 17, 8-bit, no alpha mask</td></tr>
+<tr><td>Effective image DPI (x / y)</td><td>600.10 / 613.83</td><td>600.66 / 616.86</td></tr>
+<tr><td>Shading objects / shading paint operators</td><td>0 / 0</td><td>0 / 0</td></tr>
+<tr><td>All extracted text color</td><td>#121A14</td><td>#121A14</td></tr>
+<tr><td>Text boxes inside page</td><td>PASS</td><td>PASS</td></tr></table>
+<h2>Pixel checks</h2>
+<p>At strip stops 0%, 30%, 55%, 80%, 100%, rendered samples match #E8862E, #2F72C4, #3E9E4E, #F5C62E, #E8862E. All large samples are exact in both engines; small samples differ by at most 1 channel level. Every midline column between strip edges is painted, with no white gap. All four strip boundaries are within one pixel of the expected physical geometry. The gradient spans the complete intended rule width between insets, not the complete paper width.</p>
+<p>The image uses ceiling-rounded 600 dpi dimensions, so its effective resolution is slightly above 600 dpi, particularly vertically for this thin strip. Both full-page renders are explicitly 600 dpi.</p>
+<h2>Geometry baseline</h2>
+<p>The immediate pre-change guideStickers.ts read independently before the implementation change already specified 1.2 mm / 0.7 mm gradient heights and the same positions and widths. Those are unchanged. The older archived reports/stickers-final PDFs predate that gradient and contain pale rules only 0.3 mm / 0.15 mm high; they must not be mistaken for the immediately preceding gradient revision. Their observed bounds are included separately in the JSON.</p>
+<h2>Whole-page visual inspection</h2>
+<p>All four complete PNGs were opened and visually inspected. Both sizes in both engines show the strip, all intended text, the complete QR symbol and border, and uncropped Drobež accents. No visible overflow, missing content, or footer clipping. Text bounds also pass programmatic page containment. This is digital rendering evidence, not a physical printer proof or QR decode test.</p>
+<h2>Preferred full-page PNG attachments: Poppler</h2>
+<figure><a href="turizem-drobez-large-poppler-600dpi.png"><img src="turizem-drobez-large-poppler-600dpi.png" alt="Large sticker complete Poppler render"></a><figcaption>Large — full 600 dpi PNG</figcaption></figure>
+<figure><a href="turizem-drobez-small-poppler-600dpi.png"><img src="turizem-drobez-small-poppler-600dpi.png" alt="Small sticker complete Poppler render"></a><figcaption>Small — full 600 dpi PNG</figcaption></figure>
+<p>Independent comparison renders: <a href="turizem-drobez-large-mupdf-600dpi.png">large MuPDF</a> · <a href="turizem-drobez-small-mupdf-600dpi.png">small MuPDF</a>.</p>
+<p>Evidence directory: <code>/home/runner/workspace/reports/stickers-print-robust/</code><br>Reproducible verifier: <code>/home/runner/workspace/.agents/scripts/verify_sticker_print.py</code></p>
+</html>

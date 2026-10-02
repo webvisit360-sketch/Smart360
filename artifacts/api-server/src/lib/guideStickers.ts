@@ -2,11 +2,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
+import sharp from "sharp";
 
 export type GuideStickerSize = "large" | "small";
 const mm = (value: number) => value * 72 / 25.4;
 const INK = "#121A14";
-const MUTED = "#66716A";
 export const GUIDE_STICKER_COPY = {
   header: "YOUR DIGITAL GUIDE",
   scan: "Scan with your phone camera.",
@@ -44,6 +44,42 @@ export function guideStickerLayout(size: GuideStickerSize) {
     wordmarkSize: mm(large ? 5.1 : 2.6),
     sloganY: mm(104.4), sloganSize: mm(3.1),
   };
+}
+
+// Opaque RGB PNGs avoid PDF shading support differences in print pipelines.
+// Cache the in-flight encoding too, so concurrent requests encode once per size.
+const signaturePngs = new Map<GuideStickerSize, Promise<Buffer>>();
+function signaturePng(size: GuideStickerSize): Promise<Buffer> {
+  const cached = signaturePngs.get(size);
+  if (cached) return cached;
+  const layout = guideStickerLayout(size);
+  const width = Math.ceil((layout.width - 2 * layout.inset) * 600 / 72);
+  const height = Math.ceil(layout.ruleHeight * 600 / 72);
+  const stops = [
+    { at: 0, rgb: [232, 134, 46] },
+    { at: 0.30, rgb: [47, 114, 196] },
+    { at: 0.55, rgb: [62, 158, 78] },
+    { at: 0.80, rgb: [245, 198, 46] },
+    { at: 1, rgb: [232, 134, 46] },
+  ];
+  const pixels = Buffer.alloc(width * height * 3);
+  for (let x = 0; x < width; x++) {
+    const position = x / (width - 1);
+    const end = stops.findIndex((stop, index) => index > 0 && position <= stop.at);
+    const left = stops[end - 1], right = stops[end];
+    const fraction = (position - left.at) / (right.at - left.at);
+    for (let channel = 0; channel < 3; channel++) {
+      pixels[x * 3 + channel] = Math.round(left.rgb[channel] + fraction * (right.rgb[channel] - left.rgb[channel]));
+    }
+  }
+  for (let y = 1; y < height; y++) pixels.copy(pixels, y * width * 3, 0, width * 3);
+  const encoded = sharp(pixels, { raw: { width, height, channels: 3 } })
+    .png({ palette: false }).toBuffer().catch((error) => {
+      signaturePngs.delete(size);
+      throw error;
+    });
+  signaturePngs.set(size, encoded);
+  return encoded;
 }
 
 async function fontAsset(file: string): Promise<Buffer> {
@@ -192,6 +228,7 @@ export async function makeGuideSticker(name: string, url: string, size: GuideSti
     info: { Title: `SMART360 — ${name} — ${size}` },
   });
   await registerFonts(doc);
+  const signature = await signaturePng(size);
   const fitted = fitName(doc, name, layout);
   const chunks: Buffer[] = [];
   return new Promise<Buffer>((resolve, reject) => {
@@ -206,7 +243,7 @@ export async function makeGuideSticker(name: string, url: string, size: GuideSti
         if (width > layout.width - 2 * layout.inset + 0.01) throw new Error(`Sticker text exceeds bounds: ${text}`);
         doc.fillColor(color).text(text, (layout.width - width) / 2, y, { lineBreak: false, characterSpacing: tracking });
       };
-      centered(GUIDE_STICKER_COPY.header, "Archivo600", layout.headerSize, layout.headerY, MUTED, layout.headerTracking);
+      centered(GUIDE_STICKER_COPY.header, "Archivo600", layout.headerSize, layout.headerY, INK, layout.headerTracking);
       fitted.lines.forEach((line, index) => {
         const top = layout.nameY + (layout.nameHeight - fitted.inkHeight) / 2 - fitted.inkTop;
         centered(line, "Archivo800", fitted.fontSize, top + index * fitted.lineHeight, INK);
@@ -231,15 +268,14 @@ export async function makeGuideSticker(name: string, url: string, size: GuideSti
         }
       }
       doc.fill();
-      if (size === "large") centered(GUIDE_STICKER_COPY.scan, "Archivo500", layout.scanSize, layout.scanY, MUTED);
+      if (size === "large") centered(GUIDE_STICKER_COPY.scan, "Archivo500", layout.scanSize, layout.scanY, INK);
       // Exact left-to-right stops from tour-summary-render.ts SUMMARY_STRIP.
-      // PDFKit emits an axial vector shading, not a raster image.
-      const signature = doc.linearGradient(layout.inset, layout.ruleY, layout.width - layout.inset, layout.ruleY);
-      signature.stop(0, "#E8862E").stop(0.30, "#2F72C4").stop(0.55, "#3E9E4E")
-        .stop(0.80, "#F5C62E").stop(1, "#E8862E");
-      doc.rect(layout.inset, layout.ruleY, layout.width - 2 * layout.inset, layout.ruleHeight).fill(signature);
+      // Pixel rounding must not change the physical dimensions.
+      doc.image(signature, layout.inset, layout.ruleY, {
+        width: layout.width - 2 * layout.inset, height: layout.ruleHeight,
+      });
       centered(GUIDE_STICKER_COPY.wordmark, "Archivo800", layout.wordmarkSize, layout.wordmarkY, INK, layout.wordmarkSize * 0.02);
-      if (size === "large") centered(GUIDE_STICKER_COPY.slogan, "Archivo500", layout.sloganSize, layout.sloganY, MUTED);
+      if (size === "large") centered(GUIDE_STICKER_COPY.slogan, "Archivo500", layout.sloganSize, layout.sloganY, INK);
       doc.end();
     } catch (error) {
       doc.destroy();
