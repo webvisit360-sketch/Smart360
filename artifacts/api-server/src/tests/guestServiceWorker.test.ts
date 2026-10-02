@@ -38,7 +38,7 @@ class MemoryStorage {
   async delete(name: string) { return this.stores.delete(name); }
 }
 
-function harness(options: { config?: GuestOfflineConfig; storage?: MemoryStorage } = {}) {
+function harness(options: { config?: GuestOfflineConfig; storage?: MemoryStorage; firstInstall?: boolean } = {}) {
   const cfg = options.config ?? config;
   const handlers = new Map<string, (event: any) => void>();
   const storage = options.storage ?? new MemoryStorage();
@@ -81,7 +81,7 @@ function harness(options: { config?: GuestOfflineConfig; storage?: MemoryStorage
       location: { origin },
       addEventListener: (name: string, handler: (event: any) => void) => handlers.set(name, handler),
       skipWaiting: async () => { skipped = true; },
-      registration: { unregister: async () => { unregistered = true; } },
+      registration: { active: options.firstInstall ? null : {}, unregister: async () => { unregistered = true; } },
       clients: { claim: async () => { claimed = true; }, get: async (id: string) => clients.get(id), matchAll: async () => [...clients.values()] },
     },
     URL, Response, Request, fetch, caches: storage,
@@ -109,7 +109,19 @@ function harness(options: { config?: GuestOfflineConfig; storage?: MemoryStorage
     offline: (value: boolean) => { offline = value; }, state: () => ({ unregistered, claimed, skipped }) };
 }
 
-test("actual lifecycle precaches guest shell graph, every language and published GPX, not admin/galleries/tiles", async () => {
+test("first installation activates without network warmup; page INIT then fills offline caches", async () => {
+  const h = harness({ firstInstall: true });
+  await h.lifecycle("install");
+  await h.lifecycle("activate");
+  assert.equal(h.calls.length, 0);
+  assert.deepEqual(h.state(), { unregistered: false, claimed: true, skipped: true });
+  await h.message({ type: "LG_OFFLINE_INIT", slug: config.slug, lang: "sl" });
+  assert.ok(h.calls.some(call => call.url === origin + scope));
+  h.offline(true);
+  assert.equal((await h.request(scope, { mode: "navigate" }))?.status, 200);
+});
+
+test("update lifecycle precaches guest shell graph, every language and published GPX, not admin/galleries/tiles", async () => {
   const h = harness();
   await h.lifecycle("install"); await h.lifecycle("activate");
   assert.deepEqual(h.state(), { unregistered: false, claimed: true, skipped: true });

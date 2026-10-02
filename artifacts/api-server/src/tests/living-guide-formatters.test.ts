@@ -73,17 +73,18 @@ test("keeps a supplied distance first in POI supporting text", () => {
   );
 });
 
-test("hero rule uses natural full width through the 89 percent threshold", () => {
+test("hero rule uses a width-scaled reference threshold, not device height", () => {
+  const threshold = 400 * 844 / 390 * .89;
   const exactlyAtThreshold = calculateLivingGuideHeroLayout({
     containerWidth: 400,
-    imageAspect: 400 / 712,
+    imageAspect: 400 / threshold,
     viewportHeight: 800,
   });
   assert.deepEqual(exactlyAtThreshold, {
     branch: "full-bleed",
-    naturalHeight: 712,
-    thresholdHeight: 712,
-    heroHeight: 712,
+    naturalHeight: threshold,
+    thresholdHeight: threshold,
+    heroHeight: Math.round(threshold),
   });
 
   const wide = calculateLivingGuideHeroLayout({
@@ -103,8 +104,8 @@ test("hero rule caps only images above 89 percent and uses 89 percent height", (
   });
   assert.equal(capped?.branch, "side-blur");
   assert.equal(capped?.naturalHeight, 800);
-  assert.equal(capped?.thresholdHeight, 712);
-  assert.equal(capped?.heroHeight, 712);
+  assert.equal(capped?.thresholdHeight, 400 * 844 / 390 * .89);
+  assert.equal(capped?.heroHeight, 400 * 844 / 390 * .89);
 });
 
 test("multi-photo galleries use the median natural height and clamp it to 45–89 percent", () => {

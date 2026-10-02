@@ -23,6 +23,12 @@ An offline device cannot discover a server-side slug rename until it reconnects.
 
 Separate Chromium installability diagnostics from simulated install prompts and physical-device installation.
 
+Do not identify slow service-worker activation as a proven WebAPK disqualifier. The production persistent-profile Chromium audit returned no installability errors even while the worker was installing. First activation should not await the full offline asset graph; existing-worker updates must retain warm-before-replacement protection.
+
+**Why:** A reported Samsung Chrome-badged shortcut was not reproducible as a manifest failure; ordinary and maskable production icons already had opaque white fields. A stalled-asset test proved the activation delay independently, not the cause of the phone's shortcut.
+
+**How to apply:** Record manifest diagnostics, worker lifecycle and physical Android installation as separate evidence. Incognito-only diagnostics cannot establish production installability.
+
 For offline proofs, verify that service-worker-owned fetches actually fail, not only page requests.
 
 **Why:** In this workspace's Chromium 138/Playwright runner, context offline mode blocked the page while worker-initiated refresh requests still reached the fixture server. That produced false offline evidence and misleading banner failures.

@@ -1325,7 +1325,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   z-index: 2;
   top: min(
     calc(var(--lg2-detail-hero-height) - 26px),
-    calc(100% - min(360px, 58%))
+    var(--lg2-detail-photo-reveal)
   );
   right: 0;
   left: 0;
@@ -1338,7 +1338,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   color: var(--tx);
   min-height: calc(100% - min(
     calc(var(--lg2-detail-hero-height) - 26px),
-    calc(100% - min(360px, 58%))
+    var(--lg2-detail-photo-reveal)
   ));
   overflow: visible;
   touch-action: pan-y;

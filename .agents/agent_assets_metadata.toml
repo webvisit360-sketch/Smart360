@@ -2640,3 +2640,45 @@ mtime_ms = 1790965052433
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7735506a-0e28-453b-9943-550853be9807/db8cffcd-3054-49f5-b616-d8ba7612baf9"
 storage_version_token = "1790965142040612"
 content_type = "text/html"
+
+[[outputs]]
+id = "Nqn552q13Kk7POQRUvDr8"
+uri = "file://reports/device-audit/porocilo.html"
+type = "html"
+title = "A-frame — poročilo in dokazi"
+description = "Primerjava produkcije in razvoja, meritve obeh velikosti, PWA audit ter jasno navedene omejitve preverjanja WebAPK."
+logical_id = "e8aad7b6-4e10-4eb7-96df-06f0df231984"
+content_hash = "sha256:3d748c2b7a91bf8908c6821cd1018fdb739cc233556a6157c3a0f7fb8ed2e2e5"
+size = 2218248
+mtime_ms = 1790968251759
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e8aad7b6-4e10-4eb7-96df-06f0df231984/be9c2e73-aa65-4450-a04e-61228f144e50"
+storage_version_token = "1790968294087706"
+content_type = "text/html"
+
+[[outputs]]
+id = "eggyT-PUQ71oh8HYzihoU"
+uri = "file://reports/device-audit/hero-comparison.png"
+type = "image"
+title = "Fotografija: prej / potem pri obeh velikostih"
+description = "Levi par 390 × 844, desni par 412 × 915. Prej: produkcija. Potem: razvoj z javnim produkcijskim posnetkom."
+logical_id = "eca42be3-083c-4950-88c8-bd151998324a"
+content_hash = "sha256:fe1fd4266d9cafb8c8c9152b4906755d293b66703722dd37362df2bd1db25dd9"
+size = 880529
+mtime_ms = 1790968251721
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/eca42be3-083c-4950-88c8-bd151998324a/65bc85db-2a3f-4e3c-a1ac-5b5e752b54ea"
+storage_version_token = "1790968295008455"
+content_type = "image/png"
+
+[[outputs]]
+id = "zS8xyWCIV065tF6kFWLFp"
+uri = "file://reports/device-audit/android-icon-preview.png"
+type = "image"
+title = "Produkcijska maskable ikona in krožna maska"
+description = "Belo polje in znak v varnem območju. Simulacija Androidove maske, ne dokaz nameščenega WebAPK."
+logical_id = "f5ccdcf5-0fe1-4011-94a1-1d5cabbc5a25"
+content_hash = "sha256:931ab1622819b69e9dfef39fa07326abd0a12437abdad51a49f2a9468fd4db94"
+size = 45912
+mtime_ms = 1790967120853
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f5ccdcf5-0fe1-4011-94a1-1d5cabbc5a25/83ba7fbf-8c7f-41a8-a68a-73cc5084873f"
+storage_version_token = "1790968295895342"
+content_type = "image/png"

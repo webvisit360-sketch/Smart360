@@ -1,0 +1,216 @@
+{
+  "comparison": {
+    "beforeReport": "reports/device-audit/browser-before.json",
+    "before": {
+      "390x844": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "hero": {
+          "selector": "img.lg2-hero-image-main.is-ready",
+          "src": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg?w=1400",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 520
+          },
+          "naturalSize": {
+            "width": 1400,
+            "height": 934
+          },
+          "objectFit": "cover",
+          "objectPosition": "50% 50%"
+        },
+        "sheet": {
+          "selector": "article.lg2-detail-sheet",
+          "bounds": {
+            "x": 0,
+            "y": 406,
+            "width": 390,
+            "height": 360
+          },
+          "top": 406,
+          "text": "A-frame only"
+        },
+        "screenshotObservation": "xpcf0u"
+      },
+      "412x915": {
+        "viewport": {
+          "width": 412,
+          "height": 915
+        },
+        "hero": {
+          "selector": "img.lg2-hero-image-main.is-ready",
+          "src": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg?w=1400",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 412,
+            "height": 549
+          },
+          "naturalSize": {
+            "width": 1400,
+            "height": 934
+          },
+          "objectFit": "cover",
+          "objectPosition": "50% 50%"
+        },
+        "sheet": {
+          "selector": "article.lg2-detail-sheet",
+          "bounds": {
+            "x": 0,
+            "y": 477,
+            "width": 412,
+            "height": 360
+          },
+          "top": 477,
+          "text": "A-frame only"
+        },
+        "screenshotObservation": "ix4716"
+      }
+    }
+  },
+  "after": {
+    "schemaVersion": 1,
+    "capturedAt": "2026-10-02T19:04:48.143Z",
+    "previewOrigin": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev",
+    "detailRoute": "/turizem-drobez/c/b060db15-67c4-4146-bc20-505b8fb64100/i/7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+    "navigation": {
+      "separateFreshPagePerViewport": true,
+      "directRoute": true
+    },
+    "tenantData": {
+      "devInitialResponse": 404,
+      "sourceSnapshot": "reports/device-audit/published.json",
+      "routedEndpoint": "/api/public/tenants/turizem-drobez?lang=en",
+      "snapshotRouteResponse": 200,
+      "storageUrlsRebasedToProductionOrigin": true,
+      "storageReferencesCount": 107,
+      "imageRequestsIntercepted": false
+    },
+    "viewports": {
+      "390x844": {
+        "before": {
+          "heroHeight": 520,
+          "sheetTop": 406,
+          "sheetHeight": 360
+        },
+        "after": {
+          "heroBounds": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 520
+          },
+          "heroNaturalSize": {
+            "width": 1400,
+            "height": 934
+          },
+          "heroObjectFit": "cover",
+          "heroObjectPosition": "50% 50%",
+          "heroSrc": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg",
+          "sheetBounds": {
+            "x": 0,
+            "y": 406,
+            "width": 390,
+            "height": 360,
+            "top": 406,
+            "bottom": 766
+          },
+          "sheetText": "A-frame"
+        },
+        "delta": {
+          "heroHeight": 0,
+          "sheetTop": 0
+        },
+        "screenshot": "reports/device-audit/after-390.png"
+      },
+      "412x915": {
+        "before": {
+          "heroHeight": 549,
+          "sheetTop": 477,
+          "sheetHeight": 360
+        },
+        "after": {
+          "heroBounds": {
+            "x": 0,
+            "y": 0,
+            "width": 412,
+            "height": 549
+          },
+          "heroNaturalSize": {
+            "width": 1400,
+            "height": 934
+          },
+          "heroObjectFit": "cover",
+          "heroObjectPosition": "50% 50%",
+          "heroSrc": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg",
+          "sheetBounds": {
+            "x": 0,
+            "y": 428.890625,
+            "width": 412,
+            "height": 408.09375,
+            "top": 428.890625,
+            "bottom": 836.984375
+          },
+          "sheetText": "A-frame"
+        },
+        "delta": {
+          "heroHeight": 0,
+          "sheetTop": -48.109375,
+          "sheetHeight": 48.09375
+        },
+        "screenshot": "reports/device-audit/after-412.png"
+      }
+    },
+    "images": {
+      "origin": "https://smart360.info",
+      "heroGetStatus": {
+        "390": 200,
+        "412": 200
+      },
+      "contentType": "image/jpeg",
+      "source": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg"
+    },
+    "persistentProduction": {
+      "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium",
+      "nonIncognito": true,
+      "manifestErrors": [],
+      "installabilityErrors": [],
+      "serviceWorker": {
+        "controller": null,
+        "registration": {
+          "scope": "https://smart360.info/turizem-drobez/",
+          "state": "installing"
+        }
+      }
+    },
+    "previewServiceWorker": {
+      "scriptUrl": "/api/public/tenants/turizem-drobez/sw.js",
+      "status": 404,
+      "response": "{\"error\":\"Not found\"}",
+      "registrations": [],
+      "controller": null,
+      "activationWarmupBehaviorVerified": false,
+      "reason": "Preview tenant worker endpoint is unavailable; no worker was routed or fabricated."
+    },
+    "previewApiNotes": {
+      "weatherAndOrders404": true,
+      "consoleResource404sPresent": true,
+      "devDirectRouteNavSelection": "Home highlighted on direct-route screenshots"
+    },
+    "screenshotFiles": [
+      {
+        "path": "reports/device-audit/after-390.png",
+        "bytes": 370046
+      },
+      {
+        "path": "reports/device-audit/after-412.png",
+        "bytes": 406867
+      }
+    ],
+    "productionWrites": 0
+  }
+}

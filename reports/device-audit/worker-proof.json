@@ -1,0 +1,29 @@
+{
+  "environment": "Desktop Chromium, persistent profile, localhost trustworthy origin, real generated worker + production snapshot, deliberately stalled shell request; NOT Android/WebAPK or full app offline proof",
+  "results": [
+    {
+      "variant": "before",
+      "stalled": true,
+      "state": {
+        "secureContext": true,
+        "controller": false,
+        "installing": "installing"
+      },
+      "installability": {
+        "installabilityErrors": []
+      }
+    },
+    {
+      "variant": "after",
+      "stalled": true,
+      "state": {
+        "secureContext": true,
+        "controller": true,
+        "active": "activated"
+      },
+      "installability": {
+        "installabilityErrors": []
+      }
+    }
+  ]
+}

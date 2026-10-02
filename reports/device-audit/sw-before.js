@@ -1,53 +1,6 @@
-import { createHash } from "node:crypto";
+/* Smart360 Living Guide offline 5da347b7a75c6e7c */
+const CFG = {"tenantId":"177e633a-6030-4eca-8ce8-e0a0afdff599","slug":"turizem-drobez","version":"68e23e58c305845c45c3c5fb","languages":["de","en","it","sl"],"gpx":["/api/public/tenants/turizem-drobez/items/144fe650-4b5d-44c4-9911-18c9a4d62ea9/gpx/f40384b7-08f9-4511-af14-1f4cf3a7fd7e"],"essentials":["/brand/smart360-znak-40.png?v=faceted-1","/brand/smart360-kolobar-faceted.svg","/brand/ikona-smart360-home-192.png?v=faceted-1","/brand/ikona-smart360-512.png?v=faceted-1"]};
 
-export type GuestOfflineConfig = {
-  tenantId: string;
-  slug: string;
-  version: string;
-  languages: string[];
-  gpx: string[];
-  essentials: string[];
-};
-
-/** Public snapshot + publication identity; never serialize the server-only guestAccess. */
-export function guestOfflineConfig(tenantId: string, slug: string, languages: Record<string, {
-  tree: unknown; ui?: unknown; plurals?: unknown;
-}>, publishedAt: string): GuestOfflineConfig {
-  const gpx = new Set<string>();
-  const essentials = new Set<string>([
-    "/brand/smart360-znak-40.png?v=faceted-1",
-    "/brand/smart360-kolobar-faceted.svg",
-    "/brand/ikona-smart360-home-192.png?v=faceted-1",
-    "/brand/ikona-smart360-512.png?v=faceted-1",
-  ]);
-  function visit(value: unknown): void {
-    if (!value || typeof value !== "object") return;
-    if (Array.isArray(value)) { value.forEach(visit); return; }
-    const obj = value as Record<string, unknown>;
-    const route = obj.gpxRoute as { fileId?: unknown } | undefined;
-    if (typeof obj.id === "string" && typeof route?.fileId === "string" &&
-        /^[a-zA-Z0-9-]+$/.test(obj.id) && /^[a-zA-Z0-9-]+$/.test(route.fileId)) {
-      gpx.add(`/api/public/tenants/${slug}/items/${obj.id}/gpx/${route.fileId}`);
-    }
-    Object.values(obj).forEach(visit);
-  }
-  for (const value of Object.values(languages)) {
-    visit(value.tree);
-    const tree = value.tree as Record<string, unknown>;
-    for (const key of ["logoUrl", "logoSquareUrl", "heroUrl"]) {
-      if (typeof tree[key] === "string" && tree[key]) essentials.add(tree[key]);
-    }
-  }
-  return {
-    tenantId, slug,
-    version: createHash("sha256").update(JSON.stringify({ publishedAt, languages })).digest("hex").slice(0, 24),
-    languages: Object.keys(languages).filter((lang) => /^[a-z]{2}$/.test(lang)),
-    gpx: [...gpx], essentials: [...essentials],
-  };
-}
-
-// This is deliberately plain JS: the returned bytes are the actual worker, tested in a VM.
-const runtime = String.raw`
 const ORIGIN = self.location.origin;
 const SCOPE = "/" + CFG.slug + "/";
 const API = "/api/public/tenants/" + CFG.slug;
@@ -410,13 +363,7 @@ async function warm(lang) {
 }
 self.addEventListener("install", (event) => {
   installing = true;
-  // First installation must not wait for the entire offline asset graph.
-  // The page's ready/controllerchange handlers send LG_OFFLINE_INIT after
-  // activation. Updates still warm before replacing an existing offline copy.
-  event.waitUntil((async () => {
-    if (self.registration.active) await warm("sl");
-    await self.skipWaiting();
-  })());
+  event.waitUntil((async () => { await warm("sl"); await self.skipWaiting(); })());
 });
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
@@ -449,28 +396,3 @@ self.addEventListener("fetch", (event) => {
   const category = kind(event.request);
   if (category) event.respondWith(networkFirst(event.request, category, event));
 });
-`;
-
-const revision = createHash("sha256").update(runtime).digest("hex").slice(0, 16);
-
-export function renderGuestServiceWorker(config: GuestOfflineConfig): string {
-  return `/* Smart360 Living Guide offline ${revision} */\nconst CFG = ${JSON.stringify(config)};\n${runtime}`;
-}
-
-/** Preserve the existing Swipe/legacy PWA foundation; offline is Living Guide only. */
-export function renderLegacyGuestServiceWorker(slug: string): string {
-  return `
-/* Smart360 legacy guest worker: network-only */
-const scopePath = ${JSON.stringify(`/${slug}/`)};
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
-self.addEventListener("fetch", (event) => {
-  const request = event.request;
-  if (request.mode !== "navigate" || request.method !== "GET") return;
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin || !url.pathname.startsWith(scopePath)) return;
-  if (/\\.[^/]+$/.test(url.pathname) || /\\/(?:api|admin|host)(?:\\/|$)/.test(url.pathname)) return;
-  event.respondWith(fetch(request));
-});
-`;
-}

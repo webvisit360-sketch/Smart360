@@ -9,6 +9,12 @@ Living Guide detail text stays fixed on one continuous sheet; the entire sheet m
 
 **How to apply:** Keep the motion controller shared across every detail template. Preserve intermediate positions, allow only short momentum, close below the initial position, and keep the Order dock fixed to the viewport.
 
+Device-invariant photo framing includes the sheet's initial occlusion, not only the image's object-fit. Preserve the measured iPhone reference while making both image sizing limits and exposed-photo proportions width-based.
+
+**Why:** The owner reported the A-frame subject hidden on Samsung with browser chrome, although the image itself was centered; viewport-height-dependent sheet positioning changes which part is visible.
+
+**How to apply:** Compare fresh navigations at each width; resizing an already-open detail retains the route's height lock and gives misleading baseline measurements.
+
 Draggable detail sheets intentionally have no back/close arrow. They must show one horizontal grabber and remain closable by both downward drag and a stationary tap on the exposed backdrop/hero. Non-draggable full-screen views keep their back button.
 
 **Why:** The owner considers an arrow redundant once the physical sheet model supplies clear drag and backdrop affordances, but no view may be left without a return path.

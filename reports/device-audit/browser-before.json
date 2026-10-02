@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "audit": "read-only production baseline",
+  "capturedAt": "2026-10-02T18:58:34.930Z",
+  "productionEntry": "https://smart360.info/turizem-drobez/",
+  "detailRoute": "https://smart360.info/turizem-drobez/c/b060db15-67c4-4146-bc20-505b8fb64100/i/7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+  "navigation": {
+    "freshIndependentContexts": true,
+    "resizedSamePage": false,
+    "guestOnly": true,
+    "guestDetailsSaved": false
+  },
+  "viewports": {
+    "390x844": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "hero": {
+        "selector": "img.lg2-hero-image-main.is-ready",
+        "src": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg?w=1400",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 520
+        },
+        "naturalSize": {
+          "width": 1400,
+          "height": 934
+        },
+        "objectFit": "cover",
+        "objectPosition": "50% 50%"
+      },
+      "sheet": {
+        "selector": "article.lg2-detail-sheet",
+        "bounds": {
+          "x": 0,
+          "y": 406,
+          "width": 390,
+          "height": 360
+        },
+        "top": 406,
+        "text": "A-frame only"
+      },
+      "screenshotObservation": "xpcf0u"
+    },
+    "412x915": {
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "hero": {
+        "selector": "img.lg2-hero-image-main.is-ready",
+        "src": "https://smart360.info/api/storage/img/glamping-gril/glamping-gril_a-frame_01-a74a.jpg?w=1400",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 412,
+          "height": 549
+        },
+        "naturalSize": {
+          "width": 1400,
+          "height": 934
+        },
+        "objectFit": "cover",
+        "objectPosition": "50% 50%"
+      },
+      "sheet": {
+        "selector": "article.lg2-detail-sheet",
+        "bounds": {
+          "x": 0,
+          "y": 477,
+          "width": 412,
+          "height": 360
+        },
+        "top": 477,
+        "text": "A-frame only"
+      },
+      "screenshotObservation": "ix4716"
+    }
+  },
+  "manifest": {
+    "url": "https://smart360.info/api/public/tenants/turizem-drobez/manifest.webmanifest?lang=en",
+    "cdpErrors": [],
+    "name": "Turizem Drobež",
+    "display": "standalone",
+    "scope": "https://smart360.info/turizem-drobez/",
+    "icons": [
+      "192x192",
+      "192x192 maskable",
+      "512x512",
+      "512x512 maskable"
+    ]
+  },
+  "installability": {
+    "incognitoResults": [
+      "in-incognito"
+    ],
+    "persistentContext": {
+      "apiPresent": true,
+      "attempted": true,
+      "profilePath": "/tmp/smart360-audit-persistent-profile",
+      "result": "launch failed before navigation",
+      "error": "Configured Chromium executable missing: /nix/store/71577rskzyhch3axhdqx7faygc2xyn4v-playwright-browsers-1.55.0-with-cjk/chromium_headless_shell-1186/chrome-linux/headless_shell"
+    }
+  },
+  "serviceWorker": {
+    "script": "https://smart360.info/api/public/tenants/turizem-drobez/sw.js",
+    "scope": "https://smart360.info/turizem-drobez/",
+    "controller": null,
+    "active": null,
+    "waiting": null,
+    "finalState": "installing",
+    "stateTransitions": [],
+    "watchStartedEpochMs": 1790967379004,
+    "finalElapsedMs": 113254,
+    "requestedCapMs": 90000,
+    "overCapMs": 23254,
+    "workerResourceTiming": {
+      "count": 250,
+      "first": "https://smart360.info/api/public/tenants/turizem-drobez",
+      "latest": "https://smart360.info/assets/cake-Cvj2Y1G4.js",
+      "latestDurationMs": 201,
+      "latestTransferBytes": 608,
+      "latestResponseStatus": 200,
+      "lastFiveStatuses": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "plateauObservedAtElapsedMs": [
+        73644,
+        98073,
+        113254
+      ]
+    },
+    "pageNetwork": {
+      "390": {
+        "failedRequests": 0,
+        "httpResponsesAtLeast400": 0
+      },
+      "412": {
+        "failedRequests": 0,
+        "httpResponsesAtLeast400": 0
+      }
+    },
+    "consoleErrors": [
+      "Permissions policy violation: xr-spatial-tracking is not allowed in this document.",
+      "XRSystem.isSessionSupported blocked because xr is disallowed by permissions policy."
+    ],
+    "assessment": "Worker remained installing through final sample. No failed requests or HTTP >=400 responses were observed; many worker asset requests completed with status 200. Resource count plateaued at 250, so install completion is unresolved, not confirmed failed."
+  },
+  "productionWrites": 0
+}

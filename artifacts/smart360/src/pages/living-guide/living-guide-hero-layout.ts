@@ -3,6 +3,11 @@ export const HERO_SIDE_BLUR_HEIGHT = 0.89;
 export const HERO_GALLERY_MIN_HEIGHT = 0.45;
 export const HERO_GALLERY_MAX_HEIGHT = 0.89;
 export const DETAIL_FALLBACK_ASPECT = 16 / 9;
+// Keep the existing 390×844 framing, but scale it by width rather than
+// browser chrome / viewport height. The sheet must expose the same crop too.
+export const DETAIL_REFERENCE_WIDTH = 390;
+export const DETAIL_REFERENCE_HEIGHT = 844;
+export const DETAIL_PHOTO_REVEAL_RATIO = 406 / DETAIL_REFERENCE_WIDTH;
 
 export type LivingGuideHeroBranch = "full-bleed" | "side-blur";
 
@@ -82,7 +87,8 @@ export function calculateLivingGuideHeroLayout({
   }
 
   const naturalHeight = containerWidth / imageAspect;
-  const thresholdHeight = viewportHeight * HERO_FULL_WIDTH_THRESHOLD;
+  const referenceHeight = containerWidth * DETAIL_REFERENCE_HEIGHT / DETAIL_REFERENCE_WIDTH;
+  const thresholdHeight = referenceHeight * HERO_FULL_WIDTH_THRESHOLD;
   const sideBlur = naturalHeight > thresholdHeight;
 
   return {
@@ -92,7 +98,7 @@ export function calculateLivingGuideHeroLayout({
     heroHeight: Math.max(
       1,
       sideBlur
-        ? Math.floor(viewportHeight * HERO_SIDE_BLUR_HEIGHT)
+        ? referenceHeight * HERO_SIDE_BLUR_HEIGHT
         : Math.round(naturalHeight),
     ),
   };
@@ -134,8 +140,9 @@ export function calculateLivingGuideUniformGalleryLayout({
     sortedHeights.length % 2 === 0
       ? (sortedHeights[middle - 1] + sortedHeights[middle]) / 2
       : sortedHeights[middle];
-  const minHeight = viewportHeight * HERO_GALLERY_MIN_HEIGHT;
-  const maxHeight = viewportHeight * HERO_GALLERY_MAX_HEIGHT;
+  const referenceHeight = containerWidth * DETAIL_REFERENCE_HEIGHT / DETAIL_REFERENCE_WIDTH;
+  const minHeight = referenceHeight * HERO_GALLERY_MIN_HEIGHT;
+  const maxHeight = referenceHeight * HERO_GALLERY_MAX_HEIGHT;
 
   return {
     naturalHeights,

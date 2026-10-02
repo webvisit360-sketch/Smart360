@@ -72,6 +72,7 @@ import {
   stableMediaAspect,
   nearestGalleryIndex,
   galleryImageLoading,
+  DETAIL_PHOTO_REVEAL_RATIO,
 } from "./living-guide-hero-layout";
 import "./living-guide-tokens.css";
 import "./living-guide-guest.css";
@@ -828,6 +829,7 @@ export default function LivingGuideGuestShell({
     detailHeroHeightLockRef.current?.location === location
       ? ({
           "--lg2-detail-hero-height": `${detailHeroHeightLockRef.current.height}px`,
+          "--lg2-detail-photo-reveal": `${Math.min(window.innerWidth, DETAIL_SHELL_MAX_WIDTH) * DETAIL_PHOTO_REVEAL_RATIO}px`,
         } as CSSProperties)
       : undefined;
   const detailSheetActive =
