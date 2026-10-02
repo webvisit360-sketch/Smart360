@@ -88,6 +88,8 @@ import {
 } from "../lib/tenantManagementMode";
 import { operatorDraftAfterWrite } from "../lib/publicationSafety";
 import { denyAuthorization } from "../lib/authorizationDenial";
+import { duplicateProject } from "../lib/duplicateProject";
+import { TenantDuplicateError } from "../lib/tenantCopyFiles";
 
 /** Public guest address for a slug (dev domain now, smart360.info later). */
 function serialize<T>(value: T): unknown {
@@ -1091,25 +1093,24 @@ router.delete("/admin/tenants/:id", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
+router.post("/admin/tenants/:id/duplicate", requireOperator, async (req, res): Promise<void> => {
   const id = firstParam(req.params["id"]);
   const parsed = DuplicateTenantBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  if (!tenantCopyIsEnabled()) {
-    res.status(409).json({
-      code: "TENANT_COPY_DISABLED",
-      error:
-        "Tenant copy is disabled until translations can be copied with the tenant.",
-    });
+  if (!parsed.data.name.trim() || parsed.data.name.length > 200) {
+    res.status(400).json({ error: "Vnesite ime (največ 200 znakov). Podvajanje vedno kopira celotno vsebino." });
     return;
   }
-  const { slug, name, copyContent } = parsed.data;
+  const { slug } = parsed.data;
+  const name = parsed.data.name.trim();
   const dupVerdict = await checkSlugAvailability(slug);
   if (!dupVerdict.available) {
-    res.status(409).json({ error: `slug ${dupVerdict.reason}` });
+    res.status(409).json({ error: dupVerdict.reason === "invalid_format"
+      ? "Slug mora imeti od 3 do 40 malih črk, številk ali vezajev; na začetku in koncu mora biti črka ali številka."
+      : dupVerdict.reason === "reserved" ? "Ta naslov je rezerviran. Izberite drug slug." : SLUG_TAKEN_MESSAGE });
     return;
   }
   const [source] = await db
@@ -1122,40 +1123,23 @@ router.post("/admin/tenants/:id/duplicate", async (req, res): Promise<void> => {
   }
   let created: typeof tenantsTable.$inferSelect;
   try {
-    created = await copyTenant(id, {
-      slug,
-      name,
-      copyContent: copyContent ?? true,
-    });
+    created = await duplicateProject(id, name, slug);
   } catch (error) {
     if (isSlugCollision(error)) {
       res.status(409).json({ error: SLUG_TAKEN_MESSAGE });
       return;
     }
-    if (error instanceof TenantCopyContentError) {
+    if (error instanceof TenantDuplicateError) {
       res.status(400).json({ code: "TENANT_COPY_CONTENT_BLOCKED", error: error.message });
       return;
     }
     throw error;
   }
   invalidateTenantCache(); // a public 404 may have been negatively cached for this slug
-  // Duplication hygiene: the copy must not inherit references to files that
-  // no longer exist or don't fit the field (e.g. opaque JPEG as transparent
-  // logo). Re-check everything against the CURRENT bucket and drop misses.
-  const dropped = await dropBrokenReferences(created.id);
-  await ensureTenantPublication(created.id);
-  const [fresh] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, created.id));
-  await logChange({
-    tenantId: created.id,
-    tenantName: name,
-    action: "duplicate",
-    entity: "tenant",
-    summary: `Ustvarjena je kopija nastanitve »${auditTenantName(name)}«.`,
-  });
   res.status(201).json(
     DuplicateTenantResponse.parse({
-      tenant: serialize(fresh ?? created),
-      dropped: dropped.map(({ field, label, url, reason, adminPath }) => ({ field, label, url, reason, adminPath })),
+      tenant: serialize(created),
+      dropped: [],
     }),
   );
 });

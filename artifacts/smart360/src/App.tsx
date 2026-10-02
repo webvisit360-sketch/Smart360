@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import splashMarkSvg from '../public/brand/smart360-kolobar-faceted.svg?raw';
+import splashMarkSvg from './assets/tour-summary/smart360-kolobar-faceted.svg?raw';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';

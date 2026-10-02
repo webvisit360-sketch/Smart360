@@ -1831,7 +1831,7 @@ paths:
     post:
       operationId: duplicateTenant
       tags: [tenants]
-      summary: Duplicate a tenant with its full section/category tree
+      summary: Operator-only complete draft copy with independent media; unpublished concierge project
       parameters:
         - name: id
           in: path
@@ -5142,10 +5142,11 @@ components:
       type: object
       properties:
         slug: { type: string }
-        name: { type: string }
+        name: { type: string, minLength: 1, maxLength: 200 }
         copyContent:
           type: boolean
-          description: Copy item contents too; false copies only the section/category structure
+          enum: [true]
+          description: Full content is always copied. False is rejected.
       required: [slug, name]
     TenantUpdate:
       type: object

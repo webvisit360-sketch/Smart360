@@ -62,21 +62,23 @@ export default function AdminDashboard() {
   const [newSlug, setNewSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [newType, setNewType] = useState<string>("apartmaji");
+  const [copySource, setCopySource] = useState<{ id: string; name: string } | null>(null);
+  const [copyName, setCopyName] = useState("");
+  const [copySlug, setCopySlug] = useState("");
+  const [copySlugTouched, setCopySlugTouched] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   const duplicateMutation = useDuplicateTenant({
     mutation: {
       onSuccess: (result) => {
         queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
-        // Duplication hygiene report: stale references were dropped on the
-        // server — tell the admin exactly what to re-upload in the copy.
-        if (result.dropped.length > 0) {
-          const lines = result.dropped.map(d =>
-            `• ${d.label} (${d.reason === "missing" ? "datoteka ne obstaja" : d.reason === "no_alpha" ? "logotip ni prosojen" : "napačna vrsta datoteke"})`
-          );
-          alert(`Kopija je ustvarjena kot osnutek.\n\nIzpuščene neveljavne reference (naložite znova):\n${lines.join("\n")}`);
-        }
-      }
+        queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/storage/usage"] });
+        setCopySource(null);
+        setLocation(`/admin/tenants/${result.tenant.id}`);
+      },
+      onError: (error: any) => setCopyError(error?.data?.error ?? error?.error ?? error?.message ?? "Podvajanje ni uspelo."),
     }
   });
 
@@ -414,15 +416,12 @@ export default function AdminDashboard() {
                             variant="ghost" 
                             size="sm"
                             onClick={() => {
-                              if(confirm('Želite podvojiti to namestitev?')) {
-                                duplicateMutation.mutate({ 
-                                  id: tenant.id,
-                                  data: { slug: `${tenant.slug}-copy`, name: `${tenant.name} (Kopija)`, copyContent: true }
-                                });
-                              }
+                              setCopySource({ id: tenant.id, name: tenant.name });
+                              setCopyName(""); setCopySlug(""); setCopySlugTouched(false);
+                              setCopyError(""); duplicateMutation.reset();
                             }}
                           >
-                            <Copy className="h-4 w-4" />
+                            <Copy className="h-4 w-4 mr-2" /> Podvoji
                           </Button>
                           {/* Brisanje namestitve namenoma NI v vsakodnevnem dosegu (pike-brisanje-ozadje.md):
                               en zgrešen klik uniči vsebino plačljive stranke. Ostane stikalo
@@ -437,6 +436,35 @@ export default function AdminDashboard() {
           )}
         </div>
 
+        <Dialog open={!!copySource} onOpenChange={open => { if (!open && !duplicateMutation.isPending) setCopySource(null); }}>
+          <DialogContent onInteractOutside={event => { if (duplicateMutation.isPending) event.preventDefault(); }}
+            onEscapeKeyDown={event => { if (duplicateMutation.isPending) event.preventDefault(); }}>
+            <DialogHeader>
+              <DialogTitle>Podvoji projekt</DialogTitle>
+              <DialogDescription>Kopija projekta »{copySource?.name}« bo neobjavljena, z ločenimi datotekami in brez računov gostiteljev. Kontakte, lokacijo in Wi-Fi nato uredite za novo nastanitev.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={event => {
+              event.preventDefault();
+              if (!copySource || duplicateMutation.isPending) return;
+              setCopyError("");
+              duplicateMutation.mutate({ id: copySource.id, data: { name: copyName.trim(), slug: copySlug, copyContent: true } });
+            }} className="space-y-4">
+              <div><Label htmlFor="copy-name">Ime novega projekta</Label>
+                <Input id="copy-name" required maxLength={200} disabled={duplicateMutation.isPending} value={copyName}
+                  onChange={event => { setCopyName(event.target.value); if (!copySlugTouched) setCopySlug(slugify(event.target.value)); }} /></div>
+              <div><Label htmlFor="copy-slug">Slug (naslov vodnika)</Label>
+                <Input id="copy-slug" required minLength={3} maxLength={40} pattern={"[a-z0-9][a-z0-9\\-]{1,38}[a-z0-9]"}
+                  disabled={duplicateMutation.isPending} value={copySlug}
+                  onChange={event => { setCopySlugTouched(true); setCopySlug(event.target.value); }} /></div>
+              {copyError && <p role="alert" className="text-sm text-amber-700">{copyError}</p>}
+              {duplicateMutation.isPending && <p role="status" className="flex items-center gap-2 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Kopiram vsebino in datoteke. Počakajte in ne zapirajte strani.</p>}
+              <DialogFooter>
+                <Button type="button" variant="outline" disabled={duplicateMutation.isPending} onClick={() => setCopySource(null)}>Prekliči</Button>
+                <Button type="submit" disabled={duplicateMutation.isPending || !copyName.trim()}>Podvoji</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
         {/* Storage + Recent Changes */}
         <div className="space-y-6">
           <Card>

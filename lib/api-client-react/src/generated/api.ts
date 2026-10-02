@@ -7748,7 +7748,7 @@ export const getDuplicateTenantUrl = (id: string,) => {
 }
 
 /**
- * @summary Duplicate a tenant with its full section/category tree
+ * @summary Operator-only complete draft copy with independent media; unpublished concierge project
  */
 export const duplicateTenant = async (id: string,
     tenantDuplicateInput: TenantDuplicateInput, options?: Parameters<typeof customFetch>[1]): Promise<DuplicateTenantResult> => {
@@ -7798,7 +7798,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DuplicateTenantMutationError = ErrorType<unknown>
 
     /**
- * @summary Duplicate a tenant with its full section/category tree
+ * @summary Operator-only complete draft copy with independent media; unpublished concierge project
  */
 export const useDuplicateTenant = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof duplicateTenant>>, TError,{id: string;data: BodyType<TenantDuplicateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

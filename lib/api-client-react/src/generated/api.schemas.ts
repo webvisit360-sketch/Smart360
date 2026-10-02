@@ -2509,9 +2509,13 @@ export interface TenantInput {
 
 export interface TenantDuplicateInput {
   slug: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
   name: string;
-  /** Copy item contents too; false copies only the section/category structure */
-  copyContent?: boolean;
+  /** Full content is always copied. False is rejected. */
+  copyContent?: true;
 }
 
 /**

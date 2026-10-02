@@ -1,5 +1,7 @@
 # Memory index
 
+- [Tenant duplication boundary](tenant-duplication-boundary.md) — operator-only exact draft copies; concierge reset, isolated files, synthetic-only verification, and honest crash-safety claims.
+
 - [Sticker print compatibility](sticker-print-compatibility.md) — rasterize only the trak at 600 dpi; two independent PDF engines must confirm it renders.
 
 - [Archivo print weights](archivo-print-weights.md) — generic Archivo.ttf is semibold, not regular; verify metadata for non-bold PDF copy.

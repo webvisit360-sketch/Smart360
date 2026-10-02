@@ -4914,16 +4914,20 @@ export const RevertDistanceReviewRowResponse = zod.object({
 
 
 /**
- * @summary Duplicate a tenant with its full section/category tree
+ * @summary Operator-only complete draft copy with independent media; unpublished concierge project
  */
 export const DuplicateTenantParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const duplicateTenantBodyNameMax = 200;
+
+
+
 export const DuplicateTenantBody = zod.object({
   "slug": zod.string(),
-  "name": zod.string(),
-  "copyContent": zod.boolean().optional().describe('Copy item contents too; false copies only the section\/category structure')
+  "name": zod.string().min(1).max(duplicateTenantBodyNameMax),
+  "copyContent": zod.literal(true).optional().describe('Full content is always copied. False is rejected.')
 })
 
 export const duplicateTenantResponseTenantOneTourRecordingEnabledDefault = false;

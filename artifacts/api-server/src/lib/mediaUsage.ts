@@ -1,4 +1,5 @@
 import { ObjectStorageService, objectStorageClient } from "./objectStorage.js";
+import { db, tenantsTable } from "@workspace/db";
 
 /**
  * Per-tenant media usage and soft-quota admission.
@@ -49,6 +50,19 @@ async function listUsage(): Promise<Map<string, number>> {
     if (!slug) continue;
     const size = Number(f.metadata.size ?? 0);
     bySlug.set(slug, (bySlug.get(slug) ?? 0) + size);
+  }
+  // GPX originals are private and tenant-id-scoped, but still consume the
+  // tenant's quota. Only this runtime's environment participates.
+  const environment = process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT ? "production" : "development";
+  const privatePath = parseObjectPath(`${storage.getPrivateObjectDir()}/gpx/${environment}/`);
+  const [gpxFiles] = await objectStorageClient.bucket(privatePath.bucketName)
+    .getFiles({ prefix: privatePath.objectName });
+  const tenants = await db.select({ id: tenantsTable.id, slug: tenantsTable.slug }).from(tenantsTable);
+  const slugById = new Map(tenants.map(t => [t.id, t.slug]));
+  for (const file of gpxFiles) {
+    const tenantId = file.name.slice(privatePath.objectName.length).split("/")[0];
+    const slug = slugById.get(tenantId);
+    if (slug) bySlug.set(slug, (bySlug.get(slug) ?? 0) + Number(file.metadata.size ?? 0));
   }
   return bySlug;
 }
