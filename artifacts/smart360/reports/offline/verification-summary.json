@@ -8,7 +8,7 @@
     "verifiedBy": "Screenshot helper waited for startup splash removal and checked elementFromPoint at banner horizontal center, y=10; resulting image opened and visually inspected",
     "latestTargetedRun": "SL banner/message test: 1 passed, 0 failed, 44.0 seconds; real transport cut remained active during capture",
     "otherBannerImages": "Previously saved EN/DE/IT banner screenshots were captured without splash readiness and must NOT be claimed as unobscured visual proof. Their computed-style/localization assertions remain evidence.",
-    "startupLogo": "Earlier uncached splash images were subsequently added to production worker essentials by the owner. Final GPX/free runs assert both /brand/smart360-znak-40.png and /brand/smart360-kolobar-temno.svg are cached and load with naturalWidth > 0 during the first transport-cut offline visit."
+    "startupLogo": "Historical transport-cut observations predate the canonical-only artwork cleanup. The old artwork and its evidence images have been removed; this record is not a current cache-file requirement. Current startup artwork uses the canonical faceted SVG."
   },
   "finalMapEvidence": {
     "gpx": "Full targeted GPX case passed (28.6s), including cold shell, actual canvas rendering, map marker, timer, exports and direct detail. The shell tool connection then terminated before free case completion/result aggregation.",

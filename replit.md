@@ -8,7 +8,7 @@ Smart360 trak = the kolobar unrolled (oranžna→modra→zelena→rumena, satura
 
 Edini vir znaka je smart360-kolobar-faceted.svg; vse rasterizacije izhajajo iz njega.
 
-Avtoritativni izvirnik je `artifacts/smart360/public/brand/smart360-kolobar-faceted.svg`, dobesedno izločen SVG znotraj `#splash .sm` iz lastnikovega prototipa Smart360-prototip-2030_1.html. Velja za celotno aplikacijo, e-pošto in izvoze, ne le za ikone domačega zaslona. Prejšnji `smart360-kolobar-temno.svg` je arhiviran in se ne uporablja za izris.
+Avtoritativni izvirnik je `artifacts/smart360/public/brand/smart360-kolobar-faceted.svg`, dobesedno izločen SVG znotraj `#splash .sm` iz lastnikovega prototipa Smart360-prototip-2030_1.html. Velja za celotno aplikacijo, e-pošto in izvoze, ne le za ikone domačega zaslona. Staro umetniško delo in njegove arhivske kopije so odstranjeni; generatorji uporabljajo samo ta fasetirani SVG.
 
 Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastanitev. Gost skenira QR kodo in vidi vse o nastanitvi in okolici — brez prijave. En sam operater (lastnik) ureja vse najemnike v admin vmesniku.
 

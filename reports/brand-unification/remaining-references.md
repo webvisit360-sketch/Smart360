@@ -5,17 +5,21 @@ Iskanje `kolobar-temno` po aktivnih mapah `artifacts/smart360/src`,
 `artifacts/api-server/src` in `artifacts/api-server/scripts`, brez testnih
 map `tests`, ne vrne nobenega zadetka.
 
-Razširjeno iskanje po repozitoriju, brez zgodovinskih prilog, poročil,
-posnetkov, odvisnosti, sestavljenih paketov, testov in arhivske
-dokumentacije, prav tako ne vrne nobenega zadetka.
+Staro umetniško delo je odstranjeno iz delovnega drevesa, vključno z
+javnim arhivom, dokazanimi zgodovinskimi kopijami in primerjalnimi slikami.
+Generatorji uporabljajo samo kanonični fasetirani SVG. Ime starega znaka
+v zgodovinskih besedilnih meritvah ni izrisovalni sklic.
 
 Preostali sklici v testih so namenoma:
 - negativni preverjanji, da izrisovalnik ture in generator e-pošte ne
-  uporabljata starega izvora;
-- kontrolna vsota zgodovinske kopije za primerjavo.
+  uporabljata starega izvora; ne potrebujeta stare datoteke.
 
-Stari javni SVG ostaja nespremenjen in označen v `public/brand/ARCHIVED.md`.
-Zgodovinska poročila niso aktivne poti izrisa.
+Zgodovinski vrednosti ostrine 180/192 px sta ohranjeni samo številčno.
+Dokumenti prototipov so ohranjeni; samo dokazano stari vdelani PNG je
+zamenjan s kanonično rasterizacijo. Kanonični izvirni SVG v prototipu ni
+spremenjen. Vseh 16 sprva negotovih slikovnih prilog je bilo dodatno
+vizualno pregledanih ob starem in kanoničnem znaku; potrjene stare
+slike so odstranjene. Podrobnosti so v `reports/artwork-cleanup.json`.
 
 Po ponovnem zagonu obeh aplikacij je javna prijavna stran v lokalnem
 Chromiumu vrnila HTTP 200; obrazec je viden, slike so dekodirane, napak

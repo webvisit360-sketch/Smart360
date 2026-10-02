@@ -25,9 +25,8 @@ test("generic marks and dark favicon derive from canonical vector at 4x Lanczos3
     ["ikona-smart360-192.png", 192, 142, 25, "#121a14"],
   ] as const) {
     const current = await readFile(new URL(filename, brand));
-    const previous = await readFile(new URL(filename, baseline));
-    const a = await sharp(current).metadata(), b = await sharp(previous).metadata();
-    assert.deepEqual([a.width, a.height], [b.width, b.height]);
+    const a = await sharp(current).metadata();
+    assert.deepEqual([a.width, a.height], [size, size]);
     assert.ok((await sharp(current).removeAlpha().raw().toBuffer()).equals(await render(size, markSize, offset, background)), filename);
   }
 });
@@ -36,9 +35,11 @@ test("wordmark-only blue logo and already-faceted home icons remain byte-identic
     assert.ok((await readFile(new URL(filename, brand))).equals(await readFile(new URL(filename, baseline))), filename);
   }
 });
-test("legacy email lockup preserves every pixel outside its mark square", async () => {
+test("legacy email lockup retains its dimensions and canonical mark square", async () => {
   const name = "smart360-email-lockup-558x138.png";
-  const old = await readFile(new URL(name, baseline)), current = await readFile(new URL(name, brand));
-  const crop = (buffer: Buffer) => sharp(buffer).extract({ left: 138, top: 0, width: 420, height: 138 }).raw().toBuffer();
-  assert.ok((await crop(old)).equals(await crop(current)));
+  const current = await readFile(new URL(name, brand));
+  const meta = await sharp(current).metadata();
+  assert.deepEqual([meta.width, meta.height], [558, 138]);
+  const mark = await sharp(current).extract({ left: 0, top: 0, width: 138, height: 138 }).removeAlpha().raw().toBuffer();
+  assert.ok(mark.equals(await render(138, 138, 0, "#ffffff")));
 });

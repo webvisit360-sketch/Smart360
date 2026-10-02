@@ -2234,3 +2234,59 @@ mtime_ms = 1790894982058
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/34c4f9ea-fa97-4e2b-b1fa-cf675ba2ca69/f334dd6f-d93b-49ab-9661-f8f237f8696a"
 storage_version_token = "1790914293648146"
 content_type = "text/html"
+
+[[outputs]]
+id = "ckJZEL5b70CzViIFJBUdN"
+uri = "file://reports/znak-final/gril-dobrodosli-samostojno.png"
+type = "image"
+title = "Celotna e-pošta — Dobrodošli"
+description = "Dejanska trenutna predloga s testnimi podatki, izris v brskalniku pri DPR 1 in 100 %. Fasetirani logotip prikazan pri 198 × 46 px. E-pošta ni bila poslana."
+logical_id = "60ec4b84-9698-4c9e-895d-c484c56b42fd"
+content_hash = "sha256:302d671d1408fa025e8bf3fda9edf4efc6f5b5a66ffcb03393897229dfdc2638"
+size = 101220
+mtime_ms = 1790915403291
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/60ec4b84-9698-4c9e-895d-c484c56b42fd/2c0afc29-7d36-4213-9e16-edc4339cd05b"
+storage_version_token = "1790916065333136"
+content_type = "image/png"
+
+[[outputs]]
+id = "oEGCBC7zRW2bXixUfNPUs"
+uri = "file://reports/znak-final/gril-vodnik-pripravljen-samostojno.png"
+type = "image"
+title = "Celotna e-pošta — Vodnik je pripravljen"
+description = "Celotna trenutna predloga, vključno z nogo in QR, pri 100 %. Vzorčni podatki; ne posnetek poštnega odjemalca."
+logical_id = "b9eac5af-9526-4984-83ba-e626a3d09002"
+content_hash = "sha256:0fb6d79e3f14fedbe5259bd634b81d813df4fccda0fdf8b9281b39b93bd481b8"
+size = 110155
+mtime_ms = 1790915403827
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b9eac5af-9526-4984-83ba-e626a3d09002/ee3513bc-ca5e-4f49-ad24-6ea68b12c8e9"
+storage_version_token = "1790916066240709"
+content_type = "image/png"
+
+[[outputs]]
+id = "SBAH4IhKICQtJwYBQD2Oh"
+uri = "file://reports/znak-final/map-export.png"
+type = "image"
+title = "Celotna tura — pravi zemljevid in 22 px trak"
+description = "Izvorni PNG 1080 × 1612 px s fasetiranim znakom v nogi in debelejšim trakom. Sintetična testna tura, pravi zemljevid."
+logical_id = "e00e2a6d-5d23-4fa7-9760-938a07e66cc2"
+content_hash = "sha256:080fad7d9a1db1dffefb16f484cbbaf9ca01bc6bde9dea5e2529ba46fe0bd4f8"
+size = 571330
+mtime_ms = 1790915715449
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e00e2a6d-5d23-4fa7-9760-938a07e66cc2/0ebb310c-d433-4b32-9e6c-3bd2bfe438ae"
+storage_version_token = "1790916067082376"
+content_type = "image/png"
+
+[[outputs]]
+id = "3z7oyQAezpDjV7x4bB-9B"
+uri = "file://reports/znak-final/owner-emails-native-100-percent.html"
+type = "html"
+title = "Vse štiri e-poštne predloge pri 100 %"
+description = "Dobrodošlica in pripravljen vodnik za oba načina upravljanja, brez zmanjševanja izvornih slik."
+logical_id = "3883f561-1518-4626-8b96-93a97332beef"
+content_hash = "sha256:8606ecea5a3db9555318dcd773620083eba8778a8f1ff5acca35560693299f47"
+size = 540825
+mtime_ms = 1790915404355
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3883f561-1518-4626-8b96-93a97332beef/72bcc5c1-8160-4c54-8764-21fd41d1f4d3"
+storage_version_token = "1790916067864150"
+content_type = "text/html"

@@ -1,0 +1,263 @@
+{
+  "scope": "Current working tree only; no git-history rewrite, dependency changes, database, publish or server restart.",
+  "canonicalSha256": "ca00d0eed25c2f3164105ecfa58617f51351e45dbc1648b28301ccbed8112eaa",
+  "deletedPaths": [
+    "artifacts/smart360/dist/public/brand/ikona-smart360-180.png",
+    "artifacts/smart360/dist/public/brand/ikona-smart360-192.png",
+    "artifacts/smart360/dist/public/brand/ikona-smart360-home-192.png",
+    "artifacts/smart360/dist/public/brand/smart360-email-header-138.png",
+    "artifacts/smart360/dist/public/brand/smart360-email-header-60.png",
+    "artifacts/smart360/dist/public/brand/smart360-email-lockup-558x138.png",
+    "artifacts/smart360/dist/public/brand/smart360-email-lockup-host-594x138.png",
+    "artifacts/smart360/dist/public/brand/smart360-kolobar-temno.svg",
+    "artifacts/smart360/dist/public/brand/smart360-znak-40.png",
+    "artifacts/smart360/public/brand/ARCHIVED.md",
+    "artifacts/smart360/public/brand/smart360-kolobar-temno.svg",
+    "artifacts/smart360/reports/tour-summary/desktop-1280-guided-sl.png",
+    "artifacts/smart360/reports/tour-summary/export-map-free-en-running.png",
+    "artifacts/smart360/reports/tour-summary/export-map-guided-de-cycling-kcal.png",
+    "artifacts/smart360/reports/tour-summary/export-map-guided-sl.png",
+    "artifacts/smart360/reports/tour-summary/export-schematic-blocked-it.png",
+    "artifacts/smart360/reports/tour-summary/mobile-390-guided-sl.png",
+    "artifacts/smart360/reports/tour-summary/mobile-390-posttour-final.png",
+    "artifacts/smart360/reports/tour-summary/mobile-390-posttour-v2.png",
+    "artifacts/smart360/reports/tour-summary/onscreen-preview-guided-sl.png",
+    "artifacts/smart360/reports/tour-summary/part2-evidence/en-post-tour-390.png",
+    "artifacts/smart360/reports/tour-summary/part2-evidence/en-share-unavailable-390.png",
+    "artifacts/smart360/reports/tour-summary/part2-evidence/sl-post-tour-390.png",
+    "artifacts/smart360/reports/tour-summary/part2-evidence/sl-share-unavailable-390.png",
+    "attached_assets/0_znak_1790106985954.png",
+    "attached_assets/Smart360-povprasevanje-namizje_1_1787894314826.png",
+    "attached_assets/Smart360-povprasevanje-telefon_1_1787894314824.png",
+    "attached_assets/Smart360-prijava-namizje_1_1787872268227.png",
+    "attached_assets/Smart360-prijava-telefon_1_1787872268227.png",
+    "attached_assets/admin2030_s1_1787895389011.png",
+    "attached_assets/admin2030_s3_1787895389011.png",
+    "attached_assets/admin2030_s4_1787895389010.png",
+    "attached_assets/admin2030_s5_1787983733590.png",
+    "attached_assets/admin2030_s6_1787983733590.png",
+    "attached_assets/icon-192_1787682823239.png",
+    "attached_assets/icon-192_1787682918917.png",
+    "attached_assets/mail_new_s_1787683351415.png",
+    "attached_assets/smart360-kolobar-temno_1787682918918.svg",
+    "attached_assets/smart360-kolobar-temno_2_1787682823239.svg",
+    "attached_assets/smart360-znak-40_1_1787683351417.png",
+    "attached_assets/w1440_s3_1788002851002.png",
+    "attached_assets/w1920_s1_1788002851002.png",
+    "attached_assets/w1920_s1_1_1788039435753.png",
+    "attached_assets/w1920_s3_1_1788002851002.png",
+    "attached_assets/w1920_s3_2_1788039435753.png",
+    "attached_assets/w1920_s6_1788002851002.png",
+    "reports/admin-shell-synthetic/events.png",
+    "reports/admin-shell-synthetic/offer.png",
+    "reports/admin-shell-synthetic/shell.png",
+    "reports/admin-tenant-appearance-desktop.png",
+    "reports/admin-tenant-host-form-draft-desktop.png",
+    "reports/admin-tenant-host-form-submitted-desktop.png",
+    "reports/announcements/home-dev.jpg",
+    "reports/brand-unification/before/brand/ikona-smart360-192.png",
+    "reports/brand-unification/before/brand/smart360-email-header-138.png",
+    "reports/brand-unification/before/brand/smart360-email-header-60.png",
+    "reports/brand-unification/before/brand/smart360-email-lockup-558x138.png",
+    "reports/brand-unification/before/brand/smart360-email-lockup-host-594x138.png",
+    "reports/brand-unification/before/brand/smart360-kolobar-temno.svg",
+    "reports/brand-unification/before/brand/smart360-znak-40.png",
+    "reports/brand-unification/before/frontend-favicon.html",
+    "reports/brand-unification/before/frontend-favicon.png",
+    "reports/brand-unification/before/frontend-header.html",
+    "reports/brand-unification/before/frontend-header.png",
+    "reports/brand-unification/before/frontend-login.html",
+    "reports/brand-unification/before/frontend-login.png",
+    "reports/brand-unification/before/frontend-splash.html",
+    "reports/brand-unification/before/frontend-splash.png",
+    "reports/brand-unification/before/smart360-email-lockup-host-594x138.png",
+    "reports/brand-unification/before/tour-summary/map-export.png",
+    "reports/brand-unification/before/tour-summary/map-footer.png",
+    "reports/brand-unification/before/tour-summary/map-preview.png",
+    "reports/brand-unification/before/tour-summary/original-svg.png",
+    "reports/brand-unification/before/tour-summary/schematic-export.png",
+    "reports/brand-unification/before/tour-summary/schematic-footer.png",
+    "reports/brand-unification/before/tour-summary/schematic-preview.png",
+    "reports/brand-unification/before/tour-summary/smart360-kolobar-temno.svg",
+    "reports/brand-unification/before/tour-summary/tour-summary-render.ts",
+    "reports/brand-unification/email-asset-preview.jpg",
+    "reports/brand-unification/email-before-after.html",
+    "reports/brand-unification/email-before-after.png",
+    "reports/brand-unification/porocilo.html",
+    "reports/gril-cgp-desktop.png",
+    "reports/gril-cgp-dialog-desktop.png",
+    "reports/gril-cgp-dialog-mobile.png",
+    "reports/gril-cgp-mobile.png",
+    "reports/gril-dobrodoslica-cgp.html",
+    "reports/gril-welcome-before.png",
+    "reports/host-brand-final-mobile.png",
+    "reports/host-brand-final.png",
+    "reports/screenshots/host-onboarding-mobile-header.png",
+    "reports/smart360-home-icon-180-before-supersampling.png",
+    "reports/smart360-home-icon-180-old-vs-new-4x-nearest.png",
+    "reports/smart360-home-icon-180-previous-66-supersampled.png",
+    "reports/smart360-home-icon-180-previous-66-vs-standard-74-4x-nearest.png",
+    "reports/smart360-login-cgp-header.jpg",
+    "reports/smart360-prefaceted-180.png",
+    "reports/smart360-prefaceted-192.png",
+    "reports/splash-layout/after/1280.png",
+    "reports/splash-layout/after/390.png",
+    "reports/splash-layout/after/430.png",
+    "reports/splash-layout/before/1280.png",
+    "reports/splash-layout/before/390.png",
+    "reports/splash-layout/before/430.png",
+    "reports/tagline/guest-de.png",
+    "reports/tagline/guest-en.png",
+    "reports/tagline/guest-it.png",
+    "reports/tagline/guest-sl.png",
+    "reports/tour-summary-strip/map-export.png",
+    "reports/tour-summary-strip/map-footer.png",
+    "reports/tour-summary-strip/map-preview.png",
+    "reports/tour-summary-strip/original-svg.png",
+    "reports/tour-summary-strip/schematic-export.png",
+    "reports/tour-summary-strip/schematic-footer.png",
+    "reports/tour-summary-strip/schematic-preview.png",
+    "reports/welcome-preview-desktop.png",
+    "reports/welcome-preview-mobile.png"
+  ],
+  "rewrittenCanonicalOnlyEvidence": [
+    "reports/smart360-faceted-comparison.html",
+    "reports/smart360-faceted-native-180.png",
+    "reports/smart360-faceted-native-192.png",
+    "reports/smart360-faceted-homescreen-illustrative-180.png",
+    "reports/smart360-faceted-homescreen-illustrative-192.png"
+  ],
+  "preservedDocumentsWithOnlyProvenOldEmbeddedPngReplaced": [
+    "attached_assets/Smart360-prototip-2030_1_1787811433659.html",
+    "attached_assets/Smart360-prototip-2030_1_1790892799958.html",
+    "attached_assets/Smart360-prototip-2030_2_1787830992564.html",
+    "attached_assets/Smart360-prototip-2030_5_1787893045915.html",
+    "attached_assets/emaili-gostitelju_2_1787683351417.html"
+  ],
+  "preservedUncertainAttachments": [],
+  "preservedUnrelated": "Other attachments/documents retained; historical text measurements and no-ring strip-only evidence retained. Current full emails, canonical before-name assets and all canonical after tour evidence retained.",
+  "scan": {
+    "filesScanned": 5566,
+    "embeddedImagesScanned": 6826,
+    "oldArtworkMatches": []
+  },
+  "scanLimitations": "Exact file and embedded-data SHA256 scan plus decoded-pixel/crop assessment. All 16 previously uncertain attachment screenshots now visually inspected and resolved; unrelated documents and no-mark assets remain preserved.",
+  "numericSharpnessBaselines": {
+    "180": 59.67260526995126,
+    "192": 59.78697133103046
+  },
+  "checks": [
+    "22 API brand/home-icon/email tests passed",
+    "Tour composer tests passed, including forbidden old-render-reference negative test",
+    "Canonical home-icon and generic-mark generators ran successfully",
+    "Canonical-only email/QR evidence generator ran successfully",
+    "Tour map/schematic capture passed with no failures; offline capture passed with zero network requests",
+    "Both canonical SVG hashes unchanged; App.tsx and index.css untouched; git diff --check passed",
+    "After resolving/deleting all 16 screenshot attachments: all 22 API brand/home-icon/email tests pass again; both canonical generator syntax checks and git diff --check pass; only two intentional negative old-name references remain in live source/tests."
+  ],
+  "renderReferences": "No old-name render references in live source or generators; the two negative tests intentionally forbid the old name without opening the deleted file.",
+  "resolvedAttachmentVisualInspection": {
+    "inspected": 16,
+    "deleted": 16,
+    "remainingUncertain": 0,
+    "method": "All 16 native-pixel logo crops inspected in a /tmp contact sheet beside known old SVG/raster and canonical SVG/raster. Full email screenshot additionally inspected and associated with its same-upload original email HTML using matching subject/preview/body and known old embedded PNG.",
+    "decisions": [
+      {
+        "path": "attached_assets/Smart360-povprasevanje-namizje_1_1787894314826.png",
+        "sha256": "e6697f9617ae7371ddd1b2309498ffe7ac81bfce808dd88a87fa2a5da3ddeb1b",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/Smart360-povprasevanje-telefon_1_1787894314824.png",
+        "sha256": "4aad051736ead1af0c16f7ebfe5ae15a5766966fec6117d1dd95a5e86be0c15c",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/Smart360-prijava-namizje_1_1787872268227.png",
+        "sha256": "513c53279da01a67f3ba095d381c9f900ff10e2e966d63205ab1928935c98a7a",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/Smart360-prijava-telefon_1_1787872268227.png",
+        "sha256": "58aa508594602d308df989cb359b63cb57e7bb19ba0d0a76abe06f667bc14e5f",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/admin2030_s1_1787895389011.png",
+        "sha256": "333b6349fd4eb8df8ff4eaaaef258323d970394dc6aa2c24cc0800e68676c920",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/admin2030_s3_1787895389011.png",
+        "sha256": "b88e0c8bdd13c82f898a93f82a1350cee7dd71797d51cc10a28bb9846276de03",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/admin2030_s4_1787895389010.png",
+        "sha256": "3f2af1cf017e990aacd06dcb03fdf5f578616e5cf9a222dda0e7eaf35b9f80fc",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/admin2030_s5_1787983733590.png",
+        "sha256": "e57f9ab94dd5866a04ed8f0e59036af55945278b672127da9e6e09878e2675fd",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/admin2030_s6_1787983733590.png",
+        "sha256": "3081e9d4d47176a16ebf7c7210a6b6d239f592e44aeb0a7f82636426afb7b633",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/mail_new_s_1787683351415.png",
+        "sha256": "80c60147563daf1ef15323b6cc57495bb12c071f835938668a58bbe32be1e462",
+        "decision": "delete",
+        "evidence": "Full screenshot visually inspected: exact subject, preview, heading, tenant and colored-strip layout match first email in same-upload historical emaili-gostitelju HTML, whose original embedded PNG is the proven old 4d2b8560 artwork. At 18x17px the icon alone is not decisive; source association establishes the old artwork."
+      },
+      {
+        "path": "attached_assets/w1440_s3_1788002851002.png",
+        "sha256": "02497969f586ba84dc9b9a2f311eceb2c191a218b7cca589443c4a38a2156e8d",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/w1920_s1_1788002851002.png",
+        "sha256": "2f0d450d7a353328be6ef77b69ba32a1099822e377fe4b49ad36ec3caa42ff55",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/w1920_s1_1_1788039435753.png",
+        "sha256": "57704363265a68696ab34139a3e8950613b4113c2203deaba749d258889438d2",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/w1920_s3_1_1788002851002.png",
+        "sha256": "7cc146eaa9f8b626f1b10bbcdb8cf405b04ef4f99c99350f3e7276483743d523",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/w1920_s3_2_1788039435753.png",
+        "sha256": "1821415e1e64d4e06e0396201d33523d8749d6db4794f67d6b972d5e6db9cf0c",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      },
+      {
+        "path": "attached_assets/w1920_s6_1788002851002.png",
+        "sha256": "a98971b13c66f80f91dda9fab915f0cac19a884267aa03fef5ff2ce655ef087d",
+        "decision": "delete",
+        "evidence": "Visually inspected enlarged native-pixel crop alongside both known-old SVG/raster and canonical SVG/raster: white-seamed fine facets and old thin blue-band treatment match old artwork, not canonical solid-facet mark."
+      }
+    ]
+  }
+}

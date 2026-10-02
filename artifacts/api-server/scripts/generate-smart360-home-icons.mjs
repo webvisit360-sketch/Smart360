@@ -3,8 +3,7 @@
 // downsampled only after compositing; larger icons retain their direct pipeline.
 // The checked-in canonical SVG is authoritative; never re-extract historical artwork.
 import assert from "node:assert/strict";
-import { readFile, mkdir, writeFile, copyFile } from "node:fs/promises";
-import { constants } from "node:fs";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import sharp from "sharp";
@@ -32,24 +31,7 @@ const sizes = [
     size, ratio: 0.66, maskable: true, filename: `ikona-smart360-maskable-${size}.png`,
   })),
 ];
-const baselinePath = path.join(reports, "smart360-home-icon-180-previous-66-supersampled.png");
-const comparisonPath = path.join(reports, "smart360-home-icon-180-previous-66-vs-standard-74-4x-nearest.png");
 await mkdir(reports, { recursive: true });
-for (const size of [180, 192]) {
-  const filename = size === 180 ? "ikona-smart360-180.png" : "ikona-smart360-home-192.png";
-  try {
-    await copyFile(path.join(brand, filename), path.join(reports, `smart360-prefaceted-${size}.png`), constants.COPYFILE_EXCL);
-  } catch (error) {
-    if (error.code !== "EEXIST") throw error;
-  }
-}
-// Capture the shipped 180px icon BEFORE writing any new icons; never replace
-// this comparison baseline on subsequent generator runs.
-try {
-  await copyFile(path.join(brand, "ikona-smart360-180.png"), baselinePath, constants.COPYFILE_EXCL);
-} catch (error) {
-  if (error.code !== "EEXIST") throw error;
-}
 const vectorMeta = await sharp(vector).metadata();
 assert.equal(vectorMeta.width, 1000, "Unexpected official vector intrinsic width");
 assert.equal(vectorMeta.height, 1000, "Unexpected official vector intrinsic height");
@@ -141,22 +123,6 @@ for (const size of [180, 512]) {
   await writeFile(path.join(reports, `smart360-home-icon-approval-${size}.png`),
     generated.get(`ikona-smart360-${size}.png`));
 }
-const old180 = await readFile(baselinePath);
-const enlargedOld = await sharp(old180).resize(720, 720, { kernel: "nearest" }).png().toBuffer();
-const enlargedNew = await sharp(generated.get("ikona-smart360-180.png")).resize(720, 720, { kernel: "nearest" }).png().toBuffer();
-const label = Buffer.from(`<svg width="1520" height="50" xmlns="http://www.w3.org/2000/svg"><text x="20" y="32" font-family="sans-serif" font-size="24" fill="#111">PREVIOUS — 66% supersampled</text><text x="780" y="32" font-family="sans-serif" font-size="24" fill="#111">NEW — 74% standard</text></svg>`);
-const comparison = await sharp({
-  create: { width: 1520, height: 790, channels: 3, background: white },
-}).composite([
-  { input: enlargedOld, left: 20, top: 50 },
-  { input: enlargedNew, left: 780, top: 50 },
-  { input: label, left: 0, top: 0 },
-]).removeAlpha().png().toBuffer();
-await writeFile(comparisonPath, comparison);
-for (const [panel, left] of [[enlargedOld, 20], [enlargedNew, 780]]) {
-  const cropped = await rgb(await sharp(comparison).extract({ left, top: 50, width: 720, height: 720 }).png().toBuffer());
-  assert.ok(cropped.data.equals((await rgb(panel)).data), "Comparison panel must be nearest-neighbor pixels without labels or other overlays");
-}
 const black = await sharp({
   create: { width: 1140, height: 560, channels: 3, background: "#000000" },
 }).png().toBuffer();
@@ -171,7 +137,7 @@ const sheet = await sharp({
   ]),
 ]).removeAlpha().png().toBuffer();
 await writeFile(path.join(reports, "smart360-home-icons-contact-sheet.png"), sheet);
-console.log("Verified 74% standard and 66% safe-zone maskable ink bounds, small 4x white-field Lanczos3 and large direct vector renders; saved approvals/contact sheet and previous-66/new-74 comparison.");
+console.log("Verified 74% standard and 66% safe-zone maskable ink bounds, small 4x white-field Lanczos3 and large direct vector renders; saved canonical-only approvals/contact sheet.");
 
 // Adjacent-pixel RGB contrast, weighted by edge magnitude: sum(d²)/sum(d).
 // Flat white contributes zero. Unlike raw Laplacian variance this is normalized
@@ -193,24 +159,25 @@ async function edgeContrast(buffer) {
 const sharpness = [];
 const evidenceRows = [];
 for (const size of [180, 192]) {
-  const before = await readFile(path.join(reports, `smart360-prefaceted-${size}.png`));
   const after = generated.get(size === 180 ? "ikona-smart360-180.png" : "ikona-smart360-home-192.png");
-  const oldScore = await edgeContrast(before), newScore = await edgeContrast(after);
+  // Recorded before deletion; numeric baseline only, not historical artwork.
+  const oldScore = size === 180 ? 59.67260526995126 : 59.78697133103046;
+  const newScore = await edgeContrast(after);
   sharpness.push({ size, oldScore, newScore, notSofter: newScore >= oldScore });
-  const label = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="45"><text x="20" y="28" font-family="sans-serif" font-size="16">OLD ${size}px (native)</text><text x="250" y="28" font-family="sans-serif" font-size="16">NEW ${size}px (native)</text></svg>`);
+  const label = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="45"><text x="20" y="28" font-family="sans-serif" font-size="16">Canonical faceted ${size}px (native)</text></svg>`);
   const native = await sharp({ create: { width: 460, height: size + 65, channels: 3, background: white } })
-    .composite([{ input: label, top: 0, left: 0 }, { input: before, top: 45, left: 20 }, { input: after, top: 45, left: 250 }])
+    .composite([{ input: label, top: 0, left: 0 }, { input: after, top: 45, left: 20 }])
     .removeAlpha().png().toBuffer();
   await writeFile(path.join(reports, `smart360-faceted-native-${size}.png`), native);
   // Native pixels above are never scaled; separate 60px mock launcher views
   // deliberately use normal Lanczos3 scaling, without sharpening.
-  const tiles = await Promise.all([before, after].map(b => sharp(b).resize(60, 60, { kernel: "lanczos3" }).png().toBuffer()));
-  const caption = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="180"><g font-family="sans-serif" fill="#111" text-anchor="middle"><text x="300" y="20" font-size="13">Illustrative home-screen scale · ${size}px source · NOT OS screenshots</text><text x="80" y="48">OLD</text><text x="220" y="48">NEW</text><text x="380" y="48">OLD</text><text x="520" y="48">NEW</text><text x="80" y="143">Turizem Drobež</text><text x="220" y="143">Turizem Drobež</text><text x="380" y="143">Meli Pu</text><text x="520" y="143">Meli Pu</text><text x="300" y="171" font-size="12">Shared Smart360 artwork; tenant labels only differ.</text></g></svg>`);
+  const tile = await sharp(after).resize(60, 60, { kernel: "lanczos3" }).png().toBuffer();
+  const caption = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="180"><g font-family="sans-serif" fill="#111" text-anchor="middle"><text x="300" y="20" font-size="13">Illustrative home-screen scale · ${size}px source · NOT OS screenshots</text><text x="150" y="143">Turizem Drobež</text><text x="450" y="143">Meli Pu</text><text x="300" y="171" font-size="12">Shared canonical artwork; tenant labels only differ.</text></g></svg>`);
   const launcher = await sharp({ create: { width: 600, height: 180, channels: 3, background: "#e7edf3" } })
-    .composite([{ input: caption, top: 0, left: 0 }, ...[50, 190, 350, 490].map((left, i) => ({ input: tiles[i % 2], top: 60, left }))])
+    .composite([{ input: caption, top: 0, left: 0 }, ...[120, 420].map(left => ({ input: tile, top: 60, left }))])
     .removeAlpha().png().toBuffer();
   await writeFile(path.join(reports, `smart360-faceted-homescreen-illustrative-${size}.png`), launcher);
-  evidenceRows.push(`<h2>${size}px sources</h2><img width="460" height="${size + 65}" alt="Old and new native ${size}px icons at 100%" src="data:image/png;base64,${native.toString("base64")}"><br><img width="600" height="180" alt="Illustrative home-screen scale; not actual OS screenshots" src="data:image/png;base64,${launcher.toString("base64")}">`);
+  evidenceRows.push(`<h2>${size}px source</h2><img width="460" height="${size + 65}" alt="Canonical native ${size}px icon at 100%" src="data:image/png;base64,${native.toString("base64")}"><br><img width="600" height="180" alt="Illustrative home-screen scale; not actual OS screenshots" src="data:image/png;base64,${launcher.toString("base64")}">`);
 }
 const report = {
   source: path.relative(root, prototypePath), selector: "canonical file", sha256: createHash("sha256").update(vector).digest("hex"),
@@ -219,6 +186,6 @@ const report = {
   sharpness,
 };
 await writeFile(path.join(reports, "smart360-faceted-validation.json"), JSON.stringify(report, null, 2) + "\n");
-await writeFile(path.join(reports, "smart360-faceted-comparison.html"), `<!doctype html><html lang="en"><meta charset="utf-8"><title>Smart360 faceted icon comparison</title><style>body{font:16px system-ui;margin:24px;background:#fafafa;color:#17212d}img{max-width:none}pre{white-space:pre-wrap;max-width:900px}</style><h1>Smart360: old vs faceted prototype artwork</h1><p>Native PNG panels: 100%, one image pixel per CSS pixel at browser zoom 100%. Home-screen views: illustrative 60 CSS px, NOT actual iOS/Android screenshots. No sharpening applied. Turizem Drobež and Meli Pu use the same Smart360 icon with different labels.</p>${evidenceRows.join("")}<h2>Quantitative validation</h2><pre>${JSON.stringify(report, null, 2)}</pre></html>`);
+await writeFile(path.join(reports, "smart360-faceted-comparison.html"), `<!doctype html><html lang="en"><meta charset="utf-8"><title>Smart360 canonical faceted icons</title><style>body{font:16px system-ui;margin:24px;background:#fafafa;color:#17212d}img{max-width:none}pre{white-space:pre-wrap;max-width:900px}</style><h1>Smart360: canonical faceted artwork only</h1><p>Native PNG panels: 100%, one image pixel per CSS pixel at browser zoom 100%. Home-screen views: illustrative 60 CSS px, NOT actual iOS/Android screenshots. No sharpening applied. Turizem Drobež and Meli Pu use the same Smart360 icon with different labels. Historical sharpness survives only as numeric measurements.</p>${evidenceRows.join("")}<h2>Quantitative validation</h2><pre>${JSON.stringify(report, null, 2)}</pre></html>`);
 console.log(JSON.stringify(report, null, 2));
 assert.ok(sharpness.every(s => s.notSofter), "Faceted edge-contrast regression; actual scores saved without adjustment in reports/smart360-faceted-validation.json");

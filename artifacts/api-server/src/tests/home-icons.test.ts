@@ -33,16 +33,6 @@ test("faceted vector is the exact verbatim splash artwork, not the old gradient 
   }
 });
 
-test("archived original and both pre-faceted baselines remain byte-identical", async () => {
-  for (const [base, filename, hash] of [
-    [reports, "brand-unification/before/brand/smart360-kolobar-temno.svg", "a9fa1661427a9af1d0c5542bacfc664b70541df6458131fd9f0a157a47e8c4be"],
-    [reports, "smart360-prefaceted-180.png", "485f05c8a0bb1a39f62d8a2d3da6250bb77bfa64c0f610b180aa9360696cbffb"],
-    [reports, "smart360-prefaceted-192.png", "8bc7c5d10b2ae8c0fb452769cfa797d25417ba5ed214d7c5552ffc7a74ac9f72"],
-  ] as const) {
-    assert.equal(createHash("sha256").update(await readFile(new URL(filename, base))).digest("hex"), hash, filename);
-  }
-});
-
 test("home-screen icons render the authoritative faceted vector on opaque white", async (t) => {
   const markup = svg.toString();
   assert.match(markup, /viewBox="0 0 1000 1000"/);
@@ -121,22 +111,6 @@ test("home-screen icons render the authoritative faceted vector on opaque white"
   }
 });
 
-test("180px before/after comparison uses exact 4x nearest-neighbor pixels", async () => {
-  const before = await readFile(new URL("smart360-home-icon-180-previous-66-supersampled.png", reports));
-  const after = await readFile(new URL("ikona-smart360-180.png", brand));
-  assert.ok(!before.equals(after), "the supersampled 66% 180px approval must remain intact");
-  const comparison = await readFile(new URL("smart360-home-icon-180-previous-66-vs-standard-74-4x-nearest.png", reports));
-  const comparisonMeta = await sharp(comparison).metadata();
-  assert.equal(comparisonMeta.width, 1520);
-  assert.equal(comparisonMeta.height, 790);
-  for (const [source, left] of [[before, 20], [after, 780]] as const) {
-    const expected = await sharp(source).resize(720, 720, { kernel: "nearest" }).removeAlpha().raw().toBuffer();
-    const panel = await sharp(comparison).extract({ left, top: 50, width: 720, height: 720 })
-      .removeAlpha().raw().toBuffer();
-    assert.ok(panel.equals(expected), "panel pixels must be an exact nearest-neighbor enlargement");
-  }
-});
-
 test("source platform manifest separates standard and maskable icon assets", async () => {
   const manifest = JSON.parse(await readFile(new URL("../../../smart360/public/manifest.webmanifest", import.meta.url), "utf8")) as {
     icons: { src: string; sizes: string; purpose: string }[];
@@ -163,13 +137,13 @@ async function edgeContrast(buffer: Buffer) {
   return energy / mass;
 }
 
-test("native edge contrast is not softer than preserved old icons; blur negative control", async () => {
+test("native edge contrast meets recorded historical metric; blur negative control", async () => {
   const report = JSON.parse(await readFile(new URL("smart360-faceted-validation.json", reports), "utf8"));
   for (const size of [180, 192]) {
-    const before = await readFile(new URL(`smart360-prefaceted-${size}.png`, reports));
     const after = await readFile(new URL(size === 180 ? "ikona-smart360-180.png" : "ikona-smart360-home-192.png", brand));
-    assert.ok(!before.equals(after), "old artwork must be preserved independently");
-    const oldScore = await edgeContrast(before), newScore = await edgeContrast(after);
+    // Historical measurements survive as numbers, never as deleted artwork.
+    const oldScore = size === 180 ? 59.67260526995126 : 59.78697133103046;
+    const newScore = await edgeContrast(after);
     const stored = report.sharpness.find((s: { size: number }) => s.size === size);
     assert.ok(Math.abs(stored.oldScore - oldScore) < 1e-9);
     assert.ok(Math.abs(stored.newScore - newScore) < 1e-9);
@@ -179,12 +153,11 @@ test("native edge contrast is not softer than preserved old icons; blur negative
   }
 });
 
-test("native evidence retains unscaled old/new pixels and HTML is self-contained", async () => {
+test("native evidence retains unscaled canonical pixels and HTML is self-contained", async () => {
   for (const size of [180, 192]) {
     const comparison = await readFile(new URL(`smart360-faceted-native-${size}.png`, reports));
     for (const [file, base, left] of [
-      [`smart360-prefaceted-${size}.png`, reports, 20],
-      [size === 180 ? "ikona-smart360-180.png" : "ikona-smart360-home-192.png", brand, 250],
+      [size === 180 ? "ikona-smart360-180.png" : "ikona-smart360-home-192.png", brand, 20],
     ] as const) {
       const source = await sharp(await readFile(new URL(file, base))).removeAlpha().raw().toBuffer();
       const crop = await sharp(comparison).extract({ left, top: 45, width: size, height: size }).removeAlpha().raw().toBuffer();

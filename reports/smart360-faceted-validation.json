@@ -1,6 +1,6 @@
 {
-  "source": "attached_assets/Smart360-prototip-2030_1_1790892799958.html",
-  "selector": "#splash .sm svg",
+  "source": "artifacts/smart360/public/brand/smart360-kolobar-faceted.svg",
+  "selector": "canonical file",
   "sha256": "ca00d0eed25c2f3164105ecfa58617f51351e45dbc1648b28301ccbed8112eaa",
   "bytes": 17603,
   "pathCount": 72,

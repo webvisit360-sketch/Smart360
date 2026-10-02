@@ -1,0 +1,198 @@
+{
+  "generatedAt": "2026-10-02T04:30:04.354Z",
+  "evidence": "Complete CURRENT production-renderer templates with explicitly labelled offline fixture data, not sent emails or mail-client screenshots.",
+  "generation": "Existing generate-owner-email-previews.ts executed with evidence-only destination changes, no historical writes, no header crops, and native-size measurements.",
+  "rendererChanges": "None. Preview-only replacements inline the exact current faceted lockup PNG and Archivo font for self-contained HTML.",
+  "capture": "Chromium, viewport 720x1000 CSS px, DPR 1, visualViewport scale 1, no zoom or CSS transform, fullPage true, no image resizing.",
+  "safety": "No delivery functions invoked; network fetch and pg Pool connect/query forbidden; Chromium HTTP(S) requests aborted. No database reads/writes.",
+  "lockup": {
+    "sourcePixels": "594x138",
+    "displayedCssPixels": "198x46",
+    "sourceUrl": "https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1",
+    "titleGapCssPixels": 48
+  },
+  "sources": [
+    {
+      "file": "artifacts/api-server/scripts/generate-owner-email-previews.ts",
+      "sha256": "d9ec84ed1996a3953a9f2ba7af53806a1e904f37c0f7a2b5ac3c2593261da3c6"
+    },
+    {
+      "file": "artifacts/api-server/scripts/generate-email-header-marks.mjs",
+      "sha256": "e82a63ab9116c3069c4d3b84d5b35d6e2ebca7fdedf81e03801ddd480097f442"
+    },
+    {
+      "file": "artifacts/api-server/src/lib/lifecycleEmails.ts",
+      "sha256": "acf7c8200a115df1ddbbb20958cbb13fce97ec64fc7af92ca9f1bd8f7111733c"
+    },
+    {
+      "file": "artifacts/api-server/src/lib/conciergeWelcomeEmail.ts",
+      "sha256": "cca8ee8146e052f8fc28bc9a032ba85578585d70bb07be123cccb49088d9d28f"
+    },
+    {
+      "file": "artifacts/api-server/src/lib/guideReadyNotice.ts",
+      "sha256": "5be60e40175695b7c772c1dd9bd1aab20df2f93ccfc2abadc0010f5db84e2c2d"
+    },
+    {
+      "file": "artifacts/api-server/src/lib/emailTemplate.ts",
+      "sha256": "5903ead9e505987fe8080cdc06593b344da791fa52c948fa3dc08332cea190ee"
+    },
+    {
+      "file": "artifacts/smart360/public/brand/smart360-kolobar-faceted.svg",
+      "sha256": "ca00d0eed25c2f3164105ecfa58617f51351e45dbc1648b28301ccbed8112eaa"
+    },
+    {
+      "file": "artifacts/smart360/public/brand/smart360-email-lockup-host-594x138.png",
+      "sha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5"
+    },
+    {
+      "file": "artifacts/api-server/assets/Archivo.ttf",
+      "sha256": "0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053"
+    }
+  ],
+  "cases": [
+    {
+      "name": "gril-dobrodosli-samostojno",
+      "mode": "self_service",
+      "stage": "welcome",
+      "renderer": "buildWelcomeEmailBody",
+      "fixture": {
+        "to": "preview-recipient@example.invalid",
+        "propertyName": "Apartmaji Gril",
+        "setPasswordUrl": "https://preview.invalid/disabled-example-not-a-real-link",
+        "from": "Smart360 <info@webvisit360.com>"
+      },
+      "htmlFile": "gril-dobrodosli-samostojno.html",
+      "pngFile": "gril-dobrodosli-samostojno.png",
+      "fullPngDimensions": {
+        "width": 720,
+        "height": 1000
+      },
+      "measurements": {
+        "width": 198,
+        "height": 46,
+        "naturalWidth": 594,
+        "naturalHeight": 138,
+        "gap": 48,
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentWidth": 720,
+        "documentHeight": 1000,
+        "viewportWidth": 720,
+        "footerBottom": 788.875,
+        "imageSourcesAreInline": true,
+        "fontLoaded": true,
+        "browserUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/138.0.0.0 Safari/537.36"
+      },
+      "htmlSha256": "5fb81bf36503e7718e818a4e4f683dd91fe36771e11329d560a34d64a9d04960",
+      "pngSha256": "302d671d1408fa025e8bf3fda9edf4efc6f5b5a66ffcb03393897229dfdc2638"
+    },
+    {
+      "name": "gril-dobrodosli-ureja-smart360",
+      "mode": "concierge",
+      "stage": "welcome",
+      "renderer": "renderConciergeWelcomeEmail",
+      "fixture": {
+        "tenantName": "Apartmaji Gril",
+        "guideUrl": "https://preview.invalid/disabled-example-not-a-real-link"
+      },
+      "htmlFile": "gril-dobrodosli-ureja-smart360.html",
+      "pngFile": "gril-dobrodosli-ureja-smart360.png",
+      "fullPngDimensions": {
+        "width": 720,
+        "height": 1000
+      },
+      "measurements": {
+        "width": 198,
+        "height": 46,
+        "naturalWidth": 594,
+        "naturalHeight": 138,
+        "gap": 48,
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentWidth": 720,
+        "documentHeight": 1000,
+        "viewportWidth": 720,
+        "footerBottom": 730.25,
+        "imageSourcesAreInline": true,
+        "fontLoaded": true,
+        "browserUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/138.0.0.0 Safari/537.36"
+      },
+      "htmlSha256": "1eb5c2c5265d3f47986ced63badeda645fdae47dfe7a505a720aeef972ddbe35",
+      "pngSha256": "ab49ed131e0dcd35f2dbb62474a9ab0ead43c81d0f6afc8dd298d4ae0ad15670"
+    },
+    {
+      "name": "gril-vodnik-pripravljen-samostojno",
+      "mode": "self_service",
+      "stage": "guide-ready",
+      "renderer": "renderReadyNotice",
+      "fixture": {
+        "tenantName": "Piknik prostor in kamp Gril",
+        "slug": "glamping-gril",
+        "guideUrl": "https://smart360.info/glamping-gril",
+        "mode": "self_service"
+      },
+      "qrInlining": "data (same renderer; delivered email uses CID attachment)",
+      "htmlFile": "gril-vodnik-pripravljen-samostojno.html",
+      "pngFile": "gril-vodnik-pripravljen-samostojno.png",
+      "fullPngDimensions": {
+        "width": 720,
+        "height": 1171
+      },
+      "measurements": {
+        "width": 198,
+        "height": 46,
+        "naturalWidth": 594,
+        "naturalHeight": 138,
+        "gap": 48,
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentWidth": 720,
+        "documentHeight": 1171,
+        "viewportWidth": 720,
+        "footerBottom": 1126.40625,
+        "imageSourcesAreInline": true,
+        "fontLoaded": true,
+        "browserUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/138.0.0.0 Safari/537.36"
+      },
+      "htmlSha256": "d024a7a921c43f93a0ffd3dcaaf5027c49b42926b5893cfc55381fc38b5f442c",
+      "pngSha256": "0fb6d79e3f14fedbe5259bd634b81d813df4fccda0fdf8b9281b39b93bd481b8"
+    },
+    {
+      "name": "gril-vodnik-pripravljen-ureja-smart360",
+      "mode": "concierge",
+      "stage": "guide-ready",
+      "renderer": "renderReadyNotice",
+      "fixture": {
+        "tenantName": "Piknik prostor in kamp Gril",
+        "slug": "glamping-gril",
+        "guideUrl": "https://smart360.info/glamping-gril",
+        "mode": "concierge"
+      },
+      "qrInlining": "data (same renderer; delivered email uses CID attachment)",
+      "htmlFile": "gril-vodnik-pripravljen-ureja-smart360.html",
+      "pngFile": "gril-vodnik-pripravljen-ureja-smart360.png",
+      "fullPngDimensions": {
+        "width": 720,
+        "height": 1071
+      },
+      "measurements": {
+        "width": 198,
+        "height": 46,
+        "naturalWidth": 594,
+        "naturalHeight": 138,
+        "gap": 48,
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentWidth": 720,
+        "documentHeight": 1071,
+        "viewportWidth": 720,
+        "footerBottom": 1025.8125,
+        "imageSourcesAreInline": true,
+        "fontLoaded": true,
+        "browserUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/138.0.0.0 Safari/537.36"
+      },
+      "htmlSha256": "d1ec32e07d77a1ace19aa828457172efdaf50e3efd6cb0a37667d34016bdab00",
+      "pngSha256": "804f62cfcabb49cbb1a1090fa25d0fdcaf3f918b691f2131e5532ada7850aa46"
+    }
+  ]
+}

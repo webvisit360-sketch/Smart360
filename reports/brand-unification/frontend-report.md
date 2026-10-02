@@ -1,3 +1,12 @@
+# Historical report notice
+
+This report records the earlier migration, not a runnable baseline contract.
+Old-artwork screenshots, embedded comparisons and old brand inputs referenced
+below have since been deleted at the owner's request. Current generators use
+only canonical artwork; tests retain numeric dimensions/sharpness instead of
+requiring those deleted files. See `reports/artwork-cleanup.json` for the
+exhaustive deletion inventory and current checks.
+
 # Frontend artwork unification
 
 ## Scope and preservation

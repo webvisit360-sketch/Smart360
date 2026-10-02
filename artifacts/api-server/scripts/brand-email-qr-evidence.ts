@@ -17,29 +17,23 @@ import { makeReadySticker } from "../src/lib/guideReadyNotice";
 const root = resolve(import.meta.dirname, "../../..");
 const out = resolve(root, "reports/brand-unification");
 await mkdir(out, { recursive: true });
-const before = await readFile(resolve(out, "before/smart360-email-lockup-host-594x138.png"));
 const after = await readFile(resolve(root, "artifacts/smart360/public/brand/smart360-email-lockup-host-594x138.png"));
 const measurements = [];
-for (const [name, bytes] of [["before", before], ["after", after]] as const) {
+for (const [name, bytes] of [["canonical", after]] as const) {
   const m = await sharp(bytes).metadata();
   assert.equal(m.width, 594);
   assert.equal(m.height, 138);
   assert.equal(m.channels, 3);
   measurements.push({ name, width: m.width, height: m.height, channels: m.channels, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") });
 }
-// Wordmark starts at 174px (46px symbol + 12px gap, at 3x).
-// Exclude the symbol's Lanczos resampling halo from this exact-pixel check.
-const wordmark = async (bytes: Buffer) => sharp(bytes).extract({ left: 174, top: 0, width: 420, height: 138 }).raw().toBuffer();
-assert.deepEqual(await wordmark(before), await wordmark(after));
-assert.notDeepEqual(before, after);
-const html = `<!doctype html><meta charset="utf-8"><title>Email artwork comparison</title><body style="background:white;font:16px Arial;padding:32px"><h1>Email artwork only</h1>${[["Before", before], ["After", after]].map(([label, data]) => `<h2>${label} · displayed 198 × 46</h2><img width="198" height="46" src="data:image/png;base64,${(data as Buffer).toString("base64")}"><h3>Native 594 × 138</h3><img width="594" height="138" src="data:image/png;base64,${(data as Buffer).toString("base64")}">`).join("")}</body>`;
-await writeFile(resolve(out, "email-before-after.html"), html);
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || "/usr/bin/chromium", args: ["--no-sandbox"] });
+const html = `<!doctype html><meta charset="utf-8"><title>Canonical email artwork</title><body style="background:white;font:16px Arial;padding:32px"><h1>Canonical faceted email artwork only</h1><h2>Displayed 198 × 46</h2><img width="198" height="46" src="data:image/png;base64,${after.toString("base64")}"><h3>Native 594 × 138</h3><img width="594" height="138" src="data:image/png;base64,${after.toString("base64")}"></body>`;
+await writeFile(resolve(out, "email-canonical.html"), html);
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || execFileSync("which", ["chromium"], { encoding: "utf8" }).trim(), args: ["--no-sandbox"] });
 try {
   const page = await browser.newPage({ viewport: { width: 800, height: 720 }, deviceScaleFactor: 1 });
   await page.setContent(html);
   await page.locator("img").evaluateAll(images => Promise.all(images.map(image => (image as HTMLImageElement).decode())));
-  await page.screenshot({ path: resolve(out, "email-before-after.png"), fullPage: true });
+  await page.screenshot({ path: resolve(out, "email-canonical.png"), fullPage: true });
 } finally { await browser.close(); }
 
 // Execute the actual existing admin label drawing body, substituting only its
@@ -78,10 +72,10 @@ for (const kind of ["admin-label", "ready-sticker"]) {
   assert.deepEqual(await readFile(resolve(out, `qr-${kind}-before.png`)), await readFile(resolve(out, `qr-${kind}-after.png`)));
 }
 await writeFile(resolve(out, "email-qr-measurements.json"), JSON.stringify({
-  email: measurements, display: [198, 46], unchangedWordmarkPixels: true,
+  email: measurements, display: [198, 46],
   qrArtwork: "Not applicable: admin A6 label uses text-only Archivo800 SMART360; ready sticker has no platform mark.",
   qrRenderedBeforeAfterIdentical: true,
   fixture: "Isolated example.invalid tenant; actual current generator executed twice because production QR code is unchanged. No historical PDF claim.",
   sideEffects: "No DB, auth, send or publish",
 }, null, 2));
-console.log("Email byte metadata, unchanged wordmark pixels, native/display comparison and actual QR generator fixtures verified.");
+console.log("Canonical email byte metadata, native/display artwork and actual QR generator fixtures verified.");
