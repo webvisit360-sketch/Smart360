@@ -1,0 +1,13 @@
+New operator-only feature: DUPLICATE PROJECT (tenant). The operator picks an existing tenant, saves a copy under a new name, then edits it as a fresh project. First real use: cloning Turizem Drobež as the starting point for a new tenant "Kamp Savinja" — but build it generically, Frenk will run it himself.
+
+1. UI: in the operator admin tenant list, add a "Podvoji" action. Dialog asks for the new tenant NAME and SLUG (validated unique, same rules as tenant creation). Operator-only in both management modes — hosts must never see or reach it (server-enforced, not just hidden).
+
+2. WHAT IS COPIED (content template): all sections and entries with texts in all four languages, layouts and section keys, event schedules (Termini), tours including GPX payloads, offer with prices, appearance/theme, guest-facing settings (coords, contacts, Wi-Fi, house rules — the operator edits them afterwards). MEDIA FILES ARE PHYSICALLY DUPLICATED into the new tenant's own storage: the copy must never reference the original tenant's files, so deleting media in either tenant cannot break the other. The copy counts against the NEW tenant's media quota; if quota would be exceeded, refuse the whole duplication upfront with a clear message (no partial copy).
+
+3. WHAT IS NOT COPIED / RESET: no published snapshot — the new tenant starts UNPUBLISHED and invisible until the operator publishes (Zakon 1); no messages, orders, announcements, recorded guest tours; no host accounts; management mode resets to the default concierge mode; subscription fields, renewsAt, rating/reviewsCount, slug redirects, isTemplate are NOT inherited.
+
+4. SAFETY: duplication is strictly READ-ONLY on the source tenant — it must not modify the original in any way. The operation is atomic: on any failure, roll back completely, never leave a half-copied tenant. Long copies (media) show progress or at least a busy state in the UI.
+
+5. TESTS: in DEV, duplicate a synthetic tenant and verify counts match (sections, entries, tours, media files, bytes), verify the copy is unpublished and unreachable publicly, verify file independence (delete a media file in the copy, original intact — and vice versa), verify a host account of the source cannot trigger or access duplication. Clean up all synthetic tenants and prove zero remaining. Do not run duplication against production tenants.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
