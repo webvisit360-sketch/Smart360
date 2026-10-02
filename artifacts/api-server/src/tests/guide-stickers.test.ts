@@ -84,8 +84,11 @@ test("both PDFs have one RGB strip, vector text/QR, exact geometry, and decode a
         assert.equal(layout.qr.quietModules, 4);
         assert.equal([...raw.matchAll(/\/Subtype \/Image\b/g)].length, 1);
         assert.doesNotMatch(raw, /\/Shading/);
-        assert.doesNotMatch(raw, /\/SMask|\/DCTDecode/);
+        assert.doesNotMatch(raw, /\/SMask|\/DCTDecode|\/Transparency|\/Group\b|\/DeviceN|\/Mask\b/);
         assert.match(raw, /\/ColorSpace \/DeviceRGB/);
+        assert.match(raw, /\/DefaultRGB \[\/ICCBased \d+ 0 R\]/);
+        assert.match(raw, /\/OutputIntents/);
+        assert.match(raw, /\/OutputConditionIdentifier \(sRGB IEC61966-2\.1\)/);
         const streams = [...raw.matchAll(/<<(.*?)>>\s*stream\r?\n([\s\S]*?)\r?\nendstream/gs)]
           .filter((match) => /\/FlateDecode/.test(match[1]) && !/\/Subtype \/Image/.test(match[1]))
           .map((match) => inflateSync(Buffer.from(match[2], "latin1")).toString("latin1"));

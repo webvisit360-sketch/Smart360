@@ -74,6 +74,8 @@ function signaturePng(size: GuideStickerSize): Promise<Buffer> {
   }
   for (let y = 1; y < height; y++) pixels.copy(pixels, y * width * 3, 0, width * 3);
   const encoded = sharp(pixels, { raw: { width, height, channels: 3 } })
+    .flatten({ background: "#FFFFFF" }).removeAlpha()
+    .withIccProfile("srgb")
     .png({ palette: false }).toBuffer().catch((error) => {
       signaturePngs.delete(size);
       throw error;
@@ -229,6 +231,25 @@ export async function makeGuideSticker(name: string, url: string, size: GuideSti
   });
   await registerFonts(doc);
   const signature = await signaturePng(size);
+  // Standard sRGB defines every DeviceRGB paint and image, not just a suggested
+  // printer destination. OutputIntent and DefaultRGB share the same profile.
+  const profileBytes = await fontAsset("sRGB_IEC61966_2_1.icc");
+  const profile = doc.ref({ N: 3, Alternate: "DeviceRGB" });
+  profile.end(profileBytes);
+  const internal = doc as unknown as {
+    _root: { data: Record<string, unknown> };
+    page: { colorSpaces: Record<string, unknown> };
+  };
+  internal.page.colorSpaces.DefaultRGB = ["ICCBased", profile];
+  const intent = doc.ref({
+    Type: "OutputIntent", S: "GTS_PDFA1",
+    OutputConditionIdentifier: new String("sRGB IEC61966-2.1"),
+    Info: new String("sRGB IEC61966-2.1"),
+    RegistryName: new String("http://www.color.org"),
+    DestOutputProfile: profile,
+  });
+  intent.end(undefined);
+  internal._root.data.OutputIntents = [intent];
   const fitted = fitName(doc, name, layout);
   const chunks: Buffer[] = [];
   return new Promise<Buffer>((resolve, reject) => {

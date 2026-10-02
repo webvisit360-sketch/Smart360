@@ -1,0 +1,221 @@
+1 0 obj
+<<
+  /Type /Pages
+  /Count 1
+  /Kids [ 7 0 R ]
+>>
+endobj
+2 0 obj
+<<
+  /Dests <<
+    /Names [ ]
+  >>
+>>
+endobj
+3 0 obj
+<<
+  /Type /Catalog
+  /Pages 1 0 R
+  /Names 2 0 R
+  /OutputIntents [ 9 0 R ]
+>>
+endobj
+4 0 obj
+<<
+>>
+endobj
+5 0 obj
+<<
+  /Length 3192
+  /Filter /FlateDecode
+>>
+endobj
+6 0 obj
+<<
+  /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+  /ColorSpace <<
+    /DefaultRGB [ /ICCBased 8 0 R ]
+  >>
+  /Font <<
+    /F3 10 0 R
+    /F2 11 0 R
+  >>
+  /XObject <<
+    /I1 12 0 R
+  >>
+>>
+endobj
+7 0 obj
+<<
+  /Type /Page
+  /Parent 1 0 R
+  /MediaBox [ 0 0 102.89764 155.90552 ]
+  /Contents 5 0 R
+  /Resources 6 0 R
+  /UserUnit 1
+>>
+endobj
+8 0 obj
+<<
+  /N 3
+  /Alternate /DeviceRGB
+  /Length 2567
+  /Filter /FlateDecode
+>>
+endobj
+9 0 obj
+<<
+  /Type /OutputIntent
+  /S /GTS_PDFA1
+  /OutputConditionIdentifier (sRGB IEC61966-2.1)
+  /Info (sRGB IEC61966-2.1)
+  /RegistryName (http://www.color.org)
+  /DestOutputProfile 8 0 R
+>>
+endobj
+10 0 obj
+<<
+  /Type /Font
+  /Subtype /Type0
+  /BaseFont /DZZZZZ+Archivo-SemiBold
+  /Encoding /Identity-H
+  /DescendantFonts [ 25 0 R ]
+  /ToUnicode 26 0 R
+>>
+endobj
+11 0 obj
+<<
+  /Type /Font
+  /Subtype /Type0
+  /BaseFont /CZZZZZ+Archivo-ExtraBold
+  /Encoding /Identity-H
+  /DescendantFonts [ 21 0 R ]
+  /ToUnicode 22 0 R
+>>
+endobj
+12 0 obj
+<<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /Width 726
+  /Height 17
+  /Filter /FlateDecode
+  /DecodeParms 13 0 R
+  /ColorSpace /DeviceRGB
+  /Length 2068
+>>
+endobj
+13 0 obj
+<<
+  /Predictor 15
+  /Colors 3
+  /BitsPerComponent 8
+  /Columns 726
+>>
+endobj
+14 0 obj
+<<
+  /Producer 15 0 R
+  /Creator 16 0 R
+  /CreationDate 17 0 R
+  /Title 18 0 R
+>>
+endobj
+15 0 obj
+(PDFKit)
+endobj
+16 0 obj
+(PDFKit)
+endobj
+17 0 obj
+(D:20261002181514Z)
+endobj
+18 0 obj
+<FEFF0053004D0041005200540033003600300020201400200054007500720069007A0065006D002000440072006F00620065017E0020201400200073006D0061006C006C>
+endobj
+19 0 obj
+<<
+  /Length 1649
+  /Filter /FlateDecode
+>>
+endobj
+20 0 obj
+<<
+  /Type /FontDescriptor
+  /FontName /CZZZZZ+Archivo-ExtraBold
+  /Flags 4
+  /FontBBox [ -220 -405 1393 1100 ]
+  /ItalicAngle 0
+  /Ascent 878
+  /Descent -210
+  /CapHeight 686
+  /XHeight 526
+  /StemV 0
+  /FontFile2 19 0 R
+>>
+endobj
+21 0 obj
+<<
+  /Type /Font
+  /Subtype /CIDFontType2
+  /BaseFont /CZZZZZ+Archivo-ExtraBold
+  /CIDSystemInfo <<
+    /Registry (Adobe)
+    /Ordering (Identity)
+    /Supplement 0
+  >>
+  /FontDescriptor 20 0 R
+  /W [ 0 [ 650 675 629 407 288 535 619 937 755 635 633 535 697
+        914 746 750 625 625 625 ] ]
+  /CIDToGIDMap /Identity
+>>
+endobj
+22 0 obj
+<<
+  /Length 273
+  /Filter /FlateDecode
+>>
+endobj
+23 0 obj
+<<
+  /Length 902
+  /Filter /FlateDecode
+>>
+endobj
+24 0 obj
+<<
+  /Type /FontDescriptor
+  /FontName /DZZZZZ+Archivo-SemiBold
+  /Flags 4
+  /FontBBox [ -246 -406 1315 1092 ]
+  /ItalicAngle 0
+  /Ascent 878
+  /Descent -210
+  /CapHeight 686
+  /XHeight 526
+  /StemV 0
+  /FontFile2 23 0 R
+>>
+endobj
+25 0 obj
+<<
+  /Type /Font
+  /Subtype /CIDFontType2
+  /BaseFont /DZZZZZ+Archivo-SemiBold
+  /CIDSystemInfo <<
+    /Registry (Adobe)
+    /Ordering (Identity)
+    /Supplement 0
+  >>
+  /FontDescriptor 24 0 R
+  /W [ 0 [ 652 677 782 724 717 200 728 282 794 619 709 570 672 ] ]
+  /CIDToGIDMap /Identity
+>>
+endobj
+26 0 obj
+<<
+  /Length 255
+  /Filter /FlateDecode
+>>
+endobj

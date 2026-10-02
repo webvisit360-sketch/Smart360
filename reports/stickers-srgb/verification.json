@@ -1,0 +1,264 @@
+{
+  "engines": {
+    "poppler": "pdftoppm version 25.07.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "ghostscript": "10.05.1"
+  },
+  "stickers": [
+    {
+      "size": "large",
+      "page_mm": [
+        72.49999974568684,
+        110.00000406901042
+      ],
+      "strip_mm": [
+        5.5,
+        94.5,
+        61.5,
+        1.2
+      ],
+      "image": [
+        13,
+        0,
+        1453,
+        29,
+        8,
+        "DeviceRGB",
+        "",
+        "I1",
+        "FlateDecode"
+      ],
+      "no_masks_groups_transparency": true,
+      "standard_srgb_profile_sha256": "384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a",
+      "unchanged_text_qr_geometry": true,
+      "renderers": {
+        "Poppler": {
+          "pixels": [
+            1713,
+            2599
+          ],
+          "strip_samples": [
+            {
+              "at": 0,
+              "rgb": [
+                231,
+                134,
+                46
+              ]
+            },
+            {
+              "at": 0.3,
+              "rgb": [
+                47,
+                114,
+                196
+              ]
+            },
+            {
+              "at": 0.55,
+              "rgb": [
+                62,
+                158,
+                78
+              ]
+            },
+            {
+              "at": 0.8,
+              "rgb": [
+                245,
+                198,
+                46
+              ]
+            },
+            {
+              "at": 1,
+              "rgb": [
+                232,
+                134,
+                46
+              ]
+            }
+          ],
+          "continuous_strip": true
+        },
+        "Ghostscript": {
+          "pixels": [
+            1713,
+            2598
+          ],
+          "strip_samples": [
+            {
+              "at": 0,
+              "rgb": [
+                232,
+                134,
+                46
+              ]
+            },
+            {
+              "at": 0.3,
+              "rgb": [
+                47,
+                114,
+                196
+              ]
+            },
+            {
+              "at": 0.55,
+              "rgb": [
+                62,
+                158,
+                78
+              ]
+            },
+            {
+              "at": 0.8,
+              "rgb": [
+                245,
+                198,
+                46
+              ]
+            },
+            {
+              "at": 1,
+              "rgb": [
+                232,
+                134,
+                46
+              ]
+            }
+          ],
+          "continuous_strip": true
+        }
+      },
+      "fallback": "turizem-drobez-large-PRINT-600dpi.png"
+    },
+    {
+      "size": "small",
+      "page_mm": [
+        36.29999951256646,
+        55.00000203450521
+      ],
+      "strip_mm": [
+        2.8,
+        48,
+        30.7,
+        0.7
+      ],
+      "image": [
+        12,
+        0,
+        726,
+        17,
+        8,
+        "DeviceRGB",
+        "",
+        "I1",
+        "FlateDecode"
+      ],
+      "no_masks_groups_transparency": true,
+      "standard_srgb_profile_sha256": "384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a",
+      "unchanged_text_qr_geometry": true,
+      "renderers": {
+        "Poppler": {
+          "pixels": [
+            858,
+            1300
+          ],
+          "strip_samples": [
+            {
+              "at": 0,
+              "rgb": [
+                231,
+                134,
+                47
+              ]
+            },
+            {
+              "at": 0.3,
+              "rgb": [
+                47,
+                114,
+                196
+              ]
+            },
+            {
+              "at": 0.55,
+              "rgb": [
+                62,
+                158,
+                78
+              ]
+            },
+            {
+              "at": 0.8,
+              "rgb": [
+                245,
+                198,
+                46
+              ]
+            },
+            {
+              "at": 1,
+              "rgb": [
+                232,
+                135,
+                46
+              ]
+            }
+          ],
+          "continuous_strip": true
+        },
+        "Ghostscript": {
+          "pixels": [
+            857,
+            1299
+          ],
+          "strip_samples": [
+            {
+              "at": 0,
+              "rgb": [
+                231,
+                134,
+                47
+              ]
+            },
+            {
+              "at": 0.3,
+              "rgb": [
+                47,
+                114,
+                196
+              ]
+            },
+            {
+              "at": 0.55,
+              "rgb": [
+                62,
+                158,
+                78
+              ]
+            },
+            {
+              "at": 0.8,
+              "rgb": [
+                245,
+                198,
+                46
+              ]
+            },
+            {
+              "at": 1,
+              "rgb": [
+                232,
+                134,
+                46
+              ]
+            }
+          ],
+          "continuous_strip": true
+        }
+      },
+      "fallback": "turizem-drobez-small-PRINT-600dpi.png"
+    }
+  ]
+}

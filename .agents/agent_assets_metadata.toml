@@ -2514,3 +2514,129 @@ mtime_ms = 1790919480247
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/cf8b7d89-8d62-434e-84e5-5946afbea0ce/cd34f1cb-86bc-432f-ba35-71d7303c88f1"
 storage_version_token = "1790919596643153"
 content_type = "image/png"
+
+[[outputs]]
+id = "qAQpOAcNfc-sbu-4dg3R_"
+uri = "file://reports/stickers-srgb/turizem-drobez-large.pdf"
+type = "pdf"
+title = "Velika nalepka — PDF sRGB"
+description = "Turizem Drobež. Neprosojen trak pri najmanj 600 dpi, izrecen sRGB in izhodni profil. Brez mask ali skupin prosojnosti."
+logical_id = "1ef166d2-5443-4541-a2c2-e222fb542611"
+content_hash = "sha256:8bed876665dda5c4595808a34f6bedc0bc9683eb6915d5e57d4a145b7dc99bed"
+size = 19228
+mtime_ms = 1790964914994
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1ef166d2-5443-4541-a2c2-e222fb542611/5f94a613-9513-43bf-9fe0-59e86f270d5e"
+storage_version_token = "1790965131709774"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "bqDp2ASS7Jx_O-O3XAfL9"
+uri = "file://reports/stickers-srgb/turizem-drobez-large-PRINT-600dpi.png"
+type = "image"
+title = "Velika nalepka — PNG za neposreden tisk"
+description = "Povsem sploščena slika na beli podlagi, RGB brez alfe, vdelan sRGB in 600 dpi. Za tisk brez obdelave PDF-ja."
+logical_id = "6002dea9-d6c8-4737-8bd7-04759b18096a"
+content_hash = "sha256:9f42619acd66adccbdbb8826f7fbe32ba83dbb5932af942118e9734e0a147da1"
+size = 121047
+mtime_ms = 1790965006749
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6002dea9-d6c8-4737-8bd7-04759b18096a/cf5070fb-0cdc-4610-a5a1-428714f07642"
+storage_version_token = "1790965132515990"
+content_type = "image/png"
+
+[[outputs]]
+id = "mDzGTzakAJ3OiQycdJ9QD"
+uri = "file://reports/stickers-srgb/turizem-drobez-large-poppler-600dpi.png"
+type = "image"
+title = "Velika — Poppler pri 600 dpi"
+description = "Celoten neodvisni izris novega PDF-ja. Prisotnost traku in barvne postaje so preverjene."
+logical_id = "b5aa936d-356a-4da4-b4d2-e36b299a591e"
+content_hash = "sha256:1ecccecadab0ef72b2861fc87bc7ce33b250f046f5bf4a9e6917e6986e26f85a"
+size = 113605
+mtime_ms = 1790965006225
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b5aa936d-356a-4da4-b4d2-e36b299a591e/5d286903-6bc8-43fa-bd8d-ba94d0bf787e"
+storage_version_token = "1790965133261251"
+content_type = "image/png"
+
+[[outputs]]
+id = "iptGUqWndqcclDd-2WUH9"
+uri = "file://reports/stickers-srgb/turizem-drobez-large-ghostscript-600dpi.png"
+type = "image"
+title = "Velika — Ghostscript pri 600 dpi"
+description = "Celoten neodvisni izris novega PDF-ja. Prisotnost traku in barvne postaje so preverjene."
+logical_id = "51d6747b-618e-48bb-bff2-d1b7ffd46697"
+content_hash = "sha256:497ba05884cc3e0e494b59b08f2b65f553f091b44debfbbd1977b545ff3abde3"
+size = 84763
+mtime_ms = 1790965006501
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/51d6747b-618e-48bb-bff2-d1b7ffd46697/e205c5d7-0baa-43d2-b9c1-9ee99a6a4684"
+storage_version_token = "1790965134104220"
+content_type = "image/png"
+
+[[outputs]]
+id = "zTW6tPOAKblrr9ludiAag"
+uri = "file://reports/stickers-srgb/turizem-drobez-small.pdf"
+type = "pdf"
+title = "Mala nalepka — PDF sRGB"
+description = "Turizem Drobež. Neprosojen trak pri najmanj 600 dpi, izrecen sRGB in izhodni profil. Brez mask ali skupin prosojnosti."
+logical_id = "1de5f1a4-e693-4335-9f43-0a894057ea0f"
+content_hash = "sha256:73339059cda855d0b72fa13458ae1039b3732c25a4334ee6e35692b9bde3220f"
+size = 14627
+mtime_ms = 1790964914994
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1de5f1a4-e693-4335-9f43-0a894057ea0f/0a49354d-c587-42c7-bd5f-25d909271588"
+storage_version_token = "1790965135083821"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "uFBbWXbFLyH4L3PE_uAIO"
+uri = "file://reports/stickers-srgb/turizem-drobez-small-PRINT-600dpi.png"
+type = "image"
+title = "Mala nalepka — PNG za neposreden tisk"
+description = "Povsem sploščena slika na beli podlagi, RGB brez alfe, vdelan sRGB in 600 dpi. Za tisk brez obdelave PDF-ja."
+logical_id = "d72c65af-9559-49b4-adba-907ffb8b09bc"
+content_hash = "sha256:09a9050a0082d860004bdf1e9b90d0a6617d0bbbe7d97f38767b911ca5f5b871"
+size = 46569
+mtime_ms = 1790965007173
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d72c65af-9559-49b4-adba-907ffb8b09bc/36f064f6-8cd5-4ac3-87d0-76a2df023b0a"
+storage_version_token = "1790965136287246"
+content_type = "image/png"
+
+[[outputs]]
+id = "4emFLMjS2CYveCzlNJoT8"
+uri = "file://reports/stickers-srgb/turizem-drobez-small-poppler-600dpi.png"
+type = "image"
+title = "Mala — Poppler pri 600 dpi"
+description = "Celoten neodvisni izris novega PDF-ja. Prisotnost traku in barvne postaje so preverjene."
+logical_id = "2ce97456-25fc-40e2-9187-5000d55b5e6e"
+content_hash = "sha256:27529bc2e005af26ec0ede4936f53f7f9c290afae18242917699fab4661ff849"
+size = 40851
+mtime_ms = 1790965006937
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/2ce97456-25fc-40e2-9187-5000d55b5e6e/1b07ecc8-c32c-4bc7-97c4-11ffae3b9026"
+storage_version_token = "1790965137283135"
+content_type = "image/png"
+
+[[outputs]]
+id = "O9bpBRHXar8rxITjsaaGG"
+uri = "file://reports/stickers-srgb/turizem-drobez-small-ghostscript-600dpi.png"
+type = "image"
+title = "Mala — Ghostscript pri 600 dpi"
+description = "Celoten neodvisni izris novega PDF-ja. Prisotnost traku in barvne postaje so preverjene."
+logical_id = "ca71d539-055a-4256-84bd-55eb965b3399"
+content_hash = "sha256:4f24edb6e844642a643cfe0f94295220c1d928a05a00f230f2f215620ee58d25"
+size = 33035
+mtime_ms = 1790965007097
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ca71d539-055a-4256-84bd-55eb965b3399/63e69b86-c46d-4fa7-85d8-304d04e85bc9"
+storage_version_token = "1790965138198470"
+content_type = "image/png"
+
+[[outputs]]
+id = "-Obu7xeN38DOs8kOp9mbT"
+uri = "file://reports/stickers-srgb/dokazila.html"
+type = "html"
+title = "Dokazila: sRGB, struktura PDF in oba izrisovalnika"
+description = "Samostojno poročilo vsebuje pdfimages, izpis objektov obeh PDF-jev, meritve in vse štiri 600-dpi izrise."
+logical_id = "7735506a-0e28-453b-9943-550853be9807"
+content_hash = "sha256:ddc422b32b6e385f090133a5dc8a8c1025f6456a1b685e6dc241fe6bf06eb764"
+size = 379417
+mtime_ms = 1790965052433
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7735506a-0e28-453b-9943-550853be9807/db8cffcd-3054-49f5-b616-d8ba7612baf9"
+storage_version_token = "1790965142040612"
+content_type = "text/html"
