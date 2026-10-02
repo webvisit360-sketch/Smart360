@@ -8,10 +8,12 @@ import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
 import sharp from "sharp";
-import { _setReadyDeliveryOverride, defaultReadyMessage, makeReadySticker, renderReadyNotice, sendReadyNotice } from "../lib/guideReadyNotice";
+import { _setReadyDeliveryOverride, defaultReadyMessage, renderReadyNotice, sendReadyNotice } from "../lib/guideReadyNotice";
+import { guideStickerLayout, makeGuideStickers } from "../lib/guideStickers";
 import { parseLifecycleHistory } from "../lib/lifecycleHistory";
 import { HOST_NOTIFICATION_REPLY_TO } from "../lib/businessContact";
 import { ADMIN_ROUTE_REGISTRY } from "../lib/actorGate";
+import { GetTenantLabelPdfQueryParams } from "@workspace/api-zod";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const url = "https://smart360.info/glamping-gril";
@@ -44,7 +46,7 @@ test("both ready email modes use exact copy, official brand and guarded owner ro
   }
 });
 
-test("intercepted recipient and independent archive each contain vector PDF + CID QR; failures remain redacted", async () => {
+test("intercepted recipient and independent archive each contain both vector PDFs + CID QR; failures remain redacted", async () => {
   process.env["ORDER_EMAIL_FROM"] = HOST_NOTIFICATION_REPLY_TO;
   const captured: Record<string, unknown>[] = [];
   _setReadyDeliveryOverride(async (body) => {
@@ -62,36 +64,57 @@ test("intercepted recipient and independent archive each contain vector PDF + CI
   for (const body of captured) {
     assert.equal(body["reply_to"], HOST_NOTIFICATION_REPLY_TO);
     const attachments = body["attachments"] as Array<{ filename: string; content: string; content_id?: string }>;
-    assert.equal(attachments[0].filename, "nalepka-qr-glamping-gril.pdf");
-    assert.equal(attachments[1].content_id, "guide-ready-qr");
-    const pdf = Buffer.from(attachments[0].content, "base64");
+    assert.equal(attachments.length, 3);
+    assert.equal(attachments[0].filename, "smart360-nalepka-velika.pdf");
+    assert.equal(attachments[1].filename, "smart360-nalepka-mala.pdf");
+    assert.equal(attachments[2].content_id, "guide-ready-qr");
+    assert.match(body["html"] as string, /src="cid:guide-ready-qr"/);
+    assert.ok(Buffer.from(attachments[2].content, "base64").subarray(1, 4).equals(Buffer.from("PNG")));
+    for (const attachment of attachments.slice(0, 2)) {
+    const pdf = Buffer.from(attachment.content, "base64");
     assert.ok(pdf.subarray(0, 5).equals(Buffer.from("%PDF-")));
     const dir = mkdtempSync(path.join(os.tmpdir(), "ready-pdf-"));
     try {
       const file = path.join(dir, "sticker.pdf");
       writeFileSync(file, pdf);
       const info = execFileSync("pdfinfo", [file], { encoding: "utf8" });
-      assert.match(info, /Page size:\s+419\.53 x 297\.64 pts/);
+      assert.match(info, /Pages:\s+1/);
       const images = execFileSync("pdfimages", ["-list", file], { encoding: "utf8" });
       assert.equal(images.trim().split("\n").length, 2, "sticker has no logo or raster images");
       const fonts = execFileSync("pdffonts", [file], { encoding: "utf8" });
       assert.match(fonts, /Archivo-ExtraBold/);
-      assert.match(fonts, /Archivo-SemiBold/);
       execFileSync("pdftoppm", ["-f", "1", "-singlefile", "-scale-to", "1600", "-png", file, path.join(dir, "screen")]);
       const screenshot = await sharp(path.join(dir, "screen.png")).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       assert.equal(jsQR(new Uint8ClampedArray(screenshot.data), screenshot.info.width, screenshot.info.height)?.data, url);
-      const atBorder = screenshot.data.subarray(Math.floor(screenshot.info.width / 2) * 4, Math.floor(screenshot.info.width / 2) * 4 + 3);
-      assert.deepEqual([...atBorder], [232, 235, 230], "0.5 pt A6 hairline must use #E8EBE6 inside the page");
-      let blackPixels = 0;
-      for (let i = 0; i < screenshot.data.length; i += 4) {
-        if (screenshot.data[i] === 0 && screenshot.data[i + 1] === 0 && screenshot.data[i + 2] === 0) blackPixels++;
+      // Sample only module interiors, masking text, borders and antialiased
+      // edges. Both trim sizes must use the binding reference's #121A14 ink.
+      const layout = guideStickerLayout(attachment.filename.includes("velika") ? "large" : "small");
+      const matrix = QRCode.create(url, { errorCorrectionLevel: "H" }).modules;
+      const moduleSize = layout.qr.size / (matrix.size + 8);
+      let inkModules = 0;
+      for (let y = 0; y < matrix.size; y++) {
+        for (let x = 0; x < matrix.size; x++) {
+          const px = Math.floor((layout.qr.x + (x + 4.5) * moduleSize) / layout.width * screenshot.info.width);
+          const py = Math.floor((layout.qr.y + (y + 4.5) * moduleSize) / layout.height * screenshot.info.height);
+          const expected = matrix.get(y, x) ? [18, 26, 20] : [255, 255, 255];
+          if (matrix.get(y, x)) inkModules++;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const offset = ((py + dy) * screenshot.info.width + px + dx) * 4;
+              for (let channel = 0; channel < 3; channel++) {
+                assert.ok(Math.abs(screenshot.data[offset + channel] - expected[channel]) <= 3,
+                  `QR module ${x},${y} must use ${matrix.get(y, x) ? "#121A14" : "white"} (${attachment.filename})`);
+              }
+            }
+          }
+        }
       }
-      assert.ok(blackPixels > 30000, "the PDF QR modules are true black, not CGP dark green");
+      assert.ok(inkModules > 100, "color mask samples the QR rather than surrounding artwork");
       const raw = readFileSync(file).toString("latin1");
       assert.match(raw, /\/Font/);
-      assert.match(raw, /\/Image/); // original official znak; QR itself is vector shapes
       assert.ok(pdf.length > 1000);
     } finally { rmSync(dir, { recursive: true, force: true }); }
+    }
   }
   assert.deepEqual(captured[0]["to"], ["host@example.test"]);
   assert.deepEqual(captured[1]["to"], [HOST_NOTIFICATION_REPLY_TO]);
@@ -117,16 +140,18 @@ test("Archivo instances carry actual 800/600 weights; long tenant name wraps wit
   assert.equal(weight(readFileSync(path.join(root, "artifacts/api-server/assets/Archivo-800.ttf"))), 800);
   assert.equal(weight(readFileSync(path.join(root, "artifacts/api-server/assets/Archivo-600.ttf"))), 600);
   const name = "Apartmaji in počitniške hiše Zeleni grič pod gorami";
-  const pdf = await makeReadySticker({ ...base, mode: "concierge", tenantName: name });
+  const stickers = await makeGuideStickers(name, url);
   const dir = mkdtempSync(path.join(os.tmpdir(), "ready-long-name-"));
   try {
-    const file = path.join(dir, "long-name.pdf");
-    writeFileSync(file, pdf);
-    assert.match(execFileSync("pdftotext", [file, "-"], { encoding: "utf8" }).replace(/\s+/g, " "), /Apartmaji in počitniške hiše Zeleni grič pod gorami/);
+    for (const [size, pdf] of Object.entries(stickers)) {
+      const file = path.join(dir, `long-name-${size}.pdf`);
+      writeFileSync(file, pdf);
+      assert.match(execFileSync("pdftotext", [file, "-"], { encoding: "utf8" }).replace(/\s+/g, " "), /Apartmaji in počitniške hiše Zeleni grič pod gorami/);
+    }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("owner approval reports: self-contained mode-specific HTML and A6 print PDF, never send", async () => {
+test("owner approval reports: self-contained mode-specific HTML, never send", async () => {
   const reports = path.join(root, "reports");
   mkdirSync(reports, { recursive: true });
   const mark = readFileSync(path.join(root, "artifacts/smart360/public/brand/smart360-email-lockup-host-594x138.png")).toString("base64");
@@ -139,4 +164,36 @@ test("owner approval reports: self-contained mode-specific HTML and A6 print PDF
     writeFileSync(path.join(reports, `gril-vodnik-pripravljen-${name}.html`), html);
     assert.ok(!html.includes('src="https:'));
   }
+});
+
+test("custom ready copy stays exact with both PDFs and inline CID PNG", async () => {
+  let captured: Record<string, unknown> | undefined;
+  _setReadyDeliveryOverride(async body => {
+    captured = body;
+    return { ok: true, providerMessageId: "offline-custom" };
+  });
+  const message = "Pozdravljeni,\n\nTo je vaše nespremenjeno besedilo.";
+  const input = { ...base, mode: "concierge" as const, recipient: "offline@example.invalid", subject: "Moja zadeva", message };
+  const rendered = await renderReadyNotice(input, "cid");
+  assert.equal(rendered.message, message);
+  assert.ok(rendered.text.includes(message));
+  await sendReadyNotice(input, "offline-custom");
+  assert.equal(captured?.subject, input.subject);
+  assert.equal(captured?.html, rendered.html);
+  assert.equal(captured?.text, rendered.text);
+  assert.equal((captured?.attachments as unknown[]).length, 3);
+});
+
+test("admin PDF query validates both sizes, defaults large, rejects malformed values", () => {
+  assert.equal(GetTenantLabelPdfQueryParams.parse({}).size, "large");
+  for (const size of ["large", "small"]) assert.equal(GetTenantLabelPdfQueryParams.parse({ size }).size, size);
+  for (const size of ["", "a6", "LARGE", ["large", "small"], { size: "small" }, null]) {
+    assert.equal(GetTenantLabelPdfQueryParams.safeParse({ size }).success, false);
+  }
+  const route = readFileSync(path.join(root, "artifacts/api-server/src/routes/adminTenants.ts"), "utf8");
+  assert.match(route, /GetTenantLabelPdfQueryParams\.safeParse\(req\.query\)/);
+  assert.match(route, /makeGuideSticker\(tenant\.name, url, size\)/);
+  const ui = readFileSync(path.join(root, "artifacts/smart360/src/components/admin/slug-field.tsx"), "utf8");
+  assert.ok(ui.includes("label.pdf?size=large"));
+  assert.ok(ui.includes("label.pdf?size=small"));
 });

@@ -2290,3 +2290,87 @@ mtime_ms = 1790915404355
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3883f561-1518-4626-8b96-93a97332beef/72bcc5c1-8160-4c54-8764-21fd41d1f4d3"
 storage_version_token = "1790916067864150"
 content_type = "text/html"
+
+[[outputs]]
+id = "-_YuZLWqHny-VP64j7S7o"
+uri = "file://reports/nav-chrome/index.html"
+type = "html"
+title = "Navigacija — vseh pet zavihkov pri 390 px"
+description = "Posnetki pri 100 % ter meritve barve. Dejanske komponente Living Guide v DEV-testnem prikazu; svetla fotografija je namensko postavljena pod navigacijo za preizkus neprosojnosti."
+logical_id = "a4f8ab14-6ee3-4255-b1b4-829985bc02aa"
+content_hash = "sha256:d3e8d1efb401c9ce18c93aece22f4afce404b43e810e77e5404f80e20fbde748"
+size = 841371
+mtime_ms = 1790916495327
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/a4f8ab14-6ee3-4255-b1b4-829985bc02aa/e538883e-bafd-4aaa-a7f9-0442fe203e96"
+storage_version_token = "1790916550975485"
+content_type = "text/html"
+
+[[outputs]]
+id = "wjkZL1-9gf4tkVtWMJmlO"
+uri = "file://reports/stickers-final/turizem-drobez-large.pdf"
+type = "pdf"
+title = "Turizem Drobež — velika nalepka"
+description = "PDF 72,5 × 110 mm; QR 55 × 55 mm. Vektorska vsebina in vdelan Archivo. Tisk pri 100 %, brez prilagajanja strani."
+logical_id = "88a75fe0-cbff-43eb-ba40-39965bc991a7"
+content_hash = "sha256:97d9a809abb52815adfcf341cbf72cb36aebba6d4a3271917423c0d1b3120329"
+size = 12771
+mtime_ms = 1790917331278
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/88a75fe0-cbff-43eb-ba40-39965bc991a7/0181304e-8e31-4c31-8877-190787ee5210"
+storage_version_token = "1790917574712703"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "Kdz2AJJJhz3u7kbEkY4ac"
+uri = "file://reports/stickers-final/turizem-drobez-small.pdf"
+type = "pdf"
+title = "Turizem Drobež — mala nalepka"
+description = "PDF 36,3 × 55 mm; QR 27,5 × 27,5 mm. Brez navodila za skeniranje in brez slogana."
+logical_id = "ebca59a5-7e2e-498a-8196-be876f6678b0"
+content_hash = "sha256:4125cf08d82f8dd86fc24962b063b2eb1e103f14303f4b140558064c94c7950a"
+size = 9307
+mtime_ms = 1790917331658
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ebca59a5-7e2e-498a-8196-be876f6678b0/26504f61-e587-43e9-afb8-642e7911e1c9"
+storage_version_token = "1790917575504411"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "RvV4G-3BiKHmdma4T4p21"
+uri = "file://reports/stickers-final/turizem-drobez-large-96dpi.png"
+type = "image"
+title = "Velika nalepka — rastrski predogled"
+description = "Izris dejanskega PDF pri 96 DPI za zaslonski prikaz pri 100 %. Fizična velikost na monitorju je odvisna od njegove gostote pik."
+logical_id = "7d753997-d24d-4292-a52a-bbebde94c5c6"
+content_hash = "sha256:e4e1f676ab25842a3c5f0e0f5cfe5a15314e21d0adba698c4a58dab229df9b5d"
+size = 19981
+mtime_ms = 1790917331598
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7d753997-d24d-4292-a52a-bbebde94c5c6/b5529ee5-b523-492a-af27-e32763a6e81d"
+storage_version_token = "1790917576227262"
+content_type = "image/png"
+
+[[outputs]]
+id = "AkjE9n8f5Of2swDx5kPfR"
+uri = "file://reports/stickers-final/turizem-drobez-small-96dpi.png"
+type = "image"
+title = "Mala nalepka — rastrski predogled"
+description = "Izris dejanskega PDF pri 96 DPI za zaslonski prikaz pri 100 %."
+logical_id = "bb2d2a1e-4bb5-45a7-8550-f041439faa8f"
+content_hash = "sha256:9b6365777fdb6d1f0df1353ee3028e3fa335208600264d70acd60e77619e472f"
+size = 8188
+mtime_ms = 1790917331802
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/bb2d2a1e-4bb5-45a7-8550-f041439faa8f/259e5722-c53d-4aae-86de-4e4def603440"
+storage_version_token = "1790917577086260"
+content_type = "image/png"
+
+[[outputs]]
+id = "5eF1I4-6LzICOtJr0cHHl"
+uri = "file://reports/stickers-final/preview-100-percent.html"
+type = "html"
+title = "Primerjava obeh velikosti in dolgih imen"
+description = "Šest predogledov: Turizem Drobež, Apartmaji Meli Pu in namensko dolgo testno ime, v obeh velikostih. Primeri imen Meli Pu/dolgega imena so tipografski testi, ne nalepke za dejansko uporabo."
+logical_id = "ab95e8b9-dd23-461c-81fb-96ab30f0d301"
+content_hash = "sha256:bb532e0c4f0366c575f955a9d0a2c43cf5468b5655f869e011ca7a8d34f7aabf"
+size = 120408
+mtime_ms = 1790917332902
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ab95e8b9-dd23-461c-81fb-96ab30f0d301/58812f6f-2c80-4b47-b089-2d66ae99914f"
+storage_version_token = "1790917577889392"
+content_type = "text/html"

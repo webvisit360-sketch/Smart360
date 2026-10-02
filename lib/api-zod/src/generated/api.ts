@@ -6753,13 +6753,35 @@ export const GetTenantQrResponse = zod.unknown()
 
 
 /**
- * @summary Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+ * @summary Printable QR sticker PDF in large or small size
  */
 export const GetTenantLabelPdfParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getTenantLabelPdfQuerySizeDefault = `large`;
+
+export const GetTenantLabelPdfQueryParams = zod.object({
+  "size": zod.enum(['large', 'small']).default(getTenantLabelPdfQuerySizeDefault)
+})
+
 export const GetTenantLabelPdfResponse = zod.unknown()
+
+
+/**
+ * @summary Download one of two English QR sticker PDFs for a published tenant
+ */
+export const GetPublicTenantLabelPdfParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const getPublicTenantLabelPdfQuerySizeDefault = `large`;
+
+export const GetPublicTenantLabelPdfQueryParams = zod.object({
+  "size": zod.enum(['large', 'small']).default(getPublicTenantLabelPdfQuerySizeDefault)
+})
+
+export const GetPublicTenantLabelPdfResponse = zod.unknown()
 
 
 /**

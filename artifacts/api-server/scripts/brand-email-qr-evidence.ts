@@ -1,18 +1,12 @@
 // Offline synthetic fixtures only: no route import, DB, auth, or delivery.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
-import { PassThrough } from "node:stream";
 import { createHash } from "node:crypto";
-import { transform } from "esbuild";
-import PDFDocument from "pdfkit";
-import SVGtoPDF from "svg-to-pdfkit";
 import sharp from "sharp";
 import { chromium } from "@playwright/test";
-import { guestQrSvg } from "../src/lib/guestUrl";
-import { makeReadySticker } from "../src/lib/guideReadyNotice";
+import { makeGuideSticker, makeGuideStickers } from "../src/lib/guideStickers";
 
 const root = resolve(import.meta.dirname, "../../..");
 const out = resolve(root, "reports/brand-unification");
@@ -36,46 +30,26 @@ try {
   await page.screenshot({ path: resolve(out, "email-canonical.png"), fullPage: true });
 } finally { await browser.close(); }
 
-// Execute the actual existing admin label drawing body, substituting only its
-// DB-selected tenant, response stream and URL with explicitly isolated fixtures.
+// Verify both delivery and admin paths use the shared generator, without DB access.
 const source = await readFile(resolve(root, "artifacts/api-server/src/routes/adminTenants.ts"), "utf8");
-const route = source.slice(source.indexOf('router.get("/admin/tenants/:id/label.pdf"'));
-const drawing = route.slice(route.indexOf("  const MM ="), route.indexOf("  doc.end();") + "  doc.end();".length);
-assert.ok(drawing.includes('doc.text("SMART360"'));
-assert.ok(!drawing.includes("doc.image("));
-const { code } = await transform(`async function draw() {${drawing}}\nreturn draw();`, { loader: "ts", target: "es2022" });
+assert.ok(source.includes("makeGuideSticker(tenant.name, url, size)"));
 const fixture = { name: "Offline fixture accommodation", slug: "offline-fixture" };
 const url = "https://example.invalid/offline-fixture";
-const renderLabel = async () => {
-  const res = new PassThrough() as PassThrough & { setHeader: () => void };
-  res.setHeader = () => {};
-  const chunks: Buffer[] = [];
-  const done = new Promise<Buffer>((resolve, reject) => {
-    res.on("data", chunk => chunks.push(chunk));
-    res.on("end", () => resolve(Buffer.concat(chunks)));
-    res.on("error", reject);
-  });
-  await new Function("tenant", "res", "guestUrl", "guestQrSvg", "PDFDocument", "SVGtoPDF", "readFileSync", "resolve", code)(
-    fixture, res, () => url, guestQrSvg, PDFDocument, SVGtoPDF, readFileSync, resolve,
-  );
-  return done;
-};
-for (const phase of ["before", "after"]) {
-  const labelPath = resolve(out, `qr-admin-label-${phase}.pdf`);
-  await writeFile(labelPath, await renderLabel());
+const stickers = await makeGuideStickers(fixture.name, url);
+for (const size of ["large", "small"] as const) {
+  const labelPath = resolve(out, `qr-admin-label-${size}.pdf`);
+  await writeFile(labelPath, await makeGuideSticker(fixture.name, url, size));
   execFileSync("pdftoppm", ["-singlefile", "-scale-to", "1000", "-png", labelPath, labelPath.replace(".pdf", "")]);
-  const stickerPath = resolve(out, `qr-ready-sticker-${phase}.pdf`);
-  await writeFile(stickerPath, await makeReadySticker({ tenantName: fixture.name, slug: fixture.slug, guideUrl: url, mode: "self_service" }));
+  const stickerPath = resolve(out, `qr-ready-sticker-${size}.pdf`);
+  await writeFile(stickerPath, stickers[size]);
   execFileSync("pdftoppm", ["-singlefile", "-scale-to", "1000", "-png", stickerPath, stickerPath.replace(".pdf", "")]);
-}
-for (const kind of ["admin-label", "ready-sticker"]) {
-  assert.deepEqual(await readFile(resolve(out, `qr-${kind}-before.png`)), await readFile(resolve(out, `qr-${kind}-after.png`)));
+  assert.deepEqual(await readFile(labelPath.replace(".pdf", ".png")), await readFile(stickerPath.replace(".pdf", ".png")));
 }
 await writeFile(resolve(out, "email-qr-measurements.json"), JSON.stringify({
   email: measurements, display: [198, 46],
-  qrArtwork: "Not applicable: admin A6 label uses text-only Archivo800 SMART360; ready sticker has no platform mark.",
-  qrRenderedBeforeAfterIdentical: true,
-  fixture: "Isolated example.invalid tenant; actual current generator executed twice because production QR code is unchanged. No historical PDF claim.",
+  qrArtwork: "Shared large and small stickers for admin download and ready email.",
+  qrAdminAndEmailIdentical: true,
+  fixture: "Isolated example.invalid tenant; both current sizes rendered through shared generators. No historical PDF claim.",
   sideEffects: "No DB, auth, send or publish",
 }, null, 2));
 console.log("Canonical email byte metadata, native/display artwork and actual QR generator fixtures verified.");

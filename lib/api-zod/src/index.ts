@@ -9,5 +9,7 @@ export type {
   SearchAdminPlacesParams,
   ListTenantTranslationsParams,
   ExportTranslationsParams,
+  GetTenantLabelPdfParams,
+  GetPublicTenantLabelPdfParams,
 } from "./generated/types";
 export { PinHostDraftItemBody } from "./generated/api";

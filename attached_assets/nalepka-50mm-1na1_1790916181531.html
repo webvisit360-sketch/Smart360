@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nalepka 1:1 — QR 50 mm</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Archivo',-apple-system,sans-serif;}
+  body{background:#D8DCD6;padding:10mm;display:flex;gap:14mm;flex-wrap:wrap;justify-content:center;align-items:flex-start;}
+  h2.cap{width:100%;text-align:center;font-size:4mm;color:#555e55;font-weight:600;}
+
+  /* ====== VELIKA NALEPKA: 72,5 × 110 mm, QR 55 × 55 mm ====== */
+  .stick{width:72.5mm;background:#FFFFFF;border-radius:4.4mm;padding:6.6mm 5.5mm 5.5mm;
+    box-shadow:0 3mm 8mm rgba(0,0,0,.18);text-align:center;}
+  .tn{font-size:3.1mm;letter-spacing:.12em;font-weight:600;color:#66716A;text-transform:uppercase;}
+  .tt{font-size:9.3mm;font-weight:800;color:#121A14;letter-spacing:-.01em;margin-top:1.1mm;line-height:1.05;}
+  .qr{width:55mm;height:55mm;margin:4.4mm auto 3.3mm;border-radius:2.2mm;border:.3mm solid #E4E8E2;position:relative;
+    background:
+     repeating-linear-gradient(90deg,#121A14 0 2mm,#fff 2mm 4mm),
+     repeating-linear-gradient(0deg,#121A14 0 2mm,#fff 2mm 4mm);
+    background-blend-mode:screen;}
+  .qr i{position:absolute;width:11mm;height:11mm;border:2mm solid #121A14;background:#fff;}
+  .qr i:nth-child(1){top:1.6mm;left:1.6mm}.qr i:nth-child(2){top:1.6mm;right:1.6mm}.qr i:nth-child(3){bottom:1.6mm;left:1.6mm}
+  .scan{font-size:3.3mm;color:#66716A;font-weight:500;line-height:1.45;}
+  .rule{height:.3mm;background:#ECEFEA;margin:3.8mm 0 3mm;}
+  .wm{font-size:5.1mm;font-weight:800;color:#121A14;letter-spacing:.02em;}
+  .slog{font-size:3.1mm;color:#66716A;font-weight:500;margin-top:.9mm;}
+
+  /* ====== MALA NALEPKA: polovica — 36,3 × 55 mm, QR 27,5 mm ====== */
+  .stick--s{width:36.3mm;border-radius:2.2mm;padding:3.3mm 2.8mm 2.8mm;}
+  .stick--s .tn{font-size:1.8mm;letter-spacing:.1em;}
+  .stick--s .tt{font-size:4.6mm;margin-top:.6mm;}
+  .stick--s .qr{width:27.5mm;height:27.5mm;margin:2.2mm auto 1.8mm;border-radius:1.1mm;
+    background:
+     repeating-linear-gradient(90deg,#121A14 0 1mm,#fff 1mm 2mm),
+     repeating-linear-gradient(0deg,#121A14 0 1mm,#fff 1mm 2mm);
+    background-blend-mode:screen;}
+  .stick--s .qr i{width:5.5mm;height:5.5mm;border-width:1mm;}
+  .stick--s .qr i:nth-child(1){top:.8mm;left:.8mm}.stick--s .qr i:nth-child(2){top:.8mm;right:.8mm}.stick--s .qr i:nth-child(3){bottom:.8mm;left:.8mm}
+  .stick--s .rule{margin:1.9mm 0 1.5mm;}
+  .stick--s .wm{font-size:2.6mm;}
+
+  /* opombe ob strani */
+  .note{width:72mm;background:#fff;border-radius:3mm;padding:5mm 6mm;font-size:3.2mm;color:#3a423a;line-height:1.6;box-shadow:0 2mm 6mm rgba(0,0,0,.1);}
+  .note b{display:block;font-size:3.4mm;margin-bottom:2mm;color:#121A14;}
+  .note table{border-collapse:collapse;width:100%;font-size:3mm;margin-top:2mm;}
+  .note td{padding:1.2mm 0;border-bottom:.2mm solid #ECEFEA;vertical-align:top;}
+  .note td:last-child{text-align:right;white-space:nowrap;font-weight:600;}
+  .warn{margin-top:3mm;font-size:2.9mm;color:#8a6a2a;background:#FBF3DF;border-radius:2mm;padding:2.5mm 3mm;}
+  @media print{body{background:#fff;padding:5mm}.note{box-shadow:none;border:.3mm solid #ddd}.stick{box-shadow:none;border:.3mm solid #ddd}}
+</style>
+</head>
+<body>
+
+<h2 class="cap">Nalepki v merilu 1:1 — natisni stran pri 100 % in ju nalepi na steno</h2>
+
+<div class="stick">
+  <div class="tn">Your digital guide</div>
+  <div class="tt">Turizem Drobež</div>
+  <div class="qr"><i></i><i></i><i></i></div>
+  <div class="scan">Scan with your phone camera.</div>
+  <div class="rule"></div>
+  <div class="wm">SMART360</div>
+  <div class="slog">Everything about your stay, in one place.</div>
+</div>
+
+<div class="stick stick--s">
+  <div class="tn">Your digital guide</div>
+  <div class="tt">Turizem Drobež</div>
+  <div class="qr"><i></i><i></i><i></i></div>
+  <div class="rule"></div>
+  <div class="wm">SMART360</div>
+</div>
+
+<div class="note">
+  <b>Kaj se prebere s katere razdalje (velika nalepka 72,5 × 110 mm, QR 55 mm)</b>
+  <table>
+    <tr><td>Ime nastanitve (velike črke ~6,6 mm)</td><td>do ≈ 3 m</td></tr>
+    <tr><td>SMART360 (~3,8 mm)</td><td>do ≈ 2 m</td></tr>
+    <tr><td>»Scan with your phone camera.« (~2,4 mm)</td><td>do ≈ 1 m</td></tr>
+    <tr><td>Slogan (~2,2 mm)</td><td>do ≈ 1 m</td></tr>
+    <tr><td>QR 55 mm — zanesljivo skeniranje</td><td>do ≈ 0,55 m</td></tr>
+  </table>
+  <b style="margin-top:3mm">Mala nalepka (36,3 × 55 mm, QR 27,5 mm)</b>
+  Na polovični velikosti sem navodilo in slogan izpustil: pri ~1,5 mm črkah bi bila samo madež.
+  Ostane ime (berljivo do ~1,5 m), QR (skeniranje z ~0,3 m) in SMART360. Če želiš slogan tudi tu, povej — a odsvetujem.
+  <div class="warn">Na zaslonu je merilo 1:1 samo približek (odvisno od monitorja). Pravi preizkus:
+  natisni stran pri 100 % brez prilagajanja strani, nalepi na steno in se odmakni.</div>
+</div>
+
+</body>
+</html>

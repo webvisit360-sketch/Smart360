@@ -4,6 +4,10 @@ Smart360 trak = the kolobar unrolled (oranžna→modra→zelena→rumena, satura
 
 # Smart360
 
+## QR nalepki
+
+Generator PDF izdela natanko dve različici: veliko 72,5 × 110 mm s QR 55 × 55 mm in malo 36,3 × 55 mm s QR 27,5 × 27,5 mm. Besedilo je samo angleško, razen imena nastanitve. Navodilo »Scan with your phone camera.« in slogan »Everything about your stay, in one place.« sta samo na veliki nalepki; slogan je umirjen, nikoli krepko izpisan ali preveden. Obe različici uporabljata vektorsko QR-kodo in vdelano pisavo Archivo. E-pošta z nalepkami priloži oba PDF-ja; administracija ponuja oba prenosa. Ime nastanitve je največ dvovrstično, s pomanjšanjem do določene spodnje meje in šele nato krajšanjem.
+
 ## Edini vir znaka Smart360
 
 Edini vir znaka je smart360-kolobar-faceted.svg; vse rasterizacije izhajajo iz njega.

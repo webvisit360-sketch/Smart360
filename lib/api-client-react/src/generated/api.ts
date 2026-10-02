@@ -88,9 +88,11 @@ import type {
   EnrollResult,
   EnrollVerifyBody,
   ExportTranslationsParams,
+  GetPublicTenantLabelPdfParams,
   GetPublicTenantParams,
   GetPublishedSlugRedirect200,
   GetStorageCleanupPreviewParams,
+  GetTenantLabelPdfParams,
   GpxRoute,
   GpxUploadInput,
   GuestMessageInput,
@@ -11741,20 +11743,29 @@ export function useGetTenantQr<TData = Awaited<ReturnType<typeof getTenantQr>>, 
 
 
 
-export const getGetTenantLabelPdfUrl = (id: string,) => {
+export const getGetTenantLabelPdfUrl = (id: string,
+    params?: GetTenantLabelPdfParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/admin/tenants/${id}/label.pdf`
+  return stringifiedParams.length > 0 ? `/api/admin/tenants/${id}/label.pdf?${stringifiedParams}` : `/api/admin/tenants/${id}/label.pdf`
 }
 
 /**
- * @summary Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+ * @summary Printable QR sticker PDF in large or small size
  */
-export const getTenantLabelPdf = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+export const getTenantLabelPdf = async (id: string,
+    params?: GetTenantLabelPdfParams, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
 
-  return customFetch<Blob>(getGetTenantLabelPdfUrl(id),
+  return customFetch<Blob>(getGetTenantLabelPdfUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -11767,23 +11778,25 @@ export const getTenantLabelPdf = async (id: string, options?: Parameters<typeof 
 
 
 
-export const getGetTenantLabelPdfQueryKey = (id: string,) => {
+export const getGetTenantLabelPdfQueryKey = (id: string,
+    params?: GetTenantLabelPdfParams,) => {
     return [
-    `/api/admin/tenants/${id}/label.pdf`
+    `/api/admin/tenants/${id}/label.pdf`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetTenantLabelPdfQueryOptions = <TData = Awaited<ReturnType<typeof getTenantLabelPdf>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetTenantLabelPdfQueryOptions = <TData = Awaited<ReturnType<typeof getTenantLabelPdf>>, TError = ErrorType<void>>(id: string,
+    params?: GetTenantLabelPdfParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTenantLabelPdfQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantLabelPdfQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantLabelPdf>>> = ({ signal }) => getTenantLabelPdf(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantLabelPdf>>> = ({ signal }) => getTenantLabelPdf(id,params, { signal, ...requestOptions });
 
 
 
@@ -11797,15 +11810,105 @@ export type GetTenantLabelPdfQueryError = ErrorType<void>
 
 
 /**
- * @summary Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+ * @summary Printable QR sticker PDF in large or small size
  */
 
 export function useGetTenantLabelPdf<TData = Awaited<ReturnType<typeof getTenantLabelPdf>>, TError = ErrorType<void>>(
- id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ id: string,
+    params?: GetTenantLabelPdfParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetTenantLabelPdfQueryOptions(id,options)
+  const queryOptions = getGetTenantLabelPdfQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPublicTenantLabelPdfUrl = (slug: string,
+    params?: GetPublicTenantLabelPdfParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/public/tenants/${slug}/label.pdf?${stringifiedParams}` : `/api/public/tenants/${slug}/label.pdf`
+}
+
+/**
+ * @summary Download one of two English QR sticker PDFs for a published tenant
+ */
+export const getPublicTenantLabelPdf = async (slug: string,
+    params?: GetPublicTenantLabelPdfParams, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetPublicTenantLabelPdfUrl(slug,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicTenantLabelPdfQueryKey = (slug: string,
+    params?: GetPublicTenantLabelPdfParams,) => {
+    return [
+    `/api/public/tenants/${slug}/label.pdf`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPublicTenantLabelPdfQueryOptions = <TData = Awaited<ReturnType<typeof getPublicTenantLabelPdf>>, TError = ErrorType<void>>(slug: string,
+    params?: GetPublicTenantLabelPdfParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicTenantLabelPdfQueryKey(slug,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicTenantLabelPdf>>> = ({ signal }) => getPublicTenantLabelPdf(slug,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicTenantLabelPdf>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicTenantLabelPdfQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicTenantLabelPdf>>>
+export type GetPublicTenantLabelPdfQueryError = ErrorType<void>
+
+
+/**
+ * @summary Download one of two English QR sticker PDFs for a published tenant
+ */
+
+export function useGetPublicTenantLabelPdf<TData = Awaited<ReturnType<typeof getPublicTenantLabelPdf>>, TError = ErrorType<void>>(
+ slug: string,
+    params?: GetPublicTenantLabelPdfParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicTenantLabelPdf>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicTenantLabelPdfQueryOptions(slug,params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

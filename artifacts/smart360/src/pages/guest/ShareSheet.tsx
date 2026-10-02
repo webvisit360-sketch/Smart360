@@ -1,11 +1,22 @@
 import { SheetTop } from "./SheetTop";
 import { useRef, useState } from "react";
 import { makeT } from "./i18n";
+import { getPublicTenantLabelPdf } from "@workspace/api-client-react";
 
-/** Deli to stran — QR, native share, copy link, printable A6 label (paket 14). */
+const stickerLabels: Record<string, { large: string; small: string; note: string; error: string }> = {
+  sl: { large: "Prenesi veliko nalepko PDF", small: "Prenesi malo nalepko PDF", note: "PDF v angleščini", error: "Prenos ni uspel. Poskusite znova." },
+  en: { large: "Download large sticker PDF", small: "Download small sticker PDF", note: "PDF in English", error: "Download failed. Please try again." },
+  de: { large: "Großen Aufkleber als PDF herunterladen", small: "Kleinen Aufkleber als PDF herunterladen", note: "PDF auf Englisch", error: "Download fehlgeschlagen. Bitte erneut versuchen." },
+  it: { large: "Scarica adesivo grande PDF", small: "Scarica adesivo piccolo PDF", note: "PDF in inglese", error: "Download non riuscito. Riprova." },
+};
+
+/** Share the guide or explicitly download one of the two canonical stickers. */
 export function ShareSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant: any, lang?: string, isOpen: boolean, onClose: () => void }) {
   const t = makeT(tenant, lang);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
+  const labels = stickerLabels[lang] ?? stickerLabels.sl;
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const url: string = tenant?.publicUrl ?? "";
   const shortUrl = url.replace(/^https?:\/\//, "");
@@ -39,32 +50,24 @@ export function ShareSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant: a
     }
   };
 
-  const printLabel = () => {
-    let el = document.getElementById("printcard");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "printcard";
-      // Namizni zaslon: vse plasti gostujoče aplikacije živijo v #frame —
-      // element, dodan na body, bi ušel iz stolpca (namizni-zaslon.md).
-      (document.getElementById("frame") ?? document.body).appendChild(el);
+  const downloadSticker = async (size: "large" | "small") => {
+    setDownloading(true);
+    setDownloadError(false);
+    try {
+      const pdf = await getPublicTenantLabelPdf(tenant.slug, { size });
+      const href = URL.createObjectURL(pdf);
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = `smart360-sticker-${size}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(href), 60_000);
+    } catch {
+      setDownloadError(true);
+    } finally {
+      setDownloading(false);
     }
-    // The label hangs in a guest room — it carries the ACCOMMODATION's logo
-    // (transparent file: prints clean on white paper), never the Smart360
-    // wordmark. No logo → the card is simply headed by the name.
-    const logoImg = tenant.logoUrl
-      ? `<img class="pc__logo" src="${String(tenant.logoUrl).replace(/"/g, "&quot;")}" alt="">`
-      : "";
-    el.innerHTML = `<div class="pc">
-      ${logoImg}
-      <div class="pc__qr">${tenant.qrSvg ?? ""}</div>
-      <div class="pc__n"></div>
-      <div class="pc__s">Skenirajte za vse o nastanitvi in okolici<br><i>Scan for everything about your stay</i></div>
-      <div class="pc__u"></div>
-    </div>`;
-    // Name and URL via textContent — tenant data must never be parsed as HTML.
-    el.querySelector(".pc__n")!.textContent = tenant.name ?? "";
-    el.querySelector(".pc__u")!.textContent = shortUrl;
-    window.print();
   };
 
   return (
@@ -94,11 +97,15 @@ export function ShareSheet({ tenant, lang = "sl", isOpen, onClose }: { tenant: a
           <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
         </button>
 
-        <button className="srow" onClick={printLabel}>
-          <svg className="ic" viewBox="0 0 24 24"><use href="#i-print" /></svg>
-          <div className="t"><b>{t("UI.share.print")}</b><span>{t("UI.share.print.sub")}</span></div>
-          <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
-        </button>
+        {(["large", "small"] as const).map((size) => (
+          <button key={size} className="srow" data-testid={`download-sticker-${size}`}
+            disabled={downloading || !tenant?.slug} onClick={() => downloadSticker(size)}>
+            <svg className="ic" viewBox="0 0 24 24"><use href="#i-print" /></svg>
+            <div className="t"><b>{labels[size]}</b><span>{size === "large" ? "72.5 × 110 mm" : "36.3 × 55 mm"} · {labels.note}</span></div>
+            <svg className="ic chev" viewBox="0 0 24 24"><use href="#i-chev" /></svg>
+          </button>
+        ))}
+        {downloadError && <p role="alert" data-testid="sticker-download-error">{labels.error}</p>}
       </div>
     </>
   );

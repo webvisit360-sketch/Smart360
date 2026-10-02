@@ -1,0 +1,136 @@
+{
+  "source": "DEV weather fixture, real LivingGuideGuestShell; no auth/DB writes",
+  "baselineHomePixel": [
+    18,
+    26,
+    44,
+    255
+  ],
+  "sample": {
+    "x": 3,
+    "y": 830
+  },
+  "rows": [
+    {
+      "tab": "Domov",
+      "normal": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "brightPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "darkPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "scrollY": 1398,
+      "geometryAndFontsUnchanged": true
+    },
+    {
+      "tab": "Nastanitev",
+      "normal": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "brightPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "darkPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "scrollY": 718,
+      "geometryAndFontsUnchanged": true
+    },
+    {
+      "tab": "Ponudba",
+      "normal": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "brightPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "darkPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "scrollY": 646,
+      "geometryAndFontsUnchanged": true
+    },
+    {
+      "tab": "Okolica",
+      "normal": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "brightPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "darkPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "scrollY": 1068,
+      "geometryAndFontsUnchanged": true
+    },
+    {
+      "tab": "Sporočila",
+      "normal": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "brightPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "darkPhotoScrolled": [
+        18,
+        26,
+        44,
+        255
+      ],
+      "scrollY": 612,
+      "geometryAndFontsUnchanged": true
+    }
+  ],
+  "topAudit": {
+    "position": "absolute",
+    "y": 20,
+    "scrolledY": -280,
+    "note": "Absolute hero controls move with content; not persistent top chrome."
+  }
+}

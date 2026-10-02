@@ -1647,9 +1647,7 @@ body[data-t="noc"] .lg2-detail-hero--ambient {
   height: calc(78px + env(safe-area-inset-bottom));
   padding: 0 0 calc(6px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  background: var(--glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--chrome);
   transform: translateX(-50%);
   display: grid;
   grid-template-columns: repeat(5, 1fr);

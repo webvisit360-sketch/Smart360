@@ -1,5 +1,7 @@
 # Memory index
 
+- [Archivo print weights](archivo-print-weights.md) — generic Archivo.ttf is semibold, not regular; verify metadata for non-bold PDF copy.
+
 - [Tour calorie boundary](tour-calorie-boundary.md) — device-only immutable tour profiles; short accepted GPS fixes need rolling grade windows, not per-fix slope rejection.
 
 - [Guest PWA installation](guest-pwa-install-boundary.md) — tenant-scoped Living Guide offline approved; legacy stays network-only; verify real worker transport, not browser offline mode alone.

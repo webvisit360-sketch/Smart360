@@ -20,6 +20,7 @@ body[data-t="jutro"] [data-living-guide] {
   --amb1:#F5B95C;--amb2:#FAE6BE;--amb3:#C9DCE4;--ambbg:#EDD9B4;
   --bg:#FDF7E9;--card:#FFFDF6;--card2:#F7EBD3;--tx:#2B2213;--tx2:#8A7A5C;--line:#EFE3C9;
   --acc:#F2AE2E;--accg:#AD6800;--onacc:#2B2213;--warm:#F2AE2E;--glass:rgba(255,251,240,.78);
+  --chrome:#FFFAEE;
   --scrim:rgba(46,32,12,.42);--navtx:#B5A37E;--phbr:rgba(255,248,232,.6);
 }
 
@@ -27,6 +28,7 @@ body[data-t="dan"] [data-living-guide] {
   --amb1:#EDF1EC;--amb2:#FFFFFF;--amb3:#DEE9EF;--ambbg:#F1F3EF;
   --bg:#FFFFFF;--card:#F4F6F2;--card2:#ECF0EA;--tx:#121A14;--tx2:#66716A;--line:#E8EBE6;
   --acc:#157347;--accg:#1D9159;--onacc:#FFFFFF;--warm:#DD9A2B;--glass:rgba(255,255,255,.82);
+  --chrome:#FFFFFF;
   --scrim:rgba(10,20,14,.40);--navtx:#98A29A;--phbr:rgba(255,255,255,.7);
 }
 
@@ -34,6 +36,7 @@ body[data-t="vecer"] [data-living-guide] {
   --amb1:#E8933C;--amb2:#7A3A1E;--amb3:#C4552E;--ambbg:#2B1A10;
   --bg:#FBF1E2;--card:#FFF8EC;--card2:#F4E7D2;--tx:#2A2015;--tx2:#87755C;--line:#EDDFC8;
   --acc:#B5551F;--accg:#D97A2E;--onacc:#FFFFFF;--warm:#D97A2E;--glass:rgba(255,248,236,.78);
+  --chrome:#FEF6EA;
   --scrim:rgba(43,26,12,.44);--navtx:#B49B7C;--phbr:rgba(255,244,226,.55);
 }
 
@@ -41,6 +44,9 @@ body[data-t="noc"] [data-living-guide] {
   --amb1:#182644;--amb2:#070B15;--amb3:#0E1B33;--ambbg:#05080F;
   --bg:#0C1322;--card:#151D30;--card2:#1C2639;--tx:#EEF1F8;--tx2:#8C97AB;--line:#242F45;
   --acc:#E9A63A;--accg:#F2B84B;--onacc:#231803;--warm:#E9A63A;--glass:rgba(21,29,48,.72);
+  /* Opaque glass-over-bg composite; night measured on Home at RGB(18,26,44).
+     Keep --glass translucent for cards and hero-local controls. */
+  --chrome:#121A2C;
   --scrim:rgba(3,6,14,.52);--navtx:#5D6980;--phbr:rgba(255,255,255,.12);
 }
 

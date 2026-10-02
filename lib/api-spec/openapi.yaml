@@ -2920,20 +2920,44 @@ paths:
     get:
       operationId: getTenantLabelPdf
       tags: [tenants]
-      summary: Printable A6 label PDF (wordmark, QR, name, bilingual caption, address)
+      summary: Printable QR sticker PDF in large or small size
       parameters:
         - name: id
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/GuideStickerSize'
       responses:
         "200":
           description: PDF document
           content:
             application/pdf:
               schema: { type: string, format: binary }
+        "400":
+          description: Invalid sticker size
         "404":
           description: Not found
+  /public/tenants/{slug}/label.pdf:
+    get:
+      operationId: getPublicTenantLabelPdf
+      tags: [public]
+      summary: Download one of two English QR sticker PDFs for a published tenant
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/GuideStickerSize'
+      responses:
+        "200":
+          description: English PDF sticker attachment
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "400":
+          description: Invalid sticker size
+        "404":
+          description: Tenant not found or unpublished
   /public/tenants/{slug}/orders:
     post:
       operationId: createOrder
@@ -3208,6 +3232,12 @@ paths:
         "404":
           description: Thread or tenant not found
 components:
+  parameters:
+    GuideStickerSize:
+      name: size
+      in: query
+      required: false
+      schema: { type: string, enum: [large, small], default: large }
   schemas:
     Announcement:
       type: object

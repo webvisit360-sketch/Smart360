@@ -199,7 +199,7 @@ export function ReadyPreview({ tenantId, onSent }: { tenantId: string; onSent: (
       <DialogContent className="w-[calc(100%-2rem)] max-w-3xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Predogled: vodnik je pripravljen</DialogTitle>
-          <DialogDescription>Preglejte ali začasno uredite besedilo in zadevo. Spremembe veljajo samo za to pošiljanje. Nalepka QR je priložena kot PDF.</DialogDescription>
+          <DialogDescription>Preglejte ali začasno uredite besedilo in zadevo. Spremembe veljajo samo za to pošiljanje. Priloženi sta velika in mala nalepka QR kot ločena PDF-ja.</DialogDescription>
         </DialogHeader>
         {error && <p role="alert" className="text-destructive">{error}</p>}
         {!preview ? (!error && <p role="status">Nalagam predogled …</p>) : (

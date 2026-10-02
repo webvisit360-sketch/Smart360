@@ -31,6 +31,7 @@ import {
   PreviewTenantPublicationResponse,
   AlignTenantSkeletonParams,
   AlignTenantSkeletonResponse,
+  GetTenantLabelPdfQueryParams,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
 import { logChange, safeSummary } from "../lib/changelog";
@@ -61,11 +62,8 @@ function isSlugCollision(error: unknown): boolean {
   return dbError?.code === "23505" && Boolean(dbError.constraint?.includes("slug"));
 }
 import QRCode from "qrcode";
-import PDFDocument from "pdfkit";
-import SVGtoPDF from "svg-to-pdfkit";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { guestUrl, guestQrSvg } from "../lib/guestUrl";
+import { makeGuideSticker } from "../lib/guideStickers";
 import {
   extractVirtualTourUrl,
   VirtualTourUrlError,
@@ -460,9 +458,14 @@ router.get("/admin/tenants/:id/qr.png", async (req, res): Promise<void> => {
   res.send(png);
 });
 
-// A6 label PDF — same card as the guest "Natisni nalepko" output (paket 14):
-// wordmark 38 mm, QR 62 mm, name, bilingual caption, address in blue.
+// Shared print artwork, identical to the two guide-ready email attachments.
 router.get("/admin/tenants/:id/label.pdf", async (req, res): Promise<void> => {
+  const query = GetTenantLabelPdfQueryParams.safeParse(req.query);
+  if (!query.success) {
+    res.status(400).json({ error: "Neveljavna velikost nalepke. Izberite large ali small." });
+    return;
+  }
+  const size = query.data.size ?? "large";
   const id = firstParam(req.params["id"]);
   const [tenant] = await db
     .select({ slug: tenantsTable.slug, name: tenantsTable.name })
@@ -472,67 +475,14 @@ router.get("/admin/tenants/:id/label.pdf", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  const MM = 72 / 25.4;
-  const pageW = 105 * MM;
   const url = guestUrl(tenant.slug);
-  const qrSvg = await guestQrSvg(url);
-
-  const doc = new PDFDocument({ size: [pageW, 148 * MM], margin: 8 * MM });
+  const pdf = await makeGuideSticker(tenant.name, url, size);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader(
     "Content-Disposition",
-    `attachment; filename="smart360-${tenant.slug}-nalepka-a6.pdf"`,
+    `attachment; filename="smart360-nalepka-${size === "large" ? "velika" : "mala"}.pdf"`,
   );
-  doc.pipe(res);
-
-  // This legacy A6 label has a wordmark; the separate print QR sticker does not.
-  // Always use Archivo 800 here rather than the old blue outline sprite.
-  const wmW = 38 * MM;
-  const wmH = 20;
-  let y = 14 * MM;
-  const fontFile = "artifacts/api-server/assets/Archivo-800.ttf";
-  let archivo: Buffer;
-  try {
-    archivo = readFileSync(resolve(process.cwd(), fontFile));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    archivo = readFileSync(resolve(process.cwd(), "../..", fontFile));
-  }
-  doc.registerFont("Smart360Wordmark", archivo);
-  doc.font("Smart360Wordmark").fontSize(17).fillColor("#121A14");
-  doc.text("SMART360", (pageW - wmW) / 2, y, {
-    width: wmW, align: "center", characterSpacing: 17 * 0.02,
-    lineBreak: false,
-  });
-  y += wmH + 6 * MM;
-
-  const qrW = 62 * MM;
-  SVGtoPDF(doc, qrSvg, (pageW - qrW) / 2, y, {
-    width: qrW,
-    height: qrW,
-    preserveAspectRatio: "xMidYMid meet",
-  });
-  y += qrW + 5 * MM;
-
-  doc.font("Helvetica-Bold").fontSize(16).fillColor("#14201F");
-  doc.text(tenant.name, 8 * MM, y, { width: pageW - 16 * MM, align: "center" });
-  y = doc.y + 2 * MM;
-  doc.font("Helvetica-Bold").fontSize(9.5).fillColor("#14201F");
-  doc.text("Skenirajte za vse o nastanitvi in okolici", 8 * MM, y, {
-    width: pageW - 16 * MM,
-    align: "center",
-  });
-  doc.font("Helvetica-Oblique").fontSize(9.5).fillColor("#6B7876");
-  doc.text("Scan for everything about your stay", 8 * MM, doc.y + 1, {
-    width: pageW - 16 * MM,
-    align: "center",
-  });
-  doc.font("Helvetica-Bold").fontSize(9).fillColor("#3B78DC");
-  doc.text(url.replace(/^https?:\/\//, ""), 8 * MM, doc.y + 4 * MM, {
-    width: pageW - 16 * MM,
-    align: "center",
-  });
-  doc.end();
+  res.send(pdf);
 });
 
 router.get("/admin/tenants/:id", async (req, res): Promise<void> => {

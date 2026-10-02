@@ -4042,6 +4042,14 @@ export interface TenantOverview {
   provisionalPhotos: number;
 }
 
+export type GuideStickerSizeParameter = typeof GuideStickerSizeParameter[keyof typeof GuideStickerSizeParameter];
+
+
+export const GuideStickerSizeParameter = {
+  large: 'large',
+  small: 'small',
+} as const;
+
 export type RetryHostOnboardingRecommendations200 = {
   ok: boolean;
   recommendationProcessing: HostOnboardingRecommendationProcessing;
@@ -4130,5 +4138,13 @@ lang: string;
 export type CheckSlugParams = {
 slug: string;
 tenantId?: string;
+};
+
+export type GetTenantLabelPdfParams = {
+size?: GuideStickerSizeParameter;
+};
+
+export type GetPublicTenantLabelPdfParams = {
+size?: GuideStickerSizeParameter;
 };
 

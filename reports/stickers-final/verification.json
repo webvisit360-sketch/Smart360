@@ -1,0 +1,434 @@
+{
+  "identity": {
+    "checkedAt": "2026-10-02T05:02:11.215Z",
+    "source": "https://smart360.info/api/public/tenants/turizem-drobez",
+    "status": 200,
+    "name": "Turizem Drobež",
+    "slug": "turizem-drobez",
+    "customDomain": null,
+    "guestUrl": "https://smart360.info/turizem-drobez",
+    "guestStatus": 200
+  },
+  "results": [
+    {
+      "base": "turizem-drobez-large",
+      "id": "turizem-drobez",
+      "name": "Turizem Drobež",
+      "url": "https://smart360.info/turizem-drobez",
+      "type": "Verified production identity",
+      "size": "large",
+      "layout": {
+        "width": 205.51181102362204,
+        "height": 311.8110236220473,
+        "inset": 15.590551181102363,
+        "headerY": 18.708661417322837,
+        "headerSize": 8.78740157480315,
+        "headerTracking": 1.054488188976378,
+        "nameY": 31.748031496062993,
+        "nameHeight": 47.05511811023622,
+        "nameMaxSize": 26.36220472440945,
+        "nameMinSize": 12,
+        "qr": {
+          "x": 24.8031496062992,
+          "y": 84.4724409448819,
+          "size": 155.90551181102364,
+          "quietModules": 4,
+          "borderWidth": 0.8503937007874015,
+          "borderRadius": 6.236220472440945
+        },
+        "scanY": 249.73228346456693,
+        "scanSize": 9.354330708661418,
+        "ruleY": 267.8740157480315,
+        "ruleHeight": 0.8503937007874015,
+        "wordmarkY": 276.37795275590554,
+        "wordmarkSize": 14.456692913385828,
+        "sloganY": 295.93700787401576,
+        "sloganSize": 8.78740157480315
+      },
+      "fitted": {
+        "lines": [
+          "Turizem",
+          "Drobež"
+        ],
+        "fontSize": 26.11220472440945,
+        "lineHeight": 27.417814960629926,
+        "inkTop": 4.021279527559056,
+        "inkHeight": 46.636397637795284,
+        "truncated": false,
+        "widths": [
+          104.4488188976378,
+          93.3250196850394
+        ],
+        "availableWidth": 174.3307086614173
+      },
+      "decode": [
+        {
+          "dpi": 300,
+          "width": 857,
+          "height": 1300,
+          "url": "https://smart360.info/turizem-drobez"
+        },
+        {
+          "dpi": 96,
+          "width": 275,
+          "height": 416,
+          "url": "https://smart360.info/turizem-drobez"
+        }
+      ],
+      "pdfInfo": "Title:           SMART360 — Turizem Drobež — large\nCreator:         PDFKit\nProducer:        PDFKit\nCreationDate:    Fri Oct  2 05:02:11 2026 UTC\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           1\nEncrypted:       no\nPage size:       205.512 x 311.811 pts\nPage rot:        0\nMediaBox:            0.00     0.00   205.51   311.81\nCropBox:             0.00     0.00   205.51   311.81\nBleedBox:            0.00     0.00   205.51   311.81\nTrimBox:             0.00     0.00   205.51   311.81\nArtBox:              0.00     0.00   205.51   311.81\nFile size:       12771 bytes\nOptimized:       no\nPDF version:     1.3\n",
+      "fonts": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nDZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes      8  0\nCZZZZZ+Archivo-ExtraBold             CID TrueType      Identity-H       yes yes yes      9  0\nEZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes     10  0\n",
+      "images": "page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio\n--------------------------------------------------------------------------------------------\n",
+      "text": "      Y O U R D I G I TA L G U I D E\n\n      Turizem\n      Drobež\n\n\n\n\n    Scan with your phone camera.\n\n\n         SMART360\nEverything about your stay, in one place.\n\f"
+    },
+    {
+      "base": "turizem-drobez-small",
+      "id": "turizem-drobez",
+      "name": "Turizem Drobež",
+      "url": "https://smart360.info/turizem-drobez",
+      "type": "Verified production identity",
+      "size": "small",
+      "layout": {
+        "width": 102.8976377952756,
+        "height": 155.90551181102364,
+        "inset": 7.937007874015748,
+        "headerY": 9.354330708661418,
+        "headerSize": 5.102362204724409,
+        "headerTracking": 0.510236220472441,
+        "nameY": 18.141732283464567,
+        "nameHeight": 26.645669291338585,
+        "nameMaxSize": 13.039370078740157,
+        "nameMinSize": 6,
+        "qr": {
+          "x": 12.472440944881889,
+          "y": 51.023622047244096,
+          "size": 77.95275590551182,
+          "quietModules": 4,
+          "borderWidth": 0.8503937007874015,
+          "borderRadius": 3.1181102362204727
+        },
+        "scanY": 249.73228346456693,
+        "scanSize": 9.354330708661418,
+        "ruleY": 136.06299212598427,
+        "ruleHeight": 0.42519685039370075,
+        "wordmarkY": 141.16535433070865,
+        "wordmarkSize": 7.370078740157481,
+        "sloganY": 295.93700787401576,
+        "sloganSize": 8.78740157480315
+      },
+      "fitted": {
+        "lines": [
+          "Turizem",
+          "Drobež"
+        ],
+        "fontSize": 13.039370078740157,
+        "lineHeight": 13.691338582677165,
+        "inkTop": 2.008062992125982,
+        "inkHeight": 23.288314960629922,
+        "truncated": false,
+        "widths": [
+          52.15748031496063,
+          46.602708661417324
+        ],
+        "availableWidth": 87.0236220472441
+      },
+      "decode": [
+        {
+          "dpi": 300,
+          "width": 429,
+          "height": 650,
+          "url": "https://smart360.info/turizem-drobez"
+        },
+        {
+          "dpi": 96,
+          "width": 138,
+          "height": 208,
+          "url": "https://smart360.info/turizem-drobez"
+        }
+      ],
+      "pdfInfo": "Title:           SMART360 — Turizem Drobež — small\nCreator:         PDFKit\nProducer:        PDFKit\nCreationDate:    Fri Oct  2 05:02:11 2026 UTC\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           1\nEncrypted:       no\nPage size:       102.898 x 155.906 pts\nPage rot:        0\nMediaBox:            0.00     0.00   102.90   155.91\nCropBox:             0.00     0.00   102.90   155.91\nBleedBox:            0.00     0.00   102.90   155.91\nTrimBox:             0.00     0.00   102.90   155.91\nArtBox:              0.00     0.00   102.90   155.91\nFile size:       9307 bytes\nOptimized:       no\nPDF version:     1.3\n",
+      "fonts": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nDZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes      8  0\nCZZZZZ+Archivo-ExtraBold             CID TrueType      Identity-H       yes yes yes      9  0\n",
+      "images": "page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio\n--------------------------------------------------------------------------------------------\n",
+      "text": "YOUR DIGITAL GUIDE\n\n\n Turizem\n Drobež\n\n\n\n\n  SMART360\n\f"
+    },
+    {
+      "base": "meli-pu-large",
+      "id": "meli-pu",
+      "name": "Apartmaji Meli Pu",
+      "url": "https://smart360.info/turizem-drobez",
+      "type": "Typography-only test; QR deliberately targets verified Drobež URL, not Apartmaji Meli Pu",
+      "size": "large",
+      "layout": {
+        "width": 205.51181102362204,
+        "height": 311.8110236220473,
+        "inset": 15.590551181102363,
+        "headerY": 18.708661417322837,
+        "headerSize": 8.78740157480315,
+        "headerTracking": 1.054488188976378,
+        "nameY": 31.748031496062993,
+        "nameHeight": 47.05511811023622,
+        "nameMaxSize": 26.36220472440945,
+        "nameMinSize": 12,
+        "qr": {
+          "x": 24.8031496062992,
+          "y": 84.4724409448819,
+          "size": 155.90551181102364,
+          "quietModules": 4,
+          "borderWidth": 0.8503937007874015,
+          "borderRadius": 6.236220472440945
+        },
+        "scanY": 249.73228346456693,
+        "scanSize": 9.354330708661418,
+        "ruleY": 267.8740157480315,
+        "ruleHeight": 0.8503937007874015,
+        "wordmarkY": 276.37795275590554,
+        "wordmarkSize": 14.456692913385828,
+        "sloganY": 295.93700787401576,
+        "sloganSize": 8.78740157480315
+      },
+      "fitted": {
+        "lines": [
+          "Apartmaji",
+          "Meli Pu"
+        ],
+        "fontSize": 26.11220472440945,
+        "lineHeight": 27.417814960629926,
+        "inkTop": 4.021279527559056,
+        "inkHeight": 46.636397637795284,
+        "truncated": false,
+        "widths": [
+          128.31537401574806,
+          94.65674212598428
+        ],
+        "availableWidth": 174.3307086614173
+      },
+      "decode": [
+        {
+          "dpi": 300,
+          "width": 857,
+          "height": 1300,
+          "url": "https://smart360.info/turizem-drobez"
+        },
+        {
+          "dpi": 96,
+          "width": 275,
+          "height": 416,
+          "url": "https://smart360.info/turizem-drobez"
+        }
+      ],
+      "pdfInfo": "Title:           SMART360 — Apartmaji Meli Pu — large\nCreator:         PDFKit\nProducer:        PDFKit\nCreationDate:    Fri Oct  2 05:02:11 2026 UTC\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           1\nEncrypted:       no\nPage size:       205.512 x 311.811 pts\nPage rot:        0\nMediaBox:            0.00     0.00   205.51   311.81\nCropBox:             0.00     0.00   205.51   311.81\nBleedBox:            0.00     0.00   205.51   311.81\nTrimBox:             0.00     0.00   205.51   311.81\nArtBox:              0.00     0.00   205.51   311.81\nFile size:       12906 bytes\nOptimized:       no\nPDF version:     1.3\n",
+      "fonts": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nDZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes      8  0\nCZZZZZ+Archivo-ExtraBold             CID TrueType      Identity-H       yes yes yes      9  0\nEZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes     10  0\n",
+      "images": "page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio\n--------------------------------------------------------------------------------------------\n",
+      "text": "      Y O U R D I G I TA L G U I D E\n\n   Apartmaji\n    Meli Pu\n\n\n\n\n    Scan with your phone camera.\n\n\n         SMART360\nEverything about your stay, in one place.\n\f"
+    },
+    {
+      "base": "meli-pu-small",
+      "id": "meli-pu",
+      "name": "Apartmaji Meli Pu",
+      "url": "https://smart360.info/turizem-drobez",
+      "type": "Typography-only test; QR deliberately targets verified Drobež URL, not Apartmaji Meli Pu",
+      "size": "small",
+      "layout": {
+        "width": 102.8976377952756,
+        "height": 155.90551181102364,
+        "inset": 7.937007874015748,
+        "headerY": 9.354330708661418,
+        "headerSize": 5.102362204724409,
+        "headerTracking": 0.510236220472441,
+        "nameY": 18.141732283464567,
+        "nameHeight": 26.645669291338585,
+        "nameMaxSize": 13.039370078740157,
+        "nameMinSize": 6,
+        "qr": {
+          "x": 12.472440944881889,
+          "y": 51.023622047244096,
+          "size": 77.95275590551182,
+          "quietModules": 4,
+          "borderWidth": 0.8503937007874015,
+          "borderRadius": 3.1181102362204727
+        },
+        "scanY": 249.73228346456693,
+        "scanSize": 9.354330708661418,
+        "ruleY": 136.06299212598427,
+        "ruleHeight": 0.42519685039370075,
+        "wordmarkY": 141.16535433070865,
+        "wordmarkSize": 7.370078740157481,
+        "sloganY": 295.93700787401576,
+        "sloganSize": 8.78740157480315
+      },
+      "fitted": {
+        "lines": [
+          "Apartmaji",
+          "Meli Pu"
+        ],
+        "fontSize": 13.039370078740157,
+        "lineHeight": 13.691338582677165,
+        "inkTop": 2.008062992125982,
+        "inkHeight": 23.288314960629922,
+        "truncated": false,
+        "widths": [
+          64.07546456692914,
+          47.267716535433074
+        ],
+        "availableWidth": 87.0236220472441
+      },
+      "decode": [
+        {
+          "dpi": 300,
+          "width": 429,
+          "height": 650,
+          "url": "https://smart360.info/turizem-drobez"
+        },
+        {
+          "dpi": 96,
+          "width": 138,
+          "height": 208,
+          "url": "https://smart360.info/turizem-drobez"
+        }
+      ],
+      "pdfInfo": "Title:           SMART360 — Apartmaji Meli Pu — small\nCreator:         PDFKit\nProducer:        PDFKit\nCreationDate:    Fri Oct  2 05:02:12 2026 UTC\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           1\nEncrypted:       no\nPage size:       102.898 x 155.906 pts\nPage rot:        0\nMediaBox:            0.00     0.00   102.90   155.91\nCropBox:             0.00     0.00   102.90   155.91\nBleedBox:            0.00     0.00   102.90   155.91\nTrimBox:             0.00     0.00   102.90   155.91\nArtBox:              0.00     0.00   102.90   155.91\nFile size:       9441 bytes\nOptimized:       no\nPDF version:     1.3\n",
+      "fonts": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nDZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes      8  0\nCZZZZZ+Archivo-ExtraBold             CID TrueType      Identity-H       yes yes yes      9  0\n",
+      "images": "page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio\n--------------------------------------------------------------------------------------------\n",
+      "text": "YOUR DIGITAL GUIDE\n\n\nApartmaji\n Meli Pu\n\n\n\n\n  SMART360\n\f"
+    },
+    {
+      "base": "very-long-name-large",
+      "id": "very-long-name",
+      "name": "Turizem Drobež — izjemno dolgo ime nastanitve za preverjanje zmanjševanja velikosti pisave in varnega krajšanja brez prekrivanja kode QR",
+      "url": "https://smart360.info/turizem-drobez",
+      "type": "Synthetic typography stress test; QR targets verified Drobež URL",
+      "size": "large",
+      "layout": {
+        "width": 205.51181102362204,
+        "height": 311.8110236220473,
+        "inset": 15.590551181102363,
+        "headerY": 18.708661417322837,
+        "headerSize": 8.78740157480315,
+        "headerTracking": 1.054488188976378,
+        "nameY": 31.748031496062993,
+        "nameHeight": 47.05511811023622,
+        "nameMaxSize": 26.36220472440945,
+        "nameMinSize": 12,
+        "qr": {
+          "x": 24.8031496062992,
+          "y": 84.4724409448819,
+          "size": 155.90551181102364,
+          "quietModules": 4,
+          "borderWidth": 0.8503937007874015,
+          "borderRadius": 6.236220472440945
+        },
+        "scanY": 249.73228346456693,
+        "scanSize": 9.354330708661418,
+        "ruleY": 267.8740157480315,
+        "ruleHeight": 0.8503937007874015,
+        "wordmarkY": 276.37795275590554,
+        "wordmarkSize": 14.456692913385828,
+        "sloganY": 295.93700787401576,
+        "sloganSize": 8.78740157480315
+      },
+      "fitted": {
+        "lines": [
+          "Turizem Drobež — izjemno",
+          "dolgo ime nastanitve za…"
+        ],
+        "fontSize": 12,
+        "lineHeight": 12.600000000000001,
+        "inkTop": 1.847999999999999,
+        "inkHeight": 23.652000000000005,
+        "truncated": true,
+        "widths": [
+          156.84,
+          152.028
+        ],
+        "availableWidth": 174.3307086614173
+      },
+      "decode": [
+        {
+          "dpi": 300,
+          "width": 857,
+          "height": 1300,
+          "url": "https://smart360.info/turizem-drobez"
+        },
+        {
+          "dpi": 96,
+          "width": 275,
+          "height": 416,
+          "url": "https://smart360.info/turizem-drobez"
+        }
+      ],
+      "pdfInfo": "Title:           SMART360 — Turizem Drobež — izjemno dolgo ime nastanitve za preverjanje zmanjševanja velikosti pisave in varnega krajšanja brez prekrivanja kode QR — large\nCreator:         PDFKit\nProducer:        PDFKit\nCreationDate:    Fri Oct  2 05:02:12 2026 UTC\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           1\nEncrypted:       no\nPage size:       205.512 x 311.811 pts\nPage rot:        0\nMediaBox:            0.00     0.00   205.51   311.81\nCropBox:             0.00     0.00   205.51   311.81\nBleedBox:            0.00     0.00   205.51   311.81\nTrimBox:             0.00     0.00   205.51   311.81\nArtBox:              0.00     0.00   205.51   311.81\nFile size:       13943 bytes\nOptimized:       no\nPDF version:     1.3\n",
+      "fonts": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nDZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes      8  0\nCZZZZZ+Archivo-ExtraBold             CID TrueType      Identity-H       yes yes yes      9  0\nEZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes     10  0\n",
+      "images": "page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio\n--------------------------------------------------------------------------------------------\n",
+      "text": "      Y O U R D I G I TA L G U I D E\n\nTurizem Drobež — izjemno\ndolgo ime nastanitve za…\n\n\n\n\n    Scan with your phone camera.\n\n\n         SMART360\nEverything about your stay, in one place.\n\f"
+    },
+    {
+      "base": "very-long-name-small",
+      "id": "very-long-name",
+      "name": "Turizem Drobež — izjemno dolgo ime nastanitve za preverjanje zmanjševanja velikosti pisave in varnega krajšanja brez prekrivanja kode QR",
+      "url": "https://smart360.info/turizem-drobez",
+      "type": "Synthetic typography stress test; QR targets verified Drobež URL",
+      "size": "small",
+      "layout": {
+        "width": 102.8976377952756,
+        "height": 155.90551181102364,
+        "inset": 7.937007874015748,
+        "headerY": 9.354330708661418,
+        "headerSize": 5.102362204724409,
+        "headerTracking": 0.510236220472441,
+        "nameY": 18.141732283464567,
+        "nameHeight": 26.645669291338585,
+        "nameMaxSize": 13.039370078740157,
+        "nameMinSize": 6,
+        "qr": {
+          "x": 12.472440944881889,
+          "y": 51.023622047244096,
+          "size": 77.95275590551182,
+          "quietModules": 4,
+          "borderWidth": 0.8503937007874015,
+          "borderRadius": 3.1181102362204727
+        },
+        "scanY": 249.73228346456693,
+        "scanSize": 9.354330708661418,
+        "ruleY": 136.06299212598427,
+        "ruleHeight": 0.42519685039370075,
+        "wordmarkY": 141.16535433070865,
+        "wordmarkSize": 7.370078740157481,
+        "sloganY": 295.93700787401576,
+        "sloganSize": 8.78740157480315
+      },
+      "fitted": {
+        "lines": [
+          "Turizem Drobež — izjemno",
+          "dolgo ime nastanitve za…"
+        ],
+        "fontSize": 6,
+        "lineHeight": 6.300000000000001,
+        "inkTop": 0.9239999999999995,
+        "inkHeight": 11.826000000000002,
+        "truncated": true,
+        "widths": [
+          78.42,
+          76.014
+        ],
+        "availableWidth": 87.0236220472441
+      },
+      "decode": [
+        {
+          "dpi": 300,
+          "width": 429,
+          "height": 650,
+          "url": "https://smart360.info/turizem-drobez"
+        },
+        {
+          "dpi": 96,
+          "width": 138,
+          "height": 208,
+          "url": "https://smart360.info/turizem-drobez"
+        }
+      ],
+      "pdfInfo": "Title:           SMART360 — Turizem Drobež — izjemno dolgo ime nastanitve za preverjanje zmanjševanja velikosti pisave in varnega krajšanja brez prekrivanja kode QR — small\nCreator:         PDFKit\nProducer:        PDFKit\nCreationDate:    Fri Oct  2 05:02:12 2026 UTC\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects:        no\nForm:            none\nJavaScript:      no\nPages:           1\nEncrypted:       no\nPage size:       102.898 x 155.906 pts\nPage rot:        0\nMediaBox:            0.00     0.00   102.90   155.91\nCropBox:             0.00     0.00   102.90   155.91\nBleedBox:            0.00     0.00   102.90   155.91\nTrimBox:             0.00     0.00   102.90   155.91\nArtBox:              0.00     0.00   102.90   155.91\nFile size:       10478 bytes\nOptimized:       no\nPDF version:     1.3\n",
+      "fonts": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nDZZZZZ+Archivo-SemiBold              CID TrueType      Identity-H       yes yes yes      8  0\nCZZZZZ+Archivo-ExtraBold             CID TrueType      Identity-H       yes yes yes      9  0\n",
+      "images": "page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-ppi size ratio\n--------------------------------------------------------------------------------------------\n",
+      "text": "  YOUR DIGITAL GUIDE\n\n\nTurizem Drobež — izjemno\ndolgo ime nastanitve za…\n\n\n\n\n     SMART360\n\f"
+    }
+  ]
+}

@@ -28,7 +28,23 @@ export default function LivingGuideWeatherFixture() {
     const requested = search.get("lang");
     return requested === "en" || requested === "de" || requested === "it" ? requested : "sl";
   });
-  const tenant = useMemo(() => syntheticTenant(lang), [lang]);
+  // Opt-in chrome QA uses the real shell with all five destinations. Existing
+  // weather/recorder fixtures retain their original data and assertions.
+  const chromeFixture = search.get("chrome") === "1";
+  const tenant = useMemo(() => {
+    const data = syntheticTenant(lang);
+    if (chromeFixture) {
+      data.name = "TEST – navigation chrome";
+      data.sections.push({
+        id: "s-offer", key: "offer", label: "Ponudba", isVisible: true,
+        categories: [{
+          id: "c-offer", label: "TEST ponudba", layout: "cards", isVisible: true,
+          items: [{ id: "i-offer", title: "TEST ponudba", subtitle: "Samo razvojni prikaz", isVisible: true, media: [], body: "", mapQuery: "" }],
+        }],
+      });
+    }
+    return data;
+  }, [lang, chromeFixture]);
   const weather = useMemo(() => syntheticWeather(mode, fixedNow), [mode, fixedNow]);
   const surface = location.split("/").filter(Boolean)[1] ?? "home";
 

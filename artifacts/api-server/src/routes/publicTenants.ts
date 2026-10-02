@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, tenantsTable, tenantAliasesTable, publishedSnapshotsTable } from "@workspace/db";
 import {
   GetPublicTenantResponse,
+  GetTenantLabelPdfQueryParams,
   GetTenantWeatherParams,
   GetTenantWeatherResponse,
   SearchPublicTenantResponse,
@@ -21,6 +22,7 @@ import { getHostResponseStats } from "../lib/hostResponseStats";
 import { readPublishedContent, type PublishedContent } from "../lib/publishedSnapshots";
 import { guestOfflineConfig, renderGuestServiceWorker, renderLegacyGuestServiceWorker } from "../lib/guestServiceWorker";
 import { getTenantWeatherCached } from "../lib/tenantWeather";
+import { makeGuideSticker } from "../lib/guideStickers";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -347,6 +349,41 @@ router.get(
       });
   }
 );
+
+// Downloads use the canonical two English artworks, never guest-language HTML.
+router.get("/public/tenants/:slug/label.pdf", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  const query = GetTenantLabelPdfQueryParams.safeParse(req.query);
+  if (!query.success) {
+    res.status(400).json({ error: "Invalid sticker size. Choose large or small." });
+    return;
+  }
+  const slug = firstParam(req.params["slug"]);
+  const resolved = slug ? await resolveTenantBySlugOrDomain(slug, req.headers.host) : undefined;
+  if (!resolved) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // Re-read publication status: a stale resolution cache must not permit an
+  // unpublished download. No authenticated preview exemption on this route.
+  const [tenant] = await db.select({
+    slug: tenantsTable.slug,
+    isPublished: tenantsTable.isPublished,
+    content: publishedSnapshotsTable.content,
+  }).from(tenantsTable)
+    .innerJoin(publishedSnapshotsTable, eq(publishedSnapshotsTable.tenantId, tenantsTable.id))
+    .where(eq(tenantsTable.id, resolved.id));
+  const published = (tenant?.content as unknown as PublishedContent | undefined)?.languages.sl?.tree;
+  if (!tenant || !tenant.isPublished || !published) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const size = query.data.size ?? "large";
+  const pdf = await makeGuideSticker(published.name, guestUrl(tenant.slug), size);
+  res.set("Content-Disposition", `attachment; filename="smart360-sticker-${size}.pdf"`);
+  res.set("X-Content-Type-Options", "nosniff");
+  res.type("application/pdf").send(pdf);
+});
 
 router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const slug = firstParam(req.params["slug"]);

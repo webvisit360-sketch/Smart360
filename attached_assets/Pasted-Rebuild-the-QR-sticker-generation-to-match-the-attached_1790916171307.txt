@@ -1,0 +1,17 @@
+Rebuild the QR sticker generation to match the attached BINDING reference nalepka-50mm-1na1.html. The app must generate exactly TWO sticker variants, and both are attached to the host emails that currently carry stickers (the "guide ready" lifecycle emails and anywhere else stickers are sent or downloadable in admin).
+
+1. LARGE sticker: 72.5 x 110 mm, QR 55 x 55 mm. Content top to bottom, exactly per reference: "YOUR DIGITAL GUIDE" (small caps, muted), tenant name (Archivo 800, #121A14), QR code, "Scan with your phone camera." (muted), thin rule, SMART360 wordmark (Archivo 800 #121A14), slogan "Everything about your stay, in one place." (muted, never bold, never translated). ALL text English except the tenant name.
+
+2. SMALL sticker: 36.3 x 55 mm, QR 27.5 x 27.5 mm. Same layout WITHOUT the scan instruction and WITHOUT the slogan: "YOUR DIGITAL GUIDE", tenant name, QR, rule, SMART360. Nothing else.
+
+3. PRINT QUALITY: PDFs at exact physical sizes above; QR and text as vectors (or minimum 300 dpi); Archivo embedded in the PDF; white background, no bleed assumptions beyond today's. The QR encodes the tenant's current public guide URL exactly as today (301 redirects keep old prints alive).
+
+4. LONG TENANT NAMES: the tenant name must never overflow — wrap to max two lines and scale down to a defined minimum before truncating; show in the report how "Apartmaji Meli Pu" and a deliberately long test name render on both sizes.
+
+5. DELIVERY: wherever a sticker PDF is generated or emailed today, now generate and attach BOTH variants (clearly named, e.g. smart360-nalepka-velika.pdf / smart360-nalepka-mala.pdf). The Slovenian email body text referencing the sticker should mention both sizes in one short sentence. No other email changes.
+
+6. Record in replit.md: two sticker sizes, English-only copy, slogan only on the large one.
+
+7. EVIDENCE: attach both generated PDFs for Turizem Drobež and a 100% raster preview of each; confirm physical dimensions of the PDFs programmatically (page size in mm).
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
