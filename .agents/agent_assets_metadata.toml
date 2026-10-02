@@ -2374,3 +2374,87 @@ mtime_ms = 1790917332902
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ab95e8b9-dd23-461c-81fb-96ab30f0d301/58812f6f-2c80-4b47-b089-2d66ae99914f"
 storage_version_token = "1790917577889392"
 content_type = "text/html"
+
+[[outputs]]
+id = "1WqXMuk3YqqOqLmdR_W9e"
+uri = "file://reports/trak-signature/turizem-drobez-large.pdf"
+type = "pdf"
+title = "Turizem Drobež — velika nalepka s trakom"
+description = "72,5 × 110 mm; vektorski trak 1,2 mm. Tisk pri 100 % brez prilagajanja strani."
+logical_id = "41c4ad40-6b65-4d74-a3c3-5f7fddbc9431"
+content_hash = "sha256:76700083f85b1d01e36a55d9c5658aab73e8a2cc934a32c826171251baf0e94c"
+size = 13808
+mtime_ms = 1790918154995
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/41c4ad40-6b65-4d74-a3c3-5f7fddbc9431/5aedf246-0100-41a1-9f2f-ed2e9b2e790c"
+storage_version_token = "1790918505573989"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "os7AoAMfypo_0qKpAQidO"
+uri = "file://reports/trak-signature/turizem-drobez-small.pdf"
+type = "pdf"
+title = "Turizem Drobež — mala nalepka s trakom"
+description = "36,3 × 55 mm; vektorski trak 0,7 mm. Tisk pri 100 % brez prilagajanja strani."
+logical_id = "be867655-0812-4ca7-9ad4-b158c1988282"
+content_hash = "sha256:4a3ecaa4824a1951b1949e180c5929765499e379c97afda6edfb1c99e49fd814"
+size = 10341
+mtime_ms = 1790918155355
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/be867655-0812-4ca7-9ad4-b158c1988282/ff9744c9-51aa-4c0c-afdf-7d74651304e7"
+storage_version_token = "1790918506380211"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "BFQTLsOkrHnWKOy6SEhlH"
+uri = "file://reports/trak-signature/gril-dobrodosli-samostojno.png"
+type = "image"
+title = "Dobrodošli — samostojno urejanje"
+description = "Celoten izris pri 100 %, 1×. Predogled v brskalniku, ne dokaz iz poštnega odjemalca."
+logical_id = "4a8aca30-2655-4b49-814b-faea28b5c53f"
+content_hash = "sha256:630bfa23fc88815c050e3cccf679f8c4f876d542a8fba2d2df8746579dc8e727"
+size = 102165
+mtime_ms = 1790918333931
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4a8aca30-2655-4b49-814b-faea28b5c53f/15bcf6f9-9ea8-4b62-b677-2865547dd71f"
+storage_version_token = "1790918507068769"
+content_type = "image/png"
+
+[[outputs]]
+id = "8lxsn8IAobjhKBB3G6Vzk"
+uri = "file://reports/trak-signature/gril-vodnik-pripravljen-samostojno.png"
+type = "image"
+title = "Vodnik pripravljen — samostojno urejanje"
+description = "Celoten izris pri 100 %, 1×; trak 4 px."
+logical_id = "26b561e8-7727-4d8b-bb19-53575c94bc3c"
+content_hash = "sha256:33f0a7e6bf871a6b0e6f48b73ad023fa194b4fea78b84a3b8820d6a3517ef510"
+size = 107733
+mtime_ms = 1790918334515
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/26b561e8-7727-4d8b-bb19-53575c94bc3c/935714d4-f7b5-4795-a798-e5b237cd49d1"
+storage_version_token = "1790918507829157"
+content_type = "image/png"
+
+[[outputs]]
+id = "-zFFtYYpnipDYxxF3TixK"
+uri = "file://reports/trak-signature/gril-dobrodosli-ureja-smart360.png"
+type = "image"
+title = "Dobrodošli — ureja Smart360"
+description = "Celoten izris pri 100 %, 1×."
+logical_id = "d00f3ba9-0cec-44ad-8f5d-4be5cd2d7bac"
+content_hash = "sha256:c37f6d2ed115d15930f8c4fcde03987929e9f9751f74992130a6771587c9059d"
+size = 88684
+mtime_ms = 1790918334211
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d00f3ba9-0cec-44ad-8f5d-4be5cd2d7bac/61ca1272-d51f-4750-8914-d288cfcd3820"
+storage_version_token = "1790918509112064"
+content_type = "image/png"
+
+[[outputs]]
+id = "kcTkSS__uSz0Aq0U8MW9z"
+uri = "file://reports/trak-signature/gril-vodnik-pripravljen-ureja-smart360.png"
+type = "image"
+title = "Vodnik pripravljen — ureja Smart360"
+description = "Celoten izris pri 100 %, 1×."
+logical_id = "9ce875ee-2cfe-4fdc-8e60-aa34b8e5ca30"
+content_hash = "sha256:c0719389b7f614642bb6d571a3bde9cf42d3f809f88bfac569bdd8b6ebecce60"
+size = 100611
+mtime_ms = 1790918334815
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9ce875ee-2cfe-4fdc-8e60-aa34b8e5ca30/3a2f082b-695a-40bd-9b19-358771bf3727"
+storage_version_token = "1790918509813607"
+content_type = "image/png"

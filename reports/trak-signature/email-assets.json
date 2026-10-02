@@ -1,0 +1,49 @@
+{
+  "stops": [
+    [
+      0,
+      "#E8862E"
+    ],
+    [
+      0.3,
+      "#2F72C4"
+    ],
+    [
+      0.55,
+      "#3E9E4E"
+    ],
+    [
+      0.8,
+      "#F5C62E"
+    ],
+    [
+      1,
+      "#E8862E"
+    ]
+  ],
+  "capture": "Full existing owner-email fixture renders, Chromium 100%, DPR 1, offline actual assets. No auth, DB or delivery.",
+  "fixtureSource": "artifacts/api-server/scripts/generate-owner-email-previews.ts",
+  "publication": "Assets committed to public/brand beside existing logo. Not published by this script; production availability must be verified separately.",
+  "assets": [
+    {
+      "radius": 14,
+      "file": "smart360-email-signature-r14-1116x8.png",
+      "url": "https://smart360.info/brand/smart360-email-signature-r14-1116x8.png?v=tour-1",
+      "sha256": "0e3e2227c86ff4c7c5afdc90ae44f9caa674f37ff4e892d3775b9a24f6d2bffb",
+      "bytes": 8392,
+      "sourceWidth": 1116,
+      "sourceHeight": 8,
+      "displayHeight": 4
+    },
+    {
+      "radius": 16,
+      "file": "smart360-email-signature-r16-1116x8.png",
+      "url": "https://smart360.info/brand/smart360-email-signature-r16-1116x8.png?v=tour-1",
+      "sha256": "9a015ca2d1a06b46456f6f1bb7d79c2f9cf1a9dbfcd1eeb483de8c27f0113af9",
+      "bytes": 8352,
+      "sourceWidth": 1116,
+      "sourceHeight": 8,
+      "displayHeight": 4
+    }
+  ]
+}

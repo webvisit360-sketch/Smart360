@@ -1,6 +1,8 @@
 # Smart360 trak
 
-Smart360 trak = the kolobar unrolled (oranžna→modra→zelena→rumena, saturated); appears EXCLUSIVELY on exported/shared images, never inside the app UI, so in-app color semantics (red=SOS, amber=warning) stay untouched.
+Smart360 trak = brand signature line. Allowed on brand/marketing surfaces: exported share images, sticker PDFs, e-mails. NEVER inside the guest or admin app UI, where colors carry semantic meaning.
+
+Trak uporablja iste barvne postaje kot izvoz ture: oranžna→modra→zelena→rumena→oranžna. Samostojen jantarni/oranžni okrasni trak ni dovoljen.
 
 # Smart360
 

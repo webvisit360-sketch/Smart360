@@ -39,7 +39,7 @@ export function guideStickerLayout(size: GuideStickerSize) {
     },
     scanY: mm(88.1), scanSize: mm(3.3),
     ruleY: mm(large ? 94.5 : 48),
-    ruleHeight: mm(large ? 0.3 : 0.15),
+    ruleHeight: mm(large ? 1.2 : 0.7),
     wordmarkY: mm(large ? 97.5 : 49.8),
     wordmarkSize: mm(large ? 5.1 : 2.6),
     sloganY: mm(104.4), sloganSize: mm(3.1),
@@ -232,7 +232,12 @@ export async function makeGuideSticker(name: string, url: string, size: GuideSti
       }
       doc.fill();
       if (size === "large") centered(GUIDE_STICKER_COPY.scan, "Archivo500", layout.scanSize, layout.scanY, MUTED);
-      doc.rect(layout.inset, layout.ruleY, layout.width - 2 * layout.inset, layout.ruleHeight).fill("#ECEFEA");
+      // Exact left-to-right stops from tour-summary-render.ts SUMMARY_STRIP.
+      // PDFKit emits an axial vector shading, not a raster image.
+      const signature = doc.linearGradient(layout.inset, layout.ruleY, layout.width - layout.inset, layout.ruleY);
+      signature.stop(0, "#E8862E").stop(0.30, "#2F72C4").stop(0.55, "#3E9E4E")
+        .stop(0.80, "#F5C62E").stop(1, "#E8862E");
+      doc.rect(layout.inset, layout.ruleY, layout.width - 2 * layout.inset, layout.ruleHeight).fill(signature);
       centered(GUIDE_STICKER_COPY.wordmark, "Archivo800", layout.wordmarkSize, layout.wordmarkY, INK, layout.wordmarkSize * 0.02);
       if (size === "large") centered(GUIDE_STICKER_COPY.slogan, "Archivo500", layout.sloganSize, layout.sloganY, MUTED);
       doc.end();

@@ -14,6 +14,7 @@ import { parseLifecycleHistory } from "../lib/lifecycleHistory";
 import { HOST_NOTIFICATION_REPLY_TO } from "../lib/businessContact";
 import { ADMIN_ROUTE_REGISTRY } from "../lib/actorGate";
 import { GetTenantLabelPdfQueryParams } from "@workspace/api-zod";
+import { EMAIL_SIGNATURE_URLS } from "../lib/emailTemplate";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const url = "https://smart360.info/glamping-gril";
@@ -155,14 +156,17 @@ test("owner approval reports: self-contained mode-specific HTML, never send", as
   const reports = path.join(root, "reports");
   mkdirSync(reports, { recursive: true });
   const mark = readFileSync(path.join(root, "artifacts/smart360/public/brand/smart360-email-lockup-host-594x138.png")).toString("base64");
+  const signature = readFileSync(path.join(root, "artifacts/smart360/public/brand/smart360-email-signature-r16-1116x8.png")).toString("base64");
   const archivo = readFileSync(path.join(root, "artifacts/api-server/assets/Archivo.ttf")).toString("base64");
   for (const mode of ["self_service", "concierge"] as const) {
     const rendered = await renderReadyNotice({ ...base, mode });
     const html = rendered.html.replaceAll("https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1", `data:image/png;base64,${mark}`)
+      .replaceAll(EMAIL_SIGNATURE_URLS[16], `data:image/png;base64,${signature}`)
       .replace("</head>", `<style>@font-face{font-family:Archivo;src:url(data:font/ttf;base64,${archivo}) format('truetype');font-weight:100 900}</style></head>`);
     const name = mode === "self_service" ? "samostojno" : "ureja-smart360";
     writeFileSync(path.join(reports, `gril-vodnik-pripravljen-${name}.html`), html);
     assert.ok(!html.includes('src="https:'));
+    assert.ok(html.includes(`src="data:image/png;base64,${signature}"`), "actual signature PNG bytes are embedded in offline evidence");
   }
 });
 

@@ -139,7 +139,7 @@ describe("concierge welcome email", () => {
     assert.equal(called, false);
   });
 
-  test("checked-in previews are exact outputs of the two production renderers", () => {
+  test("signature approval fixtures are exact outputs of the two production renderers", () => {
     const disabledUrl = "https://preview.invalid/disabled-example-not-a-real-link";
     const selfService = buildWelcomeEmailBody({
       to: "preview-recipient@example.invalid",
@@ -151,16 +151,23 @@ describe("concierge welcome email", () => {
       guideUrl: disabledUrl,
     });
     const selfServicePreview = readFileSync(
-      new URL("../../../../previews/management-mode/self-service.html", import.meta.url),
+      new URL("../../../../reports/trak-signature/gril-dobrodosli-samostojno-production.html", import.meta.url),
       "utf8",
     ).trimEnd();
     const conciergePreview = readFileSync(
-      new URL("../../../../previews/management-mode/concierge.html", import.meta.url),
+      new URL("../../../../reports/trak-signature/gril-dobrodosli-ureja-smart360-production.html", import.meta.url),
       "utf8",
     ).trimEnd();
 
     assert.equal(selfServicePreview, selfService.html);
     assert.equal(conciergePreview, concierge.html);
+    // Keep the historical approval fixtures untouched, and prove the signature
+    // row is the only change to their full message HTML.
+    for (const [filename, html] of [["self-service.html", selfService.html], ["concierge.html", concierge.html]]) {
+      const before = readFileSync(new URL(`../../../../previews/management-mode/${filename}`, import.meta.url), "utf8").trimEnd();
+      const withoutSignature = html.replace(/<tr><td height="4"[^>]*><img src="https:\/\/smart360\.info\/brand\/smart360-email-signature-r14-1116x8\.png\?v=tour-1"[^>]*><\/td><\/tr>\n/, "");
+      assert.equal(withoutSignature, before, "No other welcome email changes");
+    }
     assert.ok(selfServicePreview.includes(disabledUrl));
     assert.ok(conciergePreview.includes(disabledUrl));
     assert.doesNotMatch(selfServicePreview + conciergePreview, /token=|example\.com\/portal/i);

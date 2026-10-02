@@ -1,0 +1,26 @@
+[
+  {
+    "size": "large",
+    "pagePoints": [
+      0.0,
+      0.0,
+      205.51181030273438,
+      311.81103515625
+    ],
+    "embeddedImages": 0,
+    "textGeometryUnchanged": true,
+    "qrAndBackgroundPathsUnchanged": true
+  },
+  {
+    "size": "small",
+    "pagePoints": [
+      0.0,
+      0.0,
+      102.89763641357422,
+      155.905517578125
+    ],
+    "embeddedImages": 0,
+    "textGeometryUnchanged": true,
+    "qrAndBackgroundPathsUnchanged": true
+  }
+]

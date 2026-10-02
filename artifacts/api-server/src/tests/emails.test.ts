@@ -3,8 +3,8 @@
  *
  * Pins for ALL SIX templates:
  *  - subject and inbox-preview lines exactly as approved,
- *  - the shared design system (no decorative band, marked kicker, CTA, footer),
- *  - the global rules: inline styles only, no web fonts, one hosted brand mark,
+ *  - the shared design system (4px TOUR signature, marked kicker, CTA, footer),
+ *  - the global rules: inline styles only, no web fonts, hosted brand images,
  *    no tracking pixels, no auto-login links, plain-text alternative.
  */
 import { describe, test } from "node:test";
@@ -221,8 +221,9 @@ describe("global rules hold for every template", () => {
       assert.match(html, /font-size:24px;font-weight:800/, "24px title");
     });
 
-    test(`${name}: only hosted mark image, no web fonts, tracking, or <style> block`, () => {
-      assert.equal((html.match(/<img/g) ?? []).length, 1, "only the brand mark image");
+    test(`${name}: hosted mark and signature only, no web fonts, tracking, or <style> block`, () => {
+      assert.equal((html.match(/<img/g) ?? []).length, 2, "brand mark and shared signature only");
+      assert.match(html, /src="https:\/\/smart360\.info\/brand\/smart360-email-signature-r14-1116x8\.png\?v=tour-1" width="558" height="4"/);
       assert.ok(!html.includes("data:image"), "mark is never a data URI");
       assert.ok(!/url\(|@font-face|fonts\.googleapis/.test(html), "no web fonts");
       assert.ok(!html.includes("<style"), "inline styles only");

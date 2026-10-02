@@ -7,7 +7,7 @@
  *
  * Hard rules enforced here for every message:
  * - inline styles only (no <style> block, survives client CSS stripping),
- * - no web fonts or tracking pixels; the one brand mark uses our stable URL,
+ * - no web fonts or tracking pixels; brand images use our stable hosted URLs,
  * - no auto-login links (CTAs point at plain pages; tokens only for
  *   set/reset-password links which are single-use and expiring),
  * - every mail carries a plain-text alternative that reads correctly alone.
@@ -43,6 +43,12 @@ const WELCOME_THEME: typeof LEGACY_THEME = {
 };
 
 export const EMAIL_LOCKUP_URL = "https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1";
+// Hosted beside the existing lockup; PNG alpha pre-clips the top corners even
+// when an email client ignores overflow or border-radius on tables.
+export const EMAIL_SIGNATURE_URLS = {
+  14: "https://smart360.info/brand/smart360-email-signature-r14-1116x8.png?v=tour-1",
+  16: "https://smart360.info/brand/smart360-email-signature-r16-1116x8.png?v=tour-1",
+} as const;
 
 export function escHtml(s: string): string {
   return s
@@ -75,6 +81,7 @@ export type EmailBlock =
 
 export interface EmailSpec {
   theme?: "welcome-cgp";
+  cardRadius?: 14 | 16;
   subject: string;
   /** Inbox preview line — rendered as hidden preheader + first text line. */
   preheader: string;
@@ -156,6 +163,7 @@ export function renderEmail(spec: EmailSpec): { html: string; text: string } {
   const inner = spec.blocks.map((block) => blockHtml(block, theme)).join("\n");
   const footer = spec.footerLines.map(escHtml).join("<br>");
   const lifecycleHeader = theme === WELCOME_THEME && spec.brand === "Smart360";
+  const cardRadius = spec.cardRadius ?? 14;
 
   const html = `<!DOCTYPE html>
 <html lang="sl">
@@ -163,7 +171,8 @@ export function renderEmail(spec: EmailSpec): { html: string; text: string } {
 <body style="margin:0;padding:0;background:${theme.outer}">
 <div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0">${escHtml(spec.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${theme.outer}"><tr><td align="center" style="padding:26px 12px 44px">
-<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:${theme.card};border:1px solid ${theme.border};border-radius:14px;border-collapse:separate;overflow:hidden;font-family:${theme.font}">
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:${theme.card};border:1px solid ${theme.border};border-radius:${cardRadius}px;border-collapse:separate;overflow:hidden;font-family:${theme.font}">
+<tr><td height="4" style="padding:0;height:4px;font-size:0;line-height:0;mso-line-height-rule:exactly"><img src="${EMAIL_SIGNATURE_URLS[cardRadius]}" width="558" height="4" alt="" role="presentation" style="display:block;width:100%;height:4px;border:0"></td></tr>
 <tr><td style="padding:26px 26px 14px">
  ${lifecycleHeader
     ? `<img src="${EMAIL_LOCKUP_URL}" width="198" height="46" alt="Smart360" style="display:block;width:198px;height:46px;border:0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%"><tr><td height="48" style="height:48px;font-size:0;line-height:48px;mso-line-height-rule:exactly">&nbsp;</td></tr></table>`

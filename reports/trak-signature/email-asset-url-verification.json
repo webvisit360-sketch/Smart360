@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-10-02T05:19:50.693Z",
+  "checks": [
+    {
+      "environment": "development",
+      "url": "http://localhost:80/brand/smart360-email-lockup-host-594x138.png?v=faceted-1",
+      "status": 200,
+      "contentType": "image/png",
+      "expectedSha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5",
+      "responseSha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5",
+      "exactBytes": true
+    },
+    {
+      "environment": "production",
+      "url": "https://smart360.info/brand/smart360-email-lockup-host-594x138.png?v=faceted-1",
+      "status": 200,
+      "contentType": "image/png",
+      "expectedSha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5",
+      "responseSha256": "9295747b5cce7bbbcb9b9f313ecdb3be186a1ba1e7afb94da17a622e65391ce5",
+      "exactBytes": true
+    },
+    {
+      "environment": "development",
+      "url": "http://localhost:80/brand/smart360-email-signature-r14-1116x8.png?v=tour-1",
+      "status": 200,
+      "contentType": "image/png",
+      "expectedSha256": "0e3e2227c86ff4c7c5afdc90ae44f9caa674f37ff4e892d3775b9a24f6d2bffb",
+      "responseSha256": "0e3e2227c86ff4c7c5afdc90ae44f9caa674f37ff4e892d3775b9a24f6d2bffb",
+      "exactBytes": true
+    },
+    {
+      "environment": "production",
+      "url": "https://smart360.info/brand/smart360-email-signature-r14-1116x8.png?v=tour-1",
+      "status": 404,
+      "contentType": "text/plain",
+      "expectedSha256": "0e3e2227c86ff4c7c5afdc90ae44f9caa674f37ff4e892d3775b9a24f6d2bffb",
+      "responseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exactBytes": false
+    },
+    {
+      "environment": "development",
+      "url": "http://localhost:80/brand/smart360-email-signature-r16-1116x8.png?v=tour-1",
+      "status": 200,
+      "contentType": "image/png",
+      "expectedSha256": "9a015ca2d1a06b46456f6f1bb7d79c2f9cf1a9dbfcd1eeb483de8c27f0113af9",
+      "responseSha256": "9a015ca2d1a06b46456f6f1bb7d79c2f9cf1a9dbfcd1eeb483de8c27f0113af9",
+      "exactBytes": true
+    },
+    {
+      "environment": "production",
+      "url": "https://smart360.info/brand/smart360-email-signature-r16-1116x8.png?v=tour-1",
+      "status": 404,
+      "contentType": "text/plain",
+      "expectedSha256": "9a015ca2d1a06b46456f6f1bb7d79c2f9cf1a9dbfcd1eeb483de8c27f0113af9",
+      "responseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exactBytes": false
+    }
+  ],
+  "warning": "Production is not published by this work. A failed/404 response is NOT a verified asset; delivery must wait for publication and exact-byte verification."
+}

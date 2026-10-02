@@ -55,6 +55,7 @@ export async function renderReadyNotice(input: ReadyInput, inline = "data") {
   const blocks = paragraphs.map((paragraph) => p(paragraph));
   const rendered = renderEmail({
     theme: "welcome-cgp",
+    cardRadius: 16,
     subject,
     preheader: READY_SUBJECT,
     brand: "Smart360",

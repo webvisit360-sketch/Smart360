@@ -1,0 +1,23 @@
+{
+  "width": 198,
+  "height": 46,
+  "naturalWidth": 594,
+  "naturalHeight": 138,
+  "gap": 48,
+  "dpr": 1,
+  "scale": 1,
+  "allImagesLoaded": true,
+  "signature": {
+    "x": 81,
+    "y": 27,
+    "width": 558,
+    "height": 4,
+    "sourceWidth": 1116,
+    "sourceHeight": 8,
+    "cardWidth": 560,
+    "cardY": 26,
+    "radius": "14px"
+  },
+  "documentHeight": 1000,
+  "footerBottom": 792.875
+}
