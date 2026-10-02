@@ -5,8 +5,10 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { TenantManagementModeCopyState } from './tenantManagementModeCopyState';
 import type { TenantManagementModeManagementMode } from './tenantManagementModeManagementMode';
 
 export interface TenantManagementMode {
+  copyState?: TenantManagementModeCopyState;
   managementMode: TenantManagementModeManagementMode;
 }

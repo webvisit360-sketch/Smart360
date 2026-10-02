@@ -11,3 +11,4 @@ export * from "./notificationAttempts";
 export * from "./publishedSnapshots";
 export * from "./hostOnboarding";
 export * from "./announcements";
+export * from "./tenantCopyJobs";

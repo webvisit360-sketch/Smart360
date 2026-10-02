@@ -235,7 +235,7 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
     (req.query["preview"] === "true" || req.query["preview"] === "1") &&
     (await isAuthenticated(req));
 
-  if (!tenant || (!tenant.isPublished && !preview)) {
+  if (!tenant || tenant.copyState === "copying" || (!tenant.isPublished && !preview)) {
     res.status(404).json({ error: "Not found" });
     return;
   }
@@ -399,7 +399,7 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const preview =
     (req.query["preview"] === "true" || req.query["preview"] === "1") &&
     (await isAuthenticated(req));
-  if (!tenant || (!tenant.isPublished && !preview)) {
+  if (!tenant || tenant.copyState === "copying" || (!tenant.isPublished && !preview)) {
     res.status(404).json({ error: "Not found" });
     return;
   }

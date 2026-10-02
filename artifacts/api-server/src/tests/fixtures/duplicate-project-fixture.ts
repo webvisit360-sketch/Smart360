@@ -9,6 +9,7 @@ import { gpxObjectFile } from "../../routes/gpx";
 import { parseGpx } from "../../lib/gpxParser";
 import { hashPassword } from "../../lib/hostAuth";
 import { replacePublishedSnapshot } from "../../lib/publishedSnapshots";
+import { cleanupIncompleteCopy } from "../../lib/tenantCopyRecovery";
 
 export function assertDev() {
   if (process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT) throw new Error("Development fixture only");
@@ -78,6 +79,10 @@ export async function cleanupDuplicateFixture(f: DuplicateFixture) {
   const all = await db.select().from(tenantsTable);
   const tenants = all.filter(t => t.id === f.sourceId || t.copiedFromTenantId === f.sourceId || t.slug.startsWith(`dup-${f.key}`));
   for (const tenant of tenants) {
+    if (tenant.copyState === "copying") {
+      await cleanupIncompleteCopy(tenant.id);
+      continue;
+    }
     const sections = await db.select().from(sectionsTable).where(eq(sectionsTable.tenantId, tenant.id));
     const categories = sections.length ? await db.select().from(categoriesTable).where(inArray(categoriesTable.sectionId, sections.map(r => r.id))) : [];
     const items = categories.length ? await db.select().from(itemsTable).where(inArray(itemsTable.categoryId, categories.map(r => r.id))) : [];

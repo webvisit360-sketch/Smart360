@@ -206,6 +206,7 @@ export const tenantsTable = pgTable("tenants", {
   // once edited the wrong tenant, so copies must be unmistakably marked in
   // the admin header. Plain UUID (no FK) — the source may be deleted later.
   copiedFromTenantId: uuid("copied_from_tenant_id"),
+  copyState: text("copy_state").notNull().default("ready"),
   // Creation type chosen in the cockpit (kamp / hotel / apartmaji); decides
   // the seeded default sections and categories. NULL for tenants created
   // before types existed or via template copy.
@@ -232,6 +233,8 @@ export const tenantsTable = pgTable("tenants", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 }, (t) => [
+  check("tenants_copy_state_check", sql`${t.copyState} IN ('ready', 'copying')`),
+  check("tenants_copying_unpublished_check", sql`${t.copyState} <> 'copying' OR ${t.isPublished} = false`),
   check(
     "tenants_management_mode_check",
     sql`${t.managementMode} IN ('self_service','concierge')`,

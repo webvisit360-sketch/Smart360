@@ -141,6 +141,7 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/tenants/:id/changelog", binding: T_ID },
   { method: "post", path: "/admin/tenants/:id/operator-entry", binding: OWNER },
   { method: "post", path: "/admin/tenants", binding: OWNER },
+  { method: "delete", path: "/admin/tenants/:id/incomplete-copy", binding: OWNER },
   { method: "get", path: "/admin/slug-check", binding: OWNER },
   { method: "get", path: "/admin/tenants/:id/qr.png", binding: T_ID },
   { method: "get", path: "/admin/tenants/:id/label.pdf", binding: T_ID },
@@ -447,6 +448,18 @@ async function gate(
   req.actor = actor;
 
   if (actor.kind === "owner") {
+    // No ordinary editor, publication, upload, or deletion route may operate
+    // on a durable copy stub. It has no children until final atomic completion.
+    const target = /^\/admin\/tenants\/([0-9a-f-]{36})(?:\/|$)/i.exec(req.path)?.[1]
+      ?? (typeof req.body?.tenantId === "string" ? req.body.tenantId : undefined);
+    if (target && UUID_RE.test(target) &&
+        !(req.method === "DELETE" && req.path === `/admin/tenants/${target}/incomplete-copy`)) {
+      const state = await pool.query("SELECT copy_state FROM tenants WHERE id = $1", [target]);
+      if (state.rows[0]?.copy_state === "copying") {
+        res.status(409).json({ code: "TENANT_COPY_INCOMPLETE", error: "Nedokončana kopija. Počakajte na konec kopiranja ali jo odstranite." });
+        return;
+      }
+    }
     if (hit?.spec.binding.kind === "host-self") {
       // Owner-never-impersonates: there is no host behind this session.
       notFound(res);

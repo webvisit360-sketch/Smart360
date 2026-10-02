@@ -34,6 +34,7 @@ import {
   GetTenantLabelPdfQueryParams,
 } from "@workspace/api-zod";
 import { requireAdmin, getAdminUser } from "../lib/adminAuth";
+import { cleanupIncompleteCopy } from "../lib/tenantCopyRecovery";
 import { logChange, safeSummary } from "../lib/changelog";
 import { buildTenantOverviews } from "../lib/tenantOverview";
 import {
@@ -1091,6 +1092,19 @@ router.delete("/admin/tenants/:id", async (req, res): Promise<void> => {
     summary: `Odstranjena je nastanitev »${auditTenantName(tenant.name)}«.`,
   });
   res.sendStatus(204);
+});
+
+router.delete("/admin/tenants/:id/incomplete-copy", requireOperator, async (req, res): Promise<void> => {
+  try {
+    await cleanupIncompleteCopy(firstParam(req.params["id"]));
+    invalidateTenantCache();
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(error instanceof TenantDuplicateError ? 409 : 503).json({
+      error: error instanceof TenantDuplicateError ? error.message :
+        "Čiščenje datotek ni uspelo. Nedokončana kopija ostaja na seznamu; poskusite znova.",
+    });
+  }
 });
 
 router.post("/admin/tenants/:id/duplicate", requireOperator, async (req, res): Promise<void> => {

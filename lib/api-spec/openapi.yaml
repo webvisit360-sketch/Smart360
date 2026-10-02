@@ -1827,6 +1827,22 @@ paths:
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: rowId, in: path, required: true, schema: { type: string } }]
       responses:
         "200": { description: Reverted, content: { application/json: { schema: { $ref: "#/components/schemas/DistanceReviewRow" } } } }
+  /admin/tenants/{id}/incomplete-copy:
+    delete:
+      operationId: cleanupIncompleteCopy
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Incomplete copy and its files removed
+        "409":
+          description: Copy active or not an incomplete copy
+        "503":
+          description: Cleanup failed; retry is safe
   /admin/tenants/{id}/duplicate:
     post:
       operationId: duplicateTenant
@@ -5117,6 +5133,9 @@ components:
       type: object
       required: [managementMode]
       properties:
+        copyState:
+          type: string
+          enum: [ready, copying]
         managementMode:
           type: string
           enum: [self_service, concierge]

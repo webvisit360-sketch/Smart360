@@ -49,6 +49,7 @@ test("duplicate project: complete isolated unpublished copy, authorization, roll
       assert.ok(after[key].every(row => !before[key].some(original => original.id === row.id)), `${key} IDs must be new`);
     }
     assert.equal(after.tenant.isPublished, false);
+    assert.equal(after.tenant.copyState, "ready");
     assert.equal(after.tenant.isTemplate, false);
     assert.equal(after.tenant.managementMode, "concierge");
     assert.equal(after.tenant.renewsAt, null);

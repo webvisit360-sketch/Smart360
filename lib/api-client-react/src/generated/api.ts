@@ -7739,6 +7739,71 @@ export const useRevertDistanceReviewRow = <TError = ErrorType<unknown>,
       return useMutation(getRevertDistanceReviewRowMutationOptions(options));
     }
 
+export const getCleanupIncompleteCopyUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/incomplete-copy`
+}
+
+export const cleanupIncompleteCopy = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getCleanupIncompleteCopyUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getCleanupIncompleteCopyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cleanupIncompleteCopy>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cleanupIncompleteCopy>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['cleanupIncompleteCopy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cleanupIncompleteCopy>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cleanupIncompleteCopy(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CleanupIncompleteCopyMutationResult = NonNullable<Awaited<ReturnType<typeof cleanupIncompleteCopy>>>
+
+    export type CleanupIncompleteCopyMutationError = ErrorType<void>
+
+    export const useCleanupIncompleteCopy = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cleanupIncompleteCopy>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cleanupIncompleteCopy>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getCleanupIncompleteCopyMutationOptions(options));
+    }
+
 export const getDuplicateTenantUrl = (id: string,) => {
 
 

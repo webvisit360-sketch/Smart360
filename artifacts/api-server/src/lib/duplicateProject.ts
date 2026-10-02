@@ -1,19 +1,21 @@
 import { randomUUID } from "node:crypto";
 import { eq, inArray, or } from "drizzle-orm";
 import { db, tenantsTable, sectionsTable, categoriesTable, itemsTable, mediaTable,
-  translationsTable, pluralFormsTable, itemCategoryAttachmentsTable, runWithDatabase, type Db } from "@workspace/db";
+  translationsTable, pluralFormsTable, itemCategoryAttachmentsTable, tenantCopyJobsTable, runWithDatabase, type Db } from "@workspace/db";
 import { claimSlug } from "./tenantSlugReservations";
 import { logChange } from "./changelog";
 import { planTenantFiles, TenantDuplicateError } from "./tenantCopyFiles";
+import { withCopyLock, removeIncompleteCopyLocked } from "./tenantCopyRecovery";
+import { gpxEnvironment } from "../routes/gpx";
 
 /** Copy the actual draft, never reseed it or project it through a published snapshot. */
 export async function duplicateProject(sourceId: string, name: string, slug: string) {
-  let files: Awaited<ReturnType<typeof planTenantFiles>> | undefined;
-  try {
-    return await db.transaction(async tx => {
+  const id = randomUUID();
+  return withCopyLock(id, async () => {
+    const prepared = await db.transaction(async tx => {
       const [source] = await tx.select().from(tenantsTable).where(eq(tenantsTable.id, sourceId));
       if (!source) throw new TenantDuplicateError("Izvirna nastanitev ni najdena.");
-      const id = randomUUID();
+      if (source.copyState !== "ready") throw new TenantDuplicateError("Nedokončane kopije ni mogoče podvojiti.");
       const sections = await tx.select().from(sectionsTable).where(eq(sectionsTable.tenantId, sourceId));
       const categories = sections.length ? await tx.select().from(categoriesTable)
         .where(inArray(categoriesTable.sectionId, sections.map(row => row.id))) : [];
@@ -38,6 +40,7 @@ export async function duplicateProject(sourceId: string, name: string, slug: str
         creatorDraft: false, creatorOriginRegion: null,
         copiedFromTenantId: sourceId, hasUnpublishedChanges: true, operatorDraftPending: true,
         mediaQuotaBytes: 2_000_000_000,
+        copyState: "copying",
       };
       // Reject unsupported media instead of silently retaining shared files.
       const directUrls = [...media.flatMap(row => [row.url, row.posterUrl]),
@@ -57,14 +60,11 @@ export async function duplicateProject(sourceId: string, name: string, slug: str
           throw new TenantDuplicateError("Projekt vsebuje medij zunaj upravljane shrambe. Pred podvajanjem ga naložite v projekt.");
         }
       }
-      files = await planTenantFiles({ tenant, sections, categories, items, media, translations, plurals }, sourceId, id, slug);
+      const files = await planTenantFiles({ tenant, sections, categories, items, media, translations, plurals }, sourceId, id, slug);
       if (files.bytes > tenant.mediaQuotaBytes) {
         throw new TenantDuplicateError(`Kopija potrebuje ${files.bytes} bajtov; kvota novega projekta je ${tenant.mediaQuotaBytes} bajtov. Podvajanje ni bilo izvedeno.`);
       }
-      // Claim within the transaction before any object writes. No partial tenant is visible.
-      const [created] = await tx.insert(tenantsTable).values(files.rewrite(tenant)).returning();
-      await claimSlug(tx, slug, id);
-      await files.copy();
+      return { tenant: files.rewrite(tenant), files, finish: async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
       const rewrite = <T>(row: T): T => {
         const remap = (v: any): any => {
           if (v instanceof Date) return v;
@@ -94,10 +94,31 @@ export async function duplicateProject(sourceId: string, name: string, slug: str
         tenantId: id, tenantName: name, action: "duplicate", entity: "tenant",
         summary: "Ustvarjena je neobjavljena kopija nastanitve.",
       }));
-      return created;
+      }};
     }, { isolationLevel: "repeatable read" });
-  } catch (error) {
-    await files?.rollback();
-    throw error;
-  }
+    // Commit the stub AND complete write-ahead manifest before any object write.
+    await db.transaction(async tx => {
+      await tx.insert(tenantsTable).values(prepared.tenant);
+      await claimSlug(tx, slug, id);
+      await tx.insert(tenantCopyJobsTable).values({
+        tenantId: id, environment: gpxEnvironment(), objectManifest: prepared.files.manifest,
+      });
+    });
+    try {
+      await prepared.files.copy();
+      return await db.transaction(async tx => {
+        await prepared.finish(tx);
+        const [created] = await tx.update(tenantsTable).set({ copyState: "ready" })
+          .where(eq(tenantsTable.id, id)).returning();
+        await tx.delete(tenantCopyJobsTable).where(eq(tenantCopyJobsTable.tenantId, id));
+        return created;
+      });
+    } catch (error) {
+      try { await removeIncompleteCopyLocked(id); }
+      catch {
+        throw new TenantDuplicateError("Kopiranje ni uspelo. Nedokončana kopija ostaja na seznamu; uporabite »Odstrani nedokončano kopijo«.");
+      }
+      throw error;
+    }
+  });
 }

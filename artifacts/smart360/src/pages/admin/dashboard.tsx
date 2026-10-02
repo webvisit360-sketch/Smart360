@@ -1,4 +1,4 @@
-import { useGetAdminOverview, useListTenants, useListTenantOverview, useDuplicateTenant, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
+import { useGetAdminOverview, useListTenants, useListTenantOverview, useDuplicateTenant, useCleanupIncompleteCopy, useCreateTenant, useGetStorageUsage, useUpdateTenant } from "@workspace/api-client-react";
 import { fmtMediaSize, fmtMediaUsage, usagePct } from "@/lib/format-bytes";
 import { Link, useLocation } from "wouter";
 import { AdminCard as Card, AdminCardContent as CardContent, AdminCardHeader as CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { data: overview, isLoading: loadingOverview } = useGetAdminOverview();
-  const { data: tenants, isLoading: loadingTenants } = useListTenants();
+  const { data: tenants, isLoading: loadingTenants } = useListTenants({ query: { queryKey: getListTenantsQueryKey(), refetchInterval: 5000 } });
   const { data: tenantOverviews } = useListTenantOverview();
   const { data: storageUsage } = useGetStorageUsage();
   const usageByTenant = new Map(storageUsage?.tenants.map(t => [t.tenantId, t]) ?? []);
@@ -67,6 +67,18 @@ export default function AdminDashboard() {
   const [copySlug, setCopySlug] = useState("");
   const [copySlugTouched, setCopySlugTouched] = useState(false);
   const [copyError, setCopyError] = useState("");
+  const [cleanupError, setCleanupError] = useState<{ id: string; message: string } | null>(null);
+  const cleanupMutation = useCleanupIncompleteCopy({ mutation: {
+    onSuccess: () => {
+      setCleanupError(null);
+      queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getListTenantOverviewQueryKey() });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/storage/usage"] });
+    },
+    onError: (error: any, variables) => setCleanupError({ id: variables.id,
+      message: error?.data?.error ?? error?.message ?? "Čiščenje ni uspelo. Poskusite znova." }),
+  } });
 
   const duplicateMutation = useDuplicateTenant({
     mutation: {
@@ -78,7 +90,10 @@ export default function AdminDashboard() {
         setCopySource(null);
         setLocation(`/admin/tenants/${result.tenant.id}`);
       },
-      onError: (error: any) => setCopyError(error?.data?.error ?? error?.error ?? error?.message ?? "Podvajanje ni uspelo."),
+      onError: (error: any) => {
+        setCopyError(error?.data?.error ?? error?.error ?? error?.message ?? "Podvajanje ni uspelo.");
+        queryClient.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+      },
     }
   });
 
@@ -295,7 +310,26 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ) : (
-                filteredTenants.map(tenant => (
+                filteredTenants.map(tenant => tenant.copyState === "copying" ? (
+                  <Card key={tenant.id} className="border-amber-300">
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-bold">{tenant.name}</h3>
+                      <Badge variant="secondary" className="mt-2 bg-amber-100 text-amber-900">Nedokončana kopija</Badge>
+                      <p className="my-3 text-sm text-muted-foreground">
+                        /{tenant.slug} — Kopiranje še ni zaključeno. Gostom ni dostopna.
+                        Če je bilo kopiranje prekinjeno, jo odstranite. Aktivnega kopiranja ni mogoče odstraniti.
+                      </p>
+                      <Button variant="outline" disabled={cleanupMutation.isPending} onClick={() => {
+                        if (window.confirm(`Odstranim nedokončano kopijo »${tenant.name}« in vse njene kopirane datoteke? Izvirnik ostane nespremenjen.`)) {
+                          setCleanupError(null);
+                          cleanupMutation.mutate({ id: tenant.id });
+                        }
+                      }}>{cleanupMutation.isPending && cleanupMutation.variables?.id === tenant.id
+                        ? "Odstranjujem …" : "Odstrani nedokončano kopijo"}</Button>
+                      {cleanupError?.id === tenant.id && <p role="alert" className="mt-2 text-sm text-destructive">{cleanupError.message}</p>}
+                    </CardContent>
+                  </Card>
+                ) : (
                   <Card key={tenant.id} className="overflow-hidden transition-all hover:border-primary/50">
                     <div className="flex flex-col sm:flex-row">
                       <div className="p-6 flex-1 flex flex-col justify-center">

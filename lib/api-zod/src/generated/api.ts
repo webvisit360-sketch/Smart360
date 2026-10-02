@@ -2796,6 +2796,7 @@ export const ListTenantsResponseItem = zod.object({
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 export const ListTenantsResponse = zod.array(ListTenantsResponseItem)
@@ -2900,6 +2901,7 @@ export const CreateTenantResponse = zod.object({
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 
@@ -4449,6 +4451,7 @@ export const GetTenantResponse = zod.object({
   "hostAnsweredMessageCount": zod.number().optional().describe('Real guest-to-host response cycles measured for this tenant'),
   "hostResponseMedianMinutes": zod.number().nullish().describe('Median response time rounded up to whole minutes; null until five cycles exist')
 })).and(zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })).describe('Admin content tree with operator-controlled management mode.')
 
@@ -4630,6 +4633,7 @@ export const UpdateTenantResponse = zod.object({
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 
@@ -4649,10 +4653,12 @@ export const UpdateTenantManagementModeParams = zod.object({
 })
 
 export const UpdateTenantManagementModeBody = zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })
 
 export const UpdateTenantManagementModeResponse = zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })
 
@@ -4913,6 +4919,13 @@ export const RevertDistanceReviewRowResponse = zod.object({
 })
 
 
+export const CleanupIncompleteCopyParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CleanupIncompleteCopyResponse = zod.void()
+
+
 /**
  * @summary Operator-only complete draft copy with independent media; unpublished concierge project
  */
@@ -5021,6 +5034,7 @@ export const DuplicateTenantResponse = zod.object({
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })).describe('Operator\/host tenant record, including the operator-controlled access policy.'),
   "dropped": zod.array(zod.object({
@@ -5131,6 +5145,7 @@ export const RenewTenantResponse = zod.object({
   "renewsAt": zod.string().nullish(),
   "updatedAt": zod.string()
 }).and(zod.object({
+  "copyState": zod.enum(['ready', 'copying']).optional(),
   "managementMode": zod.enum(['self_service', 'concierge'])
 })).describe('Operator\/host tenant record, including the operator-controlled access policy.')
 

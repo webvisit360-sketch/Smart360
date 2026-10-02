@@ -2464,6 +2464,14 @@ export interface TenantBase {
   updatedAt: string;
 }
 
+export type TenantManagementModeCopyState = typeof TenantManagementModeCopyState[keyof typeof TenantManagementModeCopyState];
+
+
+export const TenantManagementModeCopyState = {
+  ready: 'ready',
+  copying: 'copying',
+} as const;
+
 export type TenantManagementModeManagementMode = typeof TenantManagementModeManagementMode[keyof typeof TenantManagementModeManagementMode];
 
 
@@ -2473,6 +2481,7 @@ export const TenantManagementModeManagementMode = {
 } as const;
 
 export interface TenantManagementMode {
+  copyState?: TenantManagementModeCopyState;
   managementMode: TenantManagementModeManagementMode;
 }
 

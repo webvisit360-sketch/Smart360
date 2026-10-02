@@ -315,6 +315,7 @@ export * from './tenantDuplicateInput';
 export * from './tenantInput';
 export * from './tenantInputType';
 export * from './tenantManagementMode';
+export * from './tenantManagementModeCopyState';
 export * from './tenantManagementModeManagementMode';
 export * from './tenantOverview';
 export * from './tenantPublicationPreview';

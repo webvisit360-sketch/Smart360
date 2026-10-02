@@ -59,6 +59,7 @@ export async function planTenantFiles(data: unknown, sourceId: string, targetId:
   return {
     bytes,
     count: copies.length,
+    manifest: copies.map(({ target }) => ({ bucket: target.bucket.name, name: target.name })),
     rewrite<T>(value: T): T {
       const walk = (v: any): any => {
         if (v instanceof Date) return v;
