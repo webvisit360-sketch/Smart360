@@ -18,3 +18,4 @@
 .s360-free-map{position:relative}
 .s360-free-map-wait{position:absolute;left:12px;right:12px;top:12px;margin:0;padding:8px 10px;border-radius:10px;background:var(--card);border:1px solid var(--s360-free-line);font-size:13px;color:var(--tx2);pointer-events:none}
 .s360-free-ascent{margin:0}
+.s360-tour-close-result{width:100%;min-height:44px;white-space:normal;overflow-wrap:anywhere;line-height:1.4}

@@ -6,14 +6,15 @@ import { SUMMARY_COPY, TourSummaryShare, shareTourFile, summaryLang } from "../p
 
 const EMOJI = /\p{Extended_Pictographic}/u;
 
-test("summary copy is complete in all four languages without emoji", () => {
+test("summary copy is complete in all seven languages without emoji", () => {
   const keys = Object.keys(SUMMARY_COPY.sl).sort();
-  for (const lang of ["sl", "en", "de", "it"] as const) {
+  for (const lang of ["sl", "en", "de", "it", "fr", "nl", "hr"] as const) {
     assert.deepEqual(Object.keys(SUMMARY_COPY[lang]).sort(), keys);
     for (const v of Object.values(SUMMARY_COPY[lang])) { assert.ok(v.trim()); assert.ok(!EMOJI.test(v)); }
   }
   assert.equal(SUMMARY_COPY.sl.share, "Deli turo");
-  assert.equal(summaryLang("fr"), "sl");
+  assert.equal(summaryLang("fr"), "fr");
+  assert.equal(summaryLang("unsupported"), "sl");
 });
 
 test("finished summary renders skeleton (no HTML lookalike) before blob is ready", () => {

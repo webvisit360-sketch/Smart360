@@ -3,8 +3,8 @@ import { loadTour, recoverTour, saveTour, tourStorageKey, type TourState } from 
 type TourStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 type EnumerableStorage = TourStorage & Pick<Storage, 'key' | 'length'>;
 
-/** Guided results belong to the current view, not a later visit. Active backups
- * and the default/free-recording persistence policy remain unchanged. */
+/** All tour results belong to the current view, not a later visit.
+ * Active recording backups remain recoverable. */
 export function loadTourForView(
   key: string, now: number, ephemeralFinished = false, storage?: TourStorage,
 ): TourState | null {
@@ -25,8 +25,8 @@ export function saveTourForView(
 }
 
 /** Run at app startup, even when the guest never opens the old route again.
- * Only this version's slug/itemId backups are ours; free-tour and other data
- * are deliberately excluded. Snapshot keys before removing to avoid skipping. */
+ * Only this version's slug/itemId (including free-tour) backups are ours.
+ * Snapshot keys before removing to avoid skipping. */
 export function purgeFinishedGuidedTours(storage?: EnumerableStorage): void {
   try {
     const target = storage ?? window.localStorage;
@@ -36,7 +36,7 @@ export function purgeFinishedGuidedTours(storage?: EnumerableStorage): void {
       if (!key?.startsWith(prefix)) continue;
       try {
         const parts = decodeURIComponent(key.slice(prefix.length)).split('/');
-        if (parts.length !== 2 || parts.some(part => !part) || parts[1] === 'free-tour') continue;
+        if (parts.length !== 2 || parts.some(part => !part)) continue;
         const envelope = JSON.parse(target.getItem(key) ?? 'null');
         if (envelope?.version === 1 && envelope.state?.status === 'finished') target.removeItem(key);
       } catch { /* A malformed or inaccessible unrelated entry must not block startup. */ }

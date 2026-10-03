@@ -2038,6 +2038,7 @@ export default function LivingGuideGuestShell({
 
         {baseScreen === "explore" && (
           <ExploreView
+            viewVisible={screen === "explore"}
             tenant={tenant}
             categories={exploreCategories}
             lang={lang}
@@ -2817,6 +2818,7 @@ export function ExploreView({
   onOpenItem,
   onBack,
   slug,
+  viewVisible = true,
 }: any) {
   // Published flag only, default off: no mount (no hook, no geolocation) when false.
   const freeTourEnabled = isTourRecordingEnabled(tenant) && typeof slug === "string" && !!slug;
@@ -2948,7 +2950,7 @@ export function ExploreView({
         </>}
         {freeTourEnabled && (recorderMounted || recordingVisible) && (
           <div hidden={!recordingVisible} data-testid="explore-recording-panel">
-            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} tenantName={tenant?.name ?? ""} lang={lang} />
+            <FreeTourRecorder slug={slug} t={t} center={freeTourCenter} tenantName={tenant?.name ?? ""} lang={lang} viewVisible={viewVisible && recordingVisible} viewKey={selectedCategoryChip?.key ?? EXPLORE_ALL_CATEGORY_KEY} />
           </div>
         )}
       </div>

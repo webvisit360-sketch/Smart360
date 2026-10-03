@@ -15,8 +15,15 @@ Free recording deliberately favors bounded device storage and re-importable GPX 
 
 **How to apply:** Keep retention-loss notices and distinguish recorded session totals from statistics recomputed after importing a simplified or truncated GPX.
 
-Guided-route results are deliberately view-scoped, unlike free-recording results. Leaving the route expires its summary; active guided recordings remain recoverable. Do not make these two lifecycles identical.
+Both guided-route and free-recorder results are view-scoped. Closing or leaving
+the view expires the summary; app startup purges old finished backups. Active
+and paused recordings remain recoverable. Both use the same 50 m summary boundary.
 
-**Why:** The owner reported a days-old, nine-second guided test resurfacing as a completed tour, and explicitly required the correction to leave free recording unchanged.
+**Why:** The owner subsequently reported a previous-day free recording blocking
+Start on iPhone in Croatian, explicitly called the earlier exemption wrong, and
+required identical lifecycle and short-recording rules for both kinds of tour.
 
-**How to apply:** Include navigation snapshots and browser back/forward restoration when checking expiration, not only storage reloads. Never broaden guided-result cleanup to free recordings.
+**How to apply:** Include navigation snapshots, hidden recorder tabs, and browser
+back/forward restoration when checking expiration, not only storage reloads.
+Keep Close visible above the summary preview in all seven languages; preserve
+in-progress recordings when hiding the recorder.

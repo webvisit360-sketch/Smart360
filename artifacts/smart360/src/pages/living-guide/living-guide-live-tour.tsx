@@ -158,6 +158,7 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
   if (status === "finished" && p.summary) {
     return (
       <div className="s360-tour s360-tour--result" data-testid="panel-tour-result">
+        <button type="button" className="s360-tour-btn s360-tour-close-result" onClick={p.onReset} data-testid="button-tour-reset">{t("UI.lg.liveTour.reset")}</button>
         <p className="s360-sum-kicker" data-testid="text-tour-summary-kicker">{SUMMARY_COPY[summaryLang(p.summary.lang)].kicker}</p>
         <h3 data-testid="text-tour-summary-heading">{SUMMARY_COPY[summaryLang(p.summary.lang)].heading}</h3>
         <TourSummaryShare
@@ -168,7 +169,6 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
           exportingGpx={p.exporting === "gpx"}
         />
         {p.exportError && <div role="alert" className="s360-tour-error" data-testid="status-tour-export-error">{t("UI.lg.liveTour.exportError")}</div>}
-        <button type="button" className="s360-tour-link" onClick={p.onReset} data-testid="button-tour-reset">{t("UI.lg.liveTour.reset")}</button>
       </div>
     );
   }
@@ -176,6 +176,7 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
   if (status === "finished") {
     return (
       <div className="s360-tour s360-tour--result" data-testid="panel-tour-result">
+        <button type="button" className="s360-tour-btn s360-tour-close-result" onClick={p.onReset} data-testid="button-tour-reset">{t("UI.lg.liveTour.reset")}</button>
         <h3>{t("UI.lg.liveTour.summaryTitle")}</h3>
         <LiveTourStats metrics={p.metrics} t={t} />
         <p className="s360-tour-legend">
@@ -191,7 +192,6 @@ export function LiveTourPanel(p: LiveTourPanelProps) {
           </button>
         </div>
         {p.exportError && <div role="alert" className="s360-tour-error" data-testid="status-tour-export-error">{t("UI.lg.liveTour.exportError")}</div>}
-        <button type="button" className="s360-tour-link" onClick={p.onReset} data-testid="button-tour-reset">{t("UI.lg.liveTour.reset")}</button>
         {privacy}
       </div>
     );

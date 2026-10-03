@@ -3,7 +3,7 @@
  * planned GPX. Same engine as the GPX live tour (useLiveTour: geolocation,
  * Wake Lock, auto-pause). PRIVACY: all state stays on this device.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { UiTranslator } from "../guest/i18n";
 import { useLiveTour } from "@/hooks/use-live-tour";
 import { downloadTourGpx, downloadTourImage } from "@/lib/live-tour-export";
@@ -13,20 +13,31 @@ import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile"
 import { RecordedElevationProfile, RouteMap } from "./living-guide-gpx";
 import "./living-guide-free-tour.css";
 import { TourWeatherStrip } from "./living-guide-weather";
+import { GUIDED_COPY, guidedSummaryEligible } from "@/lib/guided-tour-preflight";
+import { summaryLang } from "./living-guide-tour-summary";
 
 import { FreeTourAscent, FreeTourIntro, FreeTourOmitted, formatAscent, type FreeTourActivity } from "./living-guide-free-tour-view";
 
 export { isTourRecordingEnabled } from "./living-guide-free-tour-view";
 
-export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl" }: { slug: string; t: UiTranslator; center?: [number, number] | null; tenantName?: string; lang?: string }) {
+export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl", viewVisible = true, viewKey = "" }: { slug: string; t: UiTranslator; center?: [number, number] | null; tenantName?: string; lang?: string; viewVisible?: boolean; viewKey?: string }) {
   const [chosen, setChosen] = useState<FreeTourActivity>("hiking");
-  const tour = useLiveTour(`${slug}/free-tour`);
+  const tour = useLiveTour(`${slug}/free-tour`, { ephemeralFinished: true });
   const profile = useTourProfile();
-  const startWith = (activity: FreeTourActivity) => profile.start(snapshot => { setExportError(false); tour.start(activity, snapshot); });
+  const startWith = (activity: FreeTourActivity) => profile.start(snapshot => { setExportError(false); setShortNotice(false); tour.start(activity, snapshot); });
   const state = tour.state as (NonNullable<typeof tour.state> & { activity?: FreeTourActivity; omittedSegments?: number }) | null;
   const activity: FreeTourActivity = state?.activity ?? (state ? "hiking" : chosen);
   const ascentM = (tour.metrics as typeof tour.metrics & { ascentM?: number }).ascentM;
   const status = state?.status ?? null;
+  const [shortNotice, setShortNotice] = useState(false);
+  const previousView = useRef(viewKey);
+  const shortFinished = status === "finished" && !guidedSummaryEligible(tour.metrics.distanceM);
+  useEffect(() => {
+    const changedView = previousView.current !== viewKey;
+    previousView.current = viewKey;
+    if (shortFinished) { tour.reset(); setShortNotice(true); }
+    else if ((!viewVisible || changedView) && status === "finished") tour.reset();
+  }, [shortFinished, viewVisible, viewKey, status, tour.reset]);
   const tourActive = status !== null && status !== "finished";
   const [fullscreen, setFullscreen] = useState(false);
   const [exporting, setExporting] = useState<"image" | "gpx" | null>(null);
@@ -75,10 +86,12 @@ export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl"
         </div>
       </header>
       {!status && <TourWeatherStrip />}
+      {shortNotice && <p role="status" className="s360-tour-fine" data-testid="text-free-tour-short">{GUIDED_COPY[summaryLang(lang)].short}</p>}
       {!status && <FreeTourIntro t={t} activity={chosen} onActivity={setChosen} onStart={() => startWith(chosen)} />}
-      <TourProfileControl t={t} activity={activity} tourActive={tourActive} controller={profile} />
-      {status && (
+      {status !== "finished" && <TourProfileControl t={t} activity={activity} tourActive={tourActive} controller={profile} />}
+      {status && !shortFinished && (
         <>
+          {tourActive && <>
           <div className="s360-free-map" data-testid="map-free-tour">
             <RouteMap
               freeMode
@@ -102,6 +115,7 @@ export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl"
           <FreeTourAscent t={t} ascentM={ascentM} />
           <FreeTourOmitted t={t} count={state?.omittedSegments} />
           <RecordedElevationProfile points={points} segmentStarts={state?.segmentStarts} t={t} />
+          </>}
           <LiveTourPanel
             t={t} status={status} metrics={tour.metrics} pointCount={points.length}
             wakeStatus={tour.wakeStatus} platform={tour.platform} geoError={tour.geoError}

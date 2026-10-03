@@ -46,22 +46,23 @@ test("intro renders three activities, selected running state and privacy", () =>
 });
 
 test("recorder choices, start, privacy and profile follow active guide language", () => {
-  for (const lang of ["sl", "en", "de", "it"] as const) {
+  for (const lang of ["sl", "en", "de", "it", "fr", "nl", "hr"] as const) {
     const t = makeT(null, lang);
+    const escaped = (key: string) => renderToStaticMarkup(createElement("span", null, t(key))).slice(6, -7);
     const intro = renderToStaticMarkup(createElement(FreeTourIntro, { t, activity: "cycling", onActivity: noop, onStart: noop }));
     for (const activity of ["cycling", "hiking", "running"]) {
-      assert.ok(intro.includes(t(`UI.lg.gpx.${activity}`)), `${lang}: ${activity}`);
+      assert.ok(intro.includes(escaped(`UI.lg.gpx.${activity}`)), `${lang}: ${activity}`);
     }
-    assert.ok(intro.includes(t("UI.lg.freeTour.start")), `${lang}: start`);
-    assert.ok(intro.includes(t("UI.lg.liveTour.privacy")), `${lang}: privacy`);
+    assert.ok(intro.includes(escaped("UI.lg.freeTour.start")), `${lang}: start`);
+    assert.ok(intro.includes(escaped("UI.lg.liveTour.privacy")), `${lang}: privacy`);
     const controller = {
       profile: {}, open: true, pending: true, storageError: false,
       setOpen: noop, complete: noop, start: noop,
     } as unknown as Parameters<typeof TourProfileControl>[0]["controller"];
     const profile = renderToStaticMarkup(createElement(TourProfileControl, { t, activity: "cycling", tourActive: false, controller }));
-    assert.ok(profile.includes(t("UI.lg.calories.profile")), `${lang}: profile`);
-    assert.ok(profile.includes(t("UI.lg.calories.privacy")), `${lang}: profile privacy`);
-    assert.ok(profile.includes(t("UI.lg.calories.skip")), `${lang}: profile skip`);
+    assert.ok(profile.includes(escaped("UI.lg.calories.profile")), `${lang}: profile`);
+    assert.ok(profile.includes(escaped("UI.lg.calories.privacy")), `${lang}: profile privacy`);
+    assert.ok(profile.includes(escaped("UI.lg.calories.skip")), `${lang}: profile skip`);
   }
 });
 
@@ -95,6 +96,11 @@ test("free result panel hides planned legend; GPX default keeps it", async () =>
   assert.doesNotMatch(free, new RegExp(sl("UI.lg.liveTour.planned")));
   assert.match(free, /s360-tour-key--recorded/);
   assert.match(renderToStaticMarkup(createElement(LiveTourPanel, base)), /s360-tour-key--planned/);
+  for (const lang of ["sl", "en", "de", "it", "fr", "nl", "hr"] as const) {
+    const result = renderToStaticMarkup(createElement(LiveTourPanel, {...base,t:makeT(null,lang),hasPlannedRoute:false}));
+    assert.match(result,/data-testid="button-tour-reset"/);
+    assert.ok(result.indexOf('data-testid="button-tour-reset"')<result.indexOf("<h3>"),`${lang}: close comes before summary`);
+  }
 });
 
 test("gpx CSS anchors MapLibre markers (start/end/me) to the map origin", async () => {

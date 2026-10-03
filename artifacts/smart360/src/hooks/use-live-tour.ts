@@ -137,7 +137,7 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
   }, [key, ephemeralFinished]);
 
   // A browser back/forward-cache restoration must not resurrect a completed
-  // guided result either. Active recording and free-tour results are untouched.
+  // result either. Active recordings are untouched.
   useEffect(() => {
     if (!ephemeralFinished) return;
     const leavePage = () => { if (stateRef.current?.status === 'finished') commit(null); };

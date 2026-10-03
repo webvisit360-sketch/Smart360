@@ -15,7 +15,7 @@ function memoryStorage() {
 }
 const done = () => finishTour(startTour(1000), 10000);
 
-test('app startup purges all guided finished leftovers, preserves free/active/unrelated/malformed data', () => {
+test('app startup purges guided and free finished leftovers, preserves active/unrelated/malformed data', () => {
   const storage = memoryStorage();
   for (const id of ['home/route-a', 'home/route-b', 'another/route-c']) saveTour(id, done(), storage);
   saveTour('home/free-tour', done(), storage);
@@ -25,15 +25,15 @@ test('app startup purges all guided finished leftovers, preserves free/active/un
   storage.setItem('smart360:live-tour:v1:%broken', '{"state":{"status":"finished"}}');
   const before = storage.length;
   purgeFinishedGuidedTours(storage);
-  assert.equal(storage.length, before - 3);
+  assert.equal(storage.length, before - 4);
   assert.equal(loadTour('home/route-a', storage), null);
   assert.equal(loadTour('home/route-b', storage), null);
   assert.equal(loadTour('another/route-c', storage), null);
-  assert.equal(loadTour('home/free-tour', storage)?.status, 'finished');
+  assert.equal(loadTour('home/free-tour', storage), null);
   assert.equal(loadTour('home/active', storage)?.status, 'moving');
   assert.equal(storage.getItem('other'), '{"state":{"status":"finished"}}');
   purgeFinishedGuidedTours(storage);
-  assert.equal(storage.length, before - 3);
+  assert.equal(storage.length, before - 4);
 });
 
 test('guided hydration expires finished results even outside main startup', () => {
@@ -55,10 +55,23 @@ test('guided finish removes its backup without modifying the current in-memory r
   assert.equal(loadTourForView('home/route', 30000, true, storage), null);
 });
 
-test('free recording default still saves and reopens its finished summary', () => {
+test('free recorder expires old finished backups and never persists a new result', () => {
   const storage = memoryStorage();
-  saveTourForView('home/free-tour', done(), false, storage);
-  assert.equal(loadTourForView('home/free-tour', 999999, false, storage)?.status, 'finished');
+  saveTour('home/free-tour', done(), storage);
+  assert.equal(loadTourForView('home/free-tour', 999999, true, storage), null);
+  saveTourForView('home/free-tour', done(), true, storage);
+  assert.equal(loadTour('home/free-tour', storage), null);
+});
+
+test('free recorder moving and paused states survive startup and reload', () => {
+  for (const status of ['moving', 'manual-paused', 'auto-paused'] as const) {
+    const storage = memoryStorage();
+    saveTourForView('home/free-tour', {...startTour(1000), status, distanceM: 321}, true, storage);
+    purgeFinishedGuidedTours(storage);
+    const recovered = loadTourForView('home/free-tour', 5000, true, storage);
+    assert.equal(recovered?.status, status);
+    assert.equal(recovered?.distanceM, 321);
+  }
 });
 
 test('guided active backups recover with existing status and data intact', () => {
