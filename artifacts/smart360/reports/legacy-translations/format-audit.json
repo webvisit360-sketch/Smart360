@@ -1,0 +1,40 @@
+{
+  "units": 56,
+  "languages": [
+    "en",
+    "de",
+    "it"
+  ],
+  "formatting": "passed",
+  "numbers": "passed",
+  "namesAndAddresses": "passed",
+  "wifiValues": "passed",
+  "nonLatinScript": "passed",
+  "reviewedCorrections": [
+    {
+      "unit": "7b6eb752c3a1c984ab79f640c5265d899a458dc1ea72f7bdcf4d1bdd183a2473",
+      "field": "body"
+    },
+    {
+      "unit": "39bf22a4f93364d7e9027e31248dfd9b7889afbf706ffe58618435bb44e66a8a",
+      "field": "body"
+    },
+    {
+      "unit": "69ba51a4ea1b62d96aa25d67b2643cd0e26572e242d21613d69072dcbf0df8c7",
+      "field": "body"
+    },
+    {
+      "unit": "75714151e6dc694606a32cfee5b84c7270eea11bd1092cdb7f5a3a9300d67121",
+      "field": "label"
+    },
+    {
+      "unit": "50a48d9bf9f728fa1f9c62a16043a527e840e30bd1919912dfcedbf98ef36050",
+      "field": "title"
+    },
+    {
+      "unit": "c672fab9994e65159d73a52b5bbd66fd3e743516f25b4e0b1e920667d150a96a",
+      "field": "subtitle"
+    }
+  ],
+  "humanProfessionalReview": false
+}

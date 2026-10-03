@@ -48,3 +48,15 @@ only Replit's public signed-out homepage, so the splitter cause remains unknown.
 **How to apply:** Establish authenticated platform-console access before promising
 a console-tested format. Do not remove transaction or checksum guards to work
 around an unconfirmed parser issue.
+
+The owner subsequently confirmed successful execution via psql in the workspace
+shell. Deliver owner rollouts as unpacked plain SQL files as well as a ZIP;
+this does not establish compatibility with the SQL console UI.
+
+**Why:** The owner explicitly chose the working psql delivery path for missing
+legacy translations. Production remains read-only for agent preparation.
+
+**How to apply:** For missing-only rollouts, preserve every existing row, including
+blank and stale rows; list stale rows separately. Guard all original languages,
+not only the languages outside the insertion scope. Safe repeats may exempt only
+the file's originally missing keys, with their exact expected values verified.

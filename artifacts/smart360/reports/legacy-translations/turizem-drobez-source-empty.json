@@ -1,0 +1,2138 @@
+[
+  {
+    "model": "section",
+    "record_id": "1b0ae34b-76bd-4a08-bcdd-1f2b35827b87",
+    "field": "subtitle",
+    "reason": "source_empty"
+  },
+  {
+    "model": "section",
+    "record_id": "32542078-c5f5-49c9-9916-16faf342063d",
+    "field": "subtitle",
+    "reason": "source_empty"
+  },
+  {
+    "model": "section",
+    "record_id": "a66f140c-ceed-4146-a9f0-1bd877902403",
+    "field": "subtitle",
+    "reason": "source_empty"
+  },
+  {
+    "model": "section",
+    "record_id": "d9ed1fc3-b387-48bf-9e30-255b74cc1b9e",
+    "field": "subtitle",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "037a5423-6557-47cf-999c-7c45c4b39164",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "037a5423-6557-47cf-999c-7c45c4b39164",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "037a5423-6557-47cf-999c-7c45c4b39164",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "037a5423-6557-47cf-999c-7c45c4b39164",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08c7b27e-e339-4ad0-a677-461a69305d7e",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08c7b27e-e339-4ad0-a677-461a69305d7e",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08c7b27e-e339-4ad0-a677-461a69305d7e",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08c7b27e-e339-4ad0-a677-461a69305d7e",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08e9bc27-a4fa-4e85-82e4-8426b46d01ce",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08e9bc27-a4fa-4e85-82e4-8426b46d01ce",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08e9bc27-a4fa-4e85-82e4-8426b46d01ce",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "08e9bc27-a4fa-4e85-82e4-8426b46d01ce",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "097f6a52-0170-4e35-bede-c1724c92dd0e",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "097f6a52-0170-4e35-bede-c1724c92dd0e",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "097f6a52-0170-4e35-bede-c1724c92dd0e",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "097f6a52-0170-4e35-bede-c1724c92dd0e",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0b0ac372-79ca-47f6-8bee-28ea69e6fec6",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0b0ac372-79ca-47f6-8bee-28ea69e6fec6",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0b0ac372-79ca-47f6-8bee-28ea69e6fec6",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0b0ac372-79ca-47f6-8bee-28ea69e6fec6",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0ea2138c-1f6b-4158-88bb-09e66b219592",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0ea2138c-1f6b-4158-88bb-09e66b219592",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0ea2138c-1f6b-4158-88bb-09e66b219592",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "0ea2138c-1f6b-4158-88bb-09e66b219592",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "10f92fe4-656e-4a10-a93d-7d7cb2ac0ec4",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "10f92fe4-656e-4a10-a93d-7d7cb2ac0ec4",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "10f92fe4-656e-4a10-a93d-7d7cb2ac0ec4",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "10f92fe4-656e-4a10-a93d-7d7cb2ac0ec4",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "144fe650-4b5d-44c4-9911-18c9a4d62ea9",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "144fe650-4b5d-44c4-9911-18c9a4d62ea9",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "144fe650-4b5d-44c4-9911-18c9a4d62ea9",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "144fe650-4b5d-44c4-9911-18c9a4d62ea9",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1852a493-0ebf-436a-a174-32031954cc4f",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1852a493-0ebf-436a-a174-32031954cc4f",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1852a493-0ebf-436a-a174-32031954cc4f",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1852a493-0ebf-436a-a174-32031954cc4f",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1852a493-0ebf-436a-a174-32031954cc4f",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1a7c6be9-dcdd-458b-8774-29f228319714",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1a7c6be9-dcdd-458b-8774-29f228319714",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1a7c6be9-dcdd-458b-8774-29f228319714",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1a7c6be9-dcdd-458b-8774-29f228319714",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "1a7c6be9-dcdd-458b-8774-29f228319714",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "275facdf-ce9b-46dd-a41b-54cd2dd2cb61",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "275facdf-ce9b-46dd-a41b-54cd2dd2cb61",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "275facdf-ce9b-46dd-a41b-54cd2dd2cb61",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "275facdf-ce9b-46dd-a41b-54cd2dd2cb61",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2839becc-d6fa-47b0-a8f4-583d7aab080e",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2839becc-d6fa-47b0-a8f4-583d7aab080e",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2839becc-d6fa-47b0-a8f4-583d7aab080e",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2839becc-d6fa-47b0-a8f4-583d7aab080e",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2c742f52-5668-4cd0-bab6-2a048226119c",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2c742f52-5668-4cd0-bab6-2a048226119c",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2c742f52-5668-4cd0-bab6-2a048226119c",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2c742f52-5668-4cd0-bab6-2a048226119c",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2d3f2689-c014-4ac9-989c-eba07c2224b1",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2d3f2689-c014-4ac9-989c-eba07c2224b1",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2d3f2689-c014-4ac9-989c-eba07c2224b1",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2d3f2689-c014-4ac9-989c-eba07c2224b1",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2f61dd60-86c0-40c6-b6dc-846ee16108d4",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2f61dd60-86c0-40c6-b6dc-846ee16108d4",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2f61dd60-86c0-40c6-b6dc-846ee16108d4",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2f61dd60-86c0-40c6-b6dc-846ee16108d4",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "2f61dd60-86c0-40c6-b6dc-846ee16108d4",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "300377a0-3567-47b3-b008-bedfef1fe179",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "300377a0-3567-47b3-b008-bedfef1fe179",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "300377a0-3567-47b3-b008-bedfef1fe179",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "300377a0-3567-47b3-b008-bedfef1fe179",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "305e21c1-3eda-4f66-a409-bbb465202719",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "305e21c1-3eda-4f66-a409-bbb465202719",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "305e21c1-3eda-4f66-a409-bbb465202719",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "305e21c1-3eda-4f66-a409-bbb465202719",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "312df1c5-831d-42a6-9e47-e343d9def963",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "312df1c5-831d-42a6-9e47-e343d9def963",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "312df1c5-831d-42a6-9e47-e343d9def963",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "312df1c5-831d-42a6-9e47-e343d9def963",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "354426b1-3e17-4236-b74c-23296f88d12f",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "354426b1-3e17-4236-b74c-23296f88d12f",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "354426b1-3e17-4236-b74c-23296f88d12f",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "354426b1-3e17-4236-b74c-23296f88d12f",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "354426b1-3e17-4236-b74c-23296f88d12f",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "36cedefc-891f-4e5a-a56a-98b7ec1e77ec",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "36cedefc-891f-4e5a-a56a-98b7ec1e77ec",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "36cedefc-891f-4e5a-a56a-98b7ec1e77ec",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "36cedefc-891f-4e5a-a56a-98b7ec1e77ec",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "36cedefc-891f-4e5a-a56a-98b7ec1e77ec",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "389ce24d-edc3-495b-9917-125d5816ba32",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "389ce24d-edc3-495b-9917-125d5816ba32",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "389ce24d-edc3-495b-9917-125d5816ba32",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "389ce24d-edc3-495b-9917-125d5816ba32",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3a947f37-272b-4764-bc6d-70170dba747a",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3a947f37-272b-4764-bc6d-70170dba747a",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3a947f37-272b-4764-bc6d-70170dba747a",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3a947f37-272b-4764-bc6d-70170dba747a",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3ac0cb9d-34ca-4f49-ab87-3c3f36a09270",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3dacb0fa-6707-4611-8559-91fa113c699c",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3dacb0fa-6707-4611-8559-91fa113c699c",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3dacb0fa-6707-4611-8559-91fa113c699c",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3dacb0fa-6707-4611-8559-91fa113c699c",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "3dacb0fa-6707-4611-8559-91fa113c699c",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "42a5b144-6821-495c-86b5-cf8400cc3713",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "42a5b144-6821-495c-86b5-cf8400cc3713",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "42a5b144-6821-495c-86b5-cf8400cc3713",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "42a5b144-6821-495c-86b5-cf8400cc3713",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "45090937-2e12-48d3-87a9-f1179f2f5e2c",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "46abf12d-c1a4-40d2-b442-1c795e56bfa7",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "46abf12d-c1a4-40d2-b442-1c795e56bfa7",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "46abf12d-c1a4-40d2-b442-1c795e56bfa7",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "46abf12d-c1a4-40d2-b442-1c795e56bfa7",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "46abf12d-c1a4-40d2-b442-1c795e56bfa7",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4961c3ce-23a8-4abc-8604-69d39db267d7",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4961c3ce-23a8-4abc-8604-69d39db267d7",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4961c3ce-23a8-4abc-8604-69d39db267d7",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4961c3ce-23a8-4abc-8604-69d39db267d7",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4e667802-7eaf-46be-b371-05b296de7799",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4e667802-7eaf-46be-b371-05b296de7799",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4e667802-7eaf-46be-b371-05b296de7799",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4e667802-7eaf-46be-b371-05b296de7799",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4fa95694-fa57-481d-96a4-52f4ed988caf",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4fa95694-fa57-481d-96a4-52f4ed988caf",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4fa95694-fa57-481d-96a4-52f4ed988caf",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "4fa95694-fa57-481d-96a4-52f4ed988caf",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "54bcc584-8391-4c14-bddd-b15fe9cee1f1",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "54bcc584-8391-4c14-bddd-b15fe9cee1f1",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "54bcc584-8391-4c14-bddd-b15fe9cee1f1",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "54bcc584-8391-4c14-bddd-b15fe9cee1f1",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5618ad2b-fcf9-4f93-a67b-2172c94ec793",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5618ad2b-fcf9-4f93-a67b-2172c94ec793",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5618ad2b-fcf9-4f93-a67b-2172c94ec793",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5618ad2b-fcf9-4f93-a67b-2172c94ec793",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "565cc213-1e6d-4be4-8155-93acd37ab929",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "565cc213-1e6d-4be4-8155-93acd37ab929",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "565cc213-1e6d-4be4-8155-93acd37ab929",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "565cc213-1e6d-4be4-8155-93acd37ab929",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "57964547-3fbd-4806-9bf8-17d615071a33",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "57964547-3fbd-4806-9bf8-17d615071a33",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "57964547-3fbd-4806-9bf8-17d615071a33",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "57964547-3fbd-4806-9bf8-17d615071a33",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5ff9c6bf-4ab6-4008-b4ee-abac2d7b8ef5",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5ff9c6bf-4ab6-4008-b4ee-abac2d7b8ef5",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5ff9c6bf-4ab6-4008-b4ee-abac2d7b8ef5",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5ff9c6bf-4ab6-4008-b4ee-abac2d7b8ef5",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "5ff9c6bf-4ab6-4008-b4ee-abac2d7b8ef5",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "603fda63-f4fc-4e53-8f0f-7eb977aeccf9",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "61a14ea4-7536-4ca4-bcf5-0ca694b32496",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "61a14ea4-7536-4ca4-bcf5-0ca694b32496",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "61a14ea4-7536-4ca4-bcf5-0ca694b32496",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "61a14ea4-7536-4ca4-bcf5-0ca694b32496",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "61a14ea4-7536-4ca4-bcf5-0ca694b32496",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "62dad79f-199f-4737-b4a2-c4bc974fbf80",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "62dad79f-199f-4737-b4a2-c4bc974fbf80",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "62dad79f-199f-4737-b4a2-c4bc974fbf80",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "62dad79f-199f-4737-b4a2-c4bc974fbf80",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "67a7f2f7-3676-4789-ad38-1a558118e385",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "67a7f2f7-3676-4789-ad38-1a558118e385",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "67a7f2f7-3676-4789-ad38-1a558118e385",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "67a7f2f7-3676-4789-ad38-1a558118e385",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6a98198e-2eb6-470f-819c-efda327957a4",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6a98198e-2eb6-470f-819c-efda327957a4",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6a98198e-2eb6-470f-819c-efda327957a4",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6a98198e-2eb6-470f-819c-efda327957a4",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6b3d8d2e-0f8e-4ee9-b80d-62d9c9684c99",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6b3d8d2e-0f8e-4ee9-b80d-62d9c9684c99",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6b3d8d2e-0f8e-4ee9-b80d-62d9c9684c99",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "6b3d8d2e-0f8e-4ee9-b80d-62d9c9684c99",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "780c88c4-fabc-4d3e-910e-cbf97271144e",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "780c88c4-fabc-4d3e-910e-cbf97271144e",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "780c88c4-fabc-4d3e-910e-cbf97271144e",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "780c88c4-fabc-4d3e-910e-cbf97271144e",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "79cbca8c-1e6b-4a6f-8011-7e9e46608590",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "79cbca8c-1e6b-4a6f-8011-7e9e46608590",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "79cbca8c-1e6b-4a6f-8011-7e9e46608590",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "79cbca8c-1e6b-4a6f-8011-7e9e46608590",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bb5200d-8f63-4d9a-8d87-bdaca526e7eb",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bb5200d-8f63-4d9a-8d87-bdaca526e7eb",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bb5200d-8f63-4d9a-8d87-bdaca526e7eb",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bb5200d-8f63-4d9a-8d87-bdaca526e7eb",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7bc22207-2390-46cc-a15b-3bad7b4f4d4a",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c314bdb-8d2d-4bd2-ab31-6e6533bd232b",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c314bdb-8d2d-4bd2-ab31-6e6533bd232b",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c314bdb-8d2d-4bd2-ab31-6e6533bd232b",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c314bdb-8d2d-4bd2-ab31-6e6533bd232b",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c56098e-02d0-4660-8d8c-0f5503e3dad1",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c56098e-02d0-4660-8d8c-0f5503e3dad1",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c56098e-02d0-4660-8d8c-0f5503e3dad1",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c56098e-02d0-4660-8d8c-0f5503e3dad1",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7c56098e-02d0-4660-8d8c-0f5503e3dad1",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7d6acf03-5315-491a-aaff-2012920aa19d",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7d6acf03-5315-491a-aaff-2012920aa19d",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7d6acf03-5315-491a-aaff-2012920aa19d",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "7d6acf03-5315-491a-aaff-2012920aa19d",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "834864fd-0322-4797-94ea-5190f1999e32",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "834864fd-0322-4797-94ea-5190f1999e32",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "834864fd-0322-4797-94ea-5190f1999e32",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "834864fd-0322-4797-94ea-5190f1999e32",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "855cef00-f53b-4a8b-9b67-94d153a895cc",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "855cef00-f53b-4a8b-9b67-94d153a895cc",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "855cef00-f53b-4a8b-9b67-94d153a895cc",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "855cef00-f53b-4a8b-9b67-94d153a895cc",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "855cef00-f53b-4a8b-9b67-94d153a895cc",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8640427b-d27f-4f3d-a8de-844fed00ebe3",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8640427b-d27f-4f3d-a8de-844fed00ebe3",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8640427b-d27f-4f3d-a8de-844fed00ebe3",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8640427b-d27f-4f3d-a8de-844fed00ebe3",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c0d4f94-21a2-442a-9db4-f9305e520bc2",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c0d4f94-21a2-442a-9db4-f9305e520bc2",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c0d4f94-21a2-442a-9db4-f9305e520bc2",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c0d4f94-21a2-442a-9db4-f9305e520bc2",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c492050-31cb-43fb-9824-13b0d7449365",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c492050-31cb-43fb-9824-13b0d7449365",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c492050-31cb-43fb-9824-13b0d7449365",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8c492050-31cb-43fb-9824-13b0d7449365",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f6f3a29-94d3-4e73-b3ff-dfeea3bffa9e",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f6f3a29-94d3-4e73-b3ff-dfeea3bffa9e",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f6f3a29-94d3-4e73-b3ff-dfeea3bffa9e",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f6f3a29-94d3-4e73-b3ff-dfeea3bffa9e",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "8f7b1ffa-7b13-441b-a7ba-a7dbc8a6bb88",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "91beea0a-2197-4694-9457-ba22248ffc02",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "91beea0a-2197-4694-9457-ba22248ffc02",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "91beea0a-2197-4694-9457-ba22248ffc02",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "91beea0a-2197-4694-9457-ba22248ffc02",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "93ef217c-2cc3-4c79-82a0-e7027ca340f6",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "93ef217c-2cc3-4c79-82a0-e7027ca340f6",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "93ef217c-2cc3-4c79-82a0-e7027ca340f6",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "93ef217c-2cc3-4c79-82a0-e7027ca340f6",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "94c36c3c-4c59-4942-8216-3ee7fa7c9eaf",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "94c36c3c-4c59-4942-8216-3ee7fa7c9eaf",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "94c36c3c-4c59-4942-8216-3ee7fa7c9eaf",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "94c36c3c-4c59-4942-8216-3ee7fa7c9eaf",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b050d9-ef6c-4613-b053-707725017055",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b050d9-ef6c-4613-b053-707725017055",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b050d9-ef6c-4613-b053-707725017055",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b050d9-ef6c-4613-b053-707725017055",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b42dc2-6c4f-4e26-acf4-fed398b0ce30",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b42dc2-6c4f-4e26-acf4-fed398b0ce30",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b42dc2-6c4f-4e26-acf4-fed398b0ce30",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "98b42dc2-6c4f-4e26-acf4-fed398b0ce30",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d56f916-c239-4ba7-8884-39f6101c2cc3",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d56f916-c239-4ba7-8884-39f6101c2cc3",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d56f916-c239-4ba7-8884-39f6101c2cc3",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d56f916-c239-4ba7-8884-39f6101c2cc3",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d7f8ebb-dfaa-4e0c-9a08-c96c8cb36c38",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d7f8ebb-dfaa-4e0c-9a08-c96c8cb36c38",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d7f8ebb-dfaa-4e0c-9a08-c96c8cb36c38",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d7f8ebb-dfaa-4e0c-9a08-c96c8cb36c38",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d8b2d4a-3960-48a2-8ca7-7310acb684ab",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d8b2d4a-3960-48a2-8ca7-7310acb684ab",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d8b2d4a-3960-48a2-8ca7-7310acb684ab",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9d8b2d4a-3960-48a2-8ca7-7310acb684ab",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9f96f349-2314-4e8b-a3ab-5eaceccea2ba",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9f96f349-2314-4e8b-a3ab-5eaceccea2ba",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9f96f349-2314-4e8b-a3ab-5eaceccea2ba",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "9f96f349-2314-4e8b-a3ab-5eaceccea2ba",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "a049a0fd-5237-44e8-96d9-291336c68f19",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "a049a0fd-5237-44e8-96d9-291336c68f19",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "a049a0fd-5237-44e8-96d9-291336c68f19",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "a049a0fd-5237-44e8-96d9-291336c68f19",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "aec271cd-41fd-4f13-a222-f69bf8cd8ec5",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "aec271cd-41fd-4f13-a222-f69bf8cd8ec5",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "aec271cd-41fd-4f13-a222-f69bf8cd8ec5",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "aec271cd-41fd-4f13-a222-f69bf8cd8ec5",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b7c03ce5-23fc-4c8f-874c-795dacee7b0c",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b7c03ce5-23fc-4c8f-874c-795dacee7b0c",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b7c03ce5-23fc-4c8f-874c-795dacee7b0c",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b7c03ce5-23fc-4c8f-874c-795dacee7b0c",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b86fc640-92e4-4014-aada-8baa487b1311",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b86fc640-92e4-4014-aada-8baa487b1311",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b86fc640-92e4-4014-aada-8baa487b1311",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "b86fc640-92e4-4014-aada-8baa487b1311",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "bf2d4d58-6b3f-4b53-ab49-74fb8ec1fa07",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "bf2d4d58-6b3f-4b53-ab49-74fb8ec1fa07",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "bf2d4d58-6b3f-4b53-ab49-74fb8ec1fa07",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "bf2d4d58-6b3f-4b53-ab49-74fb8ec1fa07",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "c56267f0-978f-4c9b-a449-543f4afac7b9",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "c56267f0-978f-4c9b-a449-543f4afac7b9",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "c56267f0-978f-4c9b-a449-543f4afac7b9",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "c56267f0-978f-4c9b-a449-543f4afac7b9",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "c56267f0-978f-4c9b-a449-543f4afac7b9",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d11c4ae1-cc0e-4ceb-9bb4-076c7c890767",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d11c4ae1-cc0e-4ceb-9bb4-076c7c890767",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d11c4ae1-cc0e-4ceb-9bb4-076c7c890767",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d11c4ae1-cc0e-4ceb-9bb4-076c7c890767",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d11c4ae1-cc0e-4ceb-9bb4-076c7c890767",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d176047c-ed0f-4906-9a7f-7ea4974cd1f5",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d176047c-ed0f-4906-9a7f-7ea4974cd1f5",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d176047c-ed0f-4906-9a7f-7ea4974cd1f5",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d176047c-ed0f-4906-9a7f-7ea4974cd1f5",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d6ba8374-c11d-43b1-ace8-ba647dd2651b",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d7b1f35f-12f4-4829-b2df-532b4da6578b",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d7b1f35f-12f4-4829-b2df-532b4da6578b",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d7b1f35f-12f4-4829-b2df-532b4da6578b",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "d7b1f35f-12f4-4829-b2df-532b4da6578b",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "df403474-2f7a-4c0a-8e2e-f8128da575b9",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "df403474-2f7a-4c0a-8e2e-f8128da575b9",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "df403474-2f7a-4c0a-8e2e-f8128da575b9",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "df403474-2f7a-4c0a-8e2e-f8128da575b9",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e0671a2b-1db4-4dfc-8584-176e951e1a0d",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e3ab3d55-fed0-4751-aea9-b7bfb85b5bcb",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e3ab3d55-fed0-4751-aea9-b7bfb85b5bcb",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e3ab3d55-fed0-4751-aea9-b7bfb85b5bcb",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e3ab3d55-fed0-4751-aea9-b7bfb85b5bcb",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "e3ab3d55-fed0-4751-aea9-b7bfb85b5bcb",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "ecdf8726-e0a8-4f27-bb0e-d327444f07cc",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f61ba111-a1fb-4246-8112-ad89dc124246",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f61ba111-a1fb-4246-8112-ad89dc124246",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f61ba111-a1fb-4246-8112-ad89dc124246",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f61ba111-a1fb-4246-8112-ad89dc124246",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f8193728-2c48-49ae-a5a7-61467aaab93a",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f8193728-2c48-49ae-a5a7-61467aaab93a",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f8193728-2c48-49ae-a5a7-61467aaab93a",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "f8193728-2c48-49ae-a5a7-61467aaab93a",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fb33c0f4-9924-4c8c-8fe3-a5fda6613fe8",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fb33c0f4-9924-4c8c-8fe3-a5fda6613fe8",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fb33c0f4-9924-4c8c-8fe3-a5fda6613fe8",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fb33c0f4-9924-4c8c-8fe3-a5fda6613fe8",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fbe38134-dd36-4472-8e32-4ea0a48e3c47",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fbe38134-dd36-4472-8e32-4ea0a48e3c47",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fbe38134-dd36-4472-8e32-4ea0a48e3c47",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fbe38134-dd36-4472-8e32-4ea0a48e3c47",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd588699-0ba1-449b-9676-4d3b6220584d",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd588699-0ba1-449b-9676-4d3b6220584d",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd588699-0ba1-449b-9676-4d3b6220584d",
+    "field": "body",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd588699-0ba1-449b-9676-4d3b6220584d",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd588699-0ba1-449b-9676-4d3b6220584d",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd9d941b-f143-4804-a865-38aed37df836",
+    "field": "noteText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd9d941b-f143-4804-a865-38aed37df836",
+    "field": "priceUnit",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd9d941b-f143-4804-a865-38aed37df836",
+    "field": "eventSchedule.locationText",
+    "reason": "source_empty"
+  },
+  {
+    "model": "item",
+    "record_id": "fd9d941b-f143-4804-a865-38aed37df836",
+    "field": "eventSchedule.ageText",
+    "reason": "source_empty"
+  }
+]

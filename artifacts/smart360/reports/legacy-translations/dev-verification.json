@@ -1,0 +1,198 @@
+[
+  {
+    "slug": "meli-pu",
+    "first": 72,
+    "second": 0,
+    "protectedBefore": {
+      "source": "eeb5cf1ed4f78a3acc87a16bfba52a7f",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "efc8e3dcdc89b2ec6eed4456eb89781f"
+    },
+    "protectedAfter": {
+      "source": "eeb5cf1ed4f78a3acc87a16bfba52a7f",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "efc8e3dcdc89b2ec6eed4456eb89781f"
+    },
+    "existingRowsUnchanged": 47347,
+    "driftRejected": "Checksum drift: source, existing translations or published snapshots changed. Nothing inserted; regenerate SQL.",
+    "coverage": {
+      "en": {
+        "translated": 292,
+        "total": 292
+      },
+      "de": {
+        "translated": 292,
+        "total": 292
+      },
+      "it": {
+        "translated": 292,
+        "total": 292
+      },
+      "fr": {
+        "translated": 292,
+        "total": 292
+      },
+      "nl": {
+        "translated": 292,
+        "total": 292
+      },
+      "hr": {
+        "translated": 292,
+        "total": 292
+      }
+    },
+    "notices": [
+      "meli-pu: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "camping-menina: inserted 48 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "camping-menina: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "kamp-savinja: inserted 72 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "kamp-savinja: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "turizem-drobez: inserted 75 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "turizem-drobez: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged."
+    ]
+  },
+  {
+    "slug": "camping-menina",
+    "first": 48,
+    "second": 0,
+    "protectedBefore": {
+      "source": "bcd8b93e940ef36a8a95a450bb2609ad",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "e1fb7a383775c1303ccfcd9b1cbc3092"
+    },
+    "protectedAfter": {
+      "source": "bcd8b93e940ef36a8a95a450bb2609ad",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "e1fb7a383775c1303ccfcd9b1cbc3092"
+    },
+    "existingRowsUnchanged": 47419,
+    "driftRejected": "Checksum drift: source, existing translations or published snapshots changed. Nothing inserted; regenerate SQL.",
+    "coverage": {
+      "en": {
+        "translated": 49,
+        "total": 49
+      },
+      "de": {
+        "translated": 49,
+        "total": 49
+      },
+      "it": {
+        "translated": 49,
+        "total": 49
+      },
+      "fr": {
+        "translated": 49,
+        "total": 49
+      },
+      "nl": {
+        "translated": 49,
+        "total": 49
+      },
+      "hr": {
+        "translated": 49,
+        "total": 49
+      }
+    },
+    "notices": [
+      "camping-menina: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "kamp-savinja: inserted 72 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "kamp-savinja: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "turizem-drobez: inserted 75 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "turizem-drobez: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged."
+    ]
+  },
+  {
+    "slug": "kamp-savinja",
+    "first": 72,
+    "second": 0,
+    "protectedBefore": {
+      "source": "bf6bbe172987f8b73102f9637fc8568f",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "efb15672ece756e8056de1dc08ebe444"
+    },
+    "protectedAfter": {
+      "source": "bf6bbe172987f8b73102f9637fc8568f",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "efb15672ece756e8056de1dc08ebe444"
+    },
+    "existingRowsUnchanged": 47467,
+    "driftRejected": "Checksum drift: source, existing translations or published snapshots changed. Nothing inserted; regenerate SQL.",
+    "coverage": {
+      "en": {
+        "translated": 191,
+        "total": 191
+      },
+      "de": {
+        "translated": 191,
+        "total": 191
+      },
+      "it": {
+        "translated": 191,
+        "total": 191
+      },
+      "fr": {
+        "translated": 191,
+        "total": 191
+      },
+      "nl": {
+        "translated": 191,
+        "total": 191
+      },
+      "hr": {
+        "translated": 191,
+        "total": 191
+      }
+    },
+    "notices": [
+      "kamp-savinja: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "turizem-drobez: inserted 75 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged.",
+      "turizem-drobez: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged."
+    ]
+  },
+  {
+    "slug": "turizem-drobez",
+    "first": 75,
+    "second": 0,
+    "protectedBefore": {
+      "source": "c2d7f6c8713993dc3b7c0f26978ae29c",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "1d08dbec6e06a905b121a8d314f61a60"
+    },
+    "protectedAfter": {
+      "source": "c2d7f6c8713993dc3b7c0f26978ae29c",
+      "snapshots": "d751713988987e9331980363e24189ce",
+      "translations": "1d08dbec6e06a905b121a8d314f61a60"
+    },
+    "existingRowsUnchanged": 47539,
+    "driftRejected": "Checksum drift: source, existing translations or published snapshots changed. Nothing inserted; regenerate SQL.",
+    "coverage": {
+      "en": {
+        "translated": 192,
+        "total": 192
+      },
+      "de": {
+        "translated": 192,
+        "total": 192
+      },
+      "it": {
+        "translated": 192,
+        "total": 192
+      },
+      "fr": {
+        "translated": 192,
+        "total": 192
+      },
+      "nl": {
+        "translated": 192,
+        "total": 192
+      },
+      "hr": {
+        "translated": 192,
+        "total": 192
+      }
+    },
+    "notices": [
+      "turizem-drobez: inserted 0 draft rows; checksum verification passed; safe repeat inserts 0 while protected data is unchanged."
+    ]
+  }
+]

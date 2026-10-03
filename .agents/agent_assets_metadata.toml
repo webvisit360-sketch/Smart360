@@ -2724,3 +2724,31 @@ mtime_ms = 1791012092766
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1d7b36ed-12a0-47dc-9153-84b786ee3e60/c350b8dc-98eb-4e27-b34e-5664878bad22"
 storage_version_token = "1791012097604628"
 content_type = "text/html"
+
+[[outputs]]
+id = "fgHVAd-z191qOzZIgZG5D"
+uri = "file://artifacts/smart360/reports/legacy-translations/lastnik.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — manjkajoči EN/DE/IT"
+description = "Posamezni prenosi štirih SQL datotek, števci, popolni seznami zastarelih vrstic, kontrolne vsote in DEV dokazila."
+logical_id = "3b990734-2bca-4471-96a2-072e17165a8c"
+content_hash = "sha256:c8d725f746914401bb4af8df53f84b2bd1797a5ce433f070c38faf3c720265ed"
+size = 911057
+mtime_ms = 1791015233887
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3b990734-2bca-4471-96a2-072e17165a8c/bb5702de-23c2-44d1-a07d-efafd4647506"
+storage_version_token = "1791015261802192"
+content_type = "text/html"
+
+[[outputs]]
+id = "QWnZBsp0L5Dp7GJjI3Z4H"
+uri = "file://artifacts/smart360/reports/legacy-prevodi-en-de-it.zip"
+type = "unspecified"
+title = "Paket prevodov EN/DE/IT — štiri SQL datoteke"
+description = "267 INSERT-only osnutkov za lastnikovo izvedbo prek psql. Vključeni poročilo, varovalke in dokazila; brez produkcijske izvedbe."
+logical_id = "d0dfbda0-337b-4e41-9672-2233c8d95fa9"
+content_hash = "sha256:d8d762dc627ece08404a48ddbda7d2d8835cd131652ee798ec717b9240f0ba17"
+size = 256483
+mtime_ms = 1791015233918
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d0dfbda0-337b-4e41-9672-2233c8d95fa9/707cb10a-6316-4b60-91a7-1507822f23d5"
+storage_version_token = "1791015262708876"
+content_type = "application/octet-stream"

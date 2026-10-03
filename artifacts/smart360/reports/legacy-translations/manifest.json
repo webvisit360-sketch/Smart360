@@ -1,0 +1,266 @@
+[
+  {
+    "slug": "meli-pu",
+    "counts": {
+      "en": {
+        "sourceFields": 292,
+        "existingRows": 321,
+        "existingSourceRows": 268,
+        "insert": 24,
+        "stale": 30,
+        "staleAll": 81,
+        "blank": 0
+      },
+      "de": {
+        "sourceFields": 292,
+        "existingRows": 321,
+        "existingSourceRows": 268,
+        "insert": 24,
+        "stale": 30,
+        "staleAll": 81,
+        "blank": 0
+      },
+      "it": {
+        "sourceFields": 292,
+        "existingRows": 321,
+        "existingSourceRows": 268,
+        "insert": 24,
+        "stale": 30,
+        "staleAll": 81,
+        "blank": 0
+      },
+      "fr": {
+        "sourceFields": 292,
+        "existingRows": 295,
+        "existingSourceRows": 292,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "nl": {
+        "sourceFields": 292,
+        "existingRows": 295,
+        "existingSourceRows": 292,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "hr": {
+        "sourceFields": 292,
+        "existingRows": 295,
+        "existingSourceRows": 292,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      }
+    },
+    "expectedInsert": 72,
+    "baseline": {
+      "source": "f720aac9c9afc8caf977936e233c9241",
+      "snapshots": "3e43a8734677de29bb724d4f96d21d18",
+      "translations": "53774d5d1c0faf8b0b9d34e0039d5d7f"
+    },
+    "sqlSha256": "d3675354cc9237da5115afac5697b558696924c836e0f45db1c26d947feebf32"
+  },
+  {
+    "slug": "camping-menina",
+    "counts": {
+      "en": {
+        "sourceFields": 49,
+        "existingRows": 34,
+        "existingSourceRows": 33,
+        "insert": 16,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "de": {
+        "sourceFields": 49,
+        "existingRows": 34,
+        "existingSourceRows": 33,
+        "insert": 16,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "it": {
+        "sourceFields": 49,
+        "existingRows": 34,
+        "existingSourceRows": 33,
+        "insert": 16,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "fr": {
+        "sourceFields": 49,
+        "existingRows": 49,
+        "existingSourceRows": 49,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "nl": {
+        "sourceFields": 49,
+        "existingRows": 49,
+        "existingSourceRows": 49,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "hr": {
+        "sourceFields": 49,
+        "existingRows": 49,
+        "existingSourceRows": 49,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      }
+    },
+    "expectedInsert": 48,
+    "baseline": {
+      "source": "16b14bbc4268e603da32f5ec6ef899f7",
+      "snapshots": "25ed9cc963f5858a9faac8f19ecf953d",
+      "translations": "6a94e31321750f24bbbd082f3fc03c6e"
+    },
+    "sqlSha256": "9e5c4429b3dc5f63e81b58887863a0a845e6d32c9cc3345e17d507406a675be9"
+  },
+  {
+    "slug": "kamp-savinja",
+    "counts": {
+      "en": {
+        "sourceFields": 191,
+        "existingRows": 206,
+        "existingSourceRows": 167,
+        "insert": 24,
+        "stale": 1,
+        "staleAll": 13,
+        "blank": 0
+      },
+      "de": {
+        "sourceFields": 191,
+        "existingRows": 206,
+        "existingSourceRows": 167,
+        "insert": 24,
+        "stale": 1,
+        "staleAll": 13,
+        "blank": 0
+      },
+      "it": {
+        "sourceFields": 191,
+        "existingRows": 206,
+        "existingSourceRows": 167,
+        "insert": 24,
+        "stale": 1,
+        "staleAll": 13,
+        "blank": 0
+      },
+      "fr": {
+        "sourceFields": 191,
+        "existingRows": 191,
+        "existingSourceRows": 191,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "nl": {
+        "sourceFields": 191,
+        "existingRows": 191,
+        "existingSourceRows": 191,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "hr": {
+        "sourceFields": 191,
+        "existingRows": 191,
+        "existingSourceRows": 191,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      }
+    },
+    "expectedInsert": 72,
+    "baseline": {
+      "source": "3ce51c033e19d9e14b7f36ca03c74281",
+      "snapshots": "8b7c7bf8c70a767a4cf375120767f840",
+      "translations": "ecb53764f3784906d72f0f2683b7be08"
+    },
+    "sqlSha256": "3574e3d084a1fffbbc5fca3cb37590f6f164da21f22cf4c39b21b29bac583a6b"
+  },
+  {
+    "slug": "turizem-drobez",
+    "counts": {
+      "en": {
+        "sourceFields": 192,
+        "existingRows": 206,
+        "existingSourceRows": 167,
+        "insert": 25,
+        "stale": 1,
+        "staleAll": 13,
+        "blank": 0
+      },
+      "de": {
+        "sourceFields": 192,
+        "existingRows": 206,
+        "existingSourceRows": 167,
+        "insert": 25,
+        "stale": 1,
+        "staleAll": 13,
+        "blank": 0
+      },
+      "it": {
+        "sourceFields": 192,
+        "existingRows": 206,
+        "existingSourceRows": 167,
+        "insert": 25,
+        "stale": 1,
+        "staleAll": 13,
+        "blank": 0
+      },
+      "fr": {
+        "sourceFields": 192,
+        "existingRows": 192,
+        "existingSourceRows": 192,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "nl": {
+        "sourceFields": 192,
+        "existingRows": 192,
+        "existingSourceRows": 192,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      },
+      "hr": {
+        "sourceFields": 192,
+        "existingRows": 192,
+        "existingSourceRows": 192,
+        "insert": 0,
+        "stale": 0,
+        "staleAll": 0,
+        "blank": 0
+      }
+    },
+    "expectedInsert": 75,
+    "baseline": {
+      "source": "2301243fd1f7dca0f8b433bba4aa0b98",
+      "snapshots": "31e394f9e89e7c18bf040821ae5ad9b0",
+      "translations": "2a32ac934bd36c2fcb6cd38e445f7693"
+    },
+    "sqlSha256": "ca2d65a32e99e7dcbe941079a07657aa7128e34090913fb1f140c33cc857193c"
+  }
+]

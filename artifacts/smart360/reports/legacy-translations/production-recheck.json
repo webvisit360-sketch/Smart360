@@ -1,0 +1,58 @@
+[
+  {
+    "slug": "meli-pu",
+    "before": {
+      "source": "f720aac9c9afc8caf977936e233c9241",
+      "snapshots": "3e43a8734677de29bb724d4f96d21d18",
+      "translations": "53774d5d1c0faf8b0b9d34e0039d5d7f"
+    },
+    "after": {
+      "source": "f720aac9c9afc8caf977936e233c9241",
+      "snapshots": "3e43a8734677de29bb724d4f96d21d18",
+      "translations": "53774d5d1c0faf8b0b9d34e0039d5d7f"
+    },
+    "unchanged": true
+  },
+  {
+    "slug": "camping-menina",
+    "before": {
+      "source": "16b14bbc4268e603da32f5ec6ef899f7",
+      "snapshots": "25ed9cc963f5858a9faac8f19ecf953d",
+      "translations": "6a94e31321750f24bbbd082f3fc03c6e"
+    },
+    "after": {
+      "source": "16b14bbc4268e603da32f5ec6ef899f7",
+      "snapshots": "25ed9cc963f5858a9faac8f19ecf953d",
+      "translations": "6a94e31321750f24bbbd082f3fc03c6e"
+    },
+    "unchanged": true
+  },
+  {
+    "slug": "kamp-savinja",
+    "before": {
+      "source": "3ce51c033e19d9e14b7f36ca03c74281",
+      "snapshots": "8b7c7bf8c70a767a4cf375120767f840",
+      "translations": "ecb53764f3784906d72f0f2683b7be08"
+    },
+    "after": {
+      "source": "3ce51c033e19d9e14b7f36ca03c74281",
+      "snapshots": "8b7c7bf8c70a767a4cf375120767f840",
+      "translations": "ecb53764f3784906d72f0f2683b7be08"
+    },
+    "unchanged": true
+  },
+  {
+    "slug": "turizem-drobez",
+    "before": {
+      "source": "2301243fd1f7dca0f8b433bba4aa0b98",
+      "snapshots": "31e394f9e89e7c18bf040821ae5ad9b0",
+      "translations": "2a32ac934bd36c2fcb6cd38e445f7693"
+    },
+    "after": {
+      "source": "2301243fd1f7dca0f8b433bba4aa0b98",
+      "snapshots": "31e394f9e89e7c18bf040821ae5ad9b0",
+      "translations": "2a32ac934bd36c2fcb6cd38e445f7693"
+    },
+    "unchanged": true
+  }
+]
