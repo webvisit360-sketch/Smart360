@@ -2710,3 +2710,17 @@ mtime_ms = 1791010786190
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/70ebab77-b4fa-470b-872b-2dc9e2e97966/f3fc61c1-55f9-489d-aa96-837ffcb388e6"
 storage_version_token = "1791010794177437"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "SrdRjqGYfTdhBAqwmADXv"
+uri = "file://artifacts/smart360/reports/seven-languages/console-access-report.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — omejitev preverjanja SQL konzole"
+description = "Kaj je bilo preverjeno, zakaj reprodukcija ni mogoča in predlog varne alternative. To ni paket popravljenih SQL datotek."
+logical_id = "1d7b36ed-12a0-47dc-9153-84b786ee3e60"
+content_hash = "sha256:61601fd97614e65aaa97bb7c0c05ee1c9f3e84ba10fb571babc83c07bfc3cd8e"
+size = 2788
+mtime_ms = 1791012092766
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1d7b36ed-12a0-47dc-9153-84b786ee3e60/c350b8dc-98eb-4e27-b34e-5664878bad22"
+storage_version_token = "1791012097604628"
+content_type = "text/html"

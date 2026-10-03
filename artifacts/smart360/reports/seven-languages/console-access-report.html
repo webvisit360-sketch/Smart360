@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="sl"><meta charset="utf-8"><title>POVZETEK ZA LASTNIKA — SQL konzola</title>
+<style>body{font:17px/1.6 system-ui;max-width:850px;margin:48px auto;padding:0 24px;color:#17202a}h1{font-size:28px}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #ccc;text-align:left}code{background:#eee;padding:2px 4px}</style>
+<h1>POVZETEK ZA LASTNIKA</h1>
+<h2>Rezultat: preverjanje v isti SQL konzoli je blokirano</h2>
+<p>Testni brskalnik je odprl dejansko stran https://replit.com/, vendar je prikazala javno domačo stran z možnostma »Log in« in »Create account«. Prijavljena delovna površina in SQL konzola nista bili dostopni. Gesla nismo zahtevali, prijave nismo izvajali.</p>
+<p><strong>Noben SQL ni bil izveden, niti v DEV niti v produkciji.</strong> Datoteke in podatki niso bili spremenjeni. Objave ni bilo.</p>
+<h2>Kaj ostaja nedokazano</h2>
+<table><tr><th>Možen vzrok</th><th>Status</th></tr>
+<tr><td>Vodilni komentarji --</td><td>Nepreizkušeno v konzoli.</td></tr>
+<tr><td>DO $rollout$ in razdeljevanje stavkov</td><td>Nepreizkušeno v konzoli.</td></tr>
+<tr><td>BEGIN/COMMIT ob samodejni transakciji konzole</td><td>Nepreizkušeno v konzoli.</td></tr>
+<tr><td>Velikost datoteke</td><td>Nepreizkušeno v konzoli.</td></tr></table>
+<p>Uradna dokumentacija ni potrdila natančnega obnašanja razdeljevalnika za ta primer. Lastnikovo poročilo o tihem Run je izhodišče, ne dokaz konkretnega vzroka. Ne moremo trditi niti, da konzola varovane oblike sploh ne podpira.</p>
+<h2>Datoteke</h2>
+<p>Štiri regenerirane, v tej konzoli dokazano delujoče produkcijske datoteke <strong>niso dostavljene</strong>, ker zahtevane združljivosti ni bilo mogoče preveriti. Prejšnje datoteke niso na novo potrjene za Replitovo konzolo. Prejšnje preverjanje prek povezave z bazo ne dokazuje delovanja njenega uporabniškega vmesnika.</p>
+<h2>Najvarnejša alternativa</h2>
+<p>Za obhod nepreverjenega razdeljevalnika je predlog lastnikova izvedba nespremenjene varovane datoteke v standardnem PostgreSQL odjemalcu, npr. <code>psql</code> z <code>ON_ERROR_STOP=1</code>, na eni povezavi in z obstoječim BEGIN/COMMIT. Najprej je treba isto pot preveriti na DEV kopiji z ustreznimi DEV identitetami in kontrolnimi vsotami. To ni izvedeno v tem preizkusu in ni rešitev, dokazana znotraj Replitove SQL konzole.</p>
+<p>Ne izvajajte datoteke po kosih ali po posameznih stavkih. Ne odstranjujte preverjanj kontrolnih vsot ali transakcije. Varna rešitev mora ohraniti INSERT-only, ON CONFLICT DO NOTHING, preklic ob odstopanju kontrolnih vsot ter eno transakcijo za celotno datoteko.</p>
+<p>Za dejanski dokaz v zahtevani konzoli manjka dostop do prijavljene platformne seje z izbrano DEV bazo. Delo se tu ustavi brez produkcijske izvedbe.</p>
+</html>

@@ -36,3 +36,15 @@ the stale paragraph aliases replace the current Slovenian-based result.
 **How to apply:** Prefer the populated Slovenian body. Use English indexed fields
 only when the source body is genuinely absent; compare against the reader's
 paragraph reconstruction before preparing a bulk translation manifest.
+
+Owner-console compatibility requires a test in the actual Replit SQL console,
+not executeSql or a PostgreSQL driver. Never label driver-only verification as
+console proof.
+
+**Why:** The owner reported silent execution of whole guarded files in the SQL
+console despite earlier successful DEV driver tests. The testing browser exposed
+only Replit's public signed-out homepage, so the splitter cause remains unknown.
+
+**How to apply:** Establish authenticated platform-console access before promising
+a console-tested format. Do not remove transaction or checksum guards to work
+around an unconfirmed parser issue.
