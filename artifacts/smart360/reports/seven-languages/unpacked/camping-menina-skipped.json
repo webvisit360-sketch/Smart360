@@ -1,0 +1,32 @@
+[
+  {
+    "model": "tenant",
+    "record_id": "e0303a50-aeba-4ff2-a919-1e2558df55f3",
+    "field": "subtitle",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "section",
+    "record_id": "391cb399-ba25-4d4d-ad7b-4e5b3869dd3c",
+    "field": "subtitle",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "section",
+    "record_id": "89f6b6b0-a273-4ca5-b362-2f39cab288dc",
+    "field": "subtitle",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "section",
+    "record_id": "b92bf2bc-1877-4455-8761-fc673a216530",
+    "field": "subtitle",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "section",
+    "record_id": "e11bb298-5f97-41ec-bc05-74cfce6cf85d",
+    "field": "subtitle",
+    "reason": "no_sl_or_en_source"
+  }
+]
