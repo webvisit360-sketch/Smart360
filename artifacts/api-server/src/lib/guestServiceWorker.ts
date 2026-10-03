@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 
 export type GuestOfflineConfig = {
   tenantId: string;
@@ -40,8 +41,8 @@ export function guestOfflineConfig(tenantId: string, slug: string, languages: Re
   }
   return {
     tenantId, slug,
-    version: createHash("sha256").update(JSON.stringify({ publishedAt, languages })).digest("hex").slice(0, 24),
-    languages: Object.keys(languages).filter((lang) => /^[a-z]{2}$/.test(lang)),
+    version: createHash("sha256").update(JSON.stringify({ publishedAt, languages, registry: GUIDE_LANGUAGES })).digest("hex").slice(0, 24),
+    languages: GUIDE_LANGUAGES,
     gpx: [...gpx], essentials: [...essentials],
   };
 }

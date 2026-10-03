@@ -29,7 +29,8 @@ import {
 } from "./creatorProposalLedger";
 
 export const CREATOR_C1_BATCH_SIZE = 15;
-export const CREATOR_C1_LANGUAGE_CODES = ["sl", "en", "de", "it"] as const;
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
+export const CREATOR_C1_LANGUAGE_CODES = GUIDE_LANGUAGES;
 type Language = (typeof CREATOR_C1_LANGUAGE_CODES)[number];
 
 export type CreatorC1Place = {
@@ -134,7 +135,7 @@ export function validateCreatorC1ModelOutput(value: unknown): CreatorC1Place[] {
     ) {
       throw new Error(`C1 proposal ${i} has missing text.`);
     }
-    if (!Array.isArray(row.languages) || row.languages.length !== 4) throw new Error(`C1 proposal ${i} needs exactly four translations.`);
+    if (!Array.isArray(row.languages) || row.languages.length !== CREATOR_C1_LANGUAGE_CODES.length) throw new Error(`C1 proposal ${i} needs ${CREATOR_C1_LANGUAGE_CODES.length} translations.`);
     const languages = row.languages.map((translation, n) => {
       if (!translation || typeof translation !== "object" || Array.isArray(translation)) throw new Error(`C1 translation ${i}/${n} invalid.`);
       const t = translation as Record<string, unknown>;
@@ -363,7 +364,7 @@ Machine-resolved local settlement set, nearest first, with the number of distinc
 For at least 8 of the 15 proposals, target a place in that exact named settlement set and copy its canonical name into targetSettlement. Use null targetSettlement only for the remaining excursions. A non-null targetSettlement must exactly match one supplied name; do not invent, alter or substitute settlement names. Never target more proposals to one settlement than its supplied featureCount. The counts show where real catalogue evidence exists; they are not permission to invent unnamed places.
 Propose only editorial places for near surroundings and excursions. Never propose proximity-selected practical services such as ATMs, shops, supermarkets, pharmacies, fuel stations, doctors, health centres or post offices; those are machine-query work.
 Anchor every proposal to the stated origin. Target a useful geographic mix: roughly half of the 15 proposals should be places reasonably expected within about 20 minutes' drive of the origin; the rest should be excursions reasonably expected within 90 minutes' drive. Do not propose any place expected to require more than 90 minutes' driving. Never invent or report measurements; the server alone calculates and assigns every range.
-House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful English, German and Italian translations. Descriptions MUST be empty in every language for hospitality categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
+House style: concise, factual, useful to a guest, natural rather than promotional, and free of superlatives or unstable operational claims. Write Slovene first and faithful translations for these language codes: ${CREATOR_C1_LANGUAGE_CODES.join(", ")}. French uses vous, Dutch uses je, and Croatian is polite and natural. Descriptions MUST be empty in every language for hospitality categories. A null category is allowed only when no existing category fits and the inclusion reason explains why.
 No coordinates, distances, travel times, addresses, opening hours, prices, phone numbers, or other machine facts. A server verifies existence and routing.`;
 }
 

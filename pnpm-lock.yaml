@@ -203,6 +203,9 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
+      '@workspace/guide-languages':
+        specifier: workspace:*
+        version: link:../../lib/guide-languages
       '@workspace/integrations-openai-ai-server':
         specifier: workspace:*
         version: link:../../lib/integrations-openai-ai-server
@@ -637,6 +640,9 @@ importers:
       '@workspace/category-icons':
         specifier: workspace:*
         version: link:../../lib/category-icons
+      '@workspace/guide-languages':
+        specifier: workspace:*
+        version: link:../../lib/guide-languages
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -741,6 +747,9 @@ importers:
 
   lib/db:
     dependencies:
+      '@workspace/guide-languages':
+        specifier: workspace:*
+        version: link:../guide-languages
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@types/pg@8.20.0)(pg@8.22.0)
@@ -763,6 +772,8 @@ importers:
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
+
+  lib/guide-languages: {}
 
   lib/integrations-openai-ai-server:
     dependencies:

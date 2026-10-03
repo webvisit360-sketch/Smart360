@@ -311,6 +311,7 @@ export * from './tenantBaseNotificationChannel';
 export * from './tenantContent';
 export * from './tenantContentPlurals';
 export * from './tenantContentUi';
+export * from './tenantContentUiFallback';
 export * from './tenantDuplicateInput';
 export * from './tenantInput';
 export * from './tenantInputType';

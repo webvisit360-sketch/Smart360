@@ -26,8 +26,8 @@ test("only an actual fallback claims a saved copy; online clears immediately", (
 test("banner and retry copy cover all four languages, with exact Slovenian banner", () => {
   assert.equal(offlineCopy("sl").banner, "Ni povezave — vodnik deluje iz shranjene kopije.");
   assert.equal(offlineCopy("unsupported"), OFFLINE_COPY.sl);
-  assert.equal(new Set(Object.values(OFFLINE_COPY).map((copy) => copy.banner)).size, 4);
-  assert.equal(new Set(Object.values(OFFLINE_COPY).map((copy) => copy.retry)).size, 4);
+  assert.equal(new Set(Object.values(OFFLINE_COPY).map((copy) => copy.banner)).size, 7);
+  assert.equal(new Set(Object.values(OFFLINE_COPY).map((copy) => copy.retry)).size, 7);
 });
 
 test("network drop is friendly even when the browser still reports online; HTTP errors retain their semantics", () => {

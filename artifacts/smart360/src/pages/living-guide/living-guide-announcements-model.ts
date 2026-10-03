@@ -1,14 +1,18 @@
 // Tenant announcements ("Obvestila") — runtime data, never part of the published snapshot.
 // Pure helpers: visibility window, language fallback, device-only read state, labels.
 
-export type AnnouncementLang = "sl" | "en" | "de" | "it";
-export const ANNOUNCEMENT_LANGS: AnnouncementLang[] = ["sl", "en", "de", "it"];
+import { GUIDE_LANGUAGES, guideLanguage, LANGUAGE_LOCALES, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+export type AnnouncementLang = GuideLanguage;
+export const ANNOUNCEMENT_LANGS = GUIDE_LANGUAGES;
 
 export interface GuestAnnouncement {
   id: string;
   tenantId: string;
   titleSl?: string | null; titleEn?: string | null; titleDe?: string | null; titleIt?: string | null;
   bodySl?: string | null; bodyEn?: string | null; bodyDe?: string | null; bodyIt?: string | null;
+  titleFr?: string | null; titleNl?: string | null; titleHr?: string | null;
+  bodyFr?: string | null; bodyNl?: string | null; bodyHr?: string | null;
   imageUrl?: string | null;
   validFrom: string;
   validTo?: string | null;
@@ -17,15 +21,15 @@ export interface GuestAnnouncement {
   deletedAt?: string | null;
 }
 
-const suffix: Record<AnnouncementLang, "Sl" | "En" | "De" | "It"> = { sl: "Sl", en: "En", de: "De", it: "It" };
+const suffix = Object.fromEntries(GUIDE_LANGUAGES.map(lang => [lang, lang[0].toUpperCase() + lang.slice(1)])) as Record<AnnouncementLang, string>;
 
 export function normalizeLang(lang: string): AnnouncementLang {
-  return lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
+  return guideLanguage(lang);
 }
 
 /** Requested language first, then the first filled language in SL → EN → DE → IT order. */
 export function localizedField(row: GuestAnnouncement, field: "title" | "body", lang: string): string {
-  const order = [normalizeLang(lang), ...ANNOUNCEMENT_LANGS.filter((l) => l !== normalizeLang(lang))];
+  const order = [normalizeLang(lang), "en", "sl"] as const;
   for (const l of order) {
     const value = (row as unknown as Record<string, unknown>)[`${field}${suffix[l]}`];
     if (typeof value === "string" && value.trim()) return value.trim();
@@ -100,15 +104,15 @@ export function hasUnread(active: GuestAnnouncement[], readIds: Set<string>): bo
 }
 
 // ---------- labels ----------
-export const ANNOUNCEMENT_COPY = {
+export const ANNOUNCEMENT_COPY = extendCatalog({
   sl: { title: "Obvestila", isNew: "Novo", back: "Nazaj", published: "Objavljeno", validTo: "Velja do", today: "danes", yesterday: "včeraj", empty: "Trenutno ni obvestil.", emptyNote: "Ko gostitelj objavi novico, jo najdete tukaj.", offline: "Brez povezave. Obvestila se prikažejo, ko boste spet na spletu.", error: "Obvestil ni bilo mogoče naložiti.", retry: "Poskusi znova", close: "Zapri" },
   en: { title: "Announcements", isNew: "New", back: "Back", published: "Published", validTo: "Valid until", today: "today", yesterday: "yesterday", empty: "No announcements right now.", emptyNote: "When your host posts news, you will find it here.", offline: "You are offline. Announcements will appear once you are back online.", error: "Announcements could not be loaded.", retry: "Try again", close: "Close" },
   de: { title: "Mitteilungen", isNew: "Neu", back: "Zurück", published: "Veröffentlicht", validTo: "Gültig bis", today: "heute", yesterday: "gestern", empty: "Derzeit keine Mitteilungen.", emptyNote: "Neuigkeiten Ihres Gastgebers finden Sie hier.", offline: "Keine Verbindung. Mitteilungen erscheinen, sobald Sie wieder online sind.", error: "Mitteilungen konnten nicht geladen werden.", retry: "Erneut versuchen", close: "Schließen" },
   it: { title: "Avvisi", isNew: "Nuovo", back: "Indietro", published: "Pubblicato", validTo: "Valido fino al", today: "oggi", yesterday: "ieri", empty: "Al momento non ci sono avvisi.", emptyNote: "Quando il tuo host pubblica una novità, la trovi qui.", offline: "Sei offline. Gli avvisi compariranno appena tornerai online.", error: "Impossibile caricare gli avvisi.", retry: "Riprova", close: "Chiudi" },
-} as const;
+});
 export const announcementCopy = (lang: string) => ANNOUNCEMENT_COPY[normalizeLang(lang)];
 
-const LOCALE: Record<AnnouncementLang, string> = { sl: "sl-SI", en: "en-GB", de: "de-DE", it: "it-IT" };
+const LOCALE = LANGUAGE_LOCALES;
 const TZ = "Europe/Ljubljana";
 
 function dayKey(t: number) {

@@ -1,4 +1,6 @@
-export type EmergencyHelpLanguage = "sl" | "en" | "de" | "it";
+import { isGuideLanguage, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+export type EmergencyHelpLanguage = GuideLanguage;
 
 type EmergencyHelpCopy = {
   title: string;
@@ -6,7 +8,7 @@ type EmergencyHelpCopy = {
   police: string;
 };
 
-const EMERGENCY_HELP_COPY: Record<EmergencyHelpLanguage, EmergencyHelpCopy> = {
+const EMERGENCY_HELP_COPY = extendCatalog<EmergencyHelpCopy>({
   sl: {
     title: "Pomoč in nujni primeri",
     emergencyDescription:
@@ -31,7 +33,7 @@ const EMERGENCY_HELP_COPY: Record<EmergencyHelpLanguage, EmergencyHelpCopy> = {
       "Emergenza — soccorso sanitario, vigili del fuoco, incidenti e ferite",
     police: "Polizia",
   },
-};
+});
 
 export type EmergencyHelpContact = {
   id: string;
@@ -47,12 +49,7 @@ function visible(rows: any[] | null | undefined): any[] {
 
 export function emergencyHelpLanguage(language: string): EmergencyHelpLanguage {
   const normalized = language.toLowerCase().split("-")[0];
-  return normalized === "sl" ||
-    normalized === "en" ||
-    normalized === "de" ||
-    normalized === "it"
-    ? normalized
-    : "en";
+  return isGuideLanguage(normalized) ? normalized : "en";
 }
 
 export function sanitizeEmergencyPhone(value: unknown): string | null {

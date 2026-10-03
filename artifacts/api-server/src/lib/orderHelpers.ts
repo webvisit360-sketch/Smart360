@@ -269,9 +269,13 @@ setInterval(() => {
 export const ORDER_RETENTION_DAYS = 90;
 export const ORDER_PASSWORD_MAX = 200;
 
-export type OrderLanguage = "sl" | "en" | "de" | "it";
+import { guideLanguage, type GuideLanguage } from "@workspace/guide-languages";
+export type OrderLanguage = GuideLanguage;
 
 const WRONG_ORDER_PASSWORD_MESSAGES: Record<OrderLanguage, string> = {
+  fr: "Mot de passe incorrect",
+  nl: "Onjuist wachtwoord",
+  hr: "Pogrešna lozinka",
   sl: "Napačno geslo",
   en: "Wrong password",
   de: "Falsches Passwort",
@@ -279,6 +283,9 @@ const WRONG_ORDER_PASSWORD_MESSAGES: Record<OrderLanguage, string> = {
 };
 
 const REQUIRED_ORDER_FIELD_MESSAGES: Record<OrderLanguage, string> = {
+  fr: "Ce champ est obligatoire.",
+  nl: "Dit veld is verplicht.",
+  hr: "Ovo je polje obavezno.",
   sl: "To polje je obvezno.",
   en: "This field is required.",
   de: "Dieses Feld ist erforderlich.",
@@ -300,13 +307,13 @@ export function matchesOrderPassword(
 
 export function wrongOrderPasswordMessage(lang: string | undefined): string {
   return WRONG_ORDER_PASSWORD_MESSAGES[
-    lang === "en" || lang === "de" || lang === "it" ? lang : "sl"
+    guideLanguage(lang)
   ];
 }
 
 export function requiredOrderFieldMessage(lang: string | undefined): string {
   return REQUIRED_ORDER_FIELD_MESSAGES[
-    lang === "en" || lang === "de" || lang === "it" ? lang : "sl"
+    guideLanguage(lang)
   ];
 }
 

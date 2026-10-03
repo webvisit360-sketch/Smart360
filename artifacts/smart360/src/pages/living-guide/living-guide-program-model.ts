@@ -8,7 +8,9 @@
 export const PROGRAM_TZ = "Europe/Ljubljana";
 export type DayCode = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export const DAY_CODES: DayCode[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-export type ProgramLang = "sl" | "en" | "de" | "it";
+import { guideLanguage, LANGUAGE_LOCALES, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+export type ProgramLang = GuideLanguage;
 export type ProgramFilter = "all" | "in" | "out";
 
 export type EventSchedule = {
@@ -277,26 +279,26 @@ export function restrictiveAgeHint(value: string | null | undefined): string | n
 
 /* ---------- Labels (SL/EN/DE/IT) ---------- */
 export function programLang(lang: string): ProgramLang {
-  return lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
+  return guideLanguage(lang);
 }
-const DAY2: Record<ProgramLang, string[]> = {
+const DAY2 = extendCatalog<string[]>({
   sl: ["po", "to", "sr", "če", "pe", "so", "ne"],
   en: ["mo", "tu", "we", "th", "fr", "sa", "su"],
   de: ["mo", "di", "mi", "do", "fr", "sa", "so"],
   it: ["lu", "ma", "me", "gi", "ve", "sa", "do"],
-};
-const DAY3: Record<ProgramLang, string[]> = {
+});
+const DAY3 = extendCatalog<string[]>({
   sl: ["pon", "tor", "sre", "čet", "pet", "sob", "ned"],
   en: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
   de: ["mo", "di", "mi", "do", "fr", "sa", "so"],
   it: ["lun", "mar", "mer", "gio", "ven", "sab", "dom"],
-};
-export const PROGRAM_LABELS: Record<ProgramLang, Record<string, string>> = {
+});
+export const PROGRAM_LABELS = extendCatalog<Record<string, string>>({
   sl: { title: "Program", all: "Vse", in: "V kampu", out: "V okolici", daily: "vsak dan", time: "Ura", where: "Kje", location: "Lokacija", age: "Starost", price: "Cena", signup: "Prijava prek sporočil", empty: "Ta dan ni programa.", emptyFilter: "Ni dogodkov za ta filter.", prevWeek: "Prejšnji teden", nextWeek: "Naslednji teden", back: "Nazaj", more: "več", notePrefix: "Prijava" },
   en: { title: "Programme", all: "All", in: "In camp", out: "Nearby", daily: "daily", time: "Time", where: "Where", location: "Location", age: "Age", price: "Price", signup: "Sign up via messages", empty: "No programme on this day.", emptyFilter: "No events for this filter.", prevWeek: "Previous week", nextWeek: "Next week", back: "Back", more: "more", notePrefix: "Sign-up" },
   de: { title: "Programm", all: "Alle", in: "Im Camp", out: "In der Umgebung", daily: "täglich", time: "Uhrzeit", where: "Wo", location: "Ort", age: "Alter", price: "Preis", signup: "Anmeldung per Nachricht", empty: "An diesem Tag kein Programm.", emptyFilter: "Keine Veranstaltungen für diesen Filter.", prevWeek: "Vorherige Woche", nextWeek: "Nächste Woche", back: "Zurück", more: "mehr", notePrefix: "Anmeldung" },
   it: { title: "Programma", all: "Tutti", in: "In campeggio", out: "Nei dintorni", daily: "ogni giorno", time: "Ora", where: "Dove", location: "Luogo", age: "Età", price: "Prezzo", signup: "Iscrizione tramite messaggi", empty: "Nessun programma in questo giorno.", emptyFilter: "Nessun evento per questo filtro.", prevWeek: "Settimana precedente", nextWeek: "Settimana successiva", back: "Indietro", more: "altro", notePrefix: "Iscrizione" },
-};
+});
 export function programLabel(lang: string, key: string): string {
   return PROGRAM_LABELS[programLang(lang)][key] ?? PROGRAM_LABELS.sl[key] ?? key;
 }
@@ -329,7 +331,7 @@ export function formatTimeRange(event: ProgramEvent, lang: string): string {
   return event.timeTo ? `${from}–${formatClock(event.timeTo, lang)}` : from;
 }
 
-const LOCALE: Record<ProgramLang, string> = { sl: "sl-SI", en: "en-GB", de: "de-DE", it: "it-IT" };
+const LOCALE = LANGUAGE_LOCALES;
 function monthName(key: string, lang: string): string {
   return new Intl.DateTimeFormat(LOCALE[programLang(lang)], { month: "long", timeZone: "UTC" }).format(toUtc(key));
 }

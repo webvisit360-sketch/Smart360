@@ -1,3 +1,4 @@
+import { GUIDE_LANGUAGES, REQUIRED_EDITORIAL_LANGUAGES, type GuideLanguage } from "@workspace/guide-languages";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -77,7 +78,7 @@ export function KreatorProposalQueue({
   const editingIdRef = useRef<string | null>(null);
   const [editCategoryId, setEditCategoryId] = useState<string>("");
   const [editOperatorAddress, setEditOperatorAddress] = useState("");
-  const [editTranslations, setEditTranslations] = useState<Array<{ language: "sl" | "en" | "de" | "it"; name: string; description: string }>>([]);
+  const [editTranslations, setEditTranslations] = useState<Array<{ language: GuideLanguage; name: string; description: string }>>([]);
   const [positioningId, setPositioningId] = useState<string | null>(null);
   const [manualLatitude, setManualLatitude] = useState("");
   const [manualLongitude, setManualLongitude] = useState("");
@@ -387,7 +388,7 @@ export function KreatorProposalQueue({
           </CardContent>
         </Card>
       ) : visibleRows.map((row) => {
-        const missingLanguages = ["sl", "en", "de", "it"].filter((language) =>
+        const missingLanguages = REQUIRED_EDITORIAL_LANGUAGES.filter((language) =>
           !row.translations.some((translation) => translation.language === language));
         const editorialMissingReason = missingLanguages.length
           ? `Predloga ni mogoče potrditi: manjkajo jeziki ${missingLanguages.join(", ")}.`
@@ -738,10 +739,10 @@ export function KreatorProposalQueue({
                         });
                         setEditCategoryId(row.categoryId ?? "");
                         setEditOperatorAddress(row.operatorAddress ?? "");
-                        setEditTranslations(["sl", "en", "de", "it"].map((language) => {
+                        setEditTranslations(GUIDE_LANGUAGES.map((language) => {
                           const existing = row.translations.find((translation) => translation.language === language);
                           return {
-                            language: language as "sl" | "en" | "de" | "it",
+                            language,
                             name: existing?.name ?? row.proposedName,
                             description: existing?.description ?? "",
                           };

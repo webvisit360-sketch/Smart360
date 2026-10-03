@@ -8,12 +8,13 @@ export const PROGRAM_FIXTURE_SLUG = "__program-fixture";
 export const PROGRAM_FIXTURE_DEFAULT_DATE = "2026-08-20";
 export const PROGRAM_FIXTURE_CATEGORY_ID = "c-events";
 
-const T: Record<ProgramLang, Record<string, string>> = {
+import { extendCatalog } from "../../lib/guest-catalogs";
+const T = extendCatalog<Record<string, string>>({
   sl: { yoga: "Jutranja joga", kids: "Otroški klub", bike: "Vodena kolesarska tura", beer: "Degustacija piva", fire: "Večer ob tabornem ognju", yogaBody: "Začnite svoj dan umirjeno, sproščeno in povezano s svojim telesom. Dobrodošli ste vsi — predhodno znanje ni potrebno.", all: "Za vse", person: "osebo", events: "Dogodki", stay: "Bivanje", house: "Hišni red", quiet: "Nočni mir" },
   en: { yoga: "Morning yoga", kids: "Kids' club", bike: "Guided bike tour", beer: "Beer tasting", fire: "Campfire evening", yogaBody: "Start your day calm, relaxed and connected with your body. Everyone is welcome — no prior experience needed.", all: "For everyone", person: "person", events: "Events", stay: "Stay", house: "House rules", quiet: "Quiet hours" },
   de: { yoga: "Morgen-Yoga", kids: "Kinderclub", bike: "Geführte Radtour", beer: "Bierverkostung", fire: "Lagerfeuerabend", yogaBody: "Beginnen Sie den Tag ruhig, entspannt und im Einklang mit Ihrem Körper. Alle sind willkommen — keine Vorkenntnisse nötig.", all: "Für alle", person: "Person", events: "Veranstaltungen", stay: "Aufenthalt", house: "Hausordnung", quiet: "Nachtruhe" },
   it: { yoga: "Yoga del mattino", kids: "Club dei bambini", bike: "Tour guidato in bici", beer: "Degustazione di birra", fire: "Serata al falò", yogaBody: "Inizia la giornata con calma, rilassato e in sintonia con il tuo corpo. Tutti sono benvenuti — non serve esperienza.", all: "Per tutti", person: "persona", events: "Eventi", stay: "Soggiorno", house: "Regole della casa", quiet: "Silenzio notturno" },
-};
+});
 
 export function programFixtureTenant(lang: ProgramLang = "sl") {
   const l = T[lang];

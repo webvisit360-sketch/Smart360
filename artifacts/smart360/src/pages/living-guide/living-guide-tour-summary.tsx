@@ -6,7 +6,9 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import * as tourExport from "@/lib/live-tour-export";
 
-export type SummaryLang = "sl" | "en" | "de" | "it";
+import { guideLanguage, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+export type SummaryLang = GuideLanguage;
 import type { TourSummaryImage, TourSummaryInput } from "@/lib/live-tour-export";
 import type { SummaryPoint } from "@/lib/tour-summary-model";
 /** Planned point in composer order (object lat/lon/ele). Callers convert at their boundary. */
@@ -24,14 +26,14 @@ type ComposeResult = TourSummaryImage;
 export const TourSummaryContext = createContext<{ tenantName: string; lang: string }>({ tenantName: "", lang: "sl" });
 export const useTourSummaryContext = () => useContext(TourSummaryContext);
 
-export const SUMMARY_COPY: Record<SummaryLang, Record<string, string>> = {
+export const SUMMARY_COPY = extendCatalog<Record<string, string>>({
   sl: { kicker: "Tura končana", heading: "Tvoj povzetek", title: "Povzetek ture", preparing: "Pripravljam sliko ture …", share: "Deli turo", save: "Shrani sliko", gpx: "Prenesi GPX", exporting: "Izvažam …", error: "Slike ture ni bilo mogoče pripraviti.", retry: "Poskusi znova", alt: "Slika povzetka ture", fallback: "Deljenje slik tu ni podprto — slika je shranjena v prenose.", saved: "Slika je shranjena.", note: "Slika nastane na napravi; na strežnik ne pošljemo ničesar. Zemljevid razkrije, kje si hodil, zato deliš sam — aplikacija nikoli sama." },
   en: { kicker: "Tour finished", heading: "Your summary", title: "Tour summary", preparing: "Preparing tour image …", share: "Share tour", save: "Save image", gpx: "Download GPX", exporting: "Exporting …", error: "The tour image could not be prepared.", retry: "Try again", alt: "Tour summary image", fallback: "Image sharing is not supported here — the image was saved to downloads.", saved: "Image saved.", note: "The image is created on your device; nothing is sent to our server. The map reveals where you went, so only you decide to share — the app never does." },
   de: { kicker: "Tour beendet", heading: "Deine Zusammenfassung", title: "Tourzusammenfassung", preparing: "Tourbild wird erstellt …", share: "Tour teilen", save: "Bild speichern", gpx: "GPX herunterladen", exporting: "Export läuft …", error: "Das Tourbild konnte nicht erstellt werden.", retry: "Erneut versuchen", alt: "Bild der Tourzusammenfassung", fallback: "Bilder teilen wird hier nicht unterstützt — das Bild wurde in die Downloads gespeichert.", saved: "Bild gespeichert.", note: "Das Bild entsteht auf deinem Gerät; an unseren Server wird nichts gesendet. Die Karte zeigt, wo du warst — teilen entscheidest nur du, nie die App." },
   it: { kicker: "Tour completato", heading: "Il tuo riepilogo", title: "Riepilogo del tour", preparing: "Preparazione dell'immagine …", share: "Condividi tour", save: "Salva immagine", gpx: "Scarica GPX", exporting: "Esportazione …", error: "Impossibile preparare l'immagine del tour.", retry: "Riprova", alt: "Immagine di riepilogo del tour", fallback: "La condivisione di immagini non è supportata qui — l'immagine è stata salvata nei download.", saved: "Immagine salvata.", note: "L'immagine nasce sul tuo dispositivo; non inviamo nulla al nostro server. La mappa mostra dove sei stato: decidi tu se condividere, mai l'app." },
-};
+});
 export function summaryLang(lang: string | undefined): SummaryLang {
-  return lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
+  return guideLanguage(lang);
 }
 
 type Prepared = { url: string; file: File; blob: Blob; width: number; height: number; mapKind: string };

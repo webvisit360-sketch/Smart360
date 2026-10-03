@@ -1,3 +1,4 @@
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import {
   categoriesTable,
@@ -606,7 +607,7 @@ export async function createAdminPlace(input: {
       });
     }
     await tx.insert(creatorProposalTranslationsTable).values(
-      ["sl", "en", "de", "it"].map((language) => ({
+      GUIDE_LANGUAGES.map((language) => ({
         proposalId: proposal.id, language, name: place.name, description: "",
       })),
     );

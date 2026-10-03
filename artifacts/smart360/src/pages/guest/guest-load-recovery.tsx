@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 
-type GuestLanguage = "sl" | "en" | "de" | "it";
+import { guideLanguage, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+type GuestLanguage = GuideLanguage;
 
-const COPY: Record<
-  GuestLanguage,
-  { failure: string; retry: string; retrying: string }
-> = {
+const COPY = extendCatalog<{ failure: string; retry: string; retrying: string }>({
   sl: {
     failure: "Vodnika trenutno ni mogoče naložiti. Preverite povezavo.",
     retry: "Poskusi znova",
@@ -26,13 +25,13 @@ const COPY: Record<
     retry: "Riprova",
     retrying: "Nuovo caricamento della guida …",
   },
-};
+});
 
 const RETRY_DELAY_MS = 1_200;
 const RETRY_KEY_PREFIX = "s360:guest-load-retry:";
 
 function language(value: string): GuestLanguage {
-  return value === "en" || value === "de" || value === "it" ? value : "sl";
+  return guideLanguage(value);
 }
 
 function retryKey() {

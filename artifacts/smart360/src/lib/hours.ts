@@ -1,6 +1,7 @@
 // "Danes 12:00–22:00" pod postavko — beseda sledi jeziku gosta.
-const TODAY: Record<string, string> = { sl: "Danes", en: "Today", de: "Heute", it: "Oggi" };
-const CLOSED: Record<string, string> = { sl: "Danes zaprto", en: "Closed today", de: "Heute geschlossen", it: "Oggi chiuso" };
+import { extendCatalog } from "./guest-catalogs";
+const TODAY: Record<string, string> = extendCatalog({ sl: "Danes", en: "Today", de: "Heute", it: "Oggi" });
+const CLOSED: Record<string, string> = extendCatalog({ sl: "Danes zaprto", en: "Closed today", de: "Heute geschlossen", it: "Oggi chiuso" });
 
 type HoursRange = [number, number] | null;
 

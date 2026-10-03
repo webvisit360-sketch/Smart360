@@ -7,6 +7,7 @@ import {
   translationsTable,
 } from "@workspace/db";
 import { sanitizeBody } from "./sanitizeBody";
+import { REQUIRED_EDITORIAL_LANGUAGES, type GuideLanguage } from "@workspace/guide-languages";
 
 export type DescriptionLedgerEntry = {
   itemId: string;
@@ -23,7 +24,7 @@ export type DescriptionBackfillReportRow = {
   name: string;
   categoryKey: string;
   outcome: "updated" | "skipped";
-  languagesWritten: Array<"sl" | "en" | "de" | "it">;
+  languagesWritten: GuideLanguage[];
   reason: string;
 };
 
@@ -48,7 +49,7 @@ export async function applyMeliPuDescriptionBackfill(
   ledger: ReadonlyArray<DescriptionLedgerEntry>,
 ): Promise<DescriptionBackfillResult> {
   for (const entry of ledger) {
-    for (const language of ["sl", "en", "de", "it"] as const) {
+    for (const language of REQUIRED_EDITORIAL_LANGUAGES.filter(lang => lang in entry) as (keyof DescriptionLedgerEntry & GuideLanguage)[]) {
       if (sanitizeBody(entry[language]) !== entry[language]) {
         throw new Error(
           `Description ledger text is not canonical for ${entry.name}/${language}`,
@@ -125,7 +126,7 @@ export async function applyMeliPuDescriptionBackfill(
       const languagesWritten: DescriptionBackfillReportRow["languagesWritten"] = [
         "sl",
       ];
-      for (const language of ["en", "de", "it"] as const) {
+      for (const language of REQUIRED_EDITORIAL_LANGUAGES.filter(lang => lang !== "sl" && lang in entry) as (keyof DescriptionLedgerEntry & GuideLanguage)[]) {
         const updatedEmpty = await tx
           .update(translationsTable)
           .set({ value: entry[language], stale: false })
@@ -170,7 +171,7 @@ export async function applyMeliPuDescriptionBackfill(
         outcome: "updated",
         languagesWritten,
         reason:
-          languagesWritten.length === 4
+          languagesWritten.length === REQUIRED_EDITORIAL_LANGUAGES.length
             ? "all supplied descriptions written"
             : "source written; existing non-empty translations preserved",
       });

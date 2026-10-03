@@ -3,12 +3,13 @@ import { EXPLORE_ALL_CATEGORY_KEY } from "./living-guide-explore";
 import type { UiLanguage } from "../guest/i18n";
 
 export const EXPLORE_RECORDING_TAB_KEY = "__lg_recording_tab__";
-const RECORDING_TAB_LABELS: Record<UiLanguage, string> = {
+import { extendCatalog } from "../../lib/guest-catalogs";
+const RECORDING_TAB_LABELS = extendCatalog<string>({
   sl: "Snemanje tur",
   en: "Record a tour",
   de: "Tour aufzeichnen",
   it: "Registra un tour",
-};
+});
 
 export function recordingTabLabel(lang: UiLanguage): string {
   return RECORDING_TAB_LABELS[lang];

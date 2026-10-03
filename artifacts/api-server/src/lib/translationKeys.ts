@@ -24,7 +24,8 @@ import { isRichField } from "./normalizeContent";
  * paragraphs of a wifi item ARE translatable text).
  */
 
-export const CONTENT_LANGS = ["en", "de", "it"] as const;
+import { TRANSLATION_LANGUAGES } from "@workspace/guide-languages";
+export const CONTENT_LANGS = TRANSLATION_LANGUAGES;
 export type ContentLang = (typeof CONTENT_LANGS)[number];
 
 export type KeyEntry = {

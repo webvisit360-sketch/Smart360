@@ -20,7 +20,8 @@ import {
   type AdminAnnouncement, type AnnouncementDraft,
 } from "@/lib/announcements-admin-model";
 
-const languageNames = { Sl: "Slovenščina", En: "English", De: "Deutsch", It: "Italiano" };
+import { LANGUAGE_REGISTRY } from "@workspace/guide-languages";
+const languageNames = Object.fromEntries(LANGUAGE_REGISTRY.map(l => [l.code[0].toUpperCase() + l.code.slice(1), l.name]));
 const formatDate = (date: string) => new Intl.DateTimeFormat("sl-SI", {
   timeZone: ANNOUNCEMENT_TIME_ZONE, dateStyle: "medium", timeStyle: "short",
 }).format(new Date(date));

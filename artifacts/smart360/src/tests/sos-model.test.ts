@@ -126,7 +126,7 @@ test("four languages complete, 112 kept, directions localized", () => {
   assert.equal(SOS_DICT.de.dir.SE, "südöstlich");
   assert.equal(SOS_DICT.it.dir.SE, "a sud-est");
   assert.equal(SOS_DICT.sl.near("2,4 km", "jugovzhodno", "Turizem Drobež"), "pribl. 2,4 km jugovzhodno od Turizem Drobež");
-  assert.equal(sosLang("fr"), "sl"); assert.equal(sosLang("de-AT"), "de");
+  assert.equal(sosLang("fr"), "fr"); assert.equal(sosLang("de-AT"), "de");
 });
 test("all four languages reassure calmly and qualify operator visibility and denied-browser location", () => {
   const qualifiers = { sl: /praviloma/, en: /usually/, de: /in der Regel/, it: /di solito/ };
@@ -146,9 +146,9 @@ test("all four languages reassure calmly and qualify operator visibility and den
     assert.ok(d.smsHint.length > 0);
     assert.ok(d.smsManual.length > 0);
   }
-  assert.equal(new Set(Object.values(SOS_DICT).map(d => d.callReassurance)).size, 4);
-  assert.equal(new Set(Object.values(SOS_DICT).map(d => d.deniedReassurance)).size, 4);
-  assert.equal(new Set(Object.values(SOS_DICT).map(d => d.smsHint)).size, 4);
+  assert.equal(new Set(Object.values(SOS_DICT).map(d => d.callReassurance)).size, 7);
+  assert.equal(new Set(Object.values(SOS_DICT).map(d => d.deniedReassurance)).size, 7);
+  assert.equal(new Set(Object.values(SOS_DICT).map(d => d.smsHint)).size, 7);
 });
 test("SOS sources contain no network, storage or logging calls", () => {
   const dir = join(import.meta.dirname, "../pages/living-guide/sos");

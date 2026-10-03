@@ -27,6 +27,18 @@ export interface Announcement {
   /** @nullable */
   bodyIt: string | null;
   /** @nullable */
+  titleFr?: string | null;
+  /** @nullable */
+  bodyFr?: string | null;
+  /** @nullable */
+  titleNl?: string | null;
+  /** @nullable */
+  bodyNl?: string | null;
+  /** @nullable */
+  titleHr?: string | null;
+  /** @nullable */
+  bodyHr?: string | null;
+  /** @nullable */
   imageUrl: string | null;
   validFrom: string;
   /** @nullable */
@@ -86,6 +98,36 @@ export interface AnnouncementInput {
      * @nullable
      */
   bodyIt?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleFr?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyFr?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleNl?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyNl?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleHr?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyHr?: string | null;
   /**
      * @maxLength 2000
      * @nullable
@@ -1544,6 +1586,9 @@ export const CreatorProposalTranslationLanguage = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;
 
 export interface CreatorProposalTranslation {
@@ -1592,6 +1637,9 @@ export const CreatorProposalTranslateResultTranslationsItemLanguage = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;
 
 export type CreatorProposalTranslateResultTranslationsItem = {
@@ -1616,6 +1664,9 @@ export const ItemTranslationLanguageDraftLanguage = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;
 
 export interface ItemTranslationLanguageDraft {
@@ -1642,6 +1693,9 @@ export const ItemTranslationDraftSuggestionLanguage = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;
 
 export interface ItemTranslationDraftSuggestion {
@@ -2823,6 +2877,9 @@ export const GuestMessageInputLang = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;
 
 /**
@@ -3641,6 +3698,9 @@ export const OrderInputLang = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;
 
 /**
@@ -3926,6 +3986,11 @@ export type SectionContent = Section & {
 export type TenantContentUi = {[key: string]: string};
 
 /**
+ * Published English interface overrides for missing translations.
+ */
+export type TenantContentUiFallback = {[key: string]: string};
+
+/**
  * Plural forms for the active language, key -> CLDR form -> template
  */
 export type TenantContentPlurals = {[key: string]: {[key: string]: string}};
@@ -3945,6 +4010,8 @@ export type TenantContent = TenantBase & ({
   wifiQrSvg?: string | null;
   /** Interface strings for the active language (empty for sl) */
   ui?: TenantContentUi;
+  /** Published English interface overrides for missing translations. */
+  uiFallback?: TenantContentUiFallback;
   /** Plural forms for the active language, key -> CLDR form -> template */
   plurals?: TenantContentPlurals;
   /** Real guest-to-host response cycles measured for this tenant */

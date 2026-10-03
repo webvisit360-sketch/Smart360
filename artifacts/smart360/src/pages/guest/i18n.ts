@@ -6,7 +6,11 @@
  * Missing translation → silent Slovene fallback, never a raw key.
  */
 
-export type UiLanguage = "sl" | "en" | "de" | "it";
+import { GUIDE_LANGUAGES, guideLanguage, fallbackText, type GuideLanguage } from "@workspace/guide-languages";
+import { translateEnglish, extendCatalog } from "../../lib/guest-catalogs";
+import legacyUi from "../../lib/guest-catalogs/legacy-ui.json";
+import { UI_PLURALS } from "../../lib/guest-catalogs/plurals";
+export type UiLanguage = GuideLanguage;
 export type UiVariables = Record<string, string | number>;
 export type UiTranslator = (key: string, variables?: UiVariables) => string;
 
@@ -15,7 +19,7 @@ export type UiTranslator = (key: string, variables?: UiVariables) => string;
  * prototip-2030.html; the other three languages are built-in fallbacks until
  * a tenant-specific translation with the same key is available.
  */
-export const LIVING_GUIDE_UI = {
+const LEGACY_LIVING_GUIDE_UI = {
   "UI.lg.guide": {
     sl: "Vaš vodnik",
     en: "Your guide",
@@ -1323,13 +1327,16 @@ export const LIVING_GUIDE_UI = {
     de: "Warte auf GPS-Signal …",
     it: "In attesa del segnale GPS …",
   },
-} as const satisfies Record<string, Record<UiLanguage, string>>;
+} as const satisfies Record<string, Partial<Record<UiLanguage, string>>>;
+export const LIVING_GUIDE_UI = Object.fromEntries(
+  Object.entries(LEGACY_LIVING_GUIDE_UI).map(([key, value]) => [key, extendCatalog<string>(value)]),
+) as Record<keyof typeof LEGACY_LIVING_GUIDE_UI, Record<UiLanguage, string>>;
 
 function livingGuideUiFor(language: UiLanguage): Record<string, string> {
   return Object.fromEntries(
     Object.entries(LIVING_GUIDE_UI).map(([key, values]) => [
       key,
-      values[language],
+      values[language as keyof typeof values] ?? translateEnglish(values.en, language),
     ]),
   );
 }
@@ -1342,6 +1349,9 @@ const LIVING_GUIDE_UI_BY_LANGUAGE: Record<
   en: livingGuideUiFor("en"),
   de: livingGuideUiFor("de"),
   it: livingGuideUiFor("it"),
+  fr: livingGuideUiFor("fr"),
+  nl: livingGuideUiFor("nl"),
+  hr: livingGuideUiFor("hr"),
 };
 
 const BINDING_GUEST_SIGN_IN_KEYS = new Set([
@@ -1525,6 +1535,7 @@ const EN_FALLBACK_PLURALS: Record<string, Record<string, string>> = {
 
 type TenantLike = {
   ui?: Record<string, string> | null;
+  uiFallback?: Record<string, string> | null;
   plurals?: Record<string, Record<string, string>> | null;
 };
 
@@ -1533,20 +1544,21 @@ export function makeT(
   tenant: TenantLike | null | undefined,
   lang: string,
 ): UiTranslator {
-  const language: UiLanguage =
-    lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
+  const language = guideLanguage(lang);
   const overlay = lang !== "sl" ? (tenant?.ui ?? {}) : {};
   return (key: string, variables?: UiVariables): string => {
-    const languageBuiltIn = LIVING_GUIDE_UI_BY_LANGUAGE[language][key];
-    let value =
-      (BINDING_GUEST_SIGN_IN_KEYS.has(key)
-        ? languageBuiltIn
-        : overlay[key] ?? languageBuiltIn) ??
-      SL_UI[key] ??
-      key;
+    const languageBuiltIn = LIVING_GUIDE_UI_BY_LANGUAGE[language][key] ??
+      (legacyUi as Partial<Record<UiLanguage, Record<string, string>>>)[language]?.[key];
+    let value = fallbackText(
+      BINDING_GUEST_SIGN_IN_KEYS.has(key) ? languageBuiltIn : overlay[key],
+      languageBuiltIn, tenant?.uiFallback?.[key], LIVING_GUIDE_UI_BY_LANGUAGE.en[key],
+      (legacyUi.en as Record<string, string>)[key], SL_UI[key], key,
+    );
     if (variables) {
       for (const [name, replacement] of Object.entries(variables)) {
-        value = value.replaceAll(`{${name}}`, String(replacement));
+        const formatted = typeof replacement === "number" && ["fr", "nl", "hr"].includes(language)
+          ? new Intl.NumberFormat(language).format(replacement) : String(replacement);
+        value = value.replaceAll(`{${name}}`, formatted);
       }
     }
     return value;
@@ -1563,10 +1575,10 @@ export function plural(
   key: string,
   n: number,
 ): string {
-  const forms =
-    (lang !== "sl"
-      ? (tenant?.plurals?.[key] ?? EN_FALLBACK_PLURALS[key])
-      : undefined) ?? SL_PLURALS[key];
+  const language = guideLanguage(lang);
+  const builtIn = UI_PLURALS[language]?.[key];
+  const forms = lang === "sl" ? SL_PLURALS[key] :
+    { ...(builtIn ?? UI_PLURALS.en[key]), ...(tenant?.plurals?.[key] ?? {}) };
   if (!forms) return String(n);
   let form: string;
   try {
@@ -1574,8 +1586,9 @@ export function plural(
   } catch {
     form = new Intl.PluralRules("sl").select(n);
   }
-  const tmpl = forms[form] ?? forms["other"] ?? "{n}";
-  return tmpl.replace("{n}", String(n));
+  const tmpl = fallbackText(forms[form], forms.other, builtIn?.[form], builtIn?.other,
+    UI_PLURALS.en[key]?.other, SL_PLURALS[key]?.other, "{n}");
+  return tmpl.replace("{n}", ["fr", "nl", "hr"].includes(language) ? new Intl.NumberFormat(language).format(n) : String(n));
 }
 
 const LS_PREFIX = "s360-lang:";
@@ -1591,7 +1604,7 @@ export function resolveLang(
 ): string {
   // Before the tenant arrives the enabled list is unknown — accept every
   // supported language; the globe menu itself only offers tenant.languages.
-  const langs = enabled?.length ? enabled : ["sl", "en", "de", "it"];
+  const langs: readonly string[] = GUIDE_LANGUAGES;
   const ok = (l: string | null | undefined): l is string =>
     !!l && langs.includes(l);
   if (ok(urlLang)) return urlLang;
@@ -1611,8 +1624,7 @@ export function clampLang(
   lang: string,
   enabled: string[] | null | undefined,
 ): string {
-  if (!enabled?.length) return lang;
-  return enabled.includes(lang) ? lang : "sl";
+  return guideLanguage(lang);
 }
 
 /** Remember the guest's explicit choice for this accommodation. */
@@ -1667,9 +1679,4 @@ export function applyDocumentLang(
 }
 
 /** Native-name labels for the language switcher. */
-export const LANG_NAMES: Record<string, string> = {
-  sl: "Slovenščina",
-  en: "English",
-  de: "Deutsch",
-  it: "Italiano",
-};
+export { LANGUAGE_NAMES as LANG_NAMES } from "@workspace/guide-languages";

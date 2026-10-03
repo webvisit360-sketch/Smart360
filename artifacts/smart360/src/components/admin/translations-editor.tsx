@@ -22,11 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
 
-const LANGS = [
-  { code: "en", label: "Angleščina (EN)" },
-  { code: "de", label: "Nemščina (DE)" },
-  { code: "it", label: "Italijanščina (IT)" },
-];
+import { LANGUAGE_REGISTRY } from "@workspace/guide-languages";
+const LANGS = LANGUAGE_REGISTRY.filter(l => l.code !== "sl").map(l => ({ code: l.code, label: `${l.name} (${l.code.toUpperCase()})` }));
 
 type Filter = "vse" | "manjka" | "spremenjen";
 

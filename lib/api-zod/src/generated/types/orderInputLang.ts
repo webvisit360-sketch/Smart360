@@ -17,4 +17,7 @@ export const OrderInputLang = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;

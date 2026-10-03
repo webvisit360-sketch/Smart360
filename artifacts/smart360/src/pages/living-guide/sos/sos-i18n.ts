@@ -1,3 +1,5 @@
+import { guideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../../lib/guest-catalogs";
 import type { Cardinal, SosLang } from "./sos-model";
 
 export interface SosDict {
@@ -272,11 +274,17 @@ const it: SosDict = {
   mapButton: "SOS — la mia posizione",
 };
 
-export const SOS_DICT: Record<SosLang, SosDict> = { sl, en, de, it };
+export const SOS_DICT: Record<SosLang, SosDict> = extendCatalog({ sl, en, de, it });
+SOS_DICT.fr.near = (d, dir, name) => `à environ ${d} ${dir} de ${name}`;
+SOS_DICT.fr.dir = { N: "au nord", NE: "au nord-est", E: "à l’est", SE: "au sud-est", S: "au sud", SW: "au sud-ouest", W: "à l’ouest", NW: "au nord-ouest" };
+SOS_DICT.nl.near = (d, dir, name) => `ongeveer ${d} ${dir} van ${name}`;
+SOS_DICT.nl.dir = { N: "ten noorden", NE: "ten noordoosten", E: "ten oosten", SE: "ten zuidoosten", S: "ten zuiden", SW: "ten zuidwesten", W: "ten westen", NW: "ten noordwesten" };
+SOS_DICT.hr.near = (d, dir, name) => `približno ${d} ${dir} od ${name}`;
+SOS_DICT.hr.dir = { N: "sjeverno", NE: "sjeveroistočno", E: "istočno", SE: "jugoistočno", S: "južno", SW: "jugozapadno", W: "zapadno", NW: "sjeverozapadno" };
 
 export function sosLang(lang: string | null | undefined): SosLang {
   const l = (lang ?? "").slice(0, 2).toLowerCase();
-  return l === "en" || l === "de" || l === "it" ? l : "sl";
+  return guideLanguage(l);
 }
 
 export function sosT(lang: string | null | undefined): SosDict {

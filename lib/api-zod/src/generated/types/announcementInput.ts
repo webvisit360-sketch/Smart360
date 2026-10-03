@@ -48,6 +48,36 @@ export interface AnnouncementInput {
      */
   bodyIt?: string | null;
   /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleFr?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyFr?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleNl?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyNl?: string | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  titleHr?: string | null;
+  /**
+     * @maxLength 20000
+     * @nullable
+     */
+  bodyHr?: string | null;
+  /**
      * @maxLength 2000
      * @nullable
      */

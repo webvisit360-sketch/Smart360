@@ -44,7 +44,8 @@ export type CreatorProposalProcessingFailure = {
   reason: string;
 };
 
-export const CREATOR_EDITORIAL_LANGUAGES = ["sl", "en", "de", "it"] as const;
+import { GUIDE_LANGUAGES, REQUIRED_EDITORIAL_LANGUAGES } from "@workspace/guide-languages";
+export const CREATOR_EDITORIAL_LANGUAGES = GUIDE_LANGUAGES;
 
 /** A reviewer-facing precondition failure.  Routes deliberately map this to
  * 409 rather than treating an incomplete draft as a missing proposal. */
@@ -62,7 +63,7 @@ export function missingCreatorEditorialLanguages(
   rows: Array<{ language: string }>,
 ): string[] {
   const present = new Set(rows.map((row) => row.language));
-  return CREATOR_EDITORIAL_LANGUAGES.filter((language) => !present.has(language));
+  return REQUIRED_EDITORIAL_LANGUAGES.filter((language) => !present.has(language));
 }
 
 export function missingCreatorEditorialLanguagesReason(
@@ -87,8 +88,8 @@ export async function syncCreatorProposalContentReadyFlags(limit = 500): Promise
       WHERE p.content_ready = true
       GROUP BY p.id, p.content_ready
       HAVING COUNT(t.id) FILTER (
-        WHERE t.language IN ('sl', 'en', 'de', 'it')
-      ) < 4
+        WHERE t.language IN (${sql.join(REQUIRED_EDITORIAL_LANGUAGES.map(lang => sql`${lang}`), sql`, `)})
+      ) < ${REQUIRED_EDITORIAL_LANGUAGES.length}
       ORDER BY p.id
       LIMIT ${Math.max(1, Math.min(limit, 5_000))}
     )
@@ -979,12 +980,12 @@ export async function editCreatorProposalEditorial(input: {
   await requireActor(input.actorId);
   const languageSet = new Set(input.translations.map((row) => row.language));
   if (
-    input.translations.length !== 4 ||
-    languageSet.size !== 4 ||
-    !["sl", "en", "de", "it"].every((language) => languageSet.has(language)) ||
-    input.translations.some((row) => !row.name.trim())
+    input.translations.length !== GUIDE_LANGUAGES.length ||
+    languageSet.size !== GUIDE_LANGUAGES.length ||
+    !GUIDE_LANGUAGES.every((language) => languageSet.has(language)) ||
+    input.translations.some((row) => REQUIRED_EDITORIAL_LANGUAGES.some(lang => lang === row.language) && !row.name.trim())
   ) {
-    throw new CreatorBulkApprovalError("Predlog potrebuje ime in vse štiri jezike.");
+    throw new CreatorBulkApprovalError("Predlog potrebuje slovensko ime in polja za vse podprte jezike.");
   }
   let category: { id: string; key: string | null; label: string } | null = null;
   if (input.categoryId) {

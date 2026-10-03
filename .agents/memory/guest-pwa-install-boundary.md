@@ -3,6 +3,12 @@ name: Guest PWA install boundary
 description: Approved tenant-scoped offline boundary, legacy compatibility, and evidence limits for guest installation.
 ---
 
+Do not treat offline failure against Vite's development server as a production-worker regression. Vite source modules are outside the worker's deliberately restricted compiled-asset cache.
+
+**Why:** A seven-language DEV check found every localized payload and shell in Cache Storage but cold offline navigation still failed on uncached development resources. This is not successful offline verification either.
+
+**How to apply:** Verify the built application with actual transport blocked; do not broaden worker admission to Vite/admin sources to make the development test pass.
+
 The owner approved tenant-slug-scoped offline caching for Living Guide on 2026-09-30, superseding the original network-only restriction for that theme alone. Swipe/legacy retain their existing pass-through worker and installation behavior. Custom-domain root, admin/portal requests, mutations, redirects and weather remain outside offline caching; only the exact published tenant content and its published GPX GETs are API exceptions.
 
 **Why:** Offline support was initially deferred, then explicitly approved with these isolation boundaries. Restricting registration to Living Guide would accidentally remove pre-existing Swipe/legacy PWA behavior rather than leaving it unchanged.

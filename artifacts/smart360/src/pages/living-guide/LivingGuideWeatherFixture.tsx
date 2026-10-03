@@ -1,3 +1,4 @@
+import { guideLanguage } from "@workspace/guide-languages";
 /**
  * DEV-ONLY weather fixture. Renders the actual Living Guide Home and the
  * actual tour surfaces with deterministic synthetic weather (no network for weather).
@@ -26,7 +27,7 @@ export default function LivingGuideWeatherFixture() {
   const fixedNow = skin === "morning" || skin === "day" || skin === "evening" || skin === "night" ? weatherFixtureTime(skin) : undefined;
   const [lang, setLang] = useState<UiLanguage>(() => {
     const requested = search.get("lang");
-    return requested === "en" || requested === "de" || requested === "it" ? requested : "sl";
+    return guideLanguage(requested);
   });
   // Opt-in chrome QA uses the real shell with all five destinations. Existing
   // weather/recorder fixtures retain their original data and assertions.
@@ -55,7 +56,7 @@ export default function LivingGuideWeatherFixture() {
           tenant={tenant}
           slug={tenant.slug}
           lang={lang}
-          onLanguageChange={(next) => setLang(next === "en" || next === "de" || next === "it" ? next : "sl")}
+          onLanguageChange={(next) => setLang(guideLanguage(next))}
           devWeather={weather}
         />
       )}
@@ -77,7 +78,7 @@ function GpxSurface({ tenant, lang, weather, theme }: { tenant: any; lang: strin
         <div className="lg-stars" aria-hidden="true" />
         <div className="lgw-fixture">
           <p className="lgw-fixture-note">DEV fixture · synthetic weather</p>
-          <LivingGuideGpxRoute route={SYNTHETIC_GPX_ROUTE as any} slug={tenant.slug} itemId="i-hike-1" t={t} variant="lg" heading="TEST GPX tura" />
+          <LivingGuideGpxRoute route={SYNTHETIC_GPX_ROUTE as any} slug={tenant.slug} itemId="i-hike-1" t={t} variant="lg" heading="TEST GPX tura" lang={lang} />
         </div>
       </div>
     </WeatherProvider>

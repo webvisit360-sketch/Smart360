@@ -91,8 +91,9 @@ test("unsaved Slovenian edits immediately refresh populated targets from only th
     drafts,
     rows,
   );
-  assert.equal(refresh.length, 3);
-  assert.ok(refresh.every((entry) => entry.field === "title" && entry.stale && !entry.missing));
+  assert.equal(refresh.length, 6);
+  assert.ok(refresh.every((entry) => entry.field === "title"));
+  assert.equal(refresh.filter(entry => entry.stale && !entry.missing).length, 3);
   const request = draftsForItemTranslationRefresh(drafts, refresh);
   assert.equal(request.find((draft) => draft.language === "sl")?.title, "Nov naslov");
   assert.ok(request.filter((draft) => draft.language !== "sl").every((draft) => draft.title === ""));
@@ -120,6 +121,9 @@ test("persisted stale fields refresh after reopen while fresh populated fields s
     [
       { language: "en", field: "title", missing: false, stale: true },
       { language: "it", field: "title", missing: true, stale: false },
+      { language: "fr", field: "title", missing: true, stale: false },
+      { language: "nl", field: "title", missing: true, stale: false },
+      { language: "hr", field: "title", missing: true, stale: false },
     ],
   );
 });

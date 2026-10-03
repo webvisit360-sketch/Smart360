@@ -1,3 +1,4 @@
+import { guideLanguage } from "@workspace/guide-languages";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   useGetGuestMessages,
@@ -132,7 +133,7 @@ export function MessagesView({
         guestUnit: guest.unit,
         guestPhone: guest.phone,
         password,
-        lang: lang === "en" || lang === "de" || lang === "it" ? lang : "sl",
+        lang: guideLanguage(lang),
       },
     });
   };

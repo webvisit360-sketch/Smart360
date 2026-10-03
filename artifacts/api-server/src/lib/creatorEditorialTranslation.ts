@@ -149,7 +149,8 @@ export async function withTranslationRetries<T>(
   throw new TranslationFailure("unknown", null, null);
 }
 
-export const EDITORIAL_LANGUAGES = ["sl", "en", "de", "it"] as const;
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
+export const EDITORIAL_LANGUAGES = GUIDE_LANGUAGES;
 export type EditorialLanguage = typeof EDITORIAL_LANGUAGES[number];
 export type EditorialDraft = {
   language: EditorialLanguage;
@@ -191,10 +192,10 @@ export async function translateMissingEditorial(
   sourceLanguage?: EditorialLanguage,
   retryOptions?: TranslationRetryOptions,
 ): Promise<EditorialSuggestion[]> {
-  if (drafts.length !== 4 ||
-    new Set(drafts.map((draft) => draft.language)).size !== 4 ||
+  if (drafts.length !== EDITORIAL_LANGUAGES.length ||
+    new Set(drafts.map((draft) => draft.language)).size !== EDITORIAL_LANGUAGES.length ||
     !EDITORIAL_LANGUAGES.every((language) => drafts.some((draft) => draft.language === language))) {
-    throw new Error("Urejevalnik nima vseh štirih jezikov.");
+    throw new Error("Urejevalnik nima vseh podprtih jezikov.");
   }
 
   const tasks = (["title", "description"] as const).flatMap((field) => {
@@ -223,7 +224,7 @@ export async function translateMissingEditorial(
     response_format: { type: "json_object" },
     messages: [{
       role: "system",
-      content: "Translate only the supplied operator-authored text into exactly the requested target languages. Preserve meaning and allowed HTML formatting. Do not add facts, claims, names, addresses, explanations, or content. A field not requested for a language must be null. Return JSON only: {\"translations\":[{\"language\":\"sl|en|de|it\",\"title\":string|null,\"description\":string|null}]}."
+      content: `Translate only the supplied operator-authored text into exactly the requested target languages (${EDITORIAL_LANGUAGES.join(", ")}). Preserve meaning and allowed HTML formatting. Do not add facts, claims, names, addresses, explanations, or content. French uses vous, Dutch uses je, Croatian is polite and natural. A field not requested for a language must be null. Return JSON only: {"translations":[{"language":"requested language code","title":string|null,"description":string|null}]}.`
     }, {
       role: "user",
       content: JSON.stringify({ tasks }),
@@ -269,15 +270,12 @@ export async function translateCreatorEditorial(
   source: { name: string; description: string },
   client = openai,
   retryOptions?: TranslationRetryOptions,
-): Promise<Array<{ language: "en" | "de" | "it"; name: string; description: string }>> {
-  const translations = await translateMissingEditorial([
-    { language: "sl", title: source.name, description: source.description },
-    { language: "en", title: "", description: "" },
-    { language: "de", title: "", description: "" },
-    { language: "it", title: "", description: "" },
-  ], client, undefined, retryOptions);
+): Promise<Array<{ language: Exclude<EditorialLanguage, "sl">; name: string; description: string }>> {
+  const translations = await translateMissingEditorial(EDITORIAL_LANGUAGES.map(language => ({
+    language, title: language === "sl" ? source.name : "", description: language === "sl" ? source.description : "",
+  })), client, undefined, retryOptions);
   return translations.map((translation) => ({
-    language: translation.language as "en" | "de" | "it",
+    language: translation.language as Exclude<EditorialLanguage, "sl">,
     name: translation.title!,
     description: translation.description!,
   }));

@@ -6,7 +6,9 @@
 import type { TenantWeather } from "@workspace/api-client-react";
 
 export type { TenantWeather };
-export type WeatherLang = "sl" | "en" | "de" | "it";
+import { guideLanguage, LANGUAGE_LOCALES, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog, translateEnglish } from "../../lib/guest-catalogs";
+export type WeatherLang = GuideLanguage;
 export type WeatherIconKind = "clear" | "partly" | "cloud" | "fog" | "drizzle" | "rain" | "snow" | "storm";
 export type WeatherSkin = "morning" | "day" | "evening" | "night";
 
@@ -14,7 +16,7 @@ export const HOME_WEATHER_ZONE = "Europe/Ljubljana";
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 
-type Entry = { icon: WeatherIconKind; sl: string; en: string; de: string; it: string };
+type Entry = { icon: WeatherIconKind; en: string } & Partial<Record<WeatherLang, string>>;
 
 export const WMO_CODES: Record<number, Entry> = {
   0: { icon: "clear", sl: "Jasno", en: "Clear sky", de: "Klar", it: "Sereno" },
@@ -47,22 +49,22 @@ export const WMO_CODES: Record<number, Entry> = {
   99: { icon: "storm", sl: "Močna nevihta s točo", en: "Severe thunderstorm with hail", de: "Schweres Gewitter mit Hagel", it: "Forte temporale con grandine" },
 };
 
-const UNKNOWN: Record<WeatherLang, string> = { sl: "Vreme", en: "Weather", de: "Wetter", it: "Meteo" };
+const UNKNOWN = extendCatalog({ sl: "Vreme", en: "Weather", de: "Wetter", it: "Meteo" });
 
 export function weatherLang(lang: string | null | undefined): WeatherLang {
-  return lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
+  return guideLanguage(lang);
 }
 
 export function describeWeather(code: number, lang: string): string {
   const l = weatherLang(lang);
-  return WMO_CODES[code]?.[l] ?? UNKNOWN[l];
+  return WMO_CODES[code]?.[l] ?? (WMO_CODES[code] ? translateEnglish(WMO_CODES[code].en, l) : UNKNOWN[l]);
 }
 
 export function weatherIconKind(code: number): WeatherIconKind {
   return WMO_CODES[code]?.icon ?? "cloud";
 }
 
-const LOCALES: Record<WeatherLang, string> = { sl: "sl-SI", en: "en-GB", de: "de-DE", it: "it-IT" };
+const LOCALES = LANGUAGE_LOCALES;
 
 function safeZone(tz: string | undefined): string | undefined {
   if (!tz) return undefined;
@@ -207,7 +209,7 @@ export function tourWarning(weather: TenantWeather, now = Date.now()): TourWeath
 type Part = "morning" | "afternoon" | "evening";
 function dayPart(hour: number): Part { return hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"; }
 
-const WARNING_HEAD: Record<WeatherLang, Record<"storm" | "rain", Record<Part, string>>> = {
+const WARNING_HEAD = extendCatalog<Record<"storm" | "rain", Record<Part, string>>>({
   sl: {
     storm: { morning: "Dopoldne so napovedane nevihte.", afternoon: "Popoldne so napovedane nevihte.", evening: "Zvečer so napovedane nevihte." },
     rain: { morning: "Dopoldne je napovedan dež.", afternoon: "Popoldne je napovedan dež.", evening: "Zvečer je napovedan dež." },
@@ -224,14 +226,14 @@ const WARNING_HEAD: Record<WeatherLang, Record<"storm" | "rain", Record<Part, st
     storm: { morning: "In mattinata sono previsti temporali.", afternoon: "Nel pomeriggio sono previsti temporali.", evening: "In serata sono previsti temporali." },
     rain: { morning: "In mattinata è prevista pioggia.", afternoon: "Nel pomeriggio è prevista pioggia.", evening: "In serata è prevista pioggia." },
   },
-};
+});
 
-const WARNING_DETAIL: Record<WeatherLang, (time: string, p: number) => string> = {
+const WARNING_DETAIL = extendCatalog<(time: string, p: number) => string>({
   sl: (time, p) => `Okoli ${time} · verjetnost padavin ${p} %`,
   en: (time, p) => `Around ${time} · ${p}% chance of rain`,
   de: (time, p) => `Gegen ${time} · Regenwahrscheinlichkeit ${p} %`,
   it: (time, p) => `Verso le ${time} · probabilità di pioggia ${p}%`,
-};
+});
 
 export function warningText(w: TourWeatherWarning, tz: string | undefined, lang: string): { head: string; detail: string } {
   const l = weatherLang(lang);
@@ -239,12 +241,12 @@ export function warningText(w: TourWeatherWarning, tz: string | undefined, lang:
   return { head: WARNING_HEAD[l][w.kind][dayPart(localParts(w.time, tz).hour)], detail: WARNING_DETAIL[l](time, Math.round(w.probability)) };
 }
 
-export const WEATHER_LABELS: Record<WeatherLang, { title: string; max: string; min: string; rain: string; wind: string; sunrise: string; sunset: string; afternoon: (p: number) => string; afternoonFull: (p: number) => string; percent: (p: number) => string; warning: string }> = {
+export const WEATHER_LABELS = extendCatalog<{ title: string; max: string; min: string; rain: string; wind: string; sunrise: string; sunset: string; afternoon: (p: number) => string; afternoonFull: (p: number) => string; percent: (p: number) => string; warning: string }>({
   sl: { afternoonFull: (p) => `popoldne ${p} % verjetnost padavin`, title: "Vreme danes", max: "najv.", min: "najn.", rain: "Padavine", wind: "Veter", sunrise: "Sončni vzhod", sunset: "Sončni zahod", afternoon: (p) => `popoldne ${p} %`, percent: (p) => `${p} %`, warning: "Opozorilo" },
   en: { afternoonFull: (p) => `${p}% chance of rain this afternoon`, title: "Weather today", max: "max", min: "min", rain: "Rain", wind: "Wind", sunrise: "Sunrise", sunset: "Sunset", afternoon: (p) => `afternoon ${p}%`, percent: (p) => `${p}%`, warning: "Warning" },
   de: { afternoonFull: (p) => `nachmittags ${p} % Regenwahrscheinlichkeit`, title: "Wetter heute", max: "max.", min: "min.", rain: "Regen", wind: "Wind", sunrise: "Sonnenaufgang", sunset: "Sonnenuntergang", afternoon: (p) => `nachm. ${p} %`, percent: (p) => `${p} %`, warning: "Warnung" },
   it: { afternoonFull: (p) => `${p}% di probabilità di pioggia nel pomeriggio`, title: "Meteo di oggi", max: "max", min: "min", rain: "Pioggia", wind: "Vento", sunrise: "Alba", sunset: "Tramonto", afternoon: (p) => `pomeriggio ${p}%`, percent: (p) => `${p}%`, warning: "Avviso" },
-};
+});
 
 export function homeSolarChip(weather: TenantWeather, now: number, lang: string): { label: string; time: number | null } {
   const L = WEATHER_LABELS[weatherLang(lang)];

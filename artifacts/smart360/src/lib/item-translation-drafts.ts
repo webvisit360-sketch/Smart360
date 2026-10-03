@@ -5,7 +5,8 @@ import type {
   TranslationInput,
 } from "@workspace/api-client-react";
 
-export const ITEM_EDITOR_LANGUAGES = ["sl", "en", "de", "it"] as const;
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
+export const ITEM_EDITOR_LANGUAGES = GUIDE_LANGUAGES;
 export type ItemEditorLanguage = typeof ITEM_EDITOR_LANGUAGES[number];
 export type ItemTranslationTargetLanguage = Exclude<ItemEditorLanguage, "sl">;
 export type ItemTranslationDraftField = "title" | "description";

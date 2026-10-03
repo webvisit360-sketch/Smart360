@@ -10,6 +10,7 @@ import type { SitePlanImage } from './sitePlanImage';
 import type { TenantBase } from './tenantBase';
 import type { TenantContentPlurals } from './tenantContentPlurals';
 import type { TenantContentUi } from './tenantContentUi';
+import type { TenantContentUiFallback } from './tenantContentUiFallback';
 
 export type TenantContent = TenantBase & ({
   sections: SectionContent[];
@@ -26,6 +27,8 @@ export type TenantContent = TenantBase & ({
   wifiQrSvg?: string | null;
   /** Interface strings for the active language (empty for sl) */
   ui?: TenantContentUi;
+  /** Published English interface overrides for missing translations. */
+  uiFallback?: TenantContentUiFallback;
   /** Plural forms for the active language, key -> CLDR form -> template */
   plurals?: TenantContentPlurals;
   /** Real guest-to-host response cycles measured for this tenant */

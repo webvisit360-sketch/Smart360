@@ -1,3 +1,4 @@
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import {
   categoriesTable,
   changelogTable,
@@ -162,7 +163,8 @@ export async function alignTenantSkeleton(
         });
       }
       let stayTranslationsUpdated = 0;
-      for (const language of ["sl", "en", "de", "it"] as const) {
+      for (const language of GUIDE_LANGUAGES) {
+        if (!staySeed.names[language]) continue;
         const [current] = await tx.select({
           id: translationsTable.id,
           value: translationsTable.value,
@@ -430,7 +432,8 @@ export async function alignTenantSkeleton(
             counts.categoriesUpdated += 1;
           }
         }
-        for (const language of ["sl", "en", "de", "it"] as const) {
+        for (const language of GUIDE_LANGUAGES) {
+          if (!seed.names[language]) continue;
           let [current] = await tx.select({
             id: translationsTable.id,
             value: translationsTable.value,

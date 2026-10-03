@@ -286,13 +286,14 @@ export async function buildTenantContent(
       : [];
     const fallbackByRecord = new Map<string, Record<string, string>>();
     const requestedByRecord = new Map<string, Record<string, string>>();
-    const fallbackPriority = ["en", "de", "it"];
+    const fallbackPriority = ["en"];
     for (const t of [...translations].sort(
       (a, b) =>
         fallbackPriority.indexOf(a.lang.toLowerCase()) -
         fallbackPriority.indexOf(b.lang.toLowerCase()),
     )) {
       if (!hasMeaningfulContent(t.value)) continue;
+      if (t.lang.toLowerCase() !== lang && t.lang.toLowerCase() !== "en") continue;
       const target =
         t.lang.toLowerCase() === lang ? requestedByRecord : fallbackByRecord;
       const rec = target.get(t.recordId) ?? {};
@@ -302,7 +303,7 @@ export async function buildTenantContent(
     const apply = <T extends { id: string }>(row: T): T => {
       const fallback = fallbackByRecord.get(row.id) ?? {};
       const source = row as Record<string, unknown>;
-      const neededFallback = Object.fromEntries(
+      const neededFallback = lang !== "sl" ? fallback : Object.fromEntries(
         Object.entries(fallback).filter(([field]) => {
           if (field === "eventSchedule.locationText" || field === "eventSchedule.ageText") {
             const key = field.split(".")[1]!;

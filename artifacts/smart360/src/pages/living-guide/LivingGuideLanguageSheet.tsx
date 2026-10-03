@@ -5,12 +5,7 @@ import {
 } from "react";
 import type { UiTranslator } from "../guest/i18n";
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  sl: "Slovenščina",
-  en: "English",
-  de: "Deutsch",
-  it: "Italiano",
-};
+import { LANGUAGE_NAMES } from "@workspace/guide-languages";
 
 export function LivingGuideLanguageSheet({
   languages,

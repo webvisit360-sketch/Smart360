@@ -1,3 +1,4 @@
+import { TRANSLATION_LANGUAGES } from "@workspace/guide-languages";
 import {
   categoriesTable,
   db,
@@ -25,6 +26,9 @@ export const TENANT_TYPES = ["kamp", "hotel", "apartmaji"] as const;
 export type TenantType = (typeof TENANT_TYPES)[number];
 
 export type SeedNames = {
+  fr?: string;
+  nl?: string;
+  hr?: string;
   sl: string;
   en: string;
   de: string;
@@ -184,12 +188,12 @@ const translationValues = (
   recordId: string,
   field: "title" | "label",
   seedNames: SeedNames,
-) => (["en", "de", "it"] as const).map((lang) => ({
+) => TRANSLATION_LANGUAGES.filter(lang => !!seedNames[lang]).map((lang) => ({
   model,
   recordId,
   field,
   lang,
-  value: seedNames[lang],
+  value: seedNames[lang]!,
   stale: false,
 }));
 
@@ -358,7 +362,7 @@ async function ensureMeliPuGateTranslations(): Promise<number> {
         eq(translationsTable.model, "category"),
         eq(translationsTable.recordId, gate.id),
         eq(translationsTable.field, "label"),
-        inArray(translationsTable.lang, ["en", "de", "it"]),
+        inArray(translationsTable.lang, TRANSLATION_LANGUAGES),
       ));
     const desired = translationValues("category", gate.id, "label", gateSeed.names);
     const missing = desired.filter((row) => !existing.some((current) => current.lang === row.lang));

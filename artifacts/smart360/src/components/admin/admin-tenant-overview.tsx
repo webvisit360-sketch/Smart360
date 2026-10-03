@@ -1,3 +1,4 @@
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import { useMemo } from "react";
 import { 
   useListTenantOrders, 
@@ -90,8 +91,9 @@ export function AdminTenantOverview({ tenantId, onTabChange, isOwner = false }: 
     it: "Italijanščina",
     hr: "Hrvaščina",
     fr: "Francoščina",
+    nl: "Nizozemščina",
   };
-  const languages = tenant?.languages ?? [];
+  const languages = GUIDE_LANGUAGES;
 
   const handleOrderStatus = (orderRef: string, status: "potrjeno" | "zavrnjeno") => {
     updateStatus.mutate({ orderRef, data: { status, statusNote: null } });

@@ -14,4 +14,7 @@ export const CreatorProposalTranslationLanguage = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;

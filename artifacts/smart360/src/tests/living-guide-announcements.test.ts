@@ -73,7 +73,7 @@ test("labels exist in all four languages; list date uses today/yesterday", () =>
     const c = announcementCopy(l);
     assert.ok(c.title && c.isNew && c.offline && c.validTo && c.published);
   }
-  assert.equal(announcementCopy("hr").title, "Obvestila");
+  assert.equal(announcementCopy("hr").title, "Obavijesti");
   assert.match(formatListDate("2026-06-10T06:10:00Z", "sl", NOW), /^danes · 8\.10$/);
   assert.equal(formatListDate("2026-06-09T06:10:00Z", "en", NOW), "yesterday");
 });

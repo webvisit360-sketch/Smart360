@@ -2,9 +2,10 @@ import type { Announcement } from "@workspace/api-client-react";
 
 /** Admin wall-clock inputs are always Ljubljana time, never browser-local time. */
 export const ANNOUNCEMENT_TIME_ZONE = "Europe/Ljubljana";
-export const ANNOUNCEMENT_LANGUAGES = ["Sl", "En", "De", "It"] as const;
+import { GUIDE_LANGUAGES, type GuideLanguage } from "@workspace/guide-languages";
+export const ANNOUNCEMENT_LANGUAGES = GUIDE_LANGUAGES.map(lang => lang[0].toUpperCase() + lang.slice(1)) as Capitalize<GuideLanguage>[];
 export type AnnouncementLanguage = typeof ANNOUNCEMENT_LANGUAGES[number];
-export type AnnouncementFields = Record<`title${AnnouncementLanguage}` | `body${AnnouncementLanguage}`, string | null>;
+export type AnnouncementFields = Partial<Record<`title${AnnouncementLanguage}` | `body${AnnouncementLanguage}`, string | null>>;
 export type AdminAnnouncement = Announcement;
 export type WallClockOccurrence = "earlier" | "later";
 export type AnnouncementDraft = Record<`title${AnnouncementLanguage}` | `body${AnnouncementLanguage}`, string> & {

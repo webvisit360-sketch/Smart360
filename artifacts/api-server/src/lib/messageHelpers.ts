@@ -1,3 +1,4 @@
+import { guideLanguage } from "@workspace/guide-languages";
 /**
  * Shared helpers for the guest–host messaging feature.
  *
@@ -36,6 +37,9 @@ export function requiredMessagePhoneMessage(lang: string | undefined): string {
 }
 
 const INVALID_MESSAGE_PHONE_MESSAGES = {
+  fr: "Le numéro de téléphone doit contenir au moins 6 chiffres.",
+  nl: "Het telefoonnummer moet minstens 6 cijfers bevatten.",
+  hr: "Telefonski broj mora sadržavati najmanje 6 znamenki.",
   sl: "Telefonska številka mora vsebovati vsaj 6 števk.",
   en: "The phone number must contain at least 6 digits.",
   de: "Die Telefonnummer muss mindestens 6 Ziffern enthalten.",
@@ -44,7 +48,7 @@ const INVALID_MESSAGE_PHONE_MESSAGES = {
 
 export function invalidMessagePhoneMessage(lang: string | undefined): string {
   const normalizedLang =
-    lang === "en" || lang === "de" || lang === "it" ? lang : "sl";
+    guideLanguage(lang);
   return INVALID_MESSAGE_PHONE_MESSAGES[normalizedLang];
 }
 

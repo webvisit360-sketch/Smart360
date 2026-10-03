@@ -1,8 +1,10 @@
 // Guest menu copy and row order (pure, testable).
-export type MenuLang = "sl" | "en" | "de" | "it";
-export const LANG_NAMES: Record<string, string> = { sl: "Slovenščina", en: "English", de: "Deutsch", it: "Italiano", hr: "Hrvatski" };
+import { guideLanguage, LANGUAGE_NAMES, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+export type MenuLang = GuideLanguage;
+export const LANG_NAMES: Record<string, string> = LANGUAGE_NAMES;
 
-export const MENU_COPY = {
+export const MENU_COPY = extendCatalog({
   sl: {
     menu: "Meni", close: "Zapri meni", language: "Jezik", profile: "Moj profil", profileSub: "Za izračun kalorij pri turah — ostane na napravi",
     install: "Dodaj na začetni zaslon", installSub: "Vodnik kot aplikacija z ikono", help: "Pomoč in nujni primeri", helpSub: "Kontakti, 112, SOS lokacija",
@@ -35,8 +37,8 @@ export const MENU_COPY = {
     aboutPrivacyH: "Privacy", aboutPrivacy: "I tour registrati, il profilo calorie, gli avvisi letti e la posizione SOS restano solo su questo dispositivo e non vengono inviati a nessun server. Messaggi e ordini arrivano all'host solo quando li invii tu.",
     aboutSourcesH: "Fonti dei dati", aboutSources: "Contenuti e avvisi sono gestiti dal tuo host. Previsioni meteo: Open-Meteo (open-meteo.com). Mappe e indicazioni si aprono nella tua app di mappe. Il 112 è il numero unico europeo di emergenza.",
   },
-} as const;
-export const menuCopy = (lang: string) => MENU_COPY[(lang === "en" || lang === "de" || lang === "it" ? lang : "sl") as MenuLang];
+});
+export const menuCopy = (lang: string) => MENU_COPY[guideLanguage(lang)];
 
 /** Exactly five rows in this order; install hidden when the guide already runs standalone. */
 export function menuRowIds(installAvailable: boolean) {

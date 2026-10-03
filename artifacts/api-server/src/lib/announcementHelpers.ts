@@ -1,10 +1,11 @@
 import { CreateTenantAnnouncementBody, UpdateTenantAnnouncementBody } from "@workspace/api-zod";
 import type { TenantAnnouncement } from "@workspace/db";
 
-export const ANNOUNCEMENT_LANG_FIELDS = [
-  "titleSl", "titleEn", "titleDe", "titleIt",
-  "bodySl", "bodyEn", "bodyDe", "bodyIt",
-] as const;
+import { GUIDE_LANGUAGES, type GuideLanguage } from "@workspace/guide-languages";
+export const ANNOUNCEMENT_LANG_FIELDS = GUIDE_LANGUAGES.flatMap(lang => {
+  const suffix = lang[0].toUpperCase() + lang.slice(1);
+  return [`title${suffix}`, `body${suffix}`];
+}) as (`title${Capitalize<GuideLanguage>}` | `body${Capitalize<GuideLanguage>}`)[];
 
 type AnnouncementWrite = ReturnType<typeof CreateTenantAnnouncementBody.parse>;
 type Validation = { ok: true; data: AnnouncementWrite } | { ok: false; error: string };

@@ -1,3 +1,5 @@
+import { guideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
 /** Vite development-only fixture: real ExploreView, synthetic content, no API or auth. */
 import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -12,7 +14,7 @@ if (!import.meta.env.DEV) throw new Error("Explore recording fixture is developm
 
 const query = new URLSearchParams(location.search);
 const requestedLang = query.get("lang");
-const initialLang: UiLanguage = requestedLang === "en" || requestedLang === "de" || requestedLang === "it" ? requestedLang : "sl";
+const initialLang: UiLanguage = guideLanguage(requestedLang);
 const requestedTheme = query.get("theme");
 document.body.dataset.t = requestedTheme === "jutro" || requestedTheme === "dan" || requestedTheme === "vecer" ? requestedTheme : "noc";
 document.documentElement.lang = initialLang;
@@ -26,7 +28,7 @@ function ExploreRecordingFixture() {
     ...syntheticTenant(lang), name: "Razvojni preizkus", tourRecordingEnabled: enabled,
   }), [lang, enabled]);
   const categories = useMemo(() => [
-    { id: "fixture-food", key: "food", label: { sl: "Hrana", en: "Food", de: "Essen", it: "Cibo" }[lang], isVisible: true, items: [
+    { id: "fixture-food", key: "food", label: extendCatalog({ sl: "Hrana", en: "Food", de: "Essen", it: "Cibo" })[lang], isVisible: true, items: [
       { id: "fixture-cafe", title: "TEST café", isVisible: true },
     ] },
     ...tenant.sections[1]!.categories.map((category) => ({
@@ -35,7 +37,7 @@ function ExploreRecordingFixture() {
       items: query.get("empty") === ("key" in category ? category.key : undefined) ? [] : category.items,
     })),
     // Labels deliberately resemble eligible categories; stable key act is NOT eligible.
-    { id: "fixture-other", key: "act", label: { sl: "Šport", en: "Sport", de: "Sport", it: "Sport" }[lang], isVisible: true, items: [
+    { id: "fixture-other", key: "act", label: extendCatalog({ sl: "Šport", en: "Sport", de: "Sport", it: "Sport" })[lang], isVisible: true, items: [
       { id: "fixture-other-item", title: "TEST other", isVisible: true },
     ] },
   ], [tenant, lang, fallback]);

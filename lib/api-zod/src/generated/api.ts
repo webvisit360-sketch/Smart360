@@ -28,6 +28,12 @@ export const GetGuestAnnouncementsResponse = zod.object({
   "bodyEn": zod.string().nullable(),
   "bodyDe": zod.string().nullable(),
   "bodyIt": zod.string().nullable(),
+  "titleFr": zod.string().nullish(),
+  "bodyFr": zod.string().nullish(),
+  "titleNl": zod.string().nullish(),
+  "bodyNl": zod.string().nullish(),
+  "titleHr": zod.string().nullish(),
+  "bodyHr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "validFrom": zod.coerce.date(),
   "validTo": zod.coerce.date().nullable(),
@@ -61,6 +67,12 @@ export const GetTenantAnnouncementsResponse = zod.object({
   "bodyEn": zod.string().nullable(),
   "bodyDe": zod.string().nullable(),
   "bodyIt": zod.string().nullable(),
+  "titleFr": zod.string().nullish(),
+  "bodyFr": zod.string().nullish(),
+  "titleNl": zod.string().nullish(),
+  "bodyNl": zod.string().nullish(),
+  "titleHr": zod.string().nullish(),
+  "bodyHr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "validFrom": zod.coerce.date(),
   "validTo": zod.coerce.date().nullable(),
@@ -94,6 +106,18 @@ export const createTenantAnnouncementBodyBodyDeMax = 20000;
 
 export const createTenantAnnouncementBodyBodyItMax = 20000;
 
+export const createTenantAnnouncementBodyTitleFrMax = 250;
+
+export const createTenantAnnouncementBodyBodyFrMax = 20000;
+
+export const createTenantAnnouncementBodyTitleNlMax = 250;
+
+export const createTenantAnnouncementBodyBodyNlMax = 20000;
+
+export const createTenantAnnouncementBodyTitleHrMax = 250;
+
+export const createTenantAnnouncementBodyBodyHrMax = 20000;
+
 export const createTenantAnnouncementBodyImageUrlMax = 2000;
 
 
@@ -107,6 +131,12 @@ export const CreateTenantAnnouncementBody = zod.object({
   "bodyEn": zod.string().max(createTenantAnnouncementBodyBodyEnMax).nullish(),
   "bodyDe": zod.string().max(createTenantAnnouncementBodyBodyDeMax).nullish(),
   "bodyIt": zod.string().max(createTenantAnnouncementBodyBodyItMax).nullish(),
+  "titleFr": zod.string().max(createTenantAnnouncementBodyTitleFrMax).nullish(),
+  "bodyFr": zod.string().max(createTenantAnnouncementBodyBodyFrMax).nullish(),
+  "titleNl": zod.string().max(createTenantAnnouncementBodyTitleNlMax).nullish(),
+  "bodyNl": zod.string().max(createTenantAnnouncementBodyBodyNlMax).nullish(),
+  "titleHr": zod.string().max(createTenantAnnouncementBodyTitleHrMax).nullish(),
+  "bodyHr": zod.string().max(createTenantAnnouncementBodyBodyHrMax).nullish(),
   "imageUrl": zod.string().max(createTenantAnnouncementBodyImageUrlMax).nullish(),
   "validFrom": zod.coerce.date().optional(),
   "validTo": zod.coerce.date().nullish()
@@ -128,6 +158,12 @@ export const CreateTenantAnnouncementResponse = zod.object({
   "bodyEn": zod.string().nullable(),
   "bodyDe": zod.string().nullable(),
   "bodyIt": zod.string().nullable(),
+  "titleFr": zod.string().nullish(),
+  "bodyFr": zod.string().nullish(),
+  "titleNl": zod.string().nullish(),
+  "bodyNl": zod.string().nullish(),
+  "titleHr": zod.string().nullish(),
+  "bodyHr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "validFrom": zod.coerce.date(),
   "validTo": zod.coerce.date().nullable(),
@@ -179,6 +215,18 @@ export const updateTenantAnnouncementBodyOneBodyDeMax = 20000;
 
 export const updateTenantAnnouncementBodyOneBodyItMax = 20000;
 
+export const updateTenantAnnouncementBodyOneTitleFrMax = 250;
+
+export const updateTenantAnnouncementBodyOneBodyFrMax = 20000;
+
+export const updateTenantAnnouncementBodyOneTitleNlMax = 250;
+
+export const updateTenantAnnouncementBodyOneBodyNlMax = 20000;
+
+export const updateTenantAnnouncementBodyOneTitleHrMax = 250;
+
+export const updateTenantAnnouncementBodyOneBodyHrMax = 20000;
+
 export const updateTenantAnnouncementBodyOneImageUrlMax = 2000;
 
 
@@ -192,6 +240,12 @@ export const UpdateTenantAnnouncementBody = zod.object({
   "bodyEn": zod.string().max(updateTenantAnnouncementBodyOneBodyEnMax).nullish(),
   "bodyDe": zod.string().max(updateTenantAnnouncementBodyOneBodyDeMax).nullish(),
   "bodyIt": zod.string().max(updateTenantAnnouncementBodyOneBodyItMax).nullish(),
+  "titleFr": zod.string().max(updateTenantAnnouncementBodyOneTitleFrMax).nullish(),
+  "bodyFr": zod.string().max(updateTenantAnnouncementBodyOneBodyFrMax).nullish(),
+  "titleNl": zod.string().max(updateTenantAnnouncementBodyOneTitleNlMax).nullish(),
+  "bodyNl": zod.string().max(updateTenantAnnouncementBodyOneBodyNlMax).nullish(),
+  "titleHr": zod.string().max(updateTenantAnnouncementBodyOneTitleHrMax).nullish(),
+  "bodyHr": zod.string().max(updateTenantAnnouncementBodyOneBodyHrMax).nullish(),
   "imageUrl": zod.string().max(updateTenantAnnouncementBodyOneImageUrlMax).nullish(),
   "validFrom": zod.coerce.date().optional(),
   "validTo": zod.coerce.date().nullish()
@@ -213,6 +267,12 @@ export const UpdateTenantAnnouncementResponse = zod.object({
   "bodyEn": zod.string().nullable(),
   "bodyDe": zod.string().nullable(),
   "bodyIt": zod.string().nullable(),
+  "titleFr": zod.string().nullish(),
+  "bodyFr": zod.string().nullish(),
+  "titleNl": zod.string().nullish(),
+  "bodyNl": zod.string().nullish(),
+  "titleHr": zod.string().nullish(),
+  "bodyHr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "validFrom": zod.coerce.date(),
   "validTo": zod.coerce.date().nullable(),
@@ -2326,6 +2386,7 @@ export const GetPublicTenantResponse = zod.object({
   "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
   "wifiQrSvg": zod.string().nullish().describe('Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID\/password on every request; null when no SSID is set\n'),
   "ui": zod.record(zod.string(), zod.string()).optional().describe('Interface strings for the active language (empty for sl)'),
+  "uiFallback": zod.record(zod.string(), zod.string()).optional().describe('Published English interface overrides for missing translations.'),
   "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template'),
   "hostAnsweredMessageCount": zod.number().optional().describe('Real guest-to-host response cycles measured for this tenant'),
   "hostResponseMedianMinutes": zod.number().nullish().describe('Median response time rounded up to whole minutes; null until five cycles exist')
@@ -3317,7 +3378,7 @@ export const ListCreatorProposalsResponseItem = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -3572,7 +3633,7 @@ export const EditCreatorProposalBody = zod.object({
   "categoryId": zod.string().nullable(),
   "operatorAddress": zod.string().nullable().describe('Explicit operator-entered address; required when editing an operator-positioned proposal'),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })).min(editCreatorProposalBodyTranslationsMin).max(editCreatorProposalBodyTranslationsMax)
@@ -3622,7 +3683,7 @@ export const EditCreatorProposalResponse = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -3659,7 +3720,7 @@ export const translateCreatorProposalEditorialResponseTranslationsMax = 3;
 
 export const TranslateCreatorProposalEditorialResponse = zod.object({
   "translations": zod.array(zod.object({
-  "language": zod.enum(['en', 'de', 'it']),
+  "language": zod.enum(['en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })).min(translateCreatorProposalEditorialResponseTranslationsMin).max(translateCreatorProposalEditorialResponseTranslationsMax)
@@ -3718,7 +3779,7 @@ export const RejectCreatorProposalResponse = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -3781,7 +3842,7 @@ export const UndoCreatorProposalRejectionResponse = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -3850,7 +3911,7 @@ export const RejectCreatorProposalsBulkResponseItem = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -3944,7 +4005,7 @@ export const ConfirmCreatorProposalCoordinatesResponse = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -4007,7 +4068,7 @@ export const ApproveCreatorProposalResponse = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -4070,7 +4131,7 @@ export const UnapproveCreatorProposalResponse = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -4139,7 +4200,7 @@ export const ApproveCreatorProposalsBulkResponseItem = zod.object({
   "proximityKnown": zod.boolean()
 })),
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "name": zod.string(),
   "description": zod.string()
 })),
@@ -4447,6 +4508,7 @@ export const GetTenantResponse = zod.object({
   "qrSvg": zod.string().describe('Server-rendered QR SVG (viewBox only, no width\/height) encoding publicUrl'),
   "wifiQrSvg": zod.string().nullish().describe('Join-network QR (WIFI:T:...;S:...;P:...;;) rendered fresh from the current SSID\/password on every request; null when no SSID is set\n'),
   "ui": zod.record(zod.string(), zod.string()).optional().describe('Interface strings for the active language (empty for sl)'),
+  "uiFallback": zod.record(zod.string(), zod.string()).optional().describe('Published English interface overrides for missing translations.'),
   "plurals": zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().describe('Plural forms for the active language, key -> CLDR form -> template'),
   "hostAnsweredMessageCount": zod.number().optional().describe('Real guest-to-host response cycles measured for this tenant'),
   "hostResponseMedianMinutes": zod.number().nullish().describe('Median response time rounded up to whole minutes; null until five cycles exist')
@@ -6086,7 +6148,7 @@ export const translateMissingItemFieldsBodyTranslationsMax = 4;
 
 export const TranslateMissingItemFieldsBody = zod.object({
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "title": zod.string().max(translateMissingItemFieldsBodyTranslationsItemTitleMax),
   "description": zod.string().max(translateMissingItemFieldsBodyTranslationsItemDescriptionMax)
 })).min(translateMissingItemFieldsBodyTranslationsMin).max(translateMissingItemFieldsBodyTranslationsMax)
@@ -6094,7 +6156,7 @@ export const TranslateMissingItemFieldsBody = zod.object({
 
 export const TranslateMissingItemFieldsResponse = zod.object({
   "translations": zod.array(zod.object({
-  "language": zod.enum(['sl', 'en', 'de', 'it']),
+  "language": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']),
   "title": zod.string().nullable(),
   "description": zod.string().nullable()
 }))
@@ -6846,7 +6908,7 @@ export const CreateOrderBody = zod.object({
   "guestUnit": zod.string().min(1).max(createOrderBodyGuestUnitMax).describe('Guest accommodation\/unit pre-filled from sign-in but editable (e.g. \"B-14\")'),
   "guestNote": zod.string().max(createOrderBodyGuestNoteMax).optional().describe('Optional guest note'),
   "orderPassword": zod.string().max(createOrderBodyOrderPasswordMax).optional().describe('Required only when the tenant has configured an order password; compared after trimming and remains case-sensitive'),
-  "lang": zod.enum(['sl', 'en', 'de', 'it']).optional().describe('UI language used for localized order validation errors; defaults to sl')
+  "lang": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']).optional().describe('UI language used for localized order validation errors; defaults to sl')
 }).describe('Body for placing a new order')
 
 export const CreateOrderResponse = zod.object({
@@ -7046,7 +7108,7 @@ export const SendGuestMessageBody = zod.object({
   "guestUnit": zod.string().min(1).max(sendGuestMessageBodyGuestUnitMax).describe('Required guest unit\/room for host context; trimmed server-side and never emailed or logged'),
   "guestPhone": zod.string().min(1).max(sendGuestMessageBodyGuestPhoneMax).describe('Required guest phone; must contain at least six digit characters, formatting is preserved, and it is stored once on the thread but never emailed or logged'),
   "password": zod.string().max(sendGuestMessageBodyPasswordMax).optional().describe('Required only when the tenant has configured a guest\/order password; compared after trimming and remains case-sensitive'),
-  "lang": zod.enum(['sl', 'en', 'de', 'it']).optional().describe('UI language used for localized credential errors; defaults to sl')
+  "lang": zod.enum(['sl', 'en', 'de', 'it', 'fr', 'nl', 'hr']).optional().describe('UI language used for localized credential errors; defaults to sl')
 }).describe('Guest-sent message body with required signed-in identity and optional tenant credential')
 
 export const SendGuestMessageResponse = zod.object({

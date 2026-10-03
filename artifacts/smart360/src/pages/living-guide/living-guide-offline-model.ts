@@ -1,3 +1,5 @@
+import { guideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
 /** Only a worker-confirmed cache fallback warrants the saved-copy banner. */
 export type OfflineState = { cached: boolean; disconnected: boolean };
 export type OfflineEvent =
@@ -12,7 +14,7 @@ export function reduceOfflineState(state: OfflineState, event: OfflineEvent): Of
   return { ...state, disconnected: true };
 }
 
-export const OFFLINE_COPY = {
+export const OFFLINE_COPY = extendCatalog({
   sl: {
     banner: "Ni povezave — vodnik deluje iz shranjene kopije.",
     retry: "Ni povezave. Poskusite znova, ko boste spet povezani.",
@@ -29,10 +31,10 @@ export const OFFLINE_COPY = {
     banner: "Nessuna connessione — la guida usa una copia salvata.",
     retry: "Nessuna connessione. Riprova quando sarai di nuovo online.",
   },
-} as const;
+});
 
 export function offlineCopy(lang: string) {
-  return OFFLINE_COPY[lang === "en" || lang === "de" || lang === "it" ? lang : "sl"];
+  return OFFLINE_COPY[guideLanguage(lang)];
 }
 
 /** Fetch rejects without an HTTP status even when navigator.onLine stays true. */

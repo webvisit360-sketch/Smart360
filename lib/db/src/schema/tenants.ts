@@ -9,6 +9,7 @@ import {
   check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -182,7 +183,7 @@ export const tenantsTable = pgTable("tenants", {
   languages: text("languages")
     .array()
     .notNull()
-    .default(["sl", "en", "it", "de"]),
+    .default(GUIDE_LANGUAGES),
   // Soft per-tenant media quota (bytes). Uploads are refused at 100 %;
   // nothing is ever deleted automatically. Default 2 GB.
   mediaQuotaBytes: bigint("media_quota_bytes", { mode: "number" })

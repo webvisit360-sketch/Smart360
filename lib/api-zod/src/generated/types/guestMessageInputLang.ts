@@ -17,4 +17,7 @@ export const GuestMessageInputLang = {
   en: 'en',
   de: 'de',
   it: 'it',
+  fr: 'fr',
+  nl: 'nl',
+  hr: 'hr',
 } as const;

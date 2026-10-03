@@ -1,3 +1,5 @@
+import { GUIDE_LANGUAGES, guideLanguage, isGuideLanguage } from "@workspace/guide-languages";
+import { publishedLanguageTree } from "../lib/publishedLanguageFallback";
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, tenantsTable, tenantAliasesTable, publishedSnapshotsTable } from "@workspace/db";
@@ -71,16 +73,21 @@ async function buildPublicPayload(
 ): Promise<PayloadEntry> {
   const snapshot = published ? await readPublishedContent(tenant.id) : null;
   const publishedSource = snapshot?.languages.sl;
-  const selectedLang = lang && (publishedSource?.tree.languages ?? tenant.languages ?? []).includes(lang) ? lang : "sl";
-  const saved = snapshot?.languages[selectedLang] ?? publishedSource;
+  const selectedLang = guideLanguage(lang);
+  const saved = snapshot?.languages[selectedLang] ?? snapshot?.languages.en ?? publishedSource;
   if (published && !saved) throw new Error("Objavljeni posnetek nima vsebine.");
   const tree = saved
-    ? resolveGuestContentTree(saved.tree)
+    ? resolveGuestContentTree(publishedLanguageTree(snapshot!, selectedLang)!)
     : projectGuestTenant(await buildTenantContent(tenant, {
         visibleOnly,
-        lang: selectedLang === "sl" ? undefined : selectedLang,
+        lang: selectedLang,
       }));
-  const { ui, plurals } = saved ?? await getUiAndPlurals(tenant.id, selectedLang);
+  const { ui, plurals } = snapshot
+    ? snapshot.languages[selectedLang] ?? { ui: {}, plurals: {} }
+    : await getUiAndPlurals(tenant.id, selectedLang);
+  const uiFallback = snapshot
+    ? snapshot.languages.en?.ui ?? {}
+    : (await getUiAndPlurals(tenant.id, "en")).ui;
   const publicUrl = guestUrl(tree.slug);
   const qrSvg = await guestQrSvg(publicUrl);
   // Join-network QR — derived from the CURRENT tenant row. A Wi-Fi password
@@ -93,10 +100,12 @@ async function buildPublicPayload(
   const payload = GetPublicTenantResponse.parse(
     serialize({
       ...tree,
+      languages: GUIDE_LANGUAGES,
       publicUrl,
       qrSvg,
       wifiQrSvg: joinQr,
       ui,
+       uiFallback,
       plurals,
       hostAnsweredMessageCount: responseStats.answeredCount,
       hostResponseMedianMinutes: responseStats.medianMinutes,
@@ -215,7 +224,7 @@ function enabledLang(
   req: { query: Record<string, unknown> }
 ): string | undefined {
   const raw = typeof req.query["lang"] === "string" ? req.query["lang"] : undefined;
-  if (!raw || raw === "sl") return undefined;
+  if (!isGuideLanguage(raw) || raw === "sl") return undefined;
   return raw;
 }
 
@@ -337,7 +346,7 @@ router.get(
         short_name: published.name,
         // Installed in a language → it opens in that language (only enabled ones).
         start_url: `/${tenant.slug}/${
-          rawLang && rawLang !== "sl" && (published.languages ?? []).includes(rawLang)
+          rawLang && rawLang !== "sl" && isGuideLanguage(rawLang)
             ? `?lang=${encodeURIComponent(rawLang)}`
             : ""
         }`,

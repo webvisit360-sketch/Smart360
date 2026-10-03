@@ -2,7 +2,8 @@
  * Pure SOS location model. No I/O, no network, no logging.
  * Position data must never leave the device.
  */
-export type SosLang = "sl" | "en" | "de" | "it";
+export type { GuideLanguage as SosLang } from "@workspace/guide-languages";
+import type { GuideLanguage as SosLang } from "@workspace/guide-languages";
 
 export interface SosTenant {
   name: string;

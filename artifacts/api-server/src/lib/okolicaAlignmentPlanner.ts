@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
-export const OKOLICA_LANGUAGES = ["sl", "en", "de", "it"] as const;
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
+export const OKOLICA_LANGUAGES = GUIDE_LANGUAGES;
 export type OkolicaLanguage = (typeof OKOLICA_LANGUAGES)[number];
 
 export type BaselineRow = Record<string, unknown>;
@@ -35,7 +36,7 @@ const canonical = (
   en: string,
   de: string,
   it: string,
-): CanonicalCategory => ({ section, key, group, icon, layout, names: { sl, en, de, it } });
+): CanonicalCategory => ({ section, key, group, icon, layout, names: { sl, en, de, it, fr: "", nl: "", hr: "" } });
 
 /** Standalone approval target. It intentionally does not import tenant seeding or migration code. */
 export const OKOLICA_CANONICAL_CATEGORIES: readonly CanonicalCategory[] = [
@@ -279,6 +280,7 @@ export function planTenantAlignment(source: OkolicaBaseline, tenantId: string): 
         actions.push({ type: "update-category", categoryId: text(row.id), key: entry.key, before, after });
       }
       for (const language of OKOLICA_LANGUAGES) {
+        if (!entry.names[language]) continue;
         const current = slice.translations.find((translation) =>
           text(get(translation, "recordId", "record_id")) === text(row.id) &&
           translation.model === "category" && translation.field === "label" &&

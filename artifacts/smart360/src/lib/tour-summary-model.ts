@@ -6,14 +6,17 @@ export type TourSummaryInput = {
   state: TourState; metrics: TourMetrics; plannedSegments: SummaryPoint[][];
   tourName: string; tenantName: string; lang: string; signal?: AbortSignal;
 };
-export const SUMMARY_LABELS = {
+import { extendCatalog } from "./guest-catalogs";
+import { LANGUAGE_LOCALES, guideLanguage } from "@workspace/guide-languages";
+export const SUMMARY_LABELS = extendCatalog({
   sl: { locale: 'sl-SI', tour: 'Moja tura', cycling: 'Kolesarjenje', running: 'Tek', hiking: 'Pohodništvo', distance: 'Razdalja', ascent: 'Vzpon', altitude: 'Najv. višina', net: 'Neto čas', paused: 'Premori', elapsed: 'Skupni čas', speed: 'Povp. hitrost', maxSpeed: 'Najv. hitrost (GPS)', pace: 'Tempo', calories: 'Poraba (ocena)', schematic: 'Shematski prikaz poti', noRoute: 'Ni zabeležene poti', noElevation: 'Višinski podatki niso na voljo' },
   en: { locale: 'en-GB', tour: 'My tour', cycling: 'Cycling', running: 'Running', hiking: 'Hiking', distance: 'Distance', ascent: 'Elevation gain', altitude: 'Max. elevation', net: 'Moving time', paused: 'Paused', elapsed: 'Elapsed time', speed: 'Avg. speed', maxSpeed: 'Max. speed (GPS)', pace: 'Pace', calories: 'Energy (estimate)', schematic: 'Schematic route diagram', noRoute: 'No recorded route', noElevation: 'Elevation data unavailable' },
   de: { locale: 'de-DE', tour: 'Meine Tour', cycling: 'Radfahren', running: 'Laufen', hiking: 'Wandern', distance: 'Distanz', ascent: 'Aufstieg', altitude: 'Max. Höhe', net: 'Bewegungszeit', paused: 'Pausen', elapsed: 'Gesamtzeit', speed: 'Ø Geschwindigkeit', maxSpeed: 'Max. Tempo (GPS)', pace: 'Pace', calories: 'Energie (geschätzt)', schematic: 'Schematische Routendarstellung', noRoute: 'Keine aufgezeichnete Route', noElevation: 'Keine Höhendaten verfügbar' },
   it: { locale: 'it-IT', tour: 'La mia escursione', cycling: 'Ciclismo', running: 'Corsa', hiking: 'Escursionismo', distance: 'Distanza', ascent: 'Dislivello positivo', altitude: 'Altitudine max.', net: 'Tempo in movimento', paused: 'Pause', elapsed: 'Tempo totale', speed: 'Velocità media', maxSpeed: 'Velocità max. (GPS)', pace: 'Passo', calories: 'Energia (stima)', schematic: 'Rappresentazione schematica', noRoute: 'Nessun percorso registrato', noElevation: 'Dati altimetrici non disponibili' },
-} as const;
+});
 export function summaryLabels(lang: string) {
-  return SUMMARY_LABELS[lang.toLowerCase().split('-')[0] as keyof typeof SUMMARY_LABELS] ?? SUMMARY_LABELS.en;
+  const language = guideLanguage(lang.toLowerCase().split("-")[0]);
+  return { ...SUMMARY_LABELS[language], locale: LANGUAGE_LOCALES[language] };
 }
 export function validCoordinate(p: SummaryPoint): boolean {
   return Number.isFinite(p.lat) && Number.isFinite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180;

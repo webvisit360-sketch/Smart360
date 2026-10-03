@@ -57,13 +57,15 @@ const item = (id: string, title: string, subtitle: string) => ({
   id, title, subtitle, isVisible: true, media: [], body: "", mapQuery: title,
 });
 
-export function syntheticTenant(lang: "sl" | "en" | "de" | "it" = "sl") {
-  const labels = {
+import { GUIDE_LANGUAGES, type GuideLanguage } from "@workspace/guide-languages";
+import { extendCatalog } from "../../lib/guest-catalogs";
+export function syntheticTenant(lang: GuideLanguage = "sl") {
+  const labels = extendCatalog({
     sl: { bike: "Kolesarjenje", hike: "Pohodništvo", run: "Tek", activities: "Aktivnosti" },
     en: { bike: "Cycling", hike: "Hiking", run: "Running", activities: "Activities" },
     de: { bike: "Radfahren", hike: "Wandern", run: "Laufen", activities: "Aktivitäten" },
     it: { bike: "In bicicletta", hike: "Escursioni a piedi", run: "Corsa", activities: "Attività" },
-  }[lang];
+  })[lang];
   return {
     id: "weather-fixture",
     slug: "__weather-fixture",
@@ -72,7 +74,7 @@ export function syntheticTenant(lang: "sl" | "en" | "de" | "it" = "sl") {
     latitude: 46.1273,
     longitude: 14.4632,
     tourRecordingEnabled: true,
-    languages: ["sl", "en", "de", "it"],
+    languages: GUIDE_LANGUAGES,
     notices: [],
     sitePlanImages: [],
     wifiSsid: "Brinje-Guest",

@@ -1,3 +1,4 @@
+import { isGuideLanguage } from "@workspace/guide-languages";
 import { lazy, Suspense, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import splashMarkSvg from './assets/tour-summary/smart360-kolobar-faceted.svg?raw';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -173,7 +174,7 @@ function GuestHost() {
   const lang = tenant ? clampLang(queryLang, tenant.languages) : queryLang;
 
   const changeLivingGuideLanguage = useCallback((nextLang: string) => {
-    if (!['sl', 'en', 'de', 'it'].includes(nextLang)) return;
+    if (!isGuideLanguage(nextLang)) return;
 
     rememberLang(slug, nextLang);
     setLivingGuideLang(nextLang);

@@ -1,3 +1,4 @@
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import { createHash } from "node:crypto";
 import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import {
@@ -45,8 +46,8 @@ export async function ensurePublishedSnapshotSchema(): Promise<void> {
 
 export async function buildDraftPublication(tenant: Tenant): Promise<PublishedContent> {
   const languages: Record<string, PublishedLanguage> = {};
-  for (const lang of new Set(["sl", "en", "de", "it", ...(tenant.languages ?? [])])) {
-    const tree = projectGuestTenant(await buildTenantContent(tenant, { visibleOnly: true, lang: lang === "sl" ? undefined : lang }));
+  for (const lang of GUIDE_LANGUAGES) {
+    const tree = projectGuestTenant(await buildTenantContent(tenant, { visibleOnly: true, lang }));
     const { ui, plurals } = await getUiAndPlurals(tenant.id, lang);
     languages[lang] = { tree, ui, plurals };
   }

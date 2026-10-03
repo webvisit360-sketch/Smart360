@@ -3269,6 +3269,12 @@ components:
         bodyEn: { type: ["string", "null"] }
         bodyDe: { type: ["string", "null"] }
         bodyIt: { type: ["string", "null"] }
+        titleFr: { type: ["string", "null"] }
+        bodyFr: { type: ["string", "null"] }
+        titleNl: { type: ["string", "null"] }
+        bodyNl: { type: ["string", "null"] }
+        titleHr: { type: ["string", "null"] }
+        bodyHr: { type: ["string", "null"] }
         imageUrl: { type: ["string", "null"] }
         validFrom: { type: string, format: date-time }
         validTo: { type: ["string", "null"], format: date-time }
@@ -3299,6 +3305,12 @@ components:
         bodyEn: { type: ["string", "null"], maxLength: 20000 }
         bodyDe: { type: ["string", "null"], maxLength: 20000 }
         bodyIt: { type: ["string", "null"], maxLength: 20000 }
+        titleFr: { type: ["string", "null"], maxLength: 250 }
+        bodyFr: { type: ["string", "null"], maxLength: 20000 }
+        titleNl: { type: ["string", "null"], maxLength: 250 }
+        bodyNl: { type: ["string", "null"], maxLength: 20000 }
+        titleHr: { type: ["string", "null"], maxLength: 250 }
+        bodyHr: { type: ["string", "null"], maxLength: 20000 }
         imageUrl: { type: ["string", "null"], maxLength: 2000 }
         validFrom: { type: string, format: date-time }
         validTo: { type: ["string", "null"], format: date-time }
@@ -4371,7 +4383,7 @@ components:
     CreatorProposalTranslation:
       type: object
       properties:
-        language: { type: string, enum: [sl, en, de, it] }
+        language: { type: string, enum: [sl, en, de, it, fr, nl, hr] }
         name: { type: string }
         description: { type: string }
       required: [language, name, description]
@@ -4413,7 +4425,7 @@ components:
           items:
             type: object
             properties:
-              language: { type: string, enum: [en, de, it] }
+              language: { type: string, enum: [en, de, it, fr, nl, hr] }
               name: { type: string }
               description: { type: string }
             required: [language, name, description]
@@ -4422,7 +4434,7 @@ components:
       type: object
       additionalProperties: false
       properties:
-        language: { type: string, enum: [sl, en, de, it] }
+        language: { type: string, enum: [sl, en, de, it, fr, nl, hr] }
         title: { type: string, maxLength: 300 }
         description: { type: string, maxLength: 4000 }
       required: [language, title, description]
@@ -4440,7 +4452,7 @@ components:
       type: object
       additionalProperties: false
       properties:
-        language: { type: string, enum: [sl, en, de, it] }
+        language: { type: string, enum: [sl, en, de, it, fr, nl, hr] }
         title: { type: ["string", "null"] }
         description: { type: ["string", "null"] }
       required: [language, title, description]
@@ -5400,7 +5412,7 @@ components:
           description: Required only when the tenant has configured a guest/order password; compared after trimming and remains case-sensitive
         lang:
           type: string
-          enum: [sl, en, de, it]
+          enum: [sl, en, de, it, fr, nl, hr]
           description: UI language used for localized credential errors; defaults to sl
       required: [body, guestName, guestUnit, guestPhone]
     HostReplyInput:
@@ -6012,7 +6024,7 @@ components:
           description: Required only when the tenant has configured an order password; compared after trimming and remains case-sensitive
         lang:
           type: string
-          enum: [sl, en, de, it]
+          enum: [sl, en, de, it, fr, nl, hr]
           description: UI language used for localized order validation errors; defaults to sl
       required: [itemId, qty, guestName, guestPhone, guestUnit]
     OrderStatusUpdate:
@@ -6267,6 +6279,10 @@ components:
             ui:
               type: object
               description: Interface strings for the active language (empty for sl)
+              additionalProperties: { type: string }
+            uiFallback:
+              type: object
+              description: Published English interface overrides for missing translations.
               additionalProperties: { type: string }
             plurals:
               type: object

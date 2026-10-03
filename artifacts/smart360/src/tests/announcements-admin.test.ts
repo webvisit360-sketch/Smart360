@@ -56,8 +56,8 @@ test("save sends only writable fields, explicit null clears, and preserves an un
   assert.equal(payload.titleEn, "Announcement");
   assert.equal(payload.bodyIt, "Testo");
   assert.deepEqual(Object.keys(payload).sort(), [
-    "bodyDe", "bodyEn", "bodyIt", "bodySl", "imageUrl",
-    "titleDe", "titleEn", "titleIt", "titleSl", "validFrom", "validTo",
+    "bodyDe", "bodyEn", "bodyFr", "bodyHr", "bodyIt", "bodyNl", "bodySl", "imageUrl",
+    "titleDe", "titleEn", "titleFr", "titleHr", "titleIt", "titleNl", "titleSl", "validFrom", "validTo",
   ].sort());
   assert.equal(announcementAdminTitle(payload), "Announcement");
 });

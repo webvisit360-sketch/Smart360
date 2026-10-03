@@ -18,6 +18,7 @@
     "finalize:creator-source-ljubno": "tsx ./src/scripts/finalize-ljubno-source-first.ts"
   },
   "dependencies": {
+    "@workspace/guide-languages": "workspace:*",
     "@google-cloud/storage": "^8.0.0",
     "@node-rs/argon2": "^2.1.0",
     "@replit/connectors-sdk": "^0.4.1",

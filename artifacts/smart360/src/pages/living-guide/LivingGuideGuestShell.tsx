@@ -1,3 +1,4 @@
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import {
   type CSSProperties,
   type FormEvent,
@@ -591,16 +592,7 @@ function isOperationalRulesCategory(category: any): boolean {
   return !!firstItem?.title && !firstItem?.tint;
 }
 
-function enabledLanguageCodes(tenant: any): string[] {
-  const enabled = new Set(
-    (tenant?.languages ?? [])
-      .map((entry: any) => (typeof entry === "string" ? entry : entry?.code))
-      .filter((entry: unknown): entry is string => typeof entry === "string"),
-  );
-  return ["sl", "en", "de", "it"].filter(
-    (code) => code === "sl" || enabled.has(code),
-  );
-}
+function enabledLanguageCodes(_tenant: any): string[] { return GUIDE_LANGUAGES; }
 
 function externalUrl(value: string): string {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;

@@ -28,6 +28,18 @@ export interface Announcement {
   /** @nullable */
   bodyIt: string | null;
   /** @nullable */
+  titleFr?: string | null;
+  /** @nullable */
+  bodyFr?: string | null;
+  /** @nullable */
+  titleNl?: string | null;
+  /** @nullable */
+  bodyNl?: string | null;
+  /** @nullable */
+  titleHr?: string | null;
+  /** @nullable */
+  bodyHr?: string | null;
+  /** @nullable */
   imageUrl: string | null;
   validFrom: Date;
   /** @nullable */
