@@ -1,0 +1,15 @@
+Extend the guest guide from 4 to 7 languages: add French (fr), Dutch (nl) and Croatian (hr) alongside sl/en/de/it. All tenants get all 7 languages — there is no per-tenant language selection.
+
+1. INFRASTRUCTURE: one central language registry used everywhere (guest app, admin, content model) — no hardcoded four-language lists left anywhere. The guest language switcher shows all 7 with native names (Slovenščina, English, Deutsch, Italiano, Français, Nederlands, Hrvatski); the guest's choice persists as today. FALLBACK RULE: any missing translation — UI string or content field — renders English, then Slovenian; a guest must NEVER see a blank where text belongs.
+
+2. UI STRINGS: complete, native-quality catalogs for fr/nl/hr covering every guest-facing surface: navigation and home, weather card including day-part texts and the sunrise chip, SOS view (title, instructions, AML reassurance line, permission-denied banner, copy/share labels, localized cardinal directions), tours (start guard with live distance message, summary labels, the too-short-tour message, share texts), offline banner, announcements, the menu panel, messages and orders, the install banner. Register: French uses vous, Dutch uses informal je (standard in tourism), Croatian polite but natural. Dates and numbers follow each locale. The SOS SMS body stays Slovenian+English ASCII by design — do not change it.
+
+3. SCHEMA: tenant_announcements stores per-language columns, so fr/nl/hr require a schema change — follow the standing rule: show the exact SQL, wait for owner approval, execute in DEV only. Search for ANY other table with per-language columns and include it in the same proposal. Existing announcements without the new columns must render via the fallback rule.
+
+4. ADMIN: translation editors show all 7 fields per text; existing sl/en/de/it content stays untouched; new fields start empty.
+
+5. DO NOT translate tenant content in this task — translating existing guides is a separate task that will be approved on its own.
+
+6. TESTS: switcher shows 7 and persists; fallback verified (empty fr field renders en); screenshots of home, weather, SOS, a tour and announcements in fr, nl and hr; offline caching works with the new languages; the four existing languages render byte-identical to today.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
