@@ -25,3 +25,14 @@ changed delivery to owner-executed SQL and kept publication separate.
 **How to apply:** Report per-tenant/per-language counts, preserve source formatting
 and proper nouns, checksum sl/en/de/it before and after, and verify production
 language-tag compatibility before stating the execution order.
+
+Do not treat old indexed English body translations as missing source fields when
+the Slovenian body has already been normalized into HTML.
+
+**Why:** These are paragraph aliases of populated Slovenian content. Emitting both
+a fresh whole-body translation and English-derived indexed translations can let
+the stale paragraph aliases replace the current Slovenian-based result.
+
+**How to apply:** Prefer the populated Slovenian body. Use English indexed fields
+only when the source body is genuinely absent; compare against the reader's
+paragraph reconstruction before preparing a bulk translation manifest.

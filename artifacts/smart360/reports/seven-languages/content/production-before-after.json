@@ -1,0 +1,210 @@
+[
+  {
+    "slug": "meli-pu",
+    "before": {
+      "slug": "meli-pu",
+      "legacy": {
+        "de": {
+          "md5": "6639da12f3abcbd81a88f56c27536cea",
+          "count": 319
+        },
+        "en": {
+          "md5": "ee375855963f8822ce894d387caf1b30",
+          "count": 319
+        },
+        "it": {
+          "md5": "0757f4b6b6b7c81c01384b6dc7a4ef09",
+          "count": 319
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "f720aac9c9afc8caf977936e233c9241",
+      "snapshot": "76e458bdd697fe1c698b99953eef3fe2",
+      "snapshotPublishedAt": "2026-10-02T04:17:00.131+00:00"
+    },
+    "after": {
+      "slug": "meli-pu",
+      "legacy": {
+        "de": {
+          "md5": "6639da12f3abcbd81a88f56c27536cea",
+          "count": 319
+        },
+        "en": {
+          "md5": "ee375855963f8822ce894d387caf1b30",
+          "count": 319
+        },
+        "it": {
+          "md5": "0757f4b6b6b7c81c01384b6dc7a4ef09",
+          "count": 319
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "f720aac9c9afc8caf977936e233c9241",
+      "snapshot": "76e458bdd697fe1c698b99953eef3fe2",
+      "snapshotPublishedAt": "2026-10-02T04:17:00.131+00:00"
+    },
+    "unchanged": true
+  },
+  {
+    "slug": "camping-menina",
+    "before": {
+      "slug": "camping-menina",
+      "legacy": {
+        "de": {
+          "md5": "5589809ba8ec3460b3027eb31b60a2e8",
+          "count": 34
+        },
+        "en": {
+          "md5": "d5a49eedb99098fbbe3f149c3675436a",
+          "count": 34
+        },
+        "it": {
+          "md5": "439eb1b31e4616be5cc0210532821b54",
+          "count": 34
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "16b14bbc4268e603da32f5ec6ef899f7",
+      "snapshot": "06a2df7455d21e659ccc321ed334ee6a",
+      "snapshotPublishedAt": "2026-09-30T17:17:40.804+00:00"
+    },
+    "after": {
+      "slug": "camping-menina",
+      "legacy": {
+        "de": {
+          "md5": "5589809ba8ec3460b3027eb31b60a2e8",
+          "count": 34
+        },
+        "en": {
+          "md5": "d5a49eedb99098fbbe3f149c3675436a",
+          "count": 34
+        },
+        "it": {
+          "md5": "439eb1b31e4616be5cc0210532821b54",
+          "count": 34
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "16b14bbc4268e603da32f5ec6ef899f7",
+      "snapshot": "06a2df7455d21e659ccc321ed334ee6a",
+      "snapshotPublishedAt": "2026-09-30T17:17:40.804+00:00"
+    },
+    "unchanged": true
+  },
+  {
+    "slug": "kamp-savinja",
+    "before": {
+      "slug": "kamp-savinja",
+      "legacy": {
+        "de": {
+          "md5": "dfe39a6ebb2775bd3d208f7317252cf9",
+          "count": 179
+        },
+        "en": {
+          "md5": "1139924a14019723ea0510ed13fb26ba",
+          "count": 179
+        },
+        "it": {
+          "md5": "ef4d9715f0c50e7cf4d6a1e560d9e5d9",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "3ce51c033e19d9e14b7f36ca03c74281",
+      "snapshot": "cf08a09d6e0915f6d0911b91bea9c327",
+      "snapshotPublishedAt": "2026-10-02T21:15:00.743+00:00"
+    },
+    "after": {
+      "slug": "kamp-savinja",
+      "legacy": {
+        "de": {
+          "md5": "dfe39a6ebb2775bd3d208f7317252cf9",
+          "count": 179
+        },
+        "en": {
+          "md5": "1139924a14019723ea0510ed13fb26ba",
+          "count": 179
+        },
+        "it": {
+          "md5": "ef4d9715f0c50e7cf4d6a1e560d9e5d9",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "3ce51c033e19d9e14b7f36ca03c74281",
+      "snapshot": "cf08a09d6e0915f6d0911b91bea9c327",
+      "snapshotPublishedAt": "2026-10-02T21:15:00.743+00:00"
+    },
+    "unchanged": true
+  },
+  {
+    "slug": "turizem-drobez",
+    "before": {
+      "slug": "turizem-drobez",
+      "legacy": {
+        "de": {
+          "md5": "cd7f78d4c8735325ace84b6ac2d20af0",
+          "count": 179
+        },
+        "en": {
+          "md5": "e9160702d61ae590b56c6b1cf9b287c2",
+          "count": 179
+        },
+        "it": {
+          "md5": "b4d99aad0890b4ea35882f12b8d0274f",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "2301243fd1f7dca0f8b433bba4aa0b98",
+      "snapshot": "67423b4c08b90780e2af80b31b50fdfb",
+      "snapshotPublishedAt": "2026-10-02T21:15:31.375+00:00"
+    },
+    "after": {
+      "slug": "turizem-drobez",
+      "legacy": {
+        "de": {
+          "md5": "cd7f78d4c8735325ace84b6ac2d20af0",
+          "count": 179
+        },
+        "en": {
+          "md5": "e9160702d61ae590b56c6b1cf9b287c2",
+          "count": 179
+        },
+        "it": {
+          "md5": "b4d99aad0890b4ea35882f12b8d0274f",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "2301243fd1f7dca0f8b433bba4aa0b98",
+      "snapshot": "67423b4c08b90780e2af80b31b50fdfb",
+      "snapshotPublishedAt": "2026-10-02T21:15:31.375+00:00"
+    },
+    "unchanged": true
+  }
+]

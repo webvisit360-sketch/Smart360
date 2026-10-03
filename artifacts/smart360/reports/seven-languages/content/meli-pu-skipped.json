@@ -1,0 +1,4310 @@
+[
+  {
+    "model": "item",
+    "record_id": "84008aef-e9ea-4cd4-9c26-e541fd458a25",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "84008aef-e9ea-4cd4-9c26-e541fd458a25",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "84008aef-e9ea-4cd4-9c26-e541fd458a25",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "84008aef-e9ea-4cd4-9c26-e541fd458a25",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "84008aef-e9ea-4cd4-9c26-e541fd458a25",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "679ccec1-e3f4-4970-ba19-866589e86f1a",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "679ccec1-e3f4-4970-ba19-866589e86f1a",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "679ccec1-e3f4-4970-ba19-866589e86f1a",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "679ccec1-e3f4-4970-ba19-866589e86f1a",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "679ccec1-e3f4-4970-ba19-866589e86f1a",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "679ccec1-e3f4-4970-ba19-866589e86f1a",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cb1ff334-6ac5-4b06-9316-8aaf4b90ea02",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cb1ff334-6ac5-4b06-9316-8aaf4b90ea02",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cb1ff334-6ac5-4b06-9316-8aaf4b90ea02",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cb1ff334-6ac5-4b06-9316-8aaf4b90ea02",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cb1ff334-6ac5-4b06-9316-8aaf4b90ea02",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cb1ff334-6ac5-4b06-9316-8aaf4b90ea02",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "68e1013f-87ab-46f2-ad6e-15cf5446d62f",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "68e1013f-87ab-46f2-ad6e-15cf5446d62f",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "68e1013f-87ab-46f2-ad6e-15cf5446d62f",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "68e1013f-87ab-46f2-ad6e-15cf5446d62f",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "68e1013f-87ab-46f2-ad6e-15cf5446d62f",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "68e1013f-87ab-46f2-ad6e-15cf5446d62f",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c79092c7-3c74-4b06-b08e-c25bf992e232",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c79092c7-3c74-4b06-b08e-c25bf992e232",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c79092c7-3c74-4b06-b08e-c25bf992e232",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c79092c7-3c74-4b06-b08e-c25bf992e232",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c79092c7-3c74-4b06-b08e-c25bf992e232",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c79092c7-3c74-4b06-b08e-c25bf992e232",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "be1e9d4e-8d95-4cb2-a30b-cec0537acfb1",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "be1e9d4e-8d95-4cb2-a30b-cec0537acfb1",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "be1e9d4e-8d95-4cb2-a30b-cec0537acfb1",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "be1e9d4e-8d95-4cb2-a30b-cec0537acfb1",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "be1e9d4e-8d95-4cb2-a30b-cec0537acfb1",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "be1e9d4e-8d95-4cb2-a30b-cec0537acfb1",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b94ae9a-7415-4040-8f55-52e17f0b7672",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b94ae9a-7415-4040-8f55-52e17f0b7672",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b94ae9a-7415-4040-8f55-52e17f0b7672",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b94ae9a-7415-4040-8f55-52e17f0b7672",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b94ae9a-7415-4040-8f55-52e17f0b7672",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b94ae9a-7415-4040-8f55-52e17f0b7672",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4f04030c-91ee-4853-844a-64817e960436",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4f04030c-91ee-4853-844a-64817e960436",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4f04030c-91ee-4853-844a-64817e960436",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4f04030c-91ee-4853-844a-64817e960436",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4f04030c-91ee-4853-844a-64817e960436",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4f04030c-91ee-4853-844a-64817e960436",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "72fc67c0-f962-4992-b720-16e80ed54fa7",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "72fc67c0-f962-4992-b720-16e80ed54fa7",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "72fc67c0-f962-4992-b720-16e80ed54fa7",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "72fc67c0-f962-4992-b720-16e80ed54fa7",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "72fc67c0-f962-4992-b720-16e80ed54fa7",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "72fc67c0-f962-4992-b720-16e80ed54fa7",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1fb046fc-7a23-473b-82ab-cf0d5b2ce8cd",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1fb046fc-7a23-473b-82ab-cf0d5b2ce8cd",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1fb046fc-7a23-473b-82ab-cf0d5b2ce8cd",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1fb046fc-7a23-473b-82ab-cf0d5b2ce8cd",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1fb046fc-7a23-473b-82ab-cf0d5b2ce8cd",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1fb046fc-7a23-473b-82ab-cf0d5b2ce8cd",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "30db866a-2742-40c5-bcc3-e0ec84c327b9",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "30db866a-2742-40c5-bcc3-e0ec84c327b9",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "30db866a-2742-40c5-bcc3-e0ec84c327b9",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "30db866a-2742-40c5-bcc3-e0ec84c327b9",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "30db866a-2742-40c5-bcc3-e0ec84c327b9",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "30db866a-2742-40c5-bcc3-e0ec84c327b9",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e74d2946-9afa-4dbd-a004-2af3e2b83287",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e74d2946-9afa-4dbd-a004-2af3e2b83287",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e74d2946-9afa-4dbd-a004-2af3e2b83287",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e74d2946-9afa-4dbd-a004-2af3e2b83287",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e74d2946-9afa-4dbd-a004-2af3e2b83287",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e74d2946-9afa-4dbd-a004-2af3e2b83287",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1eb598a5-4c90-436b-9979-8eb3b638a70e",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1eb598a5-4c90-436b-9979-8eb3b638a70e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1eb598a5-4c90-436b-9979-8eb3b638a70e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1eb598a5-4c90-436b-9979-8eb3b638a70e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1eb598a5-4c90-436b-9979-8eb3b638a70e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1eb598a5-4c90-436b-9979-8eb3b638a70e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0b4f6b3e-0ad4-437e-932b-6174c3cfb115",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0b4f6b3e-0ad4-437e-932b-6174c3cfb115",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0b4f6b3e-0ad4-437e-932b-6174c3cfb115",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0b4f6b3e-0ad4-437e-932b-6174c3cfb115",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0b4f6b3e-0ad4-437e-932b-6174c3cfb115",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0b4f6b3e-0ad4-437e-932b-6174c3cfb115",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "af0defe5-61c7-4ac4-840a-7de4ef57d485",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "af0defe5-61c7-4ac4-840a-7de4ef57d485",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "af0defe5-61c7-4ac4-840a-7de4ef57d485",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "af0defe5-61c7-4ac4-840a-7de4ef57d485",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "af0defe5-61c7-4ac4-840a-7de4ef57d485",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "af0defe5-61c7-4ac4-840a-7de4ef57d485",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "51ae4cdc-78b5-41d9-8235-8ce990e799d3",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "51ae4cdc-78b5-41d9-8235-8ce990e799d3",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "51ae4cdc-78b5-41d9-8235-8ce990e799d3",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "51ae4cdc-78b5-41d9-8235-8ce990e799d3",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "51ae4cdc-78b5-41d9-8235-8ce990e799d3",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "51ae4cdc-78b5-41d9-8235-8ce990e799d3",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bfafdf1b-3782-42d9-831a-bac49d26c281",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bfafdf1b-3782-42d9-831a-bac49d26c281",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bfafdf1b-3782-42d9-831a-bac49d26c281",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bfafdf1b-3782-42d9-831a-bac49d26c281",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bfafdf1b-3782-42d9-831a-bac49d26c281",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bfafdf1b-3782-42d9-831a-bac49d26c281",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53fbe383-0115-4b67-9fb8-39ce23115e54",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53fbe383-0115-4b67-9fb8-39ce23115e54",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53fbe383-0115-4b67-9fb8-39ce23115e54",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53fbe383-0115-4b67-9fb8-39ce23115e54",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53fbe383-0115-4b67-9fb8-39ce23115e54",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53fbe383-0115-4b67-9fb8-39ce23115e54",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41c9728a-3da5-4463-ab8d-a05d229f5e64",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41c9728a-3da5-4463-ab8d-a05d229f5e64",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41c9728a-3da5-4463-ab8d-a05d229f5e64",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41c9728a-3da5-4463-ab8d-a05d229f5e64",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41c9728a-3da5-4463-ab8d-a05d229f5e64",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41c9728a-3da5-4463-ab8d-a05d229f5e64",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0fe8e8ea-f75e-4e32-9af5-1423254987eb",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0fe8e8ea-f75e-4e32-9af5-1423254987eb",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0fe8e8ea-f75e-4e32-9af5-1423254987eb",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0fe8e8ea-f75e-4e32-9af5-1423254987eb",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0fe8e8ea-f75e-4e32-9af5-1423254987eb",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0fe8e8ea-f75e-4e32-9af5-1423254987eb",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "62fe786a-090b-4fa5-8021-dcb0a104318a",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "62fe786a-090b-4fa5-8021-dcb0a104318a",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "62fe786a-090b-4fa5-8021-dcb0a104318a",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "62fe786a-090b-4fa5-8021-dcb0a104318a",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "62fe786a-090b-4fa5-8021-dcb0a104318a",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "62fe786a-090b-4fa5-8021-dcb0a104318a",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "92debb19-36ba-4511-b602-1bbb85e6188b",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "92debb19-36ba-4511-b602-1bbb85e6188b",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "92debb19-36ba-4511-b602-1bbb85e6188b",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "92debb19-36ba-4511-b602-1bbb85e6188b",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "92debb19-36ba-4511-b602-1bbb85e6188b",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b9550ee-1e91-4323-bbb9-f8abb8a3666e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b9550ee-1e91-4323-bbb9-f8abb8a3666e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b9550ee-1e91-4323-bbb9-f8abb8a3666e",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b9550ee-1e91-4323-bbb9-f8abb8a3666e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2b9550ee-1e91-4323-bbb9-f8abb8a3666e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f61527a3-503e-4b3d-91bc-1161d4e96312",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f61527a3-503e-4b3d-91bc-1161d4e96312",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f61527a3-503e-4b3d-91bc-1161d4e96312",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f61527a3-503e-4b3d-91bc-1161d4e96312",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f61527a3-503e-4b3d-91bc-1161d4e96312",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2d7920a4-6491-4b11-98c4-af6b3dff7227",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2d7920a4-6491-4b11-98c4-af6b3dff7227",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2d7920a4-6491-4b11-98c4-af6b3dff7227",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2d7920a4-6491-4b11-98c4-af6b3dff7227",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2d7920a4-6491-4b11-98c4-af6b3dff7227",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41d78418-097d-4959-8ba5-19389f26627f",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41d78418-097d-4959-8ba5-19389f26627f",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41d78418-097d-4959-8ba5-19389f26627f",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41d78418-097d-4959-8ba5-19389f26627f",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "41d78418-097d-4959-8ba5-19389f26627f",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f85f6f77-c57e-4f87-86b2-d11f8673dad2",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f85f6f77-c57e-4f87-86b2-d11f8673dad2",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f85f6f77-c57e-4f87-86b2-d11f8673dad2",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f85f6f77-c57e-4f87-86b2-d11f8673dad2",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f85f6f77-c57e-4f87-86b2-d11f8673dad2",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5e18d611-97b1-4016-9ca8-332b56205318",
+    "field": "title",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5e18d611-97b1-4016-9ca8-332b56205318",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5e18d611-97b1-4016-9ca8-332b56205318",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5e18d611-97b1-4016-9ca8-332b56205318",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5e18d611-97b1-4016-9ca8-332b56205318",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5e18d611-97b1-4016-9ca8-332b56205318",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4860043d-3db3-4c26-bd6e-714ebfdbe8ce",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4860043d-3db3-4c26-bd6e-714ebfdbe8ce",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4860043d-3db3-4c26-bd6e-714ebfdbe8ce",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4860043d-3db3-4c26-bd6e-714ebfdbe8ce",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d89a336-336d-4c64-b832-c85160132a6c",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d89a336-336d-4c64-b832-c85160132a6c",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d89a336-336d-4c64-b832-c85160132a6c",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d89a336-336d-4c64-b832-c85160132a6c",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d89a336-336d-4c64-b832-c85160132a6c",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8d1c420-1234-4959-87f4-5d7508ff54ce",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8d1c420-1234-4959-87f4-5d7508ff54ce",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8d1c420-1234-4959-87f4-5d7508ff54ce",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8d1c420-1234-4959-87f4-5d7508ff54ce",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8d1c420-1234-4959-87f4-5d7508ff54ce",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fd46cfef-1de9-4bbf-b2d3-b66f2ccad996",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fd46cfef-1de9-4bbf-b2d3-b66f2ccad996",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fd46cfef-1de9-4bbf-b2d3-b66f2ccad996",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fd46cfef-1de9-4bbf-b2d3-b66f2ccad996",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e25e02e5-bd2d-4191-aa79-2107bdce4bd3",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e25e02e5-bd2d-4191-aa79-2107bdce4bd3",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e25e02e5-bd2d-4191-aa79-2107bdce4bd3",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e25e02e5-bd2d-4191-aa79-2107bdce4bd3",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e25e02e5-bd2d-4191-aa79-2107bdce4bd3",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "600c3bc9-4bd9-4f2d-9846-e34eefc20abc",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "600c3bc9-4bd9-4f2d-9846-e34eefc20abc",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "600c3bc9-4bd9-4f2d-9846-e34eefc20abc",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "600c3bc9-4bd9-4f2d-9846-e34eefc20abc",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "600c3bc9-4bd9-4f2d-9846-e34eefc20abc",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "600c3bc9-4bd9-4f2d-9846-e34eefc20abc",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1a52268e-aa85-40dc-8ef4-1b4d38c674ee",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1a52268e-aa85-40dc-8ef4-1b4d38c674ee",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1a52268e-aa85-40dc-8ef4-1b4d38c674ee",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1a52268e-aa85-40dc-8ef4-1b4d38c674ee",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1a52268e-aa85-40dc-8ef4-1b4d38c674ee",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cbc8c421-7362-4887-94dd-43e213bb6e58",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cbc8c421-7362-4887-94dd-43e213bb6e58",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cbc8c421-7362-4887-94dd-43e213bb6e58",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cbc8c421-7362-4887-94dd-43e213bb6e58",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cbc8c421-7362-4887-94dd-43e213bb6e58",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "cbc8c421-7362-4887-94dd-43e213bb6e58",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6617360c-fdc5-455e-9e72-5269106f9a52",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6617360c-fdc5-455e-9e72-5269106f9a52",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6617360c-fdc5-455e-9e72-5269106f9a52",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6617360c-fdc5-455e-9e72-5269106f9a52",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4582653e-34e5-4381-a882-1125ada98d2d",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4582653e-34e5-4381-a882-1125ada98d2d",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4582653e-34e5-4381-a882-1125ada98d2d",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4582653e-34e5-4381-a882-1125ada98d2d",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4582653e-34e5-4381-a882-1125ada98d2d",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "24679d56-c650-4467-b1c3-66eb46383add",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "24679d56-c650-4467-b1c3-66eb46383add",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "24679d56-c650-4467-b1c3-66eb46383add",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "24679d56-c650-4467-b1c3-66eb46383add",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "24679d56-c650-4467-b1c3-66eb46383add",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "24679d56-c650-4467-b1c3-66eb46383add",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bc14f289-9cde-4ccb-be0b-7e027a2032eb",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bc14f289-9cde-4ccb-be0b-7e027a2032eb",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bc14f289-9cde-4ccb-be0b-7e027a2032eb",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bc14f289-9cde-4ccb-be0b-7e027a2032eb",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bc14f289-9cde-4ccb-be0b-7e027a2032eb",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c77950ee-3aeb-4642-b50c-2c8a54c3decb",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c77950ee-3aeb-4642-b50c-2c8a54c3decb",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c77950ee-3aeb-4642-b50c-2c8a54c3decb",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c77950ee-3aeb-4642-b50c-2c8a54c3decb",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c77950ee-3aeb-4642-b50c-2c8a54c3decb",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c43cd525-e975-48f6-89e3-6ae176a61488",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c43cd525-e975-48f6-89e3-6ae176a61488",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c43cd525-e975-48f6-89e3-6ae176a61488",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c43cd525-e975-48f6-89e3-6ae176a61488",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c43cd525-e975-48f6-89e3-6ae176a61488",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c43cd525-e975-48f6-89e3-6ae176a61488",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61805c50-ef8a-466d-ba7c-17435c11ad2a",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61805c50-ef8a-466d-ba7c-17435c11ad2a",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61805c50-ef8a-466d-ba7c-17435c11ad2a",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61805c50-ef8a-466d-ba7c-17435c11ad2a",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61805c50-ef8a-466d-ba7c-17435c11ad2a",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61805c50-ef8a-466d-ba7c-17435c11ad2a",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "81534ebf-a421-46e7-8b19-5d5a91406481",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "81534ebf-a421-46e7-8b19-5d5a91406481",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "81534ebf-a421-46e7-8b19-5d5a91406481",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "81534ebf-a421-46e7-8b19-5d5a91406481",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "81534ebf-a421-46e7-8b19-5d5a91406481",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "81534ebf-a421-46e7-8b19-5d5a91406481",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9cd5d825-6d1c-4380-b99b-54063d5e09b5",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9cd5d825-6d1c-4380-b99b-54063d5e09b5",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9cd5d825-6d1c-4380-b99b-54063d5e09b5",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9cd5d825-6d1c-4380-b99b-54063d5e09b5",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9cd5d825-6d1c-4380-b99b-54063d5e09b5",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9cd5d825-6d1c-4380-b99b-54063d5e09b5",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a6f363e4-0521-482a-a9c6-30234a23b5d4",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a6f363e4-0521-482a-a9c6-30234a23b5d4",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a6f363e4-0521-482a-a9c6-30234a23b5d4",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a6f363e4-0521-482a-a9c6-30234a23b5d4",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a6f363e4-0521-482a-a9c6-30234a23b5d4",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e5bf6696-9720-4fb2-a09f-58f2aaaff750",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e5bf6696-9720-4fb2-a09f-58f2aaaff750",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e5bf6696-9720-4fb2-a09f-58f2aaaff750",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e5bf6696-9720-4fb2-a09f-58f2aaaff750",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e5bf6696-9720-4fb2-a09f-58f2aaaff750",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e5bf6696-9720-4fb2-a09f-58f2aaaff750",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "acf6ef93-c287-41b9-97ad-f6ae4ced2862",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "acf6ef93-c287-41b9-97ad-f6ae4ced2862",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "acf6ef93-c287-41b9-97ad-f6ae4ced2862",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "acf6ef93-c287-41b9-97ad-f6ae4ced2862",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "acf6ef93-c287-41b9-97ad-f6ae4ced2862",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "acf6ef93-c287-41b9-97ad-f6ae4ced2862",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "442b143e-0ed0-48d8-ae5a-9deb4f81fa13",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "442b143e-0ed0-48d8-ae5a-9deb4f81fa13",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "442b143e-0ed0-48d8-ae5a-9deb4f81fa13",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "442b143e-0ed0-48d8-ae5a-9deb4f81fa13",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "442b143e-0ed0-48d8-ae5a-9deb4f81fa13",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "442b143e-0ed0-48d8-ae5a-9deb4f81fa13",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7a885dec-33af-48d6-b883-d98a6a2a2ee0",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7a885dec-33af-48d6-b883-d98a6a2a2ee0",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7a885dec-33af-48d6-b883-d98a6a2a2ee0",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7a885dec-33af-48d6-b883-d98a6a2a2ee0",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7a885dec-33af-48d6-b883-d98a6a2a2ee0",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6a4d3a34-8d54-49d4-bd68-8ea31f019edf",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6a4d3a34-8d54-49d4-bd68-8ea31f019edf",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6a4d3a34-8d54-49d4-bd68-8ea31f019edf",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6a4d3a34-8d54-49d4-bd68-8ea31f019edf",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6a4d3a34-8d54-49d4-bd68-8ea31f019edf",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "89d393c9-628e-4514-99f0-25a3a89bf1f4",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "89d393c9-628e-4514-99f0-25a3a89bf1f4",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "89d393c9-628e-4514-99f0-25a3a89bf1f4",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "89d393c9-628e-4514-99f0-25a3a89bf1f4",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "89d393c9-628e-4514-99f0-25a3a89bf1f4",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5f9e20a8-8a53-4b7b-b8a0-e8e0cbda531c",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5f9e20a8-8a53-4b7b-b8a0-e8e0cbda531c",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5f9e20a8-8a53-4b7b-b8a0-e8e0cbda531c",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5f9e20a8-8a53-4b7b-b8a0-e8e0cbda531c",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5f9e20a8-8a53-4b7b-b8a0-e8e0cbda531c",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5f9e20a8-8a53-4b7b-b8a0-e8e0cbda531c",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c3d3c32d-6ca6-46e1-b446-69b2063b6c55",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c3d3c32d-6ca6-46e1-b446-69b2063b6c55",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c3d3c32d-6ca6-46e1-b446-69b2063b6c55",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c3d3c32d-6ca6-46e1-b446-69b2063b6c55",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c3d3c32d-6ca6-46e1-b446-69b2063b6c55",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c3d3c32d-6ca6-46e1-b446-69b2063b6c55",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "77c0863e-b6da-48df-beda-f5c7cf81d8b6",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "77c0863e-b6da-48df-beda-f5c7cf81d8b6",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "77c0863e-b6da-48df-beda-f5c7cf81d8b6",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "77c0863e-b6da-48df-beda-f5c7cf81d8b6",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "77c0863e-b6da-48df-beda-f5c7cf81d8b6",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "77c0863e-b6da-48df-beda-f5c7cf81d8b6",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "43381ade-d6e1-4ca7-bed7-9f14b4518f07",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "43381ade-d6e1-4ca7-bed7-9f14b4518f07",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "43381ade-d6e1-4ca7-bed7-9f14b4518f07",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "43381ade-d6e1-4ca7-bed7-9f14b4518f07",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "43381ade-d6e1-4ca7-bed7-9f14b4518f07",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "43381ade-d6e1-4ca7-bed7-9f14b4518f07",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f2923fa6-1a82-445c-9dfb-bf4dbd504f8c",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f2923fa6-1a82-445c-9dfb-bf4dbd504f8c",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f2923fa6-1a82-445c-9dfb-bf4dbd504f8c",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f2923fa6-1a82-445c-9dfb-bf4dbd504f8c",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f2923fa6-1a82-445c-9dfb-bf4dbd504f8c",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f2923fa6-1a82-445c-9dfb-bf4dbd504f8c",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "040e3521-dfc6-4f20-a6a9-fb3dfd1d5b14",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "040e3521-dfc6-4f20-a6a9-fb3dfd1d5b14",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "040e3521-dfc6-4f20-a6a9-fb3dfd1d5b14",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "040e3521-dfc6-4f20-a6a9-fb3dfd1d5b14",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "040e3521-dfc6-4f20-a6a9-fb3dfd1d5b14",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "040e3521-dfc6-4f20-a6a9-fb3dfd1d5b14",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3d05a9a7-30c8-45b8-84c8-e77a415f5741",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3d05a9a7-30c8-45b8-84c8-e77a415f5741",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3d05a9a7-30c8-45b8-84c8-e77a415f5741",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3d05a9a7-30c8-45b8-84c8-e77a415f5741",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3d05a9a7-30c8-45b8-84c8-e77a415f5741",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "345518cc-ed6f-470f-ba1c-0ec0dd854bf1",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "345518cc-ed6f-470f-ba1c-0ec0dd854bf1",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "345518cc-ed6f-470f-ba1c-0ec0dd854bf1",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "345518cc-ed6f-470f-ba1c-0ec0dd854bf1",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "345518cc-ed6f-470f-ba1c-0ec0dd854bf1",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "345518cc-ed6f-470f-ba1c-0ec0dd854bf1",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "91becb6d-b58c-43e9-8ef3-5b3fdd479084",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "91becb6d-b58c-43e9-8ef3-5b3fdd479084",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "91becb6d-b58c-43e9-8ef3-5b3fdd479084",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "91becb6d-b58c-43e9-8ef3-5b3fdd479084",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "91becb6d-b58c-43e9-8ef3-5b3fdd479084",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5a92ab27-d474-4ad5-abc1-67b26697d54b",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5a92ab27-d474-4ad5-abc1-67b26697d54b",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5a92ab27-d474-4ad5-abc1-67b26697d54b",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5a92ab27-d474-4ad5-abc1-67b26697d54b",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5a92ab27-d474-4ad5-abc1-67b26697d54b",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5a92ab27-d474-4ad5-abc1-67b26697d54b",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f353cfc0-69ea-4200-8cca-12618de5147d",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f353cfc0-69ea-4200-8cca-12618de5147d",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f353cfc0-69ea-4200-8cca-12618de5147d",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f353cfc0-69ea-4200-8cca-12618de5147d",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f353cfc0-69ea-4200-8cca-12618de5147d",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f353cfc0-69ea-4200-8cca-12618de5147d",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "801ca580-a48a-4cfe-9d06-a62e482e6792",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "801ca580-a48a-4cfe-9d06-a62e482e6792",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "801ca580-a48a-4cfe-9d06-a62e482e6792",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "801ca580-a48a-4cfe-9d06-a62e482e6792",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "801ca580-a48a-4cfe-9d06-a62e482e6792",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "801ca580-a48a-4cfe-9d06-a62e482e6792",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1edbfdae-42fb-48e0-85c0-e263e958adc5",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1edbfdae-42fb-48e0-85c0-e263e958adc5",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1edbfdae-42fb-48e0-85c0-e263e958adc5",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1edbfdae-42fb-48e0-85c0-e263e958adc5",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1edbfdae-42fb-48e0-85c0-e263e958adc5",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1edbfdae-42fb-48e0-85c0-e263e958adc5",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "019d30b8-ee97-4165-af5d-a230eb474240",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "019d30b8-ee97-4165-af5d-a230eb474240",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "019d30b8-ee97-4165-af5d-a230eb474240",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "019d30b8-ee97-4165-af5d-a230eb474240",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "019d30b8-ee97-4165-af5d-a230eb474240",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "019d30b8-ee97-4165-af5d-a230eb474240",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e1551666-4f21-455c-95d9-b2e4658c497e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e1551666-4f21-455c-95d9-b2e4658c497e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e1551666-4f21-455c-95d9-b2e4658c497e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e1551666-4f21-455c-95d9-b2e4658c497e",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e1551666-4f21-455c-95d9-b2e4658c497e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e1551666-4f21-455c-95d9-b2e4658c497e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d056bb6f-da6a-44dc-bf94-a9328db7b063",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d056bb6f-da6a-44dc-bf94-a9328db7b063",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d056bb6f-da6a-44dc-bf94-a9328db7b063",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d056bb6f-da6a-44dc-bf94-a9328db7b063",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d056bb6f-da6a-44dc-bf94-a9328db7b063",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d056bb6f-da6a-44dc-bf94-a9328db7b063",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b6416567-e2b4-4ece-8d38-43ec45c7820a",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b6416567-e2b4-4ece-8d38-43ec45c7820a",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b6416567-e2b4-4ece-8d38-43ec45c7820a",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b6416567-e2b4-4ece-8d38-43ec45c7820a",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b6416567-e2b4-4ece-8d38-43ec45c7820a",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59c009cc-ed26-42a6-84f5-3053a79820d4",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59c009cc-ed26-42a6-84f5-3053a79820d4",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59c009cc-ed26-42a6-84f5-3053a79820d4",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59c009cc-ed26-42a6-84f5-3053a79820d4",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59c009cc-ed26-42a6-84f5-3053a79820d4",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59c009cc-ed26-42a6-84f5-3053a79820d4",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79b8c239-d609-4f3f-bae4-535033cba1e0",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79b8c239-d609-4f3f-bae4-535033cba1e0",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79b8c239-d609-4f3f-bae4-535033cba1e0",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79b8c239-d609-4f3f-bae4-535033cba1e0",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79b8c239-d609-4f3f-bae4-535033cba1e0",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "207c6a04-a090-4d28-acb8-63c629eddf52",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "207c6a04-a090-4d28-acb8-63c629eddf52",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "207c6a04-a090-4d28-acb8-63c629eddf52",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "207c6a04-a090-4d28-acb8-63c629eddf52",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "207c6a04-a090-4d28-acb8-63c629eddf52",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "207c6a04-a090-4d28-acb8-63c629eddf52",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856ddbf-5b3b-4ff9-831d-14c06b87184f",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856ddbf-5b3b-4ff9-831d-14c06b87184f",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856ddbf-5b3b-4ff9-831d-14c06b87184f",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856ddbf-5b3b-4ff9-831d-14c06b87184f",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856ddbf-5b3b-4ff9-831d-14c06b87184f",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856ddbf-5b3b-4ff9-831d-14c06b87184f",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fbe59b9-7c91-493c-873e-02341771048e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fbe59b9-7c91-493c-873e-02341771048e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fbe59b9-7c91-493c-873e-02341771048e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fbe59b9-7c91-493c-873e-02341771048e",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fbe59b9-7c91-493c-873e-02341771048e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fbe59b9-7c91-493c-873e-02341771048e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8f04d4c-aaa4-4f69-b1f2-c4da10598e68",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8f04d4c-aaa4-4f69-b1f2-c4da10598e68",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8f04d4c-aaa4-4f69-b1f2-c4da10598e68",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8f04d4c-aaa4-4f69-b1f2-c4da10598e68",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8f04d4c-aaa4-4f69-b1f2-c4da10598e68",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e8f04d4c-aaa4-4f69-b1f2-c4da10598e68",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "227d4f1a-7872-4f6a-9978-515aec6fd364",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "227d4f1a-7872-4f6a-9978-515aec6fd364",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "227d4f1a-7872-4f6a-9978-515aec6fd364",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "227d4f1a-7872-4f6a-9978-515aec6fd364",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "227d4f1a-7872-4f6a-9978-515aec6fd364",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "012bfa8c-a90b-425f-a1aa-a8fdc7665e33",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "012bfa8c-a90b-425f-a1aa-a8fdc7665e33",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "012bfa8c-a90b-425f-a1aa-a8fdc7665e33",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "012bfa8c-a90b-425f-a1aa-a8fdc7665e33",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "012bfa8c-a90b-425f-a1aa-a8fdc7665e33",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "012bfa8c-a90b-425f-a1aa-a8fdc7665e33",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2e310a51-048f-4fab-bc23-8fa43a7fa2ab",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2e310a51-048f-4fab-bc23-8fa43a7fa2ab",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2e310a51-048f-4fab-bc23-8fa43a7fa2ab",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2e310a51-048f-4fab-bc23-8fa43a7fa2ab",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2e310a51-048f-4fab-bc23-8fa43a7fa2ab",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2e310a51-048f-4fab-bc23-8fa43a7fa2ab",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f0506f63-c6ee-4c12-ae43-129b355e70b0",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f0506f63-c6ee-4c12-ae43-129b355e70b0",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f0506f63-c6ee-4c12-ae43-129b355e70b0",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f0506f63-c6ee-4c12-ae43-129b355e70b0",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f0506f63-c6ee-4c12-ae43-129b355e70b0",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f0506f63-c6ee-4c12-ae43-129b355e70b0",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c8f31c7-02ad-46dc-b2ec-a692591e7529",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c8f31c7-02ad-46dc-b2ec-a692591e7529",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c8f31c7-02ad-46dc-b2ec-a692591e7529",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c8f31c7-02ad-46dc-b2ec-a692591e7529",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c8f31c7-02ad-46dc-b2ec-a692591e7529",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c8f31c7-02ad-46dc-b2ec-a692591e7529",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5691fa5c-59d7-4c18-a808-ca2ebed786fa",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5691fa5c-59d7-4c18-a808-ca2ebed786fa",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5691fa5c-59d7-4c18-a808-ca2ebed786fa",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5691fa5c-59d7-4c18-a808-ca2ebed786fa",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5691fa5c-59d7-4c18-a808-ca2ebed786fa",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "5691fa5c-59d7-4c18-a808-ca2ebed786fa",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "446d2100-d170-41d7-8bcf-03e6118a183d",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "446d2100-d170-41d7-8bcf-03e6118a183d",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "446d2100-d170-41d7-8bcf-03e6118a183d",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "446d2100-d170-41d7-8bcf-03e6118a183d",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "446d2100-d170-41d7-8bcf-03e6118a183d",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "446d2100-d170-41d7-8bcf-03e6118a183d",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7758fc04-9912-4a7a-8944-0530c458bef9",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7758fc04-9912-4a7a-8944-0530c458bef9",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7758fc04-9912-4a7a-8944-0530c458bef9",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7758fc04-9912-4a7a-8944-0530c458bef9",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7758fc04-9912-4a7a-8944-0530c458bef9",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7758fc04-9912-4a7a-8944-0530c458bef9",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7948f2b0-1055-47c6-b096-731722d30720",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7948f2b0-1055-47c6-b096-731722d30720",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7948f2b0-1055-47c6-b096-731722d30720",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7948f2b0-1055-47c6-b096-731722d30720",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7948f2b0-1055-47c6-b096-731722d30720",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da96d867-dbbc-4df5-93cb-83f71a40a13a",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da96d867-dbbc-4df5-93cb-83f71a40a13a",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da96d867-dbbc-4df5-93cb-83f71a40a13a",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da96d867-dbbc-4df5-93cb-83f71a40a13a",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da96d867-dbbc-4df5-93cb-83f71a40a13a",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da96d867-dbbc-4df5-93cb-83f71a40a13a",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c4ebc7e-6081-4424-8949-d6af4a0309c6",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c4ebc7e-6081-4424-8949-d6af4a0309c6",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c4ebc7e-6081-4424-8949-d6af4a0309c6",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c4ebc7e-6081-4424-8949-d6af4a0309c6",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3c4ebc7e-6081-4424-8949-d6af4a0309c6",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "048efd21-d9ed-45ce-a017-cda9776fd651",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "048efd21-d9ed-45ce-a017-cda9776fd651",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "048efd21-d9ed-45ce-a017-cda9776fd651",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "048efd21-d9ed-45ce-a017-cda9776fd651",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d16868d6-d2c1-4485-9380-b9ebe3c04b40",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d16868d6-d2c1-4485-9380-b9ebe3c04b40",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d16868d6-d2c1-4485-9380-b9ebe3c04b40",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a1b3f0a4-4d72-4698-ae00-2c975cad3d09",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a1b3f0a4-4d72-4698-ae00-2c975cad3d09",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a1b3f0a4-4d72-4698-ae00-2c975cad3d09",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a1b3f0a4-4d72-4698-ae00-2c975cad3d09",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856f026-65cc-40c2-8b50-b76bb5d43037",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856f026-65cc-40c2-8b50-b76bb5d43037",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856f026-65cc-40c2-8b50-b76bb5d43037",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856f026-65cc-40c2-8b50-b76bb5d43037",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6856f026-65cc-40c2-8b50-b76bb5d43037",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f007f8c0-5e32-43b0-b2c7-cdfc49115eb8",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f007f8c0-5e32-43b0-b2c7-cdfc49115eb8",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f007f8c0-5e32-43b0-b2c7-cdfc49115eb8",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f007f8c0-5e32-43b0-b2c7-cdfc49115eb8",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "f007f8c0-5e32-43b0-b2c7-cdfc49115eb8",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d06aa2f4-ae23-4bd4-8beb-adc590c681a2",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d06aa2f4-ae23-4bd4-8beb-adc590c681a2",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d06aa2f4-ae23-4bd4-8beb-adc590c681a2",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d06aa2f4-ae23-4bd4-8beb-adc590c681a2",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d06aa2f4-ae23-4bd4-8beb-adc590c681a2",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d70949e9-a3f5-4a55-a89e-e485e34f11e1",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d70949e9-a3f5-4a55-a89e-e485e34f11e1",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d70949e9-a3f5-4a55-a89e-e485e34f11e1",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d70949e9-a3f5-4a55-a89e-e485e34f11e1",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d70949e9-a3f5-4a55-a89e-e485e34f11e1",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ce0ee586-9710-4549-ab62-cbe7e74d5526",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ce0ee586-9710-4549-ab62-cbe7e74d5526",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ce0ee586-9710-4549-ab62-cbe7e74d5526",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ce0ee586-9710-4549-ab62-cbe7e74d5526",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ce0ee586-9710-4549-ab62-cbe7e74d5526",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ce0ee586-9710-4549-ab62-cbe7e74d5526",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b52e042f-f3d6-4e03-aceb-6dfb48daa874",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b52e042f-f3d6-4e03-aceb-6dfb48daa874",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b52e042f-f3d6-4e03-aceb-6dfb48daa874",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b52e042f-f3d6-4e03-aceb-6dfb48daa874",
+    "field": "body",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b52e042f-f3d6-4e03-aceb-6dfb48daa874",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "b52e042f-f3d6-4e03-aceb-6dfb48daa874",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53a25412-3141-49e3-ae3f-184eb9f2f752",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53a25412-3141-49e3-ae3f-184eb9f2f752",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53a25412-3141-49e3-ae3f-184eb9f2f752",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53a25412-3141-49e3-ae3f-184eb9f2f752",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "53a25412-3141-49e3-ae3f-184eb9f2f752",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6b57bfe8-fcb3-4f67-a8f8-8f0bc6420211",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6b57bfe8-fcb3-4f67-a8f8-8f0bc6420211",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6b57bfe8-fcb3-4f67-a8f8-8f0bc6420211",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6b57bfe8-fcb3-4f67-a8f8-8f0bc6420211",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "6b57bfe8-fcb3-4f67-a8f8-8f0bc6420211",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "40c4d14b-3228-4876-85c3-791bbf91a40e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "40c4d14b-3228-4876-85c3-791bbf91a40e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "40c4d14b-3228-4876-85c3-791bbf91a40e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "40c4d14b-3228-4876-85c3-791bbf91a40e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "40c4d14b-3228-4876-85c3-791bbf91a40e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "041dfb05-504c-460c-8cdb-dfccbc79c8c2",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "041dfb05-504c-460c-8cdb-dfccbc79c8c2",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "041dfb05-504c-460c-8cdb-dfccbc79c8c2",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "041dfb05-504c-460c-8cdb-dfccbc79c8c2",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "041dfb05-504c-460c-8cdb-dfccbc79c8c2",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "99c32f2a-f852-4808-9499-f5414b751fea",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "99c32f2a-f852-4808-9499-f5414b751fea",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "99c32f2a-f852-4808-9499-f5414b751fea",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "99c32f2a-f852-4808-9499-f5414b751fea",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "99c32f2a-f852-4808-9499-f5414b751fea",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fba6248-2c10-43be-b337-519784a1ee3e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fba6248-2c10-43be-b337-519784a1ee3e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fba6248-2c10-43be-b337-519784a1ee3e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fba6248-2c10-43be-b337-519784a1ee3e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "8fba6248-2c10-43be-b337-519784a1ee3e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "dd8cb7d0-3065-40a7-b0ff-2811b6bff55d",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "dd8cb7d0-3065-40a7-b0ff-2811b6bff55d",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "dd8cb7d0-3065-40a7-b0ff-2811b6bff55d",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "dd8cb7d0-3065-40a7-b0ff-2811b6bff55d",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "dd8cb7d0-3065-40a7-b0ff-2811b6bff55d",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2817074f-bc7d-4182-902d-b03cc691011a",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2817074f-bc7d-4182-902d-b03cc691011a",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2817074f-bc7d-4182-902d-b03cc691011a",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2817074f-bc7d-4182-902d-b03cc691011a",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "2817074f-bc7d-4182-902d-b03cc691011a",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d48a8d27-138e-45fd-8338-f05e1fab7e4e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d48a8d27-138e-45fd-8338-f05e1fab7e4e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d48a8d27-138e-45fd-8338-f05e1fab7e4e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d48a8d27-138e-45fd-8338-f05e1fab7e4e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d48a8d27-138e-45fd-8338-f05e1fab7e4e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9c0a5dd4-9dd8-4fe7-8385-c8e8d95dad0b",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9c0a5dd4-9dd8-4fe7-8385-c8e8d95dad0b",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9c0a5dd4-9dd8-4fe7-8385-c8e8d95dad0b",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9c0a5dd4-9dd8-4fe7-8385-c8e8d95dad0b",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "9c0a5dd4-9dd8-4fe7-8385-c8e8d95dad0b",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fedef95e-df10-45df-97e7-cbd4b006f746",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fedef95e-df10-45df-97e7-cbd4b006f746",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fedef95e-df10-45df-97e7-cbd4b006f746",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fedef95e-df10-45df-97e7-cbd4b006f746",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "fedef95e-df10-45df-97e7-cbd4b006f746",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79500f33-bbbc-41e6-9d16-0f94650cd24e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79500f33-bbbc-41e6-9d16-0f94650cd24e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79500f33-bbbc-41e6-9d16-0f94650cd24e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79500f33-bbbc-41e6-9d16-0f94650cd24e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "79500f33-bbbc-41e6-9d16-0f94650cd24e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3de8a292-d64d-46fc-afcb-4928d16cbfe9",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3de8a292-d64d-46fc-afcb-4928d16cbfe9",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3de8a292-d64d-46fc-afcb-4928d16cbfe9",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3de8a292-d64d-46fc-afcb-4928d16cbfe9",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3de8a292-d64d-46fc-afcb-4928d16cbfe9",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "00daf11a-2631-4244-ac86-10adabdfb6cf",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "00daf11a-2631-4244-ac86-10adabdfb6cf",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "00daf11a-2631-4244-ac86-10adabdfb6cf",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "00daf11a-2631-4244-ac86-10adabdfb6cf",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "95bd0777-60b2-4333-bc4f-1f2e259b7bdd",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "95bd0777-60b2-4333-bc4f-1f2e259b7bdd",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "95bd0777-60b2-4333-bc4f-1f2e259b7bdd",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "95bd0777-60b2-4333-bc4f-1f2e259b7bdd",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "95bd0777-60b2-4333-bc4f-1f2e259b7bdd",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d4b1ca6a-8f15-4c7b-a67b-2be1281d8a19",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d4b1ca6a-8f15-4c7b-a67b-2be1281d8a19",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d4b1ca6a-8f15-4c7b-a67b-2be1281d8a19",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d4b1ca6a-8f15-4c7b-a67b-2be1281d8a19",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d4b1ca6a-8f15-4c7b-a67b-2be1281d8a19",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e6eb93f0-7d38-4dfd-b6a6-cf4e7d41a995",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e6eb93f0-7d38-4dfd-b6a6-cf4e7d41a995",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e6eb93f0-7d38-4dfd-b6a6-cf4e7d41a995",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e6eb93f0-7d38-4dfd-b6a6-cf4e7d41a995",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e6eb93f0-7d38-4dfd-b6a6-cf4e7d41a995",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3fcdcc01-89f8-43a7-8dcf-38a96b298ccd",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3fcdcc01-89f8-43a7-8dcf-38a96b298ccd",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3fcdcc01-89f8-43a7-8dcf-38a96b298ccd",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3fcdcc01-89f8-43a7-8dcf-38a96b298ccd",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "3fcdcc01-89f8-43a7-8dcf-38a96b298ccd",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "129f8518-2ad7-4147-bf73-b7377734834e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "129f8518-2ad7-4147-bf73-b7377734834e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "129f8518-2ad7-4147-bf73-b7377734834e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "129f8518-2ad7-4147-bf73-b7377734834e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "129f8518-2ad7-4147-bf73-b7377734834e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0f690296-1957-4e00-a396-a16bc7087a52",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0f690296-1957-4e00-a396-a16bc7087a52",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0f690296-1957-4e00-a396-a16bc7087a52",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0f690296-1957-4e00-a396-a16bc7087a52",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0f690296-1957-4e00-a396-a16bc7087a52",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "57af2e20-10d3-4c46-8208-61ed4abc0091",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "57af2e20-10d3-4c46-8208-61ed4abc0091",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "57af2e20-10d3-4c46-8208-61ed4abc0091",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "57af2e20-10d3-4c46-8208-61ed4abc0091",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d0faa82-9a80-4197-9472-e48a04f2da1b",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d0faa82-9a80-4197-9472-e48a04f2da1b",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d0faa82-9a80-4197-9472-e48a04f2da1b",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d0faa82-9a80-4197-9472-e48a04f2da1b",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4d0faa82-9a80-4197-9472-e48a04f2da1b",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "333b70dc-fa4a-4b3a-9401-d0ebd1c3b46e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "333b70dc-fa4a-4b3a-9401-d0ebd1c3b46e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "333b70dc-fa4a-4b3a-9401-d0ebd1c3b46e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "333b70dc-fa4a-4b3a-9401-d0ebd1c3b46e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "333b70dc-fa4a-4b3a-9401-d0ebd1c3b46e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bd823a36-15fc-4be9-aabe-f7eadf7a62cb",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bd823a36-15fc-4be9-aabe-f7eadf7a62cb",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bd823a36-15fc-4be9-aabe-f7eadf7a62cb",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "bd823a36-15fc-4be9-aabe-f7eadf7a62cb",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e891e4e1-d55c-4795-a45d-792f4f0261ff",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e891e4e1-d55c-4795-a45d-792f4f0261ff",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e891e4e1-d55c-4795-a45d-792f4f0261ff",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "e891e4e1-d55c-4795-a45d-792f4f0261ff",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d389bbc4-7e14-41b6-8d77-14c67873ef9e",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d389bbc4-7e14-41b6-8d77-14c67873ef9e",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d389bbc4-7e14-41b6-8d77-14c67873ef9e",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d389bbc4-7e14-41b6-8d77-14c67873ef9e",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "d389bbc4-7e14-41b6-8d77-14c67873ef9e",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7f0ce8c9-606e-4e22-82d9-1b3ae10bdcbe",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7f0ce8c9-606e-4e22-82d9-1b3ae10bdcbe",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7f0ce8c9-606e-4e22-82d9-1b3ae10bdcbe",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7f0ce8c9-606e-4e22-82d9-1b3ae10bdcbe",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "7f0ce8c9-606e-4e22-82d9-1b3ae10bdcbe",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ba61b0f3-d587-4b6d-bb9e-cd00c892c291",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ba61b0f3-d587-4b6d-bb9e-cd00c892c291",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ba61b0f3-d587-4b6d-bb9e-cd00c892c291",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ba61b0f3-d587-4b6d-bb9e-cd00c892c291",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ba61b0f3-d587-4b6d-bb9e-cd00c892c291",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "affa4c21-4cf2-4df5-8fc3-88ad13238dc4",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "affa4c21-4cf2-4df5-8fc3-88ad13238dc4",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "affa4c21-4cf2-4df5-8fc3-88ad13238dc4",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "affa4c21-4cf2-4df5-8fc3-88ad13238dc4",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "affa4c21-4cf2-4df5-8fc3-88ad13238dc4",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "19d6c2d5-e382-41c6-b986-76995d28db94",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "19d6c2d5-e382-41c6-b986-76995d28db94",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "19d6c2d5-e382-41c6-b986-76995d28db94",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "19d6c2d5-e382-41c6-b986-76995d28db94",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "19d6c2d5-e382-41c6-b986-76995d28db94",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a3e88379-c9f1-45aa-9caf-0dfd37f38f83",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a3e88379-c9f1-45aa-9caf-0dfd37f38f83",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a3e88379-c9f1-45aa-9caf-0dfd37f38f83",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a3e88379-c9f1-45aa-9caf-0dfd37f38f83",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "a3e88379-c9f1-45aa-9caf-0dfd37f38f83",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da1a269c-10ac-43b0-904e-3713c5cf8183",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da1a269c-10ac-43b0-904e-3713c5cf8183",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da1a269c-10ac-43b0-904e-3713c5cf8183",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da1a269c-10ac-43b0-904e-3713c5cf8183",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "da1a269c-10ac-43b0-904e-3713c5cf8183",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59e26d15-6d44-4d59-b223-fcdd706473b5",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59e26d15-6d44-4d59-b223-fcdd706473b5",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59e26d15-6d44-4d59-b223-fcdd706473b5",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59e26d15-6d44-4d59-b223-fcdd706473b5",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "59e26d15-6d44-4d59-b223-fcdd706473b5",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ad8df3df-fd17-445d-baf8-d56bc287d252",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ad8df3df-fd17-445d-baf8-d56bc287d252",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ad8df3df-fd17-445d-baf8-d56bc287d252",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ad8df3df-fd17-445d-baf8-d56bc287d252",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "ad8df3df-fd17-445d-baf8-d56bc287d252",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61ed29b6-a0cc-4231-a4f7-4e23b7369c21",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61ed29b6-a0cc-4231-a4f7-4e23b7369c21",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61ed29b6-a0cc-4231-a4f7-4e23b7369c21",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61ed29b6-a0cc-4231-a4f7-4e23b7369c21",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "61ed29b6-a0cc-4231-a4f7-4e23b7369c21",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1bf78d20-769b-4388-915a-6e3a991a4fa2",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1bf78d20-769b-4388-915a-6e3a991a4fa2",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1bf78d20-769b-4388-915a-6e3a991a4fa2",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1bf78d20-769b-4388-915a-6e3a991a4fa2",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "1bf78d20-769b-4388-915a-6e3a991a4fa2",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0290e035-822d-4800-9628-fe379a05ea46",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0290e035-822d-4800-9628-fe379a05ea46",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0290e035-822d-4800-9628-fe379a05ea46",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0290e035-822d-4800-9628-fe379a05ea46",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "0290e035-822d-4800-9628-fe379a05ea46",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c782de42-64ac-4f9d-a73b-033d6bd20f77",
+    "field": "noteText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c782de42-64ac-4f9d-a73b-033d6bd20f77",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c782de42-64ac-4f9d-a73b-033d6bd20f77",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c782de42-64ac-4f9d-a73b-033d6bd20f77",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "c782de42-64ac-4f9d-a73b-033d6bd20f77",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4e13555e-eaf4-471a-a5e8-061d90589b83",
+    "field": "priceUnit",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4e13555e-eaf4-471a-a5e8-061d90589b83",
+    "field": "producerNote",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4e13555e-eaf4-471a-a5e8-061d90589b83",
+    "field": "eventSchedule.locationText",
+    "reason": "no_sl_or_en_source"
+  },
+  {
+    "model": "item",
+    "record_id": "4e13555e-eaf4-471a-a5e8-061d90589b83",
+    "field": "eventSchedule.ageText",
+    "reason": "no_sl_or_en_source"
+  }
+]

@@ -1,0 +1,189 @@
+conname,definition
+translations_pkey,PRIMARY KEY (id)
+column_name,data_type
+lang,text
+indexdef
+CREATE UNIQUE INDEX translations_pkey ON public.translations USING btree (id)
+"CREATE UNIQUE INDEX translations_ref_idx ON public.translations USING btree (model, record_id, field, lang)"
+"CREATE INDEX translations_record_lang_idx ON public.translations USING btree (record_id, lang)"
+definition
+"CREATE OR REPLACE FUNCTION public.smart360_mark_guest_content_dirty()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+    DECLARE
+      old_tenant_id uuid;
+      new_tenant_id uuid;
+      row_id uuid;
+      parent_id uuid;
+      row_model text;
+    BEGIN
+      IF TG_TABLE_NAME = 'sections' THEN
+        IF TG_OP <> 'INSERT' THEN old_tenant_id := OLD.tenant_id; END IF;
+        IF TG_OP <> 'DELETE' THEN new_tenant_id := NEW.tenant_id; END IF;
+
+      ELSIF TG_TABLE_NAME = 'categories' THEN
+        IF TG_OP <> 'INSERT' THEN
+          SELECT tenant_id INTO old_tenant_id FROM sections WHERE id = OLD.section_id;
+        END IF;
+        IF TG_OP <> 'DELETE' THEN
+          SELECT tenant_id INTO new_tenant_id FROM sections WHERE id = NEW.section_id;
+        END IF;
+
+      ELSIF TG_TABLE_NAME = 'items' THEN
+        IF TG_OP <> 'INSERT' THEN
+          SELECT s.tenant_id INTO old_tenant_id
+          FROM categories c JOIN sections s ON s.id = c.section_id
+          WHERE c.id = OLD.category_id;
+        END IF;
+        IF TG_OP <> 'DELETE' THEN
+          SELECT s.tenant_id INTO new_tenant_id
+          FROM categories c JOIN sections s ON s.id = c.section_id
+          WHERE c.id = NEW.category_id;
+        END IF;
+
+      ELSIF TG_TABLE_NAME = 'item_category_attachments' THEN
+        IF TG_OP <> 'INSERT' THEN
+          UPDATE tenants
+          SET has_unpublished_changes = true,
+               operator_draft_pending = operator_draft_pending OR
+                 NOT COALESCE(
+                   (current_user = 'smart360_host'
+                     AND current_setting('app.role', true) = 'host')
+                   OR (current_user <> 'smart360_host'
+                     AND current_setting('smart360.draft_actor', true) = 'host'
+                     AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+                   false),
+               updated_at = now()
+          WHERE id IN (
+            SELECT s.tenant_id
+            FROM items i
+            JOIN categories c ON c.id = i.category_id
+            JOIN sections s ON s.id = c.section_id
+            WHERE i.id = OLD.item_id
+            UNION
+            SELECT s.tenant_id
+            FROM categories c JOIN sections s ON s.id = c.section_id
+            WHERE c.id = OLD.category_id
+          );
+        END IF;
+        IF TG_OP <> 'DELETE' THEN
+          UPDATE tenants
+          SET has_unpublished_changes = true,
+               operator_draft_pending = operator_draft_pending OR
+                 NOT COALESCE(
+                   (current_user = 'smart360_host'
+                     AND current_setting('app.role', true) = 'host')
+                   OR (current_user <> 'smart360_host'
+                     AND current_setting('smart360.draft_actor', true) = 'host'
+                     AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+                   false),
+               updated_at = now()
+          WHERE id IN (
+            SELECT s.tenant_id
+            FROM items i
+            JOIN categories c ON c.id = i.category_id
+            JOIN sections s ON s.id = c.section_id
+            WHERE i.id = NEW.item_id
+            UNION
+            SELECT s.tenant_id
+            FROM categories c JOIN sections s ON s.id = c.section_id
+            WHERE c.id = NEW.category_id
+          );
+        END IF;
+        IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
+
+      ELSIF TG_TABLE_NAME = 'media' THEN
+        IF TG_OP <> 'INSERT' THEN
+          old_tenant_id := OLD.tenant_id;
+          IF old_tenant_id IS NULL THEN
+            SELECT s.tenant_id INTO old_tenant_id
+            FROM items i
+            JOIN categories c ON c.id = i.category_id
+            JOIN sections s ON s.id = c.section_id
+            WHERE i.id = OLD.item_id;
+          END IF;
+        END IF;
+        IF TG_OP <> 'DELETE' THEN
+          new_tenant_id := NEW.tenant_id;
+          IF new_tenant_id IS NULL THEN
+            SELECT s.tenant_id INTO new_tenant_id
+            FROM items i
+            JOIN categories c ON c.id = i.category_id
+            JOIN sections s ON s.id = c.section_id
+            WHERE i.id = NEW.item_id;
+          END IF;
+        END IF;
+
+      ELSIF TG_TABLE_NAME = 'translations' THEN
+        IF TG_OP <> 'INSERT' THEN
+          IF OLD.model IN ('tenant', 'ui') THEN
+            old_tenant_id := OLD.record_id;
+          ELSIF OLD.model = 'section' THEN
+            SELECT tenant_id INTO old_tenant_id FROM sections WHERE id = OLD.record_id;
+          ELSIF OLD.model = 'category' THEN
+            SELECT s.tenant_id INTO old_tenant_id
+            FROM categories c JOIN sections s ON s.id = c.section_id
+            WHERE c.id = OLD.record_id;
+          ELSIF OLD.model = 'item' THEN
+            SELECT s.tenant_id INTO old_tenant_id
+            FROM items i
+            JOIN categories c ON c.id = i.category_id
+            JOIN sections s ON s.id = c.section_id
+            WHERE i.id = OLD.record_id;
+          END IF;
+        END IF;
+        IF TG_OP <> 'DELETE' THEN
+          IF NEW.model IN ('tenant', 'ui') THEN
+            new_tenant_id := NEW.record_id;
+          ELSIF NEW.model = 'section' THEN
+            SELECT tenant_id INTO new_tenant_id FROM sections WHERE id = NEW.record_id;
+          ELSIF NEW.model = 'category' THEN
+            SELECT s.tenant_id INTO new_tenant_id
+            FROM categories c JOIN sections s ON s.id = c.section_id
+            WHERE c.id = NEW.record_id;
+          ELSIF NEW.model = 'item' THEN
+            SELECT s.tenant_id INTO new_tenant_id
+          FROM items i
+          JOIN categories c ON c.id = i.category_id
+          JOIN sections s ON s.id = c.section_id
+            WHERE i.id = NEW.record_id;
+          END IF;
+        END IF;
+
+      ELSIF TG_TABLE_NAME = 'plural_forms' THEN
+        IF TG_OP <> 'INSERT' THEN old_tenant_id := OLD.tenant_id; END IF;
+        IF TG_OP <> 'DELETE' THEN new_tenant_id := NEW.tenant_id; END IF;
+        IF (TG_OP <> 'INSERT' AND old_tenant_id IS NULL)
+          OR (TG_OP <> 'DELETE' AND new_tenant_id IS NULL) THEN
+          UPDATE tenants
+          SET has_unpublished_changes = true,
+               operator_draft_pending = operator_draft_pending OR
+                 NOT COALESCE(
+                   (current_user = 'smart360_host'
+                     AND current_setting('app.role', true) = 'host')
+                   OR (current_user <> 'smart360_host'
+                     AND current_setting('smart360.draft_actor', true) = 'host'
+                     AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+                   false),
+               updated_at = now();
+          IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
+        END IF;
+      END IF;
+
+      UPDATE tenants
+      SET has_unpublished_changes = true,
+           operator_draft_pending = operator_draft_pending OR
+             NOT COALESCE(
+               (current_user = 'smart360_host'
+                 AND current_setting('app.role', true) = 'host')
+               OR (current_user <> 'smart360_host'
+                 AND current_setting('smart360.draft_actor', true) = 'host'
+                 AND current_setting('smart360.draft_tenant', true) = tenants.id::text),
+               false),
+           updated_at = now()
+      WHERE id = old_tenant_id OR id = new_tenant_id;
+      IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
+    END;
+    $function$
+"

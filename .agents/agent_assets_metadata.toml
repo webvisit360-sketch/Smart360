@@ -2682,3 +2682,31 @@ mtime_ms = 1790967120853
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/f5ccdcf5-0fe1-4011-94a1-1d5cabbc5a25/83ba7fbf-8c7f-41a8-a68a-73cc5084873f"
 storage_version_token = "1790968295895342"
 content_type = "image/png"
+
+[[outputs]]
+id = "A5SrHnnJ82s8F96VEepNl"
+uri = "file://artifacts/smart360/reports/seven-languages/content/lastnik.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — prevodi FR/NL/HR"
+description = "Štiri SQL datoteke za prenos, kontrolne vsote, izpusti, vrstni red in 12 DEV slik. Vključene so odkrite omejitve."
+logical_id = "3c9b438b-3605-42c1-825b-f1034660d2ef"
+content_hash = "sha256:6983383cf6956019ebf7ae7ac69e525459045ad2df932ffdd8deb5c511ea4926"
+size = 1575522
+mtime_ms = 1791010786066
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/3c9b438b-3605-42c1-825b-f1034660d2ef/714e7321-e2e8-45e4-9ba6-9fd389fe7d35"
+storage_version_token = "1791010793459222"
+content_type = "text/html"
+
+[[outputs]]
+id = "WjDjjjhdokEqzhR3sSU1h"
+uri = "file://artifacts/smart360/reports/seven-languages/prevodi-fr-nl-hr.zip"
+type = "unspecified"
+title = "Celoten paket: SQL, poročilo in 12 slik"
+description = "Ločena SQL datoteka za vsako nastanitev; produkcijska izvedba je izključno lastnikova."
+logical_id = "70ebab77-b4fa-470b-872b-2dc9e2e97966"
+content_hash = "sha256:429d537296d10800907c2ed9f04c230a5fccd597a31caad47d20c5c3dcafd566"
+size = 1641204
+mtime_ms = 1791010786190
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/70ebab77-b4fa-470b-872b-2dc9e2e97966/f3fc61c1-55f9-489d-aa96-837ffcb388e6"
+storage_version_token = "1791010794177437"
+content_type = "application/octet-stream"

@@ -1,0 +1,224 @@
+[
+  {
+    "slug": "meli-pu",
+    "before": {
+      "slug": "translation-evidence-meli-pu",
+      "legacy": {
+        "de": {
+          "md5": "e041069dff062570152744381f506084",
+          "count": 319
+        },
+        "en": {
+          "md5": "7071e918c31209714ed08b6e70e25f95",
+          "count": 319
+        },
+        "it": {
+          "md5": "86d10aa928db9e156cf6a2dd122cdbb2",
+          "count": 319
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "eeb5cf1ed4f78a3acc87a16bfba52a7f",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "after": {
+      "slug": "translation-evidence-meli-pu",
+      "legacy": {
+        "de": {
+          "md5": "e041069dff062570152744381f506084",
+          "count": 319
+        },
+        "en": {
+          "md5": "7071e918c31209714ed08b6e70e25f95",
+          "count": 319
+        },
+        "it": {
+          "md5": "86d10aa928db9e156cf6a2dd122cdbb2",
+          "count": 319
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "eeb5cf1ed4f78a3acc87a16bfba52a7f",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "notices": [
+      "meli-pu: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged.",
+      "camping-menina: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged.",
+      "kamp-savinja: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged.",
+      "turizem-drobez: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged."
+    ]
+  },
+  {
+    "slug": "camping-menina",
+    "before": {
+      "slug": "translation-evidence-camping-menina",
+      "legacy": {
+        "de": {
+          "md5": "651e3b85df97b6ad6ee49b3cb0da2cad",
+          "count": 34
+        },
+        "en": {
+          "md5": "790b4df652f65f3866d057f346fcf2b2",
+          "count": 34
+        },
+        "it": {
+          "md5": "06e0e7fa3c1fad55c0108919c4b02807",
+          "count": 34
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "bcd8b93e940ef36a8a95a450bb2609ad",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "after": {
+      "slug": "translation-evidence-camping-menina",
+      "legacy": {
+        "de": {
+          "md5": "651e3b85df97b6ad6ee49b3cb0da2cad",
+          "count": 34
+        },
+        "en": {
+          "md5": "790b4df652f65f3866d057f346fcf2b2",
+          "count": 34
+        },
+        "it": {
+          "md5": "06e0e7fa3c1fad55c0108919c4b02807",
+          "count": 34
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "bcd8b93e940ef36a8a95a450bb2609ad",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "notices": [
+      "camping-menina: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged.",
+      "kamp-savinja: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged.",
+      "turizem-drobez: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged."
+    ]
+  },
+  {
+    "slug": "kamp-savinja",
+    "before": {
+      "slug": "translation-evidence-kamp-savinja",
+      "legacy": {
+        "de": {
+          "md5": "35e82a2fa0a8b33496b369d3a261d0d9",
+          "count": 179
+        },
+        "en": {
+          "md5": "2c018cc113782d79ad70b011abf563c7",
+          "count": 179
+        },
+        "it": {
+          "md5": "3689fb096d9a0a2d7ce7ca6d8520b0b5",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "bf6bbe172987f8b73102f9637fc8568f",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "after": {
+      "slug": "translation-evidence-kamp-savinja",
+      "legacy": {
+        "de": {
+          "md5": "35e82a2fa0a8b33496b369d3a261d0d9",
+          "count": 179
+        },
+        "en": {
+          "md5": "2c018cc113782d79ad70b011abf563c7",
+          "count": 179
+        },
+        "it": {
+          "md5": "3689fb096d9a0a2d7ce7ca6d8520b0b5",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "bf6bbe172987f8b73102f9637fc8568f",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "notices": [
+      "kamp-savinja: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged.",
+      "turizem-drobez: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged."
+    ]
+  },
+  {
+    "slug": "turizem-drobez",
+    "before": {
+      "slug": "translation-evidence-turizem-drobez",
+      "legacy": {
+        "de": {
+          "md5": "c05a9b855d7829cc1eb366c6c03b2bc8",
+          "count": 179
+        },
+        "en": {
+          "md5": "c2908001a6d712e63736f3a29ee1faa5",
+          "count": 179
+        },
+        "it": {
+          "md5": "922b0918ea8e0878559bdb27feacd08f",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "c2d7f6c8713993dc3b7c0f26978ae29c",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "after": {
+      "slug": "translation-evidence-turizem-drobez",
+      "legacy": {
+        "de": {
+          "md5": "c05a9b855d7829cc1eb366c6c03b2bc8",
+          "count": 179
+        },
+        "en": {
+          "md5": "c2908001a6d712e63736f3a29ee1faa5",
+          "count": 179
+        },
+        "it": {
+          "md5": "922b0918ea8e0878559bdb27feacd08f",
+          "count": 179
+        },
+        "sl": {
+          "md5": "d751713988987e9331980363e24189ce",
+          "count": 0
+        }
+      },
+      "source": "c2d7f6c8713993dc3b7c0f26978ae29c",
+      "snapshot": null,
+      "snapshotPublishedAt": null
+    },
+    "notices": [
+      "turizem-drobez: inserted 0 draft rows; repeated execution inserts zero; protected checksums unchanged."
+    ]
+  }
+]
