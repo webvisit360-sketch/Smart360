@@ -54,7 +54,7 @@ try {
       const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
       const pixel = (x, y) => Array.from(ctx.getImageData(x, y, 1, 1).data);
       const row = y => Array.from(ctx.getImageData(0, y, canvas.width, 1).data);
-      const rows = Array.from({ length: 22 }, (_, i) => row(202 + i));
+      const rows = Array.from({ length: 14 }, (_, i) => row(210 + i));
       // Chromium dithers gradients by one channel unit between scanlines.
       const rowDeviation = rows.map(r => Math.max(...r.map((v, i) => Math.abs(v - rows[0][i]))));
       const footer = ctx.getImageData(142, 1544, 150, 25).data;
@@ -69,7 +69,7 @@ try {
         strip: module.SUMMARY_STRIP, layout: module.SUMMARY_LAYOUT,
         gradients: window.__summaryGradients.filter(g => g.coords.join(',') === '0,0,540,0'),
         stripRowDeviation: rowDeviation,
-        boundaryPixels: [201, 202, 223, 224].map(y => [y, pixel(540, y)]),
+        boundaryPixels: [209, 210, 223, 224].map(y => [y, pixel(540, y)]),
         samples: [0, 324, 594, 864, 1079].map(x => [x, pixel(x, 215)]),
         tenantText: window.__summaryTexts.filter(t => t.args[0] === 26 && t.args[1] === 93),
         websiteText: window.__summaryTexts.filter(t => t.text === 'smart360.info'),
@@ -80,14 +80,14 @@ try {
     await writeFile(`${OUT}/${kind}-export.png`, Buffer.from(result.bytes));
     assert.equal(result.kind, kind, 'real-map and blocked-tile exports must use their requested map modes');
     assert.deepEqual(result.dimensions, [1080, 1612]);
-    assert.equal(result.strip.height, 11);
-    assert.equal(result.strip.height * result.layout.scale, 22);
+    assert.equal(result.strip.height, 7);
+    assert.equal(result.strip.height * result.layout.scale, 14);
     assert.deepEqual(result.strip.stops, stops);
     assert.equal(result.layout.mapY, 112);
     assert.ok(result.gradients.length > 0);
     for (const gradient of result.gradients) assert.deepEqual(gradient.stops, stops);
     if (!result.stripRowDeviation.every(d => d <= 1)) report.failures.push(`${kind}: strip row color deviation ${JSON.stringify(result.stripRowDeviation)}; map/grid may overpaint row 223`);
-    assert.notDeepEqual(result.boundaryPixels[0][1], result.boundaryPixels[1][1], 'strip starts at 202px');
+    assert.notDeepEqual(result.boundaryPixels[0][1], result.boundaryPixels[1][1], 'strip starts at 210px');
     assert.notDeepEqual(result.boundaryPixels[2][1], result.boundaryPixels[3][1], 'strip ends before 224px map');
     assert.equal(result.tenantText.length, 1);
     assert.ok(result.tenantText[0].inkBottom < 101, 'tenant ink must finish above the strip at logical y=101');
@@ -119,8 +119,8 @@ try {
     await page.screenshot({ path: `${OUT}/${kind}-footer.png`, clip: { x: 30, y: 1470, width: 1020, height: 120 } });
     report.runs[kind] = {
       ...result, bytes: undefined, nativeDisplay,
-      stripNativeBounds: { x: 0, y: 202, width: 1080, height: 22 },
-      tenantGapLogical: 101 - result.tenantText[0].inkBottom,
+      stripNativeBounds: { x: 0, y: 210, width: 1080, height: 14 },
+      tenantGapLogical: 105 - result.tenantText[0].inkBottom,
       previewSha256: sha(result.bytes), downloadSha256: sha(downloadBytes), downloadName: download.suggestedFilename(),
     };
     await context.close();

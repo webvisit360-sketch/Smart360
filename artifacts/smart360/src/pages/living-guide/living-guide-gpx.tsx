@@ -46,7 +46,7 @@ function markerEl(kind: "start" | "end" | "me", label: string) {
 
 type TourPoint = { lat: number; lon: number };
 
-export function RouteMap({ route, t, freeMode = false, externalLocation = false, allowOfflineStyle = true, fallbackCenter, tourPoints, tourSegmentStarts, tourActive, tourStatus, tourKey, tourStartedAt, currentPosition, onPositionChange, fullscreen, onExitFullscreen, overlay, profileStrip }: {
+export function RouteMap({ route, t, freeMode = false, externalLocation = false, allowOfflineStyle = true, fallbackCenter, tourPoints, tourSegmentStarts, tourActive, tourStatus, tourKey, tourStartedAt, currentPosition, onPositionChange, fullscreen, onExitFullscreen, onEnterFullscreen, viewScope, overlay, profileStrip }: {
   route?: GpxRoute | null;
   t: UiTranslator;
   /** Free recording: no planned GPX; map follows recorded geometry. */
@@ -70,6 +70,8 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
   onPositionChange: (position: TourPoint | null) => void;
   fullscreen?: boolean;
   onExitFullscreen?: () => void;
+  onEnterFullscreen?: () => void;
+  viewScope?: string;
   overlay?: ReactNode;
   profileStrip?: ReactNode;
 }) {
@@ -87,6 +89,8 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
   const tourMeRef = useRef<MapLibreMarker | null>(null);
   const watchRef = useRef<number | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const manualCamera = useRef(false);
+  const [manualView, setManualView] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState("");
@@ -94,6 +98,10 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
   const exitRef = useRef<HTMLButtonElement>(null);
   const centerRef = useRef(fallbackCenter);
   const identity = courseIdentity(tourKey ?? "", tourStartedAt, !!tourActive);
+  useEffect(() => {
+    manualCamera.current = false;
+    setManualView(false);
+  }, [identity, viewScope]);
   const [preference, setPreference] = useState<{ identity: string | null; mode: CourseMode }>(() => {
     let stored: string | null = null;
     try { stored = window.localStorage.getItem("s360:tour-camera"); } catch { /* storage may be disabled */ }
@@ -167,6 +175,15 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
         cooperativeGestures: true,
       });
       mapRef.current = map;
+      const suspendFollow = (event: { originalEvent?: unknown }) => {
+        if (!event.originalEvent) return;
+        manualCamera.current = true;
+        setManualView(true);
+      };
+      map.on("movestart", suspendFollow);
+      map.on("zoomstart", suspendFollow);
+      map.on("rotatestart", suspendFollow);
+      map.on("pitchstart", suspendFollow);
       const recoverInitialStyle = createInitialRouteStyleFallback(map);
       map.on("rotate", () => {
         setMapBearing(map.getBearing());
@@ -185,7 +202,7 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
         // The container may have been sized after construction (sheet
         // animation), so refit once the style is ready.
         map.resize();
-        if (bounds) map.fitBounds(bounds, { padding: { top: 56, right: 28, bottom: 28, left: 28 }, maxZoom: 16, duration: 0 });
+        if (bounds && !manualCamera.current) map.fitBounds(bounds, { padding: { top: 56, right: 28, bottom: 28, left: 28 }, maxZoom: 16, duration: 0 });
         if (!map.getSource("gpx")) map.addSource("gpx", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: segments } },
@@ -246,7 +263,7 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
     const coords = tourSegments(points, tourSegmentStarts);
     const src = map.getSource("tour") as { setData?: (d: unknown) => void } | undefined;
     src?.setData?.({ type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: coords } });
-    if (freeMode && !(tourActive && mode === "course")) followRecorded(map, coords, tourActive ? currentPosition ?? null : null);
+    if (!manualCamera.current && freeMode && !(tourActive && mode === "course")) followRecorded(map, coords, tourActive ? currentPosition ?? null : null);
     if ((!tourActive && !externalLocation) || !currentPosition) { tourMeRef.current?.remove(); tourMeRef.current = null; return; }
     const lngLat: [number, number] = [currentPosition.lon, currentPosition.lat];
     if (tourMeRef.current) {
@@ -263,23 +280,23 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points.length, currentPosition?.lat, currentPosition?.lon, tourSegmentStarts?.join(","), tourActive, externalLocation, loaded, mode]);
+  }, [points.length, currentPosition?.lat, currentPosition?.lon, tourSegmentStarts?.join(","), tourActive, externalLocation, loaded, mode, manualView]);
 
   // The live tour's single GPS watch supplies course and position. Never derive
   // direction from the route or recorded track; invalid/slow fixes retain bearing.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !loaded || !identity || !currentPosition || mode !== "course") return;
+    if (!map || !loaded || !identity || !currentPosition || manualCamera.current) return;
     const bearing = nextCourseBearing(lastCourseBearing.current, currentPosition.heading, currentPosition.speed, tourStatus === "moving", mode);
     lastCourseBearing.current = bearing;
     map.easeTo({
       center: [currentPosition.lon, currentPosition.lat],
-      bearing: shortestBearing(map.getBearing(), bearing),
+      bearing: mode === "course" ? shortestBearing(map.getBearing(), bearing) : 0,
       offset: [0, Math.round(map.getContainer().clientHeight * 0.16)],
       zoom: Math.max(map.getZoom(), 15),
       duration: 300,
     });
-  }, [loaded, identity, mode, tourStatus, currentPosition]);
+  }, [loaded, identity, mode, tourStatus, currentPosition, manualView]);
 
   useEffect(() => {
     lastCourseBearing.current = 0;
@@ -368,6 +385,12 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
   );
   const cameraControls = identity && (
     <div className="s360-gpx-camera-controls">
+      {manualView && <button type="button" className="s360-gpx-camera-toggle" data-testid="button-tour-recenter"
+        onClick={() => { manualCamera.current = false; setManualView(false); }}>
+        {t("UI.lg.gpx.recenter")}
+      </button>}
+      {!fullscreen && onEnterFullscreen && <button type="button" className="s360-gpx-camera-toggle s360-gpx-expand" onClick={onEnterFullscreen}
+        aria-label={t("UI.lg.liveTour.fullscreen")} data-testid="button-map-expand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg></button>}
       <button type="button" className="s360-gpx-camera-toggle" aria-pressed={mode === "course"} data-testid="button-tour-course-toggle"
         onClick={() => setCameraMode(mode === "course" ? "north" : "course")}>
         {t(mode === "course" ? "UI.lg.gpx.northUp" : "UI.lg.gpx.courseUp")}
@@ -405,7 +428,7 @@ export function RouteMap({ route, t, freeMode = false, externalLocation = false,
           <div className="s360-tour-toolbar">
           {overlay}
           <button ref={exitRef} type="button" className="s360-gpx-full-exit" onClick={onExitFullscreen} data-testid="button-tour-exit-fullscreen">
-            {t("UI.lg.liveTour.exitFullscreen")}
+            {t("UI.lg.gpx.shrinkMap")}
           </button>
           </div>
           {profileStrip}
@@ -606,6 +629,7 @@ function GpxRouteBody({ route, slug, itemId, t, lang: requestedLang, variant = "
         currentPosition={position}
         onPositionChange={setOrdinaryPosition}
         fullscreen={fullscreen}
+        onEnterFullscreen={() => setFullscreen(true)}
         onExitFullscreen={exitFullscreen}
         overlay={status && status !== "finished" ? <LiveTourOverlay metrics={tour.metrics} status={status} t={t} wakeStatus={tour.wakeStatus} platform={tour.platform} /> : null}
         profileStrip={fullscreen && <ElevationProfile route={route} t={t} projection={projection} compact />}

@@ -632,6 +632,14 @@ const LEGACY_LIVING_GUIDE_UI = {
     de: "Fahrtrichtung",
     it: "Direzione di marcia",
   },
+  "UI.lg.gpx.recenter": {
+    sl: "Sledi mojemu položaju", en: "Re-center", de: "Neu zentrieren",
+    it: "Ricentra", fr: "Recentrer", nl: "Opnieuw centreren", hr: "Centriraj položaj",
+  },
+  "UI.lg.gpx.shrinkMap": {
+    sl: "Zmanjšaj zemljevid", en: "Shrink map", de: "Karte verkleinern",
+    it: "Riduci mappa", fr: "Réduire la carte", nl: "Kaart verkleinen", hr: "Smanji kartu",
+  },
   "UI.lg.gpx.showLocation": {
     sl: "Pokaži moj položaj",
     en: "Show my location",

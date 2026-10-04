@@ -3,8 +3,19 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { SUMMARY_COPY, TourSummaryShare, shareTourFile, summaryLang } from "../pages/living-guide/living-guide-tour-summary";
+import { makeT } from "../pages/guest/i18n";
 
 const EMOJI = /\p{Extended_Pictographic}/u;
+
+test("map expand, shrink and recenter have labels in all seven languages", () => {
+  for (const lang of ["sl", "en", "de", "it", "fr", "nl", "hr"] as const) {
+    const t = makeT(null, lang);
+    for (const key of ["UI.lg.liveTour.fullscreen", "UI.lg.gpx.shrinkMap", "UI.lg.gpx.recenter"]) {
+      assert.ok(t(key).length > 0);
+      assert.notEqual(t(key), key, `${lang}: ${key}`);
+    }
+  }
+});
 
 test("summary copy is complete in all seven languages without emoji", () => {
   const keys = Object.keys(SUMMARY_COPY.sl).sort();
@@ -54,6 +65,7 @@ test("share uses Web Share files when supported and treats AbortError as cancel"
   try {
     assert.equal(await shareTourFile(file, "Moja tura"), "shared");
     assert.equal(shared.files[0], file);
+    assert.deepEqual(Object.keys(shared), ["files"]);
     Object.defineProperty(globalThis, "navigator", { configurable: true, value: { share: async () => { const e = new Error("x"); e.name = "AbortError"; throw e; }, canShare: () => true } });
     assert.equal(await shareTourFile(file, "x"), "cancelled");
   } finally { if (nav) Object.defineProperty(globalThis, "navigator", nav); }

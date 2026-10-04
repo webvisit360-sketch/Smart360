@@ -33,7 +33,9 @@
 .s360-gpx-camera-toggle, .s360-gpx-compass { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line, #E8EBE6); background: #fff; color: #121A14; box-shadow: 0 2px 8px rgba(18,26,20,.16); font: 700 12px/1.2 var(--sans, system-ui, sans-serif); }
 .s360-gpx-compass { flex-direction: column; width: 36px; padding: 3px; font-size: 10px; color: #157347; }
 .s360-gpx-compass span { display: block; font-size: 14px; line-height: 15px; color: #157347; }
-.s360-gpx-full .s360-gpx-camera-controls { top: calc(max(12px, env(safe-area-inset-top)) + 76px); left: auto; right: 12px; flex-direction: column; align-items: flex-end; }
+.s360-gpx-full .s360-gpx-camera-controls { top: calc(max(12px, env(safe-area-inset-top)) + 180px); left: auto; right: 12px; flex-direction: column; align-items: flex-end; }
+.s360-gpx-expand { min-width:44px; min-height:44px; flex:none; display:grid; place-items:center; }
+.s360-gpx-camera-controls { max-width:calc(100% - 20px); flex-wrap:wrap; }
 .s360-gpx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .s360-gpx-stats div { background: var(--card, #F4F6F2); border: 1px solid var(--line, #E8EBE6); border-radius: 12px; padding: 9px 10px; min-width: 0; }
 .s360-gpx-stats dt { font-size: 11px; font-weight: 700; color: var(--tx2, #66716A); }

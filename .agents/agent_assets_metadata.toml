@@ -2752,3 +2752,31 @@ mtime_ms = 1791015233918
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d0dfbda0-337b-4e41-9672-2233c8d95fa9/707cb10a-6316-4b60-91a7-1507822f23d5"
 storage_version_token = "1791015262708876"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "uBeu0VYLz-Bi4SCtDpTfW"
+uri = "file://artifacts/smart360/reports/tour-field-fix/porocilo.html"
+type = "html"
+title = "POVZETEK ZA LASTNIKA — popravki tur"
+description = "Meritve, zajemi obeh zemljevidov pri 390 × 844, opis deljenja in primerjava izvoženega traku."
+logical_id = "c0e0a2f8-b6c6-48bd-9726-340786ad6d2c"
+content_hash = "sha256:4ae06f9ff14d8fa855505e3012616ee99d37aa745dcf11a4d7a5dafd34f5e793"
+size = 932393
+mtime_ms = 1791109823732
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c0e0a2f8-b6c6-48bd-9726-340786ad6d2c/052ea25e-e265-44bb-ac17-bbc0cd9a07fd"
+storage_version_token = "1791109843664070"
+content_type = "text/html"
+
+[[outputs]]
+id = "lkj-8AfwrjHB--0RhBl6A"
+uri = "file://artifacts/smart360/reports/tour-field-fix/trak-before-after.png"
+type = "image"
+title = "Trak v PNG: prej in potem"
+description = "Izreza dejanskih izvozov: prej 22 px, zdaj 14 px pri 2×."
+logical_id = "1365ee62-f926-46d7-aac4-bc1a036e30aa"
+content_hash = "sha256:f36113d460916b2fb814544e65d190a0be273dd5215ab828a8a5bbce10f70eeb"
+size = 52170
+mtime_ms = 1791109612441
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1365ee62-f926-46d7-aac4-bc1a036e30aa/2687df89-8842-4178-88fd-7b775bce4c67"
+storage_version_token = "1791109844563725"
+content_type = "image/png"

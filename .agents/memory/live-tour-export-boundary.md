@@ -3,6 +3,13 @@ name: Live tour export and verification boundary
 description: Device-only real-map exports, schematic fallback, offline brand assets and hardware verification limits.
 ---
 
+Share-card trak is exactly 7 px at 1x / 14 px at 2x; the earlier thickening is
+withdrawn. Email and sticker dimensions remain unchanged. Native tour sharing
+passes only a plain PNG file; Facebook controls its own post/story destination.
+
+**Why:** The owner explicitly restored the approved share-card thickness and rejected Facebook workarounds.
+**How to apply:** Keep this export-only; never infer that files-only Web Share can choose a Facebook surface.
+
 Tour summary exports now prefer a verified, client-rendered OpenFreeMap snapshot and fall back to an explicitly labeled schematic. Keep image-export evidence distinct from an on-screen map: successful tiles alone do not prove a readable/exportable canvas.
 
 **Why:** The owner replaced schematic-only exports with real-map exports while retaining device-only composition and offline fallback. Direct CORS canvas capture has been verified; no screenshot proxy or route upload is authorized.

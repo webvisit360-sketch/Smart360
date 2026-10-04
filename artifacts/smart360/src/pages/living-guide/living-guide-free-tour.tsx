@@ -44,6 +44,7 @@ export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl"
   const [exportError, setExportError] = useState(false);
   const exitFullscreen = useCallback(() => setFullscreen(false), []);
   useEffect(() => { if (!tourActive) setFullscreen(false); }, [tourActive]);
+  useEffect(() => { setFullscreen(false); }, [viewVisible, viewKey]);
   const activityLabel = t(`UI.lg.gpx.${activity}`);
   const name = `${t("UI.lg.freeTour.routeName")} · ${activityLabel}`;
   const na = t("UI.lg.gpx.unavailable");
@@ -95,6 +96,7 @@ export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl"
           <div className="s360-free-map" data-testid="map-free-tour">
             <RouteMap
               freeMode
+              viewScope={`${viewKey}:${viewVisible}`}
               fallbackCenter={center ?? null}
               t={t}
               tourPoints={points}
@@ -106,6 +108,7 @@ export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl"
               currentPosition={tour.currentPosition}
               onPositionChange={() => undefined}
               fullscreen={fullscreen}
+              onEnterFullscreen={() => setFullscreen(true)}
               onExitFullscreen={exitFullscreen}
               overlay={tourActive && status ? <LiveTourOverlay metrics={tour.metrics} status={status} t={t} wakeStatus={tour.wakeStatus} platform={tour.platform} /> : null}
               profileStrip={fullscreen && <RecordedElevationProfile points={points} segmentStarts={state?.segmentStarts} t={t} compact />}

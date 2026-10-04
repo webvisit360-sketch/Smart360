@@ -6,7 +6,7 @@ export type TourSummaryImage = { blob: Blob; fileName: string; width: number; he
 // Draw vectors/text directly into a 2x backing store, never enlarge a 1x card.
 export const SUMMARY_LAYOUT = { width: 540, height: 806, scale: 2, mapY: 112, mapHeight: 296, profileY: 408, statsY: 490, footerY: 726 } as const;
 export const SUMMARY_STRIP = {
-  height: 11,
+  height: 7,
   stops: [[0, '#E8862E'], [0.30, '#2F72C4'], [0.55, '#3E9E4E'], [0.80, '#F5C62E'], [1, '#E8862E']],
 } as const;
 /** Export-only branding; never a separate app UI decoration. */
@@ -171,7 +171,7 @@ export async function createTourSummaryImage(input: TourSummaryInput): Promise<T
     ctx.fillStyle = GREEN; fit(ctx, input.tenantName, 26, 93, 15, 488, true);
     if (kind === 'map' && map) ctx.drawImage(map.canvas, 0, 112, 540, 296);
     else drawSchematic(ctx, segments, model.labels.noRoute);
-    // Paint last so schematic border antialiasing cannot bleed into the 22px native band.
+    // Paint last so schematic border antialiasing cannot bleed into the 14px native band.
     drawSummaryStrip(ctx);
     drawProfile(ctx, input, model.labels.noElevation);
     model.stats.forEach((s, i) => {

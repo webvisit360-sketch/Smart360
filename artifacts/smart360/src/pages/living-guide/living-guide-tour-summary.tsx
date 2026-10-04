@@ -56,7 +56,7 @@ export function saveBlob(blob: Blob, fileName: string) {
 /** Returns "shared" | "cancelled" | "fallback". Must be called from a user gesture. */
 export async function shareTourFile(file: File, title: string): Promise<"shared" | "cancelled" | "fallback"> {
   const nav = typeof navigator !== "undefined" ? navigator as Navigator & { canShare?: (d: ShareData) => boolean } : null;
-  const data: ShareData = { files: [file], title };
+  const data: ShareData = { files: [file] };
   let supported = false;
   try { supported = !!nav?.share && !!nav.canShare?.(data); } catch { supported = false; }
   if (supported && nav) {

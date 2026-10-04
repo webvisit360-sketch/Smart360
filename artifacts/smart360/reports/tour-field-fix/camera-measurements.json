@@ -1,0 +1,52 @@
+[
+  {
+    "kind": "guided",
+    "before": {
+      "zoom": 14.106915203916511,
+      "center": "[13.660407695770004,45.53653959385042]"
+    },
+    "panned": {
+      "zoom": 14.106915203916511,
+      "center": "[13.659027252579563,45.53709785259659]"
+    },
+    "resumed": {
+      "zoom": 15,
+      "center": "[13.660407695770004,45.536899319091305]"
+    },
+    "fullscreen": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "watchers": 1,
+    "pinchPersists": true,
+    "panPersists": true,
+    "sameCanvas": true
+  },
+  {
+    "kind": "free",
+    "before": {
+      "zoom": 14.106915203916511,
+      "center": "[13.6604076957708,45.53653959385039]"
+    },
+    "panned": {
+      "zoom": 14.106915203916511,
+      "center": "[13.659027252573651,45.53709785259528]"
+    },
+    "resumed": {
+      "zoom": 15,
+      "center": "[13.660407695770914,45.536899319091305]"
+    },
+    "fullscreen": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "watchers": 1,
+    "pinchPersists": true,
+    "panPersists": true,
+    "sameCanvas": true
+  }
+]
