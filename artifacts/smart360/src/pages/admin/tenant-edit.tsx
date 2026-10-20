@@ -246,6 +246,7 @@ export default function AdminTenantEdit() {
     // NULL design = Trend, NULL palette = bordo (never materialized on open).
     guestDesign: null as "trend" | "simple" | null,
     simplePalette: null as "bordo" | "modra" | "custom" | null,
+    simpleDynamicBackground: false,
     simpleBaseColor: null as string | null,
   });
   const [notificationPhoneError, setNotificationPhoneError] = useState<string | null>(null);
@@ -505,6 +506,7 @@ export default function AdminTenantEdit() {
         guestUiMode: (tenant.guestUiMode === "living-guide" ? "living-guide" : "legacy") as "legacy" | "living-guide",
         guestDesign: tenant.guestDesign ?? null,
         simplePalette: tenant.simplePalette ?? null,
+        simpleDynamicBackground: tenant.simpleDynamicBackground ?? false,
         simpleBaseColor: tenant.simpleBaseColor ?? null,
       };
       lastSaved.current = initialForm;
@@ -1278,7 +1280,7 @@ export default function AdminTenantEdit() {
           />
 
           <GuestDesignSetting
-            value={{ guestDesign: formData.guestDesign, simplePalette: formData.simplePalette, simpleBaseColor: formData.simpleBaseColor }}
+            value={{ guestDesign: formData.guestDesign, simplePalette: formData.simplePalette, simpleBaseColor: formData.simpleBaseColor, simpleDynamicBackground: formData.simpleDynamicBackground }}
             onChange={(next) => setFormData((prev) => ({ ...prev, ...next }))}
           />
 

@@ -141,6 +141,7 @@ export const tenantsTable = pgTable("tenants", {
   bgColor: text("bg_color"),
   guestDesign: text("guest_design"),
   simplePalette: text("simple_palette"),
+  simpleDynamicBackground: boolean("simple_dynamic_background").notNull().default(false),
   simpleBaseColor: text("simple_base_color"),
   theme: text("theme").notNull().default("mediterran"),
   // Guest-facing UI mode. New tenants always use the Living Guide shell.

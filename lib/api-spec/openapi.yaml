@@ -5069,6 +5069,7 @@ components:
         bgColor: { type: ["string", "null"], description: "Page background for the whole guest app; null = white" }
         guestDesign: { type: ["string", "null"], enum: [trend, simple, null] }
         simplePalette: { type: ["string", "null"], enum: [bordo, modra, custom, null] }
+        simpleDynamicBackground: { type: boolean }
         simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         theme: { type: string }
         guestUiMode:
@@ -5238,6 +5239,7 @@ components:
         bgColor: { type: ["string", "null"] }
         guestDesign: { type: ["string", "null"], enum: [trend, simple, null] }
         simplePalette: { type: ["string", "null"], enum: [bordo, modra, custom, null] }
+        simpleDynamicBackground: { type: boolean }
         simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         renewsAt: { type: ["string", "null"] }
         theme: { type: string }

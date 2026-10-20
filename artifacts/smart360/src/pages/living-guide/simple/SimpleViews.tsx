@@ -6,6 +6,7 @@ import { simpleHeroUrl, simpleLabelSize, type SimpleSection, type SimpleTile } f
 import { LandingFlagColumn } from "./LanguageFlags";
 import { WeatherCard, useLivingGuideWeather } from "../living-guide-weather";
 import { GuideHeaderControls } from "./GuideHeaderControls";
+import { weatherSkin } from "../living-guide-weather-model";
 import "./living-guide-simple.css";
 
 
@@ -49,8 +50,11 @@ export function SimpleHomeView({
   tenant: any; lang: string; sections: SimpleSection[];
   onTile: (tile: SimpleTile) => void; onLanguage: () => void; onReturn: () => void;
 }) {
+  const weather = useLivingGuideWeather();
+  const skin = tenant.simpleDynamicBackground && weather?.weather
+    ? weatherSkin(weather.weather, weather.now) : null;
   return (
-    <section className="lgs-home" data-lg-scroll data-testid="screen-simple-home">
+    <section className="lgs-home" data-weather-skin={skin ?? undefined} data-lg-scroll data-testid="screen-simple-home">
       <header className="lgs-top">
         <div>
           <div className="lgs-tn">{simpleCopy("guide", lang)}</div>

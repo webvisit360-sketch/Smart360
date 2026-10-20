@@ -11,6 +11,7 @@ export type GuestDesignValue = {
   guestDesign: GuestDesign | null;
   simplePalette: SimplePaletteKey | null;
   simpleBaseColor: string | null;
+  simpleDynamicBackground?: boolean;
 };
 
 function Swatch({ tokens }: { tokens: SimplePaletteTokens }) {
@@ -68,14 +69,16 @@ export function GuestDesignSetting({ value, onChange }: { value: GuestDesignValu
           <div className="space-y-3">
             <Label>Barva</Label>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <Choice active={palette === "bordo"} onClick={() => set({ simplePalette: "bordo" })} testId="button-palette-bordo"><Swatch tokens={BORDO} />Bordo</Choice>
-              <Choice active={palette === "modra"} onClick={() => set({ simplePalette: "modra" })} testId="button-palette-modra"><Swatch tokens={MODRA} />Modra</Choice>
+              <Choice active={!value.simpleDynamicBackground && palette === "bordo"} onClick={() => set({ simplePalette: "bordo", simpleDynamicBackground: false })} testId="button-palette-bordo"><Swatch tokens={BORDO} />Bordo</Choice>
+              <Choice active={!value.simpleDynamicBackground && palette === "modra"} onClick={() => set({ simplePalette: "modra", simpleDynamicBackground: false })} testId="button-palette-modra"><Swatch tokens={MODRA} />Modra</Choice>
               <Choice
-                active={palette === "custom"}
-                onClick={() => set({ simplePalette: "custom", simpleBaseColor: value.simpleBaseColor ?? base })}
+                active={!value.simpleDynamicBackground && palette === "custom"}
+                onClick={() => set({ simplePalette: "custom", simpleBaseColor: value.simpleBaseColor ?? base, simpleDynamicBackground: false })}
                 testId="button-palette-custom"
               ><Swatch tokens={deriveSimplePalette(base)} />Poljubna</Choice>
+              <Choice active={!!value.simpleDynamicBackground} onClick={() => set({ simpleDynamicBackground: true })} testId="button-palette-dynamic">Dinamično</Choice>
             </div>
+            {value.simpleDynamicBackground && <p className="text-xs text-[var(--tx2)]">Ozadje sledi vremenskemu delu dneva. Ploščice ohranijo izbrano paleto ({palette === "custom" ? base : palette}). Brez veljavnih vremenskih podatkov ostane običajno ozadje.</p>}
             {palette === "custom" && (
               <div className="flex items-center gap-3">
                 <input

@@ -1,9 +1,9 @@
+@import "./weather-dayparts.css";
 /* Home card: binding vreme-deli-dneva backgrounds/borders/compositing.
    Only failing text tokens are minimally mixed in sRGB toward black/white.
    Contrast tests read these actual declarations against the attached reference. */
 [data-living-guide] .lgw-card {
   --lgw-txt: #F2F5F9; --lgw-muted: #8E9AAC; --lgw-line: #1E2A3D;
-  --lgw-bg: linear-gradient(135deg, #14243C 0%, #121B2B 70%);
   --lgw-chip-bg: rgba(255,255,255,.05); --lgw-chip-line: #1E2A3D;
   --lgw-slot-bg: rgba(255,255,255,.04);
   --lgw-chip-k: #8E9AAC; --lgw-slot-time: #8E9AAC;
@@ -18,7 +18,6 @@
   animation: lgw-in .6s var(--ease) both;
 }
 [data-living-guide] .lgw-card[data-weather-skin="morning"] {
-  --lgw-bg: linear-gradient(135deg, #FFE9C9 0%, #FBD9A0 55%, #F6C98A 100%);
   --lgw-line: #EBCB96;
   --lgw-chip-bg: rgba(255,255,255,.45); --lgw-chip-line: rgba(138,106,58,.22);
   --lgw-slot-bg: rgba(255,255,255,.35);
@@ -27,7 +26,6 @@
   --lgw-icon: #D98A2B; --lgw-attrib: #69573B;
 }
 [data-living-guide] .lgw-card[data-weather-skin="day"] {
-  --lgw-bg: linear-gradient(135deg, #DFF0FB 0%, #BBDCF3 60%, #A6CFEC 100%);
   --lgw-line: #A9CBE4;
   --lgw-chip-bg: rgba(255,255,255,.5); --lgw-chip-line: rgba(74,107,134,.2);
   --lgw-slot-bg: rgba(255,255,255,.4);
@@ -36,7 +34,6 @@
   --lgw-icon: #E8A93B; --lgw-attrib: #465766;
 }
 [data-living-guide] .lgw-card[data-weather-skin="evening"] {
-  --lgw-bg: linear-gradient(135deg, #FBD8A6 0%, #F2A96B 48%, #D97B42 100%);
   --lgw-line: #E0A878;
   --lgw-chip-bg: rgba(255,255,255,.38); --lgw-chip-line: rgba(122,69,38,.25);
   --lgw-slot-bg: rgba(255,255,255,.3);

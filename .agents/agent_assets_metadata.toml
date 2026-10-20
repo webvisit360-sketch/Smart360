@@ -2836,3 +2836,17 @@ mtime_ms = 1792536869226
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9b3fa953-82f7-45a3-a57c-900948bea59f/721e3f6d-1039-4256-b74a-999bfb29e613"
 storage_version_token = "1792536892439182"
 content_type = "text/html"
+
+[[outputs]]
+id = "Eg1jekIYuzpBkypMbwSLS"
+uri = "file://artifacts/smart360/reports/enostaven/dynamic-background/porocilo.html"
+type = "html"
+title = "Dinamično ozadje — poročilo in štirje prikazi"
+description = "Posnetki pri 390 × 844, dejanski barvni tokeni, primerjava s predlogo in objavljeno vremensko kartico ter meritve kontrasta."
+logical_id = "bdf59445-ea70-4634-b9eb-4f242903daa2"
+content_hash = "sha256:423da4fa97d4d9d75961a6e6b24e0a4205d208ddbac85a0addbd8683421cc7c8"
+size = 1844246
+mtime_ms = 1792537816603
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/bdf59445-ea70-4634-b9eb-4f242903daa2/5e9d64ce-c0d7-44d9-bf6a-fd268306c552"
+storage_version_token = "1792537882193018"
+content_type = "text/html"

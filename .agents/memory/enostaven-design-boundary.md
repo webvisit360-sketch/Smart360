@@ -56,3 +56,12 @@ explicit catalogue choices are the user-controlled override, with an automatic r
 a one-off replacement of selected tenants' data.
 **How to apply:** Keep catalogue-source fidelity, reserve generic pin/cart for
 unmatched labels, and distinguish fixture screenshots from live-production evidence.
+
+Dynamic Enostaven is a home-background mode, not a replacement tile palette:
+retain the tenant's Bordo/Modra/RGB choice. Its backgrounds and solar boundaries
+must have one shared source with weather; mock gradient literals must never become
+an independent implementation. Missing valid solar/weather data keeps the static
+palette rather than inventing a time-of-day.
+**Why:** The owner explicitly requires weather/home parity and unchanged tiles.
+**How to apply:** Compare the shared gradients to the binding dynamic mock and
+flag differences; use dark brown evening text and preserve landing isolation.

@@ -89,6 +89,7 @@ export interface TenantUpdate {
   guestDesign?: TenantUpdateGuestDesign;
   /** @nullable */
   simplePalette?: TenantUpdateSimplePalette;
+  simpleDynamicBackground?: boolean;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$

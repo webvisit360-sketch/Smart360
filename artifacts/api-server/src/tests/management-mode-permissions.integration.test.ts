@@ -130,7 +130,7 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
   }
   assert.equal((await request("PATCH", path, { isPublished: true, publishNow: true })).status, 403);
   assert.equal((await request("PATCH", path, { name: "Concierge forbidden", wifiSsid: "no" })).status, 403);
-  for (const appearance of [{ guestDesign: "simple" }, { simplePalette: "modra" }, { simpleBaseColor: "#246B54" }]) {
+  for (const appearance of [{ guestDesign: "simple" }, { simplePalette: "modra" }, { simpleBaseColor: "#246B54" }, { simpleDynamicBackground: true }]) {
     assert.equal((await request("PATCH", path, appearance)).status, 403, "concierge appearance remains operator-only");
   }
   assert.equal((await request("POST", `${path}/sections`, { key: "x", title: "x", icon: "x" })).status, 403);
@@ -139,11 +139,12 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
   assert.equal(conciergeLogin.status, 200, "concierge remains able to sign in");
   await changeMode("self_service");
   const appearanceSnapshot = await readPublishedContent(a!.id);
-  await ok("PATCH", path, { guestDesign: "simple", simplePalette: "custom", simpleBaseColor: "#246B54" });
+  await ok("PATCH", path, { guestDesign: "simple", simplePalette: "custom", simpleBaseColor: "#246B54", simpleDynamicBackground: true });
   const [appearanceDraft] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, a!.id));
   assert.equal(appearanceDraft!.guestDesign, "simple");
   assert.equal(appearanceDraft!.simplePalette, "custom");
   assert.equal(appearanceDraft!.simpleBaseColor, "#246B54");
+  assert.equal(appearanceDraft!.simpleDynamicBackground, true);
   assert.equal(appearanceDraft!.hasUnpublishedChanges, true);
   assert.deepEqual(await readPublishedContent(a!.id), appearanceSnapshot, "appearance stays draft until reviewed publish");
   for (const invalid of [{ guestDesign: "invented" }, { simplePalette: "invented" }, { simpleBaseColor: "red" }]) {
@@ -180,7 +181,7 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
     body: JSON.stringify({ icon: "catalog:shops" }),
   });
   assert.equal(operatorIcon.status, 200);
-  assert.equal((await operatorIcon.json()).icon, "catalog:shops");
+  assert.equal((await operatorIcon.json() as { icon: string }).icon, "catalog:shops");
   await changeMode("self_service");
   await ok("PATCH", `/admin/categories/${offerCategory.id}`, { icon: "catalog:auto" });
   assert.equal((await db.select().from(categoriesTable).where(eq(categoriesTable.id, offerCategory.id)))[0]!.icon, "catalog:auto");

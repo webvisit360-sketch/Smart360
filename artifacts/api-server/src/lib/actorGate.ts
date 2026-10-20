@@ -359,7 +359,7 @@ export const SELF_SERVICE_TENANT_WRITABLE_FIELDS = [
   "customDomain", "name", "subtitle", "address", "mapQuery", "mapUrl",
   "latitude", "longitude", "logoUrl", "logoSquareUrl", "heroUrl",
   "livingGuideHeroUrl", "tourUrl", "tourRecordingEnabled", "bgColor", "theme",
-  "guestDesign", "simplePalette", "simpleBaseColor",
+  "guestDesign", "simplePalette", "simpleBaseColor", "simpleDynamicBackground",
   "guestUiMode", "coverTitle", "coverSubtitle", "coverTitleSize",
   "coverTitleOpacity", "coverTextColor", "coverSubSize", "coverSubOpacity",
   "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil", "textScale",

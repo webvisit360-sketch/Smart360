@@ -175,6 +175,7 @@ function tokens(skin: string) {
   return {
     ...rule(css, "[data-living-guide] .lgw-card"),
     ...(skin === "night" ? {} : rule(css, `[data-living-guide] .lgw-card[data-weather-skin="${skin}"]`)),
+    ...rule(readFileSync(new URL("../pages/living-guide/weather-dayparts.css", import.meta.url), "utf8"), `[data-living-guide] [data-weather-skin="${skin}"]`),
   };
 }
 const normalize = (v: string) => v.replace(/\s/g, "").toUpperCase();

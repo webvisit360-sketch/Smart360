@@ -9,6 +9,9 @@ import { useMemo, useState, useEffect } from "react";
 import LivingGuideGuestShell from "../LivingGuideGuestShell";
 import { simpleFixtureTenant } from "./simple-fixture-data";
 import TileIconEditorFixture from "./TileIconEditorFixture";
+import { WeatherFixtureClockContext } from "../living-guide-weather";
+import { syntheticWeather, weatherFixtureTime } from "../living-guide-weather-fixture-data";
+import type { WeatherSkin } from "../living-guide-weather-model";
 
 export default function SimpleDesignFixture() {
   const [search] = useState(() => new URLSearchParams(window.location.search));
@@ -16,6 +19,9 @@ export default function SimpleDesignFixture() {
   const tenantKey = search.get("tenant") ?? "drobez";
   const palette = search.get("palette") ?? "bordo";
   const color = search.get("color");
+  const skin = search.get("skin");
+  const dynamic = ["morning", "day", "evening", "night"].includes(skin ?? "");
+  const fixedNow = dynamic ? weatherFixtureTime(skin as WeatherSkin) : undefined;
   const published = search.get("source") === "published";
   const [snapshot, setSnapshot] = useState<any>(null);
   const [error, setError] = useState("");
@@ -35,15 +41,17 @@ export default function SimpleDesignFixture() {
   if (search.get("evidence") === "icon-editor") return <TileIconEditorFixture />;
   if (published && !snapshot) return <p>Loading published evidence…</p>;
   return (
+    <WeatherFixtureClockContext.Provider value={fixedNow}>
     <LivingGuideGuestShell
       tenant={search.get("evidence") === "landing-photo" ? {
         ...tenant, tourUrl: null,
         livingGuideHeroUrl: `${import.meta.env.BASE_URL}reports/enostaven/landing-correction/${tenantKey === "melipu" ? "melipu" : "drobez"}-photo.jpg`,
-      } : tenant}
+      } : { ...tenant, simpleDynamicBackground: dynamic }}
       slug="__simple-fixture"
       lang={lang}
-      devWeather={null}
+      devWeather={fixedNow !== undefined ? syntheticWeather("calm", fixedNow) : null}
       onLanguageChange={(next) => setLang(guideLanguage(next))}
     />
+    </WeatherFixtureClockContext.Provider>
   );
 }

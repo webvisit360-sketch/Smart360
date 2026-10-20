@@ -1,0 +1,23 @@
+/* Single background source for weather detail and dynamic Enostaven home.
+   Solar boundaries and clock are owned by WeatherProvider/weatherSkin. */
+[data-living-guide] .lgw-card,
+[data-living-guide] [data-weather-skin="night"] {
+  --lgw-bg: linear-gradient(135deg, #14243C 0%, #121B2B 70%);
+  --daypart-head: #F2F5F9; --daypart-footer: #8E9AAC;
+  --daypart-ring: transparent;
+}
+[data-living-guide] [data-weather-skin="morning"] {
+  --lgw-bg: linear-gradient(135deg, #FFE9C9 0%, #FBD9A0 55%, #F6C98A 100%);
+  --daypart-head: #3A2E1C; --daypart-footer: #6C532D;
+  --daypart-ring: rgba(130,100,55,.25);
+}
+[data-living-guide] [data-weather-skin="day"] {
+  --lgw-bg: linear-gradient(135deg, #DFF0FB 0%, #BBDCF3 60%, #A6CFEC 100%);
+  --daypart-head: #14243C; --daypart-footer: #3B566B;
+  --daypart-ring: rgba(74,107,134,.25);
+}
+[data-living-guide] [data-weather-skin="evening"] {
+  --lgw-bg: linear-gradient(135deg, #FBD8A6 0%, #F2A96B 48%, #D97B42 100%);
+  --daypart-head: #361F10; --daypart-footer: #3F2414;
+  --daypart-ring: rgba(122,69,38,.25);
+}

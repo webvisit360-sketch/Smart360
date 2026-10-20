@@ -2446,6 +2446,7 @@ export interface TenantBase {
   guestDesign?: TenantBaseGuestDesign;
   /** @nullable */
   simplePalette?: TenantBaseSimplePalette;
+  simpleDynamicBackground?: boolean;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$
@@ -2747,6 +2748,7 @@ export interface TenantUpdate {
   guestDesign?: TenantUpdateGuestDesign;
   /** @nullable */
   simplePalette?: TenantUpdateSimplePalette;
+  simpleDynamicBackground?: boolean;
   /**
      * @nullable
      * @pattern ^#[0-9a-fA-F]{6}$
