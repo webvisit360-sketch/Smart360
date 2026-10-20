@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — Enostavna verzija, dinamično ozadje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Lato',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#E9ECEF;padding:26px 12px;display:flex;flex-wrap:wrap;gap:30px;justify-content:center;align-items:flex-start;}
+  h2.cap{width:100%;text-align:center;font-size:15px;color:#5a6472;font-weight:600;margin-bottom:-12px;}
+  .wrap{display:flex;flex-direction:column;align-items:center;}
+  .lbl{font-size:13px;font-weight:900;color:#5a6472;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
+  .caption{color:#96a1b3;font-size:12px;text-align:center;margin-top:18px;line-height:1.55;max-width:840px;}
+
+  /* ploščice: bordo paleta gostitelja — nespremenjena */
+  .phone{--tile1:#B23476;--tile15:#8A2A61;--tile2:#521445;--stroke:#C2DCF8;
+    width:396px;border-radius:32px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.30);position:relative;
+    background:var(--pagebg);}
+
+  /* deli dneva — točni prelivi in besedilni žetoni iz vremenske kartice */
+  .jutro{--pagebg:linear-gradient(135deg,#FFE9C9 0%,#FBD9A0 55%,#F6C98A 100%);
+         --gap:#FBD9A0;--head:#3A2E1C;--mut:#826437;--mut2:#6C532D;}
+  .dan  {--pagebg:linear-gradient(135deg,#DFF0FB 0%,#BBDCF3 60%,#A6CFEC 100%);
+         --gap:#BBDCF3;--head:#14243C;--mut:#4A6B86;--mut2:#3B566B;}
+  .vecer{--pagebg:linear-gradient(135deg,#FBD8A6 0%,#F2A96B 48%,#D97B42 100%);
+         --gap:#F2A96B;--head:#361F10;--mut:#7A4526;--mut2:#3F2414;}
+  .noc  {--pagebg:linear-gradient(135deg,#14243C 0%,#121B2B 70%);
+         --gap:#14243C;--head:#F2F5F9;--mut:#8E9AAC;--mut2:#8E9AAC;}
+  .noc::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:32px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='210'%3E%3Cg fill='%23FFFFFF'%3E%3Ccircle cx='14' cy='22' r='1.1' opacity='.35'/%3E%3Ccircle cx='57' cy='9' r='.8' opacity='.25'/%3E%3Ccircle cx='103' cy='31' r='1.2' opacity='.4'/%3E%3Ccircle cx='151' cy='14' r='.7' opacity='.22'/%3E%3Ccircle cx='178' cy='48' r='1' opacity='.3'/%3E%3Ccircle cx='33' cy='64' r='.9' opacity='.28'/%3E%3Ccircle cx='86' cy='79' r='.7' opacity='.2'/%3E%3Ccircle cx='128' cy='62' r='1.1' opacity='.33'/%3E%3Ccircle cx='9' cy='108' r='.8' opacity='.24'/%3E%3Ccircle cx='65' cy='121' r='1.2' opacity='.38'/%3E%3Ccircle cx='112' cy='104' r='.7' opacity='.2'/%3E%3Ccircle cx='166' cy='96' r='.9' opacity='.3'/%3E%3Ccircle cx='42' cy='156' r='1' opacity='.32'/%3E%3Ccircle cx='96' cy='170' r='.8' opacity='.24'/%3E%3Ccircle cx='143' cy='148' r='1.1' opacity='.36'/%3E%3Ccircle cx='182' cy='178' r='.7' opacity='.22'/%3E%3Ccircle cx='22' cy='196' r='.9' opacity='.27'/%3E%3Ccircle cx='121' cy='199' r='1' opacity='.3'/%3E%3C/g%3E%3C/svg%3E");}
+
+  .top{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 2px;position:relative;}
+  .top .tn{color:var(--mut);font-size:12px;letter-spacing:.14em;font-weight:700;text-transform:uppercase;}
+  .top .tt{color:var(--head);font-size:25px;font-weight:900;margin-top:2px;}
+  .top .flagbtn{width:52px;height:38px;border-radius:6px;background:rgba(0,0,0,.28);
+    box-shadow:0 2px 8px rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;font-size:27px;overflow:hidden;}
+
+  .sec{color:var(--head);font-size:13px;font-weight:700;margin:20px 26px 12px;letter-spacing:.08em;text-transform:uppercase;position:relative;}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:30px;row-gap:19px;padding:0 26px;position:relative;}
+  .tile{aspect-ratio:1/1;color:var(--stroke);
+    background:linear-gradient(180deg,var(--tile1) 0%,var(--tile15) 52%,var(--tile2) 100%);background-clip:padding-box;
+    border:2.3px solid var(--stroke);border-radius:19px;
+    box-shadow:inset 0 0 0 1px var(--gap), 0 4px 14px rgba(10,5,15,.35);
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:10px 5px 6px;}
+  .tile svg{width:58px;height:58px;fill:var(--stroke);stroke:none;flex:0 1 auto;min-height:0;margin-top:1px;}
+  .tile svg.ln{fill:none;stroke:var(--stroke);stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round;}
+  .tile b{color:var(--stroke);font-size:10px;font-weight:700;text-align:center;line-height:1.2;text-transform:uppercase;
+    letter-spacing:.015em;margin-top:auto;max-width:100%;}
+
+  .foot{color:var(--mut2);font-size:11.5px;text-align:center;padding:22px 0 24px;position:relative;}
+</style>
+</head>
+<body>
+<h2 class="cap">Četrta možnost ozadja — »Dinamično«: ozadje domače strani sledi delu dneva kot vremenska kartica; ploščice ostanejo v barvi gostitelja</h2>
+
+<div class="wrap"><div class="lbl">Jutro <span style="font-weight:600;color:#9aa4b2;text-transform:none;letter-spacing:0;">· pol ure pred vzhodom do 2 h po njem</span></div>
+<div class="phone jutro">
+  <div class="top">
+    <div>
+      <div class="tn">Vaš vodnik</div>
+      <div class="tt">Turizem Drobež</div>
+    </div>
+    <div class="flagbtn">🇸🇮</div>
+  </div>
+  <div class="sec">Domov</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z"/></svg><b>Obvestila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z"/></svg><b>Vreme</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z" fill-rule="evenodd"/></svg><b>Pomoč in SOS</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z"/></svg><b>Kontakt</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z" fill-rule="evenodd"/></svg><b>Dodaj na začetni zaslon</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z" fill-rule="evenodd"/></svg><b>O vodniku</b></div>
+  </div>
+  <div class="sec">Nastanitev</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z"/></svg><b>Dobrodošli</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z" fill-rule="evenodd"/></svg><b>Nastanitve</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0"/><circle cx="12" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg><b>Wi-Fi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z" fill-rule="evenodd"/></svg><b>Hišni red</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z"/></svg><b>Navodila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z" fill-rule="evenodd"/></svg><b>Prijava / odjava</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z" fill-rule="evenodd"/></svg><b>Parkiranje</b></div>
+  </div>
+  <div class="sec">Ponudba</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z"/></svg><b>Ponudba s cenami</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z" fill-rule="evenodd"/></svg><b>Domači izdelki</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z" fill-rule="evenodd"/></svg><b>Naročilo</b></div>
+  </div>
+  <div class="sec">Okolica</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="m3 20 5.5-12 4.3 7.6L15.5 11 21 20z"/><circle cx="17" cy="6" r="2"/></svg><b>Znamenitosti</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><circle cx="14.6" cy="4" r="1.9"/><path d="m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z"/></svg><b>Pohodi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z"/><path d="M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z"/></svg><b>Kolesarjenje</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M4.5 20.5c6.5 0 3-8 8.5-9.3"/><circle cx="4.5" cy="20.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="8" r="6.2"/><circle cx="16.5" cy="8" r="3.4" fill="currentColor" stroke="none"/></svg><b>Posnemi turo</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 5.5h16V21H4zM8 3v4m8-4v4" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M4 9.5h16v1.6H4z"/><circle cx="9" cy="14.5" r="1.3"/><circle cx="15" cy="14.5" r="1.3"/><circle cx="9" cy="18" r="1.3"/></svg><b>Program</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z" fill-rule="evenodd"/></svg><b>Zemljevid</b></div>
+  </div>
+  <div class="sec">Sporočila</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h17v12h-11l-6 4.5z"/></svg><b>Sporočila</b></div>
+  </div>
+  <div class="foot">Digitalni vodnik poganja Smart360 · smart360.info</div>
+</div>
+</div>
+<div class="wrap"><div class="lbl">Dan <span style="font-weight:600;color:#9aa4b2;text-transform:none;letter-spacing:0;">· do 2 h pred zahodom</span></div>
+<div class="phone dan">
+  <div class="top">
+    <div>
+      <div class="tn">Vaš vodnik</div>
+      <div class="tt">Turizem Drobež</div>
+    </div>
+    <div class="flagbtn">🇸🇮</div>
+  </div>
+  <div class="sec">Domov</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z"/></svg><b>Obvestila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z"/></svg><b>Vreme</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z" fill-rule="evenodd"/></svg><b>Pomoč in SOS</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z"/></svg><b>Kontakt</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z" fill-rule="evenodd"/></svg><b>Dodaj na začetni zaslon</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z" fill-rule="evenodd"/></svg><b>O vodniku</b></div>
+  </div>
+  <div class="sec">Nastanitev</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z"/></svg><b>Dobrodošli</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z" fill-rule="evenodd"/></svg><b>Nastanitve</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0"/><circle cx="12" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg><b>Wi-Fi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z" fill-rule="evenodd"/></svg><b>Hišni red</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z"/></svg><b>Navodila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z" fill-rule="evenodd"/></svg><b>Prijava / odjava</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z" fill-rule="evenodd"/></svg><b>Parkiranje</b></div>
+  </div>
+  <div class="sec">Ponudba</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z"/></svg><b>Ponudba s cenami</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z" fill-rule="evenodd"/></svg><b>Domači izdelki</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z" fill-rule="evenodd"/></svg><b>Naročilo</b></div>
+  </div>
+  <div class="sec">Okolica</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="m3 20 5.5-12 4.3 7.6L15.5 11 21 20z"/><circle cx="17" cy="6" r="2"/></svg><b>Znamenitosti</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><circle cx="14.6" cy="4" r="1.9"/><path d="m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z"/></svg><b>Pohodi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z"/><path d="M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z"/></svg><b>Kolesarjenje</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M4.5 20.5c6.5 0 3-8 8.5-9.3"/><circle cx="4.5" cy="20.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="8" r="6.2"/><circle cx="16.5" cy="8" r="3.4" fill="currentColor" stroke="none"/></svg><b>Posnemi turo</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 5.5h16V21H4zM8 3v4m8-4v4" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M4 9.5h16v1.6H4z"/><circle cx="9" cy="14.5" r="1.3"/><circle cx="15" cy="14.5" r="1.3"/><circle cx="9" cy="18" r="1.3"/></svg><b>Program</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z" fill-rule="evenodd"/></svg><b>Zemljevid</b></div>
+  </div>
+  <div class="sec">Sporočila</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h17v12h-11l-6 4.5z"/></svg><b>Sporočila</b></div>
+  </div>
+  <div class="foot">Digitalni vodnik poganja Smart360 · smart360.info</div>
+</div>
+</div>
+<div class="wrap"><div class="lbl">Večer <span style="font-weight:600;color:#9aa4b2;text-transform:none;letter-spacing:0;">· zadnji 2 h pred zahodom do pol ure po njem</span></div>
+<div class="phone vecer">
+  <div class="top">
+    <div>
+      <div class="tn">Vaš vodnik</div>
+      <div class="tt">Turizem Drobež</div>
+    </div>
+    <div class="flagbtn">🇸🇮</div>
+  </div>
+  <div class="sec">Domov</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z"/></svg><b>Obvestila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z"/></svg><b>Vreme</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z" fill-rule="evenodd"/></svg><b>Pomoč in SOS</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z"/></svg><b>Kontakt</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z" fill-rule="evenodd"/></svg><b>Dodaj na začetni zaslon</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z" fill-rule="evenodd"/></svg><b>O vodniku</b></div>
+  </div>
+  <div class="sec">Nastanitev</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z"/></svg><b>Dobrodošli</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z" fill-rule="evenodd"/></svg><b>Nastanitve</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0"/><circle cx="12" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg><b>Wi-Fi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z" fill-rule="evenodd"/></svg><b>Hišni red</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z"/></svg><b>Navodila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z" fill-rule="evenodd"/></svg><b>Prijava / odjava</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z" fill-rule="evenodd"/></svg><b>Parkiranje</b></div>
+  </div>
+  <div class="sec">Ponudba</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z"/></svg><b>Ponudba s cenami</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z" fill-rule="evenodd"/></svg><b>Domači izdelki</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z" fill-rule="evenodd"/></svg><b>Naročilo</b></div>
+  </div>
+  <div class="sec">Okolica</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="m3 20 5.5-12 4.3 7.6L15.5 11 21 20z"/><circle cx="17" cy="6" r="2"/></svg><b>Znamenitosti</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><circle cx="14.6" cy="4" r="1.9"/><path d="m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z"/></svg><b>Pohodi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z"/><path d="M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z"/></svg><b>Kolesarjenje</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M4.5 20.5c6.5 0 3-8 8.5-9.3"/><circle cx="4.5" cy="20.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="8" r="6.2"/><circle cx="16.5" cy="8" r="3.4" fill="currentColor" stroke="none"/></svg><b>Posnemi turo</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 5.5h16V21H4zM8 3v4m8-4v4" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M4 9.5h16v1.6H4z"/><circle cx="9" cy="14.5" r="1.3"/><circle cx="15" cy="14.5" r="1.3"/><circle cx="9" cy="18" r="1.3"/></svg><b>Program</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z" fill-rule="evenodd"/></svg><b>Zemljevid</b></div>
+  </div>
+  <div class="sec">Sporočila</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h17v12h-11l-6 4.5z"/></svg><b>Sporočila</b></div>
+  </div>
+  <div class="foot">Digitalni vodnik poganja Smart360 · smart360.info</div>
+</div>
+</div>
+<div class="wrap"><div class="lbl">Noč <span style="font-weight:600;color:#9aa4b2;text-transform:none;letter-spacing:0;">· pol ure po zahodu do pol ure pred vzhodom</span></div>
+<div class="phone noc">
+  <div class="top">
+    <div>
+      <div class="tn">Vaš vodnik</div>
+      <div class="tt">Turizem Drobež</div>
+    </div>
+    <div class="flagbtn">🇸🇮</div>
+  </div>
+  <div class="sec">Domov</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z"/></svg><b>Obvestila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z"/></svg><b>Vreme</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z" fill-rule="evenodd"/></svg><b>Pomoč in SOS</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z"/></svg><b>Kontakt</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z" fill-rule="evenodd"/></svg><b>Dodaj na začetni zaslon</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z" fill-rule="evenodd"/></svg><b>O vodniku</b></div>
+  </div>
+  <div class="sec">Nastanitev</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z"/></svg><b>Dobrodošli</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z" fill-rule="evenodd"/></svg><b>Nastanitve</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0"/><circle cx="12" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg><b>Wi-Fi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z" fill-rule="evenodd"/></svg><b>Hišni red</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z"/></svg><b>Navodila</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z" fill-rule="evenodd"/></svg><b>Prijava / odjava</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z" fill-rule="evenodd"/></svg><b>Parkiranje</b></div>
+  </div>
+  <div class="sec">Ponudba</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z"/></svg><b>Ponudba s cenami</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z" fill-rule="evenodd"/></svg><b>Domači izdelki</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z" fill-rule="evenodd"/></svg><b>Naročilo</b></div>
+  </div>
+  <div class="sec">Okolica</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="m3 20 5.5-12 4.3 7.6L15.5 11 21 20z"/><circle cx="17" cy="6" r="2"/></svg><b>Znamenitosti</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><circle cx="14.6" cy="4" r="1.9"/><path d="m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z"/></svg><b>Pohodi</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z"/><path d="M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z"/></svg><b>Kolesarjenje</b></div>
+    <div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M4.5 20.5c6.5 0 3-8 8.5-9.3"/><circle cx="4.5" cy="20.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="8" r="6.2"/><circle cx="16.5" cy="8" r="3.4" fill="currentColor" stroke="none"/></svg><b>Posnemi turo</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 5.5h16V21H4zM8 3v4m8-4v4" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M4 9.5h16v1.6H4z"/><circle cx="9" cy="14.5" r="1.3"/><circle cx="15" cy="14.5" r="1.3"/><circle cx="9" cy="18" r="1.3"/></svg><b>Program</b></div>
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z" fill-rule="evenodd"/></svg><b>Zemljevid</b></div>
+  </div>
+  <div class="sec">Sporočila</div>
+  <div class="grid">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h17v12h-11l-6 4.5z"/></svg><b>Sporočila</b></div>
+  </div>
+  <div class="foot">Digitalni vodnik poganja Smart360 · smart360.info</div>
+</div>
+</div>
+<div class="caption">Četrta skrbniška možnost ozadja: »Dinamično (spreminja se z deli dneva)« — poleg bordo, modre in poljubne barve po RGB lestvici.
+Prelivi in besedilni žetoni so natanko tisti iz potrjene vremenske kartice (jutro, dan, večer, noč); meje delov dneva sledijo
+obstoječi logiki sončnega vzhoda in zahoda v aplikaciji. Spremenita se samo ozadje in besedilo zunaj ploščic —
+ploščice ostanejo v izbrani paleti gostitelja (tu bordo). Ponoči ozadje dobi nežno zvezdnato nebo (CSS, brez slik).</div>
+</body>
+</html>
