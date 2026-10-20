@@ -74,7 +74,7 @@ export function tenantSavePayload<T extends {
       "coverSubOpacity", "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil",
       "textScale", "textFont", "textColor", "coverAlign", "coverShowRating",
       "logoX", "logoY", "logoW", "logoOpacity", "navColorCover", "navColor",
-      "navColorOn", "bgColor",
+      "navColorOn", "bgColor", "guestDesign", "simplePalette", "simpleBaseColor",
     ] as const;
     const hostData: Record<string, unknown> = { ...contacts };
     for (const field of editableFields) {

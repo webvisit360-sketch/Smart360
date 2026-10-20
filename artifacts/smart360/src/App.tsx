@@ -49,6 +49,9 @@ const LivingGuideSosFixture = import.meta.env.DEV
 const LivingGuideProgramFixture = import.meta.env.DEV
   ? lazy(() => import('@/pages/living-guide/LivingGuideProgramFixture'))
   : null;
+const SimpleDesignFixture = import.meta.env.DEV
+  ? lazy(() => import('@/pages/living-guide/simple/SimpleDesignFixture'))
+  : null;
 const LivingGuideGuestShell = lazy(
   () => import('@/pages/living-guide/LivingGuideGuestShell'),
 );
@@ -349,6 +352,14 @@ function Router() {
           <Route path="/__program-fixture/*?">
             <Suspense fallback={null}>
               <LivingGuideProgramFixture />
+            </Suspense>
+          </Route>
+        )}
+
+        {SimpleDesignFixture && (
+          <Route path="/__simple-fixture/*?">
+            <Suspense fallback={null}>
+              <SimpleDesignFixture />
             </Suspense>
           </Route>
         )}

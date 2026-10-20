@@ -2307,6 +2307,29 @@ export const TenantBaseNotificationChannel = {
 } as const;
 
 /**
+ * @nullable
+ */
+export type TenantBaseGuestDesign = typeof TenantBaseGuestDesign[keyof typeof TenantBaseGuestDesign] | null;
+
+
+export const TenantBaseGuestDesign = {
+  trend: 'trend',
+  simple: 'simple',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TenantBaseSimplePalette = typeof TenantBaseSimplePalette[keyof typeof TenantBaseSimplePalette] | null;
+
+
+export const TenantBaseSimplePalette = {
+  bordo: 'bordo',
+  modra: 'modra',
+  custom: 'custom',
+} as const;
+
+/**
  * Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell
  */
 export type TenantBaseGuestUiMode = typeof TenantBaseGuestUiMode[keyof typeof TenantBaseGuestUiMode];
@@ -2419,6 +2442,15 @@ export interface TenantBase {
      * @nullable
      */
   bgColor?: string | null;
+  /** @nullable */
+  guestDesign?: TenantBaseGuestDesign;
+  /** @nullable */
+  simplePalette?: TenantBaseSimplePalette;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  simpleBaseColor?: string | null;
   theme: string;
   /** Guest-facing UI mode: 'legacy' = existing mediterran/swipe themes; 'living-guide' = Living Guide shell */
   guestUiMode: TenantBaseGuestUiMode;
@@ -2593,6 +2625,29 @@ export const TenantUpdateNotificationChannel = {
 } as const;
 
 /**
+ * @nullable
+ */
+export type TenantUpdateGuestDesign = typeof TenantUpdateGuestDesign[keyof typeof TenantUpdateGuestDesign] | null;
+
+
+export const TenantUpdateGuestDesign = {
+  trend: 'trend',
+  simple: 'simple',
+} as const;
+
+/**
+ * @nullable
+ */
+export type TenantUpdateSimplePalette = typeof TenantUpdateSimplePalette[keyof typeof TenantUpdateSimplePalette] | null;
+
+
+export const TenantUpdateSimplePalette = {
+  bordo: 'bordo',
+  modra: 'modra',
+  custom: 'custom',
+} as const;
+
+/**
  * Guest-facing UI mode for all new and updated tenants
  */
 export type TenantUpdateGuestUiMode = typeof TenantUpdateGuestUiMode[keyof typeof TenantUpdateGuestUiMode];
@@ -2688,6 +2743,15 @@ export interface TenantUpdate {
   wifiEnc?: string | null;
   /** @nullable */
   bgColor?: string | null;
+  /** @nullable */
+  guestDesign?: TenantUpdateGuestDesign;
+  /** @nullable */
+  simplePalette?: TenantUpdateSimplePalette;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  simpleBaseColor?: string | null;
   /** @nullable */
   renewsAt?: string | null;
   theme?: string;

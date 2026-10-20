@@ -59,6 +59,7 @@ import { HostOnboardingReviewTrigger, HostOnboardingReviewPanel } from "@/compon
 import { adminPlaceTargetTab } from "@/lib/manual-pin-feedback";
 import { SkeletonAlignmentAction, DistanceBackfillAction } from "@/components/admin/skeleton-alignment-action";
 import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-editor";
+import { GuestDesignSetting } from "@/components/admin/guest-design-setting";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -242,6 +243,10 @@ export default function AdminTenantEdit() {
     wifiEnc: null as string | null, // null = WPA (privzeto)
     bgColor: null as string | null, // null = belo (privzeto)
     guestUiMode: "living-guide" as "legacy" | "living-guide",
+    // NULL design = Trend, NULL palette = bordo (never materialized on open).
+    guestDesign: null as "trend" | "simple" | null,
+    simplePalette: null as "bordo" | "modra" | "custom" | null,
+    simpleBaseColor: null as string | null,
   });
   const [notificationPhoneError, setNotificationPhoneError] = useState<string | null>(null);
 
@@ -498,6 +503,9 @@ export default function AdminTenantEdit() {
         wifiEnc: tenant.wifiEnc ?? null,
         bgColor: tenant.bgColor ?? null,
         guestUiMode: (tenant.guestUiMode === "living-guide" ? "living-guide" : "legacy") as "legacy" | "living-guide",
+        guestDesign: tenant.guestDesign ?? null,
+        simplePalette: tenant.simplePalette ?? null,
+        simpleBaseColor: tenant.simpleBaseColor ?? null,
       };
       lastSaved.current = initialForm;
       lastSavedMediaQuotaGb.current = ((tenant.mediaQuotaBytes ?? 2_000_000_000) / 1_000_000_000).toFixed(1).replace(/\.0$/, "");
@@ -1267,6 +1275,11 @@ export default function AdminTenantEdit() {
             accept="image/*"
             className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "logo"); e.target.value = ""; }}
+          />
+
+          <GuestDesignSetting
+            value={{ guestDesign: formData.guestDesign, simplePalette: formData.simplePalette, simpleBaseColor: formData.simpleBaseColor }}
+            onChange={(next) => setFormData((prev) => ({ ...prev, ...next }))}
           />
 
           <Card>

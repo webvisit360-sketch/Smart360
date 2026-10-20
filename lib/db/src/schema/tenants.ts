@@ -139,6 +139,9 @@ export const tenantsTable = pgTable("tenants", {
   // NULL = theme default white. Dark text/line tokens are DERIVED from its
   // luminance client-side — never stored separately.
   bgColor: text("bg_color"),
+  guestDesign: text("guest_design"),
+  simplePalette: text("simple_palette"),
+  simpleBaseColor: text("simple_base_color"),
   theme: text("theme").notNull().default("mediterran"),
   // Guest-facing UI mode. New tenants always use the Living Guide shell.
   // "legacy" remains readable only while the owner inventories old tenants.

@@ -1,0 +1,132 @@
+/* Enostaven — values copied from the binding references
+   (enostavna-koncni.html / enostavna-melipu.html). Everything is scoped to
+   .lgs-* classes so the Trend design stays untouched; the only shared piece
+   is the landing flag column (.lgs-flags), authorized for both designs. */
+
+/* Lato (OFL) 700 + 900, latin + latin-ext (č š ž đ ć), bundled locally. */
+@font-face {
+  font-family: "Lato S360";
+  src: url("../../../assets/fonts/lato-700-latin.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Lato S360";
+  src: url("../../../assets/fonts/lato-700-latin-ext.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Lato S360";
+  src: url("../../../assets/fonts/lato-900-latin.woff2") format("woff2");
+  font-weight: 900; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Lato S360";
+  src: url("../../../assets/fonts/lato-900-latin-ext.woff2") format("woff2");
+  font-weight: 900; font-style: normal; font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---------- landing flags (both designs) ---------- */
+.lgs-flags {
+  position: absolute; right: 14px; bottom: 110px; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  font-family: "Lato S360", -apple-system, "Segoe UI", sans-serif;
+}
+.lgs-flags-col { display: flex; flex-direction: column-reverse; align-items: center; gap: 9px; }
+.lgs-flag {
+  width: 52px; height: 38px; border-radius: 6px; border: 0; padding: 0; margin: 0;
+  background: rgba(0,0,0,.35); box-shadow: 0 3px 10px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lgs-flag.sel { width: 64px; height: 47px; }
+.lgs-flag:focus-visible, .lgs-flagbtn:focus-visible, .lgs-tile:focus-visible, .lgs-open:focus-visible {
+  outline: 2px solid var(--s-stroke, #fff); outline-offset: 3px;
+}
+.lgs-flag-img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.lgs-flags-lbl {
+  color: var(--s-txt, #F4F7FB); font-size: 11px; font-weight: 900; letter-spacing: .08em;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6); margin-top: 2px;
+}
+/* Trend: the column sits above the cover action bar. */
+.lg2-cover .lgs-flags { bottom: calc(110px + env(safe-area-inset-bottom)); }
+
+/* ---------- Enostaven root ---------- */
+.lgs-root {
+  background: var(--s-bg);
+  min-height: 100dvh;
+}
+.lgs-root .lgs-cover,
+.lgs-root .lgs-home { font-family: "Lato S360", -apple-system, "Segoe UI", sans-serif; }
+:where(.lgs-cover, .lgs-home) * { box-sizing: border-box; margin: 0; }
+
+/* ---------- landing ---------- */
+.lgs-cover { position: absolute; inset: 0; overflow-y: auto; background: var(--s-bg); }
+.lgs-hero { height: 540px; position: relative; background: linear-gradient(175deg,#5E8A52 0%,#38543A 60%,#24172b 100%); }
+.lgs-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lgs-detail-back { position:absolute; z-index:90; top:max(12px,env(safe-area-inset-top)); left:12px; width:44px; height:44px; display:grid; place-items:center; border:1px solid #d8ddd8; border-radius:50%; color:#18251d; background:white; box-shadow:0 2px 8px #0002; }
+.lgs-detail-back svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.5; }
+.lgs-shade { position: absolute; inset: 0; background: linear-gradient(180deg,
+  transparent 40%, color-mix(in srgb, var(--s-bg) 90%, transparent) 88%, var(--s-bg) 100%); }
+.lgs-land { padding: 0 20px calc(26px + env(safe-area-inset-bottom)); margin-top: -84px; position: relative; }
+.lgs-small { color: var(--s-txt); opacity: .85; font-size: 12px; letter-spacing: .16em; font-weight: 900; }
+.lgs-land h1 { color: var(--s-txt); font-size: 30px; font-weight: 900; margin: 3px 0 2px; line-height: 1.2; }
+.lgs-adr { color: var(--s-adr); font-size: 13.5px; margin-bottom: 14px; }
+.lgs-open {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+  background: linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%); background-clip: padding-box;
+  color: var(--s-txt); border-radius: 18px; padding: 16px; font: inherit; font-size: 18px; font-weight: 900;
+  letter-spacing: .03em; text-transform: uppercase;
+  border: 2.3px solid var(--s-stroke); box-shadow: inset 0 0 0 1px var(--s-bg), 0 5px 16px rgba(0,0,0,.35);
+}
+
+/* ---------- one-page home ---------- */
+.lgs-home {
+  position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: var(--s-bg); padding-top: env(safe-area-inset-top);
+}
+.lgs-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 2px; }
+.lgs-tn { color: var(--s-tint); font-size: 12px; letter-spacing: .14em; font-weight: 700; text-transform: uppercase; }
+.lgs-tt { color: var(--s-txt); font-size: 25px; font-weight: 900; margin-top: 2px; line-height: 1.2; }
+.lgs-flagbtn {
+  flex: none; width: 52px; height: 38px; border-radius: 6px; border: 0; padding: 0; cursor: pointer;
+  background: rgba(0,0,0,.28); box-shadow: 0 2px 8px rgba(0,0,0,.35);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.lgs-sec { color: var(--s-txt); font-size: 13px; font-weight: 700; margin: 20px 26px 12px !important;
+  letter-spacing: .08em; text-transform: uppercase; line-height: 1.2; }
+.lgs-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); column-gap: 30px; row-gap: 19px; padding: 0 26px; }
+.lgs-tile {
+  aspect-ratio: 1/1; min-width: 0; overflow: hidden; color: var(--s-stroke); cursor: pointer; text-decoration: none;
+  font: inherit;
+  background: linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%); background-clip: padding-box;
+  border: 2.3px solid var(--s-stroke); border-radius: 19%;
+  box-shadow: inset 0 0 0 1px var(--s-bg), 0 4px 14px rgba(10,5,15,.35);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; padding: 10px 5px 6px;
+  -webkit-tap-highlight-color: transparent; transition: transform .12s ease;
+}
+.lgs-tile:active { transform: scale(.96); }
+.lgs-tile svg { width: 58px; height: 58px; fill: #FFFFFF; stroke: none; flex: 0 1 auto; min-height: 0; margin-top: 1px; }
+.lgs-tile svg.ln { fill: none; stroke: #FFFFFF; stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
+.lgs-tile b {
+  color: var(--s-stroke); font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; text-transform: uppercase;
+  letter-spacing: .015em; margin-top: auto; max-width: 100%; flex: none;
+  /* never clipped: size is chosen per label (simpleLabelSize) and the icon yields space */
+  overflow-wrap: anywhere; hyphens: auto;
+}
+.lgs-foot { color: var(--s-tint); font-size: 11.5px; text-align: center; padding: 22px 0 calc(24px + env(safe-area-inset-bottom)); }
+
+/* Single-back destinations (weather, contact sheets; recorder full view). */
+.lgs-sheet-layer { position: fixed; inset: 0; z-index: 60; background: rgba(10,5,15,.55); display: flex; align-items: flex-end; justify-content: center; }
+.lgs-sheet-panel { width: 100%; max-width: 430px; max-height: 88dvh; overflow-y: auto; background: var(--s-bg); color: var(--s-txt);
+  border-radius: 24px 24px 0 0; padding: 12px 16px calc(22px + env(safe-area-inset-bottom)); }
+.lgs-back { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 50%;
+  background: color-mix(in srgb, var(--s-tile2) 70%, transparent); color: var(--s-txt); cursor: pointer; margin-bottom: 8px; }
+.lgs-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.lgs-full { position: fixed; inset: 0; z-index: 55; overflow-y: auto; background: var(--s-bg); color: var(--s-txt);
+  padding: calc(14px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); font-family: "Lato S360", sans-serif; }
+.lgs-full[hidden] { display: none; }
+.lgs-full-title { font-size: 25px; font-weight: 900; margin: 2px 4px 14px; }

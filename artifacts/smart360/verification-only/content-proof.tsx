@@ -6,6 +6,7 @@ import { Router } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LivingGuideGuestShell from "../src/pages/living-guide/LivingGuideGuestShell";
+import BaselineGuestShell from "../src/pages/living-guide/LivingGuideGuestShell.baseline-fixture";
 import "../src/index.css";
 import "../src/pages/living-guide/living-guide-tokens.css";
 import "../src/pages/living-guide/living-guide-guest.css";
@@ -23,7 +24,8 @@ function Proof() {
   },[language]);
   if(error)return <p role="alert">{error}</p>;
   if(!tenant)return <p>Loading DEV evidence…</p>;
-  return <LivingGuideGuestShell tenant={tenant} slug={tenant.slug} lang={language}
+  const Shell=new URLSearchParams(window.location.search).has("baseline")?BaselineGuestShell:LivingGuideGuestShell;
+  return <Shell tenant={tenant} slug={tenant.slug} lang={language}
     devWeather={null} onLanguageChange={lang=>{
       const url=new URL(window.location.href);url.searchParams.set("lang",lang);window.location.href=url.href;
     }}/>;

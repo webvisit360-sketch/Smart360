@@ -48,3 +48,5 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+/artifacts/smart360/verification-only/enostaven/
+/artifacts/smart360/reports/enostaven/

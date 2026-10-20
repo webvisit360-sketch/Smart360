@@ -129,6 +129,11 @@ import { LivingGuideAbout, LivingGuideMenu, MenuGlyph, menuCopy } from "./Living
 import { useGuestAnnouncements } from "./use-guest-announcements";
 import { isGuestStandalone, requestGuestInstall } from "../guest/guest-install";
 import { ProgramDetail, ProgramView } from "./LivingGuideProgram";
+import { LandingFlagColumn } from "./simple/LanguageFlags";
+import { SimpleCoverView, SimpleFullView, SimpleHomeView, SimpleSheet, SimpleWeatherSheet } from "./simple/SimpleViews";
+import { simpleCopy } from "./simple/simple-copy";
+import { buildSimpleSections, type SimpleTile } from "./simple/simple-tiles";
+import { resolveGuestDesign, resolveSimplePalette, simplePaletteStyle } from "./simple/simple-palette";
 import { isProgramCategory, orderPrefillNoteFor, programEventOf, signupNote } from "./living-guide-program-model";
 
 type GuestRecord = {
@@ -846,6 +851,12 @@ export default function LivingGuideGuestShell({
   const [showNotices, setShowNotices] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showSimpleWeather, setShowSimpleWeather] = useState(false);
+  const [showSimpleContact, setShowSimpleContact] = useState(false);
+  const [showSimpleRecorder, setShowSimpleRecorder] = useState(false);
+  // Once opened, the recorder stays mounted (hidden) so a live tour's
+  // geolocation watch / wake lock survives going back to the tile page.
+  const [simpleRecorderMounted, setSimpleRecorderMounted] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
     const [showLanguages, setShowLanguages] = useState(false);
   const [orderItemId, setOrderItemId] = useState<string | null>(null);
@@ -1677,10 +1688,12 @@ export default function LivingGuideGuestShell({
 
   const closePresentedView = useCallback(
     (fallbackPath: string) => {
+      const simpleDestination = resolveGuestDesign(tenant?.guestDesign) === "simple";
+      if (simpleDestination) fallbackPath = `/${slug}/home`;
       const navigateAfterAnimation = () => {
         restoreDetailFocusRef.current = true;
         const returnsToDetail =
-          window.history.state?.livingGuideFromPresentation === "detail";
+          !simpleDestination && window.history.state?.livingGuideFromPresentation === "detail";
         if (!returnsToDetail) {
           compactHistoryAfterCloseRef.current = false;
           setLocation(buildGuestPath(fallbackPath), {
@@ -1733,6 +1746,8 @@ export default function LivingGuideGuestShell({
       isDetailPresentation,
       location,
       setLocation,
+      tenant?.guestDesign,
+      slug,
     ],
   );
 
@@ -1906,6 +1921,39 @@ export default function LivingGuideGuestShell({
   const notices = visible(tenant?.notices);
   const announcements = useGuestAnnouncements(slug, String(tenant?.id ?? slug));
   const installEnabled = typeof window !== "undefined" && window.location.pathname.startsWith(`/${slug}/`) && !new URLSearchParams(window.location.search).has("preview");
+  // Enostaven: a presentation layer over the same data/routes. NULL/"trend"
+  // keeps every Trend code path below byte-identical.
+  const isSimple = resolveGuestDesign(tenant?.guestDesign) === "simple";
+  const simpleStyle = isSimple
+    ? (simplePaletteStyle(resolveSimplePalette(tenant?.simplePalette, tenant?.simpleBaseColor)) as CSSProperties)
+    : undefined;
+  const simpleHasContact = ["phone", "whatsapp", "viber", "instagram", "email"].some((key) => Boolean(tenant?.[key]));
+  const simpleSections = isSimple
+    ? buildSimpleSections(sections, lang, {
+        hasWeather: tenant?.latitude != null && tenant?.longitude != null,
+        hasContact: simpleHasContact,
+        installAvailable: installEnabled && !isGuestStandalone(slug),
+        hasOrderable: allCategories.some((entry: any) => visible(entry.category.items).some((item: any) => item.orderEnabled)),
+        recordingEnabled: isTourRecordingEnabled(tenant),
+        mapHref: resolveTenantMapsUrl(tenant, "search"),
+        hasSiteMap: navState.hasSiteMap,
+      })
+    : [];
+  const simpleBaseIsHome = isSimple && ["home", "grid", "more"].includes(baseScreen);
+  const onSimpleTile = (tile: SimpleTile) => {
+    const action = tile.action;
+    if (action.kind === "category") openCategory(action.categoryId);
+    else if (action.kind === "notices") setShowNotices(true);
+    else if (action.kind === "weather") setShowSimpleWeather(true);
+    else if (action.kind === "contact") setShowSimpleContact(true);
+    else if (action.kind === "map" && action.siteMap) navigate(`/${slug}/site-map`);
+    else if (action.kind === "sos") openEmergencyHelp();
+    else if (action.kind === "install") requestGuestInstall(slug);
+    else if (action.kind === "about") setShowAbout(true);
+    else if (action.kind === "orders") setShowOrders(true);
+    else if (action.kind === "record") { setSimpleRecorderMounted(true); setShowSimpleRecorder(true); }
+    else if (action.kind === "messages") navigateDetail(`/${slug}/messages`);
+  };
 
   return (
     <SosEntryContext.Provider value={sosEntry}>
@@ -1913,7 +1961,9 @@ export default function LivingGuideGuestShell({
     <WeatherProvider slug={slug} lang={lang} override={import.meta.env.DEV ? devWeather : undefined}>
     <div
       ref={rootRef}
-      className="lg2-app notranslate"
+      className={isSimple ? "lg2-app lgs-root notranslate" : "lg2-app notranslate"}
+      style={simpleStyle}
+      data-guest-design={isSimple ? "simple" : undefined}
       data-living-guide
       data-living-guide-app
       data-screen={screen}
@@ -1943,14 +1993,27 @@ export default function LivingGuideGuestShell({
             suppressRouteEntryAnimation ? "true" : undefined
           }
         >
-        {baseScreen === "cover" && (
+        {baseScreen === "cover" && isSimple && (
+          <SimpleCoverView tenant={tenant} lang={lang} openLabel={t("UI.lg.openGuide")} onOpen={() => navigate(`/${slug}/home`)} onLanguage={onLanguageChange} />
+        )}
+        {baseScreen === "cover" && !isSimple && (
           <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
             if (guest) navigate(`/${slug}/home`);
             else setShowSignIn(true);
-          }} onSearch={() => setShowSearch(true)} onLanguage={() => setShowLanguages(true)} />
+          }} onSearch={() => setShowSearch(true)} onSelectLanguage={onLanguageChange} />
         )}
 
-        {baseScreen === "home" && (
+        {simpleBaseIsHome && (
+          <SimpleHomeView
+            tenant={tenant}
+            lang={lang}
+            sections={simpleSections}
+            onTile={onSimpleTile}
+            onLanguage={() => setShowLanguages(true)}
+          />
+        )}
+
+        {!isSimple && baseScreen === "home" && (
           <HomeView
             tenant={tenant}
             sections={sections}
@@ -1980,7 +2043,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "more" && navState.omitted.length > 0 && (
+        {!isSimple && baseScreen === "more" && navState.omitted.length > 0 && (
           <MoreGuestView
             omitted={navState.omitted}
             t={t}
@@ -1991,7 +2054,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "grid" && baseSection && baseSection.key === "offer" && (
+        {!isSimple && baseScreen === "grid" && baseSection && baseSection.key === "offer" && (
           <ShopView
             tenant={tenant}
             section={baseSection}
@@ -2004,7 +2067,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "grid" && baseSection && baseSection.key === "stay" && (
+        {!isSimple && baseScreen === "grid" && baseSection && baseSection.key === "stay" && (
           <StayView
             tenant={tenant}
             section={baseSection}
@@ -2020,7 +2083,7 @@ export default function LivingGuideGuestShell({
           />
         )}
 
-        {baseScreen === "grid" && baseSection && baseSection.key !== "offer" && baseSection.key !== "stay" && (
+        {!isSimple && baseScreen === "grid" && baseSection && baseSection.key !== "offer" && baseSection.key !== "stay" && (
           <GridView
             tenant={tenant}
             section={baseSection}
@@ -2084,6 +2147,7 @@ export default function LivingGuideGuestShell({
             data-detail-transition={detailTransitionPhase}
             style={detailRouteStyle}
           >
+          {isSimple && screen === "detail" && <button type="button" className="lgs-detail-back" aria-label={simpleCopy("back", lang)} onClick={() => closePresentedView(`/${slug}/home`)} data-testid="button-simple-detail-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button>}
           {screen === "detail" && categoryContext ? (
           <DetailView
             category={categoryContext.category}
@@ -2143,7 +2207,31 @@ export default function LivingGuideGuestShell({
         )}
       </main>
 
-      {shouldShowLivingGuideBottomNav(baseScreen) && (
+      {isSimple && showSimpleWeather && (
+        <SimpleWeatherSheet lang={lang} location={tenantWeatherLocation(tenant)} onClose={() => setShowSimpleWeather(false)} />
+      )}
+
+      {isSimple && showSimpleContact && (
+        <SimpleSheet lang={lang} label={simpleCopy("contact", lang)} testId="simple-contact" onClose={() => setShowSimpleContact(false)}>
+          <TenantContactRows tenant={tenant} t={t} />
+        </SimpleSheet>
+      )}
+
+      {isSimple && simpleRecorderMounted && isTourRecordingEnabled(tenant) && (
+        <SimpleFullView lang={lang} hidden={!showSimpleRecorder} label={simpleCopy("record", lang)} onBack={() => setShowSimpleRecorder(false)}>
+          <FreeTourRecorder
+            slug={slug}
+            t={t}
+            center={Number.isFinite(tenant?.longitude) && Number.isFinite(tenant?.latitude) ? [tenant.longitude, tenant.latitude] : null}
+            tenantName={tenant?.name ?? ""}
+            lang={lang}
+            viewVisible={showSimpleRecorder}
+            viewKey="simple-recorder"
+          />
+        </SimpleFullView>
+      )}
+
+      {!isSimple && shouldShowLivingGuideBottomNav(baseScreen) && (
         <BottomNav
           resolvedNav={navState.resolved}
           sections={sections}
@@ -2305,7 +2393,7 @@ function Starfield({ theme }: { theme: LivingTheme }) {
   );
 }
 
-function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: any; lang: string; t: UiTranslator; onOpen: () => void; onSearch: () => void; onLanguage: () => void; }) {
+function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { tenant: any; lang: string; t: UiTranslator; onOpen: () => void; onSearch: () => void; onSelectLanguage: (lang: string) => void; }) {
   const title = tenant.coverTitle || tenant.name;
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
 
@@ -2339,10 +2427,8 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onLanguage }: { tenant: 
           <svg aria-hidden="true"><use href="#lg-i-down" /></svg>
           {t("UI.lg.openGuide")}
         </button>
-        <button className="lg2-fab lg2-language" type="button" onClick={onLanguage} aria-label={t("UI.lg.language", { lang: lang.toUpperCase() })} data-lg-language-trigger data-testid="button-cover-language">
-          {lang.toUpperCase()}
-        </button>
       </div>
+      <LandingFlagColumn lang={lang} onSelect={onSelectLanguage} />
     </section>
   );
 }

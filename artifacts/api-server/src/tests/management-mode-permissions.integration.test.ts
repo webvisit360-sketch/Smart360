@@ -129,11 +129,25 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
   }
   assert.equal((await request("PATCH", path, { isPublished: true, publishNow: true })).status, 403);
   assert.equal((await request("PATCH", path, { name: "Concierge forbidden", wifiSsid: "no" })).status, 403);
+  for (const appearance of [{ guestDesign: "simple" }, { simplePalette: "modra" }, { simpleBaseColor: "#246B54" }]) {
+    assert.equal((await request("PATCH", path, appearance)).status, 403, "concierge appearance remains operator-only");
+  }
   assert.equal((await request("POST", `${path}/sections`, { key: "x", title: "x", icon: "x" })).status, 403);
   await ok("PATCH", path, { wifiSsid: "Concierge allowed", phone: "+38640123456" });
   const conciergeLogin = await request("POST", "/admin/host/login", { email: host!.email, password }, "");
   assert.equal(conciergeLogin.status, 200, "concierge remains able to sign in");
   await changeMode("self_service");
+  const appearanceSnapshot = await readPublishedContent(a!.id);
+  await ok("PATCH", path, { guestDesign: "simple", simplePalette: "custom", simpleBaseColor: "#246B54" });
+  const [appearanceDraft] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, a!.id));
+  assert.equal(appearanceDraft!.guestDesign, "simple");
+  assert.equal(appearanceDraft!.simplePalette, "custom");
+  assert.equal(appearanceDraft!.simpleBaseColor, "#246B54");
+  assert.equal(appearanceDraft!.hasUnpublishedChanges, true);
+  assert.deepEqual(await readPublishedContent(a!.id), appearanceSnapshot, "appearance stays draft until reviewed publish");
+  for (const invalid of [{ guestDesign: "invented" }, { simplePalette: "invented" }, { simpleBaseColor: "red" }]) {
+    assert.equal((await request("PATCH", path, invalid)).status, 400);
+  }
   await ok("PATCH", path, {
     name: "Independent host", address: "Test address", mapQuery: "Test location",
     latitude: 46.1, longitude: 14.5, theme: "swipe", guestUiMode: "living-guide",
@@ -194,8 +208,11 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
   const guest = await request("GET", `/public/tenants/${a!.slug}`, undefined, "");
   assert.equal(guest.status, 200, await guest.clone().text());
   const guestBody = await guest.json() as { sections: Array<{ categories: Array<{ items: Array<{ id: string; eventSchedule: unknown; price: string }> }> }> };
+  assert.equal((guestBody as any).guestDesign, "simple");
+  assert.equal((guestBody as any).simplePalette, "custom");
+  assert.equal((guestBody as any).simpleBaseColor, "#246B54");
   const guestItems = guestBody.sections.flatMap(s => s.categories.flatMap(c => c.items));
-  assert.deepEqual(guestItems.find(i => i.id === event.id)?.eventSchedule, schedule);
+  assert.deepEqual(guestItems.find(i => i.id === event.id)?.eventSchedule, { ...schedule, locationText: "", ageText: "" });
   assert.equal(guestItems.find(i => i.id === offerItem.id)?.price, "15.00");
   const guestNotice = await request("GET", `/guest/${a!.slug}/announcements`, undefined, "");
   assert.match(await guestNotice.text(), /Updated notice/);

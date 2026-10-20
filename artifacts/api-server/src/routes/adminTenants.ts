@@ -177,7 +177,7 @@ const tenantSettingCategories: ReadonlyArray<readonly [readonly string[], string
   [["address", "mapQuery", "mapUrl", "latitude", "longitude", "coordinateOverride"], "lokacija"],
   [["wifiSsid", "wifiPass", "wifiEnc"], "Wi-Fi dostop"],
   [[
-    "bgColor", "theme", "coverTitle", "coverSubtitle", "coverTitleSize",
+    "bgColor", "theme", "guestDesign", "simplePalette", "simpleBaseColor", "coverTitle", "coverSubtitle", "coverTitleSize",
     "coverTitleOpacity", "coverTextColor", "coverSubSize", "coverSubOpacity",
     "coverMetaSize", "coverMetaOpacity", "coverVeil", "tileVeil", "textScale",
     "textFont", "textColor", "coverAlign", "coverShowRating", "logoX", "logoY",
@@ -580,6 +580,12 @@ function validateThemeCoverFields(data: Record<string, unknown>): string | null 
     return "textColor must be a hex color like #14201F";
   if (data["bgColor"] !== undefined && data["bgColor"] !== null && !/^#[0-9a-fA-F]{6}$/.test(String(data["bgColor"])))
     return "bgColor must be a hex color like #FFFFFF";
+  if (data["guestDesign"] != null && !["trend", "simple"].includes(String(data["guestDesign"])))
+    return "guestDesign must be trend or simple";
+  if (data["simplePalette"] != null && !["bordo", "modra", "custom"].includes(String(data["simplePalette"])))
+    return "simplePalette must be bordo, modra or custom";
+  if (data["simpleBaseColor"] != null && !/^#[0-9a-fA-F]{6}$/.test(String(data["simpleBaseColor"])))
+    return "simpleBaseColor must be a hex RGB color";
   if (data["wifiEnc"] !== undefined && data["wifiEnc"] !== null && !["WPA", "WEP", "nopass"].includes(String(data["wifiEnc"])))
     return "wifiEnc must be WPA, WEP or nopass";
   if (data["guestUiMode"] !== undefined && data["guestUiMode"] !== "living-guide")

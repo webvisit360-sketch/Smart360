@@ -5,9 +5,11 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+import type { TenantUpdateGuestDesign } from './tenantUpdateGuestDesign';
 import type { TenantUpdateGuestUiMode } from './tenantUpdateGuestUiMode';
 import type { TenantUpdateLivingGuideNavItem } from './tenantUpdateLivingGuideNavItem';
 import type { TenantUpdateNotificationChannel } from './tenantUpdateNotificationChannel';
+import type { TenantUpdateSimplePalette } from './tenantUpdateSimplePalette';
 
 export interface TenantUpdate {
   slug?: string;
@@ -83,6 +85,15 @@ export interface TenantUpdate {
   wifiEnc?: string | null;
   /** @nullable */
   bgColor?: string | null;
+  /** @nullable */
+  guestDesign?: TenantUpdateGuestDesign;
+  /** @nullable */
+  simplePalette?: TenantUpdateSimplePalette;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  simpleBaseColor?: string | null;
   /** @nullable */
   renewsAt?: string | null;
   theme?: string;

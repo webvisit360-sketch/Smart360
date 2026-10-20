@@ -5067,6 +5067,9 @@ components:
         wifiPass: { type: ["string", "null"] }
         wifiEnc: { type: ["string", "null"], description: "WPA | WEP | nopass; null = WPA" }
         bgColor: { type: ["string", "null"], description: "Page background for the whole guest app; null = white" }
+        guestDesign: { type: ["string", "null"], enum: [trend, simple, null] }
+        simplePalette: { type: ["string", "null"], enum: [bordo, modra, custom, null] }
+        simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         theme: { type: string }
         guestUiMode:
           type: string
@@ -5233,6 +5236,9 @@ components:
         wifiPass: { type: ["string", "null"] }
         wifiEnc: { type: ["string", "null"] }
         bgColor: { type: ["string", "null"] }
+        guestDesign: { type: ["string", "null"], enum: [trend, simple, null] }
+        simplePalette: { type: ["string", "null"], enum: [bordo, modra, custom, null] }
+        simpleBaseColor: { type: ["string", "null"], pattern: "^#[0-9a-fA-F]{6}$" }
         renewsAt: { type: ["string", "null"] }
         theme: { type: string }
         guestUiMode:

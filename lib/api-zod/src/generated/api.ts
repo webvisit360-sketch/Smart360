@@ -2144,6 +2144,7 @@ export const getPublicTenantResponseOneLatitudeMax = 90;
 export const getPublicTenantResponseOneLongitudeMin = -180;
 export const getPublicTenantResponseOneLongitudeMax = 180;
 
+export const getPublicTenantResponseOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getPublicTenantResponseOneLivingGuideNavMin = 5;
 export const getPublicTenantResponseOneLivingGuideNavMax = 5;
 
@@ -2215,6 +2216,9 @@ export const GetPublicTenantResponse = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(getPublicTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
@@ -2774,6 +2778,7 @@ export const listTenantsResponseOneLatitudeMax = 90;
 export const listTenantsResponseOneLongitudeMin = -180;
 export const listTenantsResponseOneLongitudeMax = 180;
 
+export const listTenantsResponseOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const listTenantsResponseOneLivingGuideNavMin = 5;
 export const listTenantsResponseOneLivingGuideNavMax = 5;
 
@@ -2815,6 +2820,9 @@ export const ListTenantsResponseItem = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(listTenantsResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
@@ -2879,6 +2887,7 @@ export const createTenantResponseOneLatitudeMax = 90;
 export const createTenantResponseOneLongitudeMin = -180;
 export const createTenantResponseOneLongitudeMax = 180;
 
+export const createTenantResponseOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const createTenantResponseOneLivingGuideNavMin = 5;
 export const createTenantResponseOneLivingGuideNavMax = 5;
 
@@ -2920,6 +2929,9 @@ export const CreateTenantResponse = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(createTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
@@ -4266,6 +4278,7 @@ export const getTenantResponseOneOneLatitudeMax = 90;
 export const getTenantResponseOneOneLongitudeMin = -180;
 export const getTenantResponseOneOneLongitudeMax = 180;
 
+export const getTenantResponseOneOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getTenantResponseOneOneLivingGuideNavMin = 5;
 export const getTenantResponseOneOneLivingGuideNavMax = 5;
 
@@ -4337,6 +4350,9 @@ export const GetTenantResponse = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(getTenantResponseOneOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
@@ -4530,6 +4546,7 @@ export const updateTenantBodyLatitudeMax = 90;
 export const updateTenantBodyLongitudeMin = -180;
 export const updateTenantBodyLongitudeMax = 180;
 
+export const updateTenantBodySimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateTenantBodyLivingGuideNavMin = 5;
 export const updateTenantBodyLivingGuideNavMax = 5;
 
@@ -4570,6 +4587,9 @@ export const UpdateTenantBody = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish(),
   "bgColor": zod.string().nullish(),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(updateTenantBodySimpleBaseColorRegExp).nullish(),
   "renewsAt": zod.string().nullish(),
   "theme": zod.string().optional(),
   "guestUiMode": zod.enum(['living-guide']).optional().describe('Guest-facing UI mode for all new and updated tenants'),
@@ -4612,6 +4632,7 @@ export const updateTenantResponseOneLatitudeMax = 90;
 export const updateTenantResponseOneLongitudeMin = -180;
 export const updateTenantResponseOneLongitudeMax = 180;
 
+export const updateTenantResponseOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateTenantResponseOneLivingGuideNavMin = 5;
 export const updateTenantResponseOneLivingGuideNavMax = 5;
 
@@ -4653,6 +4674,9 @@ export const UpdateTenantResponse = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(updateTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
@@ -5012,6 +5036,7 @@ export const duplicateTenantResponseTenantOneLatitudeMax = 90;
 export const duplicateTenantResponseTenantOneLongitudeMin = -180;
 export const duplicateTenantResponseTenantOneLongitudeMax = 180;
 
+export const duplicateTenantResponseTenantOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const duplicateTenantResponseTenantOneLivingGuideNavMin = 5;
 export const duplicateTenantResponseTenantOneLivingGuideNavMax = 5;
 
@@ -5054,6 +5079,9 @@ export const DuplicateTenantResponse = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(duplicateTenantResponseTenantOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),
@@ -5124,6 +5152,7 @@ export const renewTenantResponseOneLatitudeMax = 90;
 export const renewTenantResponseOneLongitudeMin = -180;
 export const renewTenantResponseOneLongitudeMax = 180;
 
+export const renewTenantResponseOneSimpleBaseColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const renewTenantResponseOneLivingGuideNavMin = 5;
 export const renewTenantResponseOneLivingGuideNavMax = 5;
 
@@ -5165,6 +5194,9 @@ export const RenewTenantResponse = zod.object({
   "wifiPass": zod.string().nullish(),
   "wifiEnc": zod.string().nullish().describe('WPA | WEP | nopass; null = WPA'),
   "bgColor": zod.string().nullish().describe('Page background for the whole guest app; null = white'),
+  "guestDesign": zod.union([zod.literal('trend'),zod.literal('simple'),zod.literal(null)]).nullish(),
+  "simplePalette": zod.union([zod.literal('bordo'),zod.literal('modra'),zod.literal('custom'),zod.literal(null)]).nullish(),
+  "simpleBaseColor": zod.string().regex(renewTenantResponseOneSimpleBaseColorRegExp).nullish(),
   "theme": zod.string(),
   "guestUiMode": zod.enum(['legacy', 'living-guide']).describe('Guest-facing UI mode: \'legacy\' = existing mediterran\/swipe themes; \'living-guide\' = Living Guide shell'),
   "coverTitle": zod.string().nullish(),

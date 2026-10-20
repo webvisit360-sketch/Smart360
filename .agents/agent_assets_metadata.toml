@@ -2780,3 +2780,17 @@ mtime_ms = 1791109612441
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1365ee62-f926-46d7-aac4-bc1a036e30aa/2687df89-8842-4178-88fd-7b775bce4c67"
 storage_version_token = "1791109844563725"
 content_type = "image/png"
+
+[[outputs]]
+id = "VmLWdtIVFPE7koa9dTZV2"
+uri = "file://artifacts/smart360/reports/enostaven/enostaven-porocilo.html"
+type = "html"
+title = "Enostaven — poročilo in slikovna dokazila"
+description = "Primerjave HTML referenc in izvedbe pri 390 × 844, bordo/modra/RGB, sedem jezikov, zastave, puščica nazaj in identičen Trend pred/po. Vključene so omejitve preverjanja."
+logical_id = "4a6fd266-1206-4ea2-9739-4b8672d4329c"
+content_hash = "sha256:a4334ef638aeea572073729b18f6199296700c90984736e8e828ac4e530f690b"
+size = 2285439
+mtime_ms = 1792530497405
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4a6fd266-1206-4ea2-9739-4b8672d4329c/13eca40b-2a56-48cd-8320-60b769ee5968"
+storage_version_token = "1792530528008602"
+content_type = "text/html"
