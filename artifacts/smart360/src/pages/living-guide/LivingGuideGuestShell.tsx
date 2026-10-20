@@ -54,6 +54,7 @@ import {
 import { LivingGuideSprite } from "./LivingGuideSprite";
 import { livingGuideInterWoff2 } from "./inter-font-source";
 import { CategoryIcon, isAvailableLucideIcon } from "@/components/category-icon";
+import { AUTOMATIC_TILE_ICON, matchTileCatalog } from "@workspace/category-icons";
 import {
   isLivingTheme,
   type LivingTheme,
@@ -571,6 +572,10 @@ function detailHeroHeight(media: any[]): number {
 
 function categoryIcon(category: any): string {
   const firstItem = visible(category?.items)[0];
+  if (category?.icon === AUTOMATIC_TILE_ICON) {
+    const automatic = matchTileCatalog(category?.label ?? "");
+    if (automatic) return automatic.id;
+  }
   if (isAvailableLucideIcon(category?.icon)) return category.icon;
   if (category?.layout === "wifi") return "wifi";
   if (category?.layout === "apartments") return "bed";

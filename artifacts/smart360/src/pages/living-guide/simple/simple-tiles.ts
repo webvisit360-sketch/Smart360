@@ -2,6 +2,7 @@
 // actual published sections/categories plus runtime features. No hardcoded
 // category list — only runtime features (notices, weather, SOS…) are fixed.
 import type { SimpleIconKey } from "./simple-icons";
+import { matchTileCatalog, tileCatalogEntry, tileKeyForCatalog } from "@workspace/category-icons";
 import { simpleCopy, type SimpleCopyKey } from "./simple-copy";
 
 export type SimpleTileAction =
@@ -58,6 +59,10 @@ const RULES: [RegExp, SimpleIconKey][] = [
 ];
 
 export function simpleCategoryIcon(category: any, sectionKey: string): SimpleIconKey {
+  const override = tileCatalogEntry(category?.icon);
+  if (override) return tileKeyForCatalog(override) as SimpleIconKey;
+  const match = matchTileCatalog(category?.label ?? category?.title ?? "");
+  if (match) return tileKeyForCatalog(match) as SimpleIconKey;
   // Explicit button names take precedence over generic/stale category keys.
   const label = (category?.label ?? category?.title ?? "").trim().toLowerCase();
   if (/^apartmaji$|^apartments$|^appartamenti$|^appartements$|^appartementen$|^apartmani$|^ferienwohnungen$/.test(label)) return "bed";

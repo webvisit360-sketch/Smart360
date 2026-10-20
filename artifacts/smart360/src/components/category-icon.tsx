@@ -1,7 +1,8 @@
 import React, { Suspense, lazy } from "react";
 import type { LucideProps } from "lucide-react";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
-import { lucideIconName } from "@workspace/category-icons";
+import { lucideIconName, tileCatalogEntry } from "@workspace/category-icons";
+import { TileCatalogIcon } from "./tile-catalog-icon";
 import { spriteId } from "@/pages/guest/sprite-icon";
 
 type DynamicIconName = keyof typeof dynamicIconImports;
@@ -10,6 +11,7 @@ const cache = new Map<DynamicIconName, React.LazyExoticComponent<React.Component
 export const availableLucideIconNames = Object.keys(dynamicIconImports).sort() as DynamicIconName[];
 
 export function isAvailableLucideIcon(icon?: string | null): boolean {
+  if (tileCatalogEntry(icon)) return true;
   const name = lucideIconName(icon);
   return !!name && name in dynamicIconImports;
 }
@@ -32,6 +34,7 @@ export function CategoryIcon({
   className,
   ...props
 }: { icon?: string | null; className?: string } & Omit<LucideProps, "ref">) {
+  if (tileCatalogEntry(icon)) return <TileCatalogIcon icon={icon!} className={className} {...props} />;
   const name = lucideIconName(icon);
   if (name && name in dynamicIconImports) {
     const LucideIcon = lazyLucide(name as DynamicIconName);

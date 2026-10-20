@@ -773,7 +773,7 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
         : "Določa zavihek, pod katerim gost vidi to kategorijo na zaslonu Okolica.";
 
   const [label, setLabel] = useState(category?.label ?? "");
-  const [icon, setIcon] = useState(category?.icon ?? suggestCategoryIcon(""));
+  const [icon, setIcon] = useState(category?.icon ?? "catalog:auto");
   const iconManuallyChosen = useRef(mode === "edit");
   const [layout, setLayout] = useState(category?.layout ?? "text");
   const [exploreGroup, setExploreGroup] = useState<string>(initialGroup);
@@ -781,7 +781,7 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
 
   const baseline = {
     label: category?.label ?? "",
-    icon: category?.icon ?? suggestCategoryIcon(""),
+    icon: category?.icon ?? "catalog:auto",
     layout: category?.layout ?? "text",
     exploreGroup: initialGroup,
     isVisible: category?.isVisible ?? true,
@@ -897,9 +897,6 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
           onChange={(e) => {
             const nextLabel = e.target.value;
             setLabel(nextLabel);
-            if (mode === "create" && !iconManuallyChosen.current) {
-              setIcon(suggestCategoryIcon(nextLabel));
-            }
           }}
           placeholder="npr. Restavracije"
           disabled={busy}
@@ -911,6 +908,7 @@ export function CategoryDialog({ mode, tenantId, sectionId, sectionKey, category
         <CategoryIconPicker
           value={icon}
           name={label}
+          catalog
           disabled={busy}
           onChange={(nextIcon) => {
             iconManuallyChosen.current = true;

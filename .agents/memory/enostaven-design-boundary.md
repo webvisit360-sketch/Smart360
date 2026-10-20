@@ -45,3 +45,14 @@ The owner's later SVG catalogue supersedes the earlier HTML pictograms for
 Apartmaji (bed), Vhodna vrata (open door), and Domači izdelki (jar). Match the
 button label; generic Nastanitve keep the building.
 **Why:** These three replacements were explicitly supplied to distinguish tiles.
+
+The owner's expanded category-icon catalogue is now the binding pictogram source
+for the whole Enostaven library, including its seven-language keyword lines.
+Preserve exact SVGs rather than drawing a substitute from the English description:
+the supplied Breakfast SVG is coffee only, although the message mentions a croissant.
+Existing seed icon values must not prevent automatic category-label matching;
+explicit catalogue choices are the user-controlled override, with an automatic reset.
+**Why:** The owner asked for cross-tenant matching and host/operator overrides, not
+a one-off replacement of selected tenants' data.
+**How to apply:** Keep catalogue-source fidelity, reserve generic pin/cart for
+unmatched labels, and distinguish fixture screenshots from live-production evidence.

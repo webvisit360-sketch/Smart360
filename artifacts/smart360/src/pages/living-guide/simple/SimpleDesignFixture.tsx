@@ -8,6 +8,7 @@ import { guideLanguage } from "@workspace/guide-languages";
 import { useMemo, useState, useEffect } from "react";
 import LivingGuideGuestShell from "../LivingGuideGuestShell";
 import { simpleFixtureTenant } from "./simple-fixture-data";
+import TileIconEditorFixture from "./TileIconEditorFixture";
 
 export default function SimpleDesignFixture() {
   const [search] = useState(() => new URLSearchParams(window.location.search));
@@ -31,6 +32,7 @@ export default function SimpleDesignFixture() {
     [tenantKey, palette, color, published, snapshot],
   );
   if (error) return <p role="alert">{error}</p>;
+  if (search.get("evidence") === "icon-editor") return <TileIconEditorFixture />;
   if (published && !snapshot) return <p>Loading published evidence…</p>;
   return (
     <LivingGuideGuestShell

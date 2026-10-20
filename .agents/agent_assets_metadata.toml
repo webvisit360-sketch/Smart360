@@ -2822,3 +2822,17 @@ mtime_ms = 1792534751233
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0f31495d-37a7-4346-bc41-de0a20f818a5/2af6d9da-98ad-4dad-b944-a198f18596f6"
 storage_version_token = "1792534788500595"
 content_type = "text/html"
+
+[[outputs]]
+id = "SOQnL1w7iBfyP4fvuq4DP"
+uri = "file://artifacts/smart360/reports/enostaven/icon-library/porocilo.html"
+type = "html"
+title = "Knjižnica ikon — poročilo in dokazila"
+description = "Vseh 50 ikon, posnetki mrež pri 390 × 844, iskalni izbirnik, rezervni ikoni, meritve in rezultati preverjanja pravic. Omejitve dokazil so posebej označene."
+logical_id = "9b3fa953-82f7-45a3-a57c-900948bea59f"
+content_hash = "sha256:b3df48940830dbfd6de56b3c551daf9593bcf9ab5319f0e0d984816d6db5c23c"
+size = 1260875
+mtime_ms = 1792536869226
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9b3fa953-82f7-45a3-a57c-900948bea59f/721e3f6d-1039-4256-b74a-999bfb29e613"
+storage_version_token = "1792536892439182"
+content_type = "text/html"

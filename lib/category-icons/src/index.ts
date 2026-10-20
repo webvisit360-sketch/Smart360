@@ -1,4 +1,5 @@
 export const LUCIDE_ICON_PREFIX = "lucide:";
+export * from "./tile-catalog";
 export const DEFAULT_CATEGORY_ICON = `${LUCIDE_ICON_PREFIX}star`;
 
 export function normalizeSlovenian(value: string): string {

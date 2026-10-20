@@ -1,14 +1,18 @@
 // Pictograms copied verbatim from the binding Enostaven references.
 import type { ReactElement } from "react";
+import type { TileCatalogId } from "@workspace/category-icons";
+import { catalogForTileKey } from "@workspace/category-icons";
+import { TileCatalogIcon } from "@/components/tile-catalog-icon";
 
 export type SimpleIconKey =
+  | TileCatalogId
   | "bell" | "weather" | "sos" | "phone" | "install" | "info" | "house" | "building" | "bed"
   | "wifi" | "doc" | "gear" | "clock" | "parking" | "door" | "ac" | "cart" | "bag"
   | "order" | "beach" | "mountain" | "hike" | "bike" | "trips" | "record" | "calendar"
   | "pin" | "chat";
 
 const E = { fillRule: "evenodd" as const };
-const ICONS: Record<SimpleIconKey, ReactElement> = {
+const ICONS: Partial<Record<SimpleIconKey, ReactElement>> = {
   bell: <path d="M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z" />,
   weather: <path d="M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z" />,
   sos: <path {...E} d="M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z" />,
@@ -41,6 +45,7 @@ const ICONS: Record<SimpleIconKey, ReactElement> = {
 const LINE = new Set<SimpleIconKey>(["wifi", "record"]);
 
 export function SimpleIcon({ icon }: { icon: SimpleIconKey }) {
+  if (catalogForTileKey(icon)) return <TileCatalogIcon icon={icon} />;
   return (
     <svg className={LINE.has(icon) ? "ln" : undefined} viewBox="0 0 24 24" aria-hidden="true">
       {ICONS[icon]}

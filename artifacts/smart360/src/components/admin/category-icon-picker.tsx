@@ -4,6 +4,10 @@ import {
   lucideIconName,
   normalizeSlovenian,
   suggestCategoryIcons,
+  AUTOMATIC_TILE_ICON,
+  matchTileCatalog,
+  searchTileCatalog,
+  tileCatalogEntry,
 } from "@workspace/category-icons";
 import { CategoryIcon, availableLucideIconNames } from "@/components/category-icon";
 import { Input } from "@/components/ui/input";
@@ -88,11 +92,13 @@ export function CategoryIconPicker({
   name,
   disabled,
   onChange,
+  catalog = false,
 }: {
   value: string;
   name: string;
   disabled?: boolean;
   onChange: (value: string) => void;
+  catalog?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState("");
@@ -108,6 +114,39 @@ export function CategoryIconPicker({
   }, [search]);
 
   useEffect(() => setLimit(PAGE_SIZE), [search]);
+
+  if (catalog) {
+    const selected = tileCatalogEntry(value);
+    const automatic = matchTileCatalog(name);
+    const entries = searchTileCatalog(search);
+    return (
+      <div className="space-y-3 rounded-md border p-3" data-testid="tile-icon-picker">
+        <button type="button" disabled={disabled} aria-pressed={!selected}
+          onClick={() => onChange(AUTOMATIC_TILE_ICON)}
+          className={`flex w-full items-center gap-3 rounded-md border p-3 text-left ${!selected ? "border-primary bg-primary/10" : "border-border"}`}>
+          <CategoryIcon icon={automatic?.id ?? "doc"} className="h-8 w-8 shrink-0" />
+          <span className="text-sm">Samodejno po imenu
+            <span className="block text-xs text-muted-foreground">{automatic?.name ?? "Rezervna ikona glede na razdelek"}</span>
+          </span>
+        </button>
+        <p className="text-xs text-muted-foreground">Ročna izbira ima prednost pred imenom kategorije.</p>
+        <Input value={search} onChange={(event) => setSearch(event.target.value)}
+          placeholder="Išči po imenu ali ključni besedi …" aria-label="Išči med ikonami kataloga" disabled={disabled} />
+        <div className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1" role="listbox" aria-label="Katalog ikon">
+          {entries.map((entry) => (
+            <button key={entry.id} type="button" role="option" aria-selected={value === entry.id}
+              aria-label={`Izberi ikono: ${entry.name}`} disabled={disabled}
+              onClick={() => onChange(entry.id)}
+              className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-md border p-2 text-center ${value === entry.id ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"}`}>
+              <CategoryIcon icon={entry.id} className="h-8 w-8 shrink-0" />
+              <span className="text-xs">{entry.name}</span>
+            </button>
+          ))}
+        </div>
+        {!entries.length && <p className="text-xs text-muted-foreground">Ni zadetkov.</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 rounded-md border p-3">

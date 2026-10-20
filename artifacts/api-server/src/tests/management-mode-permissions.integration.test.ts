@@ -11,6 +11,7 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import app from "../app";
 import adminTenantsRouter from "../routes/adminTenants";
+import adminContentRouter from "../routes/adminContent";
 import { createAdminGateForTests } from "../lib/actorGate";
 import { hashPassword } from "../lib/hostAuth";
 import { ensureTenantPublication, readPublishedContent } from "../lib/publishedSnapshots";
@@ -48,7 +49,7 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
   assert.ok(address && typeof address === "object");
   const base = `http://127.0.0.1:${address.port}/api`;
   const operatorApp = express();
-  operatorApp.use(express.json(), createAdminGateForTests({ kind: "owner" }), adminTenantsRouter);
+  operatorApp.use(express.json(), createAdminGateForTests({ kind: "owner" }), adminTenantsRouter, adminContentRouter);
   const operator = operatorApp.listen(0);
   await once(operator, "listening");
   const operatorAddress = operator.address();
@@ -167,6 +168,23 @@ test("two-mode HTTP host flow: weekly event, offer, announcement, reviewed publi
     { label: "Cene", icon: "tag", layout: "list", exploreGroup: "experiences" }, 201);
   const offerItem = await ok("POST", `/admin/categories/${offerCategory.id}/items`,
     { title: "Host offer", price: "12.00" }, 201);
+  // Catalogue keys use the existing category field and permission boundary.
+  const iconBefore = await readPublishedContent(a!.id);
+  await ok("PATCH", `/admin/categories/${offerCategory.id}`, { icon: "catalog:pizzerias" });
+  assert.equal((await db.select().from(categoriesTable).where(eq(categoriesTable.id, offerCategory.id)))[0]!.icon, "catalog:pizzerias");
+  assert.deepEqual(await readPublishedContent(a!.id), iconBefore, "icon save must stay draft-only");
+  await changeMode("concierge");
+  assert.equal((await request("PATCH", `/admin/categories/${offerCategory.id}`, { icon: "catalog:shops" })).status, 403);
+  const operatorIcon = await fetch(`${ownerBase}/admin/categories/${offerCategory.id}`, {
+    method: "PATCH", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ icon: "catalog:shops" }),
+  });
+  assert.equal(operatorIcon.status, 200);
+  assert.equal((await operatorIcon.json()).icon, "catalog:shops");
+  await changeMode("self_service");
+  await ok("PATCH", `/admin/categories/${offerCategory.id}`, { icon: "catalog:auto" });
+  assert.equal((await db.select().from(categoriesTable).where(eq(categoriesTable.id, offerCategory.id)))[0]!.icon, "catalog:auto");
+  await ok("PATCH", `/admin/categories/${offerCategory.id}`, { icon: "catalog:breakfast" });
   await ok("PATCH", `/admin/items/${offerItem.id}`, { price: "15.00", body: "Updated host offer" });
   await ok("POST", "/admin/sections/reorder", { ids: [offer.id, events.id] });
   await ok("PATCH", `/admin/categories/${eventCategory.id}`, { label: "Tedenski Termin" });
