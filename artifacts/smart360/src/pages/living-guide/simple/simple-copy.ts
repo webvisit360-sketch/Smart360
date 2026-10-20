@@ -1,6 +1,7 @@
 // Runtime labels for Enostaven (sections + runtime-feature tiles), 7 languages.
 type L = "sl" | "en" | "de" | "it" | "fr" | "nl" | "hr";
 const C = {
+  return360: { sl: "Nazaj na začetni zaslon 360", en: "Return to the 360 welcome screen", de: "Zurück zum 360-Startbildschirm", it: "Torna alla schermata iniziale 360", fr: "Retour à l’écran d’accueil 360", nl: "Terug naar het 360-startscherm", hr: "Povratak na početni zaslon 360" },
   guide: { sl: "Vaš vodnik", en: "Your guide", de: "Ihr Reiseführer", it: "La vostra guida", fr: "Votre guide", nl: "Uw gids", hr: "Vaš vodič" },
   language: { sl: "JEZIK", en: "LANGUAGE", de: "SPRACHE", it: "LINGUA", fr: "LANGUE", nl: "TAAL", hr: "JEZIK" },
   home: { sl: "Domov", en: "Home", de: "Start", it: "Home", fr: "Accueil", nl: "Start", hr: "Početna" },

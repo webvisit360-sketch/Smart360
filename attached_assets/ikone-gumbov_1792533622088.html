@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart360 — Katalog ikon gumbov</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  .pal-bordo{--bg:#4C2545;--tile1:#B23476;--tile15:#8A2A61;--tile2:#521445;--stroke:#C2DCF8;--txt:#D5E7FD;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Lato',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  body{background:#F4F5F7;padding:30px 20px 50px;max-width:1200px;margin:0 auto;}
+  h1{font-size:24px;color:#22262c;margin-bottom:4px;}
+  p.lead{color:#6a7482;font-size:13px;margin-bottom:26px;line-height:1.5;}
+  h2{font-size:15px;color:#394050;text-transform:uppercase;letter-spacing:.08em;margin:30px 0 14px;
+     border-bottom:2px solid #d8dce3;padding-bottom:6px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px;}
+  .card{background:#fff;border:1px solid #e2e5ea;border-radius:10px;padding:16px;display:flex;gap:16px;align-items:flex-start;}
+  .tilewrap{flex:none;background:var(--bg);border-radius:14px;padding:14px;}
+  .tile{width:110px;height:110px;color:var(--stroke);
+    background:linear-gradient(180deg,var(--tile1) 0%,var(--tile15) 52%,var(--tile2) 100%);background-clip:padding-box;
+    border:2.3px solid var(--stroke);border-radius:21px;
+    box-shadow:inset 0 0 0 1px var(--bg), 0 4px 14px rgba(10,5,15,.35);
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:11px 6px 7px;}
+  .tile svg{width:62px;height:62px;fill:var(--stroke);stroke:none;flex:0 1 auto;min-height:0;margin-top:1px;}
+  .tile svg.ln{fill:none;stroke:var(--stroke);stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round;}
+  .tile b{color:var(--stroke);font-size:10.5px;font-weight:700;text-align:center;line-height:1.2;text-transform:uppercase;
+    letter-spacing:.015em;margin-top:auto;max-width:100%;}
+  .meta{min-width:0;flex:1;}
+  .name{font-size:14px;font-weight:900;color:#22262c;display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .badge{font-size:9.5px;font-weight:900;letter-spacing:.06em;border-radius:4px;padding:2px 7px;}
+  .badge.nova{background:#C9453C;color:#fff;}
+  .badge.obst{background:#E4E8EE;color:#5a6472;}
+  pre{background:#F0F2F5;border:1px solid #e0e3e9;border-radius:6px;padding:10px;font-size:10px;line-height:1.45;
+      font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all;
+      user-select:all;color:#333a45;}
+</style>
+</head>
+<body>
+<h1>Katalog ikon gumbov — Enostaven pogled</h1>
+<p class="lead">Vsak gumb aplikacije s svojo ikono: levo predogled ploščice v bordo shemi natanko kot v aplikaciji,
+desno točna SVG koda ikone za kopiranje (naziv gumba + SVG). Oznaka <b>NOVA</b> pomeni novo, nadomestno ikono iz revizije podvojenih piktogramov; ostale so nespremenjene.
+Stroke detajli uporabljajo currentColor in prevzamejo barvo iz sheme.</p>
+
+<h2>Domov</h2>
+<div class="cards">
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z"/></svg><b>Obvestila</b></div></div>
+  <div class="meta">
+    <div class="name">Obvestila <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z"/></svg><b>Vreme</b></div></div>
+  <div class="meta">
+    <div class="name">Vreme <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z" fill-rule="evenodd"/></svg><b>Pomoč in SOS</b></div></div>
+  <div class="meta">
+    <div class="name">Pomoč in SOS <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z"/></svg><b>Kontakt</b></div></div>
+  <div class="meta">
+    <div class="name">Kontakt <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z" fill-rule="evenodd"/></svg><b>Dodaj na začetni zaslon</b></div></div>
+  <div class="meta">
+    <div class="name">Dodaj na začetni zaslon <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z" fill-rule="evenodd"/></svg><b>O vodniku</b></div></div>
+  <div class="meta">
+    <div class="name">O vodniku <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+</div>
+<h2>Nastanitev</h2>
+<div class="cards">
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z"/></svg><b>Dobrodošli</b></div></div>
+  <div class="meta">
+    <div class="name">Dobrodošli <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z" fill-rule="evenodd"/></svg><b>Nastanitve</b></div></div>
+  <div class="meta">
+    <div class="name">Nastanitve <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M7.2 13.1a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8zM18.6 7.5h-7.2v6.7H3.5V4.8H1.6v14.4h1.9v-2.6h17v2.6h1.9v-7.8a3.9 3.9 0 0 0-3.8-3.9z"/></svg><b>Apartmaji</b></div></div>
+  <div class="meta">
+    <div class="name">Apartmaji <span class="badge nova">NOVA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M7.2 13.1a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8zM18.6 7.5h-7.2v6.7H3.5V4.8H1.6v14.4h1.9v-2.6h17v2.6h1.9v-7.8a3.9 3.9 0 0 0-3.8-3.9z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M19.5 2.6v19.9h-5V20h3.1V4.5h-3.1V2.6zM13 2.9 4.5 4.8v15.7L13 22.4zm-2.1 9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z" fill-rule="evenodd"/></svg><b>Vhodna vrata</b></div></div>
+  <div class="meta">
+    <div class="name">Vhodna vrata <span class="badge nova">NOVA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M19.5 2.6v19.9h-5V20h3.1V4.5h-3.1V2.6zM13 2.9 4.5 4.8v15.7L13 22.4zm-2.1 9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M3.5 4h17a1.4 1.4 0 0 1 1.4 1.4v4.7a1.4 1.4 0 0 1-1.4 1.4h-17a1.4 1.4 0 0 1-1.4-1.4V5.4A1.4 1.4 0 0 1 3.5 4zm2 4.3h13v1.3h-13z" fill-rule="evenodd"/><path d="M6.3 14.5c-.9 1.4.9 2.1.2 3.8M12 14.5c-.9 1.4.9 2.1.2 3.8M17.7 14.5c-.9 1.4.9 2.1.2 3.8" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg><b>Klimatska naprava</b></div></div>
+  <div class="meta">
+    <div class="name">Klimatska naprava <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M3.5 4h17a1.4 1.4 0 0 1 1.4 1.4v4.7a1.4 1.4 0 0 1-1.4 1.4h-17a1.4 1.4 0 0 1-1.4-1.4V5.4A1.4 1.4 0 0 1 3.5 4zm2 4.3h13v1.3h-13z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;path d=&quot;M6.3 14.5c-.9 1.4.9 2.1.2 3.8M12 14.5c-.9 1.4.9 2.1.2 3.8M17.7 14.5c-.9 1.4.9 2.1.2 3.8&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.1&quot; fill=&quot;none&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0"/><circle cx="12" cy="19.2" r="1.5" fill="currentColor" stroke="none"/></svg><b>Wi-Fi</b></div></div>
+  <div class="meta">
+    <div class="name">Wi-Fi <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg class=&quot;ln&quot; viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;19.2&quot; r=&quot;1.5&quot; fill=&quot;currentColor&quot; stroke=&quot;none&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z" fill-rule="evenodd"/></svg><b>Hišni red</b></div></div>
+  <div class="meta">
+    <div class="name">Hišni red <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z"/></svg><b>Navodila</b></div></div>
+  <div class="meta">
+    <div class="name">Navodila <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z" fill-rule="evenodd"/></svg><b>Prijava / odjava</b></div></div>
+  <div class="meta">
+    <div class="name">Prijava / odjava <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z" fill-rule="evenodd"/></svg><b>Parkiranje</b></div></div>
+  <div class="meta">
+    <div class="name">Parkiranje <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+</div>
+<h2>Ponudba</h2>
+<div class="cards">
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z"/></svg><b>Ponudba s cenami</b></div></div>
+  <div class="meta">
+    <div class="name">Ponudba s cenami <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z" fill-rule="evenodd"/></svg><b>Domači izdelki</b></div></div>
+  <div class="meta">
+    <div class="name">Domači izdelki <span class="badge nova">NOVA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z" fill-rule="evenodd"/></svg><b>Naročilo</b></div></div>
+  <div class="meta">
+    <div class="name">Naročilo <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+</div>
+<h2>Okolica</h2>
+<div class="cards">
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.6a8.4 8.4 0 0 0-8.4 7.2h16.8A8.4 8.4 0 0 0 12 2.6zm-.9 8.6h1.8v6.4h-1.8z"/><path d="M2.8 20.2c1.5-1.5 3.1-1.5 4.6 0s3.1 1.5 4.6 0 3.1-1.5 4.6 0 3.1 1.5 4.6 0" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round"/></svg><b>Plaže</b></div></div>
+  <div class="meta">
+    <div class="name">Plaže <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 2.6a8.4 8.4 0 0 0-8.4 7.2h16.8A8.4 8.4 0 0 0 12 2.6zm-.9 8.6h1.8v6.4h-1.8z&quot;/&gt;&lt;path d=&quot;M2.8 20.2c1.5-1.5 3.1-1.5 4.6 0s3.1 1.5 4.6 0 3.1-1.5 4.6 0 3.1 1.5 4.6 0&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.1&quot; fill=&quot;none&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="m3 20 5.5-12 4.3 7.6L15.5 11 21 20z"/><circle cx="17" cy="6" r="2"/></svg><b>Znamenitosti</b></div></div>
+  <div class="meta">
+    <div class="name">Znamenitosti <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;m3 20 5.5-12 4.3 7.6L15.5 11 21 20z&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><circle cx="14.6" cy="4" r="1.9"/><path d="m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z"/></svg><b>Pohodi</b></div></div>
+  <div class="meta">
+    <div class="name">Pohodi <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;circle cx=&quot;14.6&quot; cy=&quot;4&quot; r=&quot;1.9&quot;/&gt;&lt;path d=&quot;m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z"/><path d="M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z"/></svg><b>Kolesarjenje</b></div></div>
+  <div class="meta">
+    <div class="name">Kolesarjenje <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z&quot;/&gt;&lt;path d=&quot;M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg class="ln" viewBox="0 0 24 24"><path d="M4.5 20.5c6.5 0 3-8 8.5-9.3"/><circle cx="4.5" cy="20.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="8" r="6.2"/><circle cx="16.5" cy="8" r="3.4" fill="currentColor" stroke="none"/></svg><b>Posnemi turo</b></div></div>
+  <div class="meta">
+    <div class="name">Posnemi turo <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg class=&quot;ln&quot; viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M4.5 20.5c6.5 0 3-8 8.5-9.3&quot;/&gt;&lt;circle cx=&quot;4.5&quot; cy=&quot;20.5&quot; r=&quot;1.4&quot; fill=&quot;currentColor&quot; stroke=&quot;none&quot;/&gt;&lt;circle cx=&quot;16.5&quot; cy=&quot;8&quot; r=&quot;6.2&quot;/&gt;&lt;circle cx=&quot;16.5&quot; cy=&quot;8&quot; r=&quot;3.4&quot; fill=&quot;currentColor&quot; stroke=&quot;none&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M11.1 2h1.8v2.2H18l2.7 2.5L18 9.2h-5.1v1.6H18.9l-2.7 2.5 2.7 2.5h-6V22h-1.8v-6.2H6l-2.7-2.5L6 10.8h5.1V9.2H6.1L3.4 6.7 6.1 4.2h5z"/></svg><b>Izleti</b></div></div>
+  <div class="meta">
+    <div class="name">Izleti <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M11.1 2h1.8v2.2H18l2.7 2.5L18 9.2h-5.1v1.6H18.9l-2.7 2.5 2.7 2.5h-6V22h-1.8v-6.2H6l-2.7-2.5L6 10.8h5.1V9.2H6.1L3.4 6.7 6.1 4.2h5z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M4 5.5h16V21H4zM8 3v4m8-4v4" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M4 9.5h16v1.6H4z"/><circle cx="9" cy="14.5" r="1.3"/><circle cx="15" cy="14.5" r="1.3"/><circle cx="9" cy="18" r="1.3"/></svg><b>Program</b></div></div>
+  <div class="meta">
+    <div class="name">Program <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M4 5.5h16V21H4zM8 3v4m8-4v4&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.6&quot; fill=&quot;none&quot;/&gt;&lt;path d=&quot;M4 9.5h16v1.6H4z&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;14.5&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;14.5&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;18&quot; r=&quot;1.3&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z" fill-rule="evenodd"/></svg><b>Zemljevid</b></div></div>
+  <div class="meta">
+    <div class="name">Zemljevid <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z&quot; fill-rule=&quot;evenodd&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+</div>
+<h2>Sporočila</h2>
+<div class="cards">
+<div class="card">
+  <div class="tilewrap pal-bordo"><div class="tile"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h17v12h-11l-6 4.5z"/></svg><b>Sporočila</b></div></div>
+  <div class="meta">
+    <div class="name">Sporočila <span class="badge obst">NESPREMENJENA</span></div>
+    <pre>&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M3.5 4.5h17v12h-11l-6 4.5z&quot;/&gt;&lt;/svg&gt;</pre>
+  </div>
+</div>
+</div>
+</body>
+</html>

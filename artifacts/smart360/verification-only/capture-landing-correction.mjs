@@ -28,7 +28,7 @@ try {
   });
   assert.equal(measurement.flags.length,7);
   for(const f of measurement.flags){assert.equal(f.width,44);assert.equal(f.height,44);assert.equal(f.radius,'50%');assert.equal(f.gap,'1px');}
-  assert.equal(measurement.button.bottom,844);assert.equal(measurement.caption,false);assert.equal(measurement.overlay,false);
+  assert.equal(measurement.button.bottom,828);assert.equal(measurement.caption,false);assert.equal(measurement.overlay,false);
   assert.equal(measurement.flags.find(f=>f.code==='SL').bottom,Math.max(...measurement.flags.map(f=>f.bottom)));
   await page.screenshot({path:`${dir}/${tenant}-${design}.png`});
   await page.getByTestId('button-flag-en').click();

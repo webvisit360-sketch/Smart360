@@ -2808,3 +2808,17 @@ mtime_ms = 1792532454658
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/dbc58c2a-38fb-4dc9-8d3a-1c0da890c6b5/a41a1360-df79-497f-af66-a9167cbc3255"
 storage_version_token = "1792532485969712"
 content_type = "text/html"
+
+[[outputs]]
+id = "lsAvWqEg6TP6z9hAj6ON6"
+uri = "file://artifacts/smart360/reports/enostaven/safe-landing/porocilo.html"
+type = "html"
+title = "Ikone, gumb 360 in varen spodnji odmik — poročilo"
+description = "SVG zamenjave, domači strani z gumbom 360 ter Meli Pu in Drobež v obeh dizajnih pri 390 × 844 in 390 × 920. Meritve in jasno označena simulacija varnega območja/PWA."
+logical_id = "0f31495d-37a7-4346-bc41-de0a20f818a5"
+content_hash = "sha256:34be1dff01c8c2d892e4a424c975a8be55ce8102311c30729b83d8a6a99392f5"
+size = 5950631
+mtime_ms = 1792534751233
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0f31495d-37a7-4346-bc41-de0a20f818a5/2af6d9da-98ad-4dad-b944-a198f18596f6"
+storage_version_token = "1792534788500595"
+content_type = "text/html"

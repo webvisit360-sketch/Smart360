@@ -2,7 +2,7 @@
 import type { ReactElement } from "react";
 
 export type SimpleIconKey =
-  | "bell" | "weather" | "sos" | "phone" | "install" | "info" | "house" | "building"
+  | "bell" | "weather" | "sos" | "phone" | "install" | "info" | "house" | "building" | "bed"
   | "wifi" | "doc" | "gear" | "clock" | "parking" | "door" | "ac" | "cart" | "bag"
   | "order" | "beach" | "mountain" | "hike" | "bike" | "trips" | "record" | "calendar"
   | "pin" | "chat";
@@ -17,15 +17,16 @@ const ICONS: Record<SimpleIconKey, ReactElement> = {
   info: <path {...E} d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z" />,
   house: <path d="M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z" />,
   building: <path {...E} d="M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z" />,
+  bed: <path d="M7.2 13.1a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8zM18.6 7.5h-7.2v6.7H3.5V4.8H1.6v14.4h1.9v-2.6h17v2.6h1.9v-7.8a3.9 3.9 0 0 0-3.8-3.9z" />,
   wifi: <><path d="M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0" /><circle cx="12" cy="19.2" r="1.5" fill="currentColor" stroke="none" /></>,
   doc: <path {...E} d="M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z" />,
   gear: <path d="M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z" />,
   clock: <path {...E} d="M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z" />,
   parking: <path {...E} d="M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z" />,
-  door: <path {...E} d="M5 2.5h14v19h2.5v1.7H2.5v-1.7H5zm2 1.9v17.1h10V4.4zm7.6 6.4a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6z" />,
+  door: <path {...E} d="M19.5 2.6v19.9h-5V20h3.1V4.5h-3.1V2.6zM13 2.9 4.5 4.8v15.7L13 22.4zm-2.1 9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z" />,
   ac: <><path {...E} d="M3.5 4h17a1.4 1.4 0 0 1 1.4 1.4v4.7a1.4 1.4 0 0 1-1.4 1.4h-17a1.4 1.4 0 0 1-1.4-1.4V5.4A1.4 1.4 0 0 1 3.5 4zm2 4.3h13v1.3h-13z" /><path d="M6.3 14.5c-.9 1.4.9 2.1.2 3.8M12 14.5c-.9 1.4.9 2.1.2 3.8M17.7 14.5c-.9 1.4.9 2.1.2 3.8" stroke="currentColor" strokeWidth="2.1" fill="none" strokeLinecap="round" /></>,
   cart: <path d="M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z" />,
-  bag: <path d="M12 2.2a5 5 0 0 0-5 4.8H4.5L6 21h12l1.5-14H17a5 5 0 0 0-5-4.8zm0 1.9a3.1 3.1 0 0 1 3.1 2.9H8.9A3.1 3.1 0 0 1 12 4.1zM8.2 10.3l.7 7.5-1.6.2-.7-7.5zm7.6 0 1.6.2-.7 7.5-1.6-.2z" />,
+  bag: <path {...E} d="M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z" />,
   order: <path {...E} d="M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z" />,
   beach: <><path d="M12 2.6a8.4 8.4 0 0 0-8.4 7.2h16.8A8.4 8.4 0 0 0 12 2.6zm-.9 8.6h1.8v6.4h-1.8z" /><path d="M2.8 20.2c1.5-1.5 3.1-1.5 4.6 0s3.1 1.5 4.6 0 3.1-1.5 4.6 0 3.1 1.5 4.6 0" stroke="currentColor" strokeWidth="2.1" fill="none" strokeLinecap="round" /></>,
   mountain: <><path d="m3 20 5.5-12 4.3 7.6L15.5 11 21 20z" /><circle cx="17" cy="6" r="2" /></>,

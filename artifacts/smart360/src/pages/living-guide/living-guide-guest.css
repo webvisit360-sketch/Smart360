@@ -1,6 +1,8 @@
 .lg2-app {
+  --lg2-safe-bottom: env(safe-area-inset-bottom, 0px);
   --lg2-shell-width: 430px;
   width: 100%;
+  height: 100vh;
   height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
@@ -448,7 +450,7 @@ body[data-t="noc"] .lg2-grid-view {
 /* Landing-only correction: untinted media, host immediately above the bottom CTA. */
 .lg2-landing-bottom {
   position: absolute; z-index: 3; left: 20px; right: 20px;
-  bottom: env(safe-area-inset-bottom, 0px); pointer-events: none;
+  bottom: 16px; bottom: calc(16px + var(--lg2-safe-bottom, 0px)); pointer-events: none;
 }
 .lg2-landing-bottom .lg2-cover-mast {
   position: static; margin: 0 4px 14px; text-shadow: 0 1px 3px #0009;
@@ -2742,6 +2744,7 @@ body[data-t="swipe"] .lg2-order-dock {
 .lg2-hhero-top .lg2-hhero-fab:first-child {
   margin-left: auto;
 }
+.lg2-hhero-top > .lgs-home-controls { margin-left:auto; }
 
 .lg2-hhero-fab {
   width: 44px;

@@ -46,7 +46,8 @@ const RULES: [RegExp, SimpleIconKey][] = [
   [/check|prijava|odjava/, "clock"],
   [/rule|red\b|hišni|house-?rules/, "doc"],
   [/instruct|navodil|appliance|manual/, "gear"],
-  [/apartm|room|sob|accommod|nastanit|units?/, "building"],
+  [/apartm|appart|ferienwohn/, "bed"],
+  [/room|sob|accommod|nastanit|units?/, "building"],
   [/beach|plaž|strand|spiagg|plage/, "beach"],
   [/hike|pohod|walk|wander/, "hike"],
   [/bike|kolo|kolesar|cycl/, "bike"],
@@ -57,11 +58,18 @@ const RULES: [RegExp, SimpleIconKey][] = [
 ];
 
 export function simpleCategoryIcon(category: any, sectionKey: string): SimpleIconKey {
+  // Explicit button names take precedence over generic/stale category keys.
+  const label = (category?.label ?? category?.title ?? "").trim().toLowerCase();
+  if (/^apartmaji$|^apartments$|^appartamenti$|^appartements$|^appartementen$|^apartmani$|^ferienwohnungen$/.test(label)) return "bed";
+  if (/^nastanitev$/.test(label)) return "building";
+  if (/^vhodna vrata$/.test(label)) return "door";
+  if (/^domači izdelki$/.test(label)) return "bag";
   const hay = `${category?.key ?? ""} ${category?.label ?? category?.title ?? ""}`.toLowerCase();
   if (category?.layout === "wifi") return "wifi";
   if (category?.layout === "events") return "calendar";
+  for (const [re, icon] of RULES) if (re.test(label)) return icon;
   for (const [re, icon] of RULES) if (re.test(hay)) return icon;
-  if (category?.layout === "apartments") return "building";
+  if (category?.layout === "apartments") return "bed";
   if (category?.layout === "routes") return "hike";
   if (category?.layout === "products") return sectionKey === "offer" ? "cart" : "bag";
   if (sectionKey === "offer") return "cart";

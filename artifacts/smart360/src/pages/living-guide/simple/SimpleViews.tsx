@@ -3,8 +3,9 @@ import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { simpleCopy } from "./simple-copy";
 import { SimpleIcon } from "./simple-icons";
 import { simpleHeroUrl, simpleLabelSize, type SimpleSection, type SimpleTile } from "./simple-tiles";
-import { FlagImage, LandingFlagColumn } from "./LanguageFlags";
+import { LandingFlagColumn } from "./LanguageFlags";
 import { WeatherCard, useLivingGuideWeather } from "../living-guide-weather";
+import { GuideHeaderControls } from "./GuideHeaderControls";
 import "./living-guide-simple.css";
 
 
@@ -43,10 +44,10 @@ function TileBody({ tile }: { tile: SimpleTile }) {
 }
 
 export function SimpleHomeView({
-  tenant, lang, sections, onTile, onLanguage,
+  tenant, lang, sections, onTile, onLanguage, onReturn,
 }: {
   tenant: any; lang: string; sections: SimpleSection[];
-  onTile: (tile: SimpleTile) => void; onLanguage: () => void;
+  onTile: (tile: SimpleTile) => void; onLanguage: () => void; onReturn: () => void;
 }) {
   return (
     <section className="lgs-home" data-lg-scroll data-testid="screen-simple-home">
@@ -55,9 +56,7 @@ export function SimpleHomeView({
           <div className="lgs-tn">{simpleCopy("guide", lang)}</div>
           <div className="lgs-tt">{tenant.coverTitle || tenant.name}</div>
         </div>
-        <button type="button" className="lgs-flagbtn" onClick={onLanguage} aria-label={lang.toUpperCase()} data-testid="button-simple-language">
-          <FlagImage lang={lang} />
-        </button>
+        <GuideHeaderControls tenant={tenant} lang={lang} onLanguage={onLanguage} onReturn={onReturn} />
       </header>
       {sections.map((section) => (
         <div key={section.key} data-testid={`simple-section-${section.key}`}>

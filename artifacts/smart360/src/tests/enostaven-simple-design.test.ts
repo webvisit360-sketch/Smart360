@@ -60,7 +60,7 @@ test("Drobež tiles mirror the reference sheet", () => {
 test("Meli Pu tiles mirror the reference sheet", () => {
   const t = simpleFixtureTenant("melipu", "modra", null);
   const s = buildSimpleSections(t.sections, "sl", { ...rt, recordingEnabled: false });
-  assert.deepEqual(s[1].tiles.map((x) => x.icon), ["house", "building", "door", "ac", "wifi", "doc", "parking"]);
+  assert.deepEqual(s[1].tiles.map((x) => x.icon), ["house", "bed", "door", "ac", "wifi", "doc", "parking"]);
   assert.deepEqual(s[3].tiles.map((x) => x.icon), ["beach", "mountain", "bike", "trips", "calendar", "pin"]);
 });
 

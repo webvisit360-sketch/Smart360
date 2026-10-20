@@ -130,6 +130,7 @@ import { useGuestAnnouncements } from "./use-guest-announcements";
 import { isGuestStandalone, requestGuestInstall } from "../guest/guest-install";
 import { ProgramDetail, ProgramView } from "./LivingGuideProgram";
 import { LandingFlagColumn } from "./simple/LanguageFlags";
+import { GuideHeaderControls } from "./simple/GuideHeaderControls";
 import { SimpleCoverView, SimpleFullView, SimpleHomeView, SimpleSheet, SimpleWeatherSheet } from "./simple/SimpleViews";
 import { simpleCopy } from "./simple/simple-copy";
 import { buildSimpleSections, type SimpleTile } from "./simple/simple-tiles";
@@ -2010,6 +2011,7 @@ export default function LivingGuideGuestShell({
             sections={simpleSections}
             onTile={onSimpleTile}
             onLanguage={() => setShowLanguages(true)}
+            onReturn={() => navigate(`/${slug}`)}
           />
         )}
 
@@ -2025,6 +2027,7 @@ export default function LivingGuideGuestShell({
             notices={notices}
             announcementsUnread={announcements.unread}
             onOpenMenu={() => setShowMenu(true)}
+            onLanguage={() => setShowLanguages(true)}
             navigate={navigate}
             navigateDetail={navigateDetail}
             slug={slug}
@@ -4626,6 +4629,7 @@ function HomeView({
   onOpenNotices,
   announcementsUnread,
   onOpenMenu,
+  onLanguage,
   navigate,
   navigateDetail,
   slug,
@@ -4677,14 +4681,7 @@ function HomeView({
           )}
           <div className="lg2-hhero-vg" aria-hidden="true" />
           <div className="lg2-hhero-top">
-            <button
-              className="lg2-hhero-fab"
-              type="button"
-              onClick={() => navigate(`/${slug}`)}
-              aria-label={t("UI.lg.tour.view")}
-            >
-              <span aria-hidden="true">360</span>
-            </button>
+            <GuideHeaderControls tenant={tenant} lang={lang} trend onLanguage={onLanguage} onReturn={() => navigate(`/${slug}`)} />
             <button
               className="lg2-hhero-fab"
               type="button"

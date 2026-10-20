@@ -70,7 +70,7 @@
 .lgs-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .lgs-detail-back { position:absolute; z-index:90; top:max(12px,env(safe-area-inset-top)); left:12px; width:44px; height:44px; display:grid; place-items:center; border:1px solid #d8ddd8; border-radius:50%; color:#18251d; background:white; box-shadow:0 2px 8px #0002; }
 .lgs-detail-back svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.5; }
-.lgs-land { position: absolute; left:20px; right:20px; bottom:env(safe-area-inset-bottom, 0px); z-index:3; pointer-events:none; }
+.lgs-land { position: absolute; left:20px; right:20px; bottom:16px; bottom:calc(16px + var(--lg2-safe-bottom, 0px)); z-index:3; pointer-events:none; }
 .lgs-land > :not(button) { text-shadow:0 1px 3px #0009; }
 .lgs-land > button { pointer-events:auto; }
 .lgs-small { color: var(--s-txt); opacity: .85; font-size: 12px; letter-spacing: .16em; font-weight: 900; }
@@ -90,6 +90,22 @@
   background: var(--s-bg); padding-top: env(safe-area-inset-top);
 }
 .lgs-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 2px; }
+.lgs-top > div:first-child { min-width:0; }
+.lgs-home-controls { display:flex; align-items:center; gap:8px; flex:none; }
+.lg2-app .lgs-home-circle {
+  box-sizing:border-box; width:44px; height:44px; flex:none; padding:1px;
+  border:1.1px solid var(--s-stroke); border-radius:50%; overflow:hidden;
+  display:grid; place-items:center; cursor:pointer; background:var(--s-bg);
+}
+.lgs-home-circle .lgs-flag-img { border-radius:50%; object-fit:cover; object-position:center; }
+.lg2-app .lgs-return360 {
+  color:#fff; font:700 12px/1.2 "Lato S360",sans-serif;
+  background:var(--s-tile1); box-shadow:inset 0 0 0 1px var(--s-bg);
+}
+.lg2-app .lgs-home-controls--trend .lgs-return360 {
+  background:var(--glass); box-shadow:inset 0 0 0 1px var(--s-bg);
+}
+.lgs-home-circle:focus-visible { outline:2px solid var(--s-stroke); outline-offset:3px; }
 .lgs-tn { color: var(--s-tint); font-size: 12px; letter-spacing: .14em; font-weight: 700; text-transform: uppercase; }
 .lgs-tt { color: var(--s-txt); font-size: 25px; font-weight: 900; margin-top: 2px; line-height: 1.2; }
 .lgs-flagbtn {
