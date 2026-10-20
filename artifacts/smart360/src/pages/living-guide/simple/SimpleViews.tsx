@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { simpleCopy } from "./simple-copy";
 import { SimpleIcon } from "./simple-icons";
 import { simpleHeroUrl, simpleLabelSize, type SimpleSection, type SimpleTile } from "./simple-tiles";
@@ -13,13 +14,13 @@ export function SimpleCoverView({
   const title = tenant.coverTitle || tenant.name;
   const focus = `${tenant.heroFocusX ?? 50}% ${tenant.heroFocusY ?? 50}%`;
   const hero = simpleHeroUrl(tenant);
+  const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
   return (
     <section className="lgs-cover" aria-label={title} data-testid="screen-simple-cover">
       <div className="lgs-hero">
-        {hero && <img src={hero} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: focus }} />}
-        <div className="lgs-shade" aria-hidden="true" />
-        <LandingFlagColumn lang={lang} onSelect={onLanguage} />
+        {tourUrl ? <iframe src={tourUrl} title={title} scrolling="no" loading="eager" /> : hero && <img src={hero} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: focus }} />}
       </div>
+      <LandingFlagColumn lang={lang} onSelect={onLanguage} />
       <div className="lgs-land">
         <div className="lgs-small">{simpleCopy("guide", lang).toUpperCase()}</div>
         {title && <h1>{title}</h1>}

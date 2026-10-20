@@ -12,9 +12,9 @@ try{
   await page.evaluate(()=>document.fonts.ready);
   const flags=await page.locator('.lgs-flag').evaluateAll(els=>els.map(el=>({code:el.getAttribute('aria-label'),selected:el.getAttribute('aria-pressed'),button:el.getBoundingClientRect().toJSON(),image:el.querySelector('img').getBoundingClientRect().toJSON()})));
   assert.equal(flags.length,7);
-  for(const f of flags){assert.ok(f.image.height<=47);assert.ok(f.image.width<=64);assert.equal(f.button.height,f.image.height);}
-  const sl=flags.find(f=>f.code==='SL');assert.equal(sl.image.height,47);assert.equal(Math.max(...flags.map(f=>f.image.bottom)),sl.image.bottom);
-  const caption=await page.locator('.lgs-flags-lbl').boundingBox();assert.ok(caption.y>=sl.image.bottom);
+  for(const f of flags){assert.equal(f.button.height,44);assert.equal(f.button.width,44);assert.ok(f.image.height<f.button.height);}
+  const sl=flags.find(f=>f.code==='SL');assert.equal(Math.max(...flags.map(f=>f.image.bottom)),sl.image.bottom);
+  const caption=await page.locator('.lgs-flags-lbl').boundingBox();assert.equal(caption,null);
   await page.screenshot({path:`${out}/landing-${palette}.png`});
   await page.getByTestId('button-flag-en').click();
   assert.equal(await page.getByTestId('button-flag-en').getAttribute('aria-pressed'),'true');

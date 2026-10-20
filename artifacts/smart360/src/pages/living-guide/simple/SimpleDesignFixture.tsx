@@ -34,7 +34,10 @@ export default function SimpleDesignFixture() {
   if (published && !snapshot) return <p>Loading published evidence…</p>;
   return (
     <LivingGuideGuestShell
-      tenant={tenant}
+      tenant={search.get("evidence") === "landing-photo" ? {
+        ...tenant, tourUrl: null,
+        livingGuideHeroUrl: `${import.meta.env.BASE_URL}reports/enostaven/landing-correction/${tenantKey === "melipu" ? "melipu" : "drobez"}-photo.jpg`,
+      } : tenant}
       slug="__simple-fixture"
       lang={lang}
       devWeather={null}

@@ -2794,3 +2794,17 @@ mtime_ms = 1792530497405
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/4a6fd266-1206-4ea2-9739-4b8672d4329c/13eca40b-2a56-48cd-8320-60b769ee5968"
 storage_version_token = "1792530528008602"
 content_type = "text/html"
+
+[[outputs]]
+id = "gBVtEWhskKhScTQtwWrRY"
+uri = "file://artifacts/smart360/reports/enostaven/landing-correction/porocilo.html"
+type = "html"
+title = "Vstopna stran — popravki in štiri slikovna dokazila"
+description = "Drobež in Meli Pu, Trend in Enostaven, pri 390 × 844. Meritve postavitve, okrogle zastave in fotografije brez barvnega preliva; navedena omejitev preverjanja virtualnega sprehoda."
+logical_id = "dbc58c2a-38fb-4dc9-8d3a-1c0da890c6b5"
+content_hash = "sha256:afc2f0e621faf1c7b0071791c2ea1ec3c85104c5c7f304a8ba4d5428b1bfea44"
+size = 1951190
+mtime_ms = 1792532454658
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/dbc58c2a-38fb-4dc9-8d3a-1c0da890c6b5/a41a1360-df79-497f-af66-a9167cbc3255"
+storage_version_token = "1792532485969712"
+content_type = "text/html"

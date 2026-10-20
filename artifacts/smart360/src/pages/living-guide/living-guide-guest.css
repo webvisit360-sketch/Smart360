@@ -445,6 +445,18 @@ body[data-t="noc"] .lg2-grid-view {
   bottom: 112px;
 }
 
+/* Landing-only correction: untinted media, host immediately above the bottom CTA. */
+.lg2-landing-bottom {
+  position: absolute; z-index: 3; left: 20px; right: 20px;
+  bottom: env(safe-area-inset-bottom, 0px); pointer-events: none;
+}
+.lg2-landing-bottom .lg2-cover-mast {
+  position: static; margin: 0 4px 14px; text-shadow: 0 1px 3px #0009;
+}
+.lg2-cover .lg2-landing-bottom .lg2-cbar {
+  position: static; margin: 0;
+}
+
 .lg2-cover-kicker {
   margin: 0;
   font-size: 11.5px;

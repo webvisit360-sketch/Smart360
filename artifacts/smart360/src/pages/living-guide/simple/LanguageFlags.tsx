@@ -8,7 +8,6 @@ import flagFr from "@/assets/flags/fr.svg";
 import flagNl from "@/assets/flags/nl.svg";
 import flagHr from "@/assets/flags/hr.svg";
 import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
-import { simpleCopy } from "./simple-copy";
 import "./living-guide-simple.css";
 
 // Official-geometry national flags from lipis/flag-icons (MIT), 4x3 set,
@@ -25,7 +24,7 @@ export function FlagImage({ lang }: { lang: string }) {
   return <img className="lgs-flag-img" src={flagUrl(lang)} alt="" aria-hidden="true" draggable={false} decoding="async" />;
 }
 
-/** Vertical landing column: Slovenian at the bottom, selected larger, JEZIK beneath. */
+/** Equal circular landing flags; Slovenian at the bottom. Selection is semantic. */
 export function LandingFlagColumn({ lang, onSelect }: { lang: string; onSelect: (lang: string) => void }) {
   return (
     <div className="lgs-flags" data-testid="landing-flags">
@@ -44,7 +43,6 @@ export function LandingFlagColumn({ lang, onSelect }: { lang: string; onSelect: 
           </button>
         ))}
       </div>
-      <div className="lgs-flags-lbl">{simpleCopy("language", lang)}</div>
     </div>
   );
 }

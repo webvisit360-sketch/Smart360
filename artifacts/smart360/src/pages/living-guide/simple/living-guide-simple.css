@@ -31,18 +31,18 @@
 
 /* ---------- landing flags (both designs) ---------- */
 .lgs-flags {
-  position: absolute; right: 14px; bottom: 110px; z-index: 3;
+  position: absolute; right: 14px; top: calc(20px + env(safe-area-inset-top)); z-index: 3;
   display: flex; flex-direction: column; align-items: center; gap: 9px;
   font-family: "Lato S360", -apple-system, "Segoe UI", sans-serif;
 }
-.lgs-flags-col { display: flex; flex-direction: column-reverse; align-items: center; gap: 9px; }
+.lgs-flags-col { display: flex; flex-direction: column-reverse; align-items: center; gap: 10px; }
 .lgs-flag {
-  width: 52px; height: 38px; border-radius: 6px; border: 0; padding: 0; margin: 0;
-  background: rgba(0,0,0,.35); box-shadow: 0 3px 10px rgba(0,0,0,.4);
+  box-sizing: border-box; width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1.1px solid var(--s-stroke, #C2DCF8); padding: 1px; margin: 0;
+  background: var(--s-bg, #4C2545); box-shadow: 0 3px 10px rgba(0,0,0,.25);
   display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.lgs-flag.sel { width: 64px; height: 47px; }
+.lgs-flag .lgs-flag-img { border-radius: 50%; object-position: center; min-width: 0; min-height: 0; }
 .lgs-flag:focus-visible, .lgs-flagbtn:focus-visible, .lgs-tile:focus-visible, .lgs-open:focus-visible {
   outline: 2px solid var(--s-stroke, #fff); outline-offset: 3px;
 }
@@ -52,7 +52,7 @@
   text-shadow: 0 1px 4px rgba(0,0,0,.6); margin-top: 2px;
 }
 /* Trend: the column sits above the cover action bar. */
-.lg2-cover .lgs-flags { bottom: calc(110px + env(safe-area-inset-bottom)); }
+.lg2-cover .lgs-flags { bottom: auto; }
 
 /* ---------- Enostaven root ---------- */
 .lgs-root {
@@ -64,14 +64,15 @@
 :where(.lgs-cover, .lgs-home) * { box-sizing: border-box; margin: 0; }
 
 /* ---------- landing ---------- */
-.lgs-cover { position: absolute; inset: 0; overflow-y: auto; background: var(--s-bg); }
-.lgs-hero { height: 540px; position: relative; background: linear-gradient(175deg,#5E8A52 0%,#38543A 60%,#24172b 100%); }
+.lgs-cover { position: absolute; inset: 0; overflow: hidden; background: #18201e; }
+.lgs-hero { position: absolute; inset: 0; }
+.lgs-hero > iframe { width:100%; height:100%; border:0; display:block; }
 .lgs-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .lgs-detail-back { position:absolute; z-index:90; top:max(12px,env(safe-area-inset-top)); left:12px; width:44px; height:44px; display:grid; place-items:center; border:1px solid #d8ddd8; border-radius:50%; color:#18251d; background:white; box-shadow:0 2px 8px #0002; }
 .lgs-detail-back svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.5; }
-.lgs-shade { position: absolute; inset: 0; background: linear-gradient(180deg,
-  transparent 40%, color-mix(in srgb, var(--s-bg) 90%, transparent) 88%, var(--s-bg) 100%); }
-.lgs-land { padding: 0 20px calc(26px + env(safe-area-inset-bottom)); margin-top: -84px; position: relative; }
+.lgs-land { position: absolute; left:20px; right:20px; bottom:env(safe-area-inset-bottom, 0px); z-index:3; pointer-events:none; }
+.lgs-land > :not(button) { text-shadow:0 1px 3px #0009; }
+.lgs-land > button { pointer-events:auto; }
 .lgs-small { color: var(--s-txt); opacity: .85; font-size: 12px; letter-spacing: .16em; font-weight: 900; }
 .lgs-land h1 { color: var(--s-txt); font-size: 30px; font-weight: 900; margin: 3px 0 2px; line-height: 1.2; }
 .lgs-adr { color: var(--s-adr); font-size: 13.5px; margin-bottom: 14px; }

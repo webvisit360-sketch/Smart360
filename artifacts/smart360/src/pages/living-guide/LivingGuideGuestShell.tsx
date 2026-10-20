@@ -2398,7 +2398,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { te
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
 
   return (
-    <section className="lg2-view lg2-cover is-on" aria-label={title} data-testid="screen-cover">
+    <section className="lg2-view lg2-cover is-on" style={simplePaletteStyle(resolveSimplePalette(tenant.simplePalette, tenant.simpleBaseColor)) as CSSProperties} aria-label={title} data-testid="screen-cover">
       <div className={tourUrl ? "lg2-cover-tour" : "lg2-cover-photo"} aria-hidden={tourUrl ? undefined : true}>
         {tourUrl ? (
           <iframe
@@ -2408,11 +2408,11 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { te
             title={title}
           />
         ) : (
-          tenant.heroUrl && <img src={tenant.heroUrl} alt="" fetchPriority="high" decoding="async" style={imageStyle(tenant.heroMedia, tenant)} />
+          (tenant.livingGuideHeroUrl || tenant.heroUrl) && <img src={tenant.livingGuideHeroUrl || tenant.heroUrl} alt="" fetchPriority="high" decoding="async" style={imageStyle(tenant.heroMedia, tenant)} />
         )}
       </div>
-      <div className={tourUrl ? "lg2-cover-veil lg2-cover-veil--tour" : "lg2-cover-veil"} aria-hidden="true" />
       {tourUrl && <div className="lg2-hint360">{t("UI.lg.tour.hint")}</div>}
+      <div className="lg2-landing-bottom">
       <div className="lg2-cover-mast">
         <p className="lg2-cover-kicker">{t("UI.lg.guide")}</p>
         {title && <h1>{title}</h1>}
@@ -2427,6 +2427,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { te
           <svg aria-hidden="true"><use href="#lg-i-down" /></svg>
           {t("UI.lg.openGuide")}
         </button>
+      </div>
       </div>
       <LandingFlagColumn lang={lang} onSelect={onSelectLanguage} />
     </section>
