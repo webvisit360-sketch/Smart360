@@ -1,0 +1,17 @@
+NEW GUEST VIEW "ENOSTAVEN" — a single-page, big-button layout for less tech-savvy guests. Two BINDING design references are attached: enostavna-koncni.html (Turizem Drobež) and enostavna-melipu.html (Apartmaji Meli Pu). Reproduce them pixel-faithfully — measure, don't eyeball.
+
+1. CONCEPT: when a tenant's design is set to "Enostaven", the guest guide becomes ONE scrolling page of square tiles grouped under the five existing category headings (Domov, Nastanitev, Ponudba, Okolica, Sporočila). There is NO bottom navigation and NO top category chips. Every tile opens the EXISTING subpage, unchanged; each subpage shows a single back arrow returning to the one page. Tiles are GENERATED from the tenant's existing published structure (sections, categories, entries and runtime features like Obvestila, Sporočila, SOS) — never a hardcoded list; the attached sheets show how Drobež's and Meli Pu's current structures map.
+
+2. TILE ANATOMY (from the reference CSS — copy its values): square tiles, 3 per row; pale outline 2.3% of tile width standing OFF the fill with a ~0.6% gap that shows the page background; corner radius 19%; vertical fill gradient with the exact three stops from the reference palettes; solid white pictogram icons ~60% of tile height; labels INSIDE the tile near the bottom, Lato 700 uppercase, wrapping up to three lines with the icon yielding space (see the flex pattern in the reference). Solid single-color page background per palette. Long labels in all 7 languages must stay inside tiles.
+
+3. COLOR MODES: bordo and modra palettes exactly as in the references, plus a third option — a free RGB color picker: the admin picks ANY base color and all tokens (background, gradient stops, tints) are DERIVED automatically preserving the same saturation/lightness relationships as the bordo palette (the reference palettes demonstrate the token structure). Implement the derivation once, deterministically.
+
+4. LANDING PAGE (applies to BOTH designs, Trend and Enostaven): replace the small "SL" button with a VERTICAL column of all seven flags on the right — real SVG flag images, NO borders, Slovenian at the bottom, the selected flag simply larger, label "JEZIK" beneath. Tapping a flag switches the language immediately.
+
+5. ADMIN: per-tenant setting "Dizajn": Trend (default — the current design, byte-identical when selected) or Enostaven; when Enostaven, a color control: Bordo / Modra / Poljubna (RGB picker). Wire it into the existing permission model as an appearance setting (self-service hosts may change it; concierge tenants operator-only).
+
+6. BEHAVIOR UNCHANGED: subpages, offline caching, announcements, messages, orders, tours, SOS, weather and the publish snapshot flow all work exactly as today — Enostaven is a presentation layer over the same data. The guest identification form keeps its existing rule: it appears only when the guest first orders or rents; there is no profile tile.
+
+7. EVIDENCE: screenshots at 390x844 of Drobež and Meli Pu in bordo and modra plus one custom RGB color, side-by-side pixel comparison against the attached references, label-overflow check across all 7 languages (longest labels), and proof that a tenant set to Trend renders exactly as today.
+
+POVZETEK ZA LASTNIKA in Slovenian. Report and STOP. No publication.
