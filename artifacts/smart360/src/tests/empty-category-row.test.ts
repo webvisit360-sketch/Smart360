@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert";
 import { readFileSync } from "node:fs";
-import { categoryAddLabel } from "../components/admin/content-editor";
+import "./node-ui-imports.mjs";
+const { categoryAddLabel } = await import("../components/admin/content-editor");
 
 const editorSource = readFileSync(
   new URL("../components/admin/content-editor.tsx", import.meta.url),

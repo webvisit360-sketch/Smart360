@@ -9,7 +9,8 @@ const source = await readFile(
 
 test("operator OKOLICA create uses place search; host uses the ordinary item form", () => {
   assert.match(source, /mode === "create" && operatorPlaceCreation && \(sectionKey === "explore" \|\| sectionKey === "services"\)/);
-  assert.match(source, /return <OkolicaPlaceCreate/);
+  // Check the rendered form, allowing access-control wrappers and whitespace.
+  assert.match(source, /<OkolicaPlaceCreate\b/);
   assert.match(source, /operatorPlaceCreation=\{operatorPlaceCreation\} onDone=\{\(\) => setAddOpen\(false\)\}/);
   assert.match(source, /await createItem\(categoryId,/);
   assert.match(source, /mode === "edit"/);

@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert";
-import {
+import "./node-ui-imports.mjs";
+const {
   getSkeletonIndex,
   layoutToLabel,
   guessCategory,
   OKOLICA_SKELETON_KEYS
-} from "../components/admin/content-editor";
+} = await import("../components/admin/content-editor");
 
 test("getSkeletonIndex uses canonical keys and ignores labels", () => {
   assert.equal(

@@ -327,36 +327,51 @@ test("explore omits empty distance sections", () => {
   assert.deepEqual(sections.map((section) => section.key), ["near"]);
 });
 
-test("explore distance section headers have the approved four-language labels", () => {
+test("explore distance section headers have the approved seven-language labels", () => {
   assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceGroup.near"], {
     sl: "V bližini",
     en: "Nearby",
     de: "In der Nähe",
     it: "Nelle vicinanze",
+    fr: "À proximité",
+    nl: "In de buurt",
+    hr: "U blizini",
   });
   assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceGroup.excursion"], {
     sl: "Izleti",
     en: "Day trips",
     de: "Ausflüge",
     it: "Gite",
+    fr: "Excursions à la journée",
+    nl: "Dagtochten",
+    hr: "Jednodnevni izleti",
   });
   assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceHint.near"], {
     sl: "do 20 min",
     en: "up to 20 min",
     de: "bis 20 Min.",
     it: "fino a 20 min",
+    fr: "jusqu'à 20 min",
+    nl: "tot 20 min",
+    hr: "do 20 min",
   });
   assert.deepEqual(LIVING_GUIDE_UI["UI.lg.distanceHint.excursion"], {
     sl: "nad 20 min",
     en: "over 20 min",
     de: "über 20 Min.",
     it: "oltre 20 min",
+    fr: "plus de 20 min",
+    nl: "meer dan 20 min",
+    hr: "više od 20 min",
   });
   assert.deepEqual(LIVING_GUIDE_UI["UI.lg.categoryFilter.all"], {
     sl: "Vse",
     en: "All",
     de: "Alle",
     it: "Tutte",
+    fr: "Tous",
+    nl: "Alles",
+    hr: "Sve",
   });
 });
 
