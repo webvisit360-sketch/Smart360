@@ -68,8 +68,30 @@
 .lgs-hero { position: absolute; inset: 0; }
 .lgs-hero > iframe { width:100%; height:100%; border:0; display:block; }
 .lgs-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.lgs-detail-back { position:absolute; z-index:90; top:max(12px,env(safe-area-inset-top)); left:12px; width:44px; height:44px; display:grid; place-items:center; border:1px solid #d8ddd8; border-radius:50%; color:#18251d; background:white; box-shadow:0 2px 8px #0002; }
-.lgs-detail-back svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.5; }
+/* ---------- unified guest back circle (both designs, every surface) ----------
+   Mirrors the header return360 circle: 44px, pale flag-tile border + 1px gap,
+   white solid arrow. Enostaven fills with the palette tile; Trend with --glass.
+   Fallbacks = bordo tokens so portals/Trend without --s-* still match. */
+.lg-back-circle, .lg-back-circle.lg2-ann-back, .lg-back-circle.lgp-hback, .lg-back-circle.lgs-back {
+  box-sizing:border-box; width:44px; height:44px; min-width:44px; flex:none; padding:1px; margin:0;
+  border:1.1px solid var(--s-stroke, #C2DCF8); border-radius:50%;
+  display:grid; place-items:center; cursor:pointer; color:#fff;
+  background:var(--s-tile1, #B23476); box-shadow:inset 0 0 0 1px var(--s-bg, #4C2545);
+  font:700 12px/1.2 "Lato S360",sans-serif; -webkit-tap-highlight-color:transparent;
+  transition:transform .12s ease;
+}
+.lg2-app:not(.lgs-root) .lg-back-circle { background:var(--glass, rgba(20,24,30,.55)); }
+.lg-back-circle svg { display:block; flex:none; width:26px; height:26px; fill:currentColor; stroke:none; }
+.lg-back-circle:active { transform:scale(.94); }
+.lg-back-circle:focus-visible { outline:2px solid var(--s-stroke, #C2DCF8); outline-offset:3px; }
+.lg-back-circle--float, .lg-back-circle.lgp-hback.lg-back-circle--float {
+  position:absolute; z-index:90; top:calc(16px + env(safe-area-inset-top, 0px)); left:16px;
+}
+.lg-back-circle.lgs-back { margin-bottom:8px; }
+.lg-back-circle.lg2-msg-back { order:-1; align-self:flex-start; }
+.lg2-msg-hd:has(.lg2-msg-back) { justify-content:flex-start; gap:12px; }
+/* The outer detail route owns the single back control in both designs. */
+.lg2-route-layer .lgp-hback { display:none; }
 .lgs-land { position: absolute; left:20px; right:20px; bottom:16px; bottom:calc(16px + var(--lg2-safe-bottom, 0px)); z-index:3; pointer-events:none; }
 .lgs-land > :not(button) { text-shadow:0 1px 3px #0009; }
 .lgs-land > button { pointer-events:auto; }
@@ -167,14 +189,9 @@
 .lgs-sheet-layer { position: fixed; inset: 0; z-index: 60; background: rgba(10,5,15,.55); display: flex; align-items: flex-end; justify-content: center; }
 .lgs-sheet-panel { width: 100%; max-width: 430px; max-height: 88dvh; overflow-y: auto; background: var(--s-bg); color: var(--s-txt);
   border-radius: 24px 24px 0 0; padding: 12px 16px calc(22px + env(safe-area-inset-bottom)); }
-.lgs-back { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 50%;
-  background: color-mix(in srgb, var(--s-tile2) 70%, transparent); color: var(--s-txt); cursor: pointer; margin-bottom: 8px; }
-.lgs-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .lgs-full { position: fixed; inset: 0; z-index: 55; overflow-y: auto; background: var(--s-bg); color: var(--s-txt);
   padding: calc(14px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); font-family: "Lato S360", sans-serif; }
 .lgs-full[hidden] { display: none; }
-/* The outer route owns the single Enostaven return control. */
-.lgs-root .lgp-hback { display: none; }
 .lgs-root .lg2-detail-view { min-height: 0; }
 .lgs-root .lg2-detail-scroll { flex: 1 1 0; min-height: 0; }
 .lgs-root .lg2-detail-scroll {
@@ -206,3 +223,6 @@
 .lgs-root .lgp-root { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
 .lgs-sheet-panel { overscroll-behavior-y: contain; }
 .lgs-full-title { font-size: 25px; font-weight: 900; margin: 2px 4px 14px; }
+
+/* Programme list inside the detail route: leave room for the shared back circle. */
+.lg2-route-layer [data-testid="program-view"] .lgp-phone { padding-top: calc(72px + env(safe-area-inset-top, 0px)); }

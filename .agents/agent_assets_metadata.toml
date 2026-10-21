@@ -2948,3 +2948,17 @@ mtime_ms = 1792610697977
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c00cf626-b1f3-4984-94cb-4d9e877a0ff1/579b95eb-5d6d-4774-813c-cc7a2eb1dee9"
 storage_version_token = "1792611162780147"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "Pb4AkVQK_p5h_9VG0DS80"
+uri = "file://artifacts/smart360/reports/back-circle/gallery.html"
+type = "html"
+title = "Enoten gumb Nazaj — galerija 39 zaslonov"
+description = "390 × 844: Enostaven bordo, modra, RGB #2E8B6A in Trend. Posnetki dejanskih komponent s sintetičnimi podatki in izmerjenimi merami ter barvami."
+logical_id = "def5a25b-9e0e-4c69-a687-2b00a550e46a"
+content_hash = "sha256:1a22eb2c00787f94be2db70229a099e4bf684f853b666e9e308c09fabbfb8523"
+size = 2613046
+mtime_ms = 1792613422677
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/def5a25b-9e0e-4c69-a687-2b00a550e46a/319f24dc-db38-4955-9c6d-b821a98ccd7c"
+storage_version_token = "1792613646775039"
+content_type = "text/html"

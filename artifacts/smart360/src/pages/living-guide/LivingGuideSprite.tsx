@@ -14,7 +14,6 @@ export function LivingGuideSprite() {
         <symbol id="lg-i-sos" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 3.5 3 19.5h18L12 3.5Z" /><path d="M12 9.5v4.6M12 17.3v.1" />
         </symbol>
-        <symbol id="lg-i-bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5 8 12l6.5 7" /></symbol>
         <symbol id="lg-i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v13M6.5 12 12 17.5 17.5 12" /></symbol>
         <symbol id="lg-i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2.5 9a15 15 0 0 1 19 0M5.5 12.5a10.5 10.5 0 0 1 13 0M8.7 16a6 6 0 0 1 6.6 0" /><circle cx="12" cy="19.5" r="1.2" fill="currentColor" stroke="none" />

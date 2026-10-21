@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { usePullClose } from "./simple/use-pull-close";
+import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import "./living-guide-announcements.css";
 import { CARD_IMAGE_WIDTH, HERO_IMAGE_WIDTH, imgSrc } from "../guest/img";
 import {
@@ -58,16 +59,12 @@ export function AnnouncementDetail({ row, lang, onBack }: { row: GuestAnnounceme
         <div className="lg2-ann-hero">
           <img src={imgSrc(row.imageUrl, HERO_IMAGE_WIDTH)} alt="" onError={() => setImageOk(false)} />
           <div className="lg2-ann-hero-sh" aria-hidden="true" />
-          <button type="button" className="lg2-ann-hero-back" onClick={onBack} aria-label={c.back} data-testid="button-announcement-back">
-            <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-          </button>
+          <GuideBackCircle className="lg-back-circle--float" onClick={onBack} label={c.back} testId="button-announcement-back" />
           <h1 className="lg2-ann-hero-title">{title}</h1>
         </div>
       ) : (
         <header className="lg2-ann-plainhead">
-          <button type="button" className="lg2-ann-back" onClick={onBack} aria-label={c.back} data-testid="button-announcement-back">
-            <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-          </button>
+          <GuideBackCircle className="lg2-ann-back" onClick={onBack} label={c.back} testId="button-announcement-back" />
           <h1 className="lg2-ann-h1">{title}</h1>
         </header>
       )}
@@ -111,9 +108,7 @@ export function LivingGuideAnnouncements({ state, lang, tenantName, onClose, sim
       {open ? <AnnouncementDetail row={open} lang={lang} onBack={back} /> : (
         <div className="lg2-ann-list">
           <div className="lg2-ann-top">
-            <button type="button" className="lg2-ann-back" onClick={onClose} aria-label={c.close} data-testid="button-announcements-close">
-              <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-            </button>
+            <GuideBackCircle className="lg2-ann-back" onClick={onClose} label={c.close} testId="button-announcements-close" />
           </div>
           <p className="lg2-ann-kicker">{tenantName}</p>
           <h1 className="lg2-ann-h1">{c.title}</h1>

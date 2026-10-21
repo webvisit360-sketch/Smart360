@@ -12,6 +12,11 @@ export function ReturnArrow() {
   return <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path fill="currentColor" d="M10 3 1 12l9 9v-6h13V9H10Z" /></svg>;
 }
 
+/** The one guest back control for both designs (Enostaven palette tile / Trend glass). */
+export function GuideBackCircle({ label, onClick, testId, className }: { label: string; onClick: () => void; testId: string; className?: string }) {
+  return <button type="button" className={`lg-back-circle${className ? ` ${className}` : ""}`} aria-label={label} title={label} onClick={onClick} data-testid={testId}><ReturnArrow /></button>;
+}
+
 export function WalkResetControl({ lang, trend = false, onReset }: { lang: string; trend?: boolean; onReset: () => void }) {
   const labels: Record<string, string> = {
     sl: "Vrni virtualni sprehod na začetek", en: "Restart the virtual walk",

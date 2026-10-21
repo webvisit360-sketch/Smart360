@@ -133,7 +133,7 @@ import { useGuestAnnouncements } from "./use-guest-announcements";
 import { isGuestStandalone, requestGuestInstall } from "../guest/guest-install";
 import { ProgramDetail, ProgramView } from "./LivingGuideProgram";
 import { LandingFlagColumn } from "./simple/LanguageFlags";
-import { GuideHeaderControls } from "./simple/GuideHeaderControls";
+import { GuideBackCircle, GuideHeaderControls } from "./simple/GuideHeaderControls";
 import { SimpleCoverView, SimpleFullView, SimpleHomeView, SimpleSheet, SimpleWeatherSheet } from "./simple/SimpleViews";
 import { simpleCopy } from "./simple/simple-copy";
 import { buildSimpleSections, type SimpleTile } from "./simple/simple-tiles";
@@ -2169,7 +2169,7 @@ export default function LivingGuideGuestShell({
             data-detail-transition={detailTransitionPhase}
             style={detailRouteStyle}
           >
-          {isSimple && screen === "detail" && <button type="button" className="lgs-detail-back" aria-label={simpleCopy("back", lang)} onClick={goBack} data-testid="button-simple-detail-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button>}
+          {screen === "detail" && <GuideBackCircle className="lg-back-circle--float" label={simpleCopy("back", lang)} onClick={goBack} testId={isSimple ? "button-simple-detail-back" : "button-detail-back"} />}
           {screen === "detail" && categoryContext ? (
           <DetailView
             category={categoryContext.category}
@@ -2999,15 +2999,12 @@ export function ExploreView({
   return (
     <section className="lg2-view lg2-explore-view" data-testid="screen-explore">
       {onBack && (
-        <button
-          className="lg2-detail-back"
-          type="button"
+        <GuideBackCircle
+          className="lg-back-circle--float"
           onClick={onBack}
-          aria-label={t("UI.lg.action.back")}
-          data-testid="explore-sheet-back"
-        >
-          <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-        </button>
+          label={t("UI.lg.action.back")}
+          testId="explore-sheet-back"
+        />
       )}
       <header className="lg2-explore-header">
         <p>{tenant.name}</p>

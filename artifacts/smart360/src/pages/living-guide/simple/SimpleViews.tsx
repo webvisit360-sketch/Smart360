@@ -1,3 +1,4 @@
+import { GuideBackCircle } from "./GuideHeaderControls";
 import { useState, type ReactNode } from "react";
 import { usePullClose } from "./use-pull-close";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
@@ -89,9 +90,7 @@ export function SimpleHomeView({
 
 function BackButton({ lang, onClick, testId }: { lang: string; onClick: () => void; testId: string }) {
   return (
-    <button type="button" className="lgs-back" onClick={onClick} aria-label={simpleCopy("back", lang)} data-testid={testId}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
-    </button>
+    <GuideBackCircle className="lgs-back" onClick={onClick} label={simpleCopy("back", lang)} testId={testId} />
   );
 }
 

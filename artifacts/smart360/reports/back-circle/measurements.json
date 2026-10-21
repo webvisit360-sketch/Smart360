@@ -1,0 +1,1174 @@
+[
+  {
+    "file": "reports/back-circle/bordo-category-list.png",
+    "design": "bordo",
+    "view": "category-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-entry.png",
+    "design": "bordo",
+    "view": "entry",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-offer.png",
+    "design": "bordo",
+    "view": "offer",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-program-list.png",
+    "design": "bordo",
+    "view": "program-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-program-detail.png",
+    "design": "bordo",
+    "view": "program-detail",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-announcement-list.png",
+    "design": "bordo",
+    "view": "announcement-list",
+    "note": "SINTETIČNO obvestilo (API prestrežen v Playwright)",
+    "backs": [
+      {
+        "testId": "button-announcements-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-announcement-detail.png",
+    "design": "bordo",
+    "view": "announcement-detail",
+    "note": "SINTETIČNO",
+    "backs": [
+      {
+        "testId": "button-announcement-back",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-messages.png",
+    "design": "bordo",
+    "view": "messages",
+    "note": "",
+    "backs": [
+      {
+        "testId": "messages-back",
+        "x": 18,
+        "y": 22,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": null,
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-about.png",
+    "design": "bordo",
+    "view": "about",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-about-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/bordo-weather.png",
+    "design": "bordo",
+    "view": "weather",
+    "note": "sintetično vreme (devWeather)",
+    "backs": [
+      {
+        "testId": "simple-weather-back",
+        "x": 16,
+        "y": 515,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgb(178, 52, 118)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-category-list.png",
+    "design": "modra",
+    "view": "category-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-entry.png",
+    "design": "modra",
+    "view": "entry",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-offer.png",
+    "design": "modra",
+    "view": "offer",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-program-list.png",
+    "design": "modra",
+    "view": "program-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-program-detail.png",
+    "design": "modra",
+    "view": "program-detail",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-announcement-list.png",
+    "design": "modra",
+    "view": "announcement-list",
+    "note": "SINTETIČNO obvestilo (API prestrežen v Playwright)",
+    "backs": [
+      {
+        "testId": "button-announcements-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-announcement-detail.png",
+    "design": "modra",
+    "view": "announcement-detail",
+    "note": "SINTETIČNO",
+    "backs": [
+      {
+        "testId": "button-announcement-back",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-messages.png",
+    "design": "modra",
+    "view": "messages",
+    "note": "",
+    "backs": [
+      {
+        "testId": "messages-back",
+        "x": 18,
+        "y": 22,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": null,
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-about.png",
+    "design": "modra",
+    "view": "about",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-about-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/modra-weather.png",
+    "design": "modra",
+    "view": "weather",
+    "note": "sintetično vreme (devWeather)",
+    "backs": [
+      {
+        "testId": "simple-weather-back",
+        "x": 16,
+        "y": 515,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(221, 227, 238)",
+        "padding": "1px",
+        "background": "rgb(52, 79, 178)",
+        "backgroundImage": "none",
+        "inset": "rgb(36, 52, 79) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(221, 227, 238)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-category-list.png",
+    "design": "custom",
+    "view": "category-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-entry.png",
+    "design": "custom",
+    "view": "entry",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-offer.png",
+    "design": "custom",
+    "view": "offer",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-program-list.png",
+    "design": "custom",
+    "view": "program-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-program-detail.png",
+    "design": "custom",
+    "view": "program-detail",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-simple-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.01995849609375,
+      "h": 42.02000045776367,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-announcement-list.png",
+    "design": "custom",
+    "view": "announcement-list",
+    "note": "SINTETIČNO obvestilo (API prestrežen v Playwright)",
+    "backs": [
+      {
+        "testId": "button-announcements-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-announcement-detail.png",
+    "design": "custom",
+    "view": "announcement-detail",
+    "note": "SINTETIČNO",
+    "backs": [
+      {
+        "testId": "button-announcement-back",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-messages.png",
+    "design": "custom",
+    "view": "messages",
+    "note": "",
+    "backs": [
+      {
+        "testId": "messages-back",
+        "x": 18,
+        "y": 22,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": null,
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-about.png",
+    "design": "custom",
+    "view": "about",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-about-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/custom-weather.png",
+    "design": "custom",
+    "view": "weather",
+    "note": "sintetično vreme (devWeather)",
+    "backs": [
+      {
+        "testId": "simple-weather-back",
+        "x": 16,
+        "y": 515,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(244, 226, 187)",
+        "padding": "1px",
+        "background": "rgb(46, 139, 106)",
+        "backgroundImage": "none",
+        "inset": "rgb(31, 60, 41) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(244, 226, 187)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-category-list.png",
+    "design": "trend",
+    "view": "category-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.019989013671875,
+      "h": 42.019996643066406,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-entry.png",
+    "design": "trend",
+    "view": "entry",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.019989013671875,
+      "h": 42.019996643066406,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-offer.png",
+    "design": "trend",
+    "view": "offer",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.019989013671875,
+      "h": 42.019996643066406,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-program-list.png",
+    "design": "trend",
+    "view": "program-list",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.019989013671875,
+      "h": 42.019996643066406,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-program-detail.png",
+    "design": "trend",
+    "view": "program-detail",
+    "note": "",
+    "backs": [
+      {
+        "testId": "button-detail-back",
+        "x": 16,
+        "y": 16,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 42.019989013671875,
+      "h": 42.019996643066406,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-announcement-list.png",
+    "design": "trend",
+    "view": "announcement-list",
+    "note": "SINTETIČNO obvestilo (API prestrežen v Playwright)",
+    "backs": [
+      {
+        "testId": "button-announcements-close",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-announcement-detail.png",
+    "design": "trend",
+    "view": "announcement-detail",
+    "note": "SINTETIČNO",
+    "backs": [
+      {
+        "testId": "button-announcement-back",
+        "x": 16,
+        "y": 20,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-messages.png",
+    "design": "trend",
+    "view": "messages",
+    "note": "",
+    "backs": [
+      {
+        "testId": "messages-back",
+        "x": 18,
+        "y": 22,
+        "w": 44,
+        "h": 44,
+        "radius": "50%",
+        "border": "1px solid rgb(194, 220, 248)",
+        "padding": "1px",
+        "background": "rgba(21, 29, 48, 0.72)",
+        "backgroundImage": "none",
+        "inset": "rgb(76, 37, 69) 0px 0px 0px 1px inset",
+        "arrowColor": "rgb(255, 255, 255)",
+        "arrowFill": "rgb(255, 255, 255)",
+        "arrowSize": "26x26"
+      }
+    ],
+    "ref": null,
+    "oldStyle": 0
+  },
+  {
+    "file": "reports/back-circle/trend-weather.png",
+    "design": "trend",
+    "view": "weather",
+    "note": "Trend: vreme je kartica na domači strani (ni ločenega pogleda/nazaj)",
+    "backs": [],
+    "ref": {
+      "w": 44,
+      "h": 44,
+      "border": "1px solid rgb(194, 220, 248)",
+      "padding": "1px"
+    },
+    "oldStyle": 0
+  }
+]

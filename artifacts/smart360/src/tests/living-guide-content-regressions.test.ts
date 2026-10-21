@@ -265,7 +265,7 @@ test("draggable detail sheets use grabbers and backdrop close without arrows", a
     source.indexOf("function ExploreView("),
     source.indexOf("function HeroGallery("),
   );
-  assert.match(fullScreenSource, /className="lg2-detail-back"/);
+  assert.match(fullScreenSource, /<GuideBackCircle[\s\S]*?testId="explore-sheet-back"/);
 });
 
 test("explore items use stored range, deterministic fallbacks, and stable distance order", () => {

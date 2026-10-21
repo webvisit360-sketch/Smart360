@@ -12,6 +12,7 @@ import TileIconEditorFixture from "./TileIconEditorFixture";
 import { WeatherFixtureClockContext } from "../living-guide-weather";
 import { syntheticWeather, weatherFixtureTime } from "../living-guide-weather-fixture-data";
 import type { WeatherSkin } from "../living-guide-weather-model";
+import { PROGRAM_FIXTURE_CATEGORY_ID, programFixtureTenant } from "../living-guide-program-fixture-data";
 
 export default function SimpleDesignFixture() {
   const [search] = useState(() => new URLSearchParams(window.location.search));
@@ -46,6 +47,16 @@ export default function SimpleDesignFixture() {
           ...category.items[0], id: `${category.id}-long-${i}`, title: `Lokacija ${i + 1}${i === 29 ? " — ZADNJA LOKACIJA" : ""}`,
           subtitle: "Preizkus dolgih seznamov", body: "", media: [], isVisible: true,
         }));
+      }
+      return copy;
+    }
+    if (search.get("evidence") === "back-gallery") {
+      // SYNTHETIC: borrow the DEV programme fixture's dated events so the real
+      // ProgramView/ProgramDetail render inside this tenant's Program tile.
+      const copy = structuredClone(tenant);
+      const events = programFixtureTenant().sections.flatMap((s: any) => s.categories).find((c: any) => c.id === PROGRAM_FIXTURE_CATEGORY_ID);
+      for (const section of copy.sections) for (const category of section.categories) {
+        if (category.layout === "events" && events) category.items = structuredClone(events.items);
       }
       return copy;
     }

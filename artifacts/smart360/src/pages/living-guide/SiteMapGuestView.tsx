@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import type { SitePlanImage } from "@workspace/api-client-react";
+import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import type { UiTranslator } from "../guest/i18n";
 import { calculatePinchZoom, clampPan } from "./living-guide-gestures";
 
@@ -210,9 +211,7 @@ export function SiteMapGuestView({ images, t, onBack }: { images: SitePlanImage[
   return (
     <div className="lg2-view z-50">
       <div className="flex-none flex items-center h-14 px-4 border-b" style={{ borderColor: 'var(--line)' }}>
-        <button onClick={onBack} aria-label={t("UI.nav.back")} className="p-2 -ml-2 rounded-full" style={{ color: 'var(--tx)' }}>
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
+        <GuideBackCircle onClick={onBack} label={t("UI.nav.back")} testId="sitemap-back" />
         <h1 className="ml-4 font-bold text-lg" style={{ color: 'var(--tx)' }}>{t("UI.lg.siteMap")}</h1>
       </div>
       

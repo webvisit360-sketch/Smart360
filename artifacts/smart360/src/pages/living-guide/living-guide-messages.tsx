@@ -1,5 +1,6 @@
 import { guideLanguage } from "@workspace/guide-languages";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import {
   useGetGuestMessages,
   useSendGuestMessage,
@@ -180,9 +181,7 @@ export function MessagesView({
           <p>{tenant.name}</p>
           <h2>{t("UI.lg.nav.messages")}</h2>
         </div>
-        <button className="lg2-fab" onClick={onBack} aria-label={t("UI.lg.action.back")} data-testid="messages-back">
-          <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-        </button>
+        <GuideBackCircle className="lg2-msg-back" onClick={onBack} label={t("UI.lg.action.back")} testId="messages-back" />
       </div>
 
       <div className="lg2-msg-sc" ref={scrollRef}>

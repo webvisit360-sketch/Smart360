@@ -1,5 +1,6 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { usePullClose } from "./simple/use-pull-close";
+import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import { CARD_IMAGE_WIDTH, HERO_IMAGE_WIDTH, mediaImgSrc } from "../guest/img";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { itemPriceText, normalizeGuestMedia } from "./living-guide-formatters";
@@ -169,9 +170,7 @@ export function ProgramDetail({ item, lang, t, onBack, onSignup }: any) {
         <div className={`lgp-hero${tint ? " lgp-hero-fixture" : ""}`}>
           {src && <img src={src} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
           <div className="lgp-sh" />
-          <button type="button" className="lgp-hback" onClick={onBack} aria-label={programLabel(lang, "back")} data-testid="program-detail-back">
-            <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-          </button>
+          <GuideBackCircle className="lgp-hback lg-back-circle--float" onClick={onBack} label={programLabel(lang, "back")} testId="program-detail-back" />
           <h1 className="lgp-ht" data-lg-detail-title>{item.title}</h1>
         </div>
 

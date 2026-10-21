@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import type { UiTranslator } from "../guest/i18n";
 import { TourProfileControl, useTourProfile } from "./living-guide-tour-profile";
 import "./living-guide-announcements.css";
@@ -108,9 +109,7 @@ export function LivingGuideAbout({ lang, onClose }: { lang: string; onClose: () 
     <div className="lg2-ann-layer" role="dialog" aria-modal="true" aria-label={c.aboutTitle} data-testid="about-guide">
       <div className="lg2-ann-list">
         <div className="lg2-ann-top">
-          <button type="button" className="lg2-ann-back" onClick={onClose} aria-label={c.close} data-testid="button-about-close">
-            <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
-          </button>
+          <GuideBackCircle className="lg2-ann-back" onClick={onClose} label={c.close} testId="button-about-close" />
         </div>
         <p className="lg2-ann-kicker">Smart360</p>
         <h1 className="lg2-ann-h1">{c.aboutTitle}</h1>

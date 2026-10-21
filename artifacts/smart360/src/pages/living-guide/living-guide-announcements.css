@@ -29,7 +29,7 @@ body[data-t="noc"] [data-living-guide] { --lg2-ann-muted: #8C97AB; --lg2-ann-acc
   width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line);
   background: var(--card); color: var(--tx); display: grid; place-items: center; cursor: pointer;
 }
-.lg2-ann-back svg, .lg2-ann-hero-back svg { width: 20px; height: 20px; }
+.lg2-ann-back:not(.lg-back-circle) svg { width: 20px; height: 20px; }
 .lg2-ann-kicker {
   margin: 0 0 4px; font-size: 12px; letter-spacing: .12em; font-weight: 700; text-transform: uppercase;
   color: var(--lg2-ann-accent);

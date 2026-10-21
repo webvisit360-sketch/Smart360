@@ -2895,7 +2895,7 @@ export function ExploreView({
           aria-label={t("UI.lg.action.back")}
           data-testid="explore-sheet-back"
         >
-          <svg aria-hidden="true"><use href="#lg-i-bk" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M10 3 1 12l9 9v-6h13V9H10Z" /></svg>
         </button>
       )}
       <header className="lg2-explore-header">

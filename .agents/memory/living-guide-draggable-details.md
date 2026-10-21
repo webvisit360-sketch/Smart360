@@ -20,7 +20,7 @@ Device-invariant photo framing includes the sheet's initial occlusion, not only 
 
 **How to apply:** Compare fresh navigations at each width; resizing an already-open detail retains the route's height lock and gives misleading baseline measurements.
 
-Enostaven details must have exactly one back control alongside downward close gestures. Nested details return to their originating LIST, not directly to the home grid; only closing the top-level list returns home. This includes announcement details. This supersedes the earlier unconditional home-return direction. Other draggable detail sheets retain the grabber/backdrop behavior; non-draggable full-screen views keep their back button.
+All guest-guide back controls in Enostaven AND Trend use the same 44×44 palette/theme-filled circle, pale tile border/gap and strong white solid arrow, top-left on subpages. Exactly one visible back control accompanies the existing downward close gestures. Nested details return to their originating LIST, not directly to the home grid; only closing the top-level list returns home. This includes announcement details. This supersedes both the earlier no-arrow Trend direction and unconditional home-return direction.
 
 **Why:** After real guest/host testing, the owner requested one consistent back control plus working swipe-down, then clarified that nested navigation must preserve the source list without flashing the home grid.
 

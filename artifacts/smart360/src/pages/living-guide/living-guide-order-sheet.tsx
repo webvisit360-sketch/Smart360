@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { GuideBackCircle } from "./simple/GuideHeaderControls";
 import { useCreateOrder, useListDeviceOrders, getListDeviceOrdersQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -311,6 +312,7 @@ export function MyOrdersSheet({
     <div className="lg2-sheet-overlay" role="presentation" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="lg2-welcome-sheet" role="dialog" aria-modal="true" data-testid="my-orders">
         <div className="lg2-grabber" aria-hidden="true" />
+        <GuideBackCircle label={t("UI.lg.action.back")} onClick={onClose} testId="my-orders-back" />
         <h2 style={{ fontSize: "24px", fontWeight: 800, margin: "0 0 16px" }}>{t("UI.lg.order.myOrders")}</h2>
         
         {isLoading ? (
@@ -356,7 +358,6 @@ export function MyOrdersSheet({
             ))}
           </div>
         )}
-        <button className="lg2-primary-button" style={{ marginTop: 24 }} onClick={onClose}>{t("UI.lg.action.back")}</button>
       </div>
     </div>
   );
