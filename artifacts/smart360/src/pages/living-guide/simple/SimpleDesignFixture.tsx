@@ -50,13 +50,19 @@ export default function SimpleDesignFixture() {
       }
       return copy;
     }
-    if (search.get("evidence") === "back-gallery") {
+    if (["back-gallery", "scroll-smoke"].includes(search.get("evidence") ?? "")) {
       // SYNTHETIC: borrow the DEV programme fixture's dated events so the real
       // ProgramView/ProgramDetail render inside this tenant's Program tile.
       const copy = structuredClone(tenant);
       const events = programFixtureTenant().sections.flatMap((s: any) => s.categories).find((c: any) => c.id === PROGRAM_FIXTURE_CATEGORY_ID);
       for (const section of copy.sections) for (const category of section.categories) {
         if (category.layout === "events" && events) category.items = structuredClone(events.items);
+        if (search.get("evidence") === "scroll-smoke") {
+          if (category.layout === "poi") category.items = Array.from({length:30}, (_, i) => ({
+            ...category.items[0], id: `${category.id}-smoke-${i}`, title: `Location ${i + 1}`,
+          }));
+          for (const item of category.items) item.body = Array.from({length:30}, (_, i) => `<p>Scroll smoke paragraph ${i + 1}. Real content overflow for native touch testing.</p>`).join("");
+        }
       }
       return copy;
     }

@@ -8,7 +8,7 @@
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx/esm --test src/tests/*.test.ts"
+    "test": "node --import tsx/esm --test --test-concurrency=1 src/tests/*.test.ts"
   },
   "devDependencies": {
     "@workspace/guide-languages": "workspace:*",

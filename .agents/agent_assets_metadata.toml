@@ -2962,3 +2962,31 @@ mtime_ms = 1792613422677
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/def5a25b-9e0e-4c69-a687-2b00a550e46a/319f24dc-db38-4955-9c6d-b821a98ccd7c"
 storage_version_token = "1792613646775039"
 content_type = "text/html"
+
+[[outputs]]
+id = "UknEeLmWvRVGwmJvmGygX"
+uri = "file://artifacts/smart360/reports/home-scroll/landing-open-footer-top.mp4"
+type = "video"
+title = "Dotik: začetni zaslon → mreža → noga → vrh"
+description = "390 × 844, razvojni Meli Pu, Chromium z dotiki CDP. Mreža doseže dejanski konec pri 1444 px in se vrne na 0. To ni posnetek fizičnega iPhona."
+logical_id = "81d8ae2e-b3e8-454a-ad8a-df383c8f9c28"
+content_hash = "sha256:58a28ac57741a5f0ef91575e1effadf8f9cc1ea6d62b84d3f3d77b0297d0d2a8"
+size = 393449
+mtime_ms = 1792614614743
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/81d8ae2e-b3e8-454a-ad8a-df383c8f9c28/9214bb4b-858b-4c51-ad69-dbd6b7cc565d"
+storage_version_token = "1792615449537880"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "8hTNOnLivQGZiY2TQqNF6"
+uri = "file://artifacts/smart360/reports/home-scroll/report.html"
+type = "html"
+title = "Poročilo o preiskavi drsenja"
+description = "Meritve razvoja in produkcije, obseg novega varovala ter izrecne omejitve: vzrok prijavljene napake na iPhonu ni ugotovljen; brez objave."
+logical_id = "5b093b2e-88ea-4f0f-9359-d829912d28e0"
+content_hash = "sha256:f256224bbefbcd0d75f9f30cc71d27af7a0187a7457ca2642212f8a20e6b68ef"
+size = 3648
+mtime_ms = 1792615434129
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5b093b2e-88ea-4f0f-9359-d829912d28e0/34ffe7a5-0b88-4950-ba0b-b45de5ae4901"
+storage_version_token = "1792615450277796"
+content_type = "text/html"

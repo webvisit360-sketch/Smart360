@@ -26,6 +26,12 @@ All guest-guide back controls in Enostaven AND Trend use the same 44×44 palette
 
 **How to apply:** Count visible controls across the outer shell and nested content. Test both directions under network throttling; a resting screenshot cannot prove absence of an intermediate home frame. Preserve independent back controls on full-screen Explore and Messages. Test long content to its true end; short fixtures cannot prove scroll reachability.
 
+Native-scroll guards must use browser touch input, not wheel events or assigned scrollTop. Start inside actual scrollable content, above fixed action docks. A fixed-height landing is not itself a scroller: test its touch targeting and transition to the grid instead. Chromium history-back and a dispatched pageshow event are not evidence of actual iOS BFCache restoration.
+
+**Why:** Repeated owner reports concern physical iPhone touch scrolling, which screenshots, mouse-wheel checks and synthetic restoration events cannot establish.
+
+**How to apply:** Report browser engine and whether pageshow.persisted was native. Do not call a device-only symptom fixed when it did not reproduce. Run browser-bearing Node test files serially in this workspace; unrestricted file concurrency exhausted process resources during Vite/Chromium startup.
+
 Enostaven route destinations paint immediately, without the Trend slide-in/media-readiness wait. Nested back restores the originating list's scroll position.
 
 **Why:** Changing the held-background source alone did not eliminate the observed home-grid flash; the destination was still offscreen while media readiness and entry animation ran. Immediate destination rendering passed throttled per-frame checks.
