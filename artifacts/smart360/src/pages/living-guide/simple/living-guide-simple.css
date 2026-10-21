@@ -193,6 +193,12 @@
 .lgs-root .lg2-detail-sheet--solo { margin-top:0; }
 .lgs-root .lg2-sub2 { touch-action:pan-y; }
 .lgs-root .lg2-gallery-track { touch-action:pan-x pan-y; }
+/* Enostaven destinations paint immediately, including while their images decode.
+   Do not expose the home underneath a sheet waiting off-screen for media. */
+.lg2-app.lgs-root .v--det,
+.lg2-app.lgs-root .v--det.on {
+  transform:none; transition:none; opacity:1; pointer-events:auto;
+}
 .lgs-root .lgp-root, .lgs-root .lgs-sheet-panel, .lgs-root .lg2-ann-layer {
   touch-action:pan-y; overscroll-behavior-y:contain;
 }

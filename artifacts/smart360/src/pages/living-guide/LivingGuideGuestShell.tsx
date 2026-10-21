@@ -940,6 +940,8 @@ export default function LivingGuideGuestShell({
 
   const captureRouteScroll = useCallback(() => {
     const routeView = rootRef.current?.querySelector<HTMLElement>(
+      ".lg2-route-layer.v--det > .lg2-view",
+    ) ?? rootRef.current?.querySelector<HTMLElement>(
       ".lg2-route-layer > .lg2-view",
     );
     if (!routeView) return;
@@ -954,6 +956,16 @@ export default function LivingGuideGuestShell({
       galleryIndex,
     });
   }, [galleryIndex, location]);
+
+  useLayoutEffect(() => {
+    if (!isDetailPresentation || resolveGuestDesign(tenant?.guestDesign) !== "simple") return;
+    const routeView = rootRef.current?.querySelector<HTMLElement>(".lg2-route-layer.v--det > .lg2-view");
+    const snapshot = routeScrollSnapshotsRef.current.get(location);
+    if (!routeView || !snapshot) return;
+    selfAndDescendants(routeView, "[data-lg-scroll]").forEach((element, index) => {
+      element.scrollTop = snapshot.scrollTops[index] ?? 0;
+    });
+  }, [location, isDetailPresentation, tenant?.guestDesign]);
 
   useLayoutEffect(() => {
     if (isDetailPresentation) return;
@@ -993,6 +1005,8 @@ export default function LivingGuideGuestShell({
   const captureHeldView = useCallback((resetStack: boolean) => {
     try {
       const source = rootRef.current?.querySelector<HTMLElement>(
+        ".lg2-route-layer.v--det > .lg2-view",
+      ) ?? rootRef.current?.querySelector<HTMLElement>(
         ".lg2-route-layer > .lg2-view",
       );
       if (!source) {
@@ -1696,12 +1710,10 @@ export default function LivingGuideGuestShell({
 
   const closePresentedView = useCallback(
     (fallbackPath: string) => {
-      const simpleDestination = resolveGuestDesign(tenant?.guestDesign) === "simple";
-      if (simpleDestination) fallbackPath = `/${slug}/home`;
       const navigateAfterAnimation = () => {
         restoreDetailFocusRef.current = true;
         const returnsToDetail =
-          !simpleDestination && window.history.state?.livingGuideFromPresentation === "detail";
+          window.history.state?.livingGuideFromPresentation === "detail";
         if (!returnsToDetail) {
           compactHistoryAfterCloseRef.current = false;
           setLocation(buildGuestPath(fallbackPath), {
@@ -2157,7 +2169,7 @@ export default function LivingGuideGuestShell({
             data-detail-transition={detailTransitionPhase}
             style={detailRouteStyle}
           >
-          {isSimple && screen === "detail" && <button type="button" className="lgs-detail-back" aria-label={simpleCopy("back", lang)} onClick={() => closePresentedView(`/${slug}/home`)} data-testid="button-simple-detail-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button>}
+          {isSimple && screen === "detail" && <button type="button" className="lgs-detail-back" aria-label={simpleCopy("back", lang)} onClick={goBack} data-testid="button-simple-detail-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button>}
           {screen === "detail" && categoryContext ? (
           <DetailView
             category={categoryContext.category}

@@ -20,11 +20,16 @@ Device-invariant photo framing includes the sheet's initial occlusion, not only 
 
 **How to apply:** Compare fresh navigations at each width; resizing an already-open detail retains the route's height lock and gives misleading baseline measurements.
 
-Enostaven details must have exactly one back control returning to the one-page grid, alongside downward close gestures. This supersedes the earlier no-arrow direction for Enostaven only. Other draggable detail sheets retain the grabber/backdrop behavior; non-draggable full-screen views keep their back button.
+Enostaven details must have exactly one back control alongside downward close gestures. Nested details return to their originating LIST, not directly to the home grid; only closing the top-level list returns home. This includes announcement details. This supersedes the earlier unconditional home-return direction. Other draggable detail sheets retain the grabber/backdrop behavior; non-draggable full-screen views keep their back button.
 
-**Why:** After real guest/host testing, the owner explicitly requested one consistent back control plus working swipe-down for all six Enostaven detail types.
+**Why:** After real guest/host testing, the owner requested one consistent back control plus working swipe-down, then clarified that nested navigation must preserve the source list without flashing the home grid.
 
-**How to apply:** Count visible controls across the outer shell and nested content, not just inside each component. Preserve independent back controls on full-screen Explore and Messages. Test long content to its true end; short fixtures cannot prove scroll reachability.
+**How to apply:** Count visible controls across the outer shell and nested content. Test both directions under network throttling; a resting screenshot cannot prove absence of an intermediate home frame. Preserve independent back controls on full-screen Explore and Messages. Test long content to its true end; short fixtures cannot prove scroll reachability.
+
+Enostaven route destinations paint immediately, without the Trend slide-in/media-readiness wait. Nested back restores the originating list's scroll position.
+
+**Why:** Changing the held-background source alone did not eliminate the observed home-grid flash; the destination was still offscreen while media readiness and entry animation ran. Immediate destination rendering passed throttled per-frame checks.
+**How to apply:** Do not reintroduce an offscreen preparation phase for Enostaven. Loading media belongs inside the destination. Validate foreground layers during transition, not merely after settling.
 
 Gallery mouse dragging must disable native image drag and suspend mandatory scroll snap only after the horizontal direction has won the threshold. Touch galleries use native horizontal scrolling and scroll snap; vertical touch gestures originating over a gallery move the shared sheet.
 

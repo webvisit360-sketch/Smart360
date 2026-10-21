@@ -92,7 +92,7 @@ export function LivingGuideAnnouncements({ state, lang, tenantName, onClose, sim
   const [openId, setOpenId] = useState<string | null>(null);
   const open = openId ? state.active.find((r) => r.id === openId) ?? null : null;
   const layerRef = useRef<HTMLDivElement | null>(null);
-  const back = () => simple || !open ? onClose() : setOpenId(null);
+  const back = () => !open ? onClose() : setOpenId(null);
   const pullClose = usePullClose(back);
   useEscape(back);
   useEffect(() => { layerRef.current?.scrollTo?.({ top: 0 }); }, [openId]);

@@ -2906,3 +2906,45 @@ mtime_ms = 1792608235909
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c9d918d3-e412-43c6-8215-09b849aac7ad/900bbbdc-f4a8-48fe-8fac-200f3d3009a5"
 storage_version_token = "1792608757255383"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "pjrfnaY2hppv2jAa8XfCo"
+uri = "file://artifacts/smart360/reports/navigation-flash/category-navigation-fixed.mp4"
+type = "video"
+title = "Lokacija: seznam → podrobnost → isti seznam"
+description = "390 × 844, povezava omejena na 400 kb/s in 500 ms zakasnitve. Brez mreže v ospredju; vrnitev na isto mesto seznama."
+logical_id = "e954f8e5-6238-4f23-b102-011d7e83ff28"
+content_hash = "sha256:abbe1dbaf78638aa4bec59baa30482a6e51286283a47cb46eed26e21584edd99"
+size = 679912
+mtime_ms = 1792611036343
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/e954f8e5-6238-4f23-b102-011d7e83ff28/001a9737-300e-4a71-8a99-871628627457"
+storage_version_token = "1792611160905331"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "ccfX_8jRcaqgYiRzMlEI3"
+uri = "file://artifacts/smart360/reports/navigation-flash/offers-navigation-fixed.mp4"
+type = "video"
+title = "Ponudba: seznam → podrobnost → seznam"
+description = "Popravljeni prehod pri upočasnjeni povezavi, brez vmesnega domačega pogleda."
+logical_id = "d4bb07fe-b8ce-4ec6-81fb-7e1951713b9b"
+content_hash = "sha256:7a0407bf542a35ba3b4e6fc24eb768f24629ff155573a46abb3c5e7edf92b75f"
+size = 448419
+mtime_ms = 1792611100128
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d4bb07fe-b8ce-4ec6-81fb-7e1951713b9b/003c1ffa-4baa-4a30-94b5-5b3eaf1a13c2"
+storage_version_token = "1792611161710039"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "kfNni4dvkg1AcCWLsjjK7"
+uri = "file://artifacts/smart360/reports/navigation-flash/announcements-navigation.mp4"
+type = "video"
+title = "Obvestilo: seznam → podrobnost → seznam"
+description = "Preverjanje s sintetičnim obvestilom in upočasnjeno povezavo; brez sprememb baze."
+logical_id = "c00cf626-b1f3-4984-94cb-4d9e877a0ff1"
+content_hash = "sha256:7a61a7c07f701b105b1d677076586dcb1d2275904bfa636db0370fd984857615"
+size = 418289
+mtime_ms = 1792610697977
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c00cf626-b1f3-4984-94cb-4d9e877a0ff1/579b95eb-5d6d-4774-813c-cc7a2eb1dee9"
+storage_version_token = "1792611162780147"
+content_type = "video/mp4"
