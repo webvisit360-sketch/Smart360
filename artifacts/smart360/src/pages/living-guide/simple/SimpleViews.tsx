@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { usePullClose } from "./use-pull-close";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { simpleCopy } from "./simple-copy";
@@ -6,7 +6,7 @@ import { SimpleIcon } from "./simple-icons";
 import { simpleHeroUrl, simpleLabelSize, type SimpleSection, type SimpleTile } from "./simple-tiles";
 import { LandingFlagColumn } from "./LanguageFlags";
 import { WeatherCard, useLivingGuideWeather } from "../living-guide-weather";
-import { GuideHeaderControls } from "./GuideHeaderControls";
+import { GuideHeaderControls, WalkResetControl } from "./GuideHeaderControls";
 import { weatherSkin } from "../living-guide-weather-model";
 import "./living-guide-simple.css";
 
@@ -18,11 +18,13 @@ export function SimpleCoverView({
   const focus = `${tenant.heroFocusX ?? 50}% ${tenant.heroFocusY ?? 50}%`;
   const hero = simpleHeroUrl(tenant);
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
+  const [walkRevision, setWalkRevision] = useState(0);
   return (
     <section className="lgs-cover" aria-label={title} data-testid="screen-simple-cover">
       <div className="lgs-hero">
-        {tourUrl ? <iframe src={tourUrl} title={title} scrolling="no" loading="eager" /> : hero && <img src={hero} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: focus }} />}
+        {tourUrl ? <iframe key={`${tourUrl}:${walkRevision}`} src={tourUrl} title={title} scrolling="no" loading="eager" /> : hero && <img src={hero} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: focus }} />}
       </div>
+      {tourUrl && <WalkResetControl lang={lang} onReset={() => setWalkRevision(n => n + 1)} />}
       <LandingFlagColumn lang={lang} onSelect={onLanguage} />
       <div className="lgs-land">
         <div className="lgs-small">{simpleCopy("guide", lang).toUpperCase()}</div>

@@ -128,6 +128,11 @@
   background:var(--glass); box-shadow:inset 0 0 0 1px var(--s-bg);
 }
 .lgs-home-circle:focus-visible { outline:2px solid var(--s-stroke); outline-offset:3px; }
+.lgs-walk-reset {
+  position:absolute; z-index:12;
+  top:calc(16px + env(safe-area-inset-top, 0px)); left:16px;
+}
+.lgs-return360 svg { display:block; flex:none; }
 .lgs-tn { color: var(--s-tint); font-size: 12px; letter-spacing: .14em; font-weight: 700; text-transform: uppercase; }
 .lgs-tt { color: var(--s-txt); font-size: 25px; font-weight: 900; margin-top: 2px; line-height: 1.2; }
 .lgs-flagbtn {

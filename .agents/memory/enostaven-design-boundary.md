@@ -29,17 +29,19 @@ size change. These replace the earlier rectangular/larger-selected flag referenc
 **How to apply:** Keep these changes landing-only. Evidence must distinguish
 photo-mode browser fixtures from a verified interactive external virtual walk.
 
-The owner explicitly places the circular 360 return control on the Enostaven grid
-and Trend home, next to an equally sized circular language flag — never on landing.
-Show it only with configured landing media; use the current palette's tile color
-(Trend keeps its theme button color), white Lato label text, and the flag's border.
-The later evidence phrase asking for 360 above landing flags conflicts with the
-explicit placement rule; follow the explicit “NOT on the landing page” instruction.
+The home return circle on Enostaven and Trend keeps its flag-matching dimensions,
+border and palette, but uses a strong white solid back arrow rather than “360”.
+It appears only with configured landing media and returns to that landing.
+A separate matching arrow on the virtual walk reloads ONLY the iframe at its
+configured starting URL; never reload the entire guide. The owner explicitly
+requested this landing reset control after real-user feedback, superseding the
+earlier prohibition on landing arrows.
 
 **Why:** The owner specified the placement and conditional visibility.
-**How to apply:** Show separate landing and home screenshots; do not put a return
-button on the screen to which it returns. Physical iPhone/PWA claims require
-device evidence, not only viewport or safe-area simulation.
+**How to apply:** Distinguish home navigation from landing iframe reset. Cross-origin
+panorama detection is not available without provider cooperation; do not add
+untrusted scripts or claim an aerial start unless verified in the actual tour.
+Physical iPhone/PWA claims require device evidence, not only viewport simulation.
 
 The owner's later SVG catalogue supersedes the earlier HTML pictograms for
 Apartmaji (bed), Vhodna vrata (open door), and Domači izdelki (jar). Match the

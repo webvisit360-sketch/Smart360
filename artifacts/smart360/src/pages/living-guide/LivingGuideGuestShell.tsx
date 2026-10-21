@@ -89,6 +89,7 @@ import {
   rememberOrderPassword,
 } from "./living-guide-orders";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
+import { WalkResetControl } from "./simple/GuideHeaderControls";
 import { instagramLink, viberHref } from "@/lib/contact-links";
 import {
   bottomNavScreen,
@@ -2404,12 +2405,14 @@ function Starfield({ theme }: { theme: LivingTheme }) {
 function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { tenant: any; lang: string; t: UiTranslator; onOpen: () => void; onSearch: () => void; onSelectLanguage: (lang: string) => void; }) {
   const title = tenant.coverTitle || tenant.name;
   const tourUrl = virtualTourEmbedUrl(tenant.tourUrl);
+  const [walkRevision, setWalkRevision] = useState(0);
 
   return (
     <section className="lg2-view lg2-cover is-on" style={simplePaletteStyle(resolveSimplePalette(tenant.simplePalette, tenant.simpleBaseColor)) as CSSProperties} aria-label={title} data-testid="screen-cover">
       <div className={tourUrl ? "lg2-cover-tour" : "lg2-cover-photo"} aria-hidden={tourUrl ? undefined : true}>
         {tourUrl ? (
           <iframe
+            key={`${tourUrl}:${walkRevision}`}
             src={tourUrl}
             scrolling="no"
             loading="eager"
@@ -2419,6 +2422,7 @@ function CoverView({ tenant, lang, t, onOpen, onSearch, onSelectLanguage }: { te
           (tenant.livingGuideHeroUrl || tenant.heroUrl) && <img src={tenant.livingGuideHeroUrl || tenant.heroUrl} alt="" fetchPriority="high" decoding="async" style={imageStyle(tenant.heroMedia, tenant)} />
         )}
       </div>
+      {tourUrl && <WalkResetControl lang={lang} trend onReset={() => setWalkRevision(n => n + 1)} />}
       {tourUrl && <div className="lg2-hint360">{t("UI.lg.tour.hint")}</div>}
       <div className="lg2-landing-bottom">
       <div className="lg2-cover-mast">
