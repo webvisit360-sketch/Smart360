@@ -15,11 +15,11 @@ Device-invariant photo framing includes the sheet's initial occlusion, not only 
 
 **How to apply:** Compare fresh navigations at each width; resizing an already-open detail retains the route's height lock and gives misleading baseline measurements.
 
-Draggable detail sheets intentionally have no back/close arrow. They must show one horizontal grabber and remain closable by both downward drag and a stationary tap on the exposed backdrop/hero. Non-draggable full-screen views keep their back button.
+Enostaven details must have exactly one back control returning to the one-page grid, alongside downward close gestures. This supersedes the earlier no-arrow direction for Enostaven only. Other draggable detail sheets retain the grabber/backdrop behavior; non-draggable full-screen views keep their back button.
 
-**Why:** The owner considers an arrow redundant once the physical sheet model supplies clear drag and backdrop affordances, but no view may be left without a return path.
+**Why:** After real guest/host testing, the owner explicitly requested one consistent back control plus working swipe-down for all six Enostaven detail types.
 
-**How to apply:** Remove arrows only inside the shared draggable `DetailView` boundary. Preserve independent back controls on full-screen Explore, Messages, and any future non-draggable presentation.
+**How to apply:** Count visible controls across the outer shell and nested content, not just inside each component. Preserve independent back controls on full-screen Explore and Messages. Test long content to its true end; short fixtures cannot prove scroll reachability.
 
 Gallery mouse dragging must disable native image drag and suspend mandatory scroll snap only after the horizontal direction has won the threshold. Touch galleries use native horizontal scrolling and scroll snap; vertical touch gestures originating over a gallery move the shared sheet.
 

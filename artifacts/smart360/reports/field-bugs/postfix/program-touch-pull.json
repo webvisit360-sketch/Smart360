@@ -1,0 +1,77 @@
+{
+  "state": {
+    "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/__simple-fixture/c/c-explore-program",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "touches": [
+      {
+        "type": "touchstart",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 500
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 525
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 550
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 575
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 600
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 625
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 650
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 675
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 700
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 725
+      },
+      {
+        "type": "touchmove",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 750
+      },
+      {
+        "type": "touchend",
+        "target": "lg2-screen-scroll lgp-root",
+        "y": 750
+      }
+    ],
+    "programVisible": true,
+    "programScrollTop": 0,
+    "homeVisible": true,
+    "back": true
+  },
+  "expectation": "Downward touch on top-of-scroll Program detail should close to home grid.",
+  "observed": "Program remained open after touch events targeted lgp-root with scrollTop 0."
+}

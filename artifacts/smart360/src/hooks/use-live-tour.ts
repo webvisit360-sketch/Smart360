@@ -105,6 +105,7 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
   const persistenceRef = useRef(ephemeralFinished);
   const [clock, setClock] = useState(() => Date.now());
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [gps, setGps] = useState({ received: 0, accepted: 0, accuracy: null as number | null, lastAt: 0 });
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lon: number; heading: number | null; speed: number | null } | null>(null);
   const [wakeStatus, setWakeStatus] = useState<WakeStatus>('idle');
   const [platform] = useState<'ios' | 'android' | 'other'>(() => {
@@ -165,7 +166,6 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
       watchRef.current = navigator.geolocation.watchPosition(
         position => {
           if (generation !== watchGeneration.current) return;
-          setGeoError(null);
           const current = stateRef.current;
           if (!current || current.status === 'finished') return;
             const { latitude: lat, longitude: lon, accuracy, altitude, altitudeAccuracy, heading, speed } = position.coords;
@@ -179,7 +179,15 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
                 speed: typeof speed === 'number' && Number.isFinite(speed) && speed >= 0 ? speed : null,
               });
            }
-           const next = recordTourPoint(current, { lat, lon, accuracy, altitude, altitudeAccuracy, timestamp: position.timestamp });
+           // Optional altitude metadata must never invalidate a valid horizontal fix.
+           const next = recordTourPoint(current, {
+             lat, lon, accuracy,
+             altitude: altitude != null && Number.isFinite(altitude) ? altitude : null,
+             altitudeAccuracy: altitudeAccuracy != null && Number.isFinite(altitudeAccuracy) && altitudeAccuracy >= 0 ? altitudeAccuracy : null,
+             timestamp: position.timestamp,
+           });
+           setGps(previous => ({ received: previous.received + 1, accepted: previous.accepted + Number(next !== current), accuracy, lastAt: Date.now() }));
+           setGeoError(accuracy > MAX_ACCURACY_M ? 'geo-poor' : next === current ? 'geo-rejected' : null);
           if (next !== current) commit(next);
         },
         error => {
@@ -210,6 +218,7 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
     if (stateRef.current && stateRef.current.status !== 'finished') return;
     setGeoError(null);
       commit(startTour(Date.now(), activity, profile));
+      setGps({ received: 0, accepted: 0, accuracy: null, lastAt: Date.now() });
   }, [commit]);
   const pause = useCallback(() => {
     if (stateRef.current) commit(pauseTour(stateRef.current, Date.now()));
@@ -222,5 +231,6 @@ export function useLiveTour(key: string, { ephemeralFinished = false }: { epheme
   }, [commit]);
   const reset = useCallback(() => { setGeoError(null); commit(null); }, [commit]);
   const metrics = useMemo(() => tourMetrics(state, clock), [state, clock]);
-  return { state, currentPosition: active ? currentPosition : null, metrics, start, pause, resume, finish, reset, geoError, wakeStatus, platform };
+  const gpsStatus = active ? { ...gps, stale: clock - gps.lastAt > 25_000 } : null;
+  return { state, currentPosition: active ? currentPosition : null, metrics, start, pause, resume, finish, reset, geoError, gpsStatus, wakeStatus, platform };
 }

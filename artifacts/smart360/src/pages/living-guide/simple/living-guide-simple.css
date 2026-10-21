@@ -168,4 +168,11 @@
 .lgs-full { position: fixed; inset: 0; z-index: 55; overflow-y: auto; background: var(--s-bg); color: var(--s-txt);
   padding: calc(14px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); font-family: "Lato S360", sans-serif; }
 .lgs-full[hidden] { display: none; }
+/* The outer route owns the single Enostaven return control. */
+.lgs-root .lgp-hback { display: none; }
+.lgs-root .lg2-detail-view { min-height: 0; }
+.lgs-root .lg2-detail-scroll { flex: 1 1 0; min-height: 0; }
+.lgs-root .lg2-detail-sheet { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+.lgs-root .lgp-root { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+.lgs-sheet-panel { overscroll-behavior-y: contain; }
 .lgs-full-title { font-size: 25px; font-weight: 900; margin: 2px 4px 14px; }

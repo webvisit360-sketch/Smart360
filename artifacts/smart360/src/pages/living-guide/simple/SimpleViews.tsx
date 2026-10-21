@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { usePullClose } from "./use-pull-close";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { simpleCopy } from "./simple-copy";
 import { SimpleIcon } from "./simple-icons";
@@ -94,9 +95,10 @@ function BackButton({ lang, onClick, testId }: { lang: string; onClick: () => vo
 
 /** Bottom sheet over the tile page with a single back arrow. */
 export function SimpleSheet({ lang, label, testId, onClose, children }: { lang: string; label: string; testId: string; onClose: () => void; children: ReactNode }) {
+  const pullClose = usePullClose(onClose);
   return (
     <div className="lgs-sheet-layer" role="dialog" aria-modal="true" aria-label={label} onClick={onClose} data-testid={testId}>
-      <div className="lgs-sheet-panel" onClick={(event) => event.stopPropagation()}>
+      <div className="lgs-sheet-panel" {...pullClose} onClick={(event) => event.stopPropagation()}>
         <BackButton lang={lang} onClick={onClose} testId={`${testId}-back`} />
         {children}
       </div>

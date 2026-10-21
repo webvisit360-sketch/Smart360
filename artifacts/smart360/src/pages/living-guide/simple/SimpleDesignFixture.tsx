@@ -37,6 +37,16 @@ export default function SimpleDesignFixture() {
     () => published && snapshot ? { ...snapshot, slug: "__simple-fixture", guestDesign: palette === "trend" ? "trend" : "simple", simplePalette: palette, simpleBaseColor: color } : simpleFixtureTenant(tenantKey, palette, color),
     [tenantKey, palette, color, published, snapshot],
   );
+  const evidenceTenant = useMemo(() => {
+    if (search.get("evidence") !== "long-detail") return tenant;
+    const copy = structuredClone(tenant);
+    for (const section of copy.sections) for (const category of section.categories) {
+      for (const item of category.items) {
+        item.body = Array.from({ length: 35 }, (_, i) => `<p>Preizkusna vrstica ${i + 1}: Dolga vsebina za preverjanje dosegljivega konca.</p>`).join("") + "<p>KONEC PREIZKUSNE VSEBINE</p>";
+      }
+    }
+    return copy;
+  }, [tenant, search]);
   if (error) return <p role="alert">{error}</p>;
   if (search.get("evidence") === "icon-editor") return <TileIconEditorFixture />;
   if (published && !snapshot) return <p>Loading published evidence…</p>;
@@ -46,7 +56,7 @@ export default function SimpleDesignFixture() {
       tenant={search.get("evidence") === "landing-photo" ? {
         ...tenant, tourUrl: null,
         livingGuideHeroUrl: `${import.meta.env.BASE_URL}reports/enostaven/landing-correction/${tenantKey === "melipu" ? "melipu" : "drobez"}-photo.jpg`,
-      } : { ...tenant, simpleDynamicBackground: dynamic }}
+      } : { ...evidenceTenant, simpleDynamicBackground: dynamic }}
       slug="__simple-fixture"
       lang={lang}
       devWeather={fixedNow !== undefined ? syntheticWeather("calm", fixedNow) : null}

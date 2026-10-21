@@ -1335,6 +1335,37 @@ const LEGACY_LIVING_GUIDE_UI = {
     de: "Warte auf GPS-Signal …",
     it: "In attesa del segnale GPS …",
   },
+  "UI.lg.liveTour.poorGps": {
+    sl: "GPS je nenatančen (nad 100 m). Razdalja se ne beleži. Pojdite na odprto in omogočite natančno lokacijo.",
+    en: "GPS accuracy is worse than 100 m. Distance is not recorded. Move outdoors and enable precise location.",
+    de: "GPS ist ungenauer als 100 m. Keine Distanzaufzeichnung. Ins Freie gehen und genauen Standort aktivieren.",
+    it: "Precisione GPS oltre 100 m. Distanza non registrata. Vai all'aperto e attiva la posizione precisa.",
+    fr: "Précision GPS supérieure à 100 m. Distance non enregistrée. Sortez et activez la position précise.",
+    nl: "GPS is minder nauwkeurig dan 100 m. Afstand wordt niet opgenomen. Ga naar buiten en schakel precieze locatie in.",
+    hr: "GPS je neprecizan (više od 100 m). Udaljenost se ne bilježi. Izađite na otvoreno i uključite preciznu lokaciju.",
+  },
+  "UI.lg.liveTour.rejectedGps": {
+    sl: "GPS-točka ni sprejeta: zastarel čas, neveljavna lokacija ali nenaden skok. Čakam na naslednjo.",
+    en: "GPS fix rejected: stale time, invalid location or sudden jump. Waiting for the next fix.",
+    de: "GPS-Punkt abgelehnt: veraltete Zeit, ungültiger Standort oder Sprung. Warte auf nächsten Punkt.",
+    it: "Punto GPS scartato: orario vecchio, posizione non valida o salto. In attesa del prossimo.",
+    fr: "Point GPS rejeté : heure ancienne, position invalide ou saut. En attente du suivant.",
+    nl: "GPS-punt geweigerd: oude tijd, ongeldige locatie of sprong. Wachten op volgend punt.",
+    hr: "GPS-točka odbijena: zastarjelo vrijeme, nevaljana lokacija ili skok. Čekam sljedeću.",
+  },
+  "UI.lg.liveTour.gpsDiagnostics": {
+    sl: "GPS prejeto / sprejeto:", en: "GPS received / accepted:", de: "GPS empfangen / akzeptiert:",
+    it: "GPS ricevuti / accettati:", fr: "GPS reçus / acceptés:", nl: "GPS ontvangen / geaccepteerd:", hr: "GPS primljeno / prihvaćeno:",
+  },
+  "UI.lg.liveTour.staleGps": {
+    sl: "Več kot 25 s brez GPS-posodobitve. Preverite dovoljenje za lokacijo; zaslon in vodnik naj ostaneta odprta.",
+    en: "No GPS update for over 25 s. Check location permission; keep the screen and guide open.",
+    de: "Seit über 25 s kein GPS-Update. Standortfreigabe prüfen; Bildschirm und Guide offen halten.",
+    it: "Nessun aggiornamento GPS da oltre 25 s. Controlla i permessi; tieni schermo e guida aperti.",
+    fr: "Aucune mise à jour GPS depuis plus de 25 s. Vérifiez les autorisations ; gardez écran et guide ouverts.",
+    nl: "Al meer dan 25 s geen GPS-update. Controleer toestemming; houd scherm en gids open.",
+    hr: "Više od 25 s bez GPS-a. Provjerite dozvolu; zaslon i vodič neka ostanu otvoreni.",
+  },
 } as const satisfies Record<string, Partial<Record<UiLanguage, string>>>;
 export const LIVING_GUIDE_UI = Object.fromEntries(
   Object.entries(LEGACY_LIVING_GUIDE_UI).map(([key, value]) => [key, extendCatalog<string>(value)]),

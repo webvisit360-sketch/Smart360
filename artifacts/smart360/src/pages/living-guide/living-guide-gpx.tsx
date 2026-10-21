@@ -649,6 +649,7 @@ function GpxRouteBody({ route, slug, itemId, t, lang: requestedLang, variant = "
         wakeStatus={tour.wakeStatus}
         platform={tour.platform}
         geoError={tour.geoError}
+        gpsStatus={tour.gpsStatus}
         exporting={exporting}
         exportError={exportError}
         startDisabled={preflight.status !== "near" || shortFinished}

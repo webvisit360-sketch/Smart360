@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { usePullClose } from "./simple/use-pull-close";
 import "./living-guide-announcements.css";
 import { CARD_IMAGE_WIDTH, HERO_IMAGE_WIDTH, imgSrc } from "../guest/img";
 import {
@@ -84,14 +85,16 @@ export function AnnouncementDetail({ row, lang, onBack }: { row: GuestAnnounceme
   );
 }
 
-export function LivingGuideAnnouncements({ state, lang, tenantName, onClose }: {
-  state: GuestAnnouncementsState; lang: string; tenantName: string; onClose: () => void;
+export function LivingGuideAnnouncements({ state, lang, tenantName, onClose, simple = false }: {
+  state: GuestAnnouncementsState; lang: string; tenantName: string; onClose: () => void; simple?: boolean;
 }) {
   const c = announcementCopy(lang);
   const [openId, setOpenId] = useState<string | null>(null);
   const open = openId ? state.active.find((r) => r.id === openId) ?? null : null;
   const layerRef = useRef<HTMLDivElement | null>(null);
-  useEscape(() => (open ? setOpenId(null) : onClose()));
+  const back = () => simple || !open ? onClose() : setOpenId(null);
+  const pullClose = usePullClose(back);
+  useEscape(back);
   useEffect(() => { layerRef.current?.scrollTo?.({ top: 0 }); }, [openId]);
   // Detail of an announcement that just expired falls back to the list automatically.
   useEffect(() => { if (openId && !open) setOpenId(null); }, [openId, open]);
@@ -104,8 +107,8 @@ export function LivingGuideAnnouncements({ state, lang, tenantName, onClose }: {
   const openRow = (id: string) => { state.markRead(id); setOpenId(id); };
 
   return (
-    <div className="lg2-ann-layer" role="dialog" aria-modal="true" aria-label={c.title} ref={layerRef} data-testid="announcements-layer">
-      {open ? <AnnouncementDetail row={open} lang={lang} onBack={() => setOpenId(null)} /> : (
+    <div className="lg2-ann-layer" role="dialog" aria-modal="true" aria-label={c.title} ref={layerRef} {...pullClose} data-testid="announcements-layer">
+      {open ? <AnnouncementDetail row={open} lang={lang} onBack={back} /> : (
         <div className="lg2-ann-list">
           <div className="lg2-ann-top">
             <button type="button" className="lg2-ann-back" onClick={onClose} aria-label={c.close} data-testid="button-announcements-close">

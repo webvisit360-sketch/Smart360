@@ -1,0 +1,281 @@
+{
+  "fixture": "/__simple-fixture/home?tenant=melipu&palette=bordo",
+  "captures": [
+    "before-home-melipu-390x844.png",
+    "welcome-detail-390x844.png",
+    "welcome-detail-390x920.png",
+    "welcome-swipe-down-return-home-390x920.png",
+    "offer-detail-390x844.png",
+    "offer-detail-390x920.png",
+    "gps-accurate-origin-390x844.png",
+    "gps-accurate-movement-390x844.png",
+    "gps-poor-accuracy-101m-390x844.png",
+    "gps-permission-denied-390x844.png",
+    "detail-sheet-and-swipe.webm",
+    "gps-recorder-injected.webm"
+  ],
+  "measurements": [
+    {
+      "name": "welcome-390x844",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/__simple-fixture/c/c-stay-welcome",
+      "viewport": {
+        "w": 390,
+        "h": 844,
+        "vh": 844
+      },
+      "scrollY": 0,
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "top": 0,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "sheet": {
+        "rect": {
+          "x": 0,
+          "y": 193,
+          "width": 390,
+          "height": 573,
+          "top": 193,
+          "right": 390,
+          "bottom": 766,
+          "left": 0
+        },
+        "scrollHeight": 573,
+        "clientHeight": 573,
+        "offset": "0",
+        "minOffset": "-766",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "scroll": {
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 766,
+          "top": 0,
+          "right": 390,
+          "bottom": 766,
+          "left": 0
+        },
+        "scrollTop": 0,
+        "scrollHeight": 766,
+        "clientHeight": 766
+      },
+      "cta": null
+    },
+    {
+      "name": "welcome-390x920",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/__simple-fixture/c/c-stay-welcome",
+      "viewport": {
+        "w": 390,
+        "h": 920,
+        "vh": 920
+      },
+      "scrollY": 0,
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 920,
+        "top": 0,
+        "right": 390,
+        "bottom": 920,
+        "left": 0
+      },
+      "sheet": {
+        "rect": {
+          "x": 0,
+          "y": 193,
+          "width": 390,
+          "height": 649,
+          "top": 193,
+          "right": 390,
+          "bottom": 842,
+          "left": 0
+        },
+        "scrollHeight": 649,
+        "clientHeight": 649,
+        "offset": "0",
+        "minOffset": "0",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "scroll": {
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 842,
+          "top": 0,
+          "right": 390,
+          "bottom": 842,
+          "left": 0
+        },
+        "scrollTop": 0,
+        "scrollHeight": 842,
+        "clientHeight": 842
+      },
+      "cta": null
+    },
+    {
+      "name": "offer-item-390x844",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/__simple-fixture/c/c-offer-prices/i/i-offer-prices",
+      "viewport": {
+        "w": 390,
+        "h": 920,
+        "vh": 920
+      },
+      "scrollY": 0,
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 920,
+        "top": 0,
+        "right": 390,
+        "bottom": 920,
+        "left": 0
+      },
+      "sheet": {
+        "rect": {
+          "x": 8.775009155273438,
+          "y": 20.70001220703125,
+          "width": 372.449951171875,
+          "height": 280.3969421386719,
+          "top": 20.70001220703125,
+          "right": 381.22496032714844,
+          "bottom": 301.0969543457031,
+          "left": 8.775009155273438
+        },
+        "scrollHeight": 294,
+        "clientHeight": 294,
+        "offset": "0",
+        "minOffset": "-842",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "scroll": {
+        "rect": {
+          "x": 8.775009155273438,
+          "y": 20.70001220703125,
+          "width": 372.449951171875,
+          "height": 804.1099853515625,
+          "top": 20.70001220703125,
+          "right": 381.22496032714844,
+          "bottom": 824.8099975585938,
+          "left": 8.775009155273438
+        },
+        "scrollTop": 0,
+        "scrollHeight": 842,
+        "clientHeight": 842
+      },
+      "cta": {
+        "x": 33,
+        "y": 761,
+        "width": 324,
+        "height": 52,
+        "top": 761,
+        "right": 357,
+        "bottom": 813,
+        "left": 33
+      }
+    },
+    {
+      "name": "offer-item-390x920",
+      "url": "https://6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02-00-9jgvt98yiw0q.spock.replit.dev/__simple-fixture/c/c-offer-prices/i/i-offer-prices",
+      "viewport": {
+        "w": 390,
+        "h": 920,
+        "vh": 920
+      },
+      "scrollY": 0,
+      "root": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 920,
+        "top": 0,
+        "right": 390,
+        "bottom": 920,
+        "left": 0
+      },
+      "sheet": {
+        "rect": {
+          "x": 8.775009155273438,
+          "y": 20.70001220703125,
+          "width": 372.449951171875,
+          "height": 280.3969421386719,
+          "top": 20.70001220703125,
+          "right": 381.22496032714844,
+          "bottom": 301.0969543457031,
+          "left": 8.775009155273438
+        },
+        "scrollHeight": 294,
+        "clientHeight": 294,
+        "offset": "0",
+        "minOffset": "-842",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "scroll": {
+        "rect": {
+          "x": 8.775009155273438,
+          "y": 20.70001220703125,
+          "width": 372.449951171875,
+          "height": 804.1099853515625,
+          "top": 20.70001220703125,
+          "right": 381.22496032714844,
+          "bottom": 824.8099975585938,
+          "left": 8.775009155273438
+        },
+        "scrollTop": 0,
+        "scrollHeight": 842,
+        "clientHeight": 842
+      },
+      "cta": {
+        "x": 33,
+        "y": 761,
+        "width": 324,
+        "height": 52,
+        "top": 761,
+        "right": 357,
+        "bottom": 813,
+        "left": 33
+      }
+    }
+  ],
+  "gps": [
+    {
+      "name": "accurate-origin",
+      "watchers": 1,
+      "status": "Tura teče",
+      "gps": "GPS prejeto / sprejeto: 1 / 1 · ±5 m",
+      "distance": "0 m"
+    },
+    {
+      "name": "accurate-movement",
+      "watchers": 1,
+      "status": "Tura teče",
+      "gps": "GPS prejeto / sprejeto: 2 / 2 · ±5 m",
+      "distance": "25 m"
+    },
+    {
+      "name": "poor-accuracy-101m",
+      "watchers": 1,
+      "status": "Tura teče",
+      "gps": "GPS prejeto / sprejeto: 3 / 2 · ±101 m",
+      "error": "GPS je nenatančen (nad 100 m). Razdalja se ne beleži. Pojdite na odprto in omogočite natančno lokacijo.",
+      "distance": "25 m"
+    },
+    {
+      "name": "permission-denied",
+      "watchers": 1,
+      "status": "Tura teče",
+      "gps": "GPS prejeto / sprejeto: 3 / 2 · ±101 m",
+      "error": "Dostop do lokacije je zavrnjen. Omogočite ga v nastavitvah brskalnika.",
+      "distance": "25 m"
+    }
+  ]
+}

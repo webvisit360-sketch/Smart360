@@ -2255,7 +2255,7 @@ export default function LivingGuideGuestShell({
 
 
       {showNotices && (
-        <LivingGuideAnnouncements state={announcements} lang={lang} tenantName={tenant?.name ?? ""} onClose={() => setShowNotices(false)} />
+        <LivingGuideAnnouncements state={announcements} lang={lang} tenantName={tenant?.name ?? ""} simple={isSimple} onClose={() => setShowNotices(false)} />
       )}
 
       {showMenu && (
@@ -3689,7 +3689,12 @@ function useDraggableDetailSheet(
       sheetRoot.toggleAttribute("data-lg-sheet-starts-at-top", startsAtTop);
       sheet.style.top = startsAtTop ? "0px" : "";
       initialTop = sheet.offsetTop;
-      const viewportHeight = sheetRoot.clientHeight;
+      // A percentage-height root can extend beyond its flex/route clip on iOS.
+      // Measure the visible intersection, not the overflowing root's own height.
+      const rootRect = sheetRoot.getBoundingClientRect();
+      const clipRect = root.getBoundingClientRect();
+      const viewportHeight = Math.max(0, Math.min(rootRect.bottom, clipRect.bottom,
+        window.visualViewport?.height ?? window.innerHeight) - rootRect.top);
       minOffset = Math.min(
         0,
         viewportHeight - initialTop - sheet.scrollHeight,
@@ -3855,6 +3860,7 @@ function useDraggableDetailSheet(
     root.addEventListener("touchmove", onTouchMove, { passive: false });
     root.addEventListener("touchend", onTouchEnd);
     root.addEventListener("touchcancel", onTouchCancel);
+    window.visualViewport?.addEventListener("resize", scheduleMeasure);
 
     return () => {
       if (closeTimer !== null) window.clearTimeout(closeTimer);
@@ -3870,6 +3876,7 @@ function useDraggableDetailSheet(
       root.removeEventListener("touchmove", onTouchMove);
       root.removeEventListener("touchend", onTouchEnd);
       root.removeEventListener("touchcancel", onTouchCancel);
+      window.visualViewport?.removeEventListener("resize", scheduleMeasure);
     };
   }, [rootRef]);
 }

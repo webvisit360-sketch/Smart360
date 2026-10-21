@@ -1,4 +1,5 @@
 import { useMemo, useState, type MouseEvent } from "react";
+import { usePullClose } from "./simple/use-pull-close";
 import { CARD_IMAGE_WIDTH, HERO_IMAGE_WIDTH, mediaImgSrc } from "../guest/img";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { itemPriceText, normalizeGuestMedia } from "./living-guide-formatters";
@@ -53,6 +54,7 @@ function bodyText(body: unknown): string {
 }
 
 export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any) {
+  const pullClose = usePullClose(() => onBack?.());
   const rows = useMemo(() => Array.isArray(tenant?.sections)
     ? programEntries(tenant.sections)
     : programItems(category).map((row) => ({ ...row, categoryId: category.id })),
@@ -71,7 +73,7 @@ export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any)
   };
 
   return (
-    <div className="lg2-screen-scroll lgp-root" data-lg-scroll onClick={stop} data-testid="program-view">
+    <div className="lg2-screen-scroll lgp-root" {...pullClose} data-lg-scroll onClick={stop} data-testid="program-view">
       <div className="lg2-detail-hero lgp-anchor" aria-hidden="true" />
       <div className="lgp-phone">
         <div className="lgp-toprow">
@@ -148,6 +150,7 @@ export function ProgramView({ category, tenant, lang, onOpenItem, onBack }: any)
 }
 
 export function ProgramDetail({ item, lang, t, onBack, onSignup }: any) {
+  const pullClose = usePullClose(onBack);
   const event = programEventOf(item)!;
   const date = programUiState.selectedDate && (event.type === "weekly" || event.date === programUiState.selectedDate)
     ? programUiState.selectedDate
@@ -160,7 +163,7 @@ export function ProgramDetail({ item, lang, t, onBack, onSignup }: any) {
   const where = event.locationText;
 
   return (
-    <div className="lg2-screen-scroll lgp-root" data-lg-scroll onClick={stop} data-testid="program-detail">
+    <div className="lg2-screen-scroll lgp-root" {...pullClose} data-lg-scroll onClick={stop} data-testid="program-detail">
       <div className="lg2-detail-hero lgp-anchor" aria-hidden="true" />
       <div className="lgp-phone">
         <div className={`lgp-hero${tint ? " lgp-hero-fixture" : ""}`}>

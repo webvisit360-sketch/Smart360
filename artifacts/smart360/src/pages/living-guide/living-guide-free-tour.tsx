@@ -121,7 +121,7 @@ export function FreeTourRecorder({ slug, t, center, tenantName = "", lang = "sl"
           </>}
           <LiveTourPanel
             t={t} status={status} metrics={tour.metrics} pointCount={points.length}
-            wakeStatus={tour.wakeStatus} platform={tour.platform} geoError={tour.geoError}
+            wakeStatus={tour.wakeStatus} platform={tour.platform} geoError={tour.geoError} gpsStatus={tour.gpsStatus}
             exporting={exporting} exportError={exportError} hasPlannedRoute={false}
             onStart={() => startWith(activity)} onPause={tour.pause} onResume={tour.resume} onFinish={tour.finish}
             onReset={() => { setExportError(false); tour.reset(); }}

@@ -108,6 +108,8 @@ const GEO_KEYS: Record<string, string> = {
   "geo-timeout": "UI.lg.gpx.geo.timeout",
   "geo-unavailable": "UI.lg.gpx.geo.unavailable",
   "geo-unsupported": "UI.lg.gpx.geo.unsupported",
+  "geo-poor": "UI.lg.liveTour.poorGps",
+  "geo-rejected": "UI.lg.liveTour.rejectedGps",
 };
 export function tourGeoErrorKey(code: string) {
   return GEO_KEYS[code] ?? (code.startsWith("UI.") ? code : "UI.lg.gpx.geo.unavailable");
@@ -121,6 +123,7 @@ export type LiveTourPanelProps = {
   wakeStatus: LiveTourWake;
   platform: LiveTourPlatform;
   geoError: string | null;
+  gpsStatus?: { received: number; accepted: number; accuracy: number | null; stale: boolean } | null;
   exporting: "image" | "gpx" | null;
   exportError: boolean;
   onStart: () => void;
@@ -140,7 +143,13 @@ export type LiveTourPanelProps = {
 
 export function LiveTourPanel(p: LiveTourPanelProps) {
   const { t, status } = p;
-  const geo = p.geoError ? <div role="alert" className="s360-tour-error" data-testid="status-tour-geo-error">{t(tourGeoErrorKey(p.geoError))}</div> : null;
+  const geo = <>
+    {p.geoError && <div role="alert" className="s360-tour-error" data-testid="status-tour-geo-error">{t(tourGeoErrorKey(p.geoError))}</div>}
+    {p.gpsStatus && <div role="status" className="s360-tour-fine" data-testid="status-tour-gps">
+      {t("UI.lg.liveTour.gpsDiagnostics")} {p.gpsStatus.received} / {p.gpsStatus.accepted} · ±{p.gpsStatus.accuracy == null ? "—" : Math.round(p.gpsStatus.accuracy)} m
+      {p.gpsStatus.stale && <p>{t("UI.lg.liveTour.staleGps")}</p>}
+    </div>}
+  </>;
   const privacy = <p className="s360-tour-fine" data-testid="text-tour-privacy">{t("UI.lg.liveTour.privacy")}</p>;
 
   if (!status) {

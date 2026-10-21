@@ -2850,3 +2850,31 @@ mtime_ms = 1792537816603
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/bdf59445-ea70-4634-b9eb-4f242903daa2/5e9d64ce-c0d7-44d9-bf6a-fd268306c552"
 storage_version_token = "1792537882193018"
 content_type = "text/html"
+
+[[outputs]]
+id = "CIWX2RY8tIrMycCR2MZrC"
+uri = "file://artifacts/smart360/reports/field-bugs/porocilo.html"
+type = "html"
+title = "Tri terenske napake — poročilo za lastnika"
+description = "Popravki, pregled šestih vrst podrobnosti, meritve in omejitve preverjanja na iPhonu."
+logical_id = "1bc9e80e-c1bc-43a8-8718-8f03c0c5cd6e"
+content_hash = "sha256:cadedaee1c538ba3c2696435d5409559abe6a14e188158a5478ed8777fbf75e4"
+size = 303920
+mtime_ms = 1792560849517
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1bc9e80e-c1bc-43a8-8718-8f03c0c5cd6e/4e6a8332-44ce-456a-a7f4-4a632d556c17"
+storage_version_token = "1792560858053333"
+content_type = "text/html"
+
+[[outputs]]
+id = "c9WNX_THs0I7DVtI_JfaD"
+uri = "file://artifacts/smart360/reports/field-bugs/postfix/program-pull-close-true-touch.webm"
+type = "video"
+title = "Poteg navzdol: program → mreža"
+description = "Posnetek dejanskih dogodkov na dotik v testnem brskalniku pri 390 × 844."
+logical_id = "0d166cee-5951-45ab-a5d9-72a2e8fd8b6f"
+content_hash = "sha256:b56db52708c43d031e52603ce06934fd98b41c9ea4f5d2fa54b3ffd4db3e8d68"
+size = 177459
+mtime_ms = 1792560243441
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0d166cee-5951-45ab-a5d9-72a2e8fd8b6f/b46e458e-b09a-4533-a3e1-b7c4bd090375"
+storage_version_token = "1792560858674201"
+content_type = "video/webm"
