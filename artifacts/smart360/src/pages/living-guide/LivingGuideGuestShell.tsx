@@ -89,7 +89,9 @@ import {
   rememberOrderPassword,
 } from "./living-guide-orders";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
-import { WalkResetControl } from "./simple/GuideHeaderControls";
+import { WalkResetControl, hasLandingScreen } from "./simple/GuideHeaderControls";
+import { usePwaLaunch } from "@/hooks/use-pwa-launch";
+import { hasActiveTourView } from "@/lib/active-tour-views";
 import { usePullClose } from "./simple/use-pull-close";
 import { instagramLink, viberHref } from "@/lib/contact-links";
 import {
@@ -1460,6 +1462,31 @@ export default function LivingGuideGuestShell({
     ],
   );
 
+  const [launchRevision, setLaunchRevision] = useState(0);
+  const [launchOverActiveTour, setLaunchOverActiveTour] = useState(false);
+  usePwaLaunch(slug, hasLandingScreen(tenant), () => {
+    setShowSignIn(false);
+    setShowNotices(false);
+    setShowSearch(false);
+    setShowLanguages(false);
+    setShowSos(false);
+    setShowAbout(false);
+    setShowOrders(false);
+    setShowSimpleWeather(false);
+    setShowSimpleContact(false);
+    setShowSimpleRecorder(false);
+    setLaunchRevision(value => value + 1);
+    // A passive OS resume must not unmount a GPS owner. Present the fresh
+    // landing above it; ordinary navigation happens only on the user's tap.
+    if (hasActiveTourView(slug)) {
+      setLaunchOverActiveTour(true);
+      return;
+    }
+    setLaunchOverActiveTour(false);
+    resetNavigationState();
+    navigate(`/${slug}`, true);
+  });
+
   const navigateDetail = useCallback(
     (path: string) => navigate(path, false, "detail"),
     [navigate],
@@ -2014,10 +2041,10 @@ export default function LivingGuideGuestShell({
           }
         >
         {baseScreen === "cover" && isSimple && (
-          <SimpleCoverView tenant={tenant} lang={lang} openLabel={t("UI.lg.openGuide")} onOpen={() => navigate(`/${slug}/home`)} onLanguage={onLanguageChange} />
+          <SimpleCoverView key={launchRevision} tenant={tenant} lang={lang} openLabel={t("UI.lg.openGuide")} onOpen={() => navigate(`/${slug}/home`)} onLanguage={onLanguageChange} />
         )}
         {baseScreen === "cover" && !isSimple && (
-          <CoverView tenant={tenant} lang={lang} t={t} onOpen={() => {
+          <CoverView key={launchRevision} tenant={tenant} lang={lang} t={t} onOpen={() => {
             if (guest) navigate(`/${slug}/home`);
             else setShowSignIn(true);
           }} onSearch={() => setShowSearch(true)} onSelectLanguage={onLanguageChange} />
@@ -2375,6 +2402,13 @@ export default function LivingGuideGuestShell({
             onLanguageChange(nextLang);
           }}
         />
+      )}
+      {launchOverActiveTour && (
+        <div data-testid="pwa-active-tour-landing" style={{position:"absolute",inset:0,zIndex:10000,background:"var(--bg)"}}>
+          {isSimple
+            ? <SimpleCoverView key={launchRevision} tenant={tenant} lang={lang} openLabel={t("UI.lg.openGuide")} onLanguage={onLanguageChange} onOpen={() => { setLaunchOverActiveTour(false); navigate(`/${slug}/home`, true); }} />
+            : <CoverView key={launchRevision} tenant={tenant} lang={lang} t={t} onSearch={() => { setLaunchOverActiveTour(false); setShowSearch(true); }} onSelectLanguage={onLanguageChange} onOpen={() => { setLaunchOverActiveTour(false); navigate(`/${slug}/home`, true); }} />}
+        </div>
       )}
       {showSos && createPortal(
         <div className="s360-sos-layer"><SosView tenant={tenant} lang={lang} onClose={() => setShowSos(false)} /></div>,

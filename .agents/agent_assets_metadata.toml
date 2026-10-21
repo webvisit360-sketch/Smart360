@@ -2990,3 +2990,31 @@ mtime_ms = 1792615434129
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5b093b2e-88ea-4f0f-9359-d829912d28e0/34ffe7a5-0b88-4950-ba0b-b45de5ae4901"
 storage_version_token = "1792615450277796"
 content_type = "text/html"
+
+[[outputs]]
+id = "qri-zNRQlhIA6TDRPb62P"
+uri = "file://artifacts/smart360/reports/home-scroll/pwa-launch/simple-long-resume-iframe.png"
+type = "image"
+title = "Enostaven: začetni zaslon po 30 sekundah"
+description = "390 × 844, simulirana nameščena aplikacija. Iframe je lokalni testni nadomestek za preverjanje ponovnega nalaganja, ne posnetek dejanske panorame."
+logical_id = "068cb6ec-aca9-488f-83f6-40d342ab69ac"
+content_hash = "sha256:d158d19521a28973f559e04dd23e28616fb3eae5868ba185d96b59e14c3b5f43"
+size = 45985
+mtime_ms = 1792617041243
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/068cb6ec-aca9-488f-83f6-40d342ab69ac/39a6db4b-3f53-4d60-b0f0-5d65d8eacd14"
+storage_version_token = "1792617278060294"
+content_type = "image/png"
+
+[[outputs]]
+id = "_zRlgu2wLiSPwtsBBql_8"
+uri = "file://artifacts/smart360/reports/home-scroll/pwa-launch/trend-active-overlay-registry-fake.png"
+type = "image"
+title = "Trend: svež začetni zaslon ob aktivni turi"
+description = "Simuliran aktivni lastnik ture ostane pod začetnim zaslonom. To ni dokaz nadaljevanja GPS na fizičnem iPhonu."
+logical_id = "9321d435-60a2-4f8b-9359-b989e4c9148b"
+content_hash = "sha256:e57c05ebfeb6e38940459c0ecf724b994e9dfb4dd9c371880da60e14b263489b"
+size = 32962
+mtime_ms = 1792616981238
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9321d435-60a2-4f8b-9359-b989e4c9148b/5d90a84e-482d-449f-9761-e8627247434d"
+storage_version_token = "1792617279273540"
+content_type = "image/png"

@@ -5,6 +5,12 @@ description: Approved tenant-scoped offline boundary, legacy compatibility, and 
 
 Do not treat offline failure against Vite's development server as a production-worker regression. Vite source modules are outside the worker's deliberately restricted compiled-asset cache.
 
+Installed Living Guide launches with a configured landing must start at a fresh landing; use a 30-second hidden interval for long-resume reset, preserving shorter interruptions and normal browser navigation. Remount the tour iframe, not the whole app. An active mounted GPS owner must remain mounted beneath a fresh landing until the guest explicitly navigates.
+
+**Why:** The owner reported iOS reopening the last grid despite a correct tenant start_url. iOS provides no reliable icon-tap event for an already running PWA; promise cold-document behavior and observed lifecycle responses, never unconditional physical-device launch interception.
+
+**How to apply:** Test standalone and ordinary-browser contexts, threshold edges, duplicate visibility/pageshow events, missed hide notifications, and active-owner preservation. Simulated BFCache or iframe remount is not proof of real iOS restoration, actual GPS continuity, or a third-party panorama's rendered content.
+
 **Why:** A seven-language DEV check found every localized payload and shell in Cache Storage but cold offline navigation still failed on uncached development resources. This is not successful offline verification either.
 
 **How to apply:** Verify the built application with actual transport blocked; do not broaden worker admission to Vite/admin sources to make the development test pass.
