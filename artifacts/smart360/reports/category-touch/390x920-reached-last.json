@@ -1,0 +1,28 @@
+{
+  "viewport": [
+    390,
+    920
+  ],
+  "scroll": {
+    "overflowY": "auto",
+    "touchAction": "pan-y",
+    "top": 2459,
+    "scrollHeight": 3301,
+    "clientHeight": 842
+  },
+  "root": {
+    "overflowY": "visible",
+    "scrollHeight": 3301,
+    "clientHeight": 3301
+  },
+  "last": {
+    "label": "Lokacija 30 — ZADNJA LOKACIJA\nPreizkus dolgih seznamov\n›",
+    "rect": [
+      20,
+      633.609375,
+      350,
+      98.59375
+    ],
+    "visible": true
+  }
+}

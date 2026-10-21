@@ -177,6 +177,25 @@
 .lgs-root .lgp-hback { display: none; }
 .lgs-root .lg2-detail-view { min-height: 0; }
 .lgs-root .lg2-detail-scroll { flex: 1 1 0; min-height: 0; }
+.lgs-root .lg2-detail-scroll {
+  overflow-y:auto; overscroll-behavior-y:contain; touch-action:pan-y;
+  -webkit-overflow-scrolling:touch;
+}
+.lgs-root .lg2-detail-sheet-root {
+  height:auto; min-height:100%; overflow:visible; display:flow-root;
+}
+.lgs-root .lg2-detail-sheet {
+  position:relative; top:auto;
+  margin-top:min(calc(var(--lg2-detail-hero-height) - 26px), var(--lg2-detail-photo-reveal));
+  transform:none; transition:none; will-change:auto;
+}
+.lgs-root .lg2-detail-sheet--full-height,
+.lgs-root .lg2-detail-sheet--solo { margin-top:0; }
+.lgs-root .lg2-sub2 { touch-action:pan-y; }
+.lgs-root .lg2-gallery-track { touch-action:pan-x pan-y; }
+.lgs-root .lgp-root, .lgs-root .lgs-sheet-panel, .lgs-root .lg2-ann-layer {
+  touch-action:pan-y; overscroll-behavior-y:contain;
+}
 .lgs-root .lg2-detail-sheet { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
 .lgs-root .lgp-root { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
 .lgs-sheet-panel { overscroll-behavior-y: contain; }

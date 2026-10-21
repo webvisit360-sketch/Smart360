@@ -2878,3 +2878,31 @@ mtime_ms = 1792560243441
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0d166cee-5951-45ab-a5d9-72a2e8fd8b6f/b46e458e-b09a-4533-a3e1-b7c4bd090375"
 storage_version_token = "1792560858674201"
 content_type = "video/webm"
+
+[[outputs]]
+id = "P7-OZUZMNVHVUDVikc0OH"
+uri = "file://artifacts/smart360/reports/category-touch/390x844.mp4"
+type = "video"
+title = "Seznam lokacij: dotik do konca in zapiranje — 390 × 844"
+description = "Potegi po klikljivih vrsticah do 30. lokacije, vrnitev na vrh in ločena poteza za zapiranje. Razvojni test s simuliranim dotikom."
+logical_id = "ffdb1616-3d39-450c-b4bc-6637ec3a9ada"
+content_hash = "sha256:84be274255c4ffb1fbed62bfc448bc570ac4b4a261a409438b3f377b3ae98473"
+size = 796492
+mtime_ms = 1792608055522
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ffdb1616-3d39-450c-b4bc-6637ec3a9ada/ae2fb921-fae1-490c-8558-d8228bd11c6d"
+storage_version_token = "1792608756148008"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "cQAauit1gJmAvbdxokI-q"
+uri = "file://artifacts/smart360/reports/category-touch/390x920.mp4"
+type = "video"
+title = "Seznam lokacij: dotik do konca in zapiranje — 390 × 920"
+description = "Isti preizkus na višjem zaslonu: zadnja lokacija dosegljiva, zapiranje samo s potezo z vrha."
+logical_id = "c9d918d3-e412-43c6-8215-09b849aac7ad"
+content_hash = "sha256:3b7d9001ed85dde328d553408d36596470e791e7ad16cbc7a5b27c07bf9f73e7"
+size = 828653
+mtime_ms = 1792608235909
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/c9d918d3-e412-43c6-8215-09b849aac7ad/900bbbdc-f4a8-48fe-8fac-200f3d3009a5"
+storage_version_token = "1792608757255383"
+content_type = "video/mp4"

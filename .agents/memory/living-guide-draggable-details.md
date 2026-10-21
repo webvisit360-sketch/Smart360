@@ -3,11 +3,16 @@ name: Living Guide draggable details
 description: Owner-approved motion model and browser gesture constraints for guest detail surfaces.
 ---
 
-Living Guide detail text stays fixed on one continuous sheet; the entire sheet moves from its initial photo-revealing position to the point where its content end reaches the viewport bottom. No inner text scrolling or automatic expansion is allowed. No-photo sheets start at the top.
+Trend detail text stays fixed on one continuous sheet; the entire sheet moves from its initial photo-revealing position to the point where its content end reaches the viewport bottom. No inner text scrolling or automatic expansion is allowed. No-photo sheets start at the top. Enostaven now explicitly uses native scrolling instead, per the owner's corrected category-list requirement.
 
 **Why:** The owner approved a physical-sheet model that must behave identically for short, long, photo, no-photo, orderable, and gallery details.
 
 **How to apply:** Keep the motion controller shared across every detail template. Preserve intermediate positions, allow only short momentum, close below the initial position, and keep the Order dock fixed to the viewport.
+
+Enostaven category lists must be tested with touch gestures STARTING ON CLICKABLE LOCATION ROWS, with enough rows to overflow. Never substitute mouse-wheel tests or individual-detail tests. Native scrolling owns upward, sideways and mid-scroll gestures. Closing may engage only from the true top with an initially downward drag; reversing an upward gesture must not turn it into a close.
+
+**Why:** The owner reproduced unreachable category rows after an earlier fix that only verified individual detail content. The old sheet controller ignored button-row touches while overflow prevented native scrolling.
+**How to apply:** Verify the actual last row plus return-to-top and downward close at both requested heights. Keep this change Enostaven-specific; it supersedes that design's continuous-sheet rule, not Trend's.
 
 Device-invariant photo framing includes the sheet's initial occlusion, not only the image's object-fit. Preserve the measured iPhone reference while making both image sizing limits and exposed-photo proportions width-based.
 

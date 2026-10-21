@@ -1,0 +1,23 @@
+{
+  "viewport": [
+    390,
+    920
+  ],
+  "scroll": {
+    "top": 3397,
+    "scrollHeight": 4239,
+    "clientHeight": 842,
+    "overflowY": "auto",
+    "touchAction": "pan-y"
+  },
+  "endMarker": {
+    "text": "KONEC PREIZKUSNE VSEBINE",
+    "rect": [
+      20,
+      687.484375,
+      350,
+      32.546875
+    ],
+    "visible": true
+  }
+}

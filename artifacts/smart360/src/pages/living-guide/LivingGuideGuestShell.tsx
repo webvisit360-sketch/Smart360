@@ -90,6 +90,7 @@ import {
 } from "./living-guide-orders";
 import { virtualTourEmbedUrl } from "@/lib/virtual-tour";
 import { WalkResetControl } from "./simple/GuideHeaderControls";
+import { usePullClose } from "./simple/use-pull-close";
 import { instagramLink, viberHref } from "@/lib/contact-links";
 import {
   bottomNavScreen,
@@ -3655,6 +3656,8 @@ function useDraggableDetailSheet(
 
   useLayoutEffect(() => {
     const root = rootRef.current;
+    // Enostaven uses native overflow scrolling, including touches on clickable rows.
+    if (root?.closest(".lgs-root")) return;
     const sheet = root?.querySelector<HTMLElement>(".lg2-detail-sheet");
     const sheetRoot = root?.querySelector<HTMLElement>(".lg2-detail-sheet-root");
     if (!root || !sheet || !sheetRoot) return;
@@ -3887,6 +3890,7 @@ function useDraggableDetailSheet(
 
 function DetailView({ category, section, itemId, lang, t, galleryIndex, onGalleryIndex, onBack, tenant, onOpenItem, showHostContacts, onOrderClick, slug }: any) {
   const detailViewRef = useRef<HTMLElement>(null);
+  const pullClose = usePullClose(onBack, ".lg2-detail-scroll");
   useDraggableDetailSheet(detailViewRef, onBack);
   const items = visible(category.items);
   const activeItem = itemId ? items.find((i: any) => i.id === itemId) : null;
@@ -3944,6 +3948,7 @@ function DetailView({ category, section, itemId, lang, t, galleryIndex, onGaller
   return (
     <section
       ref={detailViewRef}
+      {...(resolveGuestDesign(tenant?.guestDesign) === "simple" ? pullClose : {})}
       className={`lg2-view lg2-detail-view${activeItem?.orderEnabled && layout !== "tabs" && !programDetailItem ? " has-order-dock" : ""}`}
       onClick={(event) => {
         const target = event.target;

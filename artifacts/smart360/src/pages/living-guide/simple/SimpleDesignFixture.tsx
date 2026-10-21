@@ -38,6 +38,17 @@ export default function SimpleDesignFixture() {
     [tenantKey, palette, color, published, snapshot],
   );
   const evidenceTenant = useMemo(() => {
+    if (search.get("evidence") === "long-list") {
+      const copy = structuredClone(tenant);
+      for (const section of copy.sections) for (const category of section.categories) {
+        if (category.layout !== "poi" && category.layout !== "routes" && category.layout !== "apartments") continue;
+        category.items = Array.from({ length: 30 }, (_, i) => ({
+          ...category.items[0], id: `${category.id}-long-${i}`, title: `Lokacija ${i + 1}${i === 29 ? " — ZADNJA LOKACIJA" : ""}`,
+          subtitle: "Preizkus dolgih seznamov", body: "", media: [], isVisible: true,
+        }));
+      }
+      return copy;
+    }
     if (search.get("evidence") !== "long-detail") return tenant;
     const copy = structuredClone(tenant);
     for (const section of copy.sections) for (const category of section.categories) {
