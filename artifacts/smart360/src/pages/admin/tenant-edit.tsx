@@ -60,6 +60,18 @@ import { adminPlaceTargetTab } from "@/lib/manual-pin-feedback";
 import { SkeletonAlignmentAction, DistanceBackfillAction } from "@/components/admin/skeleton-alignment-action";
 import { EmergencyContactsEditor } from "@/components/admin/emergency-contacts-editor";
 import { GuestDesignSetting } from "@/components/admin/guest-design-setting";
+import { PreviewEditToggle } from "@/components/admin/preview-edit-toggle";
+import { usePreviewEditBridge, usePreviewAnnouncements } from "@/components/admin/preview-edit-bridge";
+import { PreviewEditProvider } from "@/components/admin/preview-edit-context";
+import {
+  buildContentIndex,
+  resolvePreviewTarget,
+  tooltipText,
+  type PreviewNode,
+  type PreviewResolution,
+  type PreviewTarget,
+} from "@/lib/preview-edit-resolver";
+import { useGetTenantAnnouncements, getGetTenantAnnouncementsQueryKey } from "@workspace/api-client-react";
 
 const NAV_DEFAULTS = {
   navColorCover: "#FFFFFF",
@@ -288,12 +300,32 @@ export default function AdminTenantEdit() {
   const logoFileRef = useRef<HTMLInputElement>(null);
   const [uploadBusy, setUploadBusy] = useState<"hero" | "logo" | null>(null);
 
-  const [activeTab, setActiveTab] = useState(() => adminPlaceTargetTab(window.location.search) ?? "pregled");
+  const [activeTab, setActiveTabRaw] = useState(() => adminPlaceTargetTab(window.location.search) ?? "pregled");
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+  // Unsaved-work guard for editors opened from the preview (inline pencil
+  // form, announcement form). Each reports dirtiness here; every exit that
+  // would unmount them (tab switch, new selection, clear, Escape) asks once.
+  const previewDirtyRef = useRef({ inline: false, announcement: false });
+  const confirmPreviewLeave = (scope: "all" | "inline" = "all") => {
+    const dirty = previewDirtyRef.current.inline || (scope === "all" && previewDirtyRef.current.announcement);
+    if (!dirty) return true;
+    if (!window.confirm("Imate neshranjene spremembe. Zaprem brez shranjevanja?")) return false;
+    previewDirtyRef.current = { inline: false, announcement: scope === "all" ? false : previewDirtyRef.current.announcement };
+    return true;
+  };
+  const setActiveTab = (tab: string) => {
+    if (tab === activeTabRef.current) return;
+    if (!confirmPreviewLeave()) return;
+    setPreviewSelectionRef.current?.(null);
+    setActiveTabRaw(tab);
+  };
+  const setPreviewSelectionRef = useRef<((value: null) => void) | null>(null);
   useEffect(() => {
     if ((!permissions.canUseCreator && activeTab === "kreator") ||
         (!permissions.canReviewOnboarding && activeTab === "onboarding") ||
         (!permissions.canEditAppearance && ["appearance", "guide"].includes(activeTab))) {
-      setActiveTab("general");
+      setActiveTabRaw("general");
     }
     if (!permissions.canPublish) {
       setPublicationDialogOpen(false);
@@ -362,7 +394,21 @@ export default function AdminTenantEdit() {
     });
   }, [id, queryClient]);
 
+  // Click-to-edit from the live preview (admin-only overlay in the iframe).
+  const [previewEditMode, setPreviewEditMode] = useState(false);
+  const previewEditModeRef = useRef(previewEditMode);
+  previewEditModeRef.current = previewEditMode;
+  const [previewSelection, setPreviewSelection] = useState<{ target: PreviewTarget; token: number; label: string } | null>(null);
+  setPreviewSelectionRef.current = setPreviewSelection;
+  const previewSelectionRef = useRef(previewSelection);
+  previewSelectionRef.current = previewSelection;
+  const [previewFrame, setPreviewFrame] = useState<HTMLIFrameElement | null>(null);
+  const [previewLoadTick, setPreviewLoadTick] = useState(0);
+  const [previewNotice, setPreviewNotice] = useState<string | null>(null);
+
   useEffect(() => {
+    // In click-to-edit mode the guest screen must stay where the host clicked.
+    if (previewEditModeRef.current) return;
     setPreviewScreen(["content", "distances", "guide"].includes(activeTab) ? "category" : "home");
   }, [activeTab]);
 
@@ -514,6 +560,108 @@ export default function AdminTenantEdit() {
       setFormData(initialForm);
     }
   }, [tenant]);
+
+  const previewSections = (previewTenant as { sections?: unknown } | undefined)?.sections ?? (tenant as { sections?: unknown } | undefined)?.sections;
+  const previewIndex = useMemo(() => buildContentIndex(previewSections), [previewSections]);
+  const announcementsAvailable = tenant?.guestUiMode === "living-guide";
+  usePreviewAnnouncements(previewFrame, previewLoadTick, id, tenant?.slug ?? "", announcementsAvailable && (isOwner || permissions.canManageContent));
+  const { data: previewAnnouncements } = useGetTenantAnnouncements(id, {
+    query: {
+      queryKey: getGetTenantAnnouncementsQueryKey(id),
+      enabled: Boolean(id) && announcementsAvailable && previewEditMode && (isOwner || permissions.canManageContent),
+    },
+    request: { credentials: "include", cache: "no-store" },
+  });
+  const announcementIds = useMemo(
+    () => new Set((previewAnnouncements?.announcements ?? []).map((row) => row.id)),
+    [previewAnnouncements],
+  );
+  const resolvePreview = (nodes: PreviewNode[], pathname: string) => resolvePreviewTarget(nodes, {
+    index: previewIndex,
+    contacts: { phone: tenant?.phone },
+    announcementIds,
+    pathname,
+    slug: tenant?.slug ?? "",
+    permissions: {
+      isOperator: permissions.isOperator,
+      canManageContent: permissions.canManageContent,
+      canEditIdentity: permissions.canEditIdentity,
+      canEditAppearance: permissions.canEditAppearance,
+    },
+    announcementsAvailable,
+  });
+  const selectFromPreview = (resolution: PreviewResolution | null) => {
+    if (!resolution || !resolution.allowed) {
+      setPreviewNotice(tooltipText(resolution));
+      return;
+    }
+    const target = resolution.target;
+    const current = previewSelectionRef.current?.target ?? null;
+    // Same record (e.g. another field of the same entry) keeps the mounted
+    // form and its draft; announcement → announcement is guarded by that
+    // editor's own prompt, so we don't ask twice.
+    const sameRecord = current !== null && current.kind === target.kind &&
+      (("id" in current && "id" in target && current.id === target.id) || (!("id" in current) && !("id" in target)));
+    const announcementSwap = current?.kind === "announcement" && target.kind === "announcement";
+    if (!sameRecord && !confirmPreviewLeave(announcementSwap ? "inline" : "all")) return;
+    setPreviewNotice(resolution.explicit ? null : tooltipText(resolution));
+    setPreviewSelection((previous) => ({ target: resolution.target, label: resolution.label, token: (previous?.token ?? 0) + 1 }));
+    setActiveTabRaw(
+      target.kind === "item" || target.kind === "category" || target.kind === "section" ? "content"
+        : target.kind === "announcement" ? "obvestila"
+        : target.kind === "wifi" ? "general"
+        : target.kind === "appearance" ? "appearance"
+        : "contacts",
+    );
+  };
+  usePreviewEditBridge({
+    iframe: previewFrame,
+    loadTick: previewLoadTick,
+    enabled: previewEditMode,
+    resolve: resolvePreview,
+    onSelect: selectFromPreview,
+    selected: previewSelection?.target ?? null,
+  });
+  /** Toolbar clear / Escape: guarded. */
+  const closePreviewSelection = () => {
+    if (!confirmPreviewLeave()) return;
+    setPreviewSelection(null);
+  };
+  /** The inline form already confirmed its own close — no second prompt. */
+  const releasePreviewSelection = () => {
+    previewDirtyRef.current.inline = false;
+    setPreviewSelection(null);
+  };
+  const previewFieldKey = previewSelection?.target.kind === "contact"
+    ? previewSelection.target.field
+    : previewSelection?.target.kind === "weather" ? "address"
+    : previewSelection?.target.kind === "wifi" ? "wifi"
+    : previewSelection?.target.kind === "appearance" ? previewSelection.target.part
+    : null;
+  // Settings-type targets: scroll to and focus the exact existing field.
+  useEffect(() => {
+    if (!previewFieldKey) return;
+    const timer = window.setTimeout(() => {
+      let field = document.querySelector<HTMLElement>(`main [data-preview-field="${previewFieldKey}"]`);
+      // Hidden anchor (e.g. legacy-only logo control) → its visible settings card.
+      if (field && field.offsetParent === null) field = document.querySelector<HTMLElement>('main [data-preview-field="appearance"]');
+      field?.scrollIntoView({ block: "center", behavior: "smooth" });
+      field?.querySelector<HTMLElement>("input:not([readonly]), textarea")?.focus({ preventScroll: true });
+    }, 160);
+    return () => window.clearTimeout(timer);
+  }, [previewFieldKey, previewSelection?.token, activeTab]);
+  useEffect(() => {
+    if (!previewSelection) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !document.querySelector("[role=dialog]")) closePreviewSelection();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewSelection]);
+  const previewFieldClass = (key: string) =>
+    previewFieldKey === key || (previewFieldKey === "address" && key === "address-query")
+      ? " scroll-mt-24 rounded-[10px] outline outline-2 outline-offset-4 outline-[#157347]"
+      : "";
 
   const handleImageUpload = async (file: File, kind: "hero" | "logo") => {
     setUploadBusy(kind);
@@ -928,7 +1076,7 @@ export default function AdminTenantEdit() {
             </TabsContent>
             <TabsContent value="orders"><AdminTenantOrders tenantId={id} /></TabsContent>
             <TabsContent value="messages"><AdminTenantMessages tenantId={id} /></TabsContent>
-            {tenant.guestUiMode === "living-guide" && <TabsContent value="obvestila"><AdminTenantAnnouncements key={id} tenantId={id} /></TabsContent>}
+            {tenant.guestUiMode === "living-guide" && <TabsContent value="obvestila"><AdminTenantAnnouncements key={id} tenantId={id} focus={previewSelection?.target.kind === "announcement" ? { id: previewSelection.target.id, token: previewSelection.token } : null} onDirtyChange={(dirty) => { previewDirtyRef.current.announcement = dirty; }} /></TabsContent>}
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
@@ -1009,7 +1157,7 @@ export default function AdminTenantEdit() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t mt-4">
-                <div className="space-y-2">
+                <div className={"space-y-2" + previewFieldClass("wifi")} data-preview-field="wifi">
                   <Label>WiFi omrežje (SSID)</Label>
                   <Input value={formData.wifiSsid} onChange={e => setFormData({ ...formData, wifiSsid: e.target.value })} />
                 </div>
@@ -1284,14 +1432,14 @@ export default function AdminTenantEdit() {
             onChange={(next) => setFormData((prev) => ({ ...prev, ...next }))}
           />
 
-          <Card>
+          <Card data-preview-field="appearance" className={previewFieldKey === "cover" || (previewFieldKey === "logo" && formData.guestUiMode === "living-guide") ? "outline outline-2 outline-offset-4 outline-[#157347]" : undefined}>
             <CardHeader>
               <CardTitle>Fotografije gostitelja</CardTitle>
             </CardHeader>
             <CardContent>
               <div className={`grid grid-cols-1 gap-6 ${formData.guestUiMode === "legacy" ? "md:grid-cols-2" : ""}`}>
                 {/* Hero image */}
-                <div className="space-y-3">
+                <div className={"space-y-3" + previewFieldClass("hero")} data-preview-field="hero">
                   <Label className="font-semibold">Naslovnica (Hero)</Label>
                   <div
                     className="relative rounded-xl overflow-hidden border-2 border-dashed border-muted-foreground/25 bg-muted flex items-center justify-center"
@@ -1325,7 +1473,7 @@ export default function AdminTenantEdit() {
                 </div>
 
                 {/* Logo image */}
-                <div className={formData.guestUiMode === "living-guide" ? "hidden" : "space-y-3"}>
+                <div className={formData.guestUiMode === "living-guide" ? "hidden" : "space-y-3" + previewFieldClass("logo")} data-preview-field="logo">
                   <Label className="font-semibold">Logotip gostitelja</Label>
                   <div
                     className="relative rounded-xl overflow-hidden border-2 border-dashed border-muted-foreground/25 bg-muted flex items-center justify-center"
@@ -1533,27 +1681,27 @@ export default function AdminTenantEdit() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className={"space-y-2" + previewFieldClass("phone")} data-preview-field="phone">
                   <Label>Telefon</Label>
                   <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
-                <div className="space-y-2">
+                <div className={"space-y-2" + previewFieldClass("whatsapp")} data-preview-field="whatsapp">
                   <Label>WhatsApp</Label>
                   <Input value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} />
                 </div>
-                <div className="space-y-2">
+                <div className={"space-y-2" + previewFieldClass("viber")} data-preview-field="viber">
                   <Label>Viber</Label>
                   <Input value={formData.viber} onChange={e => setFormData({ ...formData, viber: e.target.value })} />
                 </div>
-                <div className="space-y-2">
+                <div className={"space-y-2" + previewFieldClass("instagram")} data-preview-field="instagram">
                   <Label>Instagram uporabniško ime</Label>
                   <Input value={formData.instagram} onChange={e => setFormData({ ...formData, instagram: e.target.value })} />
                 </div>
-                <div className="space-y-2">
+                <div className={"space-y-2" + previewFieldClass("email")} data-preview-field="email">
                   <Label>E-pošta</Label>
                   <Input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="info@primer.si" />
                 </div>
-                {permissions.canEditIdentity && <div className="space-y-2 col-span-2">
+                {permissions.canEditIdentity && <div className={"space-y-2 col-span-2" + previewFieldClass("address")} data-preview-field="address">
                   <Label>Google Maps povezava</Label>
                   <Input
                     type="url"
@@ -1597,7 +1745,7 @@ export default function AdminTenantEdit() {
                     });
                   }}>Popravi koordinate</Button>
                 </div>}
-                {permissions.canEditIdentity && <div className="space-y-2 col-span-2">
+                {permissions.canEditIdentity && <div className={"space-y-2 col-span-2" + previewFieldClass("address-query")} data-preview-field="address-query">
                   <Label>Nadomestna poizvedba za zemljevid (Map Query)</Label>
                   <Input value={formData.mapQuery} onChange={e => setFormData({ ...formData, mapQuery: e.target.value })} placeholder="npr. Malija 143b, Izola" />
                   {isLikelyUrl(formData.mapQuery) && <p className="text-xs text-amber-700">To je povezava — uporabljena bo kot cilj. Za samodejne razdalje jo prilepite v polje »Google Maps povezava«.</p>}
@@ -1626,7 +1774,14 @@ export default function AdminTenantEdit() {
               <SkeletonAlignmentAction tenantId={tenant.id} />
               <DistanceBackfillAction tenantId={tenant.id} />
             </>}
-            <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={permissions.canManageContent} />
+            <PreviewEditProvider value={{
+              target: previewSelection && ["item", "category", "section"].includes(previewSelection.target.kind) ? previewSelection.target : null,
+              token: previewSelection?.token ?? 0,
+              close: releasePreviewSelection,
+              reportDirty: (dirty: boolean) => { previewDirtyRef.current.inline = dirty; },
+            }}>
+              <ContentEditor sections={tenant.sections as any[] ?? []} tenantId={tenant.id} operatorPlaceCreation={permissions.canManageContent} />
+            </PreviewEditProvider>
           </section>
         </TabsContent>
 
@@ -1735,6 +1890,13 @@ export default function AdminTenantEdit() {
 
       {/* PREVIEW RAIL */}
       <aside className="admin-tenant-preview w-full bg-[#F5F5F7] border-l border-black/5 shrink-0 hidden flex-col items-center py-[30px]">
+        <PreviewEditToggle
+          editMode={previewEditMode}
+          onChange={(next) => { setPreviewEditMode(next); setPreviewNotice(null); }}
+          selectionLabel={previewSelection?.label ?? null}
+          notice={previewNotice}
+          onClearSelection={closePreviewSelection}
+        />
         {permissions.canManageContent && (
           <div className="flex items-center gap-2 mb-4">
             <Switch
@@ -1747,9 +1909,12 @@ export default function AdminTenantEdit() {
             </Label>
           </div>
         )}
-        <div className="w-[289px] h-[629px] rounded-[32px] border-[7px] border-black bg-black overflow-hidden shadow-xl mb-4 relative shrink-0">
+        <div className={`w-[289px] h-[629px] rounded-[32px] border-[7px] bg-black overflow-hidden shadow-xl mb-4 relative shrink-0 transition-colors ${previewEditMode ? "border-[#157347]" : "border-black"}`}>
           <iframe
             key={`${previewKey}-${showStructure}`}
+            ref={setPreviewFrame}
+            onLoad={() => setPreviewLoadTick((tick) => tick + 1)}
+            data-testid="iframe-admin-preview"
             src={previewUrl}
             className="w-[402px] h-[874px] origin-top-left border-0 bg-white"
             style={{ transform: 'scale(0.684)' }}

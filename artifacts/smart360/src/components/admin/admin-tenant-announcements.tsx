@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,7 +27,13 @@ const formatDate = (date: string) => new Intl.DateTimeFormat("sl-SI", {
 }).format(new Date(date));
 
 /** Runtime editor: its mutations never save/publish a guide draft. */
-export function AdminTenantAnnouncements({ tenantId }: { tenantId: string }) {
+export function AdminTenantAnnouncements({ tenantId, focus, onDirtyChange }: {
+  tenantId: string;
+  /** Preview click-to-edit: open this announcement's existing editor. */
+  focus?: { id: string | null; token: number } | null;
+  /** Lets the admin shell guard tab switches / preview selections. */
+  onDirtyChange?: (dirty: boolean) => void;
+}) {
   const queryClient = useQueryClient();
   const queryKey = getGetTenantAnnouncementsQueryKey(tenantId);
   const [editing, setEditing] = useState<AdminAnnouncement | "new" | null>(null);
@@ -46,6 +52,12 @@ export function AdminTenantAnnouncements({ tenantId }: { tenantId: string }) {
   const editingRow = editing && editing !== "new" ? editing : undefined;
   const draft = form.watch();
   const isDirty = form.formState.isDirty;
+  const onDirtyChangeRef = useRef(onDirtyChange);
+  onDirtyChangeRef.current = onDirtyChange;
+  useEffect(() => {
+    onDirtyChangeRef.current?.(Boolean(editing) && isDirty);
+  }, [editing, isDirty]);
+  useEffect(() => () => onDirtyChangeRef.current?.(false), []);
   useEffect(() => {
     const timer = window.setInterval(() => setClock(Date.now()), 60_000);
     return () => window.clearInterval(timer);
@@ -113,6 +125,20 @@ export function AdminTenantAnnouncements({ tenantId }: { tenantId: string }) {
     },
     request: { credentials: "include", cache: "no-store" },
   });
+  const rootRef = useRef<HTMLElement>(null);
+  const handledFocus = useRef(0);
+  useEffect(() => {
+    if (!focus || handledFocus.current === focus.token || query.isLoading) return;
+    handledFocus.current = focus.token;
+    const row = focus.id ? rows.find((candidate) => candidate.id === focus.id && !candidate.deletedAt) : undefined;
+    if (row && (editing === "new" || editing?.id !== row.id)) openEditor(row);
+    window.setTimeout(() => {
+      const goal = rootRef.current?.querySelector<HTMLElement>(row ? '[data-testid="form-announcement-card"]' : '[data-testid="list-admin-announcements"]') ?? rootRef.current;
+      goal?.scrollIntoView({ block: "start", behavior: "smooth" });
+      goal?.querySelector<HTMLElement>("input:not([type=file])")?.focus({ preventScroll: true });
+    }, 120);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.token, query.isLoading]);
   const saving = createMutation.isPending || updateMutation.isPending;
   const busy = saving || deleteMutation.isPending || imageMutation.isPending;
   const openEditor = (row: AdminAnnouncement | "new") => {
@@ -140,7 +166,7 @@ export function AdminTenantAnnouncements({ tenantId }: { tenantId: string }) {
     }
   });
   return (
-    <section className="space-y-5" data-testid="admin-announcements-editor">
+    <section ref={rootRef} className="space-y-5" data-testid="admin-announcements-editor">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold flex items-center gap-2"><Bell className="h-5 w-5" />Obvestila</h2>
@@ -156,7 +182,7 @@ export function AdminTenantAnnouncements({ tenantId }: { tenantId: string }) {
       {notice && <p role="status" className="text-sm text-[#157347]" data-testid="status-announcement-saved">{notice}</p>}
       {operationError && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" data-testid="error-announcement-operation">{operationError}</p>}
       {editing && (
-        <Card data-testid="form-announcement-card">
+        <Card data-testid="form-announcement-card" className={focus?.id && editingRow?.id === focus.id ? "scroll-mt-24 ring-2 ring-[#157347]/40" : "scroll-mt-24"}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{editing === "new" ? "Novo obvestilo" : "Uredi obvestilo"}</CardTitle>
             <Button variant="ghost" size="icon" onClick={closeEditor} disabled={busy} aria-label="Zapri urejanje" data-testid="button-announcement-close"><X className="h-4 w-4" /></Button>

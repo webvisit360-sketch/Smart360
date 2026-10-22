@@ -3046,3 +3046,31 @@ mtime_ms = 1792697705917
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7bbf8e05-ea7b-4f5a-aab1-9ec2287cabc7/8c333894-14c1-4b71-9a6f-6589d4d48ff0"
 storage_version_token = "1792697791915650"
 content_type = "image/png"
+
+[[outputs]]
+id = "sVncYME1HW2k96ePXl-ZD"
+uri = "file://artifacts/smart360/reports/home-scroll/admin-preview/enostaven-failed.webm"
+type = "video"
+title = "Enostaven — diagnostični posnetek prvega preizkusa"
+description = "Dokumentira težavo pri izbiri; ni posnetek uspešno zaključene funkcije. Kasnejša preslikava je popravljena, trajna obroba polja pa ostaja odprta napaka."
+logical_id = "81499728-e4d6-4193-be98-f3b2473857de"
+content_hash = "sha256:5f5262a11ef55058dfdf62c8543eb46cda0608cc987a7e483d16fde3f3909213"
+size = 1723562
+mtime_ms = 1792701166702
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/81499728-e4d6-4193-be98-f3b2473857de/806ea683-6715-4078-bf21-981be3dd1d3d"
+storage_version_token = "1792702644083778"
+content_type = "video/webm"
+
+[[outputs]]
+id = "bZoQac3kq3_O3-tmJ_7Dw"
+uri = "file://artifacts/smart360/reports/home-scroll/admin-preview/trend-failed.webm"
+type = "video"
+title = "Trend — diagnostični posnetek prvega preizkusa"
+description = "Dokumentira začetno napako izbire in označevanja. Ne predstavlja končnega uspešnega preverjanja."
+logical_id = "79d9bdbf-df09-4bc3-84c9-d0c196cae307"
+content_hash = "sha256:de0ffb39f4bad1ca32a0af39e36b55031c62eaac05ace866bfbb10a5ed3a371e"
+size = 1446036
+mtime_ms = 1792701185321
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/79d9bdbf-df09-4bc3-84c9-d0c196cae307/95e89747-31f2-457b-93d5-67004097140d"
+storage_version_token = "1792702644795386"
+content_type = "video/webm"

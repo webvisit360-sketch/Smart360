@@ -81,6 +81,7 @@ import { getHostOnboardingQueryKey, getOwnerOnboardingQueryKey } from "@/hooks/u
 import { suggestCategoryIcon } from "@workspace/category-icons";
 import { CategoryIcon } from "@/components/category-icon";
 import { CategoryIconPicker } from "@/components/admin/category-icon-picker";
+import { usePreviewEdit, useRevealPreviewTarget } from "@/components/admin/preview-edit-context";
 import { EventScheduleEditor, isEventScheduleItem, scheduleDraft, scheduleFromDraft, validateSchedule, type EventSchedule } from "@/components/admin/event-schedule-editor";
 
 // ---------- Types ----------
@@ -96,6 +97,7 @@ type Item = {
   price?: string | null;
   priceUnit?: string | null;
   phone?: string | null;
+  bullets?: string[] | null;
   distanceMeters?: number | null;
   tint?: string | null;
   frame?: string | null;
@@ -358,28 +360,38 @@ function useDraft<T extends Record<string, unknown>>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  // Debounced save of current form state.
+  // Debounced save of current form state. A pending write is flushed on
+  // unmount (e.g. the preview selection moved on) so the last keystrokes
+  // survive as a restorable draft; clear() cancels it for save/cancel.
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pending = useRef<{ current: string; baseline: string } | null>(null);
+  const writeDraft = useCallback((snapshot: { current: string; baseline: string }) => {
+    try {
+      if (snapshot.current === snapshot.baseline) localStorage.removeItem(key);
+      else localStorage.setItem(key, snapshot.current);
+    } catch {
+      // ignore quota errors
+    }
+  }, [key]);
   useEffect(() => {
     if (!checked) return;
     if (timer.current) clearTimeout(timer.current);
+    pending.current = { current: JSON.stringify(current), baseline: JSON.stringify(baseline) };
     timer.current = setTimeout(() => {
-      try {
-        if (JSON.stringify(current) === JSON.stringify(baseline)) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, JSON.stringify(current));
-        }
-      } catch {
-        // ignore quota errors
-      }
+      if (pending.current) writeDraft(pending.current);
+      pending.current = null;
     }, 500);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [current, baseline, key, checked]);
+  }, [current, baseline, key, checked, writeDraft]);
+  useEffect(() => () => {
+    if (pending.current) writeDraft(pending.current);
+    pending.current = null;
+  }, [writeDraft]);
 
   const clear = useCallback(() => {
+    pending.current = null;
     if (timer.current) clearTimeout(timer.current);
     try {
       localStorage.removeItem(key);
@@ -390,6 +402,7 @@ function useDraft<T extends Record<string, unknown>>(
   }, [key]);
 
   const discardRestored = useCallback(() => {
+    pending.current = null;
     setRestored(null);
     try {
       localStorage.removeItem(key);
@@ -705,16 +718,55 @@ export function EditDialog({
   onOpenChange,
   title,
   children,
+  inline = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   children: React.ReactNode;
+  /** Render the same form in the left panel instead of a modal (preview click-to-edit). */
+  inline?: boolean;
 }) {
   const dirtyRef = useRef(false);
+  const preview = usePreviewEdit();
+  const reportPreviewDirty = useRef(preview.reportDirty);
+  reportPreviewDirty.current = preview.reportDirty;
+  const inlineRef = useRef(inline);
+  inlineRef.current = inline;
   const setDirty = useCallback((d: boolean) => {
     dirtyRef.current = d;
+    if (inlineRef.current) reportPreviewDirty.current(d);
   }, []);
+  useEffect(() => {
+    if (!inline || !open) return;
+    reportPreviewDirty.current(dirtyRef.current);
+    return () => reportPreviewDirty.current(false);
+  }, [inline, open]);
+  if (inline) {
+    if (!open) return null;
+    const requestClose = () => {
+      if (dirtyRef.current && !confirm("Imate neshranjene spremembe. Zaprem brez shranjevanja?")) return;
+      onOpenChange(false);
+    };
+    return (
+      <div
+        data-preview-inline-editor
+        data-testid="panel-preview-inline-editor"
+        role="region"
+        aria-label={title}
+        onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); requestClose(); } }}
+        className="mt-2 mb-3 flex max-h-[min(82vh,900px)] flex-col gap-3 rounded-[14px] border-2 border-[#157347] bg-white p-4 shadow-[0_8px_24px_-12px_rgba(21,115,71,0.45)]"
+      >
+        <div className="flex shrink-0 items-center justify-between gap-2">
+          <p className="text-[15px] font-extrabold text-[#14201F]">{title}</p>
+          <button type="button" onClick={requestClose} data-testid="button-preview-inline-close" aria-label="Zapri urejanje" className="rounded-md p-1 text-[#66716A] hover:bg-[#F4F6F2] hover:text-[#14201F]">
+            <XCircle className="h-4 w-4" />
+          </button>
+        </div>
+        <DirtyCtx.Provider value={setDirty}>{children}</DirtyCtx.Provider>
+      </div>
+    );
+  }
   return (
     <Dialog
       open={open}
@@ -1011,6 +1063,14 @@ type ItemDialogProps =
   | { mode: "create"; tenantId: string; categoryId: string; sectionKey?: string; category?: Category; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item?: undefined; onDone: () => void }
   | { mode: "edit"; tenantId: string; categoryId: string; sectionKey?: string; category?: Category; sectionCategories?: Category[]; allCategories?: Category[]; operatorPlaceCreation?: boolean; item: Item; onDone: () => void };
 
+export function bulletsToText(bullets: string[] | null | undefined): string {
+  return Array.isArray(bullets) ? bullets.filter((b) => typeof b === "string").join("\n") : "";
+}
+
+export function textToBullets(text: string): string[] {
+  return text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+
 function ContentDraftAccess({ allowed, children }: { allowed: boolean; children: React.ReactNode }) {
   return (
     <div>
@@ -1076,6 +1136,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
   const [price, setPrice] = useState(item?.price ?? "");
   const [priceUnit, setPriceUnit] = useState(item?.priceUnit ?? "");
   const [phone, setPhone] = useState(item?.phone ?? "");
+  const [bulletsText, setBulletsText] = useState(bulletsToText(item?.bullets));
   // Razdalja v metrih (neobvezno): prazno = brez razdalje. Hranimo kot niz,
   // da lahko polje eksplicitno počistimo (pošljemo null prek ItemUpdate).
   const [distanceMeters, setDistanceMeters] = useState(
@@ -1162,6 +1223,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
     price: item?.price ?? "",
     priceUnit: item?.priceUnit ?? "",
     phone: item?.phone ?? "",
+    bullets: bulletsToText(item?.bullets),
     distanceMeters: item?.distanceMeters != null ? String(item.distanceMeters) : "",
     isVisible: item?.isVisible ?? true,
     tint: item?.tint ?? "",
@@ -1179,6 +1241,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
     price,
     priceUnit,
     phone,
+    bullets: bulletsText,
     distanceMeters: creatorStatus.data?.activeMaterialization
       ? baseline.distanceMeters
       : distanceMeters,
@@ -1206,6 +1269,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
       setPrice(restored.price);
       setPriceUnit(restored.priceUnit);
       setPhone(restored.phone);
+      setBulletsText(typeof restored.bullets === "string" ? restored.bullets : bulletsToText(item?.bullets));
       setDistanceMeters(restored.distanceMeters ?? "");
       setIsVisible(restored.isVisible);
       setTint(restored.tint ?? "");
@@ -1267,6 +1331,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
             price: price.trim() || undefined,
             priceUnit: priceUnit.trim() || undefined,
             phone: phone.trim() || undefined,
+            ...(textToBullets(bulletsText).length ? { bullets: textToBullets(bulletsText) } : {}),
             distanceMeters: distanceValue ?? undefined,
             tint: tint || undefined,
             frame: (frame || undefined) as any,
@@ -1289,6 +1354,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
             price: price.trim() || null,
             priceUnit: priceUnit.trim() || null,
             phone: phone.trim() || null,
+            bullets: textToBullets(bulletsText),
             distanceMeters: distanceValue,
             isVisible,
             tint: tint || null,
@@ -1321,6 +1387,8 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
           price: price.trim() || null,
           priceUnit: priceUnit.trim() || null,
           phone: phone.trim() || null,
+          // Only send bullets when edited, so untouched entries keep their stored array.
+          ...(bulletsText !== baseline.bullets ? { bullets: textToBullets(bulletsText) } : {}),
           ...(!machineOwnedDistance ? { distanceMeters: distanceValue } : {}),
           isVisible,
           tint: tint || null,
@@ -1439,7 +1507,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <DialogScrollBody>
       {restored && <DraftNotice onDiscard={discardRestored} />}
-      <div className="space-y-1">
+      <div className="space-y-1" data-preview-field="title">
         <Label>Naslov</Label>
         <Input
           value={title}
@@ -1452,7 +1520,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
       {editingSchedule && (
         <EventScheduleEditor draft={eventScheduleDraft} onChange={setEventScheduleDraft} disabled={busy} error={scheduleError} />
       )}
-      <div className="space-y-1">
+      <div className="space-y-1" data-preview-field="body">
         <Label>Opis / besedilo</Label>
         <RichTextEditor
           value={body}
@@ -1602,7 +1670,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
           ))}
         </div>
       )}
-      <div className="space-y-1">
+      <div className="space-y-1" data-preview-field="media">
         <Label>Fotografije in video</Label>
         <ItemMediaEditor
           ref={mediaRef}
@@ -1621,7 +1689,7 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
           onAfterWrite={() => refreshTenantAfterAdminWrite(queryClient, tenantId)}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" data-preview-field="price">
         <div className="space-y-1">
           <Label>Cena</Label>
           <Input
@@ -1641,7 +1709,20 @@ function OrdinaryItemDialog({ mode, tenantId, categoryId, sectionKey, category: 
           />
         </div>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1" data-preview-field="bullets">
+        <Label htmlFor="item-bullets">Alineje</Label>
+        <Textarea
+          id="item-bullets"
+          data-testid="input-item-bullets"
+          value={bulletsText}
+          onChange={(e) => setBulletsText(e.target.value)}
+          placeholder={"Ena alineja v vsaki vrstici\nnpr. Brezplačno parkiranje"}
+          rows={4}
+          disabled={busy}
+        />
+        <p className="text-xs text-muted-foreground">Ena alineja na vrstico. Prazne vrstice se ne shranijo. Če je polje prazno, gost vidi alineje iz opisa (če je opis seznam).</p>
+      </div>
+      <div className="space-y-1" data-preview-field="phone">
         <Label>Telefon</Label>
         <Input
           value={phone}
@@ -2289,6 +2370,13 @@ function OkolicaPlaceCreate({
 function ItemRow({ item, tenantId, category, sectionKey, sectionCategories, allCategories }: { item: Item; tenantId: string; category: Category; sectionKey?: string; sectionCategories?: Category[]; allCategories?: Category[] }) {
   const layout = category.layout;
   const [editOpen, setEditOpen] = useState(false);
+  const preview = usePreviewEdit();
+  const previewInline = preview.target?.kind === "item" && preview.target.id === item.id;
+  const rowRef = useRevealPreviewTarget(previewInline, preview.token, previewInline && preview.target?.kind === "item" ? preview.target.field : null);
+  const closeEdit = (open: boolean) => {
+    setEditOpen(open);
+    if (!open && previewInline) preview.close();
+  };
   useEffect(() => {
     const navigate = () => {
       if (new URLSearchParams(window.location.search).get("placeItem") === item.id) setEditOpen(true);
@@ -2300,7 +2388,7 @@ function ItemRow({ item, tenantId, category, sectionKey, sectionCategories, allC
 
   return (
     <>
-      <div className={`flex items-center gap-3 bg-white border border-[#E8EBE6] rounded-[10px] p-2 pr-3 min-h-[46px] transition-colors hover:border-[#C9D2CB] ${!item.isVisible ? "opacity-60" : ""}`}>
+      <div ref={rowRef} data-testid={`row-item-${item.id}`} data-preview-selected={previewInline || undefined} className={`flex items-center gap-3 bg-white border rounded-[10px] p-2 pr-3 min-h-[46px] scroll-mt-24 transition-colors hover:border-[#C9D2CB] ${previewInline ? "border-[#157347] ring-2 ring-[#157347]/25" : "border-[#E8EBE6]"} ${!item.isVisible ? "opacity-60" : ""}`}>
         <div className="w-6 h-6 flex items-center justify-center bg-[#F4F6F2] rounded text-[#157347] shrink-0">
           <IconRenderer icon={getLayoutIcon(layout || "")} className="w-3.5 h-3.5" />
         </div>
@@ -2323,7 +2411,7 @@ function ItemRow({ item, tenantId, category, sectionKey, sectionCategories, allC
         </button>
       </div>
 
-      <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi vnos">
+      <EditDialog open={editOpen || previewInline} inline={previewInline} onOpenChange={closeEdit} title="Uredi vnos">
           <ItemDialog
             mode="edit"
             tenantId={tenantId}
@@ -2333,7 +2421,7 @@ function ItemRow({ item, tenantId, category, sectionKey, sectionCategories, allC
             sectionCategories={sectionCategories}
             allCategories={allCategories}
             item={item}
-            onDone={() => setEditOpen(false)}
+            onDone={() => closeEdit(false)}
           />
       </EditDialog>
     </>
@@ -2353,6 +2441,13 @@ export function categoryAddLabel(sectionKey?: string): "Dodaj vnos" | "Dodaj pon
 function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isExplore, allCategories, operatorPlaceCreation }: { category: Category; tenantId: string; sectionKey?: string; sectionCategories?: Category[]; isExplore?: boolean; allCategories?: Category[]; operatorPlaceCreation: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const preview = usePreviewEdit();
+  const previewInline = preview.target?.kind === "category" && preview.target.id === category.id;
+  const rowRef = useRevealPreviewTarget(previewInline, preview.token, null);
+  const closeEdit = (open: boolean) => {
+    setEditOpen(open);
+    if (!open && previewInline) preview.close();
+  };
 
   const isCustom = isExplore && String((category as any).key).startsWith("host-custom");
   const items = category.items || [];
@@ -2363,6 +2458,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
   if (isEmpty) {
     return (
       <>
+        <div ref={rowRef} className={`scroll-mt-24 rounded-[10px] ${previewInline ? "ring-2 ring-[#157347]/40" : ""}`}>
         <EmptyCategoryRow
           id={category.id}
           icon={<IconRenderer icon={category.icon} className="h-3.5 w-3.5" />}
@@ -2373,10 +2469,11 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
           onEdit={operatorPlaceCreation ? () => setEditOpen(true) : undefined}
           onAdd={canAdd ? () => setAddOpen(true) : undefined}
         />
+        </div>
 
-        {(operatorPlaceCreation || editOpen) && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+        {(operatorPlaceCreation || editOpen || previewInline) && <EditDialog open={editOpen || previewInline} inline={previewInline} onOpenChange={closeEdit} title="Uredi kategorijo">
           <ContentDraftAccess allowed={operatorPlaceCreation}>
-            <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
+            <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => closeEdit(false)} />
           </ContentDraftAccess>
         </EditDialog>}
         {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
@@ -2388,7 +2485,7 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
 
   return (
     <>
-      <div className={`mt-4 ${!category.isVisible ? "opacity-70" : ""}`}>
+      <div ref={rowRef} data-testid={`block-category-${category.id}`} className={`mt-4 scroll-mt-24 rounded-[12px] ${previewInline ? "ring-2 ring-[#157347]/40 ring-offset-4 ring-offset-[#F4F6F2]" : ""} ${!category.isVisible ? "opacity-70" : ""}`}>
         <div className="flex items-center justify-between mb-3 px-1">
           <h4 className="flex items-center gap-2 text-[14px] font-bold text-[#66716A]">
             <div className="w-6 h-6 flex items-center justify-center bg-[#F4F6F2] rounded text-[#157347]">
@@ -2423,9 +2520,9 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
         </div>
       </div>
 
-      {(operatorPlaceCreation || editOpen) && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi kategorijo">
+      {(operatorPlaceCreation || editOpen || previewInline) && <EditDialog open={editOpen || previewInline} inline={previewInline} onOpenChange={closeEdit} title="Uredi kategorijo">
         <ContentDraftAccess allowed={operatorPlaceCreation}>
-          <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => setEditOpen(false)} />
+          <CategoryDialog mode="edit" tenantId={tenantId} sectionId={category.id} sectionKey={sectionKey} category={category} onDone={() => closeEdit(false)} />
         </ContentDraftAccess>
       </EditDialog>}
       {canAdd && <EditDialog open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
@@ -2442,6 +2539,13 @@ function CategoryBlock({ category, tenantId, sectionKey, sectionCategories, isEx
 function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation }: { section: Section; tenantId: string; allCategories?: Category[]; operatorPlaceCreation: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addCatOpen, setAddCatOpen] = useState(false);
+  const preview = usePreviewEdit();
+  const previewInline = preview.target?.kind === "section" && preview.target.id === section.id;
+  const rowRef = useRevealPreviewTarget(previewInline, preview.token, null);
+  const closeEdit = (open: boolean) => {
+    setEditOpen(open);
+    if (!open && previewInline) preview.close();
+  };
 
   const isExplore = section.key === "explore" || section.key === "services";
   
@@ -2464,7 +2568,7 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
 
   return (
     <>
-      <div className={`bg-[#F4F6F2] border border-[#E8EBE6] rounded-[16px] p-4 sm:p-5 font-['Archivo'] ${!section.isVisible ? "opacity-70" : ""}`}>
+      <div ref={rowRef} data-testid={`block-section-${section.id}`} className={`bg-[#F4F6F2] border rounded-[16px] p-4 sm:p-5 scroll-mt-24 font-['Archivo'] ${previewInline ? "border-[#157347] ring-2 ring-[#157347]/25" : "border-[#E8EBE6]"} ${!section.isVisible ? "opacity-70" : ""}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="w-[34px] h-[34px] rounded-[10px] bg-[#157347] flex items-center justify-center shrink-0">
@@ -2516,13 +2620,13 @@ function SectionBlock({ section, tenantId, allCategories, operatorPlaceCreation 
       </div>
 
       {/* Edit section dialog */}
-      {(operatorPlaceCreation || editOpen) && <EditDialog open={editOpen} onOpenChange={setEditOpen} title="Uredi sekcijo">
+      {(operatorPlaceCreation || editOpen || previewInline) && <EditDialog open={editOpen || previewInline} inline={previewInline} onOpenChange={closeEdit} title="Uredi sekcijo">
         <ContentDraftAccess allowed={operatorPlaceCreation}>
           <SectionDialog
             mode="edit"
             tenantId={tenantId}
             section={section}
-            onDone={() => setEditOpen(false)}
+            onDone={() => closeEdit(false)}
           />
         </ContentDraftAccess>
       </EditDialog>}

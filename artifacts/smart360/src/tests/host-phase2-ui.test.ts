@@ -15,7 +15,7 @@ test("concierge retains publication handoff; self-service uses the shared public
     assert.match(tenant, new RegExp(`\\{permissions\\.canEditAppearance && <TabsContent value="${value}"`));
   }
   assert.match(tenant, /\{isOwner && <Card data-testid="card-guest-ui-mode">/);
-  assert.match(tenant, /\{permissions\.canEditIdentity && <div className="space-y-2 col-span-2">\s*<Label>Google Maps povezava/);
+  assert.match(tenant, /\{permissions\.canEditIdentity && <div className=(?:"[^"]*col-span-2[^"]*"|\{"[^"]*col-span-2[^"]*" \+ previewFieldClass\("[a-z-]+"\)\})(?: data-preview-field="[a-z-]+")?>\s*<Label>Google Maps povezava/);
   assert.match(tenant, /<ContentEditor sections=\{tenant\.sections as any\[\] \?\? \[\]\} tenantId=\{tenant\.id\} operatorPlaceCreation=\{permissions\.canManageContent\}/);
 });
 
@@ -43,12 +43,12 @@ test("content capabilities gate structural controls/restoration and import/expor
 
 test("capabilities expose self-service settings but keep protected operator fields and daily work unchanged", () => {
   for (const label of ["Ime namestitve", "Podnaslov"]) {
-    assert.match(tenant, new RegExp(`\\{permissions\\.canEditIdentity && <div className="[^"]+">\\s*<Label>${label}`));
+    assert.match(tenant, new RegExp(`\\{permissions\\.canEditIdentity && <div className=(?:"[^"]+"|\\{"[^"]+" \\+ previewFieldClass\\("[a-z-]+"\\)\\})(?: data-preview-field="[a-z-]+")?>\\s*<Label>${label}`));
   }
   assert.match(tenant, /\{permissions\.canEditAppearance && <div className="space-y-2">\s*<Label>URL naslovnične/);
   assert.match(tenant, /\{permissions\.canManageContent && <div className="col-span-2 space-y-2">\s*<Label>Virtualni sprehod/);
   for (const label of ["Google Maps povezava", "Latitude \\(zemljepisna širina\\)", "Longitude \\(zemljepisna dolžina\\)", "Nadomestna poizvedba za zemljevid \\(Map Query\\)"]) {
-    assert.match(tenant, new RegExp(`\\{permissions\\.canEditIdentity && <div className="[^"]+">\\s*<Label>${label}`));
+    assert.match(tenant, new RegExp(`\\{permissions\\.canEditIdentity && <div className=(?:"[^"]+"|\\{"[^"]+" \\+ previewFieldClass\\("[a-z-]+"\\)\\})(?: data-preview-field="[a-z-]+")?>\\s*<Label>${label}`));
   }
   assert.match(tenant, /\{permissions\.canEditAppearance && <TabsContent value="appearance"/);
   assert.match(tenant, /\{permissions\.canEditAppearance && <TabsContent value="guide"/);

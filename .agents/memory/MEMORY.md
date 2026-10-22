@@ -1,4 +1,5 @@
 # Memory index
+- [Admin preview editing](admin-preview-boundary.md) — parent-only editing, entry identity over category metadata, and unpublished announcement handling.
 - [Enostaven presentation](enostaven-design-boundary.md) — binding reference priority, dynamic published tiles, first-order identification and Trend preservation.
 
 - [Tenant duplication boundary](tenant-duplication-boundary.md) — operator-only exact draft copies; concierge reset, isolated files, synthetic-only verification, and honest crash-safety claims.
