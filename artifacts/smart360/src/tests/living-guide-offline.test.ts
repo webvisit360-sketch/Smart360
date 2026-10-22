@@ -281,5 +281,5 @@ test("Living Guide cover never eagerly requests unopened category/item galleries
   assert.doesNotMatch(shell, /detailHeroUrls|preloadedDetailImagesRef|new Image\(/);
   // Preserve the existing first-screen readiness gate for the viewed detail.
   assert.match(shell, /firstScreenImages\.map\(\(image\) => image\.decode\(\)/);
-  assert.match(shell, /<CoverView tenant=\{tenant\}/);
+  assert.match(shell, /<CoverView\b[^>]*\btenant\s*=\s*\{\s*tenant\s*\}/);
 });
