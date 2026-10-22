@@ -3074,3 +3074,17 @@ mtime_ms = 1792701185321
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/79d9bdbf-df09-4bc3-84c9-d0c196cae307/95e89747-31f2-457b-93d5-67004097140d"
 storage_version_token = "1792702644795386"
 content_type = "video/webm"
+
+[[outputs]]
+id = "oqDjpvZZi36aZBhGCsrCt"
+uri = "file://test-recordings/simple-preview-anchors.mp4"
+type = "video"
+title = "Enostaven — preverjanje označevanja v predogledu"
+description = "Posnetek preverjanja izbire elementov in odpiranja pripadajočih urejevalnikov. Posnetek za Trend ni bil uspešno dokončan."
+logical_id = "0e400e65-3d2d-4f75-8a64-5ba470ce2d9c"
+content_hash = "sha256:e2af35c23f9b89237c3706e7a2385e8dab1a341110836331c5ee6756d0b48b60"
+size = 2535022
+mtime_ms = 1792708112070
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0e400e65-3d2d-4f75-8a64-5ba470ce2d9c/9d8e5722-33f4-4f9b-8066-86d4bbaa45ae"
+storage_version_token = "1792708994983760"
+content_type = "video/mp4"

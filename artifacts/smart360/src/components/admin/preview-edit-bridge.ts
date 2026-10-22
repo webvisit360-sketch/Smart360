@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { PreviewNode, PreviewResolution, PreviewTarget } from "@/lib/preview-edit-resolver";
 import { contactFieldFromHref, tooltipText } from "@/lib/preview-edit-resolver";
+import { capturePreviewAnchor } from "./preview-selection-anchor";
 
 /** Draft announcements are read through the authenticated admin endpoint only
  * inside this admin-owned preview. Public guest requests are never changed. */
@@ -218,7 +219,14 @@ export function usePreviewEditBridge({
   onSelectRef.current = onSelect;
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
-  const selectedElRef = useRef<Element | null>(null);
+  const anchorRef = useRef<ReturnType<typeof capturePreviewAnchor> | null>(null);
+  const pendingRef = useRef<{ key: string; anchor: ReturnType<typeof capturePreviewAnchor> } | null>(null);
+  useEffect(() => {
+    if (!selected) {
+      anchorRef.current = null;
+      pendingRef.current = null;
+    }
+  }, [selected]);
 
   useEffect(() => {
     if (!enabled || !iframe) return;
@@ -240,14 +248,14 @@ export function usePreviewEditBridge({
     let frame = 0;
 
     const sourceElement = (target: Element) => {
-      const { nodes, elements } = describeChain(target);
+      const { nodes } = describeChain(target);
       const resolution = resolveRef.current(nodes, win!.location.pathname);
-      // Record identity can come from a distant React owner or the URL. That
-      // ancestor is not the clicked field: outlining it marked the whole phone.
-      const el = resolution?.target.kind === "item" && resolution.target.field
-        ? target
-        : resolution ? elements[Math.min(resolution.nodeIndex, elements.length - 1)] ?? target : target;
-      return { resolution, el: resolution && !resolution.explicit && resolution.nodeIndex >= elements.length - 1 ? target : el };
+      // Nested SVG paths/text belong to the visible interactive tile/contact
+      // row, not to an arbitrary React data-owner container.
+      const el = target.closest('[data-testid^="tile-"], a[href]')
+        ?? target.closest("h1,h2,h3,h4,p,li,img,video")
+        ?? target;
+      return { resolution, el };
     };
 
     const paint = () => {
@@ -263,10 +271,13 @@ export function usePreviewEditBridge({
         overlay.tip.style.display = "none";
       }
       if (selectedRef.current) {
-        if (!selectedElRef.current?.isConnected) selectedElRef.current = findElementForTarget(doc!, selectedRef.current);
-        place(overlay.selected, selectedElRef.current);
+        if (pendingRef.current?.key === JSON.stringify(selectedRef.current)) {
+          anchorRef.current = pendingRef.current.anchor;
+          pendingRef.current = null;
+        }
+        place(overlay.selected, doc!.querySelector(".guest-entry-splash")
+          ? null : anchorRef.current?.resolve(doc!) ?? null);
       } else {
-        selectedElRef.current = null;
         overlay.selected.style.display = "none";
       }
       frame = win!.requestAnimationFrame(paint);
@@ -276,14 +287,22 @@ export function usePreviewEditBridge({
     const onMove = (event: Event) => {
       const target = event.target as Element | null;
       if (!target || target.nodeType !== 1 || overlay.root.contains(target)) return;
+      if (target.closest(".guest-entry-splash")) { hoverEl = null; hoverResolution = null; return; }
       const found = sourceElement(target);
       hoverEl = found.el;
       hoverResolution = found.resolution;
     };
     const onLeave = () => { hoverEl = null; hoverResolution = null; };
     const choose = (target: Element) => {
+      // The entry splash covers the already-mounted detail during reload.
+      // Its route is not evidence that the user clicked an editable field.
+      if (target.closest(".guest-entry-splash")) return;
       const found = sourceElement(target);
-      if (found.resolution?.allowed) selectedElRef.current = found.el;
+      if (found.resolution?.allowed) {
+        // Reuse the hovered DOM anchor, not the resolver's data-source ancestor.
+        const anchor = capturePreviewAnchor(hoverEl === found.el ? hoverEl : found.el);
+        pendingRef.current = { key: JSON.stringify(found.resolution.target), anchor };
+      }
       onSelectRef.current(found.resolution);
     };
     // Block guest navigation/gestures before any guest handler runs.
@@ -320,7 +339,6 @@ export function usePreviewEditBridge({
       doc!.removeEventListener("mouseleave", onLeave, true);
       overlay.root.remove();
       cursorStyle.remove();
-      selectedElRef.current = null;
     };
   }, [iframe, loadTick, enabled]);
 }

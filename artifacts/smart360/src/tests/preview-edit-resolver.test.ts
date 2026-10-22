@@ -43,6 +43,11 @@ test("photo inside an entry resolves to the entry media field via React id", () 
 test("tile test id maps to category, labels are never used as ids", () => {
   const r = resolvePreviewTarget([node({ testId: "tile-cat-1" })], ctx());
   assert.deepEqual(r?.target, { kind: "category", id: "cat-1" });
+  assert.deepEqual(resolvePreviewTarget([
+    node({ tag: "path" }), node({ tag: "svg" }),
+    node({ testId: "tile-c-cat-1" }),
+    node({ testId: "simple-section-stay" }),
+  ], ctx())?.target, { kind: "category", id: "cat-1" });
   // A label-shaped candidate never matches a record; it falls back to appearance.
   assert.equal(resolvePreviewTarget([node({ ids: ["Apartmaji"] })], ctx({ pathname: "/demo/home" }))?.target.kind, "appearance");
 });

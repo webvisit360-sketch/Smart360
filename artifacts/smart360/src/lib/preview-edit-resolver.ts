@@ -218,7 +218,7 @@ function announcementFromTestId(testId: string, ctx: ResolveContext): PreviewTar
 
 function idTarget(id: string, ctx: ResolveContext): PreviewTarget | null {
   // Program occurrences are keyed `${item.id}-${YYYY-MM-DD}`; strip the date.
-  const clean = id.replace(/^(event|fallback|tile|cat|item|section)-/, "").replace(/-\d{4}-\d{2}-\d{2}$/, "");
+  const clean = id.replace(/^(event|fallback|tile|cat|item|section)-/, "").replace(/^[csi]-/, "").replace(/-\d{4}-\d{2}-\d{2}$/, "");
   const undated = id.replace(/-\d{4}-\d{2}-\d{2}$/, "");
   const candidates = [id, undated, clean];
   for (const candidate of candidates) {

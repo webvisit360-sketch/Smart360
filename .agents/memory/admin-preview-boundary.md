@@ -21,3 +21,20 @@ never publish fixture content or weaken the public endpoint to make evidence wor
 **How to apply:** Keep any adapter confined to the same-origin admin preview and
 remove it on iframe replacement/unmount. Distinguish unchanged guest sources
 from claims of byte-identical production bundles.
+
+Selection geometry must be independent of record lookup: persist the clicked
+visual anchor, including through the asynchronous parent-state commit, and never
+recover a lost field by outlining its React data-owner ancestor.
+**Why:** Correct form mapping can still identify a viewport-sized owner; clearing
+the clicked node before selection commits loses the only precise visual anchor.
+**How to apply:** Use the hover target for selection, remeasure in iframe CSS
+coordinates on scroll, and fail closed if its exact replacement is unavailable.
+
+Browser evidence must wait for the entry splash to disappear and use genuine
+hit-tested clicks (not forced clicks through it).
+**Why:** The detail mounts underneath the fullscreen splash. A forced title click
+can actually hit that overlay and resolve via the route, misleadingly appearing
+to be a field-selection failure. Never treat a fixture title that includes a
+field label as evidence of that field's selection.
+**How to apply:** Keep splash chrome non-editable and exclude its loading interval
+from geometry assertions; check the element hit at the intended coordinates.
