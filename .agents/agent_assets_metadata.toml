@@ -3018,3 +3018,31 @@ mtime_ms = 1792616981238
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/9321d435-60a2-4f8b-9359-b989e4c9148b/5d90a84e-482d-449f-9761-e8627247434d"
 storage_version_token = "1792617279273540"
 content_type = "image/png"
+
+[[outputs]]
+id = "NC4UEUCaiGrS5vXMNwkOq"
+uri = "file://artifacts/smart360/reports/home-scroll/color-audit/barvni-pregled.html"
+type = "html"
+title = "Barvni pregled — celotna galerija pred/po"
+description = "Program v bordo, modri in RGB paleti zjutraj in ponoči, kontrola Trend ter pregled drugih površin. Razvojni posnetki 390 × 844 in izmerjene barve."
+logical_id = "6a701f68-0d99-40ae-b1c2-25e04405256b"
+content_hash = "sha256:a336584ea702fc331fd71a4ae275dbf6a0ec32972d250fec38598962b1798297"
+size = 2289725
+mtime_ms = 1792697768258
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/6a701f68-0d99-40ae-b1c2-25e04405256b/e9d5c376-1442-4df6-9c0c-a3986b36c51e"
+storage_version_token = "1792697791187380"
+content_type = "text/html"
+
+[[outputs]]
+id = "SWUy-eXXWJImDv42GyhyL"
+uri = "file://artifacts/smart360/reports/home-scroll/color-audit/program-comparison.png"
+type = "image"
+title = "Program: prej in potem"
+description = "Levo prvotna stalno temna zasnova; nato svetli Enostaven z bordo, modrimi in RGB poudarki."
+logical_id = "7bbf8e05-ea7b-4f5a-aab1-9ec2287cabc7"
+content_hash = "sha256:69bb45793048469cccc3250e1232f79a7e231ad919dcf3e47fd618e161172606"
+size = 150415
+mtime_ms = 1792697705917
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/7bbf8e05-ea7b-4f5a-aab1-9ec2287cabc7/8c333894-14c1-4b71-9a6f-6589d4d48ff0"
+storage_version_token = "1792697791915650"
+content_type = "image/png"

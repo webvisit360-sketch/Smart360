@@ -226,3 +226,79 @@
 
 /* Programme list inside the detail route: leave room for the shared back circle. */
 .lg2-route-layer [data-testid="program-view"] .lgp-phone { padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
+
+/* Enostaven surface contract: time affects ONLY dynamic home/weather skins.
+   Runtime pages use light chrome + palette accents; reading sheets stay white.
+   More specific than body[data-t] tokens, without changing Trend or gestures.
+   Darkening the palette accent also keeps arbitrary bright RGB choices readable. */
+body[data-t] [data-living-guide].lg2-app.lgs-root {
+  --s-detail-accent: color-mix(in srgb, var(--s-tile1) 45%, #000);
+  --bg: #F6F7F9;
+  --card: #FFFFFF;
+  --card2: #FFFFFF;
+  --tx: #202733;
+  --tx2: #536171;
+  --line: #DCE1E8;
+  --acc: var(--s-detail-accent);
+  --accg: var(--s-detail-accent);
+  --onacc: #FFFFFF;
+  --glass: #FFFFFF;
+  --chrome: #FFFFFF;
+  --ink2: #536171;
+  --muted: #536171;
+  --ambbg: #F6F7F9;
+  --amb1: #F6F7F9;
+  --amb2: #FFFFFF;
+  --amb3: #F6F7F9;
+  --lg2-ann-muted: #536171;
+  --lg2-ann-accent: var(--s-detail-accent);
+}
+body[data-t] .lgs-root .lg2-detail-sheet {
+  background: #FFFFFF;
+  color: var(--tx);
+}
+body[data-t] .lgs-root .lg2-stage,
+body[data-t] .lgs-root .lg2-grid-view,
+body[data-t] .lgs-root .lg2-detail-view,
+body[data-t] .lgs-root .lg2-detail-sheet-root,
+body[data-t] .lgs-root .lg2-detail-hero--ambient {
+  background: var(--bg);
+}
+.lgs-root .lgs-sheet-panel,
+.lgs-root .lgs-full {
+  background: var(--bg);
+  color: var(--tx);
+}
+.lgs-root .lgp-root {
+  --lgp-bg: var(--bg);
+  --lgp-card: #FFFFFF;
+  --lgp-card2: #FFFFFF;
+  --lgp-line: var(--line);
+  --lgp-txt: var(--tx);
+  --lgp-muted: var(--tx2);
+  --lgp-amber: var(--s-detail-accent);
+}
+.lgs-root .lgp-desc {
+  background: #FFFFFF;
+  color: var(--tx);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.lgs-root .lgp-day.lgp-sel .lgp-dn,
+.lgs-root .lgp-day.lgp-sel .lgp-dd { color: #FFFFFF; }
+.lgs-root .lgp-day.lgp-sel .lgp-dot { background: #FFFFFF; }
+.lgs-root .lgp-root .lgp-f.lgp-on {
+  background: var(--s-detail-accent); color: #FFFFFF; border-color: var(--s-detail-accent);
+}
+.lgs-root .lgp-dp-on {
+  background: color-mix(in srgb, var(--s-tile1) 8%, #FFFFFF);
+}
+.lgs-root .lgp-dp-off { color: var(--tx2); }
+.lgs-root .lgp-root .lgp-cta { background: var(--s-detail-accent); }
+.lgs-root .lg2-ann-detail-body {
+  background: #FFFFFF;
+  border-radius: 16px;
+  margin: 0 16px;
+  padding: 16px;
+}

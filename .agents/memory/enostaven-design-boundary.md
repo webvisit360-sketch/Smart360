@@ -67,3 +67,13 @@ palette rather than inventing a time-of-day.
 **Why:** The owner explicitly requires weather/home parity and unchanged tiles.
 **How to apply:** Compare the shared gradients to the binding dynamic mock and
 flag differences; use dark brown evening text and preserve landing isolation.
+
+Enostaven runtime pages use time-independent light neutral chrome, white reading
+cards (including under photos), and accents derived from the tenant palette.
+Program must not inherit its original always-navy design in Enostaven. Day-part
+color remains confined to dynamic home and weather skins; tiles, back circles,
+and landing actions retain their palette. Trend's existing appearance is excluded.
+**Why:** The owner reported navy Program at 09:42 and requested a consistent
+Enostaven experience while explicitly prohibiting changes to Trend.
+**How to apply:** Scope overrides to Enostaven, test morning/night and all palettes,
+and do not claim Trend's existing night reading sheets are white.
