@@ -269,6 +269,9 @@ export function resolvePreviewTarget(chain: PreviewNode[], ctx: ResolveContext):
       }
       if (/weather/.test(testId)) return finish({ kind: "weather" }, true, i);
       if (testId === "button-home-wifi") return finish({ kind: "wifi" }, true, i);
+      const navKey = /^nav-(.+)$/.exec(testId)?.[1];
+      const sectionId = navKey ? ctx.index.sectionByKey.get(navKey) : undefined;
+      if (sectionId) return finish({ kind: "section", id: sectionId }, true, i);
     }
 
   }

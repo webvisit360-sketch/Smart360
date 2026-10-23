@@ -3088,3 +3088,17 @@ mtime_ms = 1792708112070
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/0e400e65-3d2d-4f75-8a64-5ba470ce2d9c/9d8e5722-33f4-4f9b-8066-86d4bbaa45ae"
 storage_version_token = "1792708994983760"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "kocSiVrlppAk643R1o4NZ"
+uri = "file://test-recordings/trend-final.webm"
+type = "video"
+title = "Trend — končni potek klikni in uredi"
+description = "Preverjen potek: domača ploščica → naslov → fotografija → kontakt; pravilni urejevalniki in obroba celotne ploščice."
+logical_id = "275d2f9f-0261-463f-8ca1-293c422cbc17"
+content_hash = "sha256:2939e8b270b53be4f5b3094ac1e3594d10e60fca124dd000de621294ebbfe34c"
+size = 1834487
+mtime_ms = 1792729912268
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/275d2f9f-0261-463f-8ca1-293c422cbc17/728a839f-596d-495c-a50b-e1a50fce9428"
+storage_version_token = "1792730031983978"
+content_type = "video/webm"

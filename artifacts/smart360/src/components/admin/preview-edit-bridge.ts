@@ -248,11 +248,16 @@ export function usePreviewEditBridge({
     let frame = 0;
 
     const sourceElement = (target: Element) => {
-      const { nodes } = describeChain(target);
+      // Trend uses keyed buttons/articles rather than Enostaven's tile test IDs.
+      // Resolve and outline the interactive tile, not its nested SVG/text/image.
+      const tile = target.closest(
+        '.lg2-photo-card, .lg2-utility-card, .lg2-hcard, .lg2-pcard, .lg2-sub2, .lg2-bottom-nav button',
+      );
+      const { nodes } = describeChain(tile ?? target);
       const resolution = resolveRef.current(nodes, win!.location.pathname);
       // Nested SVG paths/text belong to the visible interactive tile/contact
       // row, not to an arbitrary React data-owner container.
-      const el = target.closest('[data-testid^="tile-"], a[href]')
+      const el = tile ?? target.closest('[data-testid^="tile-"], a[href]')
         ?? target.closest("h1,h2,h3,h4,p,li,img,video")
         ?? target;
       return { resolution, el };

@@ -52,6 +52,14 @@ test("tile test id maps to category, labels are never used as ids", () => {
   assert.equal(resolvePreviewTarget([node({ ids: ["Apartmaji"] })], ctx({ pathname: "/demo/home" }))?.target.kind, "appearance");
 });
 
+test("Trend section tile resolves from its stable nav key, not icon or translated label", () => {
+  const chain = [node({ tag: "use" }), node({ tag: "svg" }), node({ tag: "BUTTON", testId: "nav-stay" })];
+  assert.deepEqual(resolvePreviewTarget(chain, ctx())?.target, { kind: "section", id: "sec-1" });
+  assert.equal(resolvePreviewTarget(chain, ctx())?.allowed, true);
+  assert.equal(resolvePreviewTarget(chain, ctx({ permissions: concierge }))?.allowed, false);
+  assert.equal(resolvePreviewTarget([node({testId:"nav-unknown"})], ctx())?.target.kind, "appearance");
+});
+
 test("entry phone vs tenant phone", () => {
   const tenantCall = resolvePreviewTarget([node({ tag: "A", href: "tel:+38640111222" })], ctx());
   assert.deepEqual(tenantCall?.target, { kind: "contact", field: "phone" });

@@ -29,6 +29,10 @@ recover a lost field by outlining its React data-owner ancestor.
 the clicked node before selection commits loses the only precise visual anchor.
 **How to apply:** Use the hover target for selection, remeasure in iframe CSS
 coordinates on scroll, and fail closed if its exact replacement is unavailable.
+For interactive tiles, the visual anchor is the tile's own button/article,
+including clicks on its nested pictogram or label—not the icon's SVG path.
+**Why:** Enostaven and Trend have different tile markup; anchoring the nested
+icon can look like an unselectable tile even when the record resolver succeeds.
 
 Browser evidence must wait for the entry splash to disappear and use genuine
 hit-tested clicks (not forced clicks through it).
