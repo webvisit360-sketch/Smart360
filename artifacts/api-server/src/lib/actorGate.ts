@@ -94,6 +94,8 @@ export const ADMIN_ROUTE_REGISTRY: RouteSpec[] = [
   { method: "get", path: "/admin/recovery-codes", binding: OWNER },
   { method: "post", path: "/admin/recovery-codes/rotate", binding: OWNER },
   { method: "get", path: "/admin/auth-events", binding: OWNER },
+  { method: "get", path: "/admin/tenants/:id/smartxstay-imports", binding: OWNER },
+  { method: "post", path: "/admin/tenants/:id/smartxstay-imports", binding: OWNER },
   { method: "get", path: "/admin/credentials", binding: OWNER },
   { method: "patch", path: "/admin/credentials/:id", binding: OWNER },
   { method: "delete", path: "/admin/credentials/:id", binding: OWNER },

@@ -22,6 +22,36 @@ tags:
   - name: messages
   - name: site-plan
 paths:
+  /admin/tenants/{id}/smartxstay-imports:
+    get:
+      operationId: listSmartxstayImports
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Operator import history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SmartxstayImportRun" }
+    post:
+      operationId: startSmartxstayImport
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SmartxstayImportInput" }
+      responses:
+        "202":
+          description: Import started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SmartxstayImportReceipt" }
   /guest/{slug}/announcements:
     get:
       operationId: getGuestAnnouncements
@@ -3255,6 +3285,27 @@ components:
       required: false
       schema: { type: string, enum: [large, small], default: large }
   schemas:
+    SmartxstayImportInput:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, maxLength: 2048 }
+    SmartxstayImportReceipt:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string }
+    SmartxstayImportRun:
+      type: object
+      required: [id, sourceUrl, status, createdAt, report]
+      properties:
+        id: { type: string }
+        sourceUrl: { type: string }
+        status: { type: string }
+        createdAt: { type: string }
+        report:
+          type: object
+          additionalProperties: true
     Announcement:
       type: object
       required: [id, tenantId, titleSl, titleEn, titleDe, titleIt, bodySl, bodyEn, bodyDe, bodyIt, imageUrl, validFrom, validTo, createdAt, updatedAt, deletedAt]

@@ -5,6 +5,25 @@
  * Smart360 API - multi-tenant guest information PWA
  * OpenAPI spec version: 0.1.0
  */
+export interface SmartxstayImportInput {
+  /** @maxLength 2048 */
+  url: string;
+}
+
+export interface SmartxstayImportReceipt {
+  id: string;
+}
+
+export type SmartxstayImportRunReport = { [key: string]: unknown };
+
+export interface SmartxstayImportRun {
+  id: string;
+  sourceUrl: string;
+  status: string;
+  createdAt: string;
+  report: SmartxstayImportRunReport;
+}
+
 export interface Announcement {
   /** @pattern ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ */
   id: string;

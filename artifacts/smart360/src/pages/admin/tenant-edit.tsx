@@ -35,6 +35,7 @@ import {
 } from "@/components/admin/management-mode-setting";
 import { useHostSession } from "@/hooks/use-host-session";
 import { useTenantPermissions } from "@/hooks/use-tenant-permissions";
+import { SmartxstayImport } from "@/components/admin/smartxstay-import";
 import { collapseConsecutiveChangelog } from "@/lib/changelog-collapse";
 import {
   AdminSidebarIcon as SidebarNavIcon,
@@ -1765,6 +1766,7 @@ export default function AdminTenantEdit() {
         <TabsContent value="distances"><Card><CardHeader><CardTitle>Razdalje</CardTitle></CardHeader><CardContent><DistanceReview tenantId={id} /></CardContent></Card></TabsContent>
 
         <TabsContent value="content">
+          {isOwner && <div className="mb-4"><SmartxstayImport tenantId={id} /></div>}
           <section className="bg-white" data-testid="section-management">
             <h2 className="mb-2 text-lg font-extrabold">Sekcije in vnosi</h2>
             {permissions.canManageContent && <p className="mb-4 text-sm text-muted-foreground">

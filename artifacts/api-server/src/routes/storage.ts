@@ -39,7 +39,7 @@ const storage = new ObjectStorageService();
 // The widths every photo is stored in. Admin thumbnails use 200,
 // tiles use 620, gallery/lightbox uses 1400. Never store phone originals.
 export const IMG_WIDTHS = [200, 620, 1400] as const;
-const JPEG_QUALITY: Record<number, number> = { 200: 60, 620: 65, 1400: 75 };
+export const JPEG_QUALITY: Record<number, number> = { 200: 60, 620: 65, 1400: 75 };
 
 function parseObjectPath(path: string): { bucketName: string; objectName: string } {
   if (!path.startsWith("/")) path = `/${path}`;

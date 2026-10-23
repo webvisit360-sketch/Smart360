@@ -12,3 +12,4 @@ export * from "./publishedSnapshots";
 export * from "./hostOnboarding";
 export * from "./announcements";
 export * from "./tenantCopyJobs";
+export * from "./smartxstayImport";

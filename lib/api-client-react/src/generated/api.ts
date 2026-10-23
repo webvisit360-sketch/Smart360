@@ -155,6 +155,9 @@ import type {
   SitePlanImage,
   SitePlanImageUpdate,
   SlugCheckResponse,
+  SmartxstayImportInput,
+  SmartxstayImportReceipt,
+  SmartxstayImportRun,
   StorageCleanupPreview,
   StorageCleanupRequest,
   StorageCleanupResult,
@@ -207,6 +210,143 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListSmartxstayImportsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/smartxstay-imports`
+}
+
+export const listSmartxstayImports = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SmartxstayImportRun[]> => {
+
+  return customFetch<SmartxstayImportRun[]>(getListSmartxstayImportsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSmartxstayImportsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/tenants/${id}/smartxstay-imports`
+    ] as const;
+    }
+
+
+export const getListSmartxstayImportsQueryOptions = <TData = Awaited<ReturnType<typeof listSmartxstayImports>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSmartxstayImports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSmartxstayImportsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSmartxstayImports>>> = ({ signal }) => listSmartxstayImports(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSmartxstayImports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSmartxstayImportsQueryResult = NonNullable<Awaited<ReturnType<typeof listSmartxstayImports>>>
+export type ListSmartxstayImportsQueryError = ErrorType<unknown>
+
+
+
+export function useListSmartxstayImports<TData = Awaited<ReturnType<typeof listSmartxstayImports>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSmartxstayImports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSmartxstayImportsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getStartSmartxstayImportUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/smartxstay-imports`
+}
+
+export const startSmartxstayImport = async (id: string,
+    smartxstayImportInput: SmartxstayImportInput, options?: Parameters<typeof customFetch>[1]): Promise<SmartxstayImportReceipt> => {
+
+  return customFetch<SmartxstayImportReceipt>(getStartSmartxstayImportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(smartxstayImportInput)
+  }
+);}
+
+
+
+
+
+export const getStartSmartxstayImportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startSmartxstayImport>>, TError,{id: string;data: BodyType<SmartxstayImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startSmartxstayImport>>, TError,{id: string;data: BodyType<SmartxstayImportInput>}, TContext> => {
+
+const mutationKey = ['startSmartxstayImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startSmartxstayImport>>, {id: string;data: BodyType<SmartxstayImportInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  startSmartxstayImport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartSmartxstayImportMutationResult = NonNullable<Awaited<ReturnType<typeof startSmartxstayImport>>>
+    export type StartSmartxstayImportMutationBody = BodyType<SmartxstayImportInput>
+    export type StartSmartxstayImportMutationError = ErrorType<unknown>
+
+    export const useStartSmartxstayImport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startSmartxstayImport>>, TError,{id: string;data: BodyType<SmartxstayImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startSmartxstayImport>>,
+        TError,
+        {id: string;data: BodyType<SmartxstayImportInput>},
+        TContext
+      > => {
+      return useMutation(getStartSmartxstayImportMutationOptions(options));
+    }
 
 export const getGetGuestAnnouncementsUrl = (slug: string,) => {
 

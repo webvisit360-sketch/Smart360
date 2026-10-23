@@ -131,6 +131,23 @@ export async function admitUpload(
   };
 }
 
+/** Hard admission for batch imports, sharing reservations with normal uploads. */
+export async function admitImport(tenantId: string, slugs: string[], quotaBytes: number, bytes: number): Promise<Admission> {
+  invalidateMediaUsage();
+  const used = await getUsedBytes(slugs);
+  const pending = pendingByTenant.get(tenantId) ?? 0;
+  if (used + pending + bytes > quotaBytes) return { ok: false, usedBytes: used + pending, quotaBytes };
+  pendingByTenant.set(tenantId, pending + bytes);
+  let released = false;
+  return { ok: true, release: () => {
+    if (released) return;
+    released = true;
+    const remaining = (pendingByTenant.get(tenantId) ?? 0) - bytes;
+    if (remaining > 0) pendingByTenant.set(tenantId, remaining);
+    else pendingByTenant.delete(tenantId);
+  } };
+}
+
 export function formatGb(bytes: number): string {
   if (bytes < 1_000_000_000) {
     return `${Math.round(bytes / 1_000_000)} MB`;

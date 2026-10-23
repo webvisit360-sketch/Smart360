@@ -8,6 +8,37 @@
 import * as zod from 'zod';
 
 
+export const ListSmartxstayImportsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListSmartxstayImportsResponseItem = zod.object({
+  "id": zod.string(),
+  "sourceUrl": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "report": zod.record(zod.string(), zod.unknown())
+})
+export const ListSmartxstayImportsResponse = zod.array(ListSmartxstayImportsResponseItem)
+
+
+export const StartSmartxstayImportParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const startSmartxstayImportBodyUrlMax = 2048;
+
+
+
+export const StartSmartxstayImportBody = zod.object({
+  "url": zod.string().max(startSmartxstayImportBodyUrlMax)
+})
+
+export const StartSmartxstayImportResponse = zod.object({
+  "id": zod.string()
+})
+
+
 export const GetGuestAnnouncementsParams = zod.object({
   "slug": zod.coerce.string()
 })

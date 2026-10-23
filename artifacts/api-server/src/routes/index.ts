@@ -77,4 +77,7 @@ router.use(part5MeliPuCutoverRouter);
 // code). Runs at module load, so a miss is caught before listen().
 assertAdminRoutesClassified(router);
 
+import smartxstayImportRouter from "./adminSmartxstayImport";
+router.use(smartxstayImportRouter);
+
 export default router;

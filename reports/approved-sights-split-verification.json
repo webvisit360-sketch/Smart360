@@ -1,8 +1,8 @@
 {
   "status": "PASSED_DEVELOPMENT_COPIES_NOT_PUBLISHED",
   "fixtureTenantIds": {
-    "gril": "190b3348-61ea-4808-9492-1e3a8779f98f",
-    "menina": "6afb6ef9-2270-44e4-9209-f9c0da05abc8"
+    "gril": "c6093fc8-968e-4d99-9beb-3653f2fdd615",
+    "menina": "4f8ed78e-a093-4690-8e18-df8000eef7d6"
   },
   "approvedLedger": {
     "items": 14,
@@ -56,27 +56,70 @@
   },
   "priorMetadataAlignment": {
     "gril": {
-      "summary": "Uskladitev je končana: 22 kategorij, 15 prevodov, 3 umaknjenih starih kategorij in 0 prerazvrščenih predlogov.",
+      "summary": "Uskladitev je končana: 0 razdelkov, 22 kategorij, 15 prevodov, 3 umaknjenih starih kategorij in 0 prerazvrščenih predlogov.",
       "counts": {
+        "sectionsUpdated": 0,
         "categoriesUpdated": 22,
         "translationsUpdated": 15,
         "categoriesRetired": 3,
         "proposalsRekeyed": 0,
         "itemMoves": 0
       },
-      "skipped": [],
+      "titleChanges": [],
+      "categoryMerges": [],
+      "stayTitleNormalization": {
+        "status": "skipped",
+        "summary": "Naslov razdelka: preskočeno. Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen.",
+        "titleChanged": false,
+        "translationsUpdated": 0
+      },
+      "skipped": [
+        {
+          "key": "stay",
+          "reason": "Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen."
+        },
+        {
+          "key": "stay",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
+        {
+          "key": "offer",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        }
+      ],
       "changed": true
     },
     "menina": {
-      "summary": "Uskladitev je končana: 22 kategorij, 15 prevodov, 2 umaknjenih starih kategorij in 5 prerazvrščenih predlogov.",
+      "summary": "Uskladitev je končana: 0 razdelkov, 22 kategorij, 15 prevodov, 2 umaknjenih starih kategorij in 5 prerazvrščenih predlogov.",
       "counts": {
+        "sectionsUpdated": 0,
         "categoriesUpdated": 22,
         "translationsUpdated": 15,
         "categoriesRetired": 2,
         "proposalsRekeyed": 5,
         "itemMoves": 0
       },
+      "titleChanges": [],
+      "categoryMerges": [],
+      "stayTitleNormalization": {
+        "status": "skipped",
+        "summary": "Naslov razdelka: preskočeno. Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen.",
+        "titleChanged": false,
+        "translationsUpdated": 0
+      },
       "skipped": [
+        {
+          "key": "stay",
+          "reason": "Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen."
+        },
+        {
+          "key": "stay",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
+        {
+          "key": "offer",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
         {
           "key": "food",
           "reason": "Stara kategorija ostaja, ker še vsebuje vnose, predloge ali povezave."
@@ -87,41 +130,106 @@
   },
   "approvedSplitRun": {
     "gril": {
-      "summary": "Uskladitev je končana: 0 kategorij, 0 prevodov, 1 umaknjenih starih kategorij in 63 prerazvrščenih predlogov.",
+      "summary": "Uskladitev je končana: 0 razdelkov, 0 kategorij, 0 prevodov, 1 umaknjenih starih kategorij in 63 prerazvrščenih predlogov.",
       "counts": {
+        "sectionsUpdated": 0,
         "categoriesUpdated": 0,
         "translationsUpdated": 0,
         "categoriesRetired": 1,
         "proposalsRekeyed": 63,
         "itemMoves": 14
       },
-      "skipped": [],
+      "titleChanges": [],
+      "categoryMerges": [],
+      "stayTitleNormalization": {
+        "status": "skipped",
+        "summary": "Naslov razdelka: preskočeno. Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen.",
+        "titleChanged": false,
+        "translationsUpdated": 0
+      },
+      "skipped": [
+        {
+          "key": "stay",
+          "reason": "Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen."
+        },
+        {
+          "key": "stay",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
+        {
+          "key": "offer",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        }
+      ],
       "changed": true
     }
   },
   "secondRun": {
     "gril": {
-      "summary": "Ni novih odobrenih sprememb.",
+      "summary": "Ni novih odobrenih sprememb. 3 odprtih postavk ostaja za ročno odločitev.",
       "counts": {
+        "sectionsUpdated": 0,
         "categoriesUpdated": 0,
         "translationsUpdated": 0,
         "categoriesRetired": 0,
         "proposalsRekeyed": 0,
         "itemMoves": 0
       },
-      "skipped": [],
+      "titleChanges": [],
+      "categoryMerges": [],
+      "stayTitleNormalization": {
+        "status": "skipped",
+        "summary": "Naslov razdelka: preskočeno. Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen.",
+        "titleChanged": false,
+        "translationsUpdated": 0
+      },
+      "skipped": [
+        {
+          "key": "stay",
+          "reason": "Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen."
+        },
+        {
+          "key": "stay",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
+        {
+          "key": "offer",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        }
+      ],
       "changed": false
     },
     "menina": {
-      "summary": "Ni novih odobrenih sprememb. 1 odprtih postavk ostaja za ročno odločitev.",
+      "summary": "Ni novih odobrenih sprememb. 4 odprtih postavk ostaja za ročno odločitev.",
       "counts": {
+        "sectionsUpdated": 0,
         "categoriesUpdated": 0,
         "translationsUpdated": 0,
         "categoriesRetired": 0,
         "proposalsRekeyed": 0,
         "itemMoves": 0
       },
+      "titleChanges": [],
+      "categoryMerges": [],
+      "stayTitleNormalization": {
+        "status": "skipped",
+        "summary": "Naslov razdelka: preskočeno. Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen.",
+        "titleChanged": false,
+        "translationsUpdated": 0
+      },
       "skipped": [
+        {
+          "key": "stay",
+          "reason": "Na položaju 0 ni standardnega razdelka stay; razdelek ni bil premaknjen ali spremenjen."
+        },
+        {
+          "key": "stay",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
+        {
+          "key": "offer",
+          "reason": "Manjka standardni razdelek; samodejno ustvarjanje razdelka ni dovoljeno."
+        },
         {
           "key": "food",
           "reason": "Stara kategorija ostaja, ker še vsebuje vnose, predloge ali povezave."

@@ -18,7 +18,6 @@
     "finalize:creator-source-ljubno": "tsx ./src/scripts/finalize-ljubno-source-first.ts"
   },
   "dependencies": {
-    "@workspace/guide-languages": "workspace:*",
     "@google-cloud/storage": "^8.0.0",
     "@node-rs/argon2": "^2.1.0",
     "@replit/connectors-sdk": "^0.4.1",
@@ -26,7 +25,9 @@
     "@workspace/api-zod": "workspace:*",
     "@workspace/category-icons": "workspace:*",
     "@workspace/db": "workspace:*",
+    "@workspace/guide-languages": "workspace:*",
     "@workspace/integrations-openai-ai-server": "workspace:*",
+    "cheerio": "^1.2.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

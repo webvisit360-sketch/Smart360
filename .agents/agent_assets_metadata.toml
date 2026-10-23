@@ -3102,3 +3102,17 @@ mtime_ms = 1792729912268
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/275d2f9f-0261-463f-8ca1-293c422cbc17/728a839f-596d-495c-a50b-e1a50fce9428"
 storage_version_token = "1792730031983978"
 content_type = "video/webm"
+
+[[outputs]]
+id = "kwYOKGlAButGrif35gpNL"
+uri = "file://test-recordings/smartxstay/porocilo.html"
+type = "html"
+title = "Smartxstay — poročilo razvojnega uvoza"
+description = "Celotni rezultati po kategorijah in jezikih, ponovitev brez podvajanja ter dokaz čiščenja."
+logical_id = "ffe5442c-6587-4fdf-9eb9-433c5015ae8f"
+content_hash = "sha256:68f1a32ecda60fed2d9cd67a9189b9d046c20706497f00cfbe8f64c8c3694736"
+size = 4894
+mtime_ms = 1792786219195
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/ffe5442c-6587-4fdf-9eb9-433c5015ae8f/aa845caf-b0be-47fc-9941-d54735eda523"
+storage_version_token = "1792786324595624"
+content_type = "text/html"
