@@ -45,7 +45,7 @@ test("tile anatomy = master px scaled by phone width (v/3.96 cqw)", () => {
   assert.doesNotMatch(CSS, /lgs-tile::(before|after)/);
   assert.doesNotMatch(CSS, /mask:\s*url/);
   // base gradient + border anatomy from the master stays
-  assert.match(CSS, /\.lgs-tile \{[^}]*linear-gradient\(180deg,var\(--s-tile1\) 0%,var\(--s-tile15\) 52%,var\(--s-tile2\) 100%\); background-clip: padding-box;[^}]*border: 2\.3px solid var\(--s-stroke\)/);
+  assert.match(CSS, /\.lgs-tile \{[^}]*background: var\(--s-grad, linear-gradient\(180deg,var\(--s-tile1\) 0%,var\(--s-tile15\) 52%,var\(--s-tile2\) 100%\)\); background-clip: padding-box;[^}]*border: 2\.3px solid var\(--s-stroke\)/);
 });
 
 test("44px circles kept with master-style 1.1px ring + 1px gap", () => {

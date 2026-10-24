@@ -5,6 +5,8 @@
 export type SimplePaletteTokens = {
   bg: string; tile1: string; tile15: string; tile2: string;
   stroke: string; txt: string; tint: string; adr: string;
+  /** v4 B (custom only): page-gradient bottom and tile-gradient top glow. */
+  bg2?: string; glow?: string;
 };
 export type SimplePaletteKey = "bordo" | "modra" | "custom";
 export type GuestDesign = "trend" | "simple";
@@ -56,10 +58,16 @@ function oklchToLinear(L: number, C: number, H: number): Rgb {
 }
 const EPS = 1e-6;
 const inGamut = (rgb: Rgb) => rgb.every((v) => v >= -EPS && v <= 1 + EPS);
+/** v4 gamut test: gamma-encoded channel within [-0.0005, 1.0005] (then clipped). NOT stated in the
+ *  sheet (it only says "gamut mapping"): INFERRED compatibility choice, reverse-engineered because
+ *  the strict v3 test (linear ±1e-6) reproduces only 5/10 B cards (last-bit diffs) and this reproduces 10/10. */
+const V4_TOL = 0.0005;
+const gamma = (v: number) => (v < 0 ? -fromLin(-v) : fromLin(v));
+const inGamutV4 = (rgb: Rgb) => rgb.every((v) => { const e = gamma(v); return e >= -V4_TOL && e <= 1 + V4_TOL; });
 /** Step 4: oklch -> sRGB hex, reducing C by 0.001 until inside the sRGB gamut. */
-function oklchToHex(L: number, C: number, H: number): string {
+function oklchToHex(L: number, C: number, H: number, gamut: (rgb: Rgb) => boolean = inGamut): string {
   let c = C, lin = oklchToLinear(L, c, H);
-  while (!inGamut(lin) && c > 0) { c = Math.max(0, c - 0.001); lin = oklchToLinear(L, c, H); }
+  while (!gamut(lin) && c > 0) { c = Math.max(0, c - 0.001); lin = oklchToLinear(L, c, H); }
   const x = (v: number) => Math.round(Math.min(1, Math.max(0, fromLin(Math.min(1, Math.max(0, v))))) * 255).toString(16).padStart(2, "0");
   return `#${x(lin[0])}${x(lin[1])}${x(lin[2])}`.toUpperCase();
 }
@@ -156,8 +164,79 @@ export function deriveSimplePaletteV3(baseHex: string): SimplePaletteDerivation 
   return { tokens, tileInk, outsideInk, deltaE: deltaEOK(base, tile1) };
 }
 
+/** v4 ink search: v3 walk, but L accumulates in floating point (l += step). NOT stated in the sheet:
+ *  INFERRED compatibility choice. With v3's exact steps #FF7A00 picks pale #FFFFFF txt/tint (4.51:1);
+ *  the B card shows dark ink, which this walk reproduces (0.79 + 21*0.01 overshoots 1, so L=1 is never tried). */
+function searchV4(from: number, to: number, step: number, c: number, h: number, ok: (hex: string) => boolean): string | null {
+  const dir = to >= from ? 1 : -1;
+  for (let l = from; dir > 0 ? l <= to : l >= to; l += dir * step) {
+    const hex = oklchToHex(l, c, h, inGamutV4);
+    if (ok(hex)) return hex;
+  }
+  return null;
+}
+
+/**
+ * Approved OKLCH derivation v4 B "ZIVO+" (attached_assets/barvna-izpeljava_2_1792841788636.html).
+ * Changes vs v3 only: Cd = max(Cb, 0.09) with no upper cap (gamut mapping only); zero hue
+ * drift everywhere (tile15, tile2, bg, bg2, glow and tint all use H); tile15 C*0.95,
+ * tile2/bg/bg2 C*0.85; glow = oklch(min(.97, L1+g), Cd, H), g 0.04 -> 0.01 (0 = the pick)
+ * until CR(stroke, glow) >= 3; bg2 = oklch(Lbg-s, Cd*0.85, H), s 0.07 -> 0.01 until txt
+ * and tint >= 4.5 on bg2, else bg2 = bg (flat page). Pick, ink rules and L steps = v3.
+ * The formulas above are the sheet's pseudocode; gamut tolerance and float walk are inferred (see below).
+ */
+export function deriveSimplePaletteV4(baseHex: string): SimplePaletteDerivation {
+  const base = baseHex.trim().toUpperCase();
+  const [Lb, Cb, Hb] = srgbToOklch(base);
+  const nearGrey = Cb < 0.02;
+  const H = Cb < 0.005 ? COOL : Hb;
+  const Cd = nearGrey ? 0.045 : Math.max(0.09, Cb);
+  const tile1 = base, L1 = Lb;
+  const hex = (l: number, c: number) => oklchToHex(l, c, H, inGamutV4);
+  const steps = (mode: InkMode) => {
+    let d15 = Math.min(0.085, 0.16 * L1), d2 = Math.min(0.225, 0.42 * L1), dbg = Math.min(0.19, 0.35 * L1);
+    if (mode === "dark") {
+      d2 = Math.min(d2, L1 - Math.min(L1 - 0.02, 0.6));
+      d15 = Math.min(d15, L1 - Math.min(L1 - 0.01, 0.63));
+      dbg = Math.min(dbg, L1 - Math.min(L1 - 0.02, 0.58));
+    }
+    return { tile15: hex(L1 - d15, Cd * 0.95), tile2: hex(L1 - d2, Cd * 0.85), bg: hex(L1 - dbg, Cd * 0.85), Lbg: L1 - dbg };
+  };
+  const inkC = (m: number) => Math.min(m, Cd * 0.5);
+  const tileOk = (t: { tile15: string; tile2: string }) => (h: string) =>
+    contrastRatio(h, t.tile15) >= AA && contrastRatio(h, t.tile2) >= AA && contrastRatio(h, tile1) >= 3;
+  let tileInk: InkMode = "pale";
+  let t = steps("pale");
+  let stroke = searchV4(0.9, 0.985, 0.005, inkC(0.03), H, tileOk(t));
+  if (!stroke) {
+    tileInk = "dark"; t = steps("dark");
+    stroke = searchV4(0.25, 0.1, 0.005, inkC(0.045), H, tileOk(t)) ?? hex(0.1, inkC(0.045));
+  }
+  const onBg = (h: string) => contrastRatio(h, t.bg) >= AA;
+  const txtC = Math.min(0.022, Cd * 0.4), tintC = Math.min(0.055, Cd * 0.45);
+  let outsideInk: InkMode = "pale";
+  let txt = searchV4(0.94, 1, 0.01, txtC, H, onBg), tint = searchV4(0.79, 1, 0.01, tintC, H, onBg);
+  if (!txt || !tint) {
+    outsideInk = "dark";
+    txt = searchV4(0.22, 0, 0.005, txtC, H, onBg) ?? hex(0, txtC);
+    tint = searchV4(0.35, 0, 0.01, tintC, H, onBg) ?? hex(0, tintC);
+  }
+  let glow = tile1;
+  for (let g = 4; g >= 1; g--) {
+    const h = hex(Math.min(0.97, L1 + g / 100), Cd);
+    if (contrastRatio(stroke, h) >= 3) { glow = h; break; }
+  }
+  let bg2 = t.bg;
+  for (let s = 7; s >= 1; s--) {
+    const h = hex(t.Lbg - s / 100, Cd * 0.85);
+    if (contrastRatio(txt, h) >= AA && contrastRatio(tint, h) >= AA) { bg2 = h; break; }
+  }
+  const tokens = { bg: t.bg, tile1, tile15: t.tile15, tile2: t.tile2, stroke, txt, tint, adr: txt, bg2, glow };
+  return { tokens, tileInk, outsideInk, deltaE: deltaEOK(base, tile1) };
+}
+
 export function deriveSimplePalette(baseHex: string): SimplePaletteTokens {
-  return deriveSimplePaletteV3(baseHex).tokens;
+  return deriveSimplePaletteV4(baseHex).tokens;
 }
 
 export function resolveGuestDesign(value: unknown): GuestDesign {
@@ -172,11 +251,17 @@ export function resolveSimplePalette(palette: unknown, baseColor: unknown): Simp
 
 export function simplePaletteStyle(tokens: SimplePaletteTokens): Record<string, string> {
   // Presets keep their hardcoded white icon/arrow look; only custom palettes get
-  // the v3 adaptive tile ink (--s-ink = stroke) for icons, arrows and tile CTAs.
+  // the v3/v4 adaptive tile ink (--s-ink = stroke) for icons, arrows and tile CTAs.
   const custom = tokens !== BORDO && tokens !== MODRA;
   return {
     // Custom also renders .lgs-small at full opacity: dark outside ink at .85 drops below 4.5.
     ...(custom ? { "--s-ink": tokens.stroke, "--s-small-opacity": "1" } : {}),
+    // v4 B: tile glow stop + page depth; presets never emit these (CSS falls back to tile1 / bg).
+    ...(custom && tokens.glow ? {
+      "--s-glow": tokens.glow,
+      "--s-grad": "linear-gradient(180deg,var(--s-glow) 0%,var(--s-tile1) 20%,var(--s-tile15) 58%,var(--s-tile2) 100%)",
+    } : {}),
+    ...(custom && tokens.bg2 ? { "--s-bg2": tokens.bg2, "--s-page": "linear-gradient(180deg,var(--s-bg) 0%,var(--s-bg2) 100%)" } : {}),
     "--s-bg": tokens.bg, "--s-tile1": tokens.tile1, "--s-tile15": tokens.tile15,
     "--s-tile2": tokens.tile2, "--s-stroke": tokens.stroke, "--s-txt": tokens.txt,
     "--s-tint": tokens.tint, "--s-adr": tokens.adr,

@@ -3228,3 +3228,17 @@ mtime_ms = 1792839359892
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/77610986-f308-425f-8262-1154cd6479a0/63e0d857-3aac-4031-adfa-2d36aa61b07e"
 storage_version_token = "1792839568150366"
 content_type = "text/html"
+
+[[outputs]]
+id = "T1XWO69sJvFqOAHiUH4Ps"
+uri = "file://artifacts/smart360/reports/oklch-palette/v4/comparison-v4.html"
+type = "html"
+title = "Enostaven v4 B · ŽIVO+ — dokazno poročilo"
+description = "Osem barv v dejanski aplikaciji ob stolpcu B predloge, meritve kontrasta, dokaz nespremenjenih prednastavitev in pojasnila numerične izpeljave."
+logical_id = "36c33552-f8f4-4c9f-ad20-56bdb98c1789"
+content_hash = "sha256:1c91e712b25271faaf8dc3c0491f6c8b4e927a7d64680d07a04ccf288e131040"
+size = 1343999
+mtime_ms = 1792842586282
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/36c33552-f8f4-4c9f-ad20-56bdb98c1789/9753cf4a-82cf-46f6-b18d-8963b86a714c"
+storage_version_token = "1792842794794638"
+content_type = "text/html"

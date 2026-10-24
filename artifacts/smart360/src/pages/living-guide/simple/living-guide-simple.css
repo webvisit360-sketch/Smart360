@@ -54,11 +54,12 @@
 /* Trend: the column sits above the cover action bar. */
 .lg2-cover .lgs-flags { bottom: auto; }
 
-/* --s-ink is emitted ONLY for custom palettes (v3 adaptive tile ink = stroke);
-   bordo/modra never set it, so every fallback below is their unchanged look. */
+/* --s-ink, --s-grad (v4 B four-stop tile gradient glow 0 / pick 20 / tile15 58 / tile2 100)
+   and --s-page (v4 B page depth bg -> bg2) are emitted ONLY for custom palettes; bordo/modra
+   never set them, so every fallback below is their unchanged look. */
 /* ---------- Enostaven root ---------- */
 .lgs-root {
-  background: var(--s-bg);
+  background: var(--s-page, var(--s-bg));
   min-height: 100dvh;
 }
 .lgs-root .lgs-cover,
@@ -102,7 +103,7 @@
 .lgs-adr { color: var(--s-adr); font-size: 13.5px; margin-bottom: 14px; }
 .lgs-open {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
-  background: linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%); background-clip: padding-box;
+  background: var(--s-grad, linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%)); background-clip: padding-box;
   color: var(--s-ink, var(--s-txt)); border-radius: 18px; padding: 16px; font: inherit; font-size: 18px; font-weight: 900;
   letter-spacing: .03em; text-transform: uppercase;
   border: 2.3px solid var(--s-stroke); box-shadow: inset 0 0 0 1px var(--s-bg), 0 5px 16px rgba(0,0,0,.35);
@@ -111,7 +112,7 @@
 /* ---------- one-page home ---------- */
 .lgs-home {
   position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  background: var(--s-bg); padding-top: env(safe-area-inset-top);
+  background: var(--s-page, var(--s-bg)); padding-top: env(safe-area-inset-top);
 }
 .lgs-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 2px; }
 .lgs-top > div:first-child { min-width:0; }
@@ -170,7 +171,7 @@
 .lgs-tile {
   aspect-ratio: 1/1; min-width: 0; overflow: hidden; color: var(--s-stroke); cursor: pointer; text-decoration: none;
   font: inherit;
-  background: linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%); background-clip: padding-box;
+  background: var(--s-grad, linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%)); background-clip: padding-box;
   border: 2.3px solid var(--s-stroke); border-radius: 19%;
   box-shadow: inset 0 0 0 1px var(--s-bg), 0 4px 14px rgba(10,5,15,.35);
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; padding: 10px 5px 6px;

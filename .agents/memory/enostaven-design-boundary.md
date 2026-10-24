@@ -18,7 +18,7 @@ requirements take precedence where the reference itself differs: square tiles,
 19% radius and white pictograms. Do not claim
 pixel identity for the full reference image when these differences exist.
 
-The owner's latest barvna-izpeljava binding sheet supersedes both HSL and contrast-darkened OKLCH derivation for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; tile-top must be the exact picked sRGB colour (zero ΔE). Contrast comes from adaptive pale/dark ink and relative gradient stops with light-pick floors, not changing the picked colour. Outside text chooses ink independently. The sheet omits the address token, so custom addresses use the text token.
+The owner's latest barvna-izpeljava binding sheet supersedes both HSL and contrast-darkened OKLCH derivation for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; tile-top must be the exact picked sRGB colour (zero ΔE). Contrast comes from adaptive pale/dark ink and relative gradient stops with light-pick floors, not changing the picked colour. Outside text chooses ink independently. The sheet omits the address token, so custom addresses use the text token. Current custom formula = v4 B »ŽIVO+« (barvna-izpeljava_2): no chroma cap, zero hue drift (incl. tint), tile gradient glow 0/pick 20/tile15 58/tile2 100, page bg→bg2 depth only as far as AA allows; custom-only CSS vars (--s-grad/--s-page), presets never get them. Its gamma gamut tolerance (±0.0005) and float-accumulating ink walk are INFERRED from the sheet's B outputs (needed for 10/10 exact), not authored in the sheet.
 
 **Why:** The owner requires literal picked-colour fidelity; the adaptive-ink sheet replaces the earlier compromise that darkened the picked colour for contrast.
 

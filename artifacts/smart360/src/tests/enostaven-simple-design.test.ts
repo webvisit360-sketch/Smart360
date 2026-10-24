@@ -53,11 +53,11 @@ test("v3: tile1 is exactly the pick; formula reproduces the sheet's preset cards
   for (const b of ["#48A1D4", "#4C7060", "#F6DFCC", "#101B2E", "#FFFF00", "#000000"]) {
     assert.equal(deriveSimplePalette(b).tile1, b); assert.equal(deltaEOK(b, deriveSimplePalette(b).tile1), 0);
   }
-  assert.equal(KEYS.map((k) => deriveSimplePalette("#344FB2")[k]).join(" "), "#344FB2 #223F8B #0E2156 #1E2D50 #D5DEF3 #E5EBFB #A9BBDF");
-  assert.equal(KEYS.map((k) => deriveSimplePalette("#B23476")[k]).join(" "), "#B23476 #872D61 #4F153F #4F2B48 #EFD6E0 #F8E5EC #CCAFD0");
+  assert.equal(KEYS.map((k) => deriveSimplePaletteV3("#344FB2").tokens[k]).join(" "), "#344FB2 #223F8B #0E2156 #1E2D50 #D5DEF3 #E5EBFB #A9BBDF");
+  assert.equal(KEYS.map((k) => deriveSimplePaletteV3("#B23476").tokens[k]).join(" "), "#B23476 #872D61 #4F153F #4F2B48 #EFD6E0 #F8E5EC #CCAFD0");
   assert.equal(simplePaletteStyle(BORDO)["--s-ink"], undefined);
   assert.equal(simplePaletteStyle(MODRA)["--s-ink"], undefined);
-  assert.equal(simplePaletteStyle(deriveSimplePalette("#E07B20"))["--s-ink"], "#230D01");
+  assert.equal(simplePaletteStyle(deriveSimplePaletteV3("#E07B20").tokens)["--s-ink"], "#230D01");
 });
 
 const blend = (fg: string, bg: string, a: number) => "#" + [1, 3, 5].map((i) =>
