@@ -1,20 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  BORDO, MODRA, deriveSimplePalette, resolveGuestDesign, resolveSimplePalette,
+  BORDO, MODRA, contrastRatio, deriveSimplePalette, resolveGuestDesign, resolveSimplePalette,
 } from "../pages/living-guide/simple/simple-palette";
 import { buildSimpleSections, simpleHeroUrl, simpleLabelSize } from "../pages/living-guide/simple/simple-tiles";
 import { SIMPLE_COPY } from "../pages/living-guide/simple/simple-copy";
 import { simpleFixtureTenant } from "../pages/living-guide/simple/simple-fixture-data";
 import { readFileSync } from "node:fs";
-import { hexToHslForTest } from "./enostaven-hsl";
 import { tenantSavePayload } from "../lib/tenant-publication-flow";
 
-const hexDist = (a: string, b: string) => {
-  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const [x, y] = [p(a), p(b)];
-  return Math.max(...x.map((v, i) => Math.abs(v - y[i])));
-};
 
 test("presets are copied exactly from the references", () => {
   assert.deepEqual(BORDO, { bg: "#4C2545", tile1: "#B23476", tile15: "#8A2A61", tile2: "#521445", stroke: "#C2DCF8", txt: "#D5E7FD", tint: "#CBA8D8", adr: "#D9BCD4" });
@@ -29,15 +23,52 @@ test("NULL design = trend, NULL palette = bordo, invalid custom falls back", () 
   assert.equal(resolveSimplePalette("custom", "nope"), BORDO);
 });
 
-test("custom derivation is deterministic and reproduces bordo from its own base", () => {
+test("custom derivation is deterministic (OKLCH, tile1 derived, adr aliases txt)", () => {
   const a = deriveSimplePalette("#2E8B6A");
   assert.deepEqual(a, deriveSimplePalette("#2e8b6a"));
-  assert.equal(a.tile1, "#2E8B6A");
-  const self = deriveSimplePalette(BORDO.tile1);
-  for (const key of Object.keys(BORDO) as (keyof typeof BORDO)[]) {
-    assert.ok(hexDist(self[key], BORDO[key]) <= 1, `${key}: ${self[key]} vs ${BORDO[key]}`);
-  }
+  assert.equal(a.adr, a.txt);
   for (const v of Object.values(a)) assert.match(v, /^#[0-9A-F]{6}$/);
+});
+
+// Golden: every token of the approved sheet (attached_assets/barvna-izpeljava_*.html).
+const SHEET: [string, string][] = [
+  ["#407075", "#01717A #015862 #01313B #1D3942 #C8E4E7 #DBF0F2 #A2BFD1"],
+  ["#C03028", "#AE2F27 #882325 #530B19 #51232C #F1D7D3 #FAE6E3 #D9ACBA"],
+  ["#E07B20", "#964D00 #793801 #4C1900 #50271A #EED9CB #F7E8DD #DCAEA8"],
+  ["#93B021", "#596D00 #405601 #1A3300 #213C19 #DBE1CC #E9EEDE #A2C5A9"],
+  ["#2E8B57", "#0F7644 #015C39 #013425 #133C32 #CFE4D5 #E0F0E5 #94C6BF"],
+  ["#1897B0", "#026F83 #015669 #013041 #1B3847 #C9E4EB #DCEFF5 #A2BED8"],
+  ["#2563EB", "#2D5CC0 #284796 #11265D #223357 #D4DEF3 #E3ECFA #A9BBDF"],
+  ["#7C3AED", "#6A4AB7 #4D3B91 #25215C #2A3057 #DEDBF1 #EBE9F9 #A9BBDF"],
+  ["#E85BA8", "#A32F71 #7D255D #49103D #482644 #EFD6E1 #F8E6ED #CBB0D1"],
+  ["#F6DFCC", "#885627 #6B4221 #412210 #452E24 #EDDACA #F7E8DD #D3B2AB"],
+  ["#101B2E", "#456396 #394C76 #1E2A47 #2B3448 #D3DFF3 #E3ECFA #AEBBD5"],
+  ["#8B8E93", "#55647D #434D62 #252B39 #2F343E #D6DFED #E4ECF8 #B4BBC8"],
+  ["#B23476", "#A42E6C #7E2559 #4A0F3A #492542 #EFD6E0 #F8E5EC #CCAFD0"],
+  ["#344FB2", "#3D59BD #294794 #12265C #233357 #D5DEF3 #E5EBFB #A9BBDF"],
+];
+const KEYS = ["tile1", "tile15", "tile2", "bg", "stroke", "txt", "tint"] as const;
+test("golden: all seven tokens match the approved sheet", () => {
+  for (const [base, want] of SHEET) {
+    const p = deriveSimplePalette(base);
+    assert.equal(KEYS.map((k) => p[k]).join(" "), want, base);
+  }
+});
+
+const blend = (fg: string, bg: string, a: number) => "#" + [1, 3, 5].map((i) =>
+  Math.round(parseInt(fg.slice(i, i + 2), 16) * a + parseInt(bg.slice(i, i + 2), 16) * (1 - a)).toString(16).padStart(2, "0")).join("").toUpperCase();
+
+test("AA >= 4.5 for formula pairs and rendered opacity (sheet + production #4C7060 + edges)", () => {
+  for (const base of [...SHEET.map((x) => x[0]), "#4C7060", "#000000", "#FFFFFF", "#808080", "#FFFF00", "#00FF00"]) {
+    const p = deriveSimplePalette(base);
+    for (const [fg, bg] of [[p.stroke, p.tile15], [p.stroke, p.tile2], [p.txt, p.bg], [p.tint, p.bg], [p.adr, p.bg],
+      [blend(p.txt, p.bg, 0.85), p.bg]]) assert.ok(contrastRatio(fg, bg) >= 4.5, `${base} ${fg}/${bg}`);
+  }
+});
+
+test("near-grey and pure grey handling", () => {
+  assert.deepEqual(deriveSimplePalette("#000000"), deriveSimplePalette("#FFFFFF"));
+  assert.deepEqual(deriveSimplePalette("#808080"), deriveSimplePalette("#333333"));
 });
 
 const rt = { hasWeather: true, hasContact: true, installAvailable: true, hasOrderable: true, recordingEnabled: true, mapHref: "https://maps" };
@@ -88,30 +119,6 @@ test("host autosave carries the design fields", () => {
   assert.equal(p.simpleBaseColor, "#112233");
   const contactsOnly: any = tenantSavePayload(snap, "2", false, false);
   assert.equal(contactsOnly.guestDesign, undefined);
-});
-
-test("custom pale tokens keep bordo's relative headroom to white; dark tokens keep lightness ratio", () => {
-  const ref = hexToHslForTest(BORDO.tile1)[2];
-  for (const baseHex of ["#2E8B6A", "#1A3C8F", "#D98A1E"]) {
-    const p = deriveSimplePalette(baseHex);
-    const lb = hexToHslForTest(baseHex)[2];
-    for (const k of ["stroke", "txt", "tint", "adr"] as const) {
-      const want = 1 - (1 - lb) * ((1 - hexToHslForTest(BORDO[k])[2]) / (1 - ref));
-      assert.ok(Math.abs(hexToHslForTest(p[k])[2] - want) < 0.01, `${baseHex} ${k}`);
-    }
-    for (const k of ["bg", "tile15", "tile2"] as const) {
-      const want = lb * (hexToHslForTest(BORDO[k])[2] / ref);
-      assert.ok(Math.abs(hexToHslForTest(p[k])[2] - want) < 0.01, `${baseHex} ${k}`);
-    }
-  }
-});
-
-test("black, white and gray bases are safe", () => {
-  const black = deriveSimplePalette("#000000");
-  assert.equal(black.bg, "#000000");
-  const white = deriveSimplePalette("#FFFFFF");
-  for (const k of ["stroke", "txt", "tint", "adr"] as const) assert.equal(white[k], "#FFFFFF");
-  for (const v of Object.values(deriveSimplePalette("#808080"))) assert.match(v, /^#([0-9A-F]{2})\1\1$/);
 });
 
 test("long labels shrink instead of clipping", () => {

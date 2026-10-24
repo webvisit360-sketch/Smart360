@@ -3158,3 +3158,17 @@ mtime_ms = 1792820095710
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/934e5707-54b9-47fb-b131-c865bed8d00a/803a247a-a285-44df-be5a-d79b5331f026"
 storage_version_token = "1792820096392369"
 content_type = "text/html"
+
+[[outputs]]
+id = "SzqHx71AbS5AdFbMN4NRI"
+uri = "file://artifacts/smart360/reports/oklch-palette/comparison.html"
+type = "html"
+title = "OKLCH: referenčni list in prava aplikacija"
+description = "12 vzorcev ob referenci, produkcijska osnova #4C7060, izmerjeni kontrasti in dokaz nespremenjenih presetov."
+logical_id = "1bd7d40d-a703-4c96-9dbd-cd3364cfc748"
+content_hash = "sha256:70f83549d7e691f88812d5779df95563935303ac95cb9ffbd40240c9b66fbcc7"
+size = 1263142
+mtime_ms = 1792833047750
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1bd7d40d-a703-4c96-9dbd-cd3364cfc748/7c339d55-8fb8-48cd-bda4-3fa8f150649f"
+storage_version_token = "1792833070514888"
+content_type = "text/html"

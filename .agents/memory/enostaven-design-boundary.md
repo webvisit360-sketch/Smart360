@@ -2,7 +2,6 @@
 name: Enostaven presentation boundary
 description: Binding reference priority, dynamic content and preserving Trend.
 ---
-
 Enostaven is a presentation layer over the same published guide, not a separate
 content tree. Generate tiles from actual published categories and runtime
 features; never copy the reference tenant's category list into production.
@@ -18,6 +17,12 @@ snapshots. Measure the rendered result, not just CSS. Explicit written
 requirements take precedence where the reference itself differs: square tiles,
 19% radius and white pictograms. Do not claim
 pixel identity for the full reference image when these differences exist.
+
+The owner's barvna-izpeljava binding sheet supersedes the original HSL relationships for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; custom tile1 is derived, not identical to the stored base. The sheet omits the address token, so custom addresses use the text token.
+
+**Why:** The owner explicitly replaced per-token S/L copying with deterministic OKLCH derivation while requiring presets and stored colours to remain untouched.
+
+**How to apply:** Validate all seven specified tokens against all twelve sheet samples and measure actual rendered contrast; do not retune presets to imitate formula outputs.
 
 Landing corrections apply to BOTH Trend and Enostaven: bottom-edge open button
 (16px extra clearance above the device safe area), host block immediately above, untinted photo/walk,
