@@ -54,6 +54,8 @@
 /* Trend: the column sits above the cover action bar. */
 .lg2-cover .lgs-flags { bottom: auto; }
 
+/* --s-ink is emitted ONLY for custom palettes (v3 adaptive tile ink = stroke);
+   bordo/modra never set it, so every fallback below is their unchanged look. */
 /* ---------- Enostaven root ---------- */
 .lgs-root {
   background: var(--s-bg);
@@ -75,12 +77,12 @@
 .lg-back-circle, .lg-back-circle.lg2-ann-back, .lg-back-circle.lgp-hback, .lg-back-circle.lgs-back {
   box-sizing:border-box; width:44px; height:44px; min-width:44px; flex:none; padding:1px; margin:0;
   border:1.1px solid var(--s-stroke, #C2DCF8); border-radius:50%;
-  display:grid; place-items:center; cursor:pointer; color:#fff;
+  display:grid; place-items:center; cursor:pointer; color:var(--s-ink, #fff);
   background:var(--s-tile1, #B23476); box-shadow:inset 0 0 0 1px var(--s-bg, #4C2545);
   font:700 12px/1.2 "Lato S360",sans-serif; -webkit-tap-highlight-color:transparent;
   transition:transform .12s ease;
 }
-.lg2-app:not(.lgs-root) .lg-back-circle { background:var(--glass, rgba(20,24,30,.55)); }
+.lg2-app:not(.lgs-root) .lg-back-circle { background:var(--glass, rgba(20,24,30,.55)); color:#fff; }
 .lg-back-circle svg { display:block; flex:none; width:26px; height:26px; fill:currentColor; stroke:none; }
 .lg-back-circle:active { transform:scale(.94); }
 .lg-back-circle:focus-visible { outline:2px solid var(--s-stroke, #C2DCF8); outline-offset:3px; }
@@ -95,13 +97,13 @@
 .lgs-land { position: absolute; left:20px; right:20px; bottom:16px; bottom:calc(16px + var(--lg2-safe-bottom, 0px)); z-index:3; pointer-events:none; }
 .lgs-land > :not(button) { text-shadow:0 1px 3px #0009; }
 .lgs-land > button { pointer-events:auto; }
-.lgs-small { color: var(--s-txt); opacity: .85; font-size: 12px; letter-spacing: .16em; font-weight: 900; }
+.lgs-small { color: var(--s-txt); opacity: var(--s-small-opacity, .85); font-size: 12px; letter-spacing: .16em; font-weight: 900; }
 .lgs-land h1 { color: var(--s-txt); font-size: 30px; font-weight: 900; margin: 3px 0 2px; line-height: 1.2; }
 .lgs-adr { color: var(--s-adr); font-size: 13.5px; margin-bottom: 14px; }
 .lgs-open {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
   background: linear-gradient(180deg,var(--s-tile1) 0%,var(--s-tile15) 52%,var(--s-tile2) 100%); background-clip: padding-box;
-  color: var(--s-txt); border-radius: 18px; padding: 16px; font: inherit; font-size: 18px; font-weight: 900;
+  color: var(--s-ink, var(--s-txt)); border-radius: 18px; padding: 16px; font: inherit; font-size: 18px; font-weight: 900;
   letter-spacing: .03em; text-transform: uppercase;
   border: 2.3px solid var(--s-stroke); box-shadow: inset 0 0 0 1px var(--s-bg), 0 5px 16px rgba(0,0,0,.35);
 }
@@ -143,11 +145,11 @@
 }
 .lgs-home-circle .lgs-flag-img { border-radius:50%; object-fit:cover; object-position:center; }
 .lg2-app .lgs-return360 {
-  color:#fff; font:700 12px/1.2 "Lato S360",sans-serif;
+  color:var(--s-ink, #fff); font:700 12px/1.2 "Lato S360",sans-serif;
   background:var(--s-tile1); box-shadow:inset 0 0 0 1px var(--s-bg);
 }
 .lg2-app .lgs-home-controls--trend .lgs-return360 {
-  background:var(--glass); box-shadow:inset 0 0 0 1px var(--s-bg);
+  background:var(--glass); box-shadow:inset 0 0 0 1px var(--s-bg); color:#fff;
 }
 .lgs-home-circle:focus-visible { outline:2px solid var(--s-stroke); outline-offset:3px; }
 .lgs-walk-reset {
@@ -175,8 +177,8 @@
   -webkit-tap-highlight-color: transparent; transition: transform .12s ease;
 }
 .lgs-tile:active { transform: scale(.96); }
-.lgs-tile svg { width: 58px; height: 58px; fill: #FFFFFF; stroke: none; flex: 0 1 auto; min-height: 0; margin-top: 1px; }
-.lgs-tile svg.ln { fill: none; stroke: #FFFFFF; stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
+.lgs-tile svg { width: 58px; height: 58px; color: var(--s-ink, var(--s-stroke)); fill: var(--s-ink, #FFFFFF); stroke: none; flex: 0 1 auto; min-height: 0; margin-top: 1px; }
+.lgs-tile svg.ln { fill: none; stroke: var(--s-ink, #FFFFFF); stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
 .lgs-tile b {
   color: var(--s-stroke); font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; text-transform: uppercase;
   letter-spacing: .015em; margin-top: auto; max-width: 100%; flex: none;

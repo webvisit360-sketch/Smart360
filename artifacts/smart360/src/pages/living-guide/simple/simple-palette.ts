@@ -90,41 +90,74 @@ export function deltaEOK(x: string, y: string): number {
   return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
 }
 
-/**
- * Approved OKLCH derivation v2 (attached_assets/barvna-izpeljava_1792834926623.html), 1:1.
- * tile1 keeps the chosen lightness (clamped 0.32..0.75), darkened by 0.005
- * until stroke reaches 4.6:1 on tile15 and tile2; all other tokens are relative
- * to it. The sheet defines no `adr` token: adr aliases txt (documented decision).
- */
-export function deriveSimplePalette(baseHex: string): SimplePaletteTokens {
-  const [Lb, Cb, Hb] = srgbToOklch(baseHex.trim().toUpperCase());
-  const nearGrey = Cb < 0.02;
-  const H = Cb < 0.005 ? COOL : Hb;
-  const C = nearGrey ? 0.045 : Math.min(0.165, Math.max(0.09, Cb));
-  const strokeL = 0.9, strokeC = Math.min(0.03, C * 0.5);
-  const build = (L1: number) => ({
-    tile1: oklchToHex(L1, C, H),
-    tile15: oklchToHex(L1 * 0.84, C * 0.82, toward(H, COOL, 4)),
-    tile2: oklchToHex(L1 * 0.58, C * 0.62, toward(H, COOL, 12)),
-    bg: oklchToHex(L1 * 0.65, Math.min(C * 0.42, 0.075), toward(H, COOL, 18)),
-  });
-  const stroke0 = oklchToHex(strokeL, strokeC, H);
-  // Step 5: computed upper bound of L1.
-  let L1 = Math.min(0.75, Math.max(0.32, Lb));
-  let t = build(L1);
-  while ((contrastRatio(stroke0, t.tile15) < 4.6 || contrastRatio(stroke0, t.tile2) < 4.6) && L1 > 0.32) {
-    L1 -= 0.005; t = build(L1);
+export type InkMode = "pale" | "dark";
+export type SimplePaletteDerivation = { tokens: SimplePaletteTokens; tileInk: InkMode; outsideInk: InkMode; deltaE: number };
+
+/** Ink search: walk L from `from` toward `to` by `step` until `ok(hex)`; null if never. */
+function search(from: number, to: number, step: number, c: number, h: number, ok: (hex: string) => boolean): string | null {
+  const dir = to >= from ? 1 : -1;
+  for (let i = 0; ; i++) {
+    const l = +(from + dir * step * i).toFixed(4);
+    if (dir > 0 ? l > to + 1e-9 : l < to - 1e-9) return null;
+    const hex = oklchToHex(l, c, h);
+    if (ok(hex)) return hex;
   }
-  // Step 7: raise L by 0.01 until every pair on the rounded hex reaches 4.5:1.
-  const lift = (L: number, c: number, h: number, against: string[]) => {
-    let l = L, hex = oklchToHex(l, c, h);
-    while (l < 1 && against.some((o) => contrastRatio(hex, o) < AA)) { l = Math.min(1, +(l + 0.01).toFixed(4)); hex = oklchToHex(l, c, h); }
-    return hex;
+}
+
+/**
+ * Approved OKLCH derivation v3 (attached_assets/barvna-izpeljava_1_1792836375569.html), 1:1.
+ * Step 3: tile1 IS the picked colour (deltaE 0). Steps 4-6: gradient/bg are relative
+ * to L1 (with light-pick floors in dark-ink mode); ink is pale or dark per surface:
+ * tile ink (stroke) needs >=4.5 on tile15+tile2 and >=3 on tile1; outside ink
+ * (txt+tint) needs >=4.5 on bg. The sheet defines no `adr`: adr aliases txt.
+ */
+export function deriveSimplePaletteV3(baseHex: string): SimplePaletteDerivation {
+  const base = baseHex.trim().toUpperCase();
+  const [Lb, Cb, Hb] = srgbToOklch(base);                       // step 1
+  const nearGrey = Cb < 0.02;                                    // step 2
+  const H = Cb < 0.005 ? COOL : Hb;
+  const Cd = nearGrey ? 0.045 : Math.min(0.165, Math.max(0.09, Cb));
+  const tile1 = base, L1 = Lb;                                   // step 3
+  const steps = (mode: InkMode) => {                             // step 4
+    let d15 = Math.min(0.085, 0.16 * L1), d2 = Math.min(0.225, 0.42 * L1), dbg = Math.min(0.19, 0.35 * L1);
+    if (mode === "dark") {
+      d2 = Math.min(d2, L1 - Math.min(L1 - 0.02, 0.6));
+      d15 = Math.min(d15, L1 - Math.min(L1 - 0.01, 0.63));
+      dbg = Math.min(dbg, L1 - Math.min(L1 - 0.02, 0.58));
+    }
+    return {
+      tile15: oklchToHex(L1 - d15, Cd * 0.82, toward(H, COOL, 4)),
+      tile2: oklchToHex(L1 - d2, Cd * 0.62, toward(H, COOL, 12)),
+      bg: oklchToHex(L1 - dbg, Math.min(Cd * 0.42, 0.075), toward(H, COOL, 18)),
+    };
   };
-  const stroke = lift(strokeL, strokeC, H, [t.tile15, t.tile2]);
-  const txt = lift(0.94, Math.min(0.022, C * 0.4), H, [t.bg]);
-  const tint = lift(0.79, Math.min(0.055, C * 0.45), toward(H, COOL, 30), [t.bg]);
-  return { bg: t.bg, tile1: t.tile1, tile15: t.tile15, tile2: t.tile2, stroke, txt, tint, adr: txt };
+  // step 5: tile ink
+  const inkC = (m: number) => Math.min(m, Cd * 0.5);
+  const tileOk = (t: { tile15: string; tile2: string }) => (hex: string) =>
+    contrastRatio(hex, t.tile15) >= AA && contrastRatio(hex, t.tile2) >= AA && contrastRatio(hex, tile1) >= 3;
+  let tileInk: InkMode = "pale";
+  let t = steps("pale");
+  let stroke = search(0.9, 0.985, 0.005, inkC(0.03), H, tileOk(t));
+  if (!stroke) {
+    tileInk = "dark"; t = steps("dark");
+    stroke = search(0.25, 0.1, 0.005, inkC(0.045), H, tileOk(t)) ?? oklchToHex(0.1, inkC(0.045), H);
+  }
+  // step 6: outside ink against bg, pale pair first, else dark pair
+  const onBg = (hex: string) => contrastRatio(hex, t.bg) >= AA;
+  const txtC = Math.min(0.022, Cd * 0.4), tintC = Math.min(0.055, Cd * 0.45), tintH = toward(H, COOL, 30);
+  let outsideInk: InkMode = "pale";
+  let txt = search(0.94, 1, 0.01, txtC, H, onBg), tint = search(0.79, 1, 0.01, tintC, tintH, onBg);
+  if (!txt || !tint) {
+    outsideInk = "dark";
+    txt = search(0.22, 0, 0.005, txtC, H, onBg) ?? oklchToHex(0, txtC, H);
+    tint = search(0.35, 0, 0.01, tintC, tintH, onBg) ?? oklchToHex(0, tintC, tintH);
+  }
+  const tokens = { bg: t.bg, tile1, tile15: t.tile15, tile2: t.tile2, stroke, txt, tint, adr: txt };
+  return { tokens, tileInk, outsideInk, deltaE: deltaEOK(base, tile1) };
+}
+
+export function deriveSimplePalette(baseHex: string): SimplePaletteTokens {
+  return deriveSimplePaletteV3(baseHex).tokens;
 }
 
 export function resolveGuestDesign(value: unknown): GuestDesign {
@@ -138,7 +171,12 @@ export function resolveSimplePalette(palette: unknown, baseColor: unknown): Simp
 }
 
 export function simplePaletteStyle(tokens: SimplePaletteTokens): Record<string, string> {
+  // Presets keep their hardcoded white icon/arrow look; only custom palettes get
+  // the v3 adaptive tile ink (--s-ink = stroke) for icons, arrows and tile CTAs.
+  const custom = tokens !== BORDO && tokens !== MODRA;
   return {
+    // Custom also renders .lgs-small at full opacity: dark outside ink at .85 drops below 4.5.
+    ...(custom ? { "--s-ink": tokens.stroke, "--s-small-opacity": "1" } : {}),
     "--s-bg": tokens.bg, "--s-tile1": tokens.tile1, "--s-tile15": tokens.tile15,
     "--s-tile2": tokens.tile2, "--s-stroke": tokens.stroke, "--s-txt": tokens.txt,
     "--s-tint": tokens.tint, "--s-adr": tokens.adr,

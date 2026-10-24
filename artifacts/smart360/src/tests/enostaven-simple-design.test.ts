@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  BORDO, MODRA, contrastRatio, deltaEOK, deriveSimplePalette, resolveGuestDesign, resolveSimplePalette,
+  BORDO, MODRA, contrastRatio, deltaEOK, deriveSimplePalette, deriveSimplePaletteV3, resolveGuestDesign, resolveSimplePalette, simplePaletteStyle,
 } from "../pages/living-guide/simple/simple-palette";
 import { buildSimpleSections, simpleHeroUrl, simpleLabelSize } from "../pages/living-guide/simple/simple-tiles";
 import { SIMPLE_COPY } from "../pages/living-guide/simple/simple-copy";
@@ -23,67 +23,68 @@ test("NULL design = trend, NULL palette = bordo, invalid custom falls back", () 
   assert.equal(resolveSimplePalette("custom", "nope"), BORDO);
 });
 
-test("custom derivation is deterministic (OKLCH, tile1 derived, adr aliases txt)", () => {
+test("custom derivation is deterministic (OKLCH, adr aliases txt)", () => {
   const a = deriveSimplePalette("#2E8B6A");
   assert.deepEqual(a, deriveSimplePalette("#2e8b6a"));
   assert.equal(a.adr, a.txt);
   for (const v of Object.values(a)) assert.match(v, /^#[0-9A-F]{6}$/);
 });
 
-// Golden v2: all 14 samples of the approved sheet (attached_assets/barvna-izpeljava_1792834926623.html).
-const SHEET: [string, string, number][] = [
-  ["#48A1D4", "#2584B5 #25668F #16395A #30435B #CCE2F0 #DEEEF8 #ABBBDC", 0.094],
-  ["#4C7060", "#28775A #1B5D49 #00362D #1E3D38 #CDE5D9 #DEF0E7 #9DC3C3", 0.041],
-  ["#407075", "#02757E #015B65 #00333E #1F3B44 #C8E4E7 #DBF0F2 #A2BFD1", 0.034],
-  ["#C03028", "#B93A31 #912D2D #59111E #582931 #F1D7D3 #FAE6E3 #D9ACBA", 0.017],
-  ["#E07B20", "#BD6202 #994902 #602403 #623729 #EED9CB #F7E8DD #DCAEA8", 0.091],
-  ["#93B021", "#6D8401 #4F6A02 #214001 #2D4926 #DBE1CC #E9EEDE #A2C5A9", 0.138],
-  ["#2E8B57", "#2E8B57 #1C6D48 #00402E #20483D #CFE4D5 #E0F0E5 #94C6BF", 0.000],
-  ["#1897B0", "#0389A0 #056A81 #013D51 #284656 #C9E4EB #DCEFF5 #A2BED8", 0.045],
-  ["#2563EB", "#3A6ACF #3252A2 #182D65 #2A3A60 #D4DEF3 #E3ECFA #A9BBDF", 0.050],
-  ["#7C3AED", "#7556C4 #56459C #2A2763 #31375F #DEDBF1 #EBE9F9 #A9BBDF", 0.082],
-  ["#E85BA8", "#C54F8F #983F75 #5A204D #5A3756 #EFD6E1 #F8E6ED #CBB0D1", 0.078],
-  ["#F6DFCC", "#A47142 #825736 #502F1D #553D33 #EDDACA #F7E8DD #D3B2AB", 0.331],
-  ["#101B2E", "#163160 #14244A #07112B #0F1729 #D3DFF3 #E3ECFA #AEBBD5", 0.110],
-  ["#8B8E93", "#6D7D97 #576177 #313847 #3E434D #D6DFED #E4ECF8 #B4BBC8", 0.070],
-];
+// Golden v3: all 14 samples + the AA table of the approved sheet
+// (attached_assets/barvna-izpeljava_1_1792836375569.html), parsed from the sheet itself.
+const SHEET_HTML = readFileSync(new URL("../../../../attached_assets/barvna-izpeljava_1_1792836375569.html", import.meta.url), "utf8");
+const ROWS = [...SHEET_HTML.matchAll(/<tr><td>[^<]*\((#[0-9A-F]{6})\)<\/td>((?:<td>[^<]*<\/td>)+)<\/tr>/g)].map((m) => ({
+  base: m[1], cells: [...m[2].matchAll(/<td>([^<]*)<\/td>/g)].map((x) => x[1]),
+  toks: [...SHEET_HTML.match(new RegExp(`<span><i>tile1</i> ${m[1]}</span>.*?</div>`))![0].matchAll(/<i>(\w+)<\/i> (#\w+)/g)].map((x) => x[2]).join(" "),
+}));
 const KEYS = ["tile1", "tile15", "tile2", "bg", "stroke", "txt", "tint"] as const;
-test("golden: all seven tokens match the approved sheet", () => {
-  for (const [base, want, de] of SHEET) {
-    const p = deriveSimplePalette(base);
-    assert.equal(KEYS.map((k) => p[k]).join(" "), want, base);
-    assert.equal(deltaEOK(base, p.tile1).toFixed(3), de.toFixed(3), base + " deltaE");
+test("golden v3: 14 samples, seven tokens and the full deltaE/ink/AA table match the sheet", () => {
+  assert.equal(ROWS.length, 14);
+  for (const r of ROWS) {
+    const d = deriveSimplePaletteV3(r.base), p = d.tokens;
+    assert.equal(KEYS.map((k) => p[k]).join(" "), r.toks, r.base);
+    const got = [d.deltaE.toFixed(3), d.tileInk, d.outsideInk,
+      ...[[p.stroke, p.tile15], [p.stroke, p.tile2], [p.stroke, p.tile1], [p.txt, p.bg], [p.tint, p.bg]].map(([f, g]) => contrastRatio(f, g).toFixed(2))];
+    assert.deepEqual(got, r.cells, r.base + " table");
   }
 });
 
-test("v2: tile1 follows the chosen lightness (owner samples) and formula reproduces sheet presets", () => {
-  assert.equal(deriveSimplePalette("#48A1D4").tile1, "#2584B5");
-  assert.equal(deriveSimplePalette("#4C7060").tile1, "#28775A");
-  assert.equal(deriveSimplePalette("#2E8B57").tile1, "#2E8B57");
-  assert.deepEqual(KEYS.map((k) => deriveSimplePalette("#344FB2")[k]).join(" "), "#344FB2 #223F8B #0E2156 #1E2D50 #D5DEF3 #E5EBFB #A9BBDF");
-  assert.deepEqual(KEYS.map((k) => deriveSimplePalette("#B23476")[k]).join(" "), "#AF3976 #872D61 #4F153F #4F2B48 #EFD6E0 #F8E5EC #CCAFD0");
-  // lighter choice -> lighter tile (monotone relative derivation)
-  assert.ok(contrastRatio(deriveSimplePalette("#101B2E").tile1, "#000000") < contrastRatio(deriveSimplePalette("#2E8B57").tile1, "#000000"));
+test("v3: tile1 is exactly the pick; formula reproduces the sheet's preset cards; presets untouched", () => {
+  for (const b of ["#48A1D4", "#4C7060", "#F6DFCC", "#101B2E", "#FFFF00", "#000000"]) {
+    assert.equal(deriveSimplePalette(b).tile1, b); assert.equal(deltaEOK(b, deriveSimplePalette(b).tile1), 0);
+  }
+  assert.equal(KEYS.map((k) => deriveSimplePalette("#344FB2")[k]).join(" "), "#344FB2 #223F8B #0E2156 #1E2D50 #D5DEF3 #E5EBFB #A9BBDF");
+  assert.equal(KEYS.map((k) => deriveSimplePalette("#B23476")[k]).join(" "), "#B23476 #872D61 #4F153F #4F2B48 #EFD6E0 #F8E5EC #CCAFD0");
+  assert.equal(simplePaletteStyle(BORDO)["--s-ink"], undefined);
+  assert.equal(simplePaletteStyle(MODRA)["--s-ink"], undefined);
+  assert.equal(simplePaletteStyle(deriveSimplePalette("#E07B20"))["--s-ink"], "#230D01");
 });
 
 const blend = (fg: string, bg: string, a: number) => "#" + [1, 3, 5].map((i) =>
   Math.round(parseInt(fg.slice(i, i + 2), 16) * a + parseInt(bg.slice(i, i + 2), 16) * (1 - a)).toString(16).padStart(2, "0")).join("").toUpperCase();
 
-test("AA >= 4.5 for formula pairs and rendered opacity (all 14 sheet samples + edges)", () => {
-  for (const base of [...SHEET.map((x) => x[0]), "#000000", "#FFFFFF", "#808080", "#FFFF00", "#00FF00"]) {
+test("v3 AA: labels >=4.5 on tile15/tile2, icons >=3 on tile1, outside >=4.5 (custom opacity 1) — samples + edges", () => {
+  for (const base of [...ROWS.map((x) => x.base), "#000000", "#FFFFFF", "#808080", "#FFFF00", "#00FF00", "#00FFFF", "#FF00FF"]) {
     const p = deriveSimplePalette(base);
-    for (const [fg, bg] of [[p.stroke, p.tile15], [p.stroke, p.tile2], [p.txt, p.bg], [p.tint, p.bg], [p.adr, p.bg],
-      [blend(p.txt, p.bg, 0.85), p.bg]]) assert.ok(contrastRatio(fg, bg) >= 4.5, `${base} ${fg}/${bg}`);
+    for (const [fg, bg] of [[p.stroke, p.tile15], [p.stroke, p.tile2], [p.txt, p.bg], [p.tint, p.bg], [p.adr, p.bg]])
+      assert.ok(contrastRatio(fg, bg) >= 4.5, `${base} ${fg}/${bg}`);
+    assert.ok(contrastRatio(p.stroke, p.tile1) >= 3, `${base} icon`);
+    // custom renders .lgs-small at opacity 1 (dark ink at .85 would fail, e.g. #48A1D4)
+    assert.equal(simplePaletteStyle(p)["--s-small-opacity"], "1");
+  }
+  assert.ok(contrastRatio(blend("#051017", "#687C97", 0.85), "#687C97") < 4.5, "why custom opacity is 1");
+  for (const p of [BORDO, MODRA]) {
+    assert.equal(simplePaletteStyle(p)["--s-small-opacity"], undefined);
+    assert.ok(contrastRatio(blend(p.txt, p.bg, 0.85), p.bg) >= 4.5);
   }
 });
 
-test("near-grey and pure grey handling", () => {
-  // v2: pure greys share the cool hue + 0.045 chroma (pale tokens identical);
-  // lightness follows the choice, floored at L 0.32 (black) and AA-capped (white).
-  const k = deriveSimplePalette("#000000"), w = deriveSimplePalette("#FFFFFF"), g = deriveSimplePalette("#808080");
-  for (const t of ["stroke", "txt", "tint"] as const) { assert.equal(k[t], w[t]); assert.equal(g[t], w[t]); }
-  assert.equal(k.tile1, "#28324A");
-  assert.ok(contrastRatio(w.tile1, k.tile1) > 2, "white choice yields a lighter tile than black");
+test("custom-only adaptive ink in CSS; preset fallbacks stay white", () => {
+  const css = readFileSync(new URL("../pages/living-guide/simple/living-guide-simple.css", import.meta.url), "utf8");
+  assert.match(css, /\.lgs-tile svg \{[^}]*color: var\(--s-ink, var\(--s-stroke\)\); fill: var\(--s-ink, #FFFFFF\)/);
+  assert.match(css, /\.lgs-tile svg\.ln \{[^}]*stroke: var\(--s-ink, #FFFFFF\)/);
+  assert.match(css, /\.lgs-home-controls--trend \.lgs-return360 \{[^}]*color:#fff/);
+  assert.match(css, /\.lg2-app:not\(\.lgs-root\) \.lg-back-circle \{[^}]*color:#fff/);
 });
 
 const rt = { hasWeather: true, hasContact: true, installAvailable: true, hasOrderable: true, recordingEnabled: true, mapHref: "https://maps" };

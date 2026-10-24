@@ -18,11 +18,19 @@ requirements take precedence where the reference itself differs: square tiles,
 19% radius and white pictograms. Do not claim
 pixel identity for the full reference image when these differences exist.
 
-The owner's revised barvna-izpeljava binding sheet supersedes both the original HSL relationships and fixed-lightness OKLCH derivation for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; tile-top follows picked lightness within the sheet's bounds and computed contrast ceiling, with other dark tokens derived relatively. The sheet omits the address token, so custom addresses use the text token.
+The owner's latest barvna-izpeljava binding sheet supersedes both HSL and contrast-darkened OKLCH derivation for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; tile-top must be the exact picked sRGB colour (zero ΔE). Contrast comes from adaptive pale/dark ink and relative gradient stops with light-pick floors, not changing the picked colour. Outside text chooses ink independently. The sheet omits the address token, so custom addresses use the text token.
 
-**Why:** The owner rejected the fixed-lightness result because a picked sky blue became too dark; the revised binding formula preserves lightness as far as contrast permits while keeping presets and stored colours untouched.
+**Why:** The owner requires literal picked-colour fidelity; the adaptive-ink sheet replaces the earlier compromise that darkened the picked colour for contrast.
 
-**How to apply:** Validate all seven specified tokens against all fourteen revised sheet samples and measure actual rendered contrast; do not retune presets to imitate formula outputs.
+**How to apply:** Validate all seven specified tokens against all fourteen latest sheet samples and its AA table. Measure actual rendered ink, including SVG and opacity overrides, not just token values; preserve preset appearance.
+
+The adaptive-ink sheet omits outside-text search step sizes. Resolve that omission
+against its binding output table: dark main text uses 0.005 lightness steps;
+pale outside text and dark secondary text use 0.01.
+**Why:** Those deterministic steps reproduce every supplied token and AA table row;
+using 0.01 for dark main text does not.
+**How to apply:** Retain this interpretation unless the designer supplies an explicit
+replacement, and disclose the underspecified pseudocode rather than claiming it names these steps.
 
 Landing corrections apply to BOTH Trend and Enostaven: bottom-edge open button
 (16px extra clearance above the device safe area), host block immediately above, untinted photo/walk,
