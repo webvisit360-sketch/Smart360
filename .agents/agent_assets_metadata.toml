@@ -3172,3 +3172,59 @@ mtime_ms = 1792836680774
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/1bd7d40d-a703-4c96-9dbd-cd3364cfc748/620da7b2-faef-4f97-8176-edd78ce233a5"
 storage_version_token = "1792836758885340"
 content_type = "text/html"
+
+[[outputs]]
+id = "j-0jqWgEu4mfng-DFcq-G"
+uri = "file://artifacts/smart360/reports/oklch-palette/flat-buttons/report.html"
+type = "html"
+title = "Končno poročilo — Enostaven brez senc"
+description = "Produkcijsko izhodišče, razvojni posnetki pred/po, meritve obeh predlog, oba načina črnila in pojasnila za podpikselno zaokroževanje ter večvrstične napise."
+logical_id = "eb70e0ab-42cf-42b1-b8fb-bdf83af80098"
+content_hash = "sha256:c264d5091c5b74fed312ed51b2ff139da12947d952703f5b7600b786619b7c24"
+size = 5204257
+mtime_ms = 1792839090925
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/eb70e0ab-42cf-42b1-b8fb-bdf83af80098/cfaa60ec-cc1f-4df5-ab40-9abc827ba270"
+storage_version_token = "1792839096787729"
+content_type = "text/html"
+
+[[outputs]]
+id = "xttssy3m40NK78UT1uI-g"
+uri = "file://artifacts/smart360/reports/oklch-palette/flat-buttons/shadow-closeup-dark.png"
+type = "image"
+title = "Temno črnilo — odstranitev senc"
+description = "Povečava pred in po, z vidnim prostorom okoli ploščice."
+logical_id = "b4430f7f-9484-40ca-a055-a5c251370360"
+content_hash = "sha256:076e6101d22dece0e263f164d4216c6788a5d63b354a0d5d2efd2e213ff24b3e"
+size = 28305
+mtime_ms = 1792837576654
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b4430f7f-9484-40ca-a055-a5c251370360/fe7c7449-7780-4d0d-aa31-74e1059c1881"
+storage_version_token = "1792839010802084"
+content_type = "image/png"
+
+[[outputs]]
+id = "QY2vN5scuPUDaYfntJfok"
+uri = "file://artifacts/smart360/reports/oklch-palette/flat-buttons/shadow-closeup-pale.png"
+type = "image"
+title = "Svetlo črnilo — odstranitev senc"
+description = "Povečava pred in po, z vidnim prostorom okoli ploščice."
+logical_id = "8fbb82ba-2a43-4c84-8900-0df4072f7252"
+content_hash = "sha256:eeb6089481bb1ee89df10af34427cc78cca2220c8ca057e8343b348420418352"
+size = 26272
+mtime_ms = 1792837576410
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/8fbb82ba-2a43-4c84-8900-0df4072f7252/9bde64cb-c851-44fb-8544-c21b780ea369"
+storage_version_token = "1792839011411134"
+content_type = "image/png"
+
+[[outputs]]
+id = "DYQRUkyRb6tYXyv5t3G8N"
+uri = "file://artifacts/smart360/reports/oklch-palette/master-correction/index.html"
+type = "html"
+title = "Popravljeni pregled — zavezujoče izvirne predloge"
+description = "Meritve predlog pri širini396px, preračun na390px in dejanski prikaz aplikacije; odstranjene samo zunanje sence, notranji odmik ohranjen, dokaz nespremenjenih predlog."
+logical_id = "77610986-f308-425f-8262-1154cd6479a0"
+content_hash = "sha256:3d0beb41169c0ebd95f3e3ecfc16879f03b750936cec9c2b8ef710af3be03cce"
+size = 1606040
+mtime_ms = 1792839359892
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/77610986-f308-425f-8262-1154cd6479a0/63e0d857-3aac-4031-adfa-2d36aa61b07e"
+storage_version_token = "1792839568150366"
+content_type = "text/html"

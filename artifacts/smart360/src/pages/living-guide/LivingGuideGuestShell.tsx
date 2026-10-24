@@ -1,4 +1,5 @@
 import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
+import { startOuterShadowStrip } from "./simple/strip-outer-shadows";
 import {
   type CSSProperties,
   type FormEvent,
@@ -1971,6 +1972,15 @@ export default function LivingGuideGuestShell({
   // Enostaven: a presentation layer over the same data/routes. NULL/"trend"
   // keeps every Trend code path below byte-identical.
   const isSimple = resolveGuestDesign(tenant?.guestDesign) === "simple";
+  // Portals (SOS, fullscreen tour) render under <body>; mark it so Enostaven-only
+  // button rules also reach them; the runtime strip removes only OUTER drop
+  // shadows (inset rings/selected states kept). Never set for Trend.
+  useEffect(() => {
+    if (!isSimple) return;
+    document.body.dataset.guestDesign = "simple";
+    const stop = startOuterShadowStrip(document.body);
+    return () => { stop(); delete document.body.dataset.guestDesign; };
+  }, [isSimple]);
   const simpleStyle = isSimple
     ? (simplePaletteStyle(resolveSimplePalette(tenant?.simplePalette, tenant?.simpleBaseColor)) as CSSProperties)
     : undefined;

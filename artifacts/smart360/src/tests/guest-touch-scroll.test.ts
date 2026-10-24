@@ -53,6 +53,27 @@ test("guest touch-scroll smoke — every main guest surface", { timeout: 600_000
       await page.waitForTimeout(500);
     };
     const scrolled = async (selector:string) => {
+      if (await page.locator(".lgs-root").count()) {
+        // Owner deviation: only OUTER drop-shadow layers are removed; inset layers
+        // (palette gap ring, selected states) must survive.
+        await page.waitForTimeout(50);
+        const {shadows, insets} = await page.evaluate(() => {
+          const outer: string[] = [], inset: string[] = [];
+          for (const e of document.querySelectorAll('button,[role="button"],a[class*="btn"],a[class*="cta"],a.lgs-tile')) {
+            if (!(e.getBoundingClientRect().width > 0)) continue;
+            for (const p of [null, "::before", "::after"]) {
+              const s = getComputedStyle(e, p);
+              if (p && (s.content === "none" || s.content === "")) continue;
+              const layers = s.boxShadow === "none" ? [] : s.boxShadow.split(/,(?![^(]*\))/);
+              if (layers.some(l => !/\binset\b/.test(l))) outer.push(`${e.className} ${p ?? ""}: ${s.boxShadow}`);
+              if (!p && layers.some(l => /\binset\b/.test(l))) inset.push(String(e.className));
+            }
+          }
+          return {shadows: outer, insets: inset};
+        });
+        if (await page.locator(".lgs-tile").count()) assert.ok(insets.some(c => c.includes("lgs-tile")), "tile inset gap ring must be kept");
+        assert.deepEqual(shadows, [], "Enostaven controls must have no outer drop shadow on any guest surface");
+      }
       const el = page.locator(selector).last();
       await el.waitFor();
       const before = await el.evaluate(e => ({top:e.scrollTop, height:e.clientHeight, total:e.scrollHeight}));

@@ -6,9 +6,18 @@ const css = readFileSync(new URL("../pages/living-guide/simple/living-guide-simp
 const contract = css.slice(css.indexOf("/* Enostaven surface contract:"));
 
 test("Enostaven color contract is scoped away from Trend", () => {
-  // Every selector in this isolated contract must require the simple root.
+  // Split only selector-list commas, not commas inside :is()/SVG data URLs.
+  // Body-scoped Enostaven rules also cover guest portals outside the root.
   for (const match of contract.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{/g)) {
-    for (const selector of match[1].split(",")) assert.ok(selector.includes(".lgs-root"), selector);
+    let depth = 0, start = 0;
+    const selectors: string[] = [];
+    for (let i = 0; i < match[1].length; i++) {
+      if (match[1][i] === "(") depth++;
+      if (match[1][i] === ")") depth--;
+      if (match[1][i] === "," && depth === 0) { selectors.push(match[1].slice(start, i)); start = i + 1; }
+    }
+    selectors.push(match[1].slice(start));
+    for (const selector of selectors) assert.ok(selector.includes(".lgs-root") || selector.trim().startsWith('body[data-guest-design="simple"] '), selector);
   }
   assert.match(contract, /--s-detail-accent:\s*color-mix\(in srgb, var\(--s-tile1\) 45%, #000\)/);
   assert.doesNotMatch(contract, /--s-(?:tile1|tile15|tile2|bg):|--lgw-bg:|--daypart-/);

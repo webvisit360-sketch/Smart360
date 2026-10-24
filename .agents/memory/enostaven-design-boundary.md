@@ -90,3 +90,10 @@ and landing actions retain their palette. Trend's existing appearance is exclude
 Enostaven experience while explicitly prohibiting changes to Trend.
 **How to apply:** Scope overrides to Enostaven, test morning/night and all palettes,
 and do not claim Trend's existing night reading sheets are white.
+
+Owner correction (master geometry): the two HTML sheets are READ-ONLY masters.
+Their fixed px anatomy, scaled by rendered phone width / 396, overrides the earlier
+proportional (SVG-mask %) ring. The only new deviation is removing OUTER drop shadows;
+inset shadows stay. The flat all-shadow suppression is withdrawn. Policy text lives in replit.md.
+**Why:** The owner rejected the proportional reinterpretation and blanket shadow removal.
+**How to apply:** Hash the masters before/after; measure master vs scaled target vs app.

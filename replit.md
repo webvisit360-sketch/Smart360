@@ -28,6 +28,8 @@ Večnajemniška (multi-tenant) PWA z informacijami za goste turističnih nastani
 
 ## Ključne odločitve
 
+- **Enostaven — predlogi in sence:** HTML-predlogi `attached_assets/0_enostavna-koncni_*.html` in `attached_assets/enostavna-melipu_*.html` sta master, SAMO ZA BRANJE (nikoli ju ne spreminjaj). Njune fiksne px mere (obroba 2.3px, notranja reža 1px kot inset senca, radij 19px, ikona 58px, padding 10/5/6, razmiki 30/19, robovi 26) se skalirajo z dejansko širino telefona (396px → širina aplikacije) in imajo prednost pred prejšnjimi odstotki. Edino odobreno novo odstopanje: odstranjena je samo ZUNANJA (drop) senca gumbov; inset sence (reža, izbrana stanja) ostanejo. Ohranjeni prej odobreni popravki: kvadratne ploščice, prilagodljivo črnilo v3, 44px krogi. Trend ostane nespremenjen.
+
 - **Oznake funkcij:** nikoli ne dodajaj trditev (npr. »brezplačno«), ki jih specifikacija ne vsebuje. Oznake in opisi morajo natančno opisovati dejansko funkcijo.
 - **Admin navigacija:** nedokončane admin strani nikoli ne pošiljaj kot dosegljive navigacijske izbire. Element menija se prikaže šele, ko vodi na delujoč urednik oziroma dejansko funkcionalno površino; »V pripravi« ni funkcionalna stran.
 
