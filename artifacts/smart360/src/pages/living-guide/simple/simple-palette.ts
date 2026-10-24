@@ -255,7 +255,8 @@ export function simplePaletteStyle(tokens: SimplePaletteTokens): Record<string, 
   const custom = tokens !== BORDO && tokens !== MODRA;
   return {
     // Custom also renders .lgs-small at full opacity: dark outside ink at .85 drops below 4.5.
-    ...(custom ? { "--s-ink": tokens.stroke, "--s-small-opacity": "1" } : {}),
+    // Owner override: the template pale outline never follows adaptive ink.
+    ...(custom ? { "--s-ink": tokens.stroke, "--s-outline": BORDO.stroke, "--s-small-opacity": "1" } : {}),
     // v4 B: tile glow stop + page depth; presets never emit these (CSS falls back to tile1 / bg).
     ...(custom && tokens.glow ? {
       "--s-glow": tokens.glow,

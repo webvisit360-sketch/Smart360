@@ -2,6 +2,10 @@
 name: Enostaven presentation boundary
 description: Binding reference priority, dynamic content and preserving Trend.
 ---
+Custom adaptive ink must not darken button outlines: keep the master's pale outline treatment and stand-off gap for tiles, circles and the landing action; only labels/icons adapt. Preserve preset outlines unchanged.
+**Why:** The owner explicitly overrode the binding colour sheet's ink-following border rule.
+**How to apply:** Separate border styling from the derived ink token; policy is recorded in replit.md.
+
 Enostaven is a presentation layer over the same published guide, not a separate
 content tree. Generate tiles from actual published categories and runtime
 features; never copy the reference tenant's category list into production.

@@ -6,6 +6,8 @@ Trak uporablja iste barvne postaje kot izvoz ture: oranžna→modra→zelena→r
 
 # Smart360
 
+Enostaven — lastnikova izjema za obrobe: obrobe ploščic, 44px krogov in »Odpri vodnik« vedno ohranijo svetlo obrobo iz predloge z notranjo režo; prilagodljivo črnilo spreminja samo napise in ikone. Poljubne barve uporabljajo svetlo obrobo #C2DCF8; ročno uglašeni Bordo/Modra ostaneta nespremenjeni. Predloge so samo za branje, zunanje sence ostanejo odstranjene.
+
 ## QR nalepki
 
 Generator PDF izdela natanko dve različici: veliko 72,5 × 110 mm s QR 55 × 55 mm in malo 36,3 × 55 mm s QR 27,5 × 27,5 mm. Besedilo je samo angleško, razen imena nastanitve. Navodilo »Scan with your phone camera.« in slogan »Everything about your stay, in one place.« sta samo na veliki nalepki; slogan je umirjen, nikoli krepko izpisan ali preveden. Obe različici uporabljata vektorsko QR-kodo in vdelano pisavo Archivo. E-pošta z nalepkami priloži oba PDF-ja; administracija ponuja oba prenosa. Ime nastanitve je največ dvovrstično, s pomanjšanjem do določene spodnje meje in šele nato krajšanjem.

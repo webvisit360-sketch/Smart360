@@ -3242,3 +3242,17 @@ mtime_ms = 1792842586282
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/36c33552-f8f4-4c9f-ad20-56bdb98c1789/9753cf4a-82cf-46f6-b18d-8963b86a714c"
 storage_version_token = "1792842794794638"
 content_type = "text/html"
+
+[[outputs]]
+id = "yjbe-zxCbhQCo2n-niLSy"
+uri = "file://artifacts/smart360/reports/outline-decouple/report.html"
+type = "html"
+title = "Svetle obrobe — primerjava štirih barv"
+description = "Posnetki mreže in pristajalne strani pri390×844: #48A1D4, oranžna, rožnata in Bordo; izmerjene obrobe, črnilo,44px krogi ter nespremenjeni podpisi prednastavitev."
+logical_id = "066c08c1-409c-47c2-bef6-ffdf20510770"
+content_hash = "sha256:3fafde6fcab8f11829da782c15613542925021647be5cda42fadf581934b186a"
+size = 535640
+mtime_ms = 1792845587455
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/066c08c1-409c-47c2-bef6-ffdf20510770/547ad89e-6cd0-4519-9dac-fd8428154249"
+storage_version_token = "1792846873018375"
+content_type = "text/html"
