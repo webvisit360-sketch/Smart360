@@ -9,6 +9,17 @@ Custom adaptive ink must not darken button outlines: keep the master's pale outl
 Enostaven is a presentation layer over the same published guide, not a separate
 content tree. Generate tiles from actual published categories and runtime
 features; never copy the reference tenant's category list into production.
+Every published section with content must retain its own Enostaven heading in
+admin order; never merge services/custom sections into Okolica. Trend exposes
+extra sections through Domov and the generic section page, without adding
+unbounded bottom-navigation slots.
+**Why:** The owner found published Storitve missing as a recognizable guest section.
+**How to apply:** Preserve content identity/order and verify both designs; moving
+services out of Okolica is required, not evidence of unchanged screenshots.
+For temporary Vite evidence servers/worktrees, always use an isolated cacheDir.
+**Why:** Sharing workspace node_modules also shared Vite's optimized React cache,
+causing invalid-hook-call failures in the managed preview.
+**How to apply:** Stop temporary servers after capture; do not share their optimizer cache.
 Trend must remain unchanged outside explicitly requested landing and home-header changes.
 Identification belongs at the first order/rental, never at Enostaven entry.
 

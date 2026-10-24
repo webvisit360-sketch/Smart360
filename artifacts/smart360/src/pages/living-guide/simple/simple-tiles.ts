@@ -12,7 +12,7 @@ export type SimpleTileAction =
   | { kind: "map"; href: string | null; siteMap: boolean } | { kind: "messages" };
 
 export type SimpleTile = { id: string; label: string; icon: SimpleIconKey; action: SimpleTileAction };
-export type SimpleSection = { key: "home" | "stay" | "offer" | "explore" | "messages"; title: string; tiles: SimpleTile[] };
+export type SimpleSection = { key: string; title: string; tiles: SimpleTile[] };
 
 export type SimpleRuntime = {
   hasWeather: boolean;
@@ -55,7 +55,6 @@ function categoryTiles(section: any): SimpleTile[] {
 
 export function buildSimpleSections(sections: any[], lang: string, rt: SimpleRuntime): SimpleSection[] {
   const L = (k: SimpleCopyKey) => simpleCopy(k, lang);
-  const byKey = (k: string) => vis(sections).filter((s) => s.key === k);
 
   const home: SimpleTile[] = [
     { id: "notices", label: L("notices"), icon: "bell", action: { kind: "notices" } },
@@ -65,27 +64,25 @@ export function buildSimpleSections(sections: any[], lang: string, rt: SimpleRun
     ...(rt.installAvailable ? [{ id: "install", label: L("install"), icon: "install" as const, action: { kind: "install" } as const }] : []),
     { id: "about", label: L("about"), icon: "info", action: { kind: "about" } },
   ];
-  const stay = byKey("stay").flatMap(categoryTiles);
   const offer = [
-    ...byKey("offer").flatMap(categoryTiles),
     ...(rt.hasOrderable ? [{ id: "orders", label: L("orders"), icon: "order" as const, action: { kind: "orders" } as const }] : []),
   ];
   const explore = [
-    ...byKey("explore").flatMap(categoryTiles),
-    ...byKey("services").flatMap(categoryTiles),
     ...(rt.recordingEnabled ? [{ id: "record", label: L("record"), icon: "record" as const, action: { kind: "record" } as const }] : []),
     ...(rt.hasSiteMap || rt.mapHref ? [{ id: "map", label: L("map"), icon: "pin" as const, action: { kind: "map", href: rt.mapHref, siteMap: Boolean(rt.hasSiteMap) } as const }] : []),
   ];
-  // Any further published section keeps its own tiles under Okolica so no
-  // existing content becomes unreachable without a bottom nav.
-  const known = new Set(["stay", "offer", "explore", "services"]);
-  const other = vis(sections).filter((s) => !known.has(s.key)).flatMap(categoryTiles);
+  const titles: Record<string, SimpleCopyKey> = { stay:"stay", offer:"offer", explore:"explore" };
+  const content: SimpleSection[] = vis(sections).map(s => ({
+    key:s.key,
+    title:titles[s.key] ? L(titles[s.key]) : String(s.label ?? s.title ?? s.key),
+    tiles:[...categoryTiles(s), ...(s.key === "offer" ? offer : []), ...(s.key === "explore" ? explore : [])],
+  }));
+  if (!content.some(s => s.key === "offer") && offer.length) content.push({key:"offer",title:L("offer"),tiles:offer});
+  if (!content.some(s => s.key === "explore") && explore.length) content.push({key:"explore",title:L("explore"),tiles:explore});
 
   const out: SimpleSection[] = [
     { key: "home", title: L("home"), tiles: home },
-    { key: "stay", title: L("stay"), tiles: stay },
-    { key: "offer", title: L("offer"), tiles: offer },
-    { key: "explore", title: L("explore"), tiles: [...explore, ...other] },
+    ...content,
     { key: "messages", title: L("messages"), tiles: [{ id: "messages", label: L("messages"), icon: "chat", action: { kind: "messages" } }] },
   ];
   return out.filter((s) => s.tiles.length > 0);

@@ -128,6 +128,7 @@ import {
   selectedSectionGroup,
 } from "./living-guide-groups";
 import { buildEmergencyHelpCategory } from "./living-guide-emergency-help";
+import { homeSectionLinks } from "./living-guide-home-sections";
 import { lockDetailGesture, type DetailGestureLock } from "./detail-gesture-lock";
 import { GuestInstallCard } from "./GuestInstallCard";
 import { LivingGuideAnnouncements } from "./LivingGuideAnnouncements";
@@ -4730,6 +4731,7 @@ function HomeView({
   );
   const { entries: todayEntries } = selectHomeTodayEntries(sections, now);
   const visibleDanesItems = todayEntries.slice(0, 6);
+  const extraSections = homeSectionLinks(sections);
   const tenantMapsUrl = resolveTenantMapsUrl(tenant, "search");
   const mapAvailable = Boolean(tenantMapsUrl);
 
@@ -4901,6 +4903,15 @@ function HomeView({
           </>
         )}
 
+        {extraSections.map((section) => (
+          <div className="lg2-hsect" key={section.key} data-testid={`home-section-${section.key}`}>
+            <h3>{section.label}</h3>
+            <button type="button" data-testid={`button-home-section-${section.key}`}
+              onClick={() => navigateDetail(`/${slug}/s/${encodeURIComponent(section.key)}`)}>
+              {t("UI.lg.home.more")}
+            </button>
+          </div>
+        ))}
         <div className="lg2-hhelp">
           <button
             type="button"

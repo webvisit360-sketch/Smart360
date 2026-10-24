@@ -3270,3 +3270,17 @@ mtime_ms = 1792849377595
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d20bb766-404f-4ae6-99a1-d1cc5cb1f505/c284c1bd-8d1b-4950-9039-fb78e1eaa4de"
 storage_version_token = "1792849437165346"
 content_type = "text/html"
+
+[[outputs]]
+id = "KcTpzvuMsuVjD5qUHTRVi"
+uri = "file://artifacts/smart360/reports/oklch-palette/section-rendering/porocilo-sekcije.html"
+type = "html"
+title = "Storitve in dodatne sekcije — pred in po popravku"
+description = "Savinja v obeh dizajnih pri390×844, dostop do Storitve, primerjava Meli Pu/Drobež in480uspešnih testov. Razvojna koda s shranjenimi javnimi produkcijskimi podatki."
+logical_id = "b04a2d71-1af6-4d68-b49d-e53d923e4af8"
+content_hash = "sha256:a692e6edf6ffed0895e5cbc09c798cefd97634b285f0c4df8c3b8a80e563075a"
+size = 636062
+mtime_ms = 1792852302031
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/b04a2d71-1af6-4d68-b49d-e53d923e4af8/b0c57f7a-10f4-46cb-8873-d7fd9ece4e78"
+storage_version_token = "1792852391608073"
+content_type = "text/html"
