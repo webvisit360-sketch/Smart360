@@ -656,7 +656,7 @@ describe("buildEmailBody", () => {
     assert.ok(!html.includes("Cena"), "no price row without a snapshot price");
   });
 
-  test("design: no decorative band, marked tenant kicker, orange CTA", () => {
+  test("design: approved brand mark and trak, marked tenant kicker, orange CTA", () => {
     const body = buildEmailBody(BASE_PAYLOAD, "no-reply@smart360.com");
     const html = body["html"] as string;
     assert.doesNotMatch(html, /height:5px;line-height:5px;font-size:0;background:|#DD9A2B/);
@@ -666,7 +666,7 @@ describe("buildEmailBody", () => {
     assert.ok(html.includes("Kmetija Testna"), "brand kicker is the tenant name");
     assert.match(html, /<a href="https?:\/\/[^"]*\/admin"/, "CTA links the plain portal login page");
     assert.ok(!/href="[^"]*token/i.test(html), "no auto-login or token links");
-    assert.equal((html.match(/<img/g) ?? []).length, 1, "only the hosted brand mark");
+    assert.equal((html.match(/<img/g) ?? []).length, 2, "hosted brand mark and approved trak");
     assert.ok(!html.includes(BASE_PAYLOAD.orderRef), "email stays short; order reference is available in the portal");
   });
 

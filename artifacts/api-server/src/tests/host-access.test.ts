@@ -261,8 +261,9 @@ test("CP2 host access model: fence + RLS + positive controls", async (t) => {
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/creator/distance-backfill`, {});
     await expectDenied("DELETE", `/admin/categories/${fx.categoryA}/purge`);
     await expectDenied("DELETE", `/admin/items/${fx.itemA}/purge`);
-    await expectDenied("POST", `/admin/tenants/${fx.tenantA}/translations/import`, {});
-    await expectDenied("GET", `/admin/tenants/${fx.tenantA}/translations/export`);
+    const importDenied = await jreq(base, "POST", `/admin/tenants/${fx.tenantA}/translations/import`, cookie, {});
+    assert.equal(importDenied.status, 403, "concierge import is operator-only within its tenant");
+    assert.equal((await jreq(base, "GET", `/admin/tenants/${fx.tenantA}/translations/export`, cookie)).status, 403);
     await expectDenied("GET", `/admin/tenants/${fx.tenantA}/host`);
     await expectDenied("PUT", `/admin/tenants/${fx.tenantA}/host`, { email: "x@y.si" });
     await expectDenied("POST", `/admin/tenants/${fx.tenantA}/host/send-invite`, {

@@ -316,7 +316,7 @@ test("alignment normalizes one disposable tenant destination title idempotently 
     const [dirtyTenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, id));
     assert.equal(dirtyTenant!.hasUnpublishedChanges, true);
     const preview = await previewPublication(id);
-    assert.equal(preview.total, 4);
+    assert.equal(preview.total, 7, "destination title changes in every guest language, including English fallback");
     assert.ok(preview.changed.includes("Naslov: Vaša destinacija"));
     for (const lang of ["en", "de", "it"]) {
       assert.ok(preview.changed.includes(`Naslov: ${

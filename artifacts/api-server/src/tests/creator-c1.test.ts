@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import crypto from "node:crypto";
 import { test } from "node:test";
 import { and, eq, like } from "drizzle-orm";
@@ -46,7 +47,7 @@ function place(index: number, existingCategoryId: string | null = "category"): u
     proposedName: `Place ${index}`,
     existingCategoryId,
     targetSettlement: null,
-    languages: ["sl", "en", "de", "it"].map((language) => ({
+    languages: GUIDE_LANGUAGES.map((language) => ({
       language, name: `Name ${index}`, description: "Description",
     })),
     geocodingLookupHint: `Place ${index}, Slovenia`,
@@ -63,6 +64,12 @@ test("fuzzy Creator key merges apostrophe and spacing near-duplicates", () => {
 
 test("C1 rejects forbidden machine facts and permits a null existing category", () => {
   assert.equal(validateCreatorC1ModelOutput([place(1, null)])[0]?.existingCategoryId, null);
+  const complete = validateCreatorC1ModelOutput([place(1)])[0]!;
+  assert.equal(validateCreatorC1ModelOutput([complete])[0]?.languages.length, GUIDE_LANGUAGES.length);
+  assert.throws(() => validateCreatorC1ModelOutput([{
+    ...complete, languages: complete.languages.map((row, index) =>
+      index === 0 ? { ...row, language: "en" } : row),
+  }]), /repeats a language/);
   assert.throws(() => validateCreatorC1ModelOutput([{ ...place(1) as object, latitude: 46.3 }]), /forbidden field/);
 });
 
@@ -649,8 +656,8 @@ test("C1 ranges use OSRM minute boundaries and practical descriptions are blank"
   assert.equal(assignCreatorC1Range({ isNearestPractical: false, durationMinutes: 20.01 }), "excursion");
   assert.equal(assignCreatorC1Range({ isNearestPractical: true, durationMinutes: 200 }), "practical");
   const languages = validateCreatorC1ModelOutput([place(1)])[0]!.languages;
-  assert.deepEqual(withCreatorC1DescriptionPolicy({ key: "restaurant", label: "Hospitality" }, languages).map((t) => t.description), ["", "", "", ""]);
-  assert.deepEqual(withCreatorC1DescriptionPolicy({ key: "pharmacy", label: "Pharmacy" }, languages).map((t) => t.description), ["", "", "", ""]);
+  assert.deepEqual(withCreatorC1DescriptionPolicy({ key: "restaurant", label: "Hospitality" }, languages).map((t) => t.description), GUIDE_LANGUAGES.map(() => ""));
+  assert.deepEqual(withCreatorC1DescriptionPolicy({ key: "pharmacy", label: "Pharmacy" }, languages).map((t) => t.description), GUIDE_LANGUAGES.map(() => ""));
 });
 
 test("C1 cost uses the pinned public Terra rates and cached-token discount", () => {

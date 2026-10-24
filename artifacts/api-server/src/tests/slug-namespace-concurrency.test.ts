@@ -11,6 +11,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import QRCode from "qrcode";
+import sharp from "sharp";
+import jsQR from "jsqr";
 import { eq } from "drizzle-orm";
 import {
   db,
@@ -161,15 +163,11 @@ test("two published tenants cannot claim one draft slug concurrently; winner own
     ] as const) {
       const pdfPath = path.join(tempDir, file);
       writeFileSync(pdfPath, buffer);
-      const printed = execFileSync("pdftotext", [pdfPath, "-"], { encoding: "utf8" });
-      // The older admin label intentionally omits the printed https://,
-      // while both QR encoders still receive the full absolute HTTPS URL.
-      // pdftotext can lose the hyphen glyph in the legacy Helvetica label.
-      const printedUrl = file === "admin.pdf" ? currentUrl.replace(/^https:\/\//, "") : currentUrl;
-      const oldPrintedUrl = file === "admin.pdf" ? formerUrl.replace(/^https:\/\//, "") : formerUrl;
-      const normalize = (value: string) => value.replace(/[\s-]/g, "");
-      assert.ok(normalize(printed).includes(normalize(printedUrl)), `${file} prints the canonical URL`);
-      assert.ok(!normalize(printed).includes(normalize(oldPrintedUrl)), `${file} does not print the old URL`);
+      const prefix = path.join(tempDir, file + "-render");
+      execFileSync("pdftoppm", ["-singlefile", "-r", "300", "-png", pdfPath, prefix]);
+      const image = await sharp(prefix + ".png").ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const decoded = jsQR(new Uint8ClampedArray(image.data), image.info.width, image.info.height);
+      assert.equal(decoded?.data, currentUrl, `${file} scan opens the canonical URL, not the former URL`);
     }
   } finally {
     rmSync(tempDir, { recursive: true, force: true });

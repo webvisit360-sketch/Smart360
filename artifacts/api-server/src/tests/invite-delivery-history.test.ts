@@ -122,7 +122,7 @@ test("invite delivery failures are durable, safe and owner-only", async (t) => {
   const firstAccount = await firstRead.json() as {
     account: { inviteHistory: Array<Record<string, unknown>> };
   };
-  assert.deepEqual(firstAccount.account.inviteHistory[0]?.["deliveryFailure"], {
+  assert.deepEqual(firstAccount.account.inviteHistory.find(entry => entry.kind === "invitation")?.["deliveryFailure"], {
     code: "missing_api_key",
     message: "Poštni ključ ni nastavljen",
     httpStatus: null,
@@ -140,8 +140,8 @@ test("invite delivery failures are durable, safe and owner-only", async (t) => {
   assert.equal(reread.status, 200);
   assert.equal(
     ((await reread.json()) as {
-      account: { inviteHistory: Array<{ deliveryFailure: { message: string } | null }> };
-    }).account.inviteHistory[0]?.deliveryFailure?.message,
+      account: { inviteHistory: Array<{ kind: string; deliveryFailure: { message: string } | null }> };
+    }).account.inviteHistory.find(entry => entry.kind === "invitation")?.deliveryFailure?.message,
     "Poštni ključ ni nastavljen",
   );
 
@@ -208,18 +208,20 @@ test("invite delivery failures are durable, safe and owner-only", async (t) => {
   const latestBody = await latestHistory.json() as {
     account: {
       inviteHistory: Array<{
+        kind: string;
         deliveryStatus: string;
         providerMessageId: string | null;
         deliveryFailure: unknown;
       }>;
     };
   };
-  assert.equal(latestBody.account.inviteHistory[0]?.deliveryStatus, "accepted");
+  const latestInvitation = latestBody.account.inviteHistory.find(entry => entry.kind === "invitation");
+  assert.equal(latestInvitation?.deliveryStatus, "accepted");
   assert.equal(
-    latestBody.account.inviteHistory[0]?.providerMessageId,
+    latestInvitation?.providerMessageId,
     "provider-message-safe-123",
   );
-  assert.equal(latestBody.account.inviteHistory[0]?.deliveryFailure, null);
+  assert.equal(latestInvitation?.deliveryFailure, null);
 
   const anonymous = await request(
     base,

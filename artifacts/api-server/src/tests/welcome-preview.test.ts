@@ -6,6 +6,10 @@ import { getWelcomePreview, WELCOME_PREVIEW_TOKEN } from "../lib/welcomePreview"
 import { buildWelcomeEmailBody } from "../lib/lifecycleEmails";
 import { rpOrigin } from "../lib/adminAuth";
 import { ADMIN_ROUTE_REGISTRY } from "../lib/actorGate";
+import { renderConciergeWelcomeEmail } from "../lib/conciergeWelcomeEmail";
+import { guestUrl } from "../lib/guestUrl";
+import { hostMembershipsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 test("welcome preview: same template, tenant-specific, read-only and operator-only", async () => {
   try {
@@ -18,13 +22,18 @@ test("welcome preview: same template, tenant-specific, read-only and operator-on
       ) i
     `)).rows[0].fingerprint;
     const before = await fingerprint();
-    const tenants = await db.select({ id: tenantsTable.id, name: tenantsTable.name }).from(tenantsTable);
+    const tenants = await db.select().from(tenantsTable);
     assert.ok(tenants.length > 0);
     for (const tenant of tenants) {
       const preview = await getWelcomePreview(tenant.id);
       assert.ok(preview);
       assert.equal(preview.propertyName, tenant.name);
-      const expected = buildWelcomeEmailBody({
+      const [membership] = await db.select().from(hostMembershipsTable)
+        .where(eq(hostMembershipsTable.tenantId, tenant.id)).limit(1);
+      const conciergeWithoutAccount = tenant.managementMode === "concierge" && !membership;
+      const expected = conciergeWithoutAccount ? renderConciergeWelcomeEmail({
+        tenantName: tenant.name, guideUrl: guestUrl(tenant.slug),
+      }) : buildWelcomeEmailBody({
         to: preview.recipient ?? "",
         propertyName: tenant.name,
         setPasswordUrl: `${rpOrigin()}/portal/povabilo?token=${WELCOME_PREVIEW_TOKEN}`,
@@ -32,7 +41,7 @@ test("welcome preview: same template, tenant-specific, read-only and operator-on
       assert.equal(preview.html, expected.html);
       assert.equal(preview.text, expected.text);
       assert.equal(preview.subject, expected.subject);
-      for (const content of [preview.html, preview.text]) {
+      for (const content of conciergeWithoutAccount ? [] : [preview.html, preview.text]) {
         assert.ok(content.includes("Po nastavitvi gesla vas počaka kratek obrazec — vpišete podatke o svoji nastanitvi in priporočila za okolico, vse ostalo uredimo mi."));
         assert.ok(!content.includes("Od vas potrebujemo samo gradivo"));
         assert.ok(!content.includes("Gradivo lahko pošljete kar kot odgovor"));

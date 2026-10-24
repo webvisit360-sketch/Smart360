@@ -35,6 +35,8 @@ import type { CreatorDependencyRecorder } from "./creatorDependencyTelemetry";
 import { computeRoadRoute, type FetchFn } from "./distanceEngine";
 import { logger } from "./logger";
 import { HOST_ONBOARDING_PROVENANCE } from "./hostOnboardingCreator";
+import { CreatorBulkApprovalError } from "./creatorErrors";
+export { CreatorBulkApprovalError } from "./creatorErrors";
 
 export const CREATOR_MAX_QUEUE_DURATION_S = 5400;
 
@@ -1315,16 +1317,6 @@ export async function confirmCreatorProposalCoordinates(input: {
   )).returning();
   if (!updated) throw new Error("Koordinat ni bilo mogoče shraniti.");
   return (await listCreatorProposalQueue(input.tenantId)).find((row) => row.id === input.proposalId);
-}
-
-export class CreatorBulkApprovalError extends Error {
-  constructor(
-    message: string,
-    public readonly proposalId?: string,
-    options?: { cause?: unknown },
-  ) {
-    super(message, options);
-  }
 }
 
 class CreatorProposalMaterializationError extends Error {

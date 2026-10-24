@@ -41,7 +41,7 @@ async function send(base: string, method: string, path: string, body?: unknown) 
 test("phase1: field presence denies host atomically; owner reaches the real tenant handler", async (t) => {
   const stamp = Date.now().toString(36);
   const [tenant] = await db.insert(tenantsTable)
-    .values({ slug: `gate-phase1-${stamp}`, name: "Before" })
+    .values({ slug: `gate-phase1-${stamp}`, name: "Before", managementMode: "concierge" })
     .returning({ id: tenantsTable.id });
   const [foreign] = await db.insert(tenantsTable)
     .values({ slug: `gate-phase1-other-${stamp}`, name: "Other" })

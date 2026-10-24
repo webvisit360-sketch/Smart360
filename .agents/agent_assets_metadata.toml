@@ -3130,3 +3130,17 @@ mtime_ms = 1792788601810
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/95cb6050-6f76-424e-a052-0c4be6199e10/9d497403-c5a3-481f-bb53-0ffdf8fa7ec0"
 storage_version_token = "1792788602977152"
 content_type = "text/html"
+
+[[outputs]]
+id = "1af6RZ4fBF36Bf15hHA9X"
+uri = "file://test-recordings/smartxstay/server-cleanup-report.html"
+type = "html"
+title = "Zaključno poročilo: vseh 36 postavk"
+description = "Dokazane napake, ločeni popravki kode in testov, odobren SQL ter celotni rezultati preverjanja."
+logical_id = "5ef2bfef-4493-4fcd-8b87-c7a24b8f1ebe"
+content_hash = "sha256:dd06acf2c61d06582c6328571344d069f278021c1c8e75b75bbebd0e7e978cda"
+size = 15779
+mtime_ms = 1792802207272
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5ef2bfef-4493-4fcd-8b87-c7a24b8f1ebe/24c90822-2fa2-4139-ab5b-a72acfdd7485"
+storage_version_token = "1792802208265488"
+content_type = "text/html"

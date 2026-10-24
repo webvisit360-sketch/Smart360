@@ -286,8 +286,8 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
       assert.match(qr.headers.get("content-disposition") ?? "", new RegExp(targetSlug));
       const sticker = await jreq(base, "GET", `/admin/tenants/${tenantId}/label.pdf`, ownerCookie);
       assert.equal(sticker.status, 200);
-      assert.match(sticker.headers.get("content-disposition") ?? "", new RegExp(targetSlug));
-      await sticker.arrayBuffer();
+      assert.match(sticker.headers.get("content-disposition") ?? "", /attachment;.*\.pdf/);
+      assert.equal(Buffer.from(await sticker.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
     }
 
     // Republish cycle: no new stamp, no new mail.
@@ -736,7 +736,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.equal(after.length, before.length + 1);
   });
 
-  await t.test("tenant copy refuses before creating an incomplete multilingual tenant", async () => {
+  await t.test("tenant copy creates a complete draft with multilingual content", async () => {
     const copySlug = `${slug}-copy-disabled`;
     const res = await jreq(
       base,
@@ -749,18 +749,23 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
         copyContent: true,
       },
     );
-    assert.equal(res.status, 409);
-    assert.deepEqual(await res.json(), {
-      code: "TENANT_COPY_DISABLED",
-      error:
-        "Tenant copy is disabled until translations can be copied with the tenant.",
-    });
-
     const copied = await db
-      .select({ id: tenantsTable.id })
+      .select()
       .from(tenantsTable)
       .where(eq(tenantsTable.slug, copySlug));
-    assert.equal(copied.length, 0, "refused copy must not create a tenant");
+    try {
+      assert.equal(res.status, 201, await res.text());
+      assert.equal(copied.length, 1);
+      assert.equal(copied[0]!.isPublished, false);
+      assert.equal(copied[0]!.copyState, "ready");
+    } finally {
+      for (const copy of copied) {
+        await db.delete(changelogTable).where(eq(changelogTable.tenantId, copy.id));
+        await db.delete(tenantsTable).where(eq(tenantsTable.id, copy.id));
+        await db.delete(tenantAliasesTable).where(eq(tenantAliasesTable.tenantId, copy.id));
+        await db.delete(tenantSlugReservationsTable).where(eq(tenantSlugReservationsTable.tenantId, copy.id));
+      }
+    }
   });
 
   // ---------- Concurrency: double publish races the CAS ----------
@@ -852,7 +857,7 @@ test("CP2b owner cockpit: create-by-type, slug freeze, first publish, overview, 
     assert.equal(pending.status, 200);
     const hostPublish = await jreq(base, "PATCH", `/admin/tenants/${tenantId}`, hostCookie,
       { isPublished: true, publishNow: true });
-    assert.equal(hostPublish.status, 403, "host cannot publish an owner-pending URL rename");
+    assert.equal(hostPublish.status, 409, "publication without a reviewed change-list token is rejected");
     const [afterHost] = await db.select({ slug: tenantsTable.slug, draftSlug: tenantsTable.draftSlug })
       .from(tenantsTable).where(eq(tenantsTable.id, tenantId));
     assert.equal(afterHost!.draftSlug, pendingSlug);

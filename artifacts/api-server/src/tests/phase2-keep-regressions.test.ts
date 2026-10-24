@@ -3,6 +3,7 @@
  * No owner credential/session, schema mutation or provider delivery.
  */
 import test from "node:test";
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
@@ -59,7 +60,7 @@ function send(base: string, method: string, path: string, body?: unknown) {
 test("phase2 permission fence: protected tenant fields are atomic; own operational settings and entries survive", async (t) => {
   if (process.env.NODE_ENV === "production" || process.env.REPLIT_DEPLOYMENT) throw new Error("Dev fixtures only");
   const marker = randomUUID();
-  const [tenant] = await db.insert(tenantsTable).values({ slug: `phase2-${marker}`, name: "Phase2 original" }).returning();
+  const [tenant] = await db.insert(tenantsTable).values({ slug: `phase2-${marker}`, name: "Phase2 original", managementMode: "concierge" }).returning();
   const [other] = await db.insert(tenantsTable).values({ slug: `phase2-other-${marker}`, name: "Other" }).returning();
   const [host] = await db.insert(hostUsersTable).values({ email: `phase2-${marker}@example.invalid` }).returning();
   await db.insert(hostMembershipsTable).values({ hostUserId: host.id, tenantId: tenant.id });
@@ -143,10 +144,10 @@ test("phase2 permission fence: protected tenant fields are atomic; own operation
   const translation = await send(hostServer.base, "PUT", "/admin/translations",
     { model: "item", recordId: newItem.id, field: "title", lang: "en", value: "Moved" });
   assert.equal(translation.status, 200, await translation.clone().text());
-  // All four drafts already contain text: the actual translate-missing handler executes
+  // All supported drafts already contain text: the actual translate-missing handler executes
   // but computes zero missing fields, so it never calls the paid model.
   const translateMissing = await send(hostServer.base, "POST", `/admin/items/${newItem.id}/translate-missing`, {
-    translations: ["sl", "en", "de", "it"].map((language) => ({
+    translations: GUIDE_LANGUAGES.map((language) => ({
       language, title: "Already translated", description: "Already translated",
     })),
   });

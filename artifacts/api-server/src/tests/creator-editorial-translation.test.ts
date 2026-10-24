@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { GUIDE_LANGUAGES, TRANSLATION_LANGUAGES } from "@workspace/guide-languages";
+import { TranslateMissingItemFieldsBody, EditCreatorProposalBody } from "@workspace/api-zod";
 import {
   normalizeTranslationFailure,
   translationFailureMessage,
@@ -13,13 +15,25 @@ import {
 const drafts = (
   values: Partial<Record<EditorialDraft["language"], Partial<EditorialDraft>>>,
 ): EditorialDraft[] =>
-  (["sl", "en", "de", "it"] as const).map((language) => ({
+  GUIDE_LANGUAGES.map((language) => ({
     language,
     title: values[language]?.title ?? "",
     description: values[language]?.description ?? "",
   }));
 
-test("editorial translation sends only operator Slovenian text and returns EN/DE/IT", async () => {
+test("editorial HTTP contracts accept all seven languages and reject incomplete drafts", () => {
+  const translations = drafts({});
+  assert.equal(TranslateMissingItemFieldsBody.safeParse({ translations }).success, true);
+  assert.equal(TranslateMissingItemFieldsBody.safeParse({ translations: translations.slice(0, 4) }).success, false);
+  const proposal = {
+    categoryId: null, operatorAddress: null,
+    translations: translations.map(row => ({ language: row.language, name: "Place", description: "" })),
+  };
+  assert.equal(EditCreatorProposalBody.safeParse(proposal).success, true);
+  assert.equal(EditCreatorProposalBody.safeParse({ ...proposal, translations: proposal.translations.slice(0, 4) }).success, false);
+});
+
+test("editorial translation sends only operator Slovenian text and returns all target languages", async () => {
   let userContent = "";
   const translations = await translateCreatorEditorial(
     { name: "Slap", description: "Kratek opis." },
@@ -29,6 +43,9 @@ test("editorial translation sends only operator Slovenian text and returns EN/DE
         { language: "en", title: "Waterfall", description: "Short description." },
         { language: "de", title: "Wasserfall", description: "Kurze Beschreibung." },
         { language: "it", title: "Cascata", description: "Breve descrizione." },
+        { language: "fr", title: "Cascade", description: "Description courte." },
+        { language: "nl", title: "Waterval", description: "Korte beschrijving." },
+        { language: "hr", title: "Slap", description: "Kratak opis." },
       ] }) } }] };
     } } } } as any,
   );
@@ -36,7 +53,7 @@ test("editorial translation sends only operator Slovenian text and returns EN/DE
   assert.equal(payload.tasks[0].language, "sl");
   assert.equal(payload.tasks[0].text, "Slap");
   assert.equal(payload.tasks[1].text, "Kratek opis.");
-  assert.deepEqual(translations.map((translation) => translation.language), ["en", "de", "it"]);
+  assert.deepEqual(translations.map((translation) => translation.language), TRANSLATION_LANGUAGES);
 });
 
 test("translation tasks use an English title source and leave source-less descriptions empty", async () => {
@@ -49,6 +66,9 @@ test("translation tasks use an English title source and leave source-less descri
           { language: "sl", title: "Zunanji fitnes", description: null },
           { language: "de", title: "Outdoor-Fitnessbereich", description: null },
           { language: "it", title: "Palestra all'aperto", description: null },
+          { language: "fr", title: "Fitness extérieur", description: null },
+          { language: "nl", title: "Buitenfitness", description: null },
+          { language: "hr", title: "Fitness na otvorenom", description: null },
         ],
       }) } }] };
     } } },
@@ -62,7 +82,7 @@ test("translation tasks use an English title source and leave source-less descri
     field: "title",
     language: "en",
     text: "Outdoor gym",
-    targetLanguages: ["sl", "de", "it"],
+    targetLanguages: GUIDE_LANGUAGES.filter(language => language !== "en"),
   }]);
   assert.equal(result.find((entry) => entry.language === "sl")?.description, null);
 });
@@ -75,6 +95,9 @@ test("translation service rejects content for a field that was not requested", a
           { language: "sl", title: "Zunanji fitnes", description: "Izmišljeno" },
           { language: "de", title: "Outdoor-Fitnessbereich", description: null },
           { language: "it", title: "Palestra all'aperto", description: null },
+          { language: "fr", title: "Fitness extérieur", description: null },
+          { language: "nl", title: "Buitenfitness", description: null },
+          { language: "hr", title: "Fitness na otvorenom", description: null },
         ],
       }) } }],
     }) } },
@@ -111,12 +134,15 @@ test("429 retries with bounded delay, disables SDK retries and succeeds without 
       { language: "en", title: "Waterfall", description: null },
       { language: "de", title: "Wasserfall", description: null },
       { language: "it", title: "Cascata", description: null },
+      { language: "fr", title: "Cascade", description: null },
+      { language: "nl", title: "Waterval", description: null },
+      { language: "hr", title: "Slap", description: null },
     ] }) } }] };
   } } } };
   const result = await translateMissingEditorial(drafts({ sl: { title: "Slap" } }),
     client as never, "sl", { random: () => 0, sleep: async (ms) => { sleeps.push(ms); },
       log: (event, data) => logs.push({ event, ...data }) });
-  assert.equal(result.length, 3);
+  assert.equal(result.length, TRANSLATION_LANGUAGES.length);
   assert.deepEqual(sleeps, [2000]);
   assert.equal(calls, 2);
   assert.deepEqual(logs.map((entry: any) => entry.event), ["failed_attempt", "retry"]);

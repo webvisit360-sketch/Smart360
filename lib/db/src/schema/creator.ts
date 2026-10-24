@@ -332,7 +332,7 @@ export const creatorProposalTranslationsTable = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (t) => [
-    check("creator_proposal_translations_language_check", sql`${t.language} IN ('sl','en','de','it')`),
+    check("creator_proposal_translations_language_check", sql`${t.language} IN ('sl','en','de','it','fr','nl','hr')`),
     uniqueIndex("creator_proposal_translations_proposal_language_uq").on(t.proposalId, t.language),
   ],
 );

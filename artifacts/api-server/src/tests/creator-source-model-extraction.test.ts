@@ -110,8 +110,9 @@ test("category override distinguishes mountain homes from hospitality named Dom"
   });
   assert.deepEqual(result.facts.map(fact => [fact.canonicalName, fact.categoryKey]), [
     ["Planinski dom na Smrekovcu", "hike"],
-    ["Hotel Dom Planica", "culture"],
   ]);
+  assert.equal(result.rejectionCounts.accommodation_provider, 1,
+    "hotel is excluded as accommodation, never misclassified as hiking or culture");
 });
 
 test("chunking is deterministic and model extraction aggregates usage and rejection counts", async () => {

@@ -22,12 +22,14 @@ import {
 } from "../lib/publishedSnapshots";
 import { actorStorage } from "../lib/actorContext";
 import { logger } from "../lib/logger";
+import { createAdminGateForTests } from "../lib/actorGate";
 
 test("emergency contact route keeps draft isolated until publication", async () => {
   await ensurePublishedSnapshotSchema();
   const [tenant] = await db.insert(tenantsTable).values({
     slug: `emergency-help-${randomUUID()}`,
     name: "Emergency help disposable fixture",
+    managementMode: "concierge",
     isPublished: true,
     languages: ["sl", "en"],
   }).returning();
@@ -49,6 +51,7 @@ test("emergency contact route keeps draft isolated until publication", async () 
     req.log = logger.child({ fixture: "emergency-help-publication" });
     actorStorage.run(req.actor, next);
   });
+  app.use("/api", (req, res, next) => createAdminGateForTests(req.actor!)(req, res, next));
   app.use("/api", adminContentRouter);
   app.use("/api", adminTenantsRouter);
   app.use("/api", publicTenantsRouter);

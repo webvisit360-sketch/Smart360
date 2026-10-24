@@ -188,7 +188,10 @@ test("canonical target matches the captured shared skeleton and Meli Pu needs no
     }>;
   }>;
   const flattened = shared.flatMap((section) =>
-    section.categories.map((category) => ({ section: section.key, ...category })));
+    section.categories.map((category) => ({
+      section: section.key, ...category,
+      names: { ...category.names, fr: "", nl: "", hr: "" },
+    })));
   assert.deepEqual(OKOLICA_CANONICAL_CATEGORIES, flattened);
 
   const baseline = await loadCapturedBaseline();

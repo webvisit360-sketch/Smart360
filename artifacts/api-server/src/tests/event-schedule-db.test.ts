@@ -32,6 +32,9 @@ test("isolated host schedule CRUD, translation, snapshot isolation and legacy ev
     id, slug: `schedule-test-${id}`, name: "Schedule fixture", isPublished: true,
   }).returning();
   assert.ok(tenant);
+  const [otherTenant] = await db.insert(tenantsTable).values({
+    slug: `schedule-other-${id}`, name: "Foreign schedule fixture",
+  }).returning();
   const serverFor = async (tenantId: string) => {
     const app = express();
     app.use(express.json());
@@ -44,12 +47,13 @@ test("isolated host schedule CRUD, translation, snapshot isolation and legacy ev
     return { server, base: `http://127.0.0.1:${address.port}` };
   };
   const own = await serverFor(id);
-  const foreign = await serverFor(randomUUID());
+  const foreign = await serverFor(otherTenant!.id);
   t.after(async () => {
     await Promise.all([own, foreign].map(({ server }) => new Promise<void>(resolve => server.close(() => resolve()))));
     await db.delete(translationsTable).where(eq(translationsTable.recordId, itemId));
     await db.delete(publishedSnapshotsTable).where(eq(publishedSnapshotsTable.tenantId, id));
     await db.delete(tenantsTable).where(eq(tenantsTable.id, id));
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, otherTenant!.id));
   });
   let itemId = "";
   const [section] = await db.insert(sectionsTable).values({ tenantId: id, key: "events", title: "Dogodki" }).returning();

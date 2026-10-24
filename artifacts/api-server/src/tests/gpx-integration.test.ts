@@ -75,7 +75,7 @@ test("published GPX remains byte-identical across draft replacement and deletion
   })).status, 400, "ordinary item patch cannot forge a route");
   const invalidActivity = new FormData();
   invalidActivity.append("file", new Blob([new Uint8Array(original)]), "route.gpx");
-  invalidActivity.append("activity", "running");
+  invalidActivity.append("activity", "unsupported-activity");
   const invalidResponse = await fetch(`${base}/admin/items/${a.item.id}/gpx`, {
     method: "POST", headers: { cookie: hostCookie }, body: invalidActivity,
   });

@@ -4454,8 +4454,8 @@ components:
           description: Explicit operator-entered address; required when editing an operator-positioned proposal
         translations:
           type: array
-          minItems: 4
-          maxItems: 4
+          minItems: 7
+          maxItems: 7
           items:
             $ref: "#/components/schemas/CreatorProposalTranslation"
       required: [categoryId, operatorAddress, translations]
@@ -4495,8 +4495,8 @@ components:
       properties:
         translations:
           type: array
-          minItems: 4
-          maxItems: 4
+          minItems: 7
+          maxItems: 7
           items: { $ref: "#/components/schemas/ItemTranslationLanguageDraft" }
       required: [translations]
     ItemTranslationDraftSuggestion:

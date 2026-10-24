@@ -16,8 +16,8 @@ export interface CreatorProposalEditInput {
      */
   operatorAddress: string | null;
   /**
-     * @minItems 4
-     * @maxItems 4
+     * @minItems 7
+     * @maxItems 7
      */
   translations: CreatorProposalTranslation[];
 }

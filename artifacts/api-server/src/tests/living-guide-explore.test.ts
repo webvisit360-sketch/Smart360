@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import ts from "typescript";
+import { createRequire } from "node:module";
+import { GUIDE_LANGUAGES } from "@workspace/guide-languages";
 import {
   CreateCategoryBody,
   UpdateCategoryBody,
@@ -33,7 +36,9 @@ test("nature_trails keeps its stable key with the four renamed labels", async ()
 
   assert.equal(group?.key, "nature_trails");
   assert.equal(group?.adminLabel, "Aktivnosti");
-  assert.deepEqual(LIVING_GUIDE_UI["UI.lg.exploreGroup.natureTrails"], {
+  const labels = LIVING_GUIDE_UI["UI.lg.exploreGroup.natureTrails"];
+  for (const language of GUIDE_LANGUAGES) assert.ok(labels[language]?.trim(), language);
+  assert.deepEqual(Object.fromEntries(["sl", "en", "de", "it"].map(lang => [lang, labels[lang]])), {
     sl: "Aktivnosti",
     en: "Activities",
     de: "Aktivitäten",
@@ -165,17 +170,41 @@ test("Okolica UI selects the first populated group, resets scroll, and omits opt
     ),
     "utf8",
   );
-  // The tab-state behavior (first populated group, scroll reset) is shared by
-  // Okolica/Ponudba/Nastanitev via GroupTabs/PCard/useGroupTabsState, defined
-  // immediately before ExploreView — slice from the shared block.
-  const exploreView = shell.slice(
-    shell.indexOf("function GroupTabs"),
-    shell.indexOf("function MessagesView"),
-  );
-
-  assert.match(exploreView, /groups\[0\]\?\.key \?\? null/);
-  assert.match(exploreView, /scrollTo\(\{ top: 0, behavior: "auto" \}\)/);
-  assert.match(exploreView, /\{distance && <span/);
-  assert.match(exploreView, /\{status \? \(/);
-  assert.doesNotMatch(exploreView, /Preberi več|read-more/i);
+  // Execute the real function bodies, located by AST rather than source formatting.
+  const ast = ts.createSourceFile("shell.tsx", shell, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const functions = ast.statements.filter(node => ts.isFunctionDeclaration(node) &&
+    ["ExploreCard", "useGroupTabsState"].includes(node.name?.text ?? ""));
+  assert.equal(functions.length, 2);
+  const js = ts.transpileModule(functions.map(node => node.getText(ast)).join("\n"), {
+    compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const requireClient = createRequire(new URL("../../../smart360/package.json", import.meta.url));
+  const React = requireClient("react");
+  const { renderToStaticMarkup } = requireClient("react-dom/server");
+  let selected: string | null = null;
+  const scrolls: unknown[] = [];
+  const deps = {
+    React, LivingGuideCategoryIcon: () => null, RichInline: ({ value }: any) => value,
+    useState: (initial: string | null) => [initial, (value: string) => { selected = value; }],
+    useRef: () => ({ current: { scrollTo: (options: unknown) => scrolls.push(options) } }),
+    useEffect: (effect: () => void) => effect(),
+    selectedSectionGroup: (groups: any[], key: string) => groups.find(group => group.key === key),
+    navigator: {},
+  };
+  const { ExploreCard, useGroupTabsState } = new Function(...Object.keys(deps),
+    `${js}; return { ExploreCard, useGroupTabsState };`)(...Object.values(deps));
+  const state = useGroupTabsState([{ key: "beaches" }, { key: "hiking" }]);
+  assert.equal(state.selectedGroup.key, "beaches");
+  state.selectGroup("hiking");
+  assert.equal(selected, "hiking");
+  assert.deepEqual(scrolls, [{ top: 0, behavior: "auto" }]);
+  const empty = renderToStaticMarkup(React.createElement(ExploreCard, { title: "Beach" }));
+  assert.ok(empty.includes("Beach"));
+  assert.ok(!empty.includes("lg2-explore-card-info"));
+  const populated = renderToStaticMarkup(React.createElement(ExploreCard, {
+    title: "Beach", infoText: "2 km", status: { isOpen: true, text: "Open" },
+  }));
+  assert.ok(populated.includes("2 km"));
+  assert.ok(populated.includes("is-open"));
+  assert.ok(populated.includes("Open"));
 });

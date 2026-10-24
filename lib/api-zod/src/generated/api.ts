@@ -3670,8 +3670,8 @@ export const EditCreatorProposalParams = zod.object({
   "proposalId": zod.coerce.string()
 })
 
-export const editCreatorProposalBodyTranslationsMin = 4;
-export const editCreatorProposalBodyTranslationsMax = 4;
+export const editCreatorProposalBodyTranslationsMin = 7;
+export const editCreatorProposalBodyTranslationsMax = 7;
 
 
 
@@ -6212,8 +6212,8 @@ export const translateMissingItemFieldsBodyTranslationsItemTitleMax = 300;
 
 export const translateMissingItemFieldsBodyTranslationsItemDescriptionMax = 4000;
 
-export const translateMissingItemFieldsBodyTranslationsMin = 4;
-export const translateMissingItemFieldsBodyTranslationsMax = 4;
+export const translateMissingItemFieldsBodyTranslationsMin = 7;
+export const translateMissingItemFieldsBodyTranslationsMax = 7;
 
 
 

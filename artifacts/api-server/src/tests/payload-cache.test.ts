@@ -1,11 +1,8 @@
 /**
  * Guest payload cache: the per-(tenant, lang) cache must serve within its TTL
  * and must be dropped SYNCHRONOUSLY by invalidateTenantCache() — the hook
- * every admin save route already calls. A host must never see stale content
- * after saving.
- *
- * Uses the real Express app on an ephemeral port and the real dev database
- * (tenant meli-pu), mutating tenants.name and restoring it afterwards.
+ * every admin save route already calls. Guests see published content only.
+ * Uses a disposable tenant, never edits a real customer's draft.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -18,8 +15,8 @@ import { EventEmitter } from "node:events";
 import app from "../app";
 import { invalidateTenantCache } from "../routes/publicTenants";
 import { makeAdminMutationInvalidator } from "../routes/index";
-
-const SLUG = "meli-pu";
+import { ensureTenantPublication, replacePublishedSnapshot } from "../lib/publishedSnapshots";
+import { randomUUID } from "node:crypto";
 
 test("payload cache serves within TTL and invalidates immediately on the admin-save hook", async (t) => {
   const server = app.listen(0);
@@ -29,20 +26,18 @@ test("payload cache serves within TTL and invalidates immediately on the admin-s
   const base = `http://127.0.0.1:${address.port}`;
   t.after(() => new Promise<void>((r) => server.close(() => r())));
 
-  const [tenant] = await db
-    .select()
-    .from(tenantsTable)
-    .where(eq(tenantsTable.slug, SLUG));
+  const SLUG = `cache-test-${randomUUID()}`;
+  const [tenant] = await db.insert(tenantsTable).values({
+    slug: SLUG, name: "Cache fixture", isPublished: true,
+  }).returning();
   assert.ok(tenant, `dev tenant ${SLUG} must exist`);
   assert.ok(tenant.isPublished, `dev tenant ${SLUG} must be published`);
   const originalName = tenant.name;
   const changedName = `${originalName} [cache-test]`;
+  await ensureTenantPublication(tenant.id);
 
   t.after(async () => {
-    await db
-      .update(tenantsTable)
-      .set({ name: originalName })
-      .where(eq(tenantsTable.id, tenant.id));
+    await db.delete(tenantsTable).where(eq(tenantsTable.id, tenant.id));
     invalidateTenantCache();
   });
 
@@ -69,7 +64,13 @@ test("payload cache serves within TTL and invalidates immediately on the admin-s
     "second request within TTL must come from the cache",
   );
 
-  // The admin-save hook must make the change visible IMMEDIATELY.
+  // Invalidating a draft edit must not expose unpublished content.
+  invalidateTenantCache();
+  assert.equal(await getName(), originalName);
+  const [draft] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenant.id));
+  await replacePublishedSnapshot(draft!);
+  assert.equal(await getName(), originalName, "cache remains until invalidation");
+  // Publication plus the invalidation hook makes the new snapshot visible.
   invalidateTenantCache();
   assert.equal(
     await getName(),

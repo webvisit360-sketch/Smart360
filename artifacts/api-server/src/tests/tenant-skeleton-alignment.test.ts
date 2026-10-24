@@ -24,20 +24,28 @@ test("alignment route is explicitly owner-only", () => {
   assert.deepEqual(route?.binding, { kind: "owner-only" });
 });
 
-test("operator guard rejects anonymous and host actors", () => {
+test("operator guard rejects anonymous and host actors", async () => {
   const statusCodes: number[] = [];
+  let completed: () => void = () => {};
   const response = {
     status(code: number) {
       statusCodes.push(code);
       return this;
     },
-    json() { return this; },
+    json() { completed(); return this; },
   } as unknown as Response;
   let nextCalls = 0;
-  const next = (() => { nextCalls += 1; }) as NextFunction;
-  requireOperator({} as Request, response, next);
-  requireOperator({ actor: { kind: "host", hostUserId: randomUUID(), tenantId: randomUUID() } } as Request, response, next);
-  requireOperator({ actor: { kind: "owner" } } as Request, response, next);
+  const next = (() => { nextCalls += 1; completed(); }) as NextFunction;
+  for (const request of [
+    {},
+    { actor: { kind: "host", hostUserId: randomUUID(), tenantId: randomUUID() } },
+    { actor: { kind: "owner" } },
+  ]) {
+    await new Promise<void>(resolve => {
+      completed = resolve;
+      requireOperator({ method: "POST", path: "/test", ...request } as Request, response, next);
+    });
+  }
   assert.deepEqual(statusCodes, [401, 403]);
   assert.equal(nextCalls, 1);
 });

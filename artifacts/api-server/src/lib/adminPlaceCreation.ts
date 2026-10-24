@@ -23,10 +23,10 @@ import { sanitizePlain } from "./sanitizeBody";
 import { acquireNominatimTurn, computeRoadRoute } from "./distanceEngine";
 import {
   CREATOR_MAX_QUEUE_DURATION_S,
-  CreatorBulkApprovalError,
   assertNoLiveCreatorPlaceDuplicate, lockCreatorPlaceIdentity, normalizeCreatorProposalName,
   syncApprovedCreatorPlace,
 } from "./creatorProposalLedger";
+import { CreatorBulkApprovalError } from "./creatorErrors";
 
 const USER_AGENT = "Smart360 guest guide (operator place search; admin contact via replit deployment)";
 const HOST = "https://nominatim.openstreetmap.org";

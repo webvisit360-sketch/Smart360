@@ -145,7 +145,7 @@ export function validateCreatorC1ModelOutput(value: unknown): CreatorC1Place[] {
       }
       return { language: t.language as Language, name: t.name.trim(), description: t.description };
     });
-    if (new Set(languages.map((t) => t.language)).size !== 4) throw new Error(`C1 proposal ${i} repeats a language.`);
+    if (new Set(languages.map((t) => t.language)).size !== CREATOR_C1_LANGUAGE_CODES.length) throw new Error(`C1 proposal ${i} repeats a language.`);
     return {
       proposedName: row.proposedName.trim(),
       existingCategoryId: row.existingCategoryId === null ? null : row.existingCategoryId.trim(),
