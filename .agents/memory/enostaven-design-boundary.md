@@ -18,11 +18,11 @@ requirements take precedence where the reference itself differs: square tiles,
 19% radius and white pictograms. Do not claim
 pixel identity for the full reference image when these differences exist.
 
-The owner's barvna-izpeljava binding sheet supersedes the original HSL relationships for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; custom tile1 is derived, not identical to the stored base. The sheet omits the address token, so custom addresses use the text token.
+The owner's revised barvna-izpeljava binding sheet supersedes both the original HSL relationships and fixed-lightness OKLCH derivation for custom RGB palettes. Preserve stored base colours and hand-tuned Bordo/Modra; tile-top follows picked lightness within the sheet's bounds and computed contrast ceiling, with other dark tokens derived relatively. The sheet omits the address token, so custom addresses use the text token.
 
-**Why:** The owner explicitly replaced per-token S/L copying with deterministic OKLCH derivation while requiring presets and stored colours to remain untouched.
+**Why:** The owner rejected the fixed-lightness result because a picked sky blue became too dark; the revised binding formula preserves lightness as far as contrast permits while keeping presets and stored colours untouched.
 
-**How to apply:** Validate all seven specified tokens against all twelve sheet samples and measure actual rendered contrast; do not retune presets to imitate formula outputs.
+**How to apply:** Validate all seven specified tokens against all fourteen revised sheet samples and measure actual rendered contrast; do not retune presets to imitate formula outputs.
 
 Landing corrections apply to BOTH Trend and Enostaven: bottom-edge open button
 (16px extra clearance above the device safe area), host block immediately above, untinted photo/walk,

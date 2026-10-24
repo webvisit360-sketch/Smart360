@@ -83,30 +83,48 @@ const AA = 4.5;
 /** Pale tokens (outline/text). */
 export const SIMPLE_PALE_TOKENS = ["stroke", "txt", "tint", "adr"] as const;
 
+/** Step 8: ΔE_OK, Euclidean (L,a,b) distance between two #RRGGBB colours. */
+export function deltaEOK(x: string, y: string): number {
+  const lab = (h: string) => { const [L, C, H] = srgbToOklch(h.trim().toUpperCase()); const r = (H * Math.PI) / 180; return [L, C * Math.cos(r), C * Math.sin(r)]; };
+  const p = lab(x), q = lab(y);
+  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+}
+
 /**
- * Approved OKLCH derivation (attached_assets/barvna-izpeljava_*.html), 1:1.
- * tile1 is derived (L 0.50), not the raw base. The sheet defines no `adr`
- * token: for custom palettes adr is an alias of txt (documented decision).
+ * Approved OKLCH derivation v2 (attached_assets/barvna-izpeljava_1792834926623.html), 1:1.
+ * tile1 keeps the chosen lightness (clamped 0.32..0.75), darkened by 0.005
+ * until stroke reaches 4.6:1 on tile15 and tile2; all other tokens are relative
+ * to it. The sheet defines no `adr` token: adr aliases txt (documented decision).
  */
 export function deriveSimplePalette(baseHex: string): SimplePaletteTokens {
-  const [, Cb, Hb] = srgbToOklch(baseHex.trim().toUpperCase());
+  const [Lb, Cb, Hb] = srgbToOklch(baseHex.trim().toUpperCase());
   const nearGrey = Cb < 0.02;
   const H = Cb < 0.005 ? COOL : Hb;
   const C = nearGrey ? 0.045 : Math.min(0.165, Math.max(0.09, Cb));
-  const tile1 = oklchToHex(0.5, C, H);
-  const tile15 = oklchToHex(0.42, C * 0.82, toward(H, COOL, 4));
-  const tile2 = oklchToHex(0.29, C * 0.62, toward(H, COOL, 12));
-  const bg = oklchToHex(0.325, Math.min(C * 0.42, 0.075), toward(H, COOL, 18));
-  // Step 5: raise L by 0.01 until every pair on the rounded hex reaches 4.5:1.
+  const strokeL = 0.9, strokeC = Math.min(0.03, C * 0.5);
+  const build = (L1: number) => ({
+    tile1: oklchToHex(L1, C, H),
+    tile15: oklchToHex(L1 * 0.84, C * 0.82, toward(H, COOL, 4)),
+    tile2: oklchToHex(L1 * 0.58, C * 0.62, toward(H, COOL, 12)),
+    bg: oklchToHex(L1 * 0.65, Math.min(C * 0.42, 0.075), toward(H, COOL, 18)),
+  });
+  const stroke0 = oklchToHex(strokeL, strokeC, H);
+  // Step 5: computed upper bound of L1.
+  let L1 = Math.min(0.75, Math.max(0.32, Lb));
+  let t = build(L1);
+  while ((contrastRatio(stroke0, t.tile15) < 4.6 || contrastRatio(stroke0, t.tile2) < 4.6) && L1 > 0.32) {
+    L1 -= 0.005; t = build(L1);
+  }
+  // Step 7: raise L by 0.01 until every pair on the rounded hex reaches 4.5:1.
   const lift = (L: number, c: number, h: number, against: string[]) => {
     let l = L, hex = oklchToHex(l, c, h);
     while (l < 1 && against.some((o) => contrastRatio(hex, o) < AA)) { l = Math.min(1, +(l + 0.01).toFixed(4)); hex = oklchToHex(l, c, h); }
     return hex;
   };
-  const stroke = lift(0.9, Math.min(0.03, C * 0.5), H, [tile15, tile2]);
-  const txt = lift(0.94, Math.min(0.022, C * 0.4), H, [bg]);
-  const tint = lift(0.79, Math.min(0.055, C * 0.45), toward(H, COOL, 30), [bg]);
-  return { bg, tile1, tile15, tile2, stroke, txt, tint, adr: txt };
+  const stroke = lift(strokeL, strokeC, H, [t.tile15, t.tile2]);
+  const txt = lift(0.94, Math.min(0.022, C * 0.4), H, [t.bg]);
+  const tint = lift(0.79, Math.min(0.055, C * 0.45), toward(H, COOL, 30), [t.bg]);
+  return { bg: t.bg, tile1: t.tile1, tile15: t.tile15, tile2: t.tile2, stroke, txt, tint, adr: txt };
 }
 
 export function resolveGuestDesign(value: unknown): GuestDesign {
