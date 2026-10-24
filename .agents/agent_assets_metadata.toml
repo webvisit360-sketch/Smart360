@@ -3144,3 +3144,17 @@ mtime_ms = 1792802207272
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/5ef2bfef-4493-4fcd-8b87-c7a24b8f1ebe/24c90822-2fa2-4139-ab5b-a72acfdd7485"
 storage_version_token = "1792802208265488"
 content_type = "text/html"
+
+[[outputs]]
+id = "dg9ChbmJN8nYFEvjCRXM3"
+uri = "file://test-recordings/smartxstay/autoscale-import-report.html"
+type = "html"
+title = "Smartxstay: dokazila in navodila za ponovni uvoz"
+description = "Produkcijske ugotovitve, simulacija po korakih, preklic s pravo shrambo in varen vrstni red za lastnika."
+logical_id = "934e5707-54b9-47fb-b131-c865bed8d00a"
+content_hash = "sha256:32abb9c07f05eeed2063439d3c569cbba18dd3b9f6212c276ff02c3405b4c350"
+size = 5678
+mtime_ms = 1792820095710
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/934e5707-54b9-47fb-b131-c865bed8d00a/803a247a-a285-44df-be5a-d79b5331f026"
+storage_version_token = "1792820096392369"
+content_type = "text/html"

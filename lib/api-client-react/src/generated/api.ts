@@ -39,6 +39,7 @@ import type {
   AnnouncementResult,
   AnnouncementUpdate,
   AuthEventList,
+  CancelSmartxstayImport200,
   Category,
   CategoryInput,
   CategoryUpdate,
@@ -158,6 +159,7 @@ import type {
   SmartxstayImportInput,
   SmartxstayImportReceipt,
   SmartxstayImportRun,
+  StepSmartxstayImport200,
   StorageCleanupPreview,
   StorageCleanupRequest,
   StorageCleanupResult,
@@ -210,6 +212,140 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getStepSmartxstayImportUrl = (id: string,
+    runId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/smartxstay-imports/${runId}/step`
+}
+
+export const stepSmartxstayImport = async (id: string,
+    runId: string, options?: Parameters<typeof customFetch>[1]): Promise<StepSmartxstayImport200> => {
+
+  return customFetch<StepSmartxstayImport200>(getStepSmartxstayImportUrl(id,runId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStepSmartxstayImportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stepSmartxstayImport>>, TError,{id: string;runId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof stepSmartxstayImport>>, TError,{id: string;runId: string}, TContext> => {
+
+const mutationKey = ['stepSmartxstayImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stepSmartxstayImport>>, {id: string;runId: string}> = (props) => {
+          const {id,runId} = props ?? {};
+
+          return  stepSmartxstayImport(id,runId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StepSmartxstayImportMutationResult = NonNullable<Awaited<ReturnType<typeof stepSmartxstayImport>>>
+
+    export type StepSmartxstayImportMutationError = ErrorType<unknown>
+
+    export const useStepSmartxstayImport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stepSmartxstayImport>>, TError,{id: string;runId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof stepSmartxstayImport>>,
+        TError,
+        {id: string;runId: string},
+        TContext
+      > => {
+      return useMutation(getStepSmartxstayImportMutationOptions(options));
+    }
+
+export const getCancelSmartxstayImportUrl = (id: string,
+    runId: string,) => {
+
+
+
+
+  return `/api/admin/tenants/${id}/smartxstay-imports/${runId}/cancel`
+}
+
+export const cancelSmartxstayImport = async (id: string,
+    runId: string, options?: Parameters<typeof customFetch>[1]): Promise<CancelSmartxstayImport200> => {
+
+  return customFetch<CancelSmartxstayImport200>(getCancelSmartxstayImportUrl(id,runId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCancelSmartxstayImportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelSmartxstayImport>>, TError,{id: string;runId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelSmartxstayImport>>, TError,{id: string;runId: string}, TContext> => {
+
+const mutationKey = ['cancelSmartxstayImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelSmartxstayImport>>, {id: string;runId: string}> = (props) => {
+          const {id,runId} = props ?? {};
+
+          return  cancelSmartxstayImport(id,runId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelSmartxstayImportMutationResult = NonNullable<Awaited<ReturnType<typeof cancelSmartxstayImport>>>
+
+    export type CancelSmartxstayImportMutationError = ErrorType<unknown>
+
+    export const useCancelSmartxstayImport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelSmartxstayImport>>, TError,{id: string;runId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelSmartxstayImport>>,
+        TError,
+        {id: string;runId: string},
+        TContext
+      > => {
+      return useMutation(getCancelSmartxstayImportMutationOptions(options));
+    }
 
 export const getListSmartxstayImportsUrl = (id: string,) => {
 

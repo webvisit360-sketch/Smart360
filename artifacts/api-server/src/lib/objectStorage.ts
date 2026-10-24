@@ -12,7 +12,8 @@ import {
 
 const REPLIT_SIDECAR_ENDPOINT = 'http://127.0.0.1:1106';
 
-export const objectStorageClient = new Storage({
+function createStorageClient(bounded = false) { return new Storage({
+  ...(bounded ? { retryOptions: { autoRetry: false, maxRetries: 0 } } : {}),
   credentials: {
     audience: 'replit',
     subject_token_type: 'access_token',
@@ -28,7 +29,9 @@ export const objectStorageClient = new Storage({
     universe_domain: 'googleapis.com',
   },
   projectId: '',
-});
+}); }
+export const objectStorageClient = createStorageClient();
+export const importObjectStorageClient = createStorageClient(true);
 
 export class ObjectNotFoundError extends Error {
   constructor() {

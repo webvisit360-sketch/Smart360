@@ -22,6 +22,40 @@ tags:
   - name: messages
   - name: site-plan
 paths:
+  /admin/tenants/{id}/smartxstay-imports/{runId}/step:
+    post:
+      operationId: stepSmartxstayImport
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: One durable step completed, or another request owns the step
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [busy]
+                properties:
+                  busy: { type: boolean }
+  /admin/tenants/{id}/smartxstay-imports/{runId}/cancel:
+    post:
+      operationId: cancelSmartxstayImport
+      tags: [tenants]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Cancellation persisted and one cleanup step completed, or worker busy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [busy]
+                properties:
+                  busy: { type: boolean }
   /admin/tenants/{id}/smartxstay-imports:
     get:
       operationId: listSmartxstayImports

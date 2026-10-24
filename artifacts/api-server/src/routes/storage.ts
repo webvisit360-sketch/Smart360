@@ -29,6 +29,7 @@ import { listCleanupRuns, restoreFromTrash } from "../lib/mediaCleanup";
 import {
   ObjectStorageService,
   objectStorageClient,
+  importObjectStorageClient,
 } from "../lib/objectStorage";
 import { orientedImageDimensions } from "../lib/mediaDimensions";
 import { logChange } from "../lib/changelog";
@@ -56,6 +57,7 @@ export async function deletePhotoVariants(
   slug: string,
   name: string,
   deleteExact?: (bucketName: string, objectName: string) => Promise<void>,
+  bounded = false,
 ): Promise<void> {
   const { publishedSnapshotReferences } = await import("../lib/publishedSnapshots");
   if (await publishedSnapshotReferences(`/api/storage/img/${slug}/${name}`)) return;
@@ -74,7 +76,7 @@ export async function deletePhotoVariants(
     if (deleteExact) {
       await deleteExact(bucketName, objectName);
     } else {
-      await objectStorageClient.bucket(bucketName).file(objectName).delete({ ignoreNotFound: true });
+      await (bounded ? importObjectStorageClient : objectStorageClient).bucket(bucketName).file(objectName).delete({ ignoreNotFound: true });
     }
   }));
 }
@@ -88,6 +90,7 @@ export async function storePhotoVariants(
   slug: string,
   name: string,
   original: Buffer,
+  bounded = false,
 ): Promise<void> {
   const searchPath = storage.getPublicObjectSearchPaths()[0];
   if (!searchPath) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
@@ -100,10 +103,10 @@ export async function storePhotoVariants(
     const { bucketName, objectName } = parseObjectPath(
       `${searchPath}/media/${slug}/${w}/${name}`,
     );
-    await objectStorageClient
+    await (bounded ? importObjectStorageClient : objectStorageClient)
       .bucket(bucketName)
       .file(objectName)
-      .save(buf, { contentType: "image/jpeg" });
+      .save(buf, { contentType: "image/jpeg", ...(bounded ? { resumable: false, timeout: 15_000 } : {}) });
   }
 }
 

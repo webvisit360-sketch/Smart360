@@ -4215,6 +4215,14 @@ export const GuideStickerSizeParameter = {
   small: 'small',
 } as const;
 
+export type StepSmartxstayImport200 = {
+  busy: boolean;
+};
+
+export type CancelSmartxstayImport200 = {
+  busy: boolean;
+};
+
 export type RetryHostOnboardingRecommendations200 = {
   ok: boolean;
   recommendationProcessing: HostOnboardingRecommendationProcessing;

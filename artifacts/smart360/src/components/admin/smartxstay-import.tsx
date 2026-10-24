@@ -1,16 +1,40 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useListSmartxstayImports, useStartSmartxstayImport, getListSmartxstayImportsQueryKey } from "@workspace/api-client-react";
+import { useListSmartxstayImports, useStartSmartxstayImport, getListSmartxstayImportsQueryKey, stepSmartxstayImport, cancelSmartxstayImport } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function SmartxstayImport({ tenantId }: { tenantId: string }) {
   const [url, setUrl] = useState("");
+  const [stepError, setStepError] = useState("");
+  const [retry, setRetry] = useState(0);
   const client = useQueryClient();
   const history = useListSmartxstayImports(tenantId, { query: { queryKey: getListSmartxstayImportsQueryKey(tenantId), refetchInterval: 3000 } });
   const mutation = useStartSmartxstayImport();
   const latest = history.data?.[0];
+  const active = history.data?.find(x => ["preparing", "importing"].includes(x.status));
+  const requestStep = async (runId: string, action: "step" | "cancel") => {
+    return action === "step" ? stepSmartxstayImport(tenantId, runId) : cancelSmartxstayImport(tenantId, runId);
+  };
+  useEffect(() => {
+    if (!active) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const advance = async () => {
+      try {
+        await requestStep(active.id, "step");
+        if (stopped) return;
+        setStepError("");
+        const result = await history.refetch();
+        if (!stopped && result.data?.some(r => r.id === active.id && ["preparing", "importing"].includes(r.status))) timer = setTimeout(advance, 300);
+      } catch (error) {
+        if (!stopped) setStepError(error instanceof Error ? error.message : "Povezava je prekinjena. Nadaljujte uvoz.");
+      }
+    };
+    void advance();
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [active?.id, retry, tenantId]);
   const busy = mutation.isPending || history.data?.some(x => ["preparing", "importing"].includes(x.status));
   useEffect(() => {
     if (latest?.status === "completed") void client.invalidateQueries({
@@ -36,6 +60,19 @@ export function SmartxstayImport({ tenantId }: { tenantId: string }) {
       </form>
       {mutation.isError && <p role="alert">{mutation.error instanceof Error ? mutation.error.message : "Uvoza ni bilo mogoče začeti."}</p>}
       {history.isError && <p role="alert">Poročil ni bilo mogoče naložiti.</p>}
+      {active && <div className="space-y-2">
+        <p className="text-sm">Uvoz poteka po korakih. Pustite ta urejevalnik odprt. Po zaprtju se delo varno ustavi in nadaljuje ob ponovnem odprtju.</p>
+        {stepError && <p role="alert">{stepError}</p>}
+        <Button type="button" variant="outline" onClick={() => { setStepError(""); setRetry(n => n + 1); }}>Nadaljuj uvoz</Button>{" "}
+        <Button type="button" variant="outline" onClick={async () => {
+          if (!window.confirm("Prekličem uvoz in počistim neuporabljene datoteke? Že shranjeni osnutki in obstoječa vsebina ostanejo. Ponovitev preskoči že uvožene vnose.")) return;
+          try {
+            const body = await requestStep(active.id, "cancel");
+            setStepError(body.busy ? "Preklic je zabeležen. Počakajte, da se trenutni korak zaključi." : "");
+            setRetry(n => n + 1); await history.refetch();
+          } catch (error) { setStepError(error instanceof Error ? error.message : "Preklic ni uspel."); }
+        }}>Prekliči obtičani uvoz</Button>
+      </div>}
       {history.data?.map(run => {
         const report = run.report;
         const numbers = ["sections", "categories", "entries", "images", "bytes", "sourceBytes"] as const;

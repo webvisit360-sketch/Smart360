@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import sharp from "sharp";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db, tenantsTable, tenantAliasesTable, sectionsTable, categoriesTable, itemsTable, mediaTable, translationsTable,
@@ -16,6 +16,15 @@ export type ImportReport = {
 const emptyReport = (): ImportReport => ({ entries: 0, sections: 0, categories: 0, images: 0, bytes: 0, sourceBytes: 0, languages: {}, groups: {}, skipped: [] });
 const MAX_TOTAL = 128 * 1024 * 1024;
 const MAX_IMAGES = 300;
+type Photo = { name: string; width: number; height: number; bytes: number; hash: string };
+type Checkpoint = {
+  version?: number; pages?: Record<string, { page: SourcePage; bytes: number }>;
+  photos?: Record<string, Photo>; uploaded?: string[]; downloaded?: number; cancelling?: boolean;
+  contentCursor?: number;
+};
+class YieldStep extends Error {}
+const defaultIO = { fetch: fetchSmartxstay, store: (slug: string, name: string, data: Buffer) => storePhotoVariants(slug, name, data, true), remove: (slug: string, name: string) => deletePhotoVariants(slug, name, undefined, true), admit: admitImport };
+export type ImportIO = typeof defaultIO;
 const sectionKey = (label: string) => {
   const name = normalizedName(label);
   if (/local|recommend|okolica|services|storitve/.test(name)) return "explore";
@@ -32,31 +41,91 @@ export async function startSmartxstayImport(tenantId: string, value: string) {
   // Recovery is explicit operator action, not startup DDL or automatic fetching.
   const active = await db.select().from(runs).where(and(eq(runs.tenantId, tenantId), sql`${runs.status} IN ('preparing','importing')`));
   if (active.length) throw new Error("Uvoz že poteka. Če se je strežnik med uvozom ustavil, naj operater najprej preveri in počisti evidentirane datoteke.");
-  const [run] = await db.insert(runs).values({ tenantId, sourceUrl: url.href }).returning();
-  // Keep the request short. All outcomes are persisted and polled by the UI.
-  void performSmartxstayImport(run.id, tenantId, url.href).catch(error => console.error("smartxstay import outcome persistence failed", run.id, error));
+  const [run] = await db.insert(runs).values({ tenantId, sourceUrl: url.href, checkpoint: { version: 1 }, report: emptyReport() }).returning();
   return run.id;
 }
 
-export async function performSmartxstayImport(runId: string, tenantId: string, sourceUrl: string) {
+/** Transaction-scoped advisory lock fences concurrent instances AND cancellation.
+ * Unlike an expiring lease alone, it never lets a slow live worker overlap cleanup.
+ * Process death releases the lock; checkpoints survive. No background work. */
+export async function stepSmartxstayImport(runId: string, tenantId: string, cancel = false, io: ImportIO = defaultIO) {
+  // Cancellation intent can be recorded while a step owns the lock. Cleanup
+  // cannot begin until that step releases it. Never interrupt an object write.
+  if (cancel) {
+    const [found] = await db.select({ id: runs.id }).from(runs).where(and(eq(runs.id, runId), eq(runs.tenantId, tenantId)));
+    if (!found) throw new Error("Uvoz ne obstaja.");
+    await db.update(runs).set({ checkpoint: sql`${runs.checkpoint} || '{"cancelling":true}'::jsonb` })
+      .where(and(eq(runs.id, runId), sql`${runs.status} IN ('preparing','importing')`));
+  }
+  return db.transaction(async lock => {
+    const result = await lock.execute(sql`SELECT pg_try_advisory_xact_lock(hashtextextended(${runId}, 731)) AS acquired`);
+    if (!result.rows[0]?.acquired) return { busy: true };
+    const [run] = await db.select().from(runs).where(and(eq(runs.id, runId), eq(runs.tenantId, tenantId)));
+    if (!run) throw new Error("Uvoz ne obstaja.");
+    if (["completed", "failed"].includes(run.status)) return { busy: false };
+    const checkpoint = run.checkpoint as Checkpoint;
+    if (cancel) {
+      checkpoint.cancelling = true;
+      await db.update(runs).set({ checkpoint, report: { ...emptyReport(), ...run.report as object, error: "Operater je preklical uvoz. Čiščenje poteka." } }).where(eq(runs.id, runId));
+    }
+    if (checkpoint.cancelling) {
+      const manifest = run.objectManifest as { slug: string; name: string }[];
+      const object = manifest[0];
+      if (object) {
+        const [referenced] = await db.select({ id: mediaTable.id }).from(mediaTable)
+          .where(eq(mediaTable.url, `/api/storage/img/${object.slug}/${object.name}`)).limit(1);
+        if (!referenced) await io.remove(object.slug, object.name);
+        await db.update(runs).set({ objectManifest: manifest.slice(1) }).where(eq(runs.id, runId));
+      } else {
+        await db.update(runs).set({ status: "failed", report: { ...run.report as object, error: ((run.report as ImportReport).error || "Operater je preklical uvoz. Čiščenje končano.").replace("Čiščenje poteka.", "Čiščenje končano.") }, finishedAt: new Date(), leaseToken: null, leaseExpiresAt: null }).where(eq(runs.id, runId));
+        invalidateMediaUsage();
+      }
+      return { busy: false };
+    }
+    if (checkpoint.version !== 1) throw new Error("Stari obtičani uvoz najprej prekličite.");
+    await db.update(runs).set({ leaseToken: randomUUID(), leaseExpiresAt: new Date(Date.now() + 120_000) }).where(eq(runs.id, runId));
+    await performSmartxstayImport(runId, tenantId, run.sourceUrl, io);
+    await db.update(runs).set({ leaseToken: null, leaseExpiresAt: null }).where(eq(runs.id, runId));
+    return { busy: false };
+  });
+}
+
+async function performSmartxstayImport(runId: string, tenantId: string, sourceUrl: string, io: ImportIO) {
+  const [run] = await db.select().from(runs).where(eq(runs.id, runId));
+  const checkpoint = run.checkpoint as Checkpoint;
+  checkpoint.pages ??= {}; checkpoint.photos ??= {}; checkpoint.uploaded ??= [];
   const report = emptyReport();
-  const written: { slug: string; name: string }[] = [];
+  if (checkpoint.contentCursor) {
+    const prior = run.report as ImportReport;
+    for (const key of ["entries", "sections", "categories", "languages", "groups"] as const) Object.assign(report, { [key]: prior[key] });
+  }
+  const written = run.objectManifest as { slug: string; name: string }[];
+  const saveStep = async () => {
+    await db.update(runs).set({ checkpoint: sql`${runs.checkpoint} || ${JSON.stringify(checkpoint)}::jsonb`, report }).where(eq(runs.id, runId));
+    throw new YieldStep();
+  };
+  const loadPage = async (lang: string, url: string) => {
+    if (!checkpoint.pages![lang]) {
+      const data = await io.fetch(url, 4 * 1024 * 1024);
+      checkpoint.pages![lang] = { page: parseSmartxstay(data.toString("utf8"), url), bytes: data.length };
+      report.sourceBytes = Object.values(checkpoint.pages!).reduce((n, p) => n + p.bytes, 0);
+      await saveStep();
+    }
+    report.sourceBytes += checkpoint.pages![lang].bytes;
+    return checkpoint.pages![lang].page;
+  };
   let committed = false;
   let releaseQuota: (() => void) | undefined;
   try {
     const [tenant] = await db.select().from(tenantsTable).where(eq(tenantsTable.id, tenantId));
     if (!tenant) throw new Error("Nastanitev ne obstaja.");
-    const baseBuffer = await fetchSmartxstay(sourceUrl, 4 * 1024 * 1024);
-    report.sourceBytes += baseBuffer.length;
-    const base = parseSmartxstay(baseBuffer.toString("utf8"), sourceUrl);
+    const base = await loadPage("sl", sourceUrl);
     if (base.lang !== "sl") throw new Error("Vir ne vrne slovenskega izvirnika.");
     const pages = new Map<string, SourcePage>([["sl", base]]);
     // Probe every supported language; a fallback HTML lang is not a translation.
     for (const lang of GUIDE_LANGUAGES.filter(x => x !== "sl")) {
       const url = new URL(sourceUrl); url.searchParams.set("lang", lang);
-      const buffer = await fetchSmartxstay(url.href, 4 * 1024 * 1024);
-      report.sourceBytes += buffer.length;
-      const page = parseSmartxstay(buffer.toString("utf8"), url.href);
+      const page = await loadPage(lang, url.href);
       if (page.guideId !== base.guideId) throw new Error("Jezikovni vir pripada drugemu vodniku.");
       if (page.lang !== lang || !base.languages.includes(lang)) {
         report.skipped.push(`${lang}: vir tega jezika ne oglašuje oziroma vrne nadomestni jezik.`); continue;
@@ -64,7 +133,7 @@ export async function performSmartxstayImport(runId: string, tenantId: string, s
       pages.set(lang, page);
     }
     report.skipped.push(...base.skipped);
-    const previous = await db.select().from(sources).where(and(eq(sources.tenantId, tenantId), eq(sources.sourceGuideId, base.guideId)));
+    const previous = await db.select().from(sources).where(and(eq(sources.tenantId, tenantId), eq(sources.sourceGuideId, base.guideId), sql`${sources.runId} <> ${runId}`));
     const known = new Set(previous.map(x => x.sourceItemId));
     const entries = base.entries.filter(e => {
       if (!known.has(e.identity)) return true;
@@ -73,10 +142,11 @@ export async function performSmartxstayImport(runId: string, tenantId: string, s
     // Preflight ALL assets and exact encoded variant sizes before any content/storage write.
     const urls = [...new Set(entries.flatMap(e => e.images))];
     if (urls.length > MAX_IMAGES) throw new Error(`Preveč slik (${urls.length}; meja ${MAX_IMAGES}).`);
-    const photos = new Map<string, { data: Buffer; name: string; width: number; height: number; bytes: number }>();
-    let downloaded = 0;
+    const photos = new Map<string, Photo>(Object.entries(checkpoint.photos));
+    let downloaded = checkpoint.downloaded ?? 0;
     for (const url of urls) {
-      const data = await fetchSmartxstay(url, 15 * 1024 * 1024);
+      if (photos.has(url)) continue;
+      const data = await io.fetch(url, 15 * 1024 * 1024);
       downloaded += data.length;
       if (downloaded > MAX_TOTAL) throw new Error("Slike presegajo skupno omejitev 128 MiB.");
       const meta = await sharp(data, { limitInputPixels: 40_000_000 }).metadata();
@@ -87,19 +157,31 @@ export async function performSmartxstayImport(runId: string, tenantId: string, s
         bytes += (await sharp(data, { limitInputPixels: 40_000_000 }).rotate().resize({ width, withoutEnlargement: true })
           .jpeg({ quality: JPEG_QUALITY[width], mozjpeg: true }).toBuffer()).length;
       }
-      photos.set(url, { data, name: `smartxstay-${randomUUID()}.jpg`, width: meta.width, height: meta.height, bytes });
+      checkpoint.photos[url] = { name: `smartxstay-${randomUUID()}.jpg`, width: meta.width, height: meta.height, bytes, hash: createHash("sha256").update(data).digest("hex") };
+      checkpoint.downloaded = downloaded;
+      await saveStep();
     }
     const aliases = await db.select().from(tenantAliasesTable).where(eq(tenantAliasesTable.tenantId, tenantId));
     const totalBytes = [...photos.values()].reduce((sum, p) => sum + p.bytes, 0);
-    const admission = await admitImport(tenantId, [tenant.slug, ...aliases.map(x => x.slug)], tenant.mediaQuotaBytes, totalBytes);
+    const remainingBytes = [...photos.values()].filter(p => !checkpoint.uploaded!.includes(p.name)).reduce((n, p) => n + p.bytes, 0);
+    const admission = await io.admit(tenantId, [tenant.slug, ...aliases.map(x => x.slug)], tenant.mediaQuotaBytes, remainingBytes);
     if (!admission.ok)
       throw new Error(`Uvoz zavrnjen pred shranjevanjem: potrebuje ${totalBytes} bajtov; kvota bi bila presežena.`);
     releaseQuota = admission.release;
     await db.update(runs).set({ status: "importing" }).where(eq(runs.id, runId));
-    for (const photo of photos.values()) {
-      written.push({ slug: tenant.slug, name: photo.name });
+    report.images = checkpoint.uploaded.length;
+    report.bytes = [...photos.values()].filter(p => checkpoint.uploaded!.includes(p.name)).reduce((n, p) => n + p.bytes, 0);
+    for (const [url, photo] of photos) {
+      if (checkpoint.uploaded.includes(photo.name)) continue;
+      const data = await io.fetch(url, 15 * 1024 * 1024);
+      if (createHash("sha256").update(data).digest("hex") !== photo.hash) throw new Error("Izvorna slika se je med uvozom spremenila; ponovite uvoz.");
+      if (!written.some(p => p.name === photo.name)) written.push({ slug: tenant.slug, name: photo.name });
       await db.update(runs).set({ objectManifest: written }).where(eq(runs.id, runId));
-      await storePhotoVariants(tenant.slug, photo.name, photo.data);
+      await io.store(tenant.slug, photo.name, data);
+      checkpoint.uploaded.push(photo.name);
+      report.images++; report.bytes += photo.bytes;
+      invalidateMediaUsage();
+      await saveStep();
     }
     await db.transaction(async tx => {
       // Serialize content insertion with publication and other tenant edits.
@@ -111,7 +193,10 @@ export async function performSmartxstayImport(runId: string, tenantId: string, s
       const translations = async (model: string, recordId: string, field: string, lang: string, value: string) => {
         if (value) await tx.insert(translationsTable).values({ model, recordId, field, lang, value }).onConflictDoNothing();
       };
-      for (const entry of entries) {
+      // One entry per request; its identity, translations, media, report and
+      // cursor commit atomically. Retrying after a lost response cannot duplicate.
+      const cursor = checkpoint.contentCursor ?? 0;
+      for (const entry of entries.slice(cursor, cursor + 1)) {
         let category = categories.find(c => normalizedName(c.category.label) === normalizedName(entry.category))?.category;
         let newCategory = false, newSection = false;
         let section = category ? sections.find(s => s.id === category!.sectionId) : sections.find(s => s.key === sectionKey(entry.section));
@@ -154,20 +239,20 @@ export async function performSmartxstayImport(runId: string, tenantId: string, s
         await tx.update(tenantsTable).set({ hasUnpublishedChanges: true, operatorDraftPending: true }).where(eq(tenantsTable.id, tenantId));
         await tx.insert(changelogTable).values({ tenantId, action: "create", entity: "content", actorType: "owner", summary: "Uvoz vsebine v osnutek" });
       }
-      await tx.update(runs).set({ status: "completed", report, finishedAt: new Date() }).where(eq(runs.id, runId));
+      checkpoint.contentCursor = Math.min(cursor + 1, entries.length);
+      const complete = checkpoint.contentCursor >= entries.length;
+      await tx.update(runs).set({ status: complete ? "completed" : "importing", report,
+        checkpoint: sql`${runs.checkpoint} || ${JSON.stringify(checkpoint)}::jsonb`,
+        finishedAt: complete ? new Date() : null }).where(eq(runs.id, runId));
     });
     committed = true;
     invalidateMediaUsage();
   } catch (error) {
+    if (error instanceof YieldStep) return;
     if (committed) throw error;
-    const cleanupErrors: string[] = [];
-    for (const object of written) {
-      try { await deletePhotoVariants(object.slug, object.name); }
-      catch { cleanupErrors.push(object.name); }
-    }
     report.error = error instanceof Error ? error.message : "Uvoz ni uspel.";
-    if (cleanupErrors.length) report.skipped.push(`Čiščenje ni uspelo: ${cleanupErrors.join(", ")}`);
-    await db.update(runs).set({ status: "failed", report, finishedAt: new Date() }).where(eq(runs.id, runId));
+    checkpoint.cancelling = true;
+    await db.update(runs).set({ checkpoint, report }).where(eq(runs.id, runId));
     invalidateMediaUsage();
   } finally {
     releaseQuota?.();

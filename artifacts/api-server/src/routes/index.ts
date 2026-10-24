@@ -17,6 +17,7 @@ import hostAuthRouter from "./hostAuth";
 import hostOnboardingRouter from "./hostOnboarding";
 import enquiriesRouter from "./enquiries";
 import gpxRouter from "./gpx";
+import smartxstayImportRouter from "./adminSmartxstayImport";
 import { adminGate, assertAdminRoutesClassified } from "../lib/actorGate";
 
 const router: IRouter = Router();
@@ -71,13 +72,11 @@ router.use(ordersRouter);
 router.use(messagesRouter);
 router.use(announcementsRouter);
 router.use(part5MeliPuCutoverRouter);
+router.use(smartxstayImportRouter);
 
 // Boot-time exhaustiveness check: every /admin route must be classified in
 // the gate registry, or the server refuses to start (deny-by-default for new
 // code). Runs at module load, so a miss is caught before listen().
 assertAdminRoutesClassified(router);
-
-import smartxstayImportRouter from "./adminSmartxstayImport";
-router.use(smartxstayImportRouter);
 
 export default router;

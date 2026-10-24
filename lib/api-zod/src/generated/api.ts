@@ -8,6 +8,26 @@
 import * as zod from 'zod';
 
 
+export const StepSmartxstayImportParams = zod.object({
+  "id": zod.coerce.string(),
+  "runId": zod.coerce.string()
+})
+
+export const StepSmartxstayImportResponse = zod.object({
+  "busy": zod.boolean()
+})
+
+
+export const CancelSmartxstayImportParams = zod.object({
+  "id": zod.coerce.string(),
+  "runId": zod.coerce.string()
+})
+
+export const CancelSmartxstayImportResponse = zod.object({
+  "busy": zod.boolean()
+})
+
+
 export const ListSmartxstayImportsParams = zod.object({
   "id": zod.coerce.string()
 })

@@ -2,9 +2,18 @@ import { Router } from "express";
 import { and, desc, eq } from "drizzle-orm";
 import { db, smartxstayImportRunsTable } from "@workspace/db";
 import { requireOperator } from "../lib/actorGate";
-import { startSmartxstayImport } from "../lib/smartxstayImport";
+import { startSmartxstayImport, stepSmartxstayImport } from "../lib/smartxstayImport";
 
 const router = Router();
+for (const action of ["step", "cancel"]) {
+  router.post(`/admin/tenants/:id/smartxstay-imports/:runId/${action}`, requireOperator, async (req, res) => {
+    try {
+      res.json(await stepSmartxstayImport(String(req.params.runId), String(req.params.id), action === "cancel"));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "Korak uvoza ni uspel. Poskusite znova." });
+    }
+  });
+}
 router.post("/admin/tenants/:id/smartxstay-imports", requireOperator, async (req, res) => {
   if (typeof req.body?.url !== "string" || req.body.url.length > 2048) {
     res.status(400).json({ error: "Vnesite veljaven URL vodnika." }); return;
