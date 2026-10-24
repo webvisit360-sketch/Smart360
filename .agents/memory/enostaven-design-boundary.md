@@ -67,6 +67,14 @@ button label; generic Nastanitve keep the building.
 
 The owner's expanded category-icon catalogue is now the binding pictogram source
 for the whole Enostaven library, including its seven-language keyword lines.
+The latest catalogue replaces substring matching with normalized word-prefix
+stems: under-four-character curated stems match whole words only; longest stem
+wins, then matched-word count. Keep catalog overrides authoritative and audit
+unmatched visible categories server-side, including cached payload requests.
+**Why:** An interior `ijs` match incorrectly gave Policijska pisarna an ice-cream icon.
+**How to apply:** Import all new stem lines verbatim; keep meaningful legacy
+aliases on the same word-boundary rules. A deliberate map/location pin is not
+an unknown-category fallback and must not be removed to manufacture zero pins.
 Preserve exact SVGs rather than drawing a substitute from the English description:
 the supplied Breakfast SVG is coffee only, although the message mentions a croissant.
 Existing seed icon values must not prevent automatic category-label matching;

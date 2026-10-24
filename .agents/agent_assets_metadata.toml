@@ -3256,3 +3256,17 @@ mtime_ms = 1792845587455
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/066c08c1-409c-47c2-bef6-ffdf20510770/547ad89e-6cd0-4519-9dac-fd8428154249"
 storage_version_token = "1792846873018375"
 content_type = "text/html"
+
+[[outputs]]
+id = "AQ4aFdNrRmu0XRWNxQ-EI"
+uri = "file://artifacts/smart360/reports/oklch-palette/icon-v3/porocilo.html"
+type = "html"
+title = "Katalog ikon v3 — preverjanje Savinje, Meli Pu in Drobeža"
+description = "Posnetki390×844, izbirnik61ikon, primerjava kategorij, strežniško beleženje nadomestnih ikon in rezultati476testov. Razvojna aplikacija z nespremenjenimi javnimi podatki iz produkcije."
+logical_id = "d20bb766-404f-4ae6-99a1-d1cc5cb1f505"
+content_hash = "sha256:08f8fb0b8d5c1bdc12f4231ff06bc682453b90b7469f945e4f96eeb0b9db9a5e"
+size = 3158536
+mtime_ms = 1792849377595
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6a95e2a2-fcfe-4a45-a4ef-09fa9618fe02/d20bb766-404f-4ae6-99a1-d1cc5cb1f505/c284c1bd-8d1b-4950-9039-fb78e1eaa4de"
+storage_version_token = "1792849437165346"
+content_type = "text/html"

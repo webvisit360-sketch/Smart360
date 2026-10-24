@@ -4,169 +4,375 @@ export const TILE_ICON_CATALOG = [
     "id": "catalog:obvestila",
     "name": "Obvestila",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 3a5.8 5.8 0 0 0-5.8 5.8c0 4.5-1.7 5.8-1.7 5.8h15s-1.7-1.3-1.7-5.8A5.8 5.8 0 0 0 12 3zm-2 13.5a2 2 0 0 0 4 0z\"/></svg>"
   },
   {
     "id": "catalog:vreme",
     "name": "Vreme",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M8.5 5.5a4.5 4.5 0 0 1 4.3 3.2 4.9 4.9 0 0 1 .9-.2 5.6 5.6 0 0 0-10-2A4 4 0 0 0 4.9 9a4.6 4.6 0 0 1 3.6-3.5zM12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.3 9.5a4.2 4.2 0 0 0-4.1 3.3 3.4 3.4 0 0 0-3.9 1 2.9 2.9 0 0 0-5 2A2.9 2.9 0 0 0 7.2 21h10a4.2 4.2 0 0 0 4.3-4.2 4.2 4.2 0 0 0-4.2-7.3z\"/></svg>"
   },
   {
     "id": "catalog:pomoc-in-sos",
     "name": "Pomoč in SOS",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2.8 22 20.5H2zM11 9.5h2v5h-2zm0 6.5h2v2h-2z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:kontakt",
     "name": "Kontakt",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M5.5 3.5h4.2l1.6 4.8-2.4 1.7a13.6 13.6 0 0 0 4.6 4.6l1.7-2.4 4.8 1.6v4.2a1.9 1.9 0 0 1-2.1 1.9C9.6 19.3 4.2 13.9 3.6 5.6a1.9 1.9 0 0 1 1.9-2.1z\"/></svg>"
   },
   {
     "id": "catalog:dodaj-na-zacetni-zaslon",
     "name": "Dodaj na začetni zaslon",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M8 1.8h8a2 2 0 0 1 2 2v16.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V3.8a2 2 0 0 1 2-2zm2 2.1h4v1.3h-4zM11 9.6h2v2.9h2.9v2H13v2.9h-2v-2.9H8.1v-2H11z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:o-vodniku",
     "name": "O vodniku",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zM11 10h2v7h-2zm0-3.5h2v2h-2z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:dobrodosli",
     "name": "Dobrodošli",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 3 2.5 11h2.6v9h5.4v-5.6h3v5.6h5.4v-9h2.6z\"/></svg>"
   },
   {
     "id": "catalog:nastanitve",
     "name": "Nastanitve",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M4 3h16v18h-5.2v-4.4H9.2V21H4zM7 6.4h3v2.8H7zm7 0h3v2.8h-3zM7 11h3v2.8H7zm7 0h3v2.8h-3z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:apartmaji",
     "name": "Apartmaji",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M7.2 13.1a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8zM18.6 7.5h-7.2v6.7H3.5V4.8H1.6v14.4h1.9v-2.6h17v2.6h1.9v-7.8a3.9 3.9 0 0 0-3.8-3.9z\"/></svg>"
   },
   {
     "id": "catalog:vhodna-vrata",
     "name": "Vhodna vrata",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M19.5 2.6v19.9h-5V20h3.1V4.5h-3.1V2.6zM13 2.9 4.5 4.8v15.7L13 22.4zm-2.1 9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:klimatska-naprava",
     "name": "Klimatska naprava",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M3.5 4h17a1.4 1.4 0 0 1 1.4 1.4v4.7a1.4 1.4 0 0 1-1.4 1.4h-17a1.4 1.4 0 0 1-1.4-1.4V5.4A1.4 1.4 0 0 1 3.5 4zm2 4.3h13v1.3h-13z\" fill-rule=\"evenodd\"/><path d=\"M6.3 14.5c-.9 1.4.9 2.1.2 3.8M12 14.5c-.9 1.4.9 2.1.2 3.8M17.7 14.5c-.9 1.4.9 2.1.2 3.8\" stroke=\"currentColor\" stroke-width=\"2.1\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
   },
   {
     "id": "catalog:wi-fi",
     "name": "Wi-Fi",
     "keywords": [],
+    "stems": [],
     "svg": "<svg class=\"ln\" viewBox=\"0 0 24 24\"><path d=\"M3.8 10C8.3 5.8 15.7 5.8 20.2 10M6.6 13.2c3.1-2.8 7.7-2.8 10.8 0M9.5 16.3c1.5-1.3 3.5-1.3 5 0\"/><circle cx=\"12\" cy=\"19.2\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/></svg>"
   },
   {
     "id": "catalog:hisni-red",
     "name": "Hišni red",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M6 2.5h9.5L19.5 7v14.5H6zM14.5 3.8V8h4.2zM8.5 11.5h7v1.7h-7zm0 3.6h7v1.7h-7z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:navodila",
     "name": "Navodila",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 7.5a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6zm9 6-2.2-.3a7 7 0 0 1-.7 1.7l1.4 1.8-2.1 2.1-1.8-1.4a7 7 0 0 1-1.7.7l-.3 2.2h-3l-.3-2.2a7 7 0 0 1-1.7-.7l-1.8 1.4-2.1-2.1 1.4-1.8a7 7 0 0 1-.7-1.7L3 13.5v-3l2.2-.3a7 7 0 0 1 .7-1.7L4.5 6.7l2.1-2.1 1.8 1.4a7 7 0 0 1 1.7-.7l.3-2.2h3l.3 2.2a7 7 0 0 1 1.7.7l1.8-1.4 2.1 2.1-1.4 1.8a7 7 0 0 1 .7 1.7l2.2.3z\"/></svg>"
   },
   {
     "id": "catalog:prijava-odjava",
     "name": "Prijava / odjava",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm.9 10.1-4 2.3-.9-1.5 3.1-1.8V6h1.8z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:parkiranje",
     "name": "Parkiranje",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M6.5 3h11A3.5 3.5 0 0 1 21 6.5v11a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 17.5v-11A3.5 3.5 0 0 1 6.5 3zM9.4 6.8v10.4h2.4v-3.4h1.9a3.5 3.5 0 0 0 0-7zm2.4 2.2h1.7a1.3 1.3 0 0 1 0 2.6h-1.7z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:ponudba-s-cenami",
     "name": "Ponudba s cenami",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M3 4.6h2.4l.8 2.4H21l-1.9 9H7.2L4.6 6.3zM9.3 20.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0zm9.4 0a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0z\"/></svg>"
   },
   {
     "id": "catalog:domaci-izdelki",
     "name": "Domači izdelki",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M7.5 2.2h9v3h-9zM6 6.4h12a2 2 0 0 1 2 2V19a2.6 2.6 0 0 1-2.6 2.6H6.6A2.6 2.6 0 0 1 4 19V8.4a2 2 0 0 1 2-2zm1.5 5.1h9v4.4h-9z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:narocilo",
     "name": "Naročilo",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M9 2.2h6v1.6h4v18H5v-18h4zM8.3 12l1.3-1.3 1.9 1.9 3.9-3.9 1.3 1.3-5.2 5.2zM8 16.6h8v1.6H8z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:plaze",
     "name": "Plaže",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2.6a8.4 8.4 0 0 0-8.4 7.2h16.8A8.4 8.4 0 0 0 12 2.6zm-.9 8.6h1.8v6.4h-1.8z\"/><path d=\"M2.8 20.2c1.5-1.5 3.1-1.5 4.6 0s3.1 1.5 4.6 0 3.1-1.5 4.6 0 3.1 1.5 4.6 0\" stroke=\"currentColor\" stroke-width=\"2.1\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
   },
   {
     "id": "catalog:znamenitosti",
     "name": "Znamenitosti",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"m3 20 5.5-12 4.3 7.6L15.5 11 21 20z\"/><circle cx=\"17\" cy=\"6\" r=\"2\"/></svg>"
   },
   {
     "id": "catalog:pohodi",
     "name": "Pohodi",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"14.6\" cy=\"4\" r=\"1.9\"/><path d=\"m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z\"/></svg>"
   },
   {
     "id": "catalog:kolesarjenje",
     "name": "Kolesarjenje",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M6.3 13.2a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm11.4-6.7a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.7 8.3 13 12l-1 1.8-2.9-4.6zm3.8-3.6 1.6 3h2.4v1.8h-3.4l-2-3.6z\"/><path d=\"M9.3 6.5h3.2L16 12.9l-1.5.9-3.6-5.6H9.3z\"/></svg>"
   },
   {
     "id": "catalog:posnemi-turo",
     "name": "Posnemi turo",
     "keywords": [],
+    "stems": [],
     "svg": "<svg class=\"ln\" viewBox=\"0 0 24 24\"><path d=\"M4.5 20.5c6.5 0 3-8 8.5-9.3\"/><circle cx=\"4.5\" cy=\"20.5\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.5\" cy=\"8\" r=\"6.2\"/><circle cx=\"16.5\" cy=\"8\" r=\"3.4\" fill=\"currentColor\" stroke=\"none\"/></svg>"
   },
   {
     "id": "catalog:izleti",
     "name": "Izleti",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M11.1 2h1.8v2.2H18l2.7 2.5L18 9.2h-5.1v1.6H18.9l-2.7 2.5 2.7 2.5h-6V22h-1.8v-6.2H6l-2.7-2.5L6 10.8h5.1V9.2H6.1L3.4 6.7 6.1 4.2h5z\"/></svg>"
   },
   {
     "id": "catalog:program",
     "name": "Program",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M4 5.5h16V21H4zM8 3v4m8-4v4\" stroke=\"currentColor\" stroke-width=\"2.6\" fill=\"none\"/><path d=\"M4 9.5h16v1.6H4z\"/><circle cx=\"9\" cy=\"14.5\" r=\"1.3\"/><circle cx=\"15\" cy=\"14.5\" r=\"1.3\"/><circle cx=\"9\" cy=\"18\" r=\"1.3\"/></svg>"
   },
   {
     "id": "catalog:zemljevid",
     "name": "Zemljevid",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z\" fill-rule=\"evenodd\"/></svg>"
   },
   {
     "id": "catalog:sporocila",
     "name": "Sporočila",
     "keywords": [],
+    "stems": [],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M3.5 4.5h17v12h-11l-6 4.5z\"/></svg>"
+  },
+  {
+    "id": "catalog:potovanja",
+    "name": "Potovanja",
+    "keywords": [],
+    "stems": [
+      "potovanj",
+      "travel",
+      "trip",
+      "reise",
+      "viagg",
+      "voyage",
+      "reizen",
+      "reis",
+      "putovanj"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M9 2.6h6a1.6 1.6 0 0 1 1.6 1.6v1.6h2.8A2.4 2.4 0 0 1 21.8 8.2v10.4a2.4 2.4 0 0 1-2.4 2.4H4.6a2.4 2.4 0 0 1-2.4-2.4V8.2a2.4 2.4 0 0 1 2.4-2.4h2.8V4.2A1.6 1.6 0 0 1 9 2.6zm.4 1.9v1.3h5.2V4.5zM7.2 8v11h1.6V8zm8 0v11h1.6V8z\"/></svg>"
+  },
+  {
+    "id": "catalog:za-druzine",
+    "name": "Za družine",
+    "keywords": [],
+    "stems": [
+      "družin",
+      "famil",
+      "kid",
+      "familie",
+      "famigli",
+      "famill",
+      "gezin",
+      "obitelj"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"8.2\" cy=\"4.3\" r=\"2.3\"/><path d=\"M6.2 7.6h4.1l2.3 3.5 1.6-1.2.9 1.3-2.7 2-1.4-2.1V22H8.9v-5.4H7.5V22H5.2V11z\"/><circle cx=\"16.9\" cy=\"9.2\" r=\"1.8\"/><path d=\"M15.4 11.8h3.1l1.5 3-1.2.7-1.1-2.1V22H16v-3.8h-1V22h-1.7v-7z\"/></svg>"
+  },
+  {
+    "id": "catalog:vodni-sporti",
+    "name": "Vodni športi",
+    "keywords": [],
+    "stems": [
+      "vodni šport",
+      "water sport",
+      "wassersport",
+      "sport acquatic",
+      "sport nautique",
+      "watersport",
+      "vodeni sport"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"16.8\" cy=\"6\" r=\"2.1\"/><path d=\"M2.6 12.3l5.5-5 3.1 2.7 4.3 1.3-.6 1.9-4.8-1.4-1.5-1.3-2.4 2.2 3.4 2-1.1 1.7-7-3.3z\"/><path d=\"M2.4 18.6c1.4-1.3 2.9-1.3 4.3 0s2.9 1.3 4.3 0 2.9-1.3 4.3 0 2.9 1.3 4.3 0\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
+  },
+  {
+    "id": "catalog:zimski-sporti",
+    "name": "Zimski športi",
+    "keywords": [],
+    "stems": [
+      "zimski šport",
+      "winter sport",
+      "ski",
+      "wintersport",
+      "sport invernal",
+      "sci",
+      "sport d'hiver",
+      "wintersport",
+      "zimski sport",
+      "skij"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M11.2 2h1.6v3.1l2-1.2.8 1.4-2.8 1.7v3.6l3.1-1.8.2-3.2 1.6.1-.1 2.2 2.7-1.6.8 1.4-2.7 1.6 1.9 1.1-.8 1.4-2.8-1.6-3.1 1.8 3.1 1.8 2.8-1.6.8 1.4-1.9 1.1 2.7 1.6-.8 1.4-2.7-1.6.1 2.2-1.6.1-.2-3.2-3.1-1.8v3.6l2.8 1.7-.8 1.4-2-1.2V22h-1.6v-3.1l-2 1.2-.8-1.4 2.8-1.7v-3.6l-3.1 1.8-.2 3.2-1.6-.1.1-2.2-2.7 1.6-.8-1.4 2.7-1.6-1.9-1.1.8-1.4 2.8 1.6 3.1-1.8-3.1-1.8-2.8 1.6-.8-1.4 1.9-1.1-2.7-1.6.8-1.4 2.7 1.6-.1-2.2 1.6-.1.2 3.2 3.1 1.8V7l-2.8-1.7.8-1.4 2 1.2z\"/></svg>"
+  },
+  {
+    "id": "catalog:prevoz",
+    "name": "Prevoz",
+    "keywords": [],
+    "stems": [
+      "prevoz",
+      "transport",
+      "bus",
+      "verkehr",
+      "bus",
+      "trasport",
+      "transport",
+      "vervoer",
+      "prijevoz"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M5.4 2.8h13.2a2.6 2.6 0 0 1 2.6 2.6v12a2.6 2.6 0 0 1-2.6 2.6h-.4v1.4a1.2 1.2 0 0 1-2.4 0V20H8.2v1.4a1.2 1.2 0 0 1-2.4 0V20h-.4a2.6 2.6 0 0 1-2.6-2.6v-12A2.6 2.6 0 0 1 5.4 2.8zm-.6 3.1v6h14.4v-6zM6.6 15.1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm10.8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z\"/></svg>"
+  },
+  {
+    "id": "catalog:tic",
+    "name": "TIC",
+    "keywords": [],
+    "stems": [
+      "tic",
+      "tourist info",
+      "touristeninfo",
+      "info turist",
+      "office de tourisme",
+      "toeristenbureau",
+      "turističk"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M4.5 3h15A1.5 1.5 0 0 1 21 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-15A1.5 1.5 0 0 1 4.5 3zM11 10.2h2v7.2h-2zm0-3.7h2v2.2h-2z\"/></svg>"
+  },
+  {
+    "id": "catalog:posta",
+    "name": "Pošta",
+    "keywords": [],
+    "stems": [
+      "pošt",
+      "post",
+      "mail",
+      "post",
+      "post",
+      "poste",
+      "post",
+      "pošt"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M3 4.8h18a1 1 0 0 1 1 1v12.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5.8a1 1 0 0 1 1-1zm1.7 2.1L12 12.4l7.3-5.5 1.1 1.4L12 14.7 3.6 8.3z\"/></svg>"
+  },
+  {
+    "id": "catalog:defibrilatorji",
+    "name": "Defibrilatorji",
+    "keywords": [],
+    "stems": [
+      "defibrilator",
+      "defibrillator",
+      "aed",
+      "defibrillator",
+      "defibrillator",
+      "défibrillateur",
+      "defibrillator",
+      "defibrilator"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 21.4 4.2 13.5a5.3 5.3 0 0 1 0-7.4 5.1 5.1 0 0 1 7.3 0l.5.6.5-.6a5.1 5.1 0 0 1 7.3 0 5.3 5.3 0 0 1 0 7.4zM13.1 6.8l-3.3 5.3h2.1l-1.4 5 4.2-6h-2.2l1.7-4.3z\"/></svg>"
+  },
+  {
+    "id": "catalog:bolnisnice",
+    "name": "Bolnišnice",
+    "keywords": [],
+    "stems": [
+      "bolnišnic",
+      "bolnic",
+      "hospital",
+      "krankenhaus",
+      "ospedal",
+      "hôpita",
+      "ziekenhuis",
+      "bolnic"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M4 21V7.5L12 2.2l8 5.3V21h-5.4v-4.8H9.4V21zm7-14.6v2.1H8.9v2h2.1v2.1h2v-2.1h2.1v-2H13V6.4z\"/></svg>"
+  },
+  {
+    "id": "catalog:avtoservisi",
+    "name": "Avtoservisi",
+    "keywords": [],
+    "stems": [
+      "avtoservis",
+      "avtomehan",
+      "car service",
+      "garage",
+      "autowerkstatt",
+      "autofficin",
+      "garage",
+      "autogarage",
+      "autoservis"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M19.8 2.4a3.7 3.7 0 0 0-4.5 5l-2.4 2.4 2 2 2.4-2.4a3.7 3.7 0 0 0 5-4.5l-2.1 2.1-2-.6-.6-2z\"/><path fill-rule=\"evenodd\" d=\"M3 18.4v-2.7l1.5-.5 1.1-2.9A1.9 1.9 0 0 1 7.4 11h4.4l2.7 3.4h3.3a1.6 1.6 0 0 1 1.6 1.6v2.4h-1.5a2.2 2.2 0 0 0-4.2 0H9.4a2.2 2.2 0 0 0-4.2 0z\"/><circle cx=\"7.3\" cy=\"19\" r=\"1.7\"/><circle cx=\"17.3\" cy=\"19\" r=\"1.7\"/></svg>"
+  },
+  {
+    "id": "catalog:policijska-pisarna",
+    "name": "Policijska pisarna",
+    "keywords": [],
+    "stems": [
+      "polici",
+      "police",
+      "polizei",
+      "polizi",
+      "police",
+      "politie",
+      "policij"
+    ],
+    "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 2.2l8 2.6v6.3c0 5-3.4 8.6-8 10.7-4.6-2.1-8-5.7-8-10.7V4.8zm0 4.1 1.2 2.6 2.9.3-2.2 1.9.7 2.8L12 12.4l-2.6 1.5.7-2.8-2.2-1.9 2.9-.3z\"/></svg>"
   },
   {
     "id": "catalog:breakfast",
@@ -178,6 +384,16 @@ export const TILE_ICON_CATALOG = [
       "colazione",
       "petit-déjeuner",
       "ontbijt",
+      "doručak"
+    ],
+    "stems": [
+      "zajtrk",
+      "breakfast",
+      "frühstück",
+      "colazion",
+      "petit-déj",
+      "ontbijt",
+      "doručk",
       "doručak"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M4 10h12v4.5a5.5 5.5 0 0 1-5.5 5.5h-1A5.5 5.5 0 0 1 4 14.5zm13.5 1.5h.9a2.8 2.8 0 0 1 0 5.6h-1.8a7 7 0 0 0 .9-3zm.1 3.8h.8a1 1 0 0 0 0-2h-.8zM3 21.2h14v1.6H3z\"/><path d=\"M7.1 3.2c-.8 1.2.8 1.7.2 3.2M10.6 3.2c-.8 1.2.8 1.7.2 3.2\" stroke=\"currentColor\" stroke-width=\"1.9\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
@@ -194,6 +410,18 @@ export const TILE_ICON_CATALOG = [
       "waar eten",
       "gdje jesti"
     ],
+    "stems": [
+      "jesti",
+      "hran",
+      "eat",
+      "food",
+      "essen",
+      "mangiar",
+      "manger",
+      "eten",
+      "jesti",
+      "hran"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 5.3a6.7 6.7 0 1 0 0 13.4A6.7 6.7 0 0 0 12 5.3zm0 2.4a4.3 4.3 0 1 1 0 8.6 4.3 4.3 0 0 1 0-8.6zM3.1 4.3h1.2v3.5h.8V4.3h1.2v3.5h.8V4.3h1.2v4.5a2.3 2.3 0 0 1-1.6 2.2v8.7H5.1v-8.7a2.3 2.3 0 0 1-1.6-2.2zm16.5 0c1.2 1.7 1.2 5.4 0 7.2v8.2h-1.4V4.6z\"/></svg>"
   },
   {
@@ -207,6 +435,16 @@ export const TILE_ICON_CATALOG = [
       "vie nocturne",
       "nachtleven",
       "noćni život"
+    ],
+    "stems": [
+      "nočno",
+      "nočn",
+      "nightlif",
+      "nachtleb",
+      "notturn",
+      "nocturne",
+      "nachtlev",
+      "noćn"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M3.8 3.5h16.4l-7.3 8.2v6.4h3.3V20H7.8v-1.9h3.3v-6.4zM7 5.4l2.1 2.4h5.8L17 5.4z\"/></svg>"
   },
@@ -222,6 +460,15 @@ export const TILE_ICON_CATALOG = [
       "pizzeria's",
       "picerije"
     ],
+    "stems": [
+      "piceri",
+      "pizzeri",
+      "pizzeri",
+      "pizzeri",
+      "pizzéri",
+      "pizzeri",
+      "piceri"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 2.2c3.6 0 7 1 9.9 2.9L12 22.6 2.1 5.1A19.2 19.2 0 0 1 12 2.2zm-1.7 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm4.8 3.4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-3.1 4.3a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z\"/></svg>"
   },
   {
@@ -235,6 +482,17 @@ export const TILE_ICON_CATALOG = [
       "activités",
       "activiteiten",
       "aktivnosti"
+    ],
+    "stems": [
+      "aktivnost",
+      "things to do",
+      "activit",
+      "aktivität",
+      "cose da fare",
+      "attivit",
+      "activité",
+      "activiteit",
+      "aktivnost"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 2.5A9.5 9.5 0 1 0 21.5 12 9.5 9.5 0 0 0 12 2.5zm4.9 4.6-3.2 6.4-6.6 3.4 3.2-6.4zM12 10.9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z\"/></svg>"
   },
@@ -250,6 +508,16 @@ export const TILE_ICON_CATALOG = [
       "wandelen",
       "planinarenje"
     ],
+    "stems": [
+      "pohod",
+      "pohodništv",
+      "hik",
+      "wander",
+      "escursion",
+      "randonné",
+      "wandel",
+      "planinar"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"14.6\" cy=\"4\" r=\"1.9\"/><path d=\"m13.2 6.6-3.4 3 2.6 2.7-4 7.9 2.3 1.1 3.6-7.1 2.9 1.9 1.7 5.1 2.2-.7-1.9-5.9-3.2-2.1 1.9-1.7 2.9 1.5.9-1.8-3.6-1.9z\"/></svg>"
   },
   {
@@ -263,6 +531,17 @@ export const TILE_ICON_CATALOG = [
       "magasins",
       "winkels",
       "trgovine"
+    ],
+    "stems": [
+      "trgovin",
+      "shop",
+      "store",
+      "geschäft",
+      "laden",
+      "negoz",
+      "magasin",
+      "winkel",
+      "trgovin"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 2.3a3.9 3.9 0 0 0-3.9 3.9v.9H4.5L3.7 21.7h16.6L19.5 7.1h-3.6v-.9A3.9 3.9 0 0 0 12 2.3zm0 1.8a2.1 2.1 0 0 1 2.1 2.1v.9H9.9v-.9A2.1 2.1 0 0 1 12 4.1z\"/></svg>"
   },
@@ -278,6 +557,16 @@ export const TILE_ICON_CATALOG = [
       "bakkerijen",
       "pekare"
     ],
+    "stems": [
+      "pekarn",
+      "bakerie",
+      "bakery",
+      "bäckerei",
+      "panetteri",
+      "boulangeri",
+      "bakkerij",
+      "pekar"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 4.8c-5.2 0-9.5 2.5-9.5 5.6 0 1.3.8 2.5 2.1 3.4v5.4h14.8v-5.4c1.3-.9 2.1-2.1 2.1-3.4 0-3.1-4.3-5.6-9.5-5.6zM8.1 8.9l1.5.9-2 3.4-1.5-.9zm4.5 0 1.5.9-2 3.4-1.5-.9zm4.5 0 1.5.9-2 3.4-1.5-.9z\"/></svg>"
   },
   {
@@ -291,6 +580,16 @@ export const TILE_ICON_CATALOG = [
       "stations-service",
       "tankstations",
       "benzinske postaje"
+    ],
+    "stems": [
+      "bencinsk",
+      "petrol",
+      "gas station",
+      "tankstell",
+      "benzina",
+      "station-service",
+      "tankstation",
+      "benzinsk"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M4 2.8h9.2v18.4H4zm2 2v4.4h5.2V4.8zm10.3 2.1 3.6 3.6a2 2 0 0 1 .6 1.4v6.6a2.4 2.4 0 0 1-4.8.2v-4.3h-1.1v7.4h-1.5V6.3zm1.3 3.3v2.6h1.1v-1.5z\"/><path d=\"M2.6 21.2h12\" stroke=\"currentColor\" stroke-width=\"1.9\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
   },
@@ -306,6 +605,16 @@ export const TILE_ICON_CATALOG = [
       "geldautomaten",
       "bankomati"
     ],
+    "stems": [
+      "bankomat",
+      "cash machine",
+      "atm",
+      "geldautomat",
+      "bancomat",
+      "distributeur",
+      "geldautomaat",
+      "bankomat"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M2.6 2.6h18.8v5H2.6zm2 1.6v1.8h14.8V4.2zM7 9.4h10a1.6 1.6 0 0 1 1.6 1.6v9.4a1.6 1.6 0 0 1-1.6 1.6H7a1.6 1.6 0 0 1-1.6-1.6V11A1.6 1.6 0 0 1 7 9.4zm.4 2.2v2h9.2v-2z\"/></svg>"
   },
   {
@@ -319,6 +628,15 @@ export const TILE_ICON_CATALOG = [
       "pharmacies",
       "apotheken",
       "ljekarne"
+    ],
+    "stems": [
+      "lekarn",
+      "pharmac",
+      "apothek",
+      "farmaci",
+      "pharmaci",
+      "apothe",
+      "ljekarn"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M10.5 3.5h3v7h7v3h-7v7h-3v-7h-7v-3h7z\"/></svg>"
   },
@@ -334,6 +652,15 @@ export const TILE_ICON_CATALOG = [
       "gezondheidszorg",
       "zdravstvo"
     ],
+    "stems": [
+      "zdravstv",
+      "healthcar",
+      "gesundheit",
+      "sanit",
+      "santé",
+      "gezondheid",
+      "zdravstv"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 21.4 4.2 13.5a5.3 5.3 0 0 1 0-7.4 5.1 5.1 0 0 1 7.3 0l.5.6.5-.6a5.1 5.1 0 0 1 7.3 0 5.3 5.3 0 0 1 0 7.4zM11 8.4v2.5H8.5v2H11v2.5h2v-2.5h2.5v-2H13V8.4z\"/></svg>"
   },
   {
@@ -347,6 +674,15 @@ export const TILE_ICON_CATALOG = [
       "carte",
       "kaart",
       "karta"
+    ],
+    "stems": [
+      "zemljevid",
+      "map",
+      "karte",
+      "mapp",
+      "carte",
+      "kaart",
+      "kart"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 12.5 6.5 12.5s6.5-7.6 6.5-12.5c0-3.6-2.9-6.5-6.5-6.5zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6z\" fill-rule=\"evenodd\"/></svg>"
   },
@@ -362,6 +698,15 @@ export const TILE_ICON_CATALOG = [
       "supboard",
       "sup daska"
     ],
+    "stems": [
+      "sup",
+      "sup",
+      "sup",
+      "sup",
+      "sup",
+      "sup",
+      "sup"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><circle cx=\"10.8\" cy=\"3.8\" r=\"1.9\"/><path d=\"m9.7 6.4 3.1.9 1.2 4.1 3.2 1 .5 1.9-4.7-1.4-.9-3-2.2 5.3-2-.4 2.4-5.9z\"/><path d=\"M2.9 17.2c2.6-1 15.6-1 18.2 0l-2.3 2.5H5.2z\"/><path d=\"M17.2 2.6l-3.6 14\" stroke=\"currentColor\" stroke-width=\"1.7\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
   },
   {
@@ -373,6 +718,15 @@ export const TILE_ICON_CATALOG = [
       "roller",
       "monopattino",
       "trottinette",
+      "step",
+      "romobil"
+    ],
+    "stems": [
+      "skiro",
+      "scooter",
+      "roller",
+      "monopattin",
+      "trottinett",
       "step",
       "romobil"
     ],
@@ -390,6 +744,16 @@ export const TILE_ICON_CATALOG = [
       "buitenfitness",
       "vanjski fitnes"
     ],
+    "stems": [
+      "fitnes",
+      "outdoor gym",
+      "gym",
+      "fitness",
+      "palestr",
+      "fitness",
+      "fitness",
+      "fitnes"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M1.8 10.2h2v3.6h-2zM4.5 7.8h2.7v8.4H4.5zm12.3 0h2.7v8.4h-2.7zm3.4 2.4h2v3.6h-2zM7.9 10.9h8.2v2.2H7.9z\"/></svg>"
   },
   {
@@ -398,6 +762,16 @@ export const TILE_ICON_CATALOG = [
     "keywords": [
       "žar",
       "barbecue",
+      "grill",
+      "barbecue",
+      "barbecue",
+      "barbecue",
+      "roštilj"
+    ],
+    "stems": [
+      "žar",
+      "barbecue",
+      "bbq",
       "grill",
       "barbecue",
       "barbecue",
@@ -418,6 +792,15 @@ export const TILE_ICON_CATALOG = [
       "boot met schipper",
       "brod sa skiperom"
     ],
+    "stems": [
+      "skiper",
+      "skipper",
+      "skipper",
+      "skipper",
+      "skipper",
+      "schipper",
+      "skiper"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 2.2a4.1 4.1 0 1 0 0 8.2 4.1 4.1 0 0 0 0-8.2zm0 1.8a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6zm0 1.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z\"/><path d=\"M12 .9v1.5M12 10.2v1.5M7.3 6.3H5.8M18.2 6.3h-1.5\" stroke=\"currentColor\" stroke-width=\"1.7\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M2.6 14.8h18.8l-2.7 5.2H5.3z\"/></svg>"
   },
   {
@@ -431,6 +814,21 @@ export const TILE_ICON_CATALOG = [
       "ligne maritime",
       "bootlijn",
       "brodska linija"
+    ],
+    "stems": [
+      "ladijsk",
+      "ladj",
+      "boat line",
+      "ferry",
+      "schiffslini",
+      "fähre",
+      "linea marittim",
+      "traghett",
+      "ligne maritim",
+      "bootlijn",
+      "veerboot",
+      "brodsk",
+      "trajekt"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M7 2.8h10v3h3v5.2H4V5.8h3zm-1 4.8v1.7h2.3V7.6zm4.1 0v1.7h2.3V7.6zm4.1 0v1.7h2.3V7.6zM3 12.9h18l-2.3 4.7H5.3z\"/><path d=\"M2.4 20.6c1.4-1.3 2.8-1.3 4.2 0s2.8 1.3 4.2 0 2.8-1.3 4.2 0 2.8 1.3 4.2 0\" stroke=\"currentColor\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/></svg>"
   },
@@ -446,6 +844,16 @@ export const TILE_ICON_CATALOG = [
       "spellen",
       "igre"
     ],
+    "stems": [
+      "igr",
+      "game",
+      "spiel",
+      "gioch",
+      "gioc",
+      "jeu",
+      "spel",
+      "igr"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M6 2.8h12a3.2 3.2 0 0 1 3.2 3.2v12a3.2 3.2 0 0 1-3.2 3.2H6A3.2 3.2 0 0 1 2.8 18V6A3.2 3.2 0 0 1 6 2.8zm2.3 3.3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm7.4 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-3.7 4.4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm7.4 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z\"/></svg>"
   },
   {
@@ -460,6 +868,16 @@ export const TILE_ICON_CATALOG = [
       "olijfolie",
       "maslinovo ulje"
     ],
+    "stems": [
+      "oljčn",
+      "oliv",
+      "olive oil",
+      "olivenöl",
+      "oliv",
+      "huile d'oliv",
+      "olijfoli",
+      "maslinov"
+    ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M7.9 1.9h3.8v1.8l-.5.3v2.1a6 6 0 0 1 3.3 5.4v8.3A2.3 2.3 0 0 1 12.2 22H7.4a2.3 2.3 0 0 1-2.3-2.2v-8.3A6 6 0 0 1 8.4 6.1V4l-.5-.3zM7 11.9h5.6v4.4H7z\"/><path d=\"M16.6 3.1c2.5.3 4.2 2 4.5 4.5-2.5-.3-4.2-2-4.5-4.5z\"/><circle cx=\"17.4\" cy=\"9.6\" r=\"1.5\"/><circle cx=\"20.2\" cy=\"11.2\" r=\"1.5\"/></svg>"
   },
   {
@@ -473,6 +891,15 @@ export const TILE_ICON_CATALOG = [
       "glace 24h/24",
       "ijs 24/7",
       "sladoled 24/7"
+    ],
+    "stems": [
+      "sladoled",
+      "ice cream",
+      "eis",
+      "gelat",
+      "glace",
+      "ijs",
+      "sladoled"
     ],
     "svg": "<svg viewBox=\"0 0 24 24\"><path fill-rule=\"evenodd\" d=\"M12 1.8a5.1 5.1 0 0 0-5.1 5v1h10.2v-1a5.1 5.1 0 0 0-5.1-5zM7.2 9.3h9.6L12 22.6zm3 1.9 1.3 3.4 1-3.4z\"/></svg>"
   }

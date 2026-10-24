@@ -2,7 +2,7 @@
 // actual published sections/categories plus runtime features. No hardcoded
 // category list — only runtime features (notices, weather, SOS…) are fixed.
 import type { SimpleIconKey } from "./simple-icons";
-import { matchTileCatalog, tileCatalogEntry, tileKeyForCatalog } from "@workspace/category-icons";
+import { resolveCategoryTileIcon } from "@workspace/category-icons";
 import { simpleCopy, type SimpleCopyKey } from "./simple-copy";
 
 export type SimpleTileAction =
@@ -38,48 +38,8 @@ export function simpleLabelSize(label: string): number {
 
 const vis = (rows: any[] | null | undefined) => (rows ?? []).filter((r) => r?.isVisible !== false);
 
-const RULES: [RegExp, SimpleIconKey][] = [
-  [/welcome|dobrodo|willkommen|benvenut|bienvenue|welkom|dobrodoš/, "house"],
-  [/wi-?fi|wlan/, "wifi"],
-  [/park/, "parking"],
-  [/door|vrata|entrance|vhod/, "door"],
-  [/klim|air ?con|\bac\b|aircon/, "ac"],
-  [/check|prijava|odjava/, "clock"],
-  [/rule|red\b|hišni|house-?rules/, "doc"],
-  [/instruct|navodil|appliance|manual/, "gear"],
-  [/apartm|appart|ferienwohn/, "bed"],
-  [/room|sob|accommod|nastanit|units?/, "building"],
-  [/beach|plaž|strand|spiagg|plage/, "beach"],
-  [/hike|pohod|walk|wander/, "hike"],
-  [/bike|kolo|kolesar|cycl/, "bike"],
-  [/trip|izlet|excurs|ausflug/, "trips"],
-  [/program|event|dogod/, "calendar"],
-  [/sight|znamenit|attract|poi/, "mountain"],
-  [/local|domač|product|izdelk|farm/, "bag"],
-];
-
 export function simpleCategoryIcon(category: any, sectionKey: string): SimpleIconKey {
-  const override = tileCatalogEntry(category?.icon);
-  if (override) return tileKeyForCatalog(override) as SimpleIconKey;
-  const match = matchTileCatalog(category?.label ?? category?.title ?? "");
-  if (match) return tileKeyForCatalog(match) as SimpleIconKey;
-  // Explicit button names take precedence over generic/stale category keys.
-  const label = (category?.label ?? category?.title ?? "").trim().toLowerCase();
-  if (/^apartmaji$|^apartments$|^appartamenti$|^appartements$|^appartementen$|^apartmani$|^ferienwohnungen$/.test(label)) return "bed";
-  if (/^nastanitev$/.test(label)) return "building";
-  if (/^vhodna vrata$/.test(label)) return "door";
-  if (/^domači izdelki$/.test(label)) return "bag";
-  const hay = `${category?.key ?? ""} ${category?.label ?? category?.title ?? ""}`.toLowerCase();
-  if (category?.layout === "wifi") return "wifi";
-  if (category?.layout === "events") return "calendar";
-  for (const [re, icon] of RULES) if (re.test(label)) return icon;
-  for (const [re, icon] of RULES) if (re.test(hay)) return icon;
-  if (category?.layout === "apartments") return "bed";
-  if (category?.layout === "routes") return "hike";
-  if (category?.layout === "products") return sectionKey === "offer" ? "cart" : "bag";
-  if (sectionKey === "offer") return "cart";
-  if (sectionKey === "explore" || sectionKey === "services") return "pin";
-  return "doc";
+  return resolveCategoryTileIcon(category ?? {}, sectionKey).icon as SimpleIconKey;
 }
 
 function categoryTiles(section: any): SimpleTile[] {

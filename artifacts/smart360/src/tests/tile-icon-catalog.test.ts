@@ -7,13 +7,16 @@ import {
 } from "@workspace/category-icons";
 import { simpleCategoryIcon } from "../pages/living-guide/simple/simple-tiles";
 
-test("all 50 catalog SVGs and keywords are imported verbatim", () => {
-  const html = readFileSync(new URL("../../../../attached_assets/ikone-gumbov-1_1792535751859.html", import.meta.url), "utf8");
+test("all 61 catalog SVGs and stems are imported verbatim", () => {
+  const html = readFileSync(new URL("../../../../attached_assets/ikone-gumbov_2_1792848077911.html", import.meta.url), "utf8");
   const decode = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const source = [...html.matchAll(/<pre>([\s\S]*?)<\/pre>/g)].map(m => decode(m[1]));
-  assert.equal(TILE_ICON_CATALOG.length, 50);
+  assert.equal(TILE_ICON_CATALOG.length, 61);
   assert.deepEqual(TILE_ICON_CATALOG.map(e => e.svg), source);
-  assert.equal(new Set(TILE_ICON_CATALOG.map(e => e.id)).size, 50);
+  assert.equal(new Set(TILE_ICON_CATALOG.map(e => e.id)).size, 61);
+  const stemLines = [...html.matchAll(/<div class="kw"><b>Ključna debla \(stems\):<\/b>(.*?)<\/div>/g)]
+    .map(m => m[1].split(/\s*\/\s*|\|/).map(s => s.trim()));
+  assert.deepEqual(TILE_ICON_CATALOG.filter(e => e.stems.length).map(e => e.stems), stemLines);
   for (const entry of TILE_ICON_CATALOG) assert.ok(!/<script|on\w+=|href=/i.test(entry.svg));
 });
 
@@ -53,5 +56,23 @@ test("explicit selection wins; automatic reset, invalid stored key and nonsense 
   assert.equal(simpleCategoryIcon({ label: "Xqzv 987" }, "offer"), "cart");
   assert.equal(matchTileCatalog("Xqzv 987"), undefined);
   assert.ok(searchTileCatalog("FRUHSTUCK").some(e => e.id === "catalog:breakfast"));
-  assert.equal(searchTileCatalog("").length, 50);
+  assert.equal(searchTileCatalog("").length, 61);
+});
+
+test("v3 word boundaries, short exact stems, longest match and new Savinja icons", () => {
+  const cases: Record<string, string> = {
+    "Policijska pisarna": "policijska-pisarna", "Pekarna": "bakeries",
+    "Potovanja": "potovanja", "Za družine": "za-druzine",
+    "Bolnišnice": "bolnisnice", "Defibrilatorji": "defibrilatorji",
+    "Vodni športi": "vodni-sporti", "Zimski športi": "zimski-sporti",
+    "Prevoz": "prevoz", "TIC": "tic", "Pošta": "posta", "Avtoservisi": "avtoservisi",
+    "EIS": "ice-cream-24-7", "SUP": "sup-board",
+  };
+  for (const [label, id] of Object.entries(cases)) assert.equal(matchTileCatalog(label)?.id, `catalog:${id}`, label);
+  for (const label of ["xpolicecream", "supermarketxyz", "statictest", "eisbergxyz", "xpekarnaxyz"]) {
+    assert.equal(matchTileCatalog(label), undefined, label);
+  }
+  assert.equal(matchTileCatalog("boat with a skipper")?.id, "catalog:boat-with-a-skipper");
+  assert.equal(matchTileCatalog("POLICIJSKA PISARNA")?.id, "catalog:policijska-pisarna");
+  assert.equal(simpleCategoryIcon({label:"Policijska pisarna", icon:"catalog:ice-cream-24-7"}, "services"), "catalog:ice-cream-24-7");
 });

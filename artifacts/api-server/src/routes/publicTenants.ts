@@ -25,6 +25,7 @@ import { readPublishedContent, type PublishedContent } from "../lib/publishedSna
 import { guestOfflineConfig, renderGuestServiceWorker, renderLegacyGuestServiceWorker } from "../lib/guestServiceWorker";
 import { getTenantWeatherCached } from "../lib/tenantWeather";
 import { makeGuideSticker } from "../lib/guideStickers";
+import { auditCategoryIconFallbacks } from "../lib/categoryIconAudit";
 
 function serialize<T>(value: T): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -252,13 +253,14 @@ router.get("/public/tenant-by-domain", async (req, res): Promise<void> => {
   const lang = enabledLang(tenant, req);
   // Preview (and unpublished) requests bypass the payload cache: the operator
   // must always see the database as it is right now.
-  const { payload } = await getPublicPayload(tenant, lang, {
+  const { payload, tree } = await getPublicPayload(tenant, lang, {
     bypassCache: preview || !tenant.isPublished,
     visibleOnly: !preview,
   });
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
+  if (tree.guestDesign === "simple") auditCategoryIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
   res.json(payload);
 });
 
@@ -420,13 +422,14 @@ router.get("/public/tenants/:slug", async (req, res): Promise<void> => {
   const lang = enabledLang(tenant, req);
   // Preview (and unpublished) requests bypass the payload cache: the operator
   // must always see the database as it is right now.
-  const { payload } = await getPublicPayload(tenant, lang, {
+  const { payload, tree } = await getPublicPayload(tenant, lang, {
     bypassCache: preview || !tenant.isPublished,
     visibleOnly: !preview,
   });
   // An admin save must reach a reloading guest within a second — never let
   // the browser reuse a cached copy of this JSON.
   res.set("Cache-Control", "no-store");
+  if (tree.guestDesign === "simple") auditCategoryIconFallbacks(tenant.id, lang ?? "sl", tree.sections);
   res.json(payload);
 });
 
