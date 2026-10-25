@@ -20,8 +20,19 @@ test("Kuula embed policy hides chrome while preserving identity and unrelated pa
   assert.equal(url.searchParams.get("gyro"), "0");
   assert.equal(url.searchParams.get("thumbs"), "-1");
   assert.equal(url.searchParams.get("pause"), "0");
+  assert.equal(url.searchParams.get("inst"), "0");
   assert.equal(url.searchParams.get("autorotate"), "0.16");
   assert.equal(url.searchParams.get("custom"), "kept");
+});
+
+test("Kuula instructions are disabled for existing links, explicit instructions and legacy options", () => {
+  for (const suffix of ["", "?inst=1", "?hideinst=0", "?inst=1&hideinst=0"]) {
+    const stored = `https://kuula.co/share/collection/7d9xj${suffix}`;
+    const result = new URL(virtualTourEmbedUrl(stored)!);
+    assert.equal(result.searchParams.get("inst"), "0");
+    assert.equal(result.pathname, "/share/collection/7d9xj");
+    assert.equal(virtualTourEmbedUrl(result.href), result.href);
+  }
 });
 
 test("non-Kuula providers keep their normalized URL unchanged", () => {

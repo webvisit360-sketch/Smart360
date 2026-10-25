@@ -1,4 +1,5 @@
 # Memory index
+- [Kuula instruction overlay](kuula-instructions.md) — narrow instruction toggle differs from navigation chrome; inst overrides legacy hideinst.
 - [System tiles and refresh](system-tiles-refresh.md) — published visibility defaults, SOS confirmation, and protection across content refresh and PWA resumes.
 - [Smartxstay import boundary](smartxstay-import-boundary.md) — operator-click only, additive drafts, preserved curated entries, and rendered-language verification.
 - [Admin preview editing](admin-preview-boundary.md) — parent-only editing, entry identity over category metadata, and unpublished announcement handling.

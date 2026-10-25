@@ -136,6 +136,9 @@ const KUULA_EMBED_PRESENTATION = {
   gyro: "0",
   thumbs: "-1",
   pause: "0",
+  // Kuula Export Editor → Options → instructions. `inst` also takes
+  // precedence over the legacy `hideinst` parameter in Kuula's player.
+  inst: "0",
 } as const;
 
 /**
